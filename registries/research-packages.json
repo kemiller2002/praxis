@@ -1,0 +1,41 @@
+[
+  {
+    "author_agent": "codex",
+    "completion": "complete",
+    "confidence": "high",
+    "created": "2026-07-24",
+    "discipline": [
+      "research-systems",
+      "software-engineering"
+    ],
+    "id": "RP-ROS-2026-A005",
+    "keywords": [
+      "lifecycle",
+      "identifiers",
+      "deterministic-validation",
+      "generated-registries"
+    ],
+    "path": "research/packages/RP-ROS-2026-A005--executable-contract-and-validation-slice.md",
+    "priority": "high",
+    "related_documents": [
+      "JR-ROS-2026-A004",
+      "EV-ROS-2026-A003",
+      "DF-ROS-2026-A001",
+      "DF-ROS-2026-A002"
+    ],
+    "related_projects": [],
+    "research_area": "ros-executable-contract",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "ros",
+      "validation",
+      "registries",
+      "architecture"
+    ],
+    "title": "ROS executable contract and validation slice",
+    "updated": "2026-07-24",
+    "version": "1.0.0"
+  }
+]

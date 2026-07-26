@@ -1,0 +1,29 @@
+[
+  {
+    "confidence": "high",
+    "contradicts": [],
+    "created_by_agent": "codex",
+    "evidence_type": "test-result",
+    "id": "EV-ROS-2026-A003",
+    "path": "research/evidence/EV-ROS-2026-A003--validator-completion-test.md",
+    "related_theories": [],
+    "research_area": "ros-executable-contract",
+    "retrieved": "2026-07-24",
+    "source_author": "codex",
+    "source_date": "2026-07-24",
+    "source_title": "Local unittest and CLI execution",
+    "source_uri": "tests/test_ros_cli.py",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "RP-ROS-2026-A005"
+    ],
+    "tags": [
+      "validation",
+      "registry",
+      "cli"
+    ],
+    "title": "Validator completion test results"
+  }
+]

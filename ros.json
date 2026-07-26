@@ -1,0 +1,15 @@
+{
+  "name": "research-operating-system",
+  "rosVersion": "1.0.0",
+  "repSpecificationVersion": "2.0",
+  "bootstrap": "BOOTSTRAP.md",
+  "canonicalRoots": {
+    "journals": "research/journals",
+    "packages": "research/packages",
+    "theories": "research/theories",
+    "evidence": "research/evidence"
+  },
+  "registries": "registries",
+  "templates": "templates",
+  "generated": "generated"
+}

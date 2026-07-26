@@ -1,0 +1,22 @@
+[
+  {
+    "author_agent": "codex",
+    "created": "2026-07-24",
+    "evidence_ids": [
+      "EV-ROS-2026-A003"
+    ],
+    "hypothesis_ids": [],
+    "id": "JR-ROS-2026-A004",
+    "path": "research/journals/JR-ROS-2026-A004--executable-contract-implementation.md",
+    "related_mission": {},
+    "related_package": "RP-ROS-2026-A005",
+    "research_area": "ros-executable-contract",
+    "tags": [
+      "architecture",
+      "validation",
+      "handoff"
+    ],
+    "theory_ids": [],
+    "title": "Executable contract implementation"
+  }
+]

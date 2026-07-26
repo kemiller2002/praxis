@@ -1,0 +1,39 @@
+[
+  {
+    "author_agent": "codex",
+    "created": "2026-07-24",
+    "id": "DF-ROS-2026-A001",
+    "path": "research/decisions/DF-ROS-2026-A001--canonical-artifacts-and-generated-registries.md",
+    "related_documents": [],
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "architecture",
+      "registries"
+    ],
+    "title": "Canonical artifacts and generated registries",
+    "updated": "2026-07-24",
+    "version": "1.0.0"
+  },
+  {
+    "author_agent": "codex",
+    "created": "2026-07-24",
+    "id": "DF-ROS-2026-A002",
+    "path": "research/decisions/DF-ROS-2026-A002--artifact-identity-and-acceptance-boundary.md",
+    "related_documents": [
+      "DF-ROS-2026-A001"
+    ],
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "architecture",
+      "identity",
+      "lifecycle"
+    ],
+    "title": "Artifact identity and acceptance boundary",
+    "updated": "2026-07-24",
+    "version": "1.0.0"
+  }
+]
