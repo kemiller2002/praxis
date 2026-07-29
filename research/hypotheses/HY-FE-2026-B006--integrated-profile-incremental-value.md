@@ -66,6 +66,10 @@ No discriminating test has been performed. Existing FE studies exercise
 representation and workflow behavior but do not supply the matched causal
 contrast.
 
+`EX-FE-0002` specifies but has not completed the independent blinded
+mechanism-boundary test. `EX-FE-0003` specifies a separate test but records no
+execution data.
+
 ## Results
 
 Untested. Internal executability is supporting feasibility evidence only.
@@ -87,5 +91,5 @@ no outcome value has been demonstrated.
 
 Execute `FE-EXP-UTILITY-001`, the four-arm matched comparison defined in
 `research/evaluations/FE-BOUNDARY-2026-07-28/next-experiment.md` in the
-Framework Engineering repository.
-
+Framework Engineering repository, after `EX-FE-0002` is completed or
+explicitly superseded by an authorized decision.

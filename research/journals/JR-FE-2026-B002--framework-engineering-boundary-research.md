@@ -36,6 +36,10 @@ Execute FE-MISSION-001 as the first substantive cross-repository ROS mission.
   exist.
 - The 2026-07-23 FE evaluation identified external boundary comparison as the
   highest-priority unperformed mission.
+- `EX-FE-0002` already specifies a blinded mechanism-boundary protocol, but
+  its v1.1 Stage A is incomplete, Stage B blocked, and classification
+  inconclusive; its v1.2 machine pilot is incomplete.
+- `EX-FE-0003` records no execution data.
 
 ## Actions taken
 
@@ -125,10 +129,11 @@ but limit generality.
 
 ## Highest-value next step
 
-Obtain independent adjacent-method and quantitative-method review, freeze
-power and decision thresholds, implement only the v1.1 P0 controls required
-for trustworthy execution, preregister `FE-EXP-UTILITY-001`, and run the
-matched artificial evaluation.
+Use the new source packet to repair and complete or formally supersede
+`EX-FE-0002`. Then obtain independent adjacent-method and quantitative-method
+review, freeze power and decision thresholds, implement only the v1.1 P0
+controls required for trustworthy execution, preregister
+`FE-EXP-UTILITY-001`, and run the matched artificial evaluation.
 
 ## Verification at closure
 
@@ -138,4 +143,5 @@ matched artificial evaluation.
   2/2.
 - Experiment tests passed 7/7; all ten registered experiments verified.
 - Research validation passed.
-- Research build passed with 1,240 pages built and 1,175 indexed.
+- Final current-worktree research build passed with 1,267 pages built and
+  1,200 indexed.

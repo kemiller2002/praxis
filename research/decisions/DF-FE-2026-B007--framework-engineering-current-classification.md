@@ -20,6 +20,11 @@ integration, no clearly non-subsumed causal mechanism, substantial collective
 coverage from adjacent fields, no matched outcome study, and no independent
 institutional practice.
 
+The mission produced a same-provider successor synthesis. `EX-FE-0002`
+remains Stage A incomplete, Stage B blocked, and experimentally inconclusive;
+`EX-FE-0003` has no execution data. This review-state decision cannot override
+those controlling records.
+
 # Decision
 
 Pending governance acceptance:
@@ -31,7 +36,8 @@ Pending governance acceptance:
 3. Preserve ROS–FE Profile v1.0 as the accepted-for-pilot baseline.
 4. Route enforcement improvements through a versioned v1.1 proposal.
 5. Make a preregistered matched incremental-utility experiment the next
-   evidence gate.
+   outcome-evidence gate after `EX-FE-0002` is completed or explicitly
+   superseded.
 6. Delay general automatic framework generation, autonomous canonical
    promotion, organization-wide mandates, credentialing, and discipline
    branding.
@@ -51,6 +57,8 @@ Engineering can consume the proposed definitions, schemas, risks, and test
 design as provisional inputs, but not as an accepted efficacy claim. Null and
 negative experimental outcomes must trigger simplification or renaming.
 Version 1.0 remains reproducible while v1.1 integrity controls are proposed.
+Until the existing experiment gates are resolved, its classification remains
+inconclusive even though this decision proposes a narrower working model.
 
 # Reversibility and validation
 

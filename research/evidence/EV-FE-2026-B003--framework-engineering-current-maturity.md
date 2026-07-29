@@ -30,6 +30,11 @@ execution boundaries, registries, and tests. Current authority nevertheless
 describes the field as provisional and retains low confidence in
 distinctiveness and efficacy.
 
+`EX-FE-0002` contains a rigorous blinded mechanism-boundary protocol, but its
+controlling v1.1 record remains Stage A incomplete, Stage B blocked, and
+classification inconclusive. Its machine-only v1.2 pilot is incomplete.
+`EX-FE-0003` records no execution data.
+
 ## Exact claim supported or contradicted
 
 Supports the claim that FE is currently a repository-centered research
@@ -67,6 +72,8 @@ institutional discipline threshold.
 
 This evidence is internal to one repository and authoring lineage.
 Tool-conformance results do not establish framework utility.
+The 2026-07-28 source synthesis does not satisfy the prior experiment's
+independent audit, blinding, recognition, key-custody, or reviewer gates.
 
 ## Counterevidence
 

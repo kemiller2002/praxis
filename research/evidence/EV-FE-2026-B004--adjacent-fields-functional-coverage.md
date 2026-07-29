@@ -39,6 +39,9 @@ Supports narrowing FE to a candidate integrated engineering profile and
 contradicts any unqualified current claim that FE is a distinct discipline
 with a demonstrated unique mechanism.
 
+This is a proposed synthesis finding. It does not overwrite the controlling
+`EX-FE-0002` experimental state, which remains inconclusive.
+
 It is counterevidence, but not a complete falsification, of
 `HY-FE-2026-B006`: an integration can still create value even if its parts are
 inherited.
@@ -77,7 +80,8 @@ practice.
 This is a broad structured review, not a formal systematic bibliometric
 review. Several standards were accessible only as official abstracts.
 Comparator fields are internally diverse. Literature cannot establish FE
-efficacy.
+efficacy. One provider performed the synthesis; it is not the independent
+blinded mechanism mapping required by `EX-FE-0002`.
 
 ## Counterevidence
 

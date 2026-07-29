@@ -152,8 +152,12 @@ Verification:
 - FE profile validation passed; profile tests passed 2/2.
 - FE experiment tests passed 7/7; all ten registered experiments verified.
 - FE research validation and publication build passed.
-- The research build produced 1,240 pages and indexed 1,175.
+- The final current-worktree research build produced 1,267 pages and indexed
+  1,200.
 
 The result narrows FE to a repository research program and candidate
 integrated engineering profile. The next evidence gate is the preregistered
-matched incremental-utility study.
+matched incremental-utility study. This successor synthesis does not
+overwrite `EX-FE-0002`: Stage A remains incomplete, Stage B remains blocked,
+and the experimental classification remains inconclusive. That experiment
+must be completed or explicitly superseded first.

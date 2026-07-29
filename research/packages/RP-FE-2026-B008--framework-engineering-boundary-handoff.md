@@ -56,6 +56,11 @@ the exact object and integration, but adjacent fields collectively cover
 every identified mechanism. No unique mechanism or comparative utility was
 demonstrated.
 
+This is a proposed synthesis, not an experimental override. `EX-FE-0002`
+remains Stage A incomplete, Stage B blocked, and classification inconclusive.
+Its independent gates must be completed or formally superseded before the
+matched outcome study. `EX-FE-0003` remains unexecuted.
+
 # Original Objective
 
 Execute `FE-MISSION-001`: determine FE's non-redundant boundary and create a
@@ -127,18 +132,20 @@ distinct discipline or benefit.
 
 # Recommended Next Research
 
-Review, power, and preregister `FE-EXP-UTILITY-001`; then run the matched
-artificial evaluation and held-out replication.
+Use the source packet to repair and complete or formally supersede
+`EX-FE-0002`; then review, power, and preregister `FE-EXP-UTILITY-001`, run
+the matched artificial evaluation, and perform held-out replication.
 
 # Research Backlog
 
-1. Independent comparator review.
-2. Benchmark and gold-rationale construction.
-3. Power simulation and threshold freeze.
-4. v1.1 P0 execution-integrity controls.
-5. Preregistration and Stage A execution.
-6. Held-out replication.
-7. Naturalistic Stage B only if earlier gates pass and authorization exists.
+1. Repair and complete or formally supersede `EX-FE-0002`.
+2. Independent comparator and mechanism-boundary review.
+3. Benchmark and gold-rationale construction.
+4. Power simulation and threshold freeze.
+5. v1.1 P0 execution-integrity controls.
+6. Preregistration and artificial utility execution.
+7. Held-out replication.
+8. Naturalistic evaluation only if earlier gates pass and authorization exists.
 
 # Suggested Specialized Research Agents
 
@@ -291,4 +298,4 @@ Engineering repository.
 Verification at closure: ROS validation passed and registries were current;
 FE profile validation passed with 2/2 profile tests; 7/7 experiment tests
 passed; all ten registered experiments verified; research validation and the
-1,240-page publication build passed.
+final 1,267-page current-worktree publication build passed.
