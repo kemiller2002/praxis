@@ -1,0 +1,31 @@
+# {{PROJECT_NAME}}
+
+This repository is a greenfield pilot running Repository Operating System
+{{ROS_VERSION}}.
+
+## Start here
+
+1. Read [`AGENTS.md`](AGENTS.md) and [`BOOTSTRAP.md`](BOOTSTRAP.md).
+2. Complete [`PROJECT-CHARTER.md`](PROJECT-CHARTER.md).
+3. Establish the baseline in [`context/CURRENT-STATE.md`](context/CURRENT-STATE.md).
+4. Select the first bounded mission and its observable acceptance criteria.
+5. Record durable evidence, decisions, and handoffs as the work proceeds.
+
+## Local operating commands
+
+```bash
+./ros registry check
+./ros registry build
+./ros validate
+```
+
+The installed snapshot is self-contained. It does not read from the source ROS
+repository. `.ros/installation.json` records the package version and checksums
+of installed files.
+
+## Pilot rule
+
+The operating system is itself under evaluation. Do not infer that
+{{PROJECT_NAME}} is a validated discipline, method, or product merely because
+the repository follows a rigorous process. Measure whether the process improves
+decisions, traceability, handoffs, and rework relative to the declared baseline.

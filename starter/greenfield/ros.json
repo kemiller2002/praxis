@@ -1,0 +1,17 @@
+{
+  "name": "{{PROJECT_SLUG}}",
+  "project": "{{PROJECT_NAME}}",
+  "rosVersion": "{{ROS_VERSION}}",
+  "repSpecificationVersion": "2.0",
+  "profile": "greenfield",
+  "bootstrap": "BOOTSTRAP.md",
+  "canonicalRoots": {
+    "journals": "research/journals",
+    "packages": "research/packages",
+    "theories": "research/theories",
+    "evidence": "research/evidence"
+  },
+  "registries": "registries",
+  "templates": "templates",
+  "generated": "generated"
+}

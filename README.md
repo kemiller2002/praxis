@@ -43,6 +43,23 @@ New agents should read the lifecycle, supersession, identifier, confidence,
 artifact-tier, and taxonomy documents under `framework/` before creating
 canonical records.
 
+## Portable greenfield installation
+
+ROS can be loaded into a separate beginning project through its self-contained
+npm package. The package embeds the governance, schemas, templates, validator,
+empty registries, and greenfield pilot records; the initialized repository does
+not read this source checkout.
+
+```bash
+npx --yes github:kemiller2002/Repository-Operating-System#<tag-or-commit> init \
+  --project "Communication Engineering" \
+  --target .
+```
+
+Use an immutable tag or commit SHA for reproducibility. See
+[`PACKAGE-USAGE.md`](PACKAGE-USAGE.md) for npm publication, dry-run, collision,
+verification, and release instructions.
+
 ## Repository principles
 
 - Preserve provenance.

@@ -1,0 +1,46 @@
+{
+  "name": "@kemiller2002/repository-operating-system",
+  "version": "1.0.0",
+  "description": "Self-contained Repository Operating System bootstrap for greenfield research and engineering projects.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "bin": {
+    "ros-bootstrap": "./bin/ros-bootstrap.mjs"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "starter/",
+    "AGENTS.md",
+    "BOOTSTRAP.md",
+    ".editorconfig",
+    ".gitattributes",
+    ".gitignore",
+    "docs/00-governance/",
+    "framework/",
+    "schemas/",
+    "templates/",
+    "tools/ros_cli.mjs",
+    "README.md",
+    "PACKAGE-USAGE.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test tests/npm-bootstrap.test.mjs && python3 -m unittest discover -s tests -v",
+    "pack:inspect": "npm pack --dry-run",
+    "prepack": "npm test"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "repository",
+    "operating-system",
+    "research",
+    "engineering",
+    "bootstrap",
+    "npx"
+  ]
+}

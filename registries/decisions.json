@@ -56,5 +56,24 @@
     "title": "Artifact identity and acceptance boundary",
     "updated": "2026-07-24",
     "version": "1.0.0"
+  },
+  {
+    "author_agent": "openai-codex",
+    "created": "2026-07-29",
+    "id": "DF-ROS-2026-A003",
+    "path": "research/decisions/DF-ROS-2026-A003--portable-greenfield-bootstrap-package.md",
+    "related_documents": [],
+    "status": "review",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "architecture",
+      "distribution",
+      "bootstrap",
+      "npm"
+    ],
+    "title": "Portable greenfield bootstrap package",
+    "updated": "2026-07-29",
+    "version": "1.0.0"
   }
 ]
