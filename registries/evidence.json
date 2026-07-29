@@ -2,6 +2,92 @@
   {
     "confidence": "high",
     "contradicts": [],
+    "created_by_agent": "openai-codex",
+    "evidence_type": "repository-observation",
+    "id": "EV-FE-2026-B003",
+    "path": "research/evidence/EV-FE-2026-B003--framework-engineering-current-maturity.md",
+    "related_theories": [],
+    "research_area": "framework-engineering-boundary",
+    "retrieved": "2026-07-28",
+    "source_author": "framework-engineering-research-program",
+    "source_date": "2026-07-28",
+    "source_title": "Framework Engineering repository and 2026-07-23 evaluation",
+    "source_uri": "../Framework-engineering/research/evaluations/FE-EVAL-2026-07-23/",
+    "status": "review",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "HY-FE-2026-B006",
+      "RP-FE-2026-B008"
+    ],
+    "tags": [
+      "framework-engineering",
+      "maturity",
+      "repository-observation"
+    ],
+    "title": "Framework Engineering current repository maturity"
+  },
+  {
+    "confidence": "medium",
+    "contradicts": [
+      "HY-FE-2026-B006"
+    ],
+    "created_by_agent": "openai-codex",
+    "evidence_type": "comparative-synthesis",
+    "id": "EV-FE-2026-B004",
+    "path": "research/evidence/EV-FE-2026-B004--adjacent-fields-functional-coverage.md",
+    "related_theories": [],
+    "research_area": "framework-engineering-boundary",
+    "retrieved": "2026-07-28",
+    "source_author": "openai-codex",
+    "source_date": "2026-07-28",
+    "source_title": "Framework Engineering Boundary Source Registry and Comparison Matrix",
+    "source_uri": "../Framework-engineering/research/evaluations/FE-BOUNDARY-2026-07-28/",
+    "status": "review",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "RP-FE-2026-B008"
+    ],
+    "tags": [
+      "framework-engineering",
+      "boundary",
+      "subsumption",
+      "comparative-study"
+    ],
+    "title": "Adjacent fields substantially cover current Framework Engineering mechanisms"
+  },
+  {
+    "confidence": "medium",
+    "contradicts": [],
+    "created_by_agent": "openai-codex",
+    "evidence_type": "comparative-institutional-observation",
+    "id": "EV-FE-2026-B005",
+    "path": "research/evidence/EV-FE-2026-B005--framework-engineering-institutional-maturity-gap.md",
+    "related_theories": [],
+    "research_area": "framework-engineering-boundary",
+    "retrieved": "2026-07-28",
+    "source_author": "openai-codex",
+    "source_date": "2026-07-28",
+    "source_title": "Engineering accreditation, bodies of knowledge, competency, and ethics comparison",
+    "source_uri": "../Framework-engineering/research/evaluations/FE-BOUNDARY-2026-07-28/comparison-matrix.md",
+    "status": "review",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "RP-FE-2026-B008"
+    ],
+    "tags": [
+      "framework-engineering",
+      "discipline",
+      "maturity",
+      "profession"
+    ],
+    "title": "Framework Engineering lacks established-discipline institutional maturity"
+  },
+  {
+    "confidence": "high",
+    "contradicts": [],
     "created_by_agent": "codex",
     "evidence_type": "test-result",
     "id": "EV-ROS-2026-A003",

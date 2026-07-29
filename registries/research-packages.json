@@ -1,5 +1,49 @@
 [
   {
+    "author_agent": "openai-codex",
+    "completion": "complete",
+    "confidence": "medium",
+    "created": "2026-07-28",
+    "discipline": [
+      "framework-engineering",
+      "research-systems-architecture"
+    ],
+    "id": "RP-FE-2026-B008",
+    "keywords": [
+      "subsumption",
+      "method-engineering",
+      "systems-engineering",
+      "design-science",
+      "incremental-utility"
+    ],
+    "path": "research/packages/RP-FE-2026-B008--framework-engineering-boundary-handoff.md",
+    "priority": "high",
+    "related_documents": [
+      "MS-FE-2026-B001",
+      "EV-FE-2026-B003",
+      "EV-FE-2026-B004",
+      "EV-FE-2026-B005",
+      "HY-FE-2026-B006",
+      "DF-FE-2026-B007"
+    ],
+    "related_projects": [
+      "Framework Engineering"
+    ],
+    "research_area": "framework-engineering-boundary",
+    "status": "review",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "framework-engineering",
+      "boundary",
+      "handoff",
+      "operating-profile"
+    ],
+    "title": "Framework Engineering boundary validation cross-repository handoff",
+    "updated": "2026-07-28",
+    "version": "1.0.0"
+  },
+  {
     "author_agent": "codex",
     "completion": "complete",
     "confidence": "high",

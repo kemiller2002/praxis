@@ -1,5 +1,30 @@
 [
   {
+    "author_agent": "openai-codex",
+    "created": "2026-07-28",
+    "evidence_ids": [
+      "EV-FE-2026-B003",
+      "EV-FE-2026-B004",
+      "EV-FE-2026-B005"
+    ],
+    "hypothesis_ids": [
+      "HY-FE-2026-B006"
+    ],
+    "id": "JR-FE-2026-B002",
+    "path": "research/journals/JR-FE-2026-B002--framework-engineering-boundary-research.md",
+    "related_mission": "MS-FE-2026-B001",
+    "related_package": "RP-FE-2026-B008",
+    "research_area": "framework-engineering-boundary",
+    "status": "complete",
+    "tags": [
+      "framework-engineering",
+      "boundary-study",
+      "architecture"
+    ],
+    "theory_ids": [],
+    "title": "Framework Engineering boundary research journal"
+  },
+  {
     "author_agent": "codex",
     "created": "2026-07-24",
     "evidence_ids": [

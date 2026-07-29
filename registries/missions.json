@@ -1,1 +1,30 @@
-[]
+[
+  {
+    "artifact_tier": "full-rep",
+    "created": "2026-07-28",
+    "depends_on": [],
+    "discipline": [
+      "framework-engineering",
+      "research-systems-architecture"
+    ],
+    "id": "MS-FE-2026-B001",
+    "outputs": [
+      "../Framework-engineering/research/evaluations/FE-BOUNDARY-2026-07-28/"
+    ],
+    "owner_agent": "openai-codex",
+    "path": "missions/completed/MS-FE-2026-B001--framework-engineering-boundary-validation.md",
+    "priority": "high",
+    "related_projects": [
+      "Framework Engineering"
+    ],
+    "required_framework": [
+      "framework/REP-SPECIFICATION.md",
+      "framework/policies/RESEARCH-POLICY.md",
+      "framework/policies/EVIDENCE-POLICY.md",
+      "framework/protocols/ARTIFACT-LIFECYCLE.md"
+    ],
+    "research_area": "framework-engineering-boundary",
+    "status": "completed",
+    "title": "Framework Engineering definition and boundary validation"
+  }
+]

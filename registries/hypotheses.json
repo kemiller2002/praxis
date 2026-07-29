@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "author_agent": "openai-codex",
+    "confidence": "very-low",
+    "contradicting_evidence": [
+      "EV-FE-2026-B004",
+      "EV-FE-2026-B005"
+    ],
+    "created": "2026-07-28",
+    "id": "HY-FE-2026-B006",
+    "path": "research/hypotheses/HY-FE-2026-B006--integrated-profile-incremental-value.md",
+    "related_theories": [],
+    "research_area": "framework-engineering-boundary",
+    "status": "proposed",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-FE-2026-B003"
+    ],
+    "title": "Framework Engineering integrated profile adds incremental net value"
+  }
+]

@@ -1,5 +1,26 @@
 [
   {
+    "author_agent": "openai-codex",
+    "created": "2026-07-28",
+    "id": "DF-FE-2026-B007",
+    "path": "research/decisions/DF-FE-2026-B007--framework-engineering-current-classification.md",
+    "related_documents": [
+      "RP-FE-2026-B008"
+    ],
+    "status": "review",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "framework-engineering",
+      "boundary",
+      "classification",
+      "experiment-gate"
+    ],
+    "title": "Framework Engineering current classification and next gate",
+    "updated": "2026-07-28",
+    "version": "1.0.0"
+  },
+  {
     "author_agent": "codex",
     "created": "2026-07-24",
     "id": "DF-ROS-2026-A001",
