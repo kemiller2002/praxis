@@ -6,7 +6,12 @@ import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { initializeProject, verifyProject } from "../lib/bootstrap.mjs";
+import { deriveProjectName, initializeProject, verifyProject } from "../lib/bootstrap.mjs";
+
+const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const packageVersion = JSON.parse(
+  fs.readFileSync(path.join(repository, "package.json"), "utf8")
+).version;
 
 function temporaryDirectory(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "ros-bootstrap-"));
@@ -21,7 +26,7 @@ test("greenfield initialization is self-contained and immediately valid", (t) =>
     project: "Communication Engineering"
   });
 
-  assert.equal(result.packageVersion, "1.0.0");
+  assert.equal(result.packageVersion, packageVersion);
   assert.ok(result.files.length >= 60);
   assert.match(fs.readFileSync(path.join(target, "README.md"), "utf8"), /Communication Engineering/);
   assert.equal(fs.statSync(path.join(target, "ros")).mode & 0o777, 0o755);
@@ -43,6 +48,26 @@ test("greenfield initialization is self-contained and immediately valid", (t) =>
   assert.deepEqual(verifyProject({ target }).findings, []);
 });
 
+test("project name is derived from the target folder when omitted", (t) => {
+  const parent = temporaryDirectory(t);
+  const target = path.join(parent, "communication-engineering");
+  fs.mkdirSync(target);
+  const result = initializeProject({ target });
+
+  assert.equal(result.project, "Communication Engineering");
+  const installed = JSON.parse(
+    fs.readFileSync(path.join(target, ".ros", "installation.json"), "utf8")
+  );
+  assert.equal(installed.project, "Communication Engineering");
+  assert.match(fs.readFileSync(path.join(target, "PROJECT-CHARTER.md"), "utf8"), /Communication Engineering/);
+});
+
+test("project name derivation handles separators, camel case, and explicit acronyms", () => {
+  assert.equal(deriveProjectName("/tmp/visual-engineering"), "Visual Engineering");
+  assert.equal(deriveProjectName("/tmp/researchPublisher"), "Research Publisher");
+  assert.equal(deriveProjectName("/tmp/AI Engineering"), "AI Engineering");
+});
+
 test("dry run does not create or mutate the target", (t) => {
   const parent = temporaryDirectory(t);
   const target = path.join(parent, "not-created");
@@ -52,7 +77,7 @@ test("dry run does not create or mutate the target", (t) => {
     dryRun: true
   });
   assert.equal(result.dryRun, true);
-  assert.equal(result.packageVersion, "1.0.0");
+  assert.equal(result.packageVersion, packageVersion);
   assert.ok(result.files.length >= 60);
   assert.equal(fs.existsSync(target), false);
 });
@@ -160,7 +185,6 @@ supports: [HY-COMM-2026-A001]
 
 test("npm tarball contains the executable and every scaffold source", (t) => {
   const destination = temporaryDirectory(t);
-  const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
   const packed = spawnSync(
     "npm",
     ["pack", "--ignore-scripts", "--json", "--pack-destination", destination],
@@ -204,10 +228,8 @@ test("npm tarball contains the executable and every scaffold source", (t) => {
       "--",
       "ros-bootstrap",
       "init",
-      "--project",
-      "Communication Engineering",
       "--target",
-      target
+      path.join(target, "communication-engineering")
     ],
     {
       cwd: target,
@@ -220,10 +242,12 @@ test("npm tarball contains the executable and every scaffold source", (t) => {
     }
   );
   assert.equal(executed.status, 0, executed.stderr || executed.stdout);
-  assert.match(executed.stdout, /installed ROS 1\.0\.0/);
+  assert.match(executed.stdout, new RegExp(`installed ROS ${packageVersion.replaceAll(".", "\\.")}`));
+  assert.match(executed.stdout, /project: Communication Engineering/);
 
-  const validation = spawnSync(path.join(target, "ros"), ["validate"], {
-    cwd: target,
+  const installedTarget = path.join(target, "communication-engineering");
+  const validation = spawnSync(path.join(installedTarget, "ros"), ["validate"], {
+    cwd: installedTarget,
     encoding: "utf8"
   });
   assert.equal(validation.status, 0, validation.stderr || validation.stdout);

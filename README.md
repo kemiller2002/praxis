@@ -51,14 +51,18 @@ empty registries, and greenfield pilot records; the initialized repository does
 not read this source checkout.
 
 ```bash
-npx --yes github:kemiller2002/Repository-Operating-System#<tag-or-commit> init \
-  --project "Communication Engineering" \
+npx --yes --prefer-online \
+  --package=github:kemiller2002/repository-operating-system#main \
+  ros-bootstrap init \
   --target .
 ```
 
-Use an immutable tag or commit SHA for reproducibility. See
-[`PACKAGE-USAGE.md`](PACKAGE-USAGE.md) for npm publication, dry-run, collision,
-verification, and release instructions.
+The project display name is derived from the target folder. Pass
+`--project "Different Display Name"` only when an override is needed. This
+command checks the remote and installs the latest `main`; use a tag or commit
+SHA when reproducibility is more important than freshness. See
+[`PACKAGE-USAGE.md`](PACKAGE-USAGE.md) for dry-run, collision, verification,
+and release instructions.
 
 ## Repository principles
 

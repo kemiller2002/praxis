@@ -1,6 +1,6 @@
 {
   "name": "@kemiller2002/repository-operating-system",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Self-contained Repository Operating System bootstrap for greenfield research and engineering projects.",
   "license": "UNLICENSED",
   "type": "module",

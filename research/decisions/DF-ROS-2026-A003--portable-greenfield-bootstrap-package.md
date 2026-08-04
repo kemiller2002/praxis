@@ -2,10 +2,10 @@
 id: DF-ROS-2026-A003
 title: Portable greenfield bootstrap package
 status: review
-version: 1.0.0
+version: 1.1.0
 author_agent: openai-codex
 created: 2026-07-29
-updated: 2026-07-29
+updated: 2026-08-04
 related_documents: []
 supersedes: []
 superseded_by: []
@@ -30,6 +30,8 @@ Package ROS as a zero-runtime-dependency Node CLI named
 - supports npm and GitHub tarball installation through `npx`/`npm exec`;
 - installs additively and rejects every destination collision before writing;
 - supports a no-write `--dry-run`;
+- derives the project display name from the target directory when `--project`
+  is omitted, while retaining an explicit override;
 - records package version and installed-file checksums in
   `.ros/installation.json`;
 - leaves validation and registry generation inside the initialized repository
@@ -66,6 +68,8 @@ project-owned records. Future upgrades require an explicit migration design.
 ## Consequences
 
 - Consumers can pin an npm version, Git tag, or commit SHA.
+- Consumers may instead track the latest `main` branch when freshness is an
+  explicit preference over reproducibility.
 - Package size includes governance, templates, and the Node validator,
   intentionally trading size for independence.
 - Embedded policy is a versioned snapshot; updates do not silently alter an
@@ -90,6 +94,6 @@ release, versions are immutable and changes require a new semantic version.
 ## Follow-up
 
 1. Confirm package scope ownership and select a license.
-2. Install the packed release candidate into Communication Engineering.
-3. Record the consumer result and any migration requirements.
-4. Accept, revise, or reject this decision.
+2. Record the completed Communication Engineering consumer result and any
+   migration requirements.
+3. Accept, revise, or reject this decision.

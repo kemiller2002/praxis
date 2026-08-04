@@ -4,28 +4,29 @@ The package ships a frozen, self-contained Repository Operating System
 greenfield profile. A target repository does not read from or link to this
 source checkout after installation.
 
-## Install from npm
+## Install the latest directly from GitHub
 
-After publishing version `1.0.0`:
+Run inside the target repository:
 
 ```bash
 cd /path/to/project
-npx --yes @kemiller2002/repository-operating-system@1.0.0 init \
-  --project "Communication Engineering" \
+npx --yes --prefer-online \
+  --package=github:kemiller2002/repository-operating-system#main \
+  ros-bootstrap init \
   --target .
 ```
 
-Pin the version for reproducible initialization. Avoid an unversioned
-`@latest` command in automated project creation.
+The project display name is derived from the target folder. Use
+`--project "Different Display Name"` to override it. `--prefer-online` directs
+npm to check the remote instead of preferring cached package data.
 
-## Install directly from GitHub
+## Reproducible GitHub installation
 
 Before an npm release, or when testing a repository tag:
 
 ```bash
 cd /path/to/project
-npx --yes github:kemiller2002/Repository-Operating-System#v1.0.0 init \
-  --project "Communication Engineering" \
+npx --yes github:kemiller2002/repository-operating-system#<tag> init \
   --target .
 ```
 
@@ -35,8 +36,7 @@ SHA. A branch name is convenient but not reproducible.
 ## Preview and safety
 
 ```bash
-npx --yes github:kemiller2002/Repository-Operating-System#<commit> init \
-  --project "Communication Engineering" \
+npx --yes github:kemiller2002/repository-operating-system#<commit> init \
   --target . \
   --dry-run
 ```
@@ -55,11 +55,14 @@ collisions require an explicit migration.
 ./ros validate
 ```
 
-To verify that the installed operating-system snapshot has not drifted, invoke
-the same package version:
+To verify an installed snapshot against its recorded checksums, invoke the
+current GitHub package:
 
 ```bash
-npx --yes @kemiller2002/repository-operating-system@1.0.0 verify --target .
+npx --yes --prefer-online \
+  --package=github:kemiller2002/repository-operating-system#main \
+  ros-bootstrap verify \
+  --target .
 ```
 
 Project-owned files will legitimately change during use. Snapshot verification
