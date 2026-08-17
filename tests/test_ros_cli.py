@@ -133,6 +133,21 @@ supersedes: [EV-ROS-2026-A001]
         findings = validate(root, check_registries=False)
         self.assertTrue(any("not reciprocal" in finding.message for finding in findings))
 
+    def test_legacy_rep_identity_and_confidence_remain_compatible(self) -> None:
+        temporary, root = self.root()
+        self.addCleanup(temporary.cleanup)
+        write_artifact(
+            root,
+            "research/packages/RP-2026-07-30-NHE-COMPARATIVE-REVIEW.md",
+            """
+identifier: RP-2026-07-30-NHE-COMPARATIVE-REVIEW
+title: Legacy review
+status: draft
+confidence: medium-high
+""",
+        )
+        self.assertEqual(validate(root, check_registries=False), [])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -7,7 +7,7 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const ID_RE =
-  /^(RP|JR|EV|HY|TH|EX|DF|CN|GL|MS)-[A-Z0-9]+(?:-[A-Z0-9]+)*-[0-9]{4}-(?:[0-9]{4}|[A-F0-9]{4})$/;
+  /^(?:(RP|JR|EV|HY|TH|EX|DF|CN|GL|MS)-[A-Z0-9]+(?:-[A-Z0-9]+)*-[0-9]{4}-(?:[0-9]{4}|[A-F0-9]{4})|RP-[0-9]{4}-[0-9]{2}-[0-9]{2}-[A-Z0-9]+(?:-[A-Z0-9]+)*)$/;
 const REFERENCE_FIELDS = new Set([
   "contradicts",
   "contradicting_evidence",
@@ -44,7 +44,7 @@ const ALLOWED_STATUS = {
   ]),
   TH: new Set(["candidate", "supported", "established", "challenged", "superseded", "rejected"])
 };
-const CONFIDENCE = new Set(["very-low", "low", "medium", "high", "very-high"]);
+const CONFIDENCE = new Set(["very-low", "low", "medium", "medium-high", "high", "very-high"]);
 const KIND_CONFIG = {
   decisions: ["research/decisions", "registries/decisions.json", "DF"],
   evidence: ["research/evidence", "registries/evidence.json", "EV"],
@@ -453,7 +453,9 @@ export function validate(root, { checkRegistries = true } = {}) {
     if (!artifact.metadata.title) {
       findings.push({ path: artifact.relative, field: "title", message: "required field is missing" });
     }
-    if (!path.basename(artifact.file).startsWith(`${artifact.id}--`)) {
+    const basename = path.basename(artifact.file);
+    const legacyRepFilename = /^RP-[0-9]{4}-[0-9]{2}-[0-9]{2}-/.test(artifact.id) && basename === `${artifact.id}.md`;
+    if (!basename.startsWith(`${artifact.id}--`) && !legacyRepFilename) {
       findings.push({
         path: artifact.relative,
         field: "id",

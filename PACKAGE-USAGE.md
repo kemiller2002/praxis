@@ -4,6 +4,18 @@ The package ships a frozen, self-contained Repository Operating System
 greenfield profile. A target repository does not read from or link to this
 source checkout after installation.
 
+## Install from npm
+
+After a release is published under the organization scope:
+
+```bash
+cd /path/to/project
+npx --yes \
+  --package=@echelon-foundry/repository-operating-system@<version> \
+  ros-bootstrap init \
+  --target .
+```
+
 ## Install the latest directly from GitHub
 
 Run inside the target repository:
@@ -88,11 +100,13 @@ Minor releases may add compatible commands, evidence types, or schema fields. Br
 Before tagging or publishing:
 
 ```bash
-npm test
-npm run pack:inspect
+npm run release:check
+npm publish --dry-run --access public
 ```
 
 Inspect the tarball file list, confirm the version, create an immutable Git tag,
 select and record an explicit package license, and publish with the npm account
-authorized for the `@kemiller2002` scope. The package remains `UNLICENSED`
+authorized for the `@echelon-foundry` organization scope. The package remains `UNLICENSED`
 until that decision is made.
+
+The package metadata fixes the publication registry to `https://registry.npmjs.org/`, declares public access, and links releases to the current GitHub source repository. Before the first publish, `npm whoami` must succeed and the authenticated user must have write permission in the `echelon-foundry` npm organization.

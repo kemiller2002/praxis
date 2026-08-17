@@ -58,6 +58,17 @@ npm package. The package embeds the governance, schemas, templates, validator,
 empty registries, and greenfield pilot records; the initialized repository does
 not read this source checkout.
 
+After publication, initialize from npm with:
+
+```bash
+npx --yes \
+  --package=@echelon-foundry/repository-operating-system@<version> \
+  ros-bootstrap init \
+  --target .
+```
+
+Until the npm release exists, install from the GitHub repository:
+
 ```bash
 npx --yes --prefer-online \
   --package=github:kemiller2002/repository-operating-system#main \

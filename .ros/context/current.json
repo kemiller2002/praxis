@@ -73,11 +73,56 @@
       ],
       "updatedAt": "2026-08-16T20:45:25.889Z",
       "completedAt": "2026-08-16T20:45:25.889Z"
+    },
+    {
+      "id": "PKG-ECHELON-FOUNDRY",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "package.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-17T13:51:45.212Z",
+      "completedAt": "2026-08-17T13:51:45.212Z"
+    },
+    {
+      "id": "PKG-PUBLISH-READINESS",
+      "type": "maintenance",
+      "state": "blocked",
+      "semanticState": "blocked",
+      "evidence": [],
+      "updatedAt": "2026-08-17T14:07:28.113Z",
+      "blockReason": "npm login and echelon-foundry organization write access are unavailable on this machine; public license is still UNLICENSED"
+    },
+    {
+      "id": "BOOTSTRAP-ADOPTION-FIX",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "lib/bootstrap.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-17T14:51:39.589Z",
+      "completedAt": "2026-08-17T14:51:39.589Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-08-16T20:45:25.889Z",
+  "updatedAt": "2026-08-17T14:51:39.589Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

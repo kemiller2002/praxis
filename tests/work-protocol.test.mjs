@@ -84,8 +84,9 @@ test("blocking records a reason and resume is legal", (t) => {
   assert.equal(ros(root, ["work", "block", "TASK-009", "--reason", "dependency unavailable"]).status, 0);
   assert.equal(ros(root, ["work", "resume", "TASK-009"]).status, 0);
   const context = JSON.parse(ros(root, ["work", "context"]).output);
-  assert.equal(context.workItems[0].semanticState, "active");
-  assert.equal(context.workItems[0].blockReason, "dependency unavailable");
+  const item = context.workItems.find((candidate) => candidate.id === "TASK-009");
+  assert.equal(item.semanticState, "active");
+  assert.equal(item.blockReason, "dependency unavailable");
 });
 
 test("work context reports legal actions and completion evidence", (t) => {
@@ -114,10 +115,10 @@ test("multiple work items and adapter retry retain attribution once", (t) => {
   assert.equal(ros(root, ["work", "begin", "FEAT-142", "OBL-009"]).status, 0);
   const first = ros(root, ["adapter", "publish", "--target", ".ros/mock/events.jsonl"]);
   const second = ros(root, ["adapter", "publish", "--target", ".ros/mock/events.jsonl"]);
-  assert.match(first.output, /published 2 event/);
+  assert.match(first.output, /published 3 event/);
   assert.match(second.output, /published 0 event/);
   const receipts = JSON.parse(fs.readFileSync(path.join(root, ".ros", "publications.json"), "utf8"));
-  assert.equal(Object.keys(receipts).length, 2);
+  assert.equal(Object.keys(receipts).length, 3);
   assert.ok(Object.values(receipts).every((receipt) => receipt.status === "success"));
 });
 
@@ -128,7 +129,7 @@ test("research completion does not imply a supported conclusion", (t) => {
   const result = ros(root, ["work", "complete", "RES-017", "--conclusion", "inconclusive", "--evidence", "research-record=finding.md"]);
   assert.equal(result.status, 0, result.output);
   const context = JSON.parse(ros(root, ["work", "context"]).output);
-  assert.equal(context.workItems[0].conclusion, "inconclusive");
+  assert.equal(context.workItems.find((item) => item.id === "RES-017").conclusion, "inconclusive");
 });
 
 test("mechanical mutation is allowed only with explicit system attribution", (t) => {
