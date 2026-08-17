@@ -17,6 +17,8 @@
     ".gitattributes",
     ".gitignore",
     "docs/00-governance/",
+    "docs/work-protocol.md",
+    "docs/work-adapter-contract.md",
     "framework/",
     "schemas/",
     "templates/",
@@ -28,7 +30,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "node --test tests/npm-bootstrap.test.mjs && python3 -m unittest discover -s tests -v",
+    "test": "node --test tests/npm-bootstrap.test.mjs tests/work-protocol.test.mjs && python3 -m unittest discover -s tests -v",
     "pack:inspect": "npm pack --dry-run",
     "prepack": "npm test"
   },

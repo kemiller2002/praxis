@@ -31,6 +31,7 @@ test("greenfield initialization is self-contained and immediately valid", (t) =>
   assert.match(fs.readFileSync(path.join(target, "README.md"), "utf8"), /Communication Engineering/);
   assert.equal(fs.statSync(path.join(target, "ros")).mode & 0o777, 0o755);
   assert.ok(fs.existsSync(path.join(target, ".ros", "installation.json")));
+  assert.ok(fs.existsSync(path.join(target, ".github", "workflows", "ros-validation.yml")));
 
   const registry = spawnSync(path.join(target, "ros"), ["registry", "check"], {
     cwd: target,
@@ -45,6 +46,9 @@ test("greenfield initialization is self-contained and immediately valid", (t) =>
   });
   assert.equal(validation.status, 0, validation.stderr || validation.stdout);
   assert.match(validation.stdout, /validation passed/);
+  const workflow = fs.readFileSync(path.join(target, ".github", "workflows", "ros-validation.yml"), "utf8");
+  assert.match(workflow, /ROS_BASE_REF/);
+  assert.doesNotMatch(workflow, /npm test/);
   assert.deepEqual(verifyProject({ target }).findings, []);
 });
 

@@ -75,5 +75,54 @@
     "title": "Portable greenfield bootstrap package",
     "updated": "2026-08-04",
     "version": "1.1.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-08-16",
+    "id": "DF-ROS-2026-A006",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A006--provider-neutral-work-protocol.md",
+    "related_documents": [
+      "docs/work-protocol.md",
+      "schemas/work-protocol.schema.json"
+    ],
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "work-protocol",
+      "attribution",
+      "adapters"
+    ],
+    "title": "Provider-neutral repository work protocol",
+    "updated": "2026-08-16",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-08-16",
+    "id": "DF-ROS-2026-A007",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A007--external-work-adapter-contract.md",
+    "related_documents": [
+      "docs/work-adapter-contract.md",
+      "schemas/work-adapter-request.schema.json",
+      "schemas/work-adapter-result.schema.json"
+    ],
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "work-protocol",
+      "adapters",
+      "project-management"
+    ],
+    "title": "External work-system adapter contract",
+    "updated": "2026-08-16",
+    "version": "1.0.0"
   }
 ]

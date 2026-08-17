@@ -55,6 +55,8 @@ collisions require an explicit migration.
 ./ros validate
 ```
 
+Initialization also installs `.github/workflows/ros-validation.yml`. It runs the self-contained, pinned snapshot from the repository and supplies the pull-request or push base revision for committed-change attribution. No network call to the ROS source repository occurs during validation.
+
 To verify an installed snapshot against its recorded checksums, invoke the
 current GitHub package:
 
@@ -68,6 +70,18 @@ npx --yes --prefer-online \
 Project-owned files will legitimately change during use. Snapshot verification
 is a diagnostic, not a rule forbidding project evolution; accepted changes
 should be recorded through normal project governance.
+
+## Upgrade procedure
+
+ROS upgrades are explicit and collision-safe:
+
+1. Pin the desired release tag or commit and run `ros-bootstrap init --dry-run` against a clean temporary repository to inspect the new snapshot.
+2. Read the release migration report and compare its protocol version with `ros.json`.
+3. In the consuming repository, establish an attributed upgrade work item and preserve project-owned configuration.
+4. Replace only files recorded as managed in `.ros/installation.json`; resolve differing managed files as an explicit migration rather than using a force flag.
+5. Update `.ros/installation.json`, run `ros-bootstrap verify`, `./ros registry check`, and `./ros validate`, then review the diff before commit.
+
+Minor releases may add compatible commands, evidence types, or schema fields. Breaking transition, event, or configuration semantics require a new protocol major version and a repository migration. The initializer intentionally does not perform silent in-place upgrades.
 
 ## Publication gate
 

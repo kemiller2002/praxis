@@ -12,4 +12,25 @@
   "registries": "registries",
   "templates": "templates",
   "generated": "generated"
+  ,"repository": {
+    "id": "repository-operating-system",
+    "type": "tooling"
+  },
+  "workProtocol": {
+    "version": "1.0.0",
+    "enforceAttribution": true,
+    "semanticMapping": {
+      "ready": "ready",
+      "active": "active",
+      "blocked": "blocked",
+      "complete": "complete"
+    },
+    "completionEvidence": {
+      "default": ["implementation", "tests"],
+      "research": ["research-record"],
+      "mechanical": []
+    },
+    "meaningfulPaths": ["**"],
+    "ignoredPaths": [".git/**", ".ros/context/**", ".ros/events/**", "registries/**"]
+  }
 }

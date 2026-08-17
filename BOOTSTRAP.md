@@ -27,6 +27,8 @@ the entire repository without a reason.
 
 ## 4. Execute
 
+Before meaningful repository mutation, establish attributable intent with `./ros work begin WORK-ID` and inspect `./ros work context WORK-ID` for allowed actions and required evidence. Use `./ros status` for a compact repository check. Follow `docs/work-protocol.md`.
+
 - Identify the largest material uncertainty.
 - Form explicit hypotheses.
 - Seek supporting and contradicting evidence.

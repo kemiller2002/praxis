@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "1.0.0",
+  "repository": "repository-operating-system",
+  "workItems": [
+    {
+      "id": "TASK-20260816-PROMPTS",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tools/ros_cli.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-protocol.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-16T20:35:54.073Z",
+      "completedAt": "2026-08-16T20:35:54.073Z"
+    },
+    {
+      "id": "ROADMAP-PHASE-2",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tools/ros_cli.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-protocol.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-16T20:42:03.444Z",
+      "completedAt": "2026-08-16T20:42:03.444Z"
+    },
+    {
+      "id": "ROADMAP-PHASE-3",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "starter/greenfield/.github/workflows/ros-validation.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-16T20:43:08.909Z",
+      "completedAt": "2026-08-16T20:43:08.909Z"
+    },
+    {
+      "id": "ROADMAP-PHASE-4",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "docs/work-adapter-contract.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-protocol.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-16T20:45:25.889Z",
+      "completedAt": "2026-08-16T20:45:25.889Z"
+    }
+  ],
+  "protocolVersion": "1.0.0",
+  "actor": "codex",
+  "updatedAt": "2026-08-16T20:45:25.889Z",
+  "startedAt": "2026-08-16T20:34:24.696Z",
+  "baselineDirtyPaths": [
+    "prompts/modify-daemon.md"
+  ]
+}
