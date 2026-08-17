@@ -219,6 +219,11 @@ test("installed validator accepts preserved legacy REP identity and confidence",
 });
 
 test("npm tarball contains the executable and every scaffold source", (t) => {
+  assert.equal(
+    fs.statSync(path.join(repository, "bin", "ros-bootstrap.mjs")).mode & 0o111,
+    0o111,
+    "npm executable must have executable permission bits"
+  );
   const destination = temporaryDirectory(t);
   const packed = spawnSync(
     "npm",
