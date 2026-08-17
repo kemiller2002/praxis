@@ -67,6 +67,15 @@ npx --yes \
   --target .
 ```
 
+Install the newest `main` snapshot with:
+
+```bash
+npx --yes \
+  --package=@echelon-foundry/repository-operating-system@main \
+  ros-bootstrap init \
+  --target .
+```
+
 Until the npm release exists, install from the GitHub repository:
 
 ```bash

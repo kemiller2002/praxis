@@ -118,11 +118,29 @@
       ],
       "updatedAt": "2026-08-17T14:51:39.589Z",
       "completedAt": "2026-08-17T14:51:39.589Z"
+    },
+    {
+      "id": "CI-NPM-PUBLISH",
+      "type": "infrastructure",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/npm-publish-main.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-17T16:33:50.513Z",
+      "completedAt": "2026-08-17T16:33:50.513Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-08-17T14:51:39.589Z",
+  "updatedAt": "2026-08-17T16:33:50.513Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

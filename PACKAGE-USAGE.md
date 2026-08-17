@@ -16,6 +16,17 @@ npx --yes \
   --target .
 ```
 
+To install the newest continuously published snapshot from `main`:
+
+```bash
+npx --yes \
+  --package=@echelon-foundry/repository-operating-system@main \
+  ros-bootstrap init \
+  --target .
+```
+
+Every push to the canonical GitHub `main` branch publishes a unique prerelease version such as `1.1.0-main.42.1` and moves the npm `main` dist-tag. Stable releases and the `latest` tag remain deliberate release actions.
+
 ## Install the latest directly from GitHub
 
 Run inside the target repository:
@@ -110,3 +121,15 @@ authorized for the `@echelon-foundry` organization scope. The package remains `U
 until that decision is made.
 
 The package metadata fixes the publication registry to `https://registry.npmjs.org/`, declares public access, and links releases to the current GitHub source repository. Before the first publish, `npm whoami` must succeed and the authenticated user must have write permission in the `echelon-foundry` npm organization.
+
+## Configure trusted publishing
+
+The main-snapshot workflow uses npm trusted publishing and does not require a long-lived `NPM_TOKEN`. After the first manual package publication, configure the package on npmjs.com with this trusted publisher:
+
+- Provider: GitHub Actions
+- GitHub organization or user: `kemiller2002`
+- Repository: `Repository-Operating-System`
+- Workflow filename: `npm-publish-main.yml`
+- Allowed action: `npm publish`
+
+The workflow requires GitHub-hosted runners and `id-token: write`. It refuses to publish while `package.json` remains `UNLICENSED`. If the GitHub repository is transferred, update the package repository metadata, workflow repository guard, and npm trusted-publisher configuration together.
