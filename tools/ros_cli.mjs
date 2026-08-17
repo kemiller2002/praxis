@@ -101,8 +101,19 @@ function gitPaths(root, base = "HEAD") {
     });
     const comparison = process.env.ROS_BASE_REF;
     if (comparison) {
-      const committed = execFileSync("git", ["-C", root, "diff", "--name-only", `${comparison}...HEAD`], { encoding: "utf8" });
-      paths.push(...committed.split(/\r?\n/).filter(Boolean));
+      try {
+        execFileSync("git", ["-C", root, "cat-file", "-e", `${comparison}^{commit}`], {
+          stdio: ["ignore", "ignore", "ignore"]
+        });
+        const committed = execFileSync("git", ["-C", root, "diff", "--name-only", `${comparison}...HEAD`], {
+          encoding: "utf8",
+          stdio: ["ignore", "pipe", "ignore"]
+        });
+        paths.push(...committed.split(/\r?\n/).filter(Boolean));
+      } catch {
+        // A CI base ref can be absent in nested fixture repositories. Dirty paths
+        // remain authoritative there; only the unavailable committed range is skipped.
+      }
     }
     return [...new Set(paths)].sort();
   } catch {

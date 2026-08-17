@@ -65,7 +65,7 @@ test("valid attributed work completes with evidence", (t) => {
 test("unattributed meaningful change fails validation", (t) => {
   const root = fixture(t);
   fs.writeFileSync(path.join(root, "meaningful.js"), "changed\n");
-  const result = ros(root, ["validate"]);
+  const result = ros(root, ["validate"], {env: {...process.env, ROS_BASE_REF: "missing-fixture-commit"}});
   assert.equal(result.status, 1);
   assert.match(result.output, /no active or completed work-item attribution/);
 });
@@ -100,12 +100,13 @@ test("work context reports legal actions and completion evidence", (t) => {
 test("JSON validation and status provide deterministic repair guidance", (t) => {
   const root = fixture(t);
   fs.writeFileSync(path.join(root, "unattributed.js"), "change\n");
-  const validation = ros(root, ["validate", "--json"]);
+  const fixtureEnvironment = {env: {...process.env, ROS_BASE_REF: "missing-fixture-commit"}};
+  const validation = ros(root, ["validate", "--json"], fixtureEnvironment);
   assert.equal(validation.status, 1);
   const report = JSON.parse(validation.output);
   assert.equal(report.valid, false);
   assert.match(report.findings[0].repair, /work begin/);
-  const status = JSON.parse(ros(root, ["status"]).output);
+  const status = JSON.parse(ros(root, ["status"], fixtureEnvironment).output);
   assert.equal(status.validation, "failed");
   assert.ok(status.nextActions.some((action) => action.includes("work begin")));
 });

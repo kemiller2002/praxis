@@ -154,11 +154,29 @@
       ],
       "updatedAt": "2026-08-17T16:39:14.395Z",
       "completedAt": "2026-08-17T16:39:14.395Z"
+    },
+    {
+      "id": "CI-BASE-REF-FIX",
+      "type": "bug",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tools/ros_cli.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-protocol.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-17T17:30:57.772Z",
+      "completedAt": "2026-08-17T17:30:57.772Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-08-17T16:39:14.520Z",
+  "updatedAt": "2026-08-17T17:30:57.772Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
