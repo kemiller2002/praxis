@@ -5,11 +5,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kemiller2002/Repository-Operating-System.git"
+    "url": "git+https://github.com/kemiller2002/repository-operating-system.git"
   },
-  "homepage": "https://github.com/kemiller2002/Repository-Operating-System#readme",
+  "homepage": "https://github.com/kemiller2002/repository-operating-system#readme",
   "bugs": {
-    "url": "https://github.com/kemiller2002/Repository-Operating-System/issues"
+    "url": "https://github.com/kemiller2002/repository-operating-system/issues"
   },
   "type": "module",
   "bin": {

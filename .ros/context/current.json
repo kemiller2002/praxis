@@ -200,11 +200,29 @@
       ],
       "updatedAt": "2026-08-17T19:19:28.429Z",
       "completedAt": "2026-08-17T19:19:28.429Z"
+    },
+    {
+      "id": "OIDC-REPO-IDENTITY",
+      "type": "bug",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "package.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-17T19:22:26.900Z",
+      "completedAt": "2026-08-17T19:22:26.900Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-08-17T19:19:28.429Z",
+  "updatedAt": "2026-08-17T19:22:26.900Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

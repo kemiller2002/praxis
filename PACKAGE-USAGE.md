@@ -128,7 +128,7 @@ The main-snapshot workflow uses npm trusted publishing and does not require a lo
 
 - Provider: GitHub Actions
 - GitHub organization or user: `kemiller2002`
-- Repository: `Repository-Operating-System`
+- Repository: `repository-operating-system`
 - Workflow filename: `publish.yml`
 - Allowed action: `npm publish`
 
