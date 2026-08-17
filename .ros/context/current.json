@@ -95,11 +95,21 @@
     {
       "id": "PKG-PUBLISH-READINESS",
       "type": "maintenance",
-      "state": "blocked",
-      "semanticState": "blocked",
-      "evidence": [],
-      "updatedAt": "2026-08-17T16:39:14.520Z",
-      "blockReason": "npm login, echelon-foundry organization write access, initial manual publication, and npm trusted-publisher configuration are still required"
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/publish.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-17T19:13:40.527Z",
+      "blockReason": "npm login, echelon-foundry organization write access, initial manual publication, and npm trusted-publisher configuration are still required",
+      "completedAt": "2026-08-17T19:13:40.527Z"
     },
     {
       "id": "BOOTSTRAP-ADOPTION-FIX",
@@ -176,7 +186,7 @@
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-08-17T17:30:57.772Z",
+  "updatedAt": "2026-08-17T19:13:40.527Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

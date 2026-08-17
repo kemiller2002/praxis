@@ -287,3 +287,13 @@ test("npm tarball contains the executable and every scaffold source", (t) => {
   });
   assert.equal(validation.status, 0, validation.stderr || validation.stdout);
 });
+
+test("main publishing workflow uses an OIDC-compatible npm CLI", () => {
+  const workflow = fs.readFileSync(
+    path.join(repository, ".github", "workflows", "publish.yml"),
+    "utf8"
+  );
+  assert.match(workflow, /id-token: write/);
+  assert.match(workflow, /npm install --global npm@11/);
+  assert.match(workflow, /npm publish --access public --tag main/);
+});
