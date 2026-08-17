@@ -116,9 +116,9 @@ npm publish --dry-run --access public
 ```
 
 Inspect the tarball file list, confirm the version, create an immutable Git tag,
-select and record an explicit package license, and publish with the npm account
-authorized for the `@echelon-foundry` organization scope. The package remains `UNLICENSED`
-until that decision is made.
+and publish with an npm account authorized for the `@echelon-foundry`
+organization scope. The package is distributed under the MIT License; the
+tarball must contain `LICENSE`.
 
 The package metadata fixes the publication registry to `https://registry.npmjs.org/`, declares public access, and links releases to the current GitHub source repository. Before the first publish, `npm whoami` must succeed and the authenticated user must have write permission in the `echelon-foundry` npm organization.
 
@@ -129,7 +129,7 @@ The main-snapshot workflow uses npm trusted publishing and does not require a lo
 - Provider: GitHub Actions
 - GitHub organization or user: `kemiller2002`
 - Repository: `Repository-Operating-System`
-- Workflow filename: `npm-publish-main.yml`
+- Workflow filename: `publish.yml`
 - Allowed action: `npm publish`
 
-The workflow requires GitHub-hosted runners and `id-token: write`. It refuses to publish while `package.json` remains `UNLICENSED`. If the GitHub repository is transferred, update the package repository metadata, workflow repository guard, and npm trusted-publisher configuration together.
+The workflow requires GitHub-hosted runners and `id-token: write`. It verifies that an explicit public license is configured before publishing. If the GitHub repository is transferred, update the package repository metadata, workflow repository guard, and npm trusted-publisher configuration together.

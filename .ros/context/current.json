@@ -98,8 +98,8 @@
       "state": "blocked",
       "semanticState": "blocked",
       "evidence": [],
-      "updatedAt": "2026-08-17T14:07:28.113Z",
-      "blockReason": "npm login and echelon-foundry organization write access are unavailable on this machine; public license is still UNLICENSED"
+      "updatedAt": "2026-08-17T16:39:14.520Z",
+      "blockReason": "npm login, echelon-foundry organization write access, initial manual publication, and npm trusted-publisher configuration are still required"
     },
     {
       "id": "BOOTSTRAP-ADOPTION-FIX",
@@ -136,11 +136,29 @@
       ],
       "updatedAt": "2026-08-17T16:33:50.513Z",
       "completedAt": "2026-08-17T16:33:50.513Z"
+    },
+    {
+      "id": "PKG-MIT-LICENSE",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "LICENSE"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-17T16:39:14.395Z",
+      "completedAt": "2026-08-17T16:39:14.395Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-08-17T16:33:50.513Z",
+  "updatedAt": "2026-08-17T16:39:14.520Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

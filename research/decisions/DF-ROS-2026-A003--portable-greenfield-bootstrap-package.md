@@ -39,8 +39,8 @@ Package ROS as a zero-runtime-dependency Node CLI named
 - requires explicit migration for an existing managed file rather than
   providing a destructive force option.
 
-The organization-owned npm scope is selected. This record remains in review
-until the package license and first real consumer installation are accepted.
+The organization-owned npm scope and MIT License are selected. This record
+remains in review until the first public publication is validated.
 
 ## Alternatives considered
 
@@ -76,8 +76,8 @@ project-owned records. Future upgrades require an explicit migration design.
   initialized project.
 - Snapshot verification reports drift but does not forbid governed project
   changes.
-- npm publication remains blocked until the package name/ownership and license
-  are confirmed.
+- Public redistribution is permitted under the MIT License; npm publication
+  remains blocked only on npm organization authorization and trusted-publisher setup.
 
 ## Validation
 
@@ -93,7 +93,7 @@ release, versions are immutable and changes require a new semantic version.
 
 ## Follow-up
 
-1. Confirm npm publish permission for the `echelon-foundry` organization and select a license.
+1. Confirm npm publish permission for the `echelon-foundry` organization.
 2. Record the completed Communication Engineering consumer result and any
    migration requirements.
 3. Accept, revise, or reject this decision.

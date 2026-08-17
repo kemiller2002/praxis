@@ -3,6 +3,8 @@
 **ROS Version:** 1.0.0  
 **REP Specification:** 2.0
 
+Distributed under the [MIT License](LICENSE).
+
 This repository is a shared operating environment for autonomous research
 and engineering agents.
 

@@ -2,7 +2,7 @@
   "name": "@echelon-foundry/repository-operating-system",
   "version": "1.1.0",
   "description": "Self-contained Repository Operating System bootstrap for greenfield research and engineering projects.",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kemiller2002/Repository-Operating-System.git"
@@ -24,6 +24,7 @@
     ".editorconfig",
     ".gitattributes",
     ".gitignore",
+    "LICENSE",
     "docs/00-governance/",
     "docs/work-protocol.md",
     "docs/work-adapter-contract.md",
