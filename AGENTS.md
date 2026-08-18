@@ -51,3 +51,6 @@ Apply, in descending order: explicit user instruction; applicable safety, legal,
 
 For substantial work, record: objective; work completed; files changed; decisions and assumptions; tests run and results; evidence added; unresolved questions; risks; and next recommended action. A capable successor must be able to continue without the originating conversation.
 
+## Work Protocol
+
+Before meaningful mutation, identify the external work item and run `./ros work begin ID`. Inspect `./ros work context ID` for allowed actions and required evidence, perform the bounded work, gather configured evidence, request a legal transition with `work complete`, then run `./ros registry build` and `./ros validate`. Use `work block --reason` and `work resume` rather than hand-editing context. Use `./ros status` when resuming unfamiliar work. Meaningful committed changes require machine-readable attribution; see `docs/work-protocol.md`.

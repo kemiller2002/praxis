@@ -3,6 +3,8 @@
 **ROS Version:** 1.0.0  
 **REP Specification:** 2.0
 
+Distributed under the [MIT License](LICENSE).
+
 This repository is a shared operating environment for autonomous research
 and engineering agents.
 
@@ -34,10 +36,18 @@ generated views.
 python3 -m unittest discover -s tests -v
 ```
 
-The CLI uses only the Python standard library. Validation returns a nonzero
+The CLI uses only the Node.js standard library. Validation returns a nonzero
 exit code for malformed front matter, invalid or duplicate IDs, broken
 references, invalid lifecycle values, nonreciprocal supersession, filename/ID
 mismatches, and stale registries.
+
+## Work protocol
+
+ROS 1.0 provides provider-neutral work context, legal `begin`, `block`, `resume`, and `complete` transitions, configurable completion evidence, durable attribution events, and idempotent file-adapter publication. See [`docs/work-protocol.md`](docs/work-protocol.md).
+
+External project-management products integrate through the normalized [`work adapter contract`](docs/work-adapter-contract.md); they are not embedded in ROS.
+
+Roadmap execution state and repository boundaries are tracked in [`docs/ROADMAP-STATUS.md`](docs/ROADMAP-STATUS.md).
 
 New agents should read the lifecycle, supersession, identifier, confidence,
 artifact-tier, and taxonomy documents under `framework/` before creating
@@ -49,6 +59,26 @@ ROS can be loaded into a separate beginning project through its self-contained
 npm package. The package embeds the governance, schemas, templates, validator,
 empty registries, and greenfield pilot records; the initialized repository does
 not read this source checkout.
+
+After publication, initialize from npm with:
+
+```bash
+npx --yes \
+  --package=@echelon-foundry/repository-operating-system@<version> \
+  ros-bootstrap init \
+  --target .
+```
+
+Install the newest `main` snapshot with:
+
+```bash
+npx --yes \
+  --package=@echelon-foundry/repository-operating-system@main \
+  ros-bootstrap init \
+  --target .
+```
+
+Until the npm release exists, install from the GitHub repository:
 
 ```bash
 npx --yes --prefer-online \

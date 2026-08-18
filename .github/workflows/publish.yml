@@ -1,0 +1,63 @@
+name: Publish main snapshot to npm
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: npm-publish-main
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'kemiller2002/repository-operating-system'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Use an npm CLI with trusted-publishing support
+        run: |
+          npm install --global npm@11
+          npm --version
+
+      - name: Require an explicit public license
+        run: |
+          node -e "const p=require('./package.json'); if (!p.license || p.license === 'UNLICENSED') { console.error('Select and commit a public license before publishing.'); process.exit(1); }"
+
+      - name: Test and validate
+        run: |
+          npm test
+          ./ros registry check
+          ./ros validate
+        env:
+          ROS_BASE_REF: ${{ github.event.before }}
+
+      - name: Create unique main-snapshot version
+        id: version
+        run: |
+          BASE_VERSION=$(node -p "require('./package.json').version")
+          PUBLISH_VERSION="${BASE_VERSION}-main.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
+          npm version "$PUBLISH_VERSION" --no-git-tag-version
+          echo "version=$PUBLISH_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Publish main snapshot
+        run: npm publish --access public --tag main
+
+      - name: Report published version
+        run: echo "Published @echelon-foundry/repository-operating-system@${{ steps.version.outputs.version }} with dist-tag main"

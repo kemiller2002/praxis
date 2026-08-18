@@ -1,0 +1,230 @@
+{
+  "schemaVersion": "1.0.0",
+  "repository": "repository-operating-system",
+  "workItems": [
+    {
+      "id": "TASK-20260816-PROMPTS",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tools/ros_cli.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-protocol.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-16T20:35:54.073Z",
+      "completedAt": "2026-08-16T20:35:54.073Z"
+    },
+    {
+      "id": "ROADMAP-PHASE-2",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tools/ros_cli.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-protocol.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-16T20:42:03.444Z",
+      "completedAt": "2026-08-16T20:42:03.444Z"
+    },
+    {
+      "id": "ROADMAP-PHASE-3",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "starter/greenfield/.github/workflows/ros-validation.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-16T20:43:08.909Z",
+      "completedAt": "2026-08-16T20:43:08.909Z"
+    },
+    {
+      "id": "ROADMAP-PHASE-4",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "docs/work-adapter-contract.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-protocol.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-16T20:45:25.889Z",
+      "completedAt": "2026-08-16T20:45:25.889Z"
+    },
+    {
+      "id": "PKG-ECHELON-FOUNDRY",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "package.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-17T13:51:45.212Z",
+      "completedAt": "2026-08-17T13:51:45.212Z"
+    },
+    {
+      "id": "PKG-PUBLISH-READINESS",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/publish.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-17T19:13:40.527Z",
+      "blockReason": "npm login, echelon-foundry organization write access, initial manual publication, and npm trusted-publisher configuration are still required",
+      "completedAt": "2026-08-17T19:13:40.527Z"
+    },
+    {
+      "id": "BOOTSTRAP-ADOPTION-FIX",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "lib/bootstrap.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-17T14:51:39.589Z",
+      "completedAt": "2026-08-17T14:51:39.589Z"
+    },
+    {
+      "id": "CI-NPM-PUBLISH",
+      "type": "infrastructure",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/npm-publish-main.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-17T16:33:50.513Z",
+      "completedAt": "2026-08-17T16:33:50.513Z"
+    },
+    {
+      "id": "PKG-MIT-LICENSE",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "LICENSE"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-17T16:39:14.395Z",
+      "completedAt": "2026-08-17T16:39:14.395Z"
+    },
+    {
+      "id": "CI-BASE-REF-FIX",
+      "type": "bug",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tools/ros_cli.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-protocol.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-17T17:30:57.772Z",
+      "completedAt": "2026-08-17T17:30:57.772Z"
+    },
+    {
+      "id": "PKG-BIN-EXECUTABLE",
+      "type": "bug",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "bin/ros-bootstrap.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-17T19:19:28.429Z",
+      "completedAt": "2026-08-17T19:19:28.429Z"
+    },
+    {
+      "id": "OIDC-REPO-IDENTITY",
+      "type": "bug",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "package.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-17T19:22:26.900Z",
+      "completedAt": "2026-08-17T19:22:26.900Z"
+    }
+  ],
+  "protocolVersion": "1.0.0",
+  "actor": "codex",
+  "updatedAt": "2026-08-17T19:22:26.900Z",
+  "startedAt": "2026-08-16T20:34:24.696Z",
+  "baselineDirtyPaths": [
+    "prompts/modify-daemon.md"
+  ]
+}

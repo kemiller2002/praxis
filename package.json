@@ -1,8 +1,16 @@
 {
-  "name": "@kemiller2002/repository-operating-system",
-  "version": "1.1.0",
+  "name": "@echelon-foundry/repository-operating-system",
+  "version": "1.1.1",
   "description": "Self-contained Repository Operating System bootstrap for greenfield research and engineering projects.",
-  "license": "UNLICENSED",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kemiller2002/repository-operating-system.git"
+  },
+  "homepage": "https://github.com/kemiller2002/repository-operating-system#readme",
+  "bugs": {
+    "url": "https://github.com/kemiller2002/repository-operating-system/issues"
+  },
   "type": "module",
   "bin": {
     "ros-bootstrap": "./bin/ros-bootstrap.mjs"
@@ -16,7 +24,10 @@
     ".editorconfig",
     ".gitattributes",
     ".gitignore",
+    "LICENSE",
     "docs/00-governance/",
+    "docs/work-protocol.md",
+    "docs/work-adapter-contract.md",
     "framework/",
     "schemas/",
     "templates/",
@@ -28,12 +39,14 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "node --test tests/npm-bootstrap.test.mjs && python3 -m unittest discover -s tests -v",
+    "test": "node --test tests/npm-bootstrap.test.mjs tests/work-protocol.test.mjs && python3 -m unittest discover -s tests -v",
     "pack:inspect": "npm pack --dry-run",
+    "release:check": "npm test && npm pack --dry-run && ./ros registry check && ./ros validate",
     "prepack": "npm test"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "keywords": [
     "repository",

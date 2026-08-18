@@ -31,6 +31,11 @@ test("greenfield initialization is self-contained and immediately valid", (t) =>
   assert.match(fs.readFileSync(path.join(target, "README.md"), "utf8"), /Communication Engineering/);
   assert.equal(fs.statSync(path.join(target, "ros")).mode & 0o777, 0o755);
   assert.ok(fs.existsSync(path.join(target, ".ros", "installation.json")));
+  const workContext = JSON.parse(fs.readFileSync(path.join(target, ".ros", "context", "current.json"), "utf8"));
+  assert.equal(workContext.workItems[0].semanticState, "complete");
+  assert.match(workContext.workItems[0].id, /^ROS-INSTALL-/);
+  assert.ok(fs.existsSync(path.join(target, ".ros", "events", "events.jsonl")));
+  assert.ok(fs.existsSync(path.join(target, ".github", "workflows", "ros-validation.yml")));
 
   const registry = spawnSync(path.join(target, "ros"), ["registry", "check"], {
     cwd: target,
@@ -45,6 +50,9 @@ test("greenfield initialization is self-contained and immediately valid", (t) =>
   });
   assert.equal(validation.status, 0, validation.stderr || validation.stdout);
   assert.match(validation.stdout, /validation passed/);
+  const workflow = fs.readFileSync(path.join(target, ".github", "workflows", "ros-validation.yml"), "utf8");
+  assert.match(workflow, /ROS_BASE_REF/);
+  assert.doesNotMatch(workflow, /npm test/);
   assert.deepEqual(verifyProject({ target }).findings, []);
 });
 
@@ -110,6 +118,19 @@ test("common project-owned files are preserved and recorded as unmanaged", (t) =
   assert.equal(readme.managed, false);
   assert.equal(readme.disposition, "preserved-existing");
   assert.deepEqual(verifyProject({ target }).findings, []);
+});
+
+test("installation is automatically attributed in an existing git repository", (t) => {
+  const target = temporaryDirectory(t);
+  fs.writeFileSync(path.join(target, "README.md"), "existing\n", "utf8");
+  spawnSync("git", ["init", "-q"], { cwd: target });
+  spawnSync("git", ["config", "user.email", "test@example.invalid"], { cwd: target });
+  spawnSync("git", ["config", "user.name", "ROS Test"], { cwd: target });
+  spawnSync("git", ["add", "README.md"], { cwd: target });
+  spawnSync("git", ["commit", "-qm", "baseline"], { cwd: target });
+  initializeProject({ target, project: "Existing Repository" });
+  const validation = spawnSync(path.join(target, "ros"), ["validate"], { cwd: target, encoding: "utf8" });
+  assert.equal(validation.status, 0, validation.stderr || validation.stdout);
 });
 
 test("verification detects installed snapshot drift", (t) => {
@@ -183,7 +204,26 @@ supports: [HY-COMM-2026-A001]
   assert.equal(repaired.status, 0, repaired.stderr || repaired.stdout);
 });
 
+test("installed validator accepts preserved legacy REP identity and confidence", (t) => {
+  const target = temporaryDirectory(t);
+  initializeProject({ target, project: "Compatibility Pilot" });
+  fs.writeFileSync(
+    path.join(target, "research", "packages", "RP-2026-07-30-NHE-COMPARATIVE-REVIEW.md"),
+    `---\nidentifier: RP-2026-07-30-NHE-COMPARATIVE-REVIEW\ntitle: Legacy review\nstatus: draft\nconfidence: medium-high\n---\n`,
+    "utf8"
+  );
+  const build = spawnSync(path.join(target, "ros"), ["registry", "build"], { cwd: target, encoding: "utf8" });
+  assert.equal(build.status, 0, build.stderr || build.stdout);
+  const validation = spawnSync(path.join(target, "ros"), ["validate"], { cwd: target, encoding: "utf8" });
+  assert.equal(validation.status, 0, validation.stderr || validation.stdout);
+});
+
 test("npm tarball contains the executable and every scaffold source", (t) => {
+  assert.equal(
+    fs.statSync(path.join(repository, "bin", "ros-bootstrap.mjs")).mode & 0o111,
+    0o111,
+    "npm executable must have executable permission bits"
+  );
   const destination = temporaryDirectory(t);
   const packed = spawnSync(
     "npm",
@@ -251,4 +291,20 @@ test("npm tarball contains the executable and every scaffold source", (t) => {
     encoding: "utf8"
   });
   assert.equal(validation.status, 0, validation.stderr || validation.stdout);
+});
+
+test("main publishing workflow uses an OIDC-compatible npm CLI", () => {
+  const workflow = fs.readFileSync(
+    path.join(repository, ".github", "workflows", "publish.yml"),
+    "utf8"
+  );
+  assert.match(workflow, /id-token: write/);
+  assert.match(workflow, /npm install --global npm@11/);
+  assert.match(workflow, /npm publish --access public --tag main/);
+  assert.match(workflow, /kemiller2002\/repository-operating-system/);
+  const manifest = JSON.parse(fs.readFileSync(path.join(repository, "package.json"), "utf8"));
+  assert.equal(
+    manifest.repository.url,
+    "git+https://github.com/kemiller2002/repository-operating-system.git"
+  );
 });

@@ -14,10 +14,15 @@ This repository is a greenfield pilot running Repository Operating System
 ## Local operating commands
 
 ```bash
+./ros work begin TASK-001 --type task
+./ros work context TASK-001
+./ros status
 ./ros registry check
 ./ros registry build
 ./ros validate
 ```
+
+`work context` reports legal actions and completion evidence. Validation errors include repair instructions; use `./ros validate --json` for machine-readable output. Complete work with explicit evidence paths as described in `docs/work-protocol.md`.
 
 The installed snapshot is self-contained. It does not read from the source ROS
 repository. `.ros/installation.json` records the package version and checksums

@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 ID_RE = re.compile(
-    r"^(RP|JR|EV|HY|TH|EX|DF|CN|GL|MS)-[A-Z0-9]+(?:-[A-Z0-9]+)*-[0-9]{4}-(?:[0-9]{4}|[A-F0-9]{4})$"
+    r"^(?:(RP|JR|EV|HY|TH|EX|DF|CN|GL|MS)-[A-Z0-9]+(?:-[A-Z0-9]+)*-[0-9]{4}-(?:[0-9]{4}|[A-F0-9]{4})|RP-[0-9]{4}-[0-9]{2}-[0-9]{2}-[A-Z0-9]+(?:-[A-Z0-9]+)*)$"
 )
 REFERENCE_FIELDS = {
     "contradicts",
@@ -42,7 +42,7 @@ ALLOWED_STATUS = {
     "RP": {"draft", "review", "accepted", "canonical", "deprecated", "archived", "superseded", "withdrawn"},
     "TH": {"candidate", "supported", "established", "challenged", "superseded", "rejected"},
 }
-CONFIDENCE = {"very-low", "low", "medium", "high", "very-high"}
+CONFIDENCE = {"very-low", "low", "medium", "medium-high", "high", "very-high"}
 
 KIND_CONFIG = {
     "decisions": ("research/decisions", "registries/decisions.json", "DF"),
@@ -203,7 +203,11 @@ def validate(root: Path, check_registries: bool = True) -> list[Finding]:
         by_id.setdefault(identifier, []).append(artifact)
         if not artifact.metadata.get("title"):
             findings.append(Finding(artifact.relative_path, "title", "required field is missing"))
-        if not artifact.path.name.startswith(identifier + "--"):
+        legacy_rep_filename = (
+            re.match(r"^RP-[0-9]{4}-[0-9]{2}-[0-9]{2}-", identifier)
+            and artifact.path.name == identifier + ".md"
+        )
+        if not artifact.path.name.startswith(identifier + "--") and not legacy_rep_filename:
             findings.append(
                 Finding(artifact.relative_path, "id", f"filename must start with '{identifier}--'")
             )
