@@ -124,5 +124,31 @@
     "title": "External work-system adapter contract",
     "updated": "2026-08-16",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "medium-high",
+    "created": "2026-08-19",
+    "id": "DF-ROS-2026-A008",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A008--repository-local-work-backlog.md",
+    "related_documents": [
+      "docs/work-protocol.md",
+      "docs/ROADMAP-STATUS.md",
+      "research/decisions/DF-ROS-2026-A006--provider-neutral-work-protocol.md",
+      "research/decisions/DF-ROS-2026-A007--external-work-adapter-contract.md"
+    ],
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "work-protocol",
+      "backlog",
+      "project-management"
+    ],
+    "title": "Repository-local work backlog",
+    "updated": "2026-08-19",
+    "version": "1.0.0"
   }
 ]

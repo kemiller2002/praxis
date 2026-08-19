@@ -27,6 +27,39 @@ Completion validates configured evidence types and paths before changing state. 
 
 Deterministic housekeeping may use the configured `mechanical` work type. It still requires an explicit work-item identity and event, but the default profile does not require implementation/test evidence for that type.
 
+## Local backlog
+
+Beginning a work item with `work begin` requires an ID to already exist. The
+local backlog is a cheap, repository-owned staging area for work that has not
+been assigned one yet -- captured ideas, discovered obligations, follow-ups --
+with its own small lifecycle: `captured -> ready -> {blocked, abandoned}`.
+
+```bash
+./ros add "Investigate state payload growth" --tag wasm,state --priority high
+./ros work                       # list the unified backlog + in-flight queue
+./ros work ready                 # query: items with no blocker
+./ros work ready WI-0001         # mutate: captured/blocked -> ready
+./ros work show WI-0001
+./ros work start WI-0001         # requires ready; delegates to `begin`
+./ros work block WI-0001 --reason "waiting on benchmark"
+./ros work done WI-0001 --evidence implementation=... --evidence tests=...
+./ros work abandon WI-0002 --reason "no longer relevant"
+```
+
+Canonical storage is `.ros/work/queue.json`; `.ros/work/queue.md` is a
+generated human-readable projection, and `.ros/work/items/<ID>.md` is an
+optional free-form detail file `work show` will include when present.
+
+The backlog is **not** a second work-item authority. `work start` requires
+`ready`, then delegates directly to the existing `begin` transition above --
+from that point the in-flight record in `.ros/context/current.json` is
+authoritative, and `work list`/`work show` always prefer its live state over
+the backlog's own status field. `work block`/`work ready` on an ID already
+being executed dispatch to the existing in-flight transitions, unchanged.
+See [`DF-ROS-2026-A008`](../research/decisions/DF-ROS-2026-A008--repository-local-work-backlog.md)
+for why this stays a staging layer rather than repository-owned work-item
+authority (that boundary belongs to the external system; see below).
+
 ## Adapter contract
 
 The stable executable interface is `getWorkItem`, `transitionWorkItem`, and `publishRepositoryEvent`. Protocol 1.0 implements a file-backed adapter for conformance tests:

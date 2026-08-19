@@ -31,6 +31,6 @@
       "mechanical": []
     },
     "meaningfulPaths": ["**"],
-    "ignoredPaths": [".git/**", ".ros/context/**", ".ros/events/**", "registries/**"]
+    "ignoredPaths": [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", "registries/**"]
   }
 }

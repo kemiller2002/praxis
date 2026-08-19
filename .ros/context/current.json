@@ -218,11 +218,38 @@
       ],
       "updatedAt": "2026-08-17T19:22:26.900Z",
       "completedAt": "2026-08-17T19:22:26.900Z"
+    },
+    {
+      "id": "DOC-PROJECT-ADMIN-README",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-08-18T00:33:25.670Z",
+      "completedAt": "2026-08-18T00:33:25.670Z"
+    },
+    {
+      "id": "WORKQUEUE-BACKLOG-LAYER",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tools/ros_cli.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-protocol.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-19T13:25:23.279Z",
+      "completedAt": "2026-08-19T13:25:23.279Z"
     }
   ],
   "protocolVersion": "1.0.0",
-  "actor": "codex",
-  "updatedAt": "2026-08-17T19:22:26.900Z",
+  "actor": "claude",
+  "updatedAt": "2026-08-19T13:25:23.279Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

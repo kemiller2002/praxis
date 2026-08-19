@@ -19,3 +19,7 @@ Phase 3 exits when a clean repository can be initialized, receives the default w
 ## Next ROS-owned phase
 
 ROS-owned roadmap work now stops at the stabilized Phase 4 boundary. Phase 5 creates the project-management datastore in its separate repository. Future ROS work should respond to concrete adapter-consumer feedback, add production transport adapters only when authorized, and keep daemon/model routing out of this repository.
+
+## Repository-local backlog (not a Phase 5 exception)
+
+`ros add` / `ros work list|ready|show|start|block|abandon` (see `docs/work-protocol.md`) add repository-local capture and triage for work that has no externally-assigned ID yet. This does not reopen Phase 5: the backlog owns no in-flight execution state, has no portfolio/roadmap/cross-repository concept, and `work start` immediately hands authority to the existing external-authoritative protocol above. See [`DF-ROS-2026-A008`](../research/decisions/DF-ROS-2026-A008--repository-local-work-backlog.md).

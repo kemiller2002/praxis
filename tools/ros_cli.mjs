@@ -64,6 +64,22 @@ const TRANSITIONS = {
   complete: new Set()
 };
 
+const WORK_ID_RE = /^[A-Z][A-Z0-9_-]*-[A-Z0-9][A-Z0-9_-]*$/;
+const PRIORITIES = new Set(["high", "medium", "low"]);
+
+// The local backlog is a repository-owned capture/triage layer, not a second
+// work-item authority. Once a backlog item starts (`ros work start`, which
+// delegates to the existing `begin` transition), its live state in
+// `.ros/context/current.json` always wins over the backlog's own `status` --
+// see effectiveStatus(). This keeps exactly one authoritative record per ID.
+const BACKLOG_STATUS_VALUES = new Set(["captured", "ready", "blocked", "abandoned"]);
+const BACKLOG_TRANSITIONS = {
+  captured: new Set(["ready", "abandon"]),
+  ready: new Set(["block", "start", "abandon"]),
+  blocked: new Set(["ready", "abandon"]),
+  abandoned: new Set()
+};
+
 function readJson(file, fallback = null) {
   return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : fallback;
 }
@@ -83,7 +99,7 @@ function workConfig(root) {
     },
     evidence: config.workProtocol?.completionEvidence ?? { default: ["implementation", "tests"] },
     meaningful: config.workProtocol?.meaningfulPaths ?? ["**"],
-    ignored: config.workProtocol?.ignoredPaths ?? [".git/**", ".ros/context/**", ".ros/events/**"],
+    ignored: config.workProtocol?.ignoredPaths ?? [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**"],
     enforce: config.workProtocol?.enforceAttribution === true
   };
   for (const [local, semantic] of Object.entries(result.stateMapping)) {
@@ -133,6 +149,9 @@ function meaningfulPaths(root, paths) {
 
 function contextPath(root) { return path.join(root, ".ros", "context", "current.json"); }
 function eventsPath(root) { return path.join(root, ".ros", "events", "events.jsonl"); }
+function queuePath(root) { return path.join(root, ".ros", "work", "queue.json"); }
+function queueMarkdownPath(root) { return path.join(root, ".ros", "work", "queue.md"); }
+function detailPath(root, id) { return path.join(root, ".ros", "work", "items", `${id}.md`); }
 
 function loadContext(root) {
   return readJson(contextPath(root), { schemaVersion: "1.0.0", repository: workConfig(root).repository, workItems: [] });
@@ -158,6 +177,137 @@ function contextView(root, requestedId) {
       requiredEvidenceForCompletion: config.evidence[item.type] ?? config.evidence.default ?? []
     }))
   };
+}
+
+function loadQueue(root) {
+  return readJson(queuePath(root), { schemaVersion: "1.0.0", repository: workConfig(root).repository, nextSeq: 1, items: [] });
+}
+
+function nextQueueId(queue) {
+  let candidate;
+  do {
+    candidate = `WI-${String(queue.nextSeq).padStart(4, "0")}`;
+    queue.nextSeq += 1;
+  } while (queue.items.some((item) => item.id === candidate));
+  return candidate;
+}
+
+function effectiveStatus(queueItem, contextItem) {
+  if (contextItem && contextItem.semanticState !== "ready") return contextItem.semanticState;
+  if (queueItem) return queueItem.status;
+  if (contextItem) return contextItem.semanticState;
+  return undefined;
+}
+
+function mergedRows(queue, contextItems) {
+  const contextById = new Map(contextItems.map((item) => [item.id, item]));
+  const ids = new Set([...queue.items.map((item) => item.id), ...contextItems.map((item) => item.id)]);
+  return [...ids].sort().map((id) => {
+    const queueItem = queue.items.find((item) => item.id === id);
+    const contextItem = contextById.get(id);
+    return {
+      id,
+      title: queueItem?.title ?? id,
+      tags: queueItem?.tags ?? [],
+      priority: queueItem?.priority ?? null,
+      status: effectiveStatus(queueItem, contextItem),
+      blockedReason: contextItem?.semanticState === "blocked" ? contextItem.blockReason : queueItem?.blockedReason,
+      backlogActions: queueItem && !contextItem ? [...(BACKLOG_TRANSITIONS[queueItem.status] ?? [])].sort() : [],
+      liveWorkItem: contextItem
+        ? { state: contextItem.state, semanticState: contextItem.semanticState, allowedActions: allowedActions(contextItem) }
+        : null
+    };
+  });
+}
+
+function renderQueueMarkdown(rows) {
+  const header = "# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n";
+  const body = rows.map((row) => `| ${row.id} | ${row.title} | ${row.status} | ${row.tags.join(", ")} | ${row.priority ?? ""} |`).join("\n");
+  return `${header}${body}${body ? "\n" : ""}`;
+}
+
+function saveQueue(root, queue) {
+  writeJson(queuePath(root), queue);
+  const context = loadContext(root);
+  fs.writeFileSync(queueMarkdownPath(root), renderQueueMarkdown(mergedRows(queue, context.workItems)), "utf8");
+}
+
+function mergedWorkView(root, { tags, status } = {}) {
+  const queue = loadQueue(root);
+  const context = loadContext(root);
+  let rows = mergedRows(queue, context.workItems);
+  if (tags?.length) rows = rows.filter((row) => tags.every((tag) => row.tags.includes(tag)));
+  if (status) rows = rows.filter((row) => row.status === status);
+  return rows;
+}
+
+function captureWork(root, title, options = {}) {
+  if (!title || !title.trim()) throw new Error("add requires a non-empty title");
+  if (options.priority && !PRIORITIES.has(options.priority)) throw new Error(`invalid priority '${options.priority}'; use high, medium, or low`);
+  const queue = loadQueue(root);
+  const context = loadContext(root);
+  const now = new Date().toISOString();
+  let id = options.id;
+  if (id) {
+    if (!WORK_ID_RE.test(id)) throw new Error(`invalid work-item ID '${id}'`);
+    if (queue.items.some((item) => item.id === id)) throw new Error(`work item '${id}' already exists`);
+    if (context.workItems.some((item) => item.id === id)) throw new Error(`work item '${id}' already exists in repository context`);
+  } else {
+    id = nextQueueId(queue);
+  }
+  const item = {
+    id,
+    title: title.trim(),
+    tags: options.tags ?? [],
+    priority: options.priority ?? "medium",
+    status: "captured",
+    createdAt: now,
+    updatedAt: now,
+    createdBy: options.actor ?? process.env.ROS_ACTOR ?? "unknown",
+    source: options.source ?? "manual",
+    sourceReference: options.sourceReference ?? null
+  };
+  queue.items.push(item);
+  saveQueue(root, queue);
+  return item;
+}
+
+function backlogTransition(root, action, id, options = {}) {
+  const queue = loadQueue(root);
+  const item = queue.items.find((entry) => entry.id === id);
+  if (!item) throw new Error(`'${id}' is not a captured local work item`);
+  const legal = BACKLOG_TRANSITIONS[item.status] ?? new Set();
+  if (!legal.has(action)) throw new Error(`cannot ${action} backlog item '${id}' from '${item.status}'`);
+  const now = new Date().toISOString();
+  if (action === "ready") { item.status = "ready"; delete item.blockedReason; }
+  if (action === "block") {
+    if (!options.reason) throw new Error("block requires --reason");
+    item.status = "blocked";
+    item.blockedReason = options.reason;
+  }
+  if (action === "abandon") {
+    item.status = "abandoned";
+    if (options.reason) item.abandonedReason = options.reason;
+  }
+  item.updatedAt = now;
+  saveQueue(root, queue);
+  return item;
+}
+
+function startWork(root, ids, options = {}) {
+  if (!ids.length) throw new Error("start requires at least one work-item ID");
+  const queue = loadQueue(root);
+  for (const id of ids) {
+    const item = queue.items.find((entry) => entry.id === id);
+    if (item && item.status !== "ready") {
+      throw new Error(
+        item.status === "abandoned"
+          ? `cannot start backlog item '${id}': it was abandoned`
+          : `cannot start backlog item '${id}' from '${item.status}'; mark it ready first`
+      );
+    }
+  }
+  return transition(root, "begin", ids, options);
 }
 
 function appendEvent(root, event) {
@@ -244,7 +394,7 @@ function transition(root, action, ids, options = {}) {
   const byId = new Map(context.workItems.map((item) => [item.id, item]));
   const events = [];
   for (const id of ids) {
-    if (!/^[A-Z][A-Z0-9_-]*-[A-Z0-9][A-Z0-9_-]*$/.test(id)) throw new Error(`invalid work-item ID '${id}'`);
+    if (!WORK_ID_RE.test(id)) throw new Error(`invalid work-item ID '${id}'`);
     let item = byId.get(id);
     if (!item) {
       if (action !== "begin") throw new Error(`work item '${id}' is not in repository context`);
@@ -306,6 +456,21 @@ function workFindings(root) {
   const attributed = new Set(events.flatMap((event) => event.paths ?? []));
   const active = context.workItems.some((item) => item.semanticState === "active" || item.semanticState === "blocked");
   return changed.filter((item) => !attributed.has(item) && !active).map((item) => ({ path: item, field: "work_items", message: "meaningful change has no active or completed work-item attribution" }));
+}
+
+function queueFindings(root) {
+  const queue = loadQueue(root);
+  const findings = [];
+  const seen = new Set();
+  const relative = ".ros/work/queue.json";
+  for (const item of queue.items) {
+    if (seen.has(item.id)) findings.push({ path: relative, field: "id", message: `duplicate backlog id '${item.id}'` });
+    seen.add(item.id);
+    if (!WORK_ID_RE.test(item.id)) findings.push({ path: relative, field: "id", message: `invalid backlog id '${item.id}'` });
+    if (!BACKLOG_STATUS_VALUES.has(item.status)) findings.push({ path: relative, field: "status", message: `invalid status '${item.status}' for '${item.id}'` });
+    if (item.priority && !PRIORITIES.has(item.priority)) findings.push({ path: relative, field: "priority", message: `invalid priority '${item.priority}' for '${item.id}'` });
+  }
+  return findings;
 }
 
 function scalar(raw) {
@@ -522,6 +687,7 @@ export function validate(root, { checkRegistries = true } = {}) {
   }
   if (checkRegistries) findings.push(...registryFindings(root, loaded.artifacts));
   findings.push(...workFindings(root));
+  findings.push(...queueFindings(root));
   return findings.sort((a, b) =>
     [a.path, a.field, a.message].join("\0").localeCompare([b.path, b.field, b.message].join("\0"))
   );
@@ -600,15 +766,97 @@ function evidenceOptions(args) {
   return entries;
 }
 
+function idArgs(args) {
+  return args.filter((arg, index, all) => !arg.startsWith("-") && (index === 0 || !all[index - 1].startsWith("-")));
+}
+
+function tagOptions(args) {
+  const tags = [];
+  for (let i = 0; i < args.length; i += 1) {
+    if (args[i] === "--tag" || args[i] === "-t") {
+      const value = args[i + 1];
+      if (!value || value.startsWith("--")) throw new Error(`${args[i]} requires a value`);
+      tags.push(...value.split(",").map((tag) => tag.trim()).filter(Boolean));
+      i += 1;
+    }
+  }
+  return [...new Set(tags)];
+}
+
+const ACTION_ALIASES = { done: "complete" };
+
 export function main(argv) {
   try {
     const { root, args } = parseCli(argv);
+    if (args[0] === "add") {
+      const title = args[1];
+      if (!title || title.startsWith("--")) throw new Error('add requires a title, e.g. ros add "Title"');
+      const item = captureWork(root, title, {
+        tags: tagOptions(args.slice(2)),
+        priority: option(args, "--priority"),
+        id: option(args, "--id"),
+        actor: option(args, "--actor"),
+        source: option(args, "--source"),
+        sourceReference: option(args, "--source-reference")
+      });
+      console.log(JSON.stringify(item, null, 2)); return 0;
+    }
     if (args[0] === "work" && args[1] === "context") {
       console.log(JSON.stringify(contextView(root, args[2]), null, 2)); return 0;
     }
-    if (args[0] === "work" && ["begin", "block", "resume", "complete"].includes(args[1])) {
-      const action = args[1];
-      const ids = args.slice(2).filter((arg, index, all) => !arg.startsWith("--") && (index === 0 || !all[index - 1].startsWith("--")));
+    if (args[0] === "work" && (!args[1] || args[1] === "list")) {
+      const rest = args.slice(2);
+      const tags = tagOptions(rest);
+      const status = option(rest, "--status");
+      console.log(JSON.stringify(mergedWorkView(root, { tags: tags.length ? tags : undefined, status }), null, 2)); return 0;
+    }
+    if (args[0] === "work" && args[1] === "ready") {
+      const rest = args.slice(2);
+      const ids = idArgs(rest);
+      if (!ids.length) {
+        const tags = tagOptions(rest);
+        console.log(JSON.stringify(mergedWorkView(root, { tags: tags.length ? tags : undefined, status: "ready" }), null, 2)); return 0;
+      }
+      const results = ids.map((id) => backlogTransition(root, "ready", id));
+      console.log(JSON.stringify(results, null, 2)); return 0;
+    }
+    if (args[0] === "work" && args[1] === "show") {
+      const id = args[2];
+      if (!id) throw new Error("work show requires an ID");
+      const row = mergedWorkView(root, {}).find((candidate) => candidate.id === id);
+      if (!row) throw new Error(`work item '${id}' was not found`);
+      const detail = fs.existsSync(detailPath(root, id)) ? fs.readFileSync(detailPath(root, id), "utf8") : null;
+      console.log(JSON.stringify({ ...row, detail }, null, 2)); return 0;
+    }
+    if (args[0] === "work" && args[1] === "start") {
+      const ids = idArgs(args.slice(2));
+      const result = startWork(root, ids, { type: option(args, "--type"), actor: option(args, "--actor") });
+      console.log(JSON.stringify({ workItems: result.context.workItems, events: result.events.map((event) => event.eventId) }, null, 2)); return 0;
+    }
+    if (args[0] === "work" && args[1] === "abandon") {
+      const ids = idArgs(args.slice(2));
+      const reason = option(args, "--reason");
+      const results = ids.map((id) => backlogTransition(root, "abandon", id, { reason }));
+      console.log(JSON.stringify(results, null, 2)); return 0;
+    }
+    if (args[0] === "work" && args[1] === "block") {
+      const ids = idArgs(args.slice(2));
+      if (!ids.length) throw new Error("block requires at least one work-item ID");
+      const reason = option(args, "--reason");
+      const queue = loadQueue(root);
+      const context = loadContext(root);
+      const backlogIds = ids.filter((id) => queue.items.some((item) => item.id === id) && !context.workItems.some((item) => item.id === id));
+      const contextIds = ids.filter((id) => !backlogIds.includes(id));
+      const results = backlogIds.map((id) => backlogTransition(root, "block", id, { reason }));
+      if (contextIds.length) {
+        const transitioned = transition(root, "block", contextIds, { reason });
+        results.push(...transitioned.context.workItems.filter((item) => contextIds.includes(item.id)));
+      }
+      console.log(JSON.stringify(results, null, 2)); return 0;
+    }
+    if (args[0] === "work" && ["begin", "resume", "complete", "done"].includes(args[1])) {
+      const action = ACTION_ALIASES[args[1]] ?? args[1];
+      const ids = idArgs(args.slice(2));
       const result = transition(root, action, ids, {
         type: option(args, "--type"), actor: option(args, "--actor"), reason: option(args, "--reason"),
         localState: option(args, "--local-state"), conclusion: option(args, "--conclusion"), evidence: evidenceOptions(args)
@@ -680,7 +928,7 @@ export function main(argv) {
       console.log("registries are current");
       return 0;
     }
-    console.error("Usage: ros [--root PATH] validate [--json] | status | registry build [--dry-run] | registry check | work begin|block|resume|complete|context [ID] | adapter call --store FILE --request FILE | adapter publish --target FILE");
+    console.error("Usage: ros [--root PATH] validate [--json] | status | registry build [--dry-run] | registry check | add TITLE [--tag T] [--priority P] | work [list|ready|show|start|block|abandon|begin|resume|complete|done|context] [ID...] | adapter call --store FILE --request FILE | adapter publish --target FILE");
     return 2;
   } catch (error) {
     console.error(`ERROR ${error.message}`);

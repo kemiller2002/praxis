@@ -193,3 +193,108 @@ test("adapter event publication deduplicates semantic event IDs", (t) => {
   const store = JSON.parse(fs.readFileSync(path.join(root, "adapter-store.json"), "utf8"));
   assert.equal(store.events.length, 1);
 });
+
+test("add captures a backlog item with an auto-generated ID and tags", (t) => {
+  const root = fixture(t);
+  const first = ros(root, ["add", "Investigate WASM state payload growth", "--tag", "wasm,state", "--priority", "high"]);
+  assert.equal(first.status, 0, first.output);
+  const item = JSON.parse(first.output);
+  assert.equal(item.id, "WI-0001");
+  assert.deepEqual(item.tags, ["wasm", "state"]);
+  assert.equal(item.priority, "high");
+  assert.equal(item.status, "captured");
+  const second = ros(root, ["add", "Rename WasmStateStore", "-t", "cleanup,wasm"]);
+  assert.equal(JSON.parse(second.output).id, "WI-0002");
+  assert.equal(JSON.parse(second.output).priority, "medium");
+});
+
+test("add rejects an explicit ID that collides with an existing backlog or context item", (t) => {
+  const root = fixture(t);
+  assert.equal(ros(root, ["add", "First", "--id", "WI-CUSTOM"]).status, 0);
+  const duplicate = ros(root, ["add", "Second", "--id", "WI-CUSTOM"]);
+  assert.equal(duplicate.status, 1);
+  assert.match(duplicate.output, /already exists/);
+  ros(root, ["work", "begin", "FEAT-500"]);
+  const contextCollision = ros(root, ["add", "Third", "--id", "FEAT-500"]);
+  assert.equal(contextCollision.status, 1);
+  assert.match(contextCollision.output, /already exists in repository context/);
+});
+
+test("work list and work ready filter the unified backlog by tag and status", (t) => {
+  const root = fixture(t);
+  ros(root, ["add", "A", "--tag", "wasm"]);
+  ros(root, ["add", "B", "--tag", "cleanup"]);
+  ros(root, ["work", "ready", "WI-0001"]);
+  const readyOnly = JSON.parse(ros(root, ["work", "ready"]).output);
+  assert.deepEqual(readyOnly.map((row) => row.id), ["WI-0001"]);
+  const byTag = JSON.parse(ros(root, ["work", "list", "--tag", "cleanup"]).output);
+  assert.deepEqual(byTag.map((row) => row.id), ["WI-0002"]);
+  const bare = JSON.parse(ros(root, ["work"]).output);
+  assert.deepEqual(bare.map((row) => row.id).filter((id) => id.startsWith("WI-")), ["WI-0001", "WI-0002"]);
+});
+
+test("captured item must become ready before it can start, and abandonment is terminal", (t) => {
+  const root = fixture(t);
+  ros(root, ["add", "Idea", "--id", "WI-IDEA"]);
+  const tooSoon = ros(root, ["work", "start", "WI-IDEA"]);
+  assert.equal(tooSoon.status, 1);
+  assert.match(tooSoon.output, /mark it ready first/);
+  ros(root, ["work", "ready", "WI-IDEA"]);
+  assert.equal(ros(root, ["work", "abandon", "WI-IDEA", "--reason", "no longer relevant"]).status, 0);
+  const afterAbandon = ros(root, ["work", "start", "WI-IDEA"]);
+  assert.equal(afterAbandon.status, 1);
+  assert.match(afterAbandon.output, /abandoned/);
+});
+
+test("start promotes a ready backlog item and live context state wins over backlog status", (t) => {
+  const root = fixture(t);
+  ros(root, ["add", "Ship it", "--id", "WI-SHIP", "--tag", "wasm"]);
+  ros(root, ["work", "ready", "WI-SHIP"]);
+  assert.equal(ros(root, ["work", "start", "WI-SHIP", "--type", "feature"]).status, 0);
+  const active = JSON.parse(ros(root, ["work", "show", "WI-SHIP"]).output);
+  assert.equal(active.status, "active");
+  assert.equal(active.liveWorkItem.semanticState, "active");
+  fs.mkdirSync(path.join(root, "src")); fs.writeFileSync(path.join(root, "src", "ship.js"), "export const shipped = true;\n");
+  fs.mkdirSync(path.join(root, "test")); fs.writeFileSync(path.join(root, "test", "ship.test.js"), "// passed by fixture\n");
+  assert.equal(ros(root, ["work", "done", "WI-SHIP", "--evidence", "implementation=src/ship.js", "--evidence", "tests=test/ship.test.js"]).status, 0);
+  const done = JSON.parse(ros(root, ["work", "show", "WI-SHIP"]).output);
+  assert.equal(done.status, "complete");
+});
+
+test("block dispatches per-ID to the backlog or the in-flight work item in a single call", (t) => {
+  const root = fixture(t);
+  ros(root, ["add", "Backlog item", "--id", "WI-BACKLOG"]);
+  ros(root, ["work", "ready", "WI-BACKLOG"]);
+  ros(root, ["work", "begin", "FEAT-700"]);
+  const blocked = ros(root, ["work", "block", "WI-BACKLOG", "FEAT-700", "--reason", "waiting on benchmark"]);
+  assert.equal(blocked.status, 0, blocked.output);
+  const rows = JSON.parse(ros(root, ["work", "list"]).output);
+  assert.equal(rows.find((row) => row.id === "WI-BACKLOG").status, "blocked");
+  assert.equal(rows.find((row) => row.id === "FEAT-700").status, "blocked");
+  assert.equal(ros(root, ["work", "ready", "WI-BACKLOG"]).status, 0);
+  assert.equal(ros(root, ["work", "resume", "FEAT-700"]).status, 0);
+});
+
+test("show surfaces a detail file's content when one exists", (t) => {
+  const root = fixture(t);
+  ros(root, ["add", "Needs detail", "--id", "WI-DETAIL"]);
+  const detailDir = path.join(root, ".ros", "work", "items");
+  fs.mkdirSync(detailDir, {recursive: true});
+  fs.writeFileSync(path.join(detailDir, "WI-DETAIL.md"), "# WI-DETAIL\n\n## Objective\nRename without changing behavior.\n");
+  const shown = JSON.parse(ros(root, ["work", "show", "WI-DETAIL"]).output);
+  assert.match(shown.detail, /Objective/);
+});
+
+test("the human-readable queue projection is regenerated on every backlog change", (t) => {
+  const root = fixture(t);
+  ros(root, ["add", "Readable item", "--tag", "docs"]);
+  const markdown = fs.readFileSync(path.join(root, ".ros", "work", "queue.md"), "utf8");
+  assert.match(markdown, /\| WI-0001 \| Readable item \| captured \| docs \|/);
+});
+
+test(".ros/work changes do not themselves require separate work-item attribution", (t) => {
+  const root = fixture(t);
+  const result = ros(root, ["add", "Should not trip attribution"], {env: {...process.env, ROS_BASE_REF: "missing-fixture-commit"}});
+  assert.equal(result.status, 0, result.output);
+  assert.equal(ros(root, ["validate"]).status, 0);
+});

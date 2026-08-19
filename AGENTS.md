@@ -54,3 +54,5 @@ For substantial work, record: objective; work completed; files changed; decision
 ## Work Protocol
 
 Before meaningful mutation, identify the external work item and run `./ros work begin ID`. Inspect `./ros work context ID` for allowed actions and required evidence, perform the bounded work, gather configured evidence, request a legal transition with `work complete`, then run `./ros registry build` and `./ros validate`. Use `work block --reason` and `work resume` rather than hand-editing context. Use `./ros status` when resuming unfamiliar work. Meaningful committed changes require machine-readable attribution; see `docs/work-protocol.md`.
+
+No externally-assigned ID yet? Check `./ros work ready` for capturable, unblocked repository work before assuming none exists, and use `./ros add "..."` to record a newly discovered obligation instead of leaving it as an unfiled comment or dropped observation. `./ros work start ID` promotes a ready backlog item into the protocol above. This local backlog is repository-scoped triage, not a project-management system; see the "Local backlog" section of `docs/work-protocol.md`.
