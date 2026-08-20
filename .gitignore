@@ -16,6 +16,10 @@ venv/
 # Node
 node_modules/
 
+# Compiled web UI (build with `npm run build:web`; source of truth is web/app.ts)
+web/app.js
+web/app.js.map
+
 # Generated transient work
 work/staging/*
 work/review/*

@@ -471,6 +471,9 @@ Final state, at a glance:
 Or just open [`.ros/work/queue.md`](../.ros/work/queue.md) in an editor —
 it's regenerated on every backlog change and reads as a plain table.
 
+Prefer a UI to typing commands? `npm run web` starts a local web interface
+over this same backlog — see [`web-interface.md`](web-interface.md).
+
 ---
 
 ## 8. Where the data actually lives

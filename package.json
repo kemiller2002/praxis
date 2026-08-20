@@ -39,7 +39,9 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "node --test tests/npm-bootstrap.test.mjs tests/work-protocol.test.mjs && python3 -m unittest discover -s tests -v",
+    "test": "node --test tests/npm-bootstrap.test.mjs tests/work-protocol.test.mjs tests/ros-server.test.mjs && python3 -m unittest discover -s tests -v",
+    "build:web": "tsc -p web/tsconfig.json",
+    "web": "npm run build:web && node tools/ros_server.mjs",
     "pack:inspect": "npm pack --dry-run",
     "release:check": "npm test && npm pack --dry-run && ./ros registry check && ./ros validate",
     "prepack": "npm test"
@@ -47,6 +49,9 @@
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
   },
   "keywords": [
     "repository",

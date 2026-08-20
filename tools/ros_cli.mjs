@@ -161,7 +161,7 @@ function allowedActions(item) {
   return [...(TRANSITIONS[item.semanticState] ?? [])].sort();
 }
 
-function contextView(root, requestedId) {
+export function contextView(root, requestedId) {
   const config = workConfig(root);
   const context = loadContext(root);
   const items = requestedId ? context.workItems.filter((item) => item.id === requestedId) : context.workItems;
@@ -232,7 +232,29 @@ function saveQueue(root, queue) {
   fs.writeFileSync(queueMarkdownPath(root), renderQueueMarkdown(mergedRows(queue, context.workItems)), "utf8");
 }
 
-function mergedWorkView(root, { tags, status } = {}) {
+export function showWork(root, id) {
+  if (!id) throw new Error("show requires an ID");
+  const row = mergedWorkView(root, {}).find((candidate) => candidate.id === id);
+  if (!row) throw new Error(`work item '${id}' was not found`);
+  const detail = fs.existsSync(detailPath(root, id)) ? fs.readFileSync(detailPath(root, id), "utf8") : null;
+  return { ...row, detail };
+}
+
+export function blockWork(root, ids, options = {}) {
+  if (!ids.length) throw new Error("block requires at least one work-item ID");
+  const queue = loadQueue(root);
+  const context = loadContext(root);
+  const backlogIds = ids.filter((id) => queue.items.some((item) => item.id === id) && !context.workItems.some((item) => item.id === id));
+  const contextIds = ids.filter((id) => !backlogIds.includes(id));
+  const results = backlogIds.map((id) => backlogTransition(root, "block", id, options));
+  if (contextIds.length) {
+    const transitioned = transition(root, "block", contextIds, options);
+    results.push(...transitioned.context.workItems.filter((item) => contextIds.includes(item.id)));
+  }
+  return results;
+}
+
+export function mergedWorkView(root, { tags, status } = {}) {
   const queue = loadQueue(root);
   const context = loadContext(root);
   let rows = mergedRows(queue, context.workItems);
@@ -241,7 +263,7 @@ function mergedWorkView(root, { tags, status } = {}) {
   return rows;
 }
 
-function captureWork(root, title, options = {}) {
+export function captureWork(root, title, options = {}) {
   if (!title || !title.trim()) throw new Error("add requires a non-empty title");
   if (options.priority && !PRIORITIES.has(options.priority)) throw new Error(`invalid priority '${options.priority}'; use high, medium, or low`);
   const queue = loadQueue(root);
@@ -272,7 +294,7 @@ function captureWork(root, title, options = {}) {
   return item;
 }
 
-function backlogTransition(root, action, id, options = {}) {
+export function backlogTransition(root, action, id, options = {}) {
   const queue = loadQueue(root);
   const item = queue.items.find((entry) => entry.id === id);
   if (!item) throw new Error(`'${id}' is not a captured local work item`);
@@ -294,7 +316,7 @@ function backlogTransition(root, action, id, options = {}) {
   return item;
 }
 
-function startWork(root, ids, options = {}) {
+export function startWork(root, ids, options = {}) {
   if (!ids.length) throw new Error("start requires at least one work-item ID");
   const queue = loadQueue(root);
   for (const id of ids) {
@@ -386,7 +408,7 @@ function callFileAdapter(storeFile, request) {
   return result;
 }
 
-function transition(root, action, ids, options = {}) {
+export function transition(root, action, ids, options = {}) {
   if (!ids.length) throw new Error(`${action} requires at least one work-item ID`);
   const config = workConfig(root);
   const context = loadContext(root);
@@ -724,7 +746,7 @@ function findingRecord(finding) {
   return { severity: "error", path: finding.path, field: finding.field || null, message: finding.message, repair };
 }
 
-function statusView(root) {
+export function statusView(root) {
   const context = contextView(root);
   const findings = validate(root);
   return {
@@ -821,12 +843,7 @@ export function main(argv) {
       console.log(JSON.stringify(results, null, 2)); return 0;
     }
     if (args[0] === "work" && args[1] === "show") {
-      const id = args[2];
-      if (!id) throw new Error("work show requires an ID");
-      const row = mergedWorkView(root, {}).find((candidate) => candidate.id === id);
-      if (!row) throw new Error(`work item '${id}' was not found`);
-      const detail = fs.existsSync(detailPath(root, id)) ? fs.readFileSync(detailPath(root, id), "utf8") : null;
-      console.log(JSON.stringify({ ...row, detail }, null, 2)); return 0;
+      console.log(JSON.stringify(showWork(root, args[2]), null, 2)); return 0;
     }
     if (args[0] === "work" && args[1] === "start") {
       const ids = idArgs(args.slice(2));
@@ -841,18 +858,7 @@ export function main(argv) {
     }
     if (args[0] === "work" && args[1] === "block") {
       const ids = idArgs(args.slice(2));
-      if (!ids.length) throw new Error("block requires at least one work-item ID");
-      const reason = option(args, "--reason");
-      const queue = loadQueue(root);
-      const context = loadContext(root);
-      const backlogIds = ids.filter((id) => queue.items.some((item) => item.id === id) && !context.workItems.some((item) => item.id === id));
-      const contextIds = ids.filter((id) => !backlogIds.includes(id));
-      const results = backlogIds.map((id) => backlogTransition(root, "block", id, { reason }));
-      if (contextIds.length) {
-        const transitioned = transition(root, "block", contextIds, { reason });
-        results.push(...transitioned.context.workItems.filter((item) => contextIds.includes(item.id)));
-      }
-      console.log(JSON.stringify(results, null, 2)); return 0;
+      console.log(JSON.stringify(blockWork(root, ids, { reason: option(args, "--reason") }), null, 2)); return 0;
     }
     if (args[0] === "work" && ["begin", "resume", "complete", "done"].includes(args[1])) {
       const action = ACTION_ALIASES[args[1]] ?? args[1];
