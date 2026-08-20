@@ -245,11 +245,20 @@
       ],
       "updatedAt": "2026-08-19T13:25:23.279Z",
       "completedAt": "2026-08-19T13:25:23.279Z"
+    },
+    {
+      "id": "DOC-BACKLOG-USAGE-GUIDE",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-08-19T13:51:51.518Z",
+      "completedAt": "2026-08-19T13:51:51.518Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "claude",
-  "updatedAt": "2026-08-19T13:25:23.279Z",
+  "updatedAt": "2026-08-19T13:51:51.518Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
