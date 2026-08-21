@@ -1,6 +1,6 @@
 {
   "name": "@echelon-foundry/repository-operating-system",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Self-contained Repository Operating System bootstrap for greenfield research and engineering projects.",
   "license": "MIT",
   "repository": {
