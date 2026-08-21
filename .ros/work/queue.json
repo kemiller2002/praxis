@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "repository": "repository-operating-system",
+  "nextSeq": 2,
+  "items": [
+    {
+      "id": "WI-0001",
+      "title": "This is a test entry.",
+      "tags": [
+        "code",
+        "testing"
+      ],
+      "priority": "high",
+      "status": "abandoned",
+      "createdAt": "2026-08-21T16:35:17.480Z",
+      "updatedAt": "2026-08-21T16:36:31.849Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null,
+      "abandonedReason": "test entry"
+    }
+  ]
+}

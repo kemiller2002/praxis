@@ -272,11 +272,20 @@
       ],
       "updatedAt": "2026-08-20T14:15:30.376Z",
       "completedAt": "2026-08-20T14:15:30.376Z"
+    },
+    {
+      "id": "DOC-WEB-README",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-08-21T16:35:17.515Z",
+      "completedAt": "2026-08-21T16:35:17.515Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "claude",
-  "updatedAt": "2026-08-20T14:15:30.376Z",
+  "updatedAt": "2026-08-21T16:35:17.515Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

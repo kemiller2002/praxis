@@ -49,6 +49,18 @@ External project-management products integrate through the normalized [`work ada
 
 Roadmap execution state and repository boundaries are tracked in [`docs/ROADMAP-STATUS.md`](docs/ROADMAP-STATUS.md).
 
+### Running the web interface
+
+```bash
+npm run web
+```
+
+Builds the TypeScript client and starts a local server at
+`http://127.0.0.1:4310` over the current repository's work backlog. It
+binds to localhost only and has no authentication; see
+[`docs/web-interface.md`](docs/web-interface.md) for options (`--root`,
+`--port`, `--host`), the API it exposes, and how it's built.
+
 ## Starting central aggregation and reporting
 
 The default reporting project is `project-administration`. It is the central
