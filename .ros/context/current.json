@@ -281,11 +281,20 @@
       "evidence": [],
       "updatedAt": "2026-08-21T16:35:17.515Z",
       "completedAt": "2026-08-21T16:35:17.515Z"
+    },
+    {
+      "id": "CI-LATEST-ON-VERSION-BUMP",
+      "type": "infrastructure",
+      "state": "blocked",
+      "semanticState": "blocked",
+      "evidence": [],
+      "updatedAt": "2026-08-21T18:11:18.125Z",
+      "blockReason": "no test harness exists for GitHub Actions workflows in this repo; YAML syntax was checked locally but the version-bump/publish logic itself can only be confirmed by observing a real CI run after this is pushed and a version bump lands on main"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "claude",
-  "updatedAt": "2026-08-21T16:35:17.515Z",
+  "updatedAt": "2026-08-21T18:11:18.125Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

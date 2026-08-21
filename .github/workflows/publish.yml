@@ -1,4 +1,4 @@
-name: Publish main snapshot to npm
+name: Publish to npm
 
 on:
   push:
@@ -48,6 +48,47 @@ jobs:
         env:
           ROS_BASE_REF: ${{ github.event.before }}
 
+      # A stable "latest" release happens only when this push actually
+      # changed package.json's committed version -- publishing on every push
+      # would make every commit a public release and empty the version
+      # number of meaning. This step must run before the snapshot step
+      # below, which rewrites package.json's version in the runner's
+      # working copy (not the repository) for its own, unrelated publish.
+      - name: Determine whether package.json's version changed
+        id: version-check
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "current=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+          CHANGED=false
+          if git cat-file -e "${{ github.event.before }}^{commit}" 2>/dev/null; then
+            if git show "${{ github.event.before }}:package.json" > /tmp/previous-package.json 2>/dev/null; then
+              PREVIOUS_VERSION=$(node -p "require('/tmp/previous-package.json').version" 2>/dev/null || echo "")
+              if [ -n "$PREVIOUS_VERSION" ] && [ "$PREVIOUS_VERSION" != "$CURRENT_VERSION" ]; then
+                CHANGED=true
+              fi
+            fi
+          fi
+          echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether this version is already on the registry
+        id: registry-check
+        if: steps.version-check.outputs.changed == 'true'
+        run: |
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          if npm view "${PACKAGE_NAME}@${{ steps.version-check.outputs.current }}" version >/dev/null 2>&1; then
+            echo "already_published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "already_published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish stable release
+        if: steps.version-check.outputs.changed == 'true' && steps.registry-check.outputs.already_published == 'false'
+        run: npm publish --access public
+
+      - name: Report stable release
+        if: steps.version-check.outputs.changed == 'true' && steps.registry-check.outputs.already_published == 'false'
+        run: echo "Published @echelon-foundry/repository-operating-system@${{ steps.version-check.outputs.current }} with dist-tag latest"
+
       - name: Create unique main-snapshot version
         id: version
         run: |
@@ -59,5 +100,5 @@ jobs:
       - name: Publish main snapshot
         run: npm publish --access public --tag main
 
-      - name: Report published version
+      - name: Report published snapshot
         run: echo "Published @echelon-foundry/repository-operating-system@${{ steps.version.outputs.version }} with dist-tag main"
