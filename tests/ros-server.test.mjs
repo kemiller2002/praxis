@@ -35,8 +35,13 @@ async function serve(t, root) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body ?? {})
-    })
+    }),
+    postForm: (urlPath, formData) => fetch(`${base}${urlPath}`, { method: "POST", body: formData })
   };
+}
+
+function fileField(content, filename, type = "text/plain") {
+  return new File([content], filename, { type });
 }
 
 test("GET /api/work lists the unified queue, including items with no backlog entry", async (t) => {
@@ -167,4 +172,73 @@ test("unknown routes 404 and static assets are served from the shared web/ direc
   assert.equal(page.status, 200);
   assert.match(page.headers.get("content-type") ?? "", /text\/html/);
   assert.match(await page.text(), /Work Backlog/);
+});
+
+test("POST /api/work accepts a description, and PATCH-style update changes it later", async (t) => {
+  const root = fixture(t);
+  const client = await serve(t, root);
+  await client.post("/api/work", { title: "Investigate payload growth", description: "Grows superlinearly." });
+  const shown = await client.get("/api/work/WI-0001");
+  assert.equal((await shown.json()).description, "Grows superlinearly.");
+
+  const updated = await client.post("/api/work/WI-0001/update", {
+    title: "Investigate payload growth (root cause)",
+    description: "Narrowed to serialization layer.",
+    tags: ["wasm", "perf"],
+    priority: "high"
+  });
+  assert.equal(updated.status, 200);
+  const body = await updated.json();
+  assert.equal(body.title, "Investigate payload growth (root cause)");
+  assert.equal(body.description, "Narrowed to serialization layer.");
+  assert.deepEqual(body.tags, ["wasm", "perf"]);
+  assert.equal(body.priority, "high");
+});
+
+test("POST /api/work/:id/attachments uploads multiple files, supports a custom name, and files download byte-for-byte", async (t) => {
+  const root = fixture(t);
+  const client = await serve(t, root);
+  await client.post("/api/work", { title: "Ship it", id: "WI-SHIP" });
+
+  const form = new FormData();
+  form.append("file", fileField("first content", "notes.md"));
+  form.append("file", fileField("second content", "original-name.txt"), "renamed.txt");
+  const uploaded = await client.postForm("/api/work/WI-SHIP/attachments", form);
+  const body = await uploaded.json();
+  assert.equal(uploaded.status, 200, JSON.stringify(body));
+  assert.equal(body.attachments.length, 2);
+  assert.equal(body.attachments[0].name, "notes.md");
+  assert.equal(body.attachments[1].name, "renamed.txt");
+  assert.equal(body.attachments[0].size, "first content".length);
+  assert.ok(!("file" in body.attachments[0]), "internal storage filename must not leak over the API");
+
+  const download = await client.get(`/api/work/WI-SHIP/attachments/${body.attachments[1].id}`);
+  assert.equal(download.status, 200);
+  assert.match(download.headers.get("content-disposition") ?? "", /renamed\.txt/);
+  assert.equal(await download.text(), "second content");
+});
+
+test("attaching the same display name twice keeps both files distinct on disk", async (t) => {
+  const root = fixture(t);
+  const client = await serve(t, root);
+  await client.post("/api/work", { title: "Dup names", id: "WI-DUP" });
+
+  for (const content of ["version one", "version two"]) {
+    const form = new FormData();
+    form.append("file", fileField(content, "same-name.txt"));
+    assert.equal((await client.postForm("/api/work/WI-DUP/attachments", form)).status, 200);
+  }
+  const shown = await (await client.get("/api/work/WI-DUP")).json();
+  assert.equal(shown.attachments.length, 2);
+  assert.deepEqual(shown.attachments.map((a) => a.name), ["same-name.txt", "same-name.txt"]);
+  const contents = await Promise.all(shown.attachments.map((a) => client.get(`/api/work/WI-DUP/attachments/${a.id}`).then((r) => r.text())));
+  assert.deepEqual(contents.sort(), ["version one", "version two"]);
+});
+
+test("downloading an unknown attachment 404s", async (t) => {
+  const root = fixture(t);
+  const client = await serve(t, root);
+  await client.post("/api/work", { title: "No attachments", id: "WI-EMPTY" });
+  const missing = await client.get("/api/work/WI-EMPTY/attachments/ATT-1");
+  assert.equal(missing.status, 404);
 });

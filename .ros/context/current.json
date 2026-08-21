@@ -290,11 +290,29 @@
       "evidence": [],
       "updatedAt": "2026-08-21T18:11:18.125Z",
       "blockReason": "no test harness exists for GitHub Actions workflows in this repo; YAML syntax was checked locally but the version-bump/publish logic itself can only be confirmed by observing a real CI run after this is pushed and a version bump lands on main"
+    },
+    {
+      "id": "WORK-ITEM-ATTACHMENTS",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tools/ros_cli.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/ros-server.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-21T19:01:31.398Z",
+      "completedAt": "2026-08-21T19:01:31.398Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "claude",
-  "updatedAt": "2026-08-21T18:11:18.125Z",
+  "updatedAt": "2026-08-21T19:01:31.398Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

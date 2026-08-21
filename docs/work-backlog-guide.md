@@ -115,12 +115,43 @@ Optional provenance, useful when tooling (not a human) files the item:
 `--actor` records who captured it (defaults to the `ROS_ACTOR` environment
 variable, then `"unknown"`).
 
+### With a description
+
+A longer explanation than the title, stored directly on the item (separate
+from the optional detail file covered in [§2](#2-browsing-the-backlog)):
+
+```bash
+./ros add "Investigate WASM state payload growth" \
+  --description "Payload grows superlinearly with history depth; root cause unknown."
+```
+
+### With one or more files attached
+
+Attach local files at capture time. Each `--file` is repeatable; a bare path
+uses its own filename as the associated name, or give it a different one
+with `PATH=NAME`:
+
+```bash
+./ros add "Review architecture sketch" --file ./notes/sketch.png
+```
+
+```bash
+./ros add "Review architecture sketch" \
+  --file ./notes/sketch.png=diagram.png \
+  --file ./notes/context.md=background.md
+```
+
+Two files can be attached under the *same* associated name — they stay
+distinct on disk (`ros work show` and the web UI list both).
+
 ### All flags at once
 
 ```bash
 ./ros add "Rename WasmStateStore" \
   --tag cleanup,wasm \
   --priority low \
+  --description "Purely a rename; no behavior change." \
+  --file ./notes/before-after.diff \
   --source manual \
   --actor kevin
 ```
@@ -164,7 +195,7 @@ them):
 
 Status values you'll see: `captured`, `ready`, `blocked`, `abandoned` for
 backlog-only items, and `active`, `complete` once an item has been started
-(see [§4](#4-starting-work)).
+(see [§5](#5-starting-work)).
 
 ### Combined
 
@@ -291,7 +322,44 @@ If you change your mind, capture it again:
 
 ---
 
-## 4. Starting work
+## 4. Editing an item and attaching files
+
+Description, title, tags, and priority can all be changed later — on a
+backlog item or one that's already started, it doesn't matter:
+
+```bash
+./ros work update WI-0001 \
+  --title "Investigate WASM payload growth (root cause)" \
+  --description "Narrowed to the serialization layer." \
+  --tag wasm,perf \
+  --priority high
+```
+
+Only the flags you pass are changed; omit `--tag` entirely to leave tags
+untouched (passing `--tag` with an empty value clears them).
+
+### Attaching files after the fact
+
+Same `--file PATH[=NAME]` syntax as `add`, repeatable, works on any known
+ID — including one that was `ros work begin`'d directly and never went
+through `ros add`:
+
+```bash
+./ros work attach WI-0001 --file ./notes/benchmark-results.csv
+```
+
+```bash
+./ros work attach WI-0001 \
+  --file ./notes/before.png=before.png \
+  --file ./notes/after.png=after.png
+```
+
+Attached files live under `.ros/work/attachments/<ID>/`; `ros work show ID`
+lists each one's associated name and size.
+
+---
+
+## 5. Starting work
 
 Once an item is `ready`, hand it to the tracked, attributed protocol:
 
@@ -335,7 +403,7 @@ completion will require for this item's `--type`.
 
 ---
 
-## 5. Finishing work
+## 6. Finishing work
 
 ### With evidence
 
@@ -388,7 +456,7 @@ Some work types (configured with an empty evidence list, e.g.
 
 ---
 
-## 6. Checking your work
+## 7. Checking your work
 
 Run after any batch of changes:
 
@@ -422,7 +490,7 @@ A one-shot combined view of state + validation:
 
 ---
 
-## 7. A complete walkthrough
+## 8. A complete walkthrough
 
 ```bash
 # Capture three things as you notice them
@@ -476,13 +544,14 @@ over this same backlog — see [`web-interface.md`](web-interface.md).
 
 ---
 
-## 8. Where the data actually lives
+## 9. Where the data actually lives
 
 | File | Role |
 |---|---|
 | `.ros/work/queue.json` | Canonical backlog storage. Don't hand-edit unless you know what you're doing. |
 | `.ros/work/queue.md` | Generated, human-readable projection of the queue. Regenerated automatically. |
 | `.ros/work/items/<ID>.md` | Optional, manually-authored detail for one item. |
+| `.ros/work/attachments/<ID>/` | Files attached via `ros add --file` / `ros work attach`. |
 | `.ros/context/current.json` | Canonical in-flight execution state once `start`/`begin` has run. |
 | `.ros/events/events.jsonl` | Immutable event log (started, blocked, resumed, completed) for attribution. |
 
@@ -492,15 +561,17 @@ so it never blocks `ros validate` on its own.
 
 ---
 
-## 9. Quick reference
+## 10. Quick reference
 
 | Command | What it does |
 |---|---|
-| `ros add "title" [--tag a,b] [--priority p] [--id ID]` | Capture a new backlog item |
+| `ros add "title" [--tag a,b] [--priority p] [--id ID] [--description D] [--file PATH[=NAME]]...` | Capture a new backlog item |
 | `ros work` / `ros work list [--tag T] [--status S]` | List the unified queue |
 | `ros work ready [--tag T]` | Query: items with no blocker |
 | `ros work ready ID` | Mutate: captured/blocked → ready |
-| `ros work show ID` | Full detail for one item, including any detail file |
+| `ros work show ID` | Full detail for one item, including any detail file and attachments |
+| `ros work update ID [--title T] [--description D] [--tag a,b] [--priority p]` | Change descriptive metadata, any time |
+| `ros work attach ID --file PATH[=NAME]...` | Attach one or more files to an existing item |
 | `ros work start ID [--type T]` | Promote a ready item into tracked execution |
 | `ros work block ID... --reason "..."` | Block a backlog or in-flight item (auto-dispatched) |
 | `ros work abandon ID --reason "..."` | Terminal: drop a backlog item |

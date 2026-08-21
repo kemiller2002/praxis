@@ -17,14 +17,24 @@ type LiveWorkItem = {
   allowedActions: string[];
 };
 
+type Attachment = {
+  id: string;
+  name: string;
+  size: number;
+  contentType: string | null;
+  uploadedAt: string;
+};
+
 type WorkRow = {
   id: string;
   title: string;
+  description: string | null;
   tags: string[];
   priority: "high" | "medium" | "low" | null;
   status: string;
   blockedReason?: string;
   backlogActions: string[];
+  attachments: Attachment[];
   liveWorkItem: LiveWorkItem | null;
   detail?: string | null;
 };
@@ -60,9 +70,10 @@ function setState(patch: Partial<State>): void {
 // ---------------------------------------------------------------------------
 
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  const isForm = init?.body instanceof FormData;
   const response = await fetch(path, {
     ...init,
-    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) }
+    headers: isForm ? (init?.headers ?? {}) : { "Content-Type": "application/json", ...(init?.headers ?? {}) }
   });
   const body: unknown = await response.json();
   if (!response.ok) {
@@ -85,12 +96,21 @@ function buildQuery(filter: Filter): string {
 }
 
 type RepositoryStatus = { repository: string; protocolVersion: string; validation: string };
+type UpdateInput = { title: string; description: string; tags: string[]; priority: string };
+type FileUpload = { blob: File; name: string };
 
 const api = {
   list: (filter: Filter): Promise<WorkRow[]> => apiRequest(`/api/work${buildQuery(filter)}`),
   status: (): Promise<RepositoryStatus> => apiRequest("/api/status"),
-  add: (input: { title: string; tags: string[]; priority: string }): Promise<WorkRow> =>
+  add: (input: { title: string; tags: string[]; priority: string; description: string }): Promise<WorkRow> =>
     apiRequest("/api/work", { method: "POST", body: JSON.stringify(input) }),
+  update: (id: string, input: UpdateInput): Promise<WorkRow> =>
+    apiRequest(`/api/work/${encodeURIComponent(id)}/update`, { method: "POST", body: JSON.stringify(input) }),
+  uploadAttachments: (id: string, files: readonly FileUpload[]): Promise<WorkRow> => {
+    const form = new FormData();
+    for (const file of files) form.append("file", file.blob, file.name);
+    return apiRequest(`/api/work/${encodeURIComponent(id)}/attachments`, { method: "POST", body: form });
+  },
   ready: (id: string): Promise<WorkRow> => apiRequest(`/api/work/${encodeURIComponent(id)}/ready`, { method: "POST" }),
   block: (id: string, reason: string): Promise<WorkRow> =>
     apiRequest(`/api/work/${encodeURIComponent(id)}/block`, { method: "POST", body: JSON.stringify({ reason }) }),
@@ -142,15 +162,17 @@ function actionsForRow(row: WorkRow): RowAction[] {
       if (action === "resume") actions.push({ label: "Resume", run: () => void runResume(row.id) });
       if (action === "complete") actions.push({ label: "Complete", run: () => void runComplete(row.id) });
     }
-    return actions;
+  } else {
+    for (const action of row.backlogActions) {
+      if (action === "ready") actions.push({ label: "Mark ready", run: () => void runReady(row.id) });
+      if (action === "block") actions.push({ label: "Block", run: () => void runBlock(row.id) });
+      if (action === "start") actions.push({ label: "Start", run: () => void runStart(row.id) });
+      if (action === "abandon") actions.push({ label: "Abandon", run: () => void runAbandon(row.id) });
+    }
   }
 
-  for (const action of row.backlogActions) {
-    if (action === "ready") actions.push({ label: "Mark ready", run: () => void runReady(row.id) });
-    if (action === "block") actions.push({ label: "Block", run: () => void runBlock(row.id) });
-    if (action === "start") actions.push({ label: "Start", run: () => void runStart(row.id) });
-    if (action === "abandon") actions.push({ label: "Abandon", run: () => void runAbandon(row.id) });
-  }
+  actions.push({ label: "Edit", run: () => void runUpdate(row) });
+  actions.push({ label: "Attach", run: () => void runAttach(row.id) });
   return actions;
 }
 
@@ -185,15 +207,37 @@ function renderError(message: string | null): void {
   node.textContent = message;
 }
 
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function renderAttachments(id: string, attachments: readonly Attachment[]): HTMLElement {
+  if (!attachments.length) return el("p", { class: "muted" }, ["No attachments."]);
+  return el("ul", { class: "attachment-list" }, attachments.map((attachment) =>
+    el("li", {}, [
+      el("a", { href: `/api/work/${encodeURIComponent(id)}/attachments/${encodeURIComponent(attachment.id)}`, download: "" }, [attachment.name]),
+      ` (${formatSize(attachment.size)})`
+    ])
+  ));
+}
+
 function renderDetail(rows: readonly WorkRow[], selectedId: string | null): void {
   const section = document.getElementById("detail");
+  const summary = document.getElementById("detail-summary");
   const body = document.getElementById("detail-body");
-  if (!section || !body) return;
+  if (!section || !summary || !body) return;
   const row = selectedId ? rows.find((candidate) => candidate.id === selectedId) ?? null : null;
-  if (!row) { section.hidden = true; body.textContent = ""; return; }
+  if (!row) { section.hidden = true; summary.replaceChildren(); body.textContent = ""; return; }
+
   section.hidden = false;
-  const summary = JSON.stringify(row, null, 2);
-  body.textContent = row.detail ? `${summary}\n\n${row.detail}` : summary;
+  summary.replaceChildren(
+    el("p", {}, [row.description || "No description."]),
+    renderAttachments(row.id, row.attachments)
+  );
+  const raw = JSON.stringify(row, null, 2);
+  body.textContent = row.detail ? `${raw}\n\n${row.detail}` : raw;
 }
 
 function render(current: State): void {
@@ -282,6 +326,72 @@ async function promptCompletion(): Promise<CompletionInput | null> {
   return { evidence, conclusion: conclusion || null };
 }
 
+// A file's associated `name` is independent of what was actually selected on
+// disk -- the optional text input next to each file picker overrides it, the
+// same association the CLI's `--file PATH=NAME` expresses.
+function addFileRow(container: HTMLElement): void {
+  container.append(el("div", { class: "file-row" }, [
+    el("input", { type: "file", "data-role": "file-input" }),
+    el("input", { type: "text", placeholder: "name (optional)", "data-role": "file-name" })
+  ]));
+}
+
+function resetFileRows(container: HTMLElement): void {
+  container.replaceChildren();
+  addFileRow(container);
+}
+
+function fileRowsFrom(container: HTMLElement): FileUpload[] {
+  const files: FileUpload[] = [];
+  for (const row of Array.from(container.children)) {
+    const fileInput = row.querySelector('[data-role="file-input"]');
+    const nameInput = row.querySelector('[data-role="file-name"]');
+    const blob = fileInput instanceof HTMLInputElement ? fileInput.files?.[0] : undefined;
+    if (!blob) continue;
+    const name = nameInput instanceof HTMLInputElement ? nameInput.value.trim() : "";
+    files.push({ blob, name: name || blob.name });
+  }
+  return files;
+}
+
+async function promptUpdate(row: WorkRow): Promise<UpdateInput | null> {
+  const dialog = dialogEl("update-dialog");
+  const titleInput = document.getElementById("update-dialog-title");
+  const descriptionInput = document.getElementById("update-dialog-description");
+  const tagsInput = document.getElementById("update-dialog-tags");
+  const priorityInput = document.getElementById("update-dialog-priority");
+  if (titleInput instanceof HTMLInputElement) titleInput.value = row.title;
+  if (descriptionInput instanceof HTMLTextAreaElement) descriptionInput.value = row.description ?? "";
+  if (tagsInput instanceof HTMLInputElement) tagsInput.value = row.tags.join(", ");
+  if (priorityInput instanceof HTMLSelectElement) priorityInput.value = row.priority ?? "medium";
+
+  dialog.showModal();
+  const result = await waitForClose(dialog);
+  if (result !== "confirm") return null;
+  return {
+    title: titleInput instanceof HTMLInputElement ? titleInput.value.trim() : row.title,
+    description: descriptionInput instanceof HTMLTextAreaElement ? descriptionInput.value.trim() : "",
+    tags: parseTags(tagsInput instanceof HTMLInputElement ? tagsInput.value : ""),
+    priority: priorityInput instanceof HTMLSelectElement ? priorityInput.value : "medium"
+  };
+}
+
+async function promptAttachments(): Promise<FileUpload[] | null> {
+  const dialog = dialogEl("attach-dialog");
+  const rows = document.getElementById("attach-file-rows");
+  const addButton = document.getElementById("attach-add-row");
+  if (!(rows instanceof HTMLElement)) throw new Error("missing attach-file-rows");
+
+  resetFileRows(rows);
+  const onAdd = (): void => addFileRow(rows);
+  addButton?.addEventListener("click", onAdd);
+  dialog.showModal();
+  const result = await waitForClose(dialog);
+  addButton?.removeEventListener("click", onAdd);
+  if (result !== "confirm") return null;
+  return fileRowsFrom(rows);
+}
+
 // ---------------------------------------------------------------------------
 // Commands: the only functions allowed to call setState, and only ever
 // after an effect (a fetch) has resolved or failed.
@@ -341,6 +451,18 @@ async function runComplete(id: string): Promise<void> {
   await runWithRefresh(() => api.complete(id, input.evidence, input.conclusion));
 }
 
+async function runUpdate(row: WorkRow): Promise<void> {
+  const input = await promptUpdate(row);
+  if (input === null) return;
+  await runWithRefresh(() => api.update(row.id, input));
+}
+
+async function runAttach(id: string): Promise<void> {
+  const files = await promptAttachments();
+  if (files === null || !files.length) return;
+  await runWithRefresh(() => api.uploadAttachments(id, files));
+}
+
 function parseTags(raw: string): string[] {
   return raw.split(",").map((tag) => tag.trim()).filter(Boolean);
 }
@@ -348,17 +470,33 @@ function parseTags(raw: string): string[] {
 function wireAddForm(): void {
   const form = document.getElementById("add-form");
   const titleInput = document.getElementById("add-title");
+  const descriptionInput = document.getElementById("add-description");
   const tagsInput = document.getElementById("add-tags");
   const priorityInput = document.getElementById("add-priority");
+  const filesContainer = document.getElementById("add-files");
+  const addFileButton = document.getElementById("add-add-file");
   if (!(form instanceof HTMLFormElement)) throw new Error("add-form missing");
+  if (!(filesContainer instanceof HTMLElement)) throw new Error("add-files missing");
+
+  resetFileRows(filesContainer);
+  addFileButton?.addEventListener("click", () => addFileRow(filesContainer));
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     const title = titleInput instanceof HTMLInputElement ? titleInput.value.trim() : "";
+    const description = descriptionInput instanceof HTMLTextAreaElement ? descriptionInput.value.trim() : "";
     const tags = parseTags(tagsInput instanceof HTMLInputElement ? tagsInput.value : "");
     const priority = priorityInput instanceof HTMLSelectElement ? priorityInput.value : "medium";
+    const files = fileRowsFrom(filesContainer);
     if (!title) return;
-    void runWithRefresh(() => api.add({ title, tags, priority })).then(() => form.reset());
+
+    void runWithRefresh(async () => {
+      const created = await api.add({ title, tags, priority, description });
+      if (files.length) await api.uploadAttachments(created.id, files);
+    }).then(() => {
+      form.reset();
+      resetFileRows(filesContainer);
+    });
   });
 }
 

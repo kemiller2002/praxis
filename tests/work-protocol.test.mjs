@@ -298,3 +298,45 @@ test(".ros/work changes do not themselves require separate work-item attribution
   assert.equal(result.status, 0, result.output);
   assert.equal(ros(root, ["validate"]).status, 0);
 });
+
+test("add accepts a description and files, and update/attach work on IDs that were only ever begun directly", (t) => {
+  const root = fixture(t);
+  const design = path.join(root, "design.md");
+  fs.writeFileSync(design, "notes\n");
+
+  const added = JSON.parse(ros(root, ["add", "Investigate payload growth", "--description", "Grows superlinearly.", "--file", `${design}=notes.md`]).output);
+  assert.equal(added.description, "Grows superlinearly.");
+  assert.equal(added.attachments.length, 1);
+  assert.equal(added.attachments[0].name, "notes.md");
+  assert.ok(!("file" in added.attachments[0]), "internal storage filename must not leak");
+
+  const updated = JSON.parse(ros(root, ["work", "update", "WI-0001", "--title", "Investigate payload growth (root cause)", "--priority", "high"]).output);
+  assert.equal(updated.title, "Investigate payload growth (root cause)");
+  assert.equal(updated.priority, "high");
+  assert.equal(updated.description, "Grows superlinearly.", "fields not passed to update are left unchanged");
+
+  ros(root, ["work", "begin", "FEAT-900"]);
+  const attached = JSON.parse(ros(root, ["work", "attach", "FEAT-900", "--file", `${design}=spec.md`]).output);
+  assert.equal(attached.attachments[0].name, "spec.md");
+  assert.equal(attached.liveWorkItem.semanticState, "active", "attaching a file must not disturb in-flight state");
+
+  const describedInFlight = JSON.parse(ros(root, ["work", "update", "FEAT-900", "--description", "Now documented."]).output);
+  assert.equal(describedInFlight.description, "Now documented.");
+  assert.equal(describedInFlight.liveWorkItem.semanticState, "active");
+});
+
+test("attaching two files under the same display name keeps both distinct on disk", (t) => {
+  const root = fixture(t);
+  const first = path.join(root, "a.txt");
+  const second = path.join(root, "b.txt");
+  fs.writeFileSync(first, "version one\n");
+  fs.writeFileSync(second, "version two\n");
+  ros(root, ["add", "Dup names", "--id", "WI-DUP"]);
+  ros(root, ["work", "attach", "WI-DUP", "--file", `${first}=same-name.txt`]);
+  const result = JSON.parse(ros(root, ["work", "attach", "WI-DUP", "--file", `${second}=same-name.txt`]).output);
+  assert.equal(result.attachments.length, 2);
+  assert.deepEqual(result.attachments.map((a) => a.name), ["same-name.txt", "same-name.txt"]);
+  const files = fs.readdirSync(path.join(root, ".ros", "work", "attachments", "WI-DUP"));
+  assert.equal(files.length, 2);
+  assert.equal(new Set(files).size, 2, "stored filenames must not collide");
+});

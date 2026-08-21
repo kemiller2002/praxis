@@ -152,6 +152,7 @@ function eventsPath(root) { return path.join(root, ".ros", "events", "events.jso
 function queuePath(root) { return path.join(root, ".ros", "work", "queue.json"); }
 function queueMarkdownPath(root) { return path.join(root, ".ros", "work", "queue.md"); }
 function detailPath(root, id) { return path.join(root, ".ros", "work", "items", `${id}.md`); }
+function attachmentsDir(root, id) { return path.join(root, ".ros", "work", "attachments", id); }
 
 function loadContext(root) {
   return readJson(contextPath(root), { schemaVersion: "1.0.0", repository: workConfig(root).repository, workItems: [] });
@@ -208,11 +209,13 @@ function mergedRows(queue, contextItems) {
     return {
       id,
       title: queueItem?.title ?? id,
+      description: queueItem?.description ?? null,
       tags: queueItem?.tags ?? [],
       priority: queueItem?.priority ?? null,
       status: effectiveStatus(queueItem, contextItem),
       blockedReason: contextItem?.semanticState === "blocked" ? contextItem.blockReason : queueItem?.blockedReason,
       backlogActions: queueItem && !contextItem ? [...(BACKLOG_TRANSITIONS[queueItem.status] ?? [])].sort() : [],
+      attachments: (queueItem?.attachments ?? []).map(({ id: attachmentId, name, size, contentType, uploadedAt }) => ({ id: attachmentId, name, size, contentType, uploadedAt })),
       liveWorkItem: contextItem
         ? { state: contextItem.state, semanticState: contextItem.semanticState, allowedActions: allowedActions(contextItem) }
         : null
@@ -280,9 +283,11 @@ export function captureWork(root, title, options = {}) {
   const item = {
     id,
     title: title.trim(),
+    description: options.description?.trim() || null,
     tags: options.tags ?? [],
     priority: options.priority ?? "medium",
     status: "captured",
+    attachments: [],
     createdAt: now,
     updatedAt: now,
     createdBy: options.actor ?? process.env.ROS_ACTOR ?? "unknown",
@@ -291,7 +296,101 @@ export function captureWork(root, title, options = {}) {
   };
   queue.items.push(item);
   saveQueue(root, queue);
+  for (const file of options.files ?? []) attachFile(root, id, file);
+  return options.files?.length ? showWork(root, id) : item;
+}
+
+// Any known ID -- whether captured via `add` or begun directly on the
+// external-authority protocol -- can carry description/tags/attachments.
+// This upserts a minimal backlog record on first touch so `update`/`attach`
+// work uniformly regardless of how the item originated, without ever
+// inventing a lifecycle status for it (see effectiveStatus()).
+function findOrCreateQueueEntry(root, queue, id) {
+  let item = queue.items.find((entry) => entry.id === id);
+  if (item) return item;
+  if (!WORK_ID_RE.test(id)) throw new Error(`invalid work-item ID '${id}'`);
+  const context = loadContext(root);
+  if (!context.workItems.some((entry) => entry.id === id)) throw new Error(`work item '${id}' was not found`);
+  const now = new Date().toISOString();
+  item = {
+    id,
+    title: id,
+    description: null,
+    tags: [],
+    priority: "medium",
+    status: "captured",
+    attachments: [],
+    createdAt: now,
+    updatedAt: now,
+    createdBy: "unknown",
+    source: "manual",
+    sourceReference: null
+  };
+  queue.items.push(item);
   return item;
+}
+
+export function updateWork(root, id, options = {}) {
+  const queue = loadQueue(root);
+  const item = findOrCreateQueueEntry(root, queue, id);
+  if (options.title !== undefined) {
+    if (!options.title.trim()) throw new Error("title cannot be empty");
+    item.title = options.title.trim();
+  }
+  if (options.description !== undefined) item.description = options.description.trim() || null;
+  if (options.tags !== undefined) item.tags = options.tags;
+  if (options.priority !== undefined) {
+    if (!PRIORITIES.has(options.priority)) throw new Error(`invalid priority '${options.priority}'; use high, medium, or low`);
+    item.priority = options.priority;
+  }
+  item.updatedAt = new Date().toISOString();
+  saveQueue(root, queue);
+  return item;
+}
+
+function sanitizeFileComponent(value) {
+  const cleaned = path.basename(String(value)).trim().replace(/[^A-Za-z0-9._-]+/g, "_");
+  return cleaned || "file";
+}
+
+// A file's associated `name` is independent of its on-disk storage name --
+// the caller may attach several files under the same display name, or
+// rename one away from what was originally uploaded. Storage uniqueness is
+// handled here, not by the caller.
+export function attachFile(root, id, { sourcePath, buffer, name, contentType } = {}) {
+  if (!sourcePath && !buffer) throw new Error("attach requires a source file or upload buffer");
+  const queue = loadQueue(root);
+  const item = findOrCreateQueueEntry(root, queue, id);
+  const data = buffer ?? fs.readFileSync(path.resolve(root, sourcePath));
+  const displayName = (name ?? (sourcePath ? path.basename(sourcePath) : "file")).trim() || "file";
+  item.attachments ??= [];
+  const sequence = item.attachments.reduce((max, entry) => Math.max(max, entry.seq ?? 0), 0) + 1;
+  const storedFile = `${sequence}-${sanitizeFileComponent(displayName)}`;
+  const dir = attachmentsDir(root, id);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, storedFile), data);
+  const now = new Date().toISOString();
+  const record = {
+    id: `ATT-${sequence}`,
+    seq: sequence,
+    name: displayName,
+    file: storedFile,
+    size: data.length,
+    contentType: contentType || null,
+    uploadedAt: now
+  };
+  item.attachments.push(record);
+  item.updatedAt = now;
+  saveQueue(root, queue);
+  return record;
+}
+
+export function attachmentFilePath(root, id, attachmentId) {
+  const queue = loadQueue(root);
+  const item = queue.items.find((entry) => entry.id === id);
+  const record = item?.attachments?.find((entry) => entry.id === attachmentId);
+  if (!record) throw new Error(`attachment '${attachmentId}' was not found on '${id}'`);
+  return { record, filePath: path.join(attachmentsDir(root, id), record.file) };
 }
 
 export function backlogTransition(root, action, id, options = {}) {
@@ -805,6 +904,22 @@ function tagOptions(args) {
   return [...new Set(tags)];
 }
 
+function fileOptions(args) {
+  const files = [];
+  for (let i = 0; i < args.length; i += 1) {
+    if (args[i] === "--file") {
+      const value = args[i + 1];
+      if (!value || value.startsWith("--")) throw new Error("--file requires PATH or PATH=NAME");
+      const separator = value.indexOf("=");
+      files.push(separator > 0
+        ? { sourcePath: value.slice(0, separator), name: value.slice(separator + 1) }
+        : { sourcePath: value, name: undefined });
+      i += 1;
+    }
+  }
+  return files;
+}
+
 const ACTION_ALIASES = { done: "complete" };
 
 export function main(argv) {
@@ -819,12 +934,35 @@ export function main(argv) {
         id: option(args, "--id"),
         actor: option(args, "--actor"),
         source: option(args, "--source"),
-        sourceReference: option(args, "--source-reference")
+        sourceReference: option(args, "--source-reference"),
+        description: option(args, "--description"),
+        files: fileOptions(args.slice(2))
       });
       console.log(JSON.stringify(item, null, 2)); return 0;
     }
     if (args[0] === "work" && args[1] === "context") {
       console.log(JSON.stringify(contextView(root, args[2]), null, 2)); return 0;
+    }
+    if (args[0] === "work" && args[1] === "update") {
+      const id = args[2];
+      if (!id) throw new Error("work update requires an ID");
+      const rest = args.slice(3);
+      const hasTagFlag = rest.includes("--tag") || rest.includes("-t");
+      updateWork(root, id, {
+        title: option(args, "--title"),
+        description: option(args, "--description"),
+        tags: hasTagFlag ? tagOptions(rest) : undefined,
+        priority: option(args, "--priority")
+      });
+      console.log(JSON.stringify(showWork(root, id), null, 2)); return 0;
+    }
+    if (args[0] === "work" && args[1] === "attach") {
+      const id = args[2];
+      if (!id) throw new Error("work attach requires an ID");
+      const files = fileOptions(args.slice(3));
+      if (!files.length) throw new Error("attach requires at least one --file PATH[=NAME]");
+      for (const file of files) attachFile(root, id, file);
+      console.log(JSON.stringify(showWork(root, id), null, 2)); return 0;
     }
     if (args[0] === "work" && (!args[1] || args[1] === "list")) {
       const rest = args.slice(2);
@@ -934,7 +1072,7 @@ export function main(argv) {
       console.log("registries are current");
       return 0;
     }
-    console.error("Usage: ros [--root PATH] validate [--json] | status | registry build [--dry-run] | registry check | add TITLE [--tag T] [--priority P] | work [list|ready|show|start|block|abandon|begin|resume|complete|done|context] [ID...] | adapter call --store FILE --request FILE | adapter publish --target FILE");
+    console.error("Usage: ros [--root PATH] validate [--json] | status | registry build [--dry-run] | registry check | add TITLE [--tag T] [--priority P] [--description D] [--file PATH[=NAME]]... | work [list|ready|show|start|block|abandon|update|attach|begin|resume|complete|done|context] [ID...] | adapter call --store FILE --request FILE | adapter publish --target FILE");
     return 2;
   } catch (error) {
     console.error(`ERROR ${error.message}`);

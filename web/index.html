@@ -23,7 +23,10 @@
         <option value="high">high</option>
         <option value="low">low</option>
       </select>
-      <button type="submit">Add</button>
+      <textarea id="add-description" placeholder="Optional longer description"></textarea>
+      <div id="add-files" class="file-rows"></div>
+      <button id="add-add-file" type="button">+ file</button>
+      <button type="submit" class="primary">Add</button>
     </form>
   </section>
 
@@ -68,7 +71,11 @@
 
   <section id="detail" aria-label="Selected item detail" hidden>
     <h2>Detail</h2>
-    <pre id="detail-body"></pre>
+    <div id="detail-summary"></div>
+    <details>
+      <summary>Raw record</summary>
+      <pre id="detail-body"></pre>
+    </details>
   </section>
 </main>
 
@@ -116,6 +123,48 @@
     <menu>
       <button value="cancel">Cancel</button>
       <button id="complete-dialog-confirm" value="confirm">Complete</button>
+    </menu>
+  </form>
+</dialog>
+
+<dialog id="update-dialog">
+  <form method="dialog">
+    <h2>Edit work item</h2>
+    <label>
+      Title
+      <input id="update-dialog-title" type="text" />
+    </label>
+    <label>
+      Description
+      <textarea id="update-dialog-description" placeholder="Optional longer description"></textarea>
+    </label>
+    <label>
+      Tags
+      <input id="update-dialog-tags" type="text" placeholder="tags, comma, separated" />
+    </label>
+    <label>
+      Priority
+      <select id="update-dialog-priority">
+        <option value="high">high</option>
+        <option value="medium">medium</option>
+        <option value="low">low</option>
+      </select>
+    </label>
+    <menu>
+      <button value="cancel">Cancel</button>
+      <button value="confirm">Save</button>
+    </menu>
+  </form>
+</dialog>
+
+<dialog id="attach-dialog">
+  <form method="dialog">
+    <h2>Attach files</h2>
+    <div id="attach-file-rows" class="file-rows"></div>
+    <button id="attach-add-row" type="button">+ file</button>
+    <menu>
+      <button value="cancel">Cancel</button>
+      <button value="confirm">Attach</button>
     </menu>
   </form>
 </dialog>

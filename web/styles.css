@@ -159,8 +159,45 @@ dialog menu {
   margin: 1rem 0 0;
 }
 
-.evidence-row {
+.evidence-row,
+.file-row {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 0.4rem;
+}
+
+.file-rows {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.file-row input[type="text"] {
+  flex: 1 1 12rem;
+}
+
+#add-description,
+#update-dialog-description {
+  width: 100%;
+  min-height: 3.5rem;
+  box-sizing: border-box;
+}
+
+.attachment-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+}
+
+.attachment-list li {
+  margin-bottom: 0.25rem;
+}
+
+#detail-summary p {
+  margin-top: 0;
+}
+
+details summary {
+  cursor: pointer;
+  margin-top: 0.5rem;
 }

@@ -22,9 +22,11 @@ node tools/ros_server.mjs --root /path/to/other/repo --port 4321 --host 0.0.0.0
 
 **The server binds to `127.0.0.1` by default and has no authentication.**
 Anyone who can reach it can capture, block, abandon, start, or complete work
-items and write evidence-bearing completions into your repository's history.
-Only pass `--host 0.0.0.0` (or otherwise expose it beyond your own machine)
-if you've put your own authentication or network boundary in front of it.
+items, upload files into your repository, and write evidence-bearing
+completions into your repository's history. Uploads are capped at 25 MB per
+request. Only pass `--host 0.0.0.0` (or otherwise expose it beyond your own
+machine) if you've put your own authentication or network boundary in front
+of it.
 
 After editing `web/app.ts`, either re-run `npm run web` (which rebuilds
 first) or `npm run build:web` on its own, then reload the page.
@@ -46,14 +48,20 @@ tools/ros_cli.mjs (the kernel -- owns every legality/state rule)
 
 - **`tools/ros_cli.mjs`** is unchanged in behavior. The functions the server
   calls (`captureWork`, `backlogTransition`, `startWork`, `transition`,
-  `blockWork`, `showWork`, `mergedWorkView`, `statusView`, `validate`) are
-  the exact same functions `ros`'s CLI commands call -- the server does not
-  duplicate any transition, evidence, or validation rule. A request that
-  would fail on the CLI fails the same way over HTTP, with the same message.
+  `blockWork`, `showWork`, `mergedWorkView`, `statusView`, `updateWork`,
+  `attachFile`, `attachmentFilePath`, `validate`) are the exact same
+  functions `ros`'s CLI commands call -- the server does not duplicate any
+  transition, evidence, or validation rule. A request that would fail on
+  the CLI fails the same way over HTTP, with the same message.
 - **`tools/ros_server.mjs`** is a dependency-free `node:http` server. It
-  parses JSON, matches a small route table, calls one kernel function per
+  parses JSON (and, for file uploads, standard browser-generated
+  `multipart/form-data` via a small hand-written parser -- no upload
+  library), matches a small route table, calls one kernel function per
   route, and serializes the result. It makes no decisions about what's
-  legal.
+  legal. A file's associated name comes from the browser `File`'s name at
+  upload time (or an override the UI sends alongside it); on-disk storage
+  names are generated separately so two attachments can share a display
+  name without colliding.
 - **`web/app.ts`** is a framework-free, purely functional TypeScript client:
   a single `state` value, one `setState` that re-renders, and pure functions
   from `state` to DOM. There is no two-way data binding -- typing in a
@@ -79,7 +87,10 @@ action.
 | `GET` | `/api/work?tag=T&status=S` | `ros work list --tag T --status S` |
 | `GET` | `/api/work/ready?tag=T` | `ros work ready --tag T` |
 | `GET` | `/api/work/:id` | `ros work show ID` |
-| `POST` | `/api/work` `{title, tags, priority, id?, source?, sourceReference?, actor?}` | `ros add` |
+| `POST` | `/api/work` `{title, tags, priority, description?, id?, source?, sourceReference?, actor?}` | `ros add` |
+| `POST` | `/api/work/:id/update` `{title?, description?, tags?, priority?}` | `ros work update ID` |
+| `POST` | `/api/work/:id/attachments` `multipart/form-data`, one or more `file` parts | `ros work attach ID --file ...` |
+| `GET` | `/api/work/:id/attachments/:attachmentId` | binary download (not a JSON route) |
 | `POST` | `/api/work/:id/ready` | `ros work ready ID` |
 | `POST` | `/api/work/:id/block` `{reason}` | `ros work block ID --reason ...` |
 | `POST` | `/api/work/:id/abandon` `{reason}` | `ros work abandon ID --reason ...` |
@@ -88,6 +99,12 @@ action.
 | `POST` | `/api/work/:id/complete` `{evidence: [{type, path}], conclusion?}` | `ros work done ID --evidence ...` |
 | `GET` | `/api/validate` | `ros validate --json` |
 | `GET` | `/api/status` | `ros status` |
+
+`POST /api/work/:id/update` and `.../attachments` upsert a minimal backlog
+record if `:id` was only ever `ros work begin`'d directly (never `add`ed) --
+same behavior as the CLI's `update`/`attach`, so descriptive metadata and
+files can be attached to any known work item, not just ones captured
+through the backlog.
 
 Errors are `4xx` with `{"error": "..."}`; the message is whatever
 `ros_cli.mjs` threw.
@@ -98,7 +115,12 @@ Errors are `4xx` with `{"error": "..."}`; the message is whatever
 asserts the same lifecycle rules the CLI tests assert: the `ready` gate
 before `start`, evidence requirements on `complete`, terminal `abandon`, and
 `block` correctly dispatching to the backlog or the in-flight item depending
-on where the ID currently lives. There's no automated browser test for
-`web/app.ts` itself; it was verified manually end-to-end (capture → filter →
-start → block/complete with evidence, including the native dialogs) against
-a scratch repository.
+on where the ID currently lives. It also drives real multipart uploads
+(Node's native `FormData`/`File`), covering multiple files in one request, a
+custom name overriding the original filename, two attachments sharing a
+display name staying byte-distinct, and byte-for-byte download. There's no
+automated browser test for `web/app.ts` itself; it was verified manually
+end-to-end (capture with a description and an attached file, filter,
+start, block/complete with evidence, editing an item, and attaching further
+files through the dialog -- including the native dialogs) against a scratch
+repository.
