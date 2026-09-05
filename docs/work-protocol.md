@@ -7,6 +7,7 @@ ROS owns the versioned protocol, legal transitions, repository validation, and a
 ```bash
 ./ros work begin FEAT-142 --type feature
 ./ros work context FEAT-142
+./ros telemetry show FEAT-142
 ./ros work block FEAT-142 --reason "waiting for fixture"
 ./ros work resume FEAT-142
 ./ros work complete FEAT-142 \
@@ -19,9 +20,11 @@ ROS owns the versioned protocol, legal transitions, repository validation, and a
 
 The legal semantic core is `ready -> active -> blocked -> active` and `active -> complete`. Local states may be supplied with `--local-state`; `ros.json` maps repository states to the shared semantic vocabulary. Research completion accepts an independent `--conclusion`, including `inconclusive`.
 
+Beginning work automatically starts a segmented execution record under `.ros/telemetry/executions/`; completing work automatically finalizes all active records. Block/resume transitions preserve interruption intervals. Runtime adapters can ingest token, cost, context, agent, tool, and provider-specific observations without changing the work-state protocol. `./ros validate` checks telemetry structure and finalization alongside work attribution. See [`development-telemetry.md`](development-telemetry.md).
+
 `work context` is the normal agent entry point. It reports current state, legal next actions, and evidence required for completion. `status` combines compact work state with repository validation and recommended next actions. Validation errors include deterministic repair guidance; `validate --json` provides a stable structured result for agents and CI consumers.
 
-`.ros/context/current.json` is local work context. `.ros/events/events.jsonl` contains small immutable, idempotently identified semantic events and durable file attribution. These files do not replace the external work item.
+`.ros/context/current.json` is local work context. `.ros/events/events.jsonl` contains small immutable, idempotently identified semantic events and durable file attribution. `.ros/telemetry/executions/` contains per-execution observations linked from work context and events. These files do not replace the external work item.
 
 Completion validates configured evidence types and paths before changing state. `./ros validate` rejects meaningful dirty paths when enforcement is enabled and neither active context nor a completed event attributes them. CI is the authoritative enforcement boundary; hooks are optional convenience.
 
@@ -78,4 +81,4 @@ Event IDs make retries idempotent. Successful local publication creates `.ros/pu
 
 Initialize a repository with `ros-bootstrap init`, configure `repository` and `workProtocol` in `ros.json`, and call `./ros validate` in CI. Repositories pin a package/protocol version. Breaking semantic or event-schema changes require a new major protocol version; additive evidence types and local mappings are compatible minor changes.
 
-Deferred: remote reads and transitions, signed events, review/approval transitions, commit graph indexing, global aggregation, and UI. These belong behind the adapter or in the external project-management system—not in ROS core.
+Deferred: remote reads and transitions, signed events, review/approval transitions, commit graph indexing, global aggregation, telemetry publication/retention, and UI. These belong behind the adapter or in the external project-management system—not in ROS core.

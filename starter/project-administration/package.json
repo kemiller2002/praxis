@@ -1,0 +1,14 @@
+{
+  "name": "{{PROJECT_SLUG}}",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:web": "tsc -p web/tsconfig.json",
+    "build:hub": "tsc -p web-hub/tsconfig.json",
+    "web": "npm run build:web && node tools/ros_server.mjs",
+    "hub": "npm run build:hub && node tools/ros_hub_server.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

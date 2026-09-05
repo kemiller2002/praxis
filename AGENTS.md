@@ -2,16 +2,17 @@
 id: GV-START-001
 title: Agent Startup Guide
 status: canonical
-version: 1.0.0
+version: 1.1.0
 owners:
   - repository-governance
 created: 2026-07-22
-updated: 2026-07-22
+updated: 2026-09-05
 review_cycle: quarterly
 supersedes: []
 superseded_by: []
 related_documents:
   - docs/00-governance/README.md
+  - docs/development-telemetry.md
 tags: [governance, agents, startup]
 ---
 
@@ -45,6 +46,7 @@ Apply, in descending order: explicit user instruction; applicable safety, legal,
 - Important claims cite `EV-`, `HY-`, and `TH-` records when those records exist. Material decisions use `DF-`, which canonically means **Decision Record**.
 - Do not silently change canonical policy. Propose or record the change, its evidence, consequences, version, and migration path.
 - Do not claim a test passed unless it ran and passed. Name skipped or unavailable checks and their implications.
+- Treat execution telemetry as evidence: discover capabilities, distinguish zero from unavailable, preserve normalized and sanitized raw provider data, prefer deterministic collection, and never invent a metric.
 - Not every edit needs a REP. Use the artifact threshold in the Agent Operating Manual.
 
 ## Handoff
@@ -53,6 +55,6 @@ For substantial work, record: objective; work completed; files changed; decision
 
 ## Work Protocol
 
-Before meaningful mutation, identify the external work item and run `./ros work begin ID`. Inspect `./ros work context ID` for allowed actions and required evidence, perform the bounded work, gather configured evidence, request a legal transition with `work complete`, then run `./ros registry build` and `./ros validate`. Use `work block --reason` and `work resume` rather than hand-editing context. Use `./ros status` when resuming unfamiliar work. Meaningful committed changes require machine-readable attribution; see `docs/work-protocol.md`.
+Before meaningful mutation, identify the external work item and run `./ros work begin ID`. That transition starts an execution-telemetry record; inspect `./ros work context ID`, classify the work, and ingest runtime telemetry that the current environment can expose. Preserve unknown provider fields through the sanitized raw layer and record unsupported/unavailable capability explicitly. Perform the bounded work, gather configured evidence, request a legal transition with `work complete` (which finalizes active telemetry), then run `./ros registry build` and `./ros validate`. Use `work block --reason` and `work resume` rather than hand-editing context. Use `./ros status` when resuming unfamiliar work. Meaningful committed changes require machine-readable attribution; see `docs/work-protocol.md` and `docs/development-telemetry.md`.
 
 No externally-assigned ID yet? Check `./ros work ready` for capturable, unblocked repository work before assuming none exists, and use `./ros add "..."` to record a newly discovered obligation instead of leaving it as an unfiled comment or dropped observation. `./ros work start ID` promotes a ready backlog item into the protocol above. This local backlog is repository-scoped triage, not a project-management system; see the "Local backlog" section of `docs/work-protocol.md`.

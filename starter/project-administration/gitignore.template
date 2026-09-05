@@ -16,7 +16,7 @@ venv/
 # Node
 node_modules/
 
-# Compiled web UI (build with `npm run build:web`; source of truth is web/app.ts)
+# Compiled web UI (build with `npm run build:web` / `npm run build:hub`)
 web/app.js
 web/app.js.map
 web-hub/app.js

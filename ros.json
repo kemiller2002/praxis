@@ -11,8 +11,8 @@
   },
   "registries": "registries",
   "templates": "templates",
-  "generated": "generated"
-  ,"repository": {
+  "generated": "generated",
+  "repository": {
     "id": "repository-operating-system",
     "type": "tooling"
   },
@@ -31,6 +31,15 @@
       "mechanical": []
     },
     "meaningfulPaths": ["**"],
-    "ignoredPaths": [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", "registries/**"]
+    "ignoredPaths": [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", ".ros/telemetry/**", "registries/**"]
+  },
+  "telemetry": {
+    "version": "1.0.0",
+    "enabled": true,
+    "requireFinalization": true,
+    "executionRoot": ".ros/telemetry/executions",
+    "metricRegistry": "telemetry/metrics.json",
+    "allowRawTelemetry": true,
+    "maxRawPayloadBytes": 262144
   }
 }

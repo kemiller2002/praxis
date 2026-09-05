@@ -150,5 +150,31 @@
     "title": "Repository-local work backlog",
     "updated": "2026-08-19",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "medium-high",
+    "created": "2026-08-22",
+    "id": "DF-ROS-2026-A009",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A009--installable-project-administration-hub.md",
+    "related_documents": [
+      "docs/project-administration-hub.md",
+      "docs/work-backlog-guide.md",
+      "research/decisions/DF-ROS-2026-A008--repository-local-work-backlog.md"
+    ],
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "work-protocol",
+      "project-management",
+      "bootstrap",
+      "hub"
+    ],
+    "title": "Installable project-administration hub profile",
+    "updated": "2026-08-22",
+    "version": "1.0.0"
   }
 ]

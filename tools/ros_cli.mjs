@@ -5,6 +5,20 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import {
+  TELEMETRY_ADAPTERS,
+  configuredTelemetry,
+  finalizeExecution,
+  finalizeWorkExecutions,
+  ingestTelemetry,
+  readTelemetryInput,
+  recordTelemetryLifecycle,
+  recordTelemetryMetric,
+  showTelemetry,
+  startExecution,
+  summarizeTelemetry,
+  telemetryFindings
+} from "./ros_telemetry.mjs";
 
 const ID_RE =
   /^(?:(RP|JR|EV|HY|TH|EX|DF|CN|GL|MS)-[A-Z0-9]+(?:-[A-Z0-9]+)*-[0-9]{4}-(?:[0-9]{4}|[A-F0-9]{4})|RP-[0-9]{4}-[0-9]{2}-[0-9]{2}-[A-Z0-9]+(?:-[A-Z0-9]+)*)$/;
@@ -99,7 +113,7 @@ function workConfig(root) {
     },
     evidence: config.workProtocol?.completionEvidence ?? { default: ["implementation", "tests"] },
     meaningful: config.workProtocol?.meaningfulPaths ?? ["**"],
-    ignored: config.workProtocol?.ignoredPaths ?? [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**"],
+    ignored: config.workProtocol?.ignoredPaths ?? [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", ".ros/telemetry/**"],
     enforce: config.workProtocol?.enforceAttribution === true
   };
   for (const [local, semantic] of Object.entries(result.stateMapping)) {
@@ -524,7 +538,20 @@ export function transition(root, action, ids, options = {}) {
       byId.set(id, item);
     }
     const current = item.semanticState;
-    if (!TRANSITIONS[current]?.has(action)) throw new Error(`cannot ${action} '${id}' from '${current}'`);
+    if (!TRANSITIONS[current]?.has(action)) {
+      try {
+        recordTelemetryMetric(root, id, {
+          id: "quality.invalid_transitions_prevented",
+          value: 1,
+          quality: "derived",
+          source: { type: "calculated", name: "ros-work-protocol", mechanism: "transition-guard" },
+          collectedAt: now
+        });
+      } catch {
+        // The transition guard remains authoritative when no active telemetry exists.
+      }
+      throw new Error(`cannot ${action} '${id}' from '${current}'`);
+    }
     if (action === "begin" || action === "resume") item.state = options.localState ?? "active";
     if (action === "block") {
       if (!options.reason) throw new Error("block requires --reason");
@@ -546,11 +573,56 @@ export function transition(root, action, ids, options = {}) {
     item.semanticState = config.stateMapping[item.state] ?? (action === "begin" || action === "resume" ? "active" : action === "block" ? "blocked" : "complete");
     if (!SEMANTIC_STATES.has(item.semanticState)) throw new Error(`invalid semantic state '${item.semanticState}'`);
     item.updatedAt = now;
+    if (configuredTelemetry(root).enabled) {
+      if (action === "begin") {
+        const execution = startExecution(root, id, {
+          workType: item.type,
+          classifications: options.classifications,
+          classificationRationale: options.classificationRationale,
+          rd: options.rd,
+          identity: options.telemetryIdentity,
+          attachToContext: false
+        });
+        item.telemetryExecutionIds ??= [];
+        if (execution && !item.telemetryExecutionIds.includes(execution.executionId)) item.telemetryExecutionIds.push(execution.executionId);
+      }
+      if (action === "resume") {
+        recordTelemetryLifecycle(root, id, "resumed", { occurredAt: now });
+        const active = showTelemetry(root, id).filter((record) => record.status === "active");
+        if (!active.length) {
+          const prior = showTelemetry(root, id).at(-1);
+          const execution = startExecution(root, id, {
+            workType: item.type,
+            parentExecutionId: prior?.executionId ?? null,
+            identity: options.telemetryIdentity,
+            attachToContext: false
+          });
+          item.telemetryExecutionIds ??= [];
+          if (execution) item.telemetryExecutionIds.push(execution.executionId);
+        }
+      }
+      if (action === "block") recordTelemetryLifecycle(root, id, "blocked", { occurredAt: now, reason: options.reason });
+      if (action === "complete") {
+        if (!(item.telemetryExecutionIds ?? []).length) {
+          const execution = startExecution(root, id, {
+            workType: item.type,
+            startedAt: now,
+            identity: options.telemetryIdentity,
+            attachToContext: false
+          });
+          item.telemetryExecutionIds ??= [];
+          if (execution) item.telemetryExecutionIds.push(execution.executionId);
+        }
+        const finalized = finalizeWorkExecutions(root, id, { finalizedAt: now });
+        for (const execution of finalized) if (!item.telemetryExecutionIds.includes(execution.executionId)) item.telemetryExecutionIds.push(execution.executionId);
+      }
+    }
     const event = appendEvent(root, {
       type: `work.${action === "begin" ? "started" : action === "complete" ? "completed" : action === "block" ? "blocked" : "resumed"}`,
       workItem: id, repository: config.repository, protocolVersion: config.protocolVersion,
       occurredAt: now, reason: options.reason, evidence: item.evidence,
       paths: action === "complete" ? meaningfulPaths(root, gitPaths(root)).filter((p) => !(context.baselineDirtyPaths ?? []).includes(p)) : [],
+      telemetryExecutions: item.telemetryExecutionIds ?? [],
       publication: { status: "pending" }
     });
     events.push(event);
@@ -809,6 +881,7 @@ export function validate(root, { checkRegistries = true } = {}) {
   if (checkRegistries) findings.push(...registryFindings(root, loaded.artifacts));
   findings.push(...workFindings(root));
   findings.push(...queueFindings(root));
+  findings.push(...telemetryFindings(root));
   return findings.sort((a, b) =>
     [a.path, a.field, a.message].join("\0").localeCompare([b.path, b.field, b.message].join("\0"))
   );
@@ -853,7 +926,11 @@ export function statusView(root) {
     protocolVersion: workConfig(root).protocolVersion,
     validation: findings.length ? "failed" : "passed",
     findingCount: findings.length,
-    workItems: context.workItems.map(({ id, type, state, semanticState, allowedActions }) => ({ id, type, state, semanticState, allowedActions })),
+    workItems: context.workItems.map(({ id, type, state, semanticState, allowedActions, telemetryExecutionIds }) => ({ id, type, state, semanticState, allowedActions, telemetryExecutionIds: telemetryExecutionIds ?? [] })),
+    telemetry: {
+      executionCount: showTelemetry(root).length,
+      activeExecutionCount: showTelemetry(root).filter((record) => record.status === "active").length
+    },
     nextActions: findings.length ? [...new Set(findings.map((item) => findingRecord(item).repair))] : ["Select an allowed work transition or begin a new work item."]
   };
 }
@@ -875,6 +952,45 @@ function option(args, name) {
   if (index < 0) return undefined;
   if (!args[index + 1] || args[index + 1].startsWith("--")) throw new Error(`${name} requires a value`);
   return args[index + 1];
+}
+
+function options(args, name) {
+  const values = [];
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] !== name) continue;
+    if (!args[index + 1] || args[index + 1].startsWith("--")) throw new Error(`${name} requires a value`);
+    values.push(args[index + 1]);
+    index += 1;
+  }
+  return values;
+}
+
+function telemetryIdentityOptions(args) {
+  return {
+    provider: option(args, "--provider"),
+    model: option(args, "--model"),
+    modelVersion: option(args, "--model-version"),
+    runtime: option(args, "--runtime"),
+    runtimeVersion: option(args, "--runtime-version"),
+    sessionId: option(args, "--session"),
+    conversationId: option(args, "--conversation"),
+    runId: option(args, "--run"),
+    agentId: option(args, "--agent"),
+    subagentId: option(args, "--subagent"),
+    parentExecutionId: option(args, "--parent-execution")
+  };
+}
+
+function telemetryInput(root, args) {
+  const input = option(args, "--input");
+  if (!input) throw new Error("--input requires a JSON or JSON Lines file; use '-' for stdin");
+  const file = input === "-" ? "-" : path.resolve(root, input);
+  return readTelemetryInput(file, configuredTelemetry(root).maxRawPayloadBytes);
+}
+
+function telemetryTarget(args) {
+  const value = args[2];
+  return value && !value.startsWith("--") ? value : undefined;
 }
 
 function evidenceOptions(args) {
@@ -985,7 +1101,10 @@ export function main(argv) {
     }
     if (args[0] === "work" && args[1] === "start") {
       const ids = idArgs(args.slice(2));
-      const result = startWork(root, ids, { type: option(args, "--type"), actor: option(args, "--actor") });
+      const result = startWork(root, ids, {
+        type: option(args, "--type"), actor: option(args, "--actor"),
+        telemetryIdentity: telemetryIdentityOptions(args), classifications: options(args, "--classification")
+      });
       console.log(JSON.stringify({ workItems: result.context.workItems, events: result.events.map((event) => event.eventId) }, null, 2)); return 0;
     }
     if (args[0] === "work" && args[1] === "abandon") {
@@ -1003,7 +1122,8 @@ export function main(argv) {
       const ids = idArgs(args.slice(2));
       const result = transition(root, action, ids, {
         type: option(args, "--type"), actor: option(args, "--actor"), reason: option(args, "--reason"),
-        localState: option(args, "--local-state"), conclusion: option(args, "--conclusion"), evidence: evidenceOptions(args)
+        localState: option(args, "--local-state"), conclusion: option(args, "--conclusion"), evidence: evidenceOptions(args),
+        telemetryIdentity: telemetryIdentityOptions(args), classifications: options(args, "--classification")
       });
       console.log(JSON.stringify({ workItems: result.context.workItems, events: result.events.map((event) => event.eventId) }, null, 2)); return 0;
     }
@@ -1034,6 +1154,80 @@ export function main(argv) {
       const result = callFileAdapter(path.resolve(root, store), request);
       console.log(JSON.stringify(result, null, 2));
       return result.outcome === "failure" ? 1 : result.outcome === "unknown" ? 2 : 0;
+    }
+    if (args[0] === "telemetry" && args[1] === "adapters") {
+      console.log(JSON.stringify(TELEMETRY_ADAPTERS, null, 2)); return 0;
+    }
+    if (args[0] === "telemetry" && args[1] === "start") {
+      const workItemId = telemetryTarget(args);
+      if (!workItemId) throw new Error("telemetry start requires a work-item ID");
+      const contextItem = loadContext(root).workItems.find((item) => item.id === workItemId);
+      if (!contextItem || !["active", "blocked"].includes(contextItem.semanticState)) throw new Error(`work item '${workItemId}' must be active or blocked before starting telemetry`);
+      const record = startExecution(root, workItemId, {
+        executionId: option(args, "--execution-id"),
+        workType: contextItem.type,
+        classifications: options(args, "--classification"),
+        classificationRationale: option(args, "--classification-rationale"),
+        identity: telemetryIdentityOptions(args)
+      });
+      if (!args.includes("--quiet")) console.log(JSON.stringify(record, null, 2)); return 0;
+    }
+    if (args[0] === "telemetry" && args[1] === "ingest") {
+      const record = ingestTelemetry(root, telemetryTarget(args), telemetryInput(root, args), { adapter: option(args, "--adapter") ?? "generic" });
+      if (!args.includes("--quiet")) console.log(JSON.stringify(record, null, 2)); return 0;
+    }
+    if (args[0] === "telemetry" && args[1] === "classify") {
+      const classifications = options(args, "--classification");
+      if (!classifications.length) throw new Error("telemetry classify requires at least one --classification");
+      const rdFile = option(args, "--rd-context");
+      const rd = rdFile ? readTelemetryInput(path.resolve(root, rdFile), configuredTelemetry(root).maxRawPayloadBytes) : null;
+      const record = ingestTelemetry(root, telemetryTarget(args), {
+        snapshotId: `classification-${Date.now()}`,
+        classification: {
+          types: classifications,
+          rationale: option(args, "--rationale") ?? null,
+          evidence: options(args, "--evidence-link"),
+          rd
+        },
+        raw: {}
+      });
+      if (!args.includes("--quiet")) console.log(JSON.stringify(record.classification, null, 2)); return 0;
+    }
+    if (args[0] === "telemetry" && args[1] === "record") {
+      const id = option(args, "--metric");
+      const rawValue = option(args, "--value");
+      if (!id || rawValue === undefined) throw new Error("telemetry record requires --metric and --value");
+      const quality = option(args, "--quality") ?? "observed";
+      const record = recordTelemetryMetric(root, telemetryTarget(args), {
+        id,
+        value: Number(rawValue),
+        unit: option(args, "--unit"),
+        currency: option(args, "--currency"),
+        quality,
+        confidence: option(args, "--confidence") === undefined ? null : Number(option(args, "--confidence")),
+        scope: option(args, "--scope") ?? "execution",
+        source: {
+          type: option(args, "--source-type") ?? "agent-report",
+          name: option(args, "--source-name") ?? "ros-telemetry-cli",
+          mechanism: option(args, "--mechanism") ?? "explicit-metric-record"
+        },
+        collectedAt: option(args, "--collected-at")
+      });
+      if (!args.includes("--quiet")) console.log(JSON.stringify(record.metrics.at(-1), null, 2)); return 0;
+    }
+    if (args[0] === "telemetry" && args[1] === "finalize") {
+      const inputFile = option(args, "--input");
+      const record = finalizeExecution(root, telemetryTarget(args), {
+        input: inputFile ? telemetryInput(root, args) : undefined,
+        adapter: option(args, "--adapter") ?? "generic"
+      });
+      if (!args.includes("--quiet")) console.log(JSON.stringify(record, null, 2)); return 0;
+    }
+    if (args[0] === "telemetry" && args[1] === "show") {
+      console.log(JSON.stringify(showTelemetry(root, telemetryTarget(args)), null, 2)); return 0;
+    }
+    if (args[0] === "telemetry" && (args[1] === "summary" || args[1] === "summarize")) {
+      console.log(JSON.stringify(summarizeTelemetry(root, telemetryTarget(args)), null, 2)); return 0;
     }
     if (args[0] === "validate") {
       const findings = validate(root);
@@ -1072,7 +1266,7 @@ export function main(argv) {
       console.log("registries are current");
       return 0;
     }
-    console.error("Usage: ros [--root PATH] validate [--json] | status | registry build [--dry-run] | registry check | add TITLE [--tag T] [--priority P] [--description D] [--file PATH[=NAME]]... | work [list|ready|show|start|block|abandon|update|attach|begin|resume|complete|done|context] [ID...] | adapter call --store FILE --request FILE | adapter publish --target FILE");
+    console.error("Usage: ros [--root PATH] validate [--json] | status | registry build [--dry-run] | registry check | add TITLE ... | work [list|ready|show|start|block|abandon|update|attach|begin|resume|complete|done|context] ... | telemetry [start|ingest|record|classify|finalize|show|summary|adapters] ... | adapter call ... | adapter publish ...");
     return 2;
   } catch (error) {
     console.error(`ERROR ${error.message}`);

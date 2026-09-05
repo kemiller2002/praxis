@@ -47,6 +47,19 @@ ROS 1.0 provides provider-neutral work context, legal `begin`, `block`, `resume`
 
 External project-management products integrate through the normalized [`work adapter contract`](docs/work-adapter-contract.md); they are not embedded in ROS.
 
+## Adaptive execution telemetry
+
+Every new `work begin` automatically starts a provider-neutral execution record, and `work complete` finalizes it with deterministic clock and Git measurements where attribution is trustworthy. Runtime adapters can add tokens, costs, context, agent/tool activity, scope discovery, R&D facts, and raw future provider fields without changing the core model. Unavailable is distinct from zero, observed is distinct from derived or estimated, and cumulative session totals are deduplicated during aggregation.
+
+```bash
+./ros telemetry show WORK-ID
+./ros telemetry ingest WORK-ID --adapter openai-codex --input events.jsonl
+./ros telemetry summary WORK-ID
+./ros validate
+```
+
+See [`docs/development-telemetry.md`](docs/development-telemetry.md) for the schema, privacy boundary, provider integrations, classification vocabulary, and mechanical-versus-cooperative guarantees.
+
 Roadmap execution state and repository boundaries are tracked in [`docs/ROADMAP-STATUS.md`](docs/ROADMAP-STATUS.md).
 
 ### Running the web interface
@@ -72,6 +85,26 @@ Build the reporting system in a separate repository. Install ROS into that
 repository first, and then use the installed work protocol to govern the
 project-specific administration instructions, datastore, ingestion service,
 reports, and operational procedures.
+
+For the repository-registration and work-item-creation slice of this
+specifically, ROS ships an installable **project-administration** profile
+that does this out of the box:
+
+```bash
+npx --yes --prefer-online \
+  --package=github:kemiller2002/repository-operating-system#main \
+  ros-bootstrap init \
+  --target . \
+  --profile project-administration
+```
+
+This installs a hub with its own registry of other ROS repositories (by
+local filesystem path), a CLI and web UI to create work items in any of
+them by running their own `./ros`, and a read-only aggregated view across
+all of them. It does not include ingestion, reconciliation, access control,
+retention, or reporting beyond that raw aggregated view — see
+[`docs/project-administration-hub.md`](docs/project-administration-hub.md)
+for exactly what it does and does not do.
 
 The ownership boundary is:
 

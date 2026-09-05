@@ -248,11 +248,13 @@ test("npm tarball contains the executable and every scaffold source", (t) => {
   assert.ok(files.has("tools/ros_cli.mjs"));
   assert.ok(files.has("starter/greenfield/ros"));
 
-  const manifest = JSON.parse(
-    fs.readFileSync(path.join(repository, "starter", "greenfield", "manifest.json"), "utf8")
-  );
-  for (const entry of manifest.files) {
-    assert.ok(files.has(entry.source), `tarball is missing scaffold source ${entry.source}`);
+  for (const profile of ["greenfield", "project-administration"]) {
+    const manifest = JSON.parse(
+      fs.readFileSync(path.join(repository, "starter", profile, "manifest.json"), "utf8")
+    );
+    for (const entry of manifest.files) {
+      assert.ok(files.has(entry.source), `tarball is missing scaffold source ${entry.source} (profile: ${profile})`);
+    }
   }
 
   const tarball = path.join(destination, report[0].filename);
@@ -306,5 +308,57 @@ test("main publishing workflow uses an OIDC-compatible npm CLI", () => {
   assert.equal(
     manifest.repository.url,
     "git+https://github.com/kemiller2002/repository-operating-system.git"
+  );
+});
+
+test("project-administration profile installs a working hub, self-contained and immediately valid", (t) => {
+  const target = temporaryDirectory(t);
+  const result = initializeProject({
+    target,
+    project: "Org Hub",
+    profile: "project-administration"
+  });
+
+  assert.equal(result.packageVersion, packageVersion);
+  assert.ok(fs.existsSync(path.join(target, "tools", "ros_hub_cli.mjs")));
+  assert.ok(fs.existsSync(path.join(target, "tools", "ros_hub_server.mjs")));
+  assert.ok(fs.existsSync(path.join(target, "tools", "http_body.mjs")));
+  assert.ok(fs.existsSync(path.join(target, "web-hub", "app.ts")));
+  assert.equal(fs.statSync(path.join(target, "ros-hub")).mode & 0o777, 0o755);
+
+  const registry = JSON.parse(fs.readFileSync(path.join(target, ".ros", "hub", "registry.json"), "utf8"));
+  assert.deepEqual(registry.repos, []);
+  assert.match(fs.readFileSync(path.join(target, ".ros", "hub", "registry.md"), "utf8"), /Registered Repositories/);
+
+  const validation = spawnSync(path.join(target, "ros"), ["validate"], { cwd: target, encoding: "utf8" });
+  assert.equal(validation.status, 0, validation.stderr || validation.stdout);
+  assert.match(validation.stdout, /validation passed/);
+
+  const registryCheck = spawnSync(path.join(target, "ros"), ["registry", "check"], { cwd: target, encoding: "utf8" });
+  assert.equal(registryCheck.status, 0, registryCheck.stderr || registryCheck.stdout);
+
+  // The hub CLI itself works against the freshly installed, copied files --
+  // not the source checkout.
+  const otherSpoke = temporaryDirectory(t);
+  initializeProject({ target: otherSpoke, project: "Spoke Repo" });
+  spawnSync("git", ["init", "-q"], { cwd: otherSpoke });
+
+  const registered = spawnSync(path.join(target, "ros-hub"), ["register", otherSpoke, "--name", "Spoke"], { cwd: target, encoding: "utf8" });
+  assert.equal(registered.status, 0, registered.stderr || registered.stdout);
+  const repoEntry = JSON.parse(registered.stdout);
+
+  const created = spawnSync(path.join(target, "ros-hub"), ["create", repoEntry.id, "Investigate from the hub", "--tag", "smoke"], { cwd: target, encoding: "utf8" });
+  assert.equal(created.status, 0, created.stderr || created.stdout);
+  assert.match(created.stdout, /Investigate from the hub/);
+
+  const spokeQueue = JSON.parse(fs.readFileSync(path.join(otherSpoke, ".ros", "work", "queue.json"), "utf8"));
+  assert.equal(spokeQueue.items[0].title, "Investigate from the hub");
+});
+
+test("unsupported profile lists available profiles in the error", (t) => {
+  const target = temporaryDirectory(t);
+  assert.throws(
+    () => initializeProject({ target, project: "X", profile: "nonexistent" }),
+    /unsupported profile 'nonexistent'; available profiles: greenfield, project-administration/
   );
 });

@@ -12,9 +12,14 @@ The repository separates:
 - **Generated:** derived outputs
 - **Tools:** deterministic automation and validation
 - **Archive:** deprecated or superseded noncanonical material
+- **Telemetry:** versioned normalized metric definitions plus segmented, provider-neutral execution records
 
 Canonical artifacts must remain usable independently of any specific model,
 agent vendor, or chat history.
+
+## Execution-observability boundary
+
+ROS owns execution identity, capability state, normalization, provenance, Git/clock derivation, validation, and the raw-field preservation boundary. Provider adapters translate runtime output at the edge; they do not define core semantics. Runtime providers own the truth of their usage streams. Work items remain external-system truth, while multiple execution records link to one item. Central publication, access control, retention, and cross-repository reconciliation remain outside this local capability.
 
 ## Work-system boundary
 
