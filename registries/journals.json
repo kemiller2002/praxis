@@ -43,5 +43,57 @@
     ],
     "theory_ids": [],
     "title": "Executable contract implementation"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-05",
+    "id": "JR-ROS-2026-A012",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/journals/JR-ROS-2026-A012--adaptive-telemetry-implementation.md",
+    "related_documents": [
+      "DF-ROS-2026-A010",
+      "EV-ROS-2026-A011",
+      "EV-ROS-2026-A014",
+      "docs/development-telemetry.md"
+    ],
+    "status": "complete",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "telemetry",
+      "implementation",
+      "journal"
+    ],
+    "title": "Adaptive execution telemetry archaeology and implementation journal",
+    "updated": "2026-09-05",
+    "version": "1.1.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-07",
+    "id": "JR-ROS-2026-A016",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/journals/JR-ROS-2026-A016--fsharp-migration-architecture-investigation.md",
+    "related_documents": [
+      "EV-ROS-2026-A015",
+      "RP-ROS-2026-A017"
+    ],
+    "status": "complete",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "architecture",
+      "inventory",
+      "fsharp",
+      "migration",
+      "journal"
+    ],
+    "title": "ROS operational inventory and F# migration architecture investigation",
+    "updated": "2026-09-07",
+    "version": "1.0.0"
   }
 ]

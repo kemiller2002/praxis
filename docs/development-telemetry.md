@@ -38,13 +38,19 @@ Each known normalized metric has a capability state for the execution:
 
 An observed value of zero is a real metric. Unavailability is represented only by capability state and reason, never by a synthetic zero. Validation rejects nonnumeric values, negative counts, missing sources, incompatible units, estimates without confidence, and several impossible scope/aggregation combinations.
 
+The capability object is a current-state projection with bounded transition history. `discoveredAt` and `lastAssessedAt` retain the source assessment time; `recordedAt` records when ROS processed it, so delayed or batch telemetry does not have to pretend it arrived chronologically. When a capability changes from observed to unavailable (or the reverse), the prior state, reason, source, and timestamps move into `history`. The configured history cap keeps the record bounded, retaining the first and most recent transitions plus `historyOmitted` when intermediate transitions are collapsed.
+
 ## Normalized and raw layers
 
 The normalized vocabulary is data-driven by [`telemetry/metrics.json`](../telemetry/metrics.json). Every measurement records value, unit, quality (`observed`, `derived`, or `estimated`), aggregation rule, scope, source name/type/mechanism, collection time, schema version, optional dimensions, and currency/confidence where applicable.
 
-Raw snapshots retain legitimate provider data that an adapter does not yet understand. ROS recursively redacts credentials, prompts, messages, content, command arguments/output, transcript paths, absolute working paths, and email fields; it truncates large strings and rejects snapshots over the configured byte limit. The sanitized snapshot lists unmapped leaf fields and redactions. Unknown fields do not fail ingestion.
+ROS also normalizes baseline/ending dirty-file counts, renamed and binary-file changes, time to first token, model-request failures, approval requests/denials, and peak runtime memory/CPU when available. These go beyond simple token and file totals because they help explain attribution reliability, latency, retry/permission friction, and resource cost. They are intentionally metadata-only; ROS does not collect prompt text, command output, or file contents to improve those measures.
+
+Raw snapshots retain legitimate provider data that an adapter does not yet understand. ROS recursively redacts credentials, prompts, messages, content, command arguments/output, transcript paths, absolute working paths, and email fields and truncates large strings. Retention is bounded by per-input, per-snapshot, per-execution snapshot-count, and per-execution byte limits. If a sanitized payload exceeds a retention budget, ROS omits the value but still stores normalized measurements, unmapped field paths, redaction counts, a content-free idempotency event, and the explicit omission reason. The sanitized snapshot lists unmapped leaf fields and redactions. Unknown fields do not fail ingestion.
 
 For example, if a provider adds `usage.quantum_cache_tokens` tomorrow, the existing adapter stores the sanitized field under `rawTelemetry`, surfaces its path as an `unknown` capability, and increments `telemetry.unknown_fields`. Nothing is silently converted or discarded. A later compatible registry/adapter release can promote the field while old raw records remain readable.
+
+If repository policy disables raw-payload retention, ROS still records a content-free ingestion event, the discovered field path, its `unknown` capability, the unknown-field/redaction counts, and `telemetry.raw_snapshots_omitted`. The value is deliberately not retained under that stricter policy, but retry idempotency and capability discovery remain intact. The same behavior applies when an execution reaches `maxRawSnapshotsPerExecution` or `maxRawBytesPerExecution`; each event identifies `repository-policy-disabled`, `snapshot-byte-limit`, `execution-snapshot-limit`, or `execution-byte-limit` as the cause.
 
 ## Commands
 
@@ -76,7 +82,7 @@ The automatic lifecycle is enough for deterministic baseline/final metrics. Runt
 ./ros telemetry adapters
 ```
 
-`--input -` reads JSON from standard input and `--quiet` keeps hook stdout clean. Input may be one JSON value or JSON Lines. The `generic` adapter accepts this provider-neutral envelope:
+`--input -` reads JSON from standard input and `--quiet` keeps hook stdout clean. Input may be one JSON value or JSON Lines. Confidence may be a defensible numeric value from 0 through 1 or the categorical label `low`, `medium`, or `high`; prefer a category when the runtime does not publish calibrated confidence. A calculated cost also requires `--pricing-source` and `--pricing-version` so changing price tables remain auditable. The `generic` adapter accepts this provider-neutral envelope:
 
 ```json
 {
@@ -141,15 +147,23 @@ Classification is multi-valued. The core vocabulary is: Research, Development, R
 
 Git metrics intentionally fail open to `supported-unavailable` when the execution began dirty. ROS will not attribute another contributor's pre-existing changes to the current run. The record still retains start/end repository state and the reason the execution delta is unavailable.
 
+## Persistence and synchronization
+
+ROS writes JSON and derived queue Markdown through same-directory temporary files followed by atomic replacement, so an interrupted writer leaves either the prior complete file or the next complete file rather than partially parsed JSON. Work-context transitions share one local lock, execution creation has an identity-index lock, and every mutation of an existing execution is serialized by execution ID. Locks carry a process identity and random ownership token; an abandoned owner can be reclaimed without allowing an older writer to delete a replacement lock. `.ros/locks/` is transient, Git-ignored, and excluded from development metrics.
+
+These guarantees are local-filesystem guarantees, not a distributed transaction protocol. Creation of an execution file and its backlink in work context are two atomic replacements; validation checks both directions so a process failure between them becomes an explicit repairable finding. Contended operations time out rather than stealing a lock from a live process. Parallel provider callbacks to one execution and parallel execution starts against one work item have regression coverage. Independent machines must use separate worktrees or a future central coordinator; network-filesystem lock semantics are not claimed.
+
 ## Aggregation and comparison
 
-The metric registry declares `sum`, `maximum`, `latest`, `latest-per-session`, or `none` for every normalized metric. Cumulative session totals and context gauges use `latest-per-session`: ROS keeps the latest snapshot for each unique provider session and then combines distinct sessions. It never sums repeated cumulative snapshots, including when two executions on one work item share a session. Per-turn and per-operation deltas use `sum`.
+The metric registry declares `sum`, `maximum`, `latest`, `latest-per-session`, or `none` for every normalized metric. Cumulative session totals use `latest-per-session`: ROS keeps the latest snapshot for each provider/runtime/session tuple and then combines distinct tuples. It never sums repeated cumulative snapshots, including when two executions on one work item share a session, and it does not collapse coincident session-ID strings from different providers. Per-turn and per-operation deltas use `sum`; repository dirty-state gauges use `maximum`; context gauges use `none` because a scalar cross-session total would have no valid meaning. Per-execution measurements remain available in every case.
+
+`time.wall_ms` is execution effort, so its work-item sum can exceed elapsed calendar time when agents overlap. Work-item summaries therefore include a separate `timing` object with earliest start, latest finalization, calendar span, total execution wall time, and overlapping execution milliseconds. Incomplete work returns null aggregate durations rather than a misleading partial total. Likewise, `tests.passed` counts reported passing results across executions; rerunning the same tests increments it and does not imply unique test-case count.
 
 Cross-provider comparisons must account for semantic differences. Providers may include reasoning in output tokens, define cache categories differently, estimate costs with a changing price table, route a configured model to a different served model, or expose current context rather than cumulative usage. Preserve the raw snapshot and source; do not coerce metrics merely to fill a comparison table.
 
 ## Privacy, storage, and schema evolution
 
-Capture metadata, not content. Never enable prompt/response/tool-argument capture solely for ROS. Do not place credentials or authentication headers in adapter files. Raw snapshots are bounded per snapshot and split by execution; long-term rotation or external object storage is deferred until repository scale demonstrates a need. Teams publishing records later should define retention, access control, reconciliation, signing, and deletion policies in the central system.
+Capture metadata, not content. Never enable prompt/response/tool-argument capture solely for ROS. Do not place credentials or authentication headers in adapter files. Default raw retention is at most 256 snapshots and 8 MiB of sanitized payload per execution, with 256 KiB per input/snapshot and 64 capability-history entries; repository configuration may lower those budgets. Long-term rotation or external object storage is deferred until measured scale demonstrates a need. Teams publishing records later should define retention, access control, reconciliation, signing, and deletion policies in the central system.
 
 Telemetry schema `1.0.0` is additive at the raw boundary. Readers reject an unknown record schema rather than guessing, while work history with no telemetry remains valid. To normalize a newly useful field:
 
@@ -163,4 +177,6 @@ Breaking identity, quality, unit, or aggregation meaning requires a new telemetr
 
 ## Current limitations
 
-ROS cannot obtain hidden reasoning cycles, self-corrections, precise active-versus-waiting time, human interruption time, authoritative billed cost, model rerouting identity, or detailed tool activity unless the runtime exposes them. This Codex desktop environment exposes session/thread identity to repository commands but not its in-app token/cost counters. Provider hooks may miss UI-only actions, and exporter formats may change. Agent-reported findings remain lower-assurance than runtime or deterministic Git/test output. The local records are publication-ready but are not signed, centrally reconciled, or globally deduplicated in this release.
+ROS cannot obtain hidden reasoning cycles, self-corrections, precise active-versus-waiting time, human interruption time, authoritative billed cost, model rerouting identity, or detailed tool activity unless the runtime exposes them. This Codex desktop environment exposes session/thread identity to repository commands but not its in-app token/cost counters. Provider hooks may miss UI-only actions, and exporter formats may change. Git-delta attribution also assumes one execution owns its working tree; concurrent actors in the same checkout require separate worktrees or a richer attribution mechanism. Agent-reported findings remain lower-assurance than runtime or deterministic Git/test output.
+
+Raw values can still contain a secret under a novel innocuous key, so upstream content suppression remains mandatory. Metric and event arrays are not capped because silently discarding normalized evidence would be worse without measured thresholds; very high callback volume will eventually make whole-record rewrites expensive even though raw payload and capability history are bounded. The accepted design is per-execution JSON, not an append-only event store. Reopen segmentation/compaction when real records approach retention limits, lock contention becomes routine, or profiling shows write amplification is material. Local records also remain unsigned, not centrally reconciled, and not globally deduplicated.

@@ -23,6 +23,7 @@ web-hub/app.js
 web-hub/app.js.map
 
 # Generated transient work
+.ros/locks/
 work/staging/*
 work/review/*
 logs/*

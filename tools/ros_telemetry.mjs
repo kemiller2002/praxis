@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import { readJson, withFileLock, writeJson } from "./ros_persistence.mjs";
 
 export const TELEMETRY_SCHEMA_VERSION = "1.0.0";
 export const TELEMETRY_ADAPTERS = [
@@ -45,6 +46,9 @@ const CAPABILITY_STATUSES = new Set([
   "estimated"
 ]);
 const QUALITIES = new Set(["observed", "derived", "estimated"]);
+const CONFIDENCE_LABELS = new Set(["low", "medium", "high"]);
+const METRIC_SCOPES = new Set(["operation", "turn", "tool", "execution", "session", "work-item", "repository"]);
+const AGGREGATIONS = new Set(["sum", "latest", "latest-per-session", "maximum", "none"]);
 const SOURCE_TYPES = new Set([
   "runtime-api",
   "runtime-hook",
@@ -71,16 +75,8 @@ const QUALITY_DETECTORS = new Set([
   "ros-state-system"
 ]);
 const RAW_REDACTED_KEY = /^(?:authorization|cookie|set-cookie|password|passwd|secret|credential|api[_-]?key|access[_-]?token|refresh[_-]?token|id[_-]?token|prompt|prompts|messages?|content|tool[_-]?input|tool[_-]?response|request|response|stdout|stderr|command|full[_-]?command|transcript[_-]?path|cwd|current[_-]?dir|project[_-]?dir|workspace[_-]?path|file[_-]?path|email|user\.email)$/i;
+const RAW_SENSITIVE_SEGMENT = /(?:^|[._-])(?:authorization|password|passwd|secret|credential|api[_-]?key|access[_-]?token|refresh[_-]?token|id[_-]?token|email)(?:$|[._-])/i;
 const MAX_RAW_STRING = 2048;
-
-function readJson(file, fallback = null) {
-  return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : fallback;
-}
-
-function writeJson(file, value) {
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`, "utf8");
-}
 
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable);
@@ -102,19 +98,49 @@ function isTimestamp(value) {
   return typeof value === "string" && Number.isFinite(Date.parse(value));
 }
 
+function runtimeTimestamp(value, fallback) {
+  if (isTimestamp(value)) return value;
+  if (typeof value !== "number" && typeof value !== "string") return fallback;
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return fallback;
+  const milliseconds = numeric >= 1e15 ? numeric / 1e6 : numeric >= 1e12 ? numeric : numeric >= 1e9 ? numeric * 1000 : Number.NaN;
+  if (!Number.isFinite(milliseconds)) return fallback;
+  try {
+    return new Date(milliseconds).toISOString();
+  } catch {
+    return fallback;
+  }
+}
+
 function telemetryConfig(root) {
   const config = readJson(path.join(root, "ros.json"), {});
   const telemetry = config.telemetry ?? {};
-  return {
+  const result = {
     enabled: telemetry.enabled !== false,
     requireFinalization: telemetry.requireFinalization !== false,
     executionRoot: telemetry.executionRoot ?? ".ros/telemetry/executions",
     metricRegistry: telemetry.metricRegistry ?? "telemetry/metrics.json",
     maxRawPayloadBytes: telemetry.maxRawPayloadBytes ?? 262_144,
+    maxRawSnapshotsPerExecution: telemetry.maxRawSnapshotsPerExecution ?? 256,
+    maxRawBytesPerExecution: telemetry.maxRawBytesPerExecution ?? 8_388_608,
+    maxCapabilityHistoryEntries: telemetry.maxCapabilityHistoryEntries ?? 64,
     allowRawTelemetry: telemetry.allowRawTelemetry !== false,
     disabledReason: telemetry.disabledReason ?? null,
-    repository: config.repository?.id ?? config.name ?? path.basename(root)
+    repository: config.repository?.id ?? config.name ?? path.basename(root),
+    ignoredPaths: config.workProtocol?.ignoredPaths ?? [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", ".ros/telemetry/**", ".ros/locks/**", "registries/**"]
   };
+  const limits = [
+    ["maxRawPayloadBytes", 1024],
+    ["maxRawSnapshotsPerExecution", 1],
+    ["maxRawBytesPerExecution", 1024],
+    ["maxCapabilityHistoryEntries", 2]
+  ];
+  for (const [field, minimum] of limits) {
+    if (!Number.isInteger(result[field]) || result[field] < minimum) {
+      throw new Error(`telemetry.${field} must be an integer greater than or equal to ${minimum}`);
+    }
+  }
+  return result;
 }
 
 export function loadMetricRegistry(root) {
@@ -127,6 +153,7 @@ export function loadMetricRegistry(root) {
   const metrics = new Map();
   for (const metric of registry.metrics) {
     if (!metric?.id || metrics.has(metric.id)) throw new Error(`telemetry metric registry has invalid or duplicate id '${metric?.id ?? ""}'`);
+    if (!metric.unit || !AGGREGATIONS.has(metric.aggregation)) throw new Error(`telemetry metric registry has an invalid definition for '${metric.id}'`);
     metrics.set(metric.id, metric);
   }
   return { ...registry, file, metrics };
@@ -137,7 +164,7 @@ function executionDirectory(root) {
 }
 
 function executionFile(root, executionId) {
-  if (!/^EXE-[A-Za-z0-9._:-]+$/.test(executionId)) throw new Error(`invalid execution ID '${executionId}'`);
+  if (!/^EXE-[A-Za-z0-9._-]+$/.test(executionId)) throw new Error(`invalid execution ID '${executionId}'`);
   return path.join(executionDirectory(root), `${executionId}.json`);
 }
 
@@ -163,13 +190,15 @@ function loadContext(root) {
 }
 
 function updateContextExecution(root, workItemId, executionId) {
-  const context = loadContext(root);
-  const item = context.workItems.find((entry) => entry.id === workItemId);
-  if (!item) throw new Error(`work item '${workItemId}' is not in repository context`);
-  item.telemetryExecutionIds ??= [];
-  if (!item.telemetryExecutionIds.includes(executionId)) item.telemetryExecutionIds.push(executionId);
-  context.updatedAt = nowIso();
-  writeJson(contextFile(root), context);
+  return withFileLock(root, "work-protocol", () => {
+    const context = loadContext(root);
+    const item = context.workItems.find((entry) => entry.id === workItemId);
+    if (!item) throw new Error(`work item '${workItemId}' is not in repository context`);
+    item.telemetryExecutionIds ??= [];
+    if (!item.telemetryExecutionIds.includes(executionId)) item.telemetryExecutionIds.push(executionId);
+    context.updatedAt = nowIso();
+    writeJson(contextFile(root), context);
+  });
 }
 
 function git(root, args, fallback = null) {
@@ -202,7 +231,16 @@ function gitPaths(root) {
     paths.push(entry.slice(3));
     if (/[RC]/.test(status) && parts[index + 1]) index += 1;
   }
-  return [...new Set(paths.filter((item) => item && !item.startsWith(".ros/telemetry/")))].sort();
+  return [...new Set(paths.filter((item) => item && !ignoredMetricPath(root, item)))].sort();
+}
+
+function globMatch(value, pattern) {
+  const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&").replaceAll("**", "\u0000").replaceAll("*", "[^/]*").replaceAll("\u0000", ".*");
+  return new RegExp(`^${escaped}$`).test(value);
+}
+
+function ignoredMetricPath(root, value) {
+  return telemetryConfig(root).ignoredPaths.some((pattern) => globMatch(value, pattern));
 }
 
 function gitSnapshot(root) {
@@ -255,12 +293,13 @@ function cleanBaselineChanges(root, start) {
   for (const line of nameOutput.split(/\r?\n/).filter(Boolean)) {
     const [status, first, second] = line.split("\t");
     const code = status[0];
-    entries.push({ status: code, path: code === "R" || code === "C" ? second : first, from: code === "R" || code === "C" ? first : null });
+    const file = code === "R" || code === "C" ? second : first;
+    if (!ignoredMetricPath(root, file)) entries.push({ status: code, path: file, from: code === "R" || code === "C" ? first : null });
   }
   const known = new Set(entries.map((entry) => entry.path));
   const untracked = (git(root, ["ls-files", "--others", "--exclude-standard", "-z"], "") || "")
     .split("\0")
-    .filter((item) => item && !item.startsWith(".ros/telemetry/"));
+    .filter((item) => item && !ignoredMetricPath(root, item));
   for (const file of untracked) if (!known.has(file)) entries.push({ status: "A", path: file, from: null, untracked: true });
 
   let linesAdded = 0;
@@ -270,6 +309,7 @@ function cleanBaselineChanges(root, start) {
   for (const line of numstatOutput.split(/\r?\n/).filter(Boolean)) {
     const [added, deleted, ...nameParts] = line.split("\t");
     const file = nameParts.at(-1);
+    if (ignoredMetricPath(root, file)) continue;
     if (added === "-" || deleted === "-") {
       binaryFiles += 1;
       lineStats.set(file, { added: null, deleted: null });
@@ -415,16 +455,45 @@ function ensureRecordDefaults(record) {
   return record;
 }
 
-function upsertCapability(record, capability) {
+function upsertCapability(root, record, capability) {
   const key = `${capability.metricId ?? ""}\0${capability.providerField ?? ""}`;
   const index = record.capabilities.findIndex((entry) => `${entry.metricId ?? ""}\0${entry.providerField ?? ""}` === key);
   const value = {
     ...capability,
     discoveredAt: capability.discoveredAt ?? nowIso(),
+    lastAssessedAt: capability.lastAssessedAt ?? capability.discoveredAt ?? nowIso(),
+    recordedAt: nowIso(),
     source: capability.source ?? source("agent-report", "telemetry-capability", "explicit")
   };
-  if (index >= 0) record.capabilities[index] = value;
-  else record.capabilities.push(value);
+  if (index < 0) {
+    record.capabilities.push(value);
+    return;
+  }
+  const previous = record.capabilities[index];
+  const changed = digest({ status: previous.status, reason: previous.reason ?? null, source: previous.source })
+    !== digest({ status: value.status, reason: value.reason ?? null, source: value.source });
+  let history = [...(previous.history ?? [])];
+  let historyOmitted = previous.historyOmitted ?? 0;
+  if (changed) history.push({
+    status: previous.status,
+    reason: previous.reason ?? null,
+    source: previous.source,
+    discoveredAt: previous.discoveredAt,
+    lastAssessedAt: previous.lastAssessedAt ?? previous.discoveredAt,
+    recordedAt: previous.recordedAt ?? previous.discoveredAt
+  });
+  const maximumHistory = telemetryConfig(root).maxCapabilityHistoryEntries;
+  if (history.length > maximumHistory) {
+    historyOmitted += history.length - maximumHistory;
+    history = [history[0], ...history.slice(-(maximumHistory - 1))];
+  }
+  record.capabilities[index] = {
+    ...previous,
+    ...value,
+    discoveredAt: changed ? value.discoveredAt : previous.discoveredAt,
+    ...(history.length ? { history } : {}),
+    ...(historyOmitted ? { historyOmitted } : {})
+  };
 }
 
 function normalizeMetric(root, metric, defaults = {}) {
@@ -447,6 +516,7 @@ function normalizeMetric(root, metric, defaults = {}) {
     scope: metric.scope ?? defaults.scope ?? "execution",
     aggregation: metric.aggregation ?? definition.aggregation,
     dimensions: metric.dimensions ?? {},
+    pricing: metric.pricing ?? null,
     source: metricSource,
     collectedAt,
     schemaVersion: TELEMETRY_SCHEMA_VERSION
@@ -458,10 +528,10 @@ function normalizeMetric(root, metric, defaults = {}) {
 function addMetric(root, record, metric, defaults = {}) {
   const normalized = normalizeMetric(root, metric, defaults);
   if (!record.metrics.some((entry) => entry.measurementId === normalized.measurementId)) record.metrics.push(normalized);
-  upsertCapability(record, {
+  upsertCapability(root, record, {
     metricId: normalized.id,
     status: normalized.quality === "derived" ? "derived" : normalized.quality === "estimated" ? "estimated" : "supported-observed",
-    reason: `measurement ${normalized.measurementId} recorded`,
+    reason: "normalized measurement recorded",
     discoveredAt: normalized.collectedAt,
     source: normalized.source
   });
@@ -478,9 +548,6 @@ export function startExecution(root, workItemId, options = {}) {
   if (!config.enabled) return null;
   const id = options.executionId ?? executionId();
   const file = executionFile(root, id);
-  if (fs.existsSync(file) || loadExecutions(root).some(({ record }) => record?.executionId === id)) {
-    throw new Error(`duplicate execution ID '${id}'`);
-  }
   const startedAt = options.startedAt ?? nowIso();
   const identity = discoverIdentity(options.identity ?? options);
   const discoverySource = identity.discoverySource;
@@ -537,7 +604,12 @@ export function startExecution(root, workItemId, options = {}) {
     source: source("ros-git", "git-status", "porcelain-v1"),
     collectedAt: startedAt
   });
-  writeJson(file, record);
+  withFileLock(root, "telemetry-execution-index", () => {
+    if (fs.existsSync(file) || loadExecutions(root).some(({ record: existing }) => existing?.executionId === id)) {
+      throw new Error(`duplicate execution ID '${id}'`);
+    }
+    writeJson(file, record);
+  });
   if (options.attachToContext !== false) updateContextExecution(root, workItemId, id);
   return record;
 }
@@ -558,13 +630,22 @@ function resolveExecution(root, target, { activeOnly = false } = {}) {
   return candidates.at(-1);
 }
 
+function withExecutionLock(root, target, options, operation) {
+  const selected = resolveExecution(root, target, options);
+  const executionId = selected.record.executionId;
+  return withFileLock(root, `telemetry-execution:${executionId}`, () => {
+    const current = resolveExecution(root, executionId, options);
+    return operation(current);
+  });
+}
+
 function sanitizeRaw(value, currentPath = "$", redactions = []) {
   if (Array.isArray(value)) return value.map((item, index) => sanitizeRaw(item, `${currentPath}[${index}]`, redactions));
   if (value && typeof value === "object") {
     const result = {};
     for (const [key, child] of Object.entries(value)) {
       const childPath = `${currentPath}.${key}`;
-      if (RAW_REDACTED_KEY.test(key)) {
+      if (RAW_REDACTED_KEY.test(key) || RAW_SENSITIVE_SEGMENT.test(key)) {
         result[key] = "[REDACTED_BY_ROS]";
         redactions.push(childPath);
       } else {
@@ -575,6 +656,19 @@ function sanitizeRaw(value, currentPath = "$", redactions = []) {
   }
   if (typeof value === "string" && value.length > MAX_RAW_STRING) return `[TRUNCATED_BY_ROS length=${value.length}]`;
   return value;
+}
+
+function rawSensitiveFindings(value, currentPath = "$", result = []) {
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => rawSensitiveFindings(item, `${currentPath}[${index}]`, result));
+  } else if (value && typeof value === "object") {
+    for (const [key, child] of Object.entries(value)) {
+      const childPath = `${currentPath}.${key}`;
+      if ((RAW_REDACTED_KEY.test(key) || RAW_SENSITIVE_SEGMENT.test(key)) && child !== "[REDACTED_BY_ROS]") result.push(childPath);
+      else rawSensitiveFindings(child, childPath, result);
+    }
+  }
+  return result;
 }
 
 function leafPaths(value, prefix = "$", result = []) {
@@ -653,7 +747,10 @@ function adaptOpenAICodex(input, collectedAt) {
     metrics,
     events: completed.map((entry) => ({ type: "agent.turn.completed", occurredAt: entry.timestamp ?? collectedAt, source: runtimeSource })),
     raw: input,
-    mappedFields: Object.keys(fields).map((field) => `usage.${field}`),
+    mappedFields: [
+      "type", "timestamp", "server_model", "model", "usage.model_context_window",
+      ...Object.keys(fields).map((field) => `usage.${field}`)
+    ],
     schemaVersion: input.schemaVersion ?? null,
     collectedAt,
     source: runtimeSource
@@ -676,7 +773,7 @@ function adaptClaudeStatusline(input, collectedAt) {
     if (present) metrics.push(metric(id, value, collectedAt, runtimeSource, {
       scope: scopeName,
       quality,
-      confidence: quality === "estimated" ? 0.8 : null,
+      confidence: quality === "estimated" ? "medium" : null,
       ...(id.startsWith("cost.") ? { currency: "USD" } : {})
     }));
   }
@@ -704,7 +801,19 @@ function adaptClaudeStatusline(input, collectedAt) {
     metrics,
     events: [],
     raw: input,
-    mappedFields: ["context_window", "cost.total_cost_usd", "model.id", "version", "session_id"],
+    mappedFields: [
+      "context_window.context_window_size",
+      "context_window.used_percentage",
+      "context_window.current_usage.input_tokens",
+      "context_window.current_usage.output_tokens",
+      "context_window.current_usage.cache_creation_input_tokens",
+      "context_window.current_usage.cache_read_input_tokens",
+      "cost.total_cost_usd",
+      "model.id",
+      "version",
+      "session_id",
+      "agent.name"
+    ],
     schemaVersion: input.schemaVersion ?? null,
     collectedAt,
     source: runtimeSource
@@ -739,23 +848,21 @@ function adaptOtel(input, collectedAt, identityDefaults = {}) {
   let sessionId = null;
   for (const record of records) {
     const name = firstValue(record, ["name", "event.name", "metric.name", "instrumentation.name"]);
-    const at = firstValue(record, ["timestamp", "time", "observedTimeUnixNano"]) ?? collectedAt;
+    const at = runtimeTimestamp(firstValue(record, ["timestamp", "time", "timeUnixNano", "observedTimeUnixNano"]), collectedAt);
     provider = firstValue(record, ["gen_ai.provider.name", "provider"]) ?? provider;
     model = firstValue(record, ["gen_ai.response.model", "gen_ai.request.model", "model"]) ?? model;
     sessionId = firstValue(record, ["session.id", "gen_ai.conversation.id", "session_id"]) ?? sessionId;
     const runtimeSource = source("runtime-output", "opentelemetry-json", "otel-json-export", { provider, runtime });
-    const direct = {
-      "gen_ai.usage.input_tokens": "tokens.input",
-      "input_tokens": "tokens.input",
-      "gen_ai.usage.output_tokens": "tokens.output",
-      "output_tokens": "tokens.output",
-      "cache_read_tokens": "tokens.cache_read",
-      "cache_creation_tokens": "tokens.cache_write",
-      "duration_ms": "time.model_ms",
-      "ttft_ms": "time.first_token_ms"
-    };
-    for (const [field, id] of Object.entries(direct)) {
-      const value = firstValue(record, [field]);
+    const direct = [
+      [["gen_ai.usage.input_tokens", "input_tokens"], "tokens.input"],
+      [["gen_ai.usage.output_tokens", "output_tokens"], "tokens.output"],
+      [["cache_read_tokens"], "tokens.cache_read"],
+      [["cache_creation_tokens"], "tokens.cache_write"],
+      [["duration_ms"], "time.model_ms"],
+      [["ttft_ms"], "time.first_token_ms"]
+    ];
+    for (const [fields, id] of direct) {
+      const value = firstValue(record, fields);
       if (typeof value === "number") metrics.push(metric(id, value, at, runtimeSource, { scope: "operation", dimensions: name ? { event: name } : {} }));
     }
     if (name === "gemini_cli.token.usage" || name === "gen_ai.client.token.usage") {
@@ -793,7 +900,18 @@ function adaptOtel(input, collectedAt, identityDefaults = {}) {
     metrics,
     events: [],
     raw: input,
-    mappedFields: ["attributes.gen_ai.*", "attributes.session.id", "name", "value"],
+    mappedFields: [
+      "name", "event.name", "metric.name", "instrumentation.name",
+      "timestamp", "time", "timeUnixNano", "observedTimeUnixNano",
+      "gen_ai.provider.name", "provider",
+      "gen_ai.response.model", "gen_ai.request.model", "model",
+      "session.id", "gen_ai.conversation.id", "session_id",
+      "gen_ai.usage.input_tokens", "input_tokens",
+      "gen_ai.usage.output_tokens", "output_tokens",
+      "cache_read_tokens", "cache_creation_tokens", "duration_ms", "ttft_ms",
+      "type", "gen_ai.token.type", "value", "sum", "count",
+      "success", "tool_name", "function_name", "gen_ai.tool.name", "memory_type"
+    ],
     schemaVersion: input.schemaVersion ?? null,
     collectedAt,
     source: source("runtime-output", "opentelemetry-json", "otel-json-export", { provider, runtime })
@@ -832,12 +950,12 @@ function adaptHook(input, collectedAt, identityDefaults) {
   if (/permissionrequest/i.test(hookName)) metrics.push(metric("agent.approvals_requested", 1, input.timestamp ?? collectedAt, runtimeSource));
   if (/permissiondenied/i.test(hookName)) metrics.push(metric("agent.approvals_denied", 1, input.timestamp ?? collectedAt, runtimeSource));
   return {
-    identity: { ...identityDefaults, sessionId: input.session_id ?? null, model: input.model?.id ?? input.model ?? null, agentId: input.agent_type ?? null },
+    identity: { ...identityDefaults, sessionId: input.session_id ?? null, model: input.model?.id ?? (typeof input.model === "string" ? input.model : null), agentId: input.agent_type ?? null },
     capabilities: metrics.map((item) => mappedCapability(item.id, true, runtimeSource, item.collectedAt)),
     metrics,
     events,
     raw: input,
-    mappedFields: ["hook_event_name", "tool_name", "timestamp", "session_id", "model", "agent_type"],
+    mappedFields: ["hook_event_name", "hookEventName", "event", "tool_name", "toolName", "tool.name", "timestamp", "session_id", "model", "model.id", "agent_type", "error", "tool_response.error", "success"],
     schemaVersion: input.schemaVersion ?? null,
     collectedAt: input.timestamp ?? collectedAt,
     source: runtimeSource
@@ -866,14 +984,20 @@ function mergeObject(target, incoming) {
   return target;
 }
 
-export function ingestTelemetry(root, target, input, { adapter = "generic", collectedAt = nowIso() } = {}) {
-  const resolved = resolveExecution(root, target, { activeOnly: true });
+function ingestAdapted(root, resolved, adapted, adapter) {
   const record = ensureRecordDefaults(resolved.record);
-  const adapted = adaptInput(adapter, input, collectedAt);
-  const snapshotId = adapted.snapshotId ?? `SNAP-${digest({ adapter, input })}`;
-  if (record.rawTelemetry.some((snapshot) => snapshot.snapshotId === snapshotId)) return record;
+  const snapshotId = adapted.snapshotId ?? `SNAP-${digest({ adapter, raw: adapted.raw })}`;
+  if (record.rawTelemetry.some((snapshot) => snapshot.snapshotId === snapshotId)
+    || record.events.some((event) => event.type === "telemetry.snapshot.ingested" && event.snapshotId === snapshotId)) return record;
+  const snapshotMetricIds = new Set((adapted.metrics ?? []).map((item) => item.id));
+  for (const metricId of snapshotMetricIds) {
+    const declared = (adapted.capabilities ?? []).filter((item) => item.metricId === metricId);
+    if (declared.length && declared.every((item) => item.status === "supported-unavailable" || item.status === "unsupported")) {
+      throw new Error(`telemetry snapshot '${snapshotId}' records metric '${metricId}' while declaring it unavailable or unsupported`);
+    }
+  }
   mergeObject(record.identity, adapted.identity);
-  for (const capability of adapted.capabilities ?? []) upsertCapability(record, capability);
+  for (const capability of adapted.capabilities ?? []) upsertCapability(root, record, capability);
   for (const item of adapted.metrics ?? []) addMetric(root, record, item, { source: adapted.source, collectedAt: adapted.collectedAt });
   for (const event of adapted.events ?? []) {
     const normalized = { eventId: event.eventId ?? `TEVT-${digest(event)}`, ...event };
@@ -892,14 +1016,25 @@ export function ingestTelemetry(root, target, input, { adapter = "generic", coll
     if (!record.qualitySignals.some((existing) => existing.signalId === normalized.signalId)) record.qualitySignals.push(normalized);
   }
   const config = telemetryConfig(root);
-  if (config.allowRawTelemetry) {
-    const redactions = [];
-    const payload = sanitizeRaw(adapted.raw, "$", redactions);
-    const serializedBytes = Buffer.byteLength(JSON.stringify(payload));
-    if (serializedBytes > config.maxRawPayloadBytes) throw new Error(`sanitized telemetry payload exceeds ${config.maxRawPayloadBytes} bytes`);
-    const fields = leafPaths(payload);
-    const mapped = new Set(adapted.mappedFields ?? []);
-    const discoveredFields = fields.filter((field) => ![...mapped].some((known) => field.includes(known.replace("*", ""))));
+  const redactions = [];
+  const payload = sanitizeRaw(adapted.raw, "$", redactions);
+  const fields = leafPaths(payload);
+  const mapped = new Set(adapted.mappedFields ?? []);
+  const canonicalField = (field) => field.replace(/^\$(?:\[\])?\.?/, "");
+  const discoveredFields = fields.filter((field) => {
+    const canonical = canonicalField(field);
+    return ![...mapped].some((known) => canonical === known || canonical.endsWith(`.${known}`));
+  });
+  const serializedBytes = Buffer.byteLength(JSON.stringify(payload));
+  const retainedRawBytes = record.rawTelemetry.reduce((total, snapshot) => total + Buffer.byteLength(JSON.stringify(snapshot.payload)), 0);
+  let rawRetention = { status: "omitted", reason: "repository-policy-disabled", payloadBytes: serializedBytes };
+  if (config.allowRawTelemetry && serializedBytes > config.maxRawPayloadBytes) {
+    rawRetention = { status: "omitted", reason: "snapshot-byte-limit", payloadBytes: serializedBytes };
+  } else if (config.allowRawTelemetry && record.rawTelemetry.length >= config.maxRawSnapshotsPerExecution) {
+    rawRetention = { status: "omitted", reason: "execution-snapshot-limit", payloadBytes: serializedBytes };
+  } else if (config.allowRawTelemetry && retainedRawBytes + serializedBytes > config.maxRawBytesPerExecution) {
+    rawRetention = { status: "omitted", reason: "execution-byte-limit", payloadBytes: serializedBytes };
+  } else if (config.allowRawTelemetry) {
     record.rawTelemetry.push({
       snapshotId,
       adapter,
@@ -907,44 +1042,69 @@ export function ingestTelemetry(root, target, input, { adapter = "generic", coll
       collectedAt: adapted.collectedAt,
       source: adapted.source,
       payload,
+      payloadBytes: serializedBytes,
       discoveredFields,
       redactions
     });
-    for (const field of discoveredFields) upsertCapability(record, {
-      providerField: field,
-      status: "unknown",
-      reason: "provider field preserved but not normalized by this adapter version",
-      discoveredAt: adapted.collectedAt,
-      source: adapted.source
-    });
-    if (redactions.length) addMetric(root, record, metric("telemetry.redactions", redactions.length, adapted.collectedAt, source("calculated", "ros-raw-filter", "sensitive-key-redaction"), { quality: "derived" }));
-    if (discoveredFields.length) addMetric(root, record, metric("telemetry.unknown_fields", discoveredFields.length, adapted.collectedAt, source("calculated", "ros-field-discovery", "unmapped-leaf-count"), { quality: "derived" }));
+    rawRetention = { status: "retained", reason: null, payloadBytes: serializedBytes };
   }
+  for (const field of discoveredFields) upsertCapability(root, record, {
+    providerField: field,
+    status: "unknown",
+    reason: rawRetention.status === "retained"
+      ? "provider field preserved but not normalized by this adapter version"
+      : `provider field discovered but raw payload was omitted: ${rawRetention.reason}`,
+    discoveredAt: adapted.collectedAt,
+    source: adapted.source
+  });
+  if (redactions.length) addMetric(root, record, metric("telemetry.redactions", redactions.length, adapted.collectedAt, source("calculated", "ros-raw-filter", "sensitive-key-redaction"), { quality: "derived" }));
+  if (discoveredFields.length) addMetric(root, record, metric("telemetry.unknown_fields", discoveredFields.length, adapted.collectedAt, source("calculated", "ros-field-discovery", "unmapped-leaf-count"), { quality: "derived" }));
+  if (rawRetention.status === "omitted") addMetric(root, record, metric("telemetry.raw_snapshots_omitted", 1, adapted.collectedAt, source("calculated", "ros-retention-policy", rawRetention.reason), { quality: "derived" }));
+  const ingestionEvent = {
+    type: "telemetry.snapshot.ingested",
+    snapshotId,
+    adapter,
+    rawRetention,
+    occurredAt: adapted.collectedAt,
+    source: adapted.source
+  };
+  ingestionEvent.eventId = `TEVT-${digest({ type: ingestionEvent.type, snapshotId, adapter })}`;
+  if (!record.events.some((event) => event.eventId === ingestionEvent.eventId)) record.events.push(ingestionEvent);
   record.provenance.sources.push(adapted.source);
   record.provenance.sources = [...new Map(record.provenance.sources.map((item) => [digest(item), item])).values()];
   writeJson(resolved.file, record);
   return record;
 }
 
+export function ingestTelemetry(root, target, input, { adapter = "generic", collectedAt = nowIso() } = {}) {
+  const adapted = adaptInput(adapter, input, collectedAt);
+  adapted.snapshotId ??= `SNAP-${digest({ adapter, input })}`;
+  return withExecutionLock(root, target, { activeOnly: true }, (resolved) => ingestAdapted(root, resolved, adapted, adapter));
+}
+
 export function recordTelemetryMetric(root, target, input) {
-  const resolved = resolveExecution(root, target, { activeOnly: true });
-  ensureRecordDefaults(resolved.record);
-  addMetric(root, resolved.record, input);
-  writeJson(resolved.file, resolved.record);
-  return resolved.record;
+  return withExecutionLock(root, target, { activeOnly: true }, (resolved) => {
+    ensureRecordDefaults(resolved.record);
+    addMetric(root, resolved.record, input);
+    writeJson(resolved.file, resolved.record);
+    return resolved.record;
+  });
 }
 
 export function recordTelemetryLifecycle(root, workItemId, type, fields = {}) {
   const active = loadExecutions(root).filter(({ record }) => record.workItemId === workItemId && record.status === "active");
   const at = fields.occurredAt ?? nowIso();
   for (const entry of active) {
-    ensureRecordDefaults(entry.record);
-    const event = { type: `work.${type}`, occurredAt: at, reason: fields.reason ?? null, source: source("ros-clock", "ros", "work-lifecycle") };
-    event.eventId = `TEVT-${digest(event)}`;
-    if (!entry.record.events.some((existing) => existing.eventId === event.eventId)) entry.record.events.push(event);
-    if (type === "blocked") addMetric(root, entry.record, metric("agent.interruptions", 1, at, source("calculated", "ros-work-protocol", "blocked-transition"), { quality: "derived" }));
-    if (type === "resumed") addMetric(root, entry.record, metric("agent.resumes", 1, at, source("calculated", "ros-work-protocol", "resume-transition"), { quality: "derived" }));
-    writeJson(entry.file, entry.record);
+    withExecutionLock(root, entry.record.executionId, {}, (current) => {
+      if (current.record.status !== "active") return;
+      ensureRecordDefaults(current.record);
+      const event = { type: `work.${type}`, occurredAt: at, reason: fields.reason ?? null, source: source("ros-clock", "ros", "work-lifecycle") };
+      event.eventId = `TEVT-${digest(event)}`;
+      if (!current.record.events.some((existing) => existing.eventId === event.eventId)) current.record.events.push(event);
+      if (type === "blocked") addMetric(root, current.record, metric("agent.interruptions", 1, at, source("calculated", "ros-work-protocol", "blocked-transition"), { quality: "derived" }));
+      if (type === "resumed") addMetric(root, current.record, metric("agent.resumes", 1, at, source("calculated", "ros-work-protocol", "resume-transition"), { quality: "derived" }));
+      writeJson(current.file, current.record);
+    });
   }
 }
 
@@ -969,49 +1129,55 @@ const GIT_CHANGE_METRICS = [
 ];
 
 export function finalizeExecution(root, target, options = {}) {
-  const resolved = resolveExecution(root, target);
-  const record = resolved.record;
-  if (record.status === "finalized") return record;
-  if (options.input) ingestTelemetry(root, record.executionId, options.input, { adapter: options.adapter ?? "generic" });
-  const refreshed = ensureRecordDefaults(readJson(resolved.file));
-  const finalizedAt = options.finalizedAt ?? nowIso();
-  refreshed.repository.end = gitSnapshot(root);
-  const summary = cleanBaselineChanges(root, refreshed.repository.start);
-  refreshed.repository.changeSummary = summary;
-  addMetric(root, refreshed, metric("time.wall_ms", Math.max(0, Date.parse(finalizedAt) - Date.parse(refreshed.startedAt)), finalizedAt, source("ros-clock", "ros", "timestamp-difference"), { quality: "derived" }));
-  addMetric(root, refreshed, metric("time.blocked_ms", blockedDuration(refreshed.events, finalizedAt), finalizedAt, source("calculated", "ros-work-lifecycle", "block-resume-intervals"), { quality: "derived" }));
-  addMetric(root, refreshed, metric("git.ending_dirty_files", refreshed.repository.end.dirtyPaths.length, finalizedAt, source("ros-git", "git-status", "porcelain-v1"), { quality: "derived" }));
-  if (summary.available) {
-    const values = {
-      "git.commits_created": summary.commits,
-      "git.files_added": summary.counts.added,
-      "git.files_modified": summary.counts.modified,
-      "git.files_deleted": summary.counts.deleted,
-      "git.files_renamed": summary.counts.renamed,
-      "git.binary_files_changed": summary.binaryFiles,
-      "git.lines_added": summary.linesAdded,
-      "git.lines_deleted": summary.linesDeleted,
-      "tests.added": summary.tests.added,
-      "tests.modified": summary.tests.modified,
-      "tests.removed": summary.tests.removed,
-      "documentation.files_changed": summary.documentationFilesChanged
-    };
-    for (const [id, value] of Object.entries(values)) addMetric(root, refreshed, metric(id, value, finalizedAt, source("ros-git", "git-diff", summary.mechanism), { quality: "derived" }));
-    refreshed.links.commits = [...new Set([...(refreshed.links.commits ?? []), summary.startCommit, summary.endCommit].filter(Boolean))];
-  } else {
-    for (const id of GIT_CHANGE_METRICS) upsertCapability(refreshed, {
-      metricId: id,
-      status: "supported-unavailable",
-      reason: `execution attribution unavailable: ${summary.reason}`,
-      discoveredAt: finalizedAt,
-      source: source("ros-git", "git-diff", "precondition-check")
-    });
-  }
-  refreshed.status = "finalized";
-  refreshed.finalizedAt = finalizedAt;
-  refreshed.events.push({ type: "execution.finalized", occurredAt: finalizedAt, source: source("ros-clock", "ros", "work-lifecycle"), eventId: `TEVT-${digest({ type: "execution.finalized", finalizedAt })}` });
-  writeJson(resolved.file, refreshed);
-  return refreshed;
+  const selected = resolveExecution(root, target);
+  if (selected.record.status === "finalized" && !options.input) return selected.record;
+  const adapter = options.adapter ?? "generic";
+  const adapted = options.input ? adaptInput(adapter, options.input, options.collectedAt ?? nowIso()) : null;
+  if (adapted) adapted.snapshotId ??= `SNAP-${digest({ adapter, input: options.input })}`;
+  return withExecutionLock(root, selected.record.executionId, {}, (resolved) => {
+    if (resolved.record.status === "finalized") return adapted ? ingestAdapted(root, resolved, adapted, adapter) : resolved.record;
+    if (adapted) ingestAdapted(root, resolved, adapted, adapter);
+    const refreshed = ensureRecordDefaults(resolved.record);
+    if (refreshed.status === "finalized") return refreshed;
+    const finalizedAt = options.finalizedAt ?? nowIso();
+    refreshed.repository.end = gitSnapshot(root);
+    const summary = cleanBaselineChanges(root, refreshed.repository.start);
+    refreshed.repository.changeSummary = summary;
+    addMetric(root, refreshed, metric("time.wall_ms", Math.max(0, Date.parse(finalizedAt) - Date.parse(refreshed.startedAt)), finalizedAt, source("ros-clock", "ros", "timestamp-difference"), { quality: "derived" }));
+    addMetric(root, refreshed, metric("time.blocked_ms", blockedDuration(refreshed.events, finalizedAt), finalizedAt, source("calculated", "ros-work-lifecycle", "block-resume-intervals"), { quality: "derived" }));
+    addMetric(root, refreshed, metric("git.ending_dirty_files", refreshed.repository.end.dirtyPaths.length, finalizedAt, source("ros-git", "git-status", "porcelain-v1"), { quality: "derived" }));
+    if (summary.available) {
+      const values = {
+        "git.commits_created": summary.commits,
+        "git.files_added": summary.counts.added,
+        "git.files_modified": summary.counts.modified,
+        "git.files_deleted": summary.counts.deleted,
+        "git.files_renamed": summary.counts.renamed,
+        "git.binary_files_changed": summary.binaryFiles,
+        "git.lines_added": summary.linesAdded,
+        "git.lines_deleted": summary.linesDeleted,
+        "tests.added": summary.tests.added,
+        "tests.modified": summary.tests.modified,
+        "tests.removed": summary.tests.removed,
+        "documentation.files_changed": summary.documentationFilesChanged
+      };
+      for (const [id, value] of Object.entries(values)) addMetric(root, refreshed, metric(id, value, finalizedAt, source("ros-git", "git-diff", summary.mechanism), { quality: "derived" }));
+      refreshed.links.commits = [...new Set([...(refreshed.links.commits ?? []), summary.startCommit, summary.endCommit].filter(Boolean))];
+    } else {
+      for (const id of GIT_CHANGE_METRICS) upsertCapability(root, refreshed, {
+        metricId: id,
+        status: "supported-unavailable",
+        reason: `execution attribution unavailable: ${summary.reason}`,
+        discoveredAt: finalizedAt,
+        source: source("ros-git", "git-diff", "precondition-check")
+      });
+    }
+    refreshed.status = "finalized";
+    refreshed.finalizedAt = finalizedAt;
+    refreshed.events.push({ type: "execution.finalized", occurredAt: finalizedAt, source: source("ros-clock", "ros", "work-lifecycle"), eventId: `TEVT-${digest({ type: "execution.finalized", finalizedAt })}` });
+    writeJson(resolved.file, refreshed);
+    return refreshed;
+  });
 }
 
 export function finalizeWorkExecutions(root, workItemId, options = {}) {
@@ -1028,6 +1194,51 @@ export function showTelemetry(root, target) {
 
 function dimensionsKey(metricItem) {
   return JSON.stringify(stable(metricItem.dimensions ?? {}));
+}
+
+function timingSummary(records) {
+  const starts = records.map((record) => record.startedAt).filter(isTimestamp).map(Date.parse);
+  const spans = records.flatMap((record) => {
+    if (!isTimestamp(record.startedAt) || !isTimestamp(record.finalizedAt)) return [];
+    const start = Date.parse(record.startedAt);
+    const end = Date.parse(record.finalizedAt);
+    return end >= start ? [{ start, end }] : [];
+  });
+  const fullyFinalized = records.length > 0 && spans.length === records.length;
+  if (!spans.length) return {
+    fullyFinalized,
+    finalizedExecutionCount: spans.length,
+    activeExecutionCount: records.length - spans.length,
+    earliestStartedAt: starts.length ? new Date(Math.min(...starts)).toISOString() : null,
+    latestFinalizedAt: null,
+    calendarSpanMs: null,
+    totalExecutionWallMs: null,
+    overlappingExecutionMs: null
+  };
+  const ordered = [...spans].sort((a, b) => a.start - b.start || a.end - b.end);
+  let unionMs = 0;
+  let currentStart = ordered[0].start;
+  let currentEnd = ordered[0].end;
+  for (const span of ordered.slice(1)) {
+    if (span.start <= currentEnd) currentEnd = Math.max(currentEnd, span.end);
+    else {
+      unionMs += currentEnd - currentStart;
+      currentStart = span.start;
+      currentEnd = span.end;
+    }
+  }
+  unionMs += currentEnd - currentStart;
+  const totalExecutionWallMs = spans.reduce((total, span) => total + Math.max(0, span.end - span.start), 0);
+  return {
+    fullyFinalized,
+    finalizedExecutionCount: spans.length,
+    activeExecutionCount: records.length - spans.length,
+    earliestStartedAt: starts.length ? new Date(Math.min(...starts)).toISOString() : null,
+    latestFinalizedAt: new Date(Math.max(...spans.map((span) => span.end))).toISOString(),
+    calendarSpanMs: fullyFinalized ? Math.max(...spans.map((span) => span.end)) - Math.min(...spans.map((span) => span.start)) : null,
+    totalExecutionWallMs: fullyFinalized ? totalExecutionWallMs : null,
+    overlappingExecutionMs: fullyFinalized ? Math.max(0, totalExecutionWallMs - unionMs) : null
+  };
 }
 
 export function summarizeTelemetry(root, workItemId) {
@@ -1047,12 +1258,18 @@ export function summarizeTelemetry(root, workItemId) {
     const aggregation = definition?.aggregation ?? values[0].item.aggregation;
     let value = null;
     let note = null;
-    if (aggregation === "sum") value = values.reduce((total, entry) => total + entry.item.value, 0);
+    if (aggregation === "sum") {
+      value = values.reduce((total, entry) => total + entry.item.value, 0);
+      if (values[0].item.id === "time.wall_ms") note = "sum of execution spans; may exceed calendarSpanMs when executions overlap";
+    }
     else if (aggregation === "maximum") value = Math.max(...values.map((entry) => entry.item.value));
     else if (aggregation === "latest-per-session") {
       const bySession = new Map();
       for (const entry of values) {
-        const session = entry.record.identity?.sessionId ?? `execution:${entry.record.executionId}`;
+        const identity = entry.record.identity ?? {};
+        const session = identity.sessionId
+          ? `${identity.provider ?? "unknown"}\0${identity.runtime ?? "unknown"}\0${identity.sessionId}`
+          : `execution:${entry.record.executionId}`;
         const previous = bySession.get(session);
         if (!previous || String(previous.item.collectedAt).localeCompare(String(entry.item.collectedAt)) < 0) bySession.set(session, entry);
       }
@@ -1073,6 +1290,7 @@ export function summarizeTelemetry(root, workItemId) {
     executionCount: records.length,
     providers: [...new Set(records.map((record) => record.identity?.provider ?? "unknown"))].sort(),
     runtimes: [...new Set(records.map((record) => record.identity?.runtime ?? "unknown"))].sort(),
+    timing: timingSummary(records),
     metrics: metrics.sort((a, b) => a.id.localeCompare(b.id))
   };
 }
@@ -1086,8 +1304,14 @@ function validClassification(value) {
 }
 
 export function telemetryFindings(root, context = loadContext(root)) {
-  const config = telemetryConfig(root);
   const findings = [];
+  let config;
+  try {
+    config = telemetryConfig(root);
+  } catch (error) {
+    findings.push(finding("ros.json", "telemetry", error.message));
+    return findings;
+  }
   if (!config.enabled) {
     if (!config.disabledReason) findings.push(finding("ros.json", "telemetry.disabledReason", "disabled telemetry requires an explicit reason"));
     return findings;
@@ -1110,24 +1334,41 @@ export function telemetryFindings(root, context = loadContext(root)) {
       findings.push(finding(relative, "", `malformed telemetry JSON: ${error.message}`));
       continue;
     }
+    if (!record || typeof record !== "object" || Array.isArray(record)) {
+      findings.push(finding(relative, "", "execution telemetry record must be an object"));
+      continue;
+    }
     records.push({ relative, record });
     if (record.schemaVersion !== TELEMETRY_SCHEMA_VERSION) findings.push(finding(relative, "schemaVersion", `unsupported telemetry schema version '${record.schemaVersion ?? "missing"}'`));
     if (!record.executionId) findings.push(finding(relative, "executionId", "execution identity is required"));
     else {
+      if (!/^EXE-[A-Za-z0-9._-]+$/.test(record.executionId)) findings.push(finding(relative, "executionId", "execution identity must be portable and match ^EXE-[A-Za-z0-9._-]+$"));
       if (seen.has(record.executionId)) findings.push(finding(relative, "executionId", `duplicate execution ID also in ${seen.get(record.executionId)}`));
       seen.set(record.executionId, relative);
       if (path.basename(file) !== `${record.executionId}.json`) findings.push(finding(relative, "executionId", "execution filename must match executionId"));
     }
     if (!record.workItemId) findings.push(finding(relative, "workItemId", "work-item linkage is required"));
     if (!record.identity?.provider || !record.identity?.runtime) findings.push(finding(relative, "identity", "provider and runtime identity are required; use 'unknown' only when discovery cannot resolve them"));
+    else for (const identityField of ["provider", "model", "modelVersion", "runtime", "runtimeVersion", "sessionId", "conversationId", "runId", "agentId", "subagentId", "parentExecutionId"]) {
+      const value = record.identity[identityField];
+      if (value !== null && value !== undefined && typeof value !== "string") findings.push(finding(relative, `identity.${identityField}`, "identity value must be a string or null"));
+    }
     if (record.provenance?.collector !== "ros" || !record.provenance?.collectorVersion || !isTimestamp(record.provenance?.discoveredAt)) findings.push(finding(relative, "provenance", "collector, collectorVersion, and discovery timestamp are required"));
     if (!isTimestamp(record.startedAt)) findings.push(finding(relative, "startedAt", "valid execution start timestamp is required"));
     if (!["active", "finalized"].includes(record.status)) findings.push(finding(relative, "status", `invalid execution status '${record.status}'`));
     if (record.status === "finalized" && !isTimestamp(record.finalizedAt)) findings.push(finding(relative, "finalizedAt", "finalized execution requires a completion timestamp"));
     if (record.finalizedAt && isTimestamp(record.startedAt) && Date.parse(record.finalizedAt) < Date.parse(record.startedAt)) findings.push(finding(relative, "finalizedAt", "execution completion precedes its start"));
+    for (const arrayField of ["capabilities", "metrics", "rawTelemetry", "events"]) {
+      if (!Array.isArray(record[arrayField])) findings.push(finding(relative, arrayField, "required telemetry collection must be an array"));
+    }
+    if (!record.repository || typeof record.repository !== "object" || Array.isArray(record.repository)) findings.push(finding(relative, "repository", "repository linkage and snapshots are required"));
+    if (!record.links || typeof record.links !== "object" || Array.isArray(record.links)) findings.push(finding(relative, "links", "execution links object is required"));
     const types = record.classification?.types;
     if (!Array.isArray(types) || !types.length) findings.push(finding(relative, "classification.types", "at least one work classification is required"));
-    else for (const type of types) if (!validClassification(type)) findings.push(finding(relative, "classification.types", `invalid work classification '${type}'`));
+    else {
+      if (new Set(types).size !== types.length) findings.push(finding(relative, "classification.types", "work classifications must be unique"));
+      for (const type of types) if (!validClassification(type)) findings.push(finding(relative, "classification.types", `invalid work classification '${type}'`));
+    }
     if (types?.includes("research-development")) {
       const rd = record.classification?.rd;
       if (!rd || !["researchQuestion", "hypothesis", "technicalUncertainty", "experimentalObjective", "knowledgeGap"].some((key) => rd[key])) {
@@ -1135,26 +1376,76 @@ export function telemetryFindings(root, context = loadContext(root)) {
       }
     }
     const capabilityByMetric = new Map();
-    for (const [index, capability] of (record.capabilities ?? []).entries()) {
+    const capabilityKeys = new Set();
+    const capabilities = Array.isArray(record.capabilities) ? record.capabilities : [];
+    const metrics = Array.isArray(record.metrics) ? record.metrics : [];
+    const qualitySignals = Array.isArray(record.qualitySignals) ? record.qualitySignals : [];
+    const rawTelemetry = Array.isArray(record.rawTelemetry) ? record.rawTelemetry : [];
+    const events = Array.isArray(record.events) ? record.events : [];
+    for (const [index, capability] of capabilities.entries()) {
+      if (!capability || typeof capability !== "object" || Array.isArray(capability)) {
+        findings.push(finding(relative, `capabilities[${index}]`, "capability must be an object"));
+        continue;
+      }
       if (!CAPABILITY_STATUSES.has(capability.status)) findings.push(finding(relative, `capabilities[${index}].status`, `invalid capability status '${capability.status}'`));
       if (!capability.metricId && !capability.providerField) findings.push(finding(relative, `capabilities[${index}]`, "capability requires metricId or providerField"));
+      const capabilityKey = `${capability.metricId ?? ""}\0${capability.providerField ?? ""}`;
+      if (capabilityKeys.has(capabilityKey)) findings.push(finding(relative, `capabilities[${index}]`, "duplicate capability identity"));
+      capabilityKeys.add(capabilityKey);
       if (!capability.source?.type || !capability.source?.name || !capability.source?.mechanism) findings.push(finding(relative, `capabilities[${index}].source`, "capability source provenance is required"));
+      else if (!SOURCE_TYPES.has(capability.source.type)) findings.push(finding(relative, `capabilities[${index}].source.type`, `unknown source type '${capability.source.type}'`));
+      if (!isTimestamp(capability.discoveredAt)) findings.push(finding(relative, `capabilities[${index}].discoveredAt`, "capability discovery timestamp is required"));
+      if (capability.lastAssessedAt !== undefined && !isTimestamp(capability.lastAssessedAt)) findings.push(finding(relative, `capabilities[${index}].lastAssessedAt`, "capability assessment timestamp must be valid"));
+      if (capability.recordedAt !== undefined && !isTimestamp(capability.recordedAt)) findings.push(finding(relative, `capabilities[${index}].recordedAt`, "capability recording timestamp must be valid"));
+      if (capability.history !== undefined && !Array.isArray(capability.history)) findings.push(finding(relative, `capabilities[${index}].history`, "capability history must be an array"));
+      const history = Array.isArray(capability.history) ? capability.history : [];
+      if (history.length > config.maxCapabilityHistoryEntries) findings.push(finding(relative, `capabilities[${index}].history`, "capability history exceeds the configured retention limit"));
+      if (capability.historyOmitted !== undefined && (!Number.isInteger(capability.historyOmitted) || capability.historyOmitted < 1)) findings.push(finding(relative, `capabilities[${index}].historyOmitted`, "omitted capability-history count must be a positive integer"));
+      for (const [historyIndex, observation] of history.entries()) {
+        const historyField = `capabilities[${index}].history[${historyIndex}]`;
+        if (!observation || typeof observation !== "object" || Array.isArray(observation)) {
+          findings.push(finding(relative, historyField, "capability history entry must be an object"));
+          continue;
+        }
+        if (!CAPABILITY_STATUSES.has(observation.status)) findings.push(finding(relative, `${historyField}.status`, `invalid capability status '${observation.status}'`));
+        if (!observation.source?.type || !observation.source?.name || !observation.source?.mechanism) findings.push(finding(relative, `${historyField}.source`, "capability history requires source provenance"));
+        else if (!SOURCE_TYPES.has(observation.source.type)) findings.push(finding(relative, `${historyField}.source.type`, `unknown source type '${observation.source.type}'`));
+        if (!isTimestamp(observation.discoveredAt)) findings.push(finding(relative, `${historyField}.discoveredAt`, "capability history transition timestamp is required"));
+        if (observation.lastAssessedAt !== undefined && !isTimestamp(observation.lastAssessedAt)) findings.push(finding(relative, `${historyField}.lastAssessedAt`, "capability history assessment timestamp must be valid"));
+        if (observation.recordedAt !== undefined && !isTimestamp(observation.recordedAt)) findings.push(finding(relative, `${historyField}.recordedAt`, "capability history recording timestamp must be valid"));
+        const next = history[historyIndex + 1] ?? capability;
+        if (isTimestamp(observation.recordedAt) && isTimestamp(next.recordedAt) && Date.parse(next.recordedAt) < Date.parse(observation.recordedAt)) findings.push(finding(relative, historyField, "capability state recording order must be chronological"));
+      }
+      if (capability.metricId && !registry.has(capability.metricId)) findings.push(finding(relative, `capabilities[${index}].metricId`, `unknown normalized metric '${capability.metricId}'; use providerField for unmapped capabilities`));
       if (capability.metricId) capabilityByMetric.set(capability.metricId, capability);
     }
     const unitByMetric = new Map();
-    for (const [index, item] of (record.metrics ?? []).entries()) {
-      const definition = registry.get(item.id);
+    const measurementIds = new Set();
+    for (const [index, item] of metrics.entries()) {
       const field = `metrics[${index}]`;
+      if (!item || typeof item !== "object" || Array.isArray(item)) {
+        findings.push(finding(relative, field, "metric must be an object"));
+        continue;
+      }
+      const definition = registry.get(item.id);
+      if (!item.measurementId) findings.push(finding(relative, `${field}.measurementId`, "measurement identity is required"));
+      else if (measurementIds.has(item.measurementId)) findings.push(finding(relative, `${field}.measurementId`, `duplicate measurement ID '${item.measurementId}'`));
+      measurementIds.add(item.measurementId);
       if (!definition) findings.push(finding(relative, `${field}.id`, `unknown normalized metric '${item.id}'; retain it as raw telemetry`));
       if (typeof item.value !== "number" || !Number.isFinite(item.value) || item.value < 0) findings.push(finding(relative, `${field}.value`, "metric value must be a finite non-negative number"));
       if (!QUALITIES.has(item.quality)) findings.push(finding(relative, `${field}.quality`, `invalid metric quality '${item.quality}'`));
-      if (item.quality === "estimated" && !(typeof item.confidence === "number" && item.confidence >= 0 && item.confidence <= 1)) findings.push(finding(relative, `${field}.confidence`, "estimated metric requires confidence from zero through one"));
+      const validConfidence = (typeof item.confidence === "number" && item.confidence >= 0 && item.confidence <= 1) || CONFIDENCE_LABELS.has(item.confidence);
+      if (item.quality === "estimated" && !validConfidence) findings.push(finding(relative, `${field}.confidence`, "estimated metric requires numeric confidence from zero through one or low/medium/high confidence"));
+      if (item.quality !== "estimated" && item.confidence !== null && item.confidence !== undefined) findings.push(finding(relative, `${field}.confidence`, "confidence is only valid for an estimated metric"));
       if (!item.source?.type || !item.source?.name || !item.source?.mechanism) findings.push(finding(relative, `${field}.source`, "metric source provenance is required"));
       else if (!SOURCE_TYPES.has(item.source.type)) findings.push(finding(relative, `${field}.source.type`, `unknown source type '${item.source.type}'`));
       if (!isTimestamp(item.collectedAt)) findings.push(finding(relative, `${field}.collectedAt`, "metric collection timestamp is required"));
+      if (item.schemaVersion !== TELEMETRY_SCHEMA_VERSION) findings.push(finding(relative, `${field}.schemaVersion`, `metric schema version must be '${TELEMETRY_SCHEMA_VERSION}'`));
+      if (!["operation", "turn", "tool", "execution", "session", "work-item", "repository"].includes(item.scope)) findings.push(finding(relative, `${field}.scope`, `invalid metric scope '${item.scope}'`));
       if (definition && item.aggregation !== definition.aggregation) findings.push(finding(relative, `${field}.aggregation`, `metric aggregation must be '${definition.aggregation}'`));
       if (definition?.unit === "currency") {
         if (item.unit !== "currency" || !/^[A-Z]{3}$/.test(item.currency ?? "")) findings.push(finding(relative, `${field}.unit`, "cost metric requires unit 'currency' and an ISO-style three-letter currency"));
+        if (item.source?.type === "calculated" && (!item.pricing?.source || !item.pricing?.version)) findings.push(finding(relative, `${field}.pricing`, "calculated cost requires pricing source and version provenance"));
       } else if (definition && item.unit !== definition.unit) findings.push(finding(relative, `${field}.unit`, `metric unit must be '${definition.unit}'`));
       if (unitByMetric.has(item.id) && unitByMetric.get(item.id) !== `${item.unit}:${item.currency ?? ""}`) findings.push(finding(relative, `${field}.unit`, "conflicting units for the same normalized metric"));
       unitByMetric.set(item.id, `${item.unit}:${item.currency ?? ""}`);
@@ -1163,17 +1454,57 @@ export function telemetryFindings(root, context = loadContext(root)) {
       if (definition?.aggregation === "latest-per-session" && item.scope === "session" && !record.identity?.sessionId) findings.push(finding(relative, `${field}.scope`, "session-cumulative or session-gauge metric requires a session ID"));
       const capability = capabilityByMetric.get(item.id);
       if (capability?.status === "unsupported") findings.push(finding(relative, field, "metric is present while its capability is marked unsupported"));
+      if (capability?.status === "supported-unavailable" && capability.discoveredAt === item.collectedAt) findings.push(finding(relative, field, "metric is present in the same snapshot that marks the capability unavailable"));
     }
-    for (const [index, signal] of (record.qualitySignals ?? []).entries()) {
+    for (const [index, signal] of qualitySignals.entries()) {
+      if (!signal || typeof signal !== "object" || Array.isArray(signal)) {
+        findings.push(finding(relative, `qualitySignals[${index}]`, "quality signal must be an object"));
+        continue;
+      }
       if (!QUALITY_DETECTORS.has(signal.detector) && !String(signal.detector ?? "").startsWith("x-")) findings.push(finding(relative, `qualitySignals[${index}].detector`, `invalid quality-signal detector '${signal.detector}'`));
-      if (!signal.source) findings.push(finding(relative, `qualitySignals[${index}].source`, "quality signal requires provenance"));
+      if (!signal.source?.type || !signal.source?.name || !signal.source?.mechanism) findings.push(finding(relative, `qualitySignals[${index}].source`, "quality signal requires source type, name, and mechanism"));
+      else if (!SOURCE_TYPES.has(signal.source.type)) findings.push(finding(relative, `qualitySignals[${index}].source.type`, `unknown source type '${signal.source.type}'`));
     }
-    for (const [index, snapshot] of (record.rawTelemetry ?? []).entries()) {
-      if (!snapshot.snapshotId || !snapshot.adapter || !snapshot.source || !isTimestamp(snapshot.collectedAt)) findings.push(finding(relative, `rawTelemetry[${index}]`, "raw snapshot requires identity, adapter, source, and timestamp"));
-      if (Buffer.byteLength(JSON.stringify(snapshot.payload)) > config.maxRawPayloadBytes) findings.push(finding(relative, `rawTelemetry[${index}].payload`, "raw snapshot exceeds configured storage limit"));
+    const rawSnapshotIds = new Set();
+    let retainedRawBytes = 0;
+    for (const [index, snapshot] of rawTelemetry.entries()) {
+      if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) {
+        findings.push(finding(relative, `rawTelemetry[${index}]`, "raw snapshot must be an object"));
+        continue;
+      }
+      if (!snapshot.snapshotId || !snapshot.adapter || !snapshot.source?.type || !snapshot.source?.name || !snapshot.source?.mechanism || !isTimestamp(snapshot.collectedAt)) findings.push(finding(relative, `rawTelemetry[${index}]`, "raw snapshot requires identity, adapter, source type/name/mechanism, and timestamp"));
+      else if (!SOURCE_TYPES.has(snapshot.source.type)) findings.push(finding(relative, `rawTelemetry[${index}].source.type`, `unknown source type '${snapshot.source.type}'`));
+      if (snapshot.snapshotId && rawSnapshotIds.has(snapshot.snapshotId)) findings.push(finding(relative, `rawTelemetry[${index}].snapshotId`, `duplicate snapshot ID '${snapshot.snapshotId}'`));
+      rawSnapshotIds.add(snapshot.snapshotId);
+      const serializedPayload = JSON.stringify(snapshot.payload);
+      if (serializedPayload === undefined) findings.push(finding(relative, `rawTelemetry[${index}].payload`, "raw snapshot payload is required"));
+      else {
+        const payloadBytes = Buffer.byteLength(serializedPayload);
+        retainedRawBytes += payloadBytes;
+        if (payloadBytes > config.maxRawPayloadBytes) findings.push(finding(relative, `rawTelemetry[${index}].payload`, "raw snapshot exceeds configured storage limit"));
+        if (snapshot.payloadBytes !== undefined && snapshot.payloadBytes !== payloadBytes) findings.push(finding(relative, `rawTelemetry[${index}].payloadBytes`, "recorded raw payload byte count does not match the retained payload"));
+      }
+      for (const sensitivePath of rawSensitiveFindings(snapshot.payload)) findings.push(finding(relative, `rawTelemetry[${index}].payload`, `sensitive raw field is not redacted: ${sensitivePath}`));
+    }
+    if (rawTelemetry.length > config.maxRawSnapshotsPerExecution) findings.push(finding(relative, "rawTelemetry", "raw snapshot count exceeds the configured per-execution limit"));
+    if (retainedRawBytes > config.maxRawBytesPerExecution) findings.push(finding(relative, "rawTelemetry", "retained raw payload bytes exceed the configured per-execution limit"));
+    for (const [index, event] of events.entries()) {
+      if (!event || typeof event !== "object" || Array.isArray(event)) {
+        findings.push(finding(relative, `events[${index}]`, "event must be an object"));
+        continue;
+      }
+      if (!event.type || !isTimestamp(event.occurredAt) || !event.source?.type || !event.source?.name || !event.source?.mechanism) findings.push(finding(relative, `events[${index}]`, "event requires type, timestamp, and source type/name/mechanism"));
+      else if (!SOURCE_TYPES.has(event.source.type)) findings.push(finding(relative, `events[${index}].source.type`, `unknown source type '${event.source.type}'`));
+      if (event.rawRetention && !["retained", "omitted"].includes(event.rawRetention.status)) findings.push(finding(relative, `events[${index}].rawRetention.status`, "raw retention status must be retained or omitted"));
     }
   }
   const byId = new Map(records.map((entry) => [entry.record.executionId, entry]));
+  const workById = new Map((context.workItems ?? []).map((item) => [item.id, item]));
+  for (const { relative, record } of records) {
+    if (record.workItemId && !workById.has(record.workItemId)) findings.push(finding(relative, "workItemId", `linked work item '${record.workItemId}' is not present in repository context`));
+    else if (record.workItemId && !(workById.get(record.workItemId).telemetryExecutionIds ?? []).includes(record.executionId)) findings.push(finding(relative, "workItemId", `execution '${record.executionId}' is not linked back from work item '${record.workItemId}'`));
+    if (record.identity?.parentExecutionId && !byId.has(record.identity.parentExecutionId)) findings.push(finding(relative, "identity.parentExecutionId", `parent execution '${record.identity.parentExecutionId}' was not found`));
+  }
   for (const item of context.workItems ?? []) {
     for (const id of item.telemetryExecutionIds ?? []) {
       if (!byId.has(id)) findings.push(finding(".ros/context/current.json", "telemetryExecutionIds", `work item '${item.id}' links missing execution '${id}'`));

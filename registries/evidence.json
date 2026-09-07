@@ -111,5 +111,103 @@
       "cli"
     ],
     "title": "Validator completion test results"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-05",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A011",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A011--execution-telemetry-architecture-and-provider-survey.md",
+    "related_documents": [
+      "docs/development-telemetry.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "DF-ROS-2026-A010"
+    ],
+    "tags": [
+      "telemetry",
+      "provider-survey",
+      "repository-archaeology",
+      "data-quality"
+    ],
+    "title": "ROS execution-telemetry architecture and provider capability survey",
+    "updated": "2026-09-05",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-05",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A014",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A014--iterative-telemetry-architecture-challenge.md",
+    "related_documents": [
+      "docs/development-telemetry.md",
+      "tools/ros_persistence.mjs",
+      "tools/ros_telemetry.mjs",
+      "tests/telemetry.test.mjs"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "DF-ROS-2026-A010"
+    ],
+    "tags": [
+      "telemetry",
+      "adversarial-review",
+      "concurrency",
+      "persistence",
+      "provenance",
+      "storage"
+    ],
+    "title": "Iterative telemetry architecture challenge and reliability revisions",
+    "updated": "2026-09-05",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-07",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A015",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A015--operational-architecture-inventory-baseline.md",
+    "related_documents": [
+      "JR-ROS-2026-A016",
+      "tools/ros_cli.mjs",
+      "tools/ros_telemetry.mjs",
+      "lib/bootstrap.mjs",
+      ".github/workflows/publish.yml"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "RP-ROS-2026-A017"
+    ],
+    "tags": [
+      "architecture",
+      "inventory",
+      "scripts",
+      "fsharp",
+      "migration",
+      "baseline"
+    ],
+    "title": "ROS operational architecture inventory and migration baseline",
+    "updated": "2026-09-07",
+    "version": "1.0.0"
   }
 ]

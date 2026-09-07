@@ -6,7 +6,7 @@
   "required": ["schemaVersion", "executionId", "workItemId", "status", "startedAt", "identity", "provenance", "classification", "capabilities", "metrics", "rawTelemetry", "events", "repository", "links"],
   "properties": {
     "schemaVersion": {"const": "1.0.0"},
-    "executionId": {"type": "string", "pattern": "^EXE-[A-Za-z0-9._:-]+$"},
+    "executionId": {"type": "string", "pattern": "^EXE-[A-Za-z0-9._-]+$"},
     "workItemId": {"type": "string", "minLength": 1},
     "status": {"enum": ["active", "finalized"]},
     "startedAt": {"type": "string", "format": "date-time"},
@@ -66,6 +66,7 @@
           "collectedAt": {"type": "string", "format": "date-time"},
           "source": {"$ref": "#/$defs/source"},
           "payload": {},
+          "payloadBytes": {"type": "integer", "minimum": 0},
           "discoveredFields": {"type": "array", "items": {"type": "string"}},
           "redactions": {"type": "array", "items": {"type": "string"}}
         },
@@ -104,7 +105,24 @@
         "status": {"enum": ["supported-observed", "supported-unavailable", "unsupported", "unknown", "derived", "estimated"]},
         "reason": {"type": ["string", "null"]},
         "source": {"$ref": "#/$defs/source"},
-        "discoveredAt": {"type": "string", "format": "date-time"}
+        "discoveredAt": {"type": "string", "format": "date-time"},
+        "lastAssessedAt": {"type": "string", "format": "date-time"},
+        "recordedAt": {"type": "string", "format": "date-time"},
+        "history": {"type": "array", "items": {"$ref": "#/$defs/capabilityObservation"}},
+        "historyOmitted": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": true
+    },
+    "capabilityObservation": {
+      "type": "object",
+      "required": ["status", "source", "discoveredAt"],
+      "properties": {
+        "status": {"enum": ["supported-observed", "supported-unavailable", "unsupported", "unknown", "derived", "estimated"]},
+        "reason": {"type": ["string", "null"]},
+        "source": {"$ref": "#/$defs/source"},
+        "discoveredAt": {"type": "string", "format": "date-time"},
+        "lastAssessedAt": {"type": "string", "format": "date-time"},
+        "recordedAt": {"type": "string", "format": "date-time"}
       },
       "additionalProperties": true
     },
@@ -118,10 +136,25 @@
         "unit": {"type": "string", "minLength": 1},
         "currency": {"type": ["string", "null"], "pattern": "^[A-Z]{3}$"},
         "quality": {"enum": ["observed", "derived", "estimated"]},
-        "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "confidence": {
+          "oneOf": [
+            {"type": "number", "minimum": 0, "maximum": 1},
+            {"enum": ["low", "medium", "high"]},
+            {"type": "null"}
+          ]
+        },
         "scope": {"enum": ["operation", "turn", "tool", "execution", "session", "work-item", "repository"]},
         "aggregation": {"enum": ["sum", "latest", "latest-per-session", "maximum", "none"]},
         "dimensions": {"type": "object", "additionalProperties": {"type": ["string", "number", "boolean", "null"]}},
+        "pricing": {
+          "type": ["object", "null"],
+          "properties": {
+            "source": {"type": "string", "minLength": 1},
+            "version": {"type": "string", "minLength": 1}
+          },
+          "required": ["source", "version"],
+          "additionalProperties": true
+        },
         "source": {"$ref": "#/$defs/source"},
         "collectedAt": {"type": "string", "format": "date-time"}
       },

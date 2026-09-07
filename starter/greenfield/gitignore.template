@@ -17,6 +17,7 @@ venv/
 node_modules/
 
 # Generated transient work
+.ros/locks/
 work/staging/*
 work/review/*
 logs/*

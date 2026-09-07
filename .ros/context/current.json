@@ -330,18 +330,151 @@
     {
       "id": "WI-0003",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-04T22:15:43.479Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tools/ros_telemetry.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/telemetry.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-05T13:00:41.384Z",
       "telemetryExecutionIds": [
-        "EXE-20260905T03:09:21723Z-964f55fb"
-      ]
+        "EXE-20260905T030921723Z-964f55fb"
+      ],
+      "completedAt": "2026-09-05T13:00:41.384Z"
+    },
+    {
+      "id": "WI-0004",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tools/ros_telemetry.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/telemetry.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-05T18:19:28.702Z",
+      "telemetryExecutionIds": [
+        "EXE-20260905T150039043Z-1e221f2a"
+      ],
+      "completedAt": "2026-09-05T18:19:28.702Z"
+    },
+    {
+      "id": "WI-0005",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tools/ros_telemetry.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/telemetry.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-05T18:38:28.194Z",
+      "telemetryExecutionIds": [
+        "EXE-20260905T183755651Z-5ad370b0"
+      ],
+      "completedAt": "2026-09-05T18:38:28.194Z"
+    },
+    {
+      "id": "WI-0006",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "telemetry/metrics.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/telemetry.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-05T18:41:59.584Z",
+      "telemetryExecutionIds": [
+        "EXE-20260905T183954385Z-48b9d784"
+      ],
+      "completedAt": "2026-09-05T18:41:59.584Z"
+    },
+    {
+      "id": "WI-0007",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tools/ros_persistence.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/telemetry.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-05T20:40:09.746Z",
+      "telemetryExecutionIds": [
+        "EXE-20260905T184628575Z-637e7156"
+      ],
+      "completedAt": "2026-09-05T20:40:09.746Z"
+    },
+    {
+      "id": "WI-0008",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".sde/MANIFEST.json"
+        },
+        {
+          "type": "tests",
+          "path": ".sde/MANIFEST.json"
+        }
+      ],
+      "updatedAt": "2026-09-06T02:15:54.156Z",
+      "telemetryExecutionIds": [
+        "EXE-20260906T015929615Z-dba817e9"
+      ],
+      "completedAt": "2026-09-06T02:15:54.156Z"
+    },
+    {
+      "id": "WI-0009",
+      "type": "research",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "research-record",
+          "path": "research/packages/RP-ROS-2026-A017--operational-architecture-and-fsharp-migration-plan.md"
+        }
+      ],
+      "updatedAt": "2026-09-07T09:40:57.926Z",
+      "telemetryExecutionIds": [
+        "EXE-20260907T085853369Z-9449d0c0"
+      ],
+      "completedAt": "2026-09-07T09:40:57.926Z",
+      "conclusion": "supported"
     }
   ],
   "protocolVersion": "1.0.0",
-  "actor": "claude",
-  "updatedAt": "2026-09-05T03:09:21.745Z",
+  "actor": "codex",
+  "updatedAt": "2026-09-07T09:40:57.926Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

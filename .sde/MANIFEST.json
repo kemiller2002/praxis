@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "sdeVersion": "1.0.1",
+  "methodVersion": "0.1",
+  "sourceRevision": "dcf10f9d32728598df1f73aac1ce55297da3d2f5",
+  "packageName": "@echelon-foundry/sde",
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "8aadf81400a09628c1024519d7b1b18029e42d71aed36bee424ba6ced9532065"
+    },
+    {
+      "path": "VERSION",
+      "sha256": "44e161e4495cac2cf7858043e9e6418e9579f0ddcfae826f9a372622968ce066"
+    },
+    {
+      "path": "architecture/BOUNDARY-PRESERVATION.md",
+      "sha256": "c8ac01b9b0fa911e8a2743a99e0678275ae72086f483d28a89df1b797c9eace9"
+    },
+    {
+      "path": "architecture/FOUR-TIER-ARCHITECTURE.md",
+      "sha256": "e12c98f65ecdaffdd949b72ab1e2a88f22d8e677ac024420ca64a604bb67ebdc"
+    },
+    {
+      "path": "method/AGENT-EXECUTION-RULES.md",
+      "sha256": "4d88677b32fc9074e4b2fa14483d66252d11dabfc2dfd7bf4fb6e8d78f488e87"
+    },
+    {
+      "path": "method/CHANGE-CLASSIFICATION.md",
+      "sha256": "a0a3607f73096bfc3f72e83453583c91d16d26ae8dfc464500ea106111ab2bd0"
+    },
+    {
+      "path": "method/CONSTRUCTION-METHOD.md",
+      "sha256": "c65c9711def268d9ca50024271b9c3423c5bbf250c527540723f04b7042a301b"
+    },
+    {
+      "path": "method/VERIFICATION-METHOD.md",
+      "sha256": "5dc59cbcc38ac7f7ac6cf1d8b2d2bfcc7c3e197d52697e6faba183e530276cdd"
+    },
+    {
+      "path": "reference/ENGINEERING-METRICS.md",
+      "sha256": "f77aaac47b2c0f3902b963684bc029b5fb41dacd2ef0c86405c5b63efda5e48a"
+    },
+    {
+      "path": "reference/GLOSSARY.md",
+      "sha256": "8696cca98b7e2a0cfa9e2a4b8daf26226945595404ad162bfd6a4c062799b09c"
+    },
+    {
+      "path": "templates/completion-report.md",
+      "sha256": "d0473d260e2362e56a57d50634a1079fb3736017381eabbba0d7c03ae79c6656"
+    },
+    {
+      "path": "templates/execution-log.md",
+      "sha256": "4cbe7e5622a36133586046a5ac189aa9199caca3be6054a41d3687e167e2e727"
+    },
+    {
+      "path": "templates/work-item.md",
+      "sha256": "ce16168509a38c9ecb25fb531ca73fc4bbb1a107f6964bfcd6736d2370a7862e"
+    }
+  ]
+}

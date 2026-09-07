@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 4,
+  "nextSeq": 10,
   "items": [
     {
       "id": "WI-0001",
@@ -50,6 +50,108 @@
       "attachments": [],
       "createdAt": "2026-09-04T22:15:37.634Z",
       "updatedAt": "2026-09-04T22:15:43.376Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0004",
+      "title": "Post-close telemetry data-quality hardening",
+      "description": null,
+      "tags": [
+        "telemetry",
+        "data-quality"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-05T15:00:38.928Z",
+      "updatedAt": "2026-09-05T15:00:38.984Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0005",
+      "title": "Telemetry root-record validation guard",
+      "description": null,
+      "tags": [
+        "telemetry",
+        "validation"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-05T18:37:55.531Z",
+      "updatedAt": "2026-09-05T18:37:55.592Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0006",
+      "title": "Correct telemetry gauge aggregation semantics",
+      "description": null,
+      "tags": [
+        "telemetry",
+        "aggregation"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-05T18:39:54.265Z",
+      "updatedAt": "2026-09-05T18:39:54.324Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0007",
+      "title": "Adversarial telemetry architecture revision",
+      "description": "Challenge and revise adaptive development telemetry until further changes reach diminishing returns. Focus on concurrency, persistence, provenance history, bounded retention, aggregation semantics, tests, and durable design records.",
+      "tags": [
+        "telemetry",
+        "architecture",
+        "reliability"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-05T18:46:28.456Z",
+      "updatedAt": "2026-09-05T18:46:28.514Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0008",
+      "title": "Run SDE init, status, verify, and update",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-06T01:59:02.296Z",
+      "updatedAt": "2026-09-06T01:59:29.557Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0009",
+      "title": "Inventory ROS operational architecture and plan the F# migration",
+      "description": null,
+      "tags": [
+        "architecture",
+        "fsharp",
+        "migration",
+        "sde"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-07T08:58:42.884Z",
+      "updatedAt": "2026-09-07T08:58:53.269Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null

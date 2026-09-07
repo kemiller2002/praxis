@@ -176,5 +176,37 @@
     "title": "Installable project-administration hub profile",
     "updated": "2026-08-22",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-05",
+    "id": "DF-ROS-2026-A010",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A010--provider-neutral-adaptive-execution-telemetry.md",
+    "related_documents": [
+      "docs/development-telemetry.md",
+      "docs/work-protocol.md",
+      "schemas/execution-telemetry.schema.json",
+      "telemetry/metrics.json"
+    ],
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A011",
+      "EV-ROS-2026-A014"
+    ],
+    "tags": [
+      "telemetry",
+      "work-protocol",
+      "provider-neutral",
+      "provenance",
+      "architecture"
+    ],
+    "title": "Provider-neutral adaptive execution telemetry",
+    "updated": "2026-09-05",
+    "version": "1.2.0"
   }
 ]

@@ -5,6 +5,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { readJson, withFileLock, writeJson, writeTextAtomic } from "./ros_persistence.mjs";
 import {
   TELEMETRY_ADAPTERS,
   configuredTelemetry,
@@ -94,15 +95,6 @@ const BACKLOG_TRANSITIONS = {
   abandoned: new Set()
 };
 
-function readJson(file, fallback = null) {
-  return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : fallback;
-}
-
-function writeJson(file, value) {
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`, "utf8");
-}
-
 function workConfig(root) {
   const config = readJson(path.join(root, "ros.json"), {});
   const result = {
@@ -113,7 +105,7 @@ function workConfig(root) {
     },
     evidence: config.workProtocol?.completionEvidence ?? { default: ["implementation", "tests"] },
     meaningful: config.workProtocol?.meaningfulPaths ?? ["**"],
-    ignored: config.workProtocol?.ignoredPaths ?? [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", ".ros/telemetry/**"],
+    ignored: config.workProtocol?.ignoredPaths ?? [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", ".ros/telemetry/**", ".ros/locks/**"],
     enforce: config.workProtocol?.enforceAttribution === true
   };
   for (const [local, semantic] of Object.entries(result.stateMapping)) {
@@ -246,7 +238,7 @@ function renderQueueMarkdown(rows) {
 function saveQueue(root, queue) {
   writeJson(queuePath(root), queue);
   const context = loadContext(root);
-  fs.writeFileSync(queueMarkdownPath(root), renderQueueMarkdown(mergedRows(queue, context.workItems)), "utf8");
+  writeTextAtomic(queueMarkdownPath(root), renderQueueMarkdown(mergedRows(queue, context.workItems)));
 }
 
 export function showWork(root, id) {
@@ -521,7 +513,7 @@ function callFileAdapter(storeFile, request) {
   return result;
 }
 
-export function transition(root, action, ids, options = {}) {
+function transitionUnlocked(root, action, ids, options = {}) {
   if (!ids.length) throw new Error(`${action} requires at least one work-item ID`);
   const config = workConfig(root);
   const context = loadContext(root);
@@ -637,6 +629,10 @@ export function transition(root, action, ids, options = {}) {
   }
   writeJson(contextPath(root), context);
   return { context, events };
+}
+
+export function transition(root, action, ids, options = {}) {
+  return withFileLock(root, "work-protocol", () => transitionUnlocked(root, action, ids, options));
 }
 
 function workFindings(root) {
@@ -1198,19 +1194,26 @@ export function main(argv) {
       const rawValue = option(args, "--value");
       if (!id || rawValue === undefined) throw new Error("telemetry record requires --metric and --value");
       const quality = option(args, "--quality") ?? "observed";
+      const confidenceOption = option(args, "--confidence");
+      const confidence = confidenceOption === undefined || confidenceOption === null
+        ? null
+        : Number.isFinite(Number(confidenceOption)) ? Number(confidenceOption) : confidenceOption;
+      const pricingSource = option(args, "--pricing-source");
+      const pricingVersion = option(args, "--pricing-version");
       const record = recordTelemetryMetric(root, telemetryTarget(args), {
         id,
         value: Number(rawValue),
         unit: option(args, "--unit"),
         currency: option(args, "--currency"),
         quality,
-        confidence: option(args, "--confidence") === undefined ? null : Number(option(args, "--confidence")),
+        confidence,
         scope: option(args, "--scope") ?? "execution",
         source: {
           type: option(args, "--source-type") ?? "agent-report",
           name: option(args, "--source-name") ?? "ros-telemetry-cli",
           mechanism: option(args, "--mechanism") ?? "explicit-metric-record"
         },
+        pricing: pricingSource || pricingVersion ? { source: pricingSource ?? null, version: pricingVersion ?? null } : null,
         collectedAt: option(args, "--collected-at")
       });
       if (!args.includes("--quiet")) console.log(JSON.stringify(record.metrics.at(-1), null, 2)); return 0;

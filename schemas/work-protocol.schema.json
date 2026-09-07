@@ -34,6 +34,9 @@
         "metricRegistry": {"type": "string", "minLength": 1},
         "allowRawTelemetry": {"type": "boolean"},
         "maxRawPayloadBytes": {"type": "integer", "minimum": 1024},
+        "maxRawSnapshotsPerExecution": {"type": "integer", "minimum": 1},
+        "maxRawBytesPerExecution": {"type": "integer", "minimum": 1024},
+        "maxCapabilityHistoryEntries": {"type": "integer", "minimum": 2},
         "disabledReason": {"type": "string", "minLength": 1}
       },
       "allOf": [

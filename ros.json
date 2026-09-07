@@ -31,7 +31,7 @@
       "mechanical": []
     },
     "meaningfulPaths": ["**"],
-    "ignoredPaths": [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", ".ros/telemetry/**", "registries/**"]
+    "ignoredPaths": [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", ".ros/telemetry/**", ".ros/locks/**", "registries/**"]
   },
   "telemetry": {
     "version": "1.0.0",
@@ -40,6 +40,9 @@
     "executionRoot": ".ros/telemetry/executions",
     "metricRegistry": "telemetry/metrics.json",
     "allowRawTelemetry": true,
-    "maxRawPayloadBytes": 262144
+    "maxRawPayloadBytes": 262144,
+    "maxRawSnapshotsPerExecution": 256,
+    "maxRawBytesPerExecution": 8388608,
+    "maxCapabilityHistoryEntries": 64
   }
 }

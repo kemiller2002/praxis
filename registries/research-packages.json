@@ -81,5 +81,97 @@
     "title": "ROS executable contract and validation slice",
     "updated": "2026-07-24",
     "version": "1.0.0"
+  },
+  {
+    "author_agent": "openai-codex",
+    "completion": "complete",
+    "confidence": "high",
+    "created": "2026-09-05",
+    "discipline": [
+      "software-architecture",
+      "software-metrics",
+      "research-systems"
+    ],
+    "id": "RP-ROS-2026-A013",
+    "keywords": [
+      "capability-discovery",
+      "normalized-metrics",
+      "raw-telemetry",
+      "multi-agent",
+      "research-development"
+    ],
+    "path": "research/packages/RP-ROS-2026-A013--adaptive-development-telemetry-handoff.md",
+    "priority": "high",
+    "related_documents": [
+      "DF-ROS-2026-A010",
+      "EV-ROS-2026-A011",
+      "EV-ROS-2026-A014",
+      "JR-ROS-2026-A012",
+      "docs/development-telemetry.md"
+    ],
+    "related_projects": [
+      "Repository Operating System"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "telemetry",
+      "provider-neutral",
+      "execution",
+      "provenance",
+      "handoff"
+    ],
+    "title": "Provider-neutral adaptive development telemetry implementation and handoff",
+    "updated": "2026-09-05",
+    "version": "1.1.0"
+  },
+  {
+    "author_agent": "openai-codex",
+    "completion": "complete",
+    "confidence": "high",
+    "created": "2026-09-07",
+    "discipline": [
+      "software-architecture",
+      "software-engineering",
+      "research-systems"
+    ],
+    "id": "RP-ROS-2026-A017",
+    "keywords": [
+      "operational-code",
+      "workflow",
+      "domain-boundary",
+      "interoperability",
+      "characterization"
+    ],
+    "path": "research/packages/RP-ROS-2026-A017--operational-architecture-and-fsharp-migration-plan.md",
+    "priority": "high",
+    "related_documents": [
+      "EV-ROS-2026-A015",
+      "JR-ROS-2026-A016",
+      "DF-ROS-2026-A010",
+      "docs/work-protocol.md",
+      "docs/development-telemetry.md"
+    ],
+    "related_projects": [
+      "Repository Operating System"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "architecture",
+      "inventory",
+      "scripts",
+      "automation",
+      "fsharp",
+      "migration",
+      "sde"
+    ],
+    "title": "ROS operational architecture inventory and staged F# migration plan",
+    "updated": "2026-09-07",
+    "version": "1.0.0"
   }
 ]

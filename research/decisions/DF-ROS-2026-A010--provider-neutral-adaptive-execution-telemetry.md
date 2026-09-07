@@ -2,7 +2,7 @@
 id: DF-ROS-2026-A010
 title: Provider-neutral adaptive execution telemetry
 status: accepted
-version: 1.0.0
+version: 1.2.0
 owners:
   - repository-governance
 created: 2026-09-05
@@ -11,6 +11,7 @@ supersedes: []
 superseded_by: []
 supporting_evidence:
   - EV-ROS-2026-A011
+  - EV-ROS-2026-A014
 related_documents: [docs/development-telemetry.md, docs/work-protocol.md, schemas/execution-telemetry.schema.json, telemetry/metrics.json]
 tags: [telemetry, work-protocol, provider-neutral, provenance, architecture]
 confidence: high
@@ -49,6 +50,12 @@ New work automatically inherits execution identity, baseline/finalization, and v
 
 The schema and metric registry are additive within telemetry 1.x. Breaking identity, unit, measurement-quality, or aggregation meaning requires a new major schema and migration. Central publication, signing, reconciliation, retention, and portfolio analytics remain deferred behind the external adapter/central-system boundary established by `DF-ROS-2026-A006` and `DF-ROS-2026-A007`.
 
+Adapter mappings identify exact known leaves so an added nested field cannot disappear behind a broad known prefix. Session-cumulative aggregation keys include provider, runtime, and session identity. Calculated cost requires versioned pricing provenance, while uncalibrated estimates may use categorical rather than invented numeric confidence. Disabling raw-payload retention preserves content-free ingestion identity and discovered field names without retaining their values.
+
+Aggregation semantics distinguish counters from gauges: context gauges have no manufactured scalar across sessions, while starting/ending dirty-path gauges report the maximum across executions rather than an additive total.
+
+Local persistence uses atomic file replacement and resource-scoped locks: one work-protocol lock for context transitions, one execution-index lock for creation, and one lock per execution for mutation. Capability state is a bounded current projection plus transition history; source assessment timestamps remain distinct from ROS recording order. Raw snapshots are bounded per snapshot and per execution, while normalized evidence and unknown field names survive omission. Work-item summaries distinguish calendar span, total execution-wall effort, and overlap.
+
 # Reversibility and validation
 
-Telemetry can be disabled only through explicit configuration with a recorded reason; doing so does not rewrite historical records. Individual adapters are replaceable without changing normalized records. Tests cover lifecycle, full/partial/new/removed provider fields, zero/unavailable, derived/estimated quality, multi-provider/subagent aggregation, privacy filtering, classification/R&D facts, duplicate IDs, schema versioning, Git derivation, and finalization. Revisit when real-provider pilots reveal incompatible semantics, record growth becomes material, or a stable cross-runtime OTel ingestion profile can replace adapter-specific mappings.
+Telemetry can be disabled only through explicit configuration with a recorded reason; doing so does not rewrite historical records. Individual adapters are replaceable without changing normalized records. Tests cover lifecycle, full/partial/new/removed provider fields, zero/unavailable, derived/estimated quality, multi-provider/subagent aggregation, concurrent starts/callbacks/finalization, bounded retention/history, privacy filtering, classification/R&D facts, duplicate identities, backlink integrity, schema versioning, Git derivation, and finalization. `EV-ROS-2026-A014` records the iterative challenge, material revisions, rejected alternatives, accepted weaknesses, and diminishing-returns threshold. Revisit when live-provider pilots reveal incompatible semantics, retention or lock limits become material, cross-host writers are required, schema/validator drift recurs, or a stable cross-runtime OTel ingestion profile can replace adapter-specific mappings.
