@@ -2,9 +2,9 @@
 id: SDE-DOCTRINE-005
 title: SDE Glossary
 status: accepted
-version: 0.1.0
+version: 0.2.0
 created: 2026-09-02
-updated: 2026-09-02
+updated: 2026-09-05
 tags: [doctrine, glossary]
 ---
 
@@ -77,6 +77,36 @@ picking one meaning.
 - **NOT OBSERVABLE** — the required label when a metric's telemetry
   genuinely does not exist for the environment that produced it. Never
   estimated; never silently omitted.
+
+## Structural and navigation terms
+
+- **Semantic area** — a coherent feature, workflow, or concern whose behavior
+  belongs together; it may span multiple files.
+- **Semantic authority** — the singular representation that decides a
+  semantic fact or rule.
+- **Responsibility cluster** — a human-scale implementation grouping within a
+  semantic area/authority, such as transitions, validation, capabilities, or
+  projections; not automatically a separate domain authority.
+- **Structural locality** — organization that keeps a feature's owned state,
+  behavior, contracts, and tests coherently bounded and composable.
+- **Bounded reasoning scope** — the SDE design objective of limiting the
+  information and inference required to make a safe change. Its causal effect
+  on cost/correctness remains a candidate theory.
+- **Repository semantic map** — a small top-level routing index from major
+  semantic areas to locations and manifests.
+- **Feature manifest** — navigation metadata declaring feature ownership,
+  contracts, tests, dependencies, and modification boundaries by reference;
+  it is not semantic authority.
+- **Context Surface (CS)** — the state, transitions, invariants, contracts,
+  tests, direct dependencies, and composition context required for a change.
+- **Declared / Actual Context Surface** — the context predicted by a feature
+  manifest versus the context execution and verification actually require.
+- **Context Expansion Ratio (CER)** — Actual Context Surface divided by
+  Declared Context Surface under a preregistered counting unit; an experimental
+  diagnostic, never a conformance score.
+- **Discovery Expansion (DE)** — files read outside a declared feature
+  boundary, optionally classified as declared dependency, undeclared
+  dependency, unrelated, or cross-boundary edit; an experimental diagnostic.
 
 ## SDE (methodology) terms
 

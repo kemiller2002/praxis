@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 10,
+  "nextSeq": 11,
   "items": [
     {
       "id": "WI-0001",
@@ -152,6 +152,23 @@
       "attachments": [],
       "createdAt": "2026-09-07T08:58:42.884Z",
       "updatedAt": "2026-09-07T08:58:53.269Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0010",
+      "title": "Install or update ROS with SDE and verify",
+      "description": null,
+      "tags": [
+        "maintenance",
+        "sde"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-07T20:05:27.772Z",
+      "updatedAt": "2026-09-07T20:05:36.361Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null

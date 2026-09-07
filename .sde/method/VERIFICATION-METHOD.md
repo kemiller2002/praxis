@@ -2,12 +2,13 @@
 id: SDE-METHOD-003
 title: Verification Method
 status: draft
-version: 0.1.0
+version: 0.2.0
 created: 2026-09-02
-updated: 2026-09-02
+updated: 2026-09-05
 related_documents:
   - method/CONSTRUCTION-METHOD.md
   - architecture/BOUNDARY-PRESERVATION.md
+  - architecture/STRUCTURAL-LOCALITY.md
 tags: [method, verification]
 ---
 
@@ -17,8 +18,8 @@ Status: RECOMMENDED as a mapping; EXPERIMENTAL as a claim of completeness.
 
 ## Core principle
 
-> Every required change obligation should become mechanically visible at
-> the earliest reliable layer capable of knowing it.
+> Every required change obligation should be assigned to the earliest
+> trustworthy mechanism capable of knowing it.
 
 This is not the same claim as "the compiler should detect everything." Every
 HelixNote trial to date found at least one defect class no layer in this
@@ -29,10 +30,10 @@ list catches short of behavioral verification (see below).
 | Failure class | Detected by |
 |---|---|
 | Missing semantic case | compiler / exhaustiveness checking |
-| Architecture violation (a tier depending on something it must not) | architecture check |
-| Boundary disagreement (representation collapse, uncoordinated duplication) | boundary/contract check |
-| Persistence disagreement (a schema doesn't admit what the semantic model allows) | persistence/schema agreement check |
-| Present-but-wrong implementation (compiles, passes every static/contract check, does the wrong or no work) | behavioral/integration test |
+| Architecture dependency violation | architecture check |
+| Missing or inconsistent boundary representation | boundary/contract agreement check |
+| Persistence disagreement (a schema does not admit what the semantic model allows) | persistence/schema agreement check |
+| Present-but-wrong implementation or semantic no-op | behavioral/integration test |
 | External/untyped mismatch | runtime validation at re-entry |
 | Unknown external outcome | explicit uncertainty state + reconciliation |
 
@@ -77,6 +78,42 @@ reliably. Do not rely on a fast check for something evidence shows it
 cannot catch (a present-but-inert arm) merely because the fast check
 happens to run cleanly.
 
+## Semantic no-op is a first-class defect
+
+A structurally present branch may compile and satisfy architecture and contract
+checks while performing no meaningful semantic behavior. Every meaningful
+transition, dispatch arm, or boundary behavior SHOULD have evidence of its
+intended effect where practical. This evidence may be a focused behavior test,
+integration test, representative live proof, or another mechanism that
+actually observes the semantic consequence—not merely branch presence.
+
+Exhaustiveness proves that an answer exists. It does not prove that the answer
+is behaviorally correct.
+
+## Structural verification
+
+Structural checks guide review; they do not replace semantic analysis.
+
+- `SDE-STRUCT-001` — a source unit crosses a configured physical-line review
+  band. The distributed `sde verify` implements this deterministic check as a
+  warning. Warnings do not fail an otherwise valid installation.
+- `SDE-STRUCT-002` — unusually high declaration concentration.
+- `SDE-STRUCT-003` — a source unit appears to span multiple responsibility
+  categories.
+- `SDE-STRUCT-004` — physical decomposition appears to duplicate semantic
+  authority.
+
+Only `SDE-STRUCT-001` is automated in v0.2. The remaining findings require
+language-aware or semantic evidence and MUST NOT be presented as mechanically
+verified until a reliable implementation exists. Missing map/manifest,
+undeclared dependency, cross-boundary edit, test discoverability, and ownership
+ambiguity likewise remain review/telemetry findings in v0.2.
+
+Default physical-line review guidance comes from
+[`doctrine/STRUCTURAL-LOCALITY.md`](../architecture/STRUCTURAL-LOCALITY.md). A line
+count is a proxy; reviewers decide whether a responsibility split, documented
+exception, generated-code exclusion, or no change is appropriate.
+
 ## Known gap, stated rather than hidden
 
 Experiment 3 found the entire API/HTTP correction tier has **zero**
@@ -85,3 +122,11 @@ mechanical guard on either HelixNote architecture tested (BS3-01,
 treat any change reaching the API/HTTP tier as requiring manual
 verification at that tier specifically, in addition to whatever mechanical
 checks cover the tiers it also touches.
+
+## Completion gate
+
+Before completion, confirm applicable compiler, architecture, boundary,
+behavioral, integration, and live checks; record failures and skipped checks;
+record unexpected context expansion and architecture findings; and preserve
+unavailable evidence as unavailable. A clean structural warning report alone
+does not prove semantic locality or behavioral correctness.

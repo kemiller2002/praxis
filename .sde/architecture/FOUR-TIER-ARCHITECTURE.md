@@ -2,11 +2,12 @@
 id: SDE-DOCTRINE-003
 title: Four-Tier Architecture
 status: accepted
-version: 0.1.0
+version: 0.2.0
 created: 2026-09-02
-updated: 2026-09-02
+updated: 2026-09-05
 related_documents:
   - architecture/BOUNDARY-PRESERVATION.md
+  - architecture/STRUCTURAL-LOCALITY.md
 supersedes: []
 superseded_by: []
 tags: [doctrine, four-tier, architecture]
@@ -100,6 +101,31 @@ Semantic Model
 
 Dependencies point downward only. Tier 1 never imports from Tier 2, 3, or 4.
 
+## Layering does not imply one file per tier
+
+The four tiers assign semantic responsibility and dependency direction. They
+do not prescribe physical source-file size or require an entire tier or
+semantic area to live in one file. Within a tier, meaningful features may be
+decomposed into responsibility clusters while consuming the same singular
+semantic authority.
+
+The complementary structural hierarchy is:
+
+```text
+System → Semantic Area → Semantic Authority → Responsibility Cluster
+       → Physical Module / File
+```
+
+Feature-level ownership should make state, transitions, invariants,
+capabilities, effects, presentation state, interfaces, and tests locally
+discoverable. Root application components primarily compose features;
+cross-feature access uses explicit contracts. See
+[`STRUCTURAL-LOCALITY.md`](STRUCTURAL-LOCALITY.md).
+
+This also applies to presentation-state architectures. Elmish/MVU/Redux code
+does not become structurally local merely because its state is explicit; a
+root model/reducer may still concentrate unrelated responsibilities.
+
 ## What this doctrine does not claim
 
 - It does not claim this four-way split is the only viable layering, or
@@ -108,3 +134,5 @@ Dependencies point downward only. Tier 1 never imports from Tier 2, 3, or 4.
 - It does not claim the tiers, on their own, prevent boundary failures when
   values cross between them — that is Boundary Preservation's job
   (`BOUNDARY-PRESERVATION.md`), not the tiering's.
+- It does not claim a tier, semantic area, or semantic authority must equal one
+  physical file, or that tiering alone bounds the context required for change.

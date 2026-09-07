@@ -2,9 +2,9 @@
 id: SDE-DOCTRINE-004
 title: Boundary Preservation
 status: accepted
-version: 0.1.0
+version: 0.2.0
 created: 2026-09-02
-updated: 2026-09-02
+updated: 2026-09-05
 related_documents:
   - architecture/FOUR-TIER-ARCHITECTURE.md
 supersedes: []
@@ -35,7 +35,8 @@ generic objects, primitives, or ad hoc URLs earlier than necessary.
 > The compiler can only protect the semantics you allow it to see.
 
 **Establish authority.** Duplicated semantic facts must have one authority,
-a derivation, or a mechanical agreement check.
+a derivation, or a mechanical agreement check. Physical decomposition never
+authorizes separate implementations of the same semantic decision.
 
 **Validate re-entry.** External/untyped data must be validated before
 becoming trusted semantic state.
@@ -128,6 +129,20 @@ failures required inventing a new standard):
 standards -> conventions/profile -> semantic metadata -> tooling
     -> custom DSL only if evidence demands it
 ```
+
+## Derive consequences where practical
+
+Detection optimization makes missing propagation visible. Construction
+optimization reduces independently maintained representations in the first
+place. SDE should seek one semantic decision driving as many consequences as
+practical—legality, validation, capabilities, available UI actions,
+transition execution, diagnostics, contract assertions, and tests—without
+pretending deliberate external representations can always be eliminated.
+
+The approximately four boundary files per semantic decision measured in the
+HelixNote experiments remains research evidence for those mutations, not a
+universal constant and not a solved problem [`TH-SDE-2026-0004`]. Derivation
+is a design objective; code generation is not mandatory doctrine.
 
 ## Enforcement-strength caveat (REQUIRED to state, not to resolve)
 
