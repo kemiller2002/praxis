@@ -24,7 +24,8 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   work-protocol lock through `tools/ros_persistence.mjs`; separate versioned,
   hash-preconditioned event/context and backlog queue/projection recovery
   journals, plus typed Git evidence through the contract-compatible
-  `tools/ros_git.mjs` process adapter.
+  `tools/ros_git.mjs` process adapter. The shadow F# application observes
+  completion evidence through a typed filesystem port after semantic guards.
 
 ## Interfaces
 
@@ -69,6 +70,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 - Last checked against implementation: 2026-09-08
 - Known gaps: backlog and live work intentionally remain separate recovery
   units; telemetry effects occur before event/context journal preparation; the
-  F# planner does not yet own evidence-path checks, whole-context/multi-item
-  effects, backlog promotion, or state-changing execution. Production remains
-  Node-owned pending those slices and the distribution decision.
+  F# planner does not yet own whole-context/multi-item effects, backlog
+  promotion, or state-changing execution. Evidence containment has no current
+  authority; production behavior accepts absolute existing paths. Production
+  remains Node-owned pending those slices and the distribution decision.

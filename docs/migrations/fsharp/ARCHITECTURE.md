@@ -125,6 +125,14 @@ creating a second source of truth. Whole-context planning, evidence-path
 capabilities, backlog promotion, and effect execution remain MIG-07 work. The
 framework-dependent shadow is not called by installed ROS pending distribution.
 
+The evidence-capability sub-slice composes after a successful pure plan. A typed
+port observes each supplied evidence reference as `Present`, `Missing`, or
+`Unavailable`; the filesystem adapter uses repository-root resolution while
+preserving the legacy acceptance of files, directories, and absolute paths.
+Missing and unavailable evidence remain ordered, distinct rejection issues.
+Repository containment is not imposed without an authority and is recorded as
+an open policy question. Whole-context/backlog effects still remain.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

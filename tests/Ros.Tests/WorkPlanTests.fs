@@ -1,8 +1,11 @@
 namespace Ros.Tests
 
+open System
+open System.IO
 open Ros.Application.Work
 open Ros.Contracts.Work
 open Ros.Domain.Work
+open Ros.Infrastructure.Work
 
 [<RequireQualifiedAccess>]
 module WorkPlanTests =
@@ -105,4 +108,55 @@ module WorkPlanTests =
 
                   Assert.equal "doing" plan.Item.LocalState
                   Assert.equal LiveWorkState.Active plan.Item.SemanticState
-                  Assert.equal [] plan.Telemetry } ]
+                  Assert.equal [] plan.Telemetry }
+          { Name = "verified work plan reports every evidence issue in request order"
+            Run =
+              fun () ->
+                  let missing = { Type = "implementation"; Path = "missing.fs" }
+                  let unavailable = { Type = "tests"; Path = "unavailable.fs" }
+                  let repository =
+                      { Observe =
+                          fun evidence ->
+                              if evidence = missing then EvidencePathObservation.Missing
+                              else EvidencePathObservation.Unavailable "denied" }
+
+                  let outcome =
+                      WorkOperations.planVerifiedTransition
+                          repository
+                          { request LiveWorkState.Active WorkAction.Complete with
+                              RequiredEvidence = Set.ofList [ "implementation"; "tests" ]
+                              ProvidedEvidence = [ missing; unavailable ] }
+
+                  Assert.equal
+                      (VerifiedWorkPlanOutcome.EvidenceRejected
+                          [ EvidenceIssue.Missing missing
+                            EvidenceIssue.Unavailable(unavailable, "denied") ])
+                      outcome }
+          { Name = "filesystem evidence adapter distinguishes present files directories and missing paths"
+            Run =
+              fun () ->
+                  let root = Path.Combine(Path.GetTempPath(), $"ros-evidence-{Guid.NewGuid():N}")
+                  Directory.CreateDirectory root |> ignore
+
+                  try
+                      File.WriteAllText(Path.Combine(root, "present.txt"), "evidence")
+                      Directory.CreateDirectory(Path.Combine(root, "present-directory")) |> ignore
+                      let repository = FileEvidenceRepository.create root
+
+                      Assert.equal
+                          EvidencePathObservation.Present
+                          (repository.Observe { Type = "tests"; Path = "present.txt" })
+
+                      Assert.equal
+                          EvidencePathObservation.Present
+                          (repository.Observe { Type = "tests"; Path = "present-directory" })
+
+                      Assert.equal
+                          EvidencePathObservation.Missing
+                          (repository.Observe { Type = "tests"; Path = "missing.txt" })
+
+                      match repository.Observe { Type = "tests"; Path = "invalid\000path" } with
+                      | EvidencePathObservation.Unavailable message -> Assert.isTrue (message.Length > 0) "failure message"
+                      | other -> failwith $"Expected unavailable evidence path, received {other}"
+                  finally
+                      Directory.Delete(root, true) } ]

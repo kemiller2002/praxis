@@ -701,11 +701,22 @@
         "EXE-20260908T181145717Z-9fbd14f5"
       ],
       "completedAt": "2026-09-08T18:25:16.833Z"
+    },
+    {
+      "id": "MIG-07-WORK-EVIDENCE",
+      "type": "feature",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-08T18:27:01.787Z",
+      "telemetryExecutionIds": [
+        "EXE-20260908T182701803Z-a382e3c4"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-08T18:25:16.833Z",
+  "updatedAt": "2026-09-08T18:27:01.787Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

@@ -217,3 +217,19 @@ Canonical raw execution evidence is
 | complete suite | 169 passed, 0 failed: 104 Node, 7 Python, 44 F#, 14 differential/smoke | `npm run test:all` |
 | production mutations | none | shadow CLI only; Node remains state-changing authority |
 | provider model/token/cache/cost | unavailable/not captured | no provider usage snapshot was exposed; no values inferred |
+
+## MIG-07 evidence-capability continuation
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260908T182701803Z-a382e3c4.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-08T18:27:01.803Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-work-evidence` / `a37f2ff` | Git |
+| typed tests | 2 new; 46 total F# tests pass | direct typed runner; the filesystem case also proves malformed paths become `unavailable` |
+| evidence differential | file, directory, absolute existing path, and missing path match production | Node-driven F# differential |
+| failed builds | 2 | CLI composition first lacked repository root; after self-review extended the boundary test, one assertion-helper typo failed compilation; both were repaired and the unchanged complete gate reran |
+| repair loops | 2 | root composition remained at the infrastructure edge; malformed path normalization moved inside the typed exception boundary and its test now uses the established assertion API |
+| complete suite | 172 passed, 0 failed: 104 Node, 7 Python, 46 F#, 15 differential/smoke | `npm run test:all` |
+| provider model/token/cache/cost | unavailable/not captured | no provider usage snapshot was exposed; no values inferred |

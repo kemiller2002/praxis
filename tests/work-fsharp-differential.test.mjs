@@ -166,3 +166,36 @@ test("F# work plan rejection retains missing-evidence obligations", () => {
     rejection: { reason: "missing-evidence", missingEvidence: ["tests"] }
   });
 });
+
+test("F# evidence verification matches production file directory and absolute-path existence", (t) => {
+  const outside = path.join(os.tmpdir(), `ros-work-evidence-${process.pid}.txt`);
+  fs.writeFileSync(outside, "outside fixture\n");
+  t.after(() => fs.rmSync(outside, { force: true }));
+  for (const evidencePath of ["ros.json", ".", outside, "missing-evidence.txt"]) {
+    const root = fixture(t, "active", "feature");
+    const evidence = [
+      { type: "implementation", path: evidencePath },
+      { type: "tests", path: evidencePath }
+    ];
+    let nodeAllowed = true;
+    try {
+      transition(root, "complete", ["TASK-MATRIX"], { evidence });
+    } catch {
+      nodeAllowed = false;
+    }
+    const args = [
+      fsharpCli, "--root", root, "work", "plan", "--verify-evidence",
+      "--id", "TASK-MATRIX", "--type", "feature", "--state", "active", "--action", "complete",
+      "--occurred-at", "2026-09-08T18:30:00Z", "--required", "implementation", "--required", "tests",
+      "--evidence", `implementation=${evidencePath}`, "--evidence", `tests=${evidencePath}`
+    ];
+    const fsharp = spawnSync("dotnet", args, { cwd: repositoryRoot, encoding: "utf8" });
+    assert.equal(fsharp.status === 0, nodeAllowed, evidencePath);
+    const payload = JSON.parse(fsharp.stdout);
+    if (nodeAllowed) assert.equal(payload.outcome, "planned", evidencePath);
+    else {
+      assert.equal(payload.outcome, "evidence-rejected", evidencePath);
+      assert.deepEqual(payload.rejection.evidenceIssues.map((issue) => issue.outcome), ["missing", "missing"]);
+    }
+  }
+});

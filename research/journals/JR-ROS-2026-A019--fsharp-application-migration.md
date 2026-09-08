@@ -2,7 +2,7 @@
 id: JR-ROS-2026-A019
 title: ROS F# application migration execution journal
 status: active
-version: 1.9.0
+version: 1.11.0
 research_area: repository-operating-system
 author_agent: openai-codex
 created: 2026-09-07
@@ -21,6 +21,7 @@ evidence_ids:
   - EV-ROS-2026-A036
   - EV-ROS-2026-A037
   - EV-ROS-2026-A038
+  - EV-ROS-2026-A039
 hypothesis_ids:
   - HY-ROS-2026-A021
   - HY-ROS-2026-A022
@@ -134,6 +135,8 @@ invented.
 | MIG-D019 | MIG-05 backlog persistence | adding a nominally distinct backlog write record made the existing unannotated F# work-write test helper infer the new type | introduced representation/test defect | introduced | annotated both helper return types explicitly; next build succeeded with zero warnings/errors and all 34 typed tests passed |
 | MIG-D020 | MIG-05 backlog verification | first complete gate's read-only F# repository smoke rejected stale evidence/journal registries after new canonical records were added | verification-order finding; generated projection stale | introduced by unbuilt canonical evidence changes | ran the configured registry build, confirmed current projections, and reran the unchanged complete gate; all 147 tests passed |
 | MIG-D021 | MIG-05 telemetry-link verification | the no-uncomposed-write guard passed, then its test helper failed while listing an execution directory that correctly did not exist | introduced test expectation defect | introduced | made the helper model absent storage as an empty file set; rerun passes all 28 telemetry tests |
+| MIG-D022 | MIG-07 evidence self-review | evidence path normalization occurred before the filesystem adapter's exception boundary, so a malformed path could escape instead of returning `unavailable` | introduced boundary error | introduced | moved normalization inside the typed boundary; added a malformed-path rejection assertion; final full gate passes |
+| MIG-D023 | MIG-07 evidence verification | the new malformed-path assertion used a nonexistent assertion helper and stopped the first full F# build | introduced test/agent-execution mistake | introduced | changed it to the repository's established `Assert.isTrue` helper and reran the complete gate; all 172 tests pass |
 
 # Observations
 
@@ -273,6 +276,22 @@ Three initial compiler attempts exposed ambiguous record inference and JSON/CLI
 overload inference; explicit boundary annotations repaired them. The complete
 gate passes 169 tests. Evidence-path I/O, whole-context/multi-item planning,
 backlog promotion, and production authority remain open.
+
+## MIG-07 — typed evidence observation
+
+Added a present/missing/unavailable evidence port and filesystem adapter, then
+composed it only after the pure transition plan succeeds. Missing and
+unavailable issues retain request order and full evidence identity. Controlled
+differentials match Node for files, directories, missing paths, and the current
+acceptance of absolute paths. Repository containment remains an explicit open
+policy question because no authority was found; this shadow slice does not
+silently change the contract. One compiler failure exposed the newly required
+root composition and was repaired without moving root into the domain planner.
+Adversarial self-review then found path normalization outside the adapter's
+exception boundary. Moving it inside preserves malformed paths as typed
+`Unavailable` outcomes. The first full gate after that repair exposed only a
+test-helper naming error; correcting it and rerunning the unchanged gate passed
+all 172 checks.
 
 # Decisions and rationale
 

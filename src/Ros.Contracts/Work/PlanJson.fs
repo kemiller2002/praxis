@@ -84,3 +84,42 @@ module WorkPlanContract =
                 writer.WriteNull("rejection")
 
             writer.WriteEndObject())
+
+    let renderVerifiedJson outcome =
+        match outcome with
+        | VerifiedWorkPlanOutcome.Planned plan -> renderJson (WorkPlanOutcome.Planned plan)
+        | VerifiedWorkPlanOutcome.TransitionRejected rejection -> renderJson (WorkPlanOutcome.Rejected rejection)
+        | VerifiedWorkPlanOutcome.EvidenceRejected issues ->
+            JsonRendering.renderIndented (fun writer ->
+                writer.WriteStartObject()
+                writer.WriteString("schemaVersion", "1.0.0")
+                writer.WriteString("outcome", "evidence-rejected")
+                writer.WriteNull("plan")
+                writer.WriteStartObject("rejection")
+                writer.WriteString("reason", "evidence-path-rejected")
+                writer.WriteStartArray("evidenceIssues")
+
+                for issue in issues do
+                    writer.WriteStartObject()
+
+                    match issue with
+                    | EvidenceIssue.Missing evidence ->
+                        writer.WriteString("outcome", "missing")
+                        writer.WriteStartObject("evidence")
+                        writer.WriteString("type", evidence.Type)
+                        writer.WriteString("path", evidence.Path)
+                        writer.WriteEndObject()
+                        writer.WriteNull("message")
+                    | EvidenceIssue.Unavailable(evidence, message) ->
+                        writer.WriteString("outcome", "unavailable")
+                        writer.WriteStartObject("evidence")
+                        writer.WriteString("type", evidence.Type)
+                        writer.WriteString("path", evidence.Path)
+                        writer.WriteEndObject()
+                        writer.WriteString("message", message)
+
+                    writer.WriteEndObject()
+
+                writer.WriteEndArray()
+                writer.WriteEndObject()
+                writer.WriteEndObject())

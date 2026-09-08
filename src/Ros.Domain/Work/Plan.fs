@@ -53,9 +53,26 @@ type WorkTransitionPlan =
       Telemetry: TelemetryIntent list }
 
 [<RequireQualifiedAccess>]
+type EvidencePathObservation =
+    | Present
+    | Missing
+    | Unavailable of message: string
+
+[<RequireQualifiedAccess>]
+type EvidenceIssue =
+    | Missing of WorkEvidence
+    | Unavailable of evidence: WorkEvidence * message: string
+
+[<RequireQualifiedAccess>]
 type WorkPlanOutcome =
     | Planned of WorkTransitionPlan
     | Rejected of TransitionRejection
+
+[<RequireQualifiedAccess>]
+type VerifiedWorkPlanOutcome =
+    | Planned of WorkTransitionPlan
+    | TransitionRejected of TransitionRejection
+    | EvidenceRejected of EvidenceIssue list
 
 [<RequireQualifiedAccess>]
 module WorkTransitionPlanning =

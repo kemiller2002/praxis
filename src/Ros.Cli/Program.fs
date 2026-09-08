@@ -14,6 +14,7 @@ open Ros.Domain.Git
 open Ros.Domain.Work
 open Ros.Infrastructure.Artifacts
 open Ros.Infrastructure.Git
+open Ros.Infrastructure.Work
 
 [<Literal>]
 let Version = "0.2.0-shadow"
@@ -185,7 +186,7 @@ let private defaultLocalState (action: WorkAction) =
     | WorkAction.Block -> "blocked"
     | WorkAction.Complete -> "complete"
 
-let private runWorkPlan arguments =
+let private runWorkPlan root arguments =
     let state = optionValue "--state" arguments |> Option.bind parseWorkState
     let action = optionValue "--action" arguments |> Option.bind parseWorkAction
     let workItem = optionValue "--id" arguments
@@ -220,12 +221,21 @@ let private runWorkPlan arguments =
               ChangedPaths = optionValues "--path" arguments
               TelemetryEnabled = arguments |> List.contains "--telemetry-enabled" }
 
-        let outcome = WorkOperations.planTransition request
-        printf "%s" (WorkPlanContract.renderJson outcome)
+        if arguments |> List.contains "--verify-evidence" then
+            let outcome = WorkOperations.planVerifiedTransition (FileEvidenceRepository.create root) request
+            printf "%s" (WorkPlanContract.renderVerifiedJson outcome)
 
-        match outcome with
-        | WorkPlanOutcome.Planned _ -> 0
-        | WorkPlanOutcome.Rejected _ -> 1
+            match outcome with
+            | VerifiedWorkPlanOutcome.Planned _ -> 0
+            | VerifiedWorkPlanOutcome.TransitionRejected _
+            | VerifiedWorkPlanOutcome.EvidenceRejected _ -> 1
+        else
+            let outcome = WorkOperations.planTransition request
+            printf "%s" (WorkPlanContract.renderJson outcome)
+
+            match outcome with
+            | WorkPlanOutcome.Planned _ -> 0
+            | WorkPlanOutcome.Rejected _ -> 1
     | _ ->
         eprintfn "ERROR work plan requires valid --id, --type, --state, --action, --occurred-at, and TYPE=PATH evidence"
         2
@@ -253,7 +263,7 @@ let private dispatch root arguments =
     | "git" :: "status" :: rest when rest |> List.forall ((=) "--json") ->
         runGitStatus (rest |> List.contains "--json") gitRepository
     | "work" :: "decide" :: rest -> runWorkDecision rest
-    | "work" :: "plan" :: rest -> runWorkPlan rest
+    | "work" :: "plan" :: rest -> runWorkPlan root rest
     | _ ->
         eprintfn "%s" usage
         2

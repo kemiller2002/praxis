@@ -4,18 +4,18 @@ Last updated: 2026-09-08. Production authority remains Node.
 
 | Category | Current state |
 |---|---|
-| Baseline | clean SHA tagged and pushed; active continuation branch `migration/ros-work-orchestration` started from `0dd3198` |
+| Baseline | clean SHA tagged and pushed; active continuation branch `migration/ros-work-evidence` started from `a37f2ff` |
 | Discovery | complete at T1; 28 baseline execution/config/platform units plus six executable test units; MIG-06 added one inventoried adapter |
 | Semantic decomposition | complete at T2; map and six feature manifests added |
 | Architecture | accepted for staged shadowing in `DF-ROS-2026-A027`; challenged before treatment |
 | F# implementation | MIG-03/04 and MIG-06 complete; MIG-07 includes typed transition decisions plus pure item/event/telemetry planning exposed by shadow `ros-fs work plan` |
 | Persistence migration | MIG-05 complete: bounded registry, live-work, and backlog recovery units plus atomic per-execution telemetry files and recoverable execution/context linking; no cross-store/global transaction claim |
 | Git migration | MIG-06 complete: F# owns the typed status contract; production work/telemetry effects share one contract-compatible Node adapter pending the distribution decision |
-| Work migration | MIG-07 decision and orchestration-plan sub-slices complete; Node still owns backlog promotion, evidence-path checks, whole-context effects, telemetry execution, and every state-changing command |
+| Work migration | MIG-07 decision, orchestration-plan, and typed evidence-observation sub-slices complete; Node still owns backlog promotion, whole-context effects, telemetry execution, and every state-changing command |
 | Production command switch | not authorized and not attempted |
 | Legacy removal | none; Python validator remains an oracle; layout generator is only a deprecation candidate |
 | Distribution | repository-local .NET 10 shadow only; consumer decision unresolved |
-| Verification | implementation gate passes: 104 Node, 7 Python, 44 F#, and 14 Node-driven differential/smoke tests (169 total); final SDE/ROS closeout checks remain for this slice |
+| Verification | complete gate passes: 104 Node, 7 Python, 46 F#, and 15 differential/smoke tests (172 total); final SDE/ROS closeout checks remain |
 | Research | experiment A020 and hypotheses A021–A026 preregistered |
 
 T6 closed WI-0011 and finalized `EXE-20260907T203141590Z-54f547f8`. The final

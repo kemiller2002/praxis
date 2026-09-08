@@ -12,6 +12,7 @@
     <Compile Include="Git/GitRepository.fs" />
     <Compile Include="Work/WorkStateTransaction.fs" />
     <Compile Include="Work/BacklogStateTransaction.fs" />
+    <Compile Include="Work/FileEvidenceRepository.fs" />
     <Compile Include="Artifacts/FrontMatter.fs" />
     <Compile Include="Artifacts/RegistryLock.fs" />
     <Compile Include="Artifacts/RegistryTransaction.fs" />
