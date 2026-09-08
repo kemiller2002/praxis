@@ -554,11 +554,22 @@
         "EXE-20260908T113835529Z-e8d6b91e"
       ],
       "completedAt": "2026-09-08T11:52:36.499Z"
+    },
+    {
+      "id": "MIG-07-WORK-LIFECYCLE",
+      "type": "feature",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-08T11:53:23.101Z",
+      "telemetryExecutionIds": [
+        "EXE-20260908T115323101Z-4ccf5eaa"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-08T11:52:36.499Z",
+  "updatedAt": "2026-09-08T11:53:23.101Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

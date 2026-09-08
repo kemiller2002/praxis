@@ -42,6 +42,7 @@ dotnet src/Ros.Cli/bin/Release/net10.0/ros-fs.dll artifacts validate --json
 dotnet src/Ros.Cli/bin/Release/net10.0/ros-fs.dll registry build --dry-run
 dotnet src/Ros.Cli/bin/Release/net10.0/ros-fs.dll registry check
 dotnet src/Ros.Cli/bin/Release/net10.0/ros-fs.dll git status --json
+dotnet src/Ros.Cli/bin/Release/net10.0/ros-fs.dll work decide --state active --action complete --required implementation --required tests --provided implementation --json
 ```
 
 `npm run build:fsharp` disables persistent build servers and uses one build
@@ -55,5 +56,6 @@ generated. Work and telemetry stores remain under `.ros/`.
 
 `test:fsharp` runs typed unit/architecture tests and Node-driven differential
 tests. They compare artifact registry bytes/findings and Git status paths,
-two-character statuses, rename origins, clean state, and unavailable state.
+two-character statuses, rename origins, clean/unavailable state, and all 16
+live-work state/action pairs plus block/evidence rejection behavior.
 These are compatibility gates, not an authority switch.

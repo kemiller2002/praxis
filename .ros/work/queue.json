@@ -227,6 +227,24 @@
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "MIG-07-WORK-LIFECYCLE",
+      "title": "MIG-07 shadow typed live-work transitions and evidence guards",
+      "description": null,
+      "tags": [
+        "fsharp",
+        "migration",
+        "work"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-08T11:53:22.892Z",
+      "updatedAt": "2026-09-08T11:53:23.002Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

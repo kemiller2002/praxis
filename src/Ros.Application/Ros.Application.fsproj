@@ -9,6 +9,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Git/Operations.fs" />
+    <Compile Include="Work/Operations.fs" />
     <Compile Include="Artifacts/Operations.fs" />
   </ItemGroup>
 </Project>

@@ -100,3 +100,20 @@ execution-telemetry manifests. Source inspection expanded into both Node Git
 helpers because the work manifest declared Git evidence and the telemetry
 manifest declared repository discovery; this was expected dependency fan-out,
 not an undeclared semantic area.
+
+## MIG-07 continuation execution
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260908T115323101Z-4ccf5eaa.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-08T11:53:23.101Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-fsharp-work-lifecycle` / `803f2b9` | Git baseline captured by ROS |
+| typed work tests | 4 new; 25 total F# tests passed | `Ros.Tests.dll` output |
+| work differential tests | 3 new; matrix case covers all 16 state/action pairs | Node test runner against real Node transition calls and F# CLI |
+| final complete suite | 131 passed, 0 failed | 89 Node + 7 Python + 25 F# + 10 Node-driven differential/smoke tests |
+| build executions | 2 passed, 0 failed | narrow and complete gates; successful builds had zero warnings/errors |
+| SDE integrity | v1.1.1 verified; 18 managed files; 5 pre-existing structural review warnings | `sde verify` |
+| production mutations | none | source diff; `./ros` remains Node |
+| provider model/token/cache/cost | unavailable/not captured | no runtime observation; no values inferred |

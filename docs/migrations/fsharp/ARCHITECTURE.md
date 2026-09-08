@@ -91,6 +91,19 @@ kernel still have distinct fail-open helpers, so MIG-06 remains in progress
 until their consumers move behind one typed authority with caller-specific
 compatibility evidence. The shadow can be removed without changing `./ros`.
 
+## Live-work decision seam
+
+MIG-07 begins with the pure semantic core of the live-work lifecycle. Four
+states (`Ready`, `Active`, `Blocked`, `Complete`) and four requested actions
+encode only the five characterized legal edges. The decision also rejects a
+missing block reason and missing configured evidence types. These decisions
+have no filesystem, Git, clock, telemetry, event, or persistence effects.
+
+`ros-fs work decide` is a shadow diagnostic surface with an explicit JSON
+result. It is not a state-changing command and does not claim that evidence
+paths exist. Application/effect orchestration and comparative persisted
+context/event behavior remain required before a production switch.
+
 ## State architecture
 
 | Lifecycle | Closed state now | Authority | Migration treatment |

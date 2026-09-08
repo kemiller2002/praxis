@@ -17,6 +17,7 @@
     <Compile Include="ArtifactTests.fs" />
     <Compile Include="PersistenceTests.fs" />
     <Compile Include="GitTests.fs" />
+    <Compile Include="WorkTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>
