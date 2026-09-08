@@ -33,7 +33,8 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 ## Tests and verification
 
 - Local behavior tests: `tests/work-protocol.test.mjs` and
-  `tests/ros-server.test.mjs`.
+  `tests/ros-server.test.mjs`; the future typed Git seam is exercised by
+  `tests/Ros.Tests/GitTests.fs` and `tests/git-fsharp-differential.test.mjs`.
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
 - Integration/live verification: `./ros status`, `./ros work context ID`, and
@@ -62,5 +63,6 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 - Owner: repository-governance
 - Last checked against implementation: 2026-09-07
 - Known gaps: backlog writes do not share the work-context lock; multi-file
-  transitions are not transactional; Git failure may be indistinguishable
-  from an empty change set.
+  transitions are not transactional; the production Node Git helper still
+  makes Git failure indistinguishable from an empty change set. The F# shadow
+  models this distinction but is not yet the work authority.

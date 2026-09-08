@@ -101,7 +101,9 @@
     "created": "2026-09-07",
     "evidence_ids": [
       "EV-ROS-2026-A015",
-      "EV-ROS-2026-A018"
+      "EV-ROS-2026-A018",
+      "EV-ROS-2026-A030",
+      "EV-ROS-2026-A031"
     ],
     "hypothesis_ids": [
       "HY-ROS-2026-A021",
@@ -127,6 +129,6 @@
     "theory_ids": [],
     "title": "ROS F# application migration execution journal",
     "updated": "2026-09-08",
-    "version": "1.1.0"
+    "version": "1.2.0"
   }
 ]

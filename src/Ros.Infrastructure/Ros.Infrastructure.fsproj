@@ -9,6 +9,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Git/GitRepository.fs" />
     <Compile Include="Artifacts/FrontMatter.fs" />
     <Compile Include="Artifacts/RegistryLock.fs" />
     <Compile Include="Artifacts/RegistryTransaction.fs" />

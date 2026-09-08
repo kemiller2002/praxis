@@ -209,6 +209,24 @@
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "MIG-06-GIT-PROVENANCE",
+      "title": "MIG-06 characterize and shadow typed Git provenance",
+      "description": null,
+      "tags": [
+        "fsharp",
+        "migration",
+        "git"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-08T11:38:35.335Z",
+      "updatedAt": "2026-09-08T11:38:35.432Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

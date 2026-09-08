@@ -8,6 +8,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="JsonRendering.fs" />
+    <Compile Include="Git/StatusJson.fs" />
     <Compile Include="Artifacts/RegistryJson.fs" />
     <Compile Include="Cli/FindingJson.fs" />
   </ItemGroup>

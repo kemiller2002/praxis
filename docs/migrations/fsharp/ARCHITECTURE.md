@@ -76,6 +76,21 @@ projection is idempotent. It is not a generic transaction implementation, does
 not version canonical inputs, and must not be reused for work or telemetry state
 without their own recovery/authority design.
 
+## Git provenance seam
+
+MIG-06 adds a read-only F# shadow boundary for repository status. The domain
+result is closed over `Clean`, `Changed`, and `Unavailable`; a failure can no
+longer be represented as an empty change list. Tracked status preserves separate
+index and work-tree deltas, while rename/copy changes retain both destination
+and origin paths. Infrastructure alone invokes `git status --porcelain=v1 -z`,
+the application exposes the observation use case, Contracts owns the versioned
+JSON shape, and the CLI maps unavailable to a non-zero exit.
+
+This seam does not yet replace either Node caller. The work kernel and telemetry
+kernel still have distinct fail-open helpers, so MIG-06 remains in progress
+until their consumers move behind one typed authority with caller-specific
+compatibility evidence. The shadow can be removed without changing `./ros`.
+
 ## State architecture
 
 | Lifecycle | Closed state now | Authority | Migration treatment |
@@ -138,6 +153,6 @@ startup, size, offline/update, checksum, version-selection, and rollback data.
 5. A feature slice includes semantics, handler, effect boundary, CLI, tests,
    telemetry/traceability, compatibility, and rollback.
 6. Architecture verification must include a demonstrated rejection path.
-7. A registry-file replacement is atomic per file, but a multi-registry build
-   is not a transaction; an incomplete outcome preserves written/pending sets
-   for explicit recovery work in MIG-05.
+7. A registry-file replacement is atomic per file; the bounded replay record
+   recovers an incomplete generated-registry set but is not a general-purpose
+   transaction facility.

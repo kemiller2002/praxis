@@ -4,15 +4,19 @@ open System
 open System.Collections.Generic
 open System.IO
 open Ros.Application.Artifacts
+open Ros.Application.Git
 open Ros.Contracts.Cli
+open Ros.Contracts.Git
 open Ros.Domain.Artifacts
+open Ros.Domain.Git
 open Ros.Infrastructure.Artifacts
+open Ros.Infrastructure.Git
 
 [<Literal>]
 let Version = "0.2.0-shadow"
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json]"
 
 let private parseRoot (arguments: string array) =
     let values = ResizeArray<string>(arguments)
@@ -92,8 +96,31 @@ let private runRegistryBuild dryRun repository =
         eprintfn "registry build incomplete: %d written; %d pending" written.Length pending.Length
         1
 
+let private renderGitChange change =
+    match change.OriginalPath with
+    | Some originalPath -> $"{GitStatus.code change.Status} {originalPath} -> {change.Path}"
+    | None -> $"{GitStatus.code change.Status} {change.Path}"
+
+let private runGitStatus asJson repository =
+    let observation = GitOperations.observe repository
+
+    if asJson then
+        printf "%s" (GitStatusContract.renderJson observation)
+
+    match observation with
+    | GitStatusObservation.Clean ->
+        if not asJson then printfn "working tree clean"
+        0
+    | GitStatusObservation.Changed changes ->
+        if not asJson then changes |> List.iter (renderGitChange >> printfn "%s")
+        0
+    | GitStatusObservation.Unavailable failure ->
+        if not asJson then eprintfn "ERROR %s unavailable: %s" failure.Operation failure.Message
+        1
+
 let private dispatch root arguments =
     let repository = FileArtifactRepository.create root
+    let gitRepository = ProcessGitRepository.create root
 
     match arguments with
     | [ "version" ]
@@ -111,6 +138,8 @@ let private dispatch root arguments =
     | "registry" :: "build" :: rest when rest |> List.forall ((=) "--dry-run") ->
         runRegistryBuild (rest |> List.contains "--dry-run") repository
     | [ "registry"; "check" ] -> runRegistryCheck repository
+    | "git" :: "status" :: rest when rest |> List.forall ((=) "--json") ->
+        runGitStatus (rest |> List.contains "--json") gitRepository
     | _ ->
         eprintfn "%s" usage
         2

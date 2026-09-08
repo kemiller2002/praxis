@@ -1,0 +1,88 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { execFileSync, spawnSync } from "node:child_process";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
+
+const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
+
+function git(root, args) {
+  return execFileSync("git", ["-C", root, ...args], { encoding: "utf8" });
+}
+
+function fixture(t) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-git-differential-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  git(root, ["init", "-q"]);
+  git(root, ["config", "user.email", "test@example.invalid"]);
+  git(root, ["config", "user.name", "ROS Test"]);
+  fs.writeFileSync(path.join(root, "original.txt"), "original\n");
+  fs.writeFileSync(path.join(root, "modified.txt"), "baseline\n");
+  git(root, ["add", "."]);
+  git(root, ["commit", "-qm", "baseline"]);
+  return root;
+}
+
+function runFsharp(root) {
+  const result = spawnSync("dotnet", [fsharpCli, "--root", root, "git", "status", "--json"], {
+    cwd: repositoryRoot,
+    encoding: "utf8"
+  });
+  return { ...result, json: JSON.parse(result.stdout) };
+}
+
+function nodeStatus(root) {
+  const fields = git(root, ["status", "--porcelain=v1", "-z", "--untracked-files=all"]).split("\0").filter(Boolean);
+  const changes = [];
+  for (let index = 0; index < fields.length; index += 1) {
+    const entry = fields[index];
+    const code = entry.slice(0, 2);
+    const changedPath = entry.slice(3);
+    const originalPath = /[RC]/.test(code) ? fields[++index] : null;
+    changes.push({ code, path: changedPath, originalPath });
+  }
+  return changes.sort((left, right) => left.path.localeCompare(right.path));
+}
+
+function projected(changes) {
+  return changes.map(({ code, path: changedPath, originalPath }) => ({ code, path: changedPath, originalPath }));
+}
+
+test("F# Git shadow matches clean porcelain status", (t) => {
+  assert.ok(fs.existsSync(fsharpCli), "build:fsharp must produce the shadow CLI before this test runs");
+  const root = fixture(t);
+  const result = runFsharp(root);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.json.outcome, "clean");
+  assert.deepEqual(result.json.changes, []);
+});
+
+test("F# Git shadow matches changed paths, statuses, and rename origin", (t) => {
+  const root = fixture(t);
+  git(root, ["mv", "original.txt", "renamed.txt"]);
+  fs.appendFileSync(path.join(root, "modified.txt"), "changed\n");
+  fs.writeFileSync(path.join(root, "untracked.txt"), "new\n");
+
+  const expected = nodeStatus(root);
+  const result = runFsharp(root);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.json.outcome, "changed");
+  assert.deepEqual(projected(result.json.changes), expected);
+  assert.deepEqual(result.json.changes.find(({ code }) => code.startsWith("R")), {
+    code: "R ", kind: "tracked", index: "renamed", workTree: "unmodified",
+    path: "renamed.txt", originalPath: "original.txt"
+  });
+});
+
+test("F# Git shadow reports unavailable instead of clean outside a repository", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-git-unavailable-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const result = runFsharp(root);
+  assert.equal(result.status, 1);
+  assert.equal(result.json.outcome, "unavailable");
+  assert.equal(result.json.failure.reason, "not-repository");
+  assert.equal(result.json.failure.exitCode, 128);
+});

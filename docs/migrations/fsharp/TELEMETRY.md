@@ -76,3 +76,27 @@ snapshot; they do not retroactively alter the finalized execution record.
 The final evidence record will add mechanically derived commits/files/LOC,
 build/test attempts, failures, repair loops, defect counts, migration counts,
 external-call/rule-site observations, and every available checkpoint value.
+
+## MIG-06 continuation execution
+
+Canonical raw execution evidence for this continuation is
+`.ros/telemetry/executions/EXE-20260908T113835529Z-e8d6b91e.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-08T11:38:35.529Z | ROS work/telemetry transition |
+| starting branch/tree | `migration/ros-fsharp-git-provenance`, clean before work records | Git and `./ros work ready` |
+| F# tests after Git slice | 21 passed, 0 failed | direct `Ros.Tests.dll` execution |
+| Git differential tests | 3 passed, 0 failed | Node test runner over controlled repositories |
+| new shadow command | `ros-fs git status [--json]` | CLI smoke output |
+| Git process call sites added | 1, Infrastructure only | source inspection |
+| compiler attempts | 8: 4 successful, 4 failed | command output; reserved-name, inference, placement, and interpolation repairs followed by narrow and full gates |
+| final complete suite | 124 passed, 0 failed | 89 Node + 7 Python + 21 F# + 7 Node-driven F# differential/smoke tests |
+| SDE integrity | v1.1.1 verified; 18 managed files; 5 structural review warnings | `sde status` and `sde verify`; warnings are pre-existing large-file review signals |
+| provider model/token/cache/cost | unavailable/not captured | runtime exposed no new provider observation; no values inferred |
+
+This continuation used the existing semantic map and the work-lifecycle and
+execution-telemetry manifests. Source inspection expanded into both Node Git
+helpers because the work manifest declared Git evidence and the telemetry
+manifest declared repository discovery; this was expected dependency fan-out,
+not an undeclared semantic area.

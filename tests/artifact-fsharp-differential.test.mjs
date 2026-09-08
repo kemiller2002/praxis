@@ -73,9 +73,12 @@ test("F# artifact slice matches Node registry bytes and characterized findings",
 });
 
 test("F# shadow smoke-checks the current repository without becoming its authority", () => {
-  const node = buildRegistries(repositoryRoot);
-  assert.equal(node.findings.length, 0);
-  assert.equal(node.changed, 0);
+  const node = spawnSync(path.join(repositoryRoot, "ros"), ["registry", "check"], {
+    cwd: repositoryRoot,
+    encoding: "utf8"
+  });
+  assert.equal(node.status, 0, `${node.stdout}${node.stderr}`);
+  assert.equal(node.stdout, "registries are current\n");
 
   const validation = runFsharp(["--root", repositoryRoot, "artifacts", "validate", "--json"]);
   assert.equal(validation.status, 0, validation.stderr);

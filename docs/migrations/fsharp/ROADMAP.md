@@ -36,7 +36,7 @@ Dependency ordering overrides a raw score where state safety requires it.
 | MIG-03 artifact boundary/fixtures | complete | explicit front matter, IDs, kind/status/confidence/reference shapes; path-specific findings; frozen valid/invalid fixtures | Node/Python remain oracles |
 | MIG-04 artifact validation and registry projection | complete | `ros-fs artifacts validate`, `registry build/check`; Node/F# byte parity; no canonical mutation; repeated build and partial-write outcome proof | no launcher switch; Python deprecation only after further evidence |
 | MIG-05 transactional file persistence/recovery | in progress | artifact-registry sub-slice now has cross-runtime lease, declared versioned write set, atomic per-file replacement, replay recovery, and indeterminate outcomes; work/telemetry versioning and recovery remain | retain stateful Node writers; do not generalize artifact replay |
-| MIG-06 unified Git provenance | deferred | typed clean/changed/unavailable result, rename/copy correctness, failure tests | current Git calls retained until all consumers move |
+| MIG-06 unified Git provenance | in progress | F# shadow sub-slice has typed clean/changed/unavailable outcomes, index/work-tree status, rename/copy origin paths, explicit JSON, and failure/differential tests; production caller consolidation remains | current Node Git calls retained until work and telemetry consumers have caller-specific compatibility evidence |
 | MIG-07 work lifecycle/evidence | deferred | typed backlog/live states, legal transitions, evidence guards, comparative state/files/events | shadow then explicit authority switch |
 | MIG-08 execution/telemetry core | deferred | lifecycle, identity, provenance, metric/capability semantics, aggregation, unknown/raw preservation | provider adapters remain at edge |
 | MIG-09 bootstrap/upgrade | deferred | valid initial state, versioned upgrade/check/rollback; npm materializer thin | retain npm acquisition |
@@ -50,7 +50,8 @@ Dependency ordering overrides a raw score where state safety requires it.
 
 1. Finish MIG-05 file transaction/recovery semantics before moving stateful
    writers.
-2. Unify Git provenance and prove unavailable is not clean.
+2. Move work and telemetry Git consumers behind the typed provenance boundary;
+   the F# shadow already proves unavailable is not clean.
 3. Migrate work lifecycle as a controlled shadow slice.
 4. Migrate stable execution/telemetry semantics while preserving open provider
    extensions.
