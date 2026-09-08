@@ -621,18 +621,28 @@
     {
       "id": "MIG-05-BACKLOG-PERSISTENCE",
       "type": "infrastructure",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-08T12:25:49.568Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/BacklogStateTransaction.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-protocol.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-08T13:56:19.583Z",
       "telemetryExecutionIds": [
         "EXE-20260908T122549568Z-b1bcf1e1"
-      ]
+      ],
+      "completedAt": "2026-09-08T13:56:19.583Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-08T12:25:49.568Z",
+  "updatedAt": "2026-09-08T13:56:19.583Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
