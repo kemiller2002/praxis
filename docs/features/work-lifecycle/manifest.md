@@ -20,8 +20,9 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 - Capabilities / authority: `contextView` returns allowed actions and required
   evidence; file-adapter scopes are checked by `validateAdapterRequest`.
 - Important effects and effect contracts: atomic JSON/text and a local
-  work-protocol lock through `tools/ros_persistence.mjs`; append-only event
-  publication and Git evidence through `tools/ros_cli.mjs`.
+  work-protocol lock through `tools/ros_persistence.mjs`; a versioned,
+  hash-preconditioned event/context recovery journal and Git evidence through
+  `tools/ros_cli.mjs`.
 
 ## Interfaces
 
@@ -61,8 +62,9 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 ## Maintenance
 
 - Owner: repository-governance
-- Last checked against implementation: 2026-09-07
-- Known gaps: backlog writes do not share the work-context lock; multi-file
-  transitions are not transactional; the production Node Git helper still
-  makes Git failure indistinguishable from an empty change set. The F# shadow
-  models this distinction but is not yet the work authority.
+- Last checked against implementation: 2026-09-08
+- Known gaps: backlog writes do not share the live-work recovery unit;
+  telemetry effects occur before event/context journal preparation; the
+  production Node Git helper still makes Git failure indistinguishable from an
+  empty change set. The F# shadow models the Git distinction but is not yet the
+  work authority.

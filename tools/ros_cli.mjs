@@ -72,6 +72,9 @@ const KIND_CONFIG = {
 };
 const ARTIFACT_REGISTRY_RESOURCE = "artifact-registries";
 const ARTIFACT_REGISTRY_TRANSACTION_VERSION = "1.0.0";
+const WORK_STATE_RESOURCE = "work-state";
+const WORK_STATE_TRANSACTION_VERSION = "1.0.0";
+const WORK_STATE_PATHS = [".ros/events/events.jsonl", ".ros/context/current.json"];
 
 const SEMANTIC_STATES = new Set(["backlog", "ready", "active", "review", "blocked", "complete"]);
 const TRANSITIONS = {
@@ -439,14 +442,93 @@ export function startWork(root, ids, options = {}) {
   return transition(root, "begin", ids, options);
 }
 
-function appendEvent(root, event) {
+function eventPayload(event) {
   const payload = { schemaVersion: "1.0.0", ...event };
   payload.eventId = crypto.createHash("sha256").update(JSON.stringify(payload)).digest("hex").slice(0, 24);
-  const file = eventsPath(root);
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  const existing = fs.existsSync(file) ? fs.readFileSync(file, "utf8").split(/\r?\n/).filter(Boolean).map(JSON.parse) : [];
-  if (!existing.some((item) => item.eventId === payload.eventId)) fs.appendFileSync(file, `${JSON.stringify(payload)}\n`, "utf8");
   return payload;
+}
+
+function sha256Text(text) {
+  return crypto.createHash("sha256").update(text, "utf8").digest("hex");
+}
+
+function workStateTransactionPath(root) {
+  return path.join(root, ".ros", "transactions", `${WORK_STATE_RESOURCE}.json`);
+}
+
+function currentText(root, relative) {
+  const file = path.join(root, relative);
+  return fs.existsSync(file) ? fs.readFileSync(file, "utf8") : null;
+}
+
+function workStateRecord(root, writes) {
+  if (writes.length !== WORK_STATE_PATHS.length || writes.some((write, index) => write.path !== WORK_STATE_PATHS[index])) {
+    throw new Error("work-state transaction must contain event then context");
+  }
+  return {
+    schemaVersion: WORK_STATE_TRANSACTION_VERSION,
+    resource: WORK_STATE_RESOURCE,
+    writes: writes.map((write) => {
+      const before = currentText(root, write.path);
+      return {
+        path: write.path,
+        beforeSha256: before === null ? null : sha256Text(before),
+        afterSha256: sha256Text(write.content),
+        content: write.content
+      };
+    })
+  };
+}
+
+function validWorkStateRecord(record) {
+  if (record?.schemaVersion !== WORK_STATE_TRANSACTION_VERSION || record?.resource !== WORK_STATE_RESOURCE) return false;
+  if (!Array.isArray(record.writes) || record.writes.length !== WORK_STATE_PATHS.length) return false;
+  return record.writes.every((write, index) =>
+    write?.path === WORK_STATE_PATHS[index]
+    && (write.beforeSha256 === null || /^[a-f0-9]{64}$/.test(write.beforeSha256))
+    && typeof write.afterSha256 === "string"
+    && typeof write.content === "string"
+    && sha256Text(write.content) === write.afterSha256
+  );
+}
+
+function recoverWorkStateTransaction(root) {
+  const transaction = workStateTransactionPath(root);
+  if (!fs.existsSync(transaction)) return false;
+  const record = readJson(transaction);
+  if (!validWorkStateRecord(record)) throw new Error("work-state transaction is invalid");
+
+  const observations = record.writes.map((write) => {
+    const current = currentText(root, write.path);
+    const hash = current === null ? null : sha256Text(current);
+    if (hash !== write.beforeSha256 && hash !== write.afterSha256) {
+      throw new Error(`work-state transaction target changed after preparation: ${write.path}`);
+    }
+    return { write, alreadyApplied: hash === write.afterSha256 };
+  });
+
+  for (const { write, alreadyApplied } of observations) {
+    if (!alreadyApplied) writeTextAtomic(path.join(root, write.path), write.content);
+  }
+  fs.unlinkSync(transaction);
+  return true;
+}
+
+function commitWorkState(root, writes) {
+  const transaction = workStateTransactionPath(root);
+  if (fs.existsSync(transaction)) throw new Error("pending work-state transaction must be recovered before preparing another");
+  writeJson(transaction, workStateRecord(root, writes));
+  recoverWorkStateTransaction(root);
+}
+
+function renderedEventLog(root, planned) {
+  const current = currentText(root, ".ros/events/events.jsonl") ?? "";
+  const existing = current.split(/\r?\n/).filter(Boolean).map(JSON.parse);
+  const known = new Set(existing.map((item) => item.eventId));
+  const additions = planned.filter((item) => !known.has(item.eventId));
+  if (!additions.length) return current;
+  const separator = current.length > 0 && !current.endsWith("\n") ? "\n" : "";
+  return `${current}${separator}${additions.map((item) => JSON.stringify(item)).join("\n")}\n`;
 }
 
 function adapterResult(request, outcome, fields = {}) {
@@ -611,7 +693,7 @@ function transitionUnlocked(root, action, ids, options = {}) {
         for (const execution of finalized) if (!item.telemetryExecutionIds.includes(execution.executionId)) item.telemetryExecutionIds.push(execution.executionId);
       }
     }
-    const event = appendEvent(root, {
+    const event = eventPayload({
       type: `work.${action === "begin" ? "started" : action === "complete" ? "completed" : action === "block" ? "blocked" : "resumed"}`,
       workItem: id, repository: config.repository, protocolVersion: config.protocolVersion,
       occurredAt: now, reason: options.reason, evidence: item.evidence,
@@ -629,12 +711,18 @@ function transitionUnlocked(root, action, ids, options = {}) {
     context.startedAt = now;
     context.baselineDirtyPaths = gitPaths(root).filter((item) => !context.workItems.some((work) => work.id === item));
   }
-  writeJson(contextPath(root), context);
+  commitWorkState(root, [
+    { path: ".ros/events/events.jsonl", content: renderedEventLog(root, events) },
+    { path: ".ros/context/current.json", content: `${JSON.stringify(context, null, 2)}\n` }
+  ]);
   return { context, events };
 }
 
 export function transition(root, action, ids, options = {}) {
-  return withFileLock(root, "work-protocol", () => transitionUnlocked(root, action, ids, options));
+  return withFileLock(root, "work-protocol", () => {
+    recoverWorkStateTransaction(root);
+    return transitionUnlocked(root, action, ids, options);
+  });
 }
 
 function workFindings(root) {

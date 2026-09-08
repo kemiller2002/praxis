@@ -114,11 +114,18 @@ replacement content. Recovery preflights both targets before writing: only the
 recorded before state or already-applied after state is legal. Divergence is an
 `Indeterminate` outcome and leaves the journal and both targets untouched.
 
-This is not yet connected to production or exposed as a command. Its caller
-must hold the existing `work-protocol` lease; acquiring that capability and
-integrating recovery before Node/F# transitions are separate acceptance work.
-Telemetry execution files and backlog queue/projection files are explicitly
-outside this two-file unit.
+Production Node live-work transitions now use this record while holding the
+existing `work-protocol` lease. Before making a new transition they recover any
+compatible pending record; normal completion leaves no journal. The F# and
+Node implementations accept the same JSON shape, hashes, ordered targets, and
+divergence rules. This is shared recovery infrastructure, not an authority
+switch: Node still decides and performs every state-changing work command.
+
+Telemetry execution files and backlog queue/projection files remain explicitly
+outside this two-file unit. Telemetry effects currently precede journal
+preparation, so backlink/finalization validation detects—but does not
+automatically repair—an interruption in that earlier interval. Backlog and
+telemetry require bounded store-specific recovery designs.
 
 ## State architecture
 

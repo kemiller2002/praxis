@@ -134,3 +134,20 @@ Canonical raw execution evidence is
 | SDE integrity | v1.1.1 verified; 18 managed files; 5 pre-existing structural review warnings | `sde verify` |
 | production state writer changes | 0 | source diff; shadow recovery contract only |
 | provider model/token/cache/cost | unavailable/not captured | no runtime observation; no values inferred |
+
+## MIG-05 production work-persistence integration
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260908T121300882Z-fe89c3e0.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-08T12:13:00.882Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-work-persistence-integration` / `b3a32cf` | ROS Git baseline |
+| new production/cross-runtime tests | 4; 31 total F# and 92 total Node tests pass | focused and complete test output |
+| focused work/telemetry tests | 52 passed, 0 failed | Node test runner; expected rejection diagnostics were asserted |
+| successful build | 0 warnings, 0 errors | final .NET build |
+| execution mistakes | 1 | initial direct test invocation selected an unbuilt Debug output; corrected to Release without a test failure |
+| complete suite before closeout | 140 passed, 0 failed | 92 Node + 7 Python + 31 F# + 10 Node-driven differential/smoke tests |
+| production state writer changes | Node live-work event/context writer adopts shared recovery journal under existing lock | source and cross-runtime tests |
+| provider model/token/cache/cost | unavailable/not captured | no runtime observation; no values inferred |

@@ -264,6 +264,25 @@
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "MIG-05-WORK-INTEGRATION",
+      "title": "MIG-05 integrate recoverable work event and context persistence",
+      "description": null,
+      "tags": [
+        "fsharp",
+        "migration",
+        "persistence",
+        "work"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-08T12:13:00.686Z",
+      "updatedAt": "2026-09-08T12:13:00.784Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

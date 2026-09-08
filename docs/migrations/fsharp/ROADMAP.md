@@ -35,7 +35,7 @@ Dependency ordering overrides a raw score where state safety requires it.
 | MIG-02 architecture-enforced F# skeleton | complete | five production projects; version/help; dependency rules with positive and rejection proof | remove shadow projects to roll back |
 | MIG-03 artifact boundary/fixtures | complete | explicit front matter, IDs, kind/status/confidence/reference shapes; path-specific findings; frozen valid/invalid fixtures | Node/Python remain oracles |
 | MIG-04 artifact validation and registry projection | complete | `ros-fs artifacts validate`, `registry build/check`; Node/F# byte parity; no canonical mutation; repeated build and partial-write outcome proof | no launcher switch; Python deprecation only after further evidence |
-| MIG-05 transactional file persistence/recovery | in progress | artifact registries have a cross-runtime lease/replay record; F# work-state shadow now has a separate hash-preconditioned event+context journal with partial replay, divergence preflight, corrupt/pending rejection, and typed indeterminacy; work-lock integration, Node adoption, backlog, and telemetry recovery remain | retain stateful Node writers; each semantic store keeps a bounded transaction contract |
+| MIG-05 transactional file persistence/recovery | in progress | artifact registries have a cross-runtime lease/replay record; production Node live-work transitions now use the F#/Node-compatible hash-preconditioned event+context journal under the work lock, with partial replay, divergence preflight, corrupt/pending rejection, and typed F# indeterminacy; backlog and telemetry recovery remain | retain stateful Node writers; each semantic store keeps a bounded transaction contract |
 | MIG-06 unified Git provenance | in progress | F# shadow sub-slice has typed clean/changed/unavailable outcomes, index/work-tree status, rename/copy origin paths, explicit JSON, and failure/differential tests; production caller consolidation remains | current Node Git calls retained until work and telemetry consumers have caller-specific compatibility evidence |
 | MIG-07 work lifecycle/evidence | in progress | live-work decision sub-slice has typed states/actions, exhaustive legal transitions, block-reason and evidence-type guards, explicit JSON, and a 16-case Node differential; backlog, evidence-path effects, persistence, telemetry, and context/event comparison remain | diagnostic shadow only; Node remains state-changing authority |
 | MIG-08 execution/telemetry core | deferred | lifecycle, identity, provenance, metric/capability semantics, aggregation, unknown/raw preservation | provider adapters remain at edge |
@@ -48,8 +48,8 @@ Dependency ordering overrides a raw score where state safety requires it.
 
 ## Next ordered work after this mission
 
-1. Finish MIG-05 file transaction/recovery semantics before moving stateful
-   writers.
+1. Finish MIG-05 with bounded backlog and telemetry recovery semantics; do not
+   enlarge the live-work journal into a generic transaction framework.
 2. Move work and telemetry Git consumers behind the typed provenance boundary;
    the F# shadow already proves unavailable is not clean.
 3. Migrate work lifecycle as a controlled shadow slice.

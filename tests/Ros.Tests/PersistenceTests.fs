@@ -4,6 +4,7 @@ open System
 open System.IO
 open System.Security.Cryptography
 open System.Text
+open System.Text.Json
 open Ros.Application.Artifacts
 open Ros.Application.Work
 open Ros.Domain.Artifacts
@@ -42,6 +43,13 @@ module PersistenceTests =
     let private workStateWrites eventContent contextContent =
         [ { Path = ".ros/events/events.jsonl"; Content = eventContent }
           { Path = ".ros/context/current.json"; Content = contextContent } ]
+
+    let private sha256Text (content: string) =
+        content
+        |> Encoding.UTF8.GetBytes
+        |> SHA256.HashData
+        |> Convert.ToHexString
+        |> _.ToLowerInvariant()
 
     let tests =
         [ { Name = "registry lock path matches the Node SHA-256 lease layout"
@@ -281,4 +289,42 @@ module PersistenceTests =
                           Assert.equal WorkPersistenceOutcome.Indeterminate failure.Outcome
                           Assert.equal "before-event\n" (File.ReadAllText eventFile)
                           Assert.equal "before-context\n" (File.ReadAllText contextFile)
-                          Assert.isTrue (File.Exists transaction) "corrupt transaction must remain for inspection") } ]
+                          Assert.isTrue (File.Exists transaction) "corrupt transaction must remain for inspection") }
+          { Name = "F# recovers a Node-shaped work-state journal"
+            Run =
+              fun () ->
+                  withTemporaryRoot (fun root ->
+                      let eventFile = Path.Combine(root, ".ros/events/events.jsonl")
+                      let contextFile = Path.Combine(root, ".ros/context/current.json")
+                      let transaction = WorkStateTransaction.transactionPath root
+                      let beforeEvent = "before-event\n"
+                      let beforeContext = "before-context\n"
+                      let afterEvent = "after-event\n"
+                      let afterContext = "after-context\n"
+                      Directory.CreateDirectory(Path.GetDirectoryName eventFile) |> ignore
+                      Directory.CreateDirectory(Path.GetDirectoryName contextFile) |> ignore
+                      Directory.CreateDirectory(Path.GetDirectoryName transaction) |> ignore
+                      File.WriteAllText(eventFile, beforeEvent)
+                      File.WriteAllText(contextFile, beforeContext)
+
+                      let record =
+                          {| schemaVersion = "1.0.0"
+                             resource = "work-state"
+                             writes =
+                              [ {| path = ".ros/events/events.jsonl"
+                                   beforeSha256 = sha256Text beforeEvent
+                                   afterSha256 = sha256Text afterEvent
+                                   content = afterEvent |}
+                                {| path = ".ros/context/current.json"
+                                   beforeSha256 = sha256Text beforeContext
+                                   afterSha256 = sha256Text afterContext
+                                   content = afterContext |} ] |}
+
+                      File.WriteAllText(transaction, JsonSerializer.Serialize record + "\n")
+
+                      match WorkStateTransaction.recover root with
+                      | Error failure -> failwith failure.Message
+                      | Ok() ->
+                          Assert.equal afterEvent (File.ReadAllText eventFile)
+                          Assert.equal afterContext (File.ReadAllText contextFile)
+                          Assert.isTrue (not (File.Exists transaction)) "expected Node-shaped journal completion") } ]

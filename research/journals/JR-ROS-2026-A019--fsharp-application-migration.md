@@ -2,7 +2,7 @@
 id: JR-ROS-2026-A019
 title: ROS F# application migration execution journal
 status: active
-version: 1.4.0
+version: 1.5.0
 research_area: repository-operating-system
 author_agent: openai-codex
 created: 2026-09-07
@@ -16,6 +16,7 @@ evidence_ids:
   - EV-ROS-2026-A031
   - EV-ROS-2026-A032
   - EV-ROS-2026-A033
+  - EV-ROS-2026-A034
 hypothesis_ids:
   - HY-ROS-2026-A021
   - HY-ROS-2026-A022
@@ -125,6 +126,7 @@ invented.
 | MIG-D015 | MIG-06 | the current-repository artifact smoke test regenerated stale registries before asserting no change | verification side-effect defect | legacy from MIG-04 | replaced the builder call with read-only `./ros registry check`; regenerated the expected projections once through the governed workflow; rerun must prove the check has no hidden write |
 | MIG-D016 | MIG-07 | initial F# block guard rejected whitespace-only reasons while Node accepts them | characterization mismatch found by adversarial source comparison | introduced | changed absence semantics from whitespace to empty; added differential coverage for both empty and whitespace values; policy tightening requires a separate intentional decision |
 | MIG-D017 | MIG-05 work persistence | first recovery builds exposed unconstrained .NET overloads, a record-label collision between artifact/work failures, and filesystem exceptions outside typed outcomes | introduced boundary/representation defects | introduced | constrained boundary types, annotated artifact fixtures, wrapped prepare/recover reads, and added corrupt-journal rejection; final narrow build has zero warnings/errors and 30 tests pass |
+| MIG-D018 | MIG-05 production integration | direct typed-test command selected the default Debug output after only Release had been built | agent execution mistake | introduced | reran with explicit `--configuration Release --no-build`; 31/31 typed tests passed; pin configuration in direct verification commands |
 
 # Observations
 
@@ -199,6 +201,20 @@ and refuses divergence, malformed data, incomplete/reordered sets, or a second
 pending journal. No production writer is connected yet; work-lock capability
 and Node/F# caller integration remain required.
 
+## MIG-05 — production work-state recovery integration
+
+The production Node transition kernel now uses the same ordered, versioned,
+hash-preconditioned event/context journal while holding `work-protocol`.
+Recovery runs before each live transition. Cross-runtime tests prove Node can
+finish a partially applied F#-compatible journal and F# can finish a manually
+serialized Node-shaped journal; a divergence test proves preflight rejects
+before the earlier event target is written. The complete gate passes 140 tests.
+
+This is infrastructure adoption, not F# command authority. Node still owns work
+decisions and effects. Telemetry can be mutated before journal preparation and
+backlog has a distinct queue/projection unit, so MIG-05 remains open for those
+store-specific recovery designs.
+
 # Decisions and rationale
 
 `DF-ROS-2026-A027` records the accepted boundary and rejected alternatives. The
@@ -226,5 +242,5 @@ added; no production authority source was removed or redirected.
 
 # Highest-value next step
 
-Complete T6 closeout, then prioritize MIG-05 transaction/recovery semantics
-before moving work or telemetry writers.
+Complete the current governed closeout, then finish MIG-05 backlog and telemetry
+recovery semantics before moving more stateful authority.

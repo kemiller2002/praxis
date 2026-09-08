@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -35,6 +36,31 @@ function writeJson(file, value) {
   fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`, "utf8");
 }
 
+function sha256Text(text) {
+  return crypto.createHash("sha256").update(text, "utf8").digest("hex");
+}
+
+function writeWorkStateTransaction(root, beforeEvent, afterEvent, beforeContext, afterContext) {
+  writeJson(path.join(root, ".ros", "transactions", "work-state.json"), {
+    schemaVersion: "1.0.0",
+    resource: "work-state",
+    writes: [
+      {
+        path: ".ros/events/events.jsonl",
+        beforeSha256: sha256Text(beforeEvent),
+        afterSha256: sha256Text(afterEvent),
+        content: afterEvent
+      },
+      {
+        path: ".ros/context/current.json",
+        beforeSha256: sha256Text(beforeContext),
+        afterSha256: sha256Text(afterContext),
+        content: afterContext
+      }
+    ]
+  });
+}
+
 function adapterFixture(root) {
   writeJson(path.join(root, "adapter-store.json"), {
     schemaVersion: "1.0.0",
@@ -60,6 +86,56 @@ test("valid attributed work completes with evidence", (t) => {
   const completed = ros(root, ["work", "complete", "FEAT-142", "--evidence", "implementation=src/feature.js", "--evidence", "tests=test/feature.test.js"]);
   assert.equal(completed.status, 0, completed.output);
   assert.equal(ros(root, ["validate"]).status, 0);
+});
+
+test("normal work transitions commit event and context with no pending journal", (t) => {
+  const root = fixture(t);
+  const begun = ros(root, ["work", "begin", "TASK-JOURNALED", "--type", "mechanical"]);
+  assert.equal(begun.status, 0, begun.output);
+  assert.equal(fs.existsSync(path.join(root, ".ros", "transactions", "work-state.json")), false);
+  const context = JSON.parse(fs.readFileSync(path.join(root, ".ros", "context", "current.json"), "utf8"));
+  const events = fs.readFileSync(path.join(root, ".ros", "events", "events.jsonl"), "utf8");
+  assert.equal(context.workItems.find((item) => item.id === "TASK-JOURNALED").semanticState, "active");
+  assert.match(events, /"workItem":"TASK-JOURNALED"/);
+});
+
+test("a transition recovers a partially applied F#-compatible work-state journal first", (t) => {
+  const root = fixture(t);
+  const eventFile = path.join(root, ".ros", "events", "events.jsonl");
+  const contextFile = path.join(root, ".ros", "context", "current.json");
+  const beforeEvent = fs.readFileSync(eventFile, "utf8");
+  const beforeContext = fs.readFileSync(contextFile, "utf8");
+  const afterEvent = `${beforeEvent}\n`;
+  const afterContext = `${JSON.stringify({ ...JSON.parse(beforeContext), recoveryMarker: "replayed" }, null, 2)}\n`;
+  writeWorkStateTransaction(root, beforeEvent, afterEvent, beforeContext, afterContext);
+  fs.writeFileSync(eventFile, afterEvent);
+
+  const begun = ros(root, ["work", "begin", "TASK-AFTER-RECOVERY", "--type", "mechanical"]);
+  assert.equal(begun.status, 0, begun.output);
+  const context = JSON.parse(fs.readFileSync(contextFile, "utf8"));
+  assert.equal(context.recoveryMarker, "replayed");
+  assert.equal(context.workItems.find((item) => item.id === "TASK-AFTER-RECOVERY").semanticState, "active");
+  assert.equal(fs.existsSync(path.join(root, ".ros", "transactions", "work-state.json")), false);
+});
+
+test("work-state recovery rejects divergence before starting another transition", (t) => {
+  const root = fixture(t);
+  const eventFile = path.join(root, ".ros", "events", "events.jsonl");
+  const contextFile = path.join(root, ".ros", "context", "current.json");
+  const transactionFile = path.join(root, ".ros", "transactions", "work-state.json");
+  const beforeEvent = fs.readFileSync(eventFile, "utf8");
+  const beforeContext = fs.readFileSync(contextFile, "utf8");
+  const afterEvent = `${beforeEvent}\n`;
+  const afterContext = `${JSON.stringify({ ...JSON.parse(beforeContext), recoveryMarker: "expected" }, null, 2)}\n`;
+  writeWorkStateTransaction(root, beforeEvent, afterEvent, beforeContext, afterContext);
+  fs.writeFileSync(contextFile, `${JSON.stringify({ ...JSON.parse(beforeContext), divergent: true }, null, 2)}\n`);
+
+  const begun = ros(root, ["work", "begin", "TASK-MUST-NOT-START", "--type", "mechanical"]);
+  assert.equal(begun.status, 1);
+  assert.match(begun.output, /target changed after preparation.*context\/current\.json/);
+  assert.equal(fs.readFileSync(eventFile, "utf8"), beforeEvent, "preflight must prevent the earlier event write");
+  assert.equal(JSON.parse(fs.readFileSync(contextFile, "utf8")).divergent, true);
+  assert.equal(fs.existsSync(transactionFile), true, "conflicted journal remains for inspection");
 });
 
 test("unattributed meaningful change fails validation", (t) => {
