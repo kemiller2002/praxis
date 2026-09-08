@@ -21,16 +21,29 @@ surface used to establish typed semantic ownership and comparative evidence.
 
 ## Coexistence commands
 
-The exact F# commands and project paths are added when the skeleton lands.
-Until then, the authoritative gates are:
+The authoritative production gates and additive shadow gates are:
 
 ```bash
 npm test
+npm run build:fsharp
+npm run test:fsharp
+npm run test:all
 npm run build:web
 npm run build:hub
 ./ros registry check
 ./ros validate
 ```
+
+The current shadow CLI is:
+
+```bash
+dotnet src/Ros.Cli/bin/Release/net10.0/ros-fs.dll --version
+```
+
+`npm run build:fsharp` disables persistent build servers and uses one build
+worker. This keeps compilation deterministic in constrained agent environments;
+the project graph remains small enough that the conservative setting is not a
+material local cost.
 
 No document in this directory changes the source-of-truth rules in accepted
 ROS decisions. Canonical research records remain Markdown; registry JSON is

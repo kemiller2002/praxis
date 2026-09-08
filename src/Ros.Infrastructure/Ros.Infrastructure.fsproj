@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Ros.Domain/Ros.Domain.fsproj" />
+    <ProjectReference Include="../Ros.Contracts/Ros.Contracts.fsproj" />
+    <ProjectReference Include="../Ros.Application/Ros.Application.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
+  </ItemGroup>
+</Project>

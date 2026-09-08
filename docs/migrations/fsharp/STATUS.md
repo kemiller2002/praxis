@@ -8,11 +8,11 @@ Last updated: 2026-09-07. Production authority remains Node.
 | Discovery | complete at T1; 28 execution/config/platform units plus six executable test units |
 | Semantic decomposition | complete at T2; map and six feature manifests added |
 | Architecture | accepted for staged shadowing in `DF-ROS-2026-A027`; challenged before treatment |
-| F# implementation | not started at this checkpoint |
+| F# implementation | MIG-02 skeleton complete; artifact behavior not yet implemented |
 | Production command switch | not authorized and not attempted |
 | Legacy removal | none; Python validator remains an oracle; layout generator is only a deprecation candidate |
 | Distribution | repository-local .NET 10 shadow only; consumer decision unresolved |
-| Verification | baseline 91 tests plus two TypeScript builds passed |
+| Verification | baseline 91 tests plus two TypeScript builds passed; F# solution builds with zero warnings/errors; two architecture tests pass, including a deliberate rejection case |
 | Research | experiment A020 and hypotheses A021–A026 preregistered |
 
 ## Classification summary

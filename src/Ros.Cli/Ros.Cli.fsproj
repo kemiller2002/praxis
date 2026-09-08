@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>ros-fs</AssemblyName>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Ros.Domain/Ros.Domain.fsproj" />
+    <ProjectReference Include="../Ros.Contracts/Ros.Contracts.fsproj" />
+    <ProjectReference Include="../Ros.Application/Ros.Application.fsproj" />
+    <ProjectReference Include="../Ros.Infrastructure/Ros.Infrastructure.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+</Project>

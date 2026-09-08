@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Ros.Tests</AssemblyName>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Ros.Domain/Ros.Domain.fsproj" />
+    <ProjectReference Include="../../src/Ros.Contracts/Ros.Contracts.fsproj" />
+    <ProjectReference Include="../../src/Ros.Application/Ros.Application.fsproj" />
+    <ProjectReference Include="../../src/Ros.Infrastructure/Ros.Infrastructure.fsproj" />
+    <ProjectReference Include="../../src/Ros.Cli/Ros.Cli.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="TestFramework.fs" />
+    <Compile Include="ArchitectureTests.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+</Project>

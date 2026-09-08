@@ -78,6 +78,8 @@ narrowed distribution and contract scope.
 | MIG-D006 | T1 | dead layout helpers; `write_file` would label a new post-write file overwrite; call/reference inspection | obsolete code plus latent representation defect | legacy, unreachable | deprecate generator; do not repair dead unverified behavior during artifact slice; remove only after usage window |
 | MIG-D007 | T1 | all three parallel reviewers exhausted their separate execution quota after partial work; orchestrator status | environment/agent-execution limitation | mission environment | independently verify returned claims in source; label final review accurately and retry a fresh independent reviewer only if available |
 | MIG-D008 | T2 | decision draft contained two malformed generated word fragments; immediate readback | agent execution mistake | introduced | repaired with `apply_patch`, searched for fragments, and require readback/validation after large patches |
+| MIG-D009 | post-T2 | concurrent initial `dotnet` build/run plus sandboxed restore produced silent stalls; process/build output and missing assets | environment/toolchain execution issue | mission environment | approved one explicit restore, shut down build servers, then built sequentially with shared compilation/build parallelism disabled; document deterministic npm command |
+| MIG-D010 | post-T2 | architecture rejection test expected one finding but correctly received both graph mismatch and outward-Domain findings | introduced verification expectation defect | introduced | changed assertion to require both findings; rebuilt and reran 2/2 tests; guard rejection remained effective |
 
 # Observations
 
@@ -91,6 +93,18 @@ narrowed distribution and contract scope.
   not Node versus F# by itself.
 - A .NET SDK on one machine supports a shadow build but cannot settle consumer
   distribution.
+
+# Post-T2 implementation journal
+
+## MIG-02 — architecture-enforced skeleton
+
+Added `Ros.Domain`, `Ros.Contracts`, `Ros.Application`, `Ros.Infrastructure`,
+`Ros.Cli`, and `Ros.Tests` targeting .NET 10. The CLI exposes only
+version/help. The architecture verifier reads the real project graph and also
+checks a deliberately invalid Domain -> Infrastructure graph. After the one
+test-expectation repair, the solution built with zero warnings/errors and both
+architecture tests passed. No production launcher, package payload, starter
+profile, workflow, or ROS state behavior changed.
 
 # Decisions and rationale
 
