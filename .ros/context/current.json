@@ -663,18 +663,28 @@
     {
       "id": "MIG-06-GIT-INTEGRATION",
       "type": "infrastructure",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-08T17:51:37.743Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tools/ros_git.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/git-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-08T18:10:17.427Z",
       "telemetryExecutionIds": [
         "EXE-20260908T175137758Z-37978fda"
-      ]
+      ],
+      "completedAt": "2026-09-08T18:10:17.427Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-08T17:51:37.743Z",
+  "updatedAt": "2026-09-08T18:10:17.427Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
