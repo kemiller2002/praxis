@@ -684,18 +684,28 @@
     {
       "id": "MIG-07-WORK-ORCHESTRATION",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-08T18:11:45.703Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Plan.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-08T18:25:16.833Z",
       "telemetryExecutionIds": [
         "EXE-20260908T181145717Z-9fbd14f5"
-      ]
+      ],
+      "completedAt": "2026-09-08T18:25:16.833Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-08T18:11:45.703Z",
+  "updatedAt": "2026-09-08T18:25:16.833Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
