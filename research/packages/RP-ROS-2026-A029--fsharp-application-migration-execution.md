@@ -268,5 +268,5 @@ Checkpoint and metric projection: `docs/migrations/fsharp/TELEMETRY.md`.
 - [x] Failed assumptions and treatment results are finalized.
 - [x] Theory impacts are assessed from actual evidence.
 - [x] Research debt is explicit.
-- [ ] Registries are updated at T6.
-- [ ] The next agent can continue from a clean, verified handoff.
+- [x] Registries are updated at T6.
+- [x] The next agent can continue from a clean, verified handoff.

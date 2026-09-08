@@ -15,6 +15,10 @@ Last updated: 2026-09-08. Production authority remains Node.
 | Verification | baseline 91 tests plus two TypeScript builds passed; F# solution builds with zero warnings/errors; eight F# tests and three Node-driven differential/smoke tests pass, including deliberate rejection and indeterminate-write paths |
 | Research | experiment A020 and hypotheses A021–A026 preregistered |
 
+T6 closed WI-0011 and finalized `EXE-20260907T203141590Z-54f547f8`. The final
+push state is recorded in the handoff report and journal after the closeout
+commit; production authority remains unchanged.
+
 ## Classification summary
 
 - **To F# core/commands:** artifact rules/projection now shadow-owned; later

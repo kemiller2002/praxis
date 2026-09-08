@@ -90,6 +90,16 @@ Node artifact implementation, output bytes, failure outcomes, adapter thinness,
 and authority boundary. It is expressly self-review: the three attempted
 parallel reviewers had exhausted their quotas before a final separate review.
 
+## T6 — execution finalization — 2026-09-08T06:29:33.997Z
+
+Completed WI-0011 with implementation and test evidence. ROS finalized
+`EXE-20260907T203141590Z-54f547f8`, recording 35,872,407 ms calendar/wall span,
+four commits in its captured range, 78 added and five modified files, 4,624
+added and four deleted lines, and zero ending dirty files at finalization. The
+test aggregate retains the earlier listener-restricted 14 failures alongside
+the unrestricted successful final run; no provider token/cost fields were
+invented.
+
 # Discovery and defect journal
 
 | ID | Checkpoint | Symptom/detection | Root cause/class | Legacy or introduced | Repair/verification/prevention |

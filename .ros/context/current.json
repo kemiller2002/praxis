@@ -495,18 +495,28 @@
     {
       "id": "WI-0011",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-07T20:31:41.590Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/Program.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ArtifactTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-08T06:29:33.997Z",
       "telemetryExecutionIds": [
         "EXE-20260907T203141590Z-54f547f8"
-      ]
+      ],
+      "completedAt": "2026-09-08T06:29:33.997Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-07T20:31:41.590Z",
+  "updatedAt": "2026-09-08T06:29:33.997Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

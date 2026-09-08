@@ -14,7 +14,7 @@ is the human projection; it never converts unavailable observations to zero.
 | T3 first vertical slice complete | 2026-09-08T06:14:34Z | MIG-03/04 typed artifact shadow, fixture parity, and rejection tests complete |
 | T4 implementation complete | 2026-09-08T06:18:00Z | slice committed; root CI/publish gate provisions .NET; migration docs updated |
 | T5 verification complete | 2026-09-08T06:23:23Z | full unrestricted suite, TypeScript builds, and documented self-review complete |
-| T6 final evidence | pending | work completion, registries, clean/pushed handoff |
+| T6 final evidence | 2026-09-08T06:29:33.997Z | WI-0011 complete; execution finalized; generated Git/test/LOC metrics captured |
 
 ## Starting measurements
 
@@ -58,6 +58,20 @@ is the human projection; it never converts unavailable observations to zero.
 | build executions / failures | 9 / 1 | includes baseline, F# slice attempts, and final TypeScript builds; one early F# test syntax failure was repaired |
 | agent self-corrections | 4 | D010–D013 correction categories recorded in the journal |
 | provider token/cost values | unavailable or unknown | not inferred from these engineering aggregates |
+
+## T6 mechanically derived observations
+
+| Metric | Value | Notes |
+|---|---:|---|
+| execution calendar/wall span | 35,872,407 ms | one finalized execution; this is elapsed span, not active agent time |
+| commits created in execution range | 4 | as captured at work finalization |
+| files added / modified / deleted | 78 / 5 / 0 | Git-derived at finalization |
+| lines added / deleted | 4,624 / 4 | Git-derived at finalization; not a success metric |
+| tests added / modified / removed | 32 / 0 / 0 | Git-derived classification |
+| ending dirty files | 0 | at finalization, before closeout metadata commit |
+
+The final closeout commit and push are recorded by Git after this telemetry
+snapshot; they do not retroactively alter the finalized execution record.
 
 The final evidence record will add mechanically derived commits/files/LOC,
 build/test attempts, failures, repair loops, defect counts, migration counts,
