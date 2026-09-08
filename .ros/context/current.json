@@ -558,18 +558,28 @@
     {
       "id": "MIG-07-WORK-LIFECYCLE",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-08T11:53:23.101Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Model.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-08T12:00:35.582Z",
       "telemetryExecutionIds": [
         "EXE-20260908T115323101Z-4ccf5eaa"
-      ]
+      ],
+      "completedAt": "2026-09-08T12:00:35.582Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-08T11:53:23.101Z",
+  "updatedAt": "2026-09-08T12:00:35.582Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
