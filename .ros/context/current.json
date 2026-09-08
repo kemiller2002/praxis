@@ -579,18 +579,28 @@
     {
       "id": "MIG-05-WORK-PERSISTENCE",
       "type": "infrastructure",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-08T12:01:18.252Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/WorkStateTransaction.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PersistenceTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-08T12:10:44.041Z",
       "telemetryExecutionIds": [
         "EXE-20260908T120118252Z-e06c199f"
-      ]
+      ],
+      "completedAt": "2026-09-08T12:10:44.041Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-08T12:01:18.252Z",
+  "updatedAt": "2026-09-08T12:10:44.041Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
