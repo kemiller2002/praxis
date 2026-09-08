@@ -642,18 +642,28 @@
     {
       "id": "MIG-05-TELEMETRY-RECOVERY",
       "type": "infrastructure",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-08T14:00:08.179Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Telemetry/ExecutionLink.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/telemetry.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-08T17:50:16.967Z",
       "telemetryExecutionIds": [
         "EXE-20260908T140008179Z-0d130adf"
-      ]
+      ],
+      "completedAt": "2026-09-08T17:50:16.967Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-08T14:00:08.179Z",
+  "updatedAt": "2026-09-08T17:50:16.967Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
