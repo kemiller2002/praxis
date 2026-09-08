@@ -1,0 +1,18 @@
+[
+  {
+    "created": "2026-01-05",
+    "id": "DF-TEST-2026-A005",
+    "path": "research/decisions/DF-TEST-2026-A005--accepted-decision.md",
+    "related_documents": [],
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "fixture",
+      "decision"
+    ],
+    "title": "Accepted fixture decision",
+    "updated": "2026-01-05",
+    "version": "1.0.0"
+  }
+]

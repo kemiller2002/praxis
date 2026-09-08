@@ -18,5 +18,143 @@
       "EV-FE-2026-B003"
     ],
     "title": "Framework Engineering integrated profile adds incremental net value"
+  },
+  {
+    "author_agent": "openai-codex",
+    "confidence": "low",
+    "contradicting_evidence": [],
+    "created": "2026-09-07",
+    "id": "HY-ROS-2026-A021",
+    "path": "research/hypotheses/HY-ROS-2026-A021--typed-semantic-authority-reduces-duplication.md",
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "active",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A018"
+    ],
+    "tags": [
+      "fsharp",
+      "migration",
+      "semantic-authority",
+      "duplication"
+    ],
+    "title": "Typed semantic authority reduces duplicated ROS rule sites"
+  },
+  {
+    "author_agent": "openai-codex",
+    "confidence": "low",
+    "contradicting_evidence": [],
+    "created": "2026-09-07",
+    "id": "HY-ROS-2026-A022",
+    "path": "research/hypotheses/HY-ROS-2026-A022--typed-states-reduce-invalid-state-defects.md",
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "active",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A018"
+    ],
+    "tags": [
+      "fsharp",
+      "types",
+      "state",
+      "defects"
+    ],
+    "title": "Typed states and outcomes reduce invalid-state defects"
+  },
+  {
+    "author_agent": "openai-codex",
+    "confidence": "low",
+    "contradicting_evidence": [],
+    "created": "2026-09-07",
+    "id": "HY-ROS-2026-A023",
+    "path": "research/hypotheses/HY-ROS-2026-A023--shadow-migration-preserves-contracts.md",
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "active",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A018"
+    ],
+    "tags": [
+      "fsharp",
+      "compatibility",
+      "differential-testing",
+      "rollback"
+    ],
+    "title": "Shadow migration preserves required ROS contracts"
+  },
+  {
+    "author_agent": "openai-codex",
+    "confidence": "very-low",
+    "contradicting_evidence": [],
+    "created": "2026-09-07",
+    "id": "HY-ROS-2026-A024",
+    "path": "research/hypotheses/HY-ROS-2026-A024--structural-locality-reduces-discovery-expansion.md",
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "active",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A018"
+    ],
+    "tags": [
+      "sde",
+      "navigation",
+      "structural-locality",
+      "migration"
+    ],
+    "title": "Structural locality reduces ROS discovery expansion"
+  },
+  {
+    "author_agent": "openai-codex",
+    "confidence": "very-low",
+    "contradicting_evidence": [],
+    "created": "2026-09-07",
+    "id": "HY-ROS-2026-A025",
+    "path": "research/hypotheses/HY-ROS-2026-A025--workflow-thinning-reduces-fragility.md",
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "proposed",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A018"
+    ],
+    "tags": [
+      "github-actions",
+      "release",
+      "thin-adapter",
+      "migration"
+    ],
+    "title": "Moving ROS decisions out of workflows reduces operational fragility"
+  },
+  {
+    "author_agent": "openai-codex",
+    "confidence": "very-low",
+    "contradicting_evidence": [],
+    "created": "2026-09-07",
+    "id": "HY-ROS-2026-A026",
+    "path": "research/hypotheses/HY-ROS-2026-A026--fsharp-distribution-cost-is-acceptable.md",
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "proposed",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A018"
+    ],
+    "tags": [
+      "fsharp",
+      "dotnet",
+      "distribution",
+      "portability"
+    ],
+    "title": "F# distribution cost is acceptable for ROS consumers"
   }
 ]

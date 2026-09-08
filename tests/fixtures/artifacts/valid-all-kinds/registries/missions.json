@@ -1,0 +1,18 @@
+[
+  {
+    "created": "2026-01-08",
+    "evidence_ids": [
+      "EV-TEST-2026-A001"
+    ],
+    "hypothesis_ids": [
+      "HY-TEST-2026-A002"
+    ],
+    "id": "MS-TEST-2026-A008",
+    "path": "missions/active/MS-TEST-2026-A008--active-mission.md",
+    "related_documents": [],
+    "status": "active",
+    "title": "Active fixture mission",
+    "updated": "2026-01-08",
+    "version": "1.0.0"
+  }
+]

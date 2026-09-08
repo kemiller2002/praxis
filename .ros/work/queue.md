@@ -29,6 +29,7 @@
 | WI-0007 | Adversarial telemetry architecture revision | complete | telemetry, architecture, reliability | high |
 | WI-0008 | Run SDE init, status, verify, and update | complete |  | medium |
 | WI-0009 | Inventory ROS operational architecture and plan the F# migration | complete | architecture, fsharp, migration, sde | high |
-| WI-0010 | Install or update ROS with SDE and verify | ready | maintenance, sde | high |
+| WI-0010 | Install or update ROS with SDE and verify | complete | maintenance, sde | high |
+| WI-0011 | Migrate ROS toward a coherent F# application under SDE | ready | fsharp, migration, sde, research-development | high |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |
 | WORKQUEUE-BACKLOG-LAYER | WORKQUEUE-BACKLOG-LAYER | complete |  |  |

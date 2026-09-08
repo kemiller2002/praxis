@@ -208,5 +208,37 @@
     "title": "Provider-neutral adaptive execution telemetry",
     "updated": "2026-09-05",
     "version": "1.2.0"
+  },
+  {
+    "author_agent": "openai-codex",
+    "confidence": "medium-high",
+    "created": "2026-09-07",
+    "id": "DF-ROS-2026-A027",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A027--staged-fsharp-application-boundary.md",
+    "related_documents": [
+      "RP-ROS-2026-A017",
+      "EX-ROS-2026-A020",
+      "docs/migrations/fsharp/ARCHITECTURE.md"
+    ],
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A015",
+      "EV-ROS-2026-A018"
+    ],
+    "tags": [
+      "architecture",
+      "fsharp",
+      "migration",
+      "sde",
+      "compatibility"
+    ],
+    "title": "Staged F# application boundary for ROS",
+    "updated": "2026-09-07",
+    "version": "1.0.0"
   }
 ]

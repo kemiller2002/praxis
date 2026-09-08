@@ -173,5 +173,50 @@
     "title": "ROS operational architecture inventory and staged F# migration plan",
     "updated": "2026-09-07",
     "version": "1.0.0"
+  },
+  {
+    "author_agent": "openai-codex",
+    "completion": "draft",
+    "confidence": "low",
+    "created": "2026-09-07",
+    "discipline": [
+      "software-architecture",
+      "software-engineering",
+      "developer-tooling",
+      "empirical-software-engineering"
+    ],
+    "id": "RP-ROS-2026-A029",
+    "keywords": [
+      "typed-domain",
+      "vertical-slice",
+      "differential-testing",
+      "telemetry"
+    ],
+    "path": "research/packages/RP-ROS-2026-A029--fsharp-application-migration-execution.md",
+    "priority": "high",
+    "related_documents": [
+      "RP-ROS-2026-A017",
+      "EV-ROS-2026-A018",
+      "EX-ROS-2026-A020",
+      "JR-ROS-2026-A019",
+      "DF-ROS-2026-A027"
+    ],
+    "related_projects": [
+      "repository-operating-system"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "fsharp",
+      "migration",
+      "sde",
+      "application",
+      "execution"
+    ],
+    "title": "ROS F# application migration execution and handoff",
+    "updated": "2026-09-07",
+    "version": "0.1.0"
   }
 ]

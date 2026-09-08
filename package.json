@@ -56,7 +56,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "node --test tests/npm-bootstrap.test.mjs tests/work-protocol.test.mjs tests/telemetry.test.mjs tests/ros-server.test.mjs tests/ros-hub.test.mjs && python3 -m unittest discover -s tests -v",
+    "test": "node --test tests/npm-bootstrap.test.mjs tests/work-protocol.test.mjs tests/telemetry.test.mjs tests/ros-server.test.mjs tests/ros-hub.test.mjs tests/artifact-compatibility.test.mjs && python3 -m unittest discover -s tests -v",
     "build:web": "tsc -p web/tsconfig.json",
     "build:hub": "tsc -p web-hub/tsconfig.json",
     "web": "npm run build:web && node tools/ros_server.mjs",

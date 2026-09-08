@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 11,
+  "nextSeq": 12,
   "items": [
     {
       "id": "WI-0001",
@@ -169,6 +169,25 @@
       "attachments": [],
       "createdAt": "2026-09-07T20:05:27.772Z",
       "updatedAt": "2026-09-07T20:05:36.361Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0011",
+      "title": "Migrate ROS toward a coherent F# application under SDE",
+      "description": "Inventory ROS semantics, design and challenge a typed F# target, implement safe vertical slices with compatibility and differential verification, and preserve operational behavior throughout.",
+      "tags": [
+        "fsharp",
+        "migration",
+        "sde",
+        "research-development"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-07T20:31:33.115Z",
+      "updatedAt": "2026-09-07T20:31:41.490Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null

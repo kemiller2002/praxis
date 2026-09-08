@@ -209,5 +209,39 @@
     "title": "ROS operational architecture inventory and migration baseline",
     "updated": "2026-09-07",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-07",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A018",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A018--fsharp-migration-execution-inventory.md",
+    "related_documents": [
+      "EV-ROS-2026-A015",
+      "RP-ROS-2026-A017",
+      "JR-ROS-2026-A019",
+      "DF-ROS-2026-A027"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "EX-ROS-2026-A020"
+    ],
+    "tags": [
+      "fsharp",
+      "migration",
+      "inventory",
+      "execution",
+      "baseline",
+      "sde"
+    ],
+    "title": "ROS F# migration execution inventory at immutable baseline",
+    "updated": "2026-09-07",
+    "version": "1.0.0"
   }
 ]

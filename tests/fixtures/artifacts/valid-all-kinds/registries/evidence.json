@@ -1,0 +1,19 @@
+[
+  {
+    "confidence": "medium-high",
+    "created": "2026-01-01",
+    "evidence_type": "primary",
+    "id": "EV-TEST-2026-A001",
+    "path": "research/evidence/EV-TEST-2026-A001--primary-evidence.md",
+    "research_area": "artifact-fixtures",
+    "status": "accepted",
+    "supports": [],
+    "tags": [
+      "fixture",
+      "evidence"
+    ],
+    "title": "Primary fixture evidence",
+    "updated": "2026-01-01",
+    "version": "1.0.0"
+  }
+]

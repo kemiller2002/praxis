@@ -1,0 +1,18 @@
+[
+  {
+    "confidence": "very-low",
+    "created": "2026-01-07",
+    "id": "TH-TEST-2026-A007",
+    "path": "research/theories/TH-TEST-2026-A007--candidate-theory.md",
+    "related_theories": [],
+    "status": "candidate",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-TEST-2026-A001"
+    ],
+    "title": "Candidate fixture theory",
+    "updated": "2026-01-07",
+    "version": "0.1.0"
+  }
+]

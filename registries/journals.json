@@ -95,5 +95,38 @@
     "title": "ROS operational inventory and F# migration architecture investigation",
     "updated": "2026-09-07",
     "version": "1.0.0"
+  },
+  {
+    "author_agent": "openai-codex",
+    "created": "2026-09-07",
+    "evidence_ids": [
+      "EV-ROS-2026-A015",
+      "EV-ROS-2026-A018"
+    ],
+    "hypothesis_ids": [
+      "HY-ROS-2026-A021",
+      "HY-ROS-2026-A022",
+      "HY-ROS-2026-A023",
+      "HY-ROS-2026-A024",
+      "HY-ROS-2026-A025",
+      "HY-ROS-2026-A026"
+    ],
+    "id": "JR-ROS-2026-A019",
+    "path": "research/journals/JR-ROS-2026-A019--fsharp-application-migration.md",
+    "related_mission": "WI-0011",
+    "related_package": "RP-ROS-2026-A029",
+    "research_area": "repository-operating-system",
+    "status": "active",
+    "tags": [
+      "fsharp",
+      "migration",
+      "execution-journal",
+      "defects",
+      "sde"
+    ],
+    "theory_ids": [],
+    "title": "ROS F# application migration execution journal",
+    "updated": "2026-09-07",
+    "version": "1.0.0"
   }
 ]

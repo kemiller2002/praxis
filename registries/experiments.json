@@ -1,1 +1,36 @@
-[]
+[
+  {
+    "author_agent": "openai-codex",
+    "created": "2026-09-07",
+    "id": "EX-ROS-2026-A020",
+    "inputs": [
+      "EV-ROS-2026-A018",
+      "RP-ROS-2026-A017"
+    ],
+    "outputs": [
+      "EV-ROS-2026-A028"
+    ],
+    "path": "research/experiments/EX-ROS-2026-A020--fsharp-artifact-shadow-migration.md",
+    "related_documents": [
+      "DF-ROS-2026-A027",
+      "JR-ROS-2026-A019"
+    ],
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "active",
+    "tags": [
+      "fsharp",
+      "artifacts",
+      "shadow",
+      "compatibility",
+      "sde"
+    ],
+    "tests_hypotheses": [
+      "HY-ROS-2026-A021",
+      "HY-ROS-2026-A022",
+      "HY-ROS-2026-A023",
+      "HY-ROS-2026-A024"
+    ],
+    "title": "F# artifact-management shadow migration"
+  }
+]
