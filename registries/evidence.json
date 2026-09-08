@@ -371,5 +371,36 @@
     "title": "Typed live-work decision shadow results",
     "updated": "2026-09-08",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-08",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A033",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A033--work-state-recovery-shadow-results.md",
+    "related_documents": [
+      "DF-ROS-2026-A006",
+      "DF-ROS-2026-A027",
+      "JR-ROS-2026-A019",
+      "EV-ROS-2026-A032"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "fsharp",
+      "work-lifecycle",
+      "persistence",
+      "recovery",
+      "concurrency",
+      "migration"
+    ],
+    "title": "Work-state recovery shadow results",
+    "updated": "2026-09-08",
+    "version": "1.0.0"
   }
 ]

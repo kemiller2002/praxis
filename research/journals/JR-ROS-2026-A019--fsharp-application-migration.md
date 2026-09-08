@@ -2,7 +2,7 @@
 id: JR-ROS-2026-A019
 title: ROS F# application migration execution journal
 status: active
-version: 1.3.0
+version: 1.4.0
 research_area: repository-operating-system
 author_agent: openai-codex
 created: 2026-09-07
@@ -15,6 +15,7 @@ evidence_ids:
   - EV-ROS-2026-A030
   - EV-ROS-2026-A031
   - EV-ROS-2026-A032
+  - EV-ROS-2026-A033
 hypothesis_ids:
   - HY-ROS-2026-A021
   - HY-ROS-2026-A022
@@ -123,6 +124,7 @@ invented.
 | MIG-D014 | MIG-06 | first three Git-slice builds rejected an F# 10 reserved local name, unconstrained recursive parser types, a misplaced match branch, and interpolation syntax | introduced representation/agent-execution defects | introduced | renamed/bounded the locals, added explicit parser types, restored exhaustive branch locality, and simplified interpolation; subsequent build has zero warnings/errors and all 21 tests pass |
 | MIG-D015 | MIG-06 | the current-repository artifact smoke test regenerated stale registries before asserting no change | verification side-effect defect | legacy from MIG-04 | replaced the builder call with read-only `./ros registry check`; regenerated the expected projections once through the governed workflow; rerun must prove the check has no hidden write |
 | MIG-D016 | MIG-07 | initial F# block guard rejected whitespace-only reasons while Node accepts them | characterization mismatch found by adversarial source comparison | introduced | changed absence semantics from whitespace to empty; added differential coverage for both empty and whitespace values; policy tightening requires a separate intentional decision |
+| MIG-D017 | MIG-05 work persistence | first recovery builds exposed unconstrained .NET overloads, a record-label collision between artifact/work failures, and filesystem exceptions outside typed outcomes | introduced boundary/representation defects | introduced | constrained boundary types, annotated artifact fixtures, wrapped prepare/recover reads, and added corrupt-journal rejection; final narrow build has zero warnings/errors and 30 tests pass |
 
 # Observations
 
@@ -187,6 +189,15 @@ guard and the F# diagnostic command. The first adversarial pass caught and
 removed an accidental whitespace-policy change. No context, event, telemetry,
 Git, clock, or file writer moved; those effects remain blocked on persistence
 and caller-specific comparison.
+
+## MIG-05 — hash-preconditioned work-state recovery shadow
+
+Added a separate `work-state` journal rather than reusing the artifact replay
+format. It declares exactly event then context, records before/after content
+hashes, preflights both targets, replays interrupted or already-applied writes,
+and refuses divergence, malformed data, incomplete/reordered sets, or a second
+pending journal. No production writer is connected yet; work-lock capability
+and Node/F# caller integration remain required.
 
 # Decisions and rationale
 

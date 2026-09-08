@@ -9,13 +9,13 @@ Last updated: 2026-09-08. Production authority remains Node.
 | Semantic decomposition | complete at T2; map and six feature manifests added |
 | Architecture | accepted for staged shadowing in `DF-ROS-2026-A027`; challenged before treatment |
 | F# implementation | MIG-03/04 complete; MIG-06 Git shadow complete; MIG-07 now includes the pure typed live-work transition/evidence decision and `ros-fs work decide` diagnostic |
-| Persistence migration | MIG-05 artifact-registry sub-slice complete: shared Node/F# lease and replayable generated-registry transaction; general stateful persistence remains in progress |
+| Persistence migration | MIG-05 artifact-registry sub-slice complete; F# work-state shadow adds a distinct hash-preconditioned event+context recovery journal; lock integration, Node adoption, backlog, and telemetry recovery remain |
 | Git migration | MIG-06 shadow sub-slice complete; production work/telemetry callers still use their separate Node helpers, so unified authority is not yet complete |
 | Work migration | MIG-07 live decision sub-slice complete; Node still owns backlog, evidence-path checks, effects, persistence, events, telemetry, and every state-changing command |
 | Production command switch | not authorized and not attempted |
 | Legacy removal | none; Python validator remains an oracle; layout generator is only a deprecation candidate |
 | Distribution | repository-local .NET 10 shadow only; consumer decision unresolved |
-| Verification | full suite passes: 89 Node, 7 Python, 25 F#, and 10 Node-driven differential/smoke tests (131 total); this includes the exhaustive 16-state/action work matrix; SDE v1.1.1 integrity passes with five pre-existing structural warnings |
+| Verification | full suite passes: 89 Node, 7 Python, 30 F#, and 10 Node-driven differential/smoke tests (136 total); SDE v1.1.1 integrity and ROS validation pass |
 | Research | experiment A020 and hypotheses A021–A026 preregistered |
 
 T6 closed WI-0011 and finalized `EXE-20260907T203141590Z-54f547f8`. The final

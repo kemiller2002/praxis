@@ -10,8 +10,9 @@
 | DOC-PROJECT-ADMIN-README | DOC-PROJECT-ADMIN-README | complete |  |  |
 | DOC-WEB-README | DOC-WEB-README | complete |  |  |
 | MIG-05-PERSISTENCE | MIG-05 characterize and shadow transactional persistence recovery | complete | fsharp, migration, persistence | high |
+| MIG-05-WORK-PERSISTENCE | MIG-05 characterize work-state persistence and recovery | ready | fsharp, migration, persistence, work | high |
 | MIG-06-GIT-PROVENANCE | MIG-06 characterize and shadow typed Git provenance | complete | fsharp, migration, git | high |
-| MIG-07-WORK-LIFECYCLE | MIG-07 shadow typed live-work transitions and evidence guards | ready | fsharp, migration, work | high |
+| MIG-07-WORK-LIFECYCLE | MIG-07 shadow typed live-work transitions and evidence guards | complete | fsharp, migration, work | high |
 | OIDC-REPO-IDENTITY | OIDC-REPO-IDENTITY | complete |  |  |
 | PKG-BIN-EXECUTABLE | PKG-BIN-EXECUTABLE | complete |  |  |
 | PKG-ECHELON-FOUNDRY | PKG-ECHELON-FOUNDRY | complete |  |  |

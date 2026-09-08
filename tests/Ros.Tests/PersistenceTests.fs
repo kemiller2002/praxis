@@ -5,8 +5,10 @@ open System.IO
 open System.Security.Cryptography
 open System.Text
 open Ros.Application.Artifacts
+open Ros.Application.Work
 open Ros.Domain.Artifacts
 open Ros.Infrastructure.Artifacts
+open Ros.Infrastructure.Work
 
 [<RequireQualifiedAccess>]
 module PersistenceTests =
@@ -36,6 +38,10 @@ module PersistenceTests =
         { RegistryLock.defaultSettings with
             RetryDelay = TimeSpan.Zero
             Timeout = TimeSpan.Zero }
+
+    let private workStateWrites eventContent contextContent =
+        [ { Path = ".ros/events/events.jsonl"; Content = eventContent }
+          { Path = ".ros/context/current.json"; Content = contextContent } ]
 
     let tests =
         [ { Name = "registry lock path matches the Node SHA-256 lease layout"
@@ -114,13 +120,13 @@ module PersistenceTests =
                             Assert.isTrue (not (File.Exists(RegistryTransaction.transactionPath root))) "expected completed transaction") }
           { Name = "registry build does not load or write when lease acquisition fails"
             Run = fun () ->
-                let failure =
+                let failure: DependencyFailure =
                     { Operation = "acquire artifact registry lock"
                       Path = None
                       Message = "injected lease failure"
                       Outcome = DependencyOutcome.Failed }
 
-                let repository =
+                let repository: ArtifactRepository =
                     { Load = fun () -> failwith "Load must not run after failed lease acquisition"
                       ReadRegistry = fun _ -> failwith "Read must not run after failed lease acquisition"
                       WriteRegistry = fun _ _ -> failwith "Write must not run after failed lease acquisition"
@@ -131,13 +137,13 @@ module PersistenceTests =
                 | outcome -> failwith $"Expected lease failure, received {outcome}" }
           { Name = "registry build does not load when pending transaction recovery fails"
             Run = fun () ->
-                let failure =
+                let failure: DependencyFailure =
                     { Operation = "recover artifact registry transaction"
                       Path = None
                       Message = "injected recovery failure"
                       Outcome = DependencyOutcome.Indeterminate }
 
-                let repository =
+                let repository: ArtifactRepository =
                     { Load = fun () -> failwith "Load must not run after failed transaction recovery"
                       ReadRegistry = fun _ -> failwith "Read must not run after failed transaction recovery"
                       WriteRegistry = fun _ _ -> failwith "Write must not run after failed transaction recovery"
@@ -156,13 +162,13 @@ module PersistenceTests =
             Run = fun () ->
                 let writes = ResizeArray<string>()
 
-                let releaseFailure =
+                let releaseFailure: DependencyFailure =
                     { Operation = "release artifact registry lock"
                       Path = None
                       Message = "injected ownership change"
                       Outcome = DependencyOutcome.Indeterminate }
 
-                let repository =
+                let repository: ArtifactRepository =
                     { Load = fun () -> Ok { Documents = [ validDocument ]; ParseFindings = [] }
                       ReadRegistry = fun _ -> Ok None
                       WriteRegistry = fun path _ -> writes.Add path; Ok()
@@ -179,4 +185,100 @@ module PersistenceTests =
                     Assert.equal 8 written.Length
                     Assert.equal 0 pending.Length
                     Assert.equal releaseFailure failure
-                | outcome -> failwith $"Expected indeterminate release outcome, received {outcome}" } ]
+                | outcome -> failwith $"Expected indeterminate release outcome, received {outcome}" }
+          { Name = "work-state recovery completes an interrupted event-then-context write"
+            Run =
+              fun () ->
+                  withTemporaryRoot (fun root ->
+                      let eventFile = Path.Combine(root, ".ros/events/events.jsonl")
+                      let contextFile = Path.Combine(root, ".ros/context/current.json")
+                      Directory.CreateDirectory(Path.GetDirectoryName eventFile) |> ignore
+                      Directory.CreateDirectory(Path.GetDirectoryName contextFile) |> ignore
+                      File.WriteAllText(eventFile, "before-event\n")
+                      File.WriteAllText(contextFile, "before-context\n")
+                      let writes = workStateWrites "after-event\n" "after-context\n"
+
+                      match WorkStateTransaction.prepare root writes with
+                      | Error failure -> failwith failure.Message
+                      | Ok() ->
+                          File.WriteAllText(eventFile, "after-event\n")
+
+                          match WorkStateTransaction.recover root with
+                          | Error failure -> failwith failure.Message
+                          | Ok() ->
+                              Assert.equal "after-event\n" (File.ReadAllText eventFile)
+                              Assert.equal "after-context\n" (File.ReadAllText contextFile)
+                              Assert.isTrue (not (File.Exists(WorkStateTransaction.transactionPath root))) "expected completed recovery") }
+          { Name = "work-state recovery preflights every target before replay"
+            Run =
+              fun () ->
+                  withTemporaryRoot (fun root ->
+                      let eventFile = Path.Combine(root, ".ros/events/events.jsonl")
+                      let contextFile = Path.Combine(root, ".ros/context/current.json")
+                      Directory.CreateDirectory(Path.GetDirectoryName eventFile) |> ignore
+                      Directory.CreateDirectory(Path.GetDirectoryName contextFile) |> ignore
+                      File.WriteAllText(eventFile, "before-event\n")
+                      File.WriteAllText(contextFile, "before-context\n")
+
+                      match WorkStateTransaction.prepare root (workStateWrites "after-event\n" "after-context\n") with
+                      | Error failure -> failwith failure.Message
+                      | Ok() ->
+                          File.WriteAllText(contextFile, "third-party-context\n")
+
+                          match WorkStateTransaction.recover root with
+                          | Ok() -> failwith "Expected divergence to prevent recovery"
+                          | Error failure ->
+                              Assert.equal WorkPersistenceOutcome.Indeterminate failure.Outcome
+                              Assert.equal (Some ".ros/context/current.json") failure.Path
+                              Assert.equal "before-event\n" (File.ReadAllText eventFile)
+                              Assert.isTrue (File.Exists(WorkStateTransaction.transactionPath root)) "conflicted transaction must remain") }
+          { Name = "work-state transaction rejects incomplete or reordered targets"
+            Run =
+              fun () ->
+                  withTemporaryRoot (fun root ->
+                      let reversed = workStateWrites "event\n" "context\n" |> List.rev
+
+                      match WorkStateTransaction.prepare root reversed with
+                      | Ok() -> failwith "Expected reordered write rejection"
+                      | Error failure -> Assert.equal WorkPersistenceOutcome.Failed failure.Outcome
+
+                      match WorkStateTransaction.prepare root [ { Path = ".ros/context/current.json"; Content = "context\n" } ] with
+                      | Ok() -> failwith "Expected incomplete write-set rejection"
+                      | Error failure -> Assert.equal WorkPersistenceOutcome.Failed failure.Outcome) }
+          { Name = "work-state transaction never overwrites an unrecovered journal"
+            Run =
+              fun () ->
+                  withTemporaryRoot (fun root ->
+                      let writes = workStateWrites "event\n" "context\n"
+
+                      match WorkStateTransaction.prepare root writes with
+                      | Error failure -> failwith failure.Message
+                      | Ok() ->
+                          let original = File.ReadAllText(WorkStateTransaction.transactionPath root)
+
+                          match WorkStateTransaction.prepare root writes with
+                          | Ok() -> failwith "Expected pending transaction rejection"
+                          | Error failure ->
+                              Assert.equal WorkPersistenceOutcome.Failed failure.Outcome
+                              Assert.equal original (File.ReadAllText(WorkStateTransaction.transactionPath root))) }
+          { Name = "work-state recovery rejects a corrupt journal without touching targets"
+            Run =
+              fun () ->
+                  withTemporaryRoot (fun root ->
+                      let eventFile = Path.Combine(root, ".ros/events/events.jsonl")
+                      let contextFile = Path.Combine(root, ".ros/context/current.json")
+                      let transaction = WorkStateTransaction.transactionPath root
+                      Directory.CreateDirectory(Path.GetDirectoryName eventFile) |> ignore
+                      Directory.CreateDirectory(Path.GetDirectoryName contextFile) |> ignore
+                      Directory.CreateDirectory(Path.GetDirectoryName transaction) |> ignore
+                      File.WriteAllText(eventFile, "before-event\n")
+                      File.WriteAllText(contextFile, "before-context\n")
+                      File.WriteAllText(transaction, "{\"schemaVersion\":\"1.0.0\",\"resource\":\"work-state\",\"writes\":[]}")
+
+                      match WorkStateTransaction.recover root with
+                      | Ok() -> failwith "Expected corrupt transaction rejection"
+                      | Error failure ->
+                          Assert.equal WorkPersistenceOutcome.Indeterminate failure.Outcome
+                          Assert.equal "before-event\n" (File.ReadAllText eventFile)
+                          Assert.equal "before-context\n" (File.ReadAllText contextFile)
+                          Assert.isTrue (File.Exists transaction) "corrupt transaction must remain for inspection") } ]

@@ -117,3 +117,20 @@ Canonical raw execution evidence is
 | SDE integrity | v1.1.1 verified; 18 managed files; 5 pre-existing structural review warnings | `sde verify` |
 | production mutations | none | source diff; `./ros` remains Node |
 | provider model/token/cache/cost | unavailable/not captured | no runtime observation; no values inferred |
+
+## MIG-05 work-persistence continuation
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260908T120118252Z-e06c199f.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-08T12:01:18.252Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-fsharp-work-persistence` / `9785eb6` | ROS Git baseline |
+| new persistence tests | 5; 30 total F# tests pass | direct typed test execution |
+| successful build | 0 warnings, 0 errors | final narrow .NET build |
+| failed build attempts | 2 | compiler exposed unconstrained overloads and record-label ambiguity; both repaired |
+| final complete suite | 136 passed, 0 failed | 89 Node + 7 Python + 30 F# + 10 Node-driven differential/smoke tests |
+| SDE integrity | v1.1.1 verified; 18 managed files; 5 pre-existing structural review warnings | `sde verify` |
+| production state writer changes | 0 | source diff; shadow recovery contract only |
+| provider model/token/cache/cost | unavailable/not captured | no runtime observation; no values inferred |

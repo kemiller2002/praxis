@@ -104,6 +104,22 @@ result. It is not a state-changing command and does not claim that evidence
 paths exist. Application/effect orchestration and comparative persisted
 context/event behavior remain required before a production switch.
 
+## Work-state recovery seam
+
+The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for
+the final two live-transition projections, in their characterized order:
+`.ros/events/events.jsonl` then `.ros/context/current.json`. Each declared write
+stores the before-content SHA-256, intended after-content SHA-256, and complete
+replacement content. Recovery preflights both targets before writing: only the
+recorded before state or already-applied after state is legal. Divergence is an
+`Indeterminate` outcome and leaves the journal and both targets untouched.
+
+This is not yet connected to production or exposed as a command. Its caller
+must hold the existing `work-protocol` lease; acquiring that capability and
+integrating recovery before Node/F# transitions are separate acceptance work.
+Telemetry execution files and backlog queue/projection files are explicitly
+outside this two-file unit.
+
 ## State architecture
 
 | Lifecycle | Closed state now | Authority | Migration treatment |

@@ -245,6 +245,25 @@
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "MIG-05-WORK-PERSISTENCE",
+      "title": "MIG-05 characterize work-state persistence and recovery",
+      "description": null,
+      "tags": [
+        "fsharp",
+        "migration",
+        "persistence",
+        "work"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-08T12:01:18.041Z",
+      "updatedAt": "2026-09-08T12:01:18.153Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
