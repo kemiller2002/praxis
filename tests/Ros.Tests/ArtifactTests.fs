@@ -178,7 +178,14 @@ module ArtifactTests =
                                     { Operation = "write registry"
                                       Path = Some path
                                       Message = "injected failure"
-                                      Outcome = DependencyOutcome.Indeterminate } }
+                                      Outcome = DependencyOutcome.Indeterminate }
+                      AcquireRegistryWriteLease =
+                        fun () ->
+                            Ok
+                                { Recover = fun () -> Ok()
+                                  Prepare = fun _ -> Ok()
+                                  Complete = fun () -> Ok()
+                                  Release = fun () -> Ok() } }
 
                 match ArtifactOperations.buildRegistries false repository with
                 | RegistryBuildOutcome.Incomplete(written, pending, failure) ->

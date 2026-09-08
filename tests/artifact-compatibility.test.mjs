@@ -97,3 +97,44 @@ test("Node and Python generate the frozen bytes and agree on invalid artifact fi
   assert.equal(pythonValidation.status, 1);
   assert.deepEqual(pythonFindings(pythonValidation.stderr), invalid.expectedFindings);
 });
+
+test("Node registry build reclaims a stale F#-compatible artifact lease", (t) => {
+  const root = temporaryFixture(t, "valid-all-kinds");
+  const resource = "artifact-registries";
+  const hash = crypto.createHash("sha256").update(resource).digest("hex");
+  const lock = path.join(root, ".ros", "locks", `${hash}.lock`);
+  fs.mkdirSync(path.dirname(lock), { recursive: true });
+  fs.writeFileSync(lock, JSON.stringify({
+    pid: 999999,
+    ownerToken: "fsharp-stale-owner",
+    resource,
+    acquiredAt: "2026-09-08T00:00:00.0000000Z"
+  }) + "\n");
+  const stale = new Date(Date.now() - 61_000);
+  fs.utimesSync(lock, stale, stale);
+
+  const result = buildRegistries(root, { dryRun: true });
+  assert.equal(result.changed, 0);
+  assert.equal(result.findings.length, 0);
+  assert.equal(fs.existsSync(lock), false);
+});
+
+test("Node registry build replays a pending F#-compatible artifact transaction", (t) => {
+  const root = temporaryFixture(t, "valid-all-kinds");
+  const registryPath = "registries/evidence.json";
+  const expected = fs.readFileSync(path.join(root, registryPath), "utf8");
+  const transaction = path.join(root, ".ros", "transactions", "artifact-registries.json");
+  fs.mkdirSync(path.dirname(transaction), { recursive: true });
+  fs.writeFileSync(transaction, JSON.stringify({
+    schemaVersion: "1.0.0",
+    resource: "artifact-registries",
+    writes: [{ path: registryPath, content: expected }]
+  }) + "\n");
+  fs.writeFileSync(path.join(root, registryPath), "[]\n");
+
+  const result = buildRegistries(root);
+  assert.equal(result.changed, 0);
+  assert.equal(result.findings.length, 0);
+  assert.equal(fs.readFileSync(path.join(root, registryPath), "utf8"), expected);
+  assert.equal(fs.existsSync(transaction), false);
+});

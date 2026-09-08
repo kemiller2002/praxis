@@ -78,27 +78,21 @@ module FileArtifactRepository =
             |> Error
 
     let private writeRegistry root relativePath (content: string) =
-        let file = Path.Combine(root, relativePath)
-        let directory = Path.GetDirectoryName file
-        let temporary = Path.Combine(directory, $".{Path.GetFileName(file)}.{Guid.NewGuid():N}.tmp")
-
-        try
-            Directory.CreateDirectory directory |> ignore
-            File.WriteAllText(temporary, content, UTF8Encoding(false))
-            File.Move(temporary, file, true)
-            Ok()
-        with error ->
-            try
-                if File.Exists temporary then File.Delete temporary
-            with _ ->
-                ()
-
-            dependencyFailure "write registry" (Some relativePath) DependencyOutcome.Indeterminate error
-            |> Error
+        RegistryTransaction.writeAtomic (Path.Combine(root, relativePath)) content
 
     let create root =
         let repositoryRoot = Path.GetFullPath root
 
         { Load = fun () -> load repositoryRoot
           ReadRegistry = readRegistry repositoryRoot
-          WriteRegistry = writeRegistry repositoryRoot }
+          WriteRegistry = writeRegistry repositoryRoot
+          AcquireRegistryWriteLease =
+            fun () ->
+                match RegistryLock.acquire repositoryRoot "artifact-registries" RegistryLock.defaultSettings with
+                | Error failure -> Error failure
+                | Ok lock ->
+                    Ok
+                        { Recover = fun () -> RegistryTransaction.recover repositoryRoot
+                          Prepare = RegistryTransaction.prepare repositoryRoot
+                          Complete = fun () -> RegistryTransaction.complete repositoryRoot
+                          Release = lock.Release } }

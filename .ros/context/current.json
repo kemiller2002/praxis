@@ -512,11 +512,22 @@
         "EXE-20260907T203141590Z-54f547f8"
       ],
       "completedAt": "2026-09-08T06:29:33.997Z"
+    },
+    {
+      "id": "MIG-05-PERSISTENCE",
+      "type": "infrastructure",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-08T06:37:56.005Z",
+      "telemetryExecutionIds": [
+        "EXE-20260908T063756006Z-488a5615"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-08T06:29:33.997Z",
+  "updatedAt": "2026-09-08T06:37:56.005Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

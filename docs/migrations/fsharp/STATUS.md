@@ -9,6 +9,7 @@ Last updated: 2026-09-08. Production authority remains Node.
 | Semantic decomposition | complete at T2; map and six feature manifests added |
 | Architecture | accepted for staged shadowing in `DF-ROS-2026-A027`; challenged before treatment |
 | F# implementation | MIG-03/04 complete: typed artifact policy/projection, filesystem port, explicit JSON codecs, and shadow CLI commands |
+| Persistence migration | MIG-05 artifact-registry sub-slice complete: shared Node/F# lease and replayable generated-registry transaction; general stateful persistence remains in progress |
 | Production command switch | not authorized and not attempted |
 | Legacy removal | none; Python validator remains an oracle; layout generator is only a deprecation candidate |
 | Distribution | repository-local .NET 10 shadow only; consumer decision unresolved |

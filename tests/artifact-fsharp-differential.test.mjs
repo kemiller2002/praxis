@@ -86,6 +86,26 @@ test("F# shadow smoke-checks the current repository without becoming its authori
   assert.equal(check.stdout, "registries are current\n");
 });
 
+test("F# shadow replays a Node-compatible pending artifact transaction", (t) => {
+  const root = temporaryFixture(t, valid.root);
+  const registryPath = "registries/evidence.json";
+  const expected = fs.readFileSync(path.join(root, registryPath), "utf8");
+  const transaction = path.join(root, ".ros", "transactions", "artifact-registries.json");
+  fs.mkdirSync(path.dirname(transaction), { recursive: true });
+  fs.writeFileSync(transaction, JSON.stringify({
+    schemaVersion: "1.0.0",
+    resource: "artifact-registries",
+    writes: [{ path: registryPath, content: expected }]
+  }) + "\n");
+  fs.writeFileSync(path.join(root, registryPath), "[]\n");
+
+  const result = runFsharp(["--root", root, "registry", "build"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, "0 registry file(s) changed\n");
+  assert.equal(fs.readFileSync(path.join(root, registryPath), "utf8"), expected);
+  assert.equal(fs.existsSync(transaction), false);
+});
+
 test("F# shadow rejects an unknown command with a usage exit code", () => {
   const result = runFsharp(["not-a-command"]);
   assert.equal(result.status, 2);

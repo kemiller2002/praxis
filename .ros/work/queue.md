@@ -9,6 +9,7 @@
 | DOC-BACKLOG-USAGE-GUIDE | DOC-BACKLOG-USAGE-GUIDE | complete |  |  |
 | DOC-PROJECT-ADMIN-README | DOC-PROJECT-ADMIN-README | complete |  |  |
 | DOC-WEB-README | DOC-WEB-README | complete |  |  |
+| MIG-05-PERSISTENCE | MIG-05 characterize and shadow transactional persistence recovery | ready | fsharp, migration, persistence | high |
 | OIDC-REPO-IDENTITY | OIDC-REPO-IDENTITY | complete |  |  |
 | PKG-BIN-EXECUTABLE | PKG-BIN-EXECUTABLE | complete |  |  |
 | PKG-ECHELON-FOUNDRY | PKG-ECHELON-FOUNDRY | complete |  |  |
@@ -30,6 +31,6 @@
 | WI-0008 | Run SDE init, status, verify, and update | complete |  | medium |
 | WI-0009 | Inventory ROS operational architecture and plan the F# migration | complete | architecture, fsharp, migration, sde | high |
 | WI-0010 | Install or update ROS with SDE and verify | complete | maintenance, sde | high |
-| WI-0011 | Migrate ROS toward a coherent F# application under SDE | ready | fsharp, migration, sde, research-development | high |
+| WI-0011 | Migrate ROS toward a coherent F# application under SDE | complete | fsharp, migration, sde, research-development | high |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |
 | WORKQUEUE-BACKLOG-LAYER | WORKQUEUE-BACKLOG-LAYER | complete |  |  |

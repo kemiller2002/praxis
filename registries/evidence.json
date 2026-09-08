@@ -280,5 +280,35 @@
     "title": "F# artifact shadow migration implementation and verification results",
     "updated": "2026-09-08",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-08",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A030",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A030--artifact-registry-persistence-shadow-results.md",
+    "related_documents": [
+      "EV-ROS-2026-A028",
+      "DF-ROS-2026-A027",
+      "JR-ROS-2026-A019"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "fsharp",
+      "persistence",
+      "recovery",
+      "transaction",
+      "lock",
+      "migration"
+    ],
+    "title": "Artifact registry cross-runtime lease and recovery results",
+    "updated": "2026-09-08",
+    "version": "1.0.0"
   }
 ]

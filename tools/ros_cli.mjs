@@ -70,6 +70,8 @@ const KIND_CONFIG = {
   "research-packages": ["research/packages", "registries/research-packages.json", "RP"],
   theories: ["research/theories", "registries/theories.json", "TH"]
 };
+const ARTIFACT_REGISTRY_RESOURCE = "artifact-registries";
+const ARTIFACT_REGISTRY_TRANSACTION_VERSION = "1.0.0";
 
 const SEMANTIC_STATES = new Set(["backlog", "ready", "active", "review", "blocked", "complete"]);
 const TRANSITIONS = {
@@ -801,6 +803,50 @@ function registryFindings(root, artifacts) {
   return findings;
 }
 
+function artifactRegistryTransactionPath(root) {
+  return path.join(root, ".ros", "transactions", `${ARTIFACT_REGISTRY_RESOURCE}.json`);
+}
+
+function artifactRegistryPaths() {
+  return new Set(Object.values(KIND_CONFIG).map(([, registry]) => registry));
+}
+
+function assertArtifactRegistryTransaction(record) {
+  const expected = artifactRegistryPaths();
+  if (record?.schemaVersion !== ARTIFACT_REGISTRY_TRANSACTION_VERSION
+    || record?.resource !== ARTIFACT_REGISTRY_RESOURCE
+    || !Array.isArray(record.writes)
+    || !record.writes.length) {
+    throw new Error("artifact registry transaction is invalid");
+  }
+  const seen = new Set();
+  for (const write of record.writes) {
+    if (typeof write?.path !== "string" || typeof write?.content !== "string" || !expected.has(write.path) || seen.has(write.path)) {
+      throw new Error("artifact registry transaction is invalid");
+    }
+    seen.add(write.path);
+  }
+}
+
+function recoverArtifactRegistryTransaction(root) {
+  const file = artifactRegistryTransactionPath(root);
+  if (!fs.existsSync(file)) return;
+  const record = readJson(file);
+  assertArtifactRegistryTransaction(record);
+  for (const write of record.writes) writeTextAtomic(path.join(root, write.path), write.content);
+  fs.unlinkSync(file);
+}
+
+function prepareArtifactRegistryTransaction(root, writes) {
+  const record = {
+    schemaVersion: ARTIFACT_REGISTRY_TRANSACTION_VERSION,
+    resource: ARTIFACT_REGISTRY_RESOURCE,
+    writes: writes.map(({ path: writePath, content }) => ({ path: writePath, content }))
+  };
+  assertArtifactRegistryTransaction(record);
+  writeJson(artifactRegistryTransactionPath(root), record);
+}
+
 export function validate(root, { checkRegistries = true } = {}) {
   const loaded = loadArtifacts(root);
   const findings = [...loaded.findings];
@@ -884,20 +930,33 @@ export function validate(root, { checkRegistries = true } = {}) {
 }
 
 export function buildRegistries(root, { dryRun = false } = {}) {
-  const loaded = loadArtifacts(root);
-  if (loaded.findings.length) return { changed: 0, findings: loaded.findings };
-  let changed = 0;
-  for (const [file, content] of renderedRegistries(root, loaded.artifacts)) {
-    const actual = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : null;
-    if (actual === content) continue;
-    changed += 1;
-    console.log(`${dryRun ? "WOULD WRITE" : "WROTE"} ${path.relative(root, file).split(path.sep).join("/")}`);
-    if (!dryRun) {
-      fs.mkdirSync(path.dirname(file), { recursive: true });
-      fs.writeFileSync(file, content, "utf8");
+  // F# shadows this same lease protocol. Acquire before discovery so a writer
+  // observes one coherent artifact snapshot from projection through writes.
+  return withFileLock(root, ARTIFACT_REGISTRY_RESOURCE, () => {
+    if (!dryRun) recoverArtifactRegistryTransaction(root);
+    const loaded = loadArtifacts(root);
+    if (loaded.findings.length) return { changed: 0, findings: loaded.findings };
+    let changed = 0;
+    for (const [file, content] of renderedRegistries(root, loaded.artifacts)) {
+      const actual = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : null;
+      if (actual === content) continue;
+      changed += 1;
+      console.log(`${dryRun ? "WOULD WRITE" : "WROTE"} ${path.relative(root, file).split(path.sep).join("/")}`);
+      if (!dryRun) {
+        // The journal is prepared below for the complete declared write set;
+        // this loop only reports changes before the atomic replacements occur.
+      }
     }
-  }
-  return { changed, findings: [] };
+    if (!dryRun && changed) {
+      const writes = [...renderedRegistries(root, loaded.artifacts)]
+        .filter(([file, content]) => (fs.existsSync(file) ? fs.readFileSync(file, "utf8") : null) !== content)
+        .map(([file, content]) => ({ path: path.relative(root, file).split(path.sep).join("/"), content }));
+      prepareArtifactRegistryTransaction(root, writes);
+      for (const write of writes) writeTextAtomic(path.join(root, write.path), write.content);
+      fs.unlinkSync(artifactRegistryTransactionPath(root));
+    }
+    return { changed, findings: [] };
+  });
 }
 
 function renderFinding(finding) {

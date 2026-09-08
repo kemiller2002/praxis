@@ -191,6 +191,24 @@
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "MIG-05-PERSISTENCE",
+      "title": "MIG-05 characterize and shadow transactional persistence recovery",
+      "description": "Characterize current filesystem and lock semantics, then implement only a verified F# shadow seam if recovery behavior can be preserved safely.",
+      "tags": [
+        "fsharp",
+        "migration",
+        "persistence"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-08T06:37:55.809Z",
+      "updatedAt": "2026-09-08T06:37:55.908Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

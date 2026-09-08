@@ -61,6 +61,21 @@ does not claim the broader Node `validate` contract, which additionally owns
 work, telemetry, and stale-registry checks. F# registry check is artifact-only
 until those semantic areas have their own slices.
 
+## Artifact projection persistence seam
+
+MIG-05 begins with a deliberately narrow cross-runtime lease for the generated
+artifact registries. Node and F# use the same SHA-256-named `.ros/locks` lease
+and a versioned `.ros/transactions/artifact-registries.json` write set. A normal
+build locks, recovers a pending generated-registry transaction, plans all
+changes, durably records the set, atomically replaces each registry, and removes
+the record. Recovery replays only the eight configured registry paths; malformed
+or unknown transaction data is rejected as indeterminate rather than followed.
+
+This is safe because canonical Markdown remains source of truth and registry
+projection is idempotent. It is not a generic transaction implementation, does
+not version canonical inputs, and must not be reused for work or telemetry state
+without their own recovery/authority design.
+
 ## State architecture
 
 | Lifecycle | Closed state now | Authority | Migration treatment |

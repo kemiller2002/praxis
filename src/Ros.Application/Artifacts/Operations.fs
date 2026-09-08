@@ -19,10 +19,21 @@ type ArtifactLoad =
     { Documents: ArtifactDocument list
       ParseFindings: ArtifactFinding list }
 
+type RegistryChange =
+    { Path: string
+      Content: string }
+
+type RegistryWriteLease =
+    { Recover: unit -> Result<unit, DependencyFailure>
+      Prepare: RegistryChange list -> Result<unit, DependencyFailure>
+      Complete: unit -> Result<unit, DependencyFailure>
+      Release: unit -> Result<unit, DependencyFailure> }
+
 type ArtifactRepository =
     { Load: unit -> Result<ArtifactLoad, DependencyFailure>
       ReadRegistry: string -> Result<string option, DependencyFailure>
-      WriteRegistry: string -> string -> Result<unit, DependencyFailure> }
+      WriteRegistry: string -> string -> Result<unit, DependencyFailure>
+      AcquireRegistryWriteLease: unit -> Result<RegistryWriteLease, DependencyFailure> }
 
 [<RequireQualifiedAccess>]
 type ValidationOutcome =
@@ -33,10 +44,6 @@ type ValidationOutcome =
 type RegistryCheckOutcome =
     | Completed of ArtifactFinding list
     | DependencyFailure of DependencyFailure
-
-type RegistryChange =
-    { Path: string
-      Content: string }
 
 [<RequireQualifiedAccess>]
 type RegistryBuildOutcome =
@@ -103,26 +110,58 @@ module ArtifactOperations =
                 |> RegistryCheckOutcome.Completed
 
     let buildRegistries dryRun repository =
-        match repository.Load() with
-        | Error failure -> RegistryBuildOutcome.DependencyFailure failure
-        | Ok loaded when not loaded.ParseFindings.IsEmpty ->
-            loaded.ParseFindings
-            |> List.sortWith compareFindings
-            |> RegistryBuildOutcome.Rejected
-        | Ok loaded ->
-            let projections = renderedProjections loaded.Documents
-
-            match changedRegistries repository projections with
+        let execute lease =
+            match repository.Load() with
             | Error failure -> RegistryBuildOutcome.DependencyFailure failure
-            | Ok changes when dryRun -> RegistryBuildOutcome.Completed changes
-            | Ok changes ->
-                let rec write written remaining =
-                    match remaining with
-                    | [] -> RegistryBuildOutcome.Completed(List.rev written)
-                    | change :: rest ->
-                        match repository.WriteRegistry change.Path change.Content with
-                        | Ok() -> write (change :: written) rest
-                        | Error failure ->
-                            RegistryBuildOutcome.Incomplete(List.rev written, change :: rest, failure)
+            | Ok loaded when not loaded.ParseFindings.IsEmpty ->
+                loaded.ParseFindings
+                |> List.sortWith compareFindings
+                |> RegistryBuildOutcome.Rejected
+            | Ok loaded ->
+                let projections = renderedProjections loaded.Documents
 
-                write [] changes
+                match changedRegistries repository projections with
+                | Error failure -> RegistryBuildOutcome.DependencyFailure failure
+                | Ok changes when dryRun -> RegistryBuildOutcome.Completed changes
+                | Ok [] -> RegistryBuildOutcome.Completed []
+                | Ok changes ->
+                    match lease.Prepare changes with
+                    | Error failure -> RegistryBuildOutcome.DependencyFailure failure
+                    | Ok() ->
+                        let rec write written remaining =
+                            match remaining with
+                            | [] -> RegistryBuildOutcome.Completed(List.rev written)
+                            | change :: rest ->
+                                match repository.WriteRegistry change.Path change.Content with
+                                | Ok() -> write (change :: written) rest
+                                | Error failure ->
+                                    RegistryBuildOutcome.Incomplete(List.rev written, change :: rest, failure)
+
+                        match write [] changes with
+                        | RegistryBuildOutcome.Completed written ->
+                            match lease.Complete() with
+                            | Ok() -> RegistryBuildOutcome.Completed written
+                            | Error failure -> RegistryBuildOutcome.Incomplete(written, [], failure)
+                        | outcome -> outcome
+
+        match repository.AcquireRegistryWriteLease() with
+        | Error failure -> RegistryBuildOutcome.DependencyFailure failure
+        | Ok lease ->
+            let outcome =
+                try
+                    if dryRun then execute lease
+                    else
+                        match lease.Recover() with
+                        | Error failure -> RegistryBuildOutcome.DependencyFailure failure
+                        | Ok() -> execute lease
+                with error ->
+                    lease.Release() |> ignore
+                    reraise ()
+
+            match lease.Release() with
+            | Ok() -> outcome
+            | Error releaseFailure ->
+                match outcome with
+                | RegistryBuildOutcome.Completed written ->
+                    RegistryBuildOutcome.Incomplete(written, [], releaseFailure)
+                | _ -> outcome

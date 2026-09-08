@@ -10,6 +10,8 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Artifacts/FrontMatter.fs" />
+    <Compile Include="Artifacts/RegistryLock.fs" />
+    <Compile Include="Artifacts/RegistryTransaction.fs" />
     <Compile Include="Artifacts/FileArtifactRepository.fs" />
   </ItemGroup>
 </Project>
