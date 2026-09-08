@@ -722,11 +722,22 @@
         "EXE-20260908T182701803Z-a382e3c4"
       ],
       "completedAt": "2026-09-08T23:34:02.256Z"
+    },
+    {
+      "id": "MIG-07-WORK-CONTEXT",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-08T23:35:12.454Z",
+      "telemetryExecutionIds": [
+        "EXE-20260908T233512457Z-e127ac8c"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-08T23:34:02.256Z",
+  "updatedAt": "2026-09-08T23:35:12.454Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

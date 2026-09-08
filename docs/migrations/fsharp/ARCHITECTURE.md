@@ -133,6 +133,21 @@ Missing and unavailable evidence remain ordered, distinct rejection issues.
 Repository containment is not imposed without an authority and is recorded as
 an open policy question. Whole-context/backlog effects still remain.
 
+The context-planning sub-slice lifts the item plan over an ordered selection of
+work IDs. It retains existing context order, appends newly begun items in
+request order, emits events in request order, computes first-begin metadata,
+and returns no plan if any ID or transition is rejected. Its explicit context
+JSON decoder rejects unknown semantic states while ignoring unrelated fields;
+the output is a planning view, not a lossless persistence codec.
+
+This sequencing also exposes a production boundary defect: Node delays the
+event/context transaction until every item succeeds, but performs telemetry
+effects inside the item loop. A later rejection can therefore leave earlier
+telemetry evidence detached even though context/events were not written. The
+existing execution-link recovery can repair a single detached record; a future
+F# effect handler must validate and freeze the whole plan before executing any
+telemetry intent. This slice intentionally does not switch the writer.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

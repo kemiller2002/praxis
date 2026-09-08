@@ -2,7 +2,7 @@
 id: JR-ROS-2026-A019
 title: ROS F# application migration execution journal
 status: active
-version: 1.11.0
+version: 1.12.0
 research_area: repository-operating-system
 author_agent: openai-codex
 created: 2026-09-07
@@ -22,6 +22,7 @@ evidence_ids:
   - EV-ROS-2026-A037
   - EV-ROS-2026-A038
   - EV-ROS-2026-A039
+  - EV-ROS-2026-A040
 hypothesis_ids:
   - HY-ROS-2026-A021
   - HY-ROS-2026-A022
@@ -137,6 +138,8 @@ invented.
 | MIG-D021 | MIG-05 telemetry-link verification | the no-uncomposed-write guard passed, then its test helper failed while listing an execution directory that correctly did not exist | introduced test expectation defect | introduced | made the helper model absent storage as an empty file set; rerun passes all 28 telemetry tests |
 | MIG-D022 | MIG-07 evidence self-review | evidence path normalization occurred before the filesystem adapter's exception boundary, so a malformed path could escape instead of returning `unavailable` | introduced boundary error | introduced | moved normalization inside the typed boundary; added a malformed-path rejection assertion; final full gate passes |
 | MIG-D023 | MIG-07 evidence verification | the new malformed-path assertion used a nonexistent assertion helper and stopped the first full F# build | introduced test/agent-execution mistake | introduced | changed it to the repository's established `Assert.isTrue` helper and reran the complete gate; all 172 tests pass |
+| MIG-D024 | MIG-07 context archaeology | production multi-item transition delays context/event persistence but executes telemetry inside the item loop, so a later item rejection can leave earlier detached telemetry | legacy boundary/transaction issue | legacy | F# context planner validates the complete ordered plan before returning any effects; keep Node authority and use existing single-detached-record recovery until effect execution is migrated |
+| MIG-D025 | MIG-07 context implementation | first two builds found ambiguous regex and System.Text.Json overloads | introduced representation issue | introduced | annotated string and writer boundaries explicitly; subsequent build and focused typed/differential gates pass |
 
 # Observations
 
@@ -293,6 +296,22 @@ exception boundary. Moving it inside preserves malformed paths as typed
 test-helper naming error; correcting it and rerunning the unchanged gate passed
 all 172 checks.
 
+## MIG-07 — whole-context planning
+
+Lifted the pure item planner over an ordered context selection. Existing item
+order is retained, newly begun items append in request order, events retain
+caller order, first-begin metadata is explicit, and any invalid ID, missing
+item, or later transition rejection returns no plan. An explicit context JSON
+decoder rejects unknown semantic states, while the output remains a planning
+view rather than claiming lossless persistence authority.
+
+Node/F# differentials match multi-item begin and later-item rejection with no
+context write. Source archaeology also exposed that current Node telemetry
+effects can precede such a later rejection. The future effect handler must
+freeze the complete plan before telemetry; this slice does not hide or switch
+that production boundary. The complete heterogeneous gate passes all 179
+checks with a zero-warning, zero-error F# build.
+
 # Decisions and rationale
 
 `DF-ROS-2026-A027` records the accepted boundary and rejected alternatives. The
@@ -320,5 +339,6 @@ added; no production authority source was removed or redirected.
 
 # Highest-value next step
 
-Complete the current governed closeout, then move production Git consumers
-behind the typed provenance boundary before migrating more work orchestration.
+Migrate backlog promotion semantics into a typed plan, then compose a frozen
+whole-work plan with evidence, Git, telemetry, and the existing bounded
+persistence ports before any production/distribution switch.

@@ -233,3 +233,19 @@ Canonical raw execution evidence is
 | repair loops | 2 | root composition remained at the infrastructure edge; malformed path normalization moved inside the typed exception boundary and its test now uses the established assertion API |
 | complete suite | 172 passed, 0 failed: 104 Node, 7 Python, 46 F#, 15 differential/smoke | `npm run test:all` |
 | provider model/token/cache/cost | unavailable/not captured | no provider usage snapshot was exposed; no values inferred |
+
+## MIG-07 context-planning continuation
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260908T233512457Z-e127ac8c.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-08T23:35:12.457Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-work-context-plan` / `d0a5902` | Git |
+| typed tests | 5 new; 51 total F# tests pass | direct typed runner |
+| work differential | 2 new; 8 work differentials pass | Node-driven F# comparison |
+| failed builds | 2 | compiler exposed regex and JSON overload ambiguity; explicit string/writer annotations repaired the boundaries |
+| complete suite | 179 passed, 0 failed: 104 Node, 7 Python, 51 F#, 17 differential/smoke | `npm run test:all` |
+| production mutations | none | context-plan is a shadow planning view; Node remains writer |
+| provider model/token/cache/cost | unavailable/not captured | no provider usage snapshot was exposed; no values inferred |

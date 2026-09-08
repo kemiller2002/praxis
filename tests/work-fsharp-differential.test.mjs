@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
 import { transition } from "../tools/ros_cli.mjs";
+import { observeGitStatus } from "../tools/ros_git.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
@@ -97,6 +98,38 @@ function normalizedEvent(event) {
     paths: event.paths ?? [],
     telemetryExecutions: event.telemetryExecutions ?? []
   };
+}
+
+function contextFixture(t, workItems) {
+  const root = fixture(t, "ready");
+  const contextFile = path.join(root, ".ros", "context", "current.json");
+  fs.writeFileSync(contextFile, `${JSON.stringify({
+    schemaVersion: "1.0.0",
+    repository: "work-differential",
+    workItems
+  }, null, 2)}\n`);
+  return root;
+}
+
+function fsharpContextPlan(t, root, beforeContext, action, ids, production, options = {}) {
+  const snapshot = path.join(os.tmpdir(), `ros-work-context-${process.pid}-${Math.random().toString(16).slice(2)}.json`);
+  fs.writeFileSync(snapshot, beforeContext);
+  t.after(() => fs.rmSync(snapshot, { force: true }));
+  const args = [
+    fsharpCli, "--root", root, "work", "context-plan", "--context", snapshot,
+    "--action", action, "--occurred-at", options.occurredAt,
+    "--repository", production.context.repository,
+    "--protocol-version", production.context.protocolVersion,
+    "--actor", production.context.actor,
+    "--type", options.type ?? "task"
+  ];
+  for (const id of ids) args.push("--id", id);
+  for (const changedPath of options.changedPaths ?? []) args.push("--path", changedPath);
+  for (const observedPath of options.observedGitPaths ?? []) args.push("--observed-git-path", observedPath);
+  for (const kind of options.required ?? []) args.push("--required", kind);
+  for (const evidence of options.evidence ?? []) args.push("--evidence", `${evidence.type}=${evidence.path}`);
+  if (options.reason !== undefined) args.push("--reason", options.reason);
+  return spawnSync("dotnet", args, { cwd: repositoryRoot, encoding: "utf8" });
 }
 
 test("F# live-work decision matrix matches the Node transition guard", (t) => {
@@ -198,4 +231,65 @@ test("F# evidence verification matches production file directory and absolute-pa
       assert.deepEqual(payload.rejection.evidenceIssues.map((issue) => issue.outcome), ["missing", "missing"]);
     }
   }
+});
+
+test("F# context plan matches production multi-item begin order and metadata", (t) => {
+  const root = contextFixture(t, [
+    { id: "TASK-EXIST", type: "task", state: "ready", semanticState: "ready", evidence: [] }
+  ]);
+  const contextFile = path.join(root, ".ros", "context", "current.json");
+  const before = fs.readFileSync(contextFile, "utf8");
+  const observation = observeGitStatus(root);
+  assert.notEqual(observation.outcome, "unavailable");
+  const observedGitPaths = observation.changes.map((change) => change.path);
+  const ids = ["TASK-NEW", "TASK-EXIST"];
+  const production = transition(root, "begin", ids, { type: "task", actor: "differential" });
+  const fsharp = fsharpContextPlan(t, root, before, "begin", ids, production, {
+    occurredAt: production.events[0].occurredAt,
+    observedGitPaths
+  });
+  assert.equal(fsharp.status, 0, fsharp.stderr);
+  const plan = JSON.parse(fsharp.stdout).plan;
+  assert.deepEqual(plan.workItems, production.context.workItems.map(normalizedItem));
+  assert.deepEqual(plan.events, production.events.map(normalizedEvent));
+  assert.equal(plan.repository, production.context.repository);
+  assert.equal(plan.protocolVersion, production.context.protocolVersion);
+  assert.equal(plan.actor, production.context.actor);
+  assert.equal(plan.startedAt, production.context.startedAt);
+  assert.equal(plan.updatedAt, production.context.updatedAt);
+  assert.deepEqual(plan.baselineDirtyPaths, production.context.baselineDirtyPaths);
+});
+
+test("F# context plan and production both reject a later illegal item without context writes", (t) => {
+  const workItems = [
+    { id: "TASK-READY", type: "task", state: "ready", semanticState: "ready", evidence: [] },
+    { id: "TASK-DONE", type: "task", state: "complete", semanticState: "complete", evidence: [], completedAt: "earlier" }
+  ];
+  const root = contextFixture(t, workItems);
+  const contextFile = path.join(root, ".ros", "context", "current.json");
+  const before = fs.readFileSync(contextFile, "utf8");
+  const ids = ["TASK-READY", "TASK-DONE"];
+  let productionError;
+  try {
+    transition(root, "begin", ids, { actor: "differential" });
+  } catch (error) {
+    productionError = error;
+  }
+  assert.match(productionError?.message ?? "", /cannot begin 'TASK-DONE' from 'complete'/);
+  assert.equal(fs.readFileSync(contextFile, "utf8"), before);
+  const productionShape = { context: { repository: "work-differential", protocolVersion: "1.0.0", actor: "differential" } };
+  const fsharp = fsharpContextPlan(t, root, before, "begin", ids, productionShape, {
+    occurredAt: "2026-09-08T23:45:00Z"
+  });
+  assert.equal(fsharp.status, 1, fsharp.stderr);
+  assert.deepEqual(JSON.parse(fsharp.stdout), {
+    schemaVersion: "1.0.0",
+    outcome: "rejected",
+    plan: null,
+    rejection: {
+      reason: "item-transition-rejected",
+      workItem: "TASK-DONE",
+      transition: { reason: "illegal-transition", state: "complete", action: "begin", missingEvidence: [] }
+    }
+  });
 });

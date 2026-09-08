@@ -43,6 +43,29 @@ module WorkPlanTests =
         | WorkPlanOutcome.Planned plan -> plan
         | other -> failwith $"Expected a plan, received {other}"
 
+    let private contextRequest context action ids =
+        { Context = context
+          Action = action
+          WorkItemIds = ids
+          NewItemType = "task"
+          TargetLocalState =
+            match action with
+            | WorkAction.Begin
+            | WorkAction.Resume -> "active"
+            | WorkAction.Block -> "blocked"
+            | WorkAction.Complete -> "complete"
+          BlockReason = if action = WorkAction.Block then Some "blocked now" else None
+          DefaultRequiredEvidence = Set.empty
+          RequiredEvidenceByType = Map.empty
+          ProvidedEvidence = []
+          Repository = "repo"
+          ProtocolVersion = "1.0.0"
+          Actor = "test-agent"
+          OccurredAt = "2026-09-08T23:45:00Z"
+          MeaningfulChangedPaths = []
+          ObservedGitPaths = []
+          TelemetryEnabled = false }
+
     let tests =
         [ { Name = "work completion plan replaces evidence and carries changed paths"
             Run =
@@ -159,4 +182,70 @@ module WorkPlanTests =
                       | EvidencePathObservation.Unavailable message -> Assert.isTrue (message.Length > 0) "failure message"
                       | other -> failwith $"Expected unavailable evidence path, received {other}"
                   finally
-                      Directory.Delete(root, true) } ]
+                      Directory.Delete(root, true) }
+          { Name = "context plan retains context order and request event order"
+            Run =
+              fun () ->
+                  let existing = { item LiveWorkState.Ready [] with Id = "TASK-EXIST" }
+                  let context = { WorkItems = [ existing ]; StartedAt = None; BaselineDirtyPaths = [] }
+                  let request =
+                      { contextRequest context WorkAction.Begin [ "TASK-NEW"; "TASK-EXIST" ] with
+                          ObservedGitPaths = [ "already-dirty.fs"; "TASK-NEW" ] }
+
+                  match WorkOperations.planContext request with
+                  | WorkContextPlanOutcome.Rejected rejection -> failwith $"Expected context plan, received {rejection}"
+                  | WorkContextPlanOutcome.Planned plan ->
+                      Assert.equal [ "TASK-EXIST"; "TASK-NEW" ] (plan.WorkItems |> List.map _.Id)
+                      Assert.equal [ "TASK-NEW"; "TASK-EXIST" ] (plan.ItemPlans |> List.map _.Item.Id)
+                      Assert.equal (Some request.OccurredAt) plan.StartedAt
+                      Assert.equal [ "already-dirty.fs" ] plan.BaselineDirtyPaths
+                      Assert.equal "test-agent" plan.Actor }
+          { Name = "context plan rejects atomically when a later item transition is illegal"
+            Run =
+              fun () ->
+                  let ready = { item LiveWorkState.Ready [] with Id = "TASK-READY" }
+                  let complete = { item LiveWorkState.Complete [] with Id = "TASK-DONE"; CompletedAt = Some "earlier" }
+                  let context = { WorkItems = [ ready; complete ]; StartedAt = Some "earlier"; BaselineDirtyPaths = [ "prior.fs" ] }
+
+                  Assert.equal
+                      (WorkContextPlanOutcome.Rejected(
+                          WorkContextRejection.ItemTransitionRejected(
+                              "TASK-DONE",
+                              TransitionRejection.IllegalTransition(LiveWorkState.Complete, WorkAction.Begin))))
+                      (WorkOperations.planContext (contextRequest context WorkAction.Begin [ "TASK-READY"; "TASK-DONE" ]))
+
+                  Assert.equal LiveWorkState.Ready context.WorkItems.Head.SemanticState }
+          { Name = "context plan creates absent items only for begin"
+            Run =
+              fun () ->
+                  let context = { WorkItems = []; StartedAt = None; BaselineDirtyPaths = [] }
+
+                  Assert.equal
+                      (WorkContextPlanOutcome.Rejected(WorkContextRejection.WorkItemNotInContext "TASK-MISSING"))
+                      (WorkOperations.planContext (contextRequest context WorkAction.Complete [ "TASK-MISSING" ]))
+
+                  match WorkOperations.planContext (contextRequest context WorkAction.Begin [ "TASK-MISSING" ]) with
+                  | WorkContextPlanOutcome.Planned plan ->
+                      Assert.equal [ "TASK-MISSING" ] (plan.WorkItems |> List.map _.Id)
+                  | other -> failwith $"Expected new begin item, received {other}" }
+          { Name = "context plan rejects empty and malformed work item selections"
+            Run =
+              fun () ->
+                  let context = { WorkItems = []; StartedAt = None; BaselineDirtyPaths = [] }
+
+                  Assert.equal
+                      (WorkContextPlanOutcome.Rejected WorkContextRejection.NoWorkItems)
+                      (WorkOperations.planContext (contextRequest context WorkAction.Begin []))
+
+                  Assert.equal
+                      (WorkContextPlanOutcome.Rejected(WorkContextRejection.InvalidWorkItemId "bad id"))
+                      (WorkOperations.planContext (contextRequest context WorkAction.Begin [ "bad id" ])) }
+          { Name = "context JSON contract rejects an unknown semantic state"
+            Run =
+              fun () ->
+                  let content =
+                      """{"workItems":[{"id":"TASK-ONE","type":"task","state":"ready","semanticState":"future","evidence":[]}]}"""
+
+                  match WorkContextPlanContract.parseJson content with
+                  | Error message -> Assert.isTrue (message.Contains "unsupported semantic work state") "semantic-state error"
+                  | Ok parsed -> failwith $"Expected malformed context rejection, received {parsed}" } ]

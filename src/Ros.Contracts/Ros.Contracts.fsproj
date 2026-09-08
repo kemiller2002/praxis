@@ -11,6 +11,7 @@
     <Compile Include="Git/StatusJson.fs" />
     <Compile Include="Work/DecisionJson.fs" />
     <Compile Include="Work/PlanJson.fs" />
+    <Compile Include="Work/ContextPlanJson.fs" />
     <Compile Include="Artifacts/RegistryJson.fs" />
     <Compile Include="Cli/FindingJson.fs" />
   </ItemGroup>

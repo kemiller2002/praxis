@@ -20,7 +20,7 @@ open Ros.Infrastructure.Work
 let Version = "0.2.0-shadow"
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide --state STATE --action ACTION [--reason TEXT] [--required TYPE] [--provided TYPE] [--json] | work plan --id ID --type TYPE --state STATE --action ACTION --occurred-at TIME [options]"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide --state STATE --action ACTION [options] | work plan --id ID --type TYPE --state STATE --action ACTION --occurred-at TIME [options] | work context-plan --context PATH --id ID [--id ID] --action ACTION --occurred-at TIME [options]"
 
 let private parseRoot (arguments: string array) =
     let values = ResizeArray<string>(arguments)
@@ -240,6 +240,49 @@ let private runWorkPlan root arguments =
         eprintfn "ERROR work plan requires valid --id, --type, --state, --action, --occurred-at, and TYPE=PATH evidence"
         2
 
+let private runWorkContextPlan root arguments =
+    let action = optionValue "--action" arguments |> Option.bind parseWorkAction
+    let contextPath = optionValue "--context" arguments
+    let occurredAt = optionValue "--occurred-at" arguments
+    let providedEvidence = optionValues "--evidence" arguments |> List.map parseEvidence
+
+    match action, contextPath, occurredAt with
+    | Some requested, Some relativeContextPath, Some timestamp when providedEvidence |> List.forall Option.isSome ->
+        let fullContextPath = Path.GetFullPath(Path.Combine(root, relativeContextPath))
+
+        match WorkContextPlanContract.parseJson (File.ReadAllText fullContextPath) with
+        | Error message ->
+            eprintfn "ERROR %s" message
+            2
+        | Ok context ->
+            let request =
+                { Context = context
+                  Action = requested
+                  WorkItemIds = optionValues "--id" arguments
+                  NewItemType = optionValue "--type" arguments |> Option.defaultValue "task"
+                  TargetLocalState = optionValue "--target-local-state" arguments |> Option.defaultValue (defaultLocalState requested)
+                  BlockReason = optionValue "--reason" arguments
+                  DefaultRequiredEvidence = optionValues "--required" arguments |> Set.ofList
+                  RequiredEvidenceByType = Map.empty
+                  ProvidedEvidence = providedEvidence |> List.choose id
+                  Repository = optionValue "--repository" arguments |> Option.defaultValue "repository"
+                  ProtocolVersion = optionValue "--protocol-version" arguments |> Option.defaultValue "1.0.0"
+                  Actor = optionValue "--actor" arguments |> Option.defaultValue "unknown"
+                  OccurredAt = timestamp
+                  MeaningfulChangedPaths = optionValues "--path" arguments
+                  ObservedGitPaths = optionValues "--observed-git-path" arguments
+                  TelemetryEnabled = arguments |> List.contains "--telemetry-enabled" }
+
+            let outcome = WorkOperations.planContext request
+            printf "%s" (WorkContextPlanContract.renderJson outcome)
+
+            match outcome with
+            | WorkContextPlanOutcome.Planned _ -> 0
+            | WorkContextPlanOutcome.Rejected _ -> 1
+    | _ ->
+        eprintfn "ERROR work context-plan requires valid --context, --id, --action, --occurred-at, and TYPE=PATH evidence"
+        2
+
 let private dispatch root arguments =
     let repository = FileArtifactRepository.create root
     let gitRepository = ProcessGitRepository.create root
@@ -264,6 +307,7 @@ let private dispatch root arguments =
         runGitStatus (rest |> List.contains "--json") gitRepository
     | "work" :: "decide" :: rest -> runWorkDecision rest
     | "work" :: "plan" :: rest -> runWorkPlan root rest
+    | "work" :: "context-plan" :: rest -> runWorkContextPlan root rest
     | _ ->
         eprintfn "%s" usage
         2

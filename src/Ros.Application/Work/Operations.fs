@@ -28,6 +28,7 @@ type WorkEvidenceRepository =
 module WorkOperations =
     let decideTransition request = WorkTransition.decide request
     let planTransition request = WorkTransitionPlanning.plan request
+    let planContext request = WorkContextPlanning.plan request
 
     let planVerifiedTransition (repository: WorkEvidenceRepository) (request: WorkTransitionPlanRequest) =
         match WorkTransitionPlanning.plan request with
