@@ -705,18 +705,28 @@
     {
       "id": "MIG-07-WORK-EVIDENCE",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-08T18:27:01.787Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileEvidenceRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkPlanTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-08T23:34:02.256Z",
       "telemetryExecutionIds": [
         "EXE-20260908T182701803Z-a382e3c4"
-      ]
+      ],
+      "completedAt": "2026-09-08T23:34:02.256Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-08T18:27:01.787Z",
+  "updatedAt": "2026-09-08T23:34:02.256Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
