@@ -537,18 +537,28 @@
     {
       "id": "MIG-06-GIT-PROVENANCE",
       "type": "infrastructure",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-08T11:38:35.529Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Git/GitRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/GitTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-08T11:52:36.499Z",
       "telemetryExecutionIds": [
         "EXE-20260908T113835529Z-e8d6b91e"
-      ]
+      ],
+      "completedAt": "2026-09-08T11:52:36.499Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-08T11:38:35.529Z",
+  "updatedAt": "2026-09-08T11:52:36.499Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
