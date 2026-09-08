@@ -3,13 +3,15 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
+import { execFile, execFileSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const execFileAsync = promisify(execFile);
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-work-"));
@@ -56,6 +58,27 @@ function writeWorkStateTransaction(root, beforeEvent, afterEvent, beforeContext,
         beforeSha256: sha256Text(beforeContext),
         afterSha256: sha256Text(afterContext),
         content: afterContext
+      }
+    ]
+  });
+}
+
+function writeBacklogStateTransaction(root, beforeQueue, afterQueue, beforeProjection, afterProjection) {
+  writeJson(path.join(root, ".ros", "transactions", "backlog-state.json"), {
+    schemaVersion: "1.0.0",
+    resource: "backlog-state",
+    writes: [
+      {
+        path: ".ros/work/queue.json",
+        beforeSha256: sha256Text(beforeQueue),
+        afterSha256: sha256Text(afterQueue),
+        content: afterQueue
+      },
+      {
+        path: ".ros/work/queue.md",
+        beforeSha256: sha256Text(beforeProjection),
+        afterSha256: sha256Text(afterProjection),
+        content: afterProjection
       }
     ]
   });
@@ -282,6 +305,72 @@ test("add captures a backlog item with an auto-generated ID and tags", (t) => {
   const second = ros(root, ["add", "Rename WasmStateStore", "-t", "cleanup,wasm"]);
   assert.equal(JSON.parse(second.output).id, "WI-0002");
   assert.equal(JSON.parse(second.output).priority, "medium");
+});
+
+test("normal backlog mutations commit queue and projection with no pending journal", (t) => {
+  const root = fixture(t);
+  const added = ros(root, ["add", "Journaled backlog item", "--id", "WI-JOURNALED"]);
+  assert.equal(added.status, 0, added.output);
+  assert.equal(fs.existsSync(path.join(root, ".ros", "transactions", "backlog-state.json")), false);
+  const queue = JSON.parse(fs.readFileSync(path.join(root, ".ros", "work", "queue.json"), "utf8"));
+  const projection = fs.readFileSync(path.join(root, ".ros", "work", "queue.md"), "utf8");
+  assert.equal(queue.items.find((item) => item.id === "WI-JOURNALED").status, "captured");
+  assert.match(projection, /\| WI-JOURNALED \| Journaled backlog item \| captured \|/);
+});
+
+test("a backlog mutation recovers a partially applied F#-compatible journal first", (t) => {
+  const root = fixture(t);
+  const queueFile = path.join(root, ".ros", "work", "queue.json");
+  const projectionFile = path.join(root, ".ros", "work", "queue.md");
+  const beforeQueue = fs.readFileSync(queueFile, "utf8");
+  const beforeProjection = fs.readFileSync(projectionFile, "utf8");
+  const recoveredItem = {
+    id: "WI-RECOVERED", title: "Recovered", description: null, tags: [], priority: "medium",
+    status: "captured", attachments: [], createdAt: "2026-09-08T00:00:00.000Z",
+    updatedAt: "2026-09-08T00:00:00.000Z", createdBy: "test", source: "manual", sourceReference: null
+  };
+  const afterQueue = `${JSON.stringify({ ...JSON.parse(beforeQueue), items: [recoveredItem] }, null, 2)}\n`;
+  const afterProjection = `${beforeProjection}| WI-RECOVERED | Recovered | captured |  | medium |\n`;
+  writeBacklogStateTransaction(root, beforeQueue, afterQueue, beforeProjection, afterProjection);
+  fs.writeFileSync(queueFile, afterQueue);
+
+  const added = ros(root, ["add", "After recovery", "--id", "WI-AFTER-RECOVERY"]);
+  assert.equal(added.status, 0, added.output);
+  const queue = JSON.parse(fs.readFileSync(queueFile, "utf8"));
+  assert.ok(queue.items.some((item) => item.id === "WI-RECOVERED"));
+  assert.ok(queue.items.some((item) => item.id === "WI-AFTER-RECOVERY"));
+  assert.equal(fs.existsSync(path.join(root, ".ros", "transactions", "backlog-state.json")), false);
+});
+
+test("backlog recovery rejects divergence before starting another mutation", (t) => {
+  const root = fixture(t);
+  const queueFile = path.join(root, ".ros", "work", "queue.json");
+  const projectionFile = path.join(root, ".ros", "work", "queue.md");
+  const transactionFile = path.join(root, ".ros", "transactions", "backlog-state.json");
+  const beforeQueue = fs.readFileSync(queueFile, "utf8");
+  const beforeProjection = fs.readFileSync(projectionFile, "utf8");
+  const afterQueue = `${JSON.stringify({ ...JSON.parse(beforeQueue), recoveryMarker: true }, null, 2)}\n`;
+  const afterProjection = `${beforeProjection}\n`;
+  writeBacklogStateTransaction(root, beforeQueue, afterQueue, beforeProjection, afterProjection);
+  fs.writeFileSync(projectionFile, "third-party projection\n");
+
+  const added = ros(root, ["add", "Must not be added", "--id", "WI-MUST-NOT-ADD"]);
+  assert.equal(added.status, 1);
+  assert.match(added.output, /target changed after preparation.*queue\.md/);
+  assert.equal(fs.readFileSync(queueFile, "utf8"), beforeQueue, "preflight must prevent the earlier queue write");
+  assert.equal(fs.readFileSync(projectionFile, "utf8"), "third-party projection\n");
+  assert.equal(fs.existsSync(transactionFile), true, "conflicted journal remains for inspection");
+});
+
+test("parallel backlog captures retain every queue entry under the shared work lease", async (t) => {
+  const root = fixture(t);
+  const executable = path.join(root, "ros");
+  const ids = Array.from({ length: 8 }, (_, index) => `WI-PARALLEL-${index + 1}`);
+  await Promise.all(ids.map((id) => execFileAsync(executable, ["add", `Parallel ${id}`, "--id", id], { cwd: root, encoding: "utf8" })));
+
+  const queue = JSON.parse(fs.readFileSync(path.join(root, ".ros", "work", "queue.json"), "utf8"));
+  assert.deepEqual(queue.items.map((item) => item.id).sort(), ids.sort());
+  assert.equal(fs.existsSync(path.join(root, ".ros", "transactions", "backlog-state.json")), false);
 });
 
 test("add rejects an explicit ID that collides with an existing backlog or context item", (t) => {

@@ -75,6 +75,9 @@ const ARTIFACT_REGISTRY_TRANSACTION_VERSION = "1.0.0";
 const WORK_STATE_RESOURCE = "work-state";
 const WORK_STATE_TRANSACTION_VERSION = "1.0.0";
 const WORK_STATE_PATHS = [".ros/events/events.jsonl", ".ros/context/current.json"];
+const BACKLOG_STATE_RESOURCE = "backlog-state";
+const BACKLOG_STATE_TRANSACTION_VERSION = "1.0.0";
+const BACKLOG_STATE_PATHS = [".ros/work/queue.json", ".ros/work/queue.md"];
 
 const SEMANTIC_STATES = new Set(["backlog", "ready", "active", "review", "blocked", "complete"]);
 const TRANSITIONS = {
@@ -161,7 +164,6 @@ function meaningfulPaths(root, paths) {
 function contextPath(root) { return path.join(root, ".ros", "context", "current.json"); }
 function eventsPath(root) { return path.join(root, ".ros", "events", "events.jsonl"); }
 function queuePath(root) { return path.join(root, ".ros", "work", "queue.json"); }
-function queueMarkdownPath(root) { return path.join(root, ".ros", "work", "queue.md"); }
 function detailPath(root, id) { return path.join(root, ".ros", "work", "items", `${id}.md`); }
 function attachmentsDir(root, id) { return path.join(root, ".ros", "work", "attachments", id); }
 
@@ -240,10 +242,12 @@ function renderQueueMarkdown(rows) {
   return `${header}${body}${body ? "\n" : ""}`;
 }
 
-function saveQueue(root, queue) {
-  writeJson(queuePath(root), queue);
+function saveQueueUnlocked(root, queue) {
   const context = loadContext(root);
-  writeTextAtomic(queueMarkdownPath(root), renderQueueMarkdown(mergedRows(queue, context.workItems)));
+  commitBacklogState(root, [
+    { path: ".ros/work/queue.json", content: `${JSON.stringify(queue, null, 2)}\n` },
+    { path: ".ros/work/queue.md", content: renderQueueMarkdown(mergedRows(queue, context.workItems)) }
+  ]);
 }
 
 export function showWork(root, id) {
@@ -256,16 +260,18 @@ export function showWork(root, id) {
 
 export function blockWork(root, ids, options = {}) {
   if (!ids.length) throw new Error("block requires at least one work-item ID");
-  const queue = loadQueue(root);
-  const context = loadContext(root);
-  const backlogIds = ids.filter((id) => queue.items.some((item) => item.id === id) && !context.workItems.some((item) => item.id === id));
-  const contextIds = ids.filter((id) => !backlogIds.includes(id));
-  const results = backlogIds.map((id) => backlogTransition(root, "block", id, options));
-  if (contextIds.length) {
-    const transitioned = transition(root, "block", contextIds, options);
-    results.push(...transitioned.context.workItems.filter((item) => contextIds.includes(item.id)));
-  }
-  return results;
+  return withWorkProtocol(root, () => {
+    const queue = loadQueue(root);
+    const context = loadContext(root);
+    const backlogIds = ids.filter((id) => queue.items.some((item) => item.id === id) && !context.workItems.some((item) => item.id === id));
+    const contextIds = ids.filter((id) => !backlogIds.includes(id));
+    const results = backlogIds.map((id) => backlogTransitionUnlocked(root, "block", id, options));
+    if (contextIds.length) {
+      const transitioned = transitionUnlocked(root, "block", contextIds, options);
+      results.push(...transitioned.context.workItems.filter((item) => contextIds.includes(item.id)));
+    }
+    return results;
+  });
 }
 
 export function mergedWorkView(root, { tags, status } = {}) {
@@ -277,7 +283,7 @@ export function mergedWorkView(root, { tags, status } = {}) {
   return rows;
 }
 
-export function captureWork(root, title, options = {}) {
+function captureWorkUnlocked(root, title, options = {}) {
   if (!title || !title.trim()) throw new Error("add requires a non-empty title");
   if (options.priority && !PRIORITIES.has(options.priority)) throw new Error(`invalid priority '${options.priority}'; use high, medium, or low`);
   const queue = loadQueue(root);
@@ -306,9 +312,13 @@ export function captureWork(root, title, options = {}) {
     sourceReference: options.sourceReference ?? null
   };
   queue.items.push(item);
-  saveQueue(root, queue);
-  for (const file of options.files ?? []) attachFile(root, id, file);
+  saveQueueUnlocked(root, queue);
+  for (const file of options.files ?? []) attachFileUnlocked(root, id, file);
   return options.files?.length ? showWork(root, id) : item;
+}
+
+export function captureWork(root, title, options = {}) {
+  return withWorkProtocol(root, () => captureWorkUnlocked(root, title, options));
 }
 
 // Any known ID -- whether captured via `add` or begun directly on the
@@ -341,7 +351,7 @@ function findOrCreateQueueEntry(root, queue, id) {
   return item;
 }
 
-export function updateWork(root, id, options = {}) {
+function updateWorkUnlocked(root, id, options = {}) {
   const queue = loadQueue(root);
   const item = findOrCreateQueueEntry(root, queue, id);
   if (options.title !== undefined) {
@@ -355,8 +365,12 @@ export function updateWork(root, id, options = {}) {
     item.priority = options.priority;
   }
   item.updatedAt = new Date().toISOString();
-  saveQueue(root, queue);
+  saveQueueUnlocked(root, queue);
   return item;
+}
+
+export function updateWork(root, id, options = {}) {
+  return withWorkProtocol(root, () => updateWorkUnlocked(root, id, options));
 }
 
 function sanitizeFileComponent(value) {
@@ -368,7 +382,7 @@ function sanitizeFileComponent(value) {
 // the caller may attach several files under the same display name, or
 // rename one away from what was originally uploaded. Storage uniqueness is
 // handled here, not by the caller.
-export function attachFile(root, id, { sourcePath, buffer, name, contentType } = {}) {
+function attachFileUnlocked(root, id, { sourcePath, buffer, name, contentType } = {}) {
   if (!sourcePath && !buffer) throw new Error("attach requires a source file or upload buffer");
   const queue = loadQueue(root);
   const item = findOrCreateQueueEntry(root, queue, id);
@@ -392,8 +406,12 @@ export function attachFile(root, id, { sourcePath, buffer, name, contentType } =
   };
   item.attachments.push(record);
   item.updatedAt = now;
-  saveQueue(root, queue);
+  saveQueueUnlocked(root, queue);
   return record;
+}
+
+export function attachFile(root, id, options = {}) {
+  return withWorkProtocol(root, () => attachFileUnlocked(root, id, options));
 }
 
 export function attachmentFilePath(root, id, attachmentId) {
@@ -404,7 +422,7 @@ export function attachmentFilePath(root, id, attachmentId) {
   return { record, filePath: path.join(attachmentsDir(root, id), record.file) };
 }
 
-export function backlogTransition(root, action, id, options = {}) {
+function backlogTransitionUnlocked(root, action, id, options = {}) {
   const queue = loadQueue(root);
   const item = queue.items.find((entry) => entry.id === id);
   if (!item) throw new Error(`'${id}' is not a captured local work item`);
@@ -422,24 +440,30 @@ export function backlogTransition(root, action, id, options = {}) {
     if (options.reason) item.abandonedReason = options.reason;
   }
   item.updatedAt = now;
-  saveQueue(root, queue);
+  saveQueueUnlocked(root, queue);
   return item;
+}
+
+export function backlogTransition(root, action, id, options = {}) {
+  return withWorkProtocol(root, () => backlogTransitionUnlocked(root, action, id, options));
 }
 
 export function startWork(root, ids, options = {}) {
   if (!ids.length) throw new Error("start requires at least one work-item ID");
-  const queue = loadQueue(root);
-  for (const id of ids) {
-    const item = queue.items.find((entry) => entry.id === id);
-    if (item && item.status !== "ready") {
-      throw new Error(
-        item.status === "abandoned"
-          ? `cannot start backlog item '${id}': it was abandoned`
-          : `cannot start backlog item '${id}' from '${item.status}'; mark it ready first`
-      );
+  return withWorkProtocol(root, () => {
+    const queue = loadQueue(root);
+    for (const id of ids) {
+      const item = queue.items.find((entry) => entry.id === id);
+      if (item && item.status !== "ready") {
+        throw new Error(
+          item.status === "abandoned"
+            ? `cannot start backlog item '${id}': it was abandoned`
+            : `cannot start backlog item '${id}' from '${item.status}'; mark it ready first`
+        );
+      }
     }
-  }
-  return transition(root, "begin", ids, options);
+    return transitionUnlocked(root, "begin", ids, options);
+  });
 }
 
 function eventPayload(event) {
@@ -519,6 +543,78 @@ function commitWorkState(root, writes) {
   if (fs.existsSync(transaction)) throw new Error("pending work-state transaction must be recovered before preparing another");
   writeJson(transaction, workStateRecord(root, writes));
   recoverWorkStateTransaction(root);
+}
+
+function backlogStateTransactionPath(root) {
+  return path.join(root, ".ros", "transactions", `${BACKLOG_STATE_RESOURCE}.json`);
+}
+
+function backlogStateRecord(root, writes) {
+  if (writes.length !== BACKLOG_STATE_PATHS.length || writes.some((write, index) => write.path !== BACKLOG_STATE_PATHS[index])) {
+    throw new Error("backlog-state transaction must contain queue then projection");
+  }
+  return {
+    schemaVersion: BACKLOG_STATE_TRANSACTION_VERSION,
+    resource: BACKLOG_STATE_RESOURCE,
+    writes: writes.map((write) => {
+      const before = currentText(root, write.path);
+      return {
+        path: write.path,
+        beforeSha256: before === null ? null : sha256Text(before),
+        afterSha256: sha256Text(write.content),
+        content: write.content
+      };
+    })
+  };
+}
+
+function validBacklogStateRecord(record) {
+  if (record?.schemaVersion !== BACKLOG_STATE_TRANSACTION_VERSION || record?.resource !== BACKLOG_STATE_RESOURCE) return false;
+  if (!Array.isArray(record.writes) || record.writes.length !== BACKLOG_STATE_PATHS.length) return false;
+  return record.writes.every((write, index) =>
+    write?.path === BACKLOG_STATE_PATHS[index]
+    && (write.beforeSha256 === null || /^[a-f0-9]{64}$/.test(write.beforeSha256))
+    && typeof write.afterSha256 === "string"
+    && typeof write.content === "string"
+    && sha256Text(write.content) === write.afterSha256
+  );
+}
+
+function recoverBacklogStateTransaction(root) {
+  const transaction = backlogStateTransactionPath(root);
+  if (!fs.existsSync(transaction)) return false;
+  const record = readJson(transaction);
+  if (!validBacklogStateRecord(record)) throw new Error("backlog-state transaction is invalid");
+
+  const observations = record.writes.map((write) => {
+    const current = currentText(root, write.path);
+    const hash = current === null ? null : sha256Text(current);
+    if (hash !== write.beforeSha256 && hash !== write.afterSha256) {
+      throw new Error(`backlog-state transaction target changed after preparation: ${write.path}`);
+    }
+    return { write, alreadyApplied: hash === write.afterSha256 };
+  });
+
+  for (const { write, alreadyApplied } of observations) {
+    if (!alreadyApplied) writeTextAtomic(path.join(root, write.path), write.content);
+  }
+  fs.unlinkSync(transaction);
+  return true;
+}
+
+function commitBacklogState(root, writes) {
+  const transaction = backlogStateTransactionPath(root);
+  if (fs.existsSync(transaction)) throw new Error("pending backlog-state transaction must be recovered before preparing another");
+  writeJson(transaction, backlogStateRecord(root, writes));
+  recoverBacklogStateTransaction(root);
+}
+
+function withWorkProtocol(root, operation) {
+  return withFileLock(root, "work-protocol", () => {
+    recoverWorkStateTransaction(root);
+    recoverBacklogStateTransaction(root);
+    return operation();
+  });
 }
 
 function renderedEventLog(root, planned) {
@@ -719,10 +815,7 @@ function transitionUnlocked(root, action, ids, options = {}) {
 }
 
 export function transition(root, action, ids, options = {}) {
-  return withFileLock(root, "work-protocol", () => {
-    recoverWorkStateTransaction(root);
-    return transitionUnlocked(root, action, ids, options);
-  });
+  return withWorkProtocol(root, () => transitionUnlocked(root, action, ids, options));
 }
 
 function workFindings(root) {

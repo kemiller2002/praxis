@@ -617,11 +617,22 @@
         "EXE-20260908T121300882Z-fe89c3e0"
       ],
       "completedAt": "2026-09-08T12:24:27.458Z"
+    },
+    {
+      "id": "MIG-05-BACKLOG-PERSISTENCE",
+      "type": "infrastructure",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-08T12:25:49.568Z",
+      "telemetryExecutionIds": [
+        "EXE-20260908T122549568Z-b1bcf1e1"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-08T12:24:27.458Z",
+  "updatedAt": "2026-09-08T12:25:49.568Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

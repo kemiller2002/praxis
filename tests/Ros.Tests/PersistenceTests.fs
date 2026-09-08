@@ -40,9 +40,13 @@ module PersistenceTests =
             RetryDelay = TimeSpan.Zero
             Timeout = TimeSpan.Zero }
 
-    let private workStateWrites eventContent contextContent =
+    let private workStateWrites eventContent contextContent : WorkStateWrite list =
         [ { Path = ".ros/events/events.jsonl"; Content = eventContent }
           { Path = ".ros/context/current.json"; Content = contextContent } ]
+
+    let private backlogStateWrites queueContent projectionContent : BacklogStateWrite list =
+        [ { Path = ".ros/work/queue.json"; Content = queueContent }
+          { Path = ".ros/work/queue.md"; Content = projectionContent } ]
 
     let private sha256Text (content: string) =
         content
@@ -327,4 +331,84 @@ module PersistenceTests =
                       | Ok() ->
                           Assert.equal afterEvent (File.ReadAllText eventFile)
                           Assert.equal afterContext (File.ReadAllText contextFile)
+                          Assert.isTrue (not (File.Exists transaction)) "expected Node-shaped journal completion") }
+          { Name = "backlog-state recovery completes an interrupted queue-then-projection write"
+            Run =
+              fun () ->
+                  withTemporaryRoot (fun root ->
+                      let queueFile = Path.Combine(root, ".ros/work/queue.json")
+                      let projectionFile = Path.Combine(root, ".ros/work/queue.md")
+                      Directory.CreateDirectory(Path.GetDirectoryName queueFile) |> ignore
+                      File.WriteAllText(queueFile, "before-queue\n")
+                      File.WriteAllText(projectionFile, "before-projection\n")
+
+                      match BacklogStateTransaction.prepare root (backlogStateWrites "after-queue\n" "after-projection\n") with
+                      | Error failure -> failwith failure.Message
+                      | Ok() ->
+                          File.WriteAllText(queueFile, "after-queue\n")
+
+                          match BacklogStateTransaction.recover root with
+                          | Error failure -> failwith failure.Message
+                          | Ok() ->
+                              Assert.equal "after-queue\n" (File.ReadAllText queueFile)
+                              Assert.equal "after-projection\n" (File.ReadAllText projectionFile)
+                              Assert.isTrue (not (File.Exists(BacklogStateTransaction.transactionPath root))) "expected completed recovery") }
+          { Name = "backlog-state recovery rejects projection divergence before replay"
+            Run =
+              fun () ->
+                  withTemporaryRoot (fun root ->
+                      let queueFile = Path.Combine(root, ".ros/work/queue.json")
+                      let projectionFile = Path.Combine(root, ".ros/work/queue.md")
+                      Directory.CreateDirectory(Path.GetDirectoryName queueFile) |> ignore
+                      File.WriteAllText(queueFile, "before-queue\n")
+                      File.WriteAllText(projectionFile, "before-projection\n")
+
+                      match BacklogStateTransaction.prepare root (backlogStateWrites "after-queue\n" "after-projection\n") with
+                      | Error failure -> failwith failure.Message
+                      | Ok() ->
+                          File.WriteAllText(projectionFile, "third-party-projection\n")
+
+                          match BacklogStateTransaction.recover root with
+                          | Ok() -> failwith "Expected divergence to prevent recovery"
+                          | Error failure ->
+                              Assert.equal WorkPersistenceOutcome.Indeterminate failure.Outcome
+                              Assert.equal (Some ".ros/work/queue.md") failure.Path
+                              Assert.equal "before-queue\n" (File.ReadAllText queueFile)
+                              Assert.isTrue (File.Exists(BacklogStateTransaction.transactionPath root)) "conflicted transaction must remain") }
+          { Name = "F# recovers a Node-shaped backlog-state journal"
+            Run =
+              fun () ->
+                  withTemporaryRoot (fun root ->
+                      let queueFile = Path.Combine(root, ".ros/work/queue.json")
+                      let projectionFile = Path.Combine(root, ".ros/work/queue.md")
+                      let transaction = BacklogStateTransaction.transactionPath root
+                      let beforeQueue = "before-queue\n"
+                      let beforeProjection = "before-projection\n"
+                      let afterQueue = "after-queue\n"
+                      let afterProjection = "after-projection\n"
+                      Directory.CreateDirectory(Path.GetDirectoryName queueFile) |> ignore
+                      Directory.CreateDirectory(Path.GetDirectoryName transaction) |> ignore
+                      File.WriteAllText(queueFile, beforeQueue)
+                      File.WriteAllText(projectionFile, beforeProjection)
+
+                      let record =
+                          {| schemaVersion = "1.0.0"
+                             resource = "backlog-state"
+                             writes =
+                              [ {| path = ".ros/work/queue.json"
+                                   beforeSha256 = sha256Text beforeQueue
+                                   afterSha256 = sha256Text afterQueue
+                                   content = afterQueue |}
+                                {| path = ".ros/work/queue.md"
+                                   beforeSha256 = sha256Text beforeProjection
+                                   afterSha256 = sha256Text afterProjection
+                                   content = afterProjection |} ] |}
+
+                      File.WriteAllText(transaction, JsonSerializer.Serialize record + "\n")
+
+                      match BacklogStateTransaction.recover root with
+                      | Error failure -> failwith failure.Message
+                      | Ok() ->
+                          Assert.equal afterQueue (File.ReadAllText queueFile)
+                          Assert.equal afterProjection (File.ReadAllText projectionFile)
                           Assert.isTrue (not (File.Exists transaction)) "expected Node-shaped journal completion") } ]

@@ -2,7 +2,7 @@
 id: JR-ROS-2026-A019
 title: ROS F# application migration execution journal
 status: active
-version: 1.5.0
+version: 1.6.0
 research_area: repository-operating-system
 author_agent: openai-codex
 created: 2026-09-07
@@ -17,6 +17,7 @@ evidence_ids:
   - EV-ROS-2026-A032
   - EV-ROS-2026-A033
   - EV-ROS-2026-A034
+  - EV-ROS-2026-A035
 hypothesis_ids:
   - HY-ROS-2026-A021
   - HY-ROS-2026-A022
@@ -127,6 +128,8 @@ invented.
 | MIG-D016 | MIG-07 | initial F# block guard rejected whitespace-only reasons while Node accepts them | characterization mismatch found by adversarial source comparison | introduced | changed absence semantics from whitespace to empty; added differential coverage for both empty and whitespace values; policy tightening requires a separate intentional decision |
 | MIG-D017 | MIG-05 work persistence | first recovery builds exposed unconstrained .NET overloads, a record-label collision between artifact/work failures, and filesystem exceptions outside typed outcomes | introduced boundary/representation defects | introduced | constrained boundary types, annotated artifact fixtures, wrapped prepare/recover reads, and added corrupt-journal rejection; final narrow build has zero warnings/errors and 30 tests pass |
 | MIG-D018 | MIG-05 production integration | direct typed-test command selected the default Debug output after only Release had been built | agent execution mistake | introduced | reran with explicit `--configuration Release --no-build`; 31/31 typed tests passed; pin configuration in direct verification commands |
+| MIG-D019 | MIG-05 backlog persistence | adding a nominally distinct backlog write record made the existing unannotated F# work-write test helper infer the new type | introduced representation/test defect | introduced | annotated both helper return types explicitly; next build succeeded with zero warnings/errors and all 34 typed tests passed |
+| MIG-D020 | MIG-05 backlog verification | first complete gate's read-only F# repository smoke rejected stale evidence/journal registries after new canonical records were added | verification-order finding; generated projection stale | introduced by unbuilt canonical evidence changes | ran the configured registry build, confirmed current projections, and reran the unchanged complete gate; all 147 tests passed |
 
 # Observations
 
@@ -215,6 +218,17 @@ decisions and effects. Telemetry can be mutated before journal preparation and
 backlog has a distinct queue/projection unit, so MIG-05 remains open for those
 store-specific recovery designs.
 
+## MIG-05 — backlog recovery and serialization
+
+Added a separate `backlog-state` journal for queue JSON followed by its Markdown
+projection. The production Node and typed F# implementations share the exact
+record shape. Production backlog operations now hold `work-protocol` over the
+whole read/modify/write sequence rather than only replacing individual files.
+Partial replay and divergence rejection pass in both runtimes, and a
+multi-process test retains all eight concurrent captures. The final complete
+gate passes 147 tests. Attachments remain outside the journal with
+file-before-reference ordering.
+
 # Decisions and rationale
 
 `DF-ROS-2026-A027` records the accepted boundary and rejected alternatives. The
@@ -242,5 +256,5 @@ added; no production authority source was removed or redirected.
 
 # Highest-value next step
 
-Complete the current governed closeout, then finish MIG-05 backlog and telemetry
-recovery semantics before moving more stateful authority.
+Complete the current governed closeout, then finish MIG-05 telemetry recovery
+semantics before moving more stateful authority.

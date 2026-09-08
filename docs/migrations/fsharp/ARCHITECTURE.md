@@ -127,6 +127,21 @@ preparation, so backlink/finalization validation detects—but does not
 automatically repair—an interruption in that earlier interval. Backlog and
 telemetry require bounded store-specific recovery designs.
 
+## Backlog-state recovery seam
+
+The third MIG-05 sub-slice gives the captured backlog its own bounded recovery
+unit: authoritative `.ros/work/queue.json` followed by derived
+`.ros/work/queue.md`. Node and F# share a versioned, hash-preconditioned journal
+contract. Production capture, update, attachment-reference, and backlog
+transition operations now hold `work-protocol` across the complete
+read/modify/write cycle, and live transitions acquire that same capability.
+
+The unit deliberately excludes live context/events, telemetry, and attachment
+bytes. Attachment content is written before its queue reference, preserving the
+existing failure direction: interruption can leave an orphan but not a missing
+referenced file. The Markdown file remains a rebuildable projection and is
+regenerated on backlog changes, not claimed as independent authority.
+
 ## State architecture
 
 | Lifecycle | Closed state now | Authority | Migration treatment |

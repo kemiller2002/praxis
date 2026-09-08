@@ -151,3 +151,21 @@ Canonical raw execution evidence is
 | complete suite before closeout | 140 passed, 0 failed | 92 Node + 7 Python + 31 F# + 10 Node-driven differential/smoke tests |
 | production state writer changes | Node live-work event/context writer adopts shared recovery journal under existing lock | source and cross-runtime tests |
 | provider model/token/cache/cost | unavailable/not captured | no runtime observation; no values inferred |
+
+## MIG-05 backlog-persistence continuation
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260908T122549568Z-b1bcf1e1.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-08T12:25:49.568Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-backlog-persistence` / `10f44ef` | ROS Git baseline |
+| new typed/production tests | 3 / 4 | test source and focused runner output |
+| focused gates | 34 F# and 32 Node work tests passed, zero failed | direct typed and Node test execution |
+| concurrency proof | eight concurrent `ros add` processes; eight final unique queue IDs | production test fixture |
+| successful builds before closeout | 1 | .NET build, zero warnings/errors |
+| failed builds before closeout | 1 | nominal F# write-record ambiguity in an unannotated existing test helper; repaired with explicit types |
+| complete test attempts | 2: first 146 passed/1 failed; second 147 passed/0 failed | first read-only smoke detected stale evidence/journal registries; configured rebuild then unchanged rerun passed |
+| final complete suite | 147 passed, 0 failed | 96 Node + 7 Python + 34 F# + 10 Node-driven differential/smoke tests |
+| provider model/token/cache/cost | unavailable/not captured | no runtime observation; no values inferred |

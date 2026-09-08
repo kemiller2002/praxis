@@ -17,6 +17,10 @@ type WorkStateWrite =
     { Path: string
       Content: string }
 
+type BacklogStateWrite =
+    { Path: string
+      Content: string }
+
 [<RequireQualifiedAccess>]
 module WorkOperations =
     let decideTransition request = WorkTransition.decide request

@@ -283,6 +283,24 @@
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "MIG-05-BACKLOG-PERSISTENCE",
+      "title": "Add bounded recovery for backlog queue and Markdown projection",
+      "description": null,
+      "tags": [
+        "fsharp",
+        "migration",
+        "persistence"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-08T12:25:49.460Z",
+      "updatedAt": "2026-09-08T12:25:49.513Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
