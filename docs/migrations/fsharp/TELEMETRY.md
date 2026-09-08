@@ -201,3 +201,19 @@ Canonical raw execution evidence is
 | failed focused tests before closeout | 1 | no-write guard succeeded but test helper did not model an absent execution directory; helper repaired and unchanged guard reran successfully |
 | final complete suite | 157 passed, 0 failed | 100 Node + 7 Python + 40 F# + 10 Node-driven differential/smoke tests |
 | provider model/token/cache/cost | unavailable/not captured | no runtime observation; no values inferred |
+
+## MIG-07 work-orchestration continuation
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260908T181145717Z-9fbd14f5.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-08T18:11:45.717Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-work-orchestration` / `0dd3198` | Git |
+| typed planner tests | 4 new; 44 total F# tests pass | direct typed runner |
+| production differential | all five legal item/event projections plus detailed rejection output pass | Node-driven F# differential |
+| failed builds | 3 | compiler found ambiguous record and overload inference; explicit type annotations repaired each |
+| complete suite | 169 passed, 0 failed: 104 Node, 7 Python, 44 F#, 14 differential/smoke | `npm run test:all` |
+| production mutations | none | shadow CLI only; Node remains state-changing authority |
+| provider model/token/cache/cost | unavailable/not captured | no provider usage snapshot was exposed; no values inferred |

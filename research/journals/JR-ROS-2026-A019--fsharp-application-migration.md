@@ -2,7 +2,7 @@
 id: JR-ROS-2026-A019
 title: ROS F# application migration execution journal
 status: active
-version: 1.8.0
+version: 1.9.0
 research_area: repository-operating-system
 author_agent: openai-codex
 created: 2026-09-07
@@ -20,6 +20,7 @@ evidence_ids:
   - EV-ROS-2026-A035
   - EV-ROS-2026-A036
   - EV-ROS-2026-A037
+  - EV-ROS-2026-A038
 hypothesis_ids:
   - HY-ROS-2026-A021
   - HY-ROS-2026-A022
@@ -257,6 +258,21 @@ for a pure rename. Git emits a rename representation that does not key directly
 to the normalized destination, so ROS correctly preserves per-path line stats
 as unavailable while retaining aggregate rename count and both paths. The test
 was repaired without inventing a measurement.
+
+## MIG-07 — live-work orchestration planning
+
+Added a pure F# plan above the existing transition decision. It projects the
+updated work item, semantic event, and ordered telemetry intents from supplied
+clock/Git/config/evidence observations without performing effects. Four typed
+tests and a production differential over all five legal edges pass. A final
+contract review caught that the first JSON encoder collapsed typed rejection
+details to a reason string; the encoder now retains state/action or missing
+evidence and an explicit CLI test proves it.
+
+Three initial compiler attempts exposed ambiguous record inference and JSON/CLI
+overload inference; explicit boundary annotations repaired them. The complete
+gate passes 169 tests. Evidence-path I/O, whole-context/multi-item planning,
+backlog promotion, and production authority remain open.
 
 # Decisions and rationale
 

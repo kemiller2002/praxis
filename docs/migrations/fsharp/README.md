@@ -43,6 +43,7 @@ dotnet src/Ros.Cli/bin/Release/net10.0/ros-fs.dll registry build --dry-run
 dotnet src/Ros.Cli/bin/Release/net10.0/ros-fs.dll registry check
 dotnet src/Ros.Cli/bin/Release/net10.0/ros-fs.dll git status --json
 dotnet src/Ros.Cli/bin/Release/net10.0/ros-fs.dll work decide --state active --action complete --required implementation --required tests --provided implementation --json
+dotnet src/Ros.Cli/bin/Release/net10.0/ros-fs.dll work plan --id TASK-PLAN --type feature --state active --action complete --occurred-at 2026-09-08T18:30:00Z --required implementation --evidence implementation=src/example.fs
 ```
 
 `npm run build:fsharp` disables persistent build servers and uses one build
@@ -57,5 +58,7 @@ generated. Work and telemetry stores remain under `.ros/`.
 `test:fsharp` runs typed unit/architecture tests and Node-driven differential
 tests. They compare artifact registry bytes/findings and Git status paths,
 two-character statuses, rename origins, clean/unavailable state, and all 16
-live-work state/action pairs plus block/evidence rejection behavior.
+live-work state/action pairs plus block/evidence rejection behavior. The work
+plan differential also compares item and event projections for all five legal
+transition edges.
 These are compatibility gates, not an authority switch.

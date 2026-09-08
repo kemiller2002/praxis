@@ -112,6 +112,19 @@ result. It is not a state-changing command and does not claim that evidence
 paths exist. Application/effect orchestration and comparative persisted
 context/event behavior remain required before a production switch.
 
+The next MIG-07 sub-slice adds a pure orchestration plan. Given a typed current
+item, requested action, configured target local state, observed clock, evidence,
+Git paths, repository/protocol identity, and telemetry capability, it returns
+either the full rejection or a planned item projection, semantic event, and
+ordered telemetry intents. Five legal-edge differentials match the production
+Node item/event projections field-for-field. The planner does not generate
+event/execution IDs, inspect evidence paths, acquire locks, or write state.
+
+This separation makes the use-case decision independently testable without
+creating a second source of truth. Whole-context planning, evidence-path
+capabilities, backlog promotion, and effect execution remain MIG-07 work. The
+framework-dependent shadow is not called by installed ROS pending distribution.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

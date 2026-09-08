@@ -16,7 +16,8 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   `updateWork`, and `attachFile`.
 - Invariants and guards: `BACKLOG_TRANSITIONS`, `TRANSITIONS`,
   `SEMANTIC_STATES`, `WORK_ID_RE`, completion-evidence checks, and
-  `effectiveStatus` in `tools/ros_cli.mjs`.
+  `effectiveStatus` in `tools/ros_cli.mjs`; typed transition and orchestration
+  planning in `Ros.Domain.Work`.
 - Capabilities / authority: `contextView` returns allowed actions and required
   evidence; file-adapter scopes are checked by `validateAdapterRequest`.
 - Important effects and effect contracts: atomic JSON/text and a local
@@ -37,6 +38,8 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 - Local behavior tests: `tests/work-protocol.test.mjs` and
   `tests/ros-server.test.mjs`; the typed Git seam is exercised by
   `tests/Ros.Tests/GitTests.fs` and `tests/git-fsharp-differential.test.mjs`.
+- Shadow orchestration tests: `tests/Ros.Tests/WorkPlanTests.fs` and the legal
+  item/event projection differential in `tests/work-fsharp-differential.test.mjs`.
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
 - Integration/live verification: `./ros status`, `./ros work context ID`, and
@@ -66,5 +69,6 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 - Last checked against implementation: 2026-09-08
 - Known gaps: backlog and live work intentionally remain separate recovery
   units; telemetry effects occur before event/context journal preparation; the
-  state-changing application handler remains Node-owned pending MIG-07 and the
-  distribution decision.
+  F# planner does not yet own evidence-path checks, whole-context/multi-item
+  effects, backlog promotion, or state-changing execution. Production remains
+  Node-owned pending those slices and the distribution decision.

@@ -19,7 +19,7 @@ open Ros.Infrastructure.Git
 let Version = "0.2.0-shadow"
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide --state STATE --action ACTION [--reason TEXT] [--required TYPE] [--provided TYPE] [--json]"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide --state STATE --action ACTION [--reason TEXT] [--required TYPE] [--provided TYPE] [--json] | work plan --id ID --type TYPE --state STATE --action ACTION --occurred-at TIME [options]"
 
 let private parseRoot (arguments: string array) =
     let values = ResizeArray<string>(arguments)
@@ -170,6 +170,66 @@ let private runWorkDecision arguments =
         eprintfn "ERROR work decide requires a valid --state and --action"
         2
 
+let private parseEvidence (value: string) : WorkEvidence option =
+    match value.Split('=', 2) with
+    | [| evidenceType; path |] when evidenceType.Length > 0 && path.Length > 0 ->
+        Some
+            { Type = evidenceType
+              Path = path }
+    | _ -> None
+
+let private defaultLocalState (action: WorkAction) =
+    match action with
+    | WorkAction.Begin
+    | WorkAction.Resume -> "active"
+    | WorkAction.Block -> "blocked"
+    | WorkAction.Complete -> "complete"
+
+let private runWorkPlan arguments =
+    let state = optionValue "--state" arguments |> Option.bind parseWorkState
+    let action = optionValue "--action" arguments |> Option.bind parseWorkAction
+    let workItem = optionValue "--id" arguments
+    let workType = optionValue "--type" arguments
+    let occurredAt = optionValue "--occurred-at" arguments
+    let currentEvidence = optionValues "--current-evidence" arguments |> List.map parseEvidence
+    let providedEvidence = optionValues "--evidence" arguments |> List.map parseEvidence
+
+    match state, action, workItem, workType, occurredAt with
+    | Some current, Some requested, Some workItemId, Some itemType, Some timestamp
+        when currentEvidence |> List.forall Option.isSome
+             && providedEvidence |> List.forall Option.isSome ->
+        let request =
+            { Item =
+                { Id = workItemId
+                  WorkType = itemType
+                  LocalState = optionValue "--local-state" arguments |> Option.defaultValue (WorkDecisionContract.stateName current)
+                  SemanticState = current
+                  Evidence = currentEvidence |> List.choose id
+                  BlockReason = optionValue "--current-block-reason" arguments
+                  UpdatedAt = optionValue "--updated-at" arguments
+                  CompletedAt = optionValue "--completed-at" arguments
+                  TelemetryExecutionIds = optionValues "--telemetry-id" arguments }
+              Action = requested
+              TargetLocalState = optionValue "--target-local-state" arguments |> Option.defaultValue (defaultLocalState requested)
+              BlockReason = optionValue "--reason" arguments
+              RequiredEvidence = optionValues "--required" arguments |> Set.ofList
+              ProvidedEvidence = providedEvidence |> List.choose id
+              Repository = optionValue "--repository" arguments |> Option.defaultValue "repository"
+              ProtocolVersion = optionValue "--protocol-version" arguments |> Option.defaultValue "1.0.0"
+              OccurredAt = timestamp
+              ChangedPaths = optionValues "--path" arguments
+              TelemetryEnabled = arguments |> List.contains "--telemetry-enabled" }
+
+        let outcome = WorkOperations.planTransition request
+        printf "%s" (WorkPlanContract.renderJson outcome)
+
+        match outcome with
+        | WorkPlanOutcome.Planned _ -> 0
+        | WorkPlanOutcome.Rejected _ -> 1
+    | _ ->
+        eprintfn "ERROR work plan requires valid --id, --type, --state, --action, --occurred-at, and TYPE=PATH evidence"
+        2
+
 let private dispatch root arguments =
     let repository = FileArtifactRepository.create root
     let gitRepository = ProcessGitRepository.create root
@@ -193,6 +253,7 @@ let private dispatch root arguments =
     | "git" :: "status" :: rest when rest |> List.forall ((=) "--json") ->
         runGitStatus (rest |> List.contains "--json") gitRepository
     | "work" :: "decide" :: rest -> runWorkDecision rest
+    | "work" :: "plan" :: rest -> runWorkPlan rest
     | _ ->
         eprintfn "%s" usage
         2

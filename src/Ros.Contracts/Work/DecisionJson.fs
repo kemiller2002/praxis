@@ -19,6 +19,24 @@ module WorkDecisionContract =
         | WorkAction.Resume -> "resume"
         | WorkAction.Complete -> "complete"
 
+    let writeRejection (writer: System.Text.Json.Utf8JsonWriter) rejection =
+        match rejection with
+        | TransitionRejection.IllegalTransition(state, action) ->
+            writer.WriteString("reason", "illegal-transition")
+            writer.WriteString("state", stateName state)
+            writer.WriteString("action", actionName action)
+            writer.WriteStartArray("missingEvidence")
+            writer.WriteEndArray()
+        | TransitionRejection.BlockReasonRequired ->
+            writer.WriteString("reason", "block-reason-required")
+            writer.WriteStartArray("missingEvidence")
+            writer.WriteEndArray()
+        | TransitionRejection.MissingEvidence missing ->
+            writer.WriteString("reason", "missing-evidence")
+            writer.WriteStartArray("missingEvidence")
+            missing |> List.iter writer.WriteStringValue
+            writer.WriteEndArray()
+
     let renderJson decision =
         JsonRendering.renderIndented (fun writer ->
             writer.WriteStartObject()
@@ -33,24 +51,7 @@ module WorkDecisionContract =
                 writer.WriteString("outcome", "rejected")
                 writer.WriteNull("targetState")
                 writer.WriteStartObject("rejection")
-
-                match rejection with
-                | TransitionRejection.IllegalTransition(state, action) ->
-                    writer.WriteString("reason", "illegal-transition")
-                    writer.WriteString("state", stateName state)
-                    writer.WriteString("action", actionName action)
-                    writer.WriteStartArray("missingEvidence")
-                    writer.WriteEndArray()
-                | TransitionRejection.BlockReasonRequired ->
-                    writer.WriteString("reason", "block-reason-required")
-                    writer.WriteStartArray("missingEvidence")
-                    writer.WriteEndArray()
-                | TransitionRejection.MissingEvidence missing ->
-                    writer.WriteString("reason", "missing-evidence")
-                    writer.WriteStartArray("missingEvidence")
-                    missing |> List.iter writer.WriteStringValue
-                    writer.WriteEndArray()
-
+                writeRejection writer rejection
                 writer.WriteEndObject()
 
             writer.WriteEndObject())

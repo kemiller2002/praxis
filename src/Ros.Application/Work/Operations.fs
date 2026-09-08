@@ -24,3 +24,4 @@ type BacklogStateWrite =
 [<RequireQualifiedAccess>]
 module WorkOperations =
     let decideTransition request = WorkTransition.decide request
+    let planTransition request = WorkTransitionPlanning.plan request

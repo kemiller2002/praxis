@@ -53,6 +53,52 @@ function fsharpDecision(state, action, options = {}) {
   return { status: result.status, json: JSON.parse(result.stdout), stderr: result.stderr };
 }
 
+function fsharpPlan(item, event, state, action) {
+  const args = [
+    fsharpCli, "work", "plan",
+    "--id", item.id,
+    "--type", item.type,
+    "--state", state,
+    "--action", action,
+    "--occurred-at", event.occurredAt,
+    "--repository", event.repository,
+    "--protocol-version", event.protocolVersion
+  ];
+  if (event.reason !== undefined) args.push("--reason", event.reason);
+  for (const evidence of event.evidence ?? []) args.push("--evidence", `${evidence.type}=${evidence.path}`);
+  for (const changedPath of event.paths ?? []) args.push("--path", changedPath);
+  const result = spawnSync("dotnet", args, { cwd: repositoryRoot, encoding: "utf8" });
+  return { status: result.status, json: JSON.parse(result.stdout), stderr: result.stderr };
+}
+
+function normalizedItem(item) {
+  return {
+    id: item.id,
+    type: item.type,
+    state: item.state,
+    semanticState: item.semanticState,
+    evidence: item.evidence,
+    blockReason: item.blockReason ?? null,
+    updatedAt: item.updatedAt ?? null,
+    completedAt: item.completedAt ?? null,
+    telemetryExecutionIds: item.telemetryExecutionIds ?? []
+  };
+}
+
+function normalizedEvent(event) {
+  return {
+    type: event.type,
+    workItem: event.workItem,
+    repository: event.repository,
+    protocolVersion: event.protocolVersion,
+    occurredAt: event.occurredAt,
+    reason: event.reason ?? null,
+    evidence: event.evidence ?? [],
+    paths: event.paths ?? [],
+    telemetryExecutions: event.telemetryExecutions ?? []
+  };
+}
+
 test("F# live-work decision matrix matches the Node transition guard", (t) => {
   for (const state of states) {
     for (const action of actions) {
@@ -83,4 +129,40 @@ test("F# block-reason guard preserves Node empty versus whitespace behavior", (t
     const fsharp = fsharpDecision("active", "block", { reason });
     assert.equal(fsharp.status === 0, node.allowed, JSON.stringify({ reason, node, fsharp }));
   }
+});
+
+test("F# work plans match production item and event projections for every legal edge", (t) => {
+  const cases = [
+    ["ready", "begin"],
+    ["ready", "block"],
+    ["active", "block"],
+    ["blocked", "resume"],
+    ["active", "complete"]
+  ];
+  for (const [state, action] of cases) {
+    const root = fixture(t, state);
+    const result = transition(root, action, ["TASK-MATRIX"], { reason: action === "block" ? "reason" : undefined, evidence: [] });
+    const item = result.context.workItems.find((entry) => entry.id === "TASK-MATRIX");
+    const event = result.events[0];
+    const fsharp = fsharpPlan(item, event, state, action);
+    assert.equal(fsharp.status, 0, `${state}/${action}: ${fsharp.stderr}`);
+    assert.deepEqual(fsharp.json.plan.item, normalizedItem(item), `${state}/${action} item`);
+    assert.deepEqual(fsharp.json.plan.event, normalizedEvent(event), `${state}/${action} event`);
+    assert.deepEqual(fsharp.json.plan.telemetry, []);
+  }
+});
+
+test("F# work plan rejection retains missing-evidence obligations", () => {
+  const result = spawnSync("dotnet", [
+    fsharpCli, "work", "plan", "--id", "TASK-PLAN", "--type", "feature",
+    "--state", "active", "--action", "complete", "--occurred-at", "2026-09-08T18:30:00Z",
+    "--required", "tests"
+  ], { cwd: repositoryRoot, encoding: "utf8" });
+  assert.equal(result.status, 1, result.stderr);
+  assert.deepEqual(JSON.parse(result.stdout), {
+    schemaVersion: "1.0.0",
+    outcome: "rejected",
+    plan: null,
+    rejection: { reason: "missing-evidence", missingEvidence: ["tests"] }
+  });
 });
