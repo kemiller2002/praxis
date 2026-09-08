@@ -9,5 +9,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Artifacts/FrontMatter.fs" />
+    <Compile Include="Artifacts/FileArtifactRepository.fs" />
   </ItemGroup>
 </Project>

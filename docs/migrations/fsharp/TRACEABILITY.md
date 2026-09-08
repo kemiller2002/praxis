@@ -6,8 +6,8 @@ decision are accepted.
 
 | Responsibility | Current requirement/authority | SDE constraint | F# authority | Verification/status |
 |---|---|---|---|---|
-| Canonical Markdown and generated registries | `DF-ROS-2026-A001`, A002; Node/Python behavior | boundary preservation; explicit semantic authority | `Ros.Domain.Artifacts`, `Ros.Application.Artifacts` | MIG-03/04 planned; old/new byte differential required |
-| Artifact ID/kind/status/confidence/reference validation | schemas, `tools/ros_cli.mjs`, `tools/ros_cli.py` | pure decision; explicit codecs; negative proof | `Ros.Domain.Artifacts` + front-matter contract mapper | fixtures and malformed/reference/adversarial cases planned |
+| Canonical Markdown and generated registries | `DF-ROS-2026-A001`, A002; Node/Python behavior | boundary preservation; explicit semantic authority | `Ros.Domain.Artifacts`, `Ros.Application.Artifacts`, `Ros.Contracts.Artifacts` | MIG-03/04 complete; Node/F# byte differential and repeatability pass; Node remains authority |
+| Artifact ID/kind/status/confidence/reference validation | schemas, `tools/ros_cli.mjs`, `tools/ros_cli.py` | pure decision; explicit codecs; negative proof | `Ros.Domain.Artifacts` + `Ros.Infrastructure.Artifacts.FrontMatter` | valid/invalid frozen fixtures, malformed front matter, reference/status/ID rejection, and current-repo smoke pass |
 | Backlog triage and live-state authority | `DF-ROS-2026-A006`, A008 | legal transitions, guards, evidence, retry | future `Ros.Domain.Work` | deferred behind MIG-05/06 |
 | Completion evidence and Git attribution | A006; `ros.json`; work kernel | effects isolated; unavailable distinct from clean | future Work/Application and typed Git port | deferred |
 | Execution lifecycle and telemetry | `DF-ROS-2026-A010`; metric catalog | stable closed semantics + open extensions/provenance | future `Ros.Domain.Execution/Metrics` | deferred; Node remains authority |
@@ -22,12 +22,13 @@ decision are accepted.
 | Acceptance | Requirement source | Planned proof |
 |---|---|---|
 | Node remains production authority | `DF-ROS-2026-A027` | unchanged `ros`/starter launchers and package manifest diff |
-| Canonical inputs never modified | A001 | before/after hashes in isolated differential cases |
-| Registries deterministic and equivalent | A001/A002/current behavior | byte comparison across Node/Python/F# and repeated build |
-| Invalid boundary data rejected explicitly | A002/SDE verification method | positive and negative malformed ID/status/reference/front-matter cases |
+| Canonical inputs never modified | A001 | before/after hashes in isolated fixture differential case |
+| Registries deterministic and equivalent | A001/A002/current behavior | Node/Python/F# fixture bytes, F# repeat build, and current-repository smoke |
+| Invalid boundary data rejected explicitly | A002/SDE verification method | positive/negative frozen fixture; malformed front matter; status/reference/ID cases |
 | Domain depends inward only | SDE-DOCTRINE-003/008 | project-reference architecture check plus intentional rejection |
 | Public encoding deliberate | SDE-DOCTRINE-004 | golden JSON bytes and explicit writer tests |
-| Rollback remains available | migration non-goal/safety | execute Node gates after F# additions; no authority switch |
+| Partial effect is not hidden | SDE-DOCTRINE-004 | injected second-write failure yields typed `Indeterminate` incomplete outcome |
+| Rollback remains available | migration non-goal/safety | Node gates remain; no authority switch or legacy deletion |
 
-Traceability will be updated with exact symbols and evidence ID A028 after the
-slice lands.
+The final migration evidence record `EV-ROS-2026-A028` records the exact
+commands, results, and remaining authority boundary.

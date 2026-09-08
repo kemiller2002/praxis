@@ -38,6 +38,9 @@ The current shadow CLI is:
 
 ```bash
 dotnet src/Ros.Cli/bin/Release/net10.0/ros-fs.dll --version
+dotnet src/Ros.Cli/bin/Release/net10.0/ros-fs.dll artifacts validate --json
+dotnet src/Ros.Cli/bin/Release/net10.0/ros-fs.dll registry build --dry-run
+dotnet src/Ros.Cli/bin/Release/net10.0/ros-fs.dll registry check
 ```
 
 `npm run build:fsharp` disables persistent build servers and uses one build
@@ -48,3 +51,8 @@ material local cost.
 No document in this directory changes the source-of-truth rules in accepted
 ROS decisions. Canonical research records remain Markdown; registry JSON is
 generated. Work and telemetry stores remain under `.ros/`.
+
+`test:fsharp` runs typed unit/architecture tests and a Node-driven differential
+test. The latter builds the same fixture registries with Node and F#, compares
+their exact bytes and characterized invalid findings, and smoke-checks the
+current repository. It is a compatibility gate, not an authority switch.

@@ -45,6 +45,22 @@ Ros.Contracts is the explicit versioned boundary vocabulary used at edges.
 - Code is feature-local inside those boundaries (`Artifacts` first), rather
   than one file per former script or one giant program.
 
+## Implemented artifact slice
+
+`Ros.Domain.Artifacts` owns the artifact vocabulary, identifier/kind policy,
+reference checks, and registry projection. `Ros.Application.Artifacts` owns
+the validation/check/build use cases and explicit `Failed` versus
+`Indeterminate` effect outcomes. `Ros.Infrastructure.Artifacts` owns confined
+filesystem discovery, the compatibility front-matter parser, and one-file
+atomic registry replacement. `Ros.Contracts` owns deliberate JSON renderers;
+the CLI only maps typed outcomes to command output and exits.
+
+The slice's commands are `ros-fs artifacts validate [--json]`, `ros-fs
+registry build [--dry-run]`, and `ros-fs registry check`. It intentionally
+does not claim the broader Node `validate` contract, which additionally owns
+work, telemetry, and stale-registry checks. F# registry check is artifact-only
+until those semantic areas have their own slices.
+
 ## State architecture
 
 | Lifecycle | Closed state now | Authority | Migration treatment |
@@ -107,3 +123,6 @@ startup, size, offline/update, checksum, version-selection, and rollback data.
 5. A feature slice includes semantics, handler, effect boundary, CLI, tests,
    telemetry/traceability, compatibility, and rollback.
 6. Architecture verification must include a demonstrated rejection path.
+7. A registry-file replacement is atomic per file, but a multi-registry build
+   is not a transaction; an incomplete outcome preserves written/pending sets
+   for explicit recovery work in MIG-05.

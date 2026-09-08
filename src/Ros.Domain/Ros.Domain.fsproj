@@ -4,5 +4,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Artifacts/Model.fs" />
+    <Compile Include="Artifacts/Policy.fs" />
+    <Compile Include="Artifacts/Projection.fs" />
   </ItemGroup>
 </Project>

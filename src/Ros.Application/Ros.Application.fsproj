@@ -8,5 +8,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Artifacts/Operations.fs" />
   </ItemGroup>
 </Project>

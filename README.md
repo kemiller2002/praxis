@@ -41,6 +41,23 @@ exit code for malformed front matter, invalid or duplicate IDs, broken
 references, invalid lifecycle values, nonreciprocal supersession, filename/ID
 mismatches, and stale registries.
 
+### F# migration shadow
+
+The production `./ros` command remains the Node authority. ROS also carries a
+repository-local .NET 10 F# shadow for typed artifact validation and registry
+projection; it is exercised in CI but is not packaged or selected by
+bootstrap. Build and compare it with:
+
+```bash
+npm run test:fsharp
+dotnet src/Ros.Cli/bin/Release/net10.0/ros-fs.dll artifacts validate --json
+dotnet src/Ros.Cli/bin/Release/net10.0/ros-fs.dll registry check
+```
+
+The staged architecture, compatibility evidence, and next slices are in
+[`docs/migrations/fsharp/`](docs/migrations/fsharp/README.md). Do not replace
+`./ros` or remove an adapter without a later accepted authority-switch record.
+
 ## Work protocol
 
 ROS 1.0 provides provider-neutral work context, legal `begin`, `block`, `resume`, and `complete` transitions, configurable completion evidence, durable attribution events, and idempotent file-adapter publication. A repository-local backlog (`ros add`, `ros work list|ready|show|start`) lets work be captured cheaply before it has an externally-assigned ID, and graduates into this same protocol via `work start`. See [`docs/work-protocol.md`](docs/work-protocol.md) and, for a UI over the same backlog, [`docs/web-interface.md`](docs/web-interface.md) (`npm run web`).

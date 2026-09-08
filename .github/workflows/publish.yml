@@ -31,6 +31,10 @@ jobs:
         with:
           python-version: "3.11"
 
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
       - name: Use an npm CLI with trusted-publishing support
         run: |
           npm install --global npm@11
@@ -42,7 +46,7 @@ jobs:
 
       - name: Test and validate
         run: |
-          npm test
+          npm run test:all
           ./ros registry check
           ./ros validate
         env:

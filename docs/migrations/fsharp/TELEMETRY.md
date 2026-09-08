@@ -11,7 +11,7 @@ is the human projection; it never converts unavailable observations to zero.
 | T0 experiment start | 2026-09-07T20:31:41.590Z | WI-0011 execution started; clean Git baseline; experiment question/classification recorded |
 | T1 instrumentation/bootstrap complete | 2026-09-08T00:08:50Z | authorities read; capability states inspected; baseline tests/builds recorded |
 | T2 semantic foundation established | 2026-09-08T00:19:38Z | inventory/decomposition frozen; SDE map/manifests; hypotheses/experiment/architecture decision authored |
-| T3 first vertical slice complete | pending | artifact shadow capability and local tests |
+| T3 first vertical slice complete | 2026-09-08T06:14:34Z | MIG-03/04 typed artifact shadow, fixture parity, and rejection tests complete |
 | T4 implementation complete | pending | docs/traceability/CI and committed slices |
 | T5 verification complete | pending | heterogeneous gates and review |
 | T6 final evidence | pending | work completion, registries, clean/pushed handoff |
@@ -34,6 +34,20 @@ is the human projection; it never converts unavailable observations to zero.
 | context window/utilization | supported-unavailable or unknown per raw execution | runtime capability record |
 | tool-call totals/categories | unknown unless explicitly recorded later | no trustworthy aggregate exposed at T0 |
 | Declared Context Surface/CER/Discovery Expansion baseline | missing | repository had no project SDE map/manifests at T0; not reconstructed retrospectively |
+
+## T3 measurements
+
+| Metric | Value/capability | Provenance |
+|---|---|---|
+| F# production projects | 5 | `Ros.slnx` project graph |
+| F# shadow commands | 3 capability groups: artifact validate, registry build, registry check | `Ros.Cli.Program` |
+| F# test cases | 8 passed, 0 failed | `npm run test:fsharp` output |
+| Node-driven F# differential cases | 3 passed, 0 failed | same command; fixture bytes, current-repository smoke, usage rejection |
+| F# build attempts after slice implementation | 5 invoked: 4 compiler successes, 1 compiler failure; two later Node differential failures repaired | command output: one test syntax issue, one Node strict-mode test issue, and one assertion-shape issue; no production semantic failure |
+| compiler warnings/errors on successful build | 0 / 0 | .NET build output |
+| baseline canonical inputs in F# fixture build | unchanged hashes | F# typed test |
+| new F# external process call sites | 0 in Domain/Application; CLI uses no shell/Git/network operation | source review |
+| unavailable provider token/cost/model measurements | unchanged from T0 | environment did not expose observations |
 
 The final evidence record will add mechanically derived commits/files/LOC,
 build/test attempts, failures, repair loops, defect counts, migration counts,

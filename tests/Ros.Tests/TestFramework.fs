@@ -21,6 +21,9 @@ module Assert =
         | [ value ] -> value
         | _ -> failwith $"Expected one value but received {values.Length}: {values}"
 
+    let isTrue condition message =
+        if not condition then failwith message
+
 [<RequireQualifiedAccess>]
 module TestRunner =
     let run (tests: TestCase list) =

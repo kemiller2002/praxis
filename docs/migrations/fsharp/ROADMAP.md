@@ -33,8 +33,8 @@ Dependency ordering overrides a raw score where state safety requires it.
 | MIG-00 baseline, inventory, preregistration, navigation | complete | immutable tag; T0–T2; complete inventory; semantic map/manifests; frozen hypotheses/fixtures | additive only |
 | MIG-01 bounded distribution decision | complete | repository-local framework-dependent .NET 10 shadow; production consumer choice explicitly deferred | Node/npm stays authoritative |
 | MIG-02 architecture-enforced F# skeleton | complete | five production projects; version/help; dependency rules with positive and rejection proof | remove shadow projects to roll back |
-| MIG-03 artifact boundary/fixtures | ready | explicit front matter, IDs, kind/status/confidence/reference shapes; path-specific findings; golden fixtures | Node/Python remain oracles |
-| MIG-04 artifact validation and registry projection | ready | `ros-fs artifacts validate`, `registry build/check`; byte parity; no canonical mutation; repeatability | no launcher switch; Python deprecation only after evidence |
+| MIG-03 artifact boundary/fixtures | complete | explicit front matter, IDs, kind/status/confidence/reference shapes; path-specific findings; frozen valid/invalid fixtures | Node/Python remain oracles |
+| MIG-04 artifact validation and registry projection | complete | `ros-fs artifacts validate`, `registry build/check`; Node/F# byte parity; no canonical mutation; repeated build and partial-write outcome proof | no launcher switch; Python deprecation only after further evidence |
 | MIG-05 transactional file persistence/recovery | deferred | declared write sets, version checks, lock order, crash recovery, retry-safe outcomes | retain current file stores and Node writer |
 | MIG-06 unified Git provenance | deferred | typed clean/changed/unavailable result, rename/copy correctness, failure tests | current Git calls retained until all consumers move |
 | MIG-07 work lifecycle/evidence | deferred | typed backlog/live states, legal transitions, evidence guards, comparative state/files/events | shadow then explicit authority switch |
