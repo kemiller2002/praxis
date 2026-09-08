@@ -12,8 +12,8 @@ is the human projection; it never converts unavailable observations to zero.
 | T1 instrumentation/bootstrap complete | 2026-09-08T00:08:50Z | authorities read; capability states inspected; baseline tests/builds recorded |
 | T2 semantic foundation established | 2026-09-08T00:19:38Z | inventory/decomposition frozen; SDE map/manifests; hypotheses/experiment/architecture decision authored |
 | T3 first vertical slice complete | 2026-09-08T06:14:34Z | MIG-03/04 typed artifact shadow, fixture parity, and rejection tests complete |
-| T4 implementation complete | pending | docs/traceability/CI and committed slices |
-| T5 verification complete | pending | heterogeneous gates and review |
+| T4 implementation complete | 2026-09-08T06:18:00Z | slice committed; root CI/publish gate provisions .NET; migration docs updated |
+| T5 verification complete | 2026-09-08T06:23:23Z | full unrestricted suite, TypeScript builds, and documented self-review complete |
 | T6 final evidence | pending | work completion, registries, clean/pushed handoff |
 
 ## Starting measurements
@@ -48,6 +48,16 @@ is the human projection; it never converts unavailable observations to zero.
 | baseline canonical inputs in F# fixture build | unchanged hashes | F# typed test |
 | new F# external process call sites | 0 in Domain/Application; CLI uses no shell/Git/network operation | source review |
 | unavailable provider token/cost/model measurements | unchanged from T0 | environment did not expose observations |
+
+## Running execution summary before finalization
+
+| Metric | Observed aggregate | Interpretation |
+|---|---:|---|
+| test executions | 4 | baseline, fixture preregistration, listener-restricted complete run, unrestricted complete run |
+| tests passed / failed | 272 / 14 | the 14 failures are retained as sandbox loopback restrictions; unrestricted final run itself was 105 passed / 0 failed |
+| build executions / failures | 9 / 1 | includes baseline, F# slice attempts, and final TypeScript builds; one early F# test syntax failure was repaired |
+| agent self-corrections | 4 | D010–D013 correction categories recorded in the journal |
+| provider token/cost values | unavailable or unknown | not inferred from these engineering aggregates |
 
 The final evidence record will add mechanically derived commits/files/LOC,
 build/test attempts, failures, repair loops, defect counts, migration counts,

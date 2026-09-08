@@ -2,11 +2,11 @@
 id: HY-ROS-2026-A023
 title: Shadow migration preserves required ROS contracts
 research_area: repository-operating-system
-status: active
+status: supported
 confidence: low
 created: 2026-09-07
 author_agent: openai-codex
-supporting_evidence: [EV-ROS-2026-A018]
+supporting_evidence: [EV-ROS-2026-A018, EV-ROS-2026-A028]
 contradicting_evidence: []
 related_theories: []
 supersedes: []
@@ -37,6 +37,8 @@ authority falsifies the per-slice claim.
 
 ## Current assessment
 
-Active and untested at preregistration. Exact human wording is informative but
-is not declared equivalent to structured finding identity unless existing
-callers prove it is a contract.
+Supported for the bounded artifact slice: Node/F# registry bytes and the ten
+preregistered path/field/message identities matched on controlled fixtures;
+repeat build and current-repository smoke passed while Node remained rollback.
+Exact human wording remains informative rather than generally equivalent;
+see `EV-ROS-2026-A028`.

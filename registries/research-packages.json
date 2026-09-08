@@ -176,8 +176,8 @@
   },
   {
     "author_agent": "openai-codex",
-    "completion": "draft",
-    "confidence": "low",
+    "completion": "complete",
+    "confidence": "medium",
     "created": "2026-09-07",
     "discipline": [
       "software-architecture",
@@ -197,6 +197,7 @@
     "related_documents": [
       "RP-ROS-2026-A017",
       "EV-ROS-2026-A018",
+      "EV-ROS-2026-A028",
       "EX-ROS-2026-A020",
       "JR-ROS-2026-A019",
       "DF-ROS-2026-A027"
@@ -205,7 +206,7 @@
       "repository-operating-system"
     ],
     "research_area": "repository-operating-system",
-    "status": "draft",
+    "status": "accepted",
     "superseded_by": [],
     "supersedes": [],
     "tags": [
@@ -216,7 +217,7 @@
       "execution"
     ],
     "title": "ROS F# application migration execution and handoff",
-    "updated": "2026-09-07",
-    "version": "0.1.0"
+    "updated": "2026-09-08",
+    "version": "0.2.0"
   }
 ]

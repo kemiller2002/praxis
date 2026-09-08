@@ -2,11 +2,11 @@
 id: HY-ROS-2026-A021
 title: Typed semantic authority reduces duplicated ROS rule sites
 research_area: repository-operating-system
-status: active
+status: supported
 confidence: low
 created: 2026-09-07
 author_agent: openai-codex
-supporting_evidence: [EV-ROS-2026-A018]
+supporting_evidence: [EV-ROS-2026-A018, EV-ROS-2026-A028]
 contradicting_evidence: []
 related_theories: []
 supersedes: []
@@ -46,5 +46,7 @@ the same number of independent authorities.
 
 ## Current assessment
 
-Active and untested at preregistration. Baseline duplication is observed in
-`EV-ROS-2026-A018`; no F# treatment existed when this record was created.
+Limited support from the artifact slice: stable artifact rules now have one F#
+typed path in the shadow, while Node/Python are retained only as comparison
+oracles. This does not measure a future authority switch or prove the 30%
+threshold for ROS overall; see `EV-ROS-2026-A028`.

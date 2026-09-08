@@ -28,11 +28,12 @@
     "path": "research/hypotheses/HY-ROS-2026-A021--typed-semantic-authority-reduces-duplication.md",
     "related_theories": [],
     "research_area": "repository-operating-system",
-    "status": "active",
+    "status": "supported",
     "superseded_by": [],
     "supersedes": [],
     "supporting_evidence": [
-      "EV-ROS-2026-A018"
+      "EV-ROS-2026-A018",
+      "EV-ROS-2026-A028"
     ],
     "tags": [
       "fsharp",
@@ -51,11 +52,12 @@
     "path": "research/hypotheses/HY-ROS-2026-A022--typed-states-reduce-invalid-state-defects.md",
     "related_theories": [],
     "research_area": "repository-operating-system",
-    "status": "active",
+    "status": "supported",
     "superseded_by": [],
     "supersedes": [],
     "supporting_evidence": [
-      "EV-ROS-2026-A018"
+      "EV-ROS-2026-A018",
+      "EV-ROS-2026-A028"
     ],
     "tags": [
       "fsharp",
@@ -74,11 +76,12 @@
     "path": "research/hypotheses/HY-ROS-2026-A023--shadow-migration-preserves-contracts.md",
     "related_theories": [],
     "research_area": "repository-operating-system",
-    "status": "active",
+    "status": "supported",
     "superseded_by": [],
     "supersedes": [],
     "supporting_evidence": [
-      "EV-ROS-2026-A018"
+      "EV-ROS-2026-A018",
+      "EV-ROS-2026-A028"
     ],
     "tags": [
       "fsharp",
@@ -101,7 +104,8 @@
     "superseded_by": [],
     "supersedes": [],
     "supporting_evidence": [
-      "EV-ROS-2026-A018"
+      "EV-ROS-2026-A018",
+      "EV-ROS-2026-A028"
     ],
     "tags": [
       "sde",

@@ -2,11 +2,11 @@
 id: HY-ROS-2026-A022
 title: Typed states and outcomes reduce invalid-state defects
 research_area: repository-operating-system
-status: active
+status: supported
 confidence: low
 created: 2026-09-07
 author_agent: openai-codex
-supporting_evidence: [EV-ROS-2026-A018]
+supporting_evidence: [EV-ROS-2026-A018, EV-ROS-2026-A028]
 contradicting_evidence: []
 related_theories: []
 supersedes: []
@@ -38,6 +38,8 @@ implementation.
 
 ## Current assessment
 
-Active and untested. The first artifact slice tests validated identifiers,
-kind/status combinations, and explicit findings; it does not generalize to the
-future work/telemetry state machines.
+Limited support: the typed artifact boundary and explicit dependency outcomes
+rejected malformed data and represented an injected partial write as
+`Indeterminate`, detected by compiler and behavior tests. This is not evidence
+about future work/telemetry state machines or persisted invalid-state rates;
+see `EV-ROS-2026-A028`.

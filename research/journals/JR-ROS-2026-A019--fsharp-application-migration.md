@@ -2,11 +2,11 @@
 id: JR-ROS-2026-A019
 title: ROS F# application migration execution journal
 status: active
-version: 1.0.0
+version: 1.1.0
 research_area: repository-operating-system
 author_agent: openai-codex
 created: 2026-09-07
-updated: 2026-09-07
+updated: 2026-09-08
 related_mission: WI-0011
 related_package: RP-ROS-2026-A029
 evidence_ids:
@@ -66,6 +66,30 @@ roadmap, traceability, status, and telemetry documents. No F# or other
 implementation source had been added. The pre-treatment architecture challenge
 narrowed distribution and contract scope.
 
+## T3 — first vertical slice complete — 2026-09-08T06:14:34Z
+
+Completed MIG-03/MIG-04 as a repository-local F# shadow. The artifact feature
+now has typed domain policy/projection, application use cases with explicit
+dependency outcomes, filesystem/front-matter infrastructure, explicit JSON
+renderers, CLI mapping, and tests. Node remained the source of production
+authority; there was no dual-write or launcher switch.
+
+## T4 — implementation complete — 2026-09-08T06:18:00Z
+
+Committed `30fcc6e` for the capability slice. Root validation and publication
+workflows now provision .NET and run the additive `test:all` gate; starter
+workflows remain Node-only platform declarations. Documentation and
+traceability identify scoped F# commands and retained adapters.
+
+## T5 — verification and self-review complete — 2026-09-08T06:23:23Z
+
+The unrestricted complete suite passed: 87 Node, 7 Python, 8 F#, and 3
+Node-driven differential/smoke tests, plus both TypeScript builds. The F# build
+reported zero warnings/errors. The self-review rechecked the scope against the
+Node artifact implementation, output bytes, failure outcomes, adapter thinness,
+and authority boundary. It is expressly self-review: the three attempted
+parallel reviewers had exhausted their quotas before a final separate review.
+
 # Discovery and defect journal
 
 | ID | Checkpoint | Symptom/detection | Root cause/class | Legacy or introduced | Repair/verification/prevention |
@@ -80,6 +104,9 @@ narrowed distribution and contract scope.
 | MIG-D008 | T2 | decision draft contained two malformed generated word fragments; immediate readback | agent execution mistake | introduced | repaired with `apply_patch`, searched for fragments, and require readback/validation after large patches |
 | MIG-D009 | post-T2 | concurrent initial `dotnet` build/run plus sandboxed restore produced silent stalls; process/build output and missing assets | environment/toolchain execution issue | mission environment | approved one explicit restore, shut down build servers, then built sequentially with shared compilation/build parallelism disabled; document deterministic npm command |
 | MIG-D010 | post-T2 | architecture rejection test expected one finding but correctly received both graph mismatch and outward-Domain findings | introduced verification expectation defect | introduced | changed assertion to require both findings; rebuilt and reran 2/2 tests; guard rejection remained effective |
+| MIG-D011 | T3 | initial F# test helper had invalid `and` type/module syntax; compiler diagnostic; later Node differential used strict-mode reserved parameter and compared enriched JSON against stripped Node findings | introduced test representation defects | introduced | replaced with a recursive helper; renamed the parameter; compared preregistered semantic fields. Final 8 F# + 3 differential tests pass; require compile/run after test generation |
+| MIG-D012 | T5 | sandboxed complete suite produced 14 `EPERM` loopback-listener failures in HTTP tests | environment/platform issue | mission environment | reran exact suite with approved local listener capability; all 87 Node tests passed. Preserve failed run as environment evidence rather than suppressing it |
+| MIG-D013 | T5 | `./ros validate` rejected telemetry provenance source type `agent-journal` after metric recording | introduced boundary/provenance defect | introduced | corrected it to registered `agent-report`; rerun validation proves the source-vocabulary guardrail fires rather than silently accepting a new label |
 
 # Observations
 
@@ -106,6 +133,17 @@ test-expectation repair, the solution built with zero warnings/errors and both
 architecture tests passed. No production launcher, package payload, starter
 profile, workflow, or ROS state behavior changed.
 
+## MIG-03/MIG-04 — artifact shadow slice
+
+Implemented feature-local `Artifacts` modules rather than a line-for-line
+translation. `ArtifactValue` keeps scalar/list/map data explicit;
+`ArtifactPolicy` holds ID, filename, status, confidence, duplicate, reference,
+and reciprocal rules; `ArtifactOperations` distinguishes rejected data,
+external failure, and indeterminate partial write. The filesystem adapter makes
+each registry replacement atomic but returns an explicit incomplete result
+across a multi-file write. Explicit JSON writers, frozen fixtures, and a
+Node-driven differential test preserve observed registry output.
+
 # Decisions and rationale
 
 `DF-ROS-2026-A027` records the accepted boundary and rejected alternatives. The
@@ -120,13 +158,18 @@ governance and their measurements are reported honestly.
 - Baseline context navigation metrics cannot be reconstructed because map and
   manifests did not exist at T0.
 - No hosted GitHub/npm or consumer-platform run was available at T1.
+- Current hosted-action syntax was source-checked against the official
+  `actions/setup-dotnet` documentation; a hosted workflow execution remains
+  unobserved.
 
-# Files changed through T2
+# Files changed through T5
 
-Only navigation, evidence, experiment, hypothesis, decision, migration-doc, and
-ROS work/telemetry records. No implementation source changed before T2.
+Before T2: navigation, evidence, experiment, hypothesis, decision,
+migration-doc, and ROS work/telemetry records. After T2: the additive F# shadow,
+its tests, workflow provisioning, documentation, and result evidence were
+added; no production authority source was removed or redirected.
 
 # Highest-value next step
 
-Commit the pre-treatment baseline/preregistration, then implement MIG-02–MIG-04
-as a shadow artifact-management slice with architecture and differential tests.
+Complete T6 closeout, then prioritize MIG-05 transaction/recovery semantics
+before moving work or telemetry writers.

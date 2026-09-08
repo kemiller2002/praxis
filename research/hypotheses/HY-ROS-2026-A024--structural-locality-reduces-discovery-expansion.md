@@ -6,7 +6,7 @@ status: active
 confidence: very-low
 created: 2026-09-07
 author_agent: openai-codex
-supporting_evidence: [EV-ROS-2026-A018]
+supporting_evidence: [EV-ROS-2026-A018, EV-ROS-2026-A028]
 contradicting_evidence: []
 related_theories: []
 supersedes: []
@@ -37,6 +37,7 @@ maintenance duration/rework rises without a quality benefit.
 
 ## Current assessment
 
-Very Low confidence. No project `SDE-MAP.md` or feature manifest existed at T0,
-so baseline CER/Discovery Expansion is missing rather than retrospectively
-manufactured. This mission can establish instrumentation, not a causal result.
+Still very low confidence. The map/manifests were used to constrain the artifact
+slice, but no matched baseline CER/Discovery Expansion exists. The result is
+instrumentation and a handoff boundary, not a causal result; see
+`EV-ROS-2026-A028`.

@@ -2,7 +2,7 @@
 id: EX-ROS-2026-A020
 title: F# artifact-management shadow migration
 research_area: repository-operating-system
-status: active
+status: completed
 created: 2026-09-07
 author_agent: openai-codex
 tests_hypotheses:
@@ -113,7 +113,14 @@ sources.
 
 ## Results
 
-Pending treatment. This preregistration was committed before F# source.
+MIG-03/MIG-04 completed without an authority switch. Valid F# fixtures had no
+findings; the invalid fixture's ten preregistered path/field/message identities
+matched Node; all eight F# registries matched Node bytes; canonical fixture
+Markdown hashes were unchanged; a repeated build had zero changes; the current
+repository passed F# artifact validation and registry check. An injected
+second-write failure remained explicit as an indeterminate incomplete outcome.
+The full unrestricted suite passed 87 Node, 7 Python, 8 F#, and 3
+differential/smoke tests, plus both TypeScript builds. See `EV-ROS-2026-A028`.
 
 ## Threats to validity
 
@@ -134,7 +141,10 @@ machine-readable comparison evidence, including failures.
 
 ## Conclusion
 
-Pending.
+The bounded claim is supported: a typed F# artifact shadow can preserve the
+measured deterministic projection contract while the Node authority stays in
+place. It does not establish a general production-switch, transaction, hosted
+workflow, or consumer-distribution conclusion.
 
 ## Registry updates required
 

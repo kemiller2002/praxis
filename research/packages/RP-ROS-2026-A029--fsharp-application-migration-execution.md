@@ -8,18 +8,19 @@ discipline:
   - developer-tooling
   - empirical-software-engineering
 author_agent: openai-codex
-version: 0.1.0
-confidence: low
-completion: draft
-status: draft
+version: 0.2.0
+confidence: medium
+completion: complete
+status: accepted
 priority: high
 created: 2026-09-07
-updated: 2026-09-07
+updated: 2026-09-08
 related_projects:
   - repository-operating-system
 related_documents:
   - RP-ROS-2026-A017
   - EV-ROS-2026-A018
+  - EV-ROS-2026-A028
   - EX-ROS-2026-A020
   - JR-ROS-2026-A019
   - DF-ROS-2026-A027
@@ -33,7 +34,8 @@ keywords: [typed-domain, vertical-slice, differential-testing, telemetry]
 
 - **Theory version:** no ROS theory record is changed by this execution.
 - **Knowledge-base version:** baseline
-  `6a188073474f5088decf9617f4539625e4bdb451`; SDE release `1.1.1`.
+  `6a188073474f5088decf9617f4539625e4bdb451`; implementation slice commit
+  `30fcc6e`; SDE release `1.1.1`.
 - **Highest-confidence areas:** current executable inventory and sources of truth.
 - **Lowest-confidence areas:** consumer F# distribution and longitudinal SDE
   outcome effects.
@@ -47,8 +49,14 @@ keywords: [typed-domain, vertical-slice, differential-testing, telemetry]
 
 # Executive Summary
 
-Draft until T6. Baseline, archaeology, semantic decomposition, preregistration,
-and target architecture are complete; implementation and final evidence follow.
+ROS now has a repository-local .NET 10 F# shadow application for the first
+safe vertical slice: typed artifact validation and deterministic registry
+projection. Node remains production authority. The slice was selected because
+its writes are disposable projections and because Node/Python behavior could be
+characterized before treatment. It passed byte-level Node/F# comparison,
+positive/negative/adversarial tests, current-repository smoke checks, and the
+legacy full suite. This supports a per-slice compatibility conclusion, not a
+claim that production authority or consumer distribution is ready.
 
 # Original Objective
 
@@ -73,21 +81,36 @@ See `docs/migrations/fsharp/ARCHITECTURE.md`.
 
 # Key Discoveries
 
-Pending final synthesis from A018, A028, and the journal.
+- ROS has six evidenced semantic areas—artifacts, work, execution telemetry,
+  bootstrap/distribution, project administration, and automation/release—that
+  cut across its physical scripts.
+- A feature-local F# split can own artifact semantics without copying script
+  boundaries or switching the Node launcher.
+- Explicit `Failed` and `Indeterminate` effect outcomes made a partial
+  multi-file registry write visible in tests; atomic replacement of one file
+  does not supply a transaction for the set.
+- Baseline navigation lacked a project SDE map/manifests, so discovery metrics
+  begin at T2 and cannot support a before/after causal result.
 
 # Evidence Registry
 
 - `EV-ROS-2026-A015`: prior operational baseline.
 - `EV-ROS-2026-A018`: immutable implementation-mission inventory.
-- `EV-ROS-2026-A028`: pending implementation and verification evidence.
+- `EV-ROS-2026-A028`: implementation and heterogeneous verification results.
 
 # Hypothesis Registry
 
-`HY-ROS-2026-A021` through `HY-ROS-2026-A026`; conclusions pending.
+`HY-ROS-2026-A021` through `HY-ROS-2026-A026`. A021–A023 receive limited
+per-slice support; A024 is instrumented only; A025/A026 were not treated.
 
 # Failed Assumptions
 
-Pending final synthesis.
+- A locally installed .NET SDK does not demonstrate portable consumer
+  distribution.
+- A one-file atomic writer does not imply atomicity for the complete registry
+  projection.
+- A successful sandbox test command does not prove HTTP integration when the
+  sandbox forbids loopback listeners; the unrestricted rerun was necessary.
 
 # Open Questions
 
@@ -96,7 +119,14 @@ stateful authority switching, hub trust hardening, and absent Time Entry rules.
 
 # Recommended Next Research
 
-Pending final verification.
+1. Design and characterize MIG-05 transactional filesystem recovery before
+   moving a stateful work or telemetry writer.
+2. Establish a typed Git boundary that distinguishes unavailable from clean.
+3. Migrate work lifecycle as a shadow state/evidence slice with controlled
+   repository fixtures and transition comparison.
+4. Test .NET distribution on declared macOS/Linux/Windows consumer targets
+   before considering a `./ros` authority switch.
+5. Obtain a genuinely separate adversarial review and hosted workflow evidence.
 
 # Research Backlog
 
@@ -114,7 +144,8 @@ the next core persistence design if they do not change production authority.
 
 # Risks
 
-See A018, A027, and the final evidence record.
+See A018, A027, and A028. The immediate technical risk is cross-file persistence
+and Git outcome ambiguity, not the lack of additional F# conversion volume.
 
 # Cross-Discipline Opportunities
 
@@ -140,7 +171,10 @@ heterogeneous verification but one slice cannot establish universal claims.
 
 ## New principle candidates
 
-Pending evidence.
+For a bounded deterministic projection, a typed shadow plus frozen fixtures
+and a legacy differential can establish a useful compatibility gate without an
+authority switch. This is a candidate only; it has not been tested for stateful
+or externally observable operations.
 
 ## Deprecated principles
 
@@ -148,7 +182,9 @@ None.
 
 ## Confidence changes
 
-Pending evidence.
+Confidence in the artifact-slice boundary increased from low to medium.
+Confidence in consumer distribution and migration-wide defect reduction remains
+low/very low because no matching evidence was collected.
 
 ## Predictions created
 
@@ -156,7 +192,8 @@ See hypotheses A021–A026.
 
 ## Predictions invalidated
 
-Pending evidence.
+None; unavailable or untested predictions remain open rather than treated as
+validated.
 
 ## Required theory-registry updates
 
@@ -166,21 +203,24 @@ None at this stage.
 
 - **Primary sources:** repository source, contracts, state, Git, commands, and
   test output.
-- **Independent sources:** Python implementation; independent review pending.
-- **Counterexamples reviewed:** invalid fixtures and architecture rejection path
-  pending execution.
+- **Independent sources:** Python implementation for overlapping artifact
+  behavior; external hosted-action documentation; independent review unavailable.
+- **Counterexamples reviewed:** invalid fixture, malformed front matter,
+  architecture rejection, unknown command, stale registry, and partial-write
+  outcomes.
 - **Competing viewpoints reviewed:** Node retention, mechanical/full rewrite,
   database/event store, workflow/UI rewrite, and schema-only validation.
-- **Hypotheses tested:** pending.
-- **Failed hypotheses:** pending.
-- **Research completeness:** draft.
-- **Confidence gain:** pending.
-- **Open questions reduced:** inventory and first-slice boundary; distribution
-  remains unresolved.
+- **Hypotheses tested:** A021–A024, with A024 instrumentation only.
+- **Failed hypotheses:** none established; A025/A026 not treated.
+- **Research completeness:** complete for the authorized artifact slice.
+- **Confidence gain:** bounded artifact compatibility and typed-effect evidence.
+- **Open questions reduced:** inventory, first-slice boundary, and F# artifact
+  behavior; distribution remains unresolved.
 
 # Research Debt
 
-- **Missing evidence:** T3–T6 implementation/verification and consumer platforms.
+- **Missing evidence:** hosted workflow, consumer platforms, stateful writers,
+  and independent adversarial review.
 - **Missing experiments:** stateful lifecycle, persistence recovery, distribution.
 - **Missing disciplines:** security review of hub boundary.
 - **Weak areas:** hosted workflow and external consumer observations.
@@ -191,7 +231,9 @@ None at this stage.
 
 # Repository Updates
 
-Pending final inventory.
+See `git show 30fcc6e` for the implementation slice: five F# projects, eight
+F# tests, three differential/smoke tests, additive CI provisioning, and
+migration documentation. No legacy script was removed or rerouted.
 
 # Website Updates
 
@@ -204,7 +246,11 @@ manifest. Do not infer that planned F# modules are production authority.
 
 # Handoff Instructions
 
-Pending final clean-state commands and next work.
+Start from `SDE-MAP.md`, then A018, A028, A027, this package, and the
+artifact feature manifest. Run `npm run test:all`, the TypeScript builds,
+`./ros registry check`, and `./ros validate`. Do not claim the shadow is
+production authority. Begin MIG-05 only after recording a new work item and
+characterizing crash/retry/version behavior.
 
 # Research Journal
 
@@ -219,8 +265,8 @@ Checkpoint and metric projection: `docs/migrations/fsharp/TELEMETRY.md`.
 - [x] Required metadata is present for a draft.
 - [x] Important preregistration claims reference evidence and hypothesis IDs.
 - [x] Competing alternatives were considered.
-- [ ] Failed assumptions and treatment results are finalized.
-- [ ] Theory impacts are assessed from actual evidence.
+- [x] Failed assumptions and treatment results are finalized.
+- [x] Theory impacts are assessed from actual evidence.
 - [x] Research debt is explicit.
 - [ ] Registries are updated at T6.
 - [ ] The next agent can continue from a clean, verified handoff.

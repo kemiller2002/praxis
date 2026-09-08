@@ -456,14 +456,42 @@
     },
     {
       "metricId": "agent.self_corrections",
-      "status": "unknown",
-      "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-09-07T20:31:41.608Z",
+      "status": "supported-observed",
+      "reason": "normalized measurement recorded",
+      "discoveredAt": "2026-09-08T06:29:01.234Z",
       "source": {
-        "type": "environment",
-        "name": "runtime-identity",
-        "mechanism": "whitelisted-codex-environment"
-      }
+        "type": "agent-report",
+        "name": "JR-ROS-2026-A019",
+        "mechanism": "MIG-D013-provenance-guardrail"
+      },
+      "lastAssessedAt": "2026-09-08T06:29:01.234Z",
+      "recordedAt": "2026-09-08T06:29:01.235Z",
+      "history": [
+        {
+          "status": "unknown",
+          "reason": "runtime capability not reported or mapped",
+          "source": {
+            "type": "environment",
+            "name": "runtime-identity",
+            "mechanism": "whitelisted-codex-environment"
+          },
+          "discoveredAt": "2026-09-07T20:31:41.608Z",
+          "lastAssessedAt": "2026-09-07T20:31:41.608Z",
+          "recordedAt": "2026-09-07T20:31:41.608Z"
+        },
+        {
+          "status": "supported-observed",
+          "reason": "normalized measurement recorded",
+          "source": {
+            "type": "agent-report",
+            "name": "JR-ROS-2026-A019",
+            "mechanism": "MIG-D010-through-MIG-D011"
+          },
+          "discoveredAt": "2026-09-08T06:27:56.789Z",
+          "lastAssessedAt": "2026-09-08T06:27:56.789Z",
+          "recordedAt": "2026-09-08T06:27:56.789Z"
+        }
+      ]
     },
     {
       "metricId": "agent.failed_approaches",
@@ -1066,14 +1094,14 @@
       "metricId": "tests.executions",
       "status": "supported-observed",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-09-08T00:38:51.248Z",
+      "discoveredAt": "2026-09-08T06:27:56.208Z",
       "source": {
         "type": "external-tool",
-        "name": "node-test",
-        "mechanism": "node-test-summary"
+        "name": "unrestricted-npm-run-test-all",
+        "mechanism": "full-suite-with-loopback"
       },
-      "lastAssessedAt": "2026-09-08T00:38:51.248Z",
-      "recordedAt": "2026-09-08T00:38:51.248Z",
+      "lastAssessedAt": "2026-09-08T06:27:56.208Z",
+      "recordedAt": "2026-09-08T06:27:56.208Z",
       "history": [
         {
           "status": "unknown",
@@ -1098,6 +1126,30 @@
           "discoveredAt": "2026-09-07T20:41:02.932Z",
           "lastAssessedAt": "2026-09-07T20:41:02.932Z",
           "recordedAt": "2026-09-07T20:41:02.932Z"
+        },
+        {
+          "status": "supported-observed",
+          "reason": "normalized measurement recorded",
+          "source": {
+            "type": "external-tool",
+            "name": "node-test",
+            "mechanism": "node-test-summary"
+          },
+          "discoveredAt": "2026-09-08T00:38:51.248Z",
+          "lastAssessedAt": "2026-09-08T00:38:51.248Z",
+          "recordedAt": "2026-09-08T00:38:51.248Z"
+        },
+        {
+          "status": "supported-observed",
+          "reason": "normalized measurement recorded",
+          "source": {
+            "type": "external-tool",
+            "name": "sandbox-npm-run-test-all",
+            "mechanism": "loopback-listener-restricted"
+          },
+          "discoveredAt": "2026-09-08T06:27:55.915Z",
+          "lastAssessedAt": "2026-09-08T06:27:55.915Z",
+          "recordedAt": "2026-09-08T06:27:55.915Z"
         }
       ]
     },
@@ -1105,14 +1157,14 @@
       "metricId": "tests.passed",
       "status": "supported-observed",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-09-08T00:38:51.348Z",
+      "discoveredAt": "2026-09-08T06:27:56.307Z",
       "source": {
         "type": "external-tool",
-        "name": "node-test",
-        "mechanism": "node-test-summary"
+        "name": "unrestricted-npm-run-test-all",
+        "mechanism": "node-python-fsharp-differential-summary"
       },
-      "lastAssessedAt": "2026-09-08T00:38:51.348Z",
-      "recordedAt": "2026-09-08T00:38:51.348Z",
+      "lastAssessedAt": "2026-09-08T06:27:56.307Z",
+      "recordedAt": "2026-09-08T06:27:56.307Z",
       "history": [
         {
           "status": "unknown",
@@ -1137,6 +1189,30 @@
           "discoveredAt": "2026-09-07T20:41:03.036Z",
           "lastAssessedAt": "2026-09-07T20:41:03.036Z",
           "recordedAt": "2026-09-07T20:41:03.036Z"
+        },
+        {
+          "status": "supported-observed",
+          "reason": "normalized measurement recorded",
+          "source": {
+            "type": "external-tool",
+            "name": "node-test",
+            "mechanism": "node-test-summary"
+          },
+          "discoveredAt": "2026-09-08T00:38:51.348Z",
+          "lastAssessedAt": "2026-09-08T00:38:51.348Z",
+          "recordedAt": "2026-09-08T00:38:51.348Z"
+        },
+        {
+          "status": "supported-observed",
+          "reason": "normalized measurement recorded",
+          "source": {
+            "type": "external-tool",
+            "name": "sandbox-npm-run-test-all",
+            "mechanism": "loopback-listener-restricted"
+          },
+          "discoveredAt": "2026-09-08T06:27:56.015Z",
+          "lastAssessedAt": "2026-09-08T06:27:56.015Z",
+          "recordedAt": "2026-09-08T06:27:56.015Z"
         }
       ]
     },
@@ -1144,14 +1220,14 @@
       "metricId": "tests.failed",
       "status": "supported-observed",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-09-08T00:38:51.447Z",
+      "discoveredAt": "2026-09-08T06:27:56.404Z",
       "source": {
         "type": "external-tool",
-        "name": "node-test",
-        "mechanism": "node-test-summary"
+        "name": "unrestricted-npm-run-test-all",
+        "mechanism": "node-python-fsharp-differential-summary"
       },
-      "lastAssessedAt": "2026-09-08T00:38:51.447Z",
-      "recordedAt": "2026-09-08T00:38:51.447Z",
+      "lastAssessedAt": "2026-09-08T06:27:56.404Z",
+      "recordedAt": "2026-09-08T06:27:56.404Z",
       "history": [
         {
           "status": "unknown",
@@ -1176,6 +1252,30 @@
           "discoveredAt": "2026-09-07T20:41:03.137Z",
           "lastAssessedAt": "2026-09-07T20:41:03.137Z",
           "recordedAt": "2026-09-07T20:41:03.137Z"
+        },
+        {
+          "status": "supported-observed",
+          "reason": "normalized measurement recorded",
+          "source": {
+            "type": "external-tool",
+            "name": "node-test",
+            "mechanism": "node-test-summary"
+          },
+          "discoveredAt": "2026-09-08T00:38:51.447Z",
+          "lastAssessedAt": "2026-09-08T00:38:51.447Z",
+          "recordedAt": "2026-09-08T00:38:51.447Z"
+        },
+        {
+          "status": "supported-observed",
+          "reason": "normalized measurement recorded",
+          "source": {
+            "type": "external-tool",
+            "name": "sandbox-npm-run-test-all",
+            "mechanism": "loopback-listener-restricted"
+          },
+          "discoveredAt": "2026-09-08T06:27:56.111Z",
+          "lastAssessedAt": "2026-09-08T06:27:56.111Z",
+          "recordedAt": "2026-09-08T06:27:56.111Z"
         }
       ]
     },
@@ -1194,14 +1294,14 @@
       "metricId": "build.executions",
       "status": "supported-observed",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-09-07T20:41:03.238Z",
+      "discoveredAt": "2026-09-08T06:27:56.694Z",
       "source": {
         "type": "external-tool",
-        "name": "typescript-compiler",
-        "mechanism": "pre-execution-baseline-builds"
+        "name": "typescript-build",
+        "mechanism": "final-web-and-hub-builds"
       },
-      "lastAssessedAt": "2026-09-07T20:41:03.238Z",
-      "recordedAt": "2026-09-07T20:41:03.238Z",
+      "lastAssessedAt": "2026-09-08T06:27:56.694Z",
+      "recordedAt": "2026-09-08T06:27:56.694Z",
       "history": [
         {
           "status": "unknown",
@@ -1214,6 +1314,30 @@
           "discoveredAt": "2026-09-07T20:31:41.608Z",
           "lastAssessedAt": "2026-09-07T20:31:41.608Z",
           "recordedAt": "2026-09-07T20:31:41.608Z"
+        },
+        {
+          "status": "supported-observed",
+          "reason": "normalized measurement recorded",
+          "source": {
+            "type": "external-tool",
+            "name": "typescript-compiler",
+            "mechanism": "pre-execution-baseline-builds"
+          },
+          "discoveredAt": "2026-09-07T20:41:03.238Z",
+          "lastAssessedAt": "2026-09-07T20:41:03.238Z",
+          "recordedAt": "2026-09-07T20:41:03.238Z"
+        },
+        {
+          "status": "supported-observed",
+          "reason": "normalized measurement recorded",
+          "source": {
+            "type": "external-tool",
+            "name": "dotnet-build",
+            "mechanism": "fsharp-slice-build-attempts"
+          },
+          "discoveredAt": "2026-09-08T06:27:56.499Z",
+          "lastAssessedAt": "2026-09-08T06:27:56.499Z",
+          "recordedAt": "2026-09-08T06:27:56.499Z"
         }
       ]
     },
@@ -1221,14 +1345,14 @@
       "metricId": "build.failures",
       "status": "supported-observed",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-09-07T20:41:03.341Z",
+      "discoveredAt": "2026-09-08T06:27:56.597Z",
       "source": {
         "type": "external-tool",
-        "name": "typescript-compiler",
-        "mechanism": "pre-execution-baseline-builds"
+        "name": "dotnet-build",
+        "mechanism": "fsharp-slice-build-attempts"
       },
-      "lastAssessedAt": "2026-09-07T20:41:03.341Z",
-      "recordedAt": "2026-09-07T20:41:03.341Z",
+      "lastAssessedAt": "2026-09-08T06:27:56.597Z",
+      "recordedAt": "2026-09-08T06:27:56.597Z",
       "history": [
         {
           "status": "unknown",
@@ -1241,6 +1365,18 @@
           "discoveredAt": "2026-09-07T20:31:41.608Z",
           "lastAssessedAt": "2026-09-07T20:31:41.608Z",
           "recordedAt": "2026-09-07T20:31:41.608Z"
+        },
+        {
+          "status": "supported-observed",
+          "reason": "normalized measurement recorded",
+          "source": {
+            "type": "external-tool",
+            "name": "typescript-compiler",
+            "mechanism": "pre-execution-baseline-builds"
+          },
+          "discoveredAt": "2026-09-07T20:41:03.341Z",
+          "lastAssessedAt": "2026-09-07T20:41:03.341Z",
+          "recordedAt": "2026-09-07T20:41:03.341Z"
         }
       ]
     },
@@ -1790,6 +1926,226 @@
         "mechanism": "node-test-summary"
       },
       "collectedAt": "2026-09-08T00:38:51.447Z",
+      "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-36908bc224209bf0bda360cc",
+      "id": "tests.executions",
+      "value": 1,
+      "unit": "count",
+      "currency": null,
+      "quality": "observed",
+      "confidence": null,
+      "scope": "repository",
+      "aggregation": "sum",
+      "dimensions": {},
+      "pricing": null,
+      "source": {
+        "type": "external-tool",
+        "name": "sandbox-npm-run-test-all",
+        "mechanism": "loopback-listener-restricted"
+      },
+      "collectedAt": "2026-09-08T06:27:55.915Z",
+      "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-6ef53eef7acef1c831f1c837",
+      "id": "tests.passed",
+      "value": 73,
+      "unit": "count",
+      "currency": null,
+      "quality": "observed",
+      "confidence": null,
+      "scope": "repository",
+      "aggregation": "sum",
+      "dimensions": {},
+      "pricing": null,
+      "source": {
+        "type": "external-tool",
+        "name": "sandbox-npm-run-test-all",
+        "mechanism": "loopback-listener-restricted"
+      },
+      "collectedAt": "2026-09-08T06:27:56.015Z",
+      "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-c1104909e43e12e930e92dbd",
+      "id": "tests.failed",
+      "value": 14,
+      "unit": "count",
+      "currency": null,
+      "quality": "observed",
+      "confidence": null,
+      "scope": "repository",
+      "aggregation": "sum",
+      "dimensions": {},
+      "pricing": null,
+      "source": {
+        "type": "external-tool",
+        "name": "sandbox-npm-run-test-all",
+        "mechanism": "loopback-listener-restricted"
+      },
+      "collectedAt": "2026-09-08T06:27:56.111Z",
+      "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-50153b5db54322fda30bac5f",
+      "id": "tests.executions",
+      "value": 1,
+      "unit": "count",
+      "currency": null,
+      "quality": "observed",
+      "confidence": null,
+      "scope": "repository",
+      "aggregation": "sum",
+      "dimensions": {},
+      "pricing": null,
+      "source": {
+        "type": "external-tool",
+        "name": "unrestricted-npm-run-test-all",
+        "mechanism": "full-suite-with-loopback"
+      },
+      "collectedAt": "2026-09-08T06:27:56.208Z",
+      "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-8de1fdc6918d71706f3a029d",
+      "id": "tests.passed",
+      "value": 105,
+      "unit": "count",
+      "currency": null,
+      "quality": "observed",
+      "confidence": null,
+      "scope": "repository",
+      "aggregation": "sum",
+      "dimensions": {},
+      "pricing": null,
+      "source": {
+        "type": "external-tool",
+        "name": "unrestricted-npm-run-test-all",
+        "mechanism": "node-python-fsharp-differential-summary"
+      },
+      "collectedAt": "2026-09-08T06:27:56.307Z",
+      "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-ac75a291a5a0e1e19cff7c7c",
+      "id": "tests.failed",
+      "value": 0,
+      "unit": "count",
+      "currency": null,
+      "quality": "observed",
+      "confidence": null,
+      "scope": "repository",
+      "aggregation": "sum",
+      "dimensions": {},
+      "pricing": null,
+      "source": {
+        "type": "external-tool",
+        "name": "unrestricted-npm-run-test-all",
+        "mechanism": "node-python-fsharp-differential-summary"
+      },
+      "collectedAt": "2026-09-08T06:27:56.404Z",
+      "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-d2e69ffa6b13deda64da6909",
+      "id": "build.executions",
+      "value": 5,
+      "unit": "count",
+      "currency": null,
+      "quality": "observed",
+      "confidence": null,
+      "scope": "repository",
+      "aggregation": "sum",
+      "dimensions": {},
+      "pricing": null,
+      "source": {
+        "type": "external-tool",
+        "name": "dotnet-build",
+        "mechanism": "fsharp-slice-build-attempts"
+      },
+      "collectedAt": "2026-09-08T06:27:56.499Z",
+      "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-d9d29e7bba3bcf7709ac858d",
+      "id": "build.failures",
+      "value": 1,
+      "unit": "count",
+      "currency": null,
+      "quality": "observed",
+      "confidence": null,
+      "scope": "repository",
+      "aggregation": "sum",
+      "dimensions": {},
+      "pricing": null,
+      "source": {
+        "type": "external-tool",
+        "name": "dotnet-build",
+        "mechanism": "fsharp-slice-build-attempts"
+      },
+      "collectedAt": "2026-09-08T06:27:56.597Z",
+      "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-74dcce5fcaa98743cf263388",
+      "id": "build.executions",
+      "value": 2,
+      "unit": "count",
+      "currency": null,
+      "quality": "observed",
+      "confidence": null,
+      "scope": "repository",
+      "aggregation": "sum",
+      "dimensions": {},
+      "pricing": null,
+      "source": {
+        "type": "external-tool",
+        "name": "typescript-build",
+        "mechanism": "final-web-and-hub-builds"
+      },
+      "collectedAt": "2026-09-08T06:27:56.694Z",
+      "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-33b9a2778206d3ab786a72e3",
+      "id": "agent.self_corrections",
+      "value": 3,
+      "unit": "count",
+      "currency": null,
+      "quality": "observed",
+      "confidence": null,
+      "scope": "execution",
+      "aggregation": "sum",
+      "dimensions": {},
+      "pricing": null,
+      "source": {
+        "type": "agent-report",
+        "name": "JR-ROS-2026-A019",
+        "mechanism": "MIG-D010-through-MIG-D011"
+      },
+      "collectedAt": "2026-09-08T06:27:56.789Z",
+      "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-71354126bb8b0e60be3116bb",
+      "id": "agent.self_corrections",
+      "value": 1,
+      "unit": "count",
+      "currency": null,
+      "quality": "observed",
+      "confidence": null,
+      "scope": "execution",
+      "aggregation": "sum",
+      "dimensions": {},
+      "pricing": null,
+      "source": {
+        "type": "agent-report",
+        "name": "JR-ROS-2026-A019",
+        "mechanism": "MIG-D013-provenance-guardrail"
+      },
+      "collectedAt": "2026-09-08T06:29:01.234Z",
       "schemaVersion": "1.0.0"
     }
   ],
