@@ -247,6 +247,7 @@ test("npm tarball contains the executable and every scaffold source", (t) => {
   assert.ok(files.has("framework/REP-SPECIFICATION.md"));
   assert.ok(files.has("tools/ros_cli.mjs"));
   assert.ok(files.has("tools/ros_persistence.mjs"));
+  assert.ok(files.has("tools/ros_git.mjs"));
   assert.ok(files.has("starter/greenfield/ros"));
 
   for (const profile of ["greenfield", "project-administration"]) {

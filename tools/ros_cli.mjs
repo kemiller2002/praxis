@@ -3,8 +3,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { observeGitStatus, requireGitText, runGitText } from "./ros_git.mjs";
 import { readJson, withFileLock, writeJson, writeTextAtomic } from "./ros_persistence.mjs";
 import {
   TELEMETRY_ADAPTERS,
@@ -122,33 +122,28 @@ function workConfig(root) {
   return result;
 }
 
-function gitPaths(root, base = "HEAD") {
-  try {
-    const output = execFileSync("git", ["-C", root, "status", "--porcelain=v1", "-z", "--untracked-files=all"], { encoding: "utf8" });
-    const paths = output.split("\0").filter(Boolean).map((line) => {
-      const value = line.slice(3);
-      return value.includes(" -> ") ? value.split(" -> ").at(-1) : value;
-    });
-    const comparison = process.env.ROS_BASE_REF;
-    if (comparison) {
-      try {
-        execFileSync("git", ["-C", root, "cat-file", "-e", `${comparison}^{commit}`], {
-          stdio: ["ignore", "ignore", "ignore"]
-        });
-        const committed = execFileSync("git", ["-C", root, "diff", "--name-only", `${comparison}...HEAD`], {
-          encoding: "utf8",
-          stdio: ["ignore", "pipe", "ignore"]
-        });
-        paths.push(...committed.split(/\r?\n/).filter(Boolean));
-      } catch {
-        // A CI base ref can be absent in nested fixture repositories. Dirty paths
-        // remain authoritative there; only the unavailable committed range is skipped.
-      }
-    }
-    return [...new Set(paths)].sort();
-  } catch {
-    return [];
+function gitPaths(root) {
+  const observation = observeGitStatus(root);
+  if (observation.outcome === "unavailable") {
+    // Greenfield installation intentionally supports a directory before `git init`.
+    // Every other Git failure is indeterminate and must not look like a clean tree.
+    if (observation.failure.reason === "not-repository") return [];
+    const error = new Error(`${observation.failure.operation} unavailable: ${observation.failure.message}`);
+    error.gitFailure = observation.failure;
+    throw error;
   }
+  const paths = observation.changes.map((change) => change.path);
+  const comparison = process.env.ROS_BASE_REF;
+  if (comparison) {
+    const exists = runGitText(root, ["cat-file", "-e", `${comparison}^{commit}`]);
+    if (exists.outcome === "success") {
+      const committed = requireGitText(runGitText(root, ["diff", "--name-only", `${comparison}...HEAD`]));
+      paths.push(...committed.split(/\r?\n/).filter(Boolean));
+    }
+    // A CI base ref can be absent in nested fixture repositories. Dirty paths
+    // remain authoritative there; only the unavailable committed range is skipped.
+  }
+  return [...new Set(paths)].sort();
 }
 
 function globMatch(value, pattern) {
@@ -720,6 +715,7 @@ function transitionUnlocked(root, action, ids, options = {}) {
   const now = new Date().toISOString();
   const byId = new Map(context.workItems.map((item) => [item.id, item]));
   const events = [];
+  const observedGitPaths = action === "complete" || (action === "begin" && !context.startedAt) ? gitPaths(root) : [];
   for (const id of ids) {
     if (!WORK_ID_RE.test(id)) throw new Error(`invalid work-item ID '${id}'`);
     let item = byId.get(id);
@@ -810,7 +806,7 @@ function transitionUnlocked(root, action, ids, options = {}) {
       type: `work.${action === "begin" ? "started" : action === "complete" ? "completed" : action === "block" ? "blocked" : "resumed"}`,
       workItem: id, repository: config.repository, protocolVersion: config.protocolVersion,
       occurredAt: now, reason: options.reason, evidence: item.evidence,
-      paths: action === "complete" ? meaningfulPaths(root, gitPaths(root)).filter((p) => !(context.baselineDirtyPaths ?? []).includes(p)) : [],
+      paths: action === "complete" ? meaningfulPaths(root, observedGitPaths).filter((p) => !(context.baselineDirtyPaths ?? []).includes(p)) : [],
       telemetryExecutions: item.telemetryExecutionIds ?? [],
       publication: { status: "pending" }
     });
@@ -822,7 +818,7 @@ function transitionUnlocked(root, action, ids, options = {}) {
   context.updatedAt = now;
   if (action === "begin" && !context.startedAt) {
     context.startedAt = now;
-    context.baselineDirtyPaths = gitPaths(root).filter((item) => !context.workItems.some((work) => work.id === item));
+    context.baselineDirtyPaths = observedGitPaths.filter((item) => !context.workItems.some((work) => work.id === item));
   }
   commitWorkState(root, [
     { path: ".ros/events/events.jsonl", content: renderedEventLog(root, events) },
@@ -839,7 +835,18 @@ function workFindings(root) {
   const config = workConfig(root);
   if (!config.enforce) return [];
   const context = loadContext(root);
-  const changed = meaningfulPaths(root, gitPaths(root)).filter((item) => !(context.baselineDirtyPaths ?? []).includes(item));
+  let paths;
+  try {
+    paths = gitPaths(root);
+  } catch (error) {
+    if (!error.gitFailure) throw error;
+    return [{
+      path: ".git",
+      field: "work_items",
+      message: `cannot verify work attribution because ${error.gitFailure.operation} is unavailable: ${error.gitFailure.reason}`
+    }];
+  }
+  const changed = meaningfulPaths(root, paths).filter((item) => !(context.baselineDirtyPaths ?? []).includes(item));
   if (!changed.length) return [];
   const events = fs.existsSync(eventsPath(root)) ? fs.readFileSync(eventsPath(root), "utf8").split(/\r?\n/).filter(Boolean).map(JSON.parse) : [];
   const attributed = new Set(events.flatMap((event) => event.paths ?? []));

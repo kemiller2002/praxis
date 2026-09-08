@@ -103,6 +103,44 @@ test("work lifecycle automatically starts, Git-derives, and finalizes telemetry"
   assert.equal(ros(root, ["validate"]).status, 0);
 });
 
+test("telemetry records a Git rename once with origin provenance", (t) => {
+  const root = fixture(t);
+  fs.writeFileSync(path.join(root, "before.txt"), "rename me\n");
+  execFileSync("git", ["add", "before.txt"], { cwd: root });
+  execFileSync("git", ["commit", "-qm", "rename fixture"], { cwd: root });
+  assert.equal(ros(root, ["work", "begin", "TASK-GIT-TELEMETRY", "--type", "mechanical"]).status, 0);
+  execFileSync("git", ["mv", "before.txt", "after.txt"], { cwd: root });
+  const completed = ros(root, ["work", "complete", "TASK-GIT-TELEMETRY"]);
+  assert.equal(completed.status, 0, completed.output);
+  const record = executions(root, "TASK-GIT-TELEMETRY")[0];
+  assert.equal(metric(record, "git.files_renamed")[0].value, 1);
+  assert.deepEqual(record.repository.changeSummary.paths.find((entry) => entry.status === "R"), {
+    status: "R",
+    path: "after.txt",
+    from: "before.txt",
+    lineStats: null
+  });
+});
+
+test("telemetry keeps unavailable ending Git state distinct from zero", (t) => {
+  const root = fixture(t);
+  assert.equal(ros(root, ["work", "begin", "TASK-GIT-END-UNAVAILABLE", "--type", "mechanical"]).status, 0);
+  const execution = executions(root, "TASK-GIT-END-UNAVAILABLE")[0];
+  const isolatedBin = path.join(root, "isolated-bin");
+  fs.mkdirSync(isolatedBin);
+  fs.symlinkSync(process.execPath, path.join(isolatedBin, "node"));
+  const finalized = ros(root, ["telemetry", "finalize", execution.executionId], {
+    env: { ...process.env, PATH: isolatedBin }
+  });
+  assert.equal(finalized.status, 0, finalized.output);
+  const record = JSON.parse(finalized.output);
+  assert.equal(record.repository.end.available, false);
+  assert.deepEqual(metric(record, "git.ending_dirty_files"), []);
+  assert.equal(record.capabilities.find((entry) => entry.metricId === "git.ending_dirty_files").status, "supported-unavailable");
+  assert.equal(record.repository.changeSummary.available, false);
+  assert.equal(record.repository.changeSummary.reason, "git-unavailable");
+});
+
 test("telemetry start reattaches one detached active execution instead of duplicating it", (t) => {
   const root = fixture(t);
   assert.equal(ros(root, ["work", "begin", "TASK-LINK-RETRY"]).status, 0);

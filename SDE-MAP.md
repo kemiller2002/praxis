@@ -34,4 +34,5 @@ tests do.
 | Governance and research method | `docs/00-governance/README.md` is already the canonical compact router. |
 | SDE methodology bundle | `.sde/README.md` and `.sde/MANIFEST.json` are an installed governed input; project code must not duplicate or edit its rules. |
 | Shared persistence helper | `tools/ros_persistence.mjs` is an effect implementation used by work and telemetry rather than an independent semantic area. |
+| Shared Git process adapter | `tools/ros_git.mjs` implements the installed effect boundary for the F# Git observation contract; work and telemetry own their caller policies. |
 | Legacy Python layout generator | `setup_ros_layout.py` is an uncalled compatibility candidate, not current semantic authority. |

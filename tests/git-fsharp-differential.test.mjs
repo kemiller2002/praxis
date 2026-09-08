@@ -5,6 +5,7 @@ import path from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { observeGitStatus, parseGitStatus } from "../tools/ros_git.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
@@ -58,6 +59,7 @@ test("F# Git shadow matches clean porcelain status", (t) => {
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.json.outcome, "clean");
   assert.deepEqual(result.json.changes, []);
+  assert.deepEqual(observeGitStatus(root), result.json);
 });
 
 test("F# Git shadow matches changed paths, statuses, and rename origin", (t) => {
@@ -71,6 +73,7 @@ test("F# Git shadow matches changed paths, statuses, and rename origin", (t) => 
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.json.outcome, "changed");
   assert.deepEqual(projected(result.json.changes), expected);
+  assert.deepEqual(observeGitStatus(root), result.json);
   assert.deepEqual(result.json.changes.find(({ code }) => code.startsWith("R")), {
     code: "R ", kind: "tracked", index: "renamed", workTree: "unmodified",
     path: "renamed.txt", originalPath: "original.txt"
@@ -85,4 +88,19 @@ test("F# Git shadow reports unavailable instead of clean outside a repository", 
   assert.equal(result.json.outcome, "unavailable");
   assert.equal(result.json.failure.reason, "not-repository");
   assert.equal(result.json.failure.exitCode, 128);
+  assert.deepEqual(observeGitStatus(root), result.json);
+});
+
+test("Node production boundary rejects malformed porcelain output", () => {
+  const result = parseGitStatus("?? missing-nul.txt");
+  assert.equal(result.outcome, "unavailable");
+  assert.equal(result.failure.reason, "malformed-output");
+});
+
+test("Node production boundary distinguishes a missing Git executable", (t) => {
+  const root = fixture(t);
+  const result = observeGitStatus(root, { executable: path.join(root, "missing-git") });
+  assert.equal(result.outcome, "unavailable");
+  assert.equal(result.failure.reason, "tool-unavailable");
+  assert.equal(result.failure.exitCode, null);
 });

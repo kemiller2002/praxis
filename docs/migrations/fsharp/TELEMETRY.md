@@ -95,6 +95,22 @@ Canonical raw execution evidence for this continuation is
 | SDE integrity | v1.1.1 verified; 18 managed files; 5 structural review warnings | `sde status` and `sde verify`; warnings are pre-existing large-file review signals |
 | provider model/token/cache/cost | unavailable/not captured | runtime exposed no new provider observation; no values inferred |
 
+## MIG-06 production Git consumer execution
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260908T175137758Z-37978fda.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-08T17:51:37.758Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-git-consumer-integration` / `f6ee5ce` | Git |
+| production Git status helpers | reduced from two caller-local implementations to one installed adapter | source inspection |
+| exact Node/F# observation differential | clean, changed with rename, and unavailable non-repository pass | Node differential runner |
+| caller-specific safeguards | rename attribution, pre-finalization rejection, unavailable-not-zero telemetry pass | work and telemetry tests |
+| complete suite | 163 passed, 0 failed: 104 Node, 7 Python, 40 F#, 12 differential/smoke | `npm run test:all` |
+| failed focused assertions | two expectation/premise corrections; no production regression | direct focused test output |
+| provider model/token/cache/cost | unavailable/not captured | no provider usage snapshot was exposed; no values inferred |
+
 This continuation used the existing semantic map and the work-lifecycle and
 execution-telemetry manifests. Source inspection expanded into both Node Git
 helpers because the work manifest declared Git evidence and the telemetry

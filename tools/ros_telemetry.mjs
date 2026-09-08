@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
+import { observeGitStatus, runGitText } from "./ros_git.mjs";
 import { readJson, withFileLock, writeJson } from "./ros_persistence.mjs";
 
 export const TELEMETRY_SCHEMA_VERSION = "1.0.0";
@@ -189,39 +189,6 @@ function loadContext(root) {
   return readJson(contextFile(root), { schemaVersion: "1.0.0", workItems: [] });
 }
 
-function git(root, args, fallback = null) {
-  try {
-    return execFileSync("git", ["-C", root, ...args], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"]
-    }).trim();
-  } catch {
-    return fallback;
-  }
-}
-
-function gitPaths(root) {
-  let output = "";
-  try {
-    output = execFileSync("git", ["-C", root, "status", "--porcelain=v1", "-z", "--untracked-files=all"], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"]
-    });
-  } catch {
-    return [];
-  }
-  if (!output) return [];
-  const parts = output.split("\0").filter(Boolean);
-  const paths = [];
-  for (let index = 0; index < parts.length; index += 1) {
-    const entry = parts[index];
-    const status = entry.slice(0, 2);
-    paths.push(entry.slice(3));
-    if (/[RC]/.test(status) && parts[index + 1]) index += 1;
-  }
-  return [...new Set(paths.filter((item) => item && !ignoredMetricPath(root, item)))].sort();
-}
-
 function globMatch(value, pattern) {
   const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&").replaceAll("**", "\u0000").replaceAll("*", "[^/]*").replaceAll("\u0000", ".*");
   return new RegExp(`^${escaped}$`).test(value);
@@ -232,14 +199,16 @@ function ignoredMetricPath(root, value) {
 }
 
 function gitSnapshot(root) {
-  const inside = git(root, ["rev-parse", "--is-inside-work-tree"], "false") === "true";
-  if (!inside) return { available: false, repository: telemetryConfig(root).repository, branch: null, commit: null, dirty: null, dirtyPaths: [] };
-  const dirtyPaths = gitPaths(root);
+  const observation = observeGitStatus(root);
+  if (observation.outcome === "unavailable") return { available: false, repository: telemetryConfig(root).repository, branch: null, commit: null, dirty: null, dirtyPaths: [] };
+  const dirtyPaths = [...new Set(observation.changes.map((change) => change.path).filter((item) => !ignoredMetricPath(root, item)))].sort();
+  const branch = runGitText(root, ["branch", "--show-current"]);
+  const commit = runGitText(root, ["rev-parse", "HEAD"]);
   return {
     available: true,
     repository: telemetryConfig(root).repository,
-    branch: git(root, ["branch", "--show-current"], "") || null,
-    commit: git(root, ["rev-parse", "HEAD"], null),
+    branch: branch.outcome === "success" ? branch.value || null : null,
+    commit: commit.outcome === "success" ? commit.value : null,
     dirty: dirtyPaths.length > 0,
     dirtyPaths
   };
@@ -275,8 +244,16 @@ function cleanBaselineChanges(root, start) {
     return { available: false, reason: !start.available ? "git-unavailable" : !start.commit ? "starting-commit-unavailable" : "preexisting-dirty-worktree" };
   }
   const end = gitSnapshot(root);
-  const nameOutput = git(root, ["diff", "--name-status", "--find-renames", start.commit], "");
-  const numstatOutput = git(root, ["diff", "--numstat", "--find-renames", start.commit], "");
+  if (!end.available) return { available: false, reason: "git-unavailable" };
+  const nameResult = runGitText(root, ["diff", "--name-status", "--find-renames", start.commit]);
+  const numstatResult = runGitText(root, ["diff", "--numstat", "--find-renames", start.commit]);
+  const untrackedResult = runGitText(root, ["ls-files", "--others", "--exclude-standard", "-z"], { trim: false });
+  if ([nameResult, numstatResult, untrackedResult].some((result) => result.outcome !== "success")) {
+    const failed = [nameResult, numstatResult, untrackedResult].find((result) => result.outcome !== "success");
+    return { available: false, reason: failed.failure.reason, failure: failed.failure };
+  }
+  const nameOutput = nameResult.value;
+  const numstatOutput = numstatResult.value;
   const entries = [];
   for (const line of nameOutput.split(/\r?\n/).filter(Boolean)) {
     const [status, first, second] = line.split("\t");
@@ -285,7 +262,7 @@ function cleanBaselineChanges(root, start) {
     if (!ignoredMetricPath(root, file)) entries.push({ status: code, path: file, from: code === "R" || code === "C" ? first : null });
   }
   const known = new Set(entries.map((entry) => entry.path));
-  const untracked = (git(root, ["ls-files", "--others", "--exclude-standard", "-z"], "") || "")
+  const untracked = untrackedResult.value
     .split("\0")
     .filter((item) => item && !ignoredMetricPath(root, item));
   for (const file of untracked) if (!known.has(file)) entries.push({ status: "A", path: file, from: null, untracked: true });
@@ -329,9 +306,11 @@ function cleanBaselineChanges(root, start) {
   }
   const filesByType = {};
   for (const entry of entries) filesByType[extensionOf(entry.path)] = (filesByType[extensionOf(entry.path)] ?? 0) + 1;
-  const commits = end.commit && end.commit !== start.commit
-    ? Number(git(root, ["rev-list", "--count", `${start.commit}..${end.commit}`], "0"))
-    : 0;
+  const commitCount = end.commit && end.commit !== start.commit
+    ? runGitText(root, ["rev-list", "--count", `${start.commit}..${end.commit}`])
+    : { outcome: "success", value: "0" };
+  if (commitCount.outcome !== "success") return { available: false, reason: commitCount.failure.reason, failure: commitCount.failure };
+  const commits = Number(commitCount.value);
   return {
     available: true,
     mechanism: "git-diff-from-clean-execution-baseline",
@@ -1135,7 +1114,17 @@ export function finalizeExecution(root, target, options = {}) {
     refreshed.repository.changeSummary = summary;
     addMetric(root, refreshed, metric("time.wall_ms", Math.max(0, Date.parse(finalizedAt) - Date.parse(refreshed.startedAt)), finalizedAt, source("ros-clock", "ros", "timestamp-difference"), { quality: "derived" }));
     addMetric(root, refreshed, metric("time.blocked_ms", blockedDuration(refreshed.events, finalizedAt), finalizedAt, source("calculated", "ros-work-lifecycle", "block-resume-intervals"), { quality: "derived" }));
-    addMetric(root, refreshed, metric("git.ending_dirty_files", refreshed.repository.end.dirtyPaths.length, finalizedAt, source("ros-git", "git-status", "porcelain-v1"), { quality: "derived" }));
+    if (refreshed.repository.end.available) {
+      addMetric(root, refreshed, metric("git.ending_dirty_files", refreshed.repository.end.dirtyPaths.length, finalizedAt, source("ros-git", "git-status", "porcelain-v1"), { quality: "derived" }));
+    } else {
+      upsertCapability(root, refreshed, {
+        metricId: "git.ending_dirty_files",
+        status: "supported-unavailable",
+        reason: "ending Git status unavailable",
+        discoveredAt: finalizedAt,
+        source: source("ros-git", "git-status", "porcelain-v1")
+      });
+    }
     if (summary.available) {
       const values = {
         "git.commits_created": summary.commits,

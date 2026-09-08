@@ -2,7 +2,7 @@
 id: JR-ROS-2026-A019
 title: ROS F# application migration execution journal
 status: active
-version: 1.7.0
+version: 1.8.0
 research_area: repository-operating-system
 author_agent: openai-codex
 created: 2026-09-07
@@ -19,6 +19,7 @@ evidence_ids:
   - EV-ROS-2026-A034
   - EV-ROS-2026-A035
   - EV-ROS-2026-A036
+  - EV-ROS-2026-A037
 hypothesis_ids:
   - HY-ROS-2026-A021
   - HY-ROS-2026-A022
@@ -240,6 +241,22 @@ detached records reject guessing and the exact existing `--execution-id`
 provides the repair path. Added a pure typed F# decision with explicit start,
 recover, conflict, and ambiguity outcomes. The complete gate passes 157 tests.
 MIG-05 is complete within its bounded store contracts.
+
+## MIG-06 — production Git consumer consolidation
+
+Removed the two production Git-status helpers and routed work attribution and
+telemetry through one installed Node process adapter whose versioned observation
+matches the F# clean/changed/unavailable contract exactly. Work now attributes
+rename destinations correctly and rejects unavailable Git before completion
+effects, except for the documented pre-`git init` greenfield compatibility
+case. Telemetry no longer converts unavailable ending Git state into a measured
+zero. The full gate passes 163 tests.
+
+The first adversarial assertion incorrectly expected a zero-line numstat record
+for a pure rename. Git emits a rename representation that does not key directly
+to the normalized destination, so ROS correctly preserves per-path line stats
+as unavailable while retaining aggregate rename count and both paths. The test
+was repaired without inventing a measurement.
 
 # Decisions and rationale
 

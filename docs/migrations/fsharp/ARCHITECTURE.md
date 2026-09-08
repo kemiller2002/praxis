@@ -78,7 +78,7 @@ without their own recovery/authority design.
 
 ## Git provenance seam
 
-MIG-06 adds a read-only F# shadow boundary for repository status. The domain
+MIG-06 adds a read-only F# boundary for repository status. The domain
 result is closed over `Clean`, `Changed`, and `Unavailable`; a failure can no
 longer be represented as an empty change list. Tracked status preserves separate
 index and work-tree deltas, while rename/copy changes retain both destination
@@ -86,10 +86,18 @@ and origin paths. Infrastructure alone invokes `git status --porcelain=v1 -z`,
 the application exposes the observation use case, Contracts owns the versioned
 JSON shape, and the CLI maps unavailable to a non-zero exit.
 
-This seam does not yet replace either Node caller. The work kernel and telemetry
-kernel still have distinct fail-open helpers, so MIG-06 remains in progress
-until their consumers move behind one typed authority with caller-specific
-compatibility evidence. The shadow can be removed without changing `./ros`.
+Production work and telemetry consumers now share `tools/ros_git.mjs`, whose
+versioned observation shape is byte-for-byte compatible with the F# contract.
+Work uses destination paths for rename attribution, permits only the documented
+greenfield non-repository case, and rejects other unavailable status before
+completion effects. Telemetry preserves unavailable ending state instead of
+emitting a measured zero. The two former fail-open Git helpers were removed.
+
+The Node adapter remains the installed process implementation because MIG-01
+did not authorize a .NET consumer dependency. F# therefore owns the typed
+semantic contract while differential tests constrain the compatibility
+implementation; a production runtime switch still belongs to the distribution
+slice. No custom Git behavior replaces the Git executable.
 
 ## Live-work decision seam
 

@@ -38,6 +38,7 @@
     "telemetry/",
     "templates/",
     "tools/ros_cli.mjs",
+    "tools/ros_git.mjs",
     "tools/ros_telemetry.mjs",
     "tools/ros_persistence.mjs",
     "tools/http_body.mjs",

@@ -43,6 +43,7 @@
     {"source": "docs/project-administration-hub.md", "destination": "docs/project-administration-hub.md", "template": false},
     {"source": "tools/ros_cli.mjs", "destination": "tools/ros_cli.mjs", "template": false},
     {"source": "tools/ros_telemetry.mjs", "destination": "tools/ros_telemetry.mjs", "template": false},
+    {"source": "tools/ros_git.mjs", "destination": "tools/ros_git.mjs", "template": false},
     {"source": "tools/ros_persistence.mjs", "destination": "tools/ros_persistence.mjs", "template": false},
     {"source": "telemetry/metrics.json", "destination": "telemetry/metrics.json", "template": false},
     {"source": "tools/http_body.mjs", "destination": "tools/http_body.mjs", "template": false},

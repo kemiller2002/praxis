@@ -241,8 +241,8 @@
       "sde"
     ],
     "title": "ROS F# migration execution inventory at immutable baseline",
-    "updated": "2026-09-07",
-    "version": "1.0.0"
+    "updated": "2026-09-08",
+    "version": "1.1.0"
   },
   {
     "confidence": "medium",
@@ -496,6 +496,39 @@
       "migration"
     ],
     "title": "Telemetry execution-link recovery results",
+    "updated": "2026-09-08",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-08",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A037",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A037--production-git-consumer-results.md",
+    "related_documents": [
+      "DF-ROS-2026-A006",
+      "DF-ROS-2026-A010",
+      "DF-ROS-2026-A027",
+      "JR-ROS-2026-A019",
+      "EV-ROS-2026-A031"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "fsharp",
+      "node",
+      "git",
+      "provenance",
+      "telemetry",
+      "work",
+      "migration"
+    ],
+    "title": "Production Git consumer consolidation results",
     "updated": "2026-09-08",
     "version": "1.0.0"
   }

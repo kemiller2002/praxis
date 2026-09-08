@@ -22,7 +22,8 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 - Important effects and effect contracts: atomic JSON/text and a local
   work-protocol lock through `tools/ros_persistence.mjs`; separate versioned,
   hash-preconditioned event/context and backlog queue/projection recovery
-  journals, plus Git evidence, through `tools/ros_cli.mjs`.
+  journals, plus typed Git evidence through the contract-compatible
+  `tools/ros_git.mjs` process adapter.
 
 ## Interfaces
 
@@ -34,7 +35,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 ## Tests and verification
 
 - Local behavior tests: `tests/work-protocol.test.mjs` and
-  `tests/ros-server.test.mjs`; the future typed Git seam is exercised by
+  `tests/ros-server.test.mjs`; the typed Git seam is exercised by
   `tests/Ros.Tests/GitTests.fs` and `tests/git-fsharp-differential.test.mjs`.
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
@@ -65,6 +66,5 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 - Last checked against implementation: 2026-09-08
 - Known gaps: backlog and live work intentionally remain separate recovery
   units; telemetry effects occur before event/context journal preparation; the
-  production Node Git helper still makes Git failure indistinguishable from an
-  empty change set. The F# shadow models the Git distinction but is not yet the
-  work authority.
+  state-changing application handler remains Node-owned pending MIG-07 and the
+  distribution decision.

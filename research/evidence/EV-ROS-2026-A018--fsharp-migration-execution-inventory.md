@@ -2,11 +2,11 @@
 id: EV-ROS-2026-A018
 title: ROS F# migration execution inventory at immutable baseline
 status: accepted
-version: 1.0.0
+version: 1.1.0
 owners:
   - repository-governance
 created: 2026-09-07
-updated: 2026-09-07
+updated: 2026-09-08
 research_area: repository-operating-system
 evidence_type: primary
 supports:
@@ -32,6 +32,11 @@ specific inaccuracies listed below. The inventory covers 28 production,
 configuration, generated, and platform execution units plus six executable
 verification units. No implementation source changed before this record and
 the semantic decomposition in `DF-ROS-2026-A027` were frozen.
+
+The immutable-baseline count remains 28. MIG-06 subsequently added I-06A,
+bringing the current production/configuration/platform inventory to 29 units;
+the addition and the changed I-07/I-08 dispositions are recorded below without
+altering baseline measurements.
 
 # Baseline and collection
 
@@ -167,11 +172,29 @@ every static asset copied by a manifest.
   ANOTHER RESPONSIBILITY** as an infrastructure filesystem/lock adapter behind
   typed application ports.
 
+## I-06A — `tools/ros_git.mjs` (added after immutable baseline)
+
+- **Type/entry/callers/dependencies:** Node ESM infrastructure helper exporting
+  `observeGitStatus`, `parseGitStatus`, `runGitText`, and `requireGitText`; the
+  work and telemetry kernels call it; depends only on the child-process API.
+- **I/O/state/effects:** repository root and typed Git argument list in;
+  versioned clean/changed/unavailable observations or explicit command outcomes
+  out. It reads Git state through read-only subprocesses; writes no file, uses
+  no network or secret, and preserves exit/error provenance.
+- **Operation:** malformed porcelain, missing Git, non-repository, and command
+  failures remain distinct from clean. Status parsing retains index/work-tree
+  deltas and rename/copy origin plus destination. Callers explicitly select
+  compatibility policy. Exact Node/F# differential and caller integration tests
+  cover success and rejection.
+- **Responsibility/classification:** installed effect adapter compatible with
+  the F# Git contract. **KEEP AS THIN ADAPTER** until MIG-01 distribution work
+  authorizes production invocation of the F# infrastructure implementation.
+
 ## I-07 — `tools/ros_cli.mjs`
 
 - **Type/entry/callers/dependencies:** 1,282-line Node CLI/application kernel;
   I-01/I-02, HTTP, hub spokes, workflows, tests, and humans call it. Imports
-  persistence/telemetry and invokes Git through synchronous child processes.
+  persistence/telemetry and invokes Git only through I-06A.
 - **Commands:** `validate [--json]`; `status`; `registry build [--dry-run]` and
   `check`; `add`; work `list`, `ready`, `show`, `start`, `block`, `abandon`,
   `update`, `attach`, `begin`, `resume`, `complete`/`done`, `context`; telemetry
@@ -189,8 +212,10 @@ every static asset copied by a manifest.
   retryable. Work transitions lock; queue ID allocation and multi-file effects
   are not transactional. JSON/text/errors provide observability, telemetry is
   integrated. Tests: work, artifact, server, hub, bootstrap, and telemetry
-  integration. Git failures sometimes collapse to null/empty; rename parsing
-  and partial writes are failure risks. Requires Node, local Git/filesystem.
+  integration. Git status failures other than the explicit greenfield
+  non-repository policy are indeterminate, and rename destinations are retained.
+  Partial writes remain a risk outside bounded recovery units. Requires Node,
+  local Git/filesystem.
 - **Responsibility/classification:** owns artifact policy/projection, work and
   adapter states, transition/evidence guards, Git attribution, orchestration,
   and CLI contracts; duplicates Python/schema/docs/UI/telemetry helpers.
@@ -203,7 +228,7 @@ every static asset copied by a manifest.
 - **Type/entry/callers/dependencies:** 1,537-line Node telemetry kernel called
   automatically by work transitions and explicitly through telemetry
   `start`, `ingest`, `record`, `classify`, `finalize`, `show`, `summary`, and
-  `adapters`; imports persistence and invokes Git.
+  `adapters`; imports persistence and I-06A.
 - **I/O/state/effects:** configuration, metric catalog, work context, provider
   JSON/JSONL/stdin, environment identity, Git and repository files in; writes
   locked atomic `.ros/telemetry/executions/*.json` and context backlinks.
@@ -220,7 +245,7 @@ every static asset copied by a manifest.
   Node/local Git/filesystem; provider capabilities vary.
 - **Responsibility/classification:** execution identity/lifecycle, metric and
   capability semantics, provenance/quality, classification, aggregation, and
-  provider mappings; duplicates Git/path/JSON logic. **MIGRATE TO F# CORE** the
+  provider mappings; no longer duplicates Git process/status parsing. **MIGRATE TO F# CORE** the
   stable model/decisions and **MIGRATE TO F# COMMAND** lifecycle use cases;
   **KEEP AS THIN ADAPTER** provider mappings until their contracts stabilize.
 

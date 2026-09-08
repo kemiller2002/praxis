@@ -21,8 +21,8 @@ capabilities, lifecycle capture, classification, and aggregation.
   values require distinct provenance.
 - Important effects and effect contracts: per-execution atomic files and locks;
   execution/context linking composed under `work-protocol` and the recoverable
-  work-state journal; Git/clock/environment discovery; bounded sanitized
-  provider input.
+  work-state journal; typed Git observation through `tools/ros_git.mjs`, plus
+  clock/environment discovery; bounded sanitized provider input.
 
 ## Interfaces
 
@@ -65,4 +65,5 @@ capabilities, lifecycle capture, classification, and aggregation.
 - Known gaps: live model/token/cost fields depend on runtime adapters; whole
   execution records are rewritten on each update; unkeyed response loss after
   complete journal cleanup requires inspection before intentional retry;
-  cross-host coordination and signing are deferred.
+  cross-host coordination and signing are deferred. The installed Git adapter
+  matches the F# contract but remains Node until distribution is authorized.

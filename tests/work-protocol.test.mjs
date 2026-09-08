@@ -111,6 +111,42 @@ test("valid attributed work completes with evidence", (t) => {
   assert.equal(ros(root, ["validate"]).status, 0);
 });
 
+test("work attribution records the destination of a Git rename", (t) => {
+  const root = fixture(t);
+  fs.writeFileSync(path.join(root, "before.txt"), "rename me\n");
+  execFileSync("git", ["add", "before.txt"], { cwd: root });
+  execFileSync("git", ["commit", "-qm", "rename fixture"], { cwd: root });
+  assert.equal(ros(root, ["work", "begin", "TASK-GIT-RENAME", "--type", "mechanical"]).status, 0);
+  execFileSync("git", ["mv", "before.txt", "after.txt"], { cwd: root });
+  const completed = ros(root, ["work", "complete", "TASK-GIT-RENAME"]);
+  assert.equal(completed.status, 0, completed.output);
+  const events = fs.readFileSync(path.join(root, ".ros", "events", "events.jsonl"), "utf8").trim().split(/\r?\n/).map(JSON.parse);
+  const event = events.find((entry) => entry.type === "work.completed" && entry.workItem === "TASK-GIT-RENAME");
+  assert.deepEqual(event.paths, ["after.txt"]);
+});
+
+test("work completion rejects unavailable Git before telemetry finalization", (t) => {
+  const root = fixture(t);
+  assert.equal(ros(root, ["work", "begin", "TASK-GIT-UNAVAILABLE", "--type", "mechanical"]).status, 0);
+  const isolatedBin = path.join(root, "isolated-bin");
+  fs.mkdirSync(isolatedBin);
+  fs.symlinkSync(process.execPath, path.join(isolatedBin, "node"));
+  const result = ros(root, ["work", "complete", "TASK-GIT-UNAVAILABLE"], {
+    env: { ...process.env, PATH: isolatedBin }
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.output, /git status unavailable/);
+  const validation = ros(root, ["validate", "--json"], { env: { ...process.env, PATH: isolatedBin } });
+  assert.equal(validation.status, 1);
+  const finding = JSON.parse(validation.output).findings.find((entry) => entry.path === ".git");
+  assert.match(finding.message, /cannot verify work attribution.*tool-unavailable/);
+  const directory = path.join(root, ".ros", "telemetry", "executions");
+  const records = fs.existsSync(directory)
+    ? fs.readdirSync(directory).filter((name) => name.endsWith(".json")).map((name) => JSON.parse(fs.readFileSync(path.join(directory, name), "utf8")))
+    : [];
+  assert.equal(records.find((record) => record.workItemId === "TASK-GIT-UNAVAILABLE").status, "active");
+});
+
 test("normal work transitions commit event and context with no pending journal", (t) => {
   const root = fixture(t);
   const begun = ros(root, ["work", "begin", "TASK-JOURNALED", "--type", "mechanical"]);

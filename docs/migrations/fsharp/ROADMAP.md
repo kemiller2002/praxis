@@ -36,7 +36,7 @@ Dependency ordering overrides a raw score where state safety requires it.
 | MIG-03 artifact boundary/fixtures | complete | explicit front matter, IDs, kind/status/confidence/reference shapes; path-specific findings; frozen valid/invalid fixtures | Node/Python remain oracles |
 | MIG-04 artifact validation and registry projection | complete | `ros-fs artifacts validate`, `registry build/check`; Node/F# byte parity; no canonical mutation; repeated build and partial-write outcome proof | no launcher switch; Python deprecation only after further evidence |
 | MIG-05 transactional file persistence/recovery | complete | separate bounded recovery contracts cover generated registries, live event/context, and backlog queue/projection; telemetry execution records remain atomic/per-execution locked while creation/backlink retry adopts detached evidence or rejects ambiguity; cross-runtime, divergence, concurrency, and rejection proofs pass | retain stateful Node writers; each semantic store keeps a bounded contract; no global transaction framework |
-| MIG-06 unified Git provenance | in progress | F# shadow sub-slice has typed clean/changed/unavailable outcomes, index/work-tree status, rename/copy origin paths, explicit JSON, and failure/differential tests; production caller consolidation remains | current Node Git calls retained until work and telemetry consumers have caller-specific compatibility evidence |
+| MIG-06 unified Git provenance | complete | F# owns the typed clean/changed/unavailable contract; one compatible installed Node process adapter serves work and telemetry; rename attribution, malformed/missing/non-repository outcomes, pre-effect work rejection, and unavailable-not-zero telemetry pass | retain compatible Node adapter until the MIG-01 distribution decision authorizes an F# runtime switch |
 | MIG-07 work lifecycle/evidence | in progress | live-work decision sub-slice has typed states/actions, exhaustive legal transitions, block-reason and evidence-type guards, explicit JSON, and a 16-case Node differential; backlog, evidence-path effects, persistence, telemetry, and context/event comparison remain | diagnostic shadow only; Node remains state-changing authority |
 | MIG-08 execution/telemetry core | deferred | lifecycle, identity, provenance, metric/capability semantics, aggregation, unknown/raw preservation | provider adapters remain at edge |
 | MIG-09 bootstrap/upgrade | deferred | valid initial state, versioned upgrade/check/rollback; npm materializer thin | retain npm acquisition |
@@ -48,12 +48,10 @@ Dependency ordering overrides a raw score where state safety requires it.
 
 ## Next ordered work after this mission
 
-1. Move work and telemetry Git consumers behind the typed provenance boundary;
-   the F# shadow already proves unavailable is not clean.
-2. Migrate work lifecycle orchestration as a controlled shadow slice now that
+1. Migrate work lifecycle orchestration as a controlled shadow slice now that
    its persistence preconditions exist.
-3. Migrate stable execution/telemetry semantics while preserving open provider
+2. Migrate stable execution/telemetry semantics while preserving open provider
    extensions.
-4. Run the full consumer distribution experiment before changing bootstrap.
-5. Address hub security/locking as separate defects even if its F# migration is
+3. Run the full consumer distribution experiment before changing bootstrap.
+4. Address hub security/locking as separate defects even if its F# migration is
    deferred.
