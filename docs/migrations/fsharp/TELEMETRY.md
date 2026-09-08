@@ -169,3 +169,19 @@ Canonical raw execution evidence is
 | complete test attempts | 2: first 146 passed/1 failed; second 147 passed/0 failed | first read-only smoke detected stale evidence/journal registries; configured rebuild then unchanged rerun passed |
 | final complete suite | 147 passed, 0 failed | 96 Node + 7 Python + 34 F# + 10 Node-driven differential/smoke tests |
 | provider model/token/cache/cost | unavailable/not captured | no runtime observation; no values inferred |
+
+## MIG-05 telemetry-link continuation
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260908T140008179Z-0d130adf.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-08T14:00:08.179Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-telemetry-link-recovery` / `b6b1f9b` | ROS Git baseline |
+| typed execution-link tests | 6 new; 40 total F# tests pass | direct typed runner |
+| production recovery/guard tests | 4 new; focused work/telemetry gate has 60 passing tests | Node test runner |
+| successful builds before closeout | 2 | .NET builds, zero warnings/errors |
+| failed focused tests before closeout | 1 | no-write guard succeeded but test helper did not model an absent execution directory; helper repaired and unchanged guard reran successfully |
+| final complete suite | 157 passed, 0 failed | 100 Node + 7 Python + 40 F# + 10 Node-driven differential/smoke tests |
+| provider model/token/cache/cost | unavailable/not captured | no runtime observation; no values inferred |

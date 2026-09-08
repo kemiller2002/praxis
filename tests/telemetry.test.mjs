@@ -8,6 +8,7 @@ import test from "node:test";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
 import { withFileLock } from "../tools/ros_persistence.mjs";
+import { startExecution } from "../tools/ros_telemetry.mjs";
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-telemetry-"));
@@ -38,6 +39,12 @@ function rosAsync(root, args) {
     child.on("error", reject);
     child.on("close", (status) => status === 0 ? resolve(output) : reject(new Error(output)));
   });
+}
+
+function executionFiles(root) {
+  const directory = path.join(root, ".ros", "telemetry", "executions");
+  if (!fs.existsSync(directory)) return [];
+  return fs.readdirSync(directory).filter((name) => name.endsWith(".json")).sort();
 }
 
 function writeJson(file, value) {
@@ -94,6 +101,72 @@ test("work lifecycle automatically starts, Git-derives, and finalizes telemetry"
   assert.equal(metric(record, "git.files_deleted")[0].value, 0, "a legitimate zero is retained");
   assert.equal(metric(record, "time.wall_ms")[0].quality, "derived");
   assert.equal(ros(root, ["validate"]).status, 0);
+});
+
+test("telemetry start reattaches one detached active execution instead of duplicating it", (t) => {
+  const root = fixture(t);
+  assert.equal(ros(root, ["work", "begin", "TASK-LINK-RETRY"]).status, 0);
+  const original = executions(root, "TASK-LINK-RETRY")[0];
+  const contextFile = path.join(root, ".ros", "context", "current.json");
+  const context = JSON.parse(fs.readFileSync(contextFile, "utf8"));
+  context.workItems.find((item) => item.id === "TASK-LINK-RETRY").telemetryExecutionIds = [];
+  writeJson(contextFile, context);
+
+  const conflicting = ros(root, ["telemetry", "start", "TASK-LINK-RETRY", "--execution-id", "EXE-new-link"]);
+  assert.equal(conflicting.status, 1);
+  assert.match(conflicting.output, /detached telemetry execution must be linked before creating 'EXE-new-link'/);
+  assert.deepEqual(executions(root, "TASK-LINK-RETRY").map((record) => record.executionId), [original.executionId]);
+
+  const retried = ros(root, ["telemetry", "start", "TASK-LINK-RETRY"]);
+  assert.equal(retried.status, 0, retried.output);
+  assert.equal(JSON.parse(retried.output).executionId, original.executionId);
+  assert.deepEqual(executions(root, "TASK-LINK-RETRY").map((record) => record.executionId), [original.executionId]);
+  const repaired = JSON.parse(fs.readFileSync(contextFile, "utf8"));
+  assert.deepEqual(repaired.workItems.find((item) => item.id === "TASK-LINK-RETRY").telemetryExecutionIds, [original.executionId]);
+});
+
+test("work begin retry adopts an execution left before context/event commit", (t) => {
+  const root = fixture(t);
+  assert.equal(ros(root, ["work", "begin", "TASK-BEGIN-RETRY"]).status, 0);
+  const original = executions(root, "TASK-BEGIN-RETRY")[0];
+  const contextFile = path.join(root, ".ros", "context", "current.json");
+  const context = JSON.parse(fs.readFileSync(contextFile, "utf8"));
+  context.workItems = context.workItems.filter((item) => item.id !== "TASK-BEGIN-RETRY");
+  writeJson(contextFile, context);
+
+  const retried = ros(root, ["work", "begin", "TASK-BEGIN-RETRY"]);
+  assert.equal(retried.status, 0, retried.output);
+  assert.deepEqual(executions(root, "TASK-BEGIN-RETRY").map((record) => record.executionId), [original.executionId]);
+  const repaired = JSON.parse(fs.readFileSync(contextFile, "utf8"));
+  assert.deepEqual(repaired.workItems.find((item) => item.id === "TASK-BEGIN-RETRY").telemetryExecutionIds, [original.executionId]);
+});
+
+test("ambiguous detached telemetry evidence rejects automatic recovery", (t) => {
+  const root = fixture(t);
+  assert.equal(ros(root, ["work", "begin", "TASK-LINK-AMBIGUOUS"]).status, 0);
+  assert.equal(ros(root, ["telemetry", "start", "TASK-LINK-AMBIGUOUS", "--execution-id", "EXE-second-link"]).status, 0);
+  const contextFile = path.join(root, ".ros", "context", "current.json");
+  const context = JSON.parse(fs.readFileSync(contextFile, "utf8"));
+  context.workItems.find((item) => item.id === "TASK-LINK-AMBIGUOUS").telemetryExecutionIds = [];
+  writeJson(contextFile, context);
+
+  const retried = ros(root, ["telemetry", "start", "TASK-LINK-AMBIGUOUS"]);
+  assert.equal(retried.status, 1);
+  assert.match(retried.output, /multiple detached telemetry executions require explicit selection/);
+  assert.equal(executions(root, "TASK-LINK-AMBIGUOUS").length, 2);
+  assert.equal(fs.existsSync(path.join(root, ".ros", "transactions", "work-state.json")), false);
+
+  const selected = ros(root, ["telemetry", "start", "TASK-LINK-AMBIGUOUS", "--execution-id", "EXE-second-link"]);
+  assert.equal(selected.status, 0, selected.output);
+  assert.equal(JSON.parse(selected.output).executionId, "EXE-second-link");
+  const repaired = JSON.parse(fs.readFileSync(contextFile, "utf8"));
+  assert.deepEqual(repaired.workItems.find((item) => item.id === "TASK-LINK-AMBIGUOUS").telemetryExecutionIds, ["EXE-second-link"]);
+});
+
+test("telemetry core rejects uncomposed context attachment before writing an execution", (t) => {
+  const root = fixture(t);
+  assert.throws(() => startExecution(root, "TASK-NOT-COMPOSED"), /must be composed under the work-protocol recovery boundary/);
+  assert.equal(executionFiles(root).length, 0);
 });
 
 test("Codex adapter distinguishes zero, unavailable, and a future unknown field", (t) => {

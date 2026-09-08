@@ -638,11 +638,22 @@
         "EXE-20260908T122549568Z-b1bcf1e1"
       ],
       "completedAt": "2026-09-08T13:56:19.583Z"
+    },
+    {
+      "id": "MIG-05-TELEMETRY-RECOVERY",
+      "type": "infrastructure",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-08T14:00:08.179Z",
+      "telemetryExecutionIds": [
+        "EXE-20260908T140008179Z-0d130adf"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-08T13:56:19.583Z",
+  "updatedAt": "2026-09-08T14:00:08.179Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

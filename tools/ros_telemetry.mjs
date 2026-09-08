@@ -189,18 +189,6 @@ function loadContext(root) {
   return readJson(contextFile(root), { schemaVersion: "1.0.0", workItems: [] });
 }
 
-function updateContextExecution(root, workItemId, executionId) {
-  return withFileLock(root, "work-protocol", () => {
-    const context = loadContext(root);
-    const item = context.workItems.find((entry) => entry.id === workItemId);
-    if (!item) throw new Error(`work item '${workItemId}' is not in repository context`);
-    item.telemetryExecutionIds ??= [];
-    if (!item.telemetryExecutionIds.includes(executionId)) item.telemetryExecutionIds.push(executionId);
-    context.updatedAt = nowIso();
-    writeJson(contextFile(root), context);
-  });
-}
-
 function git(root, args, fallback = null) {
   try {
     return execFileSync("git", ["-C", root, ...args], {
@@ -546,6 +534,9 @@ function executionId() {
 export function startExecution(root, workItemId, options = {}) {
   const config = telemetryConfig(root);
   if (!config.enabled) return null;
+  if (options.attachToContext !== false) {
+    throw new Error("execution/context linking must be composed under the work-protocol recovery boundary");
+  }
   const id = options.executionId ?? executionId();
   const file = executionFile(root, id);
   const startedAt = options.startedAt ?? nowIso();
@@ -610,7 +601,6 @@ export function startExecution(root, workItemId, options = {}) {
     }
     writeJson(file, record);
   });
-  if (options.attachToContext !== false) updateContextExecution(root, workItemId, id);
   return record;
 }
 

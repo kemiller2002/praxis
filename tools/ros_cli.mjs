@@ -617,6 +617,26 @@ function withWorkProtocol(root, operation) {
   });
 }
 
+function recoverOrStartExecution(root, item, statuses, options) {
+  item.telemetryExecutionIds ??= [];
+  const linked = new Set(item.telemetryExecutionIds);
+  const candidates = showTelemetry(root, item.id)
+    .filter((record) => statuses.includes(record.status) && !linked.has(record.executionId))
+    .sort((left, right) => left.executionId.localeCompare(right.executionId));
+  if (options.executionId) {
+    const requested = candidates.find((record) => record.executionId === options.executionId);
+    if (requested) return requested;
+    if (candidates.length) {
+      throw new Error(`detached telemetry execution must be linked before creating '${options.executionId}' for '${item.id}'; rerun with --execution-id ${candidates[0].executionId}`);
+    }
+  }
+  if (candidates.length > 1) {
+    throw new Error(`multiple detached telemetry executions require explicit selection for '${item.id}'; rerun with --execution-id one of: ${candidates.map((record) => record.executionId).join(", ")}`);
+  }
+  if (candidates.length === 1) return candidates[0];
+  return startExecution(root, item.id, { ...options, attachToContext: false });
+}
+
 function renderedEventLog(root, planned) {
   const current = currentText(root, ".ros/events/events.jsonl") ?? "";
   const existing = current.split(/\r?\n/).filter(Boolean).map(JSON.parse);
@@ -747,13 +767,12 @@ function transitionUnlocked(root, action, ids, options = {}) {
     item.updatedAt = now;
     if (configuredTelemetry(root).enabled) {
       if (action === "begin") {
-        const execution = startExecution(root, id, {
+        const execution = recoverOrStartExecution(root, item, ["active"], {
           workType: item.type,
           classifications: options.classifications,
           classificationRationale: options.classificationRationale,
           rd: options.rd,
-          identity: options.telemetryIdentity,
-          attachToContext: false
+          identity: options.telemetryIdentity
         });
         item.telemetryExecutionIds ??= [];
         if (execution && !item.telemetryExecutionIds.includes(execution.executionId)) item.telemetryExecutionIds.push(execution.executionId);
@@ -763,24 +782,22 @@ function transitionUnlocked(root, action, ids, options = {}) {
         const active = showTelemetry(root, id).filter((record) => record.status === "active");
         if (!active.length) {
           const prior = showTelemetry(root, id).at(-1);
-          const execution = startExecution(root, id, {
+          const execution = recoverOrStartExecution(root, item, ["active"], {
             workType: item.type,
             parentExecutionId: prior?.executionId ?? null,
-            identity: options.telemetryIdentity,
-            attachToContext: false
+            identity: options.telemetryIdentity
           });
           item.telemetryExecutionIds ??= [];
           if (execution) item.telemetryExecutionIds.push(execution.executionId);
-        }
+        } else for (const execution of active) if (!item.telemetryExecutionIds.includes(execution.executionId)) item.telemetryExecutionIds.push(execution.executionId);
       }
       if (action === "block") recordTelemetryLifecycle(root, id, "blocked", { occurredAt: now, reason: options.reason });
       if (action === "complete") {
         if (!(item.telemetryExecutionIds ?? []).length) {
-          const execution = startExecution(root, id, {
+          const execution = recoverOrStartExecution(root, item, ["active", "finalized"], {
             workType: item.type,
             startedAt: now,
-            identity: options.telemetryIdentity,
-            attachToContext: false
+            identity: options.telemetryIdentity
           });
           item.telemetryExecutionIds ??= [];
           if (execution) item.telemetryExecutionIds.push(execution.executionId);
@@ -1397,14 +1414,26 @@ export function main(argv) {
     if (args[0] === "telemetry" && args[1] === "start") {
       const workItemId = telemetryTarget(args);
       if (!workItemId) throw new Error("telemetry start requires a work-item ID");
-      const contextItem = loadContext(root).workItems.find((item) => item.id === workItemId);
-      if (!contextItem || !["active", "blocked"].includes(contextItem.semanticState)) throw new Error(`work item '${workItemId}' must be active or blocked before starting telemetry`);
-      const record = startExecution(root, workItemId, {
-        executionId: option(args, "--execution-id"),
-        workType: contextItem.type,
-        classifications: options(args, "--classification"),
-        classificationRationale: option(args, "--classification-rationale"),
-        identity: telemetryIdentityOptions(args)
+      const record = withWorkProtocol(root, () => {
+        const context = loadContext(root);
+        const contextItem = context.workItems.find((item) => item.id === workItemId);
+        if (!contextItem || !["active", "blocked"].includes(contextItem.semanticState)) throw new Error(`work item '${workItemId}' must be active or blocked before starting telemetry`);
+        const execution = recoverOrStartExecution(root, contextItem, ["active"], {
+          executionId: option(args, "--execution-id"),
+          workType: contextItem.type,
+          classifications: options(args, "--classification"),
+          classificationRationale: option(args, "--classification-rationale"),
+          identity: telemetryIdentityOptions(args)
+        });
+        if (!execution) return null;
+        contextItem.telemetryExecutionIds ??= [];
+        if (!contextItem.telemetryExecutionIds.includes(execution.executionId)) contextItem.telemetryExecutionIds.push(execution.executionId);
+        context.updatedAt = new Date().toISOString();
+        commitWorkState(root, [
+          { path: ".ros/events/events.jsonl", content: renderedEventLog(root, []) },
+          { path: ".ros/context/current.json", content: `${JSON.stringify(context, null, 2)}\n` }
+        ]);
+        return execution;
       });
       if (!args.includes("--quiet")) console.log(JSON.stringify(record, null, 2)); return 0;
     }

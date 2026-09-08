@@ -9,8 +9,9 @@
 | DOC-BACKLOG-USAGE-GUIDE | DOC-BACKLOG-USAGE-GUIDE | complete |  |  |
 | DOC-PROJECT-ADMIN-README | DOC-PROJECT-ADMIN-README | complete |  |  |
 | DOC-WEB-README | DOC-WEB-README | complete |  |  |
-| MIG-05-BACKLOG-PERSISTENCE | Add bounded recovery for backlog queue and Markdown projection | ready | fsharp, migration, persistence | high |
+| MIG-05-BACKLOG-PERSISTENCE | Add bounded recovery for backlog queue and Markdown projection | complete | fsharp, migration, persistence | high |
 | MIG-05-PERSISTENCE | MIG-05 characterize and shadow transactional persistence recovery | complete | fsharp, migration, persistence | high |
+| MIG-05-TELEMETRY-RECOVERY | Recover telemetry execution backlinks without duplicating execution evidence | ready | fsharp, migration, telemetry, persistence | high |
 | MIG-05-WORK-INTEGRATION | MIG-05 integrate recoverable work event and context persistence | complete | fsharp, migration, persistence, work | high |
 | MIG-05-WORK-PERSISTENCE | MIG-05 characterize work-state persistence and recovery | complete | fsharp, migration, persistence, work | high |
 | MIG-06-GIT-PROVENANCE | MIG-06 characterize and shadow typed Git provenance | complete | fsharp, migration, git | high |

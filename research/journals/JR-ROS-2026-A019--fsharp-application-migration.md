@@ -2,7 +2,7 @@
 id: JR-ROS-2026-A019
 title: ROS F# application migration execution journal
 status: active
-version: 1.6.0
+version: 1.7.0
 research_area: repository-operating-system
 author_agent: openai-codex
 created: 2026-09-07
@@ -18,6 +18,7 @@ evidence_ids:
   - EV-ROS-2026-A033
   - EV-ROS-2026-A034
   - EV-ROS-2026-A035
+  - EV-ROS-2026-A036
 hypothesis_ids:
   - HY-ROS-2026-A021
   - HY-ROS-2026-A022
@@ -130,6 +131,7 @@ invented.
 | MIG-D018 | MIG-05 production integration | direct typed-test command selected the default Debug output after only Release had been built | agent execution mistake | introduced | reran with explicit `--configuration Release --no-build`; 31/31 typed tests passed; pin configuration in direct verification commands |
 | MIG-D019 | MIG-05 backlog persistence | adding a nominally distinct backlog write record made the existing unannotated F# work-write test helper infer the new type | introduced representation/test defect | introduced | annotated both helper return types explicitly; next build succeeded with zero warnings/errors and all 34 typed tests passed |
 | MIG-D020 | MIG-05 backlog verification | first complete gate's read-only F# repository smoke rejected stale evidence/journal registries after new canonical records were added | verification-order finding; generated projection stale | introduced by unbuilt canonical evidence changes | ran the configured registry build, confirmed current projections, and reran the unchanged complete gate; all 147 tests passed |
+| MIG-D021 | MIG-05 telemetry-link verification | the no-uncomposed-write guard passed, then its test helper failed while listing an execution directory that correctly did not exist | introduced test expectation defect | introduced | made the helper model absent storage as an empty file set; rerun passes all 28 telemetry tests |
 
 # Observations
 
@@ -229,6 +231,16 @@ multi-process test retains all eight concurrent captures. The final complete
 gate passes 147 tests. Attachments remain outside the journal with
 file-before-reference ordering.
 
+## MIG-05 — telemetry execution-link recovery
+
+Confirmed that telemetry record updates already have a suitable single-file
+atomic/lease boundary. Moved execution/context linking into the recoverable work
+capability and added retry adoption for one detached execution. Multiple
+detached records reject guessing and the exact existing `--execution-id`
+provides the repair path. Added a pure typed F# decision with explicit start,
+recover, conflict, and ambiguity outcomes. The complete gate passes 157 tests.
+MIG-05 is complete within its bounded store contracts.
+
 # Decisions and rationale
 
 `DF-ROS-2026-A027` records the accepted boundary and rejected alternatives. The
@@ -256,5 +268,5 @@ added; no production authority source was removed or redirected.
 
 # Highest-value next step
 
-Complete the current governed closeout, then finish MIG-05 telemetry recovery
-semantics before moving more stateful authority.
+Complete the current governed closeout, then move production Git consumers
+behind the typed provenance boundary before migrating more work orchestration.

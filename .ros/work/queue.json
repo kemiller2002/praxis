@@ -301,6 +301,25 @@
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "MIG-05-TELEMETRY-RECOVERY",
+      "title": "Recover telemetry execution backlinks without duplicating execution evidence",
+      "description": null,
+      "tags": [
+        "fsharp",
+        "migration",
+        "telemetry",
+        "persistence"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-08T14:00:08.071Z",
+      "updatedAt": "2026-09-08T14:00:08.125Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

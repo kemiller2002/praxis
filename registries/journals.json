@@ -107,7 +107,8 @@
       "EV-ROS-2026-A032",
       "EV-ROS-2026-A033",
       "EV-ROS-2026-A034",
-      "EV-ROS-2026-A035"
+      "EV-ROS-2026-A035",
+      "EV-ROS-2026-A036"
     ],
     "hypothesis_ids": [
       "HY-ROS-2026-A021",
@@ -133,6 +134,6 @@
     "theory_ids": [],
     "title": "ROS F# application migration execution journal",
     "updated": "2026-09-08",
-    "version": "1.6.0"
+    "version": "1.7.0"
   }
 ]

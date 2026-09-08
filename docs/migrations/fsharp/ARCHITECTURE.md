@@ -142,6 +142,20 @@ existing failure direction: interruption can leave an orphan but not a missing
 referenced file. The Markdown file remains a rebuildable projection and is
 regenerated on backlog changes, not claimed as independent authority.
 
+## Telemetry-link recovery seam
+
+Telemetry execution JSON differs from the multi-file projections: each record
+is already atomically replaced under an execution-specific lease. MIG-05
+therefore keeps that boundary and addresses the cross-store creation seam.
+Execution creation and context linking are composed under `work-protocol`, and
+the backlink is written through the existing work-state recovery record.
+
+The typed F# decision distinguishes starting a new record, recovering exactly
+one detached active/finalized record, requested-ID conflict, and ambiguous
+detached evidence. Production uses the same behavior. An exact existing
+`--execution-id` is the repair/idempotency key; ambiguous recovery never chooses
+silently. Provider mapping and metric semantics remain MIG-08 work.
+
 ## State architecture
 
 | Lifecycle | Closed state now | Authority | Migration treatment |
