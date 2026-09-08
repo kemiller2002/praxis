@@ -600,18 +600,28 @@
     {
       "id": "MIG-05-WORK-INTEGRATION",
       "type": "infrastructure",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-08T12:13:00.882Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tools/ros_cli.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-protocol.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-08T12:24:27.458Z",
       "telemetryExecutionIds": [
         "EXE-20260908T121300882Z-fe89c3e0"
-      ]
+      ],
+      "completedAt": "2026-09-08T12:24:27.458Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-08T12:13:00.882Z",
+  "updatedAt": "2026-09-08T12:24:27.458Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
