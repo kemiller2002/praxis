@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 13,
+  "nextSeq": 14,
   "items": [
     {
       "id": "WI-0001",
@@ -387,6 +387,20 @@
       "attachments": [],
       "createdAt": "2026-09-09T15:41:09.872Z",
       "updatedAt": "2026-09-09T15:41:12.274Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0013",
+      "title": "F# backlog-queue validation slice (work backlog-validate)",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-09T16:44:22.993Z",
+      "updatedAt": "2026-09-09T16:44:25.482Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null

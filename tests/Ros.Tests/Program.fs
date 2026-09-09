@@ -13,4 +13,5 @@ let main _ =
     @ TelemetryResolutionTests.tests
     @ PathFilterTests.tests
     @ WorkAttributionTests.tests
+    @ QueueValidationTests.tests
     |> TestRunner.run

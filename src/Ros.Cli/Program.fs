@@ -21,7 +21,7 @@ open Ros.Infrastructure.Work
 let Version = "0.2.0-shadow"
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json]"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json]"
 
 let private parseRoot (arguments: string array) =
     let values = ResizeArray<string>(arguments)
@@ -510,6 +510,18 @@ let private runWorkAttributionValidate root arguments =
                     printf "%s" (WorkAttributionContract.renderJson findings)
                     if findings.IsEmpty then 0 else 1
 
+/// Mirrors production `queueFindings` (`tools/ros_cli.mjs`): duplicate ids,
+/// invalid ids, invalid status, and invalid priority over the raw backlog
+/// queue rows in `.ros/work/queue.json`.
+let private runBacklogQueueValidate root arguments =
+    if not (arguments |> List.forall ((=) "--json")) then
+        eprintfn "%s" usage
+        2
+    else
+        let findings = FileBacklogQueueRepository.readItems root |> BacklogQueueValidation.findings
+        printf "%s" (BacklogQueueValidationContract.renderJson findings)
+        if findings.IsEmpty then 0 else 1
+
 let private dispatch root arguments =
     let repository = FileArtifactRepository.create root
     let gitRepository = ProcessGitRepository.create root
@@ -538,6 +550,7 @@ let private dispatch root arguments =
     | "work" :: "backlog-decide" :: rest -> runBacklogDecision rest
     | "work" :: "backlog-promotion-plan" :: rest -> runBacklogPromotionPlan rest
     | "work" :: "validate" :: rest -> runWorkAttributionValidate root rest
+    | "work" :: "backlog-validate" :: rest -> runBacklogQueueValidate root rest
     | _ ->
         eprintfn "%s" usage
         2

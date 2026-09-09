@@ -37,6 +37,10 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   same event log through `Ros.Infrastructure.Work.FileEventLogRepository`
   and the same `enforceAttribution` flag through
   `Ros.Infrastructure.Work.FileWorkConfigRepository.readEnforceAttribution`.
+  A read-only `ros-fs work backlog-validate` diagnostic mirrors production
+  `queueFindings` (the backlog-queue contributor to Node's `validate`),
+  reading the raw `.ros/work/queue.json` rows through
+  `Ros.Infrastructure.Work.FileBacklogQueueRepository`.
 
 ## Interfaces
 
@@ -59,6 +63,8 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   `tests/work-git-paths-fsharp-differential.test.mjs`.
 - Work-attribution validation tests: `tests/Ros.Tests/WorkAttributionTests.fs`
   and `tests/work-attribution-fsharp-differential.test.mjs`.
+- Backlog-queue validation tests: `tests/Ros.Tests/QueueValidationTests.fs`
+  and `tests/work-backlog-validate-fsharp-differential.test.mjs`.
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
 - Integration/live verification: `./ros status`, `./ros work context ID`, and
