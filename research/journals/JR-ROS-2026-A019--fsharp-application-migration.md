@@ -490,9 +490,29 @@ the same class of false result production code can.
 The complete heterogeneous gate passes all 220 checks (104 Node, 7 Python,
 79 F#, 30 differential/smoke) with a zero-warning, zero-error build.
 
+## Scope correction: new-execution creation is not a small next step
+
+This journal previously described the next step as "the new-execution
+creation effect (clock/ID generation under the work-protocol capability)" —
+a parenthetical that badly understated it. `EV-ROS-2026-A044` inventories
+`tools/ros_telemetry.mjs` in full: `startExecution` alone composes identity
+discovery (provider/runtime detection), a Git baseline snapshot, metric-
+registry loading, and initial capability-status seeding before a
+schema-valid record can be written at all. A partial record (fabricated or
+empty identity/capabilities) would violate the project's own "never invent
+a metric" rule and would not be readable by Node's own telemetry consumers.
+This is effectively most of MIG-08, not a standalone effect — consistent
+with how `DF-ROS-2026-A028`'s Phase A already frames it ("absorbs... all of
+MIG-08"), now grounded in the actual code rather than an estimate. MIG-08
+needs its own architecture challenge and a deliberately chosen first
+vertical slice before implementation begins, following the same discipline
+`DF-ROS-2026-A027` used for the original migration.
+
 # Highest-value next step
 
-Design the new-execution creation effect (clock/ID generation under the
-work-protocol capability) so `PendingNewExecution` outcomes can be carried to
-completion and composed with the now-real Git/evidence observations into a
-single frozen whole-context plan, before any production/distribution switch.
+Give MIG-08 its own architecture challenge and choose its first vertical
+slice deliberately, informed by `EV-ROS-2026-A044`, rather than starting
+from the execution-creation effect as previously assumed. Until that
+scoping happens, continue closing bounded shadow/production parity gaps in
+already-claimed areas (matching the telemetry-candidate and Git-path slices)
+rather than reaching into MIG-08 piecemeal.

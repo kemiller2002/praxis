@@ -21,7 +21,7 @@ open Ros.Infrastructure.Work
 let Version = "0.2.0-shadow"
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE]"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json]"
 
 let private parseRoot (arguments: string array) =
     let values = ResizeArray<string>(arguments)
@@ -306,13 +306,13 @@ let private runWorkPlan root arguments =
 /// its committed-range diff against `HEAD` — deduped and ordinally sorted.
 /// A non-repository directory yields no paths (greenfield compatibility); any
 /// other Git or base-ref-diff failure is an error, never a silent empty list.
-let private realObservedGitPaths root : Result<string list, string> =
+let private realObservedGitPaths root : Result<string list, GitFailure> =
     let workingTreePaths =
         match GitOperations.observe (ProcessGitRepository.create root) with
         | GitStatusObservation.Clean -> Ok []
         | GitStatusObservation.Changed changes -> Ok(changes |> List.map _.Path)
         | GitStatusObservation.Unavailable failure when failure.Reason = GitUnavailableReason.NotRepository -> Ok []
-        | GitStatusObservation.Unavailable failure -> Error $"{failure.Operation} unavailable: {failure.Message}"
+        | GitStatusObservation.Unavailable failure -> Error failure
 
     workingTreePaths
     |> Result.bind (fun paths ->
@@ -326,8 +326,10 @@ let private realObservedGitPaths root : Result<string list, string> =
         | GitBaseComparisonOutcome.NotConfigured
         | GitBaseComparisonOutcome.RefUnavailable -> Ok paths
         | GitBaseComparisonOutcome.Committed committedPaths -> Ok(paths @ committedPaths)
-        | GitBaseComparisonOutcome.Unavailable failure -> Error $"{failure.Operation} unavailable: {failure.Message}")
+        | GitBaseComparisonOutcome.Unavailable failure -> Error failure)
     |> Result.map (fun paths -> paths |> List.distinct |> List.sortWith (fun left right -> String.CompareOrdinal(left, right)))
+
+let private formatGitFailure (failure: GitFailure) = $"{failure.Operation} unavailable: {failure.Message}"
 
 let private runWorkContextPlan root arguments =
     let action = optionValue "--action" arguments |> Option.bind parseWorkAction
@@ -360,8 +362,8 @@ let private runWorkContextPlan root arguments =
                 else Ok []
 
             match observedGitPathsResult with
-            | Error message ->
-                eprintfn "ERROR %s" message
+            | Error failure ->
+                eprintfn "ERROR %s" (formatGitFailure failure)
                 1
             | Ok observedGitPaths ->
                 let meaningfulChangedPaths =
@@ -454,6 +456,60 @@ let private runBacklogPromotionPlan arguments =
         eprintfn "ERROR --queue-state requires ID=STATE with a valid backlog state"
         2
 
+let private readWorkContext root : Result<WorkContextPlanningView, string> =
+    let path = Path.Combine(root, ".ros", "context", "current.json")
+
+    if not (File.Exists path) then
+        Ok { WorkItems = []; StartedAt = None; BaselineDirtyPaths = [] }
+    else
+        WorkContextPlanContract.parseJson (File.ReadAllText path)
+
+/// Mirrors production `workFindings` (`tools/ros_cli.mjs`): when attribution
+/// enforcement is off, no Git observation is ever attempted. Otherwise a
+/// broken Git repository yields a single synthetic finding rather than
+/// failing outright, matching Node's `error.gitFailure` catch.
+let private runWorkAttributionValidate root arguments =
+    if not (arguments |> List.forall ((=) "--json")) then
+        eprintfn "%s" usage
+        2
+    else
+        let enforce = FileWorkConfigRepository.readEnforceAttribution root
+
+        if not enforce then
+            printf "%s" (WorkAttributionContract.renderJson [])
+            0
+        else
+            match readWorkContext root with
+            | Error message ->
+                eprintfn "ERROR %s" message
+                2
+            | Ok context ->
+                match realObservedGitPaths root with
+                | Error failure ->
+                    let finding =
+                        { Path = ".git"
+                          Field = "work_items"
+                          Message =
+                            $"cannot verify work attribution because {failure.Operation} is unavailable: {GitUnavailableReason.code failure.Reason}" }
+
+                    printf "%s" (WorkAttributionContract.renderJson [ finding ])
+                    1
+                | Ok observedGitPaths ->
+                    let request =
+                        { Enforce = true
+                          ObservedGitPaths = observedGitPaths
+                          PathFilterConfig = FileWorkConfigRepository.readPathFilterConfig root
+                          BaselineDirtyPaths = context.BaselineDirtyPaths
+                          AttributedPaths = FileEventLogRepository.readAttributedPaths root
+                          HasActiveOrBlockedWork =
+                            context.WorkItems
+                            |> List.exists (fun item ->
+                                item.SemanticState = LiveWorkState.Active || item.SemanticState = LiveWorkState.Blocked) }
+
+                    let findings = WorkAttribution.findings request
+                    printf "%s" (WorkAttributionContract.renderJson findings)
+                    if findings.IsEmpty then 0 else 1
+
 let private dispatch root arguments =
     let repository = FileArtifactRepository.create root
     let gitRepository = ProcessGitRepository.create root
@@ -481,6 +537,7 @@ let private dispatch root arguments =
     | "work" :: "context-plan" :: rest -> runWorkContextPlan root rest
     | "work" :: "backlog-decide" :: rest -> runBacklogDecision rest
     | "work" :: "backlog-promotion-plan" :: rest -> runBacklogPromotionPlan rest
+    | "work" :: "validate" :: rest -> runWorkAttributionValidate root rest
     | _ ->
         eprintfn "%s" usage
         2

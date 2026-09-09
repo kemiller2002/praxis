@@ -221,6 +221,25 @@ begin) so an irrelevant action never risks a spurious Git failure; explicit
 outside the current repository state, exactly as `--candidate` does for
 telemetry.
 
+`ros-fs work validate [--json]` is a read-only diagnostic mirroring
+production's `workFindings` (`tools/ros_cli.mjs`), the work-attribution
+contributor to Node's monolithic `validate` findings pipeline (alongside
+artifact, registry, queue, and telemetry findings the F# CLI already exposes
+or does not yet mirror as separate diagnostics). `Ros.Domain.Work.Attribution`
+is the pure decision: when `workProtocol.enforceAttribution` is off, no
+Git observation is ever attempted, matching Node's short-circuit before
+`gitPaths` is called; otherwise every real observed Git path is filtered to
+the meaningful set via the same `PathFilter`, excluded when already present
+in the context's `baselineDirtyPaths`, and excluded again when either the
+path appears in `.ros/events/events.jsonl` (`FileEventLogRepository.readAttributedPaths`)
+or any work item in `.ros/context/current.json` is `active`/`blocked`. A
+real Git failure while enforcement is on renders the same single synthetic
+`.git` finding production does — `cannot verify work attribution because
+{operation} is unavailable: {reason}` — never a silent empty result. This
+closes one more Node/F# parity gap without adding new state-changing
+capability: the command only reads `ros.json`, `.ros/context/current.json`,
+`.ros/events/events.jsonl`, and real Git status.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

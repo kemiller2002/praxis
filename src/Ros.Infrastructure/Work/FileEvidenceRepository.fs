@@ -7,7 +7,7 @@ open Ros.Domain.Work
 
 [<RequireQualifiedAccess>]
 module FileEvidenceRepository =
-    let private observe root evidence =
+    let private observe root (evidence: WorkEvidence) =
         try
             let candidate = Path.GetFullPath(Path.Combine(root, evidence.Path))
             File.GetAttributes candidate |> ignore
