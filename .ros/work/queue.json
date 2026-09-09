@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 19,
+  "nextSeq": 20,
   "items": [
     {
       "id": "WI-0001",
@@ -471,6 +471,20 @@
       "attachments": [],
       "createdAt": "2026-09-09T23:36:57.731Z",
       "updatedAt": "2026-09-09T23:37:06.783Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0019",
+      "title": "F# work resume real effect: Phase A increment 6",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-09T23:51:57.034Z",
+      "updatedAt": "2026-09-09T23:52:03.840Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null

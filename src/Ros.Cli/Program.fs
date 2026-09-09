@@ -23,7 +23,7 @@ open System.Text.Json.Nodes
 let Version = "0.2.0-shadow"
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]*"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME]"
 
 let private parseRoot (arguments: string array) =
     let values = ResizeArray<string>(arguments)
@@ -886,9 +886,63 @@ let private workContextRejectionMessage (rejection: WorkContextRejection) =
 let private telemetryRejectionMessage (workItemId: string) (rejection: TelemetryResolutionRejection) =
     match rejection with
     | TelemetryResolutionRejection.DetachedConflict _ ->
-        $"a detached telemetry execution must be linked before creating a new one for '{workItemId}', which 'work start' does not yet support selecting"
+        $"a detached telemetry execution must be linked before creating a new one for '{workItemId}', which this command does not yet support selecting"
     | TelemetryResolutionRejection.Ambiguous ids ->
-        $"""multiple detached telemetry executions require explicit selection for '{workItemId}' ({String.Join(", ", ids)}), which 'work start' does not yet support"""
+        $"""multiple detached telemetry executions require explicit selection for '{workItemId}' ({String.Join(", ", ids)}), which this command does not yet support"""
+
+/// Shared by every live-work transition effect (`work start`, `work
+/// resume`, ...): resolves a plan's telemetry against currently observable
+/// execution files, and whenever resolution halts on `PendingNewExecution`,
+/// creates the missing execution (production's own `startExecution`) and
+/// re-resolves against freshly re-observed candidates -- a real effect
+/// boundary re-reading disk state, not a second pure pass. Bounded to one
+/// creation attempt per requested work item so a persistent failure cannot
+/// loop forever.
+let private resolveContextTelemetryWithCreation root (classifications: string list) attemptsLeft (candidatePlan: WorkContextPlan) =
+    let rec resolve attemptsLeft (candidatePlan: WorkContextPlan) =
+        let telemetryRepository: TelemetryStateRepository =
+            { Observe =
+                fun observedWorkItemId ->
+                    { LinkedExecutionIds =
+                        candidatePlan.WorkItems
+                        |> List.tryFind (fun item -> item.Id = observedWorkItemId)
+                        |> Option.map _.TelemetryExecutionIds
+                        |> Option.defaultValue []
+                      Candidates = FileTelemetryStateRepository.readCandidates root observedWorkItemId
+                      RequestedExecutionId = None } }
+
+        match WorkOperations.resolveContextTelemetry telemetryRepository candidatePlan with
+        | ResolvedTelemetryContextOutcome.Resolved resolvedPlan -> Ok resolvedPlan
+        | ResolvedTelemetryContextOutcome.Rejected(workItemId, rejection) -> Error(telemetryRejectionMessage workItemId rejection)
+        | ResolvedTelemetryContextOutcome.PendingNewExecution workItemId ->
+            if attemptsLeft <= 0 then
+                Error $"unable to resolve a telemetry execution for '{workItemId}'"
+            else
+                match candidatePlan.WorkItems |> List.tryFind (fun item -> item.Id = workItemId) with
+                | None -> Error $"work item '{workItemId}' vanished during telemetry resolution"
+                | Some item ->
+                    let createRequest: FileTelemetryExecutionRepository.CreateExecutionRequest =
+                        { WorkItemId = workItemId
+                          WorkType = item.WorkType
+                          Classifications = classifications }
+
+                    match FileTelemetryExecutionRepository.createExecution root createRequest with
+                    | Error message -> Error message
+                    | Ok _ -> resolve (attemptsLeft - 1) candidatePlan
+
+    resolve attemptsLeft candidatePlan
+
+/// Same `{workItems, events}` shape production's own `work start`/`begin`/
+/// `resume`/`complete`/`done` CLI handlers print: the freshly written
+/// `workItems` array verbatim (unmodeled fields included) and the eventId
+/// of every event this invocation produced.
+let private renderWorkTransitionOutput (writtenItems: JsonArray) (eventIds: string list) =
+    let output = JsonObject()
+    output["workItems"] <- writtenItems.DeepClone()
+    let eventsNode = JsonArray()
+    eventIds |> List.iter (fun id -> eventsNode.Add(JsonValue.Create id: JsonNode))
+    output["events"] <- eventsNode
+    output.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2))
 
 /// Mirrors production `startWork`/`transitionUnlocked` (`tools/ros_cli.mjs`)
 /// for the `begin` action only -- the real effect behind `./ros work
@@ -981,39 +1035,7 @@ let private runWorkStart root arguments =
                                         match WorkContextPlanning.plan request with
                                         | WorkContextPlanOutcome.Rejected rejection -> Error(workContextRejectionMessage rejection)
                                         | WorkContextPlanOutcome.Planned plan ->
-                                            let rec resolve attemptsLeft (candidatePlan: WorkContextPlan) =
-                                                let telemetryRepository: TelemetryStateRepository =
-                                                    { Observe =
-                                                        fun observedWorkItemId ->
-                                                            { LinkedExecutionIds =
-                                                                candidatePlan.WorkItems
-                                                                |> List.tryFind (fun item -> item.Id = observedWorkItemId)
-                                                                |> Option.map _.TelemetryExecutionIds
-                                                                |> Option.defaultValue []
-                                                              Candidates = FileTelemetryStateRepository.readCandidates root observedWorkItemId
-                                                              RequestedExecutionId = None } }
-
-                                                match WorkOperations.resolveContextTelemetry telemetryRepository candidatePlan with
-                                                | ResolvedTelemetryContextOutcome.Resolved resolvedPlan -> Ok resolvedPlan
-                                                | ResolvedTelemetryContextOutcome.Rejected(workItemId, rejection) ->
-                                                    Error(telemetryRejectionMessage workItemId rejection)
-                                                | ResolvedTelemetryContextOutcome.PendingNewExecution workItemId ->
-                                                    if attemptsLeft <= 0 then
-                                                        Error $"unable to resolve a telemetry execution for '{workItemId}'"
-                                                    else
-                                                        match candidatePlan.WorkItems |> List.tryFind (fun item -> item.Id = workItemId) with
-                                                        | None -> Error $"work item '{workItemId}' vanished during telemetry resolution"
-                                                        | Some item ->
-                                                            let createRequest: FileTelemetryExecutionRepository.CreateExecutionRequest =
-                                                                { WorkItemId = workItemId
-                                                                  WorkType = item.WorkType
-                                                                  Classifications = classifications }
-
-                                                            match FileTelemetryExecutionRepository.createExecution root createRequest with
-                                                            | Error message -> Error message
-                                                            | Ok _ -> resolve (attemptsLeft - 1) candidatePlan
-
-                                            match resolve (ids.Length + 1) plan with
+                                            match resolveContextTelemetryWithCreation root classifications (ids.Length + 1) plan with
                                             | Error message -> Error message
                                             | Ok resolvedPlan -> FileWorkContextRepository.applyContextPlan root repositoryId resolvedPlan
                 with error ->
@@ -1028,18 +1050,98 @@ let private runWorkStart root arguments =
                 eprintfn "ERROR %s" message
                 1
             | Ok(), Ok(writtenItems, eventIds) ->
-                let output = JsonObject()
-                output["workItems"] <- writtenItems.DeepClone()
-                let eventsNode = JsonArray()
-                eventIds |> List.iter (fun id -> eventsNode.Add(JsonValue.Create id: JsonNode))
-                output["events"] <- eventsNode
-                printf "%s" (output.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
+                printf "%s" (renderWorkTransitionOutput writtenItems eventIds)
                 0
     | [], _ ->
         eprintfn "ERROR start requires at least one work-item ID"
         2
     | _, None ->
         eprintfn "ERROR work start requires valid --id and --occurred-at"
+        2
+
+/// Mirrors production `transition(root, "resume", ids, options)`
+/// (`tools/ros_cli.mjs`) -- the effect behind `./ros work resume`. Live-work
+/// only: unlike `begin`, `resume` never creates a new context item (an id
+/// absent from context is rejected) and never observes Git. Reuses `work
+/// start`'s effect infrastructure directly (`WorkContextPlanning.plan`,
+/// `resolveContextTelemetryWithCreation`, `FileWorkContextRepository.
+/// applyContextPlan`). Deliberately excludes `recordTelemetryLifecycle`'s
+/// "resumed" bookkeeping and production's `parentExecutionId` linkage on the
+/// rare path where resuming creates a brand-new execution (no CLI exposes
+/// either), and explicit `--identity-*`/`--execution-id` overrides.
+let private runWorkResume root arguments =
+    let ids = optionValues "--id" arguments
+    let occurredAt = optionValue "--occurred-at" arguments
+
+    match ids, occurredAt with
+    | (_ :: _), Some timestamp ->
+        match RegistryLock.acquire root "work-protocol" RegistryLock.defaultSettings with
+        | Error failure ->
+            eprintfn "ERROR %s" failure.Message
+            1
+        | Ok lease ->
+            let result =
+                try
+                    match WorkStateTransaction.recover root with
+                    | Error failure -> Error failure.Message
+                    | Ok() ->
+                        match BacklogStateTransaction.recover root with
+                        | Error failure -> Error failure.Message
+                        | Ok() ->
+                            match readWorkContext root with
+                            | Error message -> Error message
+                            | Ok context ->
+                                let repositoryId = FileWorkConfigRepository.readRepositoryId root
+
+                                let actor =
+                                    optionValue "--actor" arguments
+                                    |> Option.orElse (Environment.GetEnvironmentVariable "ROS_ACTOR" |> Option.ofObj)
+                                    |> Option.orElse (FileWorkContextRepository.readExistingActor root)
+                                    |> Option.defaultValue "unknown"
+
+                                let request: WorkContextPlanRequest =
+                                    { Context = context
+                                      Action = WorkAction.Resume
+                                      WorkItemIds = ids
+                                      NewItemType = "task"
+                                      TargetLocalState = defaultLocalState WorkAction.Resume
+                                      BlockReason = None
+                                      DefaultRequiredEvidence = Set.empty
+                                      RequiredEvidenceByType = Map.empty
+                                      ProvidedEvidence = []
+                                      Repository = repositoryId
+                                      ProtocolVersion = FileWorkConfigRepository.readProtocolVersion root
+                                      Actor = actor
+                                      OccurredAt = timestamp
+                                      MeaningfulChangedPaths = []
+                                      ObservedGitPaths = []
+                                      TelemetryEnabled = FileWorkConfigRepository.readTelemetryEnabled root }
+
+                                match WorkContextPlanning.plan request with
+                                | WorkContextPlanOutcome.Rejected rejection -> Error(workContextRejectionMessage rejection)
+                                | WorkContextPlanOutcome.Planned plan ->
+                                    match resolveContextTelemetryWithCreation root [] (ids.Length + 1) plan with
+                                    | Error message -> Error message
+                                    | Ok resolvedPlan -> FileWorkContextRepository.applyContextPlan root repositoryId resolvedPlan
+                with error ->
+                    lease.Release() |> ignore
+                    reraise ()
+
+            match lease.Release(), result with
+            | Error releaseFailure, Ok _ ->
+                eprintfn "ERROR %s" releaseFailure.Message
+                1
+            | _, Error message ->
+                eprintfn "ERROR %s" message
+                1
+            | Ok(), Ok(writtenItems, eventIds) ->
+                printf "%s" (renderWorkTransitionOutput writtenItems eventIds)
+                0
+    | [], _ ->
+        eprintfn "ERROR resume requires at least one work-item ID"
+        2
+    | _, None ->
+        eprintfn "ERROR work resume requires valid --id and --occurred-at"
         2
 
 /// Mirrors production `queueFindings` (`tools/ros_cli.mjs`): duplicate ids,
@@ -1088,6 +1190,7 @@ let private dispatch root arguments =
     | "work" :: "update" :: rest -> runWorkUpdate root rest
     | "work" :: "attach" :: rest -> runWorkAttach root rest
     | "work" :: "start" :: rest -> runWorkStart root rest
+    | "work" :: "resume" :: rest -> runWorkResume root rest
     | _ ->
         eprintfn "%s" usage
         2
