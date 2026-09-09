@@ -21,7 +21,7 @@ open Ros.Infrastructure.Work
 let Version = "0.2.0-shadow"
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF]"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]*"
 
 let private parseRoot (arguments: string array) =
     let values = ResizeArray<string>(arguments)
@@ -668,6 +668,79 @@ let private runWorkCapture root arguments =
         eprintfn "ERROR work capture requires valid --title and --occurred-at"
         2
 
+/// Mirrors production `updateWorkUnlocked`/`findOrCreateQueueEntry`
+/// (`tools/ros_cli.mjs`) via `Ros.Domain.Work.WorkUpdate`, excluding
+/// `--file` attachment. Real effect, same lock/journal as the other
+/// backlog effects. `--tag`'s presence (not its value) decides whether
+/// tags change at all, matching production's own `rest.includes("--tag")`
+/// gate -- an update with no `--tag` flag never touches existing tags.
+let private runWorkUpdate root arguments =
+    let id = optionValue "--id" arguments
+    let occurredAt = optionValue "--occurred-at" arguments
+
+    match id, occurredAt with
+    | Some workItemId, Some timestamp ->
+        match RegistryLock.acquire root "work-protocol" RegistryLock.defaultSettings with
+        | Error failure ->
+            eprintfn "ERROR %s" failure.Message
+            1
+        | Ok lease ->
+            let result =
+                try
+                    match WorkStateTransaction.recover root with
+                    | Error failure -> Error failure.Message
+                    | Ok() ->
+                        match BacklogStateTransaction.recover root with
+                        | Error failure -> Error failure.Message
+                        | Ok() ->
+                            match readWorkContext root with
+                            | Error message -> Error message
+                            | Ok context ->
+                                let queueContainsId =
+                                    FileBacklogQueueRepository.readItems root |> List.exists (fun item -> item.Id = workItemId)
+
+                                let contextContainsId = context.WorkItems |> List.exists (fun item -> item.Id = workItemId)
+
+                                let request: WorkUpdateRequest =
+                                    { Id = workItemId
+                                      QueueContainsId = queueContainsId
+                                      ContextContainsId = contextContainsId
+                                      Title = optionValue "--title" arguments
+                                      Description = optionValue "--description" arguments
+                                      Tags = if arguments |> List.contains "--tag" then Some(optionValues "--tag" arguments) else None
+                                      Priority = optionValue "--priority" arguments
+                                      OccurredAt = timestamp }
+
+                                match WorkUpdate.plan request with
+                                | WorkUpdateOutcome.Rejected rejection ->
+                                    Error(
+                                        match rejection with
+                                        | WorkUpdateRejection.InvalidId id -> $"invalid work-item ID '{id}'"
+                                        | WorkUpdateRejection.NotFound id -> $"work item '{id}' was not found"
+                                        | WorkUpdateRejection.EmptyTitle -> "title cannot be empty"
+                                        | WorkUpdateRejection.InvalidPriority priority ->
+                                            $"invalid priority '{priority}'; use high, medium, or low"
+                                    )
+                                | WorkUpdateOutcome.Planned plan ->
+                                    FileBacklogQueueRepository.applyUpdate root workItemId plan context.WorkItems
+                with error ->
+                    lease.Release() |> ignore
+                    reraise ()
+
+            match lease.Release(), result with
+            | Error releaseFailure, Ok _ ->
+                eprintfn "ERROR %s" releaseFailure.Message
+                1
+            | _, Error message ->
+                eprintfn "ERROR %s" message
+                1
+            | Ok(), Ok row ->
+                printf "%s" (BacklogTransitionEffectContract.renderJson row)
+                0
+    | _ ->
+        eprintfn "ERROR work update requires valid --id and --occurred-at"
+        2
+
 /// Mirrors production `queueFindings` (`tools/ros_cli.mjs`): duplicate ids,
 /// invalid ids, invalid status, and invalid priority over the raw backlog
 /// queue rows in `.ros/work/queue.json`.
@@ -711,6 +784,7 @@ let private dispatch root arguments =
     | "work" :: "backlog-validate" :: rest -> runBacklogQueueValidate root rest
     | "work" :: "backlog-transition" :: rest -> runBacklogTransitionEffect root rest
     | "work" :: "capture" :: rest -> runWorkCapture root rest
+    | "work" :: "update" :: rest -> runWorkUpdate root rest
     | _ ->
         eprintfn "%s" usage
         2

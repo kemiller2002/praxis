@@ -204,6 +204,62 @@ module FileBacklogQueueRepository =
 
         node
 
+    /// Mirrors production `loadQueue`'s default document -- `{schemaVersion:
+    /// "1.0.0", repository: workConfig(root).repository, nextSeq: 1, items:
+    /// []}` -- synthesized in memory only, never written until a caller
+    /// actually commits a change, exactly as production's own `loadQueue`
+    /// never writes on read.
+    let private loadOrCreateQueueNode (root: string) : Result<JsonObject, string> =
+        let path = queuePath root
+
+        if File.Exists path then
+            match JsonNode.Parse(File.ReadAllText path) with
+            | :? JsonObject as parsed -> Ok parsed
+            | _ -> Error "queue.json must contain a JSON object"
+        else
+            let fresh = JsonObject()
+            fresh["schemaVersion"] <- JsonValue.Create "1.0.0"
+            fresh["repository"] <- JsonValue.Create(FileWorkConfigRepository.readRepositoryId root)
+            fresh["nextSeq"] <- JsonValue.Create 1
+            fresh["items"] <- JsonArray()
+            Ok fresh
+
+    /// Shared commit tail for every real backlog-queue effect: extract rows
+    /// from the (already mutated) items array, regenerate `queue.md` from
+    /// the same merged projection production renders, and commit both
+    /// through the shared `backlog-state` recovery journal (MIG-05).
+    let private commitQueue
+        (root: string)
+        (queueNode: JsonObject)
+        (items: JsonArray)
+        (contextItems: LiveWorkItem list)
+        (findRow: BacklogQueueRow list -> Result<BacklogQueueRow, string>)
+        : Result<BacklogQueueRow, string> =
+        let rows =
+            items
+            |> Seq.choose (fun node ->
+                match node with
+                | :? JsonObject as obj -> rowOf obj
+                | _ -> None)
+            |> Seq.toList
+
+        match findRow rows with
+        | Error message -> Error message
+        | Ok row ->
+            let queueContent = queueNode.ToJsonString serializerOptions + "\n"
+            let markdownContent = QueuePresentation.mergedRows rows contextItems |> QueuePresentation.renderMarkdown
+
+            let writes: BacklogStateWrite list =
+                [ { Path = queueRelativePath; Content = queueContent }
+                  { Path = markdownRelativePath; Content = markdownContent } ]
+
+            match BacklogStateTransaction.prepare root writes with
+            | Error failure -> Error failure.Message
+            | Ok() ->
+                match BacklogStateTransaction.recover root with
+                | Error failure -> Error failure.Message
+                | Ok() -> Ok row
+
     /// Mirrors production `captureWorkUnlocked` + `saveQueueUnlocked`
     /// (`tools/ros_cli.mjs`), excluding `--file` attachment: synthesizes the
     /// same default document production's `loadQueue` default produces when
@@ -213,53 +269,91 @@ module FileBacklogQueueRepository =
     /// same `backlog-state` recovery journal every other backlog effect uses.
     let captureItem (root: string) (plan: WorkCapturePlan) (contextItems: LiveWorkItem list) : Result<BacklogQueueRow, string> =
         try
-            let path = queuePath root
-
-            let queue =
-                if File.Exists path then
-                    match JsonNode.Parse(File.ReadAllText path) with
-                    | :? JsonObject as parsed -> Some parsed
-                    | _ -> None
-                else
-                    let fresh = JsonObject()
-                    fresh["schemaVersion"] <- JsonValue.Create "1.0.0"
-                    fresh["repository"] <- JsonValue.Create(FileWorkConfigRepository.readRepositoryId root)
-                    fresh["nextSeq"] <- JsonValue.Create 1
-                    fresh["items"] <- JsonArray()
-                    Some fresh
-
-            match queue with
-            | None -> Error "queue.json must contain a JSON object"
-            | Some queueNode ->
+            match loadOrCreateQueueNode root with
+            | Error message -> Error message
+            | Ok queueNode ->
                 match queueNode["items"] with
                 | :? JsonArray as items ->
                     items.Add(itemNode plan.Item: JsonNode)
                     queueNode["nextSeq"] <- JsonValue.Create plan.NextSeq
 
-                    let rows =
+                    commitQueue root queueNode items contextItems (fun rows ->
+                        match rows |> List.tryFind (fun row -> row.Id = plan.Item.Id) with
+                        | Some row -> Ok row
+                        | None -> Error $"'{plan.Item.Id}' vanished during capture")
+                | _ -> Error "queue.json 'items' must be an array"
+        with error ->
+            Error error.Message
+
+    /// Mirrors production `findOrCreateQueueEntry`'s exact minimal-record
+    /// default when an id lives only in the live context, not the queue.
+    let private defaultCapturedItem (id: string) (occurredAt: string) : CapturedWorkItem =
+        { Id = id
+          Title = id
+          Description = None
+          Tags = []
+          Priority = "medium"
+          Status = "captured"
+          CreatedAt = occurredAt
+          UpdatedAt = occurredAt
+          CreatedBy = "unknown"
+          Source = "manual"
+          SourceReference = None }
+
+    /// Mirrors production `updateWorkUnlocked`/`findOrCreateQueueEntry`
+    /// (`tools/ros_cli.mjs`): upserts the minimal default record first when
+    /// the id is not yet in the queue, then applies only the fields the
+    /// decided plan names as changed, preserving every other item and field
+    /// verbatim, and commits through the same `backlog-state` journal.
+    let applyUpdate (root: string) (id: string) (plan: WorkUpdatePlan) (contextItems: LiveWorkItem list) : Result<BacklogQueueRow, string> =
+        try
+            match loadOrCreateQueueNode root with
+            | Error message -> Error message
+            | Ok queueNode ->
+                match queueNode["items"] with
+                | :? JsonArray as items ->
+                    let existing =
                         items
                         |> Seq.choose (fun node ->
                             match node with
-                            | :? JsonObject as obj -> rowOf obj
+                            | :? JsonObject as item when stringField item "id" = Some id -> Some item
                             | _ -> None)
-                        |> Seq.toList
+                        |> Seq.tryHead
 
-                    match rows |> List.tryFind (fun row -> row.Id = plan.Item.Id) with
-                    | None -> Error $"'{plan.Item.Id}' vanished during capture"
-                    | Some newRow ->
-                        let queueContent = queueNode.ToJsonString serializerOptions + "\n"
-                        let markdownContent = QueuePresentation.mergedRows rows contextItems |> QueuePresentation.renderMarkdown
+                    let target =
+                        match existing with
+                        | Some item -> item
+                        | None ->
+                            let created = itemNode (defaultCapturedItem id plan.UpdatedAt)
+                            items.Add(created: JsonNode)
+                            created
 
-                        let writes: BacklogStateWrite list =
-                            [ { Path = queueRelativePath; Content = queueContent }
-                              { Path = markdownRelativePath; Content = markdownContent } ]
+                    match plan.Title with
+                    | WorkTitleChange.Set title -> target["title"] <- JsonValue.Create title
+                    | WorkTitleChange.Keep -> ()
 
-                        match BacklogStateTransaction.prepare root writes with
-                        | Error failure -> Error failure.Message
-                        | Ok() ->
-                            match BacklogStateTransaction.recover root with
-                            | Error failure -> Error failure.Message
-                            | Ok() -> Ok newRow
+                    match plan.Description with
+                    | WorkDescriptionChange.Set(Some description) -> target["description"] <- JsonValue.Create description
+                    | WorkDescriptionChange.Set None -> target["description"] <- null
+                    | WorkDescriptionChange.Keep -> ()
+
+                    match plan.Tags with
+                    | WorkTagsChange.Set tags ->
+                        let tagsNode = JsonArray()
+                        tags |> List.iter (fun tag -> tagsNode.Add(JsonValue.Create tag: JsonNode))
+                        target["tags"] <- tagsNode
+                    | WorkTagsChange.Keep -> ()
+
+                    match plan.Priority with
+                    | WorkPriorityChange.Set priority -> target["priority"] <- JsonValue.Create priority
+                    | WorkPriorityChange.Keep -> ()
+
+                    target["updatedAt"] <- JsonValue.Create plan.UpdatedAt
+
+                    commitQueue root queueNode items contextItems (fun rows ->
+                        match rows |> List.tryFind (fun row -> row.Id = id) with
+                        | Some row -> Ok row
+                        | None -> Error $"'{id}' vanished during update")
                 | _ -> Error "queue.json 'items' must be an array"
         with error ->
             Error error.Message

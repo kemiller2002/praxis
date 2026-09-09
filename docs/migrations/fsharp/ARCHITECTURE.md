@@ -375,6 +375,51 @@ what production itself produces (modulo the clock-derived
 `createdAt`/`updatedAt`), not merely that the CLI printed something
 plausible.
 
+## Phase A, increment 3: `work update`
+
+`ros-fs work update --id ID --occurred-at TIMESTAMP [--title TEXT]
+[--description TEXT] [--priority {high|medium|low}] [--tag TAG]*` mirrors
+production `update`/`updateWorkUnlocked`/`findOrCreateQueueEntry`
+(`tools/ros_cli.mjs`), again excluding `--file` attachment. It shares
+`captureItem`'s infrastructure rather than duplicating it: both
+`FileBacklogQueueRepository.captureItem` and the new `applyUpdate` now
+call a shared `loadOrCreateQueueNode`/`commitQueue` pair, extracted from
+`captureItem`'s original body without changing its behavior (its own
+tests still pass unchanged) — proof the two effects really do share one
+underlying shape (parse-or-synthesize, mutate, extract rows, regenerate
+`queue.md`, commit through `BacklogStateTransaction`), not just similar
+prose.
+
+The pure decision, `Ros.Domain.Work.WorkUpdate.plan`, is a genuine
+production behavior most of this migration hasn't needed yet: **partial
+field update**. Node's `updateWorkUnlocked` only ever touches a field when
+the caller's option for it is not `undefined` — an omitted `--title`
+leaves the title alone, not blank. Modeling this with `Option<'T>` inputs
+mapping to `Keep`/`Set` outputs (`WorkTitleChange`, `WorkDescriptionChange`,
+`WorkTagsChange`, `WorkPriorityChange` — four small unions rather than one
+shared type, since `BacklogFieldChange`'s existing `Keep`/`Clear`/`Set of
+string` shape doesn't fit a list-valued field or a doubly-optional
+description) keeps "nothing said, nothing changed" explicit in the type
+rather than encoded as a sentinel value. The CLI layer reproduces one more
+real subtlety in how production reaches this: `--tag`'s own *presence*,
+not its value, decides whether tags change at all (`rest.includes("--tag")`
+in production, `arguments |> List.contains "--tag"` here) — a `work update`
+with no `--tag` flag at all can never clear or replace tags, but one with a
+single valueless `--tag` still counts as "tags provided" and would replace
+them with whatever `tagOptions` collects (here, none).
+
+The other production behavior this slice reproduces deliberately, not
+fixes: `findOrCreateQueueEntry` upserts a *minimal* default record
+(`title = id`, `priority = "medium"`, `attachments: []`, ...) for an id
+found only in the live context, then updates apply on top of that fresh
+record in the same call — never on top of whatever richer record a
+caller might expect. The infrastructure layer re-derives "is this id
+already in the queue" directly from the live `items` array at write time
+rather than trusting the plan's own `UpsertNew` flag, which is sound only
+because the surrounding `work-protocol` lock rules out a same-process race
+between the decision and the write — an assumption every real effect this
+migration has built shares, not a new one.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

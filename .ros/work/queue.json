@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 16,
+  "nextSeq": 17,
   "items": [
     {
       "id": "WI-0001",
@@ -429,6 +429,20 @@
       "attachments": [],
       "createdAt": "2026-09-09T17:40:53.742Z",
       "updatedAt": "2026-09-09T17:40:59.743Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0016",
+      "title": "F# work-update real effect (DF-ROS-2026-A028 Phase A, increment 3)",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-09T17:59:41.039Z",
+      "updatedAt": "2026-09-09T17:59:43.651Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null

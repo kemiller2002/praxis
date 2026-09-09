@@ -29,6 +29,8 @@
     <Compile Include="BacklogTransitionEffectTests.fs" />
     <Compile Include="WorkCaptureTests.fs" />
     <Compile Include="WorkCaptureEffectTests.fs" />
+    <Compile Include="WorkUpdateTests.fs" />
+    <Compile Include="WorkUpdateEffectTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>
