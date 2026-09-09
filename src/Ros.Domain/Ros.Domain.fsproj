@@ -21,5 +21,6 @@
     <Compile Include="Work/QueuePresentation.fs" />
     <Compile Include="Work/Capture.fs" />
     <Compile Include="Work/Update.fs" />
+    <Compile Include="Work/Attachment.fs" />
   </ItemGroup>
 </Project>

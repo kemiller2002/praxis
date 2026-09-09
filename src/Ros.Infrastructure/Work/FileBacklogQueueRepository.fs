@@ -65,6 +65,40 @@ module FileBacklogQueueRepository =
                 | _ -> 1
             | _ -> 1
 
+    /// Mirrors production's own `entry.seq ?? 0` fallback inside
+    /// `attachFileUnlocked`'s sequence computation: a missing or malformed
+    /// `seq` counts as zero, not as absent.
+    let readAttachmentSequences (root: string) (id: string) : int list =
+        let path = queuePath root
+
+        if not (File.Exists path) then
+            []
+        else
+            use document = JsonDocument.Parse(File.ReadAllText path)
+
+            match document.RootElement.TryGetProperty "items" with
+            | true, items when items.ValueKind = JsonValueKind.Array ->
+                items.EnumerateArray()
+                |> Seq.tryFind (fun item ->
+                    match item.TryGetProperty "id" with
+                    | true, value when value.ValueKind = JsonValueKind.String -> value.GetString() = id
+                    | _ -> false)
+                |> Option.map (fun item ->
+                    match item.TryGetProperty "attachments" with
+                    | true, attachments when attachments.ValueKind = JsonValueKind.Array ->
+                        attachments.EnumerateArray()
+                        |> Seq.map (fun entry ->
+                            match entry.TryGetProperty "seq" with
+                            | true, seqValue when seqValue.ValueKind = JsonValueKind.Number ->
+                                match seqValue.TryGetInt32() with
+                                | true, value -> value
+                                | _ -> 0
+                            | _ -> 0)
+                        |> Seq.toList
+                    | _ -> [])
+                |> Option.defaultValue []
+            | _ -> []
+
     let private stringField (item: JsonObject) (name: string) =
         match item[name] with
         | :? JsonValue as value ->
@@ -300,6 +334,27 @@ module FileBacklogQueueRepository =
           Source = "manual"
           SourceReference = None }
 
+    /// Mirrors production `findOrCreateQueueEntry`: an id already in the
+    /// queue is returned as-is; otherwise the minimal default record is
+    /// appended (in production's own key order) and returned for the
+    /// caller to mutate on top of. Shared by every effect that can touch an
+    /// id known only to the live context.
+    let private findOrAppendItem (items: JsonArray) (id: string) (defaultItem: unit -> CapturedWorkItem) : JsonObject =
+        let existing =
+            items
+            |> Seq.choose (fun node ->
+                match node with
+                | :? JsonObject as item when stringField item "id" = Some id -> Some item
+                | _ -> None)
+            |> Seq.tryHead
+
+        match existing with
+        | Some item -> item
+        | None ->
+            let created = itemNode (defaultItem ())
+            items.Add(created: JsonNode)
+            created
+
     /// Mirrors production `updateWorkUnlocked`/`findOrCreateQueueEntry`
     /// (`tools/ros_cli.mjs`): upserts the minimal default record first when
     /// the id is not yet in the queue, then applies only the fields the
@@ -312,21 +367,7 @@ module FileBacklogQueueRepository =
             | Ok queueNode ->
                 match queueNode["items"] with
                 | :? JsonArray as items ->
-                    let existing =
-                        items
-                        |> Seq.choose (fun node ->
-                            match node with
-                            | :? JsonObject as item when stringField item "id" = Some id -> Some item
-                            | _ -> None)
-                        |> Seq.tryHead
-
-                    let target =
-                        match existing with
-                        | Some item -> item
-                        | None ->
-                            let created = itemNode (defaultCapturedItem id plan.UpdatedAt)
-                            items.Add(created: JsonNode)
-                            created
+                    let target = findOrAppendItem items id (fun () -> defaultCapturedItem id plan.UpdatedAt)
 
                     match plan.Title with
                     | WorkTitleChange.Set title -> target["title"] <- JsonValue.Create title
@@ -354,6 +395,69 @@ module FileBacklogQueueRepository =
                         match rows |> List.tryFind (fun row -> row.Id = id) with
                         | Some row -> Ok row
                         | None -> Error $"'{id}' vanished during update")
+                | _ -> Error "queue.json 'items' must be an array"
+        with error ->
+            Error error.Message
+
+    /// Mirrors production `attachFileUnlocked`/`findOrCreateQueueEntry`
+    /// (`tools/ros_cli.mjs`): writes the attachment bytes to
+    /// `.ros/work/attachments/{id}/{storedFile}` first, as a plain
+    /// (non-transactional) write exactly as production's own
+    /// `fs.writeFileSync` is -- a crash between this write and the queue
+    /// commit below leaves the same kind of orphaned file production's own
+    /// design already accepts, not a gap this migration introduces or
+    /// closes. Only once that succeeds does it upsert-or-find the item,
+    /// append the decided attachment record in production's own key order,
+    /// and commit `queue.json`/`queue.md` through the same journal every
+    /// other backlog effect uses.
+    let applyAttachment
+        (root: string)
+        (id: string)
+        (plan: WorkAttachmentPlan)
+        (fileBytes: byte array)
+        (contextItems: LiveWorkItem list)
+        : Result<BacklogQueueRow, string> =
+        try
+            let attachmentDirectory = Path.Combine(root, ".ros", "work", "attachments", id)
+            Directory.CreateDirectory attachmentDirectory |> ignore
+            File.WriteAllBytes(Path.Combine(attachmentDirectory, plan.Record.File), fileBytes)
+
+            match loadOrCreateQueueNode root with
+            | Error message -> Error message
+            | Ok queueNode ->
+                match queueNode["items"] with
+                | :? JsonArray as items ->
+                    let target = findOrAppendItem items id (fun () -> defaultCapturedItem id plan.UpdatedAt)
+
+                    let attachments =
+                        match target["attachments"] with
+                        | :? JsonArray as existing -> existing
+                        | _ ->
+                            let created = JsonArray()
+                            target["attachments"] <- created
+                            created
+
+                    let record = JsonObject()
+                    record["id"] <- JsonValue.Create plan.Record.Id
+                    record["seq"] <- JsonValue.Create plan.Record.Seq
+                    record["name"] <- JsonValue.Create plan.Record.Name
+                    record["file"] <- JsonValue.Create plan.Record.File
+                    record["size"] <- JsonValue.Create plan.Record.Size
+
+                    record["contentType"] <-
+                        match plan.Record.ContentType with
+                        | Some contentType -> JsonValue.Create contentType :> JsonNode
+                        | None -> null
+
+                    record["uploadedAt"] <- JsonValue.Create plan.Record.UploadedAt
+
+                    attachments.Add(record: JsonNode)
+                    target["updatedAt"] <- JsonValue.Create plan.UpdatedAt
+
+                    commitQueue root queueNode items contextItems (fun rows ->
+                        match rows |> List.tryFind (fun row -> row.Id = id) with
+                        | Some row -> Ok row
+                        | None -> Error $"'{id}' vanished during attach")
                 | _ -> Error "queue.json 'items' must be an array"
         with error ->
             Error error.Message

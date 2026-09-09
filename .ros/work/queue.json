@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 17,
+  "nextSeq": 18,
   "items": [
     {
       "id": "WI-0001",
@@ -443,6 +443,20 @@
       "attachments": [],
       "createdAt": "2026-09-09T17:59:41.039Z",
       "updatedAt": "2026-09-09T17:59:43.651Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0017",
+      "title": "F# work attach real effect: Phase A increment 4, backlog-only effects complete",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-09T22:43:08.022Z",
+      "updatedAt": "2026-09-09T22:43:12.647Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
