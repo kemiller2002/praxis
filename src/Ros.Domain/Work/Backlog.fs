@@ -8,6 +8,15 @@ type BacklogState =
     | Abandoned
 
 [<RequireQualifiedAccess>]
+module BacklogState =
+    let code state =
+        match state with
+        | BacklogState.Captured -> "captured"
+        | BacklogState.Ready -> "ready"
+        | BacklogState.Blocked -> "blocked"
+        | BacklogState.Abandoned -> "abandoned"
+
+[<RequireQualifiedAccess>]
 type BacklogAction =
     | Ready
     | Block

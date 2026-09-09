@@ -264,6 +264,69 @@ cosmetic gain. The new file is deliberately compiled last in
 become the "most recent" declaration shadowing an earlier file's own
 unannotated field access.
 
+## Phase A: the first real state-changing effect (`work backlog-transition`)
+
+`DF-ROS-2026-A028` names Phase A ("full command-surface effect parity") as
+the precondition for ever redirecting `./ros`. `ros-fs work backlog-transition
+--id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason
+TEXT]` is Phase A's first increment: a genuine, differential-proven write to
+`.ros/work/queue.json` and `.ros/work/queue.md`, mirroring production
+`backlogTransition`/`backlogTransitionUnlocked` (`tools/ros_cli.mjs`) exactly
+— not a shadow diagnostic. It deliberately excludes `start`: production's own
+`backlogTransitionUnlocked` never handles that action either (`startWork` is
+a separate exported function delegating into the full live-work
+`transitionUnlocked`, which also touches telemetry) — a materially larger,
+telemetry-entangled effect this slice does not attempt.
+
+The pure decision is `Ros.Domain.Work.BacklogTransition.decide` (already
+built and tested for the read-only `work backlog-decide` diagnostic); this
+slice is what finally *executes* that decision. Two design choices make the
+execution safe:
+
+- **JSON surgery over a typed rewrite.** `queue.json` items carry fields no
+  F# type models today (`attachments`, `description`, `sourceReference`,
+  arbitrary future fields). A typed parse-mutate-reserialize round trip would
+  silently drop anything the type doesn't know about — invisible data loss
+  on every write, not a bug that fails loudly. `Ros.Infrastructure.Work.FileBacklogQueueRepository.applyStateChange`
+  instead parses `queue.json` as a mutable `System.Text.Json.Nodes.JsonNode`
+  tree, mutates only `status`/`blockedReason`/`abandonedReason`/`updatedAt`
+  on the one matching item (`BacklogFieldChange.Set`/`Clear`/`Keep`, mapped
+  to indexer-set/`Remove`/no-op), and reserializes the *whole* tree — so
+  every other item, and every field on the mutated item this migration
+  doesn't model, survives byte-for-byte. `JsonSerializerOptions` is
+  configured with `Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping`
+  (the same choice `JsonRendering.renderIndented` already made for contract
+  output) so an apostrophe or quote in a title is never HTML-safe-escaped
+  the way .NET's default encoder would — production's own `JSON.stringify`
+  never does either, and a real differential test with `It's a "quoted"
+  title` as a fixture title proves the byte match, not just the common case.
+- **Markdown regeneration needs typed rows, not the whole document.**
+  `queue.md`'s table only ever needs `id`/`title`/`tags`/`priority` from the
+  queue plus `id`/`semanticState` from live work items in
+  `.ros/context/current.json` — so `Ros.Domain.Work.QueuePresentation`
+  (`effectiveStatus`/`mergedRows`/`renderMarkdown`) is a small, fully typed,
+  pure port of production's own `effectiveStatus`/`mergedRows`/`renderQueueMarkdown`,
+  built from rows the infrastructure layer extracts from the same mutated
+  `JsonNode` tree, without needing a complete queue-item type either.
+
+Both writes commit through the *existing* MIG-05 `BacklogStateTransaction`
+contract (`prepare` writes the recovery journal, `recover` applies it and
+deletes the journal on success — the same two-call sequence production's own
+`commitBacklogState` uses), under the same generic `RegistryLock.acquire
+root "work-protocol"` file lock production's `withFileLock` uses (proven
+format-compatible since MIG-04/05), after recovering any pending work-state
+*and* backlog-state transaction first — mirroring `withWorkProtocol`'s exact
+guard order. No new persistence primitive was needed: this slice is proof
+that MIG-05's ports were built for exactly this moment.
+
+An unknown id, an illegal transition, and a missing `--reason` on `block`
+are rejected with production's exact error-message text (`'{id}' is not a
+captured local work item`, `cannot {action} backlog item '{id}' from
+'{status}'`, `block requires --reason`) before any file is touched — proven
+by a real differential test that also exercises Node's own error path and
+asserts the state files are byte-identical afterward (i.e. untouched, not
+partially written).
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

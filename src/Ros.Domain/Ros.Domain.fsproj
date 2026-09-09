@@ -18,5 +18,6 @@
     <Compile Include="Artifacts/Policy.fs" />
     <Compile Include="Artifacts/Projection.fs" />
     <Compile Include="Work/QueueValidation.fs" />
+    <Compile Include="Work/QueuePresentation.fs" />
   </ItemGroup>
 </Project>

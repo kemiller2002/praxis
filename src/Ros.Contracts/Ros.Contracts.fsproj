@@ -15,6 +15,7 @@
     <Compile Include="Work/BacklogJson.fs" />
     <Compile Include="Work/AttributionJson.fs" />
     <Compile Include="Work/QueueValidationJson.fs" />
+    <Compile Include="Work/BacklogTransitionJson.fs" />
     <Compile Include="Artifacts/RegistryJson.fs" />
     <Compile Include="Cli/FindingJson.fs" />
   </ItemGroup>

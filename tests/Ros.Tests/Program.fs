@@ -14,4 +14,6 @@ let main _ =
     @ PathFilterTests.tests
     @ WorkAttributionTests.tests
     @ QueueValidationTests.tests
+    @ QueuePresentationTests.tests
+    @ BacklogTransitionEffectTests.tests
     |> TestRunner.run
