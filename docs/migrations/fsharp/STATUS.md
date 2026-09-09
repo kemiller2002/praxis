@@ -1,6 +1,6 @@
 # ROS F# migration status
 
-Last updated: 2026-09-09. Production authority remains Node.
+Last updated: 2026-09-09 (post four-tier/parity audit). Production authority remains Node.
 
 | Category | Current state |
 |---|---|
@@ -15,7 +15,7 @@ Last updated: 2026-09-09. Production authority remains Node.
 | Production command switch | not authorized and not attempted |
 | Legacy removal | none; Python validator remains an oracle; layout generator is only a deprecation candidate |
 | Distribution | repository-local .NET 10 shadow only; consumer decision unresolved |
-| Verification | complete gate passes: 104 Node, 7 Python, 70 F#, and 25 differential/smoke tests (206 total); final SDE/ROS closeout checks remain for the active slice |
+| Verification | complete gate passes: 104 Node, 7 Python, 72 F#, and 25 differential/smoke tests (208 total); zero-warning build; a direct four-tier compliance sweep (project references, per-file opens, no invented Tier 3 decisions) found no violations |
 | Research | experiment A020 and hypotheses A021–A026 preregistered |
 
 T6 closed WI-0011 and finalized `EXE-20260907T203141590Z-54f547f8`. The final

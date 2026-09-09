@@ -407,10 +407,51 @@ migration-doc, and ROS work/telemetry records. After T2: the additive F# shadow,
 its tests, workflow provisioning, documentation, and result evidence were
 added; no production authority source was removed or redirected.
 
+## Four-tier compliance and shadow/production parity audit
+
+Reviewed every `src/` file against `SDE-DOCTRINE-003` (Four-Tier Architecture)
+directly rather than relying only on the project-reference architecture
+test: grepped every `open` in `Ros.Domain` and `Ros.Application` for
+host/effect types (`System.IO`, `System.Diagnostics`, `DateTime.Now/UtcNow`,
+`Guid.NewGuid`, `Console`, `Environment`), read every Application-layer
+operations module to confirm it composes ports and Domain decisions rather
+than inventing its own legality rules, and confirmed Infrastructure/CLI
+reference only inward. No tier violation was found — the project-reference
+architecture test's structural check and the doctrine's semantic
+requirements agree in this codebase.
+
+The audit did surface one real shadow/production parity gap distinct from a
+tier violation: `ros-fs work plan --resolve-telemetry` could only be given
+candidate executions as synthetic `--candidate` flags, unlike every sibling
+observation (`FileEvidenceRepository` for evidence, `ProcessGitRepository`
+for Git status), which reads real repository state by default. Added
+`Ros.Infrastructure.Work.FileTelemetryStateRepository`, reading the same
+`.ros/telemetry/executions/*.json` records production's
+`showTelemetry`/`loadExecutions` observe in the same sorted order, and wired
+it as the CLI's default when no `--candidate` flags are given (flags remain
+available only to force an out-of-repository scenario for controlled
+testing). Rewrote the five telemetry differential tests to drop synthetic
+candidates entirely, reading the real fixture directory instead — a
+strictly stronger parity proof than comparing against a hand-simulated
+input. Two new typed tests cover the repository's filtering and
+missing-directory behavior directly. Complete gate: 208 checks (104 Node, 7
+Python, 72 F#, 25 differential), zero-warning build.
+
+A second, larger gap was named but deliberately not closed in this pass:
+`work context-plan`'s `ObservedGitPaths`/`MeaningfulChangedPaths` also remain
+flag-only, but production's equivalent composes the Git status observation
+with a `ros.json`-configured glob include/ignore filter and an optional
+`ROS_BASE_REF` committed-range diff — neither a config-glob matcher nor a
+committed-range Git operation exists yet anywhere in F#. Building that
+faithfully (matching Node's exact glob semantics and the base-ref existence
+check) is a materially larger, novel undertaking than wiring an
+already-built port, so it is recorded as its own future slice rather than
+attempted ad hoc alongside a compliance audit.
+
 # Highest-value next step
 
 Design the new-execution creation effect (clock/ID generation under the
 work-protocol capability) so `PendingNewExecution` outcomes can be carried to
-completion, then compose the fully resolved plan with the existing bounded
-work-state/backlog persistence ports before any production/distribution
-switch.
+completion, then build the config-driven glob matcher and `ROS_BASE_REF`
+composition so `work context-plan` observes real Git state by default like
+evidence and telemetry now do, before any production/distribution switch.

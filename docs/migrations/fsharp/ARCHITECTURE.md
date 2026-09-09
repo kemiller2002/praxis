@@ -182,15 +182,33 @@ completion. When resolution reaches an intent that would require a new
 execution, it halts and reports `PendingNewExecution` rather than guessing an
 ID — the still-open boundary below.
 
-This closes the Git side of composition already threaded through
-`ObservedGitPaths`/`MeaningfulChangedPaths`, but the plan is still pre-effect
-for that remaining case: creating a genuinely new execution record is a
-clock/ID-generation effect this migration phase does not perform, so
+`Ros.Infrastructure.Work.FileTelemetryStateRepository` gives the shadow CLI a
+real observation of candidate executions, reading the same
+`.ros/telemetry/executions/*.json` records production's
+`showTelemetry`/`loadExecutions` read, in the same lexicographic order. `ros-fs
+work plan --resolve-telemetry` uses it by default; explicit `--candidate`
+flags remain available only to force a scenario the current repository state
+does not contain (controlled testing). This closes the same class of gap
+`FileEvidenceRepository` and `ProcessGitRepository` already closed for
+evidence and Git status: the shadow surface observes real repository state
+rather than only a synthetic simulation of it.
+
+Creating a genuinely new execution record is still a clock/ID-generation
+effect this migration phase does not perform, so
 `ResolvedTelemetryOutcome.PendingNewExecution` names the exact work item
 needing that effect instead of the frozen projection. A future state-changing
 handler must perform that creation, feed the resulting ID back through the
 same `TelemetryItemState` port, and only then render the event/context write
 set through the existing work-state recovery port.
+
+`ObservedGitPaths`/`MeaningfulChangedPaths` on `work context-plan` remain
+explicit flags rather than a real observation, unlike telemetry candidates:
+production's equivalent (`gitPaths`/`meaningfulPaths` in `tools/ros_cli.mjs`)
+composes the already-typed Git status observation with a `ros.json`-configured
+glob include/ignore filter and an optional `ROS_BASE_REF` committed-range
+diff, and no F# config-glob matcher or committed-range Git operation exists
+yet to back a real default. This is a scope boundary, not a defect in what the
+context-plan slice already claims: closing it is its own bounded slice.
 
 ## Work-state recovery seam
 

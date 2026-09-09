@@ -1,8 +1,11 @@
 namespace Ros.Tests
 
+open System
+open System.IO
 open Ros.Application.Work
 open Ros.Domain.Telemetry
 open Ros.Domain.Work
+open Ros.Infrastructure.Work
 
 [<RequireQualifiedAccess>]
 module TelemetryResolutionTests =
@@ -265,4 +268,39 @@ module TelemetryResolutionTests =
                           "TASK-SECOND",
                           TelemetryResolutionRejection.Ambiguous [ "EXE-x"; "EXE-y" ]
                       ))
-                      (WorkOperations.resolveContextTelemetry repository contextPlan) } ]
+                      (WorkOperations.resolveContextTelemetry repository contextPlan) }
+          { Name = "file telemetry state repository reads only the requested work item's real execution records"
+            Run =
+              fun () ->
+                  let root = Path.Combine(Path.GetTempPath(), $"ros-telemetry-state-{Guid.NewGuid():N}")
+                  let executions = Path.Combine(root, ".ros", "telemetry", "executions")
+                  Directory.CreateDirectory executions |> ignore
+
+                  try
+                      let write executionId workItemId status =
+                          File.WriteAllText(
+                              Path.Combine(executions, $"{executionId}.json"),
+                              $"""{{"executionId":"{executionId}","workItemId":"{workItemId}","status":"{status}"}}"""
+                          )
+
+                      write "EXE-a" "TASK-TARGET" "active"
+                      write "EXE-b" "TASK-TARGET" "finalized"
+                      write "EXE-c" "TASK-OTHER" "active"
+
+                      let candidates = FileTelemetryStateRepository.readCandidates root "TASK-TARGET"
+
+                      Assert.equal
+                          [ { ExecutionId = "EXE-a"
+                              WorkItemId = "TASK-TARGET"
+                              Status = ExecutionStatus.Active }
+                            { ExecutionId = "EXE-b"
+                              WorkItemId = "TASK-TARGET"
+                              Status = ExecutionStatus.Finalized } ]
+                          candidates
+                  finally
+                      Directory.Delete(root, true) }
+          { Name = "file telemetry state repository reports no candidates when the executions directory is absent"
+            Run =
+              fun () ->
+                  let root = Path.Combine(Path.GetTempPath(), $"ros-telemetry-state-{Guid.NewGuid():N}")
+                  Assert.equal [] (FileTelemetryStateRepository.readCandidates root "TASK-TARGET") } ]
