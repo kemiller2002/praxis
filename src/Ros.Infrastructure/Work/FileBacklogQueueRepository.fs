@@ -48,6 +48,23 @@ module FileBacklogQueueRepository =
                 items.EnumerateArray() |> Seq.choose parseItem |> Seq.toList
             | _ -> []
 
+    /// Mirrors production `loadQueue`'s default `nextSeq: 1` when the file
+    /// or field is absent or malformed.
+    let readNextSeq (root: string) : int =
+        let path = queuePath root
+
+        if not (File.Exists path) then
+            1
+        else
+            use document = JsonDocument.Parse(File.ReadAllText path)
+
+            match document.RootElement.TryGetProperty "nextSeq" with
+            | true, value when value.ValueKind = JsonValueKind.Number ->
+                match value.TryGetInt32() with
+                | true, seq -> seq
+                | _ -> 1
+            | _ -> 1
+
     let private stringField (item: JsonObject) (name: string) =
         match item[name] with
         | :? JsonValue as value ->
@@ -155,3 +172,94 @@ module FileBacklogQueueRepository =
                 | _ -> Error "queue.json must contain a JSON object"
             with error ->
                 Error error.Message
+
+    /// Same field key order production's own object literal writes:
+    /// `id, title, description, tags, priority, status, attachments,
+    /// createdAt, updatedAt, createdBy, source, sourceReference`.
+    let private itemNode (item: CapturedWorkItem) : JsonObject =
+        let node = JsonObject()
+        node["id"] <- JsonValue.Create item.Id
+        node["title"] <- JsonValue.Create item.Title
+
+        node["description"] <-
+            match item.Description with
+            | Some description -> JsonValue.Create description :> JsonNode
+            | None -> null
+
+        let tags = JsonArray()
+        item.Tags |> List.iter (fun tag -> tags.Add(JsonValue.Create tag: JsonNode))
+        node["tags"] <- tags
+        node["priority"] <- JsonValue.Create item.Priority
+        node["status"] <- JsonValue.Create item.Status
+        node["attachments"] <- JsonArray()
+        node["createdAt"] <- JsonValue.Create item.CreatedAt
+        node["updatedAt"] <- JsonValue.Create item.UpdatedAt
+        node["createdBy"] <- JsonValue.Create item.CreatedBy
+        node["source"] <- JsonValue.Create item.Source
+
+        node["sourceReference"] <-
+            match item.SourceReference with
+            | Some reference -> JsonValue.Create reference :> JsonNode
+            | None -> null
+
+        node
+
+    /// Mirrors production `captureWorkUnlocked` + `saveQueueUnlocked`
+    /// (`tools/ros_cli.mjs`), excluding `--file` attachment: synthesizes the
+    /// same default document production's `loadQueue` default produces when
+    /// `queue.json` does not exist yet, appends the newly decided item in
+    /// production's own key order, persists the decided `nextSeq`, and
+    /// commits both `queue.json` and the regenerated `queue.md` through the
+    /// same `backlog-state` recovery journal every other backlog effect uses.
+    let captureItem (root: string) (plan: WorkCapturePlan) (contextItems: LiveWorkItem list) : Result<BacklogQueueRow, string> =
+        try
+            let path = queuePath root
+
+            let queue =
+                if File.Exists path then
+                    match JsonNode.Parse(File.ReadAllText path) with
+                    | :? JsonObject as parsed -> Some parsed
+                    | _ -> None
+                else
+                    let fresh = JsonObject()
+                    fresh["schemaVersion"] <- JsonValue.Create "1.0.0"
+                    fresh["repository"] <- JsonValue.Create(FileWorkConfigRepository.readRepositoryId root)
+                    fresh["nextSeq"] <- JsonValue.Create 1
+                    fresh["items"] <- JsonArray()
+                    Some fresh
+
+            match queue with
+            | None -> Error "queue.json must contain a JSON object"
+            | Some queueNode ->
+                match queueNode["items"] with
+                | :? JsonArray as items ->
+                    items.Add(itemNode plan.Item: JsonNode)
+                    queueNode["nextSeq"] <- JsonValue.Create plan.NextSeq
+
+                    let rows =
+                        items
+                        |> Seq.choose (fun node ->
+                            match node with
+                            | :? JsonObject as obj -> rowOf obj
+                            | _ -> None)
+                        |> Seq.toList
+
+                    match rows |> List.tryFind (fun row -> row.Id = plan.Item.Id) with
+                    | None -> Error $"'{plan.Item.Id}' vanished during capture"
+                    | Some newRow ->
+                        let queueContent = queueNode.ToJsonString serializerOptions + "\n"
+                        let markdownContent = QueuePresentation.mergedRows rows contextItems |> QueuePresentation.renderMarkdown
+
+                        let writes: BacklogStateWrite list =
+                            [ { Path = queueRelativePath; Content = queueContent }
+                              { Path = markdownRelativePath; Content = markdownContent } ]
+
+                        match BacklogStateTransaction.prepare root writes with
+                        | Error failure -> Error failure.Message
+                        | Ok() ->
+                            match BacklogStateTransaction.recover root with
+                            | Error failure -> Error failure.Message
+                            | Ok() -> Ok newRow
+                | _ -> Error "queue.json 'items' must be an array"
+        with error ->
+            Error error.Message

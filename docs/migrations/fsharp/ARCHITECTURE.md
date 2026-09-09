@@ -327,6 +327,54 @@ by a real differential test that also exercises Node's own error path and
 asserts the state files are byte-identical afterward (i.e. untouched, not
 partially written).
 
+## Phase A, increment 2: `work capture`
+
+`ros-fs work capture --title TITLE --occurred-at TIMESTAMP [--id ID]
+[--priority {high|medium|low}] [--description TEXT] [--tag TAG]*
+[--actor NAME] [--source NAME] [--source-reference REF]` mirrors production
+`add`/`captureWork`/`captureWorkUnlocked`/`nextQueueId` (`tools/ros_cli.mjs`),
+deliberately excluding `--file` attachment: `attachFileUnlocked` copies
+binary content and is a separate, larger effect this slice does not attempt
+(an item this command creates always starts with `attachments: []`,
+matching production's own initial state for an item created without
+`--file`).
+
+The pure decision is new: `Ros.Domain.Work.WorkCapture.plan` — title
+trimming and emptiness, priority validation, explicit-id validation against
+*both* the queue and the live context (in that order, matching production's
+own two separate checks), and collision-avoiding sequential ID generation
+(`WI-%04d` seeded from the persisted `nextSeq`, advancing past any
+collision) when no explicit id is given. It deliberately checks a
+generated id's uniqueness against the queue only, never the live context
+— reproducing a real production asymmetry (`nextQueueId` only ever
+consults `queue.items`) rather than "fixing" it, since a differential
+test must prove behavior, not a nicer version of it.
+
+`Ros.Infrastructure.Work.FileBacklogQueueRepository.captureItem` extends the
+same `JsonNode`-surgery approach `applyStateChange` established: an
+*existing* `queue.json` is parsed and appended to (every prior item and
+field surviving untouched, same as a transition); an *absent* one is
+synthesized first, matching production's `loadQueue` default —
+`{schemaVersion: "1.0.0", repository: <resolved>, nextSeq: 1, items: []}`
+— including reading `ros.json`'s `repository.id ?? name ?? path.basename(root)`
+chain (`FileWorkConfigRepository.readRepositoryId`, new) for the `repository`
+field a from-scratch document needs. The new item is then written as a
+`JsonObject` in production's own literal key order (`id, title, description,
+tags, priority, status, attachments, createdAt, updatedAt, createdBy,
+source, sourceReference`) so a byte comparison against a real Node capture
+is meaningful, not coincidental. `queue.md` is regenerated exactly as it is
+for a transition, and both writes commit through the same
+`BacklogStateTransaction`/`RegistryLock` pair.
+
+Real differential tests cover an auto-generated id (including an
+apostrophe-and-quotes title, proving the escaping choice still holds), a
+completely fresh (missing) `queue.json`, an explicit id that never advances
+`nextSeq`, and three rejection paths (empty title, invalid priority, and a
+duplicate explicit id) — each proving the state files are byte-identical to
+what production itself produces (modulo the clock-derived
+`createdAt`/`updatedAt`), not merely that the CLI printed something
+plausible.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

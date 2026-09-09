@@ -19,5 +19,6 @@
     <Compile Include="Artifacts/Projection.fs" />
     <Compile Include="Work/QueueValidation.fs" />
     <Compile Include="Work/QueuePresentation.fs" />
+    <Compile Include="Work/Capture.fs" />
   </ItemGroup>
 </Project>

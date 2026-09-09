@@ -21,7 +21,7 @@ open Ros.Infrastructure.Work
 let Version = "0.2.0-shadow"
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT]"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF]"
 
 let private parseRoot (arguments: string array) =
     let values = ResizeArray<string>(arguments)
@@ -588,6 +588,86 @@ let private runBacklogTransitionEffect root arguments =
         eprintfn "ERROR work backlog-transition requires valid --id, --action, and --occurred-at"
         2
 
+/// Mirrors production `captureWorkUnlocked`/`nextQueueId`
+/// (`tools/ros_cli.mjs`) via `Ros.Domain.Work.WorkCapture`, excluding
+/// `--file` attachment (a separate, larger effect). A real effect,
+/// guarded by the same "work-protocol" lock and `backlog-state` recovery
+/// journal as `work backlog-transition`.
+let private runWorkCapture root arguments =
+    let title = optionValue "--title" arguments
+    let occurredAt = optionValue "--occurred-at" arguments
+
+    match title, occurredAt with
+    | Some titleText, Some timestamp ->
+        match RegistryLock.acquire root "work-protocol" RegistryLock.defaultSettings with
+        | Error failure ->
+            eprintfn "ERROR %s" failure.Message
+            1
+        | Ok lease ->
+            let result =
+                try
+                    match WorkStateTransaction.recover root with
+                    | Error failure -> Error failure.Message
+                    | Ok() ->
+                        match BacklogStateTransaction.recover root with
+                        | Error failure -> Error failure.Message
+                        | Ok() ->
+                            match readWorkContext root with
+                            | Error message -> Error message
+                            | Ok context ->
+                                let actor =
+                                    optionValue "--actor" arguments
+                                    |> Option.orElse (Environment.GetEnvironmentVariable "ROS_ACTOR" |> Option.ofObj)
+                                    |> Option.defaultValue "unknown"
+
+                                let request: WorkCaptureRequest =
+                                    { Title = titleText
+                                      ExplicitId = optionValue "--id" arguments
+                                      Priority = optionValue "--priority" arguments
+                                      Description = optionValue "--description" arguments
+                                      Tags = optionValues "--tag" arguments
+                                      Actor = actor
+                                      Source = optionValue "--source" arguments
+                                      SourceReference = optionValue "--source-reference" arguments
+                                      ExistingQueueIds =
+                                        FileBacklogQueueRepository.readItems root
+                                        |> List.map (fun item -> item.Id)
+                                        |> Set.ofList
+                                      ExistingContextIds = context.WorkItems |> List.map (fun item -> item.Id) |> Set.ofList
+                                      NextSeq = FileBacklogQueueRepository.readNextSeq root
+                                      OccurredAt = timestamp }
+
+                                match WorkCapture.plan request with
+                                | WorkCaptureOutcome.Rejected rejection ->
+                                    Error(
+                                        match rejection with
+                                        | WorkCaptureRejection.EmptyTitle -> "add requires a non-empty title"
+                                        | WorkCaptureRejection.InvalidPriority priority ->
+                                            $"invalid priority '{priority}'; use high, medium, or low"
+                                        | WorkCaptureRejection.InvalidId id -> $"invalid work-item ID '{id}'"
+                                        | WorkCaptureRejection.DuplicateInQueue id -> $"work item '{id}' already exists"
+                                        | WorkCaptureRejection.DuplicateInContext id ->
+                                            $"work item '{id}' already exists in repository context"
+                                    )
+                                | WorkCaptureOutcome.Planned plan -> FileBacklogQueueRepository.captureItem root plan context.WorkItems
+                with error ->
+                    lease.Release() |> ignore
+                    reraise ()
+
+            match lease.Release(), result with
+            | Error releaseFailure, Ok _ ->
+                eprintfn "ERROR %s" releaseFailure.Message
+                1
+            | _, Error message ->
+                eprintfn "ERROR %s" message
+                1
+            | Ok(), Ok row ->
+                printf "%s" (BacklogTransitionEffectContract.renderJson row)
+                0
+    | _ ->
+        eprintfn "ERROR work capture requires valid --title and --occurred-at"
+        2
+
 /// Mirrors production `queueFindings` (`tools/ros_cli.mjs`): duplicate ids,
 /// invalid ids, invalid status, and invalid priority over the raw backlog
 /// queue rows in `.ros/work/queue.json`.
@@ -630,6 +710,7 @@ let private dispatch root arguments =
     | "work" :: "validate" :: rest -> runWorkAttributionValidate root rest
     | "work" :: "backlog-validate" :: rest -> runBacklogQueueValidate root rest
     | "work" :: "backlog-transition" :: rest -> runBacklogTransitionEffect root rest
+    | "work" :: "capture" :: rest -> runWorkCapture root rest
     | _ ->
         eprintfn "%s" usage
         2
