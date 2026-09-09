@@ -253,9 +253,9 @@ let private runWorkPlan root arguments =
               TelemetryEnabled = arguments |> List.contains "--telemetry-enabled" }
 
         if arguments |> List.contains "--resolve-telemetry" then
-            let candidates = optionValues "--candidate" arguments |> List.map (parseCandidate workItemId)
+            let explicitCandidates = optionValues "--candidate" arguments |> List.map (parseCandidate workItemId)
 
-            if candidates |> List.forall Option.isSome then
+            if explicitCandidates |> List.forall Option.isSome then
                 match WorkOperations.planTransition request with
                 | WorkPlanOutcome.Rejected rejection ->
                     printf "%s" (WorkPlanContract.renderJson (WorkPlanOutcome.Rejected rejection))
@@ -263,9 +263,13 @@ let private runWorkPlan root arguments =
                 | WorkPlanOutcome.Planned plan ->
                     let repository: TelemetryStateRepository =
                         { Observe =
-                            fun _ ->
+                            fun observedWorkItemId ->
                                 { LinkedExecutionIds = plan.Item.TelemetryExecutionIds
-                                  Candidates = candidates |> List.choose id
+                                  Candidates =
+                                    if explicitCandidates.IsEmpty then
+                                        FileTelemetryStateRepository.readCandidates root observedWorkItemId
+                                    else
+                                        explicitCandidates |> List.choose id
                                   RequestedExecutionId = optionValue "--requested-execution-id" arguments } }
 
                     let outcome = WorkOperations.resolveTelemetry repository plan

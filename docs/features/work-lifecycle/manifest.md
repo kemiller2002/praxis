@@ -25,7 +25,10 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   hash-preconditioned event/context and backlog queue/projection recovery
   journals, plus typed Git evidence through the contract-compatible
   `tools/ros_git.mjs` process adapter. The shadow F# application observes
-  completion evidence through a typed filesystem port after semantic guards.
+  completion evidence through a typed filesystem port after semantic guards,
+  and observes real candidate telemetry executions through
+  `Ros.Infrastructure.Work.FileTelemetryStateRepository` when resolving
+  execution IDs.
 
 ## Interfaces
 

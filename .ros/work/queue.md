@@ -17,7 +17,8 @@
 | MIG-06-GIT-INTEGRATION | MIG-06-GIT-INTEGRATION | complete |  |  |
 | MIG-06-GIT-PROVENANCE | MIG-06 characterize and shadow typed Git provenance | complete | fsharp, migration, git | high |
 | MIG-07-BACKLOG-PLAN | MIG-07-BACKLOG-PLAN | complete |  |  |
-| MIG-07-TELEMETRY-RESOLUTION | Compose telemetry execution-ID resolution into the F# work plan/context plan | ready |  | high |
+| MIG-07-FOUR-TIER-AUDIT | Four-tier compliance audit and real telemetry-candidate parity for the F# shadow CLI | ready |  | high |
+| MIG-07-TELEMETRY-RESOLUTION | Compose telemetry execution-ID resolution into the F# work plan/context plan | complete |  | high |
 | MIG-07-VERIFIED-CONTEXT | MIG-07-VERIFIED-CONTEXT | complete |  |  |
 | MIG-07-WORK-CONTEXT | MIG-07-WORK-CONTEXT | complete |  |  |
 | MIG-07-WORK-EVIDENCE | MIG-07-WORK-EVIDENCE | complete |  |  |
