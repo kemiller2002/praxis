@@ -420,6 +420,65 @@ because the surrounding `work-protocol` lock rules out a same-process race
 between the decision and the write — an assumption every real effect this
 migration has built shares, not a new one.
 
+## Phase A, increment 4: `work attach` — every backlog-only effect now has parity
+
+`ros-fs work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME]
+[--file PATH[=NAME]]*` mirrors production `attachFileUnlocked`/
+`sanitizeFileComponent`/`findOrCreateQueueEntry` (`tools/ros_cli.mjs`). This
+is the fourth Phase A increment and closes out the backlog-only command
+surface: `add`, `update`, `attach`, and `ready`/`block`/`abandon` all now
+have real, differential-proven F# effects.
+
+Two things make this slice larger than the prior three, both handled
+deliberately:
+
+- **It is the first real effect to touch bytes, not just JSON/text.**
+  Production reads the source file, computes a sanitized on-disk name,
+  writes it under `.ros/work/attachments/{id}/{seq}-{sanitized}`, *then*
+  commits the queue/markdown update — and does so as a **plain,
+  non-transactional write**, not through `BacklogStateTransaction`. This
+  slice reproduces that exact ordering and exact non-atomicity: a crash
+  between the file write and the queue commit leaves the same kind of
+  orphaned attachment file production's own design already accepts. That is
+  not a gap this migration introduces, and not one it silently closes
+  either — matching the boundary is the correct fidelity, not a shortcut.
+  `Ros.Domain.Work.WorkAttachment.sanitizeFileComponent` ports production's
+  `sanitizeFileComponent` exactly: the last POSIX path segment (`path.basename`
+  on this platform), trimmed, every run of characters outside
+  `[A-Za-z0-9._-]` collapsed to one `_` — falling back to `"file"` only when
+  basename-then-trim leaves *nothing at all* (not, as a first draft of this
+  slice's own tests wrongly assumed, whenever the whole name is disallowed
+  characters: `sanitizeFileComponent("???")` is `"_"`, a valid non-empty
+  result, not `"file"` — production's own `cleaned || "file"` only fires on
+  an empty string).
+- **Multiple `--file` flags do not commit as one batch.** Production's own
+  `work attach` CLI handler loops calling the fully-locked, fully-committing
+  `attachFile` once per file (`for (const file of files) attachFile(...)`),
+  so N files means N separate lock-acquire/recover/commit cycles, not one.
+  `runWorkAttach` reproduces this exactly via `attachOneFile`, a
+  single-file lock-to-commit cycle the CLI loops over — matching not just
+  the end state but the same partial-progress behavior if a later file in
+  the batch fails (earlier ones stay committed).
+
+The sequence-number and record-shape decision, `Ros.Domain.Work.WorkAttachment.plan`,
+mirrors `attachFileUnlocked`'s `item.attachments.reduce((max, entry) =>
+Math.max(max, entry.seq ?? 0), 0) + 1` precisely: the next sequence is one
+past the *highest* existing sequence, not the count, and a missing or
+malformed `seq` on an existing record counts as zero rather than being
+skipped (`FileBacklogQueueRepository.readAttachmentSequences` reproduces
+the same `?? 0` fallback when reading real records). `contentType` is
+always `None`: production's own `work attach` CLI path never threads one
+through either (only the separate, out-of-scope HTTP upload path in
+`ros_server.mjs` ever does).
+
+`FileBacklogQueueRepository.applyAttachment` extends the same
+`findOrAppendItem`/`commitQueue` shape the prior two effects share — a
+`findOrAppendItem` helper was extracted from `applyUpdate`'s original body
+(behavior unchanged, its own tests still pass) so all three item-touching
+effects (`applyUpdate`, `applyAttachment`, and `captureItem`'s own append)
+go through the same small set of primitives rather than three parallel
+copies of "find or upsert, mutate, commit."
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

@@ -21,7 +21,7 @@ open Ros.Infrastructure.Work
 let Version = "0.2.0-shadow"
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]*"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]*"
 
 let private parseRoot (arguments: string array) =
     let values = ResizeArray<string>(arguments)
@@ -741,6 +741,120 @@ let private runWorkUpdate root arguments =
         eprintfn "ERROR work update requires valid --id and --occurred-at"
         2
 
+/// Mirrors production `fileOptions`' exact linear scan and guard: each
+/// `--file` occurrence must be immediately followed by a value that is not
+/// itself another flag, split on the first `=` into `PATH` and an optional
+/// `NAME`.
+let private parseFileArguments (arguments: string list) : Result<(string * string option) list, string> =
+    let rec loop remaining acc =
+        match remaining with
+        | "--file" :: value :: rest when not (value.StartsWith "--") ->
+            let separator = value.IndexOf '='
+
+            let entry =
+                if separator > 0 then
+                    value.Substring(0, separator), Some(value.Substring(separator + 1))
+                else
+                    value, None
+
+            loop rest (entry :: acc)
+        | "--file" :: _ -> Error "--file requires PATH or PATH=NAME"
+        | _ :: rest -> loop rest acc
+        | [] -> Ok(List.rev acc)
+
+    loop arguments []
+
+/// Mirrors production `attachFileUnlocked`/`findOrCreateQueueEntry`
+/// (`tools/ros_cli.mjs`) via `Ros.Domain.Work.WorkAttachment`. Production's
+/// own `work attach` calls the fully-locked `attachFile` once per file in
+/// its own loop -- not once for the whole batch -- so this attaches
+/// exactly one file per lock acquisition too, matching that same
+/// per-file commit granularity.
+let private attachOneFile root (id: string) (sourcePath: string) (nameOverride: string option) (occurredAt: string) : Result<BacklogQueueRow, string> =
+    match RegistryLock.acquire root "work-protocol" RegistryLock.defaultSettings with
+    | Error failure -> Error failure.Message
+    | Ok lease ->
+        let result =
+            try
+                match WorkStateTransaction.recover root with
+                | Error failure -> Error failure.Message
+                | Ok() ->
+                    match BacklogStateTransaction.recover root with
+                    | Error failure -> Error failure.Message
+                    | Ok() ->
+                        match readWorkContext root with
+                        | Error message -> Error message
+                        | Ok context ->
+                            try
+                                let resolvedPath = Path.GetFullPath(Path.Combine(root, sourcePath))
+                                let fileBytes = File.ReadAllBytes resolvedPath
+
+                                let displayName =
+                                    let candidate = nameOverride |> Option.defaultValue (Path.GetFileName sourcePath)
+                                    let trimmed = candidate.Trim()
+                                    if trimmed = "" then "file" else trimmed
+
+                                let queueContainsId = FileBacklogQueueRepository.readItems root |> List.exists (fun item -> item.Id = id)
+                                let contextContainsId = context.WorkItems |> List.exists (fun item -> item.Id = id)
+
+                                let request: WorkAttachmentRequest =
+                                    { Id = id
+                                      QueueContainsId = queueContainsId
+                                      ContextContainsId = contextContainsId
+                                      DisplayName = displayName
+                                      Size = int64 fileBytes.Length
+                                      ExistingAttachmentSequences = FileBacklogQueueRepository.readAttachmentSequences root id
+                                      OccurredAt = occurredAt }
+
+                                match WorkAttachment.plan request with
+                                | WorkAttachmentOutcome.Rejected rejection ->
+                                    Error(
+                                        match rejection with
+                                        | WorkAttachmentRejection.InvalidId id -> $"invalid work-item ID '{id}'"
+                                        | WorkAttachmentRejection.NotFound id -> $"work item '{id}' was not found"
+                                    )
+                                | WorkAttachmentOutcome.Planned plan ->
+                                    FileBacklogQueueRepository.applyAttachment root id plan fileBytes context.WorkItems
+                            with error ->
+                                Error error.Message
+            with error ->
+                lease.Release() |> ignore
+                reraise ()
+
+        match lease.Release(), result with
+        | Error releaseFailure, Ok _ -> Error releaseFailure.Message
+        | _, Error message -> Error message
+        | Ok(), Ok row -> Ok row
+
+let private runWorkAttach root arguments =
+    let id = optionValue "--id" arguments
+    let occurredAt = optionValue "--occurred-at" arguments
+
+    match id, occurredAt, parseFileArguments arguments with
+    | Some workItemId, Some timestamp, Ok((_ :: _) as files) ->
+        let rec attachAll remaining =
+            match remaining with
+            | [ (sourcePath, nameOverride) ] -> attachOneFile root workItemId sourcePath nameOverride timestamp
+            | (sourcePath, nameOverride) :: rest ->
+                match attachOneFile root workItemId sourcePath nameOverride timestamp with
+                | Error message -> Error message
+                | Ok _ -> attachAll rest
+            | [] -> Error "work attach requires at least one --file PATH[=NAME]"
+
+        match attachAll files with
+        | Error message ->
+            eprintfn "ERROR %s" message
+            1
+        | Ok row ->
+            printf "%s" (BacklogTransitionEffectContract.renderJson row)
+            0
+    | _, _, Error message ->
+        eprintfn "ERROR %s" message
+        2
+    | _ ->
+        eprintfn "ERROR work attach requires valid --id, --occurred-at, and at least one --file PATH[=NAME]"
+        2
+
 /// Mirrors production `queueFindings` (`tools/ros_cli.mjs`): duplicate ids,
 /// invalid ids, invalid status, and invalid priority over the raw backlog
 /// queue rows in `.ros/work/queue.json`.
@@ -785,6 +899,7 @@ let private dispatch root arguments =
     | "work" :: "backlog-transition" :: rest -> runBacklogTransitionEffect root rest
     | "work" :: "capture" :: rest -> runWorkCapture root rest
     | "work" :: "update" :: rest -> runWorkUpdate root rest
+    | "work" :: "attach" :: rest -> runWorkAttach root rest
     | _ ->
         eprintfn "%s" usage
         2

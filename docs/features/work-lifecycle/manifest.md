@@ -65,7 +65,24 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   via `Ros.Domain.Work.WorkUpdate` and
   `FileBacklogQueueRepository.applyUpdate`, which shares its
   parse-or-synthesize/commit machinery with `captureItem`. It also
-  excludes `--file` attachment.
+  excludes `--file` attachment. `ros-fs work attach` (Phase A's fourth and
+  final backlog-only increment) is the real effect for production
+  `attachFileUnlocked`: it is the first real effect to touch file bytes, not
+  just JSON/text, writing each attachment as a plain, non-transactional file
+  before the queue commit (reproducing production's own non-atomicity between
+  the two writes rather than improving on it), computing the next attachment
+  sequence as one past the highest existing sequence (missing/malformed `seq`
+  counts as zero, not the count), and sanitizing the stored filename with a
+  ported `sanitizeFileComponent` (basename, trim, collapse disallowed
+  characters to `_`, `file` fallback only when that leaves nothing). Multiple
+  `--file` flags commit as that many separate `work-protocol` lock cycles, one
+  per file, matching production's own per-file loop, via
+  `Ros.Domain.Work.WorkAttachment` and
+  `FileBacklogQueueRepository.applyAttachment`/`readAttachmentSequences`,
+  which share `findOrAppendItem` (extracted from `applyUpdate`, behavior
+  unchanged) with the other two item-touching effects. With this increment,
+  every backlog-only Node command (`add`, `update`, `attach`,
+  `ready`/`block`/`abandon`) has real F# effect parity.
 
 ## Interfaces
 
@@ -99,6 +116,9 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 - Work-update real-effect tests: `tests/Ros.Tests/WorkUpdateTests.fs`,
   `tests/Ros.Tests/WorkUpdateEffectTests.fs`, and
   `tests/work-update-fsharp-differential.test.mjs`.
+- Work-attach real-effect tests: `tests/Ros.Tests/WorkAttachmentTests.fs`,
+  `tests/Ros.Tests/WorkAttachmentEffectTests.fs`, and
+  `tests/work-attach-fsharp-differential.test.mjs`.
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
 - Integration/live verification: `./ros status`, `./ros work context ID`, and
@@ -130,11 +150,14 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   units; telemetry effects occur before event/context journal preparation; the
   F# planner now owns pure whole-context/multi-item and backlog-promotion plans,
   post-plan evidence observation, telemetry execution-ID result-feedback
-  (recover/reject/bulk-link/finalize), and three real backlog-only effects
-  (`ready`/`block`/`abandon` transitions, `add`/`captureWork`, and
-  `update`/`findOrCreateQueueEntry`), but not new-execution creation, `start`'s
-  live-work/telemetry promotion effect, `--file` attachment, live-work
-  context/event persistence effects, or any telemetry-producer command.
-  Evidence containment has no current
+  (recover/reject/bulk-link/finalize), and all four real backlog-only effects
+  (`ready`/`block`/`abandon` transitions, `add`/`captureWork`,
+  `update`/`findOrCreateQueueEntry`, and `attachFileUnlocked`, including real
+  binary file writes and filename sanitization/sequencing) — every
+  backlog-only Node command now has real F# parity. Still remaining:
+  new-execution creation, `start`'s live-work/telemetry promotion effect,
+  every live-work transition, live-work context/event persistence effects, and
+  every telemetry-producer command — all telemetry- or live-work-entangled,
+  pending MIG-08's own scoping decision. Evidence containment has no current
   authority; production behavior accepts absolute existing paths. Production
   remains Node-owned pending those slices and the distribution decision.

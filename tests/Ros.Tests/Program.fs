@@ -20,4 +20,6 @@ let main _ =
     @ WorkCaptureEffectTests.tests
     @ WorkUpdateTests.tests
     @ WorkUpdateEffectTests.tests
+    @ WorkAttachmentTests.tests
+    @ WorkAttachmentEffectTests.tests
     |> TestRunner.run
