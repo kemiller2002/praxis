@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 14,
+  "nextSeq": 15,
   "items": [
     {
       "id": "WI-0001",
@@ -401,6 +401,20 @@
       "attachments": [],
       "createdAt": "2026-09-09T16:44:22.993Z",
       "updatedAt": "2026-09-09T16:44:25.482Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0014",
+      "title": "F# backlog-transition real effect (DF-ROS-2026-A028 Phase A, increment 1)",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-09T17:20:00.648Z",
+      "updatedAt": "2026-09-09T17:20:03.292Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null

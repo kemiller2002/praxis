@@ -912,11 +912,32 @@
         "EXE-20260909T164425566Z-68e2981e"
       ],
       "completedAt": "2026-09-09T16:44:28.629Z"
+    },
+    {
+      "id": "WI-0014",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileBacklogQueueRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-backlog-transition-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-09T17:20:06.283Z",
+      "telemetryExecutionIds": [
+        "EXE-20260909T172003382Z-c75f9eac"
+      ],
+      "completedAt": "2026-09-09T17:20:06.283Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-09T16:44:28.629Z",
+  "updatedAt": "2026-09-09T17:20:06.283Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

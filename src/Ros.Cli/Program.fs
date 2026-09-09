@@ -21,7 +21,7 @@ open Ros.Infrastructure.Work
 let Version = "0.2.0-shadow"
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json]"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT]"
 
 let private parseRoot (arguments: string array) =
     let values = ResizeArray<string>(arguments)
@@ -510,6 +510,84 @@ let private runWorkAttributionValidate root arguments =
                     printf "%s" (WorkAttributionContract.renderJson findings)
                     if findings.IsEmpty then 0 else 1
 
+/// Mirrors production `backlogTransition`/`backlogTransitionUnlocked`
+/// (`tools/ros_cli.mjs`): a real effect on `.ros/work/queue.json` and
+/// `.ros/work/queue.md`, guarded by the same "work-protocol" file lock and
+/// backlog-state recovery journal production's own writer uses. Only the
+/// three backlog-only actions (`ready`/`block`/`abandon`) are supported --
+/// `start` promotes a backlog item into live work and is production's own
+/// `startWork`, a materially larger effect (live context + telemetry) this
+/// slice deliberately excludes.
+let private runBacklogTransitionEffect root arguments =
+    let workItemId = optionValue "--id" arguments
+    let rawAction = optionValue "--action" arguments
+    let occurredAt = optionValue "--occurred-at" arguments
+    let reason = optionValue "--reason" arguments
+
+    match workItemId, rawAction, rawAction |> Option.bind parseBacklogAction, occurredAt with
+    | Some id, Some actionText, Some action, Some timestamp ->
+        match RegistryLock.acquire root "work-protocol" RegistryLock.defaultSettings with
+        | Error failure ->
+            eprintfn "ERROR %s" failure.Message
+            1
+        | Ok lease ->
+            let result =
+                try
+                    match WorkStateTransaction.recover root with
+                    | Error failure -> Error failure.Message
+                    | Ok() ->
+                        match BacklogStateTransaction.recover root with
+                        | Error failure -> Error failure.Message
+                        | Ok() ->
+                            match FileBacklogQueueRepository.readItems root |> List.tryFind (fun item -> item.Id = id) with
+                            | None -> Error $"'{id}' is not a captured local work item"
+                            | Some item ->
+                                let illegalTransition () =
+                                    Error $"cannot {actionText} backlog item '{id}' from '{item.Status}'"
+
+                                match parseBacklogState item.Status with
+                                | None -> illegalTransition ()
+                                | Some currentState ->
+                                    match
+                                        WorkOperations.decideBacklogTransition
+                                            { State = currentState; Action = action; Reason = reason }
+                                    with
+                                    | BacklogTransitionDecision.Rejected(BacklogTransitionRejection.IllegalTransition _) ->
+                                        illegalTransition ()
+                                    | BacklogTransitionDecision.Rejected BacklogTransitionRejection.BlockReasonRequired ->
+                                        Error "block requires --reason"
+                                    | BacklogTransitionDecision.Allowed BacklogTransitionEffect.PromoteToLiveWork ->
+                                        Error "work backlog-transition does not support 'start'; use production './ros work start'"
+                                    | BacklogTransitionDecision.Allowed(BacklogTransitionEffect.ChangeState(newState, blockedChange, abandonedChange)) ->
+                                        match readWorkContext root with
+                                        | Error message -> Error message
+                                        | Ok context ->
+                                            FileBacklogQueueRepository.applyStateChange
+                                                root
+                                                id
+                                                newState
+                                                blockedChange
+                                                abandonedChange
+                                                timestamp
+                                                context.WorkItems
+                with error ->
+                    lease.Release() |> ignore
+                    reraise ()
+
+            match lease.Release(), result with
+            | Error releaseFailure, Ok _ ->
+                eprintfn "ERROR %s" releaseFailure.Message
+                1
+            | _, Error message ->
+                eprintfn "ERROR %s" message
+                1
+            | Ok(), Ok row ->
+                printf "%s" (BacklogTransitionEffectContract.renderJson row)
+                0
+    | _ ->
+        eprintfn "ERROR work backlog-transition requires valid --id, --action, and --occurred-at"
+        2
+
 /// Mirrors production `queueFindings` (`tools/ros_cli.mjs`): duplicate ids,
 /// invalid ids, invalid status, and invalid priority over the raw backlog
 /// queue rows in `.ros/work/queue.json`.
@@ -551,6 +629,7 @@ let private dispatch root arguments =
     | "work" :: "backlog-promotion-plan" :: rest -> runBacklogPromotionPlan rest
     | "work" :: "validate" :: rest -> runWorkAttributionValidate root rest
     | "work" :: "backlog-validate" :: rest -> runBacklogQueueValidate root rest
+    | "work" :: "backlog-transition" :: rest -> runBacklogTransitionEffect root rest
     | _ ->
         eprintfn "%s" usage
         2
