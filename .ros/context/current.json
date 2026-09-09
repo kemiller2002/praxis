@@ -768,18 +768,28 @@
     {
       "id": "MIG-07-VERIFIED-CONTEXT",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-09T00:57:05.795Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Application/Work/Operations.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkPlanTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-09T01:03:05.598Z",
       "telemetryExecutionIds": [
         "EXE-20260909T005705798Z-55a690b1"
-      ]
+      ],
+      "completedAt": "2026-09-09T01:03:05.598Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-09T00:57:05.795Z",
+  "updatedAt": "2026-09-09T01:03:05.598Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
