@@ -42,6 +42,18 @@ type GitStatusObservation =
     | Changed of GitChange list
     | Unavailable of GitFailure
 
+/// Mirrors production's optional `ROS_BASE_REF` committed-range comparison
+/// in `gitPaths` (`tools/ros_cli.mjs`): a missing/unresolvable ref is a
+/// silent no-op (a CI base ref can be absent in nested fixture repositories),
+/// while a resolvable ref whose diff itself fails is a hard failure, not a
+/// silently skipped one.
+[<RequireQualifiedAccess>]
+type GitBaseComparisonOutcome =
+    | NotConfigured
+    | RefUnavailable
+    | Committed of paths: string list
+    | Unavailable of GitFailure
+
 [<RequireQualifiedAccess>]
 module GitStatus =
     let private deltaCode delta =

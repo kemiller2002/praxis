@@ -96,4 +96,38 @@ module GitTests =
                   | GitStatusObservation.Unavailable failure ->
                       Assert.equal GitUnavailableReason.ToolUnavailable failure.Reason
                       Assert.equal None failure.ExitCode
-                  | other -> failwith $"Expected unavailable observation, received {other}" } ]
+                  | other -> failwith $"Expected unavailable observation, received {other}" }
+          { Name = "base comparison is not configured when no ref is supplied"
+            Run =
+              fun () ->
+                  withTemporaryRoot true (fun root _ ->
+                      Assert.equal
+                          GitBaseComparisonOutcome.NotConfigured
+                          (GitOperations.compareBase (ProcessGitRepository.createBaseComparison root) None)) }
+          { Name = "base comparison returns the committed range for a resolvable ref"
+            Run =
+              fun () ->
+                  withTemporaryRoot true (fun root run ->
+                      File.WriteAllText(Path.Combine(root, "a.txt"), "one\n")
+                      run [ "add"; "a.txt" ]
+                      run [ "commit"; "-qm"; "first" ]
+                      File.WriteAllText(Path.Combine(root, "b.txt"), "two\n")
+                      run [ "add"; "b.txt" ]
+                      run [ "commit"; "-qm"; "second" ]
+
+                      Assert.equal
+                          (GitBaseComparisonOutcome.Committed [ "b.txt" ])
+                          (GitOperations.compareBase (ProcessGitRepository.createBaseComparison root) (Some "HEAD~1"))) }
+          { Name = "base comparison silently reports an unresolvable ref rather than failing"
+            Run =
+              fun () ->
+                  withTemporaryRoot true (fun root run ->
+                      File.WriteAllText(Path.Combine(root, "a.txt"), "one\n")
+                      run [ "add"; "a.txt" ]
+                      run [ "commit"; "-qm"; "first" ]
+
+                      Assert.equal
+                          GitBaseComparisonOutcome.RefUnavailable
+                          (GitOperations.compareBase
+                              (ProcessGitRepository.createBaseComparison root)
+                              (Some "refs/does-not-exist"))) } ]

@@ -201,14 +201,25 @@ handler must perform that creation, feed the resulting ID back through the
 same `TelemetryItemState` port, and only then render the event/context write
 set through the existing work-state recovery port.
 
-`ObservedGitPaths`/`MeaningfulChangedPaths` on `work context-plan` remain
-explicit flags rather than a real observation, unlike telemetry candidates:
-production's equivalent (`gitPaths`/`meaningfulPaths` in `tools/ros_cli.mjs`)
-composes the already-typed Git status observation with a `ros.json`-configured
-glob include/ignore filter and an optional `ROS_BASE_REF` committed-range
-diff, and no F# config-glob matcher or committed-range Git operation exists
-yet to back a real default. This is a scope boundary, not a defect in what the
-context-plan slice already claims: closing it is its own bounded slice.
+`ObservedGitPaths`/`MeaningfulChangedPaths` on `work context-plan` now default
+to a real observation, closing the gap the previous paragraph in this
+document once named. `Ros.Domain.Work.PathFilter` mirrors production's
+`globMatch`/`meaningfulPaths` (`tools/ros_cli.mjs`) character-for-character —
+escaping only the same metacharacter set Node's manual escape does (a generic
+regex-escape would also escape `*` itself and characters Node leaves literal,
+breaking the `**`/`*` distinction) — and `Ros.Infrastructure.Work.FileWorkConfigRepository`
+reads `ros.json`'s `workProtocol.meaningfulPaths`/`.ignoredPaths` with the
+same field-by-field defaults. `Ros.Domain.Git.GitBaseComparisonOutcome` and
+`ProcessGitRepository.createBaseComparison` add the optional `$ROS_BASE_REF`
+committed-range extension: an unresolvable ref is a silent no-op (matching
+production's own tolerance of an absent CI base ref in nested fixtures),
+while a resolvable ref whose diff itself fails is a hard error, never folded
+into a silently empty path list. The CLI gates real observation on the same
+condition production gates `gitPaths` on (completion, or a repository's first
+begin) so an irrelevant action never risks a spurious Git failure; explicit
+`--observed-git-path`/`--path` flags remain available to force a scenario
+outside the current repository state, exactly as `--candidate` does for
+telemetry.
 
 ## Work-state recovery seam
 

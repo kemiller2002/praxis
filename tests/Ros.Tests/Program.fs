@@ -11,4 +11,5 @@ let main _ =
     @ BacklogTests.tests
     @ TelemetryTests.tests
     @ TelemetryResolutionTests.tests
+    @ PathFilterTests.tests
     |> TestRunner.run

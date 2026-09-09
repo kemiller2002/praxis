@@ -28,7 +28,10 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   completion evidence through a typed filesystem port after semantic guards,
   and observes real candidate telemetry executions through
   `Ros.Infrastructure.Work.FileTelemetryStateRepository` when resolving
-  execution IDs.
+  execution IDs. It also observes real Git status and configured
+  `ros.json` meaningful/ignored path patterns by default when planning a
+  context, through `Ros.Domain.Work.PathFilter` and
+  `Ros.Infrastructure.Work.FileWorkConfigRepository`.
 
 ## Interfaces
 
@@ -46,6 +49,9 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   item/event projection differential in `tests/work-fsharp-differential.test.mjs`.
 - Telemetry execution-ID resolution tests: `tests/Ros.Tests/TelemetryResolutionTests.fs`
   and `tests/work-telemetry-fsharp-differential.test.mjs`.
+- Git observed/meaningful-path composition tests: `tests/Ros.Tests/PathFilterTests.fs`,
+  the base-comparison cases in `tests/Ros.Tests/GitTests.fs`, and
+  `tests/work-git-paths-fsharp-differential.test.mjs`.
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
 - Integration/live verification: `./ros status`, `./ros work context ID`, and
