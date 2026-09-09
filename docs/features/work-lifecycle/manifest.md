@@ -41,6 +41,8 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   `tests/Ros.Tests/GitTests.fs` and `tests/git-fsharp-differential.test.mjs`.
 - Shadow orchestration tests: `tests/Ros.Tests/WorkPlanTests.fs` and the legal
   item/event projection differential in `tests/work-fsharp-differential.test.mjs`.
+- Telemetry execution-ID resolution tests: `tests/Ros.Tests/TelemetryResolutionTests.fs`
+  and `tests/work-telemetry-fsharp-differential.test.mjs`.
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
 - Integration/live verification: `./ros status`, `./ros work context ID`, and
@@ -67,11 +69,12 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 ## Maintenance
 
 - Owner: repository-governance
-- Last checked against implementation: 2026-09-08
+- Last checked against implementation: 2026-09-09
 - Known gaps: backlog and live work intentionally remain separate recovery
   units; telemetry effects occur before event/context journal preparation; the
-  F# planner now owns pure whole-context/multi-item and backlog-promotion plans
-  plus post-plan evidence observation, but not telemetry result feedback,
+  F# planner now owns pure whole-context/multi-item and backlog-promotion plans,
+  post-plan evidence observation, and telemetry execution-ID result-feedback
+  (recover/reject/bulk-link/finalize), but not new-execution creation,
   queue/context persistence effects, or state-changing execution. Evidence containment has no current
   authority; production behavior accepts absolute existing paths. Production
   remains Node-owned pending those slices and the distribution decision.

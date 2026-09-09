@@ -168,11 +168,29 @@ command evidence list once in caller order, and returns no plan when any issue
 exists. This removes duplicate evidence-policy implementations without moving
 filesystem knowledge into Domain.
 
-The plan is still pre-effect. Telemetry intents may create or discover
-execution IDs that must be placed into the final items and events before the
-event/context write set is rendered. That result-feedback phase must be typed
-and verified before a state-changing F# handler can safely use the existing
-work-state recovery port.
+The telemetry-resolution sub-slice composes a plan's abstract `TelemetryIntent`
+list with an observed candidate-execution read model (`TelemetryItemState`),
+freezing the final item/event `telemetryExecutionIds` projection whenever no
+intent requires creating a new execution record. Begin's single
+recover-or-start decision reuses the existing `ExecutionLinkRecovery` contract
+unchanged; resume is a distinct bulk-link decision — production appends every
+currently active execution for the work item regardless of prior link state
+and never rejects on multiple candidates, unlike begin's single-candidate
+ambiguity guard. Finalize similarly re-scans every active candidate rather
+than only linked ones, matching production's orphan-recovery behavior on
+completion. When resolution reaches an intent that would require a new
+execution, it halts and reports `PendingNewExecution` rather than guessing an
+ID — the still-open boundary below.
+
+This closes the Git side of composition already threaded through
+`ObservedGitPaths`/`MeaningfulChangedPaths`, but the plan is still pre-effect
+for that remaining case: creating a genuinely new execution record is a
+clock/ID-generation effect this migration phase does not perform, so
+`ResolvedTelemetryOutcome.PendingNewExecution` names the exact work item
+needing that effect instead of the frozen projection. A future state-changing
+handler must perform that creation, feed the resulting ID back through the
+same `TelemetryItemState` port, and only then render the event/context write
+set through the existing work-state recovery port.
 
 ## Work-state recovery seam
 

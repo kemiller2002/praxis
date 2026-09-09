@@ -345,6 +345,43 @@ The result remains deliberately pre-effect: telemetry execution IDs must feed
 back into final item/event projections before persistence can be rendered. The
 complete heterogeneous gate passes all 188 checks.
 
+## MIG-07 — telemetry execution-ID resolution
+
+Composed the existing abstract `TelemetryIntent` plan with an observed
+candidate-execution read model. Begin reuses the already-verified
+`ExecutionLinkRecovery` single recover-or-reject decision unchanged. Reading
+production's resume branch closely showed a materially different rule: it
+appends every currently active execution for the work item regardless of
+prior link state and never rejects on multiple candidates, unlike begin's
+ambiguity guard over unlinked candidates. Finalize similarly re-scans every
+active candidate rather than only linked ones, which is how production
+recovers an orphaned execution on completion. Modeling resume and finalize as
+bulk, non-rejecting operations (sharing one helper) rather than reusing the
+recover-or-reject shape avoided inventing a rejection path production does not
+have.
+
+Resolution honestly halts and reports `PendingNewExecution` rather than
+inventing an ID when an intent would require creating a new execution record,
+since that creation is a clock/ID-generation effect outside this migration
+phase; steps after the halt are not evaluated because they would need to
+observe a not-yet-created record. The outcome/port types were first drafted in
+the Application layer, then moved into `Ros.Domain.Work` after noticing the
+existing `VerifiedWorkPlanOutcome`/`VerifiedWorkContextPlanOutcome` precedent:
+outcome types stay in Domain so Contracts can render them without an
+architecture-violating Application reference; only the effect-port record
+stays in Application, consistent with `WorkEvidenceRepository`.
+
+Five Node differentials confirm real production behavior for begin recovery,
+begin ambiguity rejection, resume bulk-linking across two concurrently active
+executions, and completion recovering an orphan before finalizing it versus
+finalizing an already-linked execution without re-ensuring it. Thirteen typed
+tests cover the pure decision directly. The complete heterogeneous gate passes
+all 206 checks (104 Node, 7 Python, 70 F#, 25 differential/smoke) with a
+zero-warning, zero-error F# build.
+
+New-execution creation, queue/context persistence effects, and the production
+switch remain open.
+
 # Decisions and rationale
 
 `DF-ROS-2026-A027` records the accepted boundary and rejected alternatives. The
@@ -372,6 +409,8 @@ added; no production authority source was removed or redirected.
 
 # Highest-value next step
 
-Migrate backlog promotion semantics into a typed plan, then compose a frozen
-whole-work plan with evidence, Git, telemetry, and the existing bounded
-persistence ports before any production/distribution switch.
+Design the new-execution creation effect (clock/ID generation under the
+work-protocol capability) so `PendingNewExecution` outcomes can be carried to
+completion, then compose the fully resolved plan with the existing bounded
+work-state/backlog persistence ports before any production/distribution
+switch.

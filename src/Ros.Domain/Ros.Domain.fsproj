@@ -11,6 +11,7 @@
     <Compile Include="Work/ContextPlan.fs" />
     <Compile Include="Work/Backlog.fs" />
     <Compile Include="Telemetry/ExecutionLink.fs" />
+    <Compile Include="Work/TelemetryResolution.fs" />
     <Compile Include="Artifacts/Model.fs" />
     <Compile Include="Artifacts/Policy.fs" />
     <Compile Include="Artifacts/Projection.fs" />
