@@ -12,7 +12,7 @@ Last updated: 2026-09-09 (post four-tier/parity audit). Production authority rem
 | Persistence migration | MIG-05 complete: bounded registry, live-work, and backlog recovery units plus atomic per-execution telemetry files and recoverable execution/context linking; no cross-store/global transaction claim |
 | Git migration | MIG-06 complete: F# owns the typed status contract; production work/telemetry effects share one contract-compatible Node adapter pending the distribution decision |
 | Work migration | MIG-07 decision, item/context/backlog-promotion planning, typed evidence-observation, and telemetry execution-ID resolution sub-slices complete; Node still owns new-execution creation, effect execution, queue/context persistence, and every state-changing command |
-| Production command switch | not authorized and not attempted |
+| Production command switch | not authorized and not attempted; `DF-ROS-2026-A028` opens the decision track as a three-phase plan (full command-surface effect parity, consumer distribution evidence, then the switch decision itself) gated on `EV-ROS-2026-A043`'s command-parity inventory, which found zero state-changing Node commands with an F# equivalent today |
 | Legacy removal | none; Python validator remains an oracle; layout generator is only a deprecation candidate |
 | Distribution | repository-local .NET 10 shadow only; consumer decision unresolved |
 | Verification | complete gate passes: 104 Node, 7 Python, 72 F#, and 25 differential/smoke tests (208 total); zero-warning build; a direct four-tier compliance sweep (project references, per-file opens, no invented Tier 3 decisions) found no violations |

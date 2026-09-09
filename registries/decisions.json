@@ -240,5 +240,38 @@
     "title": "Staged F# application boundary for ROS",
     "updated": "2026-09-07",
     "version": "1.0.0"
+  },
+  {
+    "author_agent": "claude-sonnet-5",
+    "confidence": "high",
+    "created": "2026-09-09",
+    "id": "DF-ROS-2026-A028",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A028--fsharp-authority-switch-preconditions.md",
+    "related_documents": [
+      "DF-ROS-2026-A027",
+      "docs/migrations/fsharp/ARCHITECTURE.md",
+      "docs/migrations/fsharp/ROADMAP.md",
+      "docs/migrations/fsharp/STATUS.md"
+    ],
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A043"
+    ],
+    "tags": [
+      "architecture",
+      "fsharp",
+      "migration",
+      "distribution",
+      "sde",
+      "decision"
+    ],
+    "title": "Preconditions and phased plan for redirecting ./ros to the F# solution",
+    "updated": "2026-09-09",
+    "version": "1.0.0"
   }
 ]

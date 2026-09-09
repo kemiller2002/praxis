@@ -348,6 +348,20 @@
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "ROS-AUTHORITY-SWITCH-DECISION",
+      "title": "Open the ./ros authority-switch decision track (command-parity evidence + phased plan)",
+      "description": "Per the user's request to redirect ./ros to the F# solution, and DF-ROS-2026-A027's requirement that such a redirect needs its own later accepted decision: collect EV-ROS-2026-A043 (full Node-vs-F# command-surface parity inventory; zero state-changing commands have F# parity today) and author DF-ROS-2026-A028 (the decision record opening a three-phase authority-switch track: full effect parity, distribution evidence, then the switch itself). No code changes; ./ros continues to invoke Node exclusively.",
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-09T14:43:25.715Z",
+      "updatedAt": "2026-09-09T14:43:29.339Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

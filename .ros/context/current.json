@@ -827,11 +827,33 @@
         "EXE-20260909T143437626Z-392780ff"
       ],
       "completedAt": "2026-09-09T14:34:40.973Z"
+    },
+    {
+      "id": "ROS-AUTHORITY-SWITCH-DECISION",
+      "type": "research",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "research-record",
+          "path": "research/decisions/DF-ROS-2026-A028--fsharp-authority-switch-preconditions.md"
+        },
+        {
+          "type": "tests",
+          "path": "research/evidence/EV-ROS-2026-A043--fsharp-node-command-parity-inventory.md"
+        }
+      ],
+      "updatedAt": "2026-09-09T14:43:35.328Z",
+      "telemetryExecutionIds": [
+        "EXE-20260909T144329414Z-debd01e8"
+      ],
+      "completedAt": "2026-09-09T14:43:35.328Z",
+      "conclusion": "supported"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-09T14:34:40.973Z",
+  "updatedAt": "2026-09-09T14:43:35.328Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
