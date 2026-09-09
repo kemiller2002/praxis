@@ -59,7 +59,7 @@
   "scripts": {
     "test": "node --test tests/npm-bootstrap.test.mjs tests/work-protocol.test.mjs tests/telemetry.test.mjs tests/ros-server.test.mjs tests/ros-hub.test.mjs tests/artifact-compatibility.test.mjs && python3 -m unittest discover -s tests -v",
     "build:fsharp": "dotnet build Ros.slnx --configuration Release --disable-build-servers --maxcpucount:1 -p:UseSharedCompilation=false -p:BuildInParallel=false",
-    "test:fsharp": "npm run build:fsharp && dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll && node --test tests/artifact-fsharp-differential.test.mjs tests/git-fsharp-differential.test.mjs tests/work-fsharp-differential.test.mjs tests/work-telemetry-fsharp-differential.test.mjs",
+    "test:fsharp": "npm run build:fsharp && dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll && node --test tests/artifact-fsharp-differential.test.mjs tests/git-fsharp-differential.test.mjs tests/work-fsharp-differential.test.mjs tests/work-telemetry-fsharp-differential.test.mjs tests/work-git-paths-fsharp-differential.test.mjs",
     "test:all": "npm test && npm run test:fsharp",
     "build:web": "tsc -p web/tsconfig.json",
     "build:hub": "tsc -p web-hub/tsconfig.json",

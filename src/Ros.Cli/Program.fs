@@ -301,6 +301,34 @@ let private runWorkPlan root arguments =
         eprintfn "ERROR work plan requires valid --id, --type, --state, --action, --occurred-at, and TYPE=PATH evidence"
         2
 
+/// Mirrors production `gitPaths` (`tools/ros_cli.mjs`): real working-tree
+/// changed paths plus, when `$ROS_BASE_REF` resolves to an existing commit,
+/// its committed-range diff against `HEAD` — deduped and ordinally sorted.
+/// A non-repository directory yields no paths (greenfield compatibility); any
+/// other Git or base-ref-diff failure is an error, never a silent empty list.
+let private realObservedGitPaths root : Result<string list, string> =
+    let workingTreePaths =
+        match GitOperations.observe (ProcessGitRepository.create root) with
+        | GitStatusObservation.Clean -> Ok []
+        | GitStatusObservation.Changed changes -> Ok(changes |> List.map _.Path)
+        | GitStatusObservation.Unavailable failure when failure.Reason = GitUnavailableReason.NotRepository -> Ok []
+        | GitStatusObservation.Unavailable failure -> Error $"{failure.Operation} unavailable: {failure.Message}"
+
+    workingTreePaths
+    |> Result.bind (fun paths ->
+        let baseRef =
+            match Environment.GetEnvironmentVariable "ROS_BASE_REF" with
+            | null
+            | "" -> None
+            | value -> Some value
+
+        match GitOperations.compareBase (ProcessGitRepository.createBaseComparison root) baseRef with
+        | GitBaseComparisonOutcome.NotConfigured
+        | GitBaseComparisonOutcome.RefUnavailable -> Ok paths
+        | GitBaseComparisonOutcome.Committed committedPaths -> Ok(paths @ committedPaths)
+        | GitBaseComparisonOutcome.Unavailable failure -> Error $"{failure.Operation} unavailable: {failure.Message}")
+    |> Result.map (fun paths -> paths |> List.distinct |> List.sortWith (fun left right -> String.CompareOrdinal(left, right)))
+
 let private runWorkContextPlan root arguments =
     let action = optionValue "--action" arguments |> Option.bind parseWorkAction
     let contextPath = optionValue "--context" arguments
@@ -316,39 +344,67 @@ let private runWorkContextPlan root arguments =
             eprintfn "ERROR %s" message
             2
         | Ok context ->
-            let request =
-                { Context = context
-                  Action = requested
-                  WorkItemIds = optionValues "--id" arguments
-                  NewItemType = optionValue "--type" arguments |> Option.defaultValue "task"
-                  TargetLocalState = optionValue "--target-local-state" arguments |> Option.defaultValue (defaultLocalState requested)
-                  BlockReason = optionValue "--reason" arguments
-                  DefaultRequiredEvidence = optionValues "--required" arguments |> Set.ofList
-                  RequiredEvidenceByType = Map.empty
-                  ProvidedEvidence = providedEvidence |> List.choose id
-                  Repository = optionValue "--repository" arguments |> Option.defaultValue "repository"
-                  ProtocolVersion = optionValue "--protocol-version" arguments |> Option.defaultValue "1.0.0"
-                  Actor = optionValue "--actor" arguments |> Option.defaultValue "unknown"
-                  OccurredAt = timestamp
-                  MeaningfulChangedPaths = optionValues "--path" arguments
-                  ObservedGitPaths = optionValues "--observed-git-path" arguments
-                  TelemetryEnabled = arguments |> List.contains "--telemetry-enabled" }
+            let explicitObservedGitPaths = optionValues "--observed-git-path" arguments
+            let explicitMeaningfulChangedPaths = optionValues "--path" arguments
+            let autoMode = explicitObservedGitPaths.IsEmpty && explicitMeaningfulChangedPaths.IsEmpty
 
-            if arguments |> List.contains "--verify-evidence" then
-                let outcome = WorkOperations.planVerifiedContext (FileEvidenceRepository.create root) request
-                printf "%s" (WorkContextPlanContract.renderVerifiedJson outcome)
+            // Mirrors production's own gate on calling `gitPaths` at all:
+            // only completion and a repository's first `begin` observe Git.
+            let shouldObserveGit =
+                requested = WorkAction.Complete
+                || (requested = WorkAction.Begin && context.StartedAt.IsNone)
 
-                match outcome with
-                | VerifiedWorkContextPlanOutcome.Planned _ -> 0
-                | VerifiedWorkContextPlanOutcome.ContextRejected _
-                | VerifiedWorkContextPlanOutcome.EvidenceRejected _ -> 1
-            else
-                let outcome = WorkOperations.planContext request
-                printf "%s" (WorkContextPlanContract.renderJson outcome)
+            let observedGitPathsResult =
+                if not autoMode then Ok explicitObservedGitPaths
+                elif shouldObserveGit then realObservedGitPaths root
+                else Ok []
 
-                match outcome with
-                | WorkContextPlanOutcome.Planned _ -> 0
-                | WorkContextPlanOutcome.Rejected _ -> 1
+            match observedGitPathsResult with
+            | Error message ->
+                eprintfn "ERROR %s" message
+                1
+            | Ok observedGitPaths ->
+                let meaningfulChangedPaths =
+                    if not autoMode then
+                        explicitMeaningfulChangedPaths
+                    elif shouldObserveGit then
+                        PathFilter.meaningfulPaths (FileWorkConfigRepository.readPathFilterConfig root) observedGitPaths
+                    else
+                        []
+
+                let request =
+                    { Context = context
+                      Action = requested
+                      WorkItemIds = optionValues "--id" arguments
+                      NewItemType = optionValue "--type" arguments |> Option.defaultValue "task"
+                      TargetLocalState = optionValue "--target-local-state" arguments |> Option.defaultValue (defaultLocalState requested)
+                      BlockReason = optionValue "--reason" arguments
+                      DefaultRequiredEvidence = optionValues "--required" arguments |> Set.ofList
+                      RequiredEvidenceByType = Map.empty
+                      ProvidedEvidence = providedEvidence |> List.choose id
+                      Repository = optionValue "--repository" arguments |> Option.defaultValue "repository"
+                      ProtocolVersion = optionValue "--protocol-version" arguments |> Option.defaultValue "1.0.0"
+                      Actor = optionValue "--actor" arguments |> Option.defaultValue "unknown"
+                      OccurredAt = timestamp
+                      MeaningfulChangedPaths = meaningfulChangedPaths
+                      ObservedGitPaths = observedGitPaths
+                      TelemetryEnabled = arguments |> List.contains "--telemetry-enabled" }
+
+                if arguments |> List.contains "--verify-evidence" then
+                    let outcome = WorkOperations.planVerifiedContext (FileEvidenceRepository.create root) request
+                    printf "%s" (WorkContextPlanContract.renderVerifiedJson outcome)
+
+                    match outcome with
+                    | VerifiedWorkContextPlanOutcome.Planned _ -> 0
+                    | VerifiedWorkContextPlanOutcome.ContextRejected _
+                    | VerifiedWorkContextPlanOutcome.EvidenceRejected _ -> 1
+                else
+                    let outcome = WorkOperations.planContext request
+                    printf "%s" (WorkContextPlanContract.renderJson outcome)
+
+                    match outcome with
+                    | WorkContextPlanOutcome.Planned _ -> 0
+                    | WorkContextPlanOutcome.Rejected _ -> 1
     | _ ->
         eprintfn "ERROR work context-plan requires valid --context, --id, --action, --occurred-at, and TYPE=PATH evidence"
         2

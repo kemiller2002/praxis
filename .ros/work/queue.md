@@ -18,6 +18,7 @@
 | MIG-06-GIT-PROVENANCE | MIG-06 characterize and shadow typed Git provenance | complete | fsharp, migration, git | high |
 | MIG-07-BACKLOG-PLAN | MIG-07-BACKLOG-PLAN | complete |  |  |
 | MIG-07-FOUR-TIER-AUDIT | Four-tier compliance audit and real telemetry-candidate parity for the F# shadow CLI | complete |  | high |
+| MIG-07-GIT-PATH-COMPOSITION | Compose real Git observed/meaningful-path defaults into the F# work context-plan | ready |  | high |
 | MIG-07-TELEMETRY-RESOLUTION | Compose telemetry execution-ID resolution into the F# work plan/context plan | complete |  | high |
 | MIG-07-VERIFIED-CONTEXT | MIG-07-VERIFIED-CONTEXT | complete |  |  |
 | MIG-07-WORK-CONTEXT | MIG-07-WORK-CONTEXT | complete |  |  |
@@ -33,7 +34,7 @@
 | ROADMAP-PHASE-2 | ROADMAP-PHASE-2 | complete |  |  |
 | ROADMAP-PHASE-3 | ROADMAP-PHASE-3 | complete |  |  |
 | ROADMAP-PHASE-4 | ROADMAP-PHASE-4 | complete |  |  |
-| ROS-AUTHORITY-SWITCH-DECISION | Open the ./ros authority-switch decision track (command-parity evidence + phased plan) | ready |  | high |
+| ROS-AUTHORITY-SWITCH-DECISION | Open the ./ros authority-switch decision track (command-parity evidence + phased plan) | complete |  | high |
 | TASK-20260816-PROMPTS | TASK-20260816-PROMPTS | complete |  |  |
 | WEB-INTERFACE | WEB-INTERFACE | complete |  |  |
 | WI-0001 | This is a test entry. | abandoned | code, testing | high |

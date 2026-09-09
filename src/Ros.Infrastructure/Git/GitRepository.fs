@@ -84,6 +84,11 @@ module GitStatusParser =
 
             read [] fields
 
+type private ProcessResult =
+    { ExitCode: int
+      Output: string
+      Error: string }
+
 [<RequireQualifiedAccess>]
 module ProcessGitRepository =
     let private unavailable reason message exitCode =
@@ -93,7 +98,7 @@ module ProcessGitRepository =
               Message = message
               ExitCode = exitCode }
 
-    let private observe executable root () =
+    let private runGit executable root (operation: string) (arguments: string list) : Result<ProcessResult, GitFailure> =
         try
             let startInfo = ProcessStartInfo()
             startInfo.FileName <- executable
@@ -102,41 +107,97 @@ module ProcessGitRepository =
             startInfo.RedirectStandardError <- true
             startInfo.ArgumentList.Add "-C"
             startInfo.ArgumentList.Add root
-            startInfo.ArgumentList.Add "status"
-            startInfo.ArgumentList.Add "--porcelain=v1"
-            startInfo.ArgumentList.Add "-z"
-            startInfo.ArgumentList.Add "--untracked-files=all"
+
+            for argument in arguments do
+                startInfo.ArgumentList.Add argument
 
             use child = new Process(StartInfo = startInfo)
 
             if not (child.Start()) then
-                unavailable GitUnavailableReason.ToolUnavailable "git process did not start" None
+                Error
+                    { Operation = operation
+                      Reason = GitUnavailableReason.ToolUnavailable
+                      Message = "git process did not start"
+                      ExitCode = None }
             else
                 let standardOutput = child.StandardOutput.ReadToEndAsync()
                 let standardError = child.StandardError.ReadToEndAsync()
                 child.WaitForExit()
-                let output = standardOutput.Result
-                let error = standardError.Result.Trim()
 
-                if child.ExitCode <> 0 then
-                    let reason =
-                        if error.Contains("not a git repository", StringComparison.OrdinalIgnoreCase) then
-                            GitUnavailableReason.NotRepository
-                        else
-                            GitUnavailableReason.CommandFailed
-
-                    let message = if error.Length = 0 then $"git exited with code {child.ExitCode}" else error
-                    unavailable reason message (Some child.ExitCode)
-                else
-                    match GitStatusParser.parse output with
-                    | Error failure -> GitStatusObservation.Unavailable failure
-                    | Ok [] -> GitStatusObservation.Clean
-                    | Ok changes -> GitStatusObservation.Changed changes
+                Ok
+                    { ExitCode = child.ExitCode
+                      Output = standardOutput.Result
+                      Error = standardError.Result.Trim() }
         with
-        | :? Win32Exception as error -> unavailable GitUnavailableReason.ToolUnavailable error.Message None
-        | error -> unavailable GitUnavailableReason.CommandFailed error.Message None
+        | :? Win32Exception as error ->
+            Error
+                { Operation = operation
+                  Reason = GitUnavailableReason.ToolUnavailable
+                  Message = error.Message
+                  ExitCode = None }
+        | error ->
+            Error
+                { Operation = operation
+                  Reason = GitUnavailableReason.CommandFailed
+                  Message = error.Message
+                  ExitCode = None }
+
+    let private observe executable root () =
+        match runGit executable root "git status" [ "status"; "--porcelain=v1"; "-z"; "--untracked-files=all" ] with
+        | Error failure -> GitStatusObservation.Unavailable failure
+        | Ok result when result.ExitCode <> 0 ->
+            let reason =
+                if result.Error.Contains("not a git repository", StringComparison.OrdinalIgnoreCase) then
+                    GitUnavailableReason.NotRepository
+                else
+                    GitUnavailableReason.CommandFailed
+
+            let message = if result.Error.Length = 0 then $"git exited with code {result.ExitCode}" else result.Error
+            unavailable reason message (Some result.ExitCode)
+        | Ok result ->
+            match GitStatusParser.parse result.Output with
+            | Error failure -> GitStatusObservation.Unavailable failure
+            | Ok [] -> GitStatusObservation.Clean
+            | Ok changes -> GitStatusObservation.Changed changes
+
+    /// Mirrors production's optional `ROS_BASE_REF` extension in `gitPaths`:
+    /// a ref that does not resolve to an existing commit is a silent
+    /// `RefUnavailable` (a CI base ref can be absent in nested fixture
+    /// repositories), never a hard failure; only a resolvable ref whose
+    /// `diff --name-only` itself fails is `Unavailable`.
+    let private compareBase executable root (ref: string option) : GitBaseComparisonOutcome =
+        match ref with
+        | None -> GitBaseComparisonOutcome.NotConfigured
+        | Some baseRef ->
+            match runGit executable root "git cat-file" [ "cat-file"; "-e"; $"{baseRef}^{{commit}}" ] with
+            | Error _ -> GitBaseComparisonOutcome.RefUnavailable
+            | Ok existsResult when existsResult.ExitCode <> 0 -> GitBaseComparisonOutcome.RefUnavailable
+            | Ok _ ->
+                match runGit executable root "git diff" [ "diff"; "--name-only"; $"{baseRef}...HEAD" ] with
+                | Error failure -> GitBaseComparisonOutcome.Unavailable failure
+                | Ok diffResult when diffResult.ExitCode <> 0 ->
+                    let message =
+                        if diffResult.Error.Length = 0 then
+                            $"git exited with code {diffResult.ExitCode}"
+                        else
+                            diffResult.Error
+
+                    GitBaseComparisonOutcome.Unavailable
+                        { Operation = "git diff"
+                          Reason = GitUnavailableReason.CommandFailed
+                          Message = message
+                          ExitCode = Some diffResult.ExitCode }
+                | Ok diffResult ->
+                    diffResult.Output.Split([| '\r'; '\n' |], StringSplitOptions.RemoveEmptyEntries)
+                    |> Array.toList
+                    |> GitBaseComparisonOutcome.Committed
 
     let createWithExecutable executable root : GitRepository =
         { ObserveStatus = observe executable (IO.Path.GetFullPath root) }
 
     let create root = createWithExecutable "git" root
+
+    let createBaseComparisonWithExecutable executable root : GitBaseComparison =
+        { Compare = compareBase executable (IO.Path.GetFullPath root) }
+
+    let createBaseComparison root = createBaseComparisonWithExecutable "git" root

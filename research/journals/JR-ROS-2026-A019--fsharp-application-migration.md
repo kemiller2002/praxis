@@ -448,10 +448,51 @@ check) is a materially larger, novel undertaking than wiring an
 already-built port, so it is recorded as its own future slice rather than
 attempted ad hoc alongside a compliance audit.
 
+## MIG-07 — Git observed/meaningful-path composition
+
+Closed the second gap the four-tier audit named rather than closed: `work
+context-plan`'s `ObservedGitPaths`/`MeaningfulChangedPaths` were flag-only
+while every sibling observation (evidence, telemetry, Git status itself) had
+moved to a real default. Ported production's `globMatch` character-for-
+character rather than reaching for a generic regex-escape helper first —
+`Regex.Escape` also escapes `*` itself and several characters (`?`, `#`
+among them) Node's manual escape list leaves untouched, which would have
+silently broken the `**`/`*` distinction the whole filter depends on. Caught
+this by running the exact same fifteen pattern/value pairs through a real
+Node script and a throwaway `dotnet fsi` script against the built assembly
+before wiring anything into the CLI, rather than trusting a hand-derived
+translation.
+
+`ros.json`'s `workProtocol.meaningfulPaths`/`.ignoredPaths` read field-by-
+field with the same defaults production falls back to per field, not an
+all-or-nothing default — matching a subtlety only visible by testing a
+config with one field set and the other absent. The optional `$ROS_BASE_REF`
+committed-range extension needed two Git operations beyond the existing
+status port (`cat-file -e`, `diff --name-only`); modeled as `NotConfigured` /
+`RefUnavailable` / `Committed` / `Unavailable` so an unresolvable ref stays
+production's documented silent no-op while a resolvable ref whose diff
+itself fails is a hard error, never folded into a silently empty path list.
+The CLI gates real observation on production's own condition (completion, or
+a repository's first begin) so an irrelevant action never risks a spurious
+Git failure; explicit flags remain available to force an out-of-repository
+scenario, matching the telemetry `--candidate` precedent.
+
+Five Node differentials (first-begin baseline capture, ROS-housekeeping-path
+exclusion from a completion's paths, custom configured patterns, a
+resolvable `ROS_BASE_REF` range, and a silently skipped unresolvable one)
+and new typed tests for the glob matcher, the config reader, and the base
+comparison all pass. One test bug surfaced during the base-ref case: an
+unrelated prior `begin` call in the test itself had already set the
+context's `startedAt`, silently defeating the first-begin gate the test
+meant to exercise — a reminder that a differential's own setup can produce
+the same class of false result production code can.
+
+The complete heterogeneous gate passes all 220 checks (104 Node, 7 Python,
+79 F#, 30 differential/smoke) with a zero-warning, zero-error build.
+
 # Highest-value next step
 
 Design the new-execution creation effect (clock/ID generation under the
 work-protocol capability) so `PendingNewExecution` outcomes can be carried to
-completion, then build the config-driven glob matcher and `ROS_BASE_REF`
-composition so `work context-plan` observes real Git state by default like
-evidence and telemetry now do, before any production/distribution switch.
+completion and composed with the now-real Git/evidence observations into a
+single frozen whole-context plan, before any production/distribution switch.

@@ -6,6 +6,7 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Git/Model.fs" />
     <Compile Include="Work/Identity.fs" />
+    <Compile Include="Work/PathFilter.fs" />
     <Compile Include="Work/Model.fs" />
     <Compile Include="Work/Plan.fs" />
     <Compile Include="Work/ContextPlan.fs" />

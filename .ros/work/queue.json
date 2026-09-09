@@ -362,6 +362,20 @@
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "MIG-07-GIT-PATH-COMPOSITION",
+      "title": "Compose real Git observed/meaningful-path defaults into the F# work context-plan",
+      "description": "Add Ros.Domain.Work.PathFilter (production-exact globMatch/meaningfulPaths port), Ros.Infrastructure.Work.FileWorkConfigRepository (reads ros.json workProtocol.meaningfulPaths/ignoredPaths field-by-field with production defaults), Ros.Domain.Git.GitBaseComparisonOutcome and ProcessGitRepository.createBaseComparison (optional ROS_BASE_REF committed-range diff, mirroring production's silent-skip-on-unresolvable/hard-fail-on-diff-error split). Wire ros-fs work context-plan to observe real Git status and configured meaningful/ignored patterns by default when --observed-git-path/--path are omitted, gated on the same action condition production gates gitPaths on. Adds Node differential proof and typed unit tests.",
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-09T15:18:27.683Z",
+      "updatedAt": "2026-09-09T15:18:31.753Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
