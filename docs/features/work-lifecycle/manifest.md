@@ -82,7 +82,28 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   which share `findOrAppendItem` (extracted from `applyUpdate`, behavior
   unchanged) with the other two item-touching effects. With this increment,
   every backlog-only Node command (`add`, `update`, `attach`,
-  `ready`/`block`/`abandon`) has real F# effect parity.
+  `ready`/`block`/`abandon`) has real F# effect parity. `ros-fs work start`
+  (Phase A's fifth increment) is the first real effect outside the backlog
+  layer: production `startWork`/`transitionUnlocked`'s `begin` action,
+  including a real telemetry execution creation when no recoverable
+  candidate exists (production `startExecution`). It writes
+  `.ros/context/current.json` and appends `.ros/events/events.jsonl`
+  through `Ros.Infrastructure.Work.FileWorkContextRepository.applyContextPlan`
+  (JSON-node surgery, preserving fields the typed `LiveWorkItem` does not
+  model, such as a research item's `conclusion`) under the shared
+  `work-state` recovery journal (MIG-05), composing the pure decision layer
+  that already existed (`WorkContextPlanning.plan` and
+  `TelemetryPlanResolution.resolveContext`) with two new real ports:
+  `Ros.Infrastructure.Work.FileTelemetryExecutionRepository.createExecution`
+  (identity discovery purely from whitelisted environment variables via
+  `Ros.Domain.Telemetry.Identity`, a real Git baseline snapshot, the full
+  metric registry, and capability seeding via `Ros.Domain.Telemetry.Capability`)
+  and `Ros.Infrastructure.Json.CanonicalJson` (the shared SHA-256 hashing
+  primitive behind both the event log's `eventId` and the execution
+  record's `measurementId`). It excludes `resume`/`block`/`complete` (which
+  additionally need `finalizeWorkExecutions`/`recordTelemetryLifecycle`),
+  explicit identity/execution-id CLI overrides, and every telemetry-producer
+  command.
 
 ## Interfaces
 
@@ -119,6 +140,9 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 - Work-attach real-effect tests: `tests/Ros.Tests/WorkAttachmentTests.fs`,
   `tests/Ros.Tests/WorkAttachmentEffectTests.fs`, and
   `tests/work-attach-fsharp-differential.test.mjs`.
+- Work-start real-effect tests: `tests/Ros.Tests/TelemetryIdentityTests.fs`,
+  `tests/Ros.Tests/WorkContextEffectTests.fs`, and
+  `tests/work-start-fsharp-differential.test.mjs`.
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
 - Integration/live verification: `./ros status`, `./ros work context ID`, and
@@ -147,17 +171,24 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 - Owner: repository-governance
 - Last checked against implementation: 2026-09-09
 - Known gaps: backlog and live work intentionally remain separate recovery
-  units; telemetry effects occur before event/context journal preparation; the
-  F# planner now owns pure whole-context/multi-item and backlog-promotion plans,
-  post-plan evidence observation, telemetry execution-ID result-feedback
-  (recover/reject/bulk-link/finalize), and all four real backlog-only effects
+  units; telemetry effects for `resume`/`complete` still occur before
+  event/context journal preparation (`work start`'s `begin` effect already
+  composes execution creation with the journal, since `EnsureActiveExecution`
+  is its only telemetry intent); the F# planner now owns pure
+  whole-context/multi-item and backlog-promotion plans, post-plan evidence
+  observation, telemetry execution-ID result-feedback
+  (recover/reject/bulk-link/finalize), all four real backlog-only effects
   (`ready`/`block`/`abandon` transitions, `add`/`captureWork`,
   `update`/`findOrCreateQueueEntry`, and `attachFileUnlocked`, including real
-  binary file writes and filename sanitization/sequencing) — every
-  backlog-only Node command now has real F# parity. Still remaining:
-  new-execution creation, `start`'s live-work/telemetry promotion effect,
-  every live-work transition, live-work context/event persistence effects, and
-  every telemetry-producer command — all telemetry- or live-work-entangled,
-  pending MIG-08's own scoping decision. Evidence containment has no current
-  authority; production behavior accepts absolute existing paths. Production
-  remains Node-owned pending those slices and the distribution decision.
+  binary file writes and filename sanitization/sequencing — every
+  backlog-only Node command now has real F# parity), and a real `work start`
+  effect (`begin`, including real telemetry execution creation). Still
+  remaining: `resume`/`block`/`complete` (need
+  `finalizeWorkExecutions`/`recordTelemetryLifecycle`), live-work
+  context/event persistence for those actions, and every telemetry-producer
+  command — all telemetry- or live-work-entangled; `resume`/`block`/`complete`
+  can reuse `work start`'s new effect infrastructure directly, while the
+  telemetry-producer commands still need MIG-08's own scoping decision.
+  Evidence containment has no current authority; production behavior accepts
+  absolute existing paths. Production remains Node-owned pending those
+  slices and the distribution decision.

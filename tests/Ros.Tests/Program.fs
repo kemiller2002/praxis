@@ -22,4 +22,6 @@ let main _ =
     @ WorkUpdateEffectTests.tests
     @ WorkAttachmentTests.tests
     @ WorkAttachmentEffectTests.tests
+    @ TelemetryIdentityTests.tests
+    @ WorkContextEffectTests.tests
     |> TestRunner.run

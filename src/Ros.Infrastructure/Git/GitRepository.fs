@@ -201,3 +201,21 @@ module ProcessGitRepository =
         { Compare = compareBase executable (IO.Path.GetFullPath root) }
 
     let createBaseComparison root = createBaseComparisonWithExecutable "git" root
+
+    /// Mirrors production `gitSnapshot`'s branch/commit reads
+    /// (`tools/ros_telemetry.mjs`): `git branch --show-current` and `git
+    /// rev-parse HEAD`, each folded to `None` on any failure (a non-zero
+    /// exit, or the tool itself being unavailable) rather than surfaced as
+    /// an error -- telemetry capture never blocks on a broken worktree.
+    let private readText executable root arguments =
+        match runGit executable root "git" arguments with
+        | Ok result when result.ExitCode = 0 ->
+            let value = result.Output.Trim()
+            if value.Length > 0 then Some value else None
+        | _ -> None
+
+    let readBranchAndCommitWithExecutable executable root : string option * string option =
+        let fullRoot = IO.Path.GetFullPath root
+        readText executable fullRoot [ "branch"; "--show-current" ], readText executable fullRoot [ "rev-parse"; "HEAD" ]
+
+    let readBranchAndCommit root = readBranchAndCommitWithExecutable "git" root
