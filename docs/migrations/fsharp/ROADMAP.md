@@ -55,3 +55,23 @@ Dependency ordering overrides a raw score where state safety requires it.
 3. Run the full consumer distribution experiment before changing bootstrap.
 4. Address hub security/locking as separate defects even if its F# migration is
    deferred.
+
+## Authority-switch decision track
+
+`DF-ROS-2026-A028` opens the decision this roadmap's "Production command
+switch" row has always deferred, as three independently-gated phases:
+
+1. **Full command-surface effect parity** — real, persisted F# handlers
+   (not shadow diagnostics) for every Node command `EV-ROS-2026-A043`
+   inventoried as having no F# equivalent, verified by differential proof of
+   the real effect. This absorbs the remainder of MIG-07 and all of MIG-08,
+   plus new modeling for backlog capture/update/attach and telemetry
+   producer commands the roadmap has not yet named as their own slice.
+2. **Consumer distribution evidence** — the macOS/Linux/Windows
+   install/startup/size/update/offline/integrity/rollback evidence
+   `DF-ROS-2026-A027` named as blocking, for a specific chosen distribution
+   shape.
+3. **The switch decision itself** — only once 1 and 2 are both accepted,
+   carrying that evidence plus an explicit rollback plan.
+
+`./ros` continues to invoke Node exclusively until Phase 3 is accepted.
