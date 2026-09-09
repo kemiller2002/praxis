@@ -131,3 +131,47 @@ module WorkPlanContract =
                 writer.WriteEndArray()
                 writer.WriteEndObject()
                 writer.WriteEndObject())
+
+    let internal writeResolutionRejection (writer: System.Text.Json.Utf8JsonWriter) rejection =
+        match rejection with
+        | TelemetryResolutionRejection.DetachedConflict executionIds ->
+            writer.WriteString("reason", "detached-conflict")
+            writer.WriteStartArray("executionIds")
+            executionIds |> List.iter writer.WriteStringValue
+            writer.WriteEndArray()
+        | TelemetryResolutionRejection.Ambiguous executionIds ->
+            writer.WriteString("reason", "ambiguous")
+            writer.WriteStartArray("executionIds")
+            executionIds |> List.iter writer.WriteStringValue
+            writer.WriteEndArray()
+
+    let renderResolvedTelemetryJson outcome =
+        JsonRendering.renderIndented (fun writer ->
+            writer.WriteStartObject()
+            writer.WriteString("schemaVersion", "1.0.0")
+
+            match outcome with
+            | ResolvedTelemetryOutcome.Resolved plan ->
+                writer.WriteString("outcome", "resolved")
+                writer.WriteStartObject("plan")
+                writer.WritePropertyName("item")
+                writeItem writer plan.Item
+                writer.WritePropertyName("event")
+                writeEvent writer plan.Event
+                writer.WriteEndObject()
+                writer.WriteNull("workItem")
+                writer.WriteNull("rejection")
+            | ResolvedTelemetryOutcome.PendingNewExecution workItemId ->
+                writer.WriteString("outcome", "pending-new-execution")
+                writer.WriteNull("plan")
+                writer.WriteString("workItem", workItemId)
+                writer.WriteNull("rejection")
+            | ResolvedTelemetryOutcome.Rejected(workItemId, rejection) ->
+                writer.WriteString("outcome", "rejected")
+                writer.WriteNull("plan")
+                writer.WriteString("workItem", workItemId)
+                writer.WriteStartObject("rejection")
+                writeResolutionRejection writer rejection
+                writer.WriteEndObject()
+
+            writer.WriteEndObject())

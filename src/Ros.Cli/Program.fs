@@ -11,6 +11,7 @@ open Ros.Contracts.Git
 open Ros.Contracts.Work
 open Ros.Domain.Artifacts
 open Ros.Domain.Git
+open Ros.Domain.Telemetry
 open Ros.Domain.Work
 open Ros.Infrastructure.Artifacts
 open Ros.Infrastructure.Git
@@ -20,7 +21,7 @@ open Ros.Infrastructure.Work
 let Version = "0.2.0-shadow"
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE]"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE]"
 
 let private parseRoot (arguments: string array) =
     let values = ResizeArray<string>(arguments)
@@ -195,6 +196,20 @@ let private parseEvidence (value: string) : WorkEvidence option =
               Path = path }
     | _ -> None
 
+let private parseCandidate workItemId (value: string) : ExecutionLinkCandidate option =
+    match value.Split('=', 2) with
+    | [| executionId; "active" |] when executionId.Length > 0 ->
+        Some
+            { ExecutionId = executionId
+              WorkItemId = workItemId
+              Status = ExecutionStatus.Active }
+    | [| executionId; "finalized" |] when executionId.Length > 0 ->
+        Some
+            { ExecutionId = executionId
+              WorkItemId = workItemId
+              Status = ExecutionStatus.Finalized }
+    | _ -> None
+
 let private defaultLocalState (action: WorkAction) =
     match action with
     | WorkAction.Begin
@@ -237,7 +252,33 @@ let private runWorkPlan root arguments =
               ChangedPaths = optionValues "--path" arguments
               TelemetryEnabled = arguments |> List.contains "--telemetry-enabled" }
 
-        if arguments |> List.contains "--verify-evidence" then
+        if arguments |> List.contains "--resolve-telemetry" then
+            let candidates = optionValues "--candidate" arguments |> List.map (parseCandidate workItemId)
+
+            if candidates |> List.forall Option.isSome then
+                match WorkOperations.planTransition request with
+                | WorkPlanOutcome.Rejected rejection ->
+                    printf "%s" (WorkPlanContract.renderJson (WorkPlanOutcome.Rejected rejection))
+                    1
+                | WorkPlanOutcome.Planned plan ->
+                    let repository: TelemetryStateRepository =
+                        { Observe =
+                            fun _ ->
+                                { LinkedExecutionIds = plan.Item.TelemetryExecutionIds
+                                  Candidates = candidates |> List.choose id
+                                  RequestedExecutionId = optionValue "--requested-execution-id" arguments } }
+
+                    let outcome = WorkOperations.resolveTelemetry repository plan
+                    printf "%s" (WorkPlanContract.renderResolvedTelemetryJson outcome)
+
+                    match outcome with
+                    | ResolvedTelemetryOutcome.Resolved _ -> 0
+                    | ResolvedTelemetryOutcome.PendingNewExecution _
+                    | ResolvedTelemetryOutcome.Rejected _ -> 1
+            else
+                eprintfn "ERROR work plan --resolve-telemetry requires EXECUTIONID=active|finalized for every --candidate"
+                2
+        elif arguments |> List.contains "--verify-evidence" then
             let outcome = WorkOperations.planVerifiedTransition (FileEvidenceRepository.create root) request
             printf "%s" (WorkPlanContract.renderVerifiedJson outcome)
 

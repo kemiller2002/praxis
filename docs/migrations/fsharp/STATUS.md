@@ -1,6 +1,6 @@
 # ROS F# migration status
 
-Last updated: 2026-09-08. Production authority remains Node.
+Last updated: 2026-09-09. Production authority remains Node.
 
 | Category | Current state |
 |---|---|
@@ -8,14 +8,14 @@ Last updated: 2026-09-08. Production authority remains Node.
 | Discovery | complete at T1; 28 baseline execution/config/platform units plus six executable test units; MIG-06 added one inventoried adapter |
 | Semantic decomposition | complete at T2; map and six feature manifests added |
 | Architecture | accepted for staged shadowing in `DF-ROS-2026-A027`; challenged before treatment |
-| F# implementation | MIG-03/04 and MIG-06 complete; MIG-07 includes typed live/backlog decisions, pure item/context/promotion planning, post-plan batch evidence verification, explicit contracts, and shadow planning diagnostics |
+| F# implementation | MIG-03/04 and MIG-06 complete; MIG-07 includes typed live/backlog decisions, pure item/context/promotion planning, post-plan batch evidence verification, telemetry execution-ID result-feedback, explicit contracts, and shadow planning diagnostics |
 | Persistence migration | MIG-05 complete: bounded registry, live-work, and backlog recovery units plus atomic per-execution telemetry files and recoverable execution/context linking; no cross-store/global transaction claim |
 | Git migration | MIG-06 complete: F# owns the typed status contract; production work/telemetry effects share one contract-compatible Node adapter pending the distribution decision |
-| Work migration | MIG-07 decision, item/context/backlog-promotion planning, and typed evidence-observation sub-slices complete; Node still owns effect execution, queue/context persistence, telemetry execution, and every state-changing command |
+| Work migration | MIG-07 decision, item/context/backlog-promotion planning, typed evidence-observation, and telemetry execution-ID resolution sub-slices complete; Node still owns new-execution creation, effect execution, queue/context persistence, and every state-changing command |
 | Production command switch | not authorized and not attempted |
 | Legacy removal | none; Python validator remains an oracle; layout generator is only a deprecation candidate |
 | Distribution | repository-local .NET 10 shadow only; consumer decision unresolved |
-| Verification | complete gate passes: 104 Node, 7 Python, 57 F#, and 20 differential/smoke tests (188 total); final SDE/ROS closeout checks remain for the active slice |
+| Verification | complete gate passes: 104 Node, 7 Python, 70 F#, and 25 differential/smoke tests (206 total); final SDE/ROS closeout checks remain for the active slice |
 | Research | experiment A020 and hypotheses A021–A026 preregistered |
 
 T6 closed WI-0011 and finalized `EXE-20260907T203141590Z-54f547f8`. The final

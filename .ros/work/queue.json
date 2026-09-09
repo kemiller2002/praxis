@@ -320,6 +320,20 @@
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "MIG-07-TELEMETRY-RESOLUTION",
+      "title": "Compose telemetry execution-ID resolution into the F# work plan/context plan",
+      "description": "Add a typed Ros.Domain.Work.TelemetryResolution module that composes a plan's abstract TelemetryIntent list with an observed candidate-execution read model, freezing the final item/event telemetryExecutionIds projection (or reporting that a new execution is required) before any state-changing effect handler renders the write set. Exposes a ros-fs work plan --resolve-telemetry shadow diagnostic and adds Node-vs-F# differential proof.",
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-09T12:32:11.452Z",
+      "updatedAt": "2026-09-09T12:32:14.610Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
