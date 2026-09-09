@@ -479,6 +479,95 @@ effects (`applyUpdate`, `applyAttachment`, and `captureItem`'s own append)
 go through the same small set of primitives rather than three parallel
 copies of "find or upsert, mutate, commit."
 
+## Phase A, increment 5: `work start` — the first live-work, telemetry-creating effect
+
+`ros-fs work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE]
+[--actor NAME] [--classification NAME]*` mirrors production
+`startWork`/`transitionUnlocked` (`tools/ros_cli.mjs`) for the `begin`
+action only. This is the first Phase A increment outside the backlog layer:
+it writes `.ros/context/current.json` and appends `.ros/events/
+events.jsonl`, and — when telemetry is enabled and no recoverable execution
+already exists — creates a brand-new `.ros/telemetry/executions/EXE-*.json`
+record, production's own `startExecution`. Closing this boundary was named
+as its own open item by the telemetry-resolution slice
+(`TelemetryEffect.CreateExecution`, `ResolvedTelemetryOutcome.PendingNewExecution`)
+and by `EV-ROS-2026-A043`'s inventory.
+
+The pure decision layer for this whole surface already existed before this
+slice: `WorkContextPlanning.plan` (new-item creation, transition legality,
+baseline-dirty-path bookkeeping) composed with `TelemetryPlanResolution.
+resolveContext` (recovering a detached candidate execution, or halting on
+`PendingNewExecution`) — both built during MIG-07-WORK-CONTEXT and
+MIG-07-TELEMETRY-RESOLUTION as read-only shadow diagnostics. This increment
+adds only the effect layer those decisions were always missing:
+
+- **`Ros.Infrastructure.Work.FileTelemetryExecutionRepository.createExecution`**
+  is the real `startExecution` port: identity discovery purely from
+  whitelisted environment variables (`Ros.Domain.Telemetry.Identity`,
+  matching production's provider/runtime cascade and independent
+  `sessionId`/`conversationId`/`runId` fallback chains exactly), a real Git
+  baseline snapshot (branch, commit, dirty paths filtered by telemetry's own
+  `ignoredPaths` default — which, unlike the work-protocol default, also
+  ignores `registries/**`), the full metric registry read from
+  `telemetry/metrics.json`, capability seeding for every registered metric
+  (`Ros.Domain.Telemetry.Capability.initial`, mirroring production's
+  `ros-derived`/runtime-known/`unknown` classification), and the one
+  baseline metric production always records at creation
+  (`git.baseline_dirty_files`) — including its content-addressed
+  `measurementId`, a SHA-256 digest of the metric's own fields with keys
+  sorted, and the capability history/omission bookkeeping a later merge
+  produces (`Capability.upsert`, capped at `maxCapabilityHistoryEntries`).
+  A capability `initialCapabilities` seeded and no observation ever merged
+  into is written as the same 5-key object production's own map produces —
+  `lastAssessedAt`/`recordedAt`/`history`/`historyOmitted` do not exist on
+  it at all, not merely hold default/empty values; a `Capability.Touched`
+  flag carries that distinction into the JSON writer. Excluded from this
+  port: every explicit override option no current CLI command supplies (an
+  execution ID, identity overrides, `startedAt`, requirement/experiment/PR
+  links, an initial `scope`) — a future telemetry-producer-command
+  increment can extend it without changing this shape.
+- **`Ros.Infrastructure.Work.FileWorkContextRepository.applyContextPlan`**
+  is the real `transitionUnlocked` + `commitWorkState` port for an
+  already-telemetry-resolved plan: JSON-node surgery on
+  `.ros/context/current.json` (preserving every field this slice's typed
+  `LiveWorkItem` does not model — a research item's `conclusion`, for
+  instance — exactly the same discipline `FileBacklogQueueRepository`
+  already established for `queue.json`), and a real event-log append with
+  production's own content-addressed `eventId`: a SHA-256 digest of the
+  event's JSON in the *exact* key-insertion order production's object
+  literal plus spread produces (no key sorting — `eventId` is computed over
+  `JSON.stringify`'s own insertion-order text, unlike `measurementId`'s
+  sorted digest), with an absent `reason` dropped from the hash input
+  entirely rather than hashed as `null` (matching `JSON.stringify` silently
+  omitting an `undefined`-valued key). Both writes commit through
+  `WorkStateTransaction` (MIG-05's `work-state` recovery journal), which
+  already existed but had never been exercised by a real effect before this
+  slice. `telemetryExecutionIds` is written onto an item only when
+  non-empty, matching production's own conditional `??= []` (never set at
+  all when telemetry is disabled).
+- The CLI orchestration (`runWorkStart`) is the first place a real effect
+  and a `PendingNewExecution` halt compose: on that outcome it calls
+  `createExecution` for the named work item, then re-runs
+  `resolveContextTelemetry` against freshly re-observed candidates (a real
+  effect boundary re-reading disk state, not a second pure pass) — bounded
+  to one attempt per requested work item so a persistent failure cannot
+  loop forever. It also reproduces `startWork`'s own backlog guard: an id
+  already captured in the queue must be `ready` (`"cannot start backlog
+  item '{id}' from '{status}'; mark it ready first"`, or `"...: it was
+  abandoned"` for that specific status), checked before any write, under
+  the same `work-protocol` lock and `work-state`/`backlog-state` recovery
+  order production's own `withWorkProtocol` uses.
+
+Deliberately excluded from this increment, each a separate later slice:
+`resume`/`block`/`complete` (the same effect infrastructure, but `complete`
+additionally needs `finalizeWorkExecutions`, and `block`/`resume` need
+`recordTelemetryLifecycle`'s within-execution "blocked"/"resumed" event
+bookkeeping — not reachable from `begin` and not yet ported); explicit
+`--identity-*`/`--execution-id`/`--conclusion` CLI overrides; and every
+telemetry-producer command (`telemetry start/ingest/classify/record/
+finalize`) and both `adapter` commands, none of which have any F# model at
+all yet.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

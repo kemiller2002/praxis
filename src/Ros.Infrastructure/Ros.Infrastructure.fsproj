@@ -21,5 +21,9 @@
     <Compile Include="Artifacts/RegistryLock.fs" />
     <Compile Include="Artifacts/RegistryTransaction.fs" />
     <Compile Include="Artifacts/FileArtifactRepository.fs" />
+    <Compile Include="Json/CanonicalJson.fs" />
+    <Compile Include="Work/FileWorkContextRepository.fs" />
+    <Compile Include="Work/FileMetricRegistryRepository.fs" />
+    <Compile Include="Work/FileTelemetryExecutionRepository.fs" />
   </ItemGroup>
 </Project>

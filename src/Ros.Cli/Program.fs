@@ -16,12 +16,14 @@ open Ros.Domain.Work
 open Ros.Infrastructure.Artifacts
 open Ros.Infrastructure.Git
 open Ros.Infrastructure.Work
+open System.Text.Json
+open System.Text.Json.Nodes
 
 [<Literal>]
 let Version = "0.2.0-shadow"
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]*"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]*"
 
 let private parseRoot (arguments: string array) =
     let values = ResizeArray<string>(arguments)
@@ -855,6 +857,191 @@ let private runWorkAttach root arguments =
         eprintfn "ERROR work attach requires valid --id, --occurred-at, and at least one --file PATH[=NAME]"
         2
 
+let private workActionCode (action: WorkAction) =
+    match action with
+    | WorkAction.Begin -> "begin"
+    | WorkAction.Block -> "block"
+    | WorkAction.Resume -> "resume"
+    | WorkAction.Complete -> "complete"
+
+let private workStateCode (state: LiveWorkState) =
+    match state with
+    | LiveWorkState.Ready -> "ready"
+    | LiveWorkState.Active -> "active"
+    | LiveWorkState.Blocked -> "blocked"
+    | LiveWorkState.Complete -> "complete"
+
+let private workContextRejectionMessage (rejection: WorkContextRejection) =
+    match rejection with
+    | WorkContextRejection.NoWorkItems -> "start requires at least one work-item ID"
+    | WorkContextRejection.InvalidWorkItemId id -> $"invalid work-item ID '{id}'"
+    | WorkContextRejection.WorkItemNotInContext id -> $"work item '{id}' is not in repository context"
+    | WorkContextRejection.ItemTransitionRejected(id, transitionRejection) ->
+        match transitionRejection with
+        | TransitionRejection.IllegalTransition(state, action) ->
+            $"cannot {workActionCode action} '{id}' from '{workStateCode state}'"
+        | TransitionRejection.BlockReasonRequired -> "block requires --reason"
+        | TransitionRejection.MissingEvidence missing -> $"""completion evidence missing for '{id}': {String.Join(", ", missing)}"""
+
+let private telemetryRejectionMessage (workItemId: string) (rejection: TelemetryResolutionRejection) =
+    match rejection with
+    | TelemetryResolutionRejection.DetachedConflict _ ->
+        $"a detached telemetry execution must be linked before creating a new one for '{workItemId}', which 'work start' does not yet support selecting"
+    | TelemetryResolutionRejection.Ambiguous ids ->
+        $"""multiple detached telemetry executions require explicit selection for '{workItemId}' ({String.Join(", ", ids)}), which 'work start' does not yet support"""
+
+/// Mirrors production `startWork`/`transitionUnlocked` (`tools/ros_cli.mjs`)
+/// for the `begin` action only -- the real effect behind `./ros work
+/// start`. Writes `.ros/context/current.json` and appends `.ros/events/
+/// events.jsonl` (`FileWorkContextRepository`) under the shared
+/// `work-protocol` lock and `work-state` recovery journal (MIG-05),
+/// creating a new telemetry execution record
+/// (`FileTelemetryExecutionRepository`, production's own `startExecution`)
+/// whenever the frozen decision layer's `TelemetryPlanResolution` halts on
+/// `PendingNewExecution`, then re-resolving. Deliberately excludes
+/// `resume`/`block`/`complete` (a separate, later increment), explicit
+/// `--identity-*`/`--execution-id`/`--conclusion` overrides (identity is
+/// discovered purely from the environment), and
+/// `recordTelemetryLifecycle`'s within-execution "blocked"/"resumed" event
+/// bookkeeping (not reachable from `begin`).
+let private runWorkStart root arguments =
+    let ids = optionValues "--id" arguments
+    let occurredAt = optionValue "--occurred-at" arguments
+
+    match ids, occurredAt with
+    | (_ :: _), Some timestamp ->
+        match RegistryLock.acquire root "work-protocol" RegistryLock.defaultSettings with
+        | Error failure ->
+            eprintfn "ERROR %s" failure.Message
+            1
+        | Ok lease ->
+            let result =
+                try
+                    match WorkStateTransaction.recover root with
+                    | Error failure -> Error failure.Message
+                    | Ok() ->
+                        match BacklogStateTransaction.recover root with
+                        | Error failure -> Error failure.Message
+                        | Ok() ->
+                            let queueItems = FileBacklogQueueRepository.readItems root
+
+                            let guard =
+                                ids
+                                |> List.tryPick (fun id ->
+                                    match queueItems |> List.tryFind (fun item -> item.Id = id) with
+                                    | Some item when item.Status <> "ready" ->
+                                        Some(
+                                            if item.Status = "abandoned" then
+                                                $"cannot start backlog item '{id}': it was abandoned"
+                                            else
+                                                $"cannot start backlog item '{id}' from '{item.Status}'; mark it ready first"
+                                        )
+                                    | _ -> None)
+
+                            match guard with
+                            | Some message -> Error message
+                            | None ->
+                                match readWorkContext root with
+                                | Error message -> Error message
+                                | Ok context ->
+                                    let repositoryId = FileWorkConfigRepository.readRepositoryId root
+
+                                    let observedGitPathsResult =
+                                        if context.StartedAt.IsNone then realObservedGitPaths root else Ok []
+
+                                    match observedGitPathsResult with
+                                    | Error failure -> Error(formatGitFailure failure)
+                                    | Ok observedGitPaths ->
+                                        let actor =
+                                            optionValue "--actor" arguments
+                                            |> Option.orElse (Environment.GetEnvironmentVariable "ROS_ACTOR" |> Option.ofObj)
+                                            |> Option.orElse (FileWorkContextRepository.readExistingActor root)
+                                            |> Option.defaultValue "unknown"
+
+                                        let classifications = optionValues "--classification" arguments
+
+                                        let request: WorkContextPlanRequest =
+                                            { Context = context
+                                              Action = WorkAction.Begin
+                                              WorkItemIds = ids
+                                              NewItemType = optionValue "--type" arguments |> Option.defaultValue "task"
+                                              TargetLocalState = defaultLocalState WorkAction.Begin
+                                              BlockReason = None
+                                              DefaultRequiredEvidence = Set.empty
+                                              RequiredEvidenceByType = Map.empty
+                                              ProvidedEvidence = []
+                                              Repository = repositoryId
+                                              ProtocolVersion = FileWorkConfigRepository.readProtocolVersion root
+                                              Actor = actor
+                                              OccurredAt = timestamp
+                                              MeaningfulChangedPaths = []
+                                              ObservedGitPaths = observedGitPaths
+                                              TelemetryEnabled = FileWorkConfigRepository.readTelemetryEnabled root }
+
+                                        match WorkContextPlanning.plan request with
+                                        | WorkContextPlanOutcome.Rejected rejection -> Error(workContextRejectionMessage rejection)
+                                        | WorkContextPlanOutcome.Planned plan ->
+                                            let rec resolve attemptsLeft (candidatePlan: WorkContextPlan) =
+                                                let telemetryRepository: TelemetryStateRepository =
+                                                    { Observe =
+                                                        fun observedWorkItemId ->
+                                                            { LinkedExecutionIds =
+                                                                candidatePlan.WorkItems
+                                                                |> List.tryFind (fun item -> item.Id = observedWorkItemId)
+                                                                |> Option.map _.TelemetryExecutionIds
+                                                                |> Option.defaultValue []
+                                                              Candidates = FileTelemetryStateRepository.readCandidates root observedWorkItemId
+                                                              RequestedExecutionId = None } }
+
+                                                match WorkOperations.resolveContextTelemetry telemetryRepository candidatePlan with
+                                                | ResolvedTelemetryContextOutcome.Resolved resolvedPlan -> Ok resolvedPlan
+                                                | ResolvedTelemetryContextOutcome.Rejected(workItemId, rejection) ->
+                                                    Error(telemetryRejectionMessage workItemId rejection)
+                                                | ResolvedTelemetryContextOutcome.PendingNewExecution workItemId ->
+                                                    if attemptsLeft <= 0 then
+                                                        Error $"unable to resolve a telemetry execution for '{workItemId}'"
+                                                    else
+                                                        match candidatePlan.WorkItems |> List.tryFind (fun item -> item.Id = workItemId) with
+                                                        | None -> Error $"work item '{workItemId}' vanished during telemetry resolution"
+                                                        | Some item ->
+                                                            let createRequest: FileTelemetryExecutionRepository.CreateExecutionRequest =
+                                                                { WorkItemId = workItemId
+                                                                  WorkType = item.WorkType
+                                                                  Classifications = classifications }
+
+                                                            match FileTelemetryExecutionRepository.createExecution root createRequest with
+                                                            | Error message -> Error message
+                                                            | Ok _ -> resolve (attemptsLeft - 1) candidatePlan
+
+                                            match resolve (ids.Length + 1) plan with
+                                            | Error message -> Error message
+                                            | Ok resolvedPlan -> FileWorkContextRepository.applyContextPlan root repositoryId resolvedPlan
+                with error ->
+                    lease.Release() |> ignore
+                    reraise ()
+
+            match lease.Release(), result with
+            | Error releaseFailure, Ok _ ->
+                eprintfn "ERROR %s" releaseFailure.Message
+                1
+            | _, Error message ->
+                eprintfn "ERROR %s" message
+                1
+            | Ok(), Ok(writtenItems, eventIds) ->
+                let output = JsonObject()
+                output["workItems"] <- writtenItems.DeepClone()
+                let eventsNode = JsonArray()
+                eventIds |> List.iter (fun id -> eventsNode.Add(JsonValue.Create id: JsonNode))
+                output["events"] <- eventsNode
+                printf "%s" (output.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
+                0
+    | [], _ ->
+        eprintfn "ERROR start requires at least one work-item ID"
+        2
+    | _, None ->
+        eprintfn "ERROR work start requires valid --id and --occurred-at"
+        2
+
 /// Mirrors production `queueFindings` (`tools/ros_cli.mjs`): duplicate ids,
 /// invalid ids, invalid status, and invalid priority over the raw backlog
 /// queue rows in `.ros/work/queue.json`.
@@ -900,6 +1087,7 @@ let private dispatch root arguments =
     | "work" :: "capture" :: rest -> runWorkCapture root rest
     | "work" :: "update" :: rest -> runWorkUpdate root rest
     | "work" :: "attach" :: rest -> runWorkAttach root rest
+    | "work" :: "start" :: rest -> runWorkStart root rest
     | _ ->
         eprintfn "%s" usage
         2
