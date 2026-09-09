@@ -870,11 +870,32 @@
         "EXE-20260909T151831832Z-fd282d7d"
       ],
       "completedAt": "2026-09-09T15:18:35.146Z"
+    },
+    {
+      "id": "WI-0012",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/Program.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-attribution-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-09T15:41:24.155Z",
+      "telemetryExecutionIds": [
+        "EXE-20260909T154112335Z-40a18669"
+      ],
+      "completedAt": "2026-09-09T15:41:24.155Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-09T15:18:35.146Z",
+  "updatedAt": "2026-09-09T15:41:24.155Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

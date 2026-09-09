@@ -31,7 +31,12 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   execution IDs. It also observes real Git status and configured
   `ros.json` meaningful/ignored path patterns by default when planning a
   context, through `Ros.Domain.Work.PathFilter` and
-  `Ros.Infrastructure.Work.FileWorkConfigRepository`.
+  `Ros.Infrastructure.Work.FileWorkConfigRepository`. A read-only
+  `ros-fs work validate` diagnostic mirrors production `workFindings`
+  (the work-attribution contributor to Node's `validate`), reading the
+  same event log through `Ros.Infrastructure.Work.FileEventLogRepository`
+  and the same `enforceAttribution` flag through
+  `Ros.Infrastructure.Work.FileWorkConfigRepository.readEnforceAttribution`.
 
 ## Interfaces
 
@@ -52,6 +57,8 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 - Git observed/meaningful-path composition tests: `tests/Ros.Tests/PathFilterTests.fs`,
   the base-comparison cases in `tests/Ros.Tests/GitTests.fs`, and
   `tests/work-git-paths-fsharp-differential.test.mjs`.
+- Work-attribution validation tests: `tests/Ros.Tests/WorkAttributionTests.fs`
+  and `tests/work-attribution-fsharp-differential.test.mjs`.
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
 - Integration/live verification: `./ros status`, `./ros work context ID`, and

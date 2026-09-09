@@ -724,5 +724,38 @@
     "title": "F# shadow CLI versus production ./ros command-surface parity inventory",
     "updated": "2026-09-09",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-09",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A044",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A044--telemetry-domain-model-inventory.md",
+    "related_documents": [
+      "DF-ROS-2026-A027",
+      "research/journals/JR-ROS-2026-A019--fsharp-application-migration.md",
+      "docs/migrations/fsharp/ROADMAP.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "DF-ROS-2026-A028"
+    ],
+    "tags": [
+      "fsharp",
+      "migration",
+      "telemetry",
+      "mig-08",
+      "scope",
+      "sde"
+    ],
+    "title": "ROS telemetry domain model inventory and MIG-08 scope correction",
+    "updated": "2026-09-09",
+    "version": "1.0.0"
   }
 ]

@@ -18,7 +18,7 @@
 | MIG-06-GIT-PROVENANCE | MIG-06 characterize and shadow typed Git provenance | complete | fsharp, migration, git | high |
 | MIG-07-BACKLOG-PLAN | MIG-07-BACKLOG-PLAN | complete |  |  |
 | MIG-07-FOUR-TIER-AUDIT | Four-tier compliance audit and real telemetry-candidate parity for the F# shadow CLI | complete |  | high |
-| MIG-07-GIT-PATH-COMPOSITION | Compose real Git observed/meaningful-path defaults into the F# work context-plan | ready |  | high |
+| MIG-07-GIT-PATH-COMPOSITION | Compose real Git observed/meaningful-path defaults into the F# work context-plan | complete |  | high |
 | MIG-07-TELEMETRY-RESOLUTION | Compose telemetry execution-ID resolution into the F# work plan/context plan | complete |  | high |
 | MIG-07-VERIFIED-CONTEXT | MIG-07-VERIFIED-CONTEXT | complete |  |  |
 | MIG-07-WORK-CONTEXT | MIG-07-WORK-CONTEXT | complete |  |  |
@@ -48,5 +48,6 @@
 | WI-0009 | Inventory ROS operational architecture and plan the F# migration | complete | architecture, fsharp, migration, sde | high |
 | WI-0010 | Install or update ROS with SDE and verify | complete | maintenance, sde | high |
 | WI-0011 | Migrate ROS toward a coherent F# application under SDE | complete | fsharp, migration, sde, research-development | high |
+| WI-0012 | F# work-attribution validation slice (work validate) | ready |  | medium |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |
 | WORKQUEUE-BACKLOG-LAYER | WORKQUEUE-BACKLOG-LAYER | complete |  |  |

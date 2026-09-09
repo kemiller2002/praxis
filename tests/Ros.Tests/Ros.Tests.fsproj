@@ -23,6 +23,7 @@
     <Compile Include="TelemetryTests.fs" />
     <Compile Include="TelemetryResolutionTests.fs" />
     <Compile Include="PathFilterTests.fs" />
+    <Compile Include="WorkAttributionTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

@@ -55,6 +55,19 @@ type GitBaseComparisonOutcome =
     | Unavailable of GitFailure
 
 [<RequireQualifiedAccess>]
+module GitUnavailableReason =
+    /// The raw reason code production's `commandFailure`/parse-failure
+    /// helpers assign (`tools/ros_git.mjs`), used verbatim in messages that
+    /// must match production's, such as the work-attribution "cannot verify"
+    /// finding.
+    let code reason =
+        match reason with
+        | GitUnavailableReason.ToolUnavailable -> "tool-unavailable"
+        | GitUnavailableReason.NotRepository -> "not-repository"
+        | GitUnavailableReason.CommandFailed -> "command-failed"
+        | GitUnavailableReason.MalformedOutput -> "malformed-output"
+
+[<RequireQualifiedAccess>]
 module GitStatus =
     let private deltaCode delta =
         match delta with
