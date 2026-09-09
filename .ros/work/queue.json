@@ -334,6 +334,20 @@
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "MIG-07-FOUR-TIER-AUDIT",
+      "title": "Four-tier compliance audit and real telemetry-candidate parity for the F# shadow CLI",
+      "description": "Audit all Ros.Domain/Application/Contracts/Infrastructure/Cli source against SDE-DOCTRINE-003 (Four-Tier Architecture) for tier violations beyond the existing project-reference architecture test; none found. Close a real shadow/production parity gap: ros-fs work plan --resolve-telemetry only accepted synthetic --candidate flags, unlike every sibling observation (evidence, Git status) which reads real repository state by default. Add Ros.Infrastructure.Work.FileTelemetryStateRepository reading real .ros/telemetry/executions/*.json records and wire it as the CLI default; rewrite differential tests to read real fixture state instead of synthetic candidates. Document (but do not close in this slice) a second, larger gap: work context-plan's Git-observed-path composition, which needs a config-driven glob matcher and ROS_BASE_REF support that do not exist yet in F#.",
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-09T14:34:34.529Z",
+      "updatedAt": "2026-09-09T14:34:37.549Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
