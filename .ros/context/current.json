@@ -747,18 +747,28 @@
     {
       "id": "MIG-07-BACKLOG-PLAN",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-09T00:34:03.069Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Backlog.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/BacklogTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-09T00:46:41.484Z",
       "telemetryExecutionIds": [
         "EXE-20260909T003403073Z-b80f117a"
-      ]
+      ],
+      "completedAt": "2026-09-09T00:46:41.484Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-09T00:34:03.069Z",
+  "updatedAt": "2026-09-09T00:46:41.484Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
