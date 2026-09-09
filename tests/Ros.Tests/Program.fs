@@ -18,4 +18,6 @@ let main _ =
     @ BacklogTransitionEffectTests.tests
     @ WorkCaptureTests.tests
     @ WorkCaptureEffectTests.tests
+    @ WorkUpdateTests.tests
+    @ WorkUpdateEffectTests.tests
     |> TestRunner.run

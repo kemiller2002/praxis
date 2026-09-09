@@ -57,7 +57,15 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   `Ros.Domain.Work.WorkCapture` and
   `FileBacklogQueueRepository.captureItem` (which also synthesizes
   production's own default document when `queue.json` does not exist yet).
-  It excludes `--file` attachment, a separate, larger effect.
+  It excludes `--file` attachment, a separate, larger effect. `ros-fs work
+  update` (Phase A's third increment) is the same kind of real effect for
+  production `update`/`findOrCreateQueueEntry`: per-field `Keep`/`Set`
+  changes for only the fields explicitly provided, and the same
+  context-only-id upsert (with production's exact minimal-record defaults)
+  via `Ros.Domain.Work.WorkUpdate` and
+  `FileBacklogQueueRepository.applyUpdate`, which shares its
+  parse-or-synthesize/commit machinery with `captureItem`. It also
+  excludes `--file` attachment.
 
 ## Interfaces
 
@@ -88,6 +96,9 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 - Work-capture real-effect tests: `tests/Ros.Tests/WorkCaptureTests.fs`,
   `tests/Ros.Tests/WorkCaptureEffectTests.fs`, and
   `tests/work-capture-fsharp-differential.test.mjs`.
+- Work-update real-effect tests: `tests/Ros.Tests/WorkUpdateTests.fs`,
+  `tests/Ros.Tests/WorkUpdateEffectTests.fs`, and
+  `tests/work-update-fsharp-differential.test.mjs`.
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
 - Integration/live verification: `./ros status`, `./ros work context ID`, and
@@ -119,10 +130,11 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   units; telemetry effects occur before event/context journal preparation; the
   F# planner now owns pure whole-context/multi-item and backlog-promotion plans,
   post-plan evidence observation, telemetry execution-ID result-feedback
-  (recover/reject/bulk-link/finalize), and two real backlog-only effects
-  (`ready`/`block`/`abandon` transitions and `add`/`captureWork`), but not
-  new-execution creation, `start`'s live-work/telemetry promotion effect,
-  `update`/`attach` effects, live-work context/event persistence effects, or
-  any telemetry-producer command. Evidence containment has no current
+  (recover/reject/bulk-link/finalize), and three real backlog-only effects
+  (`ready`/`block`/`abandon` transitions, `add`/`captureWork`, and
+  `update`/`findOrCreateQueueEntry`), but not new-execution creation, `start`'s
+  live-work/telemetry promotion effect, `--file` attachment, live-work
+  context/event persistence effects, or any telemetry-producer command.
+  Evidence containment has no current
   authority; production behavior accepts absolute existing paths. Production
   remains Node-owned pending those slices and the distribution decision.

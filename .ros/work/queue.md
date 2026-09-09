@@ -51,6 +51,7 @@
 | WI-0012 | F# work-attribution validation slice (work validate) | complete |  | medium |
 | WI-0013 | F# backlog-queue validation slice (work backlog-validate) | complete |  | medium |
 | WI-0014 | F# backlog-transition real effect (DF-ROS-2026-A028 Phase A, increment 1) | complete |  | medium |
-| WI-0015 | F# work-capture real effect (DF-ROS-2026-A028 Phase A, increment 2) | ready |  | medium |
+| WI-0015 | F# work-capture real effect (DF-ROS-2026-A028 Phase A, increment 2) | complete |  | medium |
+| WI-0016 | F# work-update real effect (DF-ROS-2026-A028 Phase A, increment 3) | ready |  | medium |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |
 | WORKQUEUE-BACKLOG-LAYER | WORKQUEUE-BACKLOG-LAYER | complete |  |  |
