@@ -240,6 +240,30 @@ closes one more Node/F# parity gap without adding new state-changing
 capability: the command only reads `ros.json`, `.ros/context/current.json`,
 `.ros/events/events.jsonl`, and real Git status.
 
+`ros-fs work backlog-validate [--json]` is the same kind of read-only
+diagnostic for production's `queueFindings` (`tools/ros_cli.mjs`), the
+backlog-queue contributor to Node's `validate` findings pipeline.
+`Ros.Domain.Work.BacklogQueueValidation` validates the raw
+`.ros/work/queue.json` rows exactly as production does — duplicate ids
+(flagged on the second occurrence, not the first), ids failing the shared
+`WorkItemId.isValid` pattern, statuses outside production's four literal
+values, and priorities outside its three — over unparsed `string` fields
+rather than an already-validated `BacklogState`/priority enum, since
+production reports an unrecognized value as a finding instead of throwing.
+`Ros.Infrastructure.Work.FileBacklogQueueRepository.readItems` reads the
+file, defaulting to an empty list exactly like production's `loadQueue`
+default when the file is absent. `BacklogQueueFinding` is a new type with
+the same `Path`/`Field`/`Message` shape as `ArtifactFinding` and
+`WorkAttributionFinding` rather than a shared one: those two names are
+already shipped with their own contracts, and unifying them retroactively
+risked the same field-resolution ambiguity a shared name already caused
+twice this migration (F# resolves an unannotated record field access to
+the most recently declared type with that field in scope) for a purely
+cosmetic gain. The new file is deliberately compiled last in
+`Ros.Domain.fsproj` so its `Id`/`Path`/`Field`/`Message` fields can never
+become the "most recent" declaration shadowing an earlier file's own
+unannotated field access.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

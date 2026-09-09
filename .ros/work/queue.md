@@ -48,6 +48,7 @@
 | WI-0009 | Inventory ROS operational architecture and plan the F# migration | complete | architecture, fsharp, migration, sde | high |
 | WI-0010 | Install or update ROS with SDE and verify | complete | maintenance, sde | high |
 | WI-0011 | Migrate ROS toward a coherent F# application under SDE | complete | fsharp, migration, sde, research-development | high |
-| WI-0012 | F# work-attribution validation slice (work validate) | ready |  | medium |
+| WI-0012 | F# work-attribution validation slice (work validate) | complete |  | medium |
+| WI-0013 | F# backlog-queue validation slice (work backlog-validate) | ready |  | medium |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |
 | WORKQUEUE-BACKLOG-LAYER | WORKQUEUE-BACKLOG-LAYER | complete |  |  |
