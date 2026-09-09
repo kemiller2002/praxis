@@ -249,3 +249,20 @@ Canonical raw execution evidence is
 | complete suite | 179 passed, 0 failed: 104 Node, 7 Python, 51 F#, 17 differential/smoke | `npm run test:all` |
 | production mutations | none | context-plan is a shadow planning view; Node remains writer |
 | provider model/token/cache/cost | unavailable/not captured | no provider usage snapshot was exposed; no values inferred |
+
+## MIG-07 backlog-planning continuation
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260909T003403073Z-b80f117a.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-09T00:34:03.073Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-backlog-plan` / `f5d2b5e` | Git |
+| typed tests | 4 new; 55 total F# tests pass | direct typed runner |
+| work differential | 2 new; 10 work differentials pass | Node-driven F# comparison |
+| failed builds | 3 | nominal request/plan ambiguity plus CLI and JSON overload ambiguity; explicit boundary annotations repaired them |
+| failed differentials | 1 | first effect shape incorrectly cleared a preserved block reason; explicit keep/clear/set operations repaired the semantic model |
+| complete suite | 185 passed, 0 failed: 104 Node, 7 Python, 55 F#, 19 differential/smoke | `npm run test:all` |
+| production mutations | none | shadow decisions/plans only; Node remains queue and live-work writer |
+| provider model/token/cache/cost | unavailable/not captured | no provider usage snapshot was exposed; no values inferred |

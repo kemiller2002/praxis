@@ -148,6 +148,19 @@ existing execution-link recovery can repair a single detached record; a future
 F# effect handler must validate and freeze the whole plan before executing any
 telemetry intent. This slice intentionally does not switch the writer.
 
+The backlog-planning sub-slice keeps queue transitions separate from live-work
+promotion. Four closed queue states and four actions encode the seven observed
+legal edges. State-change effects use explicit `Keep`, `Clear`, or `Set`
+operations for optional reasons, because production abandonment preserves a
+prior block reason. `Start` instead returns `PromoteToLiveWork`; it does not
+invent a fifth queue state or mutate the authoritative queue record.
+
+Batch promotion preflights every captured queue item as ready while permitting
+an ID absent from the local queue, preserving direct external-authority work.
+The resulting plan is input to the already typed live-context planner. Queue
+and live-context writes remain separate bounded recovery units, and the shadow
+does not attempt a cross-store transaction or production switch.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

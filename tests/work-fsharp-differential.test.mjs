@@ -7,7 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
-import { transition } from "../tools/ros_cli.mjs";
+import { backlogTransition, captureWork, startWork, transition } from "../tools/ros_cli.mjs";
 import { observeGitStatus } from "../tools/ros_git.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -130,6 +130,27 @@ function fsharpContextPlan(t, root, beforeContext, action, ids, production, opti
   for (const evidence of options.evidence ?? []) args.push("--evidence", `${evidence.type}=${evidence.path}`);
   if (options.reason !== undefined) args.push("--reason", options.reason);
   return spawnSync("dotnet", args, { cwd: repositoryRoot, encoding: "utf8" });
+}
+
+function fsharpBacklogDecision(state, action, reason = "reason") {
+  const args = [fsharpCli, "work", "backlog-decide", "--state", state, "--action", action];
+  if (reason !== undefined) args.push("--reason", reason);
+  const result = spawnSync("dotnet", args, { cwd: repositoryRoot, encoding: "utf8" });
+  return { status: result.status, json: JSON.parse(result.stdout), stderr: result.stderr };
+}
+
+function configureBacklogState(root, state) {
+  captureWork(root, "Differential backlog", { id: "WI-MATRIX" });
+  if (state === "ready" || state === "blocked") backlogTransition(root, "ready", "WI-MATRIX");
+  if (state === "blocked") backlogTransition(root, "block", "WI-MATRIX", { reason: "prior" });
+  if (state === "abandoned") backlogTransition(root, "abandon", "WI-MATRIX", { reason: "prior" });
+}
+
+function projectedField(change, current) {
+  if (change.kind === "keep") return current ?? null;
+  if (change.kind === "clear") return null;
+  if (change.kind === "set") return change.value;
+  throw new Error(`unknown backlog field change '${change.kind}'`);
 }
 
 test("F# live-work decision matrix matches the Node transition guard", (t) => {
@@ -292,4 +313,68 @@ test("F# context plan and production both reject a later illegal item without co
       transition: { reason: "illegal-transition", state: "complete", action: "begin", missingEvidence: [] }
     }
   });
+});
+
+test("F# backlog decision matrix matches production and keeps start as promotion", (t) => {
+  const backlogStates = ["captured", "ready", "blocked", "abandoned"];
+  const backlogActions = ["ready", "block", "abandon", "start"];
+  for (const state of backlogStates) {
+    for (const action of backlogActions) {
+      const root = fixture(t, "ready");
+      configureBacklogState(root, state);
+      const beforeQueue = JSON.parse(fs.readFileSync(path.join(root, ".ros", "work", "queue.json"), "utf8"));
+      const beforeItem = beforeQueue.items.find((item) => item.id === "WI-MATRIX");
+      let productionAllowed = true;
+      try {
+        if (action === "start") startWork(root, ["WI-MATRIX"], { type: "task" });
+        else backlogTransition(root, action, "WI-MATRIX", { reason: "reason" });
+      } catch {
+        productionAllowed = false;
+      }
+      const fsharp = fsharpBacklogDecision(state, action);
+      assert.equal(fsharp.status === 0, productionAllowed, `${state}/${action}: ${fsharp.stderr}`);
+      if (!productionAllowed) continue;
+      if (action === "start") {
+        assert.equal(fsharp.json.effect.kind, "promote-to-live-work");
+        const queue = JSON.parse(fs.readFileSync(path.join(root, ".ros", "work", "queue.json"), "utf8"));
+        assert.equal(queue.items.find((item) => item.id === "WI-MATRIX").status, "ready");
+      } else {
+        const queue = JSON.parse(fs.readFileSync(path.join(root, ".ros", "work", "queue.json"), "utf8"));
+        const item = queue.items.find((entry) => entry.id === "WI-MATRIX");
+        assert.equal(fsharp.json.effect.kind, "change-state");
+        assert.equal(fsharp.json.effect.state, item.status);
+        assert.equal(projectedField(fsharp.json.effect.blockedReason, beforeItem.blockedReason), item.blockedReason ?? null);
+        assert.equal(projectedField(fsharp.json.effect.abandonedReason, beforeItem.abandonedReason), item.abandonedReason ?? null);
+      }
+    }
+  }
+});
+
+test("F# backlog promotion preflight matches production batch rejection and direct-ID allowance", (t) => {
+  const root = fixture(t, "ready");
+  captureWork(root, "Ready", { id: "WI-READY" });
+  backlogTransition(root, "ready", "WI-READY");
+  captureWork(root, "Captured", { id: "WI-CAPTURED" });
+  assert.throws(
+    () => startWork(root, ["WI-READY", "WI-CAPTURED"], { type: "feature" }),
+    /cannot start backlog item 'WI-CAPTURED' from 'captured'/
+  );
+  const rejected = spawnSync("dotnet", [
+    fsharpCli, "work", "backlog-promotion-plan",
+    "--id", "WI-READY", "--id", "WI-CAPTURED", "--type", "feature",
+    "--queue-state", "WI-READY=ready", "--queue-state", "WI-CAPTURED=captured"
+  ], { cwd: repositoryRoot, encoding: "utf8" });
+  assert.equal(rejected.status, 1, rejected.stderr);
+  assert.deepEqual(JSON.parse(rejected.stdout).rejection, {
+    reason: "backlog-item-not-ready", workItem: "WI-CAPTURED", state: "captured"
+  });
+
+  const directRoot = fixture(t, "ready");
+  const production = startWork(directRoot, ["EXT-DIRECT"], { type: "feature" });
+  assert.equal(production.context.workItems.find((item) => item.id === "EXT-DIRECT").semanticState, "active");
+  const planned = spawnSync("dotnet", [
+    fsharpCli, "work", "backlog-promotion-plan", "--id", "EXT-DIRECT", "--type", "feature"
+  ], { cwd: repositoryRoot, encoding: "utf8" });
+  assert.equal(planned.status, 0, planned.stderr);
+  assert.deepEqual(JSON.parse(planned.stdout).plan, { workItems: ["EXT-DIRECT"], workType: "feature" });
 });

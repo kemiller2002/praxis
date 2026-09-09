@@ -1,7 +1,5 @@
 namespace Ros.Domain.Work
 
-open System.Text.RegularExpressions
-
 type WorkContextPlanningView =
     { WorkItems: LiveWorkItem list
       StartedAt: string option
@@ -49,9 +47,6 @@ type WorkContextPlanOutcome =
 
 [<RequireQualifiedAccess>]
 module WorkContextPlanning =
-    let private validWorkItemId (workItemId: string) =
-        Regex.IsMatch(workItemId, "^[A-Z][A-Z0-9_-]*-[A-Z0-9][A-Z0-9_-]*$")
-
     let private replaceAt index replacement items =
         items
         |> List.mapi (fun candidateIndex item -> if candidateIndex = index then replacement else item)
@@ -76,7 +71,7 @@ module WorkContextPlanning =
         let rec planItems workItems plans remainingIds =
             match remainingIds with
             | [] -> Ok(workItems, List.rev plans)
-            | workItemId :: tail when not (validWorkItemId workItemId) ->
+            | workItemId :: tail when not (WorkItemId.isValid workItemId) ->
                 Error(WorkContextRejection.InvalidWorkItemId workItemId)
             | workItemId :: tail ->
                 let located = workItems |> List.tryFindIndex (fun item -> item.Id = workItemId)

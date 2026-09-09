@@ -70,7 +70,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 - Last checked against implementation: 2026-09-08
 - Known gaps: backlog and live work intentionally remain separate recovery
   units; telemetry effects occur before event/context journal preparation; the
-  F# planner now owns pure whole-context/multi-item planning but not telemetry
-  or persistence effects, backlog promotion, or state-changing execution. Evidence containment has no current
+  F# planner now owns pure whole-context/multi-item and backlog-promotion plans
+  but not telemetry, queue/context persistence effects, or state-changing execution. Evidence containment has no current
   authority; production behavior accepts absolute existing paths. Production
   remains Node-owned pending those slices and the distribution decision.

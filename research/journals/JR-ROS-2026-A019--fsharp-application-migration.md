@@ -2,11 +2,11 @@
 id: JR-ROS-2026-A019
 title: ROS F# application migration execution journal
 status: active
-version: 1.12.0
+version: 1.13.0
 research_area: repository-operating-system
 author_agent: openai-codex
 created: 2026-09-07
-updated: 2026-09-08
+updated: 2026-09-09
 related_mission: WI-0011
 related_package: RP-ROS-2026-A029
 evidence_ids:
@@ -23,6 +23,7 @@ evidence_ids:
   - EV-ROS-2026-A038
   - EV-ROS-2026-A039
   - EV-ROS-2026-A040
+  - EV-ROS-2026-A041
 hypothesis_ids:
   - HY-ROS-2026-A021
   - HY-ROS-2026-A022
@@ -140,6 +141,8 @@ invented.
 | MIG-D023 | MIG-07 evidence verification | the new malformed-path assertion used a nonexistent assertion helper and stopped the first full F# build | introduced test/agent-execution mistake | introduced | changed it to the repository's established `Assert.isTrue` helper and reran the complete gate; all 172 tests pass |
 | MIG-D024 | MIG-07 context archaeology | production multi-item transition delays context/event persistence but executes telemetry inside the item loop, so a later item rejection can leave earlier detached telemetry | legacy boundary/transaction issue | legacy | F# context planner validates the complete ordered plan before returning any effects; keep Node authority and use existing single-detached-record recovery until effect execution is migrated |
 | MIG-D025 | MIG-07 context implementation | first two builds found ambiguous regex and System.Text.Json overloads | introduced representation issue | introduced | annotated string and writer boundaries explicitly; subsequent build and focused typed/differential gates pass |
+| MIG-D026 | MIG-07 backlog differential | first backlog effect shape implied abandonment cleared a prior block reason, while production preserves it | introduced semantic/representation error | introduced | replaced optional final values with explicit keep/clear/set field operations; reran all 16 state/action comparisons successfully |
+| MIG-D027 | MIG-07 backlog implementation | three builds found nominal request/plan and CLI/JSON overload ambiguity | introduced representation issue | introduced | added explicit request, string, and writer annotations; focused build is warning-free and typed/differential gates pass |
 
 # Observations
 
@@ -311,6 +314,21 @@ effects can precede such a later rejection. The future effect handler must
 freeze the complete plan before telemetry; this slice does not hide or switch
 that production boundary. The complete heterogeneous gate passes all 179
 checks with a zero-warning, zero-error F# build.
+
+## MIG-07 — backlog transition and promotion planning
+
+Separated local queue state changes from promotion into live work. The four
+queue states and four actions encode only seven observed legal edges. State
+changes use explicit keep/clear/set field operations, which a differential
+forced after showing that abandonment preserves an earlier block reason.
+`Start` is a promotion effect and leaves queue state ready.
+
+Batch promotion preflights all local items as ready while allowing direct IDs
+that do not exist in the repository-local backlog. Four typed tests and two
+production differentials cover the full 16-pair matrix, block guard, batch
+rejection, direct-ID compatibility, and queue-state preservation. Production
+state-changing authority remains Node. The complete heterogeneous gate passes
+all 185 checks with a zero-warning, zero-error F# build.
 
 # Decisions and rationale
 

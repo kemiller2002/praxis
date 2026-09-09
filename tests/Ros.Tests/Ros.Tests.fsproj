@@ -19,6 +19,7 @@
     <Compile Include="GitTests.fs" />
     <Compile Include="WorkTests.fs" />
     <Compile Include="WorkPlanTests.fs" />
+    <Compile Include="BacklogTests.fs" />
     <Compile Include="TelemetryTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>

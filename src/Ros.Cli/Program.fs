@@ -20,7 +20,7 @@ open Ros.Infrastructure.Work
 let Version = "0.2.0-shadow"
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide --state STATE --action ACTION [options] | work plan --id ID --type TYPE --state STATE --action ACTION --occurred-at TIME [options] | work context-plan --context PATH --id ID [--id ID] --action ACTION --occurred-at TIME [options]"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE]"
 
 let private parseRoot (arguments: string array) =
     let values = ResizeArray<string>(arguments)
@@ -146,6 +146,22 @@ let private parseWorkAction value =
     | "block" -> Some WorkAction.Block
     | "resume" -> Some WorkAction.Resume
     | "complete" -> Some WorkAction.Complete
+    | _ -> None
+
+let private parseBacklogState value =
+    match value with
+    | "captured" -> Some BacklogState.Captured
+    | "ready" -> Some BacklogState.Ready
+    | "blocked" -> Some BacklogState.Blocked
+    | "abandoned" -> Some BacklogState.Abandoned
+    | _ -> None
+
+let private parseBacklogAction value =
+    match value with
+    | "ready" -> Some BacklogAction.Ready
+    | "block" -> Some BacklogAction.Block
+    | "abandon" -> Some BacklogAction.Abandon
+    | "start" -> Some BacklogAction.Start
     | _ -> None
 
 let private runWorkDecision arguments =
@@ -283,6 +299,51 @@ let private runWorkContextPlan root arguments =
         eprintfn "ERROR work context-plan requires valid --context, --id, --action, --occurred-at, and TYPE=PATH evidence"
         2
 
+let private runBacklogDecision arguments =
+    let state = optionValue "--state" arguments |> Option.bind parseBacklogState
+    let action = optionValue "--action" arguments |> Option.bind parseBacklogAction
+
+    match state, action with
+    | Some current, Some requested ->
+        let outcome =
+            WorkOperations.decideBacklogTransition
+                { State = current
+                  Action = requested
+                  Reason = optionValue "--reason" arguments }
+
+        printf "%s" (BacklogContract.renderDecisionJson outcome)
+
+        match outcome with
+        | BacklogTransitionDecision.Allowed _ -> 0
+        | BacklogTransitionDecision.Rejected _ -> 1
+    | _ ->
+        eprintfn "ERROR work backlog-decide requires valid --state and --action"
+        2
+
+let private parseQueueState (value: string) =
+    match value.Split('=', 2) with
+    | [| workItemId; state |] -> parseBacklogState state |> Option.map (fun parsed -> workItemId, parsed)
+    | _ -> None
+
+let private runBacklogPromotionPlan arguments =
+    let states = optionValues "--queue-state" arguments |> List.map parseQueueState
+
+    if states |> List.forall Option.isSome then
+        let outcome =
+            WorkOperations.planBacklogPromotion
+                { WorkItemIds = optionValues "--id" arguments
+                  QueueStates = states |> List.choose id |> Map.ofList
+                  WorkType = optionValue "--type" arguments |> Option.defaultValue "task" }
+
+        printf "%s" (BacklogContract.renderPromotionJson outcome)
+
+        match outcome with
+        | BacklogPromotionOutcome.Planned _ -> 0
+        | BacklogPromotionOutcome.Rejected _ -> 1
+    else
+        eprintfn "ERROR --queue-state requires ID=STATE with a valid backlog state"
+        2
+
 let private dispatch root arguments =
     let repository = FileArtifactRepository.create root
     let gitRepository = ProcessGitRepository.create root
@@ -308,6 +369,8 @@ let private dispatch root arguments =
     | "work" :: "decide" :: rest -> runWorkDecision rest
     | "work" :: "plan" :: rest -> runWorkPlan root rest
     | "work" :: "context-plan" :: rest -> runWorkContextPlan root rest
+    | "work" :: "backlog-decide" :: rest -> runBacklogDecision rest
+    | "work" :: "backlog-promotion-plan" :: rest -> runBacklogPromotionPlan rest
     | _ ->
         eprintfn "%s" usage
         2
