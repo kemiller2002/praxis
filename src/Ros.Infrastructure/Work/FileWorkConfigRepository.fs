@@ -57,3 +57,36 @@ module FileWorkConfigRepository =
             match element.TryGetProperty "enforceAttribution" with
             | true, value when value.ValueKind = JsonValueKind.True -> true
             | _ -> false
+
+    /// Mirrors production `workConfig`'s `repository: config.repository?.id
+    /// ?? config.name ?? path.basename(root)`: the identity a freshly
+    /// synthesized `queue.json` is stamped with when none exists yet.
+    let readRepositoryId (root: string) : string =
+        let path = Path.Combine(root, "ros.json")
+
+        let fromConfig =
+            if not (File.Exists path) then
+                None
+            else
+                try
+                    use document = JsonDocument.Parse(File.ReadAllText path)
+                    let rootElement = document.RootElement
+
+                    let repositoryId =
+                        match rootElement.TryGetProperty "repository" with
+                        | true, value when value.ValueKind = JsonValueKind.Object ->
+                            match value.TryGetProperty "id" with
+                            | true, id when id.ValueKind = JsonValueKind.String -> Some(id.GetString())
+                            | _ -> None
+                        | _ -> None
+
+                    match repositoryId with
+                    | Some _ -> repositoryId
+                    | None ->
+                        match rootElement.TryGetProperty "name" with
+                        | true, name when name.ValueKind = JsonValueKind.String -> Some(name.GetString())
+                        | _ -> None
+                with _ ->
+                    None
+
+        fromConfig |> Option.defaultValue (Path.GetFileName(root.TrimEnd('/', '\\')))

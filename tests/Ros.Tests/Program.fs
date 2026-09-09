@@ -16,4 +16,6 @@ let main _ =
     @ QueueValidationTests.tests
     @ QueuePresentationTests.tests
     @ BacklogTransitionEffectTests.tests
+    @ WorkCaptureTests.tests
+    @ WorkCaptureEffectTests.tests
     |> TestRunner.run

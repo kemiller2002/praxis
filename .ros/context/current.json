@@ -933,11 +933,32 @@
         "EXE-20260909T172003382Z-c75f9eac"
       ],
       "completedAt": "2026-09-09T17:20:06.283Z"
+    },
+    {
+      "id": "WI-0015",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Capture.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-capture-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-09T17:41:07.404Z",
+      "telemetryExecutionIds": [
+        "EXE-20260909T174059831Z-7ba6a593"
+      ],
+      "completedAt": "2026-09-09T17:41:07.404Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-09T17:20:06.283Z",
+  "updatedAt": "2026-09-09T17:41:07.404Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
