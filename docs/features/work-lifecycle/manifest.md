@@ -103,7 +103,14 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   record's `measurementId`). It excludes `resume`/`block`/`complete` (which
   additionally need `finalizeWorkExecutions`/`recordTelemetryLifecycle`),
   explicit identity/execution-id CLI overrides, and every telemetry-producer
-  command.
+  command. `ros-fs work resume` (Phase A's sixth increment) is production
+  `transitionUnlocked`'s `resume` action, reusing increment 5's effect
+  infrastructure verbatim (a `resolveContextTelemetryWithCreation` helper
+  factored out of `runWorkStart`, no new Domain/Infrastructure code): it
+  never creates a new context item, never observes Git, and links every
+  currently-active candidate execution or creates one when none is active.
+  It excludes `recordTelemetryLifecycle`'s "resumed" bookkeeping and
+  production's `parentExecutionId` linkage on the new-execution path.
 
 ## Interfaces
 
@@ -143,6 +150,9 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 - Work-start real-effect tests: `tests/Ros.Tests/TelemetryIdentityTests.fs`,
   `tests/Ros.Tests/WorkContextEffectTests.fs`, and
   `tests/work-start-fsharp-differential.test.mjs`.
+- Work-resume real-effect tests: `tests/work-resume-fsharp-differential.test.mjs`
+  (reuses `work start`'s typed/infrastructure tests, since no new
+  Domain/Infrastructure code was added).
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
 - Integration/live verification: `./ros status`, `./ros work context ID`, and
@@ -171,24 +181,27 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 - Owner: repository-governance
 - Last checked against implementation: 2026-09-09
 - Known gaps: backlog and live work intentionally remain separate recovery
-  units; telemetry effects for `resume`/`complete` still occur before
-  event/context journal preparation (`work start`'s `begin` effect already
-  composes execution creation with the journal, since `EnsureActiveExecution`
-  is its only telemetry intent); the F# planner now owns pure
-  whole-context/multi-item and backlog-promotion plans, post-plan evidence
-  observation, telemetry execution-ID result-feedback
-  (recover/reject/bulk-link/finalize), all four real backlog-only effects
-  (`ready`/`block`/`abandon` transitions, `add`/`captureWork`,
-  `update`/`findOrCreateQueueEntry`, and `attachFileUnlocked`, including real
-  binary file writes and filename sanitization/sequencing — every
-  backlog-only Node command now has real F# parity), and a real `work start`
-  effect (`begin`, including real telemetry execution creation). Still
-  remaining: `resume`/`block`/`complete` (need
-  `finalizeWorkExecutions`/`recordTelemetryLifecycle`), live-work
+  units; telemetry effects for `complete` still occur before event/context
+  journal preparation (`work start`/`work resume` already compose execution
+  creation with the journal, since `EnsureActiveExecution` is their only
+  telemetry intent); the F# planner now owns pure whole-context/multi-item
+  and backlog-promotion plans, post-plan evidence observation, telemetry
+  execution-ID result-feedback (recover/reject/bulk-link/finalize), all four
+  real backlog-only effects (`ready`/`block`/`abandon` transitions,
+  `add`/`captureWork`, `update`/`findOrCreateQueueEntry`, and
+  `attachFileUnlocked`, including real binary file writes and filename
+  sanitization/sequencing — every backlog-only Node command now has real F#
+  parity), and two real live-work effects (`begin`/`work start` and
+  `resume`/`work resume`, both including real telemetry execution creation
+  and sharing the same effect infrastructure). Still remaining:
+  `block`/`complete` (need production's own backlog/live-context
+  id-splitting for `block`, and `finalizeWorkExecutions` for `complete`;
+  both also need `recordTelemetryLifecycle`'s within-execution
+  "blocked"/"resumed" bookkeeping for full fidelity), live-work
   context/event persistence for those actions, and every telemetry-producer
-  command — all telemetry- or live-work-entangled; `resume`/`block`/`complete`
-  can reuse `work start`'s new effect infrastructure directly, while the
-  telemetry-producer commands still need MIG-08's own scoping decision.
+  command — all telemetry- or live-work-entangled; `block`/`complete` can
+  reuse `work start`/`work resume`'s effect infrastructure directly, while
+  the telemetry-producer commands still need MIG-08's own scoping decision.
   Evidence containment has no current authority; production behavior accepts
   absolute existing paths. Production remains Node-owned pending those
   slices and the distribution decision.

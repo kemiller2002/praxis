@@ -1,0 +1,201 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { execFileSync, spawnSync } from "node:child_process";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
+
+import { initializeProject } from "../lib/bootstrap.mjs";
+import { startWork, transition } from "../tools/ros_cli.mjs";
+
+const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
+
+function fixture(t, label) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), `ros-work-resume-${label}-`));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  initializeProject({ target: root, project: "Work Resume Differential" });
+  execFileSync("git", ["init", "-q"], { cwd: root });
+  execFileSync("git", ["config", "user.email", "test@example.invalid"], { cwd: root });
+  execFileSync("git", ["config", "user.name", "ROS Test"], { cwd: root });
+  execFileSync("git", ["add", "."], { cwd: root });
+  execFileSync("git", ["commit", "-qm", "baseline"], { cwd: root });
+  return root;
+}
+
+function readContext(root) {
+  return JSON.parse(fs.readFileSync(path.join(root, ".ros", "context", "current.json"), "utf8"));
+}
+
+function readEvents(root) {
+  const file = path.join(root, ".ros", "events", "events.jsonl");
+  return fs.existsSync(file) ? fs.readFileSync(file, "utf8").split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line)) : [];
+}
+
+function readExecutions(root) {
+  const dir = path.join(root, ".ros", "telemetry", "executions");
+  return fs.readdirSync(dir).sort().map((name) => JSON.parse(fs.readFileSync(path.join(dir, name), "utf8")));
+}
+
+function runFsharp(root, command, args) {
+  const result = spawnSync("dotnet", [fsharpCli, "--root", root, "work", command, ...args], { cwd: repositoryRoot, encoding: "utf8" });
+  return { status: result.status, stdout: result.stdout, stderr: result.stderr };
+}
+
+const VOLATILE_KEYS = new Set([
+  "executionId", "startedAt", "discoveredAt", "lastAssessedAt", "recordedAt", "collectedAt",
+  "measurementId", "commit", "branch", "dirtyPaths", "dirty", "commits", "occurredAt",
+  "eventId", "updatedAt", "telemetryExecutionIds", "telemetryExecutions", "completedAt"
+]);
+
+function stripVolatile(value) {
+  if (Array.isArray(value)) return value.map(stripVolatile);
+  if (value && typeof value === "object") {
+    const result = {};
+    for (const [key, child] of Object.entries(value)) {
+      if (VOLATILE_KEYS.has(key)) continue;
+      result[key] = stripVolatile(child);
+    }
+    return result;
+  }
+  return value;
+}
+
+test("F# work resume matches production's real resume transition for a blocked item with an active execution already linked", (t) => {
+  assert.ok(fs.existsSync(fsharpCli), "build:fsharp must produce the shadow CLI before this test runs");
+  const nodeRoot = fixture(t, "linked-node");
+  const fsharpRoot = fixture(t, "linked-fsharp");
+
+  startWork(nodeRoot, ["WI-BLOCKED"], { type: "task" });
+  transition(nodeRoot, "block", ["WI-BLOCKED"], { reason: "waiting on review" });
+  runFsharp(fsharpRoot, "start", ["--id", "WI-BLOCKED", "--occurred-at", "2026-09-09T18:00:00.000Z", "--type", "task"]);
+
+  // The F# side has no `work block` command yet, so its context is driven
+  // directly to "blocked" the same way a future `work block` slice would
+  // leave it -- this test exercises `work resume` in isolation.
+  const contextFile = path.join(fsharpRoot, ".ros", "context", "current.json");
+  const context = JSON.parse(fs.readFileSync(contextFile, "utf8"));
+  const item = context.workItems.find((entry) => entry.id === "WI-BLOCKED");
+  item.state = "blocked";
+  item.semanticState = "blocked";
+  item.blockReason = "waiting on review";
+  fs.writeFileSync(contextFile, `${JSON.stringify(context, null, 2)}\n`);
+
+  const nodeResult = transition(nodeRoot, "resume", ["WI-BLOCKED"], {});
+  const fsharpResult = runFsharp(fsharpRoot, "resume", ["--id", "WI-BLOCKED", "--occurred-at", "2026-09-09T18:05:00.000Z"]);
+  assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
+
+  const nodeContext = readContext(nodeRoot);
+  const fsharpContext = readContext(fsharpRoot);
+  assert.deepEqual(stripVolatile(nodeContext), stripVolatile(fsharpContext));
+
+  const nodeItem = nodeContext.workItems.find((entry) => entry.id === "WI-BLOCKED");
+  const fsharpItem = fsharpContext.workItems.find((entry) => entry.id === "WI-BLOCKED");
+  assert.equal(nodeItem.semanticState, "active");
+  assert.equal(fsharpItem.semanticState, "active");
+  // Resuming an item with an active execution already linked never creates
+  // a new one: the linked execution count stays exactly 1.
+  assert.equal(nodeItem.telemetryExecutionIds.length, 1);
+  assert.equal(fsharpItem.telemetryExecutionIds.length, 1);
+
+  // The Node fixture went through a real `work block` (recording a
+  // `work.blocked` event); the F# fixture reached "blocked" by directly
+  // editing context.json (F# has no `work block` command yet), so only the
+  // `work.started`/`work.resumed` events -- the ones either side actually
+  // produced through a real effect -- are compared here.
+  const relevantTypes = new Set(["work.started", "work.resumed"]);
+  const nodeEvents = readEvents(nodeRoot).filter((event) => relevantTypes.has(event.type));
+  const fsharpEvents = readEvents(fsharpRoot).filter((event) => relevantTypes.has(event.type));
+  assert.deepEqual(stripVolatile(nodeEvents), stripVolatile(fsharpEvents));
+  const nodeResumed = nodeEvents.find((event) => event.type === "work.resumed");
+  const fsharpResumed = fsharpEvents.find((event) => event.type === "work.resumed");
+  assert.ok(nodeResumed && fsharpResumed);
+
+  const nodeExecutions = readExecutions(nodeRoot);
+  const fsharpExecutions = readExecutions(fsharpRoot);
+  assert.equal(nodeExecutions.length, 1);
+  assert.equal(fsharpExecutions.length, 1);
+  void nodeResult;
+});
+
+test("F# work resume creates a new telemetry execution when the item has no active one linked, matching production", (t) => {
+  const nodeRoot = fixture(t, "no-active-node");
+  const fsharpRoot = fixture(t, "no-active-fsharp");
+
+  // A context item blocked directly from "ready" (never begun) has no
+  // telemetry execution linked at all -- not reachable through any current
+  // CLI command, so both fixtures seed it directly, matching the
+  // established pattern of hand-writing fixture state a real command
+  // cannot yet produce.
+  for (const root of [nodeRoot, fsharpRoot]) {
+    const contextFile = path.join(root, ".ros", "context", "current.json");
+    const context = JSON.parse(fs.readFileSync(contextFile, "utf8"));
+    context.workItems.push({
+      id: "WI-NEVER-BEGUN",
+      type: "task",
+      state: "blocked",
+      semanticState: "blocked",
+      evidence: [],
+      blockReason: "waiting on a dependency",
+      updatedAt: "2026-01-01T00:00:00.000Z"
+    });
+    context.startedAt ??= "2026-01-01T00:00:00.000Z";
+    fs.writeFileSync(contextFile, `${JSON.stringify(context, null, 2)}\n`);
+  }
+
+  transition(nodeRoot, "resume", ["WI-NEVER-BEGUN"], {});
+  const fsharpResult = runFsharp(fsharpRoot, "resume", ["--id", "WI-NEVER-BEGUN", "--occurred-at", "2026-09-09T18:05:00.000Z"]);
+  assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
+
+  const nodeItem = readContext(nodeRoot).workItems.find((entry) => entry.id === "WI-NEVER-BEGUN");
+  const fsharpItem = readContext(fsharpRoot).workItems.find((entry) => entry.id === "WI-NEVER-BEGUN");
+  assert.equal(nodeItem.semanticState, "active");
+  assert.equal(fsharpItem.semanticState, "active");
+  assert.equal(nodeItem.telemetryExecutionIds.length, 1);
+  assert.equal(fsharpItem.telemetryExecutionIds.length, 1);
+
+  const nodeExecutions = readExecutions(nodeRoot);
+  const fsharpExecutions = readExecutions(fsharpRoot);
+  assert.equal(nodeExecutions.length, 1);
+  assert.equal(fsharpExecutions.length, 1);
+  assert.equal(nodeExecutions[0].workItemId, "WI-NEVER-BEGUN");
+  assert.equal(fsharpExecutions[0].workItemId, "WI-NEVER-BEGUN");
+});
+
+test("F# work resume rejects an id that is not in the live context, matching production's exact message", (t) => {
+  const nodeRoot = fixture(t, "missing-node");
+  const fsharpRoot = fixture(t, "missing-fsharp");
+
+  let nodeMessage;
+  try {
+    transition(nodeRoot, "resume", ["WI-GHOST"], {});
+  } catch (error) {
+    nodeMessage = error.message;
+  }
+
+  const fsharpResult = runFsharp(fsharpRoot, "resume", ["--id", "WI-GHOST", "--occurred-at", "2026-09-09T18:00:00.000Z"]);
+  assert.equal(fsharpResult.status, 1);
+  assert.match(nodeMessage, /work item 'WI-GHOST' is not in repository context/);
+  assert.match(fsharpResult.stderr, /work item 'WI-GHOST' is not in repository context/);
+});
+
+test("F# work resume rejects resuming an already-active item with production's exact illegal-transition message", (t) => {
+  const nodeRoot = fixture(t, "active-node");
+  const fsharpRoot = fixture(t, "active-fsharp");
+
+  startWork(nodeRoot, ["WI-ACTIVE"], { type: "task" });
+  runFsharp(fsharpRoot, "start", ["--id", "WI-ACTIVE", "--occurred-at", "2026-09-09T18:00:00.000Z", "--type", "task"]);
+
+  let nodeMessage;
+  try {
+    transition(nodeRoot, "resume", ["WI-ACTIVE"], {});
+  } catch (error) {
+    nodeMessage = error.message;
+  }
+
+  const fsharpResult = runFsharp(fsharpRoot, "resume", ["--id", "WI-ACTIVE", "--occurred-at", "2026-09-09T18:05:00.000Z"]);
+  assert.equal(fsharpResult.status, 1);
+  assert.match(nodeMessage, /cannot resume 'WI-ACTIVE' from 'active'/);
+  assert.match(fsharpResult.stderr, /cannot resume 'WI-ACTIVE' from 'active'/);
+});

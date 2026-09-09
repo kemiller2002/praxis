@@ -568,6 +568,45 @@ telemetry-producer command (`telemetry start/ingest/classify/record/
 finalize`) and both `adapter` commands, none of which have any F# model at
 all yet.
 
+## Phase A, increment 6: `work resume`
+
+`ros-fs work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME]`
+mirrors production `transition(root, "resume", ids, options)`
+(`tools/ros_cli.mjs`). It is the second live-work effect and reuses
+increment 5's effect infrastructure directly rather than adding any new
+Domain or Infrastructure code: the same `WorkContextPlanning.plan` (with
+`WorkAction.Resume`), the same telemetry-resolution-with-execution-creation
+loop (now factored out of `runWorkStart` into a shared
+`resolveContextTelemetryWithCreation`), and the same
+`FileWorkContextRepository.applyContextPlan` commit. This is the shape the
+`begin`/`resume`/`block`/`complete` family was always going to share; `work
+resume` is the proof that sharing works without new plumbing.
+
+Two things distinguish `resume` from `begin` and are reproduced exactly:
+`resume` never creates a new context item (an id absent from context is
+`work item '{id}' is not in repository context`, not upserted), and
+`resume` never observes Git (production's own `gitPaths` call is gated on
+`action === "complete" || (action === "begin" && !context.startedAt)` —
+`resume` satisfies neither). Telemetry-wise, `resume`'s
+`EnsureActiveExecution` intent runs through `TelemetryResolution`'s
+`linkAllActive` path: every currently-active candidate execution gets
+linked (regardless of prior link state) when one exists, or a brand-new
+execution is created via the same `FileTelemetryExecutionRepository.
+createExecution` increment 5 built when none is active — both proven by a
+real Node differential, including the "no active execution at all" case
+(a context item blocked directly from `ready`, never begun, which no
+current CLI command can produce and which the differential seeds directly
+as fixture state, matching this project's own established pattern for
+exercising a real but not-yet-CLI-reachable branch).
+
+Deliberately excluded, the same as increment 5: `recordTelemetryLifecycle`'s
+"resumed" within-execution event bookkeeping (no CLI exposes it either),
+and production's `parentExecutionId` linkage on the new-execution path
+(`identity.parentExecutionId` on the freshly created record is always
+`null`, where production sets it to the work item's most recent prior
+execution id when one exists) — both real, narrow, and honestly-scoped
+gaps rather than silent ones.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for
