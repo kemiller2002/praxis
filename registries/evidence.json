@@ -658,5 +658,36 @@
     "title": "Typed backlog transition and promotion results",
     "updated": "2026-09-09",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-09",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A042",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A042--verified-work-context-results.md",
+    "related_documents": [
+      "DF-ROS-2026-A006",
+      "DF-ROS-2026-A027",
+      "JR-ROS-2026-A019",
+      "EV-ROS-2026-A040",
+      "EV-ROS-2026-A041"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "fsharp",
+      "work",
+      "context",
+      "evidence",
+      "orchestration"
+    ],
+    "title": "Verified work context composition results",
+    "updated": "2026-09-09",
+    "version": "1.0.0"
   }
 ]

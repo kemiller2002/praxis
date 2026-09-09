@@ -2,7 +2,7 @@
 id: JR-ROS-2026-A019
 title: ROS F# application migration execution journal
 status: active
-version: 1.13.0
+version: 1.14.0
 research_area: repository-operating-system
 author_agent: openai-codex
 created: 2026-09-07
@@ -24,6 +24,7 @@ evidence_ids:
   - EV-ROS-2026-A039
   - EV-ROS-2026-A040
   - EV-ROS-2026-A041
+  - EV-ROS-2026-A042
 hypothesis_ids:
   - HY-ROS-2026-A021
   - HY-ROS-2026-A022
@@ -329,6 +330,20 @@ production differentials cover the full 16-pair matrix, block guard, batch
 rejection, direct-ID compatibility, and queue-state preservation. Production
 state-changing authority remains Node. The complete heterogeneous gate passes
 all 185 checks with a zero-warning, zero-error F# build.
+
+## MIG-07 — verified context composition
+
+Composed the whole-context semantic plan with the existing evidence port.
+Context rejection and non-completion perform no evidence I/O; accepted
+completion observes the command evidence list once in request order and
+preserves every missing or unavailable issue. This centralizes evidence
+observation for item and context planning without moving filesystem behavior
+into Domain.
+
+Two typed tests and a multi-item present/missing production differential pass.
+The result remains deliberately pre-effect: telemetry execution IDs must feed
+back into final item/event projections before persistence can be rendered. The
+complete heterogeneous gate passes all 188 checks.
 
 # Decisions and rationale
 

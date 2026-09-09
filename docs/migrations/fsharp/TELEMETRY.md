@@ -266,3 +266,19 @@ Canonical raw execution evidence is
 | complete suite | 185 passed, 0 failed: 104 Node, 7 Python, 55 F#, 19 differential/smoke | `npm run test:all` |
 | production mutations | none | shadow decisions/plans only; Node remains queue and live-work writer |
 | provider model/token/cache/cost | unavailable/not captured | no provider usage snapshot was exposed; no values inferred |
+
+## MIG-07 verified-context continuation
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260909T005705798Z-55a690b1.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-09T00:57:05.798Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-work-verified-context` / `ff47c69` | Git |
+| typed tests | 2 new; 57 total F# tests pass | direct typed runner |
+| work differential | 1 new; 11 work differentials pass | Node-driven F# comparison |
+| failed builds/tests | 0 | focused implementation gate passed on first run |
+| complete suite | 188 passed, 0 failed: 104 Node, 7 Python, 57 F#, 20 differential/smoke | `npm run test:all` |
+| production mutations | none | verified-context remains a shadow plan; Node remains writer |
+| provider model/token/cache/cost | unavailable/not captured | no provider usage snapshot was exposed; no values inferred |

@@ -129,6 +129,7 @@ function fsharpContextPlan(t, root, beforeContext, action, ids, production, opti
   for (const kind of options.required ?? []) args.push("--required", kind);
   for (const evidence of options.evidence ?? []) args.push("--evidence", `${evidence.type}=${evidence.path}`);
   if (options.reason !== undefined) args.push("--reason", options.reason);
+  if (options.verifyEvidence) args.push("--verify-evidence");
   return spawnSync("dotnet", args, { cwd: repositoryRoot, encoding: "utf8" });
 }
 
@@ -377,4 +378,35 @@ test("F# backlog promotion preflight matches production batch rejection and dire
   ], { cwd: repositoryRoot, encoding: "utf8" });
   assert.equal(planned.status, 0, planned.stderr);
   assert.deepEqual(JSON.parse(planned.stdout).plan, { workItems: ["EXT-DIRECT"], workType: "feature" });
+});
+
+test("F# verified context plan matches production multi-item evidence-path outcomes", (t) => {
+  for (const evidencePath of ["ros.json", "missing-context-evidence.txt"]) {
+    const workItems = [
+      { id: "TASK-ONE", type: "mechanical", state: "active", semanticState: "active", evidence: [] },
+      { id: "TASK-TWO", type: "mechanical", state: "active", semanticState: "active", evidence: [] }
+    ];
+    const root = contextFixture(t, workItems);
+    const contextFile = path.join(root, ".ros", "context", "current.json");
+    const before = fs.readFileSync(contextFile, "utf8");
+    const ids = ["TASK-ONE", "TASK-TWO"];
+    const evidence = [{ type: "note", path: evidencePath }];
+    let productionAllowed = true;
+    let production;
+    try {
+      production = transition(root, "complete", ids, { evidence, actor: "differential" });
+    } catch {
+      productionAllowed = false;
+      const config = JSON.parse(fs.readFileSync(path.join(root, "ros.json"), "utf8"));
+      production = { context: { repository: config.repository.id, protocolVersion: config.workProtocol.version, actor: "differential" } };
+    }
+    const fsharp = fsharpContextPlan(t, root, before, "complete", ids, production, {
+      occurredAt: production.events?.[0]?.occurredAt ?? "2026-09-09T01:00:00Z",
+      evidence,
+      verifyEvidence: true
+    });
+    assert.equal(fsharp.status === 0, productionAllowed, `${evidencePath}: ${fsharp.stderr}`);
+    const payload = JSON.parse(fsharp.stdout);
+    assert.equal(payload.outcome, productionAllowed ? "planned" : "evidence-rejected");
+  }
 });

@@ -289,12 +289,21 @@ let private runWorkContextPlan root arguments =
                   ObservedGitPaths = optionValues "--observed-git-path" arguments
                   TelemetryEnabled = arguments |> List.contains "--telemetry-enabled" }
 
-            let outcome = WorkOperations.planContext request
-            printf "%s" (WorkContextPlanContract.renderJson outcome)
+            if arguments |> List.contains "--verify-evidence" then
+                let outcome = WorkOperations.planVerifiedContext (FileEvidenceRepository.create root) request
+                printf "%s" (WorkContextPlanContract.renderVerifiedJson outcome)
 
-            match outcome with
-            | WorkContextPlanOutcome.Planned _ -> 0
-            | WorkContextPlanOutcome.Rejected _ -> 1
+                match outcome with
+                | VerifiedWorkContextPlanOutcome.Planned _ -> 0
+                | VerifiedWorkContextPlanOutcome.ContextRejected _
+                | VerifiedWorkContextPlanOutcome.EvidenceRejected _ -> 1
+            else
+                let outcome = WorkOperations.planContext request
+                printf "%s" (WorkContextPlanContract.renderJson outcome)
+
+                match outcome with
+                | WorkContextPlanOutcome.Planned _ -> 0
+                | WorkContextPlanOutcome.Rejected _ -> 1
     | _ ->
         eprintfn "ERROR work context-plan requires valid --context, --id, --action, --occurred-at, and TYPE=PATH evidence"
         2

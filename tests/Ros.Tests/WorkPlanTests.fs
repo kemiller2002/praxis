@@ -248,4 +248,52 @@ module WorkPlanTests =
 
                   match WorkContextPlanContract.parseJson content with
                   | Error message -> Assert.isTrue (message.Contains "unsupported semantic work state") "semantic-state error"
-                  | Ok parsed -> failwith $"Expected malformed context rejection, received {parsed}" } ]
+                  | Ok parsed -> failwith $"Expected malformed context rejection, received {parsed}" }
+          { Name = "verified context plan performs no evidence IO before a complete semantic plan exists"
+            Run =
+              fun () ->
+                  let mutable observations = 0
+                  let repository =
+                      { Observe =
+                          fun _ ->
+                              observations <- observations + 1
+                              EvidencePathObservation.Present }
+                  let ready = { item LiveWorkState.Ready [] with Id = "TASK-READY" }
+                  let context = { WorkItems = [ ready ]; StartedAt = None; BaselineDirtyPaths = [] }
+
+                  match WorkOperations.planVerifiedContext repository (contextRequest context WorkAction.Complete [ ready.Id ]) with
+                  | VerifiedWorkContextPlanOutcome.ContextRejected _ -> ()
+                  | other -> failwith $"Expected context rejection, received {other}"
+
+                  Assert.equal 0 observations
+
+                  match WorkOperations.planVerifiedContext repository (contextRequest context WorkAction.Begin [ ready.Id ]) with
+                  | VerifiedWorkContextPlanOutcome.Planned _ -> ()
+                  | other -> failwith $"Expected begin plan, received {other}"
+
+                  Assert.equal 0 observations }
+          { Name = "verified context plan observes command evidence once in request order"
+            Run =
+              fun () ->
+                  let first = { Type = "implementation"; Path = "missing.fs" }
+                  let second = { Type = "tests"; Path = "unavailable.fs" }
+                  let mutable observed = []
+                  let repository =
+                      { Observe =
+                          fun evidence ->
+                              observed <- observed @ [ evidence ]
+                              if evidence = first then EvidencePathObservation.Missing
+                              else EvidencePathObservation.Unavailable "denied" }
+                  let one = { item LiveWorkState.Active [] with Id = "TASK-ONE" }
+                  let two = { item LiveWorkState.Active [] with Id = "TASK-TWO" }
+                  let context = { WorkItems = [ one; two ]; StartedAt = Some "earlier"; BaselineDirtyPaths = [] }
+                  let request =
+                      { contextRequest context WorkAction.Complete [ one.Id; two.Id ] with
+                          ProvidedEvidence = [ first; second ] }
+
+                  Assert.equal
+                      (VerifiedWorkContextPlanOutcome.EvidenceRejected
+                          [ EvidenceIssue.Missing first
+                            EvidenceIssue.Unavailable(second, "denied") ])
+                      (WorkOperations.planVerifiedContext repository request)
+                  Assert.equal [ first; second ] observed } ]

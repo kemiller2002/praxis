@@ -46,6 +46,12 @@ type WorkContextPlanOutcome =
     | Rejected of WorkContextRejection
 
 [<RequireQualifiedAccess>]
+type VerifiedWorkContextPlanOutcome =
+    | Planned of WorkContextPlan
+    | ContextRejected of WorkContextRejection
+    | EvidenceRejected of EvidenceIssue list
+
+[<RequireQualifiedAccess>]
 module WorkContextPlanning =
     let private replaceAt index replacement items =
         items

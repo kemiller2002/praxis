@@ -161,6 +161,19 @@ The resulting plan is input to the already typed live-context planner. Queue
 and live-context writes remain separate bounded recovery units, and the shadow
 does not attempt a cross-store transaction or production switch.
 
+The verified-context composition applies evidence observation only after the
+entire ordered context plan succeeds, and only for completion. It reuses the
+same present/missing/unavailable boundary as the item command, observes the
+command evidence list once in caller order, and returns no plan when any issue
+exists. This removes duplicate evidence-policy implementations without moving
+filesystem knowledge into Domain.
+
+The plan is still pre-effect. Telemetry intents may create or discover
+execution IDs that must be placed into the final items and events before the
+event/context write set is rendered. That result-feedback phase must be typed
+and verified before a state-changing F# handler can safely use the existing
+work-state recovery port.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

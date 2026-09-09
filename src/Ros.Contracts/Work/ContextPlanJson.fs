@@ -148,3 +148,38 @@ module WorkContextPlanContract =
                 writer.WriteNull("rejection")
 
             writer.WriteEndObject())
+
+    let renderVerifiedJson outcome =
+        match outcome with
+        | VerifiedWorkContextPlanOutcome.Planned plan -> renderJson (WorkContextPlanOutcome.Planned plan)
+        | VerifiedWorkContextPlanOutcome.ContextRejected rejection -> renderJson (WorkContextPlanOutcome.Rejected rejection)
+        | VerifiedWorkContextPlanOutcome.EvidenceRejected issues ->
+            JsonRendering.renderIndented (fun writer ->
+                writer.WriteStartObject()
+                writer.WriteString("schemaVersion", "1.0.0")
+                writer.WriteString("outcome", "evidence-rejected")
+                writer.WriteNull("plan")
+                writer.WriteStartObject("rejection")
+                writer.WriteString("reason", "evidence-path-rejected")
+                writer.WriteStartArray("evidenceIssues")
+
+                for issue in issues do
+                    writer.WriteStartObject()
+
+                    match issue with
+                    | EvidenceIssue.Missing evidence ->
+                        writer.WriteString("outcome", "missing")
+                        writer.WritePropertyName("evidence")
+                        WorkPlanContract.writeEvidence writer evidence
+                        writer.WriteNull("message")
+                    | EvidenceIssue.Unavailable(evidence, message) ->
+                        writer.WriteString("outcome", "unavailable")
+                        writer.WritePropertyName("evidence")
+                        WorkPlanContract.writeEvidence writer evidence
+                        writer.WriteString("message", message)
+
+                    writer.WriteEndObject()
+
+                writer.WriteEndArray()
+                writer.WriteEndObject()
+                writer.WriteEndObject())

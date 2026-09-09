@@ -71,6 +71,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 - Known gaps: backlog and live work intentionally remain separate recovery
   units; telemetry effects occur before event/context journal preparation; the
   F# planner now owns pure whole-context/multi-item and backlog-promotion plans
-  but not telemetry, queue/context persistence effects, or state-changing execution. Evidence containment has no current
+  plus post-plan evidence observation, but not telemetry result feedback,
+  queue/context persistence effects, or state-changing execution. Evidence containment has no current
   authority; production behavior accepts absolute existing paths. Production
   remains Node-owned pending those slices and the distribution decision.
