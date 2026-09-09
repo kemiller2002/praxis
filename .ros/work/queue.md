@@ -11,11 +11,18 @@
 | DOC-WEB-README | DOC-WEB-README | complete |  |  |
 | MIG-05-BACKLOG-PERSISTENCE | Add bounded recovery for backlog queue and Markdown projection | complete | fsharp, migration, persistence | high |
 | MIG-05-PERSISTENCE | MIG-05 characterize and shadow transactional persistence recovery | complete | fsharp, migration, persistence | high |
-| MIG-05-TELEMETRY-RECOVERY | Recover telemetry execution backlinks without duplicating execution evidence | ready | fsharp, migration, telemetry, persistence | high |
+| MIG-05-TELEMETRY-RECOVERY | Recover telemetry execution backlinks without duplicating execution evidence | complete | fsharp, migration, telemetry, persistence | high |
 | MIG-05-WORK-INTEGRATION | MIG-05 integrate recoverable work event and context persistence | complete | fsharp, migration, persistence, work | high |
 | MIG-05-WORK-PERSISTENCE | MIG-05 characterize work-state persistence and recovery | complete | fsharp, migration, persistence, work | high |
+| MIG-06-GIT-INTEGRATION | MIG-06-GIT-INTEGRATION | complete |  |  |
 | MIG-06-GIT-PROVENANCE | MIG-06 characterize and shadow typed Git provenance | complete | fsharp, migration, git | high |
+| MIG-07-BACKLOG-PLAN | MIG-07-BACKLOG-PLAN | complete |  |  |
+| MIG-07-TELEMETRY-RESOLUTION | Compose telemetry execution-ID resolution into the F# work plan/context plan | ready |  | high |
+| MIG-07-VERIFIED-CONTEXT | MIG-07-VERIFIED-CONTEXT | complete |  |  |
+| MIG-07-WORK-CONTEXT | MIG-07-WORK-CONTEXT | complete |  |  |
+| MIG-07-WORK-EVIDENCE | MIG-07-WORK-EVIDENCE | complete |  |  |
 | MIG-07-WORK-LIFECYCLE | MIG-07 shadow typed live-work transitions and evidence guards | complete | fsharp, migration, work | high |
+| MIG-07-WORK-ORCHESTRATION | MIG-07-WORK-ORCHESTRATION | complete |  |  |
 | OIDC-REPO-IDENTITY | OIDC-REPO-IDENTITY | complete |  |  |
 | PKG-BIN-EXECUTABLE | PKG-BIN-EXECUTABLE | complete |  |  |
 | PKG-ECHELON-FOUNDRY | PKG-ECHELON-FOUNDRY | complete |  |  |

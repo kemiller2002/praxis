@@ -785,11 +785,32 @@
         "EXE-20260909T005705798Z-55a690b1"
       ],
       "completedAt": "2026-09-09T01:03:05.598Z"
+    },
+    {
+      "id": "MIG-07-TELEMETRY-RESOLUTION",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/TelemetryResolution.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-telemetry-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-09T12:33:32.452Z",
+      "telemetryExecutionIds": [
+        "EXE-20260909T123214698Z-7e031cb6"
+      ],
+      "completedAt": "2026-09-09T12:33:32.452Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-09T01:03:05.598Z",
+  "updatedAt": "2026-09-09T12:33:32.452Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
