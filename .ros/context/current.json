@@ -849,11 +849,32 @@
       ],
       "completedAt": "2026-09-09T14:43:35.328Z",
       "conclusion": "supported"
+    },
+    {
+      "id": "MIG-07-GIT-PATH-COMPOSITION",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/PathFilter.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-git-paths-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-09T15:18:35.146Z",
+      "telemetryExecutionIds": [
+        "EXE-20260909T151831832Z-fd282d7d"
+      ],
+      "completedAt": "2026-09-09T15:18:35.146Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-09T14:43:35.328Z",
+  "updatedAt": "2026-09-09T15:18:35.146Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
