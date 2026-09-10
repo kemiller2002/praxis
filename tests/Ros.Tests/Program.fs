@@ -11,6 +11,7 @@ let main _ =
     @ BacklogTests.tests
     @ TelemetryTests.tests
     @ TelemetryResolutionTests.tests
+    @ ChangeSummaryTests.tests
     @ PathFilterTests.tests
     @ WorkAttributionTests.tests
     @ QueueValidationTests.tests

@@ -123,7 +123,29 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   caught a real bug in `applyItem` (never wrote `blockReason` onto a
   live-context item at all, from increment 5 onward) and fixed it: the
   field is now written whenever set, for every action, matching production's
-  own never-cleared persistence.
+  own never-cleared persistence. `ros-fs work complete` (Phase A's eighth
+  increment) closes the live-work family: production
+  `transitionUnlocked`'s `complete` action, including real evidence-path
+  verification against the filesystem (`WorkOperations.planVerifiedContext`/
+  `Ros.Infrastructure.Work.FileEvidenceRepository`, checked only after the
+  frozen decision layer accepts the required evidence types), per-work-type
+  required evidence read from `ros.json`'s `workProtocol.completionEvidence`
+  (`FileWorkConfigRepository.readCompletionEvidence`), and unconditional
+  telemetry-execution finalization via a new
+  `Ros.Infrastructure.Work.FileTelemetryFinalizationRepository.finalizeWorkExecutions`
+  (called directly per completing id, since the shared telemetry-resolution
+  pipeline discards the `FinalizeExecutions` intent signal it computes).
+  Finalization computes a real `git diff`-derived clean-baseline change
+  summary (`Ros.Domain.Telemetry.ChangeSummary`'s `ChangeSummaryParser`/
+  `ChangeClassification`/`BlockedDuration`, reduced to the fields
+  production's own `finalizeExecution` reads) or one of production's exact
+  three unavailable reasons when the stored starting snapshot was not clean.
+  A research item's `--conclusion` (defaulting to `"inconclusive"`) is
+  written through a new `applyContextPlanWithConclusions`. It excludes
+  `options.input`/adapter-ingestion (unreachable from any current CLI path)
+  and explicit `--identity-*`/`--execution-id` overrides. With this
+  increment, every live-work transition (`begin`/`resume`/`block`/`complete`)
+  has real F# effect parity.
 
 ## Interfaces
 
@@ -169,6 +191,9 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 - Work-block real-effect tests: `tests/work-block-fsharp-differential.test.mjs`,
   plus the `blockReason`-persistence regression test in
   `tests/Ros.Tests/WorkContextEffectTests.fs`.
+- Work-complete real-effect tests: `tests/Ros.Tests/ChangeSummaryTests.fs`
+  (change-summary parsing/aggregation and blocked-duration computation) and
+  `tests/work-complete-fsharp-differential.test.mjs`.
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
 - Integration/live verification: `./ros status`, `./ros work context ID`, and
@@ -195,28 +220,25 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 ## Maintenance
 
 - Owner: repository-governance
-- Last checked against implementation: 2026-09-09
+- Last checked against implementation: 2026-09-10
 - Known gaps: backlog and live work intentionally remain separate recovery
-  units; telemetry effects for `complete` still occur before event/context
-  journal preparation (`work start`/`work resume`/`work block` already
-  compose their telemetry intents with the journal); the F# planner now
-  owns pure whole-context/multi-item and backlog-promotion plans, post-plan
-  evidence observation, telemetry execution-ID result-feedback
-  (recover/reject/bulk-link/finalize), all four real backlog-only effects
-  (`ready`/`block`/`abandon` transitions, `add`/`captureWork`,
-  `update`/`findOrCreateQueueEntry`, and `attachFileUnlocked`, including real
-  binary file writes and filename sanitization/sequencing — every
-  backlog-only Node command now has real F# parity), and three real
-  live-work effects (`begin`/`work start`, `resume`/`work resume`, and
-  `block`/`work block`, all including real telemetry execution creation
-  where relevant and sharing the same effect infrastructure). Still
-  remaining: `complete` (needs a new `finalizeWorkExecutions` port;
-  `resume`/`block` also still need `recordTelemetryLifecycle`'s
-  within-execution "resumed"/"blocked" bookkeeping for full fidelity),
-  live-work context/event persistence for `complete`, and every
-  telemetry-producer command — all telemetry- or live-work-entangled;
-  `complete` can reuse the existing effect infrastructure directly, while
-  the telemetry-producer commands still need MIG-08's own scoping decision.
-  Evidence containment has no current authority; production behavior accepts
-  absolute existing paths. Production remains Node-owned pending those
-  slices and the distribution decision.
+  units; the F# planner now owns pure whole-context/multi-item and
+  backlog-promotion plans, post-plan evidence observation, telemetry
+  execution-ID result-feedback (recover/reject/bulk-link/finalize), all four
+  real backlog-only effects (`ready`/`block`/`abandon` transitions,
+  `add`/`captureWork`, `update`/`findOrCreateQueueEntry`, and
+  `attachFileUnlocked`, including real binary file writes and filename
+  sanitization/sequencing — every backlog-only Node command now has real F#
+  parity), and all four real live-work effects (`begin`/`work start`,
+  `resume`/`work resume`, `block`/`work block`, and `complete`/`work
+  complete`, including real telemetry execution creation and finalization —
+  every live-work transition now has real F# parity too). `resume`/`block`
+  still need `recordTelemetryLifecycle`'s within-execution
+  "resumed"/"blocked" bookkeeping for full fidelity (both currently always
+  compute a zero `time.blocked_ms` on finalization, a correct answer for the
+  data this migration produces today rather than a stub). Still remaining:
+  every telemetry-producer command and both adapter commands — all
+  MIG-08-sized scoping work, independent of the now-complete work-lifecycle
+  command surface. Evidence containment has no current authority; production
+  behavior accepts absolute existing paths. Production remains Node-owned
+  pending those slices and the distribution decision.

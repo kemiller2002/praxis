@@ -219,3 +219,49 @@ module ProcessGitRepository =
         readText executable fullRoot [ "branch"; "--show-current" ], readText executable fullRoot [ "rev-parse"; "HEAD" ]
 
     let readBranchAndCommit root = readBranchAndCommitWithExecutable "git" root
+
+    /// Mirrors production `runGitText`'s default (trimmed) success/failure
+    /// shape for the git-diff-derived change-summary reads
+    /// `cleanBaselineChanges` performs: `git diff --name-status`, `git diff
+    /// --numstat`, and `git rev-list --count`.
+    let private runGitTextTrimmed executable root operation (arguments: string list) : Result<string, GitFailure> =
+        match runGit executable root operation arguments with
+        | Error failure -> Error failure
+        | Ok result when result.ExitCode <> 0 ->
+            let reason =
+                if result.Error.Contains("not a git repository", StringComparison.OrdinalIgnoreCase) then
+                    GitUnavailableReason.NotRepository
+                else
+                    GitUnavailableReason.CommandFailed
+
+            let message = if result.Error.Length = 0 then $"git exited with code {result.ExitCode}" else result.Error
+            Error { Operation = operation; Reason = reason; Message = message; ExitCode = Some result.ExitCode }
+        | Ok result -> Ok(result.Output.Trim())
+
+    let readNameStatusDiffWithExecutable executable root (startCommit: string) : Result<string, GitFailure> =
+        runGitTextTrimmed executable (IO.Path.GetFullPath root) "git diff" [ "diff"; "--name-status"; "--find-renames"; startCommit ]
+
+    let readNameStatusDiff root startCommit = readNameStatusDiffWithExecutable "git" root startCommit
+
+    let readNumstatDiffWithExecutable executable root (startCommit: string) : Result<string, GitFailure> =
+        runGitTextTrimmed executable (IO.Path.GetFullPath root) "git diff" [ "diff"; "--numstat"; "--find-renames"; startCommit ]
+
+    let readNumstatDiff root startCommit = readNumstatDiffWithExecutable "git" root startCommit
+
+    /// `-z`-delimited output is never trimmed of a real trailing NUL, matching
+    /// production's own `{trim: false}` override for this one read.
+    let readUntrackedFilesWithExecutable executable root : Result<string, GitFailure> =
+        match runGit executable (IO.Path.GetFullPath root) "git ls-files" [ "ls-files"; "--others"; "--exclude-standard"; "-z" ] with
+        | Error failure -> Error failure
+        | Ok result when result.ExitCode <> 0 ->
+            let message = if result.Error.Length = 0 then $"git exited with code {result.ExitCode}" else result.Error
+            Error { Operation = "git ls-files"; Reason = GitUnavailableReason.CommandFailed; Message = message; ExitCode = Some result.ExitCode }
+        | Ok result -> Ok result.Output
+
+    let readUntrackedFiles root = readUntrackedFilesWithExecutable "git" root
+
+    let readCommitCountWithExecutable executable root (startCommit: string) (endCommit: string) : Result<int, GitFailure> =
+        runGitTextTrimmed executable (IO.Path.GetFullPath root) "git rev-list" [ "rev-list"; "--count"; $"{startCommit}..{endCommit}" ]
+        |> Result.map int
+
+    let readCommitCount root startCommit endCommit = readCommitCountWithExecutable "git" root startCommit endCommit

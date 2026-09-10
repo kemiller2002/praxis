@@ -652,6 +652,99 @@ decision layer (`BacklogTransitionRejection.BlockReasonRequired` /
 ordered correctly by the pure `decide` functions), so the two rejections
 surface in the same order production's own does.
 
+## Phase A, increment 8: `work complete` — every live-work transition now has parity
+
+`ros-fs work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence
+TYPE=PATH]* [--conclusion TEXT] [--actor NAME]` mirrors production
+`transition(root, "complete", ids, options)` (`tools/ros_cli.mjs`'s
+`transitionUnlocked` `complete` branch, plus `tools/ros_telemetry.mjs`'s
+`finalizeExecution`/`finalizeWorkExecutions`). It closes the live-work
+family: `begin`/`resume`/`block`/`complete` all now commit through real F#
+effects.
+
+`complete` reuses increment 5/6's context-effect shape (`WorkContextPlanning.plan`
+composed via a request built the same way, `resolveContextTelemetryWithCreation`,
+a `FileWorkContextRepository` commit) but adds two things neither `begin` nor
+`resume` needed:
+
+- **Evidence-path verification.** The frozen decision layer already rejects
+  missing required evidence *types* (`TransitionRejection.MissingEvidence`).
+  Production additionally checks that every *provided* evidence path exists
+  on disk (`fs.existsSync(path.resolve(root, entry.path))`), throwing on the
+  first missing one. This CLI calls `WorkOperations.planVerifiedContext`
+  (pre-existing, unused until now) instead of `WorkContextPlanning.plan`
+  directly — it runs the same semantic plan first, then, only for
+  `Action = Complete` and only once the plan succeeds, observes each
+  provided path through `FileEvidenceRepository.create root` (also
+  pre-existing). Required evidence types are read per work-type from
+  `ros.json`'s `workProtocol.completionEvidence` (`FileWorkConfigRepository.
+  readCompletionEvidence`, new), matching production's own
+  `config.evidence[item.type] ?? config.evidence.default` fallback — the
+  default ROS scaffold requires `implementation`+`tests` for most types but
+  overrides `research` to require `research-record` alone, so this is a real
+  per-type config read, not a hardcoded set.
+- **Unconditional telemetry finalization.** Production's `complete` branch
+  always calls `finalizeWorkExecutions` once the item's own execution is
+  ensured, before the context/events commit. The shared `TelemetryPlanResolution`
+  pipeline this migration already built discards the `FinalizeExecutions`
+  intent it computes (a known, documented architectural gap — see
+  `resolveContext`/`resolvePlan`), so rather than plumbing a new signal
+  through the already-tested, shared `Ros.Application`/`Ros.Domain` layers,
+  the CLI calls the new `FileTelemetryFinalizationRepository.
+  finalizeWorkExecutions root id` directly for each completing id, in the
+  same position production uses it, gated on the same `telemetryEnabled`
+  flag production gates the whole block on.
+
+`FileTelemetryFinalizationRepository.finalizeWorkExecutions` is the new real
+effect: it re-reads each of the work item's currently-`active` execution
+records (scanning `.ros/telemetry/executions/*.json`, matching production's
+`loadExecutions().filter(status === "active")`), and for each, under that
+execution's own per-execution lock, mutates it in place —
+
+- `time.wall_ms`/`time.blocked_ms` metrics, unconditionally (`BlockedDuration.compute`,
+  a new pure port of production's `blockedDuration`, folding the execution's
+  own recorded lifecycle events; always zero today since this migration has
+  not yet ported `recordTelemetryLifecycle`'s "blocked"/"resumed" event
+  writes — a correct answer for the data this migration currently produces,
+  not a stub);
+- an ending Git snapshot and `git.ending_dirty_files` metric, or a
+  `supported-unavailable` capability when Git itself is unavailable;
+- a real **clean-baseline change summary**, computed by three new
+  `ProcessGitRepository` reads (`git diff --name-status`, `git diff
+  --numstat`, and untracked-file listing, each against the execution's own
+  *stored* starting commit — never re-observed) parsed and aggregated by a
+  new `Ros.Domain.Telemetry.ChangeSummary` module (`ChangeSummaryParser`,
+  `ChangeClassification.isTestFile`/`isDocumentation`), reduced to exactly
+  the fields production's own `finalizeExecution` reads (`filesByType` and
+  per-file `paths` are computed by production but never consumed by that one
+  caller, so this migration never computes them either — a deliberate,
+  documented scope reduction, not a silent omission). When the stored start
+  snapshot fails production's own "clean baseline" precondition
+  (`available && commit && !dirty`), the summary is `{available: false,
+  reason}` with one of production's exact three reasons
+  (`git-unavailable`/`starting-commit-unavailable`/`preexisting-dirty-worktree`),
+  and each of the twelve git-change metrics gets a `supported-unavailable`
+  capability instead of a measurement — both branches proven byte-for-byte
+  against production by a real Node/F# differential exercising a real `git`
+  repository, not synthetic fixture data.
+
+A research item's `--conclusion` (defaulting to `"inconclusive"`, matching
+production's `options.conclusion ?? "inconclusive"`) is written through a
+new `FileWorkContextRepository.applyContextPlanWithConclusions`, which
+generalizes the existing `applyContextPlan` (kept as a zero-conclusion
+convenience wrapper for the other three transitions) and extends `applyItem`
+to also persist `completedAt` and, for a research item, `conclusion` —
+neither of which any prior increment's `applyItem` wrote at all, since no
+earlier transition needed them.
+
+Deliberately excluded, matching every prior increment's honesty standard:
+`options.input`/adapter-ingestion (`finalizeExecution`'s `adaptInput`/
+`ingestAdapted`/`snapshotId` paths, gated on an option no current CLI command
+threads through to a work-completion finalize — only the separate,
+out-of-scope `telemetry finalize` command uses `--input`), and explicit
+`--identity-*`/`--execution-id` overrides (consistent with every other real
+effect in this migration).
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

@@ -24,5 +24,6 @@
     <Compile Include="Work/Attachment.fs" />
     <Compile Include="Telemetry/Identity.fs" />
     <Compile Include="Telemetry/Capability.fs" />
+    <Compile Include="Telemetry/ChangeSummary.fs" />
   </ItemGroup>
 </Project>

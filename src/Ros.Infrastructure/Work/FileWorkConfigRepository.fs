@@ -140,6 +140,38 @@ module FileWorkConfigRepository =
             | true, value when value.ValueKind = JsonValueKind.String -> value.GetString()
             | _ -> "1.0.0"
 
+    /// Mirrors production `workConfig().evidence`:
+    /// `config.workProtocol?.completionEvidence ?? {default: ["implementation",
+    /// "tests"]}`. Returns the `default` entry (itself defaulted the same
+    /// way when absent) and every other type-keyed entry, matching
+    /// production's own `config.evidence[item.type] ?? config.evidence.default`
+    /// per-type fallback.
+    let readCompletionEvidence (root: string) : Set<string> * Map<string, Set<string>> =
+        let fallbackDefault = Set.ofList [ "implementation"; "tests" ]
+
+        match readWorkProtocol root with
+        | None -> fallbackDefault, Map.empty
+        | Some element ->
+            match element.TryGetProperty "completionEvidence" with
+            | true, value when value.ValueKind = JsonValueKind.Object ->
+                let byType =
+                    value.EnumerateObject()
+                    |> Seq.choose (fun property ->
+                        if property.Value.ValueKind = JsonValueKind.Array then
+                            let values =
+                                property.Value.EnumerateArray()
+                                |> Seq.choose (fun item -> if item.ValueKind = JsonValueKind.String then Some(item.GetString()) else None)
+                                |> Set.ofSeq
+
+                            Some(property.Name, values)
+                        else
+                            None)
+                    |> Map.ofSeq
+
+                let defaultEvidence = byType |> Map.tryFind "default" |> Option.defaultValue fallbackDefault
+                defaultEvidence, (byType |> Map.remove "default")
+            | _ -> fallbackDefault, Map.empty
+
     /// Mirrors production `workConfig`'s `repository: config.repository?.id
     /// ?? config.name ?? path.basename(root)`: the identity a freshly
     /// synthesized `queue.json` is stamped with when none exists yet.

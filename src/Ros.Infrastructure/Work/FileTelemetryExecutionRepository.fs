@@ -27,7 +27,7 @@ module FileTelemetryExecutionRepository =
     let private asCapabilitySource (source: IdentitySource) : CapabilitySource =
         { Type = source.Type; Name = source.Name; Mechanism = source.Mechanism }
 
-    let private nowIso () =
+    let nowIso () =
         DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
 
     let private newExecutionId (startedAt: string) =
@@ -61,7 +61,10 @@ module FileTelemetryExecutionRepository =
             GitHubRunId = variable "GITHUB_RUN_ID"
             OllamaHost = variable "OLLAMA_HOST" }
 
-    type private GitBaseline =
+    /// Reused by `FileTelemetryFinalizationRepository` for an execution's
+    /// ending snapshot -- the same shape production's own `gitSnapshot`
+    /// produces for both the start and end of an execution's lifetime.
+    type GitBaseline =
         { Available: bool
           Repository: string
           Branch: string option
@@ -69,7 +72,7 @@ module FileTelemetryExecutionRepository =
           Dirty: bool option
           DirtyPaths: string list }
 
-    let private observeGitBaseline (root: string) (repositoryId: string) : GitBaseline =
+    let observeGitBaseline (root: string) (repositoryId: string) : GitBaseline =
         let ignored = FileWorkConfigRepository.readTelemetryIgnoredPaths root
         let isIgnored path = ignored |> List.exists (fun pattern -> Ros.Domain.Work.PathFilter.globMatch pattern path)
 
@@ -101,19 +104,19 @@ module FileTelemetryExecutionRepository =
               Dirty = Some(not dirtyPaths.IsEmpty)
               DirtyPaths = dirtyPaths }
 
-    let private sourceNode (source: CapabilitySource) : JsonObject =
+    let sourceNode (source: CapabilitySource) : JsonObject =
         let node = JsonObject()
         node["type"] <- JsonValue.Create source.Type
         node["name"] <- JsonValue.Create source.Name
         node["mechanism"] <- JsonValue.Create source.Mechanism
         node
 
-    let private optionalString (value: string option) : JsonNode =
+    let optionalString (value: string option) : JsonNode =
         match value with
         | Some text -> JsonValue.Create text
         | None -> null
 
-    let private stringArrayNode (values: string list) : JsonArray =
+    let stringArrayNode (values: string list) : JsonArray =
         let array = JsonArray()
         values |> List.iter (fun value -> array.Add(JsonValue.Create value: JsonNode))
         array
@@ -136,7 +139,7 @@ module FileTelemetryExecutionRepository =
     /// `lastAssessedAt`/`recordedAt` unconditionally, `history` only when at
     /// least one status change occurred, and `historyOmitted` only when
     /// history has actually overflowed the cap.
-    let private capabilityNode (capability: Capability) : JsonObject =
+    let capabilityNode (capability: Capability) : JsonObject =
         let node = JsonObject()
         node["metricId"] <- JsonValue.Create capability.MetricId
         node["status"] <- JsonValue.Create capability.Status
@@ -158,11 +161,14 @@ module FileTelemetryExecutionRepository =
 
         node
 
-    /// The one baseline metric production always records at execution
-    /// creation (`git.baseline_dirty_files`), including its content-addressed
-    /// `measurementId` -- a SHA-256 digest of the metric's own fields with
-    /// keys sorted, mirroring production `stable()` + `digest()`.
-    let private baselineMetricNode (definition: MetricDefinition) (dirtyFileCount: int) (source: CapabilitySource) (collectedAt: string) : JsonObject * Capability =
+    /// A `quality: "derived"` metric plus its capability-upsert inputs,
+    /// including the content-addressed `measurementId` -- a SHA-256 digest
+    /// of the metric's own fields with keys sorted, mirroring production
+    /// `stable()` + `digest()`. Every derived metric this migration records
+    /// (the execution-creation baseline, and every one `finalizeExecution`
+    /// adds) shares this exact shape and quality, so one function builds
+    /// them all.
+    let derivedMetricNode (definition: MetricDefinition) (value: int64) (source: CapabilitySource) (collectedAt: string) : JsonObject * Capability =
         let sortedForDigest = JsonObject()
         sortedForDigest["aggregation"] <- JsonValue.Create definition.Aggregation
         sortedForDigest["collectedAt"] <- JsonValue.Create collectedAt
@@ -182,14 +188,14 @@ module FileTelemetryExecutionRepository =
         sortedSource["type"] <- JsonValue.Create source.Type
         sortedForDigest["source"] <- sortedSource
         sortedForDigest["unit"] <- JsonValue.Create definition.Unit
-        sortedForDigest["value"] <- JsonValue.Create dirtyFileCount
+        sortedForDigest["value"] <- JsonValue.Create value
 
         let measurementId = "MEAS-" + CanonicalJson.sha256HexPrefix 24 (CanonicalJson.serializeCompact sortedForDigest)
 
         let node = JsonObject()
         node["measurementId"] <- JsonValue.Create measurementId
         node["id"] <- JsonValue.Create definition.Id
-        node["value"] <- JsonValue.Create dirtyFileCount
+        node["value"] <- JsonValue.Create value
         node["unit"] <- JsonValue.Create definition.Unit
         node["currency"] <- null
         node["quality"] <- JsonValue.Create "derived"
@@ -266,9 +272,9 @@ module FileTelemetryExecutionRepository =
                                 | None -> capabilities
                                 | Some definition ->
                                     let baselineNode, upserted =
-                                        baselineMetricNode
+                                        derivedMetricNode
                                             definition
-                                            git.DirtyPaths.Length
+                                            (int64 git.DirtyPaths.Length)
                                             { Type = "ros-git"; Name = "git-status"; Mechanism = "porcelain-v1" }
                                             startedAt
 
