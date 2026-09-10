@@ -234,7 +234,12 @@ module FileTelemetryExecutionRepository =
     type CreateExecutionRequest =
         { WorkItemId: string
           WorkType: string
-          Classifications: string list }
+          Classifications: string list
+          /// Production's `startExecution`'s `options.classificationRationale
+          /// ?? null`. `None` for every call site before `telemetry start`
+          /// (`work start`/`resume` never supply one, matching production's
+          /// own CLI, which never threads a rationale through those paths).
+          ClassificationRationale: string option }
 
     let private serializerOptions =
         JsonSerializerOptions(WriteIndented = true, IndentSize = 2, Encoder = Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping)
@@ -341,7 +346,11 @@ module FileTelemetryExecutionRepository =
 
                             let classificationNode = JsonObject()
                             classificationNode["types"] <- stringArrayNode classifications
-                            classificationNode["rationale"] <- null
+
+                            classificationNode["rationale"] <-
+                                match request.ClassificationRationale with
+                                | Some rationale -> JsonValue.Create rationale
+                                | None -> null
                             classificationNode["evidence"] <- JsonArray()
                             classificationNode["rd"] <- null
                             record["classification"] <- classificationNode

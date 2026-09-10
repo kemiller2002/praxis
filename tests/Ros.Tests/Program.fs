@@ -32,4 +32,5 @@ let main _ =
     @ TelemetryRecordMetricTests.tests
     @ TelemetryIngestTests.tests
     @ TelemetryClassifyTests.tests
+    @ TelemetryStartTests.tests
     |> TestRunner.run

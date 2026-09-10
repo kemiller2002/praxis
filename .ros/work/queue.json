@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 30,
+  "nextSeq": 31,
   "items": [
     {
       "id": "WI-0001",
@@ -625,6 +625,20 @@
       "attachments": [],
       "createdAt": "2026-09-10T14:37:26.866Z",
       "updatedAt": "2026-09-10T14:37:30.085Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0030",
+      "title": "F# telemetry start real effect: Phase A/MIG-08 increment 8",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-10T15:15:34.940Z",
+      "updatedAt": "2026-09-10T15:15:37.458Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
