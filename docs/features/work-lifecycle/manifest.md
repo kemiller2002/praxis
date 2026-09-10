@@ -148,6 +148,33 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   and explicit `--identity-*`/`--execution-id` overrides. With this
   increment, every live-work transition (`begin`/`resume`/`block`/`complete`)
   has real F# effect parity.
+  `ros-fs adapter call --store FILE --request FILE` (tracked as part of
+  `DF-ROS-2026-A028` Phase A/MIG-08's remaining-scope inventory, though it
+  belongs to this manifest's own `DF-ROS-2026-A007`, not telemetry) is
+  production's dependency-free file-based conformance adapter for the
+  external work-system contract (`docs/work-adapter-contract.md`): unlike
+  every other real effect in this manifest, it touches no telemetry
+  execution, work context, or lock at all, operating entirely on a
+  caller-named standalone JSON store. Work items and events inside that
+  store are caller-defined, open-ended JSON, so a new pure
+  `Ros.Domain.Work.AdapterContract.decide` inspects only the handful of
+  fields production itself reads (a work item's `state`, an event's
+  `eventId`), mirroring `callFileAdapter`/`validateAdapterRequest`'s exact
+  branch order: protocol-version and operation-support checks before the
+  store is ever loaded (so a malformed request never creates or touches
+  it), then a cached `requestId` replay, then repository authorization,
+  then `simulateOutcome: "unknown"` fault injection regardless of
+  operation or scope, then each operation's own forbidden/not-found/
+  conflict checks. `Ros.Infrastructure.Work.FileAdapterRepository.call`
+  performs the actual read/mutate/write: a `transitionWorkItem` success
+  mutates only `state`/`updatedBy` on the existing work-item node in
+  place, preserving every other caller-defined field verbatim; a
+  `publishRepositoryEvent` success appends its event only when the
+  `eventId` is not already present; every result, success or not, is
+  cached under its `requestId` and the whole store rewritten exactly once
+  per non-replayed call. `adapter publish` (the paired
+  `.ros/publications.json`-writing command) remains Node-only, its own
+  future scoping choice.
 
 ## Interfaces
 
@@ -196,6 +223,18 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 - Work-complete real-effect tests: `tests/Ros.Tests/ChangeSummaryTests.fs`
   (change-summary parsing/aggregation and blocked-duration computation) and
   `tests/work-complete-fsharp-differential.test.mjs`.
+- Adapter-call real-effect tests: `tests/Ros.Tests/AdapterContractTests.fs`
+  (every pure `decide` branch: protocol mismatch, unsupported operation,
+  cached replay, repository unauthorized, fault injection, and each
+  operation's forbidden/not-found/conflict/success case),
+  `tests/Ros.Tests/AdapterCallEffectTests.fs` (the JSON store
+  read/mutate/write around those decisions, including the
+  missing-field/protocol-mismatch untouched-store paths and the
+  transition/publish mutation-persistence paths), and
+  `tests/adapter-call-fsharp-differential.test.mjs` (the same
+  read/transition/idempotent-retry/conflict/enforcement/publish-dedup/
+  missing-field/missing-file scenarios byte-for-byte against production's
+  own CLI).
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
 - Integration/live verification: `./ros status`, `./ros work context ID`, and
@@ -239,9 +278,13 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   "resumed"/"blocked" bookkeeping (`FileTelemetryFinalizationRepository.
   recordLifecycle`, in the execution-telemetry manifest), so
   `time.blocked_ms` computes a real nonzero value on finalization instead of
-  always zero. Still remaining: every telemetry-producer command and both
-  adapter commands — all MIG-08-sized scoping work, independent of the
-  now-complete work-lifecycle command surface. Evidence containment has no
-  current authority; production
+  always zero. `adapter call` (`AdapterContract.decide`/
+  `FileAdapterRepository.call`) is now a real effect too — the external
+  work-system adapter conformance test, independent of every telemetry
+  execution/context/lock this manifest otherwise owns. Still remaining:
+  every telemetry-producer command (in the execution-telemetry manifest)
+  and `adapter publish` — all MIG-08-sized scoping work, independent of
+  the now-complete work-lifecycle command surface. Evidence containment
+  has no current authority; production
   behavior accepts absolute existing paths. Production remains Node-owned
   pending those slices and the distribution decision.

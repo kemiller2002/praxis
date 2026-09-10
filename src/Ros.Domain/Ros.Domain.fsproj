@@ -22,6 +22,7 @@
     <Compile Include="Work/Capture.fs" />
     <Compile Include="Work/Update.fs" />
     <Compile Include="Work/Attachment.fs" />
+    <Compile Include="Work/AdapterContract.fs" />
     <Compile Include="Telemetry/Identity.fs" />
     <Compile Include="Telemetry/Capability.fs" />
     <Compile Include="Telemetry/ChangeSummary.fs" />

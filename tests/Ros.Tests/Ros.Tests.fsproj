@@ -44,6 +44,8 @@
     <Compile Include="TelemetryIngestTests.fs" />
     <Compile Include="TelemetryClassifyTests.fs" />
     <Compile Include="TelemetryStartTests.fs" />
+    <Compile Include="AdapterContractTests.fs" />
+    <Compile Include="AdapterCallEffectTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>
