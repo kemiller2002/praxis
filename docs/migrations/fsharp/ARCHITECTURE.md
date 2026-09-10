@@ -1960,6 +1960,23 @@ in this repository must keep using `./ros` (Node) for every actual
 operation, and may use the F# shadow CLI's read-only commands only for
 standalone verification.
 
+## Phase B closure and the `ros-fs` npm launcher
+
+`EV-ROS-2026-A048` gathered `DF-ROS-2026-A028` Phase B's consumer
+distribution evidence (shape comparison, cross-platform buildability,
+package-size impact, offline/integrity/rollback), and `DF-ROS-2026-A029`
+accepts self-contained single-file binaries fetched from GitHub Releases as
+that shape, closing Phase B. The resulting `ros-fs` launcher
+(`bin/ros-fs.mjs`/`lib/ros-fs-launcher.mjs`) lives entirely in the npm
+package's Node layer, outside this project's four-tier F# architecture: it
+is a thin acquire-verify-cache-exec shim around the compiled `ros-fs`
+binary, with no decision logic of its own (RID resolution and checksum
+comparison are the only branching, both mechanical rather than semantic).
+It is additive and optional -- `./ros` and `ros-bootstrap init` are
+unchanged by its existence, and Phase C (redirecting `./ros`'s own
+dispatch) remains open, gated on its own future decision record per
+`DF-ROS-2026-A028`.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

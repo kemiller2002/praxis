@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 concurrency:
@@ -92,6 +92,51 @@ jobs:
       - name: Report stable release
         if: steps.version-check.outputs.changed == 'true' && steps.registry-check.outputs.already_published == 'false'
         run: echo "Published @echelon-foundry/repository-operating-system@${{ steps.version-check.outputs.current }} with dist-tag latest"
+
+      # ros-fs (bin/ros-fs.mjs) fetches a self-contained single-file binary
+      # for the caller's platform from this tagged release on first use and
+      # caches it; see DF-ROS-2026-A029. Built here, once, on a stable
+      # version bump only -- main-snapshot versions have no matching release
+      # and the launcher falls back to erroring with a clear message.
+      - name: Build self-contained ros-fs binaries for release
+        if: steps.version-check.outputs.changed == 'true' && steps.registry-check.outputs.already_published == 'false'
+        run: |
+          set -euo pipefail
+          mkdir -p dist/ros-fs
+          dotnet publish src/Ros.Cli/Ros.Cli.fsproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o dist/publish/linux-x64
+          cp dist/publish/linux-x64/ros-fs dist/ros-fs/ros-fs-linux-x64
+          dotnet publish src/Ros.Cli/Ros.Cli.fsproj -c Release -r linux-arm64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o dist/publish/linux-arm64
+          cp dist/publish/linux-arm64/ros-fs dist/ros-fs/ros-fs-linux-arm64
+          dotnet publish src/Ros.Cli/Ros.Cli.fsproj -c Release -r osx-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o dist/publish/osx-x64
+          cp dist/publish/osx-x64/ros-fs dist/ros-fs/ros-fs-osx-x64
+          dotnet publish src/Ros.Cli/Ros.Cli.fsproj -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o dist/publish/osx-arm64
+          cp dist/publish/osx-arm64/ros-fs dist/ros-fs/ros-fs-osx-arm64
+          dotnet publish src/Ros.Cli/Ros.Cli.fsproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o dist/publish/win-x64
+          cp dist/publish/win-x64/ros-fs.exe dist/ros-fs/ros-fs-win-x64.exe
+          cd dist/ros-fs
+          sha256sum ros-fs-linux-x64 ros-fs-linux-arm64 ros-fs-osx-x64 ros-fs-osx-arm64 ros-fs-win-x64.exe > checksums.txt
+          cat checksums.txt
+
+      - name: Create GitHub Release with ros-fs binaries
+        if: steps.version-check.outputs.changed == 'true' && steps.registry-check.outputs.already_published == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version-check.outputs.current }}
+        run: |
+          set -euo pipefail
+          if gh release view "v${VERSION}" >/dev/null 2>&1; then
+            echo "release v${VERSION} already exists; skipping"
+          else
+            gh release create "v${VERSION}" \
+              dist/ros-fs/ros-fs-linux-x64 \
+              dist/ros-fs/ros-fs-linux-arm64 \
+              dist/ros-fs/ros-fs-osx-x64 \
+              dist/ros-fs/ros-fs-osx-arm64 \
+              dist/ros-fs/ros-fs-win-x64.exe \
+              dist/ros-fs/checksums.txt \
+              --title "v${VERSION}" \
+              --notes "ros-fs self-contained binaries for @echelon-foundry/repository-operating-system@${VERSION}. Fetched automatically by the npm package's ros-fs launcher (bin/ros-fs.mjs) on first use; not intended for direct manual download."
+          fi
 
       - name: Create unique main-snapshot version
         id: version

@@ -81,7 +81,8 @@
 | WI-0042 | F# telemetryFindings validation port: MIG-08 increment 24 (validate unification prerequisite) | complete |  | high |
 | WI-0043 | Unify F# validate command: Phase A increment 11 (combines 5 already-real contributors) | complete |  | high |
 | WI-0044 | F# status command: Phase A increment 12 (closes EV-ROS-2026-A046's full inventory) | complete |  | high |
-| WI-0045 | Record Phase A closure evidence and point agents at F# for already-ported read-only commands | ready |  | high |
+| WI-0045 | Record Phase A closure evidence and point agents at F# for already-ported read-only commands | complete |  | high |
+| WI-0046 | Distribute ros-fs via npm as a self-contained single-file binary from GitHub Releases (DF-ROS-2026-A029) | ready |  | high |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |

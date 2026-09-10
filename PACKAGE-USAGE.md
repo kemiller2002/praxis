@@ -27,6 +27,36 @@ npx --yes \
 
 Every push to the canonical GitHub `main` branch publishes a unique prerelease version such as `1.1.0-main.42.1` and moves the npm `main` dist-tag. Stable releases and the `latest` tag remain deliberate release actions.
 
+## Run the F# CLI (`ros-fs`) via npm
+
+The package also exposes `ros-fs`, a launcher for the project's F# CLI
+(`DF-ROS-2026-A029`). It is additive: `ros-bootstrap init`'s scaffolded
+`./ros` continues to run the Node CLI unchanged, and `ros-fs` is a separate,
+optional binary any project depending on this package can invoke:
+
+```bash
+npx --package=@echelon-foundry/repository-operating-system@<version> ros-fs status
+```
+
+On first use for a given package version and platform, `ros-fs`
+(`bin/ros-fs.mjs`) downloads a self-contained, single-file build of the F#
+CLI from that version's GitHub Release, verifies its SHA-256 checksum
+against the release's `checksums.txt`, and caches it under
+`~/.cache/ros-fs/<version>/<platform>/` (override with `ROS_FS_CACHE_DIR`).
+Later invocations of the same version on the same machine run entirely from
+that cache, with no network access. Supported platforms: linux/x64,
+linux/arm64, darwin/x64, darwin/arm64, win32/x64 — an unsupported platform
+gets a clear error naming the gap rather than a silent failure.
+
+This launcher only resolves a release for a **stable** version (the one
+tagged `vX.Y.Z` on GitHub); `@main`-tagged prerelease snapshots have no
+matching release and the CLI reports that plainly rather than guessing. Only
+already-ported, differential-tested commands are safe to rely on here —
+consult `docs/migrations/fsharp/STATUS.md` for current command-surface
+parity. `ros-fs` does not replace `./ros`; see `AGENTS.md` for the
+in-repository rule that governs which one to use for real work inside this
+source checkout.
+
 ## Install the latest directly from GitHub
 
 Run inside the target repository:
