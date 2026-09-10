@@ -1,5 +1,6 @@
 namespace Ros.Infrastructure.Work
 
+open System
 open System.IO
 open System.Text.Json
 open System.Text.Json.Nodes
@@ -246,3 +247,94 @@ module FileAdapterRepository =
                 JsonSerializerOptions(WriteIndented = true, IndentSize = 2, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping)
             File.WriteAllText(storeFile, store.ToJsonString(options) + "\n")
             Ok result
+
+    // ---- adapter publish ----
+
+    let private nowIso () =
+        DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+
+    let private readJsonLines (path: string) : JsonObject list =
+        if File.Exists path then
+            File.ReadAllLines path
+            |> Array.filter (fun line -> line.Trim().Length > 0)
+            |> Array.choose (fun line ->
+                match JsonNode.Parse line with
+                | :? JsonObject as obj -> Some obj
+                | _ -> None)
+            |> Array.toList
+        else
+            []
+
+    /// Result of a publish call: how many events were newly appended to the
+    /// target versus already-published duplicates, matching production's
+    /// own printed `published N event(s); M duplicate(s) skipped`.
+    type PublishOutcome = { Published: int; Duplicates: int }
+
+    /// Mirrors production's own event republish exactly: appends every
+    /// `.ros/events/events.jsonl` event not already present (by `eventId`)
+    /// in `target`, verbatim and one compact JSON line per event, then
+    /// refreshes `.ros/publications.json`'s receipt for *every* source
+    /// event -- even an already-published one -- matching production's own
+    /// unconditional per-call `publishedAt` refresh. `target`'s parent
+    /// directory is created if missing; a failure there (or appending)
+    /// propagates as `Error` before either the destination or the receipts
+    /// file is touched, matching production's own thrown, uncaught error.
+    let publish (root: string) (target: string) : Result<PublishOutcome, string> =
+        try
+            let sourcePath = Path.Combine(root, ".ros", "events", "events.jsonl")
+            let events = readJsonLines sourcePath
+
+            let destinationPath = Path.GetFullPath(Path.Combine(root, target))
+            let published = readJsonLines destinationPath
+
+            let knownIds =
+                published
+                |> List.choose (fun e -> stringField e "eventId")
+                |> Set.ofList
+
+            let additions =
+                events
+                |> List.filter (fun e ->
+                    match stringField e "eventId" with
+                    | Some id -> not (knownIds.Contains id)
+                    | None -> true)
+
+            let compactOptions =
+                JsonSerializerOptions(Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping)
+
+            let destinationDirectory = Path.GetDirectoryName destinationPath
+            Directory.CreateDirectory destinationDirectory |> ignore
+
+            for event in additions do
+                File.AppendAllText(destinationPath, event.ToJsonString(compactOptions) + "\n")
+
+            let receiptsPath = Path.Combine(root, ".ros", "publications.json")
+
+            let receipts =
+                if File.Exists receiptsPath then
+                    match JsonNode.Parse(File.ReadAllText receiptsPath) with
+                    | :? JsonObject as obj -> obj
+                    | _ -> JsonObject()
+                else
+                    JsonObject()
+
+            let publishedAt = nowIso ()
+
+            for event in events do
+                match stringField event "eventId" with
+                | Some id ->
+                    let receipt = JsonObject()
+                    receipt["status"] <- JsonValue.Create "success"
+                    receipt["target"] <- JsonValue.Create target
+                    receipt["publishedAt"] <- JsonValue.Create publishedAt
+                    receipts[id] <- receipt
+                | None -> ()
+
+            let indentedOptions =
+                JsonSerializerOptions(WriteIndented = true, IndentSize = 2, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping)
+
+            File.WriteAllText(receiptsPath, receipts.ToJsonString(indentedOptions) + "\n")
+
+            Ok { Published = additions.Length; Duplicates = events.Length - additions.Length }
+        with error ->
+            Error error.Message

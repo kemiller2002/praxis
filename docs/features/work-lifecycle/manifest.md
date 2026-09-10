@@ -172,9 +172,23 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   `publishRepositoryEvent` success appends its event only when the
   `eventId` is not already present; every result, success or not, is
   cached under its `requestId` and the whole store rewritten exactly once
-  per non-replayed call. `adapter publish` (the paired
-  `.ros/publications.json`-writing command) remains Node-only, its own
-  future scoping choice.
+  per non-replayed call.
+  `ros-fs adapter publish --target FILE` is the paired event-republish
+  command: it reads every event from `.ros/events/events.jsonl`, appends
+  whichever are not already present (by `eventId`) in a caller-named
+  `--target` destination JSONL file (unrelated to `adapter call`'s own
+  store), then refreshes `.ros/publications.json`'s receipt for every
+  source event -- even an already-published one -- with a fresh
+  `publishedAt` on every call, matching production's own unconditional
+  per-call refresh (a real, non-obvious quirk verified against real Node
+  before writing any test: a duplicate-only republish still rewrites
+  every receipt). `Ros.Infrastructure.Work.FileAdapterRepository.publish`
+  (new, alongside `call` in the same module) creates the target's parent
+  directory unconditionally before appending -- even with zero events,
+  which creates the directory but no destination file -- and a
+  directory-creation or append failure propagates before either the
+  destination or the receipts file is touched, matching production's own
+  thrown, uncaught error.
 
 ## Interfaces
 
@@ -235,6 +249,15 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   read/transition/idempotent-retry/conflict/enforcement/publish-dedup/
   missing-field/missing-file scenarios byte-for-byte against production's
   own CLI).
+- Adapter-publish real-effect tests:
+  `tests/Ros.Tests/AdapterPublishEffectTests.fs` (fresh-destination
+  append, eventId dedup across repeated calls, the unconditional per-call
+  receipt refresh, the zero-event directory-creation-without-a-file
+  quirk, and a directory-creation failure leaving neither file touched)
+  and `tests/adapter-publish-fsharp-differential.test.mjs` (a real
+  `work begin` + `adapter publish` cycle covering append/dedup/
+  receipt-count byte-for-byte against production, the write-failure
+  rejection, the missing-`--target` message, and the zero-event case).
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
 - Integration/live verification: `./ros status`, `./ros work context ID`, and
@@ -279,12 +302,14 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   recordLifecycle`, in the execution-telemetry manifest), so
   `time.blocked_ms` computes a real nonzero value on finalization instead of
   always zero. `adapter call` (`AdapterContract.decide`/
-  `FileAdapterRepository.call`) is now a real effect too — the external
-  work-system adapter conformance test, independent of every telemetry
+  `FileAdapterRepository.call`) and `adapter publish`
+  (`FileAdapterRepository.publish`) are now real effects too — the
+  external work-system adapter conformance test and its paired
+  event-republish command, independent of every telemetry
   execution/context/lock this manifest otherwise owns. Still remaining:
-  every telemetry-producer command (in the execution-telemetry manifest)
-  and `adapter publish` — all MIG-08-sized scoping work, independent of
-  the now-complete work-lifecycle command surface. Evidence containment
+  every telemetry-producer command (in the execution-telemetry
+  manifest) — all MIG-08-sized scoping work, independent of the
+  now-complete work-lifecycle command surface. Evidence containment
   has no current authority; production
   behavior accepts absolute existing paths. Production remains Node-owned
   pending those slices and the distribution decision.
