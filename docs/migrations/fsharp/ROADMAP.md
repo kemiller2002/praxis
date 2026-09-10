@@ -107,9 +107,10 @@ computes a real nonzero value at finalization instead of always zero.
 Everything still missing from Phase 1 (`telemetry summary`'s aggregation,
 every write-path telemetry-producer command, both adapter commands, and
 `resume`'s still-open `parentExecutionId` linkage) remains its own future
-MIG-08 scoping choice. `EV-ROS-2026-A043` is not re-run for ten rows — its
-acceptance criterion is every row reading "full parity" — so the inventory
-itself is still pending a future re-run once Phase 1 is materially further
-along.
+MIG-08 scoping choice. `EV-ROS-2026-A043` has now been re-run as
+`EV-ROS-2026-A045`: thirteen of the same twenty-six rows now read "full
+parity" (up from three), but the acceptance criterion is still every row
+reading "full parity," so Phase 1 remains open until a further re-run
+closes the remaining thirteen.
 
 `./ros` continues to invoke Node exclusively until Phase 3 is accepted.
