@@ -1574,8 +1574,69 @@ mapping, a failed API request, a tool result with a string `"false"`
 success, and all three Gemini-CLI-specific metrics), the `records`-object
 input-wrapping shape, and each of the four adapter names' own identity
 seeding — all producing byte-identical identity, capability, metric, and
-event sets. `telemetry start`'s own excluded `--execution-id`/
-identity-override flags remain the one still-scoped-out piece of MIG-08.
+event sets.
+
+## Phase A / MIG-08, increment 23: `telemetry start`'s `--execution-id` and identity-override flags — the last piece of MIG-08's own scope
+
+`telemetry start`'s eighth increment shipped the command itself but
+deliberately excluded and loudly rejected (exit 2) two things production's
+own CLI exposes only here: `--execution-id` and the eleven identity-override
+flags (`--provider`/`--model`/`--model-version`/`--runtime`/
+`--runtime-version`/`--session`/`--conversation`/`--run`/`--agent`/
+`--subagent`/`--parent-execution`). This increment supports both, closing
+MIG-08's own command-surface scope entirely.
+
+`--execution-id` needed no new decision logic at all. `Ros.Domain.
+Telemetry.ExecutionLink.ExecutionLinkRecovery.decide`'s pure
+`RequestedExecutionId` handling — already shipped, and already covered by
+`TelemetryTests.fs` — was simply threaded through from the CLI for the
+first time: `resolveOrCreateExecution` (`FileTelemetryFinalizationRepository`)
+now accepts a `requestedExecutionId: string option` parameter and passes
+it straight into the `ExecutionLinkRequest` it already built, rather than
+hardcoding `None`. A matching detached candidate is recovered; a
+non-matching id with other detached candidates present rejects with
+production's own exact message (`detached telemetry execution must be
+linked before creating '{requested}' for '{workItemId}'; rerun with
+--execution-id {firstCandidate}` — `firstCandidate` taken from
+`ExecutionLinkRecovery.decide`'s own already-sorted `RejectDetachedConflict`
+list, matching production's own `candidates[0]` after its identical
+`.sort()`); with no detached candidates at all, the requested id flows
+through unchanged to become the newly created execution's own id.
+
+The eleven identity flags reuse `Ros.Domain.Telemetry.Identity.discover`'s
+already-complete override handling, built earlier in this migration and
+never missing a single field (confirmed by re-reading it before writing
+any new code) — the actual gap was purely in the CLI-to-repository
+wiring, not the domain logic. `FileTelemetryExecutionRepository.
+CreateExecutionRequest` gained two new fields: `ExecutionId: string
+option` (used verbatim instead of a freshly generated id, mirroring
+production's own `options.executionId ?? executionId()`) and
+`IdentityOverrides: IdentityInputs` (replacing the previous standalone
+`ParentExecutionId: string option` field, which is folded into this one
+as one of the same eleven slots). A new private `mergeIdentityOverrides`
+overlays the eleven explicit-override fields from the caller's value onto
+the real environment-derived `IdentityInputs`, mirroring production's own
+`discoverIdentity(options.identity ?? options)` exactly: an override field
+wins when present, otherwise the environment-derived field (and each
+field's own further environment-variable fallback chain inside `Identity.
+discover`) still applies. The two pre-existing call sites (`work start`/
+`resume`/`block`/`complete`, via `Ros.Cli.Program.
+resolveContextTelemetryWithCreation`, and `telemetry start`'s own
+`resolveOrCreateExecution`) both updated to the new field shape, each
+still supplying only `ParentExecutionId` (or nothing) on `IdentityOverrides`
+— no behavior change for any of them.
+
+Confirmed against real Node by driving the actual `ros` CLI wrapper
+directly (not just the exported function) with differential fixtures
+covering: `--execution-id` recovering a matching detached candidate;
+`--execution-id` rejecting a non-matching id with production's exact
+rerun message when other candidates exist; `--execution-id` becoming a
+freshly created execution's own id when no candidate exists at all; and
+all eleven identity flags supplied together producing an identity object
+byte-identical to production's own. This closes MIG-08's own
+command-surface scope entirely — every command and adapter name
+production's own CLI exposes for execution/telemetry now has real F#
+effect parity.
 
 ## Work-state recovery seam
 

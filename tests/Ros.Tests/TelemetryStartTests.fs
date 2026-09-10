@@ -3,6 +3,7 @@ namespace Ros.Tests
 open System
 open System.IO
 open System.Text.Json.Nodes
+open Ros.Domain.Telemetry
 open Ros.Infrastructure.Work
 
 [<RequireQualifiedAccess>]
@@ -74,7 +75,7 @@ module TelemetryStartTests =
                       writeMetricRegistry root
                       itemWith root "WI-A" "active"
 
-                      match FileTelemetryFinalizationRepository.startTarget root "WI-A" [ "research" ] (Some "manual attach") with
+                      match FileTelemetryFinalizationRepository.startTarget root "WI-A" [ "research" ] (Some "manual attach") None IdentityInputs.empty with
                       | Error message -> failwith message
                       | Ok None -> failwith "expected a created execution"
                       | Ok(Some record) ->
@@ -100,7 +101,7 @@ module TelemetryStartTests =
                       itemWith root "WI-B" "active"
                       writeExecution root "EXE-DETACHED" "WI-B" "active" "2020-01-01T00:00:00.000Z"
 
-                      match FileTelemetryFinalizationRepository.startTarget root "WI-B" [] None with
+                      match FileTelemetryFinalizationRepository.startTarget root "WI-B" [] None None IdentityInputs.empty with
                       | Error message -> failwith message
                       | Ok None -> failwith "expected a recovered execution"
                       | Ok(Some record) ->
@@ -121,7 +122,7 @@ module TelemetryStartTests =
 
                       writeExecution root "EXE-LINKED" "WI-C" "active" "2020-01-01T00:00:00.000Z"
 
-                      match FileTelemetryFinalizationRepository.startTarget root "WI-C" [] None with
+                      match FileTelemetryFinalizationRepository.startTarget root "WI-C" [] None None IdentityInputs.empty with
                       | Error message -> failwith message
                       | Ok None -> failwith "expected a created execution"
                       | Ok(Some record) ->
@@ -140,7 +141,7 @@ module TelemetryStartTests =
                       writeExecution root "EXE-DETACHED-1" "WI-D" "active" "2020-01-01T00:00:00.000Z"
                       writeExecution root "EXE-DETACHED-2" "WI-D" "active" "2020-01-01T00:00:01.000Z"
 
-                      match FileTelemetryFinalizationRepository.startTarget root "WI-D" [] None with
+                      match FileTelemetryFinalizationRepository.startTarget root "WI-D" [] None None IdentityInputs.empty with
                       | Ok _ -> failwith "expected a rejection"
                       | Error message ->
                           Assert.equal
@@ -154,7 +155,7 @@ module TelemetryStartTests =
                       writeMetricRegistry root
                       itemWith root "WI-E" "ready"
 
-                      match FileTelemetryFinalizationRepository.startTarget root "WI-E" [] None with
+                      match FileTelemetryFinalizationRepository.startTarget root "WI-E" [] None None IdentityInputs.empty with
                       | Ok _ -> failwith "expected a rejection"
                       | Error message ->
                           Assert.equal "work item 'WI-E' must be active or blocked before starting telemetry" message) }
@@ -166,7 +167,7 @@ module TelemetryStartTests =
                       writeMetricRegistry root
                       itemWith root "WI-A" "active"
 
-                      match FileTelemetryFinalizationRepository.startTarget root "WI-NOPE" [] None with
+                      match FileTelemetryFinalizationRepository.startTarget root "WI-NOPE" [] None None IdentityInputs.empty with
                       | Ok _ -> failwith "expected a rejection"
                       | Error message ->
                           Assert.equal "work item 'WI-NOPE' must be active or blocked before starting telemetry" message) }
@@ -180,9 +181,91 @@ module TelemetryStartTests =
                       File.WriteAllText(Path.Combine(root, "ros.json"), """{"telemetry":{"enabled":false}}""")
                       let before = File.ReadAllText(Path.Combine(root, ".ros", "context", "current.json"))
 
-                      match FileTelemetryFinalizationRepository.startTarget root "WI-F" [] None with
+                      match FileTelemetryFinalizationRepository.startTarget root "WI-F" [] None None IdentityInputs.empty with
                       | Error message -> failwith message
                       | Ok(Some _) -> failwith "expected no execution to be created"
                       | Ok None ->
                           let after = File.ReadAllText(Path.Combine(root, ".ros", "context", "current.json"))
-                          Assert.equal before after) } ]
+                          Assert.equal before after) }
+
+          { Name = "startTarget with --execution-id recovers a matching detached candidate instead of creating a new one"
+            Run =
+              fun () ->
+                  withTemporaryRoot (fun root ->
+                      writeMetricRegistry root
+                      itemWith root "WI-G" "active"
+                      writeExecution root "EXE-DETACHED-1" "WI-G" "active" "2020-01-01T00:00:00.000Z"
+                      writeExecution root "EXE-DETACHED-2" "WI-G" "active" "2020-01-01T00:00:01.000Z"
+
+                      match FileTelemetryFinalizationRepository.startTarget root "WI-G" [] None (Some "EXE-DETACHED-2") IdentityInputs.empty with
+                      | Error message -> failwith message
+                      | Ok None -> failwith "expected a recovered execution"
+                      | Ok(Some record) -> Assert.equal (Some "EXE-DETACHED-2") (stringField record "executionId")) }
+
+          { Name = "startTarget with --execution-id rejects a non-matching id when other detached candidates exist, with production's exact rerun message"
+            Run =
+              fun () ->
+                  withTemporaryRoot (fun root ->
+                      writeMetricRegistry root
+                      itemWith root "WI-H" "active"
+                      writeExecution root "EXE-DETACHED-1" "WI-H" "active" "2020-01-01T00:00:00.000Z"
+                      writeExecution root "EXE-DETACHED-2" "WI-H" "active" "2020-01-01T00:00:01.000Z"
+
+                      match FileTelemetryFinalizationRepository.startTarget root "WI-H" [] None (Some "EXE-NOPE") IdentityInputs.empty with
+                      | Ok record -> failwith $"expected a rejection but got {record}"
+                      | Error message ->
+                          Assert.equal
+                              "detached telemetry execution must be linked before creating 'EXE-NOPE' for 'WI-H'; rerun with --execution-id EXE-DETACHED-1"
+                              message) }
+
+          { Name = "startTarget with --execution-id becomes the newly created execution's own id when no detached candidate exists"
+            Run =
+              fun () ->
+                  withTemporaryRoot (fun root ->
+                      writeMetricRegistry root
+                      itemWith root "WI-I" "active"
+
+                      match FileTelemetryFinalizationRepository.startTarget root "WI-I" [] None (Some "EXE-CUSTOM-ID") IdentityInputs.empty with
+                      | Error message -> failwith message
+                      | Ok None -> failwith "expected a created execution"
+                      | Ok(Some record) -> Assert.equal (Some "EXE-CUSTOM-ID") (stringField record "executionId")) }
+
+          { Name = "startTarget threads all 11 identity-override fields into the created record's identity"
+            Run =
+              fun () ->
+                  withTemporaryRoot (fun root ->
+                      writeMetricRegistry root
+                      itemWith root "WI-J" "active"
+
+                      let identityOverrides: IdentityInputs =
+                          { IdentityInputs.empty with
+                              Provider = Some "acme"
+                              Model = Some "acme-model"
+                              ModelVersion = Some "v2"
+                              Runtime = Some "acme-cli"
+                              RuntimeVersion = Some "9.9.9"
+                              SessionId = Some "sess-123"
+                              ConversationId = Some "conv-456"
+                              RunId = Some "run-789"
+                              AgentId = Some "agent-1"
+                              SubagentId = Some "subagent-2"
+                              ParentExecutionId = Some "EXE-PARENT" }
+
+                      match FileTelemetryFinalizationRepository.startTarget root "WI-J" [] None None identityOverrides with
+                      | Error message -> failwith message
+                      | Ok None -> failwith "expected a created execution"
+                      | Ok(Some record) ->
+                          match record["identity"] with
+                          | :? JsonObject as identity ->
+                              Assert.equal (Some "acme") (stringField identity "provider")
+                              Assert.equal (Some "acme-model") (stringField identity "model")
+                              Assert.equal (Some "v2") (stringField identity "modelVersion")
+                              Assert.equal (Some "acme-cli") (stringField identity "runtime")
+                              Assert.equal (Some "9.9.9") (stringField identity "runtimeVersion")
+                              Assert.equal (Some "sess-123") (stringField identity "sessionId")
+                              Assert.equal (Some "conv-456") (stringField identity "conversationId")
+                              Assert.equal (Some "run-789") (stringField identity "runId")
+                              Assert.equal (Some "agent-1") (stringField identity "agentId")
+                              Assert.equal (Some "subagent-2") (stringField identity "subagentId")
+                              Assert.equal (Some "EXE-PARENT") (stringField identity "parentExecutionId")
+                          | _ -> failwith "expected an identity object") } ]

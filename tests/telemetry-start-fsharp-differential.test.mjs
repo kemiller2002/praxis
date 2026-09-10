@@ -231,11 +231,109 @@ test("F# telemetry start returns null without mutating context when telemetry is
   assert.equal(fs.readFileSync(path.join(fsharp.root, ".ros", "context", "current.json"), "utf8"), fsharpContextBefore);
 });
 
-test("F# telemetry start rejects the 12 identity/execution-id flags production exposes, as a loud not-yet-supported gap", (t) => {
-  const item = { id: "WI-A", type: "task", state: "active", semanticState: "active", evidence: [] };
-  const fsharp = fixture(t, "excluded-fsharp", [item]);
+test("F# telemetry start --execution-id recovers a matching detached candidate instead of creating a new one, matching production", (t) => {
+  const item = { id: "WI-G", type: "task", state: "active", semanticState: "active", evidence: [] };
+  const node = fixture(t, "execid-match-node", [item]);
+  const fsharp = fixture(t, "execid-match-fsharp", [item]);
 
-  const fsharpResult = runFsharp(fsharp.root, ["WI-A", "--execution-id", "EXE-SOMETHING"]);
-  assert.equal(fsharpResult.status, 2);
-  assert.equal(fsharpResult.stderr.trim(), "ERROR telemetry start --execution-id is not yet supported by this CLI");
+  for (const { root } of [node, fsharp]) {
+    writeFixtureExecution(root, "EXE-DETACHED-1", "WI-G", "active", "2020-01-01T00:00:00.000Z");
+    writeFixtureExecution(root, "EXE-DETACHED-2", "WI-G", "active", "2020-01-01T00:00:01.000Z");
+  }
+
+  const nodeResult = ros(node.root, ["telemetry", "start", "WI-G", "--execution-id", "EXE-DETACHED-2"]);
+  assert.equal(nodeResult.status, 0, nodeResult.stderr);
+  const fsharpResult = runFsharp(fsharp.root, ["WI-G", "--execution-id", "EXE-DETACHED-2"]);
+  assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
+
+  const nodeRecord = JSON.parse(nodeResult.stdout);
+  const fsharpRecord = JSON.parse(fsharpResult.stdout);
+  assert.equal(nodeRecord.executionId, "EXE-DETACHED-2");
+  assert.equal(fsharpRecord.executionId, "EXE-DETACHED-2");
+
+  assert.deepEqual(contextItem(node.root, "WI-G").telemetryExecutionIds, ["EXE-DETACHED-2"]);
+  assert.deepEqual(contextItem(fsharp.root, "WI-G").telemetryExecutionIds, ["EXE-DETACHED-2"]);
+});
+
+test("F# telemetry start --execution-id rejects a non-matching id when other detached candidates exist, with production's exact rerun message", (t) => {
+  const item = { id: "WI-H", type: "task", state: "active", semanticState: "active", evidence: [] };
+  const node = fixture(t, "execid-conflict-node", [item]);
+  const fsharp = fixture(t, "execid-conflict-fsharp", [item]);
+
+  for (const { root } of [node, fsharp]) {
+    writeFixtureExecution(root, "EXE-DETACHED-1", "WI-H", "active", "2020-01-01T00:00:00.000Z");
+    writeFixtureExecution(root, "EXE-DETACHED-2", "WI-H", "active", "2020-01-01T00:00:01.000Z");
+  }
+
+  const nodeResult = ros(node.root, ["telemetry", "start", "WI-H", "--execution-id", "EXE-NOPE"]);
+  const fsharpResult = runFsharp(fsharp.root, ["WI-H", "--execution-id", "EXE-NOPE"]);
+
+  assert.equal(nodeResult.status, 1);
+  assert.equal(fsharpResult.status, 1);
+  const expected = "detached telemetry execution must be linked before creating 'EXE-NOPE' for 'WI-H'; rerun with --execution-id EXE-DETACHED-1";
+  assert.match(nodeResult.stderr, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.equal(fsharpResult.stderr.trim(), `ERROR ${expected}`);
+});
+
+test("F# telemetry start --execution-id becomes the newly created execution's own id when no detached candidate exists, matching production", (t) => {
+  const item = { id: "WI-I", type: "task", state: "active", semanticState: "active", evidence: [] };
+  const node = fixture(t, "execid-fresh-node", [item]);
+  const fsharp = fixture(t, "execid-fresh-fsharp", [item]);
+
+  const nodeResult = ros(node.root, ["telemetry", "start", "WI-I", "--execution-id", "EXE-CUSTOM-ID"]);
+  assert.equal(nodeResult.status, 0, nodeResult.stderr);
+  const fsharpResult = runFsharp(fsharp.root, ["WI-I", "--execution-id", "EXE-CUSTOM-ID"]);
+  assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
+
+  const nodeRecord = JSON.parse(nodeResult.stdout);
+  const fsharpRecord = JSON.parse(fsharpResult.stdout);
+  assert.equal(nodeRecord.executionId, "EXE-CUSTOM-ID");
+  assert.equal(fsharpRecord.executionId, "EXE-CUSTOM-ID");
+});
+
+test("F# telemetry start's 11 identity-override flags produce an identity object identical to production's own", (t) => {
+  const item = { id: "WI-J", type: "task", state: "active", semanticState: "active", evidence: [] };
+  const node = fixture(t, "identity-node", [item]);
+  const fsharp = fixture(t, "identity-fsharp", [item]);
+
+  const identityArgs = [
+    "--provider", "acme",
+    "--model", "acme-model",
+    "--model-version", "v2",
+    "--runtime", "acme-cli",
+    "--runtime-version", "9.9.9",
+    "--session", "sess-123",
+    "--conversation", "conv-456",
+    "--run", "run-789",
+    "--agent", "agent-1",
+    "--subagent", "subagent-2",
+    "--parent-execution", "EXE-PARENT"
+  ];
+
+  const nodeResult = ros(node.root, ["telemetry", "start", "WI-J", ...identityArgs]);
+  assert.equal(nodeResult.status, 0, nodeResult.stderr);
+  const fsharpResult = runFsharp(fsharp.root, ["WI-J", ...identityArgs]);
+  assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
+
+  const nodeRecord = JSON.parse(nodeResult.stdout);
+  const fsharpRecord = JSON.parse(fsharpResult.stdout);
+
+  const normIdentity = (record) => {
+    const { orchestration, ...rest } = record.identity;
+    return rest;
+  };
+  assert.deepEqual(normIdentity(nodeRecord), normIdentity(fsharpRecord));
+  assert.deepEqual(normIdentity(nodeRecord), {
+    provider: "acme",
+    model: "acme-model",
+    modelVersion: "v2",
+    runtime: "acme-cli",
+    runtimeVersion: "9.9.9",
+    sessionId: "sess-123",
+    conversationId: "conv-456",
+    runId: "run-789",
+    agentId: "agent-1",
+    subagentId: "subagent-2",
+    parentExecutionId: "EXE-PARENT"
+  });
 });

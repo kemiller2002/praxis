@@ -2694,6 +2694,8 @@ module FileTelemetryFinalizationRepository =
         (classifications: string list)
         (classificationRationale: string option)
         (linkedIds: string list)
+        (requestedExecutionId: string option)
+        (identityOverrides: IdentityInputs)
         : Result<string option, string> =
         let rec attempt attemptsLeft =
             let candidates = FileTelemetryStateRepository.readCandidates root workItemId
@@ -2702,7 +2704,7 @@ module FileTelemetryFinalizationRepository =
                 { WorkItemId = workItemId
                   LinkedExecutionIds = Set.ofList linkedIds
                   RecoverableStatuses = Set.singleton ExecutionStatus.Active
-                  RequestedExecutionId = None
+                  RequestedExecutionId = requestedExecutionId
                   Candidates = candidates }
 
             match ExecutionLinkRecovery.decide request with
@@ -2710,8 +2712,12 @@ module FileTelemetryFinalizationRepository =
             | ExecutionLinkDecision.RejectAmbiguous ids ->
                 Error
                     $"""multiple detached telemetry executions require explicit selection for '{workItemId}'; rerun with --execution-id one of: {String.Join(", ", ids)}"""
-            | ExecutionLinkDecision.RejectDetachedConflict _ ->
-                Error $"a detached telemetry execution must be linked before creating a new one for '{workItemId}', which this command does not yet support selecting"
+            | ExecutionLinkDecision.RejectDetachedConflict candidateIds ->
+                match requestedExecutionId, candidateIds with
+                | Some requested, firstCandidate :: _ ->
+                    Error
+                        $"detached telemetry execution must be linked before creating '{requested}' for '{workItemId}'; rerun with --execution-id {firstCandidate}"
+                | _ -> Error $"a detached telemetry execution must be linked before creating a new one for '{workItemId}'"
             | ExecutionLinkDecision.StartNew ->
                 if attemptsLeft <= 0 then
                     Error $"unable to resolve a telemetry execution for '{workItemId}'"
@@ -2721,7 +2727,8 @@ module FileTelemetryFinalizationRepository =
                           WorkType = workType
                           Classifications = classifications
                           ClassificationRationale = classificationRationale
-                          ParentExecutionId = None }
+                          ExecutionId = requestedExecutionId
+                          IdentityOverrides = identityOverrides }
 
                     match FileTelemetryExecutionRepository.createExecution root createRequest with
                     | Error message -> Error message
@@ -2745,17 +2752,20 @@ module FileTelemetryFinalizationRepository =
     /// `Ok None` when telemetry is disabled and no candidate execution
     /// already exists, matching production's own pre-lock-irrelevant
     /// `startExecution` short-circuit -- no context or file mutation at
-    /// all in that case. Deliberately excludes `--execution-id` and every
-    /// `--provider`/`--model`/`--runtime`/... identity-override flag
-    /// production's own CLI exposes here (the one command that does);
-    /// supporting them would mean extending `createExecution` itself to
-    /// accept an explicit execution id and identity overrides, a
-    /// separately scoped future slice.
+    /// all in that case. `requestedExecutionId`/`identityOverrides` thread
+    /// `telemetry start`'s own `--execution-id` and the 11 identity-override
+    /// flags (`--provider`/`--model`/`--model-version`/`--runtime`/
+    /// `--runtime-version`/`--session`/`--conversation`/`--run`/`--agent`/
+    /// `--subagent`/`--parent-execution`) through to `resolveOrCreateExecution`/
+    /// `createExecution` -- production's own CLI is the only command that
+    /// exposes any of these.
     let startTarget
         (root: string)
         (workItemId: string)
         (classifications: string list)
         (classificationRationale: string option)
+        (requestedExecutionId: string option)
+        (identityOverrides: IdentityInputs)
         : Result<JsonObject option, string> =
         match RegistryLock.acquire root "work-protocol" RegistryLock.defaultSettings with
         | Error failure -> Error failure.Message
@@ -2803,7 +2813,17 @@ module FileTelemetryFinalizationRepository =
                                                         |> Seq.toList
                                                     | _ -> []
 
-                                                match resolveOrCreateExecution root workItemId workType classifications classificationRationale linkedIds with
+                                                match
+                                                    resolveOrCreateExecution
+                                                        root
+                                                        workItemId
+                                                        workType
+                                                        classifications
+                                                        classificationRationale
+                                                        linkedIds
+                                                        requestedExecutionId
+                                                        identityOverrides
+                                                with
                                                 | Error message -> Error message
                                                 | Ok None -> Ok None
                                                 | Ok(Some executionId) ->
