@@ -910,8 +910,19 @@ let private evidenceIssueMessage (issue: EvidenceIssue) =
 /// re-resolves against freshly re-observed candidates -- a real effect
 /// boundary re-reading disk state, not a second pure pass. Bounded to one
 /// creation attempt per requested work item so a persistent failure cannot
-/// loop forever.
-let private resolveContextTelemetryWithCreation root (classifications: string list) attemptsLeft (candidatePlan: WorkContextPlan) =
+/// loop forever. `parentExecutionIdFor` supplies `CreateExecutionRequest.
+/// ParentExecutionId` per work item: `work resume`'s rare
+/// no-active-candidate path supplies the work item's most recently
+/// created execution; every other action passes `fun _ -> None` (see
+/// `CreateExecutionRequest.ParentExecutionId` for why this corrects,
+/// rather than replicates, production's own behavior here).
+let private resolveContextTelemetryWithCreation
+    root
+    (classifications: string list)
+    (parentExecutionIdFor: string -> string option)
+    attemptsLeft
+    (candidatePlan: WorkContextPlan)
+    =
     let rec resolve attemptsLeft (candidatePlan: WorkContextPlan) =
         let telemetryRepository: TelemetryStateRepository =
             { Observe =
@@ -938,7 +949,8 @@ let private resolveContextTelemetryWithCreation root (classifications: string li
                         { WorkItemId = workItemId
                           WorkType = item.WorkType
                           Classifications = classifications
-                          ClassificationRationale = None }
+                          ClassificationRationale = None
+                          ParentExecutionId = parentExecutionIdFor workItemId }
 
                     match FileTelemetryExecutionRepository.createExecution root createRequest with
                     | Error message -> Error message
@@ -1049,7 +1061,7 @@ let private runWorkStart root arguments =
                                         match WorkContextPlanning.plan request with
                                         | WorkContextPlanOutcome.Rejected rejection -> Error(workContextRejectionMessage rejection)
                                         | WorkContextPlanOutcome.Planned plan ->
-                                            match resolveContextTelemetryWithCreation root classifications (ids.Length + 1) plan with
+                                            match resolveContextTelemetryWithCreation root classifications (fun _ -> None) (ids.Length + 1) plan with
                                             | Error message -> Error message
                                             | Ok resolvedPlan -> FileWorkContextRepository.applyContextPlan root repositoryId resolvedPlan
                 with error ->
@@ -1084,10 +1096,20 @@ let private runWorkStart root arguments =
 /// every currently-active execution BEFORE telemetry resolution runs,
 /// matching production's own ordering: a brand-new execution `resume`
 /// itself creates (when none was active) never receives this "resumed"
-/// event, since it did not exist yet when this ran. Deliberately excludes
-/// production's `parentExecutionId` linkage on that rare new-execution path
-/// (no CLI exposes it) and explicit `--identity-*`/`--execution-id`
-/// overrides.
+/// event, since it did not exist yet when this ran. That rare new-execution
+/// path links `parentExecutionId` to the work item's most recently created
+/// execution (`FileTelemetryQueryRepository.readLatestExecutionId`),
+/// corrected here rather than reproduced as-is: production computes this
+/// same value (`prior?.executionId ?? null`) but its own
+/// `discoverIdentity(options.identity ?? options)` call discards it, since
+/// `options.identity` is always a truthy object (even with every field
+/// `undefined`) that wins the `??` over the sibling `options` object
+/// `parentExecutionId` was actually set on -- confirmed against real Node,
+/// which always writes `null` here. Node is being deprecated rather than
+/// patched for this, so this port implements the evidently-intended
+/// behavior instead of the bug. Deliberately still excludes explicit
+/// `--identity-*`/`--execution-id` overrides (no CLI exposes them for
+/// `resume`).
 let private runWorkResume root arguments =
     let ids = optionValues "--id" arguments
     let occurredAt = optionValue "--occurred-at" arguments
@@ -1154,7 +1176,14 @@ let private runWorkResume root arguments =
                                     match lifecycleResult with
                                     | Error message -> Error message
                                     | Ok() ->
-                                        match resolveContextTelemetryWithCreation root [] (ids.Length + 1) plan with
+                                        match
+                                            resolveContextTelemetryWithCreation
+                                                root
+                                                []
+                                                (FileTelemetryQueryRepository.readLatestExecutionId root)
+                                                (ids.Length + 1)
+                                                plan
+                                        with
                                         | Error message -> Error message
                                         | Ok resolvedPlan -> FileWorkContextRepository.applyContextPlan root repositoryId resolvedPlan
                 with error ->
@@ -1269,7 +1298,7 @@ let private runWorkComplete root arguments =
                                         | issue :: _ -> Error(evidenceIssueMessage issue)
                                         | [] -> Error "evidence rejected"
                                     | VerifiedWorkContextPlanOutcome.Planned plan ->
-                                        match resolveContextTelemetryWithCreation root [] (ids.Length + 1) plan with
+                                        match resolveContextTelemetryWithCreation root [] (fun _ -> None) (ids.Length + 1) plan with
                                         | Error message -> Error message
                                         | Ok resolvedPlan ->
                                             let finalizeResult =
@@ -1456,7 +1485,7 @@ let private runWorkBlock root arguments =
                                             match lifecycleResult with
                                             | Error message -> Error message
                                             | Ok() ->
-                                                match resolveContextTelemetryWithCreation root [] (contextIds.Length + 1) plan with
+                                                match resolveContextTelemetryWithCreation root [] (fun _ -> None) (contextIds.Length + 1) plan with
                                                 | Error message -> Error message
                                                 | Ok resolvedPlan ->
                                                     match FileWorkContextRepository.applyContextPlan root repositoryId resolvedPlan with

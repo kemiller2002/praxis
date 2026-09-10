@@ -111,8 +111,30 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   currently-active candidate execution or creates one when none is active.
   It excludes `recordTelemetryLifecycle`'s "resumed" bookkeeping (closed by
   a later MIG-08 increment, in the execution-telemetry manifest -- see its
-  own "Known gaps") and production's `parentExecutionId` linkage on the
-  new-execution path (still open).
+  own "Known gaps").
+  `resume`'s `parentExecutionId` linkage on the new-execution path, once
+  scoped as a further candidate slice, turned out on manual smoke-testing
+  against real Node to be a confirmed production defect rather than a
+  missing feature: production computes `parentExecutionId: prior?.
+  executionId ?? null` but `startExecution`'s `discoverIdentity(options.
+  identity ?? options)` always picks the truthy `options.identity` sibling
+  over the `options` object that value was set on, silently discarding it
+  (real, unpatched Node always writes `null`). Every other real effect in
+  this manifest reproduces a confirmed production quirk once found; this
+  one is corrected instead, since Node is being deprecated rather than
+  patched: `runWorkResume` now supplies the work item's most recently
+  created execution (`Ros.Infrastructure.Work.FileTelemetryQueryRepository.
+  readLatestExecutionId`, new) as `CreateExecutionRequest.
+  ParentExecutionId` (new field, threaded into the pre-existing `Identity.
+  discover`/`IdentityInputs.ParentExecutionId`, which already worked
+  correctly -- the defect is purely in how production's own JavaScript
+  assembles the options object) whenever its rare no-active-candidate path
+  must create one; every other action still supplies `None`, matching
+  production's own CLI. `tests/work-resume-parent-execution-fsharp-
+  differential.test.mjs` documents this as a deliberate, known divergence:
+  it runs both real Node (confirming the defect persists) and the F# CLI
+  (confirming the corrected linkage) side by side, rather than asserting
+  byte-for-byte parity.
   `ros-fs work block` (Phase A's seventh increment) mirrors production
   `blockWork`: the one command that splits requested ids between a
   not-yet-started backlog item and an already-live context item, applying
@@ -258,6 +280,16 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   `work begin` + `adapter publish` cycle covering append/dedup/
   receipt-count byte-for-byte against production, the write-failure
   rejection, the missing-`--target` message, and the zero-event case).
+- `work resume` `parentExecutionId` correction tests:
+  `tests/Ros.Tests/TelemetryQueryTests.fs` (`readLatestExecutionId`'s
+  chronological-latest resolution and its none-for-unknown-item case) and
+  `tests/Ros.Tests/WorkContextEffectTests.fs` (`createExecution` threading
+  a supplied `ParentExecutionId` into the created record's identity, and
+  leaving it absent by default); `tests/work-resume-parent-execution-
+  fsharp-differential.test.mjs` documents the divergence explicitly,
+  running both real Node (confirming the defect persists: `null`) and the
+  F# CLI (confirming the corrected linkage) side by side, rather than
+  asserting byte-for-byte parity.
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
 - Integration/live verification: `./ros status`, `./ros work context ID`, and
@@ -306,7 +338,14 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   (`FileAdapterRepository.publish`) are now real effects too — the
   external work-system adapter conformance test and its paired
   event-republish command, independent of every telemetry
-  execution/context/lock this manifest otherwise owns. Still remaining:
+  execution/context/lock this manifest otherwise owns. `resume`'s
+  `parentExecutionId` linkage is also now correct — production's own
+  computed value turned out to be silently discarded by a confirmed
+  `discoverIdentity` object-merge defect (real Node always writes
+  `null`), so this port implements the evidently-intended behavior
+  instead, since Node is being deprecated rather than patched; a
+  dedicated differential test documents the divergence explicitly. Still
+  remaining:
   every telemetry-producer command (in the execution-telemetry
   manifest) — all MIG-08-sized scoping work, independent of the
   now-complete work-lifecycle command surface. Evidence containment

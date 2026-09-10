@@ -2,6 +2,7 @@ namespace Ros.Tests
 
 open System
 open System.IO
+open System.Text.Json.Nodes
 open Ros.Domain.Work
 open Ros.Infrastructure.Work
 
@@ -143,10 +144,65 @@ module WorkContextEffectTests =
                   withTemporaryRoot (fun root ->
                       File.WriteAllText(Path.Combine(root, "ros.json"), """{"telemetry":{"enabled":false}}""")
                       let request: FileTelemetryExecutionRepository.CreateExecutionRequest =
-                          { WorkItemId = "WI-NEW"; WorkType = "task"; Classifications = []; ClassificationRationale = None }
+                          { WorkItemId = "WI-NEW"
+                            WorkType = "task"
+                            Classifications = []
+                            ClassificationRationale = None
+                            ParentExecutionId = None }
 
                       match FileTelemetryExecutionRepository.createExecution root request with
                       | Error message -> failwith message
                       | Ok result ->
                           Assert.equal None result
-                          Assert.equal false (Directory.Exists(Path.Combine(root, ".ros", "telemetry", "executions")))) } ]
+                          Assert.equal false (Directory.Exists(Path.Combine(root, ".ros", "telemetry", "executions")))) }
+
+          { Name = "createExecution threads a supplied ParentExecutionId into the created record's identity"
+            Run =
+              fun () ->
+                  withTemporaryRoot (fun root ->
+                      let request: FileTelemetryExecutionRepository.CreateExecutionRequest =
+                          { WorkItemId = "WI-NEW"
+                            WorkType = "task"
+                            Classifications = []
+                            ClassificationRationale = None
+                            ParentExecutionId = Some "EXE-PRIOR" }
+
+                      match FileTelemetryExecutionRepository.createExecution root request with
+                      | Error message -> failwith message
+                      | Ok None -> failwith "expected an execution to be created"
+                      | Ok(Some executionId) ->
+                          let executionFile = Path.Combine(root, ".ros", "telemetry", "executions", $"{executionId}.json")
+
+                          match JsonNode.Parse(File.ReadAllText executionFile) with
+                          | :? JsonObject as record ->
+                              match record["identity"] with
+                              | :? JsonObject as identity ->
+                                  match identity["parentExecutionId"] with
+                                  | :? JsonValue as value -> Assert.equal "EXE-PRIOR" (value.GetValue<string>())
+                                  | _ -> failwith "expected identity.parentExecutionId to be a string"
+                              | _ -> failwith "expected an identity object"
+                          | _ -> failwith "expected a JSON object") }
+
+          { Name = "createExecution leaves identity.parentExecutionId absent-valued (null) when none is supplied"
+            Run =
+              fun () ->
+                  withTemporaryRoot (fun root ->
+                      let request: FileTelemetryExecutionRepository.CreateExecutionRequest =
+                          { WorkItemId = "WI-NEW"
+                            WorkType = "task"
+                            Classifications = []
+                            ClassificationRationale = None
+                            ParentExecutionId = None }
+
+                      match FileTelemetryExecutionRepository.createExecution root request with
+                      | Error message -> failwith message
+                      | Ok None -> failwith "expected an execution to be created"
+                      | Ok(Some executionId) ->
+                          let executionFile = Path.Combine(root, ".ros", "telemetry", "executions", $"{executionId}.json")
+
+                          match JsonNode.Parse(File.ReadAllText executionFile) with
+                          | :? JsonObject as record ->
+                              match record["identity"] with
+                              | :? JsonObject as identity -> Assert.equal true (isNull (identity["parentExecutionId"]: JsonNode))
+                              | _ -> failwith "expected an identity object"
+                          | _ -> failwith "expected a JSON object") } ]

@@ -57,6 +57,15 @@ module FileTelemetryQueryRepository =
     let readByWorkItemId (root: string) (workItemId: string) : JsonObject list =
         readAll root |> List.filter (fun record -> stringField record "workItemId" = Some workItemId)
 
+    /// Mirrors production's own (intended, though never actually reached --
+    /// see `CreateExecutionRequest.ParentExecutionId`) `showTelemetry(root,
+    /// id).at(-1)?.executionId` -- the most recently created execution for
+    /// a work item, regardless of status, or `None` when it has none at
+    /// all. Used by `work resume`'s rare no-active-candidate path to link a
+    /// brand-new execution back to its predecessor via `parentExecutionId`.
+    let readLatestExecutionId (root: string) (workItemId: string) : string option =
+        readByWorkItemId root workItemId |> List.tryLast |> Option.bind (fun record -> stringField record "executionId")
+
     /// Mirrors production `resolveExecution`'s exact-executionId branch: an
     /// empty match is production's exact rejection message; a match sorts by
     /// `startedAt` and takes the last one (a real behavior for a

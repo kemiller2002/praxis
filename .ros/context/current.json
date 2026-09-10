@@ -1347,11 +1347,48 @@
         "EXE-20260910T160305408Z-3b3dd41f"
       ],
       "completedAt": "2026-09-10T16:03:09.023Z"
+    },
+    {
+      "id": "WI-0033",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/Program.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileTelemetryExecutionRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileTelemetryQueryRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/TelemetryQueryTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkContextEffectTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-resume-parent-execution-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-10T17:14:07.846Z",
+      "telemetryExecutionIds": [
+        "EXE-20260910T171403650Z-85b9fd32"
+      ],
+      "completedAt": "2026-09-10T17:14:07.846Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-10T16:03:09.023Z",
+  "updatedAt": "2026-09-10T17:14:07.846Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

@@ -1316,6 +1316,49 @@ zero-event publish still creates the target directory and an empty
 append loop creates nothing). Appended events are written one compact
 JSON line each, verbatim, matching production's own `JSON.stringify`.
 
+## `work resume`'s `parentExecutionId`: a corrected, not replicated, production defect
+
+While scoping `resume`'s `parentExecutionId` linkage as a candidate next
+slice, manual smoke-testing against real Node revealed it is not actually
+a missing F# feature at all: **production's own implementation is dead
+code.** `transitionUnlocked`'s `resume` branch computes
+`parentExecutionId: prior?.executionId ?? null` (the work item's most
+recently created execution, regardless of status) and passes it into
+`recoverOrStartExecution`/`startExecution` as a option sibling to
+`identity: options.telemetryIdentity`. But `startExecution` builds
+identity via `discoverIdentity(options.identity ?? options)`, and
+`options.identity` (`telemetryIdentityOptions(args)`) is *always* a
+truthy object -- even with every field `undefined` -- so it unconditionally
+wins the `??` over the sibling `options` object `parentExecutionId` was
+actually set on. Production's own computed value is silently discarded
+every time; confirmed against real, unpatched Node: the created record's
+`identity.parentExecutionId` is always `null`, never the prior execution.
+
+Every other established increment in this migration has deliberately
+*reproduced* a real production quirk once confirmed, on the reasoning
+that production is the authority pending the switch decision. This one
+is treated differently, on the user's explicit instruction: Node is
+being deprecated rather than patched, so there is no value in
+replicating a bug in the very code intended to replace it. `runWorkResume`
+now supplies the work item's most recently created execution
+(`FileTelemetryQueryRepository.readLatestExecutionId`, new) as
+`CreateExecutionRequest.ParentExecutionId` (also new, threaded into
+`Identity.discover` via `IdentityInputs.ParentExecutionId`, which already
+existed and already worked correctly -- the defect is purely in how
+production's own JavaScript assembles the options object, not in the
+identity-discovery logic itself) whenever `resolveContextTelemetryWithCreation`
+halts on `PendingNewExecution` during a resume; every other action
+(`begin`/`block`/`complete`) still supplies `None`, matching production's
+own CLI, which never threads a `parentExecutionId` through those paths
+at all.
+
+`tests/work-resume-parent-execution-fsharp-differential.test.mjs`
+documents this as a deliberate, known divergence rather than claiming
+parity: it runs both real Node (confirming `parentExecutionId` stays
+`null`, the confirmed defect) and the F# CLI (confirming it correctly
+links to the prior execution) side by side, so the divergence stays
+visible and intentional rather than silently drifting.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

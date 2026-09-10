@@ -68,6 +68,7 @@
 | WI-0029 | F# telemetry classify real effect: Phase A/MIG-08 increment 7 | complete |  | high |
 | WI-0030 | F# telemetry start real effect: Phase A/MIG-08 increment 8 | complete |  | high |
 | WI-0031 | F# adapter call real effect: Phase A/MIG-08 increment 9 (DF-ROS-2026-A007) | complete |  | high |
-| WI-0032 | F# adapter publish real effect: Phase A/MIG-08 increment 10 (DF-ROS-2026-A007) | ready |  | high |
+| WI-0032 | F# adapter publish real effect: Phase A/MIG-08 increment 10 (DF-ROS-2026-A007) | complete |  | high |
+| WI-0033 | F# work resume parentExecutionId correction: fixes confirmed production defect (Phase A/MIG-08) | ready |  | high |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |
 | WORKQUEUE-BACKLOG-LAYER | WORKQUEUE-BACKLOG-LAYER | complete |  |  |
