@@ -1677,6 +1677,17 @@ let private runBacklogQueueValidate root arguments =
         printf "%s" (BacklogQueueValidationContract.renderJson findings)
         if findings.IsEmpty then 0 else 1
 
+/// Mirrors production `telemetryFindings` (`tools/ros_telemetry.mjs`), the
+/// telemetry contributor to `validate`'s combined findings array.
+let private runTelemetryValidate root arguments =
+    if not (arguments |> List.forall ((=) "--json")) then
+        eprintfn "%s" usage
+        2
+    else
+        let findings = FileTelemetryValidationRepository.findings root
+        printf "%s" (TelemetryValidationContract.renderJson findings)
+        if findings.IsEmpty then 0 else 1
+
 /// Mirrors production `telemetry adapters` (`tools/ros_telemetry.mjs`):
 /// prints the static provider-adapter catalog verbatim. No file I/O, no
 /// lock -- ingestion itself (mapping each adapter's payload shape into the
@@ -2192,6 +2203,7 @@ let private dispatch root arguments =
     | "work" :: "backlog-promotion-plan" :: rest -> runBacklogPromotionPlan rest
     | "work" :: "validate" :: rest -> runWorkAttributionValidate root rest
     | "work" :: "backlog-validate" :: rest -> runBacklogQueueValidate root rest
+    | "telemetry" :: "validate" :: rest -> runTelemetryValidate root rest
     | "work" :: "backlog-transition" :: rest -> runBacklogTransitionEffect root rest
     | "work" :: "context" :: rest -> runWorkContext root rest
     | [ "work" ] -> runWorkList root []

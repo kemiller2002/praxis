@@ -77,7 +77,8 @@
 | WI-0038 | F# telemetry start execution-id and identity-override flags: Phase A/MIG-08 increment 15 (final, closes MIG-08 scope) | complete |  | high |
 | WI-0039 | Re-run F# command-surface parity inventory (EV-ROS-2026-A046): confirms MIG-08 fully closed | complete |  | high |
 | WI-0040 | F# work context read-only view: Phase A increment 9 (EV-ROS-2026-A046 follow-on) | complete |  | high |
-| WI-0041 | F# work/work list/work show read-only merged view: Phase A increment 10 (EV-ROS-2026-A046 follow-on) | ready |  | high |
+| WI-0041 | F# work/work list/work show read-only merged view: Phase A increment 10 (EV-ROS-2026-A046 follow-on) | complete |  | high |
+| WI-0042 | F# telemetryFindings validation port: MIG-08 increment 24 (validate unification prerequisite) | ready |  | high |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |

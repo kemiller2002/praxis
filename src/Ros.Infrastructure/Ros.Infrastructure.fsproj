@@ -28,6 +28,7 @@
     <Compile Include="Work/FileTelemetryExecutionRepository.fs" />
     <Compile Include="Work/FileTelemetryFinalizationRepository.fs" />
     <Compile Include="Work/FileTelemetryQueryRepository.fs" />
+    <Compile Include="Work/FileTelemetryValidationRepository.fs" />
     <Compile Include="Work/FileAdapterRepository.fs" />
   </ItemGroup>
 </Project>

@@ -167,6 +167,27 @@ module FileWorkConfigRepository =
     let readTelemetryMaxRawBytesPerExecution (root: string) : int =
         readTelemetryIntLimit root "maxRawBytesPerExecution" 8_388_608
 
+    /// Mirrors production `telemetryConfig().requireFinalization`, defaulting
+    /// to `true` (disabled only by the JSON literal `false`, matching every
+    /// other telemetry boolean flag's `!== false` convention).
+    let readTelemetryRequireFinalization (root: string) : bool =
+        match readTelemetry root with
+        | None -> true
+        | Some element ->
+            match element.TryGetProperty "requireFinalization" with
+            | true, value when value.ValueKind = JsonValueKind.False -> false
+            | _ -> true
+
+    /// Mirrors production `telemetryConfig().disabledReason`, defaulting to
+    /// `None` (JSON `null`) when absent or not a string.
+    let readTelemetryDisabledReason (root: string) : string option =
+        match readTelemetry root with
+        | None -> None
+        | Some element ->
+            match element.TryGetProperty "disabledReason" with
+            | true, value when value.ValueKind = JsonValueKind.String -> Some(value.GetString())
+            | _ -> None
+
     /// Mirrors production `workConfig().protocolVersion`:
     /// `config.workProtocol?.version ?? "1.0.0"`.
     let readProtocolVersion (root: string) : string =

@@ -1655,11 +1655,56 @@
         "EXE-20260910T210413701Z-7b278465"
       ],
       "completedAt": "2026-09-10T21:04:18.034Z"
+    },
+    {
+      "id": "WI-0042",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Telemetry/Validation.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Telemetry/TelemetryValidation.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileTelemetryValidationRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileWorkConfigRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Contracts/Work/TelemetryValidationJson.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/Program.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/TelemetryValidationTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/telemetry-validate-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-10T22:02:37.238Z",
+      "telemetryExecutionIds": [
+        "EXE-20260910T220232480Z-6231c548"
+      ],
+      "completedAt": "2026-09-10T22:02:37.238Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-10T21:04:18.034Z",
+  "updatedAt": "2026-09-10T22:02:37.238Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
