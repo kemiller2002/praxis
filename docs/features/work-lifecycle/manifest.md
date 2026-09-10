@@ -400,7 +400,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 ## Maintenance
 
 - Owner: repository-governance
-- Last checked against implementation: 2026-09-10 (`status` increment, closing EV-ROS-2026-A046's full inventory)
+- Last checked against implementation: 2026-09-10 (EV-ROS-2026-A047, closing DF-ROS-2026-A028 Phase A)
 - Known gaps: backlog and live work intentionally remain separate recovery
   units; the F# planner now owns pure whole-context/multi-item and
   backlog-promotion plans, post-plan evidence observation, telemetry
@@ -478,6 +478,16 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   execution/active-execution counts) -- all byte-for-byte identical.
   `EV-ROS-2026-A046`'s full four-row inventory (`work`/`work list`,
   `work show`, `work context`, `status`) is now closed.
+
+  `EV-ROS-2026-A047` then re-ran the full 26-row command-surface parity
+  inventory a third time and found every row reading "Full parity,"
+  closing `DF-ROS-2026-A028` Phase A entirely. This authorizes nothing
+  beyond itself: Phase B (consumer distribution evidence) is uncollected
+  and Phase C (the switch itself) needs its own new decision record.
+  `AGENTS.md` was updated in the same increment to tell agents to keep
+  using `./ros` (Node) for every actual operation in this repository,
+  reserving the F# shadow CLI's read-only commands for standalone
+  verification only.
 
   Still remaining: every
   telemetry-producer command (in the execution-telemetry manifest — all
