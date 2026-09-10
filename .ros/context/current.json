@@ -1281,11 +1281,48 @@
         "EXE-20260910T151537551Z-8a2c0e52"
       ],
       "completedAt": "2026-09-10T15:15:41.894Z"
+    },
+    {
+      "id": "WI-0031",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/AdapterContract.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileAdapterRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/Program.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/AdapterContractTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/AdapterCallEffectTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/adapter-call-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-10T15:38:34.946Z",
+      "telemetryExecutionIds": [
+        "EXE-20260910T153830028Z-32f39720"
+      ],
+      "completedAt": "2026-09-10T15:38:34.946Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-10T15:15:41.894Z",
+  "updatedAt": "2026-09-10T15:38:34.946Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

@@ -138,8 +138,10 @@ capabilities, lifecycle capture, classification, and aggregation.
   deliberately excluded and loudly rejected (exit 2), scoped as a
   separate future slice, since supporting them requires extending
   `createExecution` itself. Every non-generic adapter's field mapping and
-  both `adapter call`/`adapter publish` commands remain Node-only, each
-  its own future scoping choice.
+  the `adapter call`/`adapter publish` commands (owned by the
+  work-lifecycle manifest's `DF-ROS-2026-A007`, not telemetry; `adapter
+  call` is now a real effect there) remain out of this manifest's scope,
+  each its own future scoping choice.
 
 ## Interfaces
 
@@ -265,6 +267,7 @@ capabilities, lifecycle capture, classification, and aggregation.
   `telemetry ingest` (generic adapter only), `telemetry classify`, and
   `telemetry start` (excluding `--execution-id` and the eleven
   identity-override flags) are real effects; every non-generic adapter's
-  provider-specific field mapping and both `adapter call`/`adapter
-  publish` commands remain Node-only, pending MIG-08's own further
-  scoping decisions.
+  provider-specific field mapping remains Node-only, pending MIG-08's own
+  further scoping decisions. `adapter call`/`adapter publish` are owned
+  by the work-lifecycle manifest, not this one -- see its own Known gaps
+  for their status.

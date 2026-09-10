@@ -1239,6 +1239,55 @@ production's own `renderedEventLog(root, [])`, it never appends to
 `.ros/events/events.jsonl`: no event log entry is written by this
 command, unlike `work start`/`resume`/`complete`.
 
+## Phase A / MIG-08, increment 17: `adapter call` — the external work-system adapter conformance test
+
+`adapter call --store FILE --request FILE` is production's dependency-free
+file-based conformance adapter for the external work-system contract
+(`DF-ROS-2026-A007`, `docs/work-adapter-contract.md`,
+`schemas/work-adapter-request.schema.json`/`work-adapter-result.schema.json`)
+-- a test double exercising the same `getWorkItem`/`transitionWorkItem`/
+`publishRepositoryEvent` request/result contract a real production
+adapter must satisfy, without this repository choosing a project-
+management vendor. Unlike every other increment so far, this one is not
+telemetry: it belongs to the work-lifecycle feature (`docs/features/
+work-lifecycle/manifest.md`), and touches no telemetry execution, work
+context, or lock at all -- production's own `callFileAdapter` operates
+entirely on a caller-named, standalone JSON store file with no
+`work-protocol` lease.
+
+Work items and events inside that store are caller-defined, open-ended
+JSON (production reads and writes only a handful of fields: a work
+item's `state`/`updatedBy`, an event's `eventId`). Mirroring this
+migration's established split between a pure decision and its
+Infrastructure effect, `Ros.Domain.Work.AdapterContract.decide` (new)
+is a pure function from a `DecisionInput` (the primitive fields
+production actually inspects) to an `AdapterDecision` union mirroring
+`callFileAdapter`'s exact branch order: protocol-version mismatch and
+unsupported-operation checks first (production's own
+`validateAdapterRequest`, which never touches the store file at all for
+these two), then -- only once the store is loaded -- a cached
+`requestId` replay (no mutation, matching production's own early
+return), then repository authorization, then `simulateOutcome:
+"unknown"` fault injection regardless of operation or scope, then each
+operation's own forbidden/not-found/conflict checks. `firstMissingField`
+mirrors production's `validateAdapterRequest`'s first loop -- a missing
+required field is a thrown `Error` in production, surfaced identically
+here as `Result.Error` before the store is ever touched.
+
+`Ros.Infrastructure.Work.FileAdapterRepository.call` (new) performs the
+actual JSON store read/mutate/write around that decision: a
+`transitionWorkItem` success mutates only `state`/`updatedBy` on the
+existing work item node in place, preserving every other caller-defined
+field verbatim; a `publishRepositoryEvent` success appends the event
+only when its `eventId` is not already present, matching production's
+own de-duplication; every result (success, failure, or unknown alike) is
+cached under its `requestId` and the whole store is rewritten, exactly
+once, per non-replayed call. Exit codes match production's own CLI
+mapping: 0 success, 1 failure, 2 unknown.
+
+`adapter publish` (the paired `.ros/publications.json`-writing command)
+remains Node-only, its own future scoping choice.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for
