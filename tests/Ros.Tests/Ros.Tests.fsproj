@@ -39,6 +39,7 @@
     <Compile Include="TelemetryQueryTests.fs" />
     <Compile Include="TelemetryLifecycleTests.fs" />
     <Compile Include="TelemetrySummaryTests.fs" />
+    <Compile Include="TelemetryFinalizeTargetTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

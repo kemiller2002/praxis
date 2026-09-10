@@ -604,3 +604,113 @@ module FileTelemetryFinalizationRepository =
                 | Ok() -> loop rest
 
         loop (activeExecutionIds root workItemId)
+
+    /// Every execution record on disk, in ascending filename order (a local
+    /// duplicate of `FileTelemetryQueryRepository.readAll`'s scan -- this
+    /// migration's established convention keeps small per-module read
+    /// helpers independent rather than cross-referenced, the same way each
+    /// telemetry-execution module already carries its own `stringField`).
+    let private readAllExecutionRecords (root: string) : JsonObject list =
+        let directory = Path.Combine(root, ".ros", "telemetry", "executions")
+
+        if not (Directory.Exists directory) then
+            []
+        else
+            Directory.GetFiles(directory, "*.json")
+            |> Array.sort
+            |> Array.choose (fun file ->
+                match JsonNode.Parse(File.ReadAllText file) with
+                | :? JsonObject as record -> Some record
+                | _ -> None)
+            |> Array.toList
+
+    /// Every work-item id currently `active` or `blocked` in
+    /// `.ros/context/current.json`, mirroring production's own
+    /// `loadContext(root).workItems.filter(item => item.semanticState ===
+    /// "active" || item.semanticState === "blocked")` -- used only to
+    /// resolve `telemetry finalize`'s target when none is given.
+    let private activeOrBlockedWorkItemIds (root: string) : string list =
+        let path = Path.Combine(root, ".ros", "context", "current.json")
+
+        if not (File.Exists path) then
+            []
+        else
+            match JsonNode.Parse(File.ReadAllText path) with
+            | :? JsonObject as context ->
+                match context["workItems"] with
+                | :? JsonArray as items ->
+                    items
+                    |> Seq.choose (function
+                        | :? JsonObject as item ->
+                            match stringField item "id", stringField item "semanticState" with
+                            | Some id, Some("active" | "blocked") -> Some id
+                            | _ -> None
+                        | _ -> None)
+                    |> Seq.toList
+                | _ -> []
+            | _ -> []
+
+    /// Mirrors production `resolveExecution`'s target resolution (without
+    /// `activeOnly`, matching `finalizeExecution`'s own call): an
+    /// `EXE-`-prefixed target matches by exact `executionId`; any other
+    /// target matches by `workItemId` regardless of status (unlike
+    /// `telemetry show`'s work-item branch, a already-finalized execution is
+    /// a legal match here too); no target at all requires exactly one
+    /// currently active-or-blocked work item, rejecting production's exact
+    /// message otherwise. Every branch's matches sort by `startedAt` and
+    /// take the last (most recently started) one.
+    let private resolveFinalizeTarget (root: string) (target: string option) : Result<string, string> =
+        let records = readAllExecutionRecords root
+
+        let candidatesResult =
+            match target with
+            | Some value when value.StartsWith("EXE-", StringComparison.Ordinal) ->
+                Ok(records |> List.filter (fun record -> stringField record "executionId" = Some value))
+            | Some workItemId -> Ok(records |> List.filter (fun record -> stringField record "workItemId" = Some workItemId))
+            | None ->
+                match activeOrBlockedWorkItemIds root with
+                | [ workItemId ] -> Ok(records |> List.filter (fun record -> stringField record "workItemId" = Some workItemId))
+                | _ -> Error "telemetry target is ambiguous; provide a work-item or execution ID"
+
+        match candidatesResult with
+        | Error message -> Error message
+        | Ok candidates ->
+            match candidates |> List.sortBy (fun record -> stringField record "startedAt" |> Option.defaultValue "") with
+            | [] -> Error $"""telemetry execution '{target |> Option.defaultValue "current"}' was not found"""
+            | sorted ->
+                match stringField (List.last sorted) "executionId" with
+                | Some executionId -> Ok executionId
+                | None -> Error "execution record must carry an executionId"
+
+    /// Mirrors production `finalizeExecution(root, target, options)` with no
+    /// `--input` (adapter-ingestion is a separately-scoped later slice, the
+    /// one place it is reachable at all): resolves the target the same way
+    /// production does, returns an already-finalized record untouched and
+    /// unlocked (matching production's own pre-lock fast return), and
+    /// otherwise finalizes it via the same `finalizeOne` mutation
+    /// `finalizeWorkExecutions` uses, then returns the freshly written
+    /// record for the CLI to print.
+    let finalizeTarget (root: string) (target: string option) : Result<JsonObject, string> =
+        match resolveFinalizeTarget root target with
+        | Error message -> Error message
+        | Ok executionId ->
+            let file = executionFile root executionId
+
+            let alreadyFinalized =
+                match JsonNode.Parse(File.ReadAllText file) with
+                | :? JsonObject as record -> stringField record "status" = Some "finalized"
+                | _ -> false
+
+            let result =
+                if alreadyFinalized then
+                    Ok()
+                else
+                    let repositoryId = FileWorkConfigRepository.readRepositoryId root
+                    finalizeOne root repositoryId executionId
+
+            match result with
+            | Error message -> Error message
+            | Ok() ->
+                match JsonNode.Parse(File.ReadAllText file) with
+                | :? JsonObject as record -> Ok record
+                | _ -> Error "execution record must be a JSON object"
