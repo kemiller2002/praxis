@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 33,
+  "nextSeq": 34,
   "items": [
     {
       "id": "WI-0001",
@@ -667,6 +667,20 @@
       "attachments": [],
       "createdAt": "2026-09-10T16:03:02.517Z",
       "updatedAt": "2026-09-10T16:03:05.313Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0033",
+      "title": "F# work resume parentExecutionId correction: fixes confirmed production defect (Phase A/MIG-08)",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-10T17:14:00.751Z",
+      "updatedAt": "2026-09-10T17:14:03.557Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null

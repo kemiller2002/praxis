@@ -70,6 +70,23 @@ module TelemetryQueryTests =
                     | Error message -> failwith message
                     | Ok record -> Assert.equal "WI-0001" (stringField record "workItemId")) }
 
+          { Name = "readLatestExecutionId returns the most recently created execution's id, in ascending-filename (chronological) order"
+            Run = fun () ->
+                withTemporaryRoot (fun root ->
+                    writeExecution root "EXE-20260101T000000000Z-aaaaaaaa" "WI-MATCH" "2026-01-01T00:00:00.000Z"
+                    writeExecution root "EXE-20260102T000000000Z-bbbbbbbb" "WI-MATCH" "2026-01-02T00:00:00.000Z"
+                    writeExecution root "EXE-20260103T000000000Z-cccccccc" "WI-OTHER" "2026-01-03T00:00:00.000Z"
+
+                    Assert.equal
+                        (Some "EXE-20260102T000000000Z-bbbbbbbb")
+                        (FileTelemetryQueryRepository.readLatestExecutionId root "WI-MATCH")) }
+
+          { Name = "readLatestExecutionId returns None for a work item with no executions at all"
+            Run = fun () ->
+                withTemporaryRoot (fun root ->
+                    writeExecution root "EXE-1" "WI-OTHER" "2026-01-01T00:00:00.000Z"
+                    Assert.equal None (FileTelemetryQueryRepository.readLatestExecutionId root "WI-GHOST")) }
+
           { Name = "telemetry adapters is production's exact static catalog, in production's exact order"
             Run = fun () ->
                 Assert.equal

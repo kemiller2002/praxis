@@ -239,7 +239,24 @@ module FileTelemetryExecutionRepository =
           /// ?? null`. `None` for every call site before `telemetry start`
           /// (`work start`/`resume` never supply one, matching production's
           /// own CLI, which never threads a rationale through those paths).
-          ClassificationRationale: string option }
+          ClassificationRationale: string option
+          /// Production's `startExecution`'s `options.parentExecutionId ??
+          /// null` -- but production's own `work resume` never actually
+          /// delivers a value here: `discoverIdentity(options.identity ??
+          /// options)` picks `options.identity` (always a truthy object,
+          /// even with every field `undefined`) over the sibling `options`
+          /// object `resume` set `parentExecutionId` on, so production's own
+          /// computed prior-execution id is silently discarded every time
+          /// (confirmed against real Node: the field is always `null` in
+          /// the created record). Since Node is being deprecated rather
+          /// than patched, this port implements the evidently-intended
+          /// behavior instead of replicating the bug: `runWorkResume`
+          /// supplies the work item's most recently created execution here
+          /// (`FileTelemetryQueryRepository.readLatestExecutionId`); every
+          /// other call site passes `None`, matching production's own CLI,
+          /// which never threads a `parentExecutionId` through `begin`/
+          /// `block`/`complete` at all.
+          ParentExecutionId: string option }
 
     let private serializerOptions =
         JsonSerializerOptions(WriteIndented = true, IndentSize = 2, Encoder = Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping)
@@ -263,7 +280,10 @@ module FileTelemetryExecutionRepository =
                             let startedAt = nowIso ()
                             let executionId = newExecutionId startedAt
                             let repositoryId = FileWorkConfigRepository.readRepositoryId root
-                            let identity, discoverySource = Identity.discover (environmentIdentityInputs ())
+                            let identity, discoverySource =
+                                Identity.discover
+                                    { environmentIdentityInputs () with
+                                        ParentExecutionId = request.ParentExecutionId }
                             let git = observeGitBaseline root repositoryId
                             let definitions = FileMetricRegistryRepository.read root
 

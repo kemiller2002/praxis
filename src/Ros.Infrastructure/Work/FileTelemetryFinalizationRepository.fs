@@ -1832,7 +1832,8 @@ module FileTelemetryFinalizationRepository =
                         { WorkItemId = workItemId
                           WorkType = workType
                           Classifications = classifications
-                          ClassificationRationale = classificationRationale }
+                          ClassificationRationale = classificationRationale
+                          ParentExecutionId = None }
 
                     match FileTelemetryExecutionRepository.createExecution root createRequest with
                     | Error message -> Error message
