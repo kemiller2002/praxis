@@ -360,6 +360,14 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   `ros` CLI wrapper directly, covering `work list`, bare `work`, `work
   show` across backlog-only/live/blocked/attachment items, and the
   unknown-ID rejection byte-for-byte against production).
+- Unified-validate real-effect tests: `tests/Ros.Tests/FindingContractTests.fs`
+  (the three repair-message branches, including the `work_items` one added
+  for this increment) and `tests/validate-unified-fsharp-differential.test.mjs`
+  (a clean bootstrap in both `--json` and text form; a combined
+  backlog-status/disabled-telemetry scenario; a stale registry sorted
+  together with other findings; and a malformed artifact plus an
+  unattributed Git change rendered in both output forms — all
+  byte-for-byte identical to production's own `validate`).
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
 - Integration/live verification: `./ros status`, `./ros work context ID`,
@@ -386,7 +394,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 ## Maintenance
 
 - Owner: repository-governance
-- Last checked against implementation: 2026-09-10 (work list/show increment)
+- Last checked against implementation: 2026-09-10 (unified `validate` increment)
 - Known gaps: backlog and live work intentionally remain separate recovery
   units; the F# planner now owns pure whole-context/multi-item and
   backlog-promotion plans, post-plan evidence observation, telemetry
@@ -423,13 +431,26 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   production's own `mergedRows` computes, wider than
   `QueuePresentation`'s five-field markdown-only projection) and a new
   `Ros.Infrastructure.Work.FileWorkListRepository`; `--tag`/`--status`
-  filtering is not yet ported. Still remaining: every telemetry-producer
-  command (in the execution-telemetry manifest — all now real, per
-  MIG-08's own closure) has no bearing here; what's left in this
-  manifest's own scope is `status`, the one remaining pure read-only view
-  `EV-ROS-2026-A046` found never assigned to MIG-07/MIG-08, and it
-  depends on the `validate` command unification (`workFindings` +
-  `queueFindings` under one production-shaped result), which has not yet
-  been scoped. Evidence containment has no current authority; production
+  filtering is not yet ported. `ros-fs validate [--json]` is now a real,
+  unified effect too: production's own top-level `validate(root)`
+  combines artifact findings, registry staleness, `workFindings`,
+  `queueFindings`, and `telemetryFindings` (execution-telemetry
+  manifest) into one sorted array, and every one of those five
+  contributors already had a real F# equivalent from earlier increments
+  — this closes purely CLI-layer composition (`Ros.Cli.Program.
+  runValidateUnified`), reusing each contributor's existing decision
+  logic unchanged and adding the one missing repair-message branch
+  (`field = "work_items"`) to the shared `Ros.Contracts.Cli.
+  FindingContract`. Confirmed against real Node across a combined
+  scenario (a backlog-status violation, a disabled-telemetry violation,
+  a stale registry, a malformed artifact, and an unattributed Git
+  change, all present at once) producing a byte-identical sorted finding
+  list in both `--json` and text form. Still remaining: every
+  telemetry-producer command (in the execution-telemetry manifest — all
+  now real, per MIG-08's own closure) has no bearing here; what's left
+  in this manifest's own scope is `status`, the one remaining pure
+  read-only view `EV-ROS-2026-A046` found never assigned to
+  MIG-07/MIG-08 — its own dependency on the `validate` unification is
+  now resolved. Evidence containment has no current authority; production
   behavior accepts absolute existing paths. Production remains Node-owned
   pending those slices and the distribution decision.

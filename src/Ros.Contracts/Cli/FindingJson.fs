@@ -9,6 +9,8 @@ module FindingContract =
     let repair finding =
         if finding.Message.Contains("registry is stale") then
             "Run './ros registry build'."
+        elif finding.Field = "work_items" then
+            "Run './ros work begin WORK-ID', perform the change, then complete it with configured evidence."
         else
             "Correct the named file and field, then run './ros validate' again."
 

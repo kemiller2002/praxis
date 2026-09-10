@@ -1861,6 +1861,58 @@ completed work item whose linked execution was never finalized. This
 increment does not itself unify `validate` — it only makes the last
 missing contributor to that eventual command real.
 
+## Phase A, increment 11: unified `validate` — every contributor was already real
+
+With `telemetryFindings` shipped, all five of production's own
+`validate(root)` contributors (`tools/ros_cli.mjs`) already had a real F#
+equivalent: `ArtifactPolicy.validate` (artifact semantic + parse
+findings), `ArtifactOperations.checkRegistries` (registry staleness),
+`Ros.Domain.Work.Attribution` (`workFindings`),
+`Ros.Domain.Work.QueueValidation` (`queueFindings`), and
+`Ros.Domain.Telemetry.TelemetryValidation` (`telemetryFindings`).
+Unifying them into one `ros-fs validate [--json]` command matching
+production's exact combined, sorted output is therefore pure
+orchestration — no contributor's own decision changes — and lives at the
+CLI composition layer (`Ros.Cli.Program.runValidateUnified`) rather than
+introducing a new cross-feature Application module, consistent with how
+several other multi-repository CLI commands in this migration already
+compose directly at the dispatch layer (`work validate` itself already
+composes config, context, and Git observation inline).
+
+Two small pieces of genuine logic were needed, not just composition.
+First, `ArtifactOperations.checkRegistries`'s own result already bundles
+the same parse findings `ArtifactOperations.validate` separately
+returns (`loaded.ParseFindings @ stale`), so using it verbatim would
+double-count them; the unified command filters its result down to only
+the `"registry is stale"` messages before merging. Second, production's
+own `findingRecord` computes a finding's repair hint from three
+branches — a stale-registry message, a `field === "work_items"` finding,
+or the generic default — but the pre-existing `Ros.Contracts.Cli.
+FindingContract.repair` (built for `artifacts validate` alone, which
+never produces a `work_items`-fielded finding) only implemented the
+first and third. This increment adds the missing branch; it is a safe,
+backward-compatible addition, since no artifact-only finding could ever
+have exercised it before.
+
+Sorting mirrors production's own `findings.sort((a, b) => [a.path,
+a.field, a.message].join("\0").localeCompare(...))` with ordinal string
+comparison over the same joined tuple, rather than replicating Node's
+locale-aware `localeCompare` collation — a deliberate, documented
+simplification, since every path/field/message this repository's own
+contributors produce is plain ASCII, where ordinal and locale-aware
+comparison agree.
+
+Confirmed against real Node across a combined scenario exercising all
+five contributors and the sort together — a backlog-item invalid
+status, disabled telemetry with no reason, a stale registry, a
+malformed artifact (bad identifier, wrong filename), and an
+unattributed Git change, all present in the same repository at once —
+producing a byte-identical sorted finding list in both `--json` and
+plain-text form (including the text form's per-finding `ERROR .../ REPAIR
+...` rendering and final error count). `status` is now unblocked: its
+own dependency on this unification is resolved, and it remains the one
+row `EV-ROS-2026-A046` found never assigned to MIG-07/MIG-08's scope.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

@@ -39,6 +39,7 @@
     <Compile Include="WorkContextViewTests.fs" />
     <Compile Include="WorkListViewTests.fs" />
     <Compile Include="TelemetryValidationTests.fs" />
+    <Compile Include="FindingContractTests.fs" />
     <Compile Include="TelemetryQueryTests.fs" />
     <Compile Include="TelemetryLifecycleTests.fs" />
     <Compile Include="TelemetrySummaryTests.fs" />

@@ -78,7 +78,8 @@
 | WI-0039 | Re-run F# command-surface parity inventory (EV-ROS-2026-A046): confirms MIG-08 fully closed | complete |  | high |
 | WI-0040 | F# work context read-only view: Phase A increment 9 (EV-ROS-2026-A046 follow-on) | complete |  | high |
 | WI-0041 | F# work/work list/work show read-only merged view: Phase A increment 10 (EV-ROS-2026-A046 follow-on) | complete |  | high |
-| WI-0042 | F# telemetryFindings validation port: MIG-08 increment 24 (validate unification prerequisite) | ready |  | high |
+| WI-0042 | F# telemetryFindings validation port: MIG-08 increment 24 (validate unification prerequisite) | complete |  | high |
+| WI-0043 | Unify F# validate command: Phase A increment 11 (combines 5 already-real contributors) | ready |  | high |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |
