@@ -23,7 +23,7 @@ open System.Text.Json.Nodes
 let Version = "0.2.0-shadow"
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet]"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--quiet]"
 
 let private parseRoot (arguments: string array) =
     let values = ResizeArray<string>(arguments)
@@ -1704,6 +1704,79 @@ let private runTelemetryFinalize root (arguments: string list) =
 
             0
 
+/// Mirrors production `telemetry record [TARGET] --metric ID --value VALUE`
+/// (`recordTelemetryMetric`/`normalizeMetric`/`addMetric`,
+/// `tools/ros_telemetry.mjs`) -- MIG-08's fifth increment, and the second
+/// write-path telemetry-producer command. Unlike `finalize`, target
+/// resolution is `activeOnly`: an execution that is not currently
+/// `"active"` (including one finalized between resolution and the lock
+/// being acquired, matching production's own re-resolve-under-the-lock
+/// race check) is rejected with production's exact `"... was not found or
+/// is already finalized"` message. `--confidence` mirrors production's own
+/// permissive parsing: a value that parses as a finite number is stored
+/// numerically, any other text is stored as-is, and omitting the flag
+/// entirely stores `null`. `--quality`/`--scope`/`--source-*` all default
+/// exactly as production's CLI does; `--unit`/`--currency`/`--collected-at`
+/// are optional overrides of the metric registry's own values. `--value`'s
+/// parse failure is deliberately not surfaced here -- it becomes `NaN` and
+/// is passed through unvalidated, so the finite-value rejection happens at
+/// the same point production's does, after target resolution and lock
+/// acquisition, not before.
+let private runTelemetryRecord root (arguments: string list) =
+    let target = arguments |> List.tryHead |> Option.filter (fun value -> not (value.StartsWith("--", StringComparison.Ordinal)))
+
+    match optionValue "--metric" arguments, optionValue "--value" arguments with
+    | None, _
+    | _, None ->
+        eprintfn "ERROR telemetry record requires --metric and --value"
+        1
+    | Some metricId, Some rawValue ->
+        let value =
+            match Double.TryParse(rawValue, Globalization.NumberStyles.Float, Globalization.CultureInfo.InvariantCulture) with
+            | true, parsed -> parsed
+            | false, _ -> Double.NaN
+
+        let confidence =
+            match optionValue "--confidence" arguments with
+            | None -> FileTelemetryFinalizationRepository.NoConfidence
+            | Some text ->
+                match Double.TryParse(text, Globalization.NumberStyles.Float, Globalization.CultureInfo.InvariantCulture) with
+                | true, parsed when Double.IsFinite parsed -> FileTelemetryFinalizationRepository.NumericConfidence parsed
+                | _ -> FileTelemetryFinalizationRepository.TextConfidence text
+
+        let request: FileTelemetryFinalizationRepository.RecordMetricRequest =
+            { MetricId = metricId
+              Value = value
+              Unit = optionValue "--unit" arguments
+              Currency = optionValue "--currency" arguments
+              Quality = optionValue "--quality" arguments |> Option.defaultValue "observed"
+              Confidence = confidence
+              Scope = optionValue "--scope" arguments |> Option.defaultValue "execution"
+              Source =
+                { Type = optionValue "--source-type" arguments |> Option.defaultValue "agent-report"
+                  Name = optionValue "--source-name" arguments |> Option.defaultValue "ros-telemetry-cli"
+                  Mechanism = optionValue "--mechanism" arguments |> Option.defaultValue "explicit-metric-record" }
+              PricingSource = optionValue "--pricing-source" arguments
+              PricingVersion = optionValue "--pricing-version" arguments
+              CollectedAt = optionValue "--collected-at" arguments }
+
+        match FileTelemetryFinalizationRepository.recordMetric root target request with
+        | Error message ->
+            eprintfn "ERROR %s" message
+            1
+        | Ok record ->
+            if not (arguments |> List.contains "--quiet") then
+                let lastMetric =
+                    match record["metrics"] with
+                    | :? JsonArray as metrics when metrics.Count > 0 -> Some metrics.[metrics.Count - 1]
+                    | _ -> None
+
+                match lastMetric with
+                | Some metric -> printf "%s" (metric.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
+                | None -> ()
+
+            0
+
 let private dispatch root arguments =
     let repository = FileArtifactRepository.create root
     let gitRepository = ProcessGitRepository.create root
@@ -1745,6 +1818,7 @@ let private dispatch root arguments =
     | "telemetry" :: "show" :: rest -> runTelemetryShow root rest
     | "telemetry" :: ("summary" | "summarize") :: rest -> runTelemetrySummary root rest
     | "telemetry" :: "finalize" :: rest -> runTelemetryFinalize root rest
+    | "telemetry" :: "record" :: rest -> runTelemetryRecord root rest
     | _ ->
         eprintfn "%s" usage
         2

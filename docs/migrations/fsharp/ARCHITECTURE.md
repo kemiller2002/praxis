@@ -965,6 +965,72 @@ of per-module helper duplication, already evidenced by both modules'
 independent private `stringField` implementations) was judged lower-risk
 than reordering the compile list for a single call site.
 
+## Phase A / MIG-08, increment 13: `telemetry record` — the second write-path telemetry-producer command
+
+Increment 12 shipped `telemetry finalize`; this increment ports production's
+other directly CLI-reachable write-path effect, `telemetry record [TARGET]
+--metric ID --value VALUE`, production's `recordTelemetryMetric` layered on
+`normalizeMetric`/`addMetric` (`tools/ros_telemetry.mjs`) -- the one command
+that lets a caller append an arbitrary registered metric to an execution
+without going through `work start`/`work complete`'s own automatic
+lifecycle.
+
+Target resolution reuses `finalize`'s own resolver, generalized to accept
+production's `activeOnly` option (`resolveExecutionTarget`, replacing the
+former `resolveFinalizeTarget` as its `activeOnly = false` case): `record`
+passes `activeOnly = true`, matching production's own `withExecutionLock`
+call, so a target whose only match is not currently `"active"` -- including
+one finalized between the pre-lock resolve and the lock actually being
+acquired, a real race production itself guards against by re-resolving
+under the lock -- is rejected with production's exact `"... was not found
+or is already finalized"` message (reproduced here by re-running the same
+resolver a second time immediately after acquiring the lock, exactly where
+production's own `withExecutionLock` re-resolves).
+
+The normalization/write-path itself (`recordMetric`, new in
+`FileTelemetryFinalizationRepository`) ports every field a CLI caller can
+actually reach: the metric id must exist in `telemetry/metrics.json` (else
+production's exact `"unknown normalized metric '...'"` message) and the
+value must be finite (else `"metric '...' requires a finite numeric
+value"`) -- both checked at the same point production's does, *inside* the
+lock, after the race re-resolve, not before, so a target-resolution
+rejection always wins over an input-validation one when both would apply.
+`--unit`/`--currency` override the registry's own defaults; `--quality`/
+`--scope`/`--source-type`/`--source-name`/`--mechanism` default exactly as
+production's CLI does (`"observed"`/`"execution"`/`"agent-report"`/
+`"ros-telemetry-cli"`/`"explicit-metric-record"`); `--pricing-source`/
+`--pricing-version` build a pricing object only when at least one is given;
+`--collected-at` defaults to the real current time. `--confidence` mirrors
+production's own permissive parsing exactly via a small `MetricConfidence`
+union (`NoConfidence`/`NumericConfidence`/`TextConfidence`): omitted is
+`null`, text that parses as a finite number is stored numerically, anything
+else is stored as the literal text -- matching production's `Number.
+isFinite(Number(confidenceOption)) ? Number(confidenceOption) :
+confidenceOption` exactly, including that a malformed `--value` similarly
+becomes `NaN` rather than a CLI-level parse error, so it reaches the same
+finite-value rejection point production's own `Number(rawValue)` does.
+`dimensions` stays `{}` and `aggregation` stays the registry's own value
+throughout, since no CLI flag can override either one -- production's
+`normalizeMetric` allows both, but nothing reachable from `telemetry
+record` ever supplies a non-default value for them.
+
+The `measurementId` is a SHA-256 digest of the metric's own fields with
+keys sorted (mirroring production's `stable()` + `digest()`, and this
+migration's own `derivedMetricNode` from the `work complete`/`finalize`
+slices), so an identical repeated call -- same id, value, quality,
+`collectedAt`, and every other digested field -- is deduplicated by content
+rather than appended twice. The capability upsert (and the record's
+rewrite to disk) still happens unconditionally either way, exactly
+matching production's own `addMetric`, which never conditions the
+capability write on whether the metric itself was a duplicate. One
+subtle, deliberately-reproduced quirk: the CLI prints `record.metrics.
+at(-1)` from the *returned, already-mutated* record -- if the call was a
+content-duplicate of a metric that is not already the array's last entry,
+the printed metric is whatever else happens to be last, not the one just
+"recorded". This was confirmed by hand against real Node before being
+written up here, since it is easy to assume the print always reflects the
+call just made.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

@@ -68,10 +68,22 @@ capabilities, lifecycle capture, classification, and aggregation.
   reproducing production's real pre-lock fast path (an already-finalized
   resolved execution returns untouched, no lock acquired). `--input` (real
   adapter ingestion) is deliberately not ported and rejected outright
-  rather than silently ignored. Every remaining write-path
-  telemetry-producer command (`start`/`ingest`/`classify`/`record`) and
-  both `adapter call`/`adapter publish` commands remain Node-only, each
-  its own future scoping choice.
+  rather than silently ignored. A fifth increment ships the second
+  write-path telemetry-producer command, `telemetry record [TARGET]
+  --metric ID --value VALUE` (`FileTelemetryFinalizationRepository.
+  resolveExecutionTarget`, generalized from `finalize`'s own resolver
+  with production's own `activeOnly` option, plus `recordMetric`, new):
+  a target whose only match is not currently active is rejected
+  (including a race re-checked immediately after the lock, matching
+  production's own re-resolve), the metric id must be registered and the
+  value must be finite (validated inside the lock, at the same point
+  production's `normalizeMetric` does), and a content-addressed
+  `measurementId` deduplicates an identical repeated call while the
+  capability upsert and record rewrite still happen unconditionally,
+  matching production's own `addMetric` exactly. Every remaining
+  write-path telemetry-producer command (`start`/`ingest`/`classify`)
+  and both `adapter call`/`adapter publish` commands remain Node-only,
+  each its own future scoping choice.
 
 ## Interfaces
 
@@ -117,6 +129,19 @@ capabilities, lifecycle capture, classification, and aggregation.
   ambiguity variants and the not-found rejection with production's exact
   messages, the already-finalized byte-identical-file fast path, and an
   F#-only assertion that `--input` is rejected with exit code 2).
+- F# telemetry-record real-effect tests:
+  `tests/Ros.Tests/TelemetryRecordMetricTests.fs` (every resolution
+  branch, unknown-metric/non-finite-value rejections, content-addressed
+  dedup, a fresh capability creation and an existing-capability-to-history
+  upsert, and unit/currency/confidence overrides) and
+  `tests/telemetry-record-fsharp-differential.test.mjs` (a real
+  `work start` + `telemetry record` cycle byte-identical to production's
+  own `recordTelemetryMetric`, workItemId-restricted-to-active and
+  `EXE-`-prefixed resolution over hand-written fixtures, both ambiguity
+  variants and the not-active rejection with production's exact
+  messages, content-addressed dedup, a real registry-seeded capability
+  transition, and unit/currency/confidence overrides cross-checked
+  byte-for-byte against production).
 
 ## Dependencies
 
@@ -148,8 +173,9 @@ capabilities, lifecycle capture, classification, and aggregation.
   F# parity is now real but partial: execution creation/finalization
   (via `work start`/`work complete`), lifecycle bookkeeping (via `work
   block`/`work resume`), all three read-only `telemetry
-  adapters`/`telemetry show`/`telemetry summary` commands, and manual
-  `telemetry finalize` (excluding `--input` adapter ingestion) are real
-  effects; every remaining write-path telemetry-producer command and both
-  adapter commands remain Node-only, pending MIG-08's own further scoping
-  decisions.
+  adapters`/`telemetry show`/`telemetry summary` commands, and both
+  `telemetry finalize` (excluding `--input` adapter ingestion) and
+  `telemetry record` are real effects; every remaining write-path
+  telemetry-producer command (`start`/`ingest`/`classify`) and both
+  adapter commands remain Node-only, pending MIG-08's own further
+  scoping decisions.

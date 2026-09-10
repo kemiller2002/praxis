@@ -29,4 +29,5 @@ let main _ =
     @ TelemetryLifecycleTests.tests
     @ TelemetrySummaryTests.tests
     @ TelemetryFinalizeTargetTests.tests
+    @ TelemetryRecordMetricTests.tests
     |> TestRunner.run
