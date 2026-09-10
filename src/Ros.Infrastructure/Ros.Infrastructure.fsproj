@@ -17,6 +17,7 @@
     <Compile Include="Work/FileWorkConfigRepository.fs" />
     <Compile Include="Work/FileEventLogRepository.fs" />
     <Compile Include="Work/FileBacklogQueueRepository.fs" />
+    <Compile Include="Work/FileWorkListRepository.fs" />
     <Compile Include="Artifacts/FrontMatter.fs" />
     <Compile Include="Artifacts/RegistryLock.fs" />
     <Compile Include="Artifacts/RegistryTransaction.fs" />

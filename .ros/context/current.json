@@ -1618,11 +1618,48 @@
         "EXE-20260910T204128899Z-e11401c5"
       ],
       "completedAt": "2026-09-10T20:41:32.510Z"
+    },
+    {
+      "id": "WI-0041",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/WorkListView.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Backlog.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileWorkListRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/Program.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkListViewTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-list-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-10T21:04:18.034Z",
+      "telemetryExecutionIds": [
+        "EXE-20260910T210413701Z-7b278465"
+      ],
+      "completedAt": "2026-09-10T21:04:18.034Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-10T20:41:32.510Z",
+  "updatedAt": "2026-09-10T21:04:18.034Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
