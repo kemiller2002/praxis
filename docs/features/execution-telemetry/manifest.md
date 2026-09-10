@@ -185,10 +185,28 @@ capabilities, lifecycle capture, classification, and aggregation.
   or `success` is explicitly `false`; SubagentStart, PostCompact,
   PermissionRequest, and PermissionDenied each contribute exactly one
   metric of their own. Exactly one `runtime.{hookName}` event is emitted
-  per call regardless of how many patterns matched. Every other real
-  adapter name (`anthropic-claude-statusline`, `anthropic-claude-otel`,
-  `google-gemini-otel`, `github-copilot-otel`, `otel-json`) remains its
-  own future scoping choice.
+  per call regardless of how many patterns matched.
+
+  An eleventh increment ships `anthropic-claude-statusline` via
+  `FileTelemetryFinalizationRepository.adaptClaudeStatusline`, the first
+  real adapter whose input is a single snapshot object rather than an
+  event stream -- there is no per-record iteration at all. Three
+  top-level fields (`context.window_size`, `context.utilization` --
+  computed as `used_percentage / 100` -- and `cost.session_cumulative`)
+  and four `current_usage` token fields each always get a capability
+  declaration, present or not, matching `adaptOpenAICodex`'s
+  fixed-declaration style rather than `adaptHook`'s derived-from-fired
+  style. `cost.session_cumulative` is the one field whose present-value
+  capability status becomes `"estimated"` rather than
+  `"supported-observed"` -- a real quirk, since a statusline snapshot
+  cannot directly observe session cost, only estimate it -- and whose
+  metric alone carries a `currency: "USD"` extra and an always-present
+  `confidence` key (`"medium"` when estimated, JSON `null` otherwise);
+  the four `current_usage` metrics carry no such extras at all. This
+  adapter emits no events of its own, and `collectedAt` is never
+  overridden by an input timestamp field. Every other real adapter name
+  (`anthropic-claude-otel`, `google-gemini-otel`, `github-copilot-otel`,
+  `otel-json`) remains its own future scoping choice.
 
 ## Interfaces
 
@@ -299,6 +317,16 @@ capabilities, lifecycle capture, classification, and aggregation.
   adapter names -- PostToolUse-with-error, SubagentStart,
   PermissionDenied -- plus the no-error PostToolUse case, compared
   byte-for-byte against production's own `ingestTelemetry`/`adaptHook`).
+- F# telemetry-ingest claude-statusline real-effect tests:
+  `tests/Ros.Tests/TelemetryIngestClaudeStatuslineTests.fs` (the
+  fully-populated field mapping including the utilization division and
+  full identity resolution, the `cost.session_cumulative`
+  `"estimated"`-status quirk, the all-absent case with every capability
+  `supported-unavailable` and zero metrics, and the no-events invariant)
+  and `tests/telemetry-ingest-claude-statusline-fsharp-differential.test.mjs`
+  (a fully-populated snapshot, the all-absent case, and the
+  estimated-status quirk in isolation, compared byte-for-byte against
+  production's own `ingestTelemetry`/`adaptClaudeStatusline`).
 
 ## Dependencies
 
@@ -332,14 +360,14 @@ capabilities, lifecycle capture, classification, and aggregation.
   block`/`work resume`), all three read-only `telemetry
   adapters`/`telemetry show`/`telemetry summary` commands, `telemetry
   finalize` (excluding `--input` adapter ingestion), `telemetry record`,
-  `telemetry ingest` (`generic`, `openai-codex`, and the three hook
+  `telemetry ingest` (`generic`, `openai-codex`, the three hook
   adapters -- `anthropic-claude-hook`/`google-gemini-hook`/
-  `github-copilot-hook`), `telemetry
+  `github-copilot-hook` -- and `anthropic-claude-statusline`), `telemetry
   classify`, and `telemetry start` (excluding `--execution-id` and the
   eleven identity-override flags) are real effects; every other
-  non-generic adapter's provider-specific field mapping (the OTel family,
-  `anthropic-claude-statusline`) remains Node-only, pending MIG-08's own
-  further scoping decisions. `adapter call`/`adapter
+  non-generic adapter's provider-specific field mapping (the OTel family)
+  remains Node-only, pending MIG-08's own further scoping decisions.
+  `adapter call`/`adapter
   publish` are owned by the work-lifecycle manifest, not this one -- see
   its own Known gaps
   for their status.

@@ -1449,6 +1449,59 @@ patterns (`PostToolUse` with and without an error, `SubagentStart`,
 `PermissionDenied`), each producing byte-identical identity, capability,
 metric, and event sets.
 
+## Phase A / MIG-08, increment 21: `anthropic-claude-statusline` — a single snapshot, not an event stream
+
+`anthropic-claude-statusline` is the fourth real adapter name ported, and
+the first whose input is a single snapshot object rather than an event
+stream or per-record collection — there is no iteration at all in
+`adaptClaudeStatusline`, unlike `adaptOpenAICodex`'s per-entry loop or
+`adaptHook`'s per-payload pattern matching.
+
+Its field mapping falls into two groups, matching production's own two
+separate loops. Three top-level fields — `context.window_size`
+(`context_window.context_window_size`), `context.utilization`
+(`context_window.used_percentage / 100`), and `cost.session_cumulative`
+(`cost.total_cost_usd`) — each always get a capability declaration
+(present or not), and, when present, a metric carrying an explicit
+`quality` ("observed" for the first two, "estimated" for cost) and a
+`confidence` key that is always present (`"medium"` when estimated,
+JSON `null` otherwise) — unlike every metric in every other adapter in
+this migration, where `confidence` (like every other optional extra) is
+simply absent when not applicable. `cost.session_cumulative` is also the
+one field whose *capability* status becomes `"estimated"` rather than
+`"supported-observed"` when present — a real quirk, since a statusline
+snapshot cannot directly observe session cost, only estimate it — and
+the one metric whose extras include `currency: "USD"`, gated on the
+metric id's own `cost.` prefix rather than a fixed adapter-wide flag.
+
+Four `current_usage` token fields (`input_tokens`/`output_tokens`/
+`cache_creation_input_tokens`/`cache_read_input_tokens`, mapped to
+`context.current_input_tokens`/`context.current_output_tokens`/
+`context.current_cache_write_tokens`/`context.current_cache_read_tokens`)
+form the second group: each always gets a plain capability declaration
+(present or not, no `"estimated"` special case), and, when present, a
+metric with no `quality`/`confidence`/`currency` extras at all — a
+narrower shape than the first group's metrics, again matching
+production's own second, simpler loop exactly.
+
+This adapter emits no events of its own at all — the returned `events`
+array is always empty, so only the shared ingest pipeline's own
+`telemetry.snapshot.ingested` bookkeeping event appears in the stored
+record. `collectedAt` is also never overridden by an input timestamp
+field (unlike `adaptHook`'s `input.timestamp ?? collectedAt`), since a
+statusline snapshot carries no per-event timestamp to prefer. Confirmed
+against real Node with differential fixtures covering a fully-populated
+snapshot, a snapshot with nothing present (every capability
+`supported-unavailable`, zero metrics), and the `cost.session_cumulative`
+`"estimated"`-status quirk in isolation — all producing byte-identical
+identity, capability, metric, and event sets. Notably, the shared
+metric-recording pipeline (`normalizeAndAppendIngestedMetric`) normalizes
+every stored metric to the same full field set regardless of which
+extras the adapter itself supplied, so this adapter's narrower raw shape
+for the `current_usage` fields converges with the richer shape from the
+top-level fields once persisted — parity holds end-to-end even though
+the two groups' raw shapes differ.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for
