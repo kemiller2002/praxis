@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 43,
+  "nextSeq": 44,
   "items": [
     {
       "id": "WI-0001",
@@ -835,6 +835,20 @@
       "attachments": [],
       "createdAt": "2026-09-10T22:02:29.639Z",
       "updatedAt": "2026-09-10T22:02:32.370Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0043",
+      "title": "Unify F# validate command: Phase A increment 11 (combines 5 already-real contributors)",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-10T22:15:56.918Z",
+      "updatedAt": "2026-09-10T22:15:59.716Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null

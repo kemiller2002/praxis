@@ -269,9 +269,12 @@ capabilities, lifecycle capture, classification, and aggregation.
   pricing/ratio-bound/session-scope/capability-cross-check, quality
   signals, raw-telemetry redaction/byte-budget/snapshot-count, events,
   classification, and cross-record work-item/parent-execution/
-  finalization-completeness linkage. Unlike every other validator in this
-  migration (`Ros.Domain.Work.QueueValidation`, `Ros.Domain.Work.
-  Attribution`), this one does not follow the usual Domain-decides/
+  finalization-completeness linkage. A follow-on increment (work-lifecycle
+  manifest) unified this with the other four `validate` contributors into
+  one real `ros-fs validate [--json]` command. Unlike every other
+  validator in this migration (`Ros.Domain.Work.QueueValidation`,
+  `Ros.Domain.Work.Attribution`), this one does not follow the usual
+  Domain-decides/
   Infrastructure-reads split at the file level in the obvious way -- it
   still does, but through an unusually wide typed boundary. A new
   `Ros.Domain.Telemetry.TelemetryValidation` (Tier 2, per
@@ -516,13 +519,13 @@ capabilities, lifecycle capture, classification, and aggregation.
   and eleven identity-override flags) are real effects -- MIG-08's own
   command-surface scope is now completely real. `adapter call`/`adapter
   publish` are owned by the work-lifecycle manifest, not this one -- see
-  its own Known gaps. `telemetryFindings` (the telemetry contributor to
-  production's combined `validate` findings) is also now real
-  (`Ros.Domain.Telemetry.TelemetryValidation`/`Ros.Infrastructure.Work.
-  FileTelemetryValidationRepository`, exposed as `ros-fs telemetry
-  validate`), the last piece the not-yet-scoped `validate` command
-  unification needs; unifying it into one command matching production's
-  own combined `validate [--json]` output (artifact findings + registry
-  staleness + `workFindings` + `queueFindings` + `telemetryFindings`,
-  sorted together) remains its own future increment
-  for their status.
+  its own Known gaps for their status. `telemetryFindings` (the telemetry
+  contributor to production's combined `validate` findings) is also now
+  real (`Ros.Domain.Telemetry.TelemetryValidation`/`Ros.Infrastructure.
+  Work.FileTelemetryValidationRepository`, exposed standalone as `ros-fs
+  telemetry validate`), and a follow-on increment folded it into the
+  real, unified `ros-fs validate [--json]` command (artifact findings +
+  registry staleness + `workFindings` + `queueFindings` +
+  `telemetryFindings`, sorted together, matching production's own
+  combined output) -- see the work-lifecycle manifest's own Known gaps
+  for that command's status.

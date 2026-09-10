@@ -1700,11 +1700,40 @@
         "EXE-20260910T220232480Z-6231c548"
       ],
       "completedAt": "2026-09-10T22:02:37.238Z"
+    },
+    {
+      "id": "WI-0043",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/Program.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Contracts/Cli/FindingJson.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/FindingContractTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/validate-unified-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-10T22:16:03.272Z",
+      "telemetryExecutionIds": [
+        "EXE-20260910T221559807Z-42a9a759"
+      ],
+      "completedAt": "2026-09-10T22:16:03.272Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-10T22:02:37.238Z",
+  "updatedAt": "2026-09-10T22:16:03.272Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

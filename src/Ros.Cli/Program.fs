@@ -469,48 +469,49 @@ let private readWorkContext root : Result<WorkContextPlanningView, string> =
 /// Mirrors production `workFindings` (`tools/ros_cli.mjs`): when attribution
 /// enforcement is off, no Git observation is ever attempted. Otherwise a
 /// broken Git repository yields a single synthetic finding rather than
-/// failing outright, matching Node's `error.gitFailure` catch.
+/// failing outright, matching Node's `error.gitFailure` catch. Shared by
+/// the standalone `work validate` diagnostic and the unified `validate`
+/// command, since both need production's exact same findings.
+let private computeWorkAttributionFindings root : Result<WorkAttributionFinding list, string> =
+    let enforce = FileWorkConfigRepository.readEnforceAttribution root
+
+    if not enforce then
+        Ok []
+    else
+        match readWorkContext root with
+        | Error message -> Error message
+        | Ok context ->
+            match realObservedGitPaths root with
+            | Error failure ->
+                Ok
+                    [ { Path = ".git"
+                        Field = "work_items"
+                        Message = $"cannot verify work attribution because {failure.Operation} is unavailable: {GitUnavailableReason.code failure.Reason}" } ]
+            | Ok observedGitPaths ->
+                let request =
+                    { Enforce = true
+                      ObservedGitPaths = observedGitPaths
+                      PathFilterConfig = FileWorkConfigRepository.readPathFilterConfig root
+                      BaselineDirtyPaths = context.BaselineDirtyPaths
+                      AttributedPaths = FileEventLogRepository.readAttributedPaths root
+                      HasActiveOrBlockedWork =
+                        context.WorkItems
+                        |> List.exists (fun item -> item.SemanticState = LiveWorkState.Active || item.SemanticState = LiveWorkState.Blocked) }
+
+                Ok(WorkAttribution.findings request)
+
 let private runWorkAttributionValidate root arguments =
     if not (arguments |> List.forall ((=) "--json")) then
         eprintfn "%s" usage
         2
     else
-        let enforce = FileWorkConfigRepository.readEnforceAttribution root
-
-        if not enforce then
-            printf "%s" (WorkAttributionContract.renderJson [])
-            0
-        else
-            match readWorkContext root with
-            | Error message ->
-                eprintfn "ERROR %s" message
-                2
-            | Ok context ->
-                match realObservedGitPaths root with
-                | Error failure ->
-                    let finding =
-                        { Path = ".git"
-                          Field = "work_items"
-                          Message =
-                            $"cannot verify work attribution because {failure.Operation} is unavailable: {GitUnavailableReason.code failure.Reason}" }
-
-                    printf "%s" (WorkAttributionContract.renderJson [ finding ])
-                    1
-                | Ok observedGitPaths ->
-                    let request =
-                        { Enforce = true
-                          ObservedGitPaths = observedGitPaths
-                          PathFilterConfig = FileWorkConfigRepository.readPathFilterConfig root
-                          BaselineDirtyPaths = context.BaselineDirtyPaths
-                          AttributedPaths = FileEventLogRepository.readAttributedPaths root
-                          HasActiveOrBlockedWork =
-                            context.WorkItems
-                            |> List.exists (fun item ->
-                                item.SemanticState = LiveWorkState.Active || item.SemanticState = LiveWorkState.Blocked) }
-
-                    let findings = WorkAttribution.findings request
-                    printf "%s" (WorkAttributionContract.renderJson findings)
-                    if findings.IsEmpty then 0 else 1
+        match computeWorkAttributionFindings root with
+        | Error message ->
+            eprintfn "ERROR %s" message
+            2
+        | Ok findings ->
+            printf "%s" (WorkAttributionContract.renderJson findings)
+            if findings.IsEmpty then 0 else 1
 
 /// Shared by `work backlog-transition` and `work block` (whose backlog-item
 /// branch is the same effect): mirrors production `backlogTransitionUnlocked`
@@ -1677,6 +1678,71 @@ let private runBacklogQueueValidate root arguments =
         printf "%s" (BacklogQueueValidationContract.renderJson findings)
         if findings.IsEmpty then 0 else 1
 
+/// Mirrors production's top-level `validate(root)` (`tools/ros_cli.mjs`):
+/// the same five contributors, each already a real F# effect on its own
+/// (`ArtifactPolicy.validate`, registry staleness, `WorkAttribution`,
+/// `BacklogQueueValidation`, `TelemetryValidation`), combined into one
+/// sorted array and rendered with production's exact `findingRecord`
+/// repair-message logic. This is pure orchestration -- no contributor's
+/// own decision changes here -- so it lives at the CLI composition layer
+/// rather than introducing a new cross-feature Application module.
+/// Sorted with ordinal string comparison over the joined `path/field/
+/// message` tuple, approximating production's own locale-aware
+/// `localeCompare` on the same join -- a deliberate, documented
+/// simplification: every path/field/message this repository's own
+/// contributors produce is plain ASCII, where ordinal and locale-aware
+/// collation agree.
+let private runValidateUnified root arguments =
+    if not (arguments |> List.forall ((=) "--json")) then
+        eprintfn "%s" usage
+        2
+    else
+        let repository = FileArtifactRepository.create root
+
+        match ArtifactOperations.validate repository with
+        | ValidationOutcome.DependencyFailure failure -> reportDependencyFailure failure
+        | ValidationOutcome.Completed artifactFindings ->
+            match ArtifactOperations.checkRegistries repository with
+            | RegistryCheckOutcome.DependencyFailure failure -> reportDependencyFailure failure
+            | RegistryCheckOutcome.Completed registryCombined ->
+                // `checkRegistries` recomputes the same parse findings
+                // `validate` already returned; keep only the staleness
+                // findings from its result to avoid double-counting.
+                let staleFindings = registryCombined |> List.filter (fun f -> f.Message.Contains "registry is stale")
+
+                match computeWorkAttributionFindings root with
+                | Error message ->
+                    eprintfn "ERROR %s" message
+                    1
+                | Ok workFindings ->
+                    let convert (path: string) (field: string) (message: string) : ArtifactFinding = { Path = path; Field = field; Message = message }
+
+                    let queueFindings =
+                        FileBacklogQueueRepository.readItems root |> BacklogQueueValidation.findings |> List.map (fun f -> convert f.Path f.Field f.Message)
+
+                    let telemetryFindingsConverted =
+                        FileTelemetryValidationRepository.findings root |> List.map (fun f -> convert f.Path f.Field f.Message)
+
+                    let workFindingsConverted = workFindings |> List.map (fun f -> convert f.Path f.Field f.Message)
+
+                    let all =
+                        artifactFindings @ staleFindings @ workFindingsConverted @ queueFindings @ telemetryFindingsConverted
+                        |> List.sortWith (fun a b ->
+                            System.String.CompareOrdinal($"{a.Path}\000{a.Field}\000{a.Message}", $"{b.Path}\000{b.Field}\000{b.Message}"))
+
+                    if arguments |> List.contains "--json" then
+                        printf "%s" (FindingContract.renderJson all)
+                        if all.IsEmpty then 0 else 1
+                    elif all.IsEmpty then
+                        printfn "validation passed"
+                        0
+                    else
+                        for finding in all do
+                            eprintfn "ERROR %s\n  REPAIR %s" (renderFinding finding) (FindingContract.repair finding)
+
+                        eprintfn "validation failed with %d error(s)" all.Length
+                        1
+
 /// Mirrors production `telemetryFindings` (`tools/ros_telemetry.mjs`), the
 /// telemetry contributor to `validate`'s combined findings array.
 let private runTelemetryValidate root arguments =
@@ -2189,6 +2255,7 @@ let private dispatch root arguments =
     | [ "-h" ] ->
         printfn "%s" usage
         0
+    | "validate" :: rest -> runValidateUnified root rest
     | "artifacts" :: "validate" :: rest when rest |> List.forall ((=) "--json") ->
         runValidation (rest |> List.contains "--json") repository
     | "registry" :: "build" :: rest when rest |> List.forall ((=) "--dry-run") ->
