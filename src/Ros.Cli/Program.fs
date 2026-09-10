@@ -1819,11 +1819,15 @@ let private runTelemetryRecord root (arguments: string list) =
 /// (`adaptClaudeStatusline`), a single-snapshot adapter (not an event
 /// stream) whose one real quirk is that a present `cost.session_cumulative`
 /// value gets an `"estimated"` capability status rather than
-/// `"supported-observed"`. Every other adapter name production itself
-/// recognizes remains its own
-/// future MIG-08 slice and is rejected outright (exit 2) rather than
-/// silently treated as generic; a name production itself would not
-/// recognize gets production's own exact error (exit 1).
+/// `"supported-observed"`; the final increment added the OTel adapter
+/// family (`anthropic-claude-otel`/`google-gemini-otel`/
+/// `github-copilot-otel`/`otel-json`), sharing one `adaptOtel` that looks
+/// every field up across a per-record set of nested candidates (the
+/// record itself, `attributes`, `resource.attributes`, `body`,
+/// `dataPoint.attributes`) rather than any fixed schema. Every adapter
+/// name production itself recognizes now maps to a real effect; a name
+/// production itself would not recognize gets production's own exact
+/// error (exit 1).
 /// `--input`'s file (or `-` for stdin) is read and byte-checked here,
 /// matching production's own `readTelemetryInput`; everything past that
 /// (adaptation, target resolution, the mutation itself) is

@@ -1,6 +1,7 @@
 namespace Ros.Infrastructure.Work
 
 open System
+open System.Globalization
 open System.IO
 open System.Text.Json
 open System.Text.Json.Nodes
@@ -1350,6 +1351,328 @@ module FileTelemetryFinalizationRepository =
           CollectedAt = collectedAt
           Source = runtimeSource }
 
+    /// Mirrors production `adaptOtel`: maps an OpenTelemetry-shaped export
+    /// (a single record, an array of records, or an object carrying
+    /// `records`/`events`) to runtime metrics, with no fixed schema of its
+    /// own -- every field is looked up across a per-record set of "nested
+    /// candidates" (the record itself, `attributes`, `resource.attributes`,
+    /// `body`, `dataPoint.attributes`, in that fixed order), matching a
+    /// broad range of real exporter shapes (OTLP JSON, Gemini CLI's own
+    /// metric events, etc.) with one lookup helper. `identity.provider`/
+    /// `runtime`/`model`/`sessionId` update per record as new values are
+    /// discovered (last one wins across the whole stream), seeded from the
+    /// caller's `identityProvider`/`identityRuntime` (both `"unknown"` for
+    /// the bare `otel-json` adapter, matching production's own
+    /// `identityDefaults = {}` default). Unlike every prior adapter,
+    /// capabilities here are declared 1:1 from whichever metrics actually
+    /// fired -- there is no "recognized but unavailable" declaration at
+    /// all, matching `adaptHook`'s style rather than `adaptOpenAICodex`'s.
+    /// `runtimeTimestamp` (production's own numeric-magnitude heuristic for
+    /// telling nanosecond/millisecond/second epoch values apart, or an
+    /// already-ISO string passed through verbatim) is ported for the
+    /// realistic timestamp shapes OTel exports actually carry; an exotic
+    /// non-ISO date string `Date.parse` would still accept is the one
+    /// acknowledged, deliberately unreproduced corner this port leaves
+    /// (mirroring `hasTruthyField`'s own documented zero-is-falsy gap).
+    let private adaptOtel (input: JsonNode) (collectedAt: string) (identityProvider: string) (identityRuntime: string) : AdaptedSnapshot =
+        let objectFieldOf (o: JsonObject) (name: string) : JsonObject option =
+            match o[name] with
+            | :? JsonObject as v -> Some v
+            | _ -> None
+
+        let numberFieldOf (o: JsonObject) (name: string) : float option =
+            match o[name] with
+            | :? JsonValue as v when v.GetValueKind() = JsonValueKind.Number ->
+                match v.TryGetValue<float>() with
+                | true, parsed -> Some parsed
+                | _ -> None
+            | _ -> None
+
+        let records: JsonObject list =
+            let ofArray (array: JsonArray) = array |> Seq.choose (function :? JsonObject as o -> Some o | _ -> None) |> Seq.toList
+
+            match input with
+            | :? JsonArray as array -> ofArray array
+            | :? JsonObject as single ->
+                match single["records"] with
+                | :? JsonArray as array -> ofArray array
+                | _ ->
+                    match single["events"] with
+                    | :? JsonArray as array -> ofArray array
+                    | _ -> [ single ]
+            | _ -> []
+
+        let nestedCandidates (record: JsonObject) : JsonObject list =
+            [ Some record
+              objectFieldOf record "attributes"
+              objectFieldOf record "resource" |> Option.bind (fun r -> objectFieldOf r "attributes")
+              objectFieldOf record "body"
+              objectFieldOf record "dataPoint" |> Option.bind (fun d -> objectFieldOf d "attributes") ]
+            |> List.choose id
+
+        let firstValue (record: JsonObject) (names: string list) : JsonNode option =
+            nestedCandidates record
+            |> List.tryPick (fun candidate -> names |> List.tryPick (fun name -> match candidate[name] with null -> None | v -> Some v))
+
+        let firstStringValue (record: JsonObject) (names: string list) : string option =
+            firstValue record names
+            |> Option.bind (function
+                | :? JsonValue as v when v.GetValueKind() = JsonValueKind.String -> Some(v.GetValue<string>())
+                | _ -> None)
+
+        let numericValue (record: JsonObject) : float option =
+            numberFieldOf record "value"
+            |> Option.orElse (numberFieldOf record "sum")
+            |> Option.orElse (numberFieldOf record "count")
+            |> Option.orElse (objectFieldOf record "dataPoint" |> Option.bind (fun d -> numberFieldOf d "value"))
+            |> Option.orElse (objectFieldOf record "body" |> Option.bind (fun b -> numberFieldOf b "value"))
+
+        let isTimestamp (s: string) : bool =
+            match DateTimeOffset.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.None) with
+            | true, _ -> true
+            | _ -> false
+
+        let numericToIso (numeric: float) (fallback: string) : string =
+            let milliseconds =
+                if numeric >= 1e15 then numeric / 1e6
+                elif numeric >= 1e12 then numeric
+                elif numeric >= 1e9 then numeric * 1000.0
+                else Double.NaN
+
+            if Double.IsNaN milliseconds || Double.IsInfinity milliseconds then
+                fallback
+            else
+                try
+                    DateTimeOffset.FromUnixTimeMilliseconds(int64 milliseconds).UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture)
+                with _ ->
+                    fallback
+
+        let runtimeTimestampOf (value: JsonNode option) (fallback: string) : string =
+            match value with
+            | Some(:? JsonValue as v) when v.GetValueKind() = JsonValueKind.String ->
+                let s = v.GetValue<string>()
+
+                if isTimestamp s then
+                    s
+                else
+                    match Double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture) with
+                    | true, numeric -> numericToIso numeric fallback
+                    | false, _ -> fallback
+            | Some(:? JsonValue as v) when v.GetValueKind() = JsonValueKind.Number ->
+                match v.TryGetValue<float>() with
+                | true, numeric -> numericToIso numeric fallback
+                | false, _ -> fallback
+            | _ -> fallback
+
+        let metricNode (metricSource: JsonObject) (metricId: string) (value: float) (at: string) (scope: string option) (dimensions: JsonObject option) : JsonObject =
+            let node = JsonObject()
+            node["id"] <- JsonValue.Create metricId
+            node["value"] <- JsonValue.Create value
+            node["collectedAt"] <- JsonValue.Create(at: string)
+            node["source"] <- metricSource.DeepClone()
+
+            match scope with
+            | Some s -> node["scope"] <- JsonValue.Create s
+            | None -> ()
+
+            match dimensions with
+            | Some d -> node["dimensions"] <- d
+            | None -> ()
+
+            node
+
+        let capabilityNode (metricId: string) (metricSource: JsonObject) (discoveredAt: string) : JsonObject =
+            let node = JsonObject()
+            node["metricId"] <- JsonValue.Create metricId
+            node["status"] <- JsonValue.Create "supported-observed"
+            node["reason"] <- JsonValue.Create "provider field observed"
+            node["source"] <- metricSource.DeepClone()
+            node["discoveredAt"] <- JsonValue.Create discoveredAt
+            node
+
+        let directFields =
+            [ [ "gen_ai.usage.input_tokens"; "input_tokens" ], "tokens.input"
+              [ "gen_ai.usage.output_tokens"; "output_tokens" ], "tokens.output"
+              [ "cache_read_tokens" ], "tokens.cache_read"
+              [ "cache_creation_tokens" ], "tokens.cache_write"
+              [ "duration_ms" ], "time.model_ms"
+              [ "ttft_ms" ], "time.first_token_ms" ]
+
+        let tokenTypeMetricId =
+            dict
+                [ "input", "tokens.input"
+                  "output", "tokens.output"
+                  "thought", "tokens.reasoning"
+                  "cache", "tokens.cached_input"
+                  "tool", "tokens.tool" ]
+
+        let isFalseValue (value: JsonNode option) : bool =
+            match value with
+            | Some(:? JsonValue as v) when v.GetValueKind() = JsonValueKind.False -> true
+            | Some(:? JsonValue as v) when v.GetValueKind() = JsonValueKind.String && v.GetValue<string>() = "false" -> true
+            | _ -> false
+
+        let metrics = ResizeArray<JsonObject>()
+        let mutable provider = identityProvider
+        let mutable runtime = identityRuntime
+        let mutable model: string option = None
+        let mutable sessionId: string option = None
+
+        for record in records do
+            let name = firstStringValue record [ "name"; "event.name"; "metric.name"; "instrumentation.name" ]
+            let at = runtimeTimestampOf (firstValue record [ "timestamp"; "time"; "timeUnixNano"; "observedTimeUnixNano" ]) collectedAt
+            provider <- firstStringValue record [ "gen_ai.provider.name"; "provider" ] |> Option.defaultValue provider
+            model <- firstStringValue record [ "gen_ai.response.model"; "gen_ai.request.model"; "model" ] |> Option.orElse model
+            sessionId <- firstStringValue record [ "session.id"; "gen_ai.conversation.id"; "session_id" ] |> Option.orElse sessionId
+
+            let runtimeSource =
+                let node = JsonObject()
+                node["type"] <- JsonValue.Create "runtime-output"
+                node["name"] <- JsonValue.Create "opentelemetry-json"
+                node["mechanism"] <- JsonValue.Create "otel-json-export"
+                node["provider"] <- JsonValue.Create provider
+                node["runtime"] <- JsonValue.Create runtime
+                node
+
+            for fields, metricId in directFields do
+                match firstValue record fields with
+                | Some(:? JsonValue as v) when v.GetValueKind() = JsonValueKind.Number ->
+                    match v.TryGetValue<float>() with
+                    | true, value ->
+                        let dimensions = JsonObject()
+
+                        match name with
+                        | Some n -> dimensions["event"] <- JsonValue.Create n
+                        | None -> ()
+
+                        metrics.Add(metricNode runtimeSource metricId value at (Some "operation") (Some dimensions))
+                    | _ -> ()
+                | _ -> ()
+
+            if name = Some "gemini_cli.token.usage" || name = Some "gen_ai.client.token.usage" then
+                let tokenType = firstStringValue record [ "type"; "gen_ai.token.type" ]
+                let metricId = tokenType |> Option.bind (fun t -> match tokenTypeMetricId.TryGetValue t with true, v -> Some v | _ -> None)
+                let value = numericValue record
+
+                match metricId, value, tokenType with
+                | Some id, Some v, Some t ->
+                    let dimensions = JsonObject()
+                    dimensions["tokenType"] <- JsonValue.Create t
+                    metrics.Add(metricNode runtimeSource id v at (Some "operation") (Some dimensions))
+                | _ -> ()
+
+            if [ "claude_code.api_request"; "api_request" ] |> List.exists (fun n -> Some n = name) then
+                metrics.Add(metricNode runtimeSource "model.requests" 1.0 at (Some "operation") None)
+
+                if isFalseValue (firstValue record [ "success" ]) then
+                    metrics.Add(metricNode runtimeSource "model.request_failures" 1.0 at (Some "operation") None)
+
+            if ([ "claude_code.tool_result"; "tool_result"; "tool_call" ] |> List.exists (fun n -> Some n = name)) || name = Some "gemini_cli.tool.call.count" then
+                let count = numericValue record |> Option.defaultValue 1.0
+                let tool = firstStringValue record [ "tool_name"; "function_name"; "gen_ai.tool.name" ] |> Option.defaultValue "unknown"
+                let dimensions = JsonObject()
+                dimensions["toolType"] <- JsonValue.Create tool
+                metrics.Add(metricNode runtimeSource "tool.calls" count at (Some "tool") (Some dimensions))
+
+                if isFalseValue (firstValue record [ "success" ]) then
+                    let failureDimensions = JsonObject()
+                    failureDimensions["toolType"] <- JsonValue.Create tool
+                    metrics.Add(metricNode runtimeSource "tool.failures" 1.0 at (Some "tool") (Some failureDimensions))
+
+            if name = Some "gemini_cli.agent.turns" then
+                match numericValue record with
+                | Some value -> metrics.Add(metricNode runtimeSource "agent.turns" value at None None)
+                | None -> ()
+
+            if name = Some "gemini_cli.chat_compression" then
+                metrics.Add(metricNode runtimeSource "context.compactions" 1.0 at None None)
+
+            if name = Some "gemini_cli.memory.usage" && firstStringValue record [ "memory_type" ] = Some "rss" then
+                match numericValue record with
+                | Some value -> metrics.Add(metricNode runtimeSource "runtime.memory_peak_bytes" value at None None)
+                | None -> ()
+
+        let capabilities =
+            metrics
+            |> Seq.map (fun m ->
+                let metricId = stringField m "id" |> Option.get
+                let discoveredAt = stringField m "collectedAt" |> Option.get
+                let metricSource = match m["source"] with :? JsonObject as s -> s | _ -> JsonObject()
+                capabilityNode metricId metricSource discoveredAt)
+            |> List.ofSeq
+
+        let identity = JsonObject()
+        identity["provider"] <- JsonValue.Create provider
+        identity["runtime"] <- JsonValue.Create runtime
+
+        identity["model"] <-
+            match model with
+            | Some m -> JsonValue.Create m
+            | None -> null
+
+        identity["sessionId"] <-
+            match sessionId with
+            | Some s -> JsonValue.Create s
+            | None -> null
+
+        let finalSource =
+            let node = JsonObject()
+            node["type"] <- JsonValue.Create "runtime-output"
+            node["name"] <- JsonValue.Create "opentelemetry-json"
+            node["mechanism"] <- JsonValue.Create "otel-json-export"
+            node["provider"] <- JsonValue.Create provider
+            node["runtime"] <- JsonValue.Create runtime
+            node
+
+        { Identity = identity
+          Capabilities = capabilities
+          Metrics = metrics |> List.ofSeq
+          Events = []
+          Classification = None
+          Scope = None
+          QualitySignals = []
+          Links = None
+          Raw = input
+          MappedFields =
+            [ "name"
+              "event.name"
+              "metric.name"
+              "instrumentation.name"
+              "timestamp"
+              "time"
+              "timeUnixNano"
+              "observedTimeUnixNano"
+              "gen_ai.provider.name"
+              "provider"
+              "gen_ai.response.model"
+              "gen_ai.request.model"
+              "model"
+              "session.id"
+              "gen_ai.conversation.id"
+              "session_id"
+              "gen_ai.usage.input_tokens"
+              "input_tokens"
+              "gen_ai.usage.output_tokens"
+              "output_tokens"
+              "cache_read_tokens"
+              "cache_creation_tokens"
+              "duration_ms"
+              "ttft_ms"
+              "type"
+              "gen_ai.token.type"
+              "value"
+              "sum"
+              "count"
+              "success"
+              "tool_name"
+              "function_name"
+              "gen_ai.tool.name"
+              "memory_type" ]
+          SchemaVersion = (match input with :? JsonObject as o -> (match o["schemaVersion"] with null -> null | v -> v) | _ -> null)
+          SnapshotId = None
+          CollectedAt = collectedAt
+          Source = finalSource }
+
     /// Precompiled once, mirroring `rawRedactedKeyPattern`'s own convention,
     /// rather than reconstructed on every `toolCategoryMetric`/`adaptHook`
     /// call.
@@ -2237,22 +2560,17 @@ module FileTelemetryFinalizationRepository =
     /// "generic"})`: adapter validation and adaptation happen before any
     /// target resolution or lock, exactly matching production's own
     /// `adaptInput` call ahead of `withExecutionLock` -- an unknown
-    /// adapter name (one production itself would not recognize) or a bad
-    /// target both reject before anything is touched. Every other real
-    /// adapter name is its own future MIG-08 slice.
+    /// adapter name (one production itself would not recognize) rejects
+    /// before anything is touched, matching production's own message
+    /// exactly. Every adapter name production itself recognizes
+    /// (`Ros.Domain.Telemetry.TelemetryAdapters.all`) now maps to a real
+    /// adaptation function -- the "not yet supported by this CLI" rejection
+    /// this dispatch carried through MIG-08's earlier adapter increments is
+    /// retired as dead code now that none of `TelemetryAdapters.all`'s
+    /// names can reach it.
     let ingestTarget (root: string) (target: string option) (adapter: string) (inputText: string) : Result<JsonObject, string> =
-        let supportedAdapters =
-            [ "generic"
-              "openai-codex"
-              "anthropic-claude-statusline"
-              "anthropic-claude-hook"
-              "google-gemini-hook"
-              "github-copilot-hook" ]
-
         if not (Ros.Domain.Telemetry.TelemetryAdapters.all |> List.contains adapter) then
             Error $"unknown telemetry adapter '{adapter}'"
-        elif not (supportedAdapters |> List.contains adapter) then
-            Error $"telemetry ingest --adapter '{adapter}' is not yet supported by this CLI"
         else
             match parseIngestInput inputText with
             | Error message -> Error message
@@ -2266,6 +2584,10 @@ module FileTelemetryFinalizationRepository =
                     | "anthropic-claude-hook" -> adaptHook inputNode collectedAt "anthropic" "claude-code"
                     | "google-gemini-hook" -> adaptHook inputNode collectedAt "google" "gemini-cli"
                     | "github-copilot-hook" -> adaptHook inputNode collectedAt "github" "copilot"
+                    | "anthropic-claude-otel" -> adaptOtel inputNode collectedAt "anthropic" "claude-code"
+                    | "google-gemini-otel" -> adaptOtel inputNode collectedAt "google" "gemini-cli"
+                    | "github-copilot-otel" -> adaptOtel inputNode collectedAt "github" "copilot"
+                    | "otel-json" -> adaptOtel inputNode collectedAt "unknown" "unknown"
                     | _ -> adaptGeneric inputNode collectedAt
 
                 // Mirrors production `ingestTelemetry`'s own `adapted.snapshotId
