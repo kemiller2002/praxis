@@ -109,8 +109,10 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   factored out of `runWorkStart`, no new Domain/Infrastructure code): it
   never creates a new context item, never observes Git, and links every
   currently-active candidate execution or creates one when none is active.
-  It excludes `recordTelemetryLifecycle`'s "resumed" bookkeeping and
-  production's `parentExecutionId` linkage on the new-execution path.
+  It excludes `recordTelemetryLifecycle`'s "resumed" bookkeeping (closed by
+  a later MIG-08 increment, in the execution-telemetry manifest -- see its
+  own "Known gaps") and production's `parentExecutionId` linkage on the
+  new-execution path (still open).
   `ros-fs work block` (Phase A's seventh increment) mirrors production
   `blockWork`: the one command that splits requested ids between a
   not-yet-started backlog item and an already-live context item, applying
@@ -233,12 +235,13 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   `resume`/`work resume`, `block`/`work block`, and `complete`/`work
   complete`, including real telemetry execution creation and finalization —
   every live-work transition now has real F# parity too). `resume`/`block`
-  still need `recordTelemetryLifecycle`'s within-execution
-  "resumed"/"blocked" bookkeeping for full fidelity (both currently always
-  compute a zero `time.blocked_ms` on finalization, a correct answer for the
-  data this migration produces today rather than a stub). Still remaining:
-  every telemetry-producer command and both adapter commands — all
-  MIG-08-sized scoping work, independent of the now-complete work-lifecycle
-  command surface. Evidence containment has no current authority; production
+  now also record `recordTelemetryLifecycle`'s within-execution
+  "resumed"/"blocked" bookkeeping (`FileTelemetryFinalizationRepository.
+  recordLifecycle`, in the execution-telemetry manifest), so
+  `time.blocked_ms` computes a real nonzero value on finalization instead of
+  always zero. Still remaining: every telemetry-producer command and both
+  adapter commands — all MIG-08-sized scoping work, independent of the
+  now-complete work-lifecycle command surface. Evidence containment has no
+  current authority; production
   behavior accepts absolute existing paths. Production remains Node-owned
   pending those slices and the distribution decision.

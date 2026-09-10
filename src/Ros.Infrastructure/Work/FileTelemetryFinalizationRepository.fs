@@ -9,14 +9,16 @@ open Ros.Infrastructure.Artifacts
 open Ros.Infrastructure.Git
 open Ros.Infrastructure.Json
 
-/// The real "finalize an execution" effect (`DF-ROS-2026-A028` Phase A):
-/// production's `finalizeExecution`/`finalizeWorkExecutions`
-/// (`tools/ros_telemetry.mjs`), reduced to the path production's own `work
-/// complete` CLI actually reaches (no `--input` adapter ingestion, which no
-/// current CLI command threads through to a work-completion finalize).
-/// Mutates an existing `.ros/telemetry/executions/EXE-*.json` record in
-/// place, under its own per-execution lock -- it never creates or links an
-/// execution (see `FileTelemetryExecutionRepository`).
+/// Real mutation effects against an existing execution record
+/// (`DF-ROS-2026-A028` Phase A): production's `finalizeExecution`/
+/// `finalizeWorkExecutions` and `recordTelemetryLifecycle`
+/// (`tools/ros_telemetry.mjs`). `finalizeWorkExecutions` is reduced to the
+/// path production's own `work complete` CLI actually reaches (no
+/// `--input` adapter ingestion, which no current CLI command threads
+/// through to a work-completion finalize). Each mutates an existing
+/// `.ros/telemetry/executions/EXE-*.json` record in place, under its own
+/// per-execution lock -- neither creates or links an execution (see
+/// `FileTelemetryExecutionRepository`).
 [<RequireQualifiedAccess>]
 module FileTelemetryFinalizationRepository =
     let private serializerOptions =
@@ -458,6 +460,146 @@ module FileTelemetryFinalizationRepository =
             | [] -> Ok()
             | executionId :: rest ->
                 match finalizeOne root repositoryId executionId with
+                | Error message -> Error message
+                | Ok() -> loop rest
+
+        loop (activeExecutionIds root workItemId)
+
+    /// Mirrors production `recordTelemetryLifecycle`: appends a
+    /// `work.blocked`/`work.resumed` event (deduped by its sorted-key
+    /// digest `eventId`, matching production's own `digest()` exactly, not
+    /// the unsorted `eventId` convention `.ros/events/events.jsonl` uses)
+    /// plus its paired `agent.interruptions`/`agent.resumes` metric, to
+    /// every currently-active execution linked to a work item. `work
+    /// block`/`work resume` call this BEFORE resolving or creating any new
+    /// telemetry execution for the same transition, matching production's
+    /// own ordering exactly -- a freshly created execution never receives
+    /// a lifecycle event for the transition that created it. A work item
+    /// with no currently-active execution is a legitimate no-op, not an
+    /// error (matching production's own empty-array iteration). Excludes
+    /// `ensureRecordDefaults`' legacy-record backfill: every record this
+    /// migration's own writers produce already carries the full shape it
+    /// would otherwise backfill.
+    let recordLifecycle (root: string) (workItemId: string) (lifecycleType: string) (occurredAt: string) (reason: string option) : Result<unit, string> =
+        let recordOne (executionId: string) : Result<unit, string> =
+            match RegistryLock.acquire root $"telemetry-execution:{executionId}" RegistryLock.defaultSettings with
+            | Error failure -> Error failure.Message
+            | Ok lease ->
+                let result =
+                    try
+                        let file = executionFile root executionId
+
+                        if not (File.Exists file) then
+                            Ok()
+                        else
+                            match JsonNode.Parse(File.ReadAllText file) with
+                            | :? JsonObject as record ->
+                                match stringField record "status" with
+                                | Some "active" ->
+                                    let sortedForDigest = JsonObject()
+                                    sortedForDigest["occurredAt"] <- JsonValue.Create occurredAt
+
+                                    sortedForDigest["reason"] <-
+                                        match reason with
+                                        | Some value -> JsonValue.Create value
+                                        | None -> null
+
+                                    let sortedSource = JsonObject()
+                                    sortedSource["mechanism"] <- JsonValue.Create "work-lifecycle"
+                                    sortedSource["name"] <- JsonValue.Create "ros"
+                                    sortedSource["type"] <- JsonValue.Create "ros-clock"
+                                    sortedForDigest["source"] <- sortedSource
+                                    sortedForDigest["type"] <- JsonValue.Create $"work.{lifecycleType}"
+
+                                    let eventId = "TEVT-" + CanonicalJson.sha256HexPrefix 24 (CanonicalJson.serializeCompact sortedForDigest)
+
+                                    let events =
+                                        match record["events"] with
+                                        | :? JsonArray as existing -> existing
+                                        | _ ->
+                                            let created = JsonArray()
+                                            record["events"] <- created
+                                            created
+
+                                    let alreadyRecorded =
+                                        events
+                                        |> Seq.exists (function
+                                            | :? JsonObject as node -> stringField node "eventId" = Some eventId
+                                            | _ -> false)
+
+                                    if not alreadyRecorded then
+                                        let event = JsonObject()
+                                        event["type"] <- JsonValue.Create $"work.{lifecycleType}"
+                                        event["occurredAt"] <- JsonValue.Create occurredAt
+
+                                        event["reason"] <-
+                                            match reason with
+                                            | Some value -> JsonValue.Create value
+                                            | None -> null
+
+                                        event["source"] <- FileTelemetryExecutionRepository.sourceNode { Type = "ros-clock"; Name = "ros"; Mechanism = "work-lifecycle" }
+                                        event["eventId"] <- JsonValue.Create eventId
+                                        events.Add(event: JsonNode)
+
+                                        let metricId = if lifecycleType = "blocked" then "agent.interruptions" else "agent.resumes"
+                                        let mechanism = if lifecycleType = "blocked" then "blocked-transition" else "resume-transition"
+                                        let metricSource: CapabilitySource = { Type = "calculated"; Name = "ros-work-protocol"; Mechanism = mechanism }
+
+                                        match FileMetricRegistryRepository.read root |> List.tryFind (fun definition -> definition.Id = metricId) with
+                                        | None -> ()
+                                        | Some definition ->
+                                            let metricNode, upserted = FileTelemetryExecutionRepository.derivedMetricNode definition 1L metricSource occurredAt
+
+                                            match record["metrics"] with
+                                            | :? JsonArray as metrics -> metrics.Add(metricNode: JsonNode)
+                                            | _ -> record["metrics"] <- JsonArray(metricNode :> JsonNode)
+
+                                            let existingCapabilities =
+                                                match record["capabilities"] with
+                                                | :? JsonArray as array ->
+                                                    array
+                                                    |> Seq.choose (function :? JsonObject as node -> Some(parseCapability node) | _ -> None)
+                                                    |> Seq.toList
+                                                | _ -> []
+
+                                            let maxHistory = FileWorkConfigRepository.readTelemetryMaxCapabilityHistoryEntries root
+
+                                            let mergedCapabilities =
+                                                if existingCapabilities |> List.exists (fun capability -> capability.MetricId = metricId) then
+                                                    existingCapabilities
+                                                    |> List.map (fun capability ->
+                                                        if capability.MetricId = metricId then
+                                                            Capability.upsert maxHistory occurredAt occurredAt upserted.Status upserted.Reason upserted.Source capability
+                                                        else
+                                                            capability)
+                                                else
+                                                    existingCapabilities @ [ upserted ]
+
+                                            let capabilitiesNode = JsonArray()
+
+                                            mergedCapabilities
+                                            |> List.iter (fun capability -> capabilitiesNode.Add(FileTelemetryExecutionRepository.capabilityNode capability: JsonNode))
+
+                                            record["capabilities"] <- capabilitiesNode
+
+                                        File.WriteAllText(file, record.ToJsonString serializerOptions + "\n")
+
+                                    Ok()
+                                | _ -> Ok()
+                            | _ -> Error "execution record must be a JSON object"
+                    with error ->
+                        lease.Release() |> ignore
+                        reraise ()
+
+                match lease.Release(), result with
+                | Error releaseFailure, Ok _ -> Error releaseFailure.Message
+                | _, outcome -> outcome
+
+        let rec loop remaining =
+            match remaining with
+            | [] -> Ok()
+            | executionId :: rest ->
+                match recordOne executionId with
                 | Error message -> Error message
                 | Ok() -> loop rest
 

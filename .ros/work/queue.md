@@ -58,6 +58,7 @@
 | WI-0019 | F# work resume real effect: Phase A increment 6 | complete |  | high |
 | WI-0020 | F# work block real effect: Phase A increment 7 | complete |  | high |
 | WI-0021 | F# work complete real effect: Phase A increment 8 | complete |  | high |
-| WI-0022 | F# telemetry adapters/show real effect: Phase A/MIG-08 increment 1 | ready |  | high |
+| WI-0022 | F# telemetry adapters/show real effect: Phase A/MIG-08 increment 1 | complete |  | high |
+| WI-0023 | F# telemetry lifecycle bookkeeping real effect: Phase A/MIG-08 increment 2 | ready |  | high |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |
 | WORKQUEUE-BACKLOG-LAYER | WORKQUEUE-BACKLOG-LAYER | complete |  |  |

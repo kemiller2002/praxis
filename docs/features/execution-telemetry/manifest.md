@@ -37,8 +37,19 @@ capabilities, lifecycle capture, classification, and aggregation.
   (`Ros.Domain.Telemetry.TelemetryAdapters`, a direct port of the
   `TELEMETRY_ADAPTERS` catalog) and `telemetry show`
   (`Ros.Infrastructure.Work.FileTelemetryQueryRepository`, a lock-free read
-  of `.ros/telemetry/executions/*.json`). `telemetry summary`'s aggregation,
-  every write-path telemetry-producer command
+  of `.ros/telemetry/executions/*.json`). A follow-on slice closed a real
+  gap left open by `work start`/`work complete`: `recordTelemetryLifecycle`
+  (`FileTelemetryFinalizationRepository.recordLifecycle`) now appends the
+  real `work.blocked`/`work.resumed` events -- deduped by production's own
+  sorted-key digest, matching its `TEVT-` `eventId` convention exactly --
+  plus their paired `agent.interruptions`/`agent.resumes` metrics, to every
+  currently-active execution linked to a work item, called from `work
+  block`/`work resume` (in the work-lifecycle manifest) before those
+  commands resolve or create any new telemetry execution, matching
+  production's own ordering. `time.blocked_ms` (computed at finalization by
+  `BlockedDuration.compute`, shipped in the `work complete` increment) now
+  computes a real nonzero value instead of always zero. `telemetry
+  summary`'s aggregation, every write-path telemetry-producer command
   (`start`/`ingest`/`classify`/`record`/`finalize`), and both `adapter
   call`/`adapter publish` commands remain Node-only, each its own future
   scoping choice.
@@ -62,6 +73,11 @@ capabilities, lifecycle capture, classification, and aggregation.
   and `tests/telemetry-show-fsharp-differential.test.mjs` (imports
   production's own `showTelemetry`/`TELEMETRY_ADAPTERS` directly from
   `tools/ros_telemetry.mjs` rather than reimplementing them).
+- F# telemetry-lifecycle real-effect tests:
+  `tests/Ros.Tests/TelemetryLifecycleTests.fs` and
+  `tests/work-telemetry-lifecycle-fsharp-differential.test.mjs` (a real
+  `work block`/`work resume`/`work complete` cycle proving the lifecycle
+  events, their metrics, and a real nonzero `time.blocked_ms`).
 
 ## Dependencies
 
@@ -91,7 +107,8 @@ capabilities, lifecycle capture, classification, and aggregation.
   cross-host coordination and signing are deferred. The installed Git adapter
   matches the F# contract but remains Node until distribution is authorized.
   F# parity is now real but partial: execution creation/finalization
-  (via `work start`/`work complete`) and the two read-only `telemetry
+  (via `work start`/`work complete`), lifecycle bookkeeping (via `work
+  block`/`work resume`), and the two read-only `telemetry
   adapters`/`telemetry show` commands are real effects; `telemetry
   summary`'s aggregation, every write-path telemetry-producer command, and
   both adapter commands remain Node-only, pending MIG-08's own further
