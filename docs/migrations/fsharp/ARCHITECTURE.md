@@ -905,6 +905,66 @@ special-cases an `EXE-`-prefixed value the way `showTelemetry` does, so
 passing an execution id here silently filters to nothing (matching that
 real quirk rather than "improving" on it).
 
+## Phase A / MIG-08, increment 12: `telemetry finalize` — the first write-path telemetry-producer command
+
+Increments 9-11 covered every read-only telemetry command; this increment
+opens the write-path list left open since increment 9, starting with
+`telemetry finalize [TARGET] [--quiet]` -- production's own manual
+finalization entry point, layered entirely on the same
+`FileTelemetryFinalizationRepository.finalizeOne` mutation that `work
+complete` already exercises (shipped, tested, and unchanged since the
+work-lifecycle slice), so this increment adds only target *resolution*,
+never a second finalization code path to keep in sync.
+
+`FileTelemetryFinalizationRepository.resolveFinalizeTarget` ports
+production's `resolveExecution` exactly, including a real quirk `telemetry
+show` does *not* share: a non-`EXE-`-prefixed target matches by
+`workItemId` regardless of the matched execution's status (`show`'s
+equivalent branch is state-blind too, but callers like `finalizeExecution`
+never pass `activeOnly`, so this is production's real behavior, not an
+oversight to fix). The three branches, matching `resolveExecution` exactly:
+
+- An `EXE-`-prefixed target matches by exact `executionId`.
+- Any other target matches by `workItemId`, any status.
+- No target reads `.ros/context/current.json`, filters to work items whose
+  `semanticState` is `active` or `blocked`, and requires exactly one match
+  -- zero or several both reject with production's exact message,
+  `"telemetry target is ambiguous; provide a work-item or execution ID"`.
+
+Every branch then sorts its candidates by `startedAt` ascending and takes
+the last (most recent); an empty candidate set after that rejects with
+production's exact `"telemetry execution '{target}' was not found"`
+(`"current"` substituted for a missing target, matching production's own
+`?? "current"`).
+
+`finalizeTarget` then reproduces production's exact pre-lock fast path: if
+the resolved execution's file already reads `status: "finalized"`, it is
+returned completely untouched -- no lock acquired at all. This is a real,
+intentional race-tolerant behavior in production (a second concurrent
+finalize call should not block on or re-mutate a call that already won),
+reproduced deliberately rather than "improved" into always taking the
+lock. Otherwise, `finalizeOne` (already lock-guarded, already
+double-checking "finalized" under its own lock) runs unchanged.
+
+One deliberate scope cut: production's `--input` flag drives real adapter
+ingestion (`adaptInput`/`ingestAdapted`) before finalization, folding
+externally-supplied telemetry into the execution. This CLI does not port
+adapter ingestion at all yet (it is its own future MIG-08 slice, shared
+with `adapter call`/`adapter publish`), so `--input` is rejected outright
+with `"telemetry finalize --input is not yet supported by this CLI"`
+(exit code 2) rather than silently accepted and ignored -- a loud gap, not
+a quiet one. `--quiet` (suppressing the printed record, matching
+production's own flag) is a one-line addition alongside it.
+
+`resolveFinalizeTarget` reads execution records directly off disk via a
+small private `readAllExecutionRecords` helper rather than reusing
+`FileTelemetryQueryRepository.readAll`: the finalization module compiles
+before the query module in `Ros.Infrastructure.fsproj`, and duplicating
+this small helper (following this codebase's own established convention
+of per-module helper duplication, already evidenced by both modules'
+independent private `stringField` implementations) was judged lower-risk
+than reordering the compile list for a single call site.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

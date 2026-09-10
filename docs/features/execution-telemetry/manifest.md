@@ -56,10 +56,22 @@ capabilities, lifecycle capture, classification, and aggregation.
   `none`, falling back to a plain "latest wins" default) and an
   interval-sweep timing summary (calendar span vs. total wall time vs.
   overlap), fed by `FileTelemetryQueryRepository.readSummaryExecutions`'s
-  JSON extraction/grouping. Every write-path telemetry-producer command
-  (`start`/`ingest`/`classify`/`record`/`finalize`) and both `adapter
-  call`/`adapter publish` commands remain Node-only, each its own future
-  scoping choice.
+  JSON extraction/grouping. A fourth increment ships the first write-path
+  telemetry-producer command, `telemetry finalize [TARGET]`
+  (`FileTelemetryFinalizationRepository.resolveFinalizeTarget`/
+  `finalizeTarget`): target resolution ports production's
+  `resolveExecution` exactly (an `EXE-`-prefixed target matches by exact
+  execution id; any other target matches by workItemId regardless of
+  status; no target requires exactly one active/blocked work item, else
+  production's exact ambiguity message), then reuses the already-tested
+  `finalizeOne` mutation unchanged -- no second finalization code path --
+  reproducing production's real pre-lock fast path (an already-finalized
+  resolved execution returns untouched, no lock acquired). `--input` (real
+  adapter ingestion) is deliberately not ported and rejected outright
+  rather than silently ignored. Every remaining write-path
+  telemetry-producer command (`start`/`ingest`/`classify`/`record`) and
+  both `adapter call`/`adapter publish` commands remain Node-only, each
+  its own future scoping choice.
 
 ## Interfaces
 
@@ -93,6 +105,18 @@ capabilities, lifecycle capture, classification, and aggregation.
   metrics, work-item filtering, an empty summary, and hand-written fixture
   executions proving `latest-per-session`/`none` byte-for-byte against
   production).
+- F# telemetry-finalize real-effect tests:
+  `tests/Ros.Tests/TelemetryFinalizeTargetTests.fs` (every
+  `resolveFinalizeTarget` branch: `EXE-` exact match, workItemId match
+  regardless of status, single/zero/multiple active-item resolution,
+  unknown-target rejection, already-finalized untouched) and
+  `tests/telemetry-finalize-fsharp-differential.test.mjs` (a real
+  `work start` + `telemetry finalize` cycle with cross-checked
+  deterministic metrics, workItemId-latest-regardless-of-status and
+  `EXE-`-prefixed resolution over hand-written fixture executions, both
+  ambiguity variants and the not-found rejection with production's exact
+  messages, the already-finalized byte-identical-file fast path, and an
+  F#-only assertion that `--input` is rejected with exit code 2).
 
 ## Dependencies
 
@@ -123,8 +147,9 @@ capabilities, lifecycle capture, classification, and aggregation.
   matches the F# contract but remains Node until distribution is authorized.
   F# parity is now real but partial: execution creation/finalization
   (via `work start`/`work complete`), lifecycle bookkeeping (via `work
-  block`/`work resume`), and all three read-only `telemetry
-  adapters`/`telemetry show`/`telemetry summary` commands are real
-  effects; every write-path telemetry-producer command and both adapter
-  commands remain Node-only, pending MIG-08's own further scoping
+  block`/`work resume`), all three read-only `telemetry
+  adapters`/`telemetry show`/`telemetry summary` commands, and manual
+  `telemetry finalize` (excluding `--input` adapter ingestion) are real
+  effects; every remaining write-path telemetry-producer command and both
+  adapter commands remain Node-only, pending MIG-08's own further scoping
   decisions.
