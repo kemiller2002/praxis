@@ -23,7 +23,7 @@ open System.Text.Json.Nodes
 let Version = "0.2.0-shadow"
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME]"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME]"
 
 let private parseRoot (arguments: string array) =
     let values = ResizeArray<string>(arguments)
@@ -893,6 +893,16 @@ let private telemetryRejectionMessage (workItemId: string) (rejection: Telemetry
     | TelemetryResolutionRejection.Ambiguous ids ->
         $"""multiple detached telemetry executions require explicit selection for '{workItemId}' ({String.Join(", ", ids)}), which this command does not yet support"""
 
+/// Mirrors production's own `fs.existsSync` check on every provided
+/// evidence path (`transitionUnlocked`'s `complete` branch): both
+/// `EvidenceIssue` cases surface identical text, since Node's
+/// `existsSync` swallows every underlying error (permission denied
+/// included) and reports a plain missing path either way.
+let private evidenceIssueMessage (issue: EvidenceIssue) =
+    match issue with
+    | EvidenceIssue.Missing evidence -> $"evidence path does not exist: {evidence.Path}"
+    | EvidenceIssue.Unavailable(evidence, _) -> $"evidence path does not exist: {evidence.Path}"
+
 /// Shared by every live-work transition effect (`work start`, `work
 /// resume`, ...): resolves a plan's telemetry against currently observable
 /// execution files, and whenever resolution halts on `PendingNewExecution`,
@@ -1147,6 +1157,150 @@ let private runWorkResume root arguments =
         eprintfn "ERROR work resume requires valid --id and --occurred-at"
         2
 
+/// Mirrors production `transition(root, "complete", ids, options)`
+/// (`tools/ros_cli.mjs`) -- the effect behind `./ros work complete`.
+/// Live-work only, like `resume`: an id absent from context is rejected.
+/// Git is always observed (production's own `observedGitPaths` gate is
+/// `action === "complete" || ...`), and required completion evidence
+/// comes from `ros.json`'s `workProtocol.completionEvidence`
+/// (`FileWorkConfigRepository.readCompletionEvidence`), verified against
+/// the real filesystem via `WorkOperations.planVerifiedContext`/
+/// `FileEvidenceRepository` -- matching production's own `fs.existsSync`
+/// check on every provided evidence path, not just the required evidence
+/// *types* the frozen decision layer already rejects on. When telemetry
+/// is enabled, finalizes every currently active telemetry execution for
+/// each completing id (`FileTelemetryFinalizationRepository.
+/// finalizeWorkExecutions`, production's own unconditional
+/// `finalizeWorkExecutions` call) before committing -- the shared
+/// `resolveContextTelemetryWithCreation`/`TelemetryPlanResolution`
+/// pipeline discards the `FinalizeExecutions` intent signal, so this is
+/// called directly rather than threaded through it. A research-type
+/// item's `--conclusion` (defaulting to `"inconclusive"`, matching
+/// production) is written via `FileWorkContextRepository.
+/// applyContextPlanWithConclusions`. Deliberately excludes
+/// `options.input`/adapter-ingestion (unreachable from any CLI path) and
+/// explicit `--identity-*`/`--execution-id` overrides, matching every
+/// prior increment.
+let private runWorkComplete root arguments =
+    let ids = optionValues "--id" arguments
+    let occurredAt = optionValue "--occurred-at" arguments
+    let providedEvidence = optionValues "--evidence" arguments |> List.map parseEvidence
+
+    match ids, occurredAt with
+    | (_ :: _), Some timestamp when providedEvidence |> List.forall Option.isSome ->
+        match RegistryLock.acquire root "work-protocol" RegistryLock.defaultSettings with
+        | Error failure ->
+            eprintfn "ERROR %s" failure.Message
+            1
+        | Ok lease ->
+            let result =
+                try
+                    match WorkStateTransaction.recover root with
+                    | Error failure -> Error failure.Message
+                    | Ok() ->
+                        match BacklogStateTransaction.recover root with
+                        | Error failure -> Error failure.Message
+                        | Ok() ->
+                            match readWorkContext root with
+                            | Error message -> Error message
+                            | Ok context ->
+                                let repositoryId = FileWorkConfigRepository.readRepositoryId root
+
+                                match realObservedGitPaths root with
+                                | Error failure -> Error(formatGitFailure failure)
+                                | Ok observedGitPaths ->
+                                    let meaningfulChangedPaths =
+                                        PathFilter.meaningfulPaths (FileWorkConfigRepository.readPathFilterConfig root) observedGitPaths
+
+                                    let actor =
+                                        optionValue "--actor" arguments
+                                        |> Option.orElse (Environment.GetEnvironmentVariable "ROS_ACTOR" |> Option.ofObj)
+                                        |> Option.orElse (FileWorkContextRepository.readExistingActor root)
+                                        |> Option.defaultValue "unknown"
+
+                                    let defaultRequiredEvidence, requiredEvidenceByType =
+                                        FileWorkConfigRepository.readCompletionEvidence root
+
+                                    let telemetryEnabled = FileWorkConfigRepository.readTelemetryEnabled root
+
+                                    let request: WorkContextPlanRequest =
+                                        { Context = context
+                                          Action = WorkAction.Complete
+                                          WorkItemIds = ids
+                                          NewItemType = "task"
+                                          TargetLocalState = defaultLocalState WorkAction.Complete
+                                          BlockReason = None
+                                          DefaultRequiredEvidence = defaultRequiredEvidence
+                                          RequiredEvidenceByType = requiredEvidenceByType
+                                          ProvidedEvidence = providedEvidence |> List.choose id
+                                          Repository = repositoryId
+                                          ProtocolVersion = FileWorkConfigRepository.readProtocolVersion root
+                                          Actor = actor
+                                          OccurredAt = timestamp
+                                          MeaningfulChangedPaths = meaningfulChangedPaths
+                                          ObservedGitPaths = observedGitPaths
+                                          TelemetryEnabled = telemetryEnabled }
+
+                                    match WorkOperations.planVerifiedContext (FileEvidenceRepository.create root) request with
+                                    | VerifiedWorkContextPlanOutcome.ContextRejected rejection -> Error(workContextRejectionMessage rejection)
+                                    | VerifiedWorkContextPlanOutcome.EvidenceRejected issues ->
+                                        match issues with
+                                        | issue :: _ -> Error(evidenceIssueMessage issue)
+                                        | [] -> Error "evidence rejected"
+                                    | VerifiedWorkContextPlanOutcome.Planned plan ->
+                                        match resolveContextTelemetryWithCreation root [] (ids.Length + 1) plan with
+                                        | Error message -> Error message
+                                        | Ok resolvedPlan ->
+                                            let finalizeResult =
+                                                if telemetryEnabled then
+                                                    ids
+                                                    |> List.fold
+                                                        (fun acc workItemId ->
+                                                            match acc with
+                                                            | Error _ -> acc
+                                                            | Ok() -> FileTelemetryFinalizationRepository.finalizeWorkExecutions root workItemId)
+                                                        (Ok())
+                                                else
+                                                    Ok()
+
+                                            match finalizeResult with
+                                            | Error message -> Error message
+                                            | Ok() ->
+                                                let conclusion =
+                                                    optionValue "--conclusion" arguments |> Option.defaultValue "inconclusive"
+
+                                                let conclusions =
+                                                    resolvedPlan.ItemPlans
+                                                    |> List.filter (fun itemPlan -> itemPlan.Item.WorkType = "research")
+                                                    |> List.map (fun itemPlan -> itemPlan.Item.Id, conclusion)
+                                                    |> Map.ofList
+
+                                                FileWorkContextRepository.applyContextPlanWithConclusions
+                                                    root
+                                                    repositoryId
+                                                    conclusions
+                                                    resolvedPlan
+                with error ->
+                    lease.Release() |> ignore
+                    reraise ()
+
+            match lease.Release(), result with
+            | Error releaseFailure, Ok _ ->
+                eprintfn "ERROR %s" releaseFailure.Message
+                1
+            | _, Error message ->
+                eprintfn "ERROR %s" message
+                1
+            | Ok(), Ok(writtenItems, eventIds) ->
+                printf "%s" (renderWorkTransitionOutput writtenItems eventIds)
+                0
+    | [], _ ->
+        eprintfn "ERROR complete requires at least one work-item ID"
+        2
+    | _ ->
+        eprintfn "ERROR work complete requires valid --id, --occurred-at, and TYPE=PATH evidence"
+        2
+
 let private readRawQueueItem root (id: string) : JsonObject option =
     let path = Path.Combine(root, ".ros", "work", "queue.json")
 
@@ -1358,6 +1512,7 @@ let private dispatch root arguments =
     | "work" :: "start" :: rest -> runWorkStart root rest
     | "work" :: "resume" :: rest -> runWorkResume root rest
     | "work" :: "block" :: rest -> runWorkBlock root rest
+    | "work" :: "complete" :: rest -> runWorkComplete root rest
     | _ ->
         eprintfn "%s" usage
         2

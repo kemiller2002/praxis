@@ -64,14 +64,22 @@ module FileWorkContextRepository =
         values |> List.iter (fun value -> array.Add(JsonValue.Create value: JsonNode))
         array
 
-    /// Mutates only the fields production's own `begin` transition mutates
-    /// on a live-work item: `type`/`state`/`semanticState`/`evidence` for a
-    /// brand-new item, `state`/`semanticState`/`updatedAt` for an existing
-    /// one, and `telemetryExecutionIds` only when non-empty (production
-    /// itself never sets the field at all when telemetry is disabled).
-    /// Every other field already on an existing item (a research item's
-    /// `conclusion`, for instance) is left untouched.
-    let private applyItem (items: JsonArray) (item: LiveWorkItem) : unit =
+    /// Mutates only the fields production's own transitions mutate on a
+    /// live-work item: `type`/`state`/`semanticState`/`evidence` for a
+    /// brand-new item; `state`/`semanticState`/`evidence`/`updatedAt` for an
+    /// existing one (production's own `item.evidence = evidence` runs on
+    /// every `complete`, and is a harmless no-op re-write of the same value
+    /// for every other action, since only `complete`'s own plan ever changes
+    /// it); `completedAt`/`blockReason` only when set (production sets
+    /// `blockReason` on `block` and `completedAt` on `complete`, and neither
+    /// is ever cleared by a later transition -- both persist as stale fields
+    /// for the rest of the item's life); `conclusion` only for a research
+    /// item's `complete` (via the caller-supplied `conclusions` map, since
+    /// the typed `LiveWorkItem` does not model it at all); and
+    /// `telemetryExecutionIds` only when non-empty (production itself never
+    /// sets the field at all when telemetry is disabled). Every other field
+    /// already on an existing item is left untouched.
+    let private applyItem (conclusions: Map<string, string>) (items: JsonArray) (item: LiveWorkItem) : unit =
         let existing =
             items
             |> Seq.choose (fun node ->
@@ -94,16 +102,20 @@ module FileWorkContextRepository =
                 fresh
 
         if existing.IsSome then
+            node["evidence"] <- evidenceArrayNode item.Evidence
             node["state"] <- JsonValue.Create item.LocalState
             node["semanticState"] <- JsonValue.Create(semanticStateCode item.SemanticState)
 
         item.UpdatedAt |> Option.iter (fun updatedAt -> node["updatedAt"] <- JsonValue.Create updatedAt)
 
-        // Mirrors production exactly: `item.blockReason = options.reason` is
-        // only ever assigned during a `block` transition and is never
-        // cleared by any later transition (including `resume`) -- once set,
-        // it persists as a stale field for the rest of the item's life.
+        // Mirrors production exactly: `item.blockReason = options.reason` and
+        // `item.completedAt = now` are each only ever assigned during their
+        // own transition (`block`, `complete`) and are never cleared by any
+        // later transition (including `resume`) -- once set, each persists
+        // as a stale field for the rest of the item's life.
         item.BlockReason |> Option.iter (fun reason -> node["blockReason"] <- JsonValue.Create reason)
+        item.CompletedAt |> Option.iter (fun completedAt -> node["completedAt"] <- JsonValue.Create completedAt)
+        conclusions |> Map.tryFind item.Id |> Option.iter (fun conclusion -> node["conclusion"] <- JsonValue.Create conclusion)
 
         if not item.TelemetryExecutionIds.IsEmpty then
             node["telemetryExecutionIds"] <- stringArrayNode item.TelemetryExecutionIds
@@ -207,14 +219,19 @@ module FileWorkContextRepository =
     /// matching production's own returned `events` list, this includes an
     /// id even when the event line itself turned out to already be present
     /// in the log (recorded once, reported every time it is produced).
-    let applyContextPlan (root: string) (repositoryId: string) (plan: WorkContextPlan) : Result<JsonArray * string list, string> =
+    let applyContextPlanWithConclusions
+        (root: string)
+        (repositoryId: string)
+        (conclusions: Map<string, string>)
+        (plan: WorkContextPlan)
+        : Result<JsonArray * string list, string> =
         try
             match loadOrCreateContextNode root repositoryId with
             | Error message -> Error message
             | Ok contextNode ->
                 match contextNode["workItems"] with
                 | :? JsonArray as items ->
-                    plan.ItemPlans |> List.iter (fun itemPlan -> applyItem items itemPlan.Item)
+                    plan.ItemPlans |> List.iter (fun itemPlan -> applyItem conclusions items itemPlan.Item)
 
                     contextNode["protocolVersion"] <- JsonValue.Create plan.ProtocolVersion
                     contextNode["repository"] <- JsonValue.Create plan.Repository
@@ -248,3 +265,8 @@ module FileWorkContextRepository =
                 | _ -> Error "context/current.json 'workItems' must be an array"
         with error ->
             Error error.Message
+
+    /// `applyContextPlanWithConclusions` with no research-conclusion writes
+    /// -- every action but `complete` (on a research item) needs this.
+    let applyContextPlan (root: string) (repositoryId: string) (plan: WorkContextPlan) : Result<JsonArray * string list, string> =
+        applyContextPlanWithConclusions root repositoryId Map.empty plan

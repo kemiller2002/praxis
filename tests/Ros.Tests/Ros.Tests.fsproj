@@ -22,6 +22,7 @@
     <Compile Include="BacklogTests.fs" />
     <Compile Include="TelemetryTests.fs" />
     <Compile Include="TelemetryResolutionTests.fs" />
+    <Compile Include="ChangeSummaryTests.fs" />
     <Compile Include="PathFilterTests.fs" />
     <Compile Include="WorkAttributionTests.fs" />
     <Compile Include="QueueValidationTests.fs" />
