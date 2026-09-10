@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 39,
+  "nextSeq": 40,
   "items": [
     {
       "id": "WI-0001",
@@ -751,6 +751,20 @@
       "attachments": [],
       "createdAt": "2026-09-10T20:21:30.550Z",
       "updatedAt": "2026-09-10T20:21:33.301Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0039",
+      "title": "Re-run F# command-surface parity inventory (EV-ROS-2026-A046): confirms MIG-08 fully closed",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-10T20:26:42.474Z",
+      "updatedAt": "2026-09-10T20:26:52.787Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
