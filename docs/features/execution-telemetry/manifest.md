@@ -167,11 +167,28 @@ capabilities, lifecycle capture, classification, and aggregation.
   `identity.model` resolves from the *last* record (searched in reverse)
   carrying a truthy `server_model` or `model`, regardless of whether that
   record was itself "completed" -- confirmed against real Node with a
-  fixture where the identity-bearing record is not itself a turn. Every
-  other real adapter name (`anthropic-claude-statusline`,
-  `anthropic-claude-hook`, `anthropic-claude-otel`, `google-gemini-hook`,
-  `google-gemini-otel`, `github-copilot-hook`, `github-copilot-otel`,
-  `otel-json`) remains its own future scoping choice.
+  fixture where the identity-bearing record is not itself a turn.
+
+  A tenth increment ships the three hook adapters --
+  `anthropic-claude-hook`, `google-gemini-hook`, `github-copilot-hook` --
+  all resolving to one shared `FileTelemetryFinalizationRepository.adaptHook`
+  function parameterized only by identity provider/runtime, matching
+  production's own one-function/three-name shape. Unlike
+  `adaptOpenAICodex`'s fixed six-field capability declaration, `adaptHook`'s
+  capabilities are derived strictly 1:1 from whichever metrics actually
+  fired: `hook_event_name` (falling back to `hookEventName`/`event`) is
+  matched, case-insensitively, against five independent (non-exclusive)
+  precompiled regex patterns. PostToolUse/AfterTool/ToolResult contributes
+  `tool.calls`, a `toolCategoryMetric`-bucketed metric (11 substring-matched
+  categories, falling back to `tool.external_service_calls`), and a
+  conditional `tool.failures` when `error`/`tool_response.error` is truthy
+  or `success` is explicitly `false`; SubagentStart, PostCompact,
+  PermissionRequest, and PermissionDenied each contribute exactly one
+  metric of their own. Exactly one `runtime.{hookName}` event is emitted
+  per call regardless of how many patterns matched. Every other real
+  adapter name (`anthropic-claude-statusline`, `anthropic-claude-otel`,
+  `google-gemini-otel`, `github-copilot-otel`, `otel-json`) remains its
+  own future scoping choice.
 
 ## Interfaces
 
@@ -272,6 +289,16 @@ capabilities, lifecycle capture, classification, and aggregation.
   (identity/capabilities/metrics/events compared structurally against
   production's own `ingestTelemetry`/`adaptOpenAICodex`, the reverse-order
   identity resolution, and unknown-field discovery).
+- F# telemetry-ingest hook-adapter real-effect tests:
+  `tests/Ros.Tests/TelemetryIngestHookTests.fs` (the PostToolUse
+  tool-use/tool-category/identity mapping, the truthy-error and no-error
+  `tool.failures` branches, SubagentStart's `agent.subagents_spawned`/
+  `agentId`, PostCompact/PermissionRequest/PermissionDenied's own distinct
+  metrics, and the single-event-per-call invariant) and
+  `tests/telemetry-ingest-hook-fsharp-differential.test.mjs` (all three
+  adapter names -- PostToolUse-with-error, SubagentStart,
+  PermissionDenied -- plus the no-error PostToolUse case, compared
+  byte-for-byte against production's own `ingestTelemetry`/`adaptHook`).
 
 ## Dependencies
 
@@ -305,11 +332,14 @@ capabilities, lifecycle capture, classification, and aggregation.
   block`/`work resume`), all three read-only `telemetry
   adapters`/`telemetry show`/`telemetry summary` commands, `telemetry
   finalize` (excluding `--input` adapter ingestion), `telemetry record`,
-  `telemetry ingest` (`generic` and `openai-codex` adapters), `telemetry
+  `telemetry ingest` (`generic`, `openai-codex`, and the three hook
+  adapters -- `anthropic-claude-hook`/`google-gemini-hook`/
+  `github-copilot-hook`), `telemetry
   classify`, and `telemetry start` (excluding `--execution-id` and the
   eleven identity-override flags) are real effects; every other
-  non-generic adapter's provider-specific field mapping remains Node-only,
-  pending MIG-08's own further scoping decisions. `adapter call`/`adapter
+  non-generic adapter's provider-specific field mapping (the OTel family,
+  `anthropic-claude-statusline`) remains Node-only, pending MIG-08's own
+  further scoping decisions. `adapter call`/`adapter
   publish` are owned by the work-lifecycle manifest, not this one -- see
   its own Known gaps
   for their status.

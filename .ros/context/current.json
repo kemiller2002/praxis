@@ -1413,11 +1413,40 @@
         "EXE-20260910T172815930Z-1cab9cc0"
       ],
       "completedAt": "2026-09-10T17:28:19.606Z"
+    },
+    {
+      "id": "WI-0035",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileTelemetryFinalizationRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/Program.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/TelemetryIngestHookTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/telemetry-ingest-hook-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-10T17:46:04.897Z",
+      "telemetryExecutionIds": [
+        "EXE-20260910T174556590Z-c51be5d7"
+      ],
+      "completedAt": "2026-09-10T17:46:04.897Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-10T17:28:19.606Z",
+  "updatedAt": "2026-09-10T17:46:04.897Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

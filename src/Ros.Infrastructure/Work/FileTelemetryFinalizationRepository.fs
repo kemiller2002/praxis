@@ -36,6 +36,21 @@ module FileTelemetryFinalizationRepository =
             Some(value.GetValue<bool>())
         | _ -> None
 
+    /// A JS-truthiness approximation for a field on an arbitrary caller-
+    /// supplied JSON object, shared by every real-adapter mapping: absent,
+    /// JSON `false`, and an empty string are falsy; everything else
+    /// (objects, arrays, non-zero numbers, non-empty strings, `true`) is
+    /// truthy. Realistic adapter input never relies on JS's zero-is-falsy
+    /// rule for these particular fields (always an object, a non-empty
+    /// identifier string, or absent), so that one divergence from full JS
+    /// truthiness is left unreproduced.
+    let private hasTruthyField (node: JsonObject) (name: string) : bool =
+        match node[name] with
+        | null -> false
+        | :? JsonValue as v when v.GetValueKind() = JsonValueKind.False -> false
+        | :? JsonValue as v when v.GetValueKind() = JsonValueKind.String -> v.GetValue<string>() <> ""
+        | _ -> true
+
     let private intField (node: JsonObject) (name: string) : int option =
         match node[name] with
         | :? JsonValue as value when value.GetValueKind() = JsonValueKind.Number ->
@@ -1035,13 +1050,6 @@ module FileTelemetryFinalizationRepository =
                 | _ -> [ single ]
             | _ -> []
 
-        let hasTruthyField (entry: JsonObject) (name: string) =
-            match entry[name] with
-            | null -> false
-            | :? JsonValue as v when v.GetValueKind() = JsonValueKind.False -> false
-            | :? JsonValue as v when v.GetValueKind() = JsonValueKind.String -> v.GetValue<string>() <> ""
-            | _ -> true
-
         let completed = records |> List.filter (fun entry -> stringField entry "type" = Some "turn.completed" || hasTruthyField entry "usage")
 
         let runtimeSource =
@@ -1164,6 +1172,209 @@ module FileTelemetryFinalizationRepository =
           SchemaVersion = (match input with :? JsonObject as o -> (match o["schemaVersion"] with null -> null | v -> v) | _ -> null)
           SnapshotId = None
           CollectedAt = collectedAt
+          Source = runtimeSource }
+
+    /// Precompiled once, mirroring `rawRedactedKeyPattern`'s own convention,
+    /// rather than reconstructed on every `toolCategoryMetric`/`adaptHook`
+    /// call.
+    let private toolCategoryPatterns =
+        [ Regex(@"bash|shell|command|terminal|powershell"), "tool.shell_commands"
+          Regex(@"read|view|open_file"), "tool.file_reads"
+          Regex(@"write|edit|patch|replace|create_file"), "tool.file_writes"
+          Regex(@"search|grep|find|glob"), "tool.searches"
+          Regex(@"web|browser|fetch|chrome"), "tool.web_activity"
+          Regex(@"git|repository"), "tool.repository_operations"
+          Regex(@"test"), "tool.test_executions"
+          Regex(@"build|compile"), "tool.build_executions"
+          Regex(@"deploy"), "tool.deployments"
+          Regex(@"database|sql|query"), "tool.database_operations"
+          Regex(@"api|http|mcp"), "tool.api_operations" ]
+
+    let private hookNamePattern (pattern: string) = Regex(pattern, RegexOptions.IgnoreCase)
+    let private postToolUsePattern = hookNamePattern "posttooluse|aftertool|toolresult"
+    let private subagentStartPattern = hookNamePattern "subagentstart"
+    let private postCompactPattern = hookNamePattern "postcompact"
+    let private permissionRequestPattern = hookNamePattern "permissionrequest"
+    let private permissionDeniedPattern = hookNamePattern "permissiondenied"
+
+    /// Mirrors production `toolCategoryMetric`: buckets a tool name into
+    /// one of eleven categories by substring match (first pattern wins, in
+    /// this exact order), or a general fallback when nothing matches.
+    let private toolCategoryMetric (toolName: string) : string =
+        let value = toolName.ToLowerInvariant()
+
+        toolCategoryPatterns
+        |> List.tryPick (fun (pattern, category) -> if pattern.IsMatch value then Some category else None)
+        |> Option.defaultValue "tool.external_service_calls"
+
+    /// Mirrors production `adaptHook`, shared by all three lifecycle-hook
+    /// adapters (`anthropic-claude-hook`, `google-gemini-hook`,
+    /// `github-copilot-hook`), distinguished only by `identityDefaults`
+    /// (`provider`/`runtime`). Always emits exactly one lifecycle event
+    /// (`runtime.<hook-name-kebab-lowercased>`); metrics are conditional on
+    /// independent (not mutually exclusive) regex matches against the hook
+    /// event name, matching production's own independent `if` checks
+    /// exactly. Unlike `adaptOpenAICodex`'s fixed six-field capability
+    /// declaration, every capability here is derived 1:1 from whichever
+    /// metrics actually fired -- there is no "field recognized but absent"
+    /// declaration for a hook adapter at all.
+    let private adaptHook (input: JsonNode) (collectedAt: string) (identityProvider: string) (identityRuntime: string) : AdaptedSnapshot =
+        let inputObject = match input with :? JsonObject as o -> Some o | _ -> None
+
+        let field (name: string) : JsonObject -> JsonNode option =
+            fun o -> match o[name] with null -> None | v -> Some v
+
+        let stringOf (name: string) : string option =
+            inputObject |> Option.bind (fun o -> stringField o name)
+
+        let hookName =
+            stringOf "hook_event_name" |> Option.orElse (stringOf "hookEventName") |> Option.orElse (stringOf "event") |> Option.defaultValue "unknown"
+
+        let toolName =
+            stringOf "tool_name"
+            |> Option.orElse (stringOf "toolName")
+            |> Option.orElse (
+                inputObject
+                |> Option.bind (fun o -> field "tool" o)
+                |> Option.bind (function :? JsonObject as t -> stringField t "name" | _ -> None)
+            )
+            |> Option.defaultValue "unknown"
+
+        let at = (inputObject |> Option.bind (fun o -> stringField o "timestamp")) |> Option.defaultValue collectedAt
+
+        let runtimeSource =
+            let node = JsonObject()
+            node["type"] <- JsonValue.Create "runtime-hook"
+            node["name"] <- JsonValue.Create $"{identityRuntime}-hook"
+            node["mechanism"] <- JsonValue.Create "lifecycle-hook-json"
+            node["provider"] <- JsonValue.Create identityProvider
+            node["runtime"] <- JsonValue.Create identityRuntime
+            node
+
+        let plainMetric metricId (value: float) : JsonObject =
+            let node = JsonObject()
+            node["id"] <- JsonValue.Create(metricId: string)
+            node["value"] <- JsonValue.Create value
+            node["collectedAt"] <- JsonValue.Create(at: string)
+            node["source"] <- runtimeSource.DeepClone()
+            node
+
+        let toolScopedMetric metricId : JsonObject =
+            let node = plainMetric metricId 1.0
+            node["scope"] <- JsonValue.Create "tool"
+            let dimensions = JsonObject()
+            dimensions["toolType"] <- JsonValue.Create(toolName: string)
+            node["dimensions"] <- dimensions
+            node
+
+        let metrics = ResizeArray<JsonObject>()
+        let hookNameLower = hookName.ToLowerInvariant()
+
+        if postToolUsePattern.IsMatch hookNameLower then
+            metrics.Add(toolScopedMetric "tool.calls")
+            metrics.Add(toolScopedMetric (toolCategoryMetric toolName))
+
+            let toolResponseError =
+                inputObject
+                |> Option.bind (fun o -> field "tool_response" o)
+                |> Option.map (function
+                    | :? JsonObject as r -> hasTruthyField r "error"
+                    | _ -> false)
+                |> Option.defaultValue false
+
+            let successIsFalse =
+                inputObject |> Option.bind (fun o -> boolField o "success") = Some false
+
+            let hasError = (inputObject |> Option.map (fun o -> hasTruthyField o "error") |> Option.defaultValue false) || toolResponseError || successIsFalse
+
+            if hasError then
+                metrics.Add(toolScopedMetric "tool.failures")
+
+        if subagentStartPattern.IsMatch hookNameLower then
+            metrics.Add(plainMetric "agent.subagents_spawned" 1.0)
+
+        if postCompactPattern.IsMatch hookNameLower then
+            metrics.Add(plainMetric "context.compactions" 1.0)
+
+        if permissionRequestPattern.IsMatch hookNameLower then
+            metrics.Add(plainMetric "agent.approvals_requested" 1.0)
+
+        if permissionDeniedPattern.IsMatch hookNameLower then
+            metrics.Add(plainMetric "agent.approvals_denied" 1.0)
+
+        let capabilities =
+            metrics
+            |> Seq.map (fun m ->
+                let node = JsonObject()
+                node["metricId"] <- (stringField m "id" |> Option.get |> JsonValue.Create :> JsonNode)
+                node["status"] <- JsonValue.Create "supported-observed"
+                node["reason"] <- JsonValue.Create "provider field observed"
+                node["source"] <- runtimeSource.DeepClone()
+                node["discoveredAt"] <- JsonValue.Create(stringField m "collectedAt" |> Option.get: string)
+                node)
+            |> List.ofSeq
+
+        let eventTypeSuffix = Regex.Replace(hookName, @"[^A-Za-z0-9]+", "-").ToLowerInvariant()
+
+        let event =
+            let node = JsonObject()
+            node["type"] <- JsonValue.Create $"runtime.{eventTypeSuffix}"
+            node["occurredAt"] <- JsonValue.Create(at: string)
+            node["source"] <- runtimeSource.DeepClone()
+            node
+
+        let identity = JsonObject()
+        identity["provider"] <- JsonValue.Create identityProvider
+        identity["runtime"] <- JsonValue.Create identityRuntime
+
+        identity["sessionId"] <-
+            match stringOf "session_id" with
+            | Some s -> JsonValue.Create s
+            | None -> null
+
+        let model =
+            match inputObject |> Option.bind (fun o -> field "model" o) with
+            | Some(:? JsonObject as m) -> stringField m "id"
+            | Some(:? JsonValue as v) when v.GetValueKind() = JsonValueKind.String -> Some(v.GetValue<string>())
+            | _ -> None
+
+        identity["model"] <-
+            match model with
+            | Some m -> JsonValue.Create m
+            | None -> null
+
+        identity["agentId"] <-
+            match stringOf "agent_type" with
+            | Some s -> JsonValue.Create s
+            | None -> null
+
+        { Identity = identity
+          Capabilities = capabilities
+          Metrics = metrics |> List.ofSeq
+          Events = [ event ]
+          Classification = None
+          Scope = None
+          QualitySignals = []
+          Links = None
+          Raw = input
+          MappedFields =
+            [ "hook_event_name"
+              "hookEventName"
+              "event"
+              "tool_name"
+              "toolName"
+              "tool.name"
+              "timestamp"
+              "session_id"
+              "model"
+              "model.id"
+              "agent_type"
+              "error"
+              "tool_response.error"
+              "success" ]
+          SchemaVersion = (inputObject |> Option.bind (fun o -> match o["schemaVersion"] with null -> None | v -> Some v) |> Option.defaultValue null)
+          SnapshotId = None
+          CollectedAt = at
           Source = runtimeSource }
 
     let private rawRedactedKeyPattern =
@@ -1854,9 +2065,12 @@ module FileTelemetryFinalizationRepository =
     /// target both reject before anything is touched. Every other real
     /// adapter name is its own future MIG-08 slice.
     let ingestTarget (root: string) (target: string option) (adapter: string) (inputText: string) : Result<JsonObject, string> =
+        let supportedAdapters =
+            [ "generic"; "openai-codex"; "anthropic-claude-hook"; "google-gemini-hook"; "github-copilot-hook" ]
+
         if not (Ros.Domain.Telemetry.TelemetryAdapters.all |> List.contains adapter) then
             Error $"unknown telemetry adapter '{adapter}'"
-        elif adapter <> "generic" && adapter <> "openai-codex" then
+        elif not (supportedAdapters |> List.contains adapter) then
             Error $"telemetry ingest --adapter '{adapter}' is not yet supported by this CLI"
         else
             match parseIngestInput inputText with
@@ -1865,10 +2079,12 @@ module FileTelemetryFinalizationRepository =
                 let collectedAt = FileTelemetryExecutionRepository.nowIso ()
 
                 let adapted =
-                    if adapter = "openai-codex" then
-                        adaptOpenAICodex inputNode collectedAt
-                    else
-                        adaptGeneric inputNode collectedAt
+                    match adapter with
+                    | "openai-codex" -> adaptOpenAICodex inputNode collectedAt
+                    | "anthropic-claude-hook" -> adaptHook inputNode collectedAt "anthropic" "claude-code"
+                    | "google-gemini-hook" -> adaptHook inputNode collectedAt "google" "gemini-cli"
+                    | "github-copilot-hook" -> adaptHook inputNode collectedAt "github" "copilot"
+                    | _ -> adaptGeneric inputNode collectedAt
 
                 // Mirrors production `ingestTelemetry`'s own `adapted.snapshotId
                 // ??= \`SNAP-${digest({ adapter, input })}\``, computed here

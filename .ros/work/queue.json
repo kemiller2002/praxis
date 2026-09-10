@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 35,
+  "nextSeq": 36,
   "items": [
     {
       "id": "WI-0001",
@@ -695,6 +695,20 @@
       "attachments": [],
       "createdAt": "2026-09-10T17:28:13.141Z",
       "updatedAt": "2026-09-10T17:28:15.837Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0035",
+      "title": "F# telemetry ingest hook adapters: Phase A/MIG-08 increment 12",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-10T17:45:51.829Z",
+      "updatedAt": "2026-09-10T17:45:56.494Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
