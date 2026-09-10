@@ -707,8 +707,10 @@
       "docs/migrations/fsharp/STATUS.md"
     ],
     "research_area": "repository-operating-system",
-    "status": "accepted",
-    "superseded_by": [],
+    "status": "superseded",
+    "superseded_by": [
+      "EV-ROS-2026-A045"
+    ],
     "supersedes": [],
     "supports": [
       "DF-ROS-2026-A028"
@@ -722,7 +724,7 @@
       "sde"
     ],
     "title": "F# shadow CLI versus production ./ros command-surface parity inventory",
-    "updated": "2026-09-09",
+    "updated": "2026-09-10",
     "version": "1.0.0"
   },
   {
@@ -756,6 +758,45 @@
     ],
     "title": "ROS telemetry domain model inventory and MIG-08 scope correction",
     "updated": "2026-09-09",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-10",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A045",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A045--fsharp-node-command-parity-inventory-rerun.md",
+    "related_documents": [
+      "DF-ROS-2026-A027",
+      "EV-ROS-2026-A043",
+      "EV-ROS-2026-A044",
+      "docs/migrations/fsharp/ARCHITECTURE.md",
+      "docs/migrations/fsharp/ROADMAP.md",
+      "docs/migrations/fsharp/STATUS.md",
+      "docs/migrations/fsharp/TRACEABILITY.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [
+      "EV-ROS-2026-A043"
+    ],
+    "supports": [
+      "DF-ROS-2026-A028"
+    ],
+    "tags": [
+      "fsharp",
+      "migration",
+      "parity",
+      "cli",
+      "distribution",
+      "sde"
+    ],
+    "title": "F# shadow CLI versus production ./ros command-surface parity inventory (re-run)",
+    "updated": "2026-09-10",
     "version": "1.0.0"
   }
 ]

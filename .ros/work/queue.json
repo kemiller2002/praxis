@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 24,
+  "nextSeq": 25,
   "items": [
     {
       "id": "WI-0001",
@@ -541,6 +541,20 @@
       "attachments": [],
       "createdAt": "2026-09-10T09:19:55.690Z",
       "updatedAt": "2026-09-10T09:19:58.311Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0024",
+      "title": "Re-run EV-ROS-2026-A043 command-surface parity inventory",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-10T09:39:02.079Z",
+      "updatedAt": "2026-09-10T09:39:04.849Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
