@@ -25,6 +25,7 @@ let main _ =
     @ WorkAttachmentEffectTests.tests
     @ TelemetryIdentityTests.tests
     @ WorkContextEffectTests.tests
+    @ WorkContextViewTests.tests
     @ TelemetryQueryTests.tests
     @ TelemetryLifecycleTests.tests
     @ TelemetrySummaryTests.tests
