@@ -1402,7 +1402,54 @@ Every other real adapter name (`anthropic-claude-statusline`,
 `otel-json`) remains its own future MIG-08 slice, still rejected outright
 (exit 2) exactly as before.
 
-## `work resume`'s `parentExecutionId`: a corrected, not replicated, production defect
+## Phase A / MIG-08, increment 20: the three hook adapters — capabilities derived from what fired, not a fixed declaration
+
+`anthropic-claude-hook`, `google-gemini-hook`, and `github-copilot-hook`
+are three CLI-visible adapter names that all resolve to production's
+single `adaptHook` function, parameterized only by an identity
+provider/runtime pair (`anthropic`/`claude-code`, `google`/`gemini-cli`,
+`github`/`copilot` respectively) — the same one-function/three-name
+shape production itself uses (`adaptInput`'s own three `if` branches
+each call `adaptHook` with different `identityDefaults`). The F# port
+mirrors this with a single `adaptHook` taking `identityProvider`/
+`identityRuntime` as plain string parameters and a three-way match in
+`ingestTarget`'s dispatch, rather than three near-duplicate functions.
+
+Unlike `adaptOpenAICodex`'s fixed six-field capability declaration
+(increment 19, above), `adaptHook`'s capabilities are derived strictly
+1:1 from whichever metrics actually fired for a given payload — there is
+no "recognized but unavailable" declaration at all in this adapter. The
+hook payload's `hook_event_name` (falling back to `hookEventName`, then
+`event`) is matched, case-insensitively, against five independent
+(non-exclusive — more than one can match the same payload) precompiled
+regex patterns: `posttooluse|aftertool|toolresult`, `subagentstart`,
+`postcompact`, `permissionrequest`, `permissiondenied`. A tool-use match
+always contributes two metrics together — `tool.calls` and a
+`toolCategoryMetric`-bucketed metric (`tool_name` matched against 11
+substring patterns — shell/file-read/file-write/search/web/repository/
+test/build/deploy/database/api — first match wins, falling back to
+`tool.external_service_calls`) — plus a third, conditional
+`tool.failures` metric only when the payload's own `error` field is
+truthy, its `tool_response.error` is truthy, or `success` is explicitly
+`false`. Every other pattern match contributes exactly one metric
+(`agent.subagents_spawned`, `context.compactions`,
+`agent.approvals_requested`, `agent.approvals_denied`). Regardless of how
+many of the five patterns match, exactly one `runtime.{hookName}` event
+is emitted per call (the hook name lowercased and non-alphanumeric runs
+collapsed to `-`), matching production's own single-event-per-call
+shape.
+
+Identity resolves the same way for all three adapter names: `sessionId`
+from `session_id`, `model` from `model.id` when `model` is an object or
+`model` itself when it is a string, `agentId` from `agent_type` — each
+`null` when absent, matching production's own `??`-chained field
+resolution exactly. Confirmed against real Node with differential
+fixtures covering all three adapter names and four of the five hook-name
+patterns (`PostToolUse` with and without an error, `SubagentStart`,
+`PermissionDenied`), each producing byte-identical identity, capability,
+metric, and event sets.
+
+## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for
 the final two live-transition projections, in their characterized order:

@@ -1812,10 +1812,13 @@ let private runTelemetryRecord root (arguments: string list) =
 /// `tools/ros_telemetry.mjs`) -- MIG-08's sixth increment shipped the
 /// `generic` adapter (the one with zero provider-specific field mapping);
 /// a later increment added `openai-codex`, the first real provider-specific
-/// field mapping ported. Every other adapter name production itself
-/// recognizes remains its own future MIG-08 slice and is rejected outright
-/// (exit 2) rather than silently treated as generic; a name production
-/// itself would not recognize gets production's own exact error (exit 1).
+/// field mapping ported; a further increment added the three hook adapters
+/// (`anthropic-claude-hook`/`google-gemini-hook`/`github-copilot-hook`),
+/// sharing one `adaptHook` parameterized only by identity provider/runtime.
+/// Every other adapter name production itself recognizes remains its own
+/// future MIG-08 slice and is rejected outright (exit 2) rather than
+/// silently treated as generic; a name production itself would not
+/// recognize gets production's own exact error (exit 1).
 /// `--input`'s file (or `-` for stdin) is read and byte-checked here,
 /// matching production's own `readTelemetryInput`; everything past that
 /// (adaptation, target resolution, the mutation itself) is

@@ -70,6 +70,7 @@
 | WI-0031 | F# adapter call real effect: Phase A/MIG-08 increment 9 (DF-ROS-2026-A007) | complete |  | high |
 | WI-0032 | F# adapter publish real effect: Phase A/MIG-08 increment 10 (DF-ROS-2026-A007) | complete |  | high |
 | WI-0033 | F# work resume parentExecutionId correction: fixes confirmed production defect (Phase A/MIG-08) | complete |  | high |
-| WI-0034 | F# telemetry ingest openai-codex adapter: Phase A/MIG-08 increment 11 | ready |  | high |
+| WI-0034 | F# telemetry ingest openai-codex adapter: Phase A/MIG-08 increment 11 | complete |  | high |
+| WI-0035 | F# telemetry ingest hook adapters: Phase A/MIG-08 increment 12 | ready |  | high |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |
 | WORKQUEUE-BACKLOG-LAYER | WORKQUEUE-BACKLOG-LAYER | complete |  |  |
