@@ -650,16 +650,20 @@ module FileTelemetryFinalizationRepository =
                 | _ -> []
             | _ -> []
 
-    /// Mirrors production `resolveExecution`'s target resolution (without
-    /// `activeOnly`, matching `finalizeExecution`'s own call): an
+    /// Mirrors production `resolveExecution`'s target resolution: an
     /// `EXE-`-prefixed target matches by exact `executionId`; any other
     /// target matches by `workItemId` regardless of status (unlike
-    /// `telemetry show`'s work-item branch, a already-finalized execution is
-    /// a legal match here too); no target at all requires exactly one
+    /// `telemetry show`'s work-item branch, an already-finalized execution
+    /// is a legal match here too); no target at all requires exactly one
     /// currently active-or-blocked work item, rejecting production's exact
-    /// message otherwise. Every branch's matches sort by `startedAt` and
-    /// take the last (most recently started) one.
-    let private resolveFinalizeTarget (root: string) (target: string option) : Result<string, string> =
+    /// message otherwise. `activeOnly` (production's own option of the same
+    /// name, used by `telemetry record`/`ingest`/`classify` but not
+    /// `finalize`) additionally drops every non-`"active"` candidate before
+    /// the not-found check, and appends production's own `" or is already
+    /// finalized"` suffix to that check's message. Every branch's surviving
+    /// matches sort by `startedAt` and take the last (most recently
+    /// started) one.
+    let private resolveExecutionTarget (root: string) (target: string option) (activeOnly: bool) : Result<string, string> =
         let records = readAllExecutionRecords root
 
         let candidatesResult =
@@ -675,12 +679,23 @@ module FileTelemetryFinalizationRepository =
         match candidatesResult with
         | Error message -> Error message
         | Ok candidates ->
-            match candidates |> List.sortBy (fun record -> stringField record "startedAt" |> Option.defaultValue "") with
-            | [] -> Error $"""telemetry execution '{target |> Option.defaultValue "current"}' was not found"""
-            | sorted ->
-                match stringField (List.last sorted) "executionId" with
+            let filtered =
+                if activeOnly then
+                    candidates |> List.filter (fun record -> stringField record "status" = Some "active")
+                else
+                    candidates
+
+            match filtered with
+            | [] ->
+                let suffix = if activeOnly then " or is already finalized" else ""
+                Error $"""telemetry execution '{target |> Option.defaultValue "current"}' was not found{suffix}"""
+            | nonEmpty ->
+                match nonEmpty |> List.sortBy (fun record -> stringField record "startedAt" |> Option.defaultValue "") |> List.last |> fun record -> stringField record "executionId" with
                 | Some executionId -> Ok executionId
                 | None -> Error "execution record must carry an executionId"
+
+    let private resolveFinalizeTarget (root: string) (target: string option) : Result<string, string> =
+        resolveExecutionTarget root target false
 
     /// Mirrors production `finalizeExecution(root, target, options)` with no
     /// `--input` (adapter-ingestion is a separately-scoped later slice, the
@@ -714,3 +729,206 @@ module FileTelemetryFinalizationRepository =
                 match JsonNode.Parse(File.ReadAllText file) with
                 | :? JsonObject as record -> Ok record
                 | _ -> Error "execution record must be a JSON object"
+
+    /// Production's `--confidence` accepts either a number (`0`-`1`) or a
+    /// free-form label (`"low"`/`"medium"`/`"high"`, or in fact any
+    /// non-numeric text `Number.isFinite` rejects) and stores whichever one
+    /// the CLI actually parsed -- no confidence at all is `null`, never a
+    /// third "unset" marker distinct from it.
+    type MetricConfidence =
+        | NoConfidence
+        | NumericConfidence of float
+        | TextConfidence of string
+
+    /// The CLI-reachable shape of production's `recordTelemetryMetric`
+    /// input: every field `./ros telemetry record` can actually populate.
+    /// `Unit`/`Currency` are explicit overrides of the registry's own
+    /// `unit` (`None` means "use the registry's"); `Value` is passed through
+    /// unvalidated (matching production's own `Number(rawValue)`, which
+    /// silently becomes `NaN` for non-numeric input) so the finite-value
+    /// check below runs at the same point production's does: after target
+    /// resolution and lock acquisition, not before.
+    type RecordMetricRequest =
+        { MetricId: string
+          Value: float
+          Unit: string option
+          Currency: string option
+          Quality: string
+          Confidence: MetricConfidence
+          Scope: string
+          Source: CapabilitySource
+          PricingSource: string option
+          PricingVersion: string option
+          CollectedAt: string option }
+
+    let private confidenceNode (confidence: MetricConfidence) : JsonNode =
+        match confidence with
+        | NoConfidence -> null
+        | NumericConfidence value -> JsonValue.Create value
+        | TextConfidence text -> JsonValue.Create text
+
+    let private optionalStringNode (value: string option) : JsonNode =
+        match value with
+        | Some text -> JsonValue.Create text
+        | None -> null
+
+    let private pricingNode (source: string option) (version: string option) : JsonNode =
+        match source, version with
+        | None, None -> null
+        | _ ->
+            let node = JsonObject()
+            node["source"] <- optionalStringNode source
+            node["version"] <- optionalStringNode version
+            node
+
+    /// Mirrors production's `quality`-to-capability-`status` mapping inside
+    /// `addMetric`: `"derived"`/`"estimated"` pass straight through, and
+    /// every other quality string -- including the CLI's own `"observed"`
+    /// default -- becomes `"supported-observed"`.
+    let private capabilityStatusForQuality (quality: string) =
+        match quality with
+        | "derived" -> "derived"
+        | "estimated" -> "estimated"
+        | _ -> "supported-observed"
+
+    /// Mirrors production `recordTelemetryMetric`/`normalizeMetric`/
+    /// `addMetric` for the one CLI command that reaches them directly,
+    /// `telemetry record`: resolves the target with `activeOnly` (an
+    /// execution that finalized between the pre-lock resolve and the lock
+    /// acquiring is rejected by the same re-resolve `withExecutionLock`
+    /// performs, reproduced here), then -- inside the lock, after that
+    /// re-resolve, exactly where production's own validation runs --
+    /// rejects an unregistered metric id or a non-finite value. The
+    /// `measurementId` is a SHA-256 digest of the metric's own fields with
+    /// keys sorted (mirroring production's `stable()` + `digest()`, and
+    /// this migration's own `derivedMetricNode`), so an identical repeated
+    /// call is deduplicated by content rather than appended twice; the
+    /// capability upsert (and the record's rewrite) still happens
+    /// unconditionally either way, matching production's own `addMetric`
+    /// exactly. `dimensions` is always `{}` and `aggregation` is always the
+    /// registry's own value, since no current CLI flag can override either
+    /// (production's `normalizeMetric` allows both, but nothing reaches
+    /// that path with a non-default value).
+    let recordMetric (root: string) (target: string option) (request: RecordMetricRequest) : Result<JsonObject, string> =
+        match resolveExecutionTarget root target true with
+        | Error message -> Error message
+        | Ok executionId ->
+            match RegistryLock.acquire root $"telemetry-execution:{executionId}" RegistryLock.defaultSettings with
+            | Error failure -> Error failure.Message
+            | Ok lease ->
+                let result =
+                    try
+                        match resolveExecutionTarget root (Some executionId) true with
+                        | Error message -> Error message
+                        | Ok _ ->
+                            match FileMetricRegistryRepository.read root |> List.tryFind (fun definition -> definition.Id = request.MetricId) with
+                            | None -> Error $"unknown normalized metric '{request.MetricId}'; preserve it in raw telemetry until it is registered"
+                            | Some definition when not (Double.IsFinite request.Value) ->
+                                Error $"metric '{request.MetricId}' requires a finite numeric value"
+                            | Some definition ->
+                                let file = executionFile root executionId
+
+                                match JsonNode.Parse(File.ReadAllText file) with
+                                | :? JsonObject as record ->
+                                    let unit = request.Unit |> Option.defaultValue definition.Unit
+                                    let collectedAt = request.CollectedAt |> Option.defaultValue (FileTelemetryExecutionRepository.nowIso ())
+
+                                    let sortedForDigest = JsonObject()
+                                    sortedForDigest["aggregation"] <- JsonValue.Create definition.Aggregation
+                                    sortedForDigest["collectedAt"] <- JsonValue.Create collectedAt
+                                    sortedForDigest["confidence"] <- confidenceNode request.Confidence
+                                    sortedForDigest["currency"] <- optionalStringNode request.Currency
+                                    sortedForDigest["dimensions"] <- JsonObject()
+                                    sortedForDigest["id"] <- JsonValue.Create request.MetricId
+                                    sortedForDigest["measurementId"] <- JsonValue.Create ""
+                                    sortedForDigest["pricing"] <- pricingNode request.PricingSource request.PricingVersion
+                                    sortedForDigest["quality"] <- JsonValue.Create request.Quality
+                                    sortedForDigest["schemaVersion"] <- JsonValue.Create "1.0.0"
+                                    sortedForDigest["scope"] <- JsonValue.Create request.Scope
+
+                                    let sortedSource = JsonObject()
+                                    sortedSource["mechanism"] <- JsonValue.Create request.Source.Mechanism
+                                    sortedSource["name"] <- JsonValue.Create request.Source.Name
+                                    sortedSource["type"] <- JsonValue.Create request.Source.Type
+                                    sortedForDigest["source"] <- sortedSource
+                                    sortedForDigest["unit"] <- JsonValue.Create unit
+                                    sortedForDigest["value"] <- JsonValue.Create request.Value
+
+                                    let measurementId = "MEAS-" + CanonicalJson.sha256HexPrefix 24 (CanonicalJson.serializeCompact sortedForDigest)
+
+                                    let metricsArray =
+                                        match record["metrics"] with
+                                        | :? JsonArray as array -> array
+                                        | _ ->
+                                            let created = JsonArray()
+                                            record["metrics"] <- created
+                                            created
+
+                                    let alreadyPresent =
+                                        metricsArray
+                                        |> Seq.exists (function
+                                            | :? JsonObject as node -> stringField node "measurementId" = Some measurementId
+                                            | _ -> false)
+
+                                    if not alreadyPresent then
+                                        let metricNode = JsonObject()
+                                        metricNode["measurementId"] <- JsonValue.Create measurementId
+                                        metricNode["id"] <- JsonValue.Create request.MetricId
+                                        metricNode["value"] <- JsonValue.Create request.Value
+                                        metricNode["unit"] <- JsonValue.Create unit
+                                        metricNode["currency"] <- optionalStringNode request.Currency
+                                        metricNode["quality"] <- JsonValue.Create request.Quality
+                                        metricNode["confidence"] <- confidenceNode request.Confidence
+                                        metricNode["scope"] <- JsonValue.Create request.Scope
+                                        metricNode["aggregation"] <- JsonValue.Create definition.Aggregation
+                                        metricNode["dimensions"] <- JsonObject()
+                                        metricNode["pricing"] <- pricingNode request.PricingSource request.PricingVersion
+                                        metricNode["source"] <- FileTelemetryExecutionRepository.sourceNode request.Source
+                                        metricNode["collectedAt"] <- JsonValue.Create collectedAt
+                                        metricNode["schemaVersion"] <- JsonValue.Create "1.0.0"
+                                        metricsArray.Add(metricNode: JsonNode)
+
+                                    let status = capabilityStatusForQuality request.Quality
+                                    let recordedAtNow = FileTelemetryExecutionRepository.nowIso ()
+
+                                    let existingCapabilities =
+                                        match record["capabilities"] with
+                                        | :? JsonArray as array -> array |> Seq.choose (function :? JsonObject as node -> Some(parseCapability node) | _ -> None) |> Seq.toList
+                                        | _ -> []
+
+                                    let maxHistory = FileWorkConfigRepository.readTelemetryMaxCapabilityHistoryEntries root
+
+                                    let mergedCapabilities =
+                                        if existingCapabilities |> List.exists (fun capability -> capability.MetricId = request.MetricId) then
+                                            existingCapabilities
+                                            |> List.map (fun capability ->
+                                                if capability.MetricId = request.MetricId then
+                                                    Capability.upsert maxHistory collectedAt recordedAtNow status (Some "normalized measurement recorded") request.Source capability
+                                                else
+                                                    capability)
+                                        else
+                                            existingCapabilities
+                                            @ [ { MetricId = request.MetricId
+                                                  Status = status
+                                                  Reason = Some "normalized measurement recorded"
+                                                  DiscoveredAt = collectedAt
+                                                  LastAssessedAt = collectedAt
+                                                  RecordedAt = recordedAtNow
+                                                  Source = request.Source
+                                                  History = []
+                                                  HistoryOmitted = 0
+                                                  Touched = false } ]
+
+                                    let capabilitiesNode = JsonArray()
+                                    mergedCapabilities |> List.iter (fun capability -> capabilitiesNode.Add(FileTelemetryExecutionRepository.capabilityNode capability: JsonNode))
+                                    record["capabilities"] <- capabilitiesNode
+
+                                    File.WriteAllText(file, record.ToJsonString serializerOptions + "\n")
+                                    Ok record
+                                | _ -> Error "execution record must be a JSON object"
+                    with error ->
+                        Error error.Message
+
+                match lease.Release(), result with
+                | Error releaseFailure, Ok _ -> Error releaseFailure.Message
+                | _, outcome -> outcome
