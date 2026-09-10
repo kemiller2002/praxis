@@ -48,9 +48,16 @@ capabilities, lifecycle capture, classification, and aggregation.
   commands resolve or create any new telemetry execution, matching
   production's own ordering. `time.blocked_ms` (computed at finalization by
   `BlockedDuration.compute`, shipped in the `work complete` increment) now
-  computes a real nonzero value instead of always zero. `telemetry
-  summary`'s aggregation, every write-path telemetry-producer command
-  (`start`/`ingest`/`classify`/`record`/`finalize`), and both `adapter
+  computes a real nonzero value instead of always zero. A third increment
+  ports `telemetry summary`'s aggregation (`summarizeTelemetry`/
+  `timingSummary`): a new pure `Ros.Domain.Telemetry.Summary` module
+  computes four real aggregation strategies (`sum`, `maximum`,
+  `latest-per-session` -- a real per-session dedup, not a plain sum -- and
+  `none`, falling back to a plain "latest wins" default) and an
+  interval-sweep timing summary (calendar span vs. total wall time vs.
+  overlap), fed by `FileTelemetryQueryRepository.readSummaryExecutions`'s
+  JSON extraction/grouping. Every write-path telemetry-producer command
+  (`start`/`ingest`/`classify`/`record`/`finalize`) and both `adapter
   call`/`adapter publish` commands remain Node-only, each its own future
   scoping choice.
 
@@ -78,6 +85,14 @@ capabilities, lifecycle capture, classification, and aggregation.
   `tests/work-telemetry-lifecycle-fsharp-differential.test.mjs` (a real
   `work block`/`work resume`/`work complete` cycle proving the lifecycle
   events, their metrics, and a real nonzero `time.blocked_ms`).
+- F# telemetry-summary real-effect tests:
+  `tests/Ros.Tests/TelemetrySummaryTests.fs` (every `TimingSummary`/
+  `MetricAggregation` branch) and
+  `tests/telemetry-summary-fsharp-differential.test.mjs` (a real
+  `work start`/`work complete` cycle with cross-checked deterministic
+  metrics, work-item filtering, an empty summary, and hand-written fixture
+  executions proving `latest-per-session`/`none` byte-for-byte against
+  production).
 
 ## Dependencies
 
@@ -108,8 +123,8 @@ capabilities, lifecycle capture, classification, and aggregation.
   matches the F# contract but remains Node until distribution is authorized.
   F# parity is now real but partial: execution creation/finalization
   (via `work start`/`work complete`), lifecycle bookkeeping (via `work
-  block`/`work resume`), and the two read-only `telemetry
-  adapters`/`telemetry show` commands are real effects; `telemetry
-  summary`'s aggregation, every write-path telemetry-producer command, and
-  both adapter commands remain Node-only, pending MIG-08's own further
-  scoping decisions.
+  block`/`work resume`), and all three read-only `telemetry
+  adapters`/`telemetry show`/`telemetry summary` commands are real
+  effects; every write-path telemetry-producer command and both adapter
+  commands remain Node-only, pending MIG-08's own further scoping
+  decisions.

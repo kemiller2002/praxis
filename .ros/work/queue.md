@@ -60,6 +60,7 @@
 | WI-0021 | F# work complete real effect: Phase A increment 8 | complete |  | high |
 | WI-0022 | F# telemetry adapters/show real effect: Phase A/MIG-08 increment 1 | complete |  | high |
 | WI-0023 | F# telemetry lifecycle bookkeeping real effect: Phase A/MIG-08 increment 2 | complete |  | high |
-| WI-0024 | Re-run EV-ROS-2026-A043 command-surface parity inventory | ready |  | high |
+| WI-0024 | Re-run EV-ROS-2026-A043 command-surface parity inventory | complete |  | high |
+| WI-0025 | F# telemetry summary real effect: Phase A/MIG-08 increment 3 | ready |  | high |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |
 | WORKQUEUE-BACKLOG-LAYER | WORKQUEUE-BACKLOG-LAYER | complete |  |  |

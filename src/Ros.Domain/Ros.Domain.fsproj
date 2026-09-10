@@ -26,5 +26,6 @@
     <Compile Include="Telemetry/Capability.fs" />
     <Compile Include="Telemetry/ChangeSummary.fs" />
     <Compile Include="Telemetry/TelemetryAdapters.fs" />
+    <Compile Include="Telemetry/Summary.fs" />
   </ItemGroup>
 </Project>
