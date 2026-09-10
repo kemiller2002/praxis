@@ -275,5 +275,41 @@
     "title": "Preconditions and phased plan for redirecting ./ros to the F# solution",
     "updated": "2026-09-10",
     "version": "1.0.0"
+  },
+  {
+    "author_agent": "claude-sonnet-5",
+    "confidence": "high",
+    "created": "2026-09-10",
+    "id": "DF-ROS-2026-A029",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A029--fsharp-npm-binary-distribution.md",
+    "related_documents": [
+      "DF-ROS-2026-A027",
+      "DF-ROS-2026-A028",
+      "docs/migrations/fsharp/ARCHITECTURE.md",
+      "docs/migrations/fsharp/STATUS.md",
+      "PACKAGE-USAGE.md"
+    ],
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A047",
+      "EV-ROS-2026-A048"
+    ],
+    "tags": [
+      "architecture",
+      "fsharp",
+      "migration",
+      "distribution",
+      "npm",
+      "sde",
+      "decision"
+    ],
+    "title": "Distribute ros-fs via npm as a self-contained single-file binary fetched from GitHub Releases",
+    "updated": "2026-09-10",
+    "version": "1.0.0"
   }
 ]

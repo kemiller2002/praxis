@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 46,
+  "nextSeq": 47,
   "items": [
     {
       "id": "WI-0001",
@@ -877,6 +877,20 @@
       "attachments": [],
       "createdAt": "2026-09-10T22:41:16.625Z",
       "updatedAt": "2026-09-10T22:41:22.230Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0046",
+      "title": "Distribute ros-fs via npm as a self-contained single-file binary from GitHub Releases (DF-ROS-2026-A029)",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-10T23:51:49.095Z",
+      "updatedAt": "2026-09-10T23:51:55.907Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null

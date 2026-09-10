@@ -883,5 +883,39 @@
     "title": "F# shadow CLI versus production ./ros command-surface parity inventory (closure)",
     "updated": "2026-09-10",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-10",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A048",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A048--fsharp-npm-distribution-shape-evidence.md",
+    "related_documents": [
+      "DF-ROS-2026-A027",
+      "EV-ROS-2026-A047",
+      "docs/migrations/fsharp/ARCHITECTURE.md",
+      "docs/migrations/fsharp/STATUS.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "DF-ROS-2026-A028",
+      "DF-ROS-2026-A029"
+    ],
+    "tags": [
+      "fsharp",
+      "migration",
+      "distribution",
+      "npm",
+      "sde"
+    ],
+    "title": "Consumer distribution evidence for the F# CLI (DF-ROS-2026-A028 Phase B)",
+    "updated": "2026-09-10",
+    "version": "1.0.0"
   }
 ]

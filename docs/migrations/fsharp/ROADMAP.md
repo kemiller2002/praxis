@@ -31,7 +31,7 @@ Dependency ordering overrides a raw score where state safety requires it.
 | Slice | Status | Capability and acceptance | Compatibility/removal plan |
 |---|---|---|---|
 | MIG-00 baseline, inventory, preregistration, navigation | complete | immutable tag; T0–T2; complete inventory; semantic map/manifests; frozen hypotheses/fixtures | additive only |
-| MIG-01 bounded distribution decision | complete | repository-local framework-dependent .NET 10 shadow; production consumer choice explicitly deferred | Node/npm stays authoritative |
+| MIG-01 bounded distribution decision | complete | repository-local framework-dependent .NET 10 shadow; production consumer choice explicitly deferred at the time. `DF-ROS-2026-A029` has since accepted a consumer distribution shape (self-contained single-file binaries via GitHub Releases) for the additive, optional `ros-fs` npm launcher -- `DF-ROS-2026-A028` Phase B evidence (`EV-ROS-2026-A048`) | Node/npm stays authoritative for `./ros` and `ros-bootstrap init`; `ros-fs` is a separate, opt-in binary that does not change either |
 | MIG-02 architecture-enforced F# skeleton | complete | five production projects; version/help; dependency rules with positive and rejection proof | remove shadow projects to roll back |
 | MIG-03 artifact boundary/fixtures | complete | explicit front matter, IDs, kind/status/confidence/reference shapes; path-specific findings; frozen valid/invalid fixtures | Node/Python remain oracles |
 | MIG-04 artifact validation and registry projection | complete | `ros-fs artifacts validate`, `registry build/check`; Node/F# byte parity; no canonical mutation; repeated build and partial-write outcome proof | no launcher switch; Python deprecation only after further evidence |

@@ -16,9 +16,12 @@ venv/
 # Node
 node_modules/
 
-# .NET / F#
-**/bin/
-**/obj/
+# .NET / F# build output (src/tests trees only -- the repo-root bin/ holds
+# tracked npm CLI entrypoints, e.g. bin/ros-bootstrap.mjs and bin/ros-fs.mjs)
+src/**/bin/
+src/**/obj/
+tests/**/bin/
+tests/**/obj/
 
 # Compiled web UI (build with `npm run build:web`; source of truth is web/app.ts)
 web/app.js
