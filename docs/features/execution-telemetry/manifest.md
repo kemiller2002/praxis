@@ -101,10 +101,21 @@ capabilities, lifecycle capture, classification, and aggregation.
   normalization path, and provenance-source dedup by content digest. A
   new general `CanonicalJson.stabilize`/`contentDigest`
   (`Ros.Infrastructure.Json`) mirrors production's `stable()` for
-  arbitrary caller-supplied JSON. Every remaining write-path
-  telemetry-producer command (`start`/`classify`), every non-generic
-  adapter's field mapping, and both `adapter call`/`adapter publish`
-  commands remain Node-only, each its own future scoping choice.
+  arbitrary caller-supplied JSON. A seventh increment ships `telemetry
+  classify --classification NAME [...] [--rationale TEXT]
+  [--evidence-link LINK]* [--rd-context FILE]`, a thin wrapper over the
+  sixth increment's generic-ingest path
+  (`FileTelemetryFinalizationRepository.classifyTarget`, new): builds a
+  synthetic ingest whose only content is a constructed `classification`
+  object and an explicit `raw: {}`, using a real-clock
+  `` `classification-${Date.now()}` `` snapshotId (not content-addressed,
+  so a repeated call is never deduplicated the way a normal ingest
+  snapshot would be), then delegates to `ingestTarget` unchanged;
+  `--rd-context` reuses `telemetry ingest`'s own `--input`
+  reading/parsing exactly. Every remaining write-path telemetry-producer
+  command (`start`), every non-generic adapter's field mapping, and both
+  `adapter call`/`adapter publish` commands remain Node-only, each its
+  own future scoping choice.
 
 ## Interfaces
 
@@ -176,6 +187,15 @@ capabilities, lifecycle capture, classification, and aggregation.
   independent of executionId or wall-clock time, the
   declared-unavailable rejection's shared snapshotId, config-driven
   retention behavior, and stdin (`-`) input).
+- F# telemetry-classify real-effect tests:
+  `tests/Ros.Tests/TelemetryClassifyTests.fs` (the classification shape,
+  the empty-classification-list rejection, an rd-context merge,
+  non-dedup across repeated calls, and EXE-prefixed target resolution)
+  and `tests/telemetry-classify-fsharp-differential.test.mjs`
+  (reproducing production's own CLI-dispatch construction, since it has
+  no standalone exported function, covering the same classification
+  shape byte-for-byte, `--rd-context` file merging, the
+  empty-classification rejection, and non-dedup across two real calls).
 
 ## Dependencies
 
@@ -209,8 +229,8 @@ capabilities, lifecycle capture, classification, and aggregation.
   block`/`work resume`), all three read-only `telemetry
   adapters`/`telemetry show`/`telemetry summary` commands, `telemetry
   finalize` (excluding `--input` adapter ingestion), `telemetry record`,
-  and `telemetry ingest` (generic adapter only) are real effects; every
-  remaining write-path telemetry-producer command (`start`/`classify`),
-  every non-generic adapter's provider-specific field mapping, and both
-  `adapter call`/`adapter publish` commands remain Node-only, pending
-  MIG-08's own further scoping decisions.
+  `telemetry ingest` (generic adapter only), and `telemetry classify`
+  are real effects; `telemetry start`, every non-generic adapter's
+  provider-specific field mapping, and both `adapter call`/`adapter
+  publish` commands remain Node-only, pending MIG-08's own further
+  scoping decisions.
