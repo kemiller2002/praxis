@@ -611,6 +611,118 @@ let private runWorkContext root (arguments: string list) =
         printf "%s" (view.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
         0
 
+let private attachmentSummaryNode (attachment: WorkAttachmentSummary) : JsonObject =
+    let node = JsonObject()
+    node["id"] <- JsonValue.Create attachment.Id
+    node["name"] <- JsonValue.Create attachment.Name
+    node["size"] <- JsonValue.Create attachment.Size
+
+    node["contentType"] <-
+        match attachment.ContentType with
+        | Some contentType -> JsonValue.Create contentType :> JsonNode
+        | None -> null
+
+    node["uploadedAt"] <- JsonValue.Create attachment.UploadedAt
+    node
+
+/// Same field key order production's own `mergedRows` object literal
+/// (`tools/ros_cli.mjs`): `id, title, description, tags, priority, status,
+/// blockedReason, backlogActions, attachments, liveWorkItem`. Unlike
+/// `description`/`priority` (always present, `null` when absent),
+/// `blockedReason` is genuinely omitted when neither source names one --
+/// production's own object literal leaves it `undefined`, which
+/// `JSON.stringify` drops entirely rather than writing `null`.
+let private workListRowNode (row: WorkListRow) : JsonObject =
+    let node = JsonObject()
+    node["id"] <- JsonValue.Create row.Id
+    node["title"] <- JsonValue.Create row.Title
+
+    node["description"] <-
+        match row.Description with
+        | Some description -> JsonValue.Create description :> JsonNode
+        | None -> null
+
+    let tags = JsonArray()
+    row.Tags |> List.iter (fun tag -> tags.Add(JsonValue.Create tag: JsonNode))
+    node["tags"] <- tags
+
+    node["priority"] <-
+        match row.Priority with
+        | Some priority -> JsonValue.Create priority :> JsonNode
+        | None -> null
+
+    node["status"] <- JsonValue.Create row.Status
+
+    match row.BlockedReason with
+    | Some reason -> node["blockedReason"] <- JsonValue.Create reason
+    | None -> ()
+
+    let backlogActions = JsonArray()
+    row.BacklogActions |> List.iter (fun action -> backlogActions.Add(JsonValue.Create action: JsonNode))
+    node["backlogActions"] <- backlogActions
+
+    let attachments = JsonArray()
+    row.Attachments |> List.iter (fun attachment -> attachments.Add(attachmentSummaryNode attachment: JsonNode))
+    node["attachments"] <- attachments
+
+    node["liveWorkItem"] <-
+        match row.LiveWorkItem with
+        | None -> null
+        | Some live ->
+            let liveNode = JsonObject()
+            liveNode["state"] <- JsonValue.Create live.State
+            liveNode["semanticState"] <- JsonValue.Create live.SemanticState
+            let allowedActions = JsonArray()
+            live.AllowedActions |> List.iter (fun action -> allowedActions.Add(JsonValue.Create action: JsonNode))
+            liveNode["allowedActions"] <- allowedActions
+            liveNode :> JsonNode
+
+    node
+
+let private renderWorkListRows (rows: WorkListRow list) =
+    let array = JsonArray()
+    rows |> List.iter (fun row -> array.Add(workListRowNode row: JsonNode))
+    array.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2))
+
+/// Mirrors production `work`/`work list` (`mergedWorkView(root, {})`,
+/// `tools/ros_cli.mjs`): every id known to the backlog queue or the live
+/// context, merged and augmented exactly as `Ros.Domain.Work.WorkListView`
+/// decides. `--tag`/`--status` filtering is not yet ported -- a known gap,
+/// documented alongside this increment's docs update.
+let private runWorkList root (arguments: string list) =
+    match FileWorkListRepository.readListView root with
+    | Error message ->
+        eprintfn "ERROR %s" message
+        1
+    | Ok rows ->
+        printf "%s" (renderWorkListRows rows)
+        0
+
+/// Mirrors production `showWork` (`tools/ros_cli.mjs`): the same merged
+/// row `work list` produces for one id, plus the detail markdown file's
+/// content (`null` when none exists) -- an unknown id rejects with
+/// production's exact message rather than an empty view.
+let private runWorkShow root (arguments: string list) =
+    match arguments |> List.tryHead with
+    | None ->
+        eprintfn "ERROR show requires an ID"
+        1
+    | Some id ->
+        match FileWorkListRepository.readShowView root id with
+        | Error message ->
+            eprintfn "ERROR %s" message
+            1
+        | Ok(row, detail) ->
+            let node = workListRowNode row
+
+            node["detail"] <-
+                match detail with
+                | Some text -> JsonValue.Create text :> JsonNode
+                | None -> null
+
+            printf "%s" (node.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
+            0
+
 /// Mirrors production `captureWorkUnlocked`/`nextQueueId`
 /// (`tools/ros_cli.mjs`) via `Ros.Domain.Work.WorkCapture`, excluding
 /// `--file` attachment (a separate, larger effect). A real effect,
@@ -2082,6 +2194,9 @@ let private dispatch root arguments =
     | "work" :: "backlog-validate" :: rest -> runBacklogQueueValidate root rest
     | "work" :: "backlog-transition" :: rest -> runBacklogTransitionEffect root rest
     | "work" :: "context" :: rest -> runWorkContext root rest
+    | [ "work" ] -> runWorkList root []
+    | "work" :: "list" :: rest -> runWorkList root rest
+    | "work" :: "show" :: rest -> runWorkShow root rest
     | "work" :: "capture" :: rest -> runWorkCapture root rest
     | "work" :: "update" :: rest -> runWorkUpdate root rest
     | "work" :: "attach" :: rest -> runWorkAttach root rest

@@ -16,12 +16,29 @@ module BacklogState =
         | BacklogState.Blocked -> "blocked"
         | BacklogState.Abandoned -> "abandoned"
 
+    let parse (value: string) =
+        match value with
+        | "captured" -> Some BacklogState.Captured
+        | "ready" -> Some BacklogState.Ready
+        | "blocked" -> Some BacklogState.Blocked
+        | "abandoned" -> Some BacklogState.Abandoned
+        | _ -> None
+
 [<RequireQualifiedAccess>]
 type BacklogAction =
     | Ready
     | Block
     | Abandon
     | Start
+
+[<RequireQualifiedAccess>]
+module BacklogAction =
+    let code action =
+        match action with
+        | BacklogAction.Ready -> "ready"
+        | BacklogAction.Block -> "block"
+        | BacklogAction.Abandon -> "abandon"
+        | BacklogAction.Start -> "start"
 
 type BacklogTransitionRequest =
     { State: BacklogState
@@ -71,6 +88,17 @@ type BacklogPromotionOutcome =
 
 [<RequireQualifiedAccess>]
 module BacklogTransition =
+    /// Mirrors production's `BACKLOG_TRANSITIONS` lookup table
+    /// (`tools/ros_cli.mjs`): the actions a backlog-only item (no live
+    /// context counterpart) exposes as `backlogActions` in the merged
+    /// work view, independent of `decide`'s own legality checks.
+    let allowedActions state =
+        match state with
+        | BacklogState.Captured -> [ BacklogAction.Ready; BacklogAction.Abandon ]
+        | BacklogState.Ready -> [ BacklogAction.Block; BacklogAction.Start; BacklogAction.Abandon ]
+        | BacklogState.Blocked -> [ BacklogAction.Ready; BacklogAction.Abandon ]
+        | BacklogState.Abandoned -> []
+
     let decide request =
         match request.State, request.Action with
         | BacklogState.Captured, BacklogAction.Ready

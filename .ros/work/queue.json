@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 41,
+  "nextSeq": 42,
   "items": [
     {
       "id": "WI-0001",
@@ -807,6 +807,20 @@
       "attachments": [],
       "createdAt": "2026-09-10T20:41:26.107Z",
       "updatedAt": "2026-09-10T20:41:28.811Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0041",
+      "title": "F# work/work list/work show read-only merged view: Phase A increment 10 (EV-ROS-2026-A046 follow-on)",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-10T21:04:11.041Z",
+      "updatedAt": "2026-09-10T21:04:13.603Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null

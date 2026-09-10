@@ -811,6 +811,76 @@ byte-for-byte identical once timestamps and randomly-generated execution
 IDs are normalized out. `work`/`work list`, `work show`, and `status`
 remain their own future increments.
 
+## Phase A, increment 10: `work`/`work list`/`work show` — the merged backlog/live view
+
+The second of `EV-ROS-2026-A046`'s four unassigned rows. Production's own
+`mergedWorkView`/`showWork` (`tools/ros_cli.mjs`) compute a wider view
+than `work context`'s: they merge the backlog queue (`.ros/work/queue.json`)
+with the live context, at full fidelity — `description`, `blockedReason`,
+`backlogActions`, `attachments`, and a nested `liveWorkItem` summary — not
+just the five columns `queue.md` itself renders.
+
+A pre-existing `Ros.Domain.Work.QueuePresentation.mergedRows` already
+computed this merge, but only at the narrower five-field
+(`Id`/`Title`/`Tags`/`Priority`/`Status`) fidelity `queue.md` rendering
+needs; widening it in place would have risked every existing caller
+(`FileBacklogQueueRepository`'s `applyStateChange`/`captureItem`/
+`applyUpdate`/`applyAttachment`, all committing `queue.md` on every real
+backlog effect). Instead, a new `Ros.Domain.Work.WorkListView` module adds
+a second, wider `mergedRows` at the `work`/`work list`/`work show`
+fidelity, reusing `QueuePresentation.effectiveStatus` for the one
+status-precedence rule both share rather than duplicating it. It also
+adds `BacklogTransition.allowedActions` (mirroring production's own
+`BACKLOG_TRANSITIONS` lookup table) as a new, independent function
+alongside `BacklogTransition.decide` — the table names which actions a
+backlog-only item exposes as `backlogActions`, a different question from
+`decide`'s own per-request legality check.
+
+One subtle production distinction required getting the JSON-presence
+rules exactly right, not just the values: `description`, `priority`, and
+an attachment's `contentType` are always-present fields (`null` when the
+source has no value), while `blockedReason` is genuinely *absent* from
+the JSON when neither the live item (if blocked) nor the backlog record
+names one. Production's own object literal computes `blockedReason:
+contextItem?.semanticState === "blocked" ? contextItem.blockReason :
+queueItem?.blockedReason` — when both operands are `undefined`, the field
+itself is `undefined`, and `JSON.stringify` drops an `undefined`-valued
+key entirely rather than writing `null` for it. The F# port matches this
+by conditionally assigning the `blockedReason` key on the output
+`JsonObject` only when `row.BlockedReason` is `Some`, never assigning
+(not even to `null`) when it is `None` — unlike every other optional
+field in this row, which always assigns (`null` or the value).
+
+`Ros.Infrastructure.Work.FileWorkListRepository` is the new read-side
+port. It reads the live context through the exact same typed parse every
+write-side effect already depends on
+(`Ros.Contracts.Work.WorkContextPlanContract.parseJson`), rather than
+introducing a second context parser. For `queue.json`, it introduces a
+new `QueueItemDetail` shape (title, description, tags, priority, status,
+blockedReason, attachments) deliberately kept separate from
+`FileBacklogQueueRepository.readItems`'s existing, narrower
+`BacklogQueueItemRecord` (id/status/priority only) — that type still
+serves `Ros.Domain.Work.QueueValidation`'s findings, unrelated to this
+view, and widening it would have been a needless coupling between two
+independent read paths. `work show`'s one addition over `work list` is
+the detail markdown file (`.ros/work/items/{id}.md`, read as `Some text`
+when present, `None`/`null` otherwise) and production's exact
+unknown-id rejection message.
+
+Confirmed against real Node by driving the actual `ros` CLI wrapper
+directly across a deliberately varied fixture — a backlog-only captured
+item, a ready item promoted to an active live item, a blocked live item
+(backlog record's own stale `blockedReason` intentionally left in place,
+to confirm the live item wins), and a ready item carrying a real file
+attachment — for `work list`, bare `work`, `work show` on each of the
+four items, and the unknown-ID rejection, all byte-for-byte identical
+once timestamps are normalized out. `--tag`/`--status` filtering is not
+yet ported (`work context` did not need it; this view's CLI wiring
+mirrors that same read-only-view scope). `status` is now the one
+remaining row `EV-ROS-2026-A046` found unassigned, and it depends on the
+`validate` command unification (`workFindings` + `queueFindings` under
+one production-shaped result), which has not yet been scoped.
+
 ## Phase A / MIG-08, increment 9: `telemetry adapters` and `telemetry show` — the first telemetry-producer commands
 
 With the live-work family closed, Phase A's remaining scope is every

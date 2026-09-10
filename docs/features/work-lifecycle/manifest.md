@@ -230,8 +230,37 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   earlier increments; this was purely new read-path wiring. A requested
   ID with no matching item rejects with production's exact message rather
   than an empty view. Requires no lock at all, unlike every mutation
-  command above. `work`/`work list`, `work show`, and `status` remain
-  their own future increments.
+  command above.
+
+  `ros-fs work`/`ros-fs work list`/`ros-fs work show [ID]` (Phase A's tenth
+  increment, the second of `EV-ROS-2026-A046`'s four unassigned rows) are
+  production's `mergedWorkView`/`showWork`: the merged backlog-queue/
+  live-context projection at its full fidelity, wider than
+  `Ros.Domain.Work.QueuePresentation.mergedRows`'s five-field `queue.md`-only
+  projection (which this increment leaves untouched). A new
+  `Ros.Domain.Work.WorkListView.mergedRows` reuses
+  `QueuePresentation.effectiveStatus` for the shared status-precedence rule
+  and adds a new `BacklogTransition.allowedActions` lookup table (mirroring
+  production's own `BACKLOG_TRANSITIONS`, independent of `BacklogTransition.
+  decide`'s legality checks) for the `backlogActions` field a backlog-only
+  id exposes. It reproduces one subtle production distinction exactly:
+  `description`/`priority`/attachment `contentType` are always present
+  (`null` when absent) while `blockedReason` is genuinely omitted from the
+  JSON when neither the live item nor the backlog record names one --
+  production's own object literal leaves it `undefined`, which
+  `JSON.stringify` drops, never coercing it to `null`.
+  `Ros.Infrastructure.Work.FileWorkListRepository` reads the live context
+  through the same typed `Ros.Contracts.Work.WorkContextPlanContract.
+  parseJson` every write-side effect already uses, and reads `queue.json`
+  wide enough for the new fields via a new `QueueItemDetail` parse
+  (distinct from `FileBacklogQueueRepository.readItems`'s narrower
+  `BacklogQueueItemRecord`, which `QueueValidation` still needs unchanged).
+  `work show` additionally reads the detail markdown file
+  (`.ros/work/items/{id}.md`, `null` when absent) and rejects an unknown id
+  with production's exact message. `--tag`/`--status` filtering is not yet
+  ported (a known gap, matching this slice's read-only scope). `status`
+  remains its own future increment, and depends on the `validate` command
+  unification this manifest has not yet scoped.
 
 ## Interfaces
 
@@ -320,10 +349,21 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   `add`/`work ready`/`work start`/`work block` cycle driving the actual
   `ros` CLI wrapper directly, covering the no-ID view, ID filtering, and
   the unknown-ID rejection byte-for-byte against production).
+- Work-list/work-show real-effect tests: `tests/Ros.Tests/WorkListViewTests.fs`
+  (backlog-only `backlogActions`, live-only `liveWorkItem` with a
+  defaulted title, a blocked live item overriding both `status` and
+  `blockedReason` over a stale backlog record, the genuine
+  `blockedReason` omission case, attachment pass-through including a null
+  content type, and ordinal id ordering) and
+  `tests/work-list-fsharp-differential.test.mjs` (a real `add`/`work
+  ready`/`work start`/`work block`/attachment cycle driving the actual
+  `ros` CLI wrapper directly, covering `work list`, bare `work`, `work
+  show` across backlog-only/live/blocked/attachment items, and the
+  unknown-ID rejection byte-for-byte against production).
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
-- Integration/live verification: `./ros status`, `./ros work context ID`, and
-  `./ros validate`.
+- Integration/live verification: `./ros status`, `./ros work context ID`,
+  `./ros work list`, `./ros work show ID`, and `./ros validate`.
 
 ## Dependencies
 
@@ -346,7 +386,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 ## Maintenance
 
 - Owner: repository-governance
-- Last checked against implementation: 2026-09-10
+- Last checked against implementation: 2026-09-10 (work list/show increment)
 - Known gaps: backlog and live work intentionally remain separate recovery
   units; the F# planner now owns pure whole-context/multi-item and
   backlog-promotion plans, post-plan evidence observation, telemetry
@@ -377,12 +417,19 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   dedicated differential test documents the divergence explicitly.
   `work context [ID]` is now a real read-only effect too — reusing
   already-existing `WorkTransition.allowedActions`/`readCompletionEvidence`
-  domain logic, requiring no lock. Still remaining: every
-  telemetry-producer command (in the execution-telemetry manifest — all
-  now real, per MIG-08's own closure) has no bearing here; what's left in
-  this manifest's own scope is the three other pure read-only views
-  `EV-ROS-2026-A046` found never assigned to MIG-07/MIG-08 (`work`/`work
-  list`, `work show`, `status`), each its own small, separately-scoped
-  future increment. Evidence containment has no current authority;
-  production behavior accepts absolute existing paths. Production
-  remains Node-owned pending those slices and the distribution decision.
+  domain logic, requiring no lock. `work`/`work list`/`work show [ID]` are
+  now real read-only effects as well, via a new
+  `Ros.Domain.Work.WorkListView.mergedRows` (the full-fidelity merge
+  production's own `mergedRows` computes, wider than
+  `QueuePresentation`'s five-field markdown-only projection) and a new
+  `Ros.Infrastructure.Work.FileWorkListRepository`; `--tag`/`--status`
+  filtering is not yet ported. Still remaining: every telemetry-producer
+  command (in the execution-telemetry manifest — all now real, per
+  MIG-08's own closure) has no bearing here; what's left in this
+  manifest's own scope is `status`, the one remaining pure read-only view
+  `EV-ROS-2026-A046` found never assigned to MIG-07/MIG-08, and it
+  depends on the `validate` command unification (`workFindings` +
+  `queueFindings` under one production-shaped result), which has not yet
+  been scoped. Evidence containment has no current authority; production
+  behavior accepts absolute existing paths. Production remains Node-owned
+  pending those slices and the distribution decision.
