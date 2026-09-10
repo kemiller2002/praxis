@@ -1735,3 +1735,54 @@ module FileTelemetryFinalizationRepository =
                         match lease.Release(), result with
                         | Error releaseFailure, Ok _ -> Error releaseFailure.Message
                         | _, outcome -> outcome
+
+    // ---- telemetry classify (a thin wrapper over generic ingest) ----
+
+    /// Mirrors production `telemetry classify --classification NAME [...]
+    /// [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE]`: a
+    /// synthetic ingest whose `snapshotId` is `classification-{now-ms}`, a
+    /// real-clock timestamp production computes with its own `Date.now()`
+    /// (not a content digest), so a repeated call is *not* deduplicated
+    /// the way a normal `telemetry ingest` snapshot would be -- each
+    /// classify call is its own event, matching production exactly. Reuses
+    /// `ingestTarget` unchanged (always the `generic` adapter, matching
+    /// production's own un-overridden `ingestTelemetry` call) rather than
+    /// a second mutation path, since a classification is just an ingest
+    /// whose only real content is its `classification` object and an
+    /// explicitly empty `raw: {}`.
+    let classifyTarget
+        (root: string)
+        (target: string option)
+        (classifications: string list)
+        (rationale: string option)
+        (evidenceLinks: string list)
+        (rd: JsonNode option)
+        : Result<JsonObject, string> =
+        if classifications.IsEmpty then
+            Error "telemetry classify requires at least one --classification"
+        else
+            let snapshotId = $"classification-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}"
+
+            let typesNode = JsonArray()
+            classifications |> List.iter (fun value -> typesNode.Add(JsonValue.Create value: JsonNode))
+
+            let evidenceNode = JsonArray()
+            evidenceLinks |> List.iter (fun value -> evidenceNode.Add(JsonValue.Create value: JsonNode))
+
+            let classificationNode = JsonObject()
+            classificationNode["types"] <- typesNode
+            classificationNode["rationale"] <- (match rationale with Some value -> JsonValue.Create value | None -> null)
+            classificationNode["evidence"] <- evidenceNode
+            classificationNode["rd"] <- (match rd with Some node -> node.DeepClone() | None -> null)
+
+            let inputNode = JsonObject()
+            inputNode["snapshotId"] <- JsonValue.Create snapshotId
+            inputNode["classification"] <- classificationNode
+            inputNode["raw"] <- JsonObject()
+
+            match ingestTarget root target "generic" (inputNode.ToJsonString()) with
+            | Error message -> Error message
+            | Ok record ->
+                match record["classification"] with
+                | :? JsonObject as classification -> Ok classification
+                | _ -> Error "execution record must carry a classification object"

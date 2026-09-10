@@ -1143,6 +1143,43 @@ tried first, falling back to JSON Lines (one value per non-blank line) --
 production's own `readTelemetryInput` contract exactly, reproduced as
 `FileTelemetryFinalizationRepository.parseIngestInput`.
 
+## Phase A / MIG-08, increment 15: `telemetry classify` — a thin wrapper over generic ingest
+
+`telemetry classify --classification NAME [...] [--rationale TEXT]
+[--evidence-link LINK]* [--rd-context FILE]` is production's own thin
+wrapper over `ingestTelemetry`: it builds a synthetic ingest whose only
+real content is a constructed `classification` object and an explicitly
+empty `raw: {}`, then calls the same `ingestTelemetry(root, target,
+input)` `telemetry ingest` already does, with no `adapter` override
+(always `"generic"`). Since increment 14 already ported the entire
+generic-ingest mutation path, this increment is almost entirely a CLI
+wrapper: `FileTelemetryFinalizationRepository.classifyTarget` (new)
+builds the `classification` object (`types`, `rationale`, `evidence`,
+`rd`) and the synthetic input, then delegates to `ingestTarget`
+unchanged -- no second mutation path.
+
+The one genuinely distinct piece of production behavior is
+`classification`'s own `snapshotId`: `` `classification-${Date.now()}` ``
+-- a **real-clock millisecond timestamp**, not a content digest like
+every other ingest's default. This means a `telemetry classify` call is
+essentially never deduplicated the way a repeated `telemetry ingest`
+snapshot would be: each call gets its own event and its own
+`rawTelemetry` entry (an empty `{}` payload, since `raw: {}` is always
+explicit), reproduced here via `DateTimeOffset.UtcNow.
+ToUnixTimeMilliseconds()` rather than the content-addressed formula
+`ingestTarget`'s own fallback would otherwise compute (moot regardless,
+since `classifyTarget` always supplies an explicit `snapshotId` up
+front, the same way a caller-supplied one on `telemetry ingest` would).
+
+`--rd-context`'s file (or `-` for stdin) is read exactly like `telemetry
+ingest`'s own `--input` -- same byte-limit check, same JSON/JSON-Lines
+parsing via `parseIngestInput` -- reused rather than duplicated, since
+production's own `readTelemetryInput` call is identical in both
+commands. Checking for at least one `--classification` happens before
+that read, matching production's own check order exactly (an absent or
+malformed `--rd-context` file never masks the "no classification"
+rejection).
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

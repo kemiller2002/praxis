@@ -23,7 +23,7 @@ open System.Text.Json.Nodes
 let Version = "0.2.0-shadow"
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--quiet] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet]"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--quiet] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet]"
 
 let private parseRoot (arguments: string array) =
     let values = ResizeArray<string>(arguments)
@@ -1820,6 +1820,60 @@ let private runTelemetryIngest root (arguments: string list) =
             eprintfn "ERROR %s" error.Message
             1
 
+/// Mirrors production `telemetry classify --classification NAME [...]
+/// [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE]`
+/// (`tools/ros_cli.mjs`) -- MIG-08's seventh increment, a thin wrapper over
+/// the same generic-adapter ingest `telemetry ingest` already reuses: a
+/// synthetic ingest whose `snapshotId` is `classification-{now-ms}` (a
+/// real-clock timestamp, not a content digest, so a repeated call is its
+/// own new event rather than deduplicated) and whose only real content is
+/// the constructed `classification` object plus an explicitly empty
+/// `raw: {}`. `--rd-context`'s file (or `-` for stdin) is read and parsed
+/// exactly like `telemetry ingest`'s own `--input` (JSON or JSON Lines,
+/// byte-checked against the same configured limit); checking for at least
+/// one `--classification` happens before that read, matching production's
+/// own check order exactly.
+let private runTelemetryClassify root (arguments: string list) =
+    let target = arguments |> List.tryHead |> Option.filter (fun value -> not (value.StartsWith("--", StringComparison.Ordinal)))
+    let classifications = optionValues "--classification" arguments
+
+    if classifications.IsEmpty then
+        eprintfn "ERROR telemetry classify requires at least one --classification"
+        1
+    else
+        let rationale = optionValue "--rationale" arguments
+        let evidenceLinks = optionValues "--evidence-link" arguments
+
+        let rdResult =
+            match optionValue "--rd-context" arguments with
+            | None -> Ok None
+            | Some rdPath ->
+                try
+                    let raw = if rdPath = "-" then Console.In.ReadToEnd() else File.ReadAllText(Path.Combine(root, rdPath))
+                    let maxBytes = FileWorkConfigRepository.readTelemetryMaxRawPayloadBytes root
+
+                    if Text.Encoding.UTF8.GetByteCount raw > maxBytes then
+                        Error $"telemetry input exceeds {maxBytes} bytes"
+                    else
+                        FileTelemetryFinalizationRepository.parseIngestInput raw |> Result.map Some
+                with :? IOException as error ->
+                    Error error.Message
+
+        match rdResult with
+        | Error message ->
+            eprintfn "ERROR %s" message
+            1
+        | Ok rd ->
+            match FileTelemetryFinalizationRepository.classifyTarget root target classifications rationale evidenceLinks rd with
+            | Error message ->
+                eprintfn "ERROR %s" message
+                1
+            | Ok classification ->
+                if not (arguments |> List.contains "--quiet") then
+                    printf "%s" (classification.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
+
+                0
+
 let private dispatch root arguments =
     let repository = FileArtifactRepository.create root
     let gitRepository = ProcessGitRepository.create root
@@ -1863,6 +1917,7 @@ let private dispatch root arguments =
     | "telemetry" :: "finalize" :: rest -> runTelemetryFinalize root rest
     | "telemetry" :: "record" :: rest -> runTelemetryRecord root rest
     | "telemetry" :: "ingest" :: rest -> runTelemetryIngest root rest
+    | "telemetry" :: "classify" :: rest -> runTelemetryClassify root rest
     | _ ->
         eprintfn "%s" usage
         2
