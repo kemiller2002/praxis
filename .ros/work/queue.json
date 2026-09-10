@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 23,
+  "nextSeq": 24,
   "items": [
     {
       "id": "WI-0001",
@@ -527,6 +527,20 @@
       "attachments": [],
       "createdAt": "2026-09-10T09:00:22.963Z",
       "updatedAt": "2026-09-10T09:00:25.464Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0023",
+      "title": "F# telemetry lifecycle bookkeeping real effect: Phase A/MIG-08 increment 2",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-10T09:19:55.690Z",
+      "updatedAt": "2026-09-10T09:19:58.311Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null

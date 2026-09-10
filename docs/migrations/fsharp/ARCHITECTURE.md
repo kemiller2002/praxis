@@ -562,7 +562,8 @@ Deliberately excluded from this increment, each a separate later slice:
 `resume`/`block`/`complete` (the same effect infrastructure, but `complete`
 additionally needs `finalizeWorkExecutions`, and `block`/`resume` need
 `recordTelemetryLifecycle`'s within-execution "blocked"/"resumed" event
-bookkeeping — not reachable from `begin` and not yet ported); explicit
+bookkeeping — not reachable from `begin` and not yet ported at the time;
+closed later by increment 10); explicit
 `--identity-*`/`--execution-id`/`--conclusion` CLI overrides; and every
 telemetry-producer command (`telemetry start/ingest/classify/record/
 finalize`) and both `adapter` commands, none of which have any F# model at
@@ -599,13 +600,13 @@ current CLI command can produce and which the differential seeds directly
 as fixture state, matching this project's own established pattern for
 exercising a real but not-yet-CLI-reachable branch).
 
-Deliberately excluded, the same as increment 5: `recordTelemetryLifecycle`'s
-"resumed" within-execution event bookkeeping (no CLI exposes it either),
-and production's `parentExecutionId` linkage on the new-execution path
-(`identity.parentExecutionId` on the freshly created record is always
-`null`, where production sets it to the work item's most recent prior
-execution id when one exists) — both real, narrow, and honestly-scoped
-gaps rather than silent ones.
+Deliberately excluded at the time, the same as increment 5:
+`recordTelemetryLifecycle`'s "resumed" within-execution event bookkeeping
+(closed later by increment 10), and production's `parentExecutionId`
+linkage on the new-execution path (`identity.parentExecutionId` on the
+freshly created record is always `null`, where production sets it to the
+work item's most recent prior execution id when one exists — still open) —
+both real, narrow, and honestly-scoped gaps rather than silent ones.
 
 ## Phase A, increment 7: `work block`
 
@@ -703,10 +704,12 @@ execution's own per-execution lock, mutates it in place —
 
 - `time.wall_ms`/`time.blocked_ms` metrics, unconditionally (`BlockedDuration.compute`,
   a new pure port of production's `blockedDuration`, folding the execution's
-  own recorded lifecycle events; always zero today since this migration has
-  not yet ported `recordTelemetryLifecycle`'s "blocked"/"resumed" event
-  writes — a correct answer for the data this migration currently produces,
-  not a stub);
+  own recorded lifecycle events; at the time this always evaluated to zero,
+  since this migration had not yet ported `recordTelemetryLifecycle`'s
+  "blocked"/"resumed" event writes — a correct answer for the data this
+  migration produced then, not a stub. Increment 10 closed that gap, so
+  `time.blocked_ms` now computes a real nonzero value whenever a completed
+  execution was actually blocked and resumed);
 - an ending Git snapshot and `git.ending_dirty_files` metric, or a
   `supported-unavailable` capability when Git itself is unavailable;
 - a real **clean-baseline change summary**, computed by three new
@@ -795,6 +798,51 @@ write-path telemetry-producer command (`start`, `ingest`, `classify`,
 commands (the work-adapter contract, a different concern from telemetry
 provider adapters). Each remains its own future increment, chosen the same
 deliberate way this one was.
+
+## Phase A / MIG-08, increment 10: telemetry lifecycle bookkeeping — closing a real gap in `work block`/`work resume`
+
+Increments 5-8 documented, honestly, that `work resume`/`work block` never
+ported production's `recordTelemetryLifecycle` (`tools/ros_telemetry.mjs`):
+the "resumed"/"blocked" bookkeeping it writes into an execution's OWN
+`events` array (distinct from `.ros/events/events.jsonl`, the context-level
+event log those two commands already write correctly). Its absence meant
+`time.blocked_ms` -- computed at finalization by `BlockedDuration.compute`,
+already ported in increment 8 -- always evaluated to zero: a correct
+answer for the data this migration produced at the time, not a stub, but
+incomplete relative to production. This increment closes that gap.
+
+`FileTelemetryFinalizationRepository.recordLifecycle` (a new function
+alongside `finalizeWorkExecutions` in the same module, since both mutate an
+existing execution record in place under its own per-execution lock) mirrors
+`recordTelemetryLifecycle` exactly: for every currently-active execution
+linked to a work item, it appends a `work.blocked`/`work.resumed` event
+(deduped by a `TEVT-` id -- but unlike every other `TEVT-`/`MEAS-` id this
+migration has built so far from a 2-14-key digest, this one is a full
+4-key object including a nested 3-key `source`, still hand-built in
+alphabetical key order to match production's own recursive `stable()`
+sort) plus its paired `agent.interruptions`/`agent.resumes` metric
+(reusing `FileTelemetryExecutionRepository.derivedMetricNode`, the same
+"derived"-quality metric/capability shape increment 8's finalization
+already established).
+
+`work resume`/`work block` (`src/Ros.Cli/Program.fs`) now call
+`recordLifecycle` for every requested id -- `resumed`/`blocked`
+respectively, `block` also threading its `--reason` through -- BEFORE
+`resolveContextTelemetryWithCreation` runs, matching production's own exact
+ordering: `recordTelemetryLifecycle` reads whichever executions are
+*currently* active, and only afterward does either command decide whether
+a new execution needs linking or creating. A brand-new execution `resume`
+itself creates (when none was active) therefore never receives a "resumed"
+event for the transition that created it, exactly like production. For
+`work block`, this reordering is observationally a no-op today (a
+`Block`-only telemetry intent never triggers new-execution creation, per
+`WorkTransitionPlanning.telemetryIntents`), but the same ordering is kept
+for both commands rather than relying on that fact staying true.
+
+Deliberately excluded, matching `finalizeOne`'s own established scope
+reduction: `ensureRecordDefaults`' legacy-record backfill (every record
+this migration's own writers produce already carries the full shape it
+would otherwise backfill, so there is nothing to default).
 
 ## Work-state recovery seam
 

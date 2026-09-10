@@ -1078,10 +1078,15 @@ let private runWorkStart root arguments =
 /// absent from context is rejected) and never observes Git. Reuses `work
 /// start`'s effect infrastructure directly (`WorkContextPlanning.plan`,
 /// `resolveContextTelemetryWithCreation`, `FileWorkContextRepository.
-/// applyContextPlan`). Deliberately excludes `recordTelemetryLifecycle`'s
-/// "resumed" bookkeeping and production's `parentExecutionId` linkage on the
-/// rare path where resuming creates a brand-new execution (no CLI exposes
-/// either), and explicit `--identity-*`/`--execution-id` overrides.
+/// applyContextPlan`). Records `recordTelemetryLifecycle`'s "resumed"
+/// bookkeeping (`FileTelemetryFinalizationRepository.recordLifecycle`) on
+/// every currently-active execution BEFORE telemetry resolution runs,
+/// matching production's own ordering: a brand-new execution `resume`
+/// itself creates (when none was active) never receives this "resumed"
+/// event, since it did not exist yet when this ran. Deliberately excludes
+/// production's `parentExecutionId` linkage on that rare new-execution path
+/// (no CLI exposes it) and explicit `--identity-*`/`--execution-id`
+/// overrides.
 let private runWorkResume root arguments =
     let ids = optionValues "--id" arguments
     let occurredAt = optionValue "--occurred-at" arguments
@@ -1133,9 +1138,24 @@ let private runWorkResume root arguments =
                                 match WorkContextPlanning.plan request with
                                 | WorkContextPlanOutcome.Rejected rejection -> Error(workContextRejectionMessage rejection)
                                 | WorkContextPlanOutcome.Planned plan ->
-                                    match resolveContextTelemetryWithCreation root [] (ids.Length + 1) plan with
+                                    let lifecycleResult =
+                                        if request.TelemetryEnabled then
+                                            ids
+                                            |> List.fold
+                                                (fun acc id ->
+                                                    match acc with
+                                                    | Error _ -> acc
+                                                    | Ok() -> FileTelemetryFinalizationRepository.recordLifecycle root id "resumed" timestamp None)
+                                                (Ok())
+                                        else
+                                            Ok()
+
+                                    match lifecycleResult with
                                     | Error message -> Error message
-                                    | Ok resolvedPlan -> FileWorkContextRepository.applyContextPlan root repositoryId resolvedPlan
+                                    | Ok() ->
+                                        match resolveContextTelemetryWithCreation root [] (ids.Length + 1) plan with
+                                        | Error message -> Error message
+                                        | Ok resolvedPlan -> FileWorkContextRepository.applyContextPlan root repositoryId resolvedPlan
                 with error ->
                     lease.Release() |> ignore
                     reraise ()
@@ -1335,7 +1355,12 @@ let private readRawQueueItem root (id: string) : JsonObject option =
 /// `--occurred-at` is this CLI's own synthetic determinism parameter (as
 /// for every other real effect in this migration, none of which
 /// production's real CLI actually exposes): production computes its own
-/// timestamp per branch.
+/// timestamp per branch. For live-context ids, also records
+/// `recordTelemetryLifecycle`'s "blocked" bookkeeping
+/// (`FileTelemetryFinalizationRepository.recordLifecycle`) on every
+/// currently-active execution before telemetry resolution runs, matching
+/// production's own ordering -- backlog-only ids never reach telemetry at
+/// all, since a never-started item has no execution to record against.
 let private runWorkBlock root arguments =
     let ids = optionValues "--id" arguments
     let reason = optionValue "--reason" arguments
@@ -1415,29 +1440,44 @@ let private runWorkBlock root arguments =
                                         match WorkContextPlanning.plan request with
                                         | WorkContextPlanOutcome.Rejected rejection -> Error(workContextRejectionMessage rejection)
                                         | WorkContextPlanOutcome.Planned plan ->
-                                            match resolveContextTelemetryWithCreation root [] (contextIds.Length + 1) plan with
+                                            let lifecycleResult =
+                                                if request.TelemetryEnabled then
+                                                    contextIds
+                                                    |> List.fold
+                                                        (fun acc id ->
+                                                            match acc with
+                                                            | Error _ -> acc
+                                                            | Ok() -> FileTelemetryFinalizationRepository.recordLifecycle root id "blocked" timestamp reason)
+                                                        (Ok())
+                                                else
+                                                    Ok()
+
+                                            match lifecycleResult with
                                             | Error message -> Error message
-                                            | Ok resolvedPlan ->
-                                                match FileWorkContextRepository.applyContextPlan root repositoryId resolvedPlan with
+                                            | Ok() ->
+                                                match resolveContextTelemetryWithCreation root [] (contextIds.Length + 1) plan with
                                                 | Error message -> Error message
-                                                | Ok(writtenItems, _) ->
-                                                    let contextIdSet = Set.ofList contextIds
+                                                | Ok resolvedPlan ->
+                                                    match FileWorkContextRepository.applyContextPlan root repositoryId resolvedPlan with
+                                                    | Error message -> Error message
+                                                    | Ok(writtenItems, _) ->
+                                                        let contextIdSet = Set.ofList contextIds
 
-                                                    let matching = JsonArray()
+                                                        let matching = JsonArray()
 
-                                                    for node in writtenItems do
-                                                        match node with
-                                                        | :? JsonObject as item ->
-                                                            match item["id"] with
-                                                            | :? JsonValue as value when
-                                                                value.GetValueKind() = JsonValueKind.String
-                                                                && contextIdSet.Contains(value.GetValue<string>())
-                                                                ->
-                                                                matching.Add(item.DeepClone(): JsonNode)
+                                                        for node in writtenItems do
+                                                            match node with
+                                                            | :? JsonObject as item ->
+                                                                match item["id"] with
+                                                                | :? JsonValue as value when
+                                                                    value.GetValueKind() = JsonValueKind.String
+                                                                    && contextIdSet.Contains(value.GetValue<string>())
+                                                                    ->
+                                                                    matching.Add(item.DeepClone(): JsonNode)
+                                                                | _ -> ()
                                                             | _ -> ()
-                                                        | _ -> ()
 
-                                                    Ok(backlogRows, matching)
+                                                        Ok(backlogRows, matching)
                 with error ->
                     lease.Release() |> ignore
                     reraise ()

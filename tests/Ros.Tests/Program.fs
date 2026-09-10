@@ -26,4 +26,5 @@ let main _ =
     @ TelemetryIdentityTests.tests
     @ WorkContextEffectTests.tests
     @ TelemetryQueryTests.tests
+    @ TelemetryLifecycleTests.tests
     |> TestRunner.run
