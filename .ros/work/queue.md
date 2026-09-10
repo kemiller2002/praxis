@@ -55,6 +55,7 @@
 | WI-0016 | F# work-update real effect (DF-ROS-2026-A028 Phase A, increment 3) | complete |  | medium |
 | WI-0017 | F# work attach real effect: Phase A increment 4, backlog-only effects complete | complete |  | high |
 | WI-0018 | F# work start real effect: Phase A increment 5, first live-work/telemetry-creating effect | complete |  | high |
-| WI-0019 | F# work resume real effect: Phase A increment 6 | ready |  | high |
+| WI-0019 | F# work resume real effect: Phase A increment 6 | complete |  | high |
+| WI-0020 | F# work block real effect: Phase A increment 7 | ready |  | high |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |
 | WORKQUEUE-BACKLOG-LAYER | WORKQUEUE-BACKLOG-LAYER | complete |  |  |

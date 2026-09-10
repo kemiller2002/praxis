@@ -23,7 +23,7 @@ open System.Text.Json.Nodes
 let Version = "0.2.0-shadow"
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME]"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME]"
 
 let private parseRoot (arguments: string array) =
     let values = ResizeArray<string>(arguments)
@@ -512,6 +512,37 @@ let private runWorkAttributionValidate root arguments =
                     printf "%s" (WorkAttributionContract.renderJson findings)
                     if findings.IsEmpty then 0 else 1
 
+/// Shared by `work backlog-transition` and `work block` (whose backlog-item
+/// branch is the same effect): mirrors production `backlogTransitionUnlocked`
+/// for one id, without acquiring or releasing any lock itself -- the caller
+/// already holds `work-protocol` across the whole operation, exactly like
+/// production's own `withWorkProtocol`-wrapped callers never re-acquire it
+/// per id.
+let private applyBacklogTransition
+    root
+    (id: string)
+    (action: BacklogAction)
+    (actionText: string)
+    (reason: string option)
+    (timestamp: string)
+    (contextItems: LiveWorkItem list)
+    : Result<BacklogQueueRow, string> =
+    match FileBacklogQueueRepository.readItems root |> List.tryFind (fun item -> item.Id = id) with
+    | None -> Error $"'{id}' is not a captured local work item"
+    | Some item ->
+        let illegalTransition () = Error $"cannot {actionText} backlog item '{id}' from '{item.Status}'"
+
+        match parseBacklogState item.Status with
+        | None -> illegalTransition ()
+        | Some currentState ->
+            match WorkOperations.decideBacklogTransition { State = currentState; Action = action; Reason = reason } with
+            | BacklogTransitionDecision.Rejected(BacklogTransitionRejection.IllegalTransition _) -> illegalTransition ()
+            | BacklogTransitionDecision.Rejected BacklogTransitionRejection.BlockReasonRequired -> Error "block requires --reason"
+            | BacklogTransitionDecision.Allowed BacklogTransitionEffect.PromoteToLiveWork ->
+                Error "this command does not support 'start'; use production './ros work start'"
+            | BacklogTransitionDecision.Allowed(BacklogTransitionEffect.ChangeState(newState, blockedChange, abandonedChange)) ->
+                FileBacklogQueueRepository.applyStateChange root id newState blockedChange abandonedChange timestamp contextItems
+
 /// Mirrors production `backlogTransition`/`backlogTransitionUnlocked`
 /// (`tools/ros_cli.mjs`): a real effect on `.ros/work/queue.json` and
 /// `.ros/work/queue.md`, guarded by the same "work-protocol" file lock and
@@ -541,37 +572,9 @@ let private runBacklogTransitionEffect root arguments =
                         match BacklogStateTransaction.recover root with
                         | Error failure -> Error failure.Message
                         | Ok() ->
-                            match FileBacklogQueueRepository.readItems root |> List.tryFind (fun item -> item.Id = id) with
-                            | None -> Error $"'{id}' is not a captured local work item"
-                            | Some item ->
-                                let illegalTransition () =
-                                    Error $"cannot {actionText} backlog item '{id}' from '{item.Status}'"
-
-                                match parseBacklogState item.Status with
-                                | None -> illegalTransition ()
-                                | Some currentState ->
-                                    match
-                                        WorkOperations.decideBacklogTransition
-                                            { State = currentState; Action = action; Reason = reason }
-                                    with
-                                    | BacklogTransitionDecision.Rejected(BacklogTransitionRejection.IllegalTransition _) ->
-                                        illegalTransition ()
-                                    | BacklogTransitionDecision.Rejected BacklogTransitionRejection.BlockReasonRequired ->
-                                        Error "block requires --reason"
-                                    | BacklogTransitionDecision.Allowed BacklogTransitionEffect.PromoteToLiveWork ->
-                                        Error "work backlog-transition does not support 'start'; use production './ros work start'"
-                                    | BacklogTransitionDecision.Allowed(BacklogTransitionEffect.ChangeState(newState, blockedChange, abandonedChange)) ->
-                                        match readWorkContext root with
-                                        | Error message -> Error message
-                                        | Ok context ->
-                                            FileBacklogQueueRepository.applyStateChange
-                                                root
-                                                id
-                                                newState
-                                                blockedChange
-                                                abandonedChange
-                                                timestamp
-                                                context.WorkItems
+                            match readWorkContext root with
+                            | Error message -> Error message
+                            | Ok context -> applyBacklogTransition root id action actionText reason timestamp context.WorkItems
                 with error ->
                     lease.Release() |> ignore
                     reraise ()
@@ -1144,6 +1147,169 @@ let private runWorkResume root arguments =
         eprintfn "ERROR work resume requires valid --id and --occurred-at"
         2
 
+let private readRawQueueItem root (id: string) : JsonObject option =
+    let path = Path.Combine(root, ".ros", "work", "queue.json")
+
+    if not (File.Exists path) then
+        None
+    else
+        match JsonNode.Parse(File.ReadAllText path) with
+        | :? JsonObject as queue ->
+            match queue["items"] with
+            | :? JsonArray as items ->
+                items
+                |> Seq.tryPick (fun node ->
+                    match node with
+                    | :? JsonObject as candidate ->
+                        match candidate["id"] with
+                        | :? JsonValue as value when value.GetValueKind() = JsonValueKind.String && value.GetValue<string>() = id -> Some candidate
+                        | _ -> None
+                    | _ -> None)
+            | _ -> None
+        | _ -> None
+
+/// Mirrors production `blockWork` (`tools/ros_cli.mjs`): a combined effect
+/// that splits requested ids between backlog-only items (not yet started)
+/// and live-context items, applying the matching real effect to each under
+/// ONE held `work-protocol` lock -- production's own `blockWork` never
+/// acquires the lock twice either. `--reason` is optional at the argument
+/// level, matching production's own CLI: whether it is actually required
+/// depends on the item's current state (`block` is illegal from anywhere
+/// but `ready`/`active`, and that illegal-transition rejection fires before
+/// the missing-reason one ever would), so the check is left to the same
+/// decision layer every other real effect uses, not enforced eagerly here.
+/// `--occurred-at` is this CLI's own synthetic determinism parameter (as
+/// for every other real effect in this migration, none of which
+/// production's real CLI actually exposes): production computes its own
+/// timestamp per branch.
+let private runWorkBlock root arguments =
+    let ids = optionValues "--id" arguments
+    let reason = optionValue "--reason" arguments
+    let occurredAt = optionValue "--occurred-at" arguments
+
+    match ids, occurredAt with
+    | (_ :: _), Some timestamp ->
+        match RegistryLock.acquire root "work-protocol" RegistryLock.defaultSettings with
+        | Error failure ->
+            eprintfn "ERROR %s" failure.Message
+            1
+        | Ok lease ->
+            let result =
+                try
+                    match WorkStateTransaction.recover root with
+                    | Error failure -> Error failure.Message
+                    | Ok() ->
+                        match BacklogStateTransaction.recover root with
+                        | Error failure -> Error failure.Message
+                        | Ok() ->
+                            match readWorkContext root with
+                            | Error message -> Error message
+                            | Ok context ->
+                                let queueItems = FileBacklogQueueRepository.readItems root
+                                let contextIdSet = context.WorkItems |> List.map (fun item -> item.Id) |> Set.ofList
+
+                                let backlogIds =
+                                    ids
+                                    |> List.filter (fun id ->
+                                        (queueItems |> List.exists (fun item -> item.Id = id)) && not (contextIdSet.Contains id))
+
+                                let contextIds = ids |> List.filter (fun id -> not (List.contains id backlogIds))
+
+                                let rec applyBacklog remaining acc =
+                                    match remaining with
+                                    | [] -> Ok(List.rev acc)
+                                    | id :: rest ->
+                                        match applyBacklogTransition root id BacklogAction.Block "block" reason timestamp context.WorkItems with
+                                        | Error message -> Error message
+                                        | Ok _ ->
+                                            match readRawQueueItem root id with
+                                            | None -> Error $"'{id}' vanished during block"
+                                            | Some rawItem -> applyBacklog rest (rawItem :: acc)
+
+                                match applyBacklog backlogIds [] with
+                                | Error message -> Error message
+                                | Ok backlogRows ->
+                                    if contextIds.IsEmpty then
+                                        Ok(backlogRows, JsonArray())
+                                    else
+                                        let repositoryId = FileWorkConfigRepository.readRepositoryId root
+
+                                        let actor =
+                                            optionValue "--actor" arguments
+                                            |> Option.orElse (Environment.GetEnvironmentVariable "ROS_ACTOR" |> Option.ofObj)
+                                            |> Option.orElse (FileWorkContextRepository.readExistingActor root)
+                                            |> Option.defaultValue "unknown"
+
+                                        let request: WorkContextPlanRequest =
+                                            { Context = context
+                                              Action = WorkAction.Block
+                                              WorkItemIds = contextIds
+                                              NewItemType = "task"
+                                              TargetLocalState = defaultLocalState WorkAction.Block
+                                              BlockReason = reason
+                                              DefaultRequiredEvidence = Set.empty
+                                              RequiredEvidenceByType = Map.empty
+                                              ProvidedEvidence = []
+                                              Repository = repositoryId
+                                              ProtocolVersion = FileWorkConfigRepository.readProtocolVersion root
+                                              Actor = actor
+                                              OccurredAt = timestamp
+                                              MeaningfulChangedPaths = []
+                                              ObservedGitPaths = []
+                                              TelemetryEnabled = FileWorkConfigRepository.readTelemetryEnabled root }
+
+                                        match WorkContextPlanning.plan request with
+                                        | WorkContextPlanOutcome.Rejected rejection -> Error(workContextRejectionMessage rejection)
+                                        | WorkContextPlanOutcome.Planned plan ->
+                                            match resolveContextTelemetryWithCreation root [] (contextIds.Length + 1) plan with
+                                            | Error message -> Error message
+                                            | Ok resolvedPlan ->
+                                                match FileWorkContextRepository.applyContextPlan root repositoryId resolvedPlan with
+                                                | Error message -> Error message
+                                                | Ok(writtenItems, _) ->
+                                                    let contextIdSet = Set.ofList contextIds
+
+                                                    let matching = JsonArray()
+
+                                                    for node in writtenItems do
+                                                        match node with
+                                                        | :? JsonObject as item ->
+                                                            match item["id"] with
+                                                            | :? JsonValue as value when
+                                                                value.GetValueKind() = JsonValueKind.String
+                                                                && contextIdSet.Contains(value.GetValue<string>())
+                                                                ->
+                                                                matching.Add(item.DeepClone(): JsonNode)
+                                                            | _ -> ()
+                                                        | _ -> ()
+
+                                                    Ok(backlogRows, matching)
+                with error ->
+                    lease.Release() |> ignore
+                    reraise ()
+
+            match lease.Release(), result with
+            | Error releaseFailure, Ok _ ->
+                eprintfn "ERROR %s" releaseFailure.Message
+                1
+            | _, Error message ->
+                eprintfn "ERROR %s" message
+                1
+            | Ok(), Ok(backlogRows, contextItems) ->
+                let combined = JsonArray()
+                backlogRows |> List.iter (fun item -> combined.Add(item.DeepClone(): JsonNode))
+                for item in contextItems do
+                    combined.Add(item.DeepClone(): JsonNode)
+
+                printf "%s" (combined.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
+                0
+    | [], _ ->
+        eprintfn "ERROR block requires at least one work-item ID"
+        2
+    | _, None ->
+        eprintfn "ERROR work block requires valid --id and --occurred-at"
+        2
+
 /// Mirrors production `queueFindings` (`tools/ros_cli.mjs`): duplicate ids,
 /// invalid ids, invalid status, and invalid priority over the raw backlog
 /// queue rows in `.ros/work/queue.json`.
@@ -1191,6 +1357,7 @@ let private dispatch root arguments =
     | "work" :: "attach" :: rest -> runWorkAttach root rest
     | "work" :: "start" :: rest -> runWorkStart root rest
     | "work" :: "resume" :: rest -> runWorkResume root rest
+    | "work" :: "block" :: rest -> runWorkBlock root rest
     | _ ->
         eprintfn "%s" usage
         2

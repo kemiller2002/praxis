@@ -111,6 +111,32 @@ module WorkContextEffectTests =
 
                       Assert.equal 1 lines.Length) }
 
+          { Name = "applying a block plan writes blockReason onto the item, matching production's persisted (never-cleared) field"
+            Run =
+              fun () ->
+                  withTemporaryRoot (fun root ->
+                      let beginPlan = planFor (beginItem "WI-BLOCKED" [ "EXE-1" ])
+                      FileWorkContextRepository.applyContextPlan root "repo" beginPlan |> ignore
+
+                      let blockedItem =
+                          { (beginItem "WI-BLOCKED" [ "EXE-1" ]) with
+                              LocalState = "blocked"
+                              SemanticState = LiveWorkState.Blocked
+                              BlockReason = Some "waiting on review" }
+
+                      let blockPlan =
+                          { (planFor blockedItem) with
+                              ItemPlans =
+                                [ { Item = blockedItem
+                                    Event = { eventFor blockedItem with EventType = "work.blocked"; Reason = Some "waiting on review" }
+                                    Telemetry = [] } ] }
+
+                      match FileWorkContextRepository.applyContextPlan root "repo" blockPlan with
+                      | Error message -> failwith message
+                      | Ok _ ->
+                          let raw = File.ReadAllText(Path.Combine(root, ".ros", "context", "current.json"))
+                          Assert.equal true (raw.Contains "\"blockReason\": \"waiting on review\"")) }
+
           { Name = "createExecution returns None without writing anything when telemetry is disabled"
             Run =
               fun () ->

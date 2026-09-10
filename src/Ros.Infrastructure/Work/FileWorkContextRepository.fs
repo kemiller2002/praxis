@@ -99,6 +99,12 @@ module FileWorkContextRepository =
 
         item.UpdatedAt |> Option.iter (fun updatedAt -> node["updatedAt"] <- JsonValue.Create updatedAt)
 
+        // Mirrors production exactly: `item.blockReason = options.reason` is
+        // only ever assigned during a `block` transition and is never
+        // cleared by any later transition (including `resume`) -- once set,
+        // it persists as a stale field for the rest of the item's life.
+        item.BlockReason |> Option.iter (fun reason -> node["blockReason"] <- JsonValue.Create reason)
+
         if not item.TelemetryExecutionIds.IsEmpty then
             node["telemetryExecutionIds"] <- stringArrayNode item.TelemetryExecutionIds
 

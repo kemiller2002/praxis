@@ -607,6 +607,51 @@ and production's `parentExecutionId` linkage on the new-execution path
 execution id when one exists) — both real, narrow, and honestly-scoped
 gaps rather than silent ones.
 
+## Phase A, increment 7: `work block`
+
+`ros-fs work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT]
+[--actor NAME]` mirrors production `blockWork` (`tools/ros_cli.mjs`) — the
+one live-work-adjacent command that is not purely one or the other:
+production's own `blockWork` splits its requested ids into backlog-only
+items (captured but never started) and live-context items, applying the
+matching real effect to each *under one held `work-protocol` lock*, and
+returns a single mixed-shape array (raw backlog queue items alongside raw
+live-context items). This increment reproduces the split, the combined
+lock hold, and the mixed output exactly: backlog ids go through the same
+`applyBacklogTransition` (a small helper extracted from `runBacklogTransitionEffect`,
+reused verbatim) `work backlog-transition` already used for `block`; context
+ids go through `work start`/`work resume`'s effect infrastructure
+unchanged (`WorkContextPlanning.plan` with `WorkAction.Block`,
+`resolveContextTelemetryWithCreation`, `FileWorkContextRepository.applyContextPlan`)
+— `RecordBlocked` never halts on `PendingNewExecution`, so no new
+execution-creation logic was needed here either.
+
+One correctness fix came out of this slice, caught by the differential
+test rather than assumed correct: `FileWorkContextRepository.applyItem`
+never wrote `blockReason` onto a live-context item at all. Production sets
+`item.blockReason = options.reason` during `block` and — notably — never
+clears it on any later transition, including `resume`; it persists as a
+stale field for the rest of the item's life. `applyItem` now writes it
+whenever `Item.BlockReason` is `Some`, for every action, matching that
+persistence exactly. This shipped as part of increments 5/6 undetected
+until a real live-context `work block` differential existed to catch it —
+a reminder that "no new Domain/Infrastructure code" (true of increment 6)
+does not mean "no new coverage of existing code."
+
+The other correctness detail this slice got right the first time by
+reading production closely rather than assuming: `--reason` is **not**
+checked eagerly. Production's own check order is transition-legality
+first, then the missing-reason rejection — `backlogTransitionUnlocked`
+and `transitionUnlocked` both throw the illegal-transition error before
+ever reaching `if (!options.reason) throw "block requires --reason"`. A
+CLI that required `--reason` up front would report the wrong error for an
+item in the wrong state (e.g. still `captured`, never `ready`). This CLI
+instead always threads `reason: string option` through to the existing
+decision layer (`BacklogTransitionRejection.BlockReasonRequired` /
+`TransitionRejection.BlockReasonRequired`, both already modeled and
+ordered correctly by the pure `decide` functions), so the two rejections
+surface in the same order production's own does.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for
