@@ -1288,6 +1288,34 @@ mapping: 0 success, 1 failure, 2 unknown.
 `adapter publish` (the paired `.ros/publications.json`-writing command)
 remains Node-only, its own future scoping choice.
 
+## Phase A / MIG-08, increment 18: `adapter publish` — the paired event-republish command
+
+`adapter publish --target FILE` is production's own event-republish
+command, paired with increment 17's `adapter call` but otherwise
+unrelated to it: it reads every event from `.ros/events/events.jsonl`,
+appends whichever are not already present (by `eventId`) in `target`
+(a caller-named destination JSONL file, unrelated to the adapter store),
+then refreshes `.ros/publications.json`'s receipt for every source event
+-- even an already-published one -- with a fresh `publishedAt` timestamp,
+matching production's own unconditional per-call refresh (the receipt's
+`publishedAt` changes on every republish, not just when a new event is
+appended). This is a real, non-obvious quirk verified against real Node
+before writing any test: a duplicate-only republish still rewrites every
+receipt.
+
+`Ros.Infrastructure.Work.FileAdapterRepository.publish` (new, alongside
+`call` in the same module) mirrors production's own read-order exactly:
+source events, then the destination's existing events (for the
+`known` eventId set), then creates the destination's parent directory
+before appending -- a failure there (e.g. a path segment already exists
+as a non-directory file) propagates as `Error` before either the
+destination or `.ros/publications.json` is touched at all, matching
+production's own thrown, uncaught error and its real quirk that a
+zero-event publish still creates the target directory and an empty
+`{}` `publications.json`, just never a destination file (an empty
+append loop creates nothing). Appended events are written one compact
+JSON line each, verbatim, matching production's own `JSON.stringify`.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

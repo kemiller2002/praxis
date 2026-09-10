@@ -35,4 +35,5 @@ let main _ =
     @ TelemetryStartTests.tests
     @ AdapterContractTests.tests
     @ AdapterCallEffectTests.tests
+    @ AdapterPublishEffectTests.tests
     |> TestRunner.run
