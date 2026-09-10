@@ -1786,3 +1786,155 @@ module FileTelemetryFinalizationRepository =
                 match record["classification"] with
                 | :? JsonObject as classification -> Ok classification
                 | _ -> Error "execution record must carry a classification object"
+
+    // ---- telemetry start (manual recover-or-create, no state transition) ----
+
+    /// Mirrors production's `recoverOrStartExecution`/`showTelemetry`
+    /// filtering exactly, via the shared pure `ExecutionLinkRecovery.decide`
+    /// (`Ros.Domain.Telemetry.ExecutionLink`) `work start`/`work resume`
+    /// already use through the heavier `TelemetryResolution`/
+    /// `WorkContextPlan` layer -- `telemetry start` needs none of that
+    /// machinery (there is no state transition at all here, just a manual
+    /// telemetry attachment to an item already `active`/`blocked`), so it
+    /// calls the same low-level decision directly. Bounded to one creation
+    /// attempt, matching `Ros.Cli.Program.resolveContextTelemetryWithCreation`'s
+    /// own retry cap.
+    let private resolveOrCreateExecution
+        (root: string)
+        (workItemId: string)
+        (workType: string)
+        (classifications: string list)
+        (classificationRationale: string option)
+        (linkedIds: string list)
+        : Result<string option, string> =
+        let rec attempt attemptsLeft =
+            let candidates = FileTelemetryStateRepository.readCandidates root workItemId
+
+            let request: ExecutionLinkRequest =
+                { WorkItemId = workItemId
+                  LinkedExecutionIds = Set.ofList linkedIds
+                  RecoverableStatuses = Set.singleton ExecutionStatus.Active
+                  RequestedExecutionId = None
+                  Candidates = candidates }
+
+            match ExecutionLinkRecovery.decide request with
+            | ExecutionLinkDecision.Recover executionId -> Ok(Some executionId)
+            | ExecutionLinkDecision.RejectAmbiguous ids ->
+                Error
+                    $"""multiple detached telemetry executions require explicit selection for '{workItemId}'; rerun with --execution-id one of: {String.Join(", ", ids)}"""
+            | ExecutionLinkDecision.RejectDetachedConflict _ ->
+                Error $"a detached telemetry execution must be linked before creating a new one for '{workItemId}', which this command does not yet support selecting"
+            | ExecutionLinkDecision.StartNew ->
+                if attemptsLeft <= 0 then
+                    Error $"unable to resolve a telemetry execution for '{workItemId}'"
+                else
+                    let createRequest: FileTelemetryExecutionRepository.CreateExecutionRequest =
+                        { WorkItemId = workItemId
+                          WorkType = workType
+                          Classifications = classifications
+                          ClassificationRationale = classificationRationale }
+
+                    match FileTelemetryExecutionRepository.createExecution root createRequest with
+                    | Error message -> Error message
+                    | Ok None -> Ok None
+                    | Ok(Some _) -> attempt (attemptsLeft - 1)
+
+        attempt 1
+
+    /// Mirrors production `telemetry start WORKITEMID` (`tools/ros_cli.mjs`)
+    /// -- MIG-08's eighth increment: a manual telemetry-execution attachment
+    /// to a work item already `active`/`blocked`, with no semantic-state
+    /// transition of its own (unlike `work start`/`resume`, which combine a
+    /// transition with telemetry attachment in one committed operation).
+    /// Runs under the same `work-protocol` lock and recovery preflight
+    /// every live-work transition uses, then does its own narrow
+    /// `context/current.json` read-modify-write (no event log entry at
+    /// all, matching production's own `renderedEventLog(root, [])` with an
+    /// empty planned-events list) rather than going through the
+    /// transition-shaped `WorkContextPlanning`/`FileWorkContextRepository.
+    /// applyContextPlan`, since there is no transition to plan. Returns
+    /// `Ok None` when telemetry is disabled and no candidate execution
+    /// already exists, matching production's own pre-lock-irrelevant
+    /// `startExecution` short-circuit -- no context or file mutation at
+    /// all in that case. Deliberately excludes `--execution-id` and every
+    /// `--provider`/`--model`/`--runtime`/... identity-override flag
+    /// production's own CLI exposes here (the one command that does);
+    /// supporting them would mean extending `createExecution` itself to
+    /// accept an explicit execution id and identity overrides, a
+    /// separately scoped future slice.
+    let startTarget
+        (root: string)
+        (workItemId: string)
+        (classifications: string list)
+        (classificationRationale: string option)
+        : Result<JsonObject option, string> =
+        match RegistryLock.acquire root "work-protocol" RegistryLock.defaultSettings with
+        | Error failure -> Error failure.Message
+        | Ok lease ->
+            let result =
+                try
+                    match WorkStateTransaction.recover root with
+                    | Error failure -> Error failure.Message
+                    | Ok() ->
+                        match BacklogStateTransaction.recover root with
+                        | Error failure -> Error failure.Message
+                        | Ok() ->
+                            let contextPath = Path.Combine(root, ".ros", "context", "current.json")
+
+                            if not (File.Exists contextPath) then
+                                Error $"work item '{workItemId}' must be active or blocked before starting telemetry"
+                            else
+                                match JsonNode.Parse(File.ReadAllText contextPath) with
+                                | :? JsonObject as context ->
+                                    match context["workItems"] with
+                                    | :? JsonArray as items ->
+                                        let matchedItem =
+                                            items
+                                            |> Seq.tryPick (function
+                                                | :? JsonObject as item when stringField item "id" = Some workItemId -> Some item
+                                                | _ -> None)
+
+                                        match matchedItem with
+                                        | None -> Error $"work item '{workItemId}' must be active or blocked before starting telemetry"
+                                        | Some item ->
+                                            let semanticState = stringField item "semanticState" |> Option.defaultValue ""
+
+                                            if semanticState <> "active" && semanticState <> "blocked" then
+                                                Error $"work item '{workItemId}' must be active or blocked before starting telemetry"
+                                            else
+                                                let workType = stringField item "type" |> Option.defaultValue "task"
+
+                                                let linkedIds =
+                                                    match item["telemetryExecutionIds"] with
+                                                    | :? JsonArray as array ->
+                                                        array
+                                                        |> Seq.choose (function
+                                                            | :? JsonValue as v when v.GetValueKind() = JsonValueKind.String -> Some(v.GetValue<string>())
+                                                            | _ -> None)
+                                                        |> Seq.toList
+                                                    | _ -> []
+
+                                                match resolveOrCreateExecution root workItemId workType classifications classificationRationale linkedIds with
+                                                | Error message -> Error message
+                                                | Ok None -> Ok None
+                                                | Ok(Some executionId) ->
+                                                    if not (List.contains executionId linkedIds) then
+                                                        let idsNode = JsonArray()
+                                                        (linkedIds @ [ executionId ]) |> List.iter (fun id -> idsNode.Add(JsonValue.Create id: JsonNode))
+                                                        item["telemetryExecutionIds"] <- idsNode
+
+                                                    context["updatedAt"] <- JsonValue.Create(FileTelemetryExecutionRepository.nowIso ())
+                                                    File.WriteAllText(contextPath, context.ToJsonString(serializerOptions) + "\n")
+
+                                                    match JsonNode.Parse(File.ReadAllText(executionFile root executionId)) with
+                                                    | :? JsonObject as record -> Ok(Some record)
+                                                    | _ -> Error "execution record must be a JSON object"
+                                    | _ -> Error $"work item '{workItemId}' must be active or blocked before starting telemetry"
+                                | _ -> Error "work context must be a JSON object"
+                with error ->
+                    lease.Release() |> ignore
+                    reraise ()
+
+            match lease.Release(), result with
+            | Error releaseFailure, Ok _ -> Error releaseFailure.Message
+            | _, outcome -> outcome

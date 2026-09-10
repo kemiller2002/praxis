@@ -112,10 +112,34 @@ capabilities, lifecycle capture, classification, and aggregation.
   so a repeated call is never deduplicated the way a normal ingest
   snapshot would be), then delegates to `ingestTarget` unchanged;
   `--rd-context` reuses `telemetry ingest`'s own `--input`
-  reading/parsing exactly. Every remaining write-path telemetry-producer
-  command (`start`), every non-generic adapter's field mapping, and both
-  `adapter call`/`adapter publish` commands remain Node-only, each its
-  own future scoping choice.
+  reading/parsing exactly. An eighth increment ships `telemetry start
+  WORKITEMID [--classification NAME]* [--classification-rationale TEXT]
+  [--quiet]`, the fourth write-path telemetry-producer command and the
+  first with no state transition of its own to plan
+  (`FileTelemetryFinalizationRepository.resolveOrCreateExecution`/
+  `startTarget`, new): rejects a work item that is missing from context
+  or not active/blocked with production's identical message from either
+  cause; calls the same low-level pure `Ros.Domain.Telemetry.
+  ExecutionLinkRecovery.decide` `work start`/`resume`'s own telemetry
+  resolution uses, recovering an unambiguous detached (unlinked, active)
+  candidate, rejecting on more than one with production's exact `; rerun
+  with --execution-id one of: ...` message, else creating a new execution
+  via `FileTelemetryExecutionRepository.createExecution` (bounded to a
+  single attempt); links the resolved id into `telemetryExecutionIds`
+  (guarded against a duplicate) via a narrow direct
+  `.ros/context/current.json` read-modify-write, deliberately bypassing
+  the transition-plan-shaped `FileWorkContextRepository.applyContextPlan`
+  -- but, matching production's own `renderedEventLog(root, [])`, never
+  appends to `events.jsonl`. `CreateExecutionRequest` gained a real,
+  previously-unported `ClassificationRationale` field
+  (production's `startExecution`'s `options.classificationRationale ??
+  null`). `--execution-id` and the eleven identity-override flags
+  production's own CLI exposes (`telemetryIdentityOptions`) are
+  deliberately excluded and loudly rejected (exit 2), scoped as a
+  separate future slice, since supporting them requires extending
+  `createExecution` itself. Every non-generic adapter's field mapping and
+  both `adapter call`/`adapter publish` commands remain Node-only, each
+  its own future scoping choice.
 
 ## Interfaces
 
@@ -196,6 +220,15 @@ capabilities, lifecycle capture, classification, and aggregation.
   no standalone exported function, covering the same classification
   shape byte-for-byte, `--rd-context` file merging, the
   empty-classification rejection, and non-dedup across two real calls).
+- F# telemetry-start real-effect tests:
+  `tests/Ros.Tests/TelemetryStartTests.fs` (fresh creation with no
+  candidate, detached-execution recovery, new-execution-when-only-
+  candidate-already-linked, ambiguity rejection with production's exact
+  message, the not-active-or-blocked rejection for both a missing and a
+  wrong-state item, and the disabled-with-no-candidate no-op) and
+  `tests/telemetry-start-fsharp-differential.test.mjs` (the same seven
+  scenarios end-to-end against the real `ros` CLI, plus an F#-only
+  assertion that `--execution-id` is rejected with exit code 2).
 
 ## Dependencies
 
@@ -229,8 +262,9 @@ capabilities, lifecycle capture, classification, and aggregation.
   block`/`work resume`), all three read-only `telemetry
   adapters`/`telemetry show`/`telemetry summary` commands, `telemetry
   finalize` (excluding `--input` adapter ingestion), `telemetry record`,
-  `telemetry ingest` (generic adapter only), and `telemetry classify`
-  are real effects; `telemetry start`, every non-generic adapter's
-  provider-specific field mapping, and both `adapter call`/`adapter
+  `telemetry ingest` (generic adapter only), `telemetry classify`, and
+  `telemetry start` (excluding `--execution-id` and the eleven
+  identity-override flags) are real effects; every non-generic adapter's
+  provider-specific field mapping and both `adapter call`/`adapter
   publish` commands remain Node-only, pending MIG-08's own further
   scoping decisions.

@@ -1180,6 +1180,65 @@ that read, matching production's own check order exactly (an absent or
 malformed `--rd-context` file never masks the "no classification"
 rejection).
 
+## Phase A / MIG-08, increment 16: `telemetry start` — the first command that recovers-or-creates telemetry outside a work transition
+
+`telemetry start WORKITEMID [--classification NAME]* [--classification-rationale
+TEXT] [--quiet]` is production's own manual telemetry-attach command:
+unlike `work start`/`work resume`, it has no state transition of its own
+to plan -- it recovers or creates a telemetry execution for a work item
+that is already `active` or `blocked`, links it into
+`telemetryExecutionIds`, and returns. Production rejects both "the work
+item is not in context" and "the work item is not active/blocked" with
+the exact same message (`work item '{id}' must be active or blocked
+before starting telemetry`), reproduced here from three separate F# code
+paths (missing context file, item not found, wrong `semanticState`) that
+all resolve to the identical string.
+
+Unlike `work start`/`resume`, whose telemetry resolution is
+transition-plan-shaped (`WorkContextPlanning`/`resolveContextTelemetry`,
+consumed by `resolveContextTelemetryWithCreation` in `Ros.Cli.Program`),
+`telemetry start` has no plan to build. `FileTelemetryFinalizationRepository.
+startTarget` (new) therefore calls the same low-level pure
+`ExecutionLinkRecovery.decide` directly against
+`FileTelemetryStateRepository.readCandidates`, then performs a narrow,
+self-contained read-modify-write of `.ros/context/current.json` --
+deliberately bypassing `FileWorkContextRepository`'s only public API
+(`applyContextPlan`/`applyContextPlanWithConclusions`), which is shaped
+for a transition's item/event/telemetry plan, not a bare link-in-place.
+`resolveOrCreateExecution` mirrors production's `recoverOrStartExecution`
+exactly: filter candidates by work item, `Active` status, and exclusion
+of already-linked ids; `Recover` an unambiguous detached candidate;
+`RejectAmbiguous` on more than one (with production's exact `; rerun with
+--execution-id one of: ...` message); otherwise create a new execution
+via `FileTelemetryExecutionRepository.createExecution` (bounded to a
+single attempt, since there is no plan-resolution retry loop here).
+
+`classificationRationale` (`tools/ros_telemetry.mjs`'s `rationale:
+options.classificationRationale ?? null`) is a real, previously-unported
+production field: `CreateExecutionRequest` gained one new optional field
+for it, `None` at both pre-existing call sites (`work start`/`resume`
+never supply one, matching production's own CLI).
+
+This increment deliberately excludes `--execution-id` and the eleven
+identity-override flags (`--provider`, `--model`, `--model-version`,
+`--runtime`, `--runtime-version`, `--session`, `--conversation`, `--run`,
+`--agent`, `--subagent`, `--parent-execution`) that production's own
+`telemetry start` exposes via `telemetryIdentityOptions`. Unlike prior
+increments' exclusions (flags no current CLI command exposed at all),
+these are real, reachable production behavior -- supporting them requires
+extending `createExecution` itself to accept an explicit execution id and
+identity-override layering, judged a separately-scoped future slice. Each
+is rejected as a loud gap (exit code 2, `telemetry start FLAG is not yet
+supported by this CLI`) rather than silently ignored.
+
+`telemetry start` commits via a plain context-file write plus
+`RegistryLock.acquire root "work-protocol"` (matching production's
+`withWorkProtocol` lock and its `recoverWorkStateTransaction`/
+`recoverBacklogStateTransaction` recovery calls) -- but, matching
+production's own `renderedEventLog(root, [])`, it never appends to
+`.ros/events/events.jsonl`: no event log entry is written by this
+command, unlike `work start`/`resume`/`complete`.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

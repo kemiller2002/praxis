@@ -143,7 +143,7 @@ module WorkContextEffectTests =
                   withTemporaryRoot (fun root ->
                       File.WriteAllText(Path.Combine(root, "ros.json"), """{"telemetry":{"enabled":false}}""")
                       let request: FileTelemetryExecutionRepository.CreateExecutionRequest =
-                          { WorkItemId = "WI-NEW"; WorkType = "task"; Classifications = [] }
+                          { WorkItemId = "WI-NEW"; WorkType = "task"; Classifications = []; ClassificationRationale = None }
 
                       match FileTelemetryExecutionRepository.createExecution root request with
                       | Error message -> failwith message

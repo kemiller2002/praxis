@@ -23,7 +23,7 @@ open System.Text.Json.Nodes
 let Version = "0.2.0-shadow"
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--quiet] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet]"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--quiet] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet]"
 
 let private parseRoot (arguments: string array) =
     let values = ResizeArray<string>(arguments)
@@ -937,7 +937,8 @@ let private resolveContextTelemetryWithCreation root (classifications: string li
                     let createRequest: FileTelemetryExecutionRepository.CreateExecutionRequest =
                         { WorkItemId = workItemId
                           WorkType = item.WorkType
-                          Classifications = classifications }
+                          Classifications = classifications
+                          ClassificationRationale = None }
 
                     match FileTelemetryExecutionRepository.createExecution root createRequest with
                     | Error message -> Error message
@@ -1874,6 +1875,61 @@ let private runTelemetryClassify root (arguments: string list) =
 
                 0
 
+/// Mirrors production `telemetry start WORKITEMID [--classification NAME]*
+/// [--classification-rationale TEXT] [--quiet]` (`tools/ros_cli.mjs`) --
+/// MIG-08's eighth increment: manually ensures a currently `active`/
+/// `blocked` work item has a linked telemetry execution, recovering a
+/// detached one or creating a new one, with no state transition of its
+/// own (unlike `work start`/`resume`). Deliberately excludes `--execution-
+/// id` and every identity-override flag (`--provider`/`--model`/
+/// `--model-version`/`--runtime`/`--runtime-version`/`--session`/
+/// `--conversation`/`--run`/`--agent`/`--subagent`/`--parent-execution`)
+/// production's own CLI exposes here -- the one command that does --
+/// rejected outright (exit 2) rather than silently ignored, since
+/// supporting them means extending `createExecution` itself, a separately
+/// scoped future slice. Prints the literal JSON `null` when telemetry is
+/// disabled and no candidate execution exists, matching production's own
+/// `console.log(JSON.stringify(null, null, 2))`.
+let private runTelemetryStart root (arguments: string list) =
+    let unsupportedFlags =
+        [ "--execution-id"
+          "--provider"
+          "--model"
+          "--model-version"
+          "--runtime"
+          "--runtime-version"
+          "--session"
+          "--conversation"
+          "--run"
+          "--agent"
+          "--subagent"
+          "--parent-execution" ]
+
+    match unsupportedFlags |> List.tryFind (fun flag -> arguments |> List.contains flag) with
+    | Some flag ->
+        eprintfn "ERROR telemetry start %s is not yet supported by this CLI" flag
+        2
+    | None ->
+        match arguments |> List.tryHead |> Option.filter (fun value -> not (value.StartsWith("--", StringComparison.Ordinal))) with
+        | None ->
+            eprintfn "ERROR telemetry start requires a work-item ID"
+            1
+        | Some workItemId ->
+            let classifications = optionValues "--classification" arguments
+            let classificationRationale = optionValue "--classification-rationale" arguments
+
+            match FileTelemetryFinalizationRepository.startTarget root workItemId classifications classificationRationale with
+            | Error message ->
+                eprintfn "ERROR %s" message
+                1
+            | Ok record ->
+                if not (arguments |> List.contains "--quiet") then
+                    match record with
+                    | Some record -> printf "%s" (record.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
+                    | None -> printf "null"
+
+                0
+
 let private dispatch root arguments =
     let repository = FileArtifactRepository.create root
     let gitRepository = ProcessGitRepository.create root
@@ -1918,6 +1974,7 @@ let private dispatch root arguments =
     | "telemetry" :: "record" :: rest -> runTelemetryRecord root rest
     | "telemetry" :: "ingest" :: rest -> runTelemetryIngest root rest
     | "telemetry" :: "classify" :: rest -> runTelemetryClassify root rest
+    | "telemetry" :: "start" :: rest -> runTelemetryStart root rest
     | _ ->
         eprintfn "%s" usage
         2
