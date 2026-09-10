@@ -212,6 +212,27 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   destination or the receipts file is touched, matching production's own
   thrown, uncaught error.
 
+  `ros-fs work context [ID]` (Phase A's ninth increment, prompted by
+  `EV-ROS-2026-A046`'s finding that this row -- along with `work`/`work
+  list`, `work show`, and `status` -- was never assigned to MIG-07 or
+  MIG-08's scope at all) is the first pure read-only command surface view:
+  production's own `contextView` reads `.ros/context/current.json`,
+  optionally filtered to one work item, computing two fields fresh on
+  every call rather than storing them -- `allowedActions` (reusing the
+  existing `Ros.Domain.Work.WorkTransition.allowedActions`, matching
+  production's own `TRANSITIONS[item.semanticState]` table exactly,
+  including its empty-array fallback for a semantic state the table does
+  not recognize) and `requiredEvidenceForCompletion` (reusing the
+  existing `Ros.Infrastructure.Work.FileWorkConfigRepository.
+  readCompletionEvidence`, the same per-type/default lookup `work
+  complete`'s evidence check already used). No new decision logic was
+  needed at all -- both pieces of domain logic already existed from
+  earlier increments; this was purely new read-path wiring. A requested
+  ID with no matching item rejects with production's exact message rather
+  than an empty view. Requires no lock at all, unlike every mutation
+  command above. `work`/`work list`, `work show`, and `status` remain
+  their own future increments.
+
 ## Interfaces
 
 - Inbound: `./ros add`, `./ros work ...`, `./ros adapter ...`, and HTTP routes
@@ -290,6 +311,15 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   running both real Node (confirming the defect persists: `null`) and the
   F# CLI (confirming the corrected linkage) side by side, rather than
   asserting byte-for-byte parity.
+- Work-context real-effect tests: `tests/Ros.Tests/WorkContextViewTests.fs`
+  (every item's `allowedActions`/`requiredEvidenceForCompletion` computed
+  fresh, ID filtering preserving unmodeled fields such as a research
+  item's `conclusion`, the not-in-context rejection, and the
+  synthesized-empty-view case when no context file exists yet) and
+  `tests/work-context-fsharp-differential.test.mjs` (a real
+  `add`/`work ready`/`work start`/`work block` cycle driving the actual
+  `ros` CLI wrapper directly, covering the no-ID view, ID filtering, and
+  the unknown-ID rejection byte-for-byte against production).
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
 - Integration/live verification: `./ros status`, `./ros work context ID`, and
@@ -344,11 +374,15 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   `discoverIdentity` object-merge defect (real Node always writes
   `null`), so this port implements the evidently-intended behavior
   instead, since Node is being deprecated rather than patched; a
-  dedicated differential test documents the divergence explicitly. Still
-  remaining:
-  every telemetry-producer command (in the execution-telemetry
-  manifest) — all MIG-08-sized scoping work, independent of the
-  now-complete work-lifecycle command surface. Evidence containment
-  has no current authority; production
-  behavior accepts absolute existing paths. Production remains Node-owned
-  pending those slices and the distribution decision.
+  dedicated differential test documents the divergence explicitly.
+  `work context [ID]` is now a real read-only effect too — reusing
+  already-existing `WorkTransition.allowedActions`/`readCompletionEvidence`
+  domain logic, requiring no lock. Still remaining: every
+  telemetry-producer command (in the execution-telemetry manifest — all
+  now real, per MIG-08's own closure) has no bearing here; what's left in
+  this manifest's own scope is the three other pure read-only views
+  `EV-ROS-2026-A046` found never assigned to MIG-07/MIG-08 (`work`/`work
+  list`, `work show`, `status`), each its own small, separately-scoped
+  future increment. Evidence containment has no current authority;
+  production behavior accepts absolute existing paths. Production
+  remains Node-owned pending those slices and the distribution decision.

@@ -748,6 +748,69 @@ out-of-scope `telemetry finalize` command uses `--input`), and explicit
 `--identity-*`/`--execution-id` overrides (consistent with every other real
 effect in this migration).
 
+## Phase A, increment 9: `work context` — the first pure read-only command surface view
+
+`EV-ROS-2026-A046`'s re-run of the command-surface parity inventory,
+collected once MIG-08 closed entirely, found four rows still reading "No
+F# equivalent" — but flagged all four (`work`/`work list`, `work show`,
+`work context`, `status`) as never having been assigned to MIG-07 or
+MIG-08's own scope in the first place, rather than a gap either migration
+left open. This increment closes the smallest of the four.
+
+`ros-fs work context [ID]` mirrors production's own `contextView`
+(`tools/ros_cli.mjs`) exactly: a read of `.ros/context/current.json`,
+optionally filtered to one work item by ID, with two fields computed
+fresh on every call rather than persisted. Unlike every increment above,
+neither piece of domain logic needed to be written — both already
+existed from earlier work:
+
+- **`allowedActions`** reuses `Ros.Domain.Work.WorkTransition.
+  allowedActions` (built for the live-work transition decision layer
+  itself, long before this increment), matching production's own
+  `TRANSITIONS[item.semanticState]` lookup table exactly field-for-field
+  — including its behavior for a semantic state the table does not
+  recognize: production's `TRANSITIONS[unknownState]` is `undefined`,
+  spread through `[...(undefined ?? [])]` to an empty array; the F# port
+  matches this via `parseSemanticState value |> Option.map
+  WorkTransition.allowedActions |> Option.defaultValue []`, then sorts
+  the result (`List.sort`) to match production's own `.sort()` — though
+  in practice every declared state's action list already happens to
+  enumerate alphabetically, so the sort is a defensive correctness
+  guarantee rather than an observed reordering.
+- **`requiredEvidenceForCompletion`** reuses `Ros.Infrastructure.Work.
+  FileWorkConfigRepository.readCompletionEvidence` (built for `work
+  complete`'s own evidence-type validation), the same per-item-type,
+  falling back to `default`, lookup production's own `config.
+  evidence[item.type] ?? config.evidence.default` performs. One accepted
+  limitation carries over from reusing this existing, `Set`-based read
+  rather than writing a second, order-preserving one: `Set.toList`
+  always returns values in alphabetical order, while production's own
+  array preserves whatever order `ros.json` declared. This repository's
+  own `ros.json` happens to declare every evidence list already in
+  alphabetical order (`["implementation", "tests"]`, `["research-record"]`,
+  `[]`), so the divergence does not manifest here, but a hypothetical
+  consuming repository declaring a different order would see it
+  normalized.
+
+Every unmodeled field on each item — a research item's `conclusion`, for
+instance — is preserved verbatim via JSON-node surgery (`item.
+DeepClone()` then two new keys assigned), matching production's own
+`{...item, allowedActions, requiredEvidenceForCompletion}` object spread:
+both new keys are appended after every pre-existing one, exactly as
+JavaScript's spread-then-assign does. A requested ID matching no context
+item rejects with production's exact message (`work item '{id}' is not
+in repository context`) rather than returning an empty view. Unlike
+every mutation command in this manifest, `work context` acquires no lock
+at all — there is nothing to serialize against a pure read.
+
+Confirmed against real Node by driving the actual `ros` CLI wrapper
+directly (not just the exported function), covering a mix of active and
+blocked items with real telemetry executions attached (the no-ID view),
+filtering to one item by ID, and the unknown-ID rejection — all
+byte-for-byte identical once timestamps and randomly-generated execution
+IDs are normalized out. `work`/`work list`, `work show`, and `status`
+remain their own future increments.
+
 ## Phase A / MIG-08, increment 9: `telemetry adapters` and `telemetry show` — the first telemetry-producer commands
 
 With the live-work family closed, Phase A's remaining scope is every

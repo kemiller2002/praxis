@@ -593,6 +593,24 @@ let private runBacklogTransitionEffect root arguments =
         eprintfn "ERROR work backlog-transition requires valid --id, --action, and --occurred-at"
         2
 
+/// Mirrors production `work context [ID]` (`contextView`,
+/// `tools/ros_cli.mjs`): the first pure read-only view of
+/// `.ros/context/current.json` this CLI exposes, requiring no lock at all
+/// (unlike every mutation command above). `ID` is positional, like
+/// `telemetry show`'s own `TARGET`; a supplied ID that matches no context
+/// item rejects with production's exact message rather than returning an
+/// empty view.
+let private runWorkContext root (arguments: string list) =
+    let requestedId = arguments |> List.tryHead |> Option.filter (fun value -> not (value.StartsWith("--", StringComparison.Ordinal)))
+
+    match FileWorkContextRepository.readContextView root requestedId with
+    | Error message ->
+        eprintfn "ERROR %s" message
+        1
+    | Ok view ->
+        printf "%s" (view.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
+        0
+
 /// Mirrors production `captureWorkUnlocked`/`nextQueueId`
 /// (`tools/ros_cli.mjs`) via `Ros.Domain.Work.WorkCapture`, excluding
 /// `--file` attachment (a separate, larger effect). A real effect,
@@ -2063,6 +2081,7 @@ let private dispatch root arguments =
     | "work" :: "validate" :: rest -> runWorkAttributionValidate root rest
     | "work" :: "backlog-validate" :: rest -> runBacklogQueueValidate root rest
     | "work" :: "backlog-transition" :: rest -> runBacklogTransitionEffect root rest
+    | "work" :: "context" :: rest -> runWorkContext root rest
     | "work" :: "capture" :: rest -> runWorkCapture root rest
     | "work" :: "update" :: rest -> runWorkUpdate root rest
     | "work" :: "attach" :: rest -> runWorkAttach root rest

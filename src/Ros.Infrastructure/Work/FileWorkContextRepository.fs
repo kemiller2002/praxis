@@ -40,6 +40,21 @@ module FileWorkContextRepository =
         | LiveWorkState.Blocked -> "blocked"
         | LiveWorkState.Complete -> "complete"
 
+    let private parseSemanticState (value: string) : LiveWorkState option =
+        match value with
+        | "ready" -> Some LiveWorkState.Ready
+        | "active" -> Some LiveWorkState.Active
+        | "blocked" -> Some LiveWorkState.Blocked
+        | "complete" -> Some LiveWorkState.Complete
+        | _ -> None
+
+    let private actionCode (action: WorkAction) =
+        match action with
+        | WorkAction.Begin -> "begin"
+        | WorkAction.Block -> "block"
+        | WorkAction.Resume -> "resume"
+        | WorkAction.Complete -> "complete"
+
     let private stringField (item: JsonObject) (name: string) =
         match item[name] with
         | :? JsonValue as value ->
@@ -148,6 +163,96 @@ module FileWorkContextRepository =
             fresh["repository"] <- JsonValue.Create repositoryId
             fresh["workItems"] <- JsonArray()
             Ok fresh
+
+    /// Mirrors production `work context [ID]` (`contextView`,
+    /// `tools/ros_cli.mjs`): a read-only view of `.ros/context/current.json`,
+    /// optionally filtered to one work item, with two fields production
+    /// computes fresh on every read rather than storing -- `allowedActions`
+    /// (`WorkTransition.allowedActions`, matching production's own
+    /// `TRANSITIONS[item.semanticState]` exactly, including its fallback to
+    /// an empty array for a semantic state the live-work transition table
+    /// does not recognize) and `requiredEvidenceForCompletion`
+    /// (`FileWorkConfigRepository.readCompletionEvidence`'s per-type/default
+    /// fallback -- ordered alphabetically via the underlying `Set<string>`,
+    /// matching this repository's own `ros.json` evidence lists, which
+    /// happen to already be declared in alphabetical order; a config
+    /// repository declaring a different order would see it normalized,
+    /// an accepted limitation of reusing the existing `Set`-based read
+    /// rather than a second order-preserving one). Every unmodeled field on
+    /// each item (a research item's `conclusion`, for instance) is preserved
+    /// verbatim via JSON-node surgery, matching production's own
+    /// `{...item, allowedActions, requiredEvidenceForCompletion}` spread,
+    /// with the two new keys appended after every existing one exactly as
+    /// object-spread-then-assign does in JavaScript.
+    let readContextView (root: string) (requestedId: string option) : Result<JsonObject, string> =
+        let repositoryId = FileWorkConfigRepository.readRepositoryId root
+
+        match loadOrCreateContextNode root repositoryId with
+        | Error message -> Error message
+        | Ok context ->
+            let allItems =
+                match context["workItems"] with
+                | :? JsonArray as array -> array |> Seq.choose (function :? JsonObject as o -> Some o | _ -> None) |> Seq.toList
+                | _ -> []
+
+            let items =
+                match requestedId with
+                | Some id -> allItems |> List.filter (fun item -> stringField item "id" = Some id)
+                | None -> allItems
+
+            match requestedId with
+            | Some id when items.IsEmpty -> Error $"work item '{id}' is not in repository context"
+            | _ ->
+                let defaultEvidence, evidenceByType = FileWorkConfigRepository.readCompletionEvidence root
+
+                let augmented =
+                    items
+                    |> List.map (fun item ->
+                        let node = item.DeepClone() :?> JsonObject
+
+                        let allowedActions =
+                            stringField item "semanticState"
+                            |> Option.bind parseSemanticState
+                            |> Option.map WorkTransition.allowedActions
+                            |> Option.defaultValue []
+                            |> List.map actionCode
+                            |> List.sort
+
+                        node["allowedActions"] <- stringArrayNode allowedActions
+
+                        let evidenceType = stringField item "type" |> Option.defaultValue ""
+
+                        let requiredEvidence =
+                            evidenceByType |> Map.tryFind evidenceType |> Option.defaultValue defaultEvidence |> Set.toList |> List.sort
+
+                        node["requiredEvidenceForCompletion"] <- stringArrayNode requiredEvidence
+
+                        node)
+
+                let workItemsNode = JsonArray()
+                augmented |> List.iter (fun item -> workItemsNode.Add(item: JsonNode))
+
+                let output = JsonObject()
+
+                output["schemaVersion"] <-
+                    match context["schemaVersion"] with
+                    | null -> JsonValue.Create "1.0.0" :> JsonNode
+                    | v -> v.DeepClone()
+
+                output["protocolVersion"] <- JsonValue.Create(FileWorkConfigRepository.readProtocolVersion root)
+
+                output["repository"] <-
+                    match context["repository"] with
+                    | null -> JsonValue.Create repositoryId :> JsonNode
+                    | v -> v.DeepClone()
+
+                output["actor"] <-
+                    match context["actor"] with
+                    | null -> JsonValue.Create "unknown" :> JsonNode
+                    | v -> v.DeepClone()
+
+                output["workItems"] <- workItemsNode
+                Ok output
 
     /// Same field ordering production's own object literal + later property
     /// assignment produces for a freshly created event: the hash input

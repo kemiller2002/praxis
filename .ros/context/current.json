@@ -1566,11 +1566,63 @@
         "EXE-20260910T202652889Z-58fa1685"
       ],
       "completedAt": "2026-09-10T20:27:23.373Z"
+    },
+    {
+      "id": "WI-READY",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-10T20:34:40.136Z",
+      "telemetryExecutionIds": [
+        "EXE-20260910T203440154Z-b25c0cf1"
+      ]
+    },
+    {
+      "id": "WI-ACTIVE",
+      "type": "task",
+      "state": "blocked",
+      "semanticState": "blocked",
+      "evidence": [],
+      "updatedAt": "2026-09-10T20:34:40.579Z",
+      "telemetryExecutionIds": [
+        "EXE-20260910T203440452Z-5ea56a27"
+      ],
+      "blockReason": "waiting"
+    },
+    {
+      "id": "WI-0040",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileWorkContextRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/Program.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkContextViewTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-context-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-10T20:41:32.510Z",
+      "telemetryExecutionIds": [
+        "EXE-20260910T204128899Z-e11401c5"
+      ],
+      "completedAt": "2026-09-10T20:41:32.510Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-10T20:27:23.373Z",
+  "updatedAt": "2026-09-10T20:41:32.510Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

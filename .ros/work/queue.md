@@ -75,6 +75,9 @@
 | WI-0036 | F# telemetry ingest anthropic-claude-statusline adapter: Phase A/MIG-08 increment 13 | complete |  | high |
 | WI-0037 | F# telemetry ingest OTel adapter family: Phase A/MIG-08 increment 14 (final adapter, completes telemetry ingest) | complete |  | high |
 | WI-0038 | F# telemetry start execution-id and identity-override flags: Phase A/MIG-08 increment 15 (final, closes MIG-08 scope) | complete |  | high |
-| WI-0039 | Re-run F# command-surface parity inventory (EV-ROS-2026-A046): confirms MIG-08 fully closed | ready |  | high |
+| WI-0039 | Re-run F# command-surface parity inventory (EV-ROS-2026-A046): confirms MIG-08 fully closed | complete |  | high |
+| WI-0040 | F# work context read-only view: Phase A increment 9 (EV-ROS-2026-A046 follow-on) | ready |  | high |
+| WI-ACTIVE | Active item | blocked |  | medium |
+| WI-READY | Ready item | active |  | medium |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |
 | WORKQUEUE-BACKLOG-LAYER | WORKQUEUE-BACKLOG-LAYER | complete |  |  |
