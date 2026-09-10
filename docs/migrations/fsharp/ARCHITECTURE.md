@@ -745,6 +745,57 @@ out-of-scope `telemetry finalize` command uses `--input`), and explicit
 `--identity-*`/`--execution-id` overrides (consistent with every other real
 effect in this migration).
 
+## Phase A / MIG-08, increment 9: `telemetry adapters` and `telemetry show` — the first telemetry-producer commands
+
+With the live-work family closed, Phase A's remaining scope is every
+`telemetry ...` producer command and both `adapter ...` commands —
+`EV-ROS-2026-A044` (a full inventory of `tools/ros_telemetry.mjs`) grounds
+why this is MIG-08-sized rather than a quick follow-on: creating a single
+new execution record already needs identity discovery, a Git baseline
+snapshot, metric-registry loading, and initial capability seeding, and
+that record's own text explicitly declines to recommend which slice to
+attempt first — only that MIG-08 "almost certainly" needs its own smaller
+first vertical slice. This increment is that choice: the two commands with
+zero new write-path, lock, identity, or adapter complexity —
+`ros-fs telemetry adapters` and `ros-fs telemetry show [TARGET]` — mirroring
+production `tools/ros_telemetry.mjs`'s `TELEMETRY_ADAPTERS` constant and
+`showTelemetry` exactly.
+
+`telemetry adapters` prints a hardcoded provider-adapter catalog
+(`Ros.Domain.Telemetry.TelemetryAdapters.all`, a direct port of the
+`TELEMETRY_ADAPTERS` array) — no file I/O, no domain logic at all, just a
+literal list ported for traceability's sake.
+
+`telemetry show [TARGET]` is a real read against
+`.ros/telemetry/executions/*.json` — the same files `work start`/`work
+complete` already produce — through a new
+`Ros.Infrastructure.Work.FileTelemetryQueryRepository`
+(`readAll`/`readByWorkItemId`/`readByExecutionId`), with no lock and no
+write. `TARGET` is positional, matching production's own
+`telemetryTarget(args)` (`args[2]`, undefined when it starts with `--`),
+not a `--` flag like every other command this migration has ported so far:
+
+- no target → every execution record, in ascending filename order
+  (`readAll`, mirroring `loadExecutions`);
+- an `EXE-`-prefixed target → `resolveExecution`'s exact-id branch:
+  reject with production's exact message when nothing matches, otherwise
+  resolve the (in practice singular) match;
+- any other target → filter by `workItemId` (`readByWorkItemId`), where an
+  empty result is **not** a rejection — production's own `showTelemetry`
+  never throws for this branch, unlike the `EXE-` one.
+
+Deliberately excluded, and explicitly out of THIS increment's scope rather
+than assumed unnecessary: `telemetry summary`'s aggregation
+(`summarizeTelemetry` — four aggregation strategies plus interval-merged
+timing summaries, real new domain logic, not a trivial read); every
+write-path telemetry-producer command (`start`, `ingest`, `classify`,
+`record`, `finalize` — the last of which is also the one place
+`--input`/adapter-ingestion is reachable at all, deliberately excluded from
+`work complete` in increment 8); and both `adapter call`/`adapter publish`
+commands (the work-adapter contract, a different concern from telemetry
+provider adapters). Each remains its own future increment, chosen the same
+deliberate way this one was.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

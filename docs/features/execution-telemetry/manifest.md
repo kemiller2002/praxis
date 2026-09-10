@@ -23,6 +23,25 @@ capabilities, lifecycle capture, classification, and aggregation.
   execution/context linking composed under `work-protocol` and the recoverable
   work-state journal; typed Git observation through `tools/ros_git.mjs`, plus
   clock/environment discovery; bounded sanitized provider input.
+- F# migration (`DF-ROS-2026-A028` Phase A, MIG-08): `EV-ROS-2026-A044`
+  inventories this file's full scope and explains why a "quick" slice was
+  never realistic (creating one new execution record alone composes
+  identity discovery, a Git baseline snapshot, metric-registry loading, and
+  initial capability seeding). That identity/Git/registry/capability
+  machinery, plus a real clean-baseline change summary and finalization,
+  already shipped as part of `work start`/`work complete`
+  (`Ros.Infrastructure.Work.FileTelemetryExecutionRepository`/
+  `FileTelemetryFinalizationRepository`, in the work-lifecycle manifest) --
+  MIG-08's own first increment is the two read-only `telemetry ...`
+  commands with zero further new complexity: `telemetry adapters`
+  (`Ros.Domain.Telemetry.TelemetryAdapters`, a direct port of the
+  `TELEMETRY_ADAPTERS` catalog) and `telemetry show`
+  (`Ros.Infrastructure.Work.FileTelemetryQueryRepository`, a lock-free read
+  of `.ros/telemetry/executions/*.json`). `telemetry summary`'s aggregation,
+  every write-path telemetry-producer command
+  (`start`/`ingest`/`classify`/`record`/`finalize`), and both `adapter
+  call`/`adapter publish` commands remain Node-only, each its own future
+  scoping choice.
 
 ## Interfaces
 
@@ -39,6 +58,10 @@ capabilities, lifecycle capture, classification, and aggregation.
   `telemetry/metrics.json`, adapter fixtures, and unknown/zero/unavailable tests.
 - Integration/live verification: `./ros telemetry show|summary` and
   `./ros validate`.
+- F# telemetry-read real-effect tests: `tests/Ros.Tests/TelemetryQueryTests.fs`
+  and `tests/telemetry-show-fsharp-differential.test.mjs` (imports
+  production's own `showTelemetry`/`TELEMETRY_ADAPTERS` directly from
+  `tools/ros_telemetry.mjs` rather than reimplementing them).
 
 ## Dependencies
 
@@ -61,9 +84,15 @@ capabilities, lifecycle capture, classification, and aggregation.
 ## Maintenance
 
 - Owner: repository-governance
-- Last checked against implementation: 2026-09-08
+- Last checked against implementation: 2026-09-10
 - Known gaps: live model/token/cost fields depend on runtime adapters; whole
   execution records are rewritten on each update; unkeyed response loss after
   complete journal cleanup requires inspection before intentional retry;
   cross-host coordination and signing are deferred. The installed Git adapter
   matches the F# contract but remains Node until distribution is authorized.
+  F# parity is now real but partial: execution creation/finalization
+  (via `work start`/`work complete`) and the two read-only `telemetry
+  adapters`/`telemetry show` commands are real effects; `telemetry
+  summary`'s aggregation, every write-path telemetry-producer command, and
+  both adapter commands remain Node-only, pending MIG-08's own further
+  scoping decisions.

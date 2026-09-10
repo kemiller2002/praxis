@@ -23,7 +23,7 @@ open System.Text.Json.Nodes
 let Version = "0.2.0-shadow"
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME]"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | telemetry adapters | telemetry show [TARGET]"
 
 let private parseRoot (arguments: string array) =
     let values = ResizeArray<string>(arguments)
@@ -1476,6 +1476,53 @@ let private runBacklogQueueValidate root arguments =
         printf "%s" (BacklogQueueValidationContract.renderJson findings)
         if findings.IsEmpty then 0 else 1
 
+/// Mirrors production `telemetry adapters` (`tools/ros_telemetry.mjs`):
+/// prints the static provider-adapter catalog verbatim. No file I/O, no
+/// lock -- ingestion itself (mapping each adapter's payload shape into the
+/// normalized schema) is a separately-scoped later slice.
+let private runTelemetryAdapters () =
+    let node = JsonArray()
+    TelemetryAdapters.all |> List.iter (fun name -> node.Add(JsonValue.Create name: JsonNode))
+    printf "%s" (node.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
+    0
+
+/// Mirrors production `telemetry show [TARGET]` (`showTelemetry`,
+/// `tools/ros_telemetry.mjs`) -- Phase A/MIG-08's first increment, and the
+/// first telemetry-producer command with real F# parity. `TARGET` is
+/// positional, not a flag, matching production's own `telemetryTarget(args)`
+/// (`args[2]`, undefined when it starts with `--`). No target prints every
+/// execution record; an `EXE-`-prefixed target resolves exactly one record
+/// or production's exact rejection message; any other target filters by
+/// work-item ID, where an empty result is not a rejection (production's own
+/// `showTelemetry` never throws for this branch). Read-only: no lock, no
+/// write, and no new identity/Git/capability machinery -- it only reads the
+/// same `.ros/telemetry/executions/*.json` records `work start`/`work
+/// complete` already produce. Deliberately excludes `telemetry summary`'s
+/// aggregation (`summarizeTelemetry`), a separately-scoped later slice.
+let private runTelemetryShow root (arguments: string list) =
+    let target =
+        arguments
+        |> List.tryHead
+        |> Option.filter (fun value -> not (value.StartsWith("--", StringComparison.Ordinal)))
+
+    let renderRecords (records: JsonObject list) =
+        let node = JsonArray()
+        records |> List.iter (fun record -> node.Add(record.DeepClone(): JsonNode))
+        printf "%s" (node.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
+        0
+
+    match target with
+    | None -> renderRecords (FileTelemetryQueryRepository.readAll root)
+    | Some value when value.StartsWith("EXE-", StringComparison.Ordinal) ->
+        match FileTelemetryQueryRepository.readByExecutionId root value with
+        | Error message ->
+            eprintfn "ERROR %s" message
+            1
+        | Ok record ->
+            printf "%s" (record.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
+            0
+    | Some workItemId -> renderRecords (FileTelemetryQueryRepository.readByWorkItemId root workItemId)
+
 let private dispatch root arguments =
     let repository = FileArtifactRepository.create root
     let gitRepository = ProcessGitRepository.create root
@@ -1513,6 +1560,8 @@ let private dispatch root arguments =
     | "work" :: "resume" :: rest -> runWorkResume root rest
     | "work" :: "block" :: rest -> runWorkBlock root rest
     | "work" :: "complete" :: rest -> runWorkComplete root rest
+    | [ "telemetry"; "adapters" ] -> runTelemetryAdapters ()
+    | "telemetry" :: "show" :: rest -> runTelemetryShow root rest
     | _ ->
         eprintfn "%s" usage
         2

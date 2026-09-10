@@ -26,5 +26,6 @@
     <Compile Include="Work/FileMetricRegistryRepository.fs" />
     <Compile Include="Work/FileTelemetryExecutionRepository.fs" />
     <Compile Include="Work/FileTelemetryFinalizationRepository.fs" />
+    <Compile Include="Work/FileTelemetryQueryRepository.fs" />
   </ItemGroup>
 </Project>
