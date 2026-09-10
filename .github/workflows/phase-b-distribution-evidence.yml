@@ -1,7 +1,8 @@
 name: Phase B distribution evidence (scratch)
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [phase-b-distribution-evidence-scratch]
 
 jobs:
   measure:
