@@ -141,7 +141,15 @@ module FileTelemetryExecutionRepository =
     /// history has actually overflowed the cap.
     let capabilityNode (capability: Capability) : JsonObject =
         let node = JsonObject()
-        node["metricId"] <- JsonValue.Create capability.MetricId
+
+        match capability.MetricId with
+        | Some metricId -> node["metricId"] <- JsonValue.Create metricId
+        | None -> ()
+
+        match capability.ProviderField with
+        | Some providerField -> node["providerField"] <- JsonValue.Create providerField
+        | None -> ()
+
         node["status"] <- JsonValue.Create capability.Status
         node["reason"] <- optionalString capability.Reason
         node["discoveredAt"] <- JsonValue.Create capability.DiscoveredAt
@@ -209,7 +217,8 @@ module FileTelemetryExecutionRepository =
         node["schemaVersion"] <- JsonValue.Create "1.0.0"
 
         let capability =
-            { MetricId = definition.Id
+            { MetricId = Some definition.Id
+              ProviderField = None
               Status = "derived"
               Reason = Some "normalized measurement recorded"
               DiscoveredAt = collectedAt
@@ -284,9 +293,10 @@ module FileTelemetryExecutionRepository =
 
                                     capabilities
                                     |> List.map (fun capability ->
-                                        if capability.MetricId = definition.Id then
+                                        if capability.MetricId = Some definition.Id then
                                             Capability.upsert
                                                 maxHistory
+                                                startedAt
                                                 startedAt
                                                 startedAt
                                                 upserted.Status

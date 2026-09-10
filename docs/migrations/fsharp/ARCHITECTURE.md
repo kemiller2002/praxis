@@ -1031,6 +1031,118 @@ the printed metric is whatever else happens to be last, not the one just
 written up here, since it is easy to assume the print always reflects the
 call just made.
 
+## Phase A / MIG-08, increment 14: `telemetry ingest` — the third write-path telemetry-producer command, generic adapter only
+
+Increments 12-13 shipped two directly CLI-typed write-path commands
+(`finalize`, `record`); this increment ports production's largest
+remaining directly-reachable effect, `telemetry ingest [TARGET] --input
+FILE [--adapter NAME]` (`ingestTelemetry`/`adaptInput`/`ingestAdapted`),
+restricted to the `generic` adapter -- the one with zero provider-specific
+field mapping, matching increment 9's own "smallest real slice first"
+choice. Every other adapter name production itself recognizes
+(`openai-codex`, `anthropic-claude-*`, `google-gemini-*`,
+`github-copilot-*`, `otel-json`) is its own future MIG-08 slice; the CLI
+rejects them outright (exit 2) rather than silently treating them as
+generic, while a name production itself would not recognize gets
+production's own exact error.
+
+Target resolution reuses `record`'s own `activeOnly` resolver, but adapter
+validation and adaptation happen *before* it -- mirroring production's own
+`ingestTelemetry`, which calls `adaptInput` (throwing on an unknown
+adapter) ahead of `withExecutionLock`. `adaptGeneric` (new) is a direct
+field-by-field passthrough of the parsed input JSON -- `identity`,
+`capabilities`, `metrics`, `events`, `classification`, `scope`,
+`qualitySignals`, `links`, and `raw` (falling back to `providerTelemetry`,
+then `{}`) are honored verbatim, since the generic adapter maps nothing.
+
+The real complexity lives in `ingestAdaptedGeneric` (new), which mirrors
+`ingestAdapted` field-for-field:
+
+- **Snapshot identity and dedup.** A caller-supplied `snapshotId` wins;
+  otherwise production computes it *before* `ingestAdapted` even runs,
+  inside `ingestTelemetry` itself, as a SHA-256 digest of `{adapter,
+  input}` over the *original, un-adapted* input -- not `adapted.raw` as
+  `ingestAdapted`'s own (in practice unreachable) fallback formula would
+  suggest. Getting this backwards was the one real bug this increment's
+  own manual smoke-testing against real Node caught before any test was
+  written: the two formulas produce different digests whenever the input
+  JSON carries fields outside `raw`, and only re-deriving production's
+  real call order (`ingestTelemetry` sets `adapted.snapshotId` first)
+  resolved it. An execution that already carries this `snapshotId` --
+  in `rawTelemetry` or the ingestion-event log -- returns untouched, no
+  further mutation attempted.
+- **The declared-unavailable consistency guard**: a metric reported with a
+  value while every one of its declared capabilities says
+  `supported-unavailable`/`unsupported` rejects the whole snapshot before
+  any mutation, citing the same snapshotId.
+- **Identity merge** (`mergeObject` semantics: skips `null`/absent
+  incoming values) versus **classification/scope merge** (plain
+  object-spread semantics: an explicit incoming `null` overwrites) --
+  two genuinely different merge rules production itself keeps distinct,
+  reproduced as two separate functions rather than one parameterized by a
+  boolean, since conflating them risks silently drifting one back into
+  the other on a future edit.
+- **Metric normalization** generalizes `record`'s own narrow, CLI-typed
+  path: an ingested metric is an arbitrary JSON object, so `unit`,
+  `currency`, `quality`, `confidence`, `scope`, `aggregation`,
+  `dimensions`, `pricing`, `measurementId`, `source`, and `collectedAt`
+  are all honored verbatim when the metric item itself supplies them,
+  falling back to the registry/defaults chain exactly as production's
+  field-by-field `??` does.
+- **Capability upsert** is now keyed by the pair `(metricId,
+  providerField)`, not `metricId` alone -- the `Capability` domain type
+  (`Ros.Domain.Telemetry`) gained an optional `ProviderField` alongside
+  making `MetricId` itself optional, since production's own unknown-field
+  discovery capability (below) carries a `providerField` and *no*
+  `metricId` at all. `Capability.upsert` also gained an independent
+  `newLastAssessedAt` parameter (every pre-existing call site passes the
+  same value twice, preserving its exact prior behavior) since a
+  directly-declared ingest capability can assert a `lastAssessedAt`
+  distinct from its own `discoveredAt`, unlike every other capability
+  write this migration produces.
+- **Raw payload handling**: `sanitizeRaw` (new, general `JsonNode`
+  recursion) redacts any key matching either of production's sensitive-key
+  patterns and truncates an over-long string leaf, always rebuilding via
+  fresh nodes since a `JsonNode` already attached elsewhere cannot be
+  reattached; `leafPaths` (new) collects every leaf's path (array indices
+  normalized to `[]`) for unmapped-field discovery. The byte-budget
+  retention policy checks, in production's own order, whether raw
+  telemetry is disabled by config, whether this single snapshot exceeds
+  `maxRawPayloadBytes`, whether the execution has already reached
+  `maxRawSnapshotsPerExecution`, and whether adding this snapshot would
+  exceed `maxRawBytesPerExecution` -- four new `Ros.Infrastructure.Work.
+  FileWorkConfigRepository` readers, matching production's own defaults.
+  Every discovered (unmapped) field gets its own `unknown`-status,
+  `providerField`-keyed capability, whether or not the raw snapshot itself
+  was actually retained.
+- **The three derived quality metrics** (`telemetry.redactions`,
+  `telemetry.unknown_fields`, `telemetry.raw_snapshots_omitted`) are
+  synthesized as ordinary metric-normalization inputs (a small
+  `syntheticMetricNode` helper) and routed through the same
+  `normalizeAndAppendIngestedMetric` path every other ingested metric
+  uses, rather than a separate write path -- one mutation function to
+  keep correct, not two.
+- **Provenance sources** accumulate across every ingest call, deduped by a
+  content digest of each source object (mirroring production's own
+  `[...new Map(sources.map(s => [digest(s), s])).values()]`).
+
+A new general `CanonicalJson.stabilize`/`contentDigest` (in
+`Ros.Infrastructure.Json`) mirrors production's `stable()` for genuinely
+arbitrary, caller-supplied JSON -- a raw payload, an ingested event or
+quality signal, a metric's own `dimensions`/`pricing` -- where the key set
+and nesting depth are not known in advance, unlike every prior
+content-addressed digest in this migration (an event's `eventId`, a
+derived metric's `measurementId`), which could hand-build an
+already-sorted flat object literal because their own field set was fixed
+and shallow.
+
+`--input`'s file (or `-` for stdin) is read and byte-checked at the CLI
+layer (`Ros.Cli.Program`), matching this migration's own established split
+of disk I/O away from the pure effect functions; a single JSON value is
+tried first, falling back to JSON Lines (one value per non-blank line) --
+production's own `readTelemetryInput` contract exactly, reproduced as
+`FileTelemetryFinalizationRepository.parseIngestInput`.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

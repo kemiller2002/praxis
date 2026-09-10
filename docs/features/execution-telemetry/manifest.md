@@ -80,10 +80,31 @@ capabilities, lifecycle capture, classification, and aggregation.
   production's `normalizeMetric` does), and a content-addressed
   `measurementId` deduplicates an identical repeated call while the
   capability upsert and record rewrite still happen unconditionally,
-  matching production's own `addMetric` exactly. Every remaining
-  write-path telemetry-producer command (`start`/`ingest`/`classify`)
-  and both `adapter call`/`adapter publish` commands remain Node-only,
-  each its own future scoping choice.
+  matching production's own `addMetric` exactly. A sixth increment ships
+  the third write-path telemetry-producer command, `telemetry ingest
+  [TARGET] --input FILE`, restricted to the `generic` adapter (every
+  other real adapter name is rejected outright, its own future slice;
+  a genuinely unknown name gets production's own exact error):
+  `FileTelemetryFinalizationRepository.ingestTarget`/
+  `ingestAdaptedGeneric`/`adaptGeneric` port `ingestTelemetry`/
+  `ingestAdapted` field-for-field -- snapshot dedup keyed by a digest of
+  the original un-adapted input, the declared-unavailable consistency
+  guard, identity merge (skip-null) versus classification/scope merge
+  (explicit-null-overwrites) kept as two distinct functions, general
+  metric normalization honoring every field an ingested metric supplies,
+  capability upsert now keyed by `(metricId, providerField)` rather than
+  `metricId` alone (`Ros.Domain.Telemetry.Capability` gained an optional
+  `ProviderField`, and `MetricId` itself is now optional), raw-payload
+  redaction/truncation plus the four-branch byte-budget retention policy
+  (new `FileWorkConfigRepository` raw-telemetry config readers), the
+  three derived quality metrics routed through the same metric-
+  normalization path, and provenance-source dedup by content digest. A
+  new general `CanonicalJson.stabilize`/`contentDigest`
+  (`Ros.Infrastructure.Json`) mirrors production's `stable()` for
+  arbitrary caller-supplied JSON. Every remaining write-path
+  telemetry-producer command (`start`/`classify`), every non-generic
+  adapter's field mapping, and both `adapter call`/`adapter publish`
+  commands remain Node-only, each its own future scoping choice.
 
 ## Interfaces
 
@@ -142,6 +163,19 @@ capabilities, lifecycle capture, classification, and aggregation.
   messages, content-addressed dedup, a real registry-seeded capability
   transition, and unit/currency/confidence overrides cross-checked
   byte-for-byte against production).
+- F# telemetry-ingest real-effect tests:
+  `tests/Ros.Tests/TelemetryIngestTests.fs` (identity/metric/event
+  merging with redaction and derived metrics, snapshot dedup,
+  declared-capability upsert-into-history, the declared-unavailable
+  conflict, classification/scope/links merge semantics, quality-signal
+  dedup, every resolution/adapter rejection, all three raw-retention
+  branches, and `parseIngestInput`'s JSON/JSON-Lines/empty/malformed
+  handling) and `tests/telemetry-ingest-fsharp-differential.test.mjs`
+  (the same real-effect surface byte-for-byte against production's own
+  `ingestTelemetry`, including snapshotId/eventId digest equality
+  independent of executionId or wall-clock time, the
+  declared-unavailable rejection's shared snapshotId, config-driven
+  retention behavior, and stdin (`-`) input).
 
 ## Dependencies
 
@@ -173,9 +207,10 @@ capabilities, lifecycle capture, classification, and aggregation.
   F# parity is now real but partial: execution creation/finalization
   (via `work start`/`work complete`), lifecycle bookkeeping (via `work
   block`/`work resume`), all three read-only `telemetry
-  adapters`/`telemetry show`/`telemetry summary` commands, and both
-  `telemetry finalize` (excluding `--input` adapter ingestion) and
-  `telemetry record` are real effects; every remaining write-path
-  telemetry-producer command (`start`/`ingest`/`classify`) and both
-  adapter commands remain Node-only, pending MIG-08's own further
-  scoping decisions.
+  adapters`/`telemetry show`/`telemetry summary` commands, `telemetry
+  finalize` (excluding `--input` adapter ingestion), `telemetry record`,
+  and `telemetry ingest` (generic adapter only) are real effects; every
+  remaining write-path telemetry-producer command (`start`/`classify`),
+  every non-generic adapter's provider-specific field mapping, and both
+  `adapter call`/`adapter publish` commands remain Node-only, pending
+  MIG-08's own further scoping decisions.

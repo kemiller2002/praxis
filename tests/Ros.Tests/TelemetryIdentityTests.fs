@@ -105,7 +105,7 @@ module TelemetryIdentityTests =
           { Name = "upserting a capability for the first time always adds lastAssessedAt/recordedAt, matching it Touched even without a status change"
             Run = fun () ->
                 let previous = Capability.initial "T0" (source "e" "n" "m") "unknown" true (metric "git.baseline_dirty_files" "ros-derived")
-                let merged = Capability.upsert 64 "T0" "T1" previous.Status previous.Reason previous.Source previous
+                let merged = Capability.upsert 64 "T0" "T0" "T1" previous.Status previous.Reason previous.Source previous
                 Assert.equal true merged.Touched
                 Assert.equal [] merged.History
                 Assert.equal 0 merged.HistoryOmitted }
@@ -113,7 +113,7 @@ module TelemetryIdentityTests =
           { Name = "upserting a capability with a changed reason moves the previous status into history"
             Run = fun () ->
                 let previous = Capability.initial "T0" (source "e" "n" "m") "unknown" true (metric "git.baseline_dirty_files" "ros-derived")
-                let merged = Capability.upsert 64 "T1" "T1" "derived" (Some "normalized measurement recorded") (source "ros-git" "git-status" "porcelain-v1") previous
+                let merged = Capability.upsert 64 "T1" "T1" "T1" "derived" (Some "normalized measurement recorded") (source "ros-git" "git-status" "porcelain-v1") previous
                 Assert.equal 1 merged.History.Length
                 Assert.equal previous.Status merged.History[0].Status
                 Assert.equal previous.Reason merged.History[0].Reason
@@ -125,7 +125,7 @@ module TelemetryIdentityTests =
 
                 let grown =
                     [ 1..5 ]
-                    |> List.fold (fun capability index -> Capability.upsert 3 $"T{index}" $"T{index}" $"status-{index}" None (source "e" "n" "m") capability) seed
+                    |> List.fold (fun capability index -> Capability.upsert 3 $"T{index}" $"T{index}" $"T{index}" $"status-{index}" None (source "e" "n" "m") capability) seed
 
                 Assert.equal 3 grown.History.Length
                 Assert.equal "derived" grown.History[0].Status

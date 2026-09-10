@@ -130,6 +130,43 @@ module FileWorkConfigRepository =
                 | _ -> 64
             | _ -> 64
 
+    /// Mirrors production `telemetryConfig().allowRawTelemetry`, defaulting
+    /// to `true` (disabled only by the JSON literal `false`, matching every
+    /// other telemetry boolean flag's `!== false` convention).
+    let readTelemetryAllowRawTelemetry (root: string) : bool =
+        match readTelemetry root with
+        | None -> true
+        | Some element ->
+            match element.TryGetProperty "allowRawTelemetry" with
+            | true, value when value.ValueKind = JsonValueKind.False -> false
+            | _ -> true
+
+    let private readTelemetryIntLimit (root: string) (propertyName: string) (fallback: int) : int =
+        match readTelemetry root with
+        | None -> fallback
+        | Some element ->
+            match element.TryGetProperty propertyName with
+            | true, value when value.ValueKind = JsonValueKind.Number ->
+                match value.TryGetInt32() with
+                | true, parsed -> parsed
+                | _ -> fallback
+            | _ -> fallback
+
+    /// Mirrors production `telemetryConfig().maxRawPayloadBytes`, defaulting
+    /// to 262,144.
+    let readTelemetryMaxRawPayloadBytes (root: string) : int =
+        readTelemetryIntLimit root "maxRawPayloadBytes" 262_144
+
+    /// Mirrors production `telemetryConfig().maxRawSnapshotsPerExecution`,
+    /// defaulting to 256.
+    let readTelemetryMaxRawSnapshotsPerExecution (root: string) : int =
+        readTelemetryIntLimit root "maxRawSnapshotsPerExecution" 256
+
+    /// Mirrors production `telemetryConfig().maxRawBytesPerExecution`,
+    /// defaulting to 8,388,608.
+    let readTelemetryMaxRawBytesPerExecution (root: string) : int =
+        readTelemetryIntLimit root "maxRawBytesPerExecution" 8_388_608
+
     /// Mirrors production `workConfig().protocolVersion`:
     /// `config.workProtocol?.version ?? "1.0.0"`.
     let readProtocolVersion (root: string) : string =
