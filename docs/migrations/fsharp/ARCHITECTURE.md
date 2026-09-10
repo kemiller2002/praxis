@@ -1913,6 +1913,40 @@ plain-text form (including the text form's per-finding `ERROR .../ REPAIR
 own dependency on this unification is resolved, and it remains the one
 row `EV-ROS-2026-A046` found never assigned to MIG-07/MIG-08's scope.
 
+## Phase A, increment 12: `status` — closing `EV-ROS-2026-A046`'s full four-row inventory
+
+The last of the four command-surface rows `EV-ROS-2026-A046` found
+never assigned to MIG-07 or MIG-08's scope. Production's own
+`statusView` (`tools/ros_cli.mjs`) is itself pure composition over three
+pieces this migration already ported in full: `contextView` (`work
+context`, increment 9), the unified `validate` findings (increment 11,
+reused directly as `computeUnifiedFindings` rather than recomputed), and
+`showTelemetry`'s own execution read (execution-telemetry manifest's
+`FileTelemetryQueryRepository.readAll`), filtered to `status ===
+"active"` for the active-execution count. Because every piece
+`statusView` needs was already real, this increment adds zero new
+Domain or Infrastructure code — it is purely CLI-layer composition
+(`Ros.Cli.Program.runStatus`), narrowing `contextView`'s per-item output
+to the six fields production's own destructuring keeps
+(`id`/`type`/`state`/`semanticState`/`allowedActions`/
+`telemetryExecutionIds`, the last defaulting to an empty array when
+absent, matching production's own `?? []`), and deduplicating each
+finding's repair hint into `nextActions` via `List.distinct`
+(first-occurrence order, matching JS's `[...new Set(...)]`), falling
+back to production's exact single default message
+(`"Select an allowed work transition or begin a new work item."`) when
+there are no findings at all.
+
+Confirmed against real Node for a clean bootstrap (`validation:
+"passed"`, the default `nextActions` message) and a populated
+repository — real active and blocked work items with real linked
+telemetry executions, a real backlog-status finding driving
+`validation: "failed"` and a non-default `nextActions` entry, and real
+execution/active-execution counts — all byte-for-byte identical. This
+closes `EV-ROS-2026-A046`'s full four-row inventory: `work`/`work list`,
+`work show`, `work context`, and `status` all now have real F# effect
+parity.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for
