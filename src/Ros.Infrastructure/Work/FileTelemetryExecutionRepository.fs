@@ -240,33 +240,84 @@ module FileTelemetryExecutionRepository =
           /// (`work start`/`resume` never supply one, matching production's
           /// own CLI, which never threads a rationale through those paths).
           ClassificationRationale: string option
-          /// Production's `startExecution`'s `options.parentExecutionId ??
-          /// null` -- but production's own `work resume` never actually
-          /// delivers a value here: `discoverIdentity(options.identity ??
-          /// options)` picks `options.identity` (always a truthy object,
-          /// even with every field `undefined`) over the sibling `options`
-          /// object `resume` set `parentExecutionId` on, so production's own
-          /// computed prior-execution id is silently discarded every time
-          /// (confirmed against real Node: the field is always `null` in
-          /// the created record). Since Node is being deprecated rather
-          /// than patched, this port implements the evidently-intended
-          /// behavior instead of replicating the bug: `runWorkResume`
-          /// supplies the work item's most recently created execution here
-          /// (`FileTelemetryQueryRepository.readLatestExecutionId`); every
-          /// other call site passes `None`, matching production's own CLI,
-          /// which never threads a `parentExecutionId` through `begin`/
-          /// `block`/`complete` at all.
-          ParentExecutionId: string option }
+          /// Production's `startExecution`'s `options.executionId ??
+          /// executionId()`: an explicit id to use verbatim instead of
+          /// generating a fresh one. Only `telemetry start`'s own
+          /// `--execution-id` flag ever supplies one (and only reaches
+          /// `createExecution` at all when no detached candidate matched
+          /// it, per `ExecutionLinkRecovery.decide`'s `StartNew` branch --
+          /// a matching candidate is recovered instead of ever creating);
+          /// every other call site passes `None`.
+          ExecutionId: string option
+          /// The 11 explicit per-field identity overrides production's own
+          /// `telemetryIdentityOptions(args)` builds from CLI flags
+          /// (`--provider`/`--model`/`--model-version`/`--runtime`/
+          /// `--runtime-version`/`--session`/`--conversation`/`--run`/
+          /// `--agent`/`--subagent`/`--parent-execution`), merged over the
+          /// real environment-discovered `IdentityInputs` inside
+          /// `createExecution` -- mirroring production's own
+          /// `discoverIdentity(options.identity ?? options)`, where
+          /// `options.identity` (always a truthy object, even with every
+          /// field `undefined`) supplies each explicit override field and
+          /// `discoverIdentity`'s own environment-variable fallbacks still
+          /// apply underneath per field. Only `telemetry start` ever
+          /// populates more than `ParentExecutionId`: every other call site
+          /// passes `{ IdentityInputs.empty with ParentExecutionId = ... }`,
+          /// matching production's own CLI, which never threads any other
+          /// identity-override flag through `begin`/`resume`/`block`/
+          /// `complete` at all. `resume`'s own `ParentExecutionId` here is
+          /// the one place this migration's F# port deliberately implements
+          /// the evidently-intended behavior rather than production's own:
+          /// production's `discoverIdentity(options.identity ?? options)`
+          /// picks `options.identity` over the sibling `options` object
+          /// `resume` actually set `parentExecutionId` on, so production's
+          /// own computed prior-execution id is silently discarded every
+          /// time (confirmed against real, unpatched Node: the field is
+          /// always `null` in the created record). Since Node is being
+          /// deprecated rather than patched, `runWorkResume` supplies the
+          /// work item's most recently created execution here
+          /// (`FileTelemetryQueryRepository.readLatestExecutionId`) instead
+          /// of reproducing the defect.
+          IdentityOverrides: IdentityInputs }
 
     let private serializerOptions =
         JsonSerializerOptions(WriteIndented = true, IndentSize = 2, Encoder = Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping)
 
+    /// Overlays the 11 explicit per-field identity overrides a caller (only
+    /// `telemetry start` today) supplied onto the real environment-derived
+    /// `IdentityInputs`, mirroring production's own `discoverIdentity(
+    /// options.identity ?? options)`: an override field wins when present,
+    /// otherwise the environment-derived field (and, inside `Identity.
+    /// discover` itself, each field's own further environment-variable
+    /// fallback chain) still applies -- every environment-only field
+    /// (`RosTelemetry*`, `Codex*`, `ClaudeCodeSessionId`, `GeminiSessionId`,
+    /// `CopilotSessionId`, `GitHubActions`, `GitHubRunId`, `OllamaHost`)
+    /// comes from `environment` unchanged, since `overrides` never carries
+    /// real values for those (a caller only ever populates the 11 explicit
+    /// fields on the value it builds).
+    let private mergeIdentityOverrides (environment: IdentityInputs) (overrides: IdentityInputs) : IdentityInputs =
+        { environment with
+            Provider = overrides.Provider
+            Model = overrides.Model
+            ModelVersion = overrides.ModelVersion
+            Runtime = overrides.Runtime
+            RuntimeVersion = overrides.RuntimeVersion
+            SessionId = overrides.SessionId
+            ConversationId = overrides.ConversationId
+            RunId = overrides.RunId
+            AgentId = overrides.AgentId
+            SubagentId = overrides.SubagentId
+            ParentExecutionId = overrides.ParentExecutionId }
+
     /// Mirrors production `startExecution`, excluding every explicit
-    /// override option no current CLI command supplies (an execution ID,
-    /// identity overrides, `startedAt`, requirement/experiment/PR links,
-    /// and an initial `scope`) -- identity is discovered purely from the
-    /// environment. Returns `None` when telemetry is disabled, matching
-    /// production's own `if (!config.enabled) return null`.
+    /// override option no current CLI command supplies (`startedAt`,
+    /// requirement/experiment/PR links, and an initial `scope`) -- an
+    /// explicit execution id and the 11 identity-override fields are both
+    /// now real (`telemetry start`'s own `--execution-id` and identity
+    /// flags); every other call site still discovers identity purely from
+    /// the environment and lets a fresh execution id be generated. Returns
+    /// `None` when telemetry is disabled, matching production's own
+    /// `if (!config.enabled) return null`.
     let createExecution (root: string) (request: CreateExecutionRequest) : Result<string option, string> =
         if not (FileWorkConfigRepository.readTelemetryEnabled root) then
             Ok None
@@ -278,12 +329,10 @@ module FileTelemetryExecutionRepository =
                     let result =
                         try
                             let startedAt = nowIso ()
-                            let executionId = newExecutionId startedAt
+                            let executionId = request.ExecutionId |> Option.defaultValue (newExecutionId startedAt)
                             let repositoryId = FileWorkConfigRepository.readRepositoryId root
                             let identity, discoverySource =
-                                Identity.discover
-                                    { environmentIdentityInputs () with
-                                        ParentExecutionId = request.ParentExecutionId }
+                                Identity.discover (mergeIdentityOverrides (environmentIdentityInputs ()) request.IdentityOverrides)
                             let git = observeGitBaseline root repositoryId
                             let definitions = FileMetricRegistryRepository.read root
 

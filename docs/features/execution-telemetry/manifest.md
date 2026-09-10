@@ -134,10 +134,9 @@ capabilities, lifecycle capture, classification, and aggregation.
   previously-unported `ClassificationRationale` field
   (production's `startExecution`'s `options.classificationRationale ??
   null`). `--execution-id` and the eleven identity-override flags
-  production's own CLI exposes (`telemetryIdentityOptions`) are
-  deliberately excluded and loudly rejected (exit 2), scoped as a
-  separate future slice, since supporting them requires extending
-  `createExecution` itself. The `adapter call`/`adapter publish` commands
+  production's own CLI exposes (`telemetryIdentityOptions`) were
+  initially excluded and loudly rejected (exit 2); a later increment
+  (below) closes that gap. The `adapter call`/`adapter publish` commands
   (owned by the work-lifecycle manifest's `DF-ROS-2026-A007`, not
   telemetry; both are now real effects there) remain out of this
   manifest's scope.
@@ -233,6 +232,30 @@ capabilities, lifecycle capture, classification, and aggregation.
   now dispatches to a real F# effect, so `ingestTarget`'s "not yet
   supported by this CLI" rejection became permanently unreachable and was
   retired along with the allowlist that guarded it.
+
+  A thirteenth and final increment closes the last piece of MIG-08's own
+  scope: `telemetry start`'s own `--execution-id` and its eleven
+  identity-override flags, excluded since the eighth increment above.
+  `--execution-id` needed no new decision logic at all --
+  `Ros.Domain.Telemetry.ExecutionLinkRecovery.decide`'s pure
+  `RequestedExecutionId` handling, already shipped and already tested,
+  was simply threaded through from the CLI for the first time: a match
+  among detached candidates recovers that execution; a non-match with
+  other candidates present rejects with production's exact `; rerun with
+  --execution-id ...` message (naming the first candidate in sorted
+  order); no candidates at all lets the requested id become the newly
+  created execution's own id. The eleven identity flags reuse
+  `Ros.Domain.Telemetry.Identity.discover`'s already-complete override
+  handling, built earlier in this migration and never missing a field --
+  the actual gap was purely in the CLI-to-repository wiring.
+  `FileTelemetryExecutionRepository.CreateExecutionRequest` gained
+  `ExecutionId`/`IdentityOverrides` fields (the latter replacing the
+  previous standalone `ParentExecutionId` field, folded in as one of the
+  same eleven slots), and `createExecution` now merges the full override
+  set over environment-discovered identity via a new
+  `mergeIdentityOverrides`, mirroring production's own
+  `discoverIdentity(options.identity ?? options)` exactly. This closes
+  MIG-08's own command-surface scope entirely.
 
 ## Interfaces
 
@@ -366,6 +389,17 @@ capabilities, lifecycle capture, classification, and aggregation.
   timestamp -- the `records`-object wrapping shape, and each of the
   other two OTel adapter names' own identity seeding, byte-for-byte
   against production's own `ingestTelemetry`/`adaptOtel`).
+- F# telemetry-start identity/execution-id real-effect tests:
+  `tests/Ros.Tests/TelemetryStartTests.fs` (`--execution-id` recovering a
+  matching detached candidate, rejecting a non-matching one with
+  production's exact rerun message, becoming a freshly created
+  execution's own id with no candidates present, and all eleven identity
+  flags threading into the created record's identity) and
+  `tests/Ros.Tests/WorkContextEffectTests.fs` (`createExecution`'s own
+  `ExecutionId` override in isolation); a real differential
+  (`tests/telemetry-start-fsharp-differential.test.mjs`) drives the
+  actual `ros` CLI wrapper directly, not just the exported function,
+  covering all four scenarios byte-for-byte against production.
 
 ## Dependencies
 
@@ -405,10 +439,9 @@ capabilities, lifecycle capture, classification, and aggregation.
   `anthropic-claude-hook`/`google-gemini-hook`/`github-copilot-hook` --
   and the four OTel adapters -- `anthropic-claude-otel`/
   `google-gemini-otel`/`github-copilot-otel`/`otel-json`), `telemetry
-  classify`, and `telemetry start` (excluding `--execution-id` and the
-  eleven identity-override flags) are real effects; those excluded
-  `telemetry start` flags are the one remaining non-generic-adapter gap
-  in MIG-08's own scope. `adapter call`/`adapter
+  classify`, and `telemetry start` (including its own `--execution-id`
+  and eleven identity-override flags) are real effects -- MIG-08's own
+  command-surface scope is now completely real. `adapter call`/`adapter
   publish` are owned by the work-lifecycle manifest, not this one -- see
   its own Known gaps
   for their status.

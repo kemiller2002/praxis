@@ -950,7 +950,8 @@ let private resolveContextTelemetryWithCreation
                           WorkType = item.WorkType
                           Classifications = classifications
                           ClassificationRationale = None
-                          ParentExecutionId = parentExecutionIdFor workItemId }
+                          ExecutionId = None
+                          IdentityOverrides = { IdentityInputs.empty with ParentExecutionId = parentExecutionIdFor workItemId } }
 
                     match FileTelemetryExecutionRepository.createExecution root createRequest with
                     | Error message -> Error message
@@ -1916,60 +1917,62 @@ let private runTelemetryClassify root (arguments: string list) =
 
                 0
 
-/// Mirrors production `telemetry start WORKITEMID [--classification NAME]*
-/// [--classification-rationale TEXT] [--quiet]` (`tools/ros_cli.mjs`) --
-/// MIG-08's eighth increment: manually ensures a currently `active`/
-/// `blocked` work item has a linked telemetry execution, recovering a
-/// detached one or creating a new one, with no state transition of its
-/// own (unlike `work start`/`resume`). Deliberately excludes `--execution-
-/// id` and every identity-override flag (`--provider`/`--model`/
-/// `--model-version`/`--runtime`/`--runtime-version`/`--session`/
-/// `--conversation`/`--run`/`--agent`/`--subagent`/`--parent-execution`)
-/// production's own CLI exposes here -- the one command that does --
-/// rejected outright (exit 2) rather than silently ignored, since
-/// supporting them means extending `createExecution` itself, a separately
-/// scoped future slice. Prints the literal JSON `null` when telemetry is
-/// disabled and no candidate execution exists, matching production's own
+/// Mirrors production `telemetry start WORKITEMID [--execution-id ID]
+/// [--classification NAME]* [--classification-rationale TEXT]
+/// [--provider NAME] [--model NAME] [--model-version VERSION]
+/// [--runtime NAME] [--runtime-version VERSION] [--session ID]
+/// [--conversation ID] [--run ID] [--agent ID] [--subagent ID]
+/// [--parent-execution ID] [--quiet]` (`tools/ros_cli.mjs`) -- MIG-08's
+/// eighth increment shipped everything but `--execution-id` and the 11
+/// identity-override flags; this increment closes that gap, the last
+/// piece of MIG-08's own scope. `--execution-id` selects among detached
+/// (unlinked, active) candidates exactly like `resolveOrCreateExecution`'s
+/// pure decision (`Ros.Domain.Telemetry.ExecutionLinkRecovery.decide`)
+/// already handled -- a match recovers that execution, a non-match with
+/// other candidates present rejects with production's exact `; rerun with
+/// --execution-id ...` message, and no candidates at all lets the
+/// requested id become the newly created execution's own id. The 11
+/// identity flags parallel production's own `telemetryIdentityOptions`
+/// exactly and are merged over environment-discovered identity inside
+/// `createExecution`, an explicit override always winning. Prints the
+/// literal JSON `null` when telemetry is disabled and no candidate
+/// execution exists, matching production's own
 /// `console.log(JSON.stringify(null, null, 2))`.
 let private runTelemetryStart root (arguments: string list) =
-    let unsupportedFlags =
-        [ "--execution-id"
-          "--provider"
-          "--model"
-          "--model-version"
-          "--runtime"
-          "--runtime-version"
-          "--session"
-          "--conversation"
-          "--run"
-          "--agent"
-          "--subagent"
-          "--parent-execution" ]
-
-    match unsupportedFlags |> List.tryFind (fun flag -> arguments |> List.contains flag) with
-    | Some flag ->
-        eprintfn "ERROR telemetry start %s is not yet supported by this CLI" flag
-        2
+    match arguments |> List.tryHead |> Option.filter (fun value -> not (value.StartsWith("--", StringComparison.Ordinal))) with
     | None ->
-        match arguments |> List.tryHead |> Option.filter (fun value -> not (value.StartsWith("--", StringComparison.Ordinal))) with
-        | None ->
-            eprintfn "ERROR telemetry start requires a work-item ID"
+        eprintfn "ERROR telemetry start requires a work-item ID"
+        1
+    | Some workItemId ->
+        let classifications = optionValues "--classification" arguments
+        let classificationRationale = optionValue "--classification-rationale" arguments
+        let requestedExecutionId = optionValue "--execution-id" arguments
+
+        let identityOverrides: IdentityInputs =
+            { IdentityInputs.empty with
+                Provider = optionValue "--provider" arguments
+                Model = optionValue "--model" arguments
+                ModelVersion = optionValue "--model-version" arguments
+                Runtime = optionValue "--runtime" arguments
+                RuntimeVersion = optionValue "--runtime-version" arguments
+                SessionId = optionValue "--session" arguments
+                ConversationId = optionValue "--conversation" arguments
+                RunId = optionValue "--run" arguments
+                AgentId = optionValue "--agent" arguments
+                SubagentId = optionValue "--subagent" arguments
+                ParentExecutionId = optionValue "--parent-execution" arguments }
+
+        match FileTelemetryFinalizationRepository.startTarget root workItemId classifications classificationRationale requestedExecutionId identityOverrides with
+        | Error message ->
+            eprintfn "ERROR %s" message
             1
-        | Some workItemId ->
-            let classifications = optionValues "--classification" arguments
-            let classificationRationale = optionValue "--classification-rationale" arguments
+        | Ok record ->
+            if not (arguments |> List.contains "--quiet") then
+                match record with
+                | Some record -> printf "%s" (record.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
+                | None -> printf "null"
 
-            match FileTelemetryFinalizationRepository.startTarget root workItemId classifications classificationRationale with
-            | Error message ->
-                eprintfn "ERROR %s" message
-                1
-            | Ok record ->
-                if not (arguments |> List.contains "--quiet") then
-                    match record with
-                    | Some record -> printf "%s" (record.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
-                    | None -> printf "null"
-
-                0
+            0
 
 /// `adapter call --store FILE --request FILE`: real effect for
 /// production's file-based conformance adapter (`DF-ROS-2026-A007`,

@@ -3,6 +3,7 @@ namespace Ros.Tests
 open System
 open System.IO
 open System.Text.Json.Nodes
+open Ros.Domain.Telemetry
 open Ros.Domain.Work
 open Ros.Infrastructure.Work
 
@@ -148,7 +149,8 @@ module WorkContextEffectTests =
                             WorkType = "task"
                             Classifications = []
                             ClassificationRationale = None
-                            ParentExecutionId = None }
+                            ExecutionId = None
+                            IdentityOverrides = IdentityInputs.empty }
 
                       match FileTelemetryExecutionRepository.createExecution root request with
                       | Error message -> failwith message
@@ -165,7 +167,8 @@ module WorkContextEffectTests =
                             WorkType = "task"
                             Classifications = []
                             ClassificationRationale = None
-                            ParentExecutionId = Some "EXE-PRIOR" }
+                            ExecutionId = None
+                            IdentityOverrides = { IdentityInputs.empty with ParentExecutionId = Some "EXE-PRIOR" } }
 
                       match FileTelemetryExecutionRepository.createExecution root request with
                       | Error message -> failwith message
@@ -192,7 +195,8 @@ module WorkContextEffectTests =
                             WorkType = "task"
                             Classifications = []
                             ClassificationRationale = None
-                            ParentExecutionId = None }
+                            ExecutionId = None
+                            IdentityOverrides = IdentityInputs.empty }
 
                       match FileTelemetryExecutionRepository.createExecution root request with
                       | Error message -> failwith message
@@ -205,4 +209,21 @@ module WorkContextEffectTests =
                               match record["identity"] with
                               | :? JsonObject as identity -> Assert.equal true (isNull (identity["parentExecutionId"]: JsonNode))
                               | _ -> failwith "expected an identity object"
-                          | _ -> failwith "expected a JSON object") } ]
+                          | _ -> failwith "expected a JSON object") }
+
+          { Name = "createExecution uses a supplied ExecutionId verbatim instead of generating a fresh one"
+            Run =
+              fun () ->
+                  withTemporaryRoot (fun root ->
+                      let request: FileTelemetryExecutionRepository.CreateExecutionRequest =
+                          { WorkItemId = "WI-NEW"
+                            WorkType = "task"
+                            Classifications = []
+                            ClassificationRationale = None
+                            ExecutionId = Some "EXE-CUSTOM-ID"
+                            IdentityOverrides = IdentityInputs.empty }
+
+                      match FileTelemetryExecutionRepository.createExecution root request with
+                      | Error message -> failwith message
+                      | Ok None -> failwith "expected an execution to be created"
+                      | Ok(Some executionId) -> Assert.equal "EXE-CUSTOM-ID" executionId) } ]
