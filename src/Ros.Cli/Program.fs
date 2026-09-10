@@ -45,7 +45,7 @@ let private renderFinding (finding: ArtifactFinding) =
 
     $"{location}: {finding.Message}"
 
-let private reportDependencyFailure (failure: DependencyFailure) =
+let private dependencyFailureMessage (failure: DependencyFailure) : string =
     let location = failure.Path |> Option.map (fun path -> $" '{path}'") |> Option.defaultValue ""
 
     let outcome =
@@ -53,7 +53,10 @@ let private reportDependencyFailure (failure: DependencyFailure) =
         | DependencyOutcome.Failed -> "failed"
         | DependencyOutcome.Indeterminate -> "indeterminate"
 
-    eprintfn "ERROR %s%s %s: %s" failure.Operation location outcome failure.Message
+    $"{failure.Operation}{location} {outcome}: {failure.Message}"
+
+let private reportDependencyFailure (failure: DependencyFailure) =
+    eprintfn "ERROR %s" (dependencyFailureMessage failure)
     1
 
 let private runValidation asJson repository =
@@ -1692,56 +1695,143 @@ let private runBacklogQueueValidate root arguments =
 /// simplification: every path/field/message this repository's own
 /// contributors produce is plain ASCII, where ordinal and locale-aware
 /// collation agree.
+/// Mirrors production `validate(root)`'s own combined computation, shared
+/// by the unified `validate` command and `status` (production's own
+/// `statusView` calls `validate(root)` directly for its `findingCount`/
+/// `nextActions` fields).
+let private computeUnifiedFindings root : Result<ArtifactFinding list, string> =
+    let repository = FileArtifactRepository.create root
+
+    match ArtifactOperations.validate repository with
+    | ValidationOutcome.DependencyFailure failure -> Error(dependencyFailureMessage failure)
+    | ValidationOutcome.Completed artifactFindings ->
+        match ArtifactOperations.checkRegistries repository with
+        | RegistryCheckOutcome.DependencyFailure failure -> Error(dependencyFailureMessage failure)
+        | RegistryCheckOutcome.Completed registryCombined ->
+            // `checkRegistries` recomputes the same parse findings
+            // `validate` already returned; keep only the staleness
+            // findings from its result to avoid double-counting.
+            let staleFindings = registryCombined |> List.filter (fun f -> f.Message.Contains "registry is stale")
+
+            match computeWorkAttributionFindings root with
+            | Error message -> Error message
+            | Ok workFindings ->
+                let convert (path: string) (field: string) (message: string) : ArtifactFinding = { Path = path; Field = field; Message = message }
+
+                let queueFindings =
+                    FileBacklogQueueRepository.readItems root |> BacklogQueueValidation.findings |> List.map (fun f -> convert f.Path f.Field f.Message)
+
+                let telemetryFindingsConverted =
+                    FileTelemetryValidationRepository.findings root |> List.map (fun f -> convert f.Path f.Field f.Message)
+
+                let workFindingsConverted = workFindings |> List.map (fun f -> convert f.Path f.Field f.Message)
+
+                artifactFindings @ staleFindings @ workFindingsConverted @ queueFindings @ telemetryFindingsConverted
+                |> List.sortWith (fun a b -> System.String.CompareOrdinal($"{a.Path}\000{a.Field}\000{a.Message}", $"{b.Path}\000{b.Field}\000{b.Message}"))
+                |> Ok
+
 let private runValidateUnified root arguments =
     if not (arguments |> List.forall ((=) "--json")) then
         eprintfn "%s" usage
         2
     else
-        let repository = FileArtifactRepository.create root
+        match computeUnifiedFindings root with
+        | Error message ->
+            eprintfn "ERROR %s" message
+            1
+        | Ok all ->
+            if arguments |> List.contains "--json" then
+                printf "%s" (FindingContract.renderJson all)
+                if all.IsEmpty then 0 else 1
+            elif all.IsEmpty then
+                printfn "validation passed"
+                0
+            else
+                for finding in all do
+                    eprintfn "ERROR %s\n  REPAIR %s" (renderFinding finding) (FindingContract.repair finding)
 
-        match ArtifactOperations.validate repository with
-        | ValidationOutcome.DependencyFailure failure -> reportDependencyFailure failure
-        | ValidationOutcome.Completed artifactFindings ->
-            match ArtifactOperations.checkRegistries repository with
-            | RegistryCheckOutcome.DependencyFailure failure -> reportDependencyFailure failure
-            | RegistryCheckOutcome.Completed registryCombined ->
-                // `checkRegistries` recomputes the same parse findings
-                // `validate` already returned; keep only the staleness
-                // findings from its result to avoid double-counting.
-                let staleFindings = registryCombined |> List.filter (fun f -> f.Message.Contains "registry is stale")
+                eprintfn "validation failed with %d error(s)" all.Length
+                1
 
-                match computeWorkAttributionFindings root with
-                | Error message ->
-                    eprintfn "ERROR %s" message
-                    1
-                | Ok workFindings ->
-                    let convert (path: string) (field: string) (message: string) : ArtifactFinding = { Path = path; Field = field; Message = message }
+/// Mirrors production `statusView` (`tools/ros_cli.mjs`): the same
+/// `contextView` read `work context` uses, narrowed to six fields per
+/// item, plus the unified `validate` findings' count/pass-fail summary
+/// and deduplicated repair hints, plus real execution/active-execution
+/// counts from `telemetry show`'s own read.
+let private runStatus root =
+    match computeUnifiedFindings root with
+    | Error message ->
+        eprintfn "ERROR %s" message
+        1
+    | Ok findings ->
+        match FileWorkContextRepository.readContextView root None with
+        | Error message ->
+            eprintfn "ERROR %s" message
+            1
+        | Ok contextView ->
+            let executions = FileTelemetryQueryRepository.readAll root
 
-                    let queueFindings =
-                        FileBacklogQueueRepository.readItems root |> BacklogQueueValidation.findings |> List.map (fun f -> convert f.Path f.Field f.Message)
+            let statusField (node: JsonObject) : string option =
+                match node["status"] with
+                | :? JsonValue as value when value.GetValueKind() = JsonValueKind.String -> Some(value.GetValue<string>())
+                | _ -> None
 
-                    let telemetryFindingsConverted =
-                        FileTelemetryValidationRepository.findings root |> List.map (fun f -> convert f.Path f.Field f.Message)
+            let executionCount = executions.Length
+            let activeExecutionCount = executions |> List.filter (fun e -> statusField e = Some "active") |> List.length
 
-                    let workFindingsConverted = workFindings |> List.map (fun f -> convert f.Path f.Field f.Message)
+            let cloneField (node: JsonObject) (name: string) : JsonNode =
+                match node[name] with
+                | null -> null
+                | v -> v.DeepClone()
 
-                    let all =
-                        artifactFindings @ staleFindings @ workFindingsConverted @ queueFindings @ telemetryFindingsConverted
-                        |> List.sortWith (fun a b ->
-                            System.String.CompareOrdinal($"{a.Path}\000{a.Field}\000{a.Message}", $"{b.Path}\000{b.Field}\000{b.Message}"))
+            let cloneOrEmptyArray (node: JsonObject) (name: string) : JsonNode =
+                match node[name] with
+                | null -> JsonArray() :> JsonNode
+                | v -> v.DeepClone()
 
-                    if arguments |> List.contains "--json" then
-                        printf "%s" (FindingContract.renderJson all)
-                        if all.IsEmpty then 0 else 1
-                    elif all.IsEmpty then
-                        printfn "validation passed"
-                        0
-                    else
-                        for finding in all do
-                            eprintfn "ERROR %s\n  REPAIR %s" (renderFinding finding) (FindingContract.repair finding)
+            let workItemsNode = JsonArray()
 
-                        eprintfn "validation failed with %d error(s)" all.Length
-                        1
+            match contextView["workItems"] with
+            | :? JsonArray as items ->
+                for item in items do
+                    match item with
+                    | :? JsonObject as obj ->
+                        let projected = JsonObject()
+                        projected["id"] <- cloneField obj "id"
+                        projected["type"] <- cloneField obj "type"
+                        projected["state"] <- cloneField obj "state"
+                        projected["semanticState"] <- cloneField obj "semanticState"
+                        projected["allowedActions"] <- cloneOrEmptyArray obj "allowedActions"
+                        projected["telemetryExecutionIds"] <- cloneOrEmptyArray obj "telemetryExecutionIds"
+                        workItemsNode.Add(projected: JsonNode)
+                    | _ -> ()
+            | _ -> ()
+
+            let telemetryNode = JsonObject()
+            telemetryNode["executionCount"] <- JsonValue.Create executionCount
+            telemetryNode["activeExecutionCount"] <- JsonValue.Create activeExecutionCount
+
+            let nextActionsNode = JsonArray()
+
+            if findings.IsEmpty then
+                nextActionsNode.Add(JsonValue.Create "Select an allowed work transition or begin a new work item.": JsonNode)
+            else
+                findings
+                |> List.map FindingContract.repair
+                |> List.distinct
+                |> List.iter (fun repair -> nextActionsNode.Add(JsonValue.Create repair: JsonNode))
+
+            let output = JsonObject()
+            output["repository"] <- JsonValue.Create(FileWorkConfigRepository.readRepositoryId root)
+            output["protocolVersion"] <- JsonValue.Create(FileWorkConfigRepository.readProtocolVersion root)
+            output["validation"] <- JsonValue.Create(if findings.IsEmpty then "passed" else "failed")
+            output["findingCount"] <- JsonValue.Create findings.Length
+            output["workItems"] <- workItemsNode
+            output["telemetry"] <- telemetryNode
+            output["nextActions"] <- nextActionsNode
+
+            printf "%s" (output.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
+            0
 
 /// Mirrors production `telemetryFindings` (`tools/ros_telemetry.mjs`), the
 /// telemetry contributor to `validate`'s combined findings array.
@@ -2256,6 +2346,7 @@ let private dispatch root arguments =
         printfn "%s" usage
         0
     | "validate" :: rest -> runValidateUnified root rest
+    | [ "status" ] -> runStatus root
     | "artifacts" :: "validate" :: rest when rest |> List.forall ((=) "--json") ->
         runValidation (rest |> List.contains "--json") repository
     | "registry" :: "build" :: rest when rest |> List.forall ((=) "--dry-run") ->

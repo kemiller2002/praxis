@@ -368,6 +368,12 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   together with other findings; and a malformed artifact plus an
   unattributed Git change rendered in both output forms — all
   byte-for-byte identical to production's own `validate`).
+- Status real-effect tests: `tests/status-fsharp-differential.test.mjs`
+  (a clean bootstrap with no findings and production's exact default
+  `nextActions` message, and a populated repository with real
+  active/blocked work items, real linked telemetry executions, a real
+  backlog-status finding, and real execution/active-execution counts --
+  byte-for-byte identical to production's own `statusView`).
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
 - Integration/live verification: `./ros status`, `./ros work context ID`,
@@ -394,7 +400,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 ## Maintenance
 
 - Owner: repository-governance
-- Last checked against implementation: 2026-09-10 (unified `validate` increment)
+- Last checked against implementation: 2026-09-10 (`status` increment, closing EV-ROS-2026-A046's full inventory)
 - Known gaps: backlog and live work intentionally remain separate recovery
   units; the F# planner now owns pure whole-context/multi-item and
   backlog-promotion plans, post-plan evidence observation, telemetry
@@ -445,12 +451,37 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   scenario (a backlog-status violation, a disabled-telemetry violation,
   a stale registry, a malformed artifact, and an unattributed Git
   change, all present at once) producing a byte-identical sorted finding
-  list in both `--json` and text form. Still remaining: every
+  list in both `--json` and text form.
+
+  `ros-fs status` (Phase A's twelfth work-lifecycle increment) closes
+  the last of `EV-ROS-2026-A046`'s four originally-unassigned rows.
+  Production's own `statusView` composes three already-real pieces --
+  `contextView` (this manifest's own `work context`, narrowed here to
+  six fields per item: `id`/`type`/`state`/`semanticState`/
+  `allowedActions`/`telemetryExecutionIds`, the last defaulting to an
+  empty array when absent, matching production's own `?? []`), the
+  unified `validate` findings (this manifest's own
+  `computeUnifiedFindings`, reused directly rather than reinvoked as a
+  second computation), and `telemetry show`'s own execution read
+  (execution-telemetry manifest, `FileTelemetryQueryRepository.readAll`)
+  filtered to `status === "active"` for the active count -- so this
+  increment adds no new Domain or Infrastructure code at all, purely
+  CLI-layer composition (`Ros.Cli.Program.runStatus`). `nextActions`
+  deduplicates each finding's own repair hint via `List.distinct`
+  (first-occurrence order, matching JS's `[...new Set(...)]`), falling
+  back to production's exact single default message when there are no
+  findings at all. Confirmed against real Node for a clean bootstrap
+  (default `nextActions` message, `validation: "passed"`) and a
+  populated repository (real active/blocked work items with real linked
+  telemetry executions, a real backlog-status finding driving
+  `validation: "failed"` and a non-default `nextActions` entry, and real
+  execution/active-execution counts) -- all byte-for-byte identical.
+  `EV-ROS-2026-A046`'s full four-row inventory (`work`/`work list`,
+  `work show`, `work context`, `status`) is now closed.
+
+  Still remaining: every
   telemetry-producer command (in the execution-telemetry manifest — all
-  now real, per MIG-08's own closure) has no bearing here; what's left
-  in this manifest's own scope is `status`, the one remaining pure
-  read-only view `EV-ROS-2026-A046` found never assigned to
-  MIG-07/MIG-08 — its own dependency on the `validate` unification is
-  now resolved. Evidence containment has no current authority; production
-  behavior accepts absolute existing paths. Production remains Node-owned
+  now real, per MIG-08's own closure) has no bearing here. Evidence
+  containment has no current authority; production behavior accepts
+  absolute existing paths. Production remains Node-owned
   pending those slices and the distribution decision.
