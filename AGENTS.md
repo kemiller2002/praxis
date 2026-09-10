@@ -2,11 +2,11 @@
 id: GV-START-001
 title: Agent Startup Guide
 status: canonical
-version: 1.1.0
+version: 1.2.0
 owners:
   - repository-governance
 created: 2026-07-22
-updated: 2026-09-05
+updated: 2026-09-10
 review_cycle: quarterly
 supersedes: []
 superseded_by: []
@@ -58,3 +58,23 @@ For substantial work, record: objective; work completed; files changed; decision
 Before meaningful mutation, identify the external work item and run `./ros work begin ID`. That transition starts an execution-telemetry record; inspect `./ros work context ID`, classify the work, and ingest runtime telemetry that the current environment can expose. Preserve unknown provider fields through the sanitized raw layer and record unsupported/unavailable capability explicitly. Perform the bounded work, gather configured evidence, request a legal transition with `work complete` (which finalizes active telemetry), then run `./ros registry build` and `./ros validate`. Use `work block --reason` and `work resume` rather than hand-editing context. Use `./ros status` when resuming unfamiliar work. Meaningful committed changes require machine-readable attribution; see `docs/work-protocol.md` and `docs/development-telemetry.md`.
 
 No externally-assigned ID yet? Check `./ros work ready` for capturable, unblocked repository work before assuming none exists, and use `./ros add "..."` to record a newly discovered obligation instead of leaving it as an unfiled comment or dropped observation. `./ros work start ID` promotes a ready backlog item into the protocol above. This local backlog is repository-scoped triage, not a project-management system; see the "Local backlog" section of `docs/work-protocol.md`.
+
+## F# shadow CLI
+
+`./ros` is Node and remains the sole production authority for every command,
+including every state-mutating one, per `DF-ROS-2026-A028`. A parallel F#
+CLI (`dotnet src/Ros.Cli/bin/Release/net10.0/ros-fs.dll ...`) now has real,
+differential-tested effect parity for every command `./ros` exposes
+(`EV-ROS-2026-A047` closes `DF-ROS-2026-A028` Phase A), but that parity does
+not by itself authorize using it as a substitute for `./ros`: Phase B
+(consumer distribution evidence) is uncollected, and Phase C (the actual
+authority switch) requires its own accepted decision record. Do not run
+`ros-fs` state-mutating commands (`work start`/`resume`/`block`/`complete`,
+`work capture`/`update`/`attach`/`backlog-transition`, any `telemetry` or
+`adapter` producer command) against this repository's real `.ros/` state —
+use `./ros` for all actual work. Read-only `ros-fs` commands (`status`,
+`validate`, `telemetry validate`, `work`/`work show`/`work context`,
+`artifacts validate`, `registry check`, `git status`) may be run standalone
+against real repository state for verification or cross-checking, since they
+mutate nothing, but their output is not an alternate source of truth —
+`./ros`'s own output is authoritative whenever the two could be compared.

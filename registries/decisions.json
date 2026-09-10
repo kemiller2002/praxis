@@ -254,13 +254,15 @@
       "DF-ROS-2026-A027",
       "docs/migrations/fsharp/ARCHITECTURE.md",
       "docs/migrations/fsharp/ROADMAP.md",
-      "docs/migrations/fsharp/STATUS.md"
+      "docs/migrations/fsharp/STATUS.md",
+      "AGENTS.md"
     ],
     "status": "accepted",
     "superseded_by": [],
     "supersedes": [],
     "supporting_evidence": [
-      "EV-ROS-2026-A043"
+      "EV-ROS-2026-A043",
+      "EV-ROS-2026-A047"
     ],
     "tags": [
       "architecture",
@@ -271,7 +273,7 @@
       "decision"
     ],
     "title": "Preconditions and phased plan for redirecting ./ros to the F# solution",
-    "updated": "2026-09-09",
+    "updated": "2026-09-10",
     "version": "1.0.0"
   }
 ]

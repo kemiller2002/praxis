@@ -6,15 +6,17 @@ version: 1.0.0
 owners:
   - repository-governance
 created: 2026-09-09
-updated: 2026-09-09
+updated: 2026-09-10
 author_agent: claude-sonnet-5
 supporting_evidence:
   - EV-ROS-2026-A043
+  - EV-ROS-2026-A047
 related_documents:
   - DF-ROS-2026-A027
   - docs/migrations/fsharp/ARCHITECTURE.md
   - docs/migrations/fsharp/ROADMAP.md
   - docs/migrations/fsharp/STATUS.md
+  - AGENTS.md
 supersedes: []
 superseded_by: []
 tags: [architecture, fsharp, migration, distribution, sde, decision]
@@ -133,6 +135,20 @@ Phase A is large — comparable in scope to the whole of MIG-07 plus MIG-08 —
 and is not committed to any timeline by this record. `ROADMAP.md` and
 `STATUS.md` are updated alongside this record to reference it, so a future
 session resuming the migration finds this decision before re-deriving it.
+
+# Update — 2026-09-10
+
+`EV-ROS-2026-A047` re-ran the command-surface parity inventory this record's
+Phase A cites and found all 26 rows reading "Full parity" — Phase A's own
+acceptance criterion is met, closing it. This update does not change the
+Decision, Alternatives, or Consequences above: Phase B (consumer
+distribution evidence) remains entirely uncollected, and Phase C still
+requires both phases accepted plus its own new decision record carrying a
+rollback plan and cutover mechanism. `./ros`'s dispatch is unchanged by
+this update. `AGENTS.md` was updated in the same increment to tell agents
+working in this repository that the F# CLI's now-real command parity does
+not authorize using it in place of `./ros` for anything but standalone,
+read-only verification.
 
 # Reversibility and validation
 

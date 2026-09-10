@@ -1947,6 +1947,19 @@ closes `EV-ROS-2026-A046`'s full four-row inventory: `work`/`work list`,
 `work show`, `work context`, and `status` all now have real F# effect
 parity.
 
+## Phase A closure
+
+`EV-ROS-2026-A047` re-ran the full 26-row command-surface parity inventory
+after the `status` increment above landed and found every row reading "Full
+parity" for the first time, closing `DF-ROS-2026-A028` Phase A. This closes
+the F# implementation half of the authority-switch decision track; it does
+not touch Phase B (consumer distribution evidence, uncollected) or Phase C
+(the switch itself, which needs its own new decision record). `AGENTS.md`
+was updated in the same increment to state explicitly that agents working
+in this repository must keep using `./ros` (Node) for every actual
+operation, and may use the F# shadow CLI's read-only commands only for
+standalone verification.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

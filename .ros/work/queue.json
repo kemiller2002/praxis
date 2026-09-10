@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 45,
+  "nextSeq": 46,
   "items": [
     {
       "id": "WI-0001",
@@ -863,6 +863,20 @@
       "attachments": [],
       "createdAt": "2026-09-10T22:28:30.363Z",
       "updatedAt": "2026-09-10T22:28:38.561Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0045",
+      "title": "Record Phase A closure evidence and point agents at F# for already-ported read-only commands",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-10T22:41:16.625Z",
+      "updatedAt": "2026-09-10T22:41:22.230Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
