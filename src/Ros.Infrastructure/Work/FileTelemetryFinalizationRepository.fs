@@ -4,6 +4,7 @@ open System
 open System.IO
 open System.Text.Json
 open System.Text.Json.Nodes
+open System.Text.RegularExpressions
 open Ros.Domain.Telemetry
 open Ros.Infrastructure.Artifacts
 open Ros.Infrastructure.Git
@@ -64,7 +65,8 @@ module FileTelemetryFinalizationRepository =
         let discoveredAt = stringField node "discoveredAt" |> Option.defaultValue ""
         let touched = node.ContainsKey "lastAssessedAt"
 
-        { MetricId = stringField node "metricId" |> Option.defaultValue ""
+        { MetricId = stringField node "metricId"
+          ProviderField = stringField node "providerField"
           Status = stringField node "status" |> Option.defaultValue ""
           Reason = stringField node "reason"
           DiscoveredAt = discoveredAt
@@ -268,8 +270,8 @@ module FileTelemetryFinalizationRepository =
                                 let upsertInto (capabilities: Capability list) metricId status reason source =
                                     capabilities
                                     |> List.map (fun capability ->
-                                        if capability.MetricId = metricId then
-                                            Capability.upsert maxHistory finalizedAt finalizedAt status reason source capability
+                                        if capability.MetricId = Some metricId then
+                                            Capability.upsert maxHistory finalizedAt finalizedAt finalizedAt status reason source capability
                                         else
                                             capability)
 
@@ -565,11 +567,11 @@ module FileTelemetryFinalizationRepository =
                                             let maxHistory = FileWorkConfigRepository.readTelemetryMaxCapabilityHistoryEntries root
 
                                             let mergedCapabilities =
-                                                if existingCapabilities |> List.exists (fun capability -> capability.MetricId = metricId) then
+                                                if existingCapabilities |> List.exists (fun capability -> capability.MetricId = Some metricId) then
                                                     existingCapabilities
                                                     |> List.map (fun capability ->
-                                                        if capability.MetricId = metricId then
-                                                            Capability.upsert maxHistory occurredAt occurredAt upserted.Status upserted.Reason upserted.Source capability
+                                                        if capability.MetricId = Some metricId then
+                                                            Capability.upsert maxHistory occurredAt occurredAt occurredAt upserted.Status upserted.Reason upserted.Source capability
                                                         else
                                                             capability)
                                                 else
@@ -899,16 +901,17 @@ module FileTelemetryFinalizationRepository =
                                     let maxHistory = FileWorkConfigRepository.readTelemetryMaxCapabilityHistoryEntries root
 
                                     let mergedCapabilities =
-                                        if existingCapabilities |> List.exists (fun capability -> capability.MetricId = request.MetricId) then
+                                        if existingCapabilities |> List.exists (fun capability -> capability.MetricId = Some request.MetricId) then
                                             existingCapabilities
                                             |> List.map (fun capability ->
-                                                if capability.MetricId = request.MetricId then
-                                                    Capability.upsert maxHistory collectedAt recordedAtNow status (Some "normalized measurement recorded") request.Source capability
+                                                if capability.MetricId = Some request.MetricId then
+                                                    Capability.upsert maxHistory collectedAt collectedAt recordedAtNow status (Some "normalized measurement recorded") request.Source capability
                                                 else
                                                     capability)
                                         else
                                             existingCapabilities
-                                            @ [ { MetricId = request.MetricId
+                                            @ [ { MetricId = Some request.MetricId
+                                                  ProviderField = None
                                                   Status = status
                                                   Reason = Some "normalized measurement recorded"
                                                   DiscoveredAt = collectedAt
@@ -932,3 +935,803 @@ module FileTelemetryFinalizationRepository =
                 match lease.Release(), result with
                 | Error releaseFailure, Ok _ -> Error releaseFailure.Message
                 | _, outcome -> outcome
+
+    // ---- telemetry ingest (generic adapter only; every other adapter is
+    // its own future MIG-08 slice, rejected outright at the CLI layer) ----
+
+    /// The one CLI-reachable field set of production's `adaptGeneric`'s
+    /// return shape (`tools/ros_telemetry.mjs`): everything the generic
+    /// adapter passes through verbatim from the input JSON, plus the
+    /// handful of fields it defaults itself.
+    type private AdaptedSnapshot =
+        { Identity: JsonObject
+          Capabilities: JsonObject list
+          Metrics: JsonObject list
+          Events: JsonObject list
+          Classification: JsonObject option
+          Scope: JsonObject option
+          QualitySignals: JsonObject list
+          Links: JsonObject option
+          Raw: JsonNode
+          MappedFields: string list
+          SchemaVersion: JsonNode
+          SnapshotId: string option
+          CollectedAt: string
+          Source: JsonObject }
+
+    let private defaultGenericSource () : JsonObject =
+        let node = JsonObject()
+        node["type"] <- JsonValue.Create "runtime-output"
+        node["name"] <- JsonValue.Create "generic-telemetry-envelope"
+        node["mechanism"] <- JsonValue.Create "json"
+        node
+
+    /// Mirrors production `adaptGeneric`: the "generic" adapter maps
+    /// nothing -- every field the input JSON itself carries passes through
+    /// verbatim, defaulting only the same handful of fields production's
+    /// own `??` calls default. A non-object input (e.g. the JSON Lines
+    /// fallback's array, or a bare scalar) behaves exactly as production's
+    /// own property access on it would: every field reads as absent.
+    let private adaptGeneric (input: JsonNode) (collectedAt: string) : AdaptedSnapshot =
+        let inputObject = match input with :? JsonObject as o -> Some o | _ -> None
+
+        let field (name: string) : JsonNode option =
+            inputObject |> Option.bind (fun o -> match o[name] with null -> None | v -> Some v)
+
+        let objectField (name: string) : JsonObject option =
+            match field name with
+            | Some(:? JsonObject as o) -> Some o
+            | _ -> None
+
+        let arrayField (name: string) : JsonObject list =
+            match field name with
+            | Some(:? JsonArray as a) -> a |> Seq.choose (function :? JsonObject as o -> Some o | _ -> None) |> Seq.toList
+            | _ -> []
+
+        { Identity = objectField "identity" |> Option.defaultValue (JsonObject())
+          Capabilities = arrayField "capabilities"
+          Metrics = arrayField "metrics"
+          Events = arrayField "events"
+          Classification = objectField "classification"
+          Scope = objectField "scope"
+          QualitySignals = arrayField "qualitySignals"
+          Links = objectField "links"
+          Raw = (field "raw" |> Option.orElse (field "providerTelemetry") |> Option.defaultValue (JsonObject() :> JsonNode))
+          MappedFields = []
+          SchemaVersion = (field "schemaVersion" |> Option.defaultValue null)
+          SnapshotId = inputObject |> Option.bind (fun o -> stringField o "snapshotId")
+          CollectedAt = (inputObject |> Option.bind (fun o -> stringField o "collectedAt")) |> Option.defaultValue collectedAt
+          Source = objectField "source" |> Option.defaultValue (defaultGenericSource ()) }
+
+    let private rawRedactedKeyPattern =
+        Regex(
+            @"^(?:authorization|cookie|set-cookie|password|passwd|secret|credential|api[_-]?key|access[_-]?token|refresh[_-]?token|id[_-]?token|prompt|prompts|messages?|content|tool[_-]?input|tool[_-]?response|request|response|stdout|stderr|command|full[_-]?command|transcript[_-]?path|cwd|current[_-]?dir|project[_-]?dir|workspace[_-]?path|file[_-]?path|email|user\.email)$",
+            RegexOptions.IgnoreCase
+        )
+
+    let private rawSensitiveSegmentPattern =
+        Regex(
+            @"(?:^|[._-])(?:authorization|password|passwd|secret|credential|api[_-]?key|access[_-]?token|refresh[_-]?token|id[_-]?token|email)(?:$|[._-])",
+            RegexOptions.IgnoreCase
+        )
+
+    let private maxRawStringLength = 2048
+
+    /// Mirrors production `sanitizeRaw`: redacts any key matching either
+    /// sensitive-key pattern (replacing its value, never recursing into
+    /// it), truncates an over-long string leaf, and otherwise rebuilds the
+    /// tree unchanged -- always via fresh nodes (`DeepClone` for scalars),
+    /// since a `JsonNode` already attached elsewhere cannot be reattached.
+    let rec private sanitizeRawNode (value: JsonNode) (currentPath: string) (redactions: ResizeArray<string>) : JsonNode =
+        match value with
+        | null -> null
+        | :? JsonArray as array ->
+            let result = JsonArray()
+            array |> Seq.iteri (fun index item -> result.Add(sanitizeRawNode item $"{currentPath}[{index}]" redactions))
+            result
+        | :? JsonObject as obj ->
+            let result = JsonObject()
+
+            for entry in obj |> Seq.toList do
+                let childPath = $"{currentPath}.{entry.Key}"
+
+                if rawRedactedKeyPattern.IsMatch(entry.Key) || rawSensitiveSegmentPattern.IsMatch(entry.Key) then
+                    result[entry.Key] <- JsonValue.Create "[REDACTED_BY_ROS]"
+                    redactions.Add childPath
+                else
+                    result[entry.Key] <- sanitizeRawNode entry.Value childPath redactions
+
+            result
+        | :? JsonValue as leaf when leaf.GetValueKind() = JsonValueKind.String ->
+            let text = leaf.GetValue<string>()
+
+            if text.Length > maxRawStringLength then
+                JsonValue.Create $"[TRUNCATED_BY_ROS length={text.Length}]"
+            else
+                JsonValue.Create text
+        | _ -> value.DeepClone()
+
+    /// Mirrors production `leafPaths`: every leaf value's path (array
+    /// indices normalized to `[]`), deduplicated and sorted -- called on
+    /// the already-sanitized payload, so a redacted leaf's path is still
+    /// recorded (its value is now a plain string, still a leaf).
+    let rec private leafPathsInto (value: JsonNode) (prefix: string) (result: ResizeArray<string>) =
+        match value with
+        | :? JsonArray as array -> array |> Seq.iteri (fun index item -> leafPathsInto item $"{prefix}[{index}]" result)
+        | :? JsonObject as obj ->
+            for entry in obj do
+                leafPathsInto entry.Value $"{prefix}.{entry.Key}" result
+        | _ -> result.Add(Regex.Replace(prefix, @"\[\d+\]", "[]"))
+
+    let private leafPaths (value: JsonNode) : string list =
+        let result = ResizeArray<string>()
+        leafPathsInto value "$" result
+        result |> Seq.distinct |> Seq.sortWith (fun a b -> String.CompareOrdinal(a, b)) |> Seq.toList
+
+    let private alreadyIngested (record: JsonObject) (snapshotId: string) : bool =
+        let inRawTelemetry =
+            match record["rawTelemetry"] with
+            | :? JsonArray as array -> array |> Seq.exists (function :? JsonObject as node -> stringField node "snapshotId" = Some snapshotId | _ -> false)
+            | _ -> false
+
+        let inEvents =
+            match record["events"] with
+            | :? JsonArray as array ->
+                array
+                |> Seq.exists (function
+                    | :? JsonObject as node -> stringField node "type" = Some "telemetry.snapshot.ingested" && stringField node "snapshotId" = Some snapshotId
+                    | _ -> false)
+            | _ -> false
+
+        inRawTelemetry || inEvents
+
+    /// Mirrors production's consistency guard inside `ingestAdapted`: a
+    /// snapshot that both reports a value for a metric AND declares every
+    /// capability for that same metric id unavailable/unsupported
+    /// contradicts itself, rejected before any mutation.
+    let private declaredUnavailableConflict (metrics: JsonObject list) (capabilities: JsonObject list) : string option =
+        let metricIds = metrics |> List.choose (fun m -> stringField m "id") |> List.distinct
+
+        metricIds
+        |> List.tryPick (fun metricId ->
+            let declared = capabilities |> List.filter (fun c -> stringField c "metricId" = Some metricId)
+
+            if
+                not declared.IsEmpty
+                && declared |> List.forall (fun c -> stringField c "status" = Some "supported-unavailable" || stringField c "status" = Some "unsupported")
+            then
+                Some metricId
+            else
+                None)
+
+    let private capabilitySourceFromNode (node: JsonNode) : CapabilitySource =
+        match node with
+        | :? JsonObject as o -> parseSource o
+        | _ -> { Type = ""; Name = ""; Mechanism = "" }
+
+    /// Mirrors production `upsertCapability`'s general (metricId,
+    /// providerField)-keyed merge, shared by every capability write this
+    /// increment produces: a directly-declared ingest capability, a
+    /// discovered-but-unmapped raw field, and a metric's own upsert.
+    let private mergeCapabilityByKey
+        (root: string)
+        (record: JsonObject)
+        (metricId: string option)
+        (providerField: string option)
+        (status: string)
+        (reason: string option)
+        (discoveredAt: string)
+        (lastAssessedAt: string)
+        (source: CapabilitySource)
+        : unit =
+        let recordedAtNow = FileTelemetryExecutionRepository.nowIso ()
+        let maxHistory = FileWorkConfigRepository.readTelemetryMaxCapabilityHistoryEntries root
+
+        let existing =
+            match record["capabilities"] with
+            | :? JsonArray as array -> array |> Seq.choose (function :? JsonObject as node -> Some(parseCapability node) | _ -> None) |> Seq.toList
+            | _ -> []
+
+        let matchesKey (capability: Capability) = capability.MetricId = metricId && capability.ProviderField = providerField
+
+        let merged =
+            if existing |> List.exists matchesKey then
+                existing
+                |> List.map (fun capability ->
+                    if matchesKey capability then
+                        Capability.upsert maxHistory discoveredAt lastAssessedAt recordedAtNow status reason source capability
+                    else
+                        capability)
+            else
+                existing
+                @ [ { MetricId = metricId
+                      ProviderField = providerField
+                      Status = status
+                      Reason = reason
+                      DiscoveredAt = discoveredAt
+                      LastAssessedAt = lastAssessedAt
+                      RecordedAt = recordedAtNow
+                      Source = source
+                      History = []
+                      HistoryOmitted = 0
+                      Touched = false } ]
+
+        let node = JsonArray()
+        merged |> List.iter (fun capability -> node.Add(FileTelemetryExecutionRepository.capabilityNode capability: JsonNode))
+        record["capabilities"] <- node
+
+    /// A directly-declared ingest capability (`adapted.capabilities`, an
+    /// arbitrary JSON object): production's `capability.discoveredAt ??
+    /// nowIso()`/`capability.lastAssessedAt ?? capability.discoveredAt ??
+    /// nowIso()`/`capability.source ?? source("agent-report",
+    /// "telemetry-capability", "explicit")` fallbacks, none of which use
+    /// `adapted.collectedAt` at all (unlike every other timestamp this
+    /// increment writes).
+    let private mergeDeclaredCapability (root: string) (record: JsonObject) (capabilityNode: JsonObject) : unit =
+        let metricId = stringField capabilityNode "metricId"
+        let providerField = stringField capabilityNode "providerField"
+        let status = stringField capabilityNode "status" |> Option.defaultValue ""
+        let reason = stringField capabilityNode "reason"
+        let discoveredAt = stringField capabilityNode "discoveredAt" |> Option.defaultValue (FileTelemetryExecutionRepository.nowIso ())
+        let lastAssessedAt = stringField capabilityNode "lastAssessedAt" |> Option.defaultValue discoveredAt
+
+        let source =
+            match capabilityNode["source"] with
+            | :? JsonObject as s -> parseSource s
+            | _ -> { Type = "agent-report"; Name = "telemetry-capability"; Mechanism = "explicit" }
+
+        mergeCapabilityByKey root record metricId providerField status reason discoveredAt lastAssessedAt source
+
+    /// Mirrors production `normalizeMetric`/`addMetric` for a metric item
+    /// that arrives as an arbitrary JSON object -- as `telemetry ingest`'s
+    /// generic adapter passes every `metrics[]` entry through verbatim,
+    /// unlike `telemetry record`'s narrow CLI-typed shape, a metric here
+    /// may carry any of its own `unit`/`currency`/`quality`/`confidence`/
+    /// `scope`/`aggregation`/`dimensions`/`pricing`/`measurementId`/
+    /// `source`/`collectedAt` fields, each honored verbatim over the
+    /// registry/defaults fallback chain exactly as production's
+    /// field-by-field `??` does. Appends the normalized metric (deduped by
+    /// content-addressed `measurementId`) and always upserts its
+    /// capability, whether or not the metric itself was a duplicate --
+    /// matching production's own `addMetric` exactly.
+    let private normalizeAndAppendIngestedMetric
+        (root: string)
+        (record: JsonObject)
+        (metricNode: JsonObject)
+        (defaultSource: JsonNode)
+        (defaultCollectedAt: string)
+        : Result<unit, string> =
+        match stringField metricNode "id" with
+        | None -> Error "metric requires an 'id'"
+        | Some metricId ->
+            match FileMetricRegistryRepository.read root |> List.tryFind (fun definition -> definition.Id = metricId) with
+            | None -> Error $"unknown normalized metric '{metricId}'; preserve it in raw telemetry until it is registered"
+            | Some definition ->
+                let numericValue =
+                    match metricNode["value"] with
+                    | :? JsonValue as v when v.GetValueKind() = JsonValueKind.Number ->
+                        match v.TryGetValue<float>() with
+                        | true, parsed -> Some parsed
+                        | _ -> None
+                    | :? JsonValue as v when v.GetValueKind() = JsonValueKind.String ->
+                        let text = v.GetValue<string>()
+
+                        if text.Trim() = "" then
+                            None
+                        else
+                            match Double.TryParse(text, Globalization.NumberStyles.Float, Globalization.CultureInfo.InvariantCulture) with
+                            | true, parsed -> Some parsed
+                            | _ -> None
+                    | _ -> None
+
+                match numericValue with
+                | None -> Error $"metric '{metricId}' requires a finite numeric value"
+                | Some value when not (Double.IsFinite value) -> Error $"metric '{metricId}' requires a finite numeric value"
+                | Some value ->
+                    let unit = stringField metricNode "unit" |> Option.defaultValue definition.Unit
+                    let currency = stringField metricNode "currency"
+                    let quality = stringField metricNode "quality" |> Option.defaultValue "observed"
+                    let scope = stringField metricNode "scope" |> Option.defaultValue "execution"
+                    let aggregation = stringField metricNode "aggregation" |> Option.defaultValue definition.Aggregation
+                    let collectedAt = stringField metricNode "collectedAt" |> Option.defaultValue defaultCollectedAt
+                    let dimensionsValue = match metricNode["dimensions"] with :? JsonObject as o -> (o: JsonNode) | _ -> JsonObject()
+                    let sourceValue = match metricNode["source"] with null -> defaultSource | v -> v
+
+                    let normalized = JsonObject()
+                    normalized["measurementId"] <- JsonValue.Create ""
+                    normalized["id"] <- JsonValue.Create metricId
+                    normalized["value"] <- JsonValue.Create value
+                    normalized["unit"] <- JsonValue.Create unit
+                    normalized["currency"] <- (match currency with Some c -> JsonValue.Create c | None -> null)
+                    normalized["quality"] <- JsonValue.Create quality
+
+                    normalized["confidence"] <-
+                        (match metricNode["confidence"] with
+                         | null -> null
+                         | v -> v.DeepClone())
+
+                    normalized["scope"] <- JsonValue.Create scope
+                    normalized["aggregation"] <- JsonValue.Create aggregation
+                    normalized["dimensions"] <- dimensionsValue.DeepClone()
+
+                    normalized["pricing"] <-
+                        (match metricNode["pricing"] with
+                         | null -> null
+                         | v -> v.DeepClone())
+
+                    normalized["source"] <- sourceValue.DeepClone()
+                    normalized["collectedAt"] <- JsonValue.Create collectedAt
+                    normalized["schemaVersion"] <- JsonValue.Create "1.0.0"
+
+                    let measurementId =
+                        match stringField metricNode "measurementId" with
+                        | Some existing when existing <> "" -> existing
+                        | _ -> "MEAS-" + CanonicalJson.contentDigest 24 normalized
+
+                    normalized["measurementId"] <- JsonValue.Create measurementId
+
+                    let metricsArray =
+                        match record["metrics"] with
+                        | :? JsonArray as array -> array
+                        | _ ->
+                            let created = JsonArray()
+                            record["metrics"] <- created
+                            created
+
+                    let alreadyPresent =
+                        metricsArray
+                        |> Seq.exists (function
+                            | :? JsonObject as node -> stringField node "measurementId" = Some measurementId
+                            | _ -> false)
+
+                    if not alreadyPresent then
+                        metricsArray.Add(normalized: JsonNode)
+
+                    let status =
+                        match quality with
+                        | "derived" -> "derived"
+                        | "estimated" -> "estimated"
+                        | _ -> "supported-observed"
+
+                    mergeCapabilityByKey
+                        root
+                        record
+                        (Some metricId)
+                        None
+                        status
+                        (Some "normalized measurement recorded")
+                        collectedAt
+                        collectedAt
+                        (capabilitySourceFromNode sourceValue)
+
+                    Ok()
+
+    let private syntheticMetricNode (metricId: string) (value: int) (source: CapabilitySource) (collectedAt: string) : JsonObject =
+        let node = JsonObject()
+        node["id"] <- JsonValue.Create metricId
+        node["value"] <- JsonValue.Create(float value)
+        node["quality"] <- JsonValue.Create "derived"
+        node["collectedAt"] <- JsonValue.Create collectedAt
+        node["source"] <- FileTelemetryExecutionRepository.sourceNode source
+        node
+
+    let private mergeIdentity (record: JsonObject) (incoming: JsonObject) : unit =
+        match record["identity"] with
+        | :? JsonObject as identity ->
+            for entry in incoming |> Seq.toList do
+                match entry.Value with
+                | null -> ()
+                | value -> identity[entry.Key] <- value.DeepClone()
+        | _ -> ()
+
+    /// A plain JS object-spread merge (`{...record.X, ...adapted.X}`),
+    /// unlike identity's `mergeObject`: an incoming key's value is always
+    /// set verbatim, including an explicit JSON `null` (spread never skips
+    /// `null`, only `mergeObject`'s own explicit check does).
+    let private shallowMerge (record: JsonObject) (key: string) (incoming: JsonObject option) : unit =
+        match incoming with
+        | None -> ()
+        | Some incomingObject ->
+            let target =
+                match record[key] with
+                | :? JsonObject as o -> o
+                | _ ->
+                    let created = JsonObject()
+                    record[key] <- created
+                    created
+
+            for entry in incomingObject |> Seq.toList do
+                target[entry.Key] <-
+                    match entry.Value with
+                    | null -> null
+                    | v -> v.DeepClone()
+
+    let private mergeLinks (record: JsonObject) (incoming: JsonObject option) : unit =
+        match incoming with
+        | None -> ()
+        | Some incomingLinks ->
+            let target =
+                match record["links"] with
+                | :? JsonObject as o -> o
+                | _ ->
+                    let created = JsonObject()
+                    record["links"] <- created
+                    created
+
+            for entry in incomingLinks |> Seq.toList do
+                match entry.Value with
+                | :? JsonArray as incomingArray ->
+                    let existingArray =
+                        match target[entry.Key] with
+                        | :? JsonArray as array -> array |> Seq.toList
+                        | _ -> []
+
+                    let seen = Collections.Generic.HashSet<string>()
+                    let merged = JsonArray()
+
+                    for item in existingArray @ (incomingArray |> Seq.toList) do
+                        let key = match item with null -> "null" | v -> v.ToJsonString()
+                        if seen.Add key then merged.Add(item.DeepClone(): JsonNode)
+
+                    target[entry.Key] <- merged
+                | value ->
+                    target[entry.Key] <-
+                        match value with
+                        | null -> null
+                        | v -> v.DeepClone()
+
+    let private mergeIngestedEvent (record: JsonObject) (eventNode: JsonObject) : unit =
+        let eventId =
+            match stringField eventNode "eventId" with
+            | Some existing -> existing
+            | None -> "TEVT-" + CanonicalJson.contentDigest 24 eventNode
+
+        let eventsArray =
+            match record["events"] with
+            | :? JsonArray as array -> array
+            | _ ->
+                let created = JsonArray()
+                record["events"] <- created
+                created
+
+        let alreadyPresent =
+            eventsArray
+            |> Seq.exists (function
+                | :? JsonObject as node -> stringField node "eventId" = Some eventId
+                | _ -> false)
+
+        if not alreadyPresent then
+            let normalized = eventNode.DeepClone() :?> JsonObject
+            normalized["eventId"] <- JsonValue.Create eventId
+            eventsArray.Add(normalized: JsonNode)
+
+    let private mergeQualitySignal (record: JsonObject) (signalNode: JsonObject) : unit =
+        let signalId =
+            match stringField signalNode "signalId" with
+            | Some existing -> existing
+            | None -> "QS-" + CanonicalJson.contentDigest 24 signalNode
+
+        let signalsArray =
+            match record["qualitySignals"] with
+            | :? JsonArray as array -> array
+            | _ ->
+                let created = JsonArray()
+                record["qualitySignals"] <- created
+                created
+
+        let alreadyPresent =
+            signalsArray
+            |> Seq.exists (function
+                | :? JsonObject as node -> stringField node "signalId" = Some signalId
+                | _ -> false)
+
+        if not alreadyPresent then
+            let normalized = signalNode.DeepClone() :?> JsonObject
+            normalized["signalId"] <- JsonValue.Create signalId
+            signalsArray.Add(normalized: JsonNode)
+
+    /// Mirrors production `ingestAdapted`, restricted to what the generic
+    /// adapter ever produces: snapshot dedup (an already-ingested
+    /// `snapshotId`, tracked in either `rawTelemetry` or the ingestion
+    /// event log, returns the record untouched), the declared-unavailable
+    /// consistency guard, identity/capability/metric/event/classification/
+    /// scope/links/quality-signal merging, raw payload redaction plus the
+    /// byte-budget retention policy (four outcomes, exactly matching
+    /// production's own branch order), unknown-field capability discovery,
+    /// the three derived quality metrics, the ingestion event, and
+    /// provenance-source tracking (deduped by content digest).
+    let private ingestAdaptedGeneric (root: string) (executionId: string) (adapted: AdaptedSnapshot) : Result<JsonObject, string> =
+        let file = executionFile root executionId
+
+        match JsonNode.Parse(File.ReadAllText file) with
+        | :? JsonObject as record ->
+            // `ingestTarget` always populates `SnapshotId` before calling here
+            // (either the adapter's own `input.snapshotId`, or production's
+            // `ingestTelemetry`-level `{adapter, input}` digest) -- production's
+            // OWN `ingestAdapted`-level fallback (`{adapter, raw: adapted.raw}`)
+            // is unreachable through this call path and is not reproduced here.
+            let snapshotId = adapted.SnapshotId |> Option.defaultWith (fun () -> failwith "snapshotId must be populated before ingestAdaptedGeneric runs")
+
+            if alreadyIngested record snapshotId then
+                Ok record
+            else
+                match declaredUnavailableConflict adapted.Metrics adapted.Capabilities with
+                | Some metricId -> Error $"telemetry snapshot '{snapshotId}' records metric '{metricId}' while declaring it unavailable or unsupported"
+                | None ->
+                    mergeIdentity record adapted.Identity
+                    adapted.Capabilities |> List.iter (mergeDeclaredCapability root record)
+
+                    let metricResult =
+                        adapted.Metrics
+                        |> List.fold
+                            (fun outcome metricNode ->
+                                match outcome with
+                                | Error _ -> outcome
+                                | Ok() -> normalizeAndAppendIngestedMetric root record metricNode (adapted.Source: JsonNode) adapted.CollectedAt)
+                            (Ok())
+
+                    match metricResult with
+                    | Error message -> Error message
+                    | Ok() ->
+                        adapted.Events |> List.iter (mergeIngestedEvent record)
+                        shallowMerge record "classification" adapted.Classification
+                        shallowMerge record "scope" adapted.Scope
+                        mergeLinks record adapted.Links
+                        adapted.QualitySignals |> List.iter (mergeQualitySignal record)
+
+                        let allowRaw = FileWorkConfigRepository.readTelemetryAllowRawTelemetry root
+                        let maxPayloadBytes = FileWorkConfigRepository.readTelemetryMaxRawPayloadBytes root
+                        let maxSnapshotsPerExecution = FileWorkConfigRepository.readTelemetryMaxRawSnapshotsPerExecution root
+                        let maxBytesPerExecution = FileWorkConfigRepository.readTelemetryMaxRawBytesPerExecution root
+
+                        let redactions = ResizeArray<string>()
+                        let payload = sanitizeRawNode adapted.Raw "$" redactions
+                        let fields = leafPaths payload
+                        let mappedSet = Set.ofList adapted.MappedFields
+                        let canonicalField (field: string) = Regex.Replace(field, @"^\$(?:\[\])?\.?", "")
+
+                        let discoveredFields =
+                            fields
+                            |> List.filter (fun field ->
+                                let canonical = canonicalField field
+                                not (mappedSet |> Set.exists (fun known -> canonical = known || canonical.EndsWith($".{known}"))))
+
+                        let serializedBytes = Text.Encoding.UTF8.GetByteCount(CanonicalJson.serializeCompact payload)
+
+                        let existingRawTelemetry =
+                            match record["rawTelemetry"] with
+                            | :? JsonArray as array -> array |> Seq.choose (function :? JsonObject as node -> Some node | _ -> None) |> Seq.toList
+                            | _ -> []
+
+                        let retainedRawBytes =
+                            existingRawTelemetry
+                            |> List.sumBy (fun snapshot ->
+                                match snapshot["payload"] with
+                                | null -> 0
+                                | payloadNode -> Text.Encoding.UTF8.GetByteCount(CanonicalJson.serializeCompact payloadNode))
+
+                        let rawRetentionStatus, rawRetentionReason =
+                            if not allowRaw then "omitted", "repository-policy-disabled"
+                            elif serializedBytes > maxPayloadBytes then "omitted", "snapshot-byte-limit"
+                            elif existingRawTelemetry.Length >= maxSnapshotsPerExecution then "omitted", "execution-snapshot-limit"
+                            elif retainedRawBytes + serializedBytes > maxBytesPerExecution then "omitted", "execution-byte-limit"
+                            else "retained", ""
+
+                        if rawRetentionStatus = "retained" then
+                            let rawTelemetryArray =
+                                match record["rawTelemetry"] with
+                                | :? JsonArray as array -> array
+                                | _ ->
+                                    let created = JsonArray()
+                                    record["rawTelemetry"] <- created
+                                    created
+
+                            let snapshotNode = JsonObject()
+                            snapshotNode["snapshotId"] <- JsonValue.Create snapshotId
+                            snapshotNode["adapter"] <- JsonValue.Create "generic"
+                            snapshotNode["schemaVersion"] <-
+                                match adapted.SchemaVersion with
+                                | null -> null
+                                | v -> v.DeepClone()
+                            snapshotNode["collectedAt"] <- JsonValue.Create adapted.CollectedAt
+                            snapshotNode["source"] <- adapted.Source.DeepClone()
+                            snapshotNode["payload"] <- payload
+                            snapshotNode["payloadBytes"] <- JsonValue.Create serializedBytes
+
+                            let discoveredFieldsNode = JsonArray()
+                            discoveredFields |> List.iter (fun field -> discoveredFieldsNode.Add(JsonValue.Create field: JsonNode))
+                            snapshotNode["discoveredFields"] <- discoveredFieldsNode
+
+                            let redactionsNode = JsonArray()
+                            redactions |> Seq.iter (fun path -> redactionsNode.Add(JsonValue.Create path: JsonNode))
+                            snapshotNode["redactions"] <- redactionsNode
+
+                            rawTelemetryArray.Add(snapshotNode: JsonNode)
+
+                        let discoveredFieldReason =
+                            if rawRetentionStatus = "retained" then
+                                "provider field preserved but not normalized by this adapter version"
+                            else
+                                $"provider field discovered but raw payload was omitted: {rawRetentionReason}"
+
+                        for fieldPath in discoveredFields do
+                            mergeCapabilityByKey
+                                root
+                                record
+                                None
+                                (Some fieldPath)
+                                "unknown"
+                                (Some discoveredFieldReason)
+                                adapted.CollectedAt
+                                adapted.CollectedAt
+                                (capabilitySourceFromNode adapted.Source)
+
+                        if redactions.Count > 0 then
+                            normalizeAndAppendIngestedMetric
+                                root
+                                record
+                                (syntheticMetricNode "telemetry.redactions" redactions.Count { Type = "calculated"; Name = "ros-raw-filter"; Mechanism = "sensitive-key-redaction" } adapted.CollectedAt)
+                                (adapted.Source: JsonNode)
+                                adapted.CollectedAt
+                            |> ignore
+
+                        if not discoveredFields.IsEmpty then
+                            normalizeAndAppendIngestedMetric
+                                root
+                                record
+                                (syntheticMetricNode "telemetry.unknown_fields" discoveredFields.Length { Type = "calculated"; Name = "ros-field-discovery"; Mechanism = "unmapped-leaf-count" } adapted.CollectedAt)
+                                (adapted.Source: JsonNode)
+                                adapted.CollectedAt
+                            |> ignore
+
+                        if rawRetentionStatus = "omitted" then
+                            normalizeAndAppendIngestedMetric
+                                root
+                                record
+                                (syntheticMetricNode "telemetry.raw_snapshots_omitted" 1 { Type = "calculated"; Name = "ros-retention-policy"; Mechanism = rawRetentionReason } adapted.CollectedAt)
+                                (adapted.Source: JsonNode)
+                                adapted.CollectedAt
+                            |> ignore
+
+                        let rawRetentionNode = JsonObject()
+                        rawRetentionNode["status"] <- JsonValue.Create rawRetentionStatus
+                        rawRetentionNode["reason"] <- (if rawRetentionStatus = "omitted" then JsonValue.Create rawRetentionReason else null)
+                        rawRetentionNode["payloadBytes"] <- JsonValue.Create serializedBytes
+
+                        let ingestionEventSeed = JsonObject()
+                        ingestionEventSeed["type"] <- JsonValue.Create "telemetry.snapshot.ingested"
+                        ingestionEventSeed["snapshotId"] <- JsonValue.Create snapshotId
+                        ingestionEventSeed["adapter"] <- JsonValue.Create "generic"
+                        let ingestionEventId = "TEVT-" + CanonicalJson.contentDigest 24 ingestionEventSeed
+
+                        let eventsArray =
+                            match record["events"] with
+                            | :? JsonArray as array -> array
+                            | _ ->
+                                let created = JsonArray()
+                                record["events"] <- created
+                                created
+
+                        let ingestionEventAlreadyPresent =
+                            eventsArray
+                            |> Seq.exists (function
+                                | :? JsonObject as node -> stringField node "eventId" = Some ingestionEventId
+                                | _ -> false)
+
+                        if not ingestionEventAlreadyPresent then
+                            let ingestionEvent = JsonObject()
+                            ingestionEvent["type"] <- JsonValue.Create "telemetry.snapshot.ingested"
+                            ingestionEvent["snapshotId"] <- JsonValue.Create snapshotId
+                            ingestionEvent["adapter"] <- JsonValue.Create "generic"
+                            ingestionEvent["rawRetention"] <- rawRetentionNode
+                            ingestionEvent["occurredAt"] <- JsonValue.Create adapted.CollectedAt
+                            ingestionEvent["source"] <- adapted.Source.DeepClone()
+                            ingestionEvent["eventId"] <- JsonValue.Create ingestionEventId
+                            eventsArray.Add(ingestionEvent: JsonNode)
+
+                        let existingSources =
+                            match record["provenance"] with
+                            | :? JsonObject as provenance ->
+                                match provenance["sources"] with
+                                | :? JsonArray as array -> array |> Seq.choose (function :? JsonObject as node -> Some node | _ -> None) |> Seq.toList
+                                | _ -> []
+                            | _ -> []
+
+                        let dedupedSources =
+                            let seen = Collections.Generic.HashSet<string>()
+                            let result = ResizeArray<JsonObject>()
+
+                            for candidate in existingSources @ [ adapted.Source ] do
+                                let key = CanonicalJson.contentDigest 24 candidate
+                                if seen.Add key then result.Add candidate
+
+                            result |> Seq.toList
+
+                        let sourcesNode = JsonArray()
+                        dedupedSources |> List.iter (fun source -> sourcesNode.Add(source.DeepClone(): JsonNode))
+
+                        match record["provenance"] with
+                        | :? JsonObject as provenance -> provenance["sources"] <- sourcesNode
+                        | _ ->
+                            let provenance = JsonObject()
+                            provenance["sources"] <- sourcesNode
+                            record["provenance"] <- provenance
+
+                        File.WriteAllText(file, record.ToJsonString serializerOptions + "\n")
+                        Ok record
+        | _ -> Error "execution record must be a JSON object"
+
+    /// Mirrors production `readTelemetryInput`'s parsing half (the
+    /// disk/stdin read and byte-limit check are the CLI's own concern,
+    /// matching how this migration already splits file I/O into
+    /// `Ros.Cli.Program`): a single JSON value first, falling back to
+    /// JSON Lines (one value per non-blank line) only when that fails.
+    let parseIngestInput (text: string) : Result<JsonNode, string> =
+        let trimmed = text.Trim()
+
+        if trimmed = "" then
+            Error "telemetry input is empty"
+        else
+            try
+                Ok(JsonNode.Parse trimmed)
+            with _ ->
+                try
+                    let lines = trimmed.Split([| "\r\n"; "\n" |], StringSplitOptions.None) |> Array.filter (fun line -> line.Trim() <> "")
+                    let array = JsonArray()
+                    lines |> Array.iter (fun line -> array.Add(JsonNode.Parse line))
+                    Ok(array: JsonNode)
+                with error ->
+                    Error $"telemetry input must be JSON or JSON Lines: {error.Message}"
+
+    /// Mirrors production `ingestTelemetry(root, target, input, {adapter:
+    /// "generic"})`: adapter validation and adaptation happen before any
+    /// target resolution or lock, exactly matching production's own
+    /// `adaptInput` call ahead of `withExecutionLock` -- an unknown
+    /// adapter name (one production itself would not recognize) or a bad
+    /// target both reject before anything is touched. Every other real
+    /// adapter name is its own future MIG-08 slice.
+    let ingestTarget (root: string) (target: string option) (adapter: string) (inputText: string) : Result<JsonObject, string> =
+        if not (Ros.Domain.Telemetry.TelemetryAdapters.all |> List.contains adapter) then
+            Error $"unknown telemetry adapter '{adapter}'"
+        elif adapter <> "generic" then
+            Error $"telemetry ingest --adapter '{adapter}' is not yet supported by this CLI"
+        else
+            match parseIngestInput inputText with
+            | Error message -> Error message
+            | Ok inputNode ->
+                let collectedAt = FileTelemetryExecutionRepository.nowIso ()
+                let adapted = adaptGeneric inputNode collectedAt
+
+                // Mirrors production `ingestTelemetry`'s own `adapted.snapshotId
+                // ??= \`SNAP-${digest({ adapter, input })}\``, computed here
+                // (using the ORIGINAL, un-adapted input) before `ingestAdapted`
+                // ever runs -- the adapter's own fallback formula (`{adapter,
+                // raw: adapted.raw}`) is unreachable through this call path,
+                // since `snapshotId` is always already set by the time
+                // `ingestAdapted` would consult it.
+                let adapted =
+                    match adapted.SnapshotId with
+                    | Some _ -> adapted
+                    | None ->
+                        let seed = JsonObject()
+                        seed["adapter"] <- JsonValue.Create adapter
+                        seed["input"] <- inputNode.DeepClone()
+                        { adapted with SnapshotId = Some("SNAP-" + CanonicalJson.contentDigest 24 seed) }
+
+                match resolveExecutionTarget root target true with
+                | Error message -> Error message
+                | Ok executionId ->
+                    match RegistryLock.acquire root $"telemetry-execution:{executionId}" RegistryLock.defaultSettings with
+                    | Error failure -> Error failure.Message
+                    | Ok lease ->
+                        let result =
+                            try
+                                match resolveExecutionTarget root (Some executionId) true with
+                                | Error message -> Error message
+                                | Ok _ -> ingestAdaptedGeneric root executionId adapted
+                            with error ->
+                                Error error.Message
+
+                        match lease.Release(), result with
+                        | Error releaseFailure, Ok _ -> Error releaseFailure.Message
+                        | _, outcome -> outcome

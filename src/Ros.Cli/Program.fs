@@ -23,7 +23,7 @@ open System.Text.Json.Nodes
 let Version = "0.2.0-shadow"
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--quiet]"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--quiet] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet]"
 
 let private parseRoot (arguments: string array) =
     let values = ResizeArray<string>(arguments)
@@ -1777,6 +1777,49 @@ let private runTelemetryRecord root (arguments: string list) =
 
             0
 
+/// Mirrors production `telemetry ingest [TARGET] --input FILE [--adapter
+/// NAME]` (`ingestTelemetry`/`adaptInput`/`ingestAdapted`,
+/// `tools/ros_telemetry.mjs`) -- MIG-08's sixth increment and the third
+/// write-path telemetry-producer command, restricted to the `generic`
+/// adapter (the one with zero provider-specific field mapping, matching
+/// increment 1's own "smallest real slice first" pattern): every other
+/// adapter name production itself recognizes is its own future MIG-08
+/// slice and is rejected outright (exit 2) rather than silently treated as
+/// generic; a name production itself would not recognize gets production's
+/// own exact error (exit 1). `--input`'s file (or `-` for stdin) is read
+/// and byte-checked here, matching production's own `readTelemetryInput`;
+/// everything past that (adaptation, target resolution, the mutation
+/// itself) is `FileTelemetryFinalizationRepository.ingestTarget`.
+let private runTelemetryIngest root (arguments: string list) =
+    let target = arguments |> List.tryHead |> Option.filter (fun value -> not (value.StartsWith("--", StringComparison.Ordinal)))
+    let adapter = optionValue "--adapter" arguments |> Option.defaultValue "generic"
+
+    match optionValue "--input" arguments with
+    | None ->
+        eprintfn "ERROR --input requires a JSON or JSON Lines file; use '-' for stdin"
+        1
+    | Some inputPath ->
+        try
+            let raw = if inputPath = "-" then Console.In.ReadToEnd() else File.ReadAllText(Path.Combine(root, inputPath))
+            let maxBytes = FileWorkConfigRepository.readTelemetryMaxRawPayloadBytes root
+
+            if Text.Encoding.UTF8.GetByteCount raw > maxBytes then
+                eprintfn "ERROR telemetry input exceeds %d bytes" maxBytes
+                1
+            else
+                match FileTelemetryFinalizationRepository.ingestTarget root target adapter raw with
+                | Error message ->
+                    eprintfn "ERROR %s" message
+                    if message.EndsWith("is not yet supported by this CLI", StringComparison.Ordinal) then 2 else 1
+                | Ok record ->
+                    if not (arguments |> List.contains "--quiet") then
+                        printf "%s" (record.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
+
+                    0
+        with :? IOException as error ->
+            eprintfn "ERROR %s" error.Message
+            1
+
 let private dispatch root arguments =
     let repository = FileArtifactRepository.create root
     let gitRepository = ProcessGitRepository.create root
@@ -1819,6 +1862,7 @@ let private dispatch root arguments =
     | "telemetry" :: ("summary" | "summarize") :: rest -> runTelemetrySummary root rest
     | "telemetry" :: "finalize" :: rest -> runTelemetryFinalize root rest
     | "telemetry" :: "record" :: rest -> runTelemetryRecord root rest
+    | "telemetry" :: "ingest" :: rest -> runTelemetryIngest root rest
     | _ ->
         eprintfn "%s" usage
         2

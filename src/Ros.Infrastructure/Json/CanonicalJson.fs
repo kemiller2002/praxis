@@ -36,3 +36,41 @@ module CanonicalJson =
             |> fun value -> value.ToLowerInvariant()
 
         hex.Substring(0, length)
+
+    /// `stable(value)` (`tools/ros_telemetry.mjs`): recursively rebuilds a
+    /// node with every object's own keys sorted (ordinally, matching
+    /// production's plain `Object.keys(value).sort()` for realistic JSON
+    /// key names), leaving array order and every scalar untouched. Unlike
+    /// this migration's other content-addressed digests (`recordLifecycle`'s
+    /// event, `derivedMetricNode`'s metric), which hand-build a flat,
+    /// already-sorted object literal because their own field set is fixed
+    /// and shallow, this is for digesting genuinely arbitrary,
+    /// caller-supplied JSON (a raw telemetry payload, an ingested event or
+    /// quality signal, a metric's own `dimensions`/`pricing`) where the key
+    /// set and nesting depth are not known in advance. Always rebuilds
+    /// fresh nodes (via `DeepClone` for scalars) since a `JsonNode` can only
+    /// ever be attached to one parent.
+    let rec stabilize (node: JsonNode) : JsonNode =
+        match node with
+        | null -> null
+        | :? JsonArray as array ->
+            let result = JsonArray()
+            for item in array do
+                result.Add(stabilize item)
+
+            result
+        | :? JsonObject as obj ->
+            let result = JsonObject()
+            let keys = obj |> Seq.map (fun entry -> entry.Key) |> List.ofSeq |> List.sortWith (fun a b -> String.CompareOrdinal(a, b))
+
+            for key in keys do
+                result[key] <- stabilize obj[key]
+
+            result
+        | _ -> node.DeepClone()
+
+    /// `digest(value, length)`: `stable()` followed by `serializeCompact`
+    /// and `sha256HexPrefix`, for digesting arbitrary (not hand-sorted)
+    /// JSON directly.
+    let contentDigest (length: int) (node: JsonNode) : string =
+        sha256HexPrefix length (serializeCompact (stabilize node))

@@ -24,7 +24,15 @@ type CapabilityHistoryEntry =
       RecordedAt: string }
 
 type Capability =
-    { MetricId: string
+    { /// Production keys a capability by the pair `(metricId, providerField)`,
+      /// and every capability this migration wrote before ingest existed
+      /// carried a `metricId` and never a `providerField`. Ingest's own
+      /// unknown-field discovery is the one producer of the opposite case
+      /// (a `providerField` with no `metricId` at all, matching production's
+      /// object literal that omits the `metricId` key entirely) -- both
+      /// fields are optional so either shape round-trips exactly.
+      MetricId: string option
+      ProviderField: string option
       Status: string
       Reason: string option
       DiscoveredAt: string
@@ -110,7 +118,8 @@ module Capability =
             else
                 "unknown", "runtime capability not reported or mapped"
 
-        { MetricId = metric.Id
+        { MetricId = Some metric.Id
+          ProviderField = None
           Status = status
           Reason = Some reason
           DiscoveredAt = discoveredAt
@@ -126,10 +135,15 @@ module Capability =
     /// only when it actually changed, then history is capped at
     /// `maxHistoryEntries` by keeping the oldest entry plus the most recent
     /// ones (mirroring production's own first-plus-tail truncation) and
-    /// counting the rest as `historyOmitted`.
+    /// counting the rest as `historyOmitted`. `newDiscoveredAt` and
+    /// `newLastAssessedAt` are the same value at every call site except a
+    /// directly-supplied ingest capability, where production's own
+    /// `capability.lastAssessedAt ?? capability.discoveredAt ?? nowIso()`
+    /// lets a caller assert a distinct `lastAssessedAt`.
     let upsert
         (maxHistoryEntries: int)
         (newDiscoveredAt: string)
+        (newLastAssessedAt: string)
         (recordedAtNow: string)
         (status: string)
         (reason: string option)
@@ -163,7 +177,7 @@ module Capability =
             Reason = reason
             Source = source
             DiscoveredAt = if changed then newDiscoveredAt else previous.DiscoveredAt
-            LastAssessedAt = newDiscoveredAt
+            LastAssessedAt = newLastAssessedAt
             RecordedAt = recordedAtNow
             History = cappedHistory
             HistoryOmitted = previous.HistoryOmitted + additionalOmitted
