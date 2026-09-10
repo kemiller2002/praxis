@@ -297,9 +297,9 @@ test("F# telemetry ingest rejects an unknown adapter with production's exact mes
   assert.equal(nodeMessage, "unknown telemetry adapter 'bogus-adapter'");
   assert.match(fsharpResult.stderr, /unknown telemetry adapter 'bogus-adapter'/);
 
-  const fsharpUnsupportedResult = runFsharp(fsharpRoot, ["EXE-1", "--input", writeInputFile(t, "unsupported", input), "--adapter", "anthropic-claude-statusline"]);
+  const fsharpUnsupportedResult = runFsharp(fsharpRoot, ["EXE-1", "--input", writeInputFile(t, "unsupported", input), "--adapter", "anthropic-claude-otel"]);
   assert.equal(fsharpUnsupportedResult.status, 2);
-  assert.match(fsharpUnsupportedResult.stderr, /telemetry ingest --adapter 'anthropic-claude-statusline' is not yet supported by this CLI/);
+  assert.match(fsharpUnsupportedResult.stderr, /telemetry ingest --adapter 'anthropic-claude-otel' is not yet supported by this CLI/);
 });
 
 test("F# telemetry ingest honors repository raw-telemetry retention config, matching production's byte-budget and disabled-policy branches", (t) => {

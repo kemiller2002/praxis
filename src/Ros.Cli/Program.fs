@@ -1814,8 +1814,13 @@ let private runTelemetryRecord root (arguments: string list) =
 /// a later increment added `openai-codex`, the first real provider-specific
 /// field mapping ported; a further increment added the three hook adapters
 /// (`anthropic-claude-hook`/`google-gemini-hook`/`github-copilot-hook`),
-/// sharing one `adaptHook` parameterized only by identity provider/runtime.
-/// Every other adapter name production itself recognizes remains its own
+/// sharing one `adaptHook` parameterized only by identity provider/runtime;
+/// a further increment added `anthropic-claude-statusline`
+/// (`adaptClaudeStatusline`), a single-snapshot adapter (not an event
+/// stream) whose one real quirk is that a present `cost.session_cumulative`
+/// value gets an `"estimated"` capability status rather than
+/// `"supported-observed"`. Every other adapter name production itself
+/// recognizes remains its own
 /// future MIG-08 slice and is rejected outright (exit 2) rather than
 /// silently treated as generic; a name production itself would not
 /// recognize gets production's own exact error (exit 1).

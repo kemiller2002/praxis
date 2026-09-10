@@ -1174,6 +1174,182 @@ module FileTelemetryFinalizationRepository =
           CollectedAt = collectedAt
           Source = runtimeSource }
 
+    /// Mirrors production `adaptClaudeStatusline`: maps a Claude Code
+    /// statusline JSON payload (a single snapshot, not an event stream) to
+    /// context/cost metrics. Three top-level fields
+    /// (`context.window_size`/`context.utilization`/
+    /// `cost.session_cumulative`) each always get a capability declaration
+    /// (present or not) and, when present, a metric carrying `quality`
+    /// ("observed" or "estimated") and `confidence` (`"medium"` when
+    /// estimated, JSON `null` otherwise -- always present as a key, unlike
+    /// the four current-usage fields below); `cost.session_cumulative` is
+    /// the one field whose capability status becomes `"estimated"` instead
+    /// of `"supported-observed"` when present, a real quirk since a
+    /// statusline snapshot cannot directly observe session cost, only
+    /// estimate it. `context.utilization` is computed by dividing
+    /// `used_percentage` by 100. The four `current_usage` token fields
+    /// (input/output/cache write/cache read) each get a plain capability
+    /// declaration and, when present, a metric with no `quality`/
+    /// `confidence`/`currency` extras at all. Unlike `adaptOpenAICodex`/
+    /// `adaptHook`, this adapter emits no events at all, and `collectedAt`
+    /// is never overridden by an input timestamp field.
+    let private adaptClaudeStatusline (input: JsonNode) (collectedAt: string) : AdaptedSnapshot =
+        let inputObject = match input with :? JsonObject as o -> Some o | _ -> None
+
+        let objectFieldOf (o: JsonObject) (name: string) : JsonObject option =
+            match o[name] with
+            | :? JsonObject as v -> Some v
+            | _ -> None
+
+        let numberFieldOf (o: JsonObject) (name: string) : float option =
+            match o[name] with
+            | :? JsonValue as v when v.GetValueKind() = JsonValueKind.Number ->
+                match v.TryGetValue<float>() with
+                | true, parsed -> Some parsed
+                | _ -> None
+            | _ -> None
+
+        let contextWindow = inputObject |> Option.bind (fun o -> objectFieldOf o "context_window")
+        let currentUsage = contextWindow |> Option.bind (fun cw -> objectFieldOf cw "current_usage")
+        let cost = inputObject |> Option.bind (fun o -> objectFieldOf o "cost")
+
+        let windowSize = contextWindow |> Option.bind (fun cw -> numberFieldOf cw "context_window_size")
+        let utilization = contextWindow |> Option.bind (fun cw -> numberFieldOf cw "used_percentage") |> Option.map (fun p -> p / 100.0)
+        let sessionCost = cost |> Option.bind (fun c -> numberFieldOf c "total_cost_usd")
+
+        let runtimeSource =
+            let node = JsonObject()
+            node["type"] <- JsonValue.Create "runtime-output"
+            node["name"] <- JsonValue.Create "claude-code-statusline"
+            node["mechanism"] <- JsonValue.Create "statusline-json"
+            node["provider"] <- JsonValue.Create "anthropic"
+            node["runtime"] <- JsonValue.Create "claude-code"
+            node
+
+        let capabilityNode metricId present : JsonObject =
+            let node = JsonObject()
+            node["metricId"] <- JsonValue.Create(metricId: string)
+            node["status"] <- JsonValue.Create(if present then "supported-observed" else "supported-unavailable")
+
+            node["reason"] <-
+                JsonValue.Create(
+                    if present then
+                        "provider field observed"
+                    else
+                        "adapter recognizes the field but it was unavailable in this snapshot"
+                )
+
+            node["source"] <- runtimeSource.DeepClone()
+            node["discoveredAt"] <- JsonValue.Create(collectedAt: string)
+            node
+
+        let estimatedCapabilityNode metricId present (quality: string) : JsonObject =
+            let node = capabilityNode metricId present
+
+            if present && quality = "estimated" then
+                node["status"] <- JsonValue.Create "estimated"
+
+            node
+
+        let topLevelMetricNode metricId (value: float) (quality: string) : JsonObject =
+            let node = JsonObject()
+            node["id"] <- JsonValue.Create(metricId: string)
+            node["value"] <- JsonValue.Create value
+            node["collectedAt"] <- JsonValue.Create(collectedAt: string)
+            node["source"] <- runtimeSource.DeepClone()
+            node["scope"] <- JsonValue.Create "session"
+            node["quality"] <- JsonValue.Create quality
+            node["confidence"] <- (if quality = "estimated" then JsonValue.Create "medium" :> JsonNode else null)
+
+            if (metricId: string).StartsWith("cost.", StringComparison.Ordinal) then
+                node["currency"] <- JsonValue.Create "USD"
+
+            node
+
+        let currentUsageMetricNode metricId (value: float) : JsonObject =
+            let node = JsonObject()
+            node["id"] <- JsonValue.Create(metricId: string)
+            node["value"] <- JsonValue.Create value
+            node["collectedAt"] <- JsonValue.Create(collectedAt: string)
+            node["source"] <- runtimeSource.DeepClone()
+            node["scope"] <- JsonValue.Create "session"
+            node
+
+        let capabilities = ResizeArray<JsonObject>()
+        let metrics = ResizeArray<JsonObject>()
+
+        for metricId, value, quality in
+            [ "context.window_size", windowSize, "observed"
+              "context.utilization", utilization, "observed"
+              "cost.session_cumulative", sessionCost, "estimated" ] do
+            capabilities.Add(estimatedCapabilityNode metricId value.IsSome quality)
+
+            match value with
+            | Some v -> metrics.Add(topLevelMetricNode metricId v quality)
+            | None -> ()
+
+        for field, metricId in
+            [ "input_tokens", "context.current_input_tokens"
+              "output_tokens", "context.current_output_tokens"
+              "cache_creation_input_tokens", "context.current_cache_write_tokens"
+              "cache_read_input_tokens", "context.current_cache_read_tokens" ] do
+            let value = currentUsage |> Option.bind (fun u -> numberFieldOf u field)
+            capabilities.Add(capabilityNode metricId value.IsSome)
+
+            match value with
+            | Some v -> metrics.Add(currentUsageMetricNode metricId v)
+            | None -> ()
+
+        let identity = JsonObject()
+        identity["provider"] <- JsonValue.Create "anthropic"
+        identity["runtime"] <- JsonValue.Create "claude-code"
+
+        identity["runtimeVersion"] <-
+            match inputObject |> Option.bind (fun o -> stringField o "version") with
+            | Some v -> JsonValue.Create v
+            | None -> null
+
+        identity["model"] <-
+            match inputObject |> Option.bind (fun o -> objectFieldOf o "model") |> Option.bind (fun m -> stringField m "id") with
+            | Some m -> JsonValue.Create m
+            | None -> null
+
+        identity["sessionId"] <-
+            match inputObject |> Option.bind (fun o -> stringField o "session_id") with
+            | Some s -> JsonValue.Create s
+            | None -> null
+
+        identity["agentId"] <-
+            match inputObject |> Option.bind (fun o -> objectFieldOf o "agent") |> Option.bind (fun a -> stringField a "name") with
+            | Some a -> JsonValue.Create a
+            | None -> null
+
+        { Identity = identity
+          Capabilities = capabilities |> List.ofSeq
+          Metrics = metrics |> List.ofSeq
+          Events = []
+          Classification = None
+          Scope = None
+          QualitySignals = []
+          Links = None
+          Raw = input
+          MappedFields =
+            [ "context_window.context_window_size"
+              "context_window.used_percentage"
+              "context_window.current_usage.input_tokens"
+              "context_window.current_usage.output_tokens"
+              "context_window.current_usage.cache_creation_input_tokens"
+              "context_window.current_usage.cache_read_input_tokens"
+              "cost.total_cost_usd"
+              "model.id"
+              "version"
+              "session_id"
+              "agent.name" ]
+          SchemaVersion = (match input with :? JsonObject as o -> (match o["schemaVersion"] with null -> null | v -> v) | _ -> null)
+          SnapshotId = None
+          CollectedAt = collectedAt
+          Source = runtimeSource }
+
     /// Precompiled once, mirroring `rawRedactedKeyPattern`'s own convention,
     /// rather than reconstructed on every `toolCategoryMetric`/`adaptHook`
     /// call.
@@ -2066,7 +2242,12 @@ module FileTelemetryFinalizationRepository =
     /// adapter name is its own future MIG-08 slice.
     let ingestTarget (root: string) (target: string option) (adapter: string) (inputText: string) : Result<JsonObject, string> =
         let supportedAdapters =
-            [ "generic"; "openai-codex"; "anthropic-claude-hook"; "google-gemini-hook"; "github-copilot-hook" ]
+            [ "generic"
+              "openai-codex"
+              "anthropic-claude-statusline"
+              "anthropic-claude-hook"
+              "google-gemini-hook"
+              "github-copilot-hook" ]
 
         if not (Ros.Domain.Telemetry.TelemetryAdapters.all |> List.contains adapter) then
             Error $"unknown telemetry adapter '{adapter}'"
@@ -2081,6 +2262,7 @@ module FileTelemetryFinalizationRepository =
                 let adapted =
                     match adapter with
                     | "openai-codex" -> adaptOpenAICodex inputNode collectedAt
+                    | "anthropic-claude-statusline" -> adaptClaudeStatusline inputNode collectedAt
                     | "anthropic-claude-hook" -> adaptHook inputNode collectedAt "anthropic" "claude-code"
                     | "google-gemini-hook" -> adaptHook inputNode collectedAt "google" "gemini-cli"
                     | "github-copilot-hook" -> adaptHook inputNode collectedAt "github" "copilot"
