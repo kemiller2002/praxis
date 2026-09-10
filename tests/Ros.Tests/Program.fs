@@ -34,6 +34,7 @@ let main _ =
     @ TelemetryIngestOpenAICodexTests.tests
     @ TelemetryIngestHookTests.tests
     @ TelemetryIngestClaudeStatuslineTests.tests
+    @ TelemetryIngestOtelTests.tests
     @ TelemetryClassifyTests.tests
     @ TelemetryStartTests.tests
     @ AdapterContractTests.tests

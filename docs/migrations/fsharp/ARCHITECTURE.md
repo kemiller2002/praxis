@@ -1502,6 +1502,81 @@ for the `current_usage` fields converges with the richer shape from the
 top-level fields once persisted — parity holds end-to-end even though
 the two groups' raw shapes differ.
 
+## Phase A / MIG-08, increment 22: the OTel adapter family — the last real adapter mapping, and the first with no fixed schema at all
+
+`anthropic-claude-otel`, `google-gemini-otel`, `github-copilot-otel`, and
+`otel-json` are four CLI-visible adapter names that all resolve to
+production's single `adaptOtel` function — the same one-function/
+multi-name shape as `adaptHook`, but with one more name and, unlike
+every prior adapter (each keyed to one specific provider's JSON shape),
+no fixed field schema of its own at all. Every field `adaptOtel` reads
+is looked up via a shared `firstValue` helper across a per-record set of
+"nested candidates" — the record itself, `attributes`,
+`resource.attributes`, `body`, `dataPoint.attributes`, checked in that
+fixed order, first candidate to carry any of the requested field names
+wins — matching the range of real shapes OTLP JSON exports and Gemini
+CLI's own metric events actually carry without needing a name apiece.
+`otel-json` is the one adapter name with no identity seed at all
+(production's own `identityDefaults = {}` default resolves both
+`provider` and `runtime` to `"unknown"`); the F# port passes `"unknown"`/
+`"unknown"` explicitly at its own dispatch arm rather than threading an
+optional-parameter default through `adaptOtel`, keeping every call site
+uniform.
+
+Input shape resolves the same way production's own `Array.isArray(input)
+? input : input.records ?? input.events ?? [input]` does: an array of
+records, an object carrying a `records` or `events` array, or (falling
+through both) the single object itself treated as one record.
+`identity.provider`/`runtime`/`model`/`sessionId` are *mutable across the
+whole record stream* — each record can overwrite them with its own
+discovered value, and the last record to carry one wins, unlike every
+other adapter in this migration where identity resolves once from a
+fixed vantage point (the last record in reverse, or the input object
+directly). Metrics fall into several independently-triggered branches
+per record: six "direct" field mappings (token/cache/timing fields,
+each always carrying a `dimensions.event` key -- populated with the
+record's own `name` field when present, an empty object otherwise, never
+omitted, unlike every other adapter's optional `dimensions`); a
+name-and-type-keyed token-usage mapping (`gemini_cli.token.usage`/
+`gen_ai.client.token.usage`, mapping five possible `type` values to
+their own metric ids); `model.requests`/`model.request_failures` for
+API-request-shaped records; `tool.calls`/`tool.failures` for
+tool-result-shaped records; and three Gemini-CLI-specific single-metric
+mappings (`agent.turns`, `context.compactions`,
+`runtime.memory_peak_bytes` gated on `memory_type === "rss"`). Like
+`adaptHook`, capabilities are declared 1:1 from whichever metrics
+actually fired, each keyed to the metric's own recorded `source` object
+(which can itself differ across metrics from different records, since
+`provider`/`runtime` can change mid-stream) — there is no "recognized
+but unavailable" declaration at all.
+
+`runtimeTimestamp` — production's own heuristic for telling apart an
+already-ISO-8601 timestamp string (passed through verbatim), a numeric
+epoch value in nanoseconds/milliseconds/seconds (told apart purely by
+magnitude thresholds and converted to a millisecond-precision ISO
+string), and anything else (falling back to the ingest-time
+`collectedAt`) — is ported for the realistic timestamp shapes real OTel
+exports carry. One corner is deliberately left unreproduced, mirroring
+`hasTruthyField`'s own documented zero-is-falsy gap: an exotic non-ISO
+date string `Date.parse` would still accept (e.g. `"January 1, 2026"`)
+is treated as non-timestamp text here rather than parsed, since no
+realistic OTel export emits timestamps in that shape.
+
+This closes MIG-08's telemetry-ingest adapter inventory: every name in
+`Ros.Domain.Telemetry.TelemetryAdapters.all` now dispatches to a real
+adaptation function in `ingestTarget`, so its "not yet supported by this
+CLI" rejection branch became permanently unreachable and was retired
+along with the `supportedAdapters` allowlist that guarded it. Confirmed
+against real Node with differential fixtures covering a record exercising
+every branch at once (nested `resource.attributes` provider discovery,
+a numeric nanosecond timestamp, direct fields, the token-usage type
+mapping, a failed API request, a tool result with a string `"false"`
+success, and all three Gemini-CLI-specific metrics), the `records`-object
+input-wrapping shape, and each of the four adapter names' own identity
+seeding — all producing byte-identical identity, capability, metric, and
+event sets. `telemetry start`'s own excluded `--execution-id`/
+identity-override flags remain the one still-scoped-out piece of MIG-08.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

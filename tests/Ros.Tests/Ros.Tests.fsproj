@@ -45,6 +45,7 @@
     <Compile Include="TelemetryIngestOpenAICodexTests.fs" />
     <Compile Include="TelemetryIngestHookTests.fs" />
     <Compile Include="TelemetryIngestClaudeStatuslineTests.fs" />
+    <Compile Include="TelemetryIngestOtelTests.fs" />
     <Compile Include="TelemetryClassifyTests.fs" />
     <Compile Include="TelemetryStartTests.fs" />
     <Compile Include="AdapterContractTests.fs" />

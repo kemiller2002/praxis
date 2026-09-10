@@ -72,6 +72,7 @@
 | WI-0033 | F# work resume parentExecutionId correction: fixes confirmed production defect (Phase A/MIG-08) | complete |  | high |
 | WI-0034 | F# telemetry ingest openai-codex adapter: Phase A/MIG-08 increment 11 | complete |  | high |
 | WI-0035 | F# telemetry ingest hook adapters: Phase A/MIG-08 increment 12 | complete |  | high |
-| WI-0036 | F# telemetry ingest anthropic-claude-statusline adapter: Phase A/MIG-08 increment 13 | ready |  | high |
+| WI-0036 | F# telemetry ingest anthropic-claude-statusline adapter: Phase A/MIG-08 increment 13 | complete |  | high |
+| WI-0037 | F# telemetry ingest OTel adapter family: Phase A/MIG-08 increment 14 (final adapter, completes telemetry ingest) | ready |  | high |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |
 | WORKQUEUE-BACKLOG-LAYER | WORKQUEUE-BACKLOG-LAYER | complete |  |  |

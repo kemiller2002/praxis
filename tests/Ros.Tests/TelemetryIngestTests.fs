@@ -285,7 +285,7 @@ module TelemetryIngestTests =
                     | Ok record -> failwith $"expected a rejection but got {record}"
                     | Error message -> Assert.equal "unknown normalized metric 'bogus.metric'; preserve it in raw telemetry until it is registered" message) }
 
-          { Name = "ingestTarget rejects a target whose only matching execution is not active, and rejects ambiguous/unknown adapters before touching anything"
+          { Name = "ingestTarget rejects a target whose only matching execution is not active, and rejects an unknown adapter before touching anything"
             Run = fun () ->
                 withTemporaryRoot (fun root ->
                     writeMetricRegistry root
@@ -301,14 +301,7 @@ module TelemetryIngestTests =
 
                     match FileTelemetryFinalizationRepository.ingestTarget root None "bogus-adapter" "{}" with
                     | Ok record -> failwith $"expected a rejection but got {record}"
-                    | Error message -> Assert.equal "unknown telemetry adapter 'bogus-adapter'" message)
-
-                withTemporaryRoot (fun root ->
-                    writeMetricRegistry root
-
-                    match FileTelemetryFinalizationRepository.ingestTarget root None "anthropic-claude-otel" "{}" with
-                    | Ok record -> failwith $"expected a rejection but got {record}"
-                    | Error message -> Assert.equal "telemetry ingest --adapter 'anthropic-claude-otel' is not yet supported by this CLI" message) }
+                    | Error message -> Assert.equal "unknown telemetry adapter 'bogus-adapter'" message) }
 
           { Name = "ingestTarget omits raw retention when disabled by config, still records the omission metric and unknown-field capabilities"
             Run = fun () ->

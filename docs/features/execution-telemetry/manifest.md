@@ -204,9 +204,35 @@ capabilities, lifecycle capture, classification, and aggregation.
   `confidence` key (`"medium"` when estimated, JSON `null` otherwise);
   the four `current_usage` metrics carry no such extras at all. This
   adapter emits no events of its own, and `collectedAt` is never
-  overridden by an input timestamp field. Every other real adapter name
-  (`anthropic-claude-otel`, `google-gemini-otel`, `github-copilot-otel`,
-  `otel-json`) remains its own future scoping choice.
+  overridden by an input timestamp field.
+
+  A twelfth and final adapter-mapping increment ships the OTel adapter
+  family -- `anthropic-claude-otel`, `google-gemini-otel`,
+  `github-copilot-otel`, `otel-json` -- all resolving to one shared
+  `FileTelemetryFinalizationRepository.adaptOtel`, the first adapter with
+  no fixed field schema at all. Every field is looked up via a shared
+  `firstValue` helper across a per-record set of nested candidates (the
+  record itself, `attributes`, `resource.attributes`, `body`,
+  `dataPoint.attributes`, in that fixed order), matching the range of
+  shapes real OTLP JSON exports and Gemini CLI's own metric events
+  actually carry. Unlike every other adapter, `identity.provider`/
+  `runtime`/`model`/`sessionId` can be overwritten by any record across
+  the whole stream, with the last discovered value winning; `otel-json`
+  is the one adapter name with no identity seed, resolving both fields to
+  `"unknown"`. Metrics come from six direct field mappings (always
+  carrying a `dimensions.event` key, populated or empty, never omitted),
+  a name-and-type-keyed token-usage mapping, request/tool-result mappings
+  (a string `"false"` or boolean `false` success field triggers a
+  failure metric), and three Gemini-CLI-specific single-metric mappings.
+  Like `adaptHook`, capabilities are derived 1:1 from whichever metrics
+  actually fired. `runtimeTimestamp` (production's own heuristic for
+  telling an ISO string apart from a numeric nanosecond/millisecond/
+  second epoch value by magnitude) is ported for realistic OTel export
+  timestamp shapes. This closes MIG-08's telemetry-ingest adapter
+  inventory -- every name in `Ros.Domain.Telemetry.TelemetryAdapters.all`
+  now dispatches to a real F# effect, so `ingestTarget`'s "not yet
+  supported by this CLI" rejection became permanently unreachable and was
+  retired along with the allowlist that guarded it.
 
 ## Interfaces
 
@@ -327,6 +353,19 @@ capabilities, lifecycle capture, classification, and aggregation.
   (a fully-populated snapshot, the all-absent case, and the
   estimated-status quirk in isolation, compared byte-for-byte against
   production's own `ingestTelemetry`/`adaptClaudeStatusline`).
+- F# telemetry-ingest OTel-adapter-family real-effect tests:
+  `tests/Ros.Tests/TelemetryIngestOtelTests.fs` (a direct-field mapping
+  with its derived capability, nested `resource.attributes` provider/
+  model/session discovery, the api-request success/failure branch, the
+  tool-result string-`"false"` failure branch, the three
+  Gemini-CLI-specific metrics together, the bare `otel-json` adapter's
+  `records`-object unwrapping and unknown/unknown identity seed, and the
+  no-events invariant) and
+  `tests/telemetry-ingest-otel-fsharp-differential.test.mjs` (a record
+  exercising every branch at once -- including a numeric nanosecond
+  timestamp -- the `records`-object wrapping shape, and each of the
+  other two OTel adapter names' own identity seeding, byte-for-byte
+  against production's own `ingestTelemetry`/`adaptOtel`).
 
 ## Dependencies
 
@@ -360,14 +399,16 @@ capabilities, lifecycle capture, classification, and aggregation.
   block`/`work resume`), all three read-only `telemetry
   adapters`/`telemetry show`/`telemetry summary` commands, `telemetry
   finalize` (excluding `--input` adapter ingestion), `telemetry record`,
-  `telemetry ingest` (`generic`, `openai-codex`, the three hook
-  adapters -- `anthropic-claude-hook`/`google-gemini-hook`/
-  `github-copilot-hook` -- and `anthropic-claude-statusline`), `telemetry
+  `telemetry ingest` (every adapter name in `TelemetryAdapters.all` now
+  has a real mapping: `generic`, `openai-codex`,
+  `anthropic-claude-statusline`, the three hook adapters --
+  `anthropic-claude-hook`/`google-gemini-hook`/`github-copilot-hook` --
+  and the four OTel adapters -- `anthropic-claude-otel`/
+  `google-gemini-otel`/`github-copilot-otel`/`otel-json`), `telemetry
   classify`, and `telemetry start` (excluding `--execution-id` and the
-  eleven identity-override flags) are real effects; every other
-  non-generic adapter's provider-specific field mapping (the OTel family)
-  remains Node-only, pending MIG-08's own further scoping decisions.
-  `adapter call`/`adapter
+  eleven identity-override flags) are real effects; those excluded
+  `telemetry start` flags are the one remaining non-generic-adapter gap
+  in MIG-08's own scope. `adapter call`/`adapter
   publish` are owned by the work-lifecycle manifest, not this one -- see
   its own Known gaps
   for their status.
