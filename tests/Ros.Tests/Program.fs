@@ -31,6 +31,7 @@ let main _ =
     @ TelemetryFinalizeTargetTests.tests
     @ TelemetryRecordMetricTests.tests
     @ TelemetryIngestTests.tests
+    @ TelemetryIngestOpenAICodexTests.tests
     @ TelemetryClassifyTests.tests
     @ TelemetryStartTests.tests
     @ AdapterContractTests.tests

@@ -1003,6 +1003,169 @@ module FileTelemetryFinalizationRepository =
           CollectedAt = (inputObject |> Option.bind (fun o -> stringField o "collectedAt")) |> Option.defaultValue collectedAt
           Source = objectField "source" |> Option.defaultValue (defaultGenericSource ()) }
 
+    /// The six usage fields production's own `adaptOpenAICodex` maps, in
+    /// its own object-literal (and therefore iteration) order.
+    let private codexUsageFields =
+        [ "input_tokens", "tokens.input"
+          "output_tokens", "tokens.output"
+          "cached_input_tokens", "tokens.cached_input"
+          "cache_write_input_tokens", "tokens.cache_write"
+          "reasoning_output_tokens", "tokens.reasoning"
+          "total_tokens", "tokens.total" ]
+
+    /// Mirrors production `adaptOpenAICodex`: maps a Codex `exec --json`
+    /// event stream (or a single event object) to normalized token/context
+    /// metrics. `completed` -- entries with `type === "turn.completed"` or
+    /// any `usage` object at all -- each contribute a fixed capability
+    /// declaration for all six usage fields (present or not) plus a metric
+    /// only for the fields actually present, matching production's own
+    /// per-entry, per-field iteration order exactly; `context.window_size`
+    /// is the one field with a metric but deliberately no paired
+    /// capability declaration, matching production's own omission.
+    /// `identity.model` resolves from the *last* record (searched in
+    /// reverse) that carries a truthy `server_model` or `model`, regardless
+    /// of whether that record was itself "completed".
+    let private adaptOpenAICodex (input: JsonNode) (collectedAt: string) : AdaptedSnapshot =
+        let records: JsonObject list =
+            match input with
+            | :? JsonArray as array -> array |> Seq.choose (function :? JsonObject as o -> Some o | _ -> None) |> Seq.toList
+            | :? JsonObject as single ->
+                match single["events"] with
+                | :? JsonArray as array -> array |> Seq.choose (function :? JsonObject as o -> Some o | _ -> None) |> Seq.toList
+                | _ -> [ single ]
+            | _ -> []
+
+        let hasTruthyField (entry: JsonObject) (name: string) =
+            match entry[name] with
+            | null -> false
+            | :? JsonValue as v when v.GetValueKind() = JsonValueKind.False -> false
+            | :? JsonValue as v when v.GetValueKind() = JsonValueKind.String -> v.GetValue<string>() <> ""
+            | _ -> true
+
+        let completed = records |> List.filter (fun entry -> stringField entry "type" = Some "turn.completed" || hasTruthyField entry "usage")
+
+        let runtimeSource =
+            let node = JsonObject()
+            node["type"] <- JsonValue.Create "runtime-output"
+            node["name"] <- JsonValue.Create "codex-json"
+            node["mechanism"] <- JsonValue.Create "codex-exec-jsonl"
+            node["provider"] <- JsonValue.Create "openai"
+            node["runtime"] <- JsonValue.Create "codex"
+            node
+
+        let usageOf (entry: JsonObject) : JsonObject option =
+            match entry["usage"] with
+            | :? JsonObject as usage -> Some usage
+            | _ -> None
+
+        let numberOf (usage: JsonObject option) (field: string) : float option =
+            usage
+            |> Option.bind (fun u ->
+                match u[field] with
+                | :? JsonValue as v when v.GetValueKind() = JsonValueKind.Number ->
+                    match v.TryGetValue<float>() with
+                    | true, parsed -> Some parsed
+                    | _ -> None
+                | _ -> None)
+
+        let capabilityNode metricId present : JsonObject =
+            let node = JsonObject()
+            node["metricId"] <- JsonValue.Create(metricId: string)
+            node["status"] <- JsonValue.Create(if present then "supported-observed" else "supported-unavailable")
+
+            node["reason"] <-
+                JsonValue.Create(
+                    if present then
+                        "provider field observed"
+                    else
+                        "adapter recognizes the field but it was unavailable in this snapshot"
+                )
+
+            node["source"] <- runtimeSource.DeepClone()
+            node["discoveredAt"] <- JsonValue.Create(collectedAt: string)
+            node
+
+        let metricNode metricId (value: float) at scope (dimensions: JsonObject option) : JsonObject =
+            let node = JsonObject()
+            node["id"] <- JsonValue.Create(metricId: string)
+            node["value"] <- JsonValue.Create value
+            node["collectedAt"] <- JsonValue.Create(at: string)
+            node["source"] <- runtimeSource.DeepClone()
+            node["scope"] <- JsonValue.Create(scope: string)
+
+            match dimensions with
+            | Some d -> node["dimensions"] <- d
+            | None -> ()
+
+            node
+
+        let capabilities = ResizeArray<JsonObject>()
+        let metrics = ResizeArray<JsonObject>()
+
+        completed
+        |> List.iteri (fun index entry ->
+            let at = stringField entry "timestamp" |> Option.defaultValue collectedAt
+            let usage = usageOf entry
+
+            for field, metricId in codexUsageFields do
+                let value = numberOf usage field
+                capabilities.Add(capabilityNode metricId value.IsSome)
+
+                match value with
+                | Some v ->
+                    let dimensions = JsonObject()
+                    dimensions["turnIndex"] <- JsonValue.Create(index: int)
+                    metrics.Add(metricNode metricId v at "turn" (Some dimensions))
+                | None -> ()
+
+            match numberOf usage "model_context_window" with
+            | Some windowSize -> metrics.Add(metricNode "context.window_size" windowSize at "session" None)
+            | None -> ())
+
+        let identityEvent =
+            records
+            |> List.rev
+            |> List.tryFind (fun entry -> hasTruthyField entry "server_model" || hasTruthyField entry "model")
+
+        let model =
+            identityEvent
+            |> Option.bind (fun entry -> stringField entry "server_model" |> Option.orElse (stringField entry "model"))
+
+        let identity = JsonObject()
+        identity["provider"] <- JsonValue.Create "openai"
+        identity["runtime"] <- JsonValue.Create "codex"
+
+        identity["model"] <-
+            match model with
+            | Some m -> JsonValue.Create m
+            | None -> null
+
+        let events =
+            completed
+            |> List.map (fun entry ->
+                let node = JsonObject()
+                node["type"] <- JsonValue.Create "agent.turn.completed"
+                node["occurredAt"] <- JsonValue.Create(stringField entry "timestamp" |> Option.defaultValue collectedAt: string)
+                node["source"] <- runtimeSource.DeepClone()
+                node)
+
+        { Identity = identity
+          Capabilities = capabilities |> List.ofSeq
+          Metrics = metrics |> List.ofSeq
+          Events = events
+          Classification = None
+          Scope = None
+          QualitySignals = []
+          Links = None
+          Raw = input
+          MappedFields =
+            [ "type"; "timestamp"; "server_model"; "model"; "usage.model_context_window" ]
+            @ (codexUsageFields |> List.map (fun (field, _) -> $"usage.{field}"))
+          SchemaVersion = (match input with :? JsonObject as o -> (match o["schemaVersion"] with null -> null | v -> v) | _ -> null)
+          SnapshotId = None
+          CollectedAt = collectedAt
+          Source = runtimeSource }
+
     let private rawRedactedKeyPattern =
         Regex(
             @"^(?:authorization|cookie|set-cookie|password|passwd|secret|credential|api[_-]?key|access[_-]?token|refresh[_-]?token|id[_-]?token|prompt|prompts|messages?|content|tool[_-]?input|tool[_-]?response|request|response|stdout|stderr|command|full[_-]?command|transcript[_-]?path|cwd|current[_-]?dir|project[_-]?dir|workspace[_-]?path|file[_-]?path|email|user\.email)$",
@@ -1693,14 +1856,19 @@ module FileTelemetryFinalizationRepository =
     let ingestTarget (root: string) (target: string option) (adapter: string) (inputText: string) : Result<JsonObject, string> =
         if not (Ros.Domain.Telemetry.TelemetryAdapters.all |> List.contains adapter) then
             Error $"unknown telemetry adapter '{adapter}'"
-        elif adapter <> "generic" then
+        elif adapter <> "generic" && adapter <> "openai-codex" then
             Error $"telemetry ingest --adapter '{adapter}' is not yet supported by this CLI"
         else
             match parseIngestInput inputText with
             | Error message -> Error message
             | Ok inputNode ->
                 let collectedAt = FileTelemetryExecutionRepository.nowIso ()
-                let adapted = adaptGeneric inputNode collectedAt
+
+                let adapted =
+                    if adapter = "openai-codex" then
+                        adaptOpenAICodex inputNode collectedAt
+                    else
+                        adaptGeneric inputNode collectedAt
 
                 // Mirrors production `ingestTelemetry`'s own `adapted.snapshotId
                 // ??= \`SNAP-${digest({ adapter, input })}\``, computed here

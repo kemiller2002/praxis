@@ -306,9 +306,9 @@ module TelemetryIngestTests =
                 withTemporaryRoot (fun root ->
                     writeMetricRegistry root
 
-                    match FileTelemetryFinalizationRepository.ingestTarget root None "openai-codex" "{}" with
+                    match FileTelemetryFinalizationRepository.ingestTarget root None "anthropic-claude-statusline" "{}" with
                     | Ok record -> failwith $"expected a rejection but got {record}"
-                    | Error message -> Assert.equal "telemetry ingest --adapter 'openai-codex' is not yet supported by this CLI" message) }
+                    | Error message -> Assert.equal "telemetry ingest --adapter 'anthropic-claude-statusline' is not yet supported by this CLI" message) }
 
           { Name = "ingestTarget omits raw retention when disabled by config, still records the omission metric and unknown-field capabilities"
             Run = fun () ->

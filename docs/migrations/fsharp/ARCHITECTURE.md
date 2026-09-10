@@ -1359,7 +1359,50 @@ parity: it runs both real Node (confirming `parentExecutionId` stays
 links to the prior execution) side by side, so the divergence stays
 visible and intentional rather than silently drifting.
 
-## Work-state recovery seam
+## Phase A / MIG-08, increment 19: `telemetry ingest --adapter openai-codex` — the first real provider-specific field mapping
+
+Every write-path telemetry-producer increment so far ported the `generic`
+adapter only -- the one with zero provider-specific field mapping.
+`openai-codex` is the first of the nine real adapter names
+(`TELEMETRY_ADAPTERS`) to get its own mapping ported: production's
+`adaptOpenAICodex` translates a Codex `exec --json` event stream (or a
+single event object) into normalized token/context metrics.
+
+The port revealed a design win worth calling out: the generic ingest
+pipeline shipped in an earlier increment (`ingestAdaptedGeneric` --
+snapshot dedup, identity merge, capability upsert, metric normalization,
+raw redaction/retention, quality-signal handling) turns out to be
+entirely adapter-agnostic once an `AdaptedSnapshot` value exists. Porting
+a new adapter therefore means writing only the *adaptation* function
+(raw input to `AdaptedSnapshot`) and adding one dispatch arm in
+`ingestTarget`; the entire downstream mutation pipeline is reused
+unchanged, matching production's own `adaptInput`/`ingestAdapted` split
+exactly.
+
+`adaptOpenAICodex` (new, alongside `adaptGeneric` in the same module)
+mirrors production field-for-field: `completed` entries (`type ===
+"turn.completed"` or any `usage` object at all) each declare a fixed
+capability for all six usage fields (`input_tokens`/`output_tokens`/
+`cached_input_tokens`/`cache_write_input_tokens`/
+`reasoning_output_tokens`/`total_tokens`), present or not, but a metric
+only for the fields actually present -- `context.window_size` is the one
+metric with deliberately no paired capability declaration in the adapter
+itself, a real quirk reproduced exactly (though the shared
+metric-recording pipeline still upserts a capability for it regardless,
+since that step applies uniformly to every recorded metric independent
+of the adapter). `identity.model` resolves from the *last* record
+(searched in reverse) carrying a truthy `server_model` or `model`,
+regardless of whether that record was itself "completed" -- confirmed
+against real Node with a two-record fixture where the identity-bearing
+record is not itself a turn.
+
+Every other real adapter name (`anthropic-claude-statusline`,
+`anthropic-claude-hook`, `anthropic-claude-otel`, `google-gemini-hook`,
+`google-gemini-otel`, `github-copilot-hook`, `github-copilot-otel`,
+`otel-json`) remains its own future MIG-08 slice, still rejected outright
+(exit 2) exactly as before.
+
+## `work resume`'s `parentExecutionId`: a corrected, not replicated, production defect
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for
 the final two live-transition projections, in their characterized order:

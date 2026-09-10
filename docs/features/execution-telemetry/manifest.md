@@ -137,11 +137,41 @@ capabilities, lifecycle capture, classification, and aggregation.
   production's own CLI exposes (`telemetryIdentityOptions`) are
   deliberately excluded and loudly rejected (exit 2), scoped as a
   separate future slice, since supporting them requires extending
-  `createExecution` itself. Every non-generic adapter's field mapping and
-  the `adapter call`/`adapter publish` commands (owned by the
-  work-lifecycle manifest's `DF-ROS-2026-A007`, not telemetry; `adapter
-  call` is now a real effect there) remain out of this manifest's scope,
-  each its own future scoping choice.
+  `createExecution` itself. The `adapter call`/`adapter publish` commands
+  (owned by the work-lifecycle manifest's `DF-ROS-2026-A007`, not
+  telemetry; both are now real effects there) remain out of this
+  manifest's scope.
+
+  A ninth increment ships `telemetry ingest --adapter openai-codex`, the
+  first real provider-specific field mapping ported beyond `generic`:
+  `FileTelemetryFinalizationRepository.adaptOpenAICodex` (new) mirrors
+  production's own `adaptOpenAICodex` field-for-field, mapping a Codex
+  `exec --json` event stream (or a single event object) to normalized
+  token/context metrics. This port confirmed a design payoff from the
+  generic-ingest increment: the shared mutation pipeline
+  (`ingestAdaptedGeneric` -- snapshot dedup, identity merge, capability
+  upsert, metric normalization, raw redaction/retention) is fully
+  adapter-agnostic once an `AdaptedSnapshot` value exists, so a new
+  adapter needs only its own adaptation function plus one dispatch arm in
+  `ingestTarget`, reusing everything downstream unchanged. `completed`
+  entries (`type === "turn.completed"` or any `usage` object at all) each
+  declare a fixed capability for all six usage fields
+  (`input_tokens`/`output_tokens`/`cached_input_tokens`/
+  `cache_write_input_tokens`/`reasoning_output_tokens`/`total_tokens`),
+  present or not, but a metric only for the fields actually present, in
+  production's own per-entry per-field order; `context.window_size` is
+  the one metric with deliberately no paired capability declaration in
+  the adapter itself, a real quirk reproduced exactly (the shared
+  metric-recording pipeline still upserts a capability for it regardless,
+  since that step applies uniformly to every recorded metric).
+  `identity.model` resolves from the *last* record (searched in reverse)
+  carrying a truthy `server_model` or `model`, regardless of whether that
+  record was itself "completed" -- confirmed against real Node with a
+  fixture where the identity-bearing record is not itself a turn. Every
+  other real adapter name (`anthropic-claude-statusline`,
+  `anthropic-claude-hook`, `anthropic-claude-otel`, `google-gemini-hook`,
+  `google-gemini-otel`, `github-copilot-hook`, `github-copilot-otel`,
+  `otel-json`) remains its own future scoping choice.
 
 ## Interfaces
 
@@ -231,6 +261,17 @@ capabilities, lifecycle capture, classification, and aggregation.
   `tests/telemetry-start-fsharp-differential.test.mjs` (the same seven
   scenarios end-to-end against the real `ros` CLI, plus an F#-only
   assertion that `--execution-id` is rejected with exit code 2).
+- F# telemetry-ingest openai-codex real-effect tests:
+  `tests/Ros.Tests/TelemetryIngestOpenAICodexTests.fs` (the fixed
+  six-field capability declaration with presence-gated metrics, the
+  context.window_size metric-without-adapter-capability quirk, per-entry
+  turnIndex assignment, reverse-order identity.model resolution including
+  a non-completed identity-bearing record, the completed-entry filter,
+  and single-object input wrapping) and
+  `tests/telemetry-ingest-openai-codex-fsharp-differential.test.mjs`
+  (identity/capabilities/metrics/events compared structurally against
+  production's own `ingestTelemetry`/`adaptOpenAICodex`, the reverse-order
+  identity resolution, and unknown-field discovery).
 
 ## Dependencies
 
@@ -264,10 +305,11 @@ capabilities, lifecycle capture, classification, and aggregation.
   block`/`work resume`), all three read-only `telemetry
   adapters`/`telemetry show`/`telemetry summary` commands, `telemetry
   finalize` (excluding `--input` adapter ingestion), `telemetry record`,
-  `telemetry ingest` (generic adapter only), `telemetry classify`, and
-  `telemetry start` (excluding `--execution-id` and the eleven
-  identity-override flags) are real effects; every non-generic adapter's
-  provider-specific field mapping remains Node-only, pending MIG-08's own
-  further scoping decisions. `adapter call`/`adapter publish` are owned
-  by the work-lifecycle manifest, not this one -- see its own Known gaps
+  `telemetry ingest` (`generic` and `openai-codex` adapters), `telemetry
+  classify`, and `telemetry start` (excluding `--execution-id` and the
+  eleven identity-override flags) are real effects; every other
+  non-generic adapter's provider-specific field mapping remains Node-only,
+  pending MIG-08's own further scoping decisions. `adapter call`/`adapter
+  publish` are owned by the work-lifecycle manifest, not this one -- see
+  its own Known gaps
   for their status.
