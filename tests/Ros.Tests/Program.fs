@@ -27,6 +27,7 @@ let main _ =
     @ WorkContextEffectTests.tests
     @ WorkContextViewTests.tests
     @ WorkListViewTests.tests
+    @ TelemetryValidationTests.tests
     @ TelemetryQueryTests.tests
     @ TelemetryLifecycleTests.tests
     @ TelemetrySummaryTests.tests

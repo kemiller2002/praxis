@@ -1771,6 +1771,96 @@ command-surface scope entirely — every command and adapter name
 production's own CLI exposes for execution/telemetry now has real F#
 effect parity.
 
+## Phase A / MIG-08, increment 24: `telemetryFindings` — the largest single validator in this migration
+
+Outside MIG-08's own command-surface scope, but a direct prerequisite for
+the not-yet-scoped `validate` command unification (work-lifecycle
+manifest): production's `validate(root)` combines artifact findings,
+registry staleness, `workFindings`, `queueFindings`, and
+`telemetryFindings` into one sorted array. The first four contributors
+already had real F# equivalents (`ArtifactPolicy.validate`,
+`ArtifactOperations.checkRegistries`, `Ros.Domain.Work.Attribution`,
+`Ros.Domain.Work.QueueValidation`); `telemetryFindings` did not, and at
+roughly 210 lines of dense, independent checks in production, it is
+larger than any other single function ported in this migration —
+comparable to the entire 14-increment telemetry-ingest adapter family
+combined.
+
+Every other validator in this migration follows the same shape:
+Infrastructure parses raw JSON into a small, loosely-typed record
+(`BacklogQueueItemRecord`, three plain fields), and Domain decides over
+that record, checking a raw string against a known set rather than a
+parsed enum — `QueueValidation`'s own doc comment states why explicitly:
+"production reports an unrecognized status... as a finding rather than
+rejecting parse." `telemetryFindings` follows the identical principle at
+much greater depth, because the record it validates is much deeper:
+11-field identity, capabilities with nested source and history, metrics
+with nested source and pricing, quality signals, raw telemetry snapshots,
+events, repository/links objects, and classification. A first draft of
+this port kept the checking logic operating directly on `JsonNode`
+inside `Ros.Infrastructure` end to end — faithful to production's own
+permissive `?.`/`typeof` idiom, but a genuine violation of
+`SDE-DOCTRINE-003` (Four-Tier Architecture): Tier 2 ("what legal change
+may happen", including guards and invariants) is where a validation
+decision belongs, and Tier 4 ("what actually happened") should only
+report structural facts about raw data, never decide legality itself.
+The shipped version corrects this: a wide family of plain `Parsed*`/
+`Raw*` types (`Ros.Domain.Telemetry.Validation`) crosses the boundary —
+no `JsonNode` reaches `Ros.Domain` at all — and `Ros.Domain.Telemetry.
+TelemetryValidation` (Tier 2) makes every actual legality decision over
+those types, while `Ros.Infrastructure.Work.
+FileTelemetryValidationRepository` (Tier 4) does nothing but parse JSON
+into them and report what it structurally found.
+
+Two closed-union types carry real information the plain `option` types
+this migration otherwise favors cannot: `FieldPresence<'a>`
+(`KeyAbsent`/`KeyPresent of 'a option`) distinguishes a JSON key that is
+genuinely absent from one that is present but unparseable or explicitly
+`null` — needed because production's own JS uses two different
+truthiness gates for this, and they disagree on `null`. Most "present but
+invalid" checks (`lastAssessedAt`, `recordedAt`, `history`,
+`historyOmitted`, `payloadBytes`) use `value !== undefined`, where an
+explicit `null` counts as present (and, since `null` never satisfies any
+of those fields' validity checks, always fires the finding). Metric
+`confidence` alone uses the narrower `value !== null && value !==
+undefined`, where an explicit `null` is treated exactly like an absent
+key. A first pass at this port missed the distinction — confirmed
+directly against real Node before any test existed: a genuine completed
+real `work start` execution (whose own `confidence: null` field
+production itself writes for every non-estimated metric) produced a
+spurious finding until `FieldPresence` parsing was corrected to map
+explicit `null` to `KeyAbsent` for this one field only. `IdentityField`
+(`FieldAbsent`/`FieldNull`/`FieldString of string`/`FieldOtherInvalid`)
+models each of the eleven identity fields' exact three-way shape the
+same way. The config/registry early-exit sequence — production's own
+three sequential early `return`s (malformed config, disabled-with-no-
+reason, malformed registry) — is a small closed state machine,
+`TelemetryValidationOutcome`, rather than a chain of independently
+re-checked booleans.
+
+One deliberate simplification: production's own registry loader
+(`loadMetricRegistry`) throws on the first invalid entry, so this port's
+`RawMetricRegistry`/`validateRegistry` reproduces that exact early-exit
+behavior rather than collecting every registry-level problem — matching
+production, this is a config-authoring error path, not a per-execution
+one.
+
+Confirmed against real Node across a wide scenario sweep before any test
+was written, each byte-for-byte identical: a clean real `work start`; a
+fully completed, evidence-satisfied, real `work complete` (real
+change-summary metrics, zero findings); disabled telemetry with no
+reason; a malformed metric registry; a deliberately broken hand-written
+record combining a non-portable executionId, a filename mismatch, an
+empty workItemId, a non-string identity field, an invalid status, a
+duplicate classification type, an invalid capability timestamp, a
+negative metric value, and a ROS-derived/quality mismatch, all at once;
+capability history recorded out of chronological order; an unrecognized
+quality-signal detector; an unredacted sensitive raw-payload field; a
+telemetry execution not linked back from its own work item; and a
+completed work item whose linked execution was never finalized. This
+increment does not itself unify `validate` — it only makes the last
+missing contributor to that eventual command real.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

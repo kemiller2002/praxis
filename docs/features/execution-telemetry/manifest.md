@@ -257,6 +257,56 @@ capabilities, lifecycle capture, classification, and aggregation.
   `discoverIdentity(options.identity ?? options)` exactly. This closes
   MIG-08's own command-surface scope entirely.
 
+  A fourteenth increment, outside MIG-08's own command-surface scope but
+  a direct prerequisite for the not-yet-scoped `validate` command
+  unification (work-lifecycle manifest), ports `telemetryFindings`
+  (`tools/ros_telemetry.mjs`) -- the telemetry contributor to production's
+  combined `validate` findings array, and by a wide margin the largest
+  single validator in this migration: roughly 80 independent checks
+  across execution shape, 11-field identity, provenance, capability
+  status/source/timestamp/history-chronology/history-retention, metric
+  quality/confidence/source/schema/scope/aggregation/unit/currency/
+  pricing/ratio-bound/session-scope/capability-cross-check, quality
+  signals, raw-telemetry redaction/byte-budget/snapshot-count, events,
+  classification, and cross-record work-item/parent-execution/
+  finalization-completeness linkage. Unlike every other validator in this
+  migration (`Ros.Domain.Work.QueueValidation`, `Ros.Domain.Work.
+  Attribution`), this one does not follow the usual Domain-decides/
+  Infrastructure-reads split at the file level in the obvious way -- it
+  still does, but through an unusually wide typed boundary. A new
+  `Ros.Domain.Telemetry.TelemetryValidation` (Tier 2, per
+  `.sde/architecture/FOUR-TIER-ARCHITECTURE.md`) makes every legality
+  decision over a family of plain `Parsed*`/`Raw*` types (`Validation.fs`)
+  -- no `JsonNode` crosses into it at all -- while a new
+  `Ros.Infrastructure.Work.FileTelemetryValidationRepository` does
+  nothing but parse raw JSON into those types and report structural
+  facts (is this key present, does this shape parse), never a legality
+  judgment itself. Two closed-union design points matter: `FieldPresence
+  <'a>` (`KeyAbsent`/`KeyPresent of 'a option`) faithfully distinguishes
+  JS's `!== undefined` gate (used for `lastAssessedAt`/`recordedAt`/
+  `history`/`historyOmitted`/`payloadBytes`) from its narrower `!== null
+  && !== undefined` gate (used only for metric `confidence`, where an
+  explicit JSON `null` must be parsed as `KeyAbsent`, not `KeyPresent`);
+  and `IdentityField` (`FieldAbsent`/`FieldNull`/`FieldString of string`/
+  `FieldOtherInvalid`) models each of the 11 identity fields' exact
+  three-way shape. The config/registry early-exit sequence is itself a
+  small closed state machine (`TelemetryValidationOutcome`), not a chain
+  of booleans: `ConfigInvalid`/`TelemetryDisabled`/`RegistryInvalid`/
+  `ReadyToValidate`, mirroring production's own three sequential early
+  `return`s. Confirmed against real Node across a wide scenario sweep
+  before any test was written: a clean real `work start`, a fully
+  completed/finalized real `work complete` (with real change-summary
+  metrics), disabled-telemetry-with-no-reason, a malformed registry, a
+  deliberately broken hand-written record (wrong-format id/filename
+  mismatch/non-string identity field/invalid status/duplicate
+  classification types/invalid capability timestamp/negative metric
+  value/ROS-derived-quality mismatch), capability history chronological
+  ordering, an invalid quality-signal detector, unredacted raw-payload
+  fields, cross-record work-item back-linkage, and a completed work item
+  with unfinalized linked telemetry -- all byte-for-byte identical. This
+  increment does not itself unify `validate`; it only makes the last
+  missing contributor real.
+
 ## Interfaces
 
 - Inbound: automatic work lifecycle calls and `./ros telemetry
@@ -400,6 +450,29 @@ capabilities, lifecycle capture, classification, and aggregation.
   (`tests/telemetry-start-fsharp-differential.test.mjs`) drives the
   actual `ros` CLI wrapper directly, not just the exported function,
   covering all four scenarios byte-for-byte against production.
+- F# telemetry-validate (`telemetryFindings`) real-effect tests:
+  `tests/Ros.Tests/TelemetryValidationTests.fs` (~30 focused tests, one
+  violated rule per test against a hand-verified zero-finding baseline
+  record: the config/registry state machine's four branches, executionId/
+  workItemId requiredness and shape, identity truthiness and the 11-field
+  present-non-string-non-null check, provenance, status/finalizedAt
+  ordering, required-array/repository/links presence, classification
+  uniqueness/vocabulary/research-development, capability status/identity/
+  source/timestamps/history retention and chronological ordering, metric
+  value/quality/confidence -- including that an explicit `null` never
+  counts as present but any other present shape does -- schema/scope/
+  aggregation/unit/currency/pricing/ratio-bound/session-scope/capability
+  cross-checks, quality-signal detectors, raw-snapshot requiredness and a
+  null payload's validity, unredacted-field detection, event shape, and
+  cross-record work-item/parent-execution/finalization linkage) and
+  `tests/telemetry-validate-fsharp-differential.test.mjs` (six real
+  scenarios against production's own `telemetryFindings`, imported
+  directly rather than reimplemented: a clean real `work start`, a fully
+  completed/finalized real `work complete`, disabled-telemetry-with-no-
+  reason and malformed-registry early exits, a deliberately broken
+  hand-written record, capability-history/quality-signal/raw-redaction/
+  cross-record-linkage together, and a completed work item with
+  unfinalized linked telemetry -- all byte-for-byte identical).
 
 ## Dependencies
 
@@ -422,7 +495,7 @@ capabilities, lifecycle capture, classification, and aggregation.
 ## Maintenance
 
 - Owner: repository-governance
-- Last checked against implementation: 2026-09-10
+- Last checked against implementation: 2026-09-10 (telemetryFindings increment)
 - Known gaps: live model/token/cost fields depend on runtime adapters; whole
   execution records are rewritten on each update; unkeyed response loss after
   complete journal cleanup requires inspection before intentional retry;
@@ -443,5 +516,13 @@ capabilities, lifecycle capture, classification, and aggregation.
   and eleven identity-override flags) are real effects -- MIG-08's own
   command-surface scope is now completely real. `adapter call`/`adapter
   publish` are owned by the work-lifecycle manifest, not this one -- see
-  its own Known gaps
+  its own Known gaps. `telemetryFindings` (the telemetry contributor to
+  production's combined `validate` findings) is also now real
+  (`Ros.Domain.Telemetry.TelemetryValidation`/`Ros.Infrastructure.Work.
+  FileTelemetryValidationRepository`, exposed as `ros-fs telemetry
+  validate`), the last piece the not-yet-scoped `validate` command
+  unification needs; unifying it into one command matching production's
+  own combined `validate [--json]` output (artifact findings + registry
+  staleness + `workFindings` + `queueFindings` + `telemetryFindings`,
+  sorted together) remains its own future increment
   for their status.
