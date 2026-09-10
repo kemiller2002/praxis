@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 25,
+  "nextSeq": 26,
   "items": [
     {
       "id": "WI-0001",
@@ -555,6 +555,20 @@
       "attachments": [],
       "createdAt": "2026-09-10T09:39:02.079Z",
       "updatedAt": "2026-09-10T09:39:04.849Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0025",
+      "title": "F# telemetry summary real effect: Phase A/MIG-08 increment 3",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-10T09:57:14.354Z",
+      "updatedAt": "2026-09-10T09:57:16.969Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null

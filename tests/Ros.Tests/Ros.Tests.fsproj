@@ -38,6 +38,7 @@
     <Compile Include="WorkContextEffectTests.fs" />
     <Compile Include="TelemetryQueryTests.fs" />
     <Compile Include="TelemetryLifecycleTests.fs" />
+    <Compile Include="TelemetrySummaryTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

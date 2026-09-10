@@ -787,17 +787,18 @@ not a `--` flag like every other command this migration has ported so far:
   empty result is **not** a rejection — production's own `showTelemetry`
   never throws for this branch, unlike the `EXE-` one.
 
-Deliberately excluded, and explicitly out of THIS increment's scope rather
-than assumed unnecessary: `telemetry summary`'s aggregation
+Deliberately excluded at the time, and explicitly out of THIS increment's
+scope rather than assumed unnecessary: `telemetry summary`'s aggregation
 (`summarizeTelemetry` — four aggregation strategies plus interval-merged
-timing summaries, real new domain logic, not a trivial read); every
-write-path telemetry-producer command (`start`, `ingest`, `classify`,
-`record`, `finalize` — the last of which is also the one place
-`--input`/adapter-ingestion is reachable at all, deliberately excluded from
-`work complete` in increment 8); and both `adapter call`/`adapter publish`
-commands (the work-adapter contract, a different concern from telemetry
-provider adapters). Each remains its own future increment, chosen the same
-deliberate way this one was.
+timing summaries, real new domain logic, not a trivial read — closed later
+by increment 11); every write-path telemetry-producer command (`start`,
+`ingest`, `classify`, `record`, `finalize` — the last of which is also the
+one place `--input`/adapter-ingestion is reachable at all, deliberately
+excluded from `work complete` in increment 8, still open); and both
+`adapter call`/`adapter publish` commands (the work-adapter contract, a
+different concern from telemetry provider adapters, still open). Each
+remains its own future increment, chosen the same deliberate way this one
+was.
 
 ## Phase A / MIG-08, increment 10: telemetry lifecycle bookkeeping — closing a real gap in `work block`/`work resume`
 
@@ -843,6 +844,66 @@ Deliberately excluded, matching `finalizeOne`'s own established scope
 reduction: `ensureRecordDefaults`' legacy-record backfill (every record
 this migration's own writers produce already carries the full shape it
 would otherwise backfill, so there is nothing to default).
+
+## Phase A / MIG-08, increment 11: `telemetry summary` — real aggregation, not just a read
+
+Increment 9 explicitly deferred `telemetry summary`'s aggregation
+(`summarizeTelemetry`) as real new domain logic rather than a trivial read.
+This increment ports it: four real aggregation strategies plus an
+interval-sweep timing summary, over every metric recorded across every
+execution matching a work-item filter (or every execution when none is
+given) -- the largest read-only telemetry command by far, but still no
+lock and no write.
+
+The pure math lives in a new `Ros.Domain.Telemetry.Summary` module,
+deliberately separated from the JSON parsing/grouping (in
+`FileTelemetryQueryRepository.readSummaryExecutions`, new) so the
+aggregation itself is unit-testable without touching a filesystem:
+
+- **`TimingSummary.compute`** mirrors production `timingSummary` exactly:
+  an interval-sweep union over every fully-finalized execution's
+  `[startedAt, finalizedAt]` span reports `calendarSpanMs` (the union's
+  total extent) against `totalExecutionWallMs` (the naive sum, double-
+  counting overlaps) and their difference as `overlappingExecutionMs` --
+  all three explicitly nulled whenever any execution in the set is still
+  active, since an unfinished execution's true end time is unknown.
+- **`MetricAggregation.compute`** mirrors the four real strategies inside
+  `summarizeTelemetry`: `sum` (with `time.wall_ms` alone carrying a
+  fixed explanatory note about double-counting overlaps), `maximum`,
+  `latest-per-session` (sums only the latest-`collectedAt` sample per
+  unique `provider`/`runtime`/`sessionId` triple, or per execution id when
+  no session is set -- a real per-session dedup, not a plain sum), and
+  `none` (never aggregates, just a fixed note) -- falling back to a plain
+  "latest measurement wins" default for any other/missing aggregation
+  string, matching production's own unguarded `else` branch.
+- **`TelemetrySummary.summarize`** groups every `(id, unit, currency,
+  dimensions)` tuple across every execution (preserving file/array
+  encounter order, since `latest-per-session`'s tie-breaking depends on
+  it), resolves each group's aggregation strategy from the metric
+  registry when the id is known there, else falls back to the group's
+  own stored `aggregation` field (matching production's own `definition
+  ?.aggregation ?? values[0].item.aggregation`), and sorts the final
+  metrics array by id.
+
+`FileTelemetryQueryRepository.readSummaryExecutions` does the necessary
+JSON extraction: `identity.provider`/`.runtime`/`.sessionId` (each
+defaulting the same way production's own `?? "unknown"`/absent-key
+optional chaining does), `startedAt`/`finalizedAt`, and every `metrics[]`
+entry's `id`/`unit`/`currency`/`value`/`collectedAt`/`aggregation`. One
+narrow, documented reduction: a measurement's `dimensions` object is used
+as a grouping key via its own (not canonically key-sorted) JSON text,
+rather than production's `stable()`-sorted key -- every metric this
+migration itself ever writes always has empty `dimensions`, so this only
+risks diverging from production's own grouping for a non-empty
+`dimensions` object written by an external tool with non-canonical field
+order, which no current effect produces.
+
+`telemetry summary`'s own `TARGET` argument is positional like `telemetry
+show`'s, but unlike `show` it is used purely as a work-item-id filter --
+production's own `summarizeTelemetry(root, workItemId)` never
+special-cases an `EXE-`-prefixed value the way `showTelemetry` does, so
+passing an execution id here silently filters to nothing (matching that
+real quirk rather than "improving" on it).
 
 ## Work-state recovery seam
 

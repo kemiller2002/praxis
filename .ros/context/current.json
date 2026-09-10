@@ -1143,11 +1143,32 @@
         "EXE-20260910T093904929Z-a75a5262"
       ],
       "completedAt": "2026-09-10T09:39:14.143Z"
+    },
+    {
+      "id": "WI-0025",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Telemetry/Summary.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/telemetry-summary-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-10T09:57:20.290Z",
+      "telemetryExecutionIds": [
+        "EXE-20260910T095717049Z-db271344"
+      ],
+      "completedAt": "2026-09-10T09:57:20.290Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-10T09:39:14.143Z",
+  "updatedAt": "2026-09-10T09:57:20.290Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

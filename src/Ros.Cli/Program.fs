@@ -23,7 +23,7 @@ open System.Text.Json.Nodes
 let Version = "0.2.0-shadow"
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | telemetry adapters | telemetry show [TARGET]"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET]"
 
 let private parseRoot (arguments: string array) =
     let values = ResizeArray<string>(arguments)
@@ -1537,8 +1537,7 @@ let private runTelemetryAdapters () =
 /// `showTelemetry` never throws for this branch). Read-only: no lock, no
 /// write, and no new identity/Git/capability machinery -- it only reads the
 /// same `.ros/telemetry/executions/*.json` records `work start`/`work
-/// complete` already produce. Deliberately excludes `telemetry summary`'s
-/// aggregation (`summarizeTelemetry`), a separately-scoped later slice.
+/// complete` already produce.
 let private runTelemetryShow root (arguments: string list) =
     let target =
         arguments
@@ -1562,6 +1561,115 @@ let private runTelemetryShow root (arguments: string list) =
             printf "%s" (record.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
             0
     | Some workItemId -> renderRecords (FileTelemetryQueryRepository.readByWorkItemId root workItemId)
+
+/// Mirrors production `telemetry summary`/`telemetry summarize [TARGET]`
+/// (`summarizeTelemetry`, `tools/ros_telemetry.mjs`) -- MIG-08's third
+/// increment, and the largest read-only telemetry command: four real
+/// aggregation strategies (`sum`/`maximum`/`latest-per-session`/`none`,
+/// falling back to `latest`) plus an interval-sweep timing summary, over
+/// every metric recorded across matching execution files. `TARGET` is
+/// positional like `telemetry show`, but here it is used purely as a
+/// work-item-id filter -- unlike `show`, `summary` never special-cases an
+/// `EXE-`-prefixed value, matching production's own `!workItemId ||
+/// record.workItemId === workItemId` check exactly (passing an execution id
+/// here silently matches nothing, reproducing that real quirk rather than
+/// improving on it). Read-only: no lock, no write.
+let private runTelemetrySummary root (arguments: string list) =
+    let workItemId =
+        arguments
+        |> List.tryHead
+        |> Option.filter (fun value -> not (value.StartsWith("--", StringComparison.Ordinal)))
+
+    let executions = FileTelemetryQueryRepository.readSummaryExecutions root workItemId
+    let summary = TelemetrySummary.summarize workItemId executions
+
+    let output = JsonObject()
+    output["schemaVersion"] <- JsonValue.Create summary.SchemaVersion
+
+    output["workItemId"] <-
+        match summary.WorkItemId with
+        | Some id -> JsonValue.Create id
+        | None -> null
+
+    output["executionCount"] <- JsonValue.Create summary.ExecutionCount
+    let providersNode = JsonArray()
+    summary.Providers |> List.iter (fun provider -> providersNode.Add(JsonValue.Create provider: JsonNode))
+    output["providers"] <- providersNode
+    let runtimesNode = JsonArray()
+    summary.Runtimes |> List.iter (fun runtime -> runtimesNode.Add(JsonValue.Create runtime: JsonNode))
+    output["runtimes"] <- runtimesNode
+
+    let timing = summary.Timing
+    let timingNode = JsonObject()
+    timingNode["fullyFinalized"] <- JsonValue.Create timing.FullyFinalized
+    timingNode["finalizedExecutionCount"] <- JsonValue.Create timing.FinalizedExecutionCount
+    timingNode["activeExecutionCount"] <- JsonValue.Create timing.ActiveExecutionCount
+
+    timingNode["earliestStartedAt"] <-
+        match timing.EarliestStartedAt with
+        | Some value -> JsonValue.Create value
+        | None -> null
+
+    timingNode["latestFinalizedAt"] <-
+        match timing.LatestFinalizedAt with
+        | Some value -> JsonValue.Create value
+        | None -> null
+
+    timingNode["calendarSpanMs"] <-
+        match timing.CalendarSpanMs with
+        | Some value -> JsonValue.Create value
+        | None -> null
+
+    timingNode["totalExecutionWallMs"] <-
+        match timing.TotalExecutionWallMs with
+        | Some value -> JsonValue.Create value
+        | None -> null
+
+    timingNode["overlappingExecutionMs"] <-
+        match timing.OverlappingExecutionMs with
+        | Some value -> JsonValue.Create value
+        | None -> null
+
+    output["timing"] <- timingNode
+
+    let metricsNode = JsonArray()
+
+    summary.Metrics
+    |> List.iter (fun metric ->
+        let metricNode = JsonObject()
+        metricNode["id"] <- JsonValue.Create metric.Id
+
+        metricNode["value"] <-
+            match metric.Value with
+            | Some value -> JsonValue.Create value
+            | None -> null
+
+        metricNode["unit"] <- JsonValue.Create metric.Unit
+
+        metricNode["currency"] <-
+            match metric.Currency with
+            | Some currency -> JsonValue.Create currency
+            | None -> null
+
+        metricNode["dimensions"] <-
+            match JsonNode.Parse metric.DimensionsKey with
+            | :? JsonObject as dimensions -> dimensions
+            | _ -> JsonObject()
+
+        metricNode["aggregation"] <- JsonValue.Create metric.Aggregation
+        metricNode["measurements"] <- JsonValue.Create metric.Measurements
+
+        metricNode["note"] <-
+            match metric.Note with
+            | Some note -> JsonValue.Create note
+            | None -> null
+
+        metricsNode.Add(metricNode: JsonNode))
+
+    output["metrics"] <- metricsNode
+
+    printf "%s" (output.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
+    0
 
 let private dispatch root arguments =
     let repository = FileArtifactRepository.create root
@@ -1602,6 +1710,7 @@ let private dispatch root arguments =
     | "work" :: "complete" :: rest -> runWorkComplete root rest
     | [ "telemetry"; "adapters" ] -> runTelemetryAdapters ()
     | "telemetry" :: "show" :: rest -> runTelemetryShow root rest
+    | "telemetry" :: ("summary" | "summarize") :: rest -> runTelemetrySummary root rest
     | _ ->
         eprintfn "%s" usage
         2
