@@ -1,7 +1,7 @@
 ---
 id: EV-ROS-2026-A045
 title: F# shadow CLI versus production ./ros command-surface parity inventory (re-run)
-status: accepted
+status: superseded
 version: 1.0.0
 owners:
   - repository-governance
@@ -15,13 +15,15 @@ related_documents:
   - DF-ROS-2026-A027
   - EV-ROS-2026-A043
   - EV-ROS-2026-A044
+  - EV-ROS-2026-A046
   - docs/migrations/fsharp/ARCHITECTURE.md
   - docs/migrations/fsharp/ROADMAP.md
   - docs/migrations/fsharp/STATUS.md
   - docs/migrations/fsharp/TRACEABILITY.md
 supersedes:
   - EV-ROS-2026-A043
-superseded_by: []
+superseded_by:
+  - EV-ROS-2026-A046
 tags: [fsharp, migration, parity, cli, distribution, sde]
 confidence: high
 ---
