@@ -1,0 +1,99 @@
+name: Phase B distribution evidence (scratch)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  measure:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            rid: osx-arm64
+          - os: macos-13
+            rid: osx-x64
+          - os: windows-latest
+            rid: win-x64
+          - os: ubuntu-latest
+            rid: linux-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Publish framework-dependent
+        run: dotnet publish src/Ros.Cli/Ros.Cli.fsproj -c Release -r ${{ matrix.rid }} --self-contained false -o out/fd
+
+      - name: Publish self-contained single-file
+        run: dotnet publish src/Ros.Cli/Ros.Cli.fsproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o out/sc
+
+      - name: Measure (bash)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          echo "## Phase B evidence: ${{ matrix.rid }} on ${{ matrix.os }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          FD_SIZE=$(du -sh out/fd | cut -f1)
+          FD_DLL="out/fd/ros-fs.dll"
+          echo "framework-dependent dir size: $FD_SIZE" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f "out/sc/ros-fs" ]; then
+            SC_BIN="out/sc/ros-fs"
+          else
+            SC_BIN=$(find out/sc -maxdepth 1 -type f -executable -name "ros-fs*")
+          fi
+          SC_SIZE=$(du -h "$SC_BIN" | cut -f1)
+          echo "self-contained single-file binary size: $SC_SIZE ($SC_BIN)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Startup timing (5 runs each, --version)" >> "$GITHUB_STEP_SUMMARY"
+          echo "framework-dependent:" >> "$GITHUB_STEP_SUMMARY"
+          for i in 1 2 3 4 5; do
+            START=$(date +%s%N)
+            dotnet "$FD_DLL" --version > /dev/null 2>&1
+            END=$(date +%s%N)
+            echo "  run $i: $(( (END - START) / 1000000 )) ms" >> "$GITHUB_STEP_SUMMARY"
+          done
+          echo "self-contained single-file:" >> "$GITHUB_STEP_SUMMARY"
+          for i in 1 2 3 4 5; do
+            START=$(date +%s%N)
+            "$SC_BIN" --version > /dev/null 2>&1
+            END=$(date +%s%N)
+            echo "  run $i: $(( (END - START) / 1000000 )) ms" >> "$GITHUB_STEP_SUMMARY"
+          done
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Functional smoke test (self-contained binary, no dotnet on PATH assumed)" >> "$GITHUB_STEP_SUMMARY"
+          "$SC_BIN" --version >> "$GITHUB_STEP_SUMMARY" 2>&1 || echo "FAILED" >> "$GITHUB_STEP_SUMMARY"
+          sha256sum "$SC_BIN" >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || shasum -a 256 "$SC_BIN" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Measure (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## Phase B evidence: ${{ matrix.rid }} on ${{ matrix.os }}"
+          $fdSize = (Get-ChildItem out/fd -Recurse | Measure-Object -Property Length -Sum).Sum / 1MB
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ("framework-dependent dir size: {0:N2} MB" -f $fdSize)
+          $scBin = Get-ChildItem out/sc -Filter "ros-fs.exe" | Select-Object -First 1
+          $scSize = $scBin.Length / 1MB
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ("self-contained single-file binary size: {0:N2} MB ({1})" -f $scSize, $scBin.FullName)
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "### Startup timing (5 runs each, --version)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "framework-dependent:"
+          for ($i = 1; $i -le 5; $i++) {
+            $sw = [Diagnostics.Stopwatch]::StartNew()
+            dotnet out/fd/ros-fs.dll --version | Out-Null
+            $sw.Stop()
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ("  run {0}: {1} ms" -f $i, $sw.ElapsedMilliseconds)
+          }
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "self-contained single-file:"
+          for ($i = 1; $i -le 5; $i++) {
+            $sw = [Diagnostics.Stopwatch]::StartNew()
+            & $scBin.FullName --version | Out-Null
+            $sw.Stop()
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ("  run {0}: {1} ms" -f $i, $sw.ElapsedMilliseconds)
+          }
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "### Functional smoke test"
+          & $scBin.FullName --version | Add-Content -Path $env:GITHUB_STEP_SUMMARY
+          (Get-FileHash $scBin.FullName -Algorithm SHA256).Hash | Add-Content -Path $env:GITHUB_STEP_SUMMARY
