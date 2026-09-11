@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { initializeProject } from "../lib/bootstrap.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const installWorkItemId = `ROS-INSTALL-${JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8")).version.replaceAll(".", "-")}`;
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
 
 // Golden masters below were captured once from production's own Node `work
@@ -24,7 +25,7 @@ const GOLDEN = {
     actor: "ros-bootstrap",
     workItems: [
       {
-        id: "ROS-INSTALL-1-2-1",
+        id: installWorkItemId,
         type: "mechanical",
         state: "complete",
         semanticState: "complete",

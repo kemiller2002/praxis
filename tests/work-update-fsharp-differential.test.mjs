@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { initializeProject } from "../lib/bootstrap.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const installWorkItemId = `ROS-INSTALL-${JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8")).version.replaceAll(".", "-")}`;
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
 
 // Golden masters below were captured once from production's own Node
@@ -37,7 +38,7 @@ const GOLDEN = {
       }
     ]
   },
-  test1Markdown: "# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| ROS-INSTALL-1-2-1 | ROS-INSTALL-1-2-1 | complete |  |  |\n| WI-0001 | New title | ready | code | low |\n",
+  test1Markdown: `# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| ${installWorkItemId} | ${installWorkItemId} | complete |  |  |\n| WI-0001 | New title | ready | code | low |\n`,
   test2Description: null,
   test2Queue: {
     schemaVersion: "1.0.0",
@@ -84,8 +85,8 @@ const GOLDEN = {
     nextSeq: 1,
     items: [
       {
-        id: "ROS-INSTALL-1-2-1",
-        title: "ROS-INSTALL-1-2-1",
+        id: installWorkItemId,
+        title: installWorkItemId,
         description: null,
         tags: ["upserted"],
         priority: "medium",
@@ -97,7 +98,7 @@ const GOLDEN = {
       }
     ]
   },
-  test4Markdown: "# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| ROS-INSTALL-1-2-1 | ROS-INSTALL-1-2-1 | complete | upserted | medium |\n",
+  test4Markdown: `# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| ${installWorkItemId} | ${installWorkItemId} | complete | upserted | medium |\n`,
   test5Message: "work item 'WI-9999' was not found",
   test5Queue: {
     schemaVersion: "1.0.0",
@@ -239,7 +240,7 @@ test("F# work update matches production's real upsert for an id known only to th
   const emptyQueue = { schemaVersion: "1.0.0", repository: "repository", nextSeq: 1, items: [] };
   writeQueue(fsharpRoot, emptyQueue);
 
-  const fsharp = runFsharp(fsharpRoot, "ROS-INSTALL-1-2-1", { tags: ["upserted"] });
+  const fsharp = runFsharp(fsharpRoot, installWorkItemId, { tags: ["upserted"] });
   assert.equal(fsharp.status, 0, fsharp.stderr);
 
   assert.deepEqual(withoutClockFields(readQueue(fsharpRoot)), GOLDEN.test4Queue);

@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { initializeProject } from "../lib/bootstrap.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const installWorkItemId = `ROS-INSTALL-${JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8")).version.replaceAll(".", "-")}`;
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
 
 // Golden masters below were captured once from production's own Node
@@ -37,7 +38,7 @@ const GOLDEN = {
       }
     ]
   },
-  test1Markdown: "# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| ROS-INSTALL-1-2-1 | ROS-INSTALL-1-2-1 | complete |  |  |\n| WI-0001 | It's a \"quoted\" title | ready | code | high |\n",
+  test1Markdown: `# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| ${installWorkItemId} | ${installWorkItemId} | complete |  |  |\n| WI-0001 | It's a "quoted" title | ready | code | high |\n`,
   test1StoredFile: "2-My_Cool_File_.txt",
   test1FileBytesBase64: "aGVsbG8gd29ybGQsIHdpdGggYSB3ZWlyZCBuYW1lIGNvbWluZw==",
   test2Name: "upload.txt",
@@ -66,8 +67,8 @@ const GOLDEN = {
     nextSeq: 1,
     items: [
       {
-        id: "ROS-INSTALL-1-2-1",
-        title: "ROS-INSTALL-1-2-1",
+        id: installWorkItemId,
+        title: installWorkItemId,
         description: null,
         tags: [],
         priority: "medium",
@@ -81,7 +82,7 @@ const GOLDEN = {
       }
     ]
   },
-  test3Markdown: "# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| ROS-INSTALL-1-2-1 | ROS-INSTALL-1-2-1 | complete |  | medium |\n",
+  test3Markdown: `# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| ${installWorkItemId} | ${installWorkItemId} | complete |  | medium |\n`,
   test4Queue: {
     schemaVersion: "1.0.0",
     repository: "repository",
@@ -200,7 +201,7 @@ test("F# work attach matches production's real upsert for an id known only to th
   const emptyQueue = { schemaVersion: "1.0.0", repository: "repository", nextSeq: 1, items: [] };
   writeQueue(fsharpRoot, emptyQueue);
 
-  const fsharp = runFsharp(fsharpRoot, "ROS-INSTALL-1-2-1", ["upload.txt"]);
+  const fsharp = runFsharp(fsharpRoot, installWorkItemId, ["upload.txt"]);
   assert.equal(fsharp.status, 0, fsharp.stderr);
 
   assert.deepEqual(withoutClockFields(readQueue(fsharpRoot)), GOLDEN.test3Queue);

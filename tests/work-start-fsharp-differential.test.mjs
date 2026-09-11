@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { initializeProject } from "../lib/bootstrap.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const installWorkItemId = `ROS-INSTALL-${JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8")).version.replaceAll(".", "-")}`;
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
 
 function fixture(t, label) {
@@ -96,7 +97,7 @@ const GOLDEN ={
     "baselineDirtyPaths": [],
     "workItems": [
       {
-        "id": "ROS-INSTALL-1-2-1",
+        "id": installWorkItemId,
         "type": "mechanical",
         "state": "complete",
         "semanticState": "complete",
@@ -121,7 +122,7 @@ const GOLDEN ={
     {
       "schemaVersion": "1.0.0",
       "type": "work.completed",
-      "workItem": "ROS-INSTALL-1-2-1",
+      "workItem": installWorkItemId,
       "repository": "work-start-differential",
       "protocolVersion": "1.0.0",
       "evidence": [
@@ -1507,7 +1508,7 @@ const GOLDEN ={
     "baselineDirtyPaths": [],
     "workItems": [
       {
-        "id": "ROS-INSTALL-1-2-1",
+        "id": installWorkItemId,
         "type": "mechanical",
         "state": "complete",
         "semanticState": "complete",
