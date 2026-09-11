@@ -29,7 +29,7 @@ for (const key of [
 
 function fixture(t, label) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), `ros-work-start-${label}-`));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 }));
   initializeProject({ target: root, project: "Work Start Differential" });
   execFileSync("git", ["init", "-q"], { cwd: root });
   execFileSync("git", ["config", "user.email", "test@example.invalid"], { cwd: root });

@@ -62,7 +62,7 @@ const GOLDEN = {
 
 function fixture(t, label) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), `ros-telemetry-ingest-codex-${label}-`));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 }));
   initializeProject({ target: root, project: "Telemetry Ingest Codex Differential" });
   execFileSync("git", ["init", "-q"], { cwd: root });
   execFileSync("git", ["config", "user.email", "test@example.invalid"], { cwd: root });

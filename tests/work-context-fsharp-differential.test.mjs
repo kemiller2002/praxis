@@ -79,7 +79,7 @@ const GOLDEN = {
 
 function fixture(t, label) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), `ros-work-context-${label}-`));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 }));
   initializeProject({ target: root, project: "Work Context Differential" });
   execFileSync("git", ["-C", root, "init", "-q"]);
   return root;

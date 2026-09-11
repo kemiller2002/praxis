@@ -39,7 +39,7 @@ const GOLDEN = {
 
 function fixture(t, label, workItems) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), `ros-telemetry-start-${label}-`));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 }));
   initializeProject({ target: root, project: "Telemetry Start Differential" });
   execFileSync("git", ["-C", root, "init", "-q"]);
 

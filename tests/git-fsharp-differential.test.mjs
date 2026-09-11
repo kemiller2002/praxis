@@ -55,7 +55,7 @@ function git(root, args) {
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-git-differential-"));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 }));
   git(root, ["init", "-q"]);
   git(root, ["config", "user.email", "test@example.invalid"]);
   git(root, ["config", "user.name", "ROS Test"]);
@@ -121,7 +121,7 @@ test("F# Git shadow matches changed paths, statuses, and rename origin", (t) => 
 
 test("F# Git shadow reports unavailable instead of clean outside a repository", (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-git-unavailable-"));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 }));
   const result = runFsharp(root);
   assert.equal(result.status, 1);
   assert.equal(result.json.outcome, "unavailable");

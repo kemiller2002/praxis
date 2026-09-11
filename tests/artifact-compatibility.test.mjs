@@ -18,7 +18,7 @@ function temporaryFixture(t, name) {
   const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), `ros-artifact-${name}-`));
   const root = path.join(temporaryRoot, name);
   fs.cpSync(path.join(fixtureRoot, name), root, { recursive: true });
-  t.after(() => fs.rmSync(temporaryRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
+  t.after(() => fs.rmSync(temporaryRoot, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 }));
   return root;
 }
 

@@ -13,7 +13,7 @@ const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", 
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-telemetry-resolution-"));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 }));
   initializeProject({ target: root, project: "Telemetry Resolution Differential" });
   execFileSync("git", ["init", "-q"], { cwd: root });
   execFileSync("git", ["config", "user.email", "test@example.invalid"], { cwd: root });

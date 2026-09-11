@@ -170,7 +170,7 @@ const fixtureItems = [
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-backlog-transition-differential-"));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 }));
   initializeProject({ target: root, project: "Backlog Transition Differential" });
 
   const configFile = path.join(root, "ros.json");
