@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 50,
+  "nextSeq": 51,
   "items": [
     {
       "id": "WI-0001",
@@ -933,6 +933,22 @@
       "attachments": [],
       "createdAt": "2026-09-11T01:39:41.996Z",
       "updatedAt": "2026-09-11T01:40:00.000Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0050",
+      "title": "Execute DF-ROS-2026-A032 Phase 2 with refined scope: Node internal-library-only, golden-master tests (DF-ROS-2026-A033)",
+      "description": null,
+      "tags": [
+        "fsharp-migration"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-11T05:56:20.744Z",
+      "updatedAt": "2026-09-11T05:56:23.000Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null

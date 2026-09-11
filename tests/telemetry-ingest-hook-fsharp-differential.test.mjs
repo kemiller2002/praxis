@@ -7,10 +7,85 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
-import { ingestTelemetry } from "../tools/ros_telemetry.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
+
+// Golden masters below were captured once from production's own Node
+// implementation (tools/ros_telemetry.mjs's ingestTelemetry with the
+// anthropic-claude-hook/google-gemini-hook/github-copilot-hook adapters)
+// with the exact same call sequence as each test, then frozen here. Node is
+// retained in this repository only as the web server's internal dependency
+// (DF-ROS-2026-A033) and is no longer executed as a live oracle by this test
+// suite.
+const GOLDEN = {
+  posttooluse: {
+    identity: { provider: "anthropic", runtime: "claude-code", model: "claude-opus-5", sessionId: "sess-123", agentId: null },
+    capabilities: [
+      { metricId: undefined, status: "unknown", reason: "provider field preserved but not normalized by this adapter version" },
+      { metricId: "telemetry.redactions", status: "derived", reason: "normalized measurement recorded" },
+      { metricId: "telemetry.unknown_fields", status: "derived", reason: "normalized measurement recorded" },
+      { metricId: "tool.calls", status: "supported-observed", reason: "normalized measurement recorded" },
+      { metricId: "tool.failures", status: "supported-observed", reason: "normalized measurement recorded" },
+      { metricId: "tool.shell_commands", status: "supported-observed", reason: "normalized measurement recorded" }
+    ],
+    metrics: [
+      { id: "telemetry.redactions", value: 1, scope: "execution", dimensions: "{}" },
+      { id: "telemetry.unknown_fields", value: 1, scope: "execution", dimensions: "{}" },
+      { id: "tool.calls", value: 1, scope: "tool", dimensions: "{\"toolType\":\"Bash\"}" },
+      { id: "tool.failures", value: 1, scope: "tool", dimensions: "{\"toolType\":\"Bash\"}" },
+      { id: "tool.shell_commands", value: 1, scope: "tool", dimensions: "{\"toolType\":\"Bash\"}" }
+    ],
+    events: ["runtime.posttooluse", "telemetry.snapshot.ingested"],
+    storedCapabilities: [
+      { metricId: undefined, status: "unknown", reason: "provider field preserved but not normalized by this adapter version" },
+      { metricId: "telemetry.redactions", status: "derived", reason: "normalized measurement recorded" },
+      { metricId: "telemetry.unknown_fields", status: "derived", reason: "normalized measurement recorded" },
+      { metricId: "tool.calls", status: "supported-observed", reason: "normalized measurement recorded" },
+      { metricId: "tool.failures", status: "supported-observed", reason: "normalized measurement recorded" },
+      { metricId: "tool.shell_commands", status: "supported-observed", reason: "normalized measurement recorded" }
+    ],
+    storedMetrics: [
+      { id: "telemetry.redactions", value: 1, scope: "execution", dimensions: "{}" },
+      { id: "telemetry.unknown_fields", value: 1, scope: "execution", dimensions: "{}" },
+      { id: "tool.calls", value: 1, scope: "tool", dimensions: "{\"toolType\":\"Bash\"}" },
+      { id: "tool.failures", value: 1, scope: "tool", dimensions: "{\"toolType\":\"Bash\"}" },
+      { id: "tool.shell_commands", value: 1, scope: "tool", dimensions: "{\"toolType\":\"Bash\"}" }
+    ]
+  },
+  subagentstart: {
+    identity: { provider: "google", runtime: "gemini-cli", model: null, sessionId: null, agentId: "explore-agent" },
+    capabilities: [
+      { metricId: "agent.subagents_spawned", status: "supported-observed", reason: "normalized measurement recorded" }
+    ],
+    metrics: [
+      { id: "agent.subagents_spawned", value: 1, scope: "execution", dimensions: "{}" }
+    ],
+    events: ["runtime.subagentstart", "telemetry.snapshot.ingested"],
+    storedCapabilities: [
+      { metricId: "agent.subagents_spawned", status: "supported-observed", reason: "normalized measurement recorded" }
+    ],
+    storedMetrics: [
+      { id: "agent.subagents_spawned", value: 1, scope: "execution", dimensions: "{}" }
+    ]
+  },
+  permissiondenied: {
+    identity: { provider: "github", runtime: "copilot", model: "gpt-5-copilot", sessionId: null, agentId: null },
+    capabilities: [
+      { metricId: "agent.approvals_denied", status: "supported-observed", reason: "normalized measurement recorded" }
+    ],
+    metrics: [
+      { id: "agent.approvals_denied", value: 1, scope: "execution", dimensions: "{}" }
+    ],
+    events: ["runtime.permissiondenied", "telemetry.snapshot.ingested"],
+    storedCapabilities: [
+      { metricId: "agent.approvals_denied", status: "supported-observed", reason: "normalized measurement recorded" }
+    ],
+    storedMetrics: [
+      { id: "agent.approvals_denied", value: 1, scope: "execution", dimensions: "{}" }
+    ]
+  }
+};
 
 function fixture(t, label) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), `ros-telemetry-ingest-hook-${label}-`));
@@ -118,44 +193,36 @@ const cases = [
 for (const { adapter, label, input } of cases) {
   test(`F# telemetry ingest --adapter ${adapter} maps identity/capabilities/metrics/events identically to production's own adaptHook (${label})`, (t) => {
     assert.ok(fs.existsSync(fsharpCli), "build:fsharp must produce the shadow CLI before this test runs");
-    const nodeRoot = fixture(t, `${label}-node`);
     const fsharpRoot = fixture(t, `${label}-fsharp`);
 
-    writeFixtureExecution(nodeRoot, "EXE-1", "WI-A", "active", "2026-01-01T00:00:00.000Z");
     writeFixtureExecution(fsharpRoot, "EXE-1", "WI-A", "active", "2026-01-01T00:00:00.000Z");
-
-    const nodeRecord = ingestTelemetry(nodeRoot, "EXE-1", input, { adapter });
 
     const fsharpResult = runFsharp(fsharpRoot, ["EXE-1", "--input", writeInputFile(t, `hook-${label}`, input), "--adapter", adapter]);
     assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
     const fsharpRecord = JSON.parse(fsharpResult.stdout);
 
-    assert.deepEqual(normIdentity(nodeRecord), normIdentity(fsharpRecord));
-    assert.deepEqual(normCapabilities(nodeRecord), normCapabilities(fsharpRecord));
-    assert.deepEqual(normMetrics(nodeRecord), normMetrics(fsharpRecord));
-    assert.deepEqual(normEvents(nodeRecord), normEvents(fsharpRecord));
+    const golden = GOLDEN[label];
+    assert.deepEqual(golden.identity, normIdentity(fsharpRecord));
+    assert.deepEqual(golden.capabilities, normCapabilities(fsharpRecord));
+    assert.deepEqual(golden.metrics, normMetrics(fsharpRecord));
+    assert.deepEqual(golden.events, normEvents(fsharpRecord));
 
-    const nodeStored = readExecution(nodeRoot, "EXE-1");
     const fsharpStored = readExecution(fsharpRoot, "EXE-1");
-    assert.deepEqual(normCapabilities(nodeStored), normCapabilities(fsharpStored));
-    assert.deepEqual(normMetrics(nodeStored), normMetrics(fsharpStored));
+    assert.deepEqual(golden.storedCapabilities, normCapabilities(fsharpStored));
+    assert.deepEqual(golden.storedMetrics, normMetrics(fsharpStored));
   });
 }
 
 test("F# telemetry ingest --adapter anthropic-claude-hook does not record tool.failures when nothing indicates an error, matching production", (t) => {
-  const nodeRoot = fixture(t, "no-error-node");
   const fsharpRoot = fixture(t, "no-error-fsharp");
 
-  writeFixtureExecution(nodeRoot, "EXE-1", "WI-A", "active", "2026-01-01T00:00:00.000Z");
   writeFixtureExecution(fsharpRoot, "EXE-1", "WI-A", "active", "2026-01-01T00:00:00.000Z");
 
   const input = { hook_event_name: "PostToolUse", tool_name: "Bash", timestamp: "2026-01-01T00:00:05.000Z", tool_response: { result: "ok" } };
 
-  const nodeRecord = ingestTelemetry(nodeRoot, "EXE-1", input, { adapter: "anthropic-claude-hook" });
   const fsharpResult = runFsharp(fsharpRoot, ["EXE-1", "--input", writeInputFile(t, "hook-no-error", input), "--adapter", "anthropic-claude-hook"]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
   const fsharpRecord = JSON.parse(fsharpResult.stdout);
 
-  assert.equal(nodeRecord.metrics.filter((m) => m.id === "tool.failures").length, 0);
   assert.equal(fsharpRecord.metrics.filter((m) => m.id === "tool.failures").length, 0);
 });

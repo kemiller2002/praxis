@@ -7,10 +7,61 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
-import { startWork, transition } from "../tools/ros_cli.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
+
+// Golden masters below were captured once from production's own Node
+// implementation (tools/ros_cli.mjs's startWork/transition) with the exact
+// same call sequence as each test, then frozen here. Node is retained in
+// this repository only as the web server's internal dependency
+// (DF-ROS-2026-A033) and is no longer executed as a live oracle by this
+// test suite.
+const GOLDEN = {
+  test1Context: {
+    schemaVersion: "1.0.0",
+    protocolVersion: "1.0.0",
+    repository: "work-resume-differential",
+    actor: "ros-bootstrap",
+    baselineDirtyPaths: [],
+    workItems: [
+      {
+        id: "ROS-INSTALL-1-2-1",
+        type: "mechanical",
+        state: "complete",
+        semanticState: "complete",
+        evidence: [{ type: "installation", path: ".ros/installation.json" }]
+      },
+      {
+        id: "WI-BLOCKED",
+        type: "task",
+        state: "active",
+        semanticState: "active",
+        evidence: [],
+        blockReason: "waiting on review"
+      }
+    ]
+  },
+  test1SemanticState: "active",
+  test1ExecIdsLength: 1,
+  test1Events: [
+    {
+      schemaVersion: "1.0.0", type: "work.started", workItem: "WI-BLOCKED", repository: "work-resume-differential",
+      protocolVersion: "1.0.0", evidence: [], paths: [], publication: { status: "pending" }
+    },
+    {
+      schemaVersion: "1.0.0", type: "work.resumed", workItem: "WI-BLOCKED", repository: "work-resume-differential",
+      protocolVersion: "1.0.0", evidence: [], paths: [], publication: { status: "pending" }
+    }
+  ],
+  test1ExecutionsLength: 1,
+  test2SemanticState: "active",
+  test2ExecIdsLength: 1,
+  test2ExecutionsLength: 1,
+  test2ExecutionsWorkItemId: "WI-NEVER-BEGUN",
+  test3Message: "work item 'WI-GHOST' is not in repository context",
+  test4Message: "cannot resume 'WI-ACTIVE' from 'active'"
+};
 
 function fixture(t, label) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), `ros-work-resume-${label}-`));
@@ -64,11 +115,8 @@ function stripVolatile(value) {
 
 test("F# work resume matches production's real resume transition for a blocked item with an active execution already linked", (t) => {
   assert.ok(fs.existsSync(fsharpCli), "build:fsharp must produce the shadow CLI before this test runs");
-  const nodeRoot = fixture(t, "linked-node");
   const fsharpRoot = fixture(t, "linked-fsharp");
 
-  startWork(nodeRoot, ["WI-BLOCKED"], { type: "task" });
-  transition(nodeRoot, "block", ["WI-BLOCKED"], { reason: "waiting on review" });
   runFsharp(fsharpRoot, "start", ["--id", "WI-BLOCKED", "--occurred-at", "2026-09-09T18:00:00.000Z", "--type", "task"]);
 
   // The F# side has no `work block` command yet, so its context is driven
@@ -82,21 +130,18 @@ test("F# work resume matches production's real resume transition for a blocked i
   item.blockReason = "waiting on review";
   fs.writeFileSync(contextFile, `${JSON.stringify(context, null, 2)}\n`);
 
-  const nodeResult = transition(nodeRoot, "resume", ["WI-BLOCKED"], {});
   const fsharpResult = runFsharp(fsharpRoot, "resume", ["--id", "WI-BLOCKED", "--occurred-at", "2026-09-09T18:05:00.000Z"]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
 
-  const nodeContext = readContext(nodeRoot);
   const fsharpContext = readContext(fsharpRoot);
-  assert.deepEqual(stripVolatile(nodeContext), stripVolatile(fsharpContext));
+  assert.deepEqual(stripVolatile(fsharpContext), GOLDEN.test1Context);
 
-  const nodeItem = nodeContext.workItems.find((entry) => entry.id === "WI-BLOCKED");
   const fsharpItem = fsharpContext.workItems.find((entry) => entry.id === "WI-BLOCKED");
-  assert.equal(nodeItem.semanticState, "active");
+  assert.equal(GOLDEN.test1SemanticState, "active");
   assert.equal(fsharpItem.semanticState, "active");
   // Resuming an item with an active execution already linked never creates
   // a new one: the linked execution count stays exactly 1.
-  assert.equal(nodeItem.telemetryExecutionIds.length, 1);
+  assert.equal(GOLDEN.test1ExecIdsLength, 1);
   assert.equal(fsharpItem.telemetryExecutionIds.length, 1);
 
   // The Node fixture went through a real `work block` (recording a
@@ -105,97 +150,70 @@ test("F# work resume matches production's real resume transition for a blocked i
   // `work.started`/`work.resumed` events -- the ones either side actually
   // produced through a real effect -- are compared here.
   const relevantTypes = new Set(["work.started", "work.resumed"]);
-  const nodeEvents = readEvents(nodeRoot).filter((event) => relevantTypes.has(event.type));
   const fsharpEvents = readEvents(fsharpRoot).filter((event) => relevantTypes.has(event.type));
-  assert.deepEqual(stripVolatile(nodeEvents), stripVolatile(fsharpEvents));
-  const nodeResumed = nodeEvents.find((event) => event.type === "work.resumed");
+  assert.deepEqual(stripVolatile(fsharpEvents), GOLDEN.test1Events);
   const fsharpResumed = fsharpEvents.find((event) => event.type === "work.resumed");
-  assert.ok(nodeResumed && fsharpResumed);
+  assert.ok(fsharpResumed);
 
-  const nodeExecutions = readExecutions(nodeRoot);
   const fsharpExecutions = readExecutions(fsharpRoot);
-  assert.equal(nodeExecutions.length, 1);
+  assert.equal(GOLDEN.test1ExecutionsLength, 1);
   assert.equal(fsharpExecutions.length, 1);
-  void nodeResult;
 });
 
 test("F# work resume creates a new telemetry execution when the item has no active one linked, matching production", (t) => {
-  const nodeRoot = fixture(t, "no-active-node");
   const fsharpRoot = fixture(t, "no-active-fsharp");
 
   // A context item blocked directly from "ready" (never begun) has no
   // telemetry execution linked at all -- not reachable through any current
-  // CLI command, so both fixtures seed it directly, matching the
-  // established pattern of hand-writing fixture state a real command
-  // cannot yet produce.
-  for (const root of [nodeRoot, fsharpRoot]) {
-    const contextFile = path.join(root, ".ros", "context", "current.json");
-    const context = JSON.parse(fs.readFileSync(contextFile, "utf8"));
-    context.workItems.push({
-      id: "WI-NEVER-BEGUN",
-      type: "task",
-      state: "blocked",
-      semanticState: "blocked",
-      evidence: [],
-      blockReason: "waiting on a dependency",
-      updatedAt: "2026-01-01T00:00:00.000Z"
-    });
-    context.startedAt ??= "2026-01-01T00:00:00.000Z";
-    fs.writeFileSync(contextFile, `${JSON.stringify(context, null, 2)}\n`);
-  }
+  // CLI command, so the fixture seeds it directly, matching the established
+  // pattern of hand-writing fixture state a real command cannot yet
+  // produce.
+  const contextFile = path.join(fsharpRoot, ".ros", "context", "current.json");
+  const context = JSON.parse(fs.readFileSync(contextFile, "utf8"));
+  context.workItems.push({
+    id: "WI-NEVER-BEGUN",
+    type: "task",
+    state: "blocked",
+    semanticState: "blocked",
+    evidence: [],
+    blockReason: "waiting on a dependency",
+    updatedAt: "2026-01-01T00:00:00.000Z"
+  });
+  context.startedAt ??= "2026-01-01T00:00:00.000Z";
+  fs.writeFileSync(contextFile, `${JSON.stringify(context, null, 2)}\n`);
 
-  transition(nodeRoot, "resume", ["WI-NEVER-BEGUN"], {});
   const fsharpResult = runFsharp(fsharpRoot, "resume", ["--id", "WI-NEVER-BEGUN", "--occurred-at", "2026-09-09T18:05:00.000Z"]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
 
-  const nodeItem = readContext(nodeRoot).workItems.find((entry) => entry.id === "WI-NEVER-BEGUN");
   const fsharpItem = readContext(fsharpRoot).workItems.find((entry) => entry.id === "WI-NEVER-BEGUN");
-  assert.equal(nodeItem.semanticState, "active");
+  assert.equal(GOLDEN.test2SemanticState, "active");
   assert.equal(fsharpItem.semanticState, "active");
-  assert.equal(nodeItem.telemetryExecutionIds.length, 1);
+  assert.equal(GOLDEN.test2ExecIdsLength, 1);
   assert.equal(fsharpItem.telemetryExecutionIds.length, 1);
 
-  const nodeExecutions = readExecutions(nodeRoot);
   const fsharpExecutions = readExecutions(fsharpRoot);
-  assert.equal(nodeExecutions.length, 1);
+  assert.equal(GOLDEN.test2ExecutionsLength, 1);
   assert.equal(fsharpExecutions.length, 1);
-  assert.equal(nodeExecutions[0].workItemId, "WI-NEVER-BEGUN");
+  assert.equal(GOLDEN.test2ExecutionsWorkItemId, "WI-NEVER-BEGUN");
   assert.equal(fsharpExecutions[0].workItemId, "WI-NEVER-BEGUN");
 });
 
 test("F# work resume rejects an id that is not in the live context, matching production's exact message", (t) => {
-  const nodeRoot = fixture(t, "missing-node");
   const fsharpRoot = fixture(t, "missing-fsharp");
-
-  let nodeMessage;
-  try {
-    transition(nodeRoot, "resume", ["WI-GHOST"], {});
-  } catch (error) {
-    nodeMessage = error.message;
-  }
 
   const fsharpResult = runFsharp(fsharpRoot, "resume", ["--id", "WI-GHOST", "--occurred-at", "2026-09-09T18:00:00.000Z"]);
   assert.equal(fsharpResult.status, 1);
-  assert.match(nodeMessage, /work item 'WI-GHOST' is not in repository context/);
+  assert.match(GOLDEN.test3Message, /work item 'WI-GHOST' is not in repository context/);
   assert.match(fsharpResult.stderr, /work item 'WI-GHOST' is not in repository context/);
 });
 
 test("F# work resume rejects resuming an already-active item with production's exact illegal-transition message", (t) => {
-  const nodeRoot = fixture(t, "active-node");
   const fsharpRoot = fixture(t, "active-fsharp");
 
-  startWork(nodeRoot, ["WI-ACTIVE"], { type: "task" });
   runFsharp(fsharpRoot, "start", ["--id", "WI-ACTIVE", "--occurred-at", "2026-09-09T18:00:00.000Z", "--type", "task"]);
-
-  let nodeMessage;
-  try {
-    transition(nodeRoot, "resume", ["WI-ACTIVE"], {});
-  } catch (error) {
-    nodeMessage = error.message;
-  }
 
   const fsharpResult = runFsharp(fsharpRoot, "resume", ["--id", "WI-ACTIVE", "--occurred-at", "2026-09-09T18:05:00.000Z"]);
   assert.equal(fsharpResult.status, 1);
-  assert.match(nodeMessage, /cannot resume 'WI-ACTIVE' from 'active'/);
+  assert.match(GOLDEN.test4Message, /cannot resume 'WI-ACTIVE' from 'active'/);
   assert.match(fsharpResult.stderr, /cannot resume 'WI-ACTIVE' from 'active'/);
 });

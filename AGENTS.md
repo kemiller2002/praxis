@@ -61,12 +61,18 @@ No externally-assigned ID yet? Check `./ros work ready` for capturable, unblocke
 
 ## F# CLI
 
-`./ros` in this source checkout runs the F# CLI (`DF-ROS-2026-A030`).
-Node's own implementation (`tools/ros_cli.mjs`) remains in the repository,
-fully tested, as this decision's rollback path, but `./ros` no longer
-invokes it. If `./ros` reports it needs building, run `npm run
-build:fsharp` first; CI always builds it before `./ros` runs, so this only
-affects local/manual use after a source change.
+`./ros` in this source checkout, and every project bootstrapped via `npx
+ros-bootstrap init` (both profiles), runs the F# CLI (`DF-ROS-2026-A030`,
+`DF-ROS-2026-A032`). Node is no longer a CLI anywhere in this project or
+what it scaffolds. Node's own implementation (`tools/ros_cli.mjs` and its
+companions) remains in this repository and in the `project-administration`
+starter profile only, as `tools/ros_server.mjs`'s/`ros_hub_cli.mjs`'s
+in-process internal library dependency (`DF-ROS-2026-A033`) — it is no
+longer characterized or scaffolded as a CLI rollback path, and the
+`greenfield` starter profile no longer includes it at all. If `./ros`
+reports it needs building, run `npm run build:fsharp` first; CI always
+builds it before `./ros` runs, so this only affects local/manual use after
+a source change.
 
 F#'s command syntax differs from Node's in ways worth knowing rather than
 guessing from memory:
@@ -89,7 +95,6 @@ guessing from memory:
   remaining command-surface gaps (e.g. `telemetry finalize --input`, a
   deliberately unported adapter-ingestion-at-finalize path).
 
-This section describes `./ros` in this source checkout only.
-`starter/greenfield/ros` — what other projects get via `npx ros-bootstrap
-init` — still runs Node; redirecting it is a separate, not-yet-made
-decision (`DF-ROS-2026-A028` Phase C's own scope note).
+This section's command-syntax notes apply equally to `./ros` in this
+source checkout and to any project's own bootstrapped `./ros`, since both
+run the same F# CLI.

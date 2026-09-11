@@ -2034,14 +2034,52 @@ proving the real acquire-cache-exec mechanism works without depending on
 network access to a real GitHub release in the test suite.
 
 Node's source (`tools/ros_cli.mjs`/`ros_git.mjs`/`ros_telemetry.mjs`/
-`ros_persistence.mjs`) remains fully present, in this repository and in
+`ros_persistence.mjs`) remained fully present, in this repository and in
 the starter template, as both a rollback path and Phase 2's future
-starting point: actually deleting it needs the ~20 differential test
-files that still import its functions directly (not merely spawn `./ros`)
-converted to fixed-expectation ("golden master") tests first, since
-deletion removes their live comparison oracle. That conversion is a
-separate, larger undertaking `DF-ROS-2026-A032` names but does not
-attempt.
+starting point at the time this record shipped. `DF-ROS-2026-A033` (below)
+executed Phase 2 with a refined scope once a real blocker to outright
+deletion surfaced.
+
+## Full Node replacement (Phase 2, refined: internal-library-only, `DF-ROS-2026-A033`)
+
+`DF-ROS-2026-A032` Phase 2 was named as "delete Node's source, converting
+the tests that import it directly first." Attempting that surfaced a real
+blocker before any deletion happened: `tools/ros_server.mjs` (the
+project-administration starter profile's web UI backend, a separate,
+permanently out-of-scope feature this migration never touches) imports
+`tools/ros_cli.mjs`'s functions directly, in-process, and
+`tools/ros_hub_cli.mjs`/`ros_hub_server.mjs` depend on the same family for
+the hub feature. Wholesale deletion would have broken both. `DF-ROS-2026-A033`
+resolves this without abandoning the goal:
+
+- Node's CLI entrypoint (`node tools/ros_cli.mjs args...`, and the identical
+  scaffold copy) stays fully retired everywhere — this was already true.
+- Node's source is not deleted. It remains, unchanged, in this repository
+  and in the `project-administration` starter profile only (dropped
+  entirely from `starter/greenfield/manifest.json`), re-characterized in
+  every canonical doc as that profile's own web/hub servers' in-process
+  internal library dependency — never again documented or scaffolded as a
+  CLI or a rollback path.
+- The differential/CLI test suite stops treating Node as a live oracle.
+  Every test that previously imported its functions directly, or spawned
+  `node tools/ros_cli.mjs` (against either the source tree or a bootstrapped
+  fixture copy) to compute an expected value, now compares against a
+  golden-master literal captured once from that same real behavior; Node is
+  not executed at test time by any of them. `tools/work-protocol.test.mjs`
+  and `tests/telemetry.test.mjs` — Node's own pre-migration CLI test suite,
+  exercising an entrypoint nothing in production invokes anymore — were
+  deleted outright rather than converted, since their only coverage was of
+  that now-dead entrypoint.
+- A real, independent bug surfaced by this work and fixed in passing:
+  `tools/ros_hub_cli.mjs`'s `createWorkInRepo` passed `--file` inline on its
+  `add` call, which Node's CLI accepts but F#'s deliberately does not (F#'s
+  own equivalent effect is the separate `work attach` command). Once the
+  hub's tests were wired to a spoke's *real* F# CLI (matching production,
+  where every spoke's `./ros` is F# by `DF-ROS-2026-A032`) instead of a Node
+  stand-in, this silently broke file-attachment through the hub. Fixed by
+  issuing a follow-up `work attach` call, and reading the final item back
+  via `work show`, when files are given — a call shape that works
+  identically against either backend.
 
 ## Work-state recovery seam
 

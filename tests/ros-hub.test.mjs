@@ -19,24 +19,27 @@ import { createServer } from "../tools/ros_hub_server.mjs";
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageVersion = JSON.parse(fs.readFileSync(path.join(repository, "package.json"), "utf8")).version;
+const fsharpCli = path.join(repository, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
 
 // Every spoke repo's own ./ros is now the F# launcher (DF-ROS-2026-A032),
-// which ros_hub_cli.mjs's runRepoCli shells out to. Seed one shared cache
-// slot with a generic delegator (resolves tools/ros_cli.mjs relative to
-// whatever cwd it's invoked with, since the launcher's own child process
-// inherits execFileSync's cwd) so every spoke repo this file creates gets a
-// genuinely working ./ros without needing real network access or a
-// per-project-specific cache entry.
+// which ros_hub_cli.mjs's runRepoCli shells out to. Node's CLI modules are
+// retained in this repository only as the web server's internal dependency
+// (DF-ROS-2026-A033) and are no longer scaffolded into new spoke repos, so
+// the delegator seeded here execs the real, already-built F# CLI binary
+// directly (inheriting execFileSync's cwd, exactly like the real launcher
+// would after acquiring a real release binary) rather than standing in with
+// Node -- this is a real spoke's real backend, not a Node stand-in.
 const spokeCacheDir = fs.mkdtempSync(path.join(os.tmpdir(), "ros-hub-spoke-cache-"));
 process.env.ROS_FS_CACHE_DIR = spokeCacheDir;
 test.after(() => fs.rmSync(spokeCacheDir, { recursive: true, force: true }));
 const spokeRid = launcherInternal.resolveRid();
 assert.ok(spokeRid, "this test host's platform/arch must resolve to a known RID");
+assert.ok(fs.existsSync(fsharpCli), "build:fsharp must produce the shadow CLI before this test runs");
 const spokeBinaryPath = launcherInternal.cacheDirectory(packageVersion, spokeRid);
 fs.mkdirSync(spokeBinaryPath, { recursive: true });
 fs.writeFileSync(
   path.join(spokeBinaryPath, launcherInternal.binaryName(spokeRid)),
-  "#!/bin/sh\nexec node \"$(pwd)/tools/ros_cli.mjs\" \"$@\"\n",
+  `#!/bin/sh\nexec dotnet "${fsharpCli}" "$@"\n`,
   { mode: 0o755 }
 );
 

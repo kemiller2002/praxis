@@ -7,11 +7,83 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
-import { startWork, transition } from "../tools/ros_cli.mjs";
-import { summarizeTelemetry } from "../tools/ros_telemetry.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
+
+// Golden masters below were captured once from production's own Node
+// implementation (tools/ros_telemetry.mjs's summarizeTelemetry) with the
+// exact same call sequence as each test, then frozen here. Node is retained
+// in this repository only as the web server's internal dependency
+// (DF-ROS-2026-A033) and is no longer executed as a live oracle by this test
+// suite.
+const GOLDEN = {
+  test1Providers: ["anthropic"],
+  test1Runtimes: ["claude-code"],
+  test1Metrics: {
+    "git.files_added": { value: 4, aggregation: "sum", measurements: 2, unit: "count" },
+    "git.files_modified": { value: 0, aggregation: "sum", measurements: 2, unit: "count" },
+    "documentation.files_changed": { value: 4, aggregation: "sum", measurements: 2, unit: "count" },
+    "git.baseline_dirty_files": { value: 0, aggregation: "maximum", measurements: 2, unit: "count" }
+  },
+  test3Summary: {
+    schemaVersion: "1.0.0",
+    workItemId: null,
+    executionCount: 0,
+    providers: [],
+    runtimes: [],
+    timing: {
+      fullyFinalized: false,
+      finalizedExecutionCount: 0,
+      activeExecutionCount: 0,
+      earliestStartedAt: null,
+      latestFinalizedAt: null,
+      calendarSpanMs: null,
+      totalExecutionWallMs: null,
+      overlappingExecutionMs: null
+    },
+    metrics: []
+  },
+  test4Summary: {
+    schemaVersion: "1.0.0",
+    workItemId: "WI-FIX",
+    executionCount: 3,
+    providers: ["anthropic"],
+    runtimes: ["claude-code"],
+    timing: {
+      fullyFinalized: true,
+      finalizedExecutionCount: 3,
+      activeExecutionCount: 0,
+      earliestStartedAt: "2026-01-01T00:00:00.000Z",
+      latestFinalizedAt: "2026-01-01T00:10:00.000Z",
+      calendarSpanMs: 600000,
+      totalExecutionWallMs: 1800000,
+      overlappingExecutionMs: 1200000
+    },
+    metrics: [
+      {
+        id: "context.window_size",
+        value: null,
+        unit: "tokens",
+        currency: null,
+        dimensions: {},
+        aggregation: "none",
+        measurements: 1,
+        note: "not aggregated; inspect per-execution measurements"
+      },
+      {
+        id: "session.tokens.cumulative",
+        value: 200,
+        unit: "tokens",
+        currency: null,
+        dimensions: {},
+        aggregation: "latest-per-session",
+        measurements: 3,
+        note: "latest value per unique provider session; cumulative snapshots are not summed"
+      }
+    ]
+  }
+};
 
 function fixture(t, label) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), `ros-telemetry-summary-${label}-`));
@@ -36,110 +108,82 @@ function metricValue(summary, id) {
 
 test("F# telemetry summary matches production's real aggregation over two real, real-timed executions", (t) => {
   assert.ok(fs.existsSync(fsharpCli), "build:fsharp must produce the shadow CLI before this test runs");
-  const nodeRoot = fixture(t, "real-node");
   const fsharpRoot = fixture(t, "real-fsharp");
 
-  startWork(nodeRoot, ["WI-A"], { type: "task" });
   execFileSync("dotnet", [fsharpCli, "--root", fsharpRoot, "work", "start", "--id", "WI-A", "--occurred-at", "2026-09-10T18:00:00.000Z", "--type", "task"]);
-
-  startWork(nodeRoot, ["WI-B"], { type: "task" });
   execFileSync("dotnet", [fsharpCli, "--root", fsharpRoot, "work", "start", "--id", "WI-B", "--occurred-at", "2026-09-10T18:00:01.000Z", "--type", "task"]);
 
-  for (const root of [nodeRoot, fsharpRoot]) {
-    fs.writeFileSync(path.join(root, "IMPLEMENTATION-NOTES.md"), "Implemented.\n");
-    fs.writeFileSync(path.join(root, "TESTS-NOTES.md"), "Tested.\n");
-  }
+  fs.writeFileSync(path.join(fsharpRoot, "IMPLEMENTATION-NOTES.md"), "Implemented.\n");
+  fs.writeFileSync(path.join(fsharpRoot, "TESTS-NOTES.md"), "Tested.\n");
 
-  const evidence = [
-    { type: "implementation", path: "IMPLEMENTATION-NOTES.md" },
-    { type: "tests", path: "TESTS-NOTES.md" }
-  ];
-
-  transition(nodeRoot, "complete", ["WI-A", "WI-B"], { evidence });
   execFileSync("dotnet", [
     fsharpCli, "--root", fsharpRoot, "work", "complete", "--id", "WI-A", "--id", "WI-B", "--occurred-at", "2026-09-10T18:05:00.000Z",
     "--evidence", "implementation=IMPLEMENTATION-NOTES.md", "--evidence", "tests=TESTS-NOTES.md"
   ]);
 
-  const nodeSummary = summarizeTelemetry(nodeRoot, undefined);
   const fsharpResult = runFsharp(fsharpRoot, ["summary"]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
   const fsharpSummary = JSON.parse(fsharpResult.stdout);
 
-  assert.equal(nodeSummary.executionCount, 2);
   assert.equal(fsharpSummary.executionCount, 2);
-  assert.deepEqual(nodeSummary.providers, fsharpSummary.providers);
-  assert.deepEqual(nodeSummary.runtimes, fsharpSummary.runtimes);
-  assert.equal(nodeSummary.timing.fullyFinalized, true);
+  assert.deepEqual(GOLDEN.test1Providers, fsharpSummary.providers);
+  assert.deepEqual(GOLDEN.test1Runtimes, fsharpSummary.runtimes);
   assert.equal(fsharpSummary.timing.fullyFinalized, true);
 
   // Cross-checked deterministic aggregates: identical real git diffs on both
   // sides, so the same "sum"/"maximum" values must match exactly, node vs. F#.
   for (const id of ["git.files_added", "git.files_modified", "documentation.files_changed", "git.baseline_dirty_files"]) {
-    const nodeMetric = metricValue(nodeSummary, id);
     const fsharpMetric = metricValue(fsharpSummary, id);
-    assert.ok(nodeMetric, `node summary missing metric ${id}`);
     assert.ok(fsharpMetric, `fsharp summary missing metric ${id}`);
-    assert.equal(nodeMetric.value, fsharpMetric.value, `metric ${id} value mismatch`);
-    assert.equal(nodeMetric.aggregation, fsharpMetric.aggregation);
-    assert.equal(nodeMetric.measurements, fsharpMetric.measurements);
-    assert.equal(nodeMetric.unit, fsharpMetric.unit);
+    const golden = GOLDEN.test1Metrics[id];
+    assert.equal(golden.value, fsharpMetric.value, `metric ${id} value mismatch`);
+    assert.equal(golden.aggregation, fsharpMetric.aggregation);
+    assert.equal(golden.measurements, fsharpMetric.measurements);
+    assert.equal(golden.unit, fsharpMetric.unit);
   }
 
   // time.wall_ms is real-clock-derived (positive on both sides, not
   // cross-equal); its aggregation note is deterministic and compared.
-  const nodeWallMs = metricValue(nodeSummary, "time.wall_ms");
   const fsharpWallMs = metricValue(fsharpSummary, "time.wall_ms");
-  assert.ok(nodeWallMs.value > 0);
   assert.ok(fsharpWallMs.value > 0);
-  assert.equal(nodeWallMs.note, "sum of execution spans; may exceed calendarSpanMs when executions overlap");
-  assert.equal(fsharpWallMs.note, nodeWallMs.note);
+  assert.equal(fsharpWallMs.note, "sum of execution spans; may exceed calendarSpanMs when executions overlap");
 });
 
 test("F# telemetry summary WORKITEMID filters to a single execution's metrics only, matching production", (t) => {
-  const nodeRoot = fixture(t, "filter-node");
   const fsharpRoot = fixture(t, "filter-fsharp");
 
-  startWork(nodeRoot, ["WI-A"], { type: "task" });
   execFileSync("dotnet", [fsharpCli, "--root", fsharpRoot, "work", "start", "--id", "WI-A", "--occurred-at", "2026-09-10T18:00:00.000Z", "--type", "task"]);
-  startWork(nodeRoot, ["WI-B"], { type: "task" });
   execFileSync("dotnet", [fsharpCli, "--root", fsharpRoot, "work", "start", "--id", "WI-B", "--occurred-at", "2026-09-10T18:00:01.000Z", "--type", "task"]);
 
-  const nodeSummary = summarizeTelemetry(nodeRoot, "WI-A");
   const fsharpResult = runFsharp(fsharpRoot, ["summary", "WI-A"]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
   const fsharpSummary = JSON.parse(fsharpResult.stdout);
 
-  assert.equal(nodeSummary.workItemId, "WI-A");
   assert.equal(fsharpSummary.workItemId, "WI-A");
-  assert.equal(nodeSummary.executionCount, 1);
   assert.equal(fsharpSummary.executionCount, 1);
 });
 
 test("F# telemetry summary with no executions at all reports an empty, zeroed summary, matching production", (t) => {
-  const nodeRoot = fixture(t, "empty-node");
   const fsharpRoot = fixture(t, "empty-fsharp");
 
-  const nodeSummary = summarizeTelemetry(nodeRoot, undefined);
   const fsharpResult = runFsharp(fsharpRoot, ["summary"]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
   const fsharpSummary = JSON.parse(fsharpResult.stdout);
 
-  assert.deepEqual(nodeSummary, fsharpSummary);
-  assert.equal(nodeSummary.executionCount, 0);
-  assert.deepEqual(nodeSummary.metrics, []);
-  assert.equal(nodeSummary.timing.fullyFinalized, false);
+  assert.deepEqual(GOLDEN.test3Summary, fsharpSummary);
+  assert.equal(fsharpSummary.executionCount, 0);
+  assert.deepEqual(fsharpSummary.metrics, []);
+  assert.equal(fsharpSummary.timing.fullyFinalized, false);
 });
 
 test("F# telemetry summary exercises latest-per-session and none aggregation over hand-written fixture executions, byte-identical to production", (t) => {
-  const nodeRoot = fixture(t, "fixture-node");
   const fsharpRoot = fixture(t, "fixture-fsharp");
 
   // These aggregation strategies are never produced by any real effect this
-  // migration's own writers exercise (only sum/maximum are), so both
-  // fixtures are seeded directly with identical hand-written execution
-  // records -- matching this project's established pattern for exercising a
-  // real but not-yet-CLI-producible branch.
+  // migration's own writers exercise (only sum/maximum are), so the fixture
+  // is seeded directly with identical hand-written execution records --
+  // matching this project's established pattern for exercising a real but
+  // not-yet-CLI-producible branch.
   const record = (executionId, sessionId, tokenValue, tokenCollectedAt, includeWindowSize) => ({
     schemaVersion: "1.0.0",
     executionId,
@@ -194,29 +238,26 @@ test("F# telemetry summary exercises latest-per-session and none aggregation ove
     record("EXE-FIX-3", "sess-B", 50, "2026-01-01T00:01:30.000Z", false)
   ];
 
-  for (const root of [nodeRoot, fsharpRoot]) {
-    const directory = path.join(root, ".ros", "telemetry", "executions");
-    fs.mkdirSync(directory, { recursive: true });
-    for (const rec of records) fs.writeFileSync(path.join(directory, `${rec.executionId}.json`), JSON.stringify(rec, null, 2));
-  }
+  const directory = path.join(fsharpRoot, ".ros", "telemetry", "executions");
+  fs.mkdirSync(directory, { recursive: true });
+  for (const rec of records) fs.writeFileSync(path.join(directory, `${rec.executionId}.json`), JSON.stringify(rec, null, 2));
 
-  const nodeSummary = summarizeTelemetry(nodeRoot, "WI-FIX");
   const fsharpResult = runFsharp(fsharpRoot, ["summary", "WI-FIX"]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
   const fsharpSummary = JSON.parse(fsharpResult.stdout);
 
-  assert.deepEqual(nodeSummary, fsharpSummary);
+  assert.deepEqual(GOLDEN.test4Summary, fsharpSummary);
 
-  const nodeTokens = metricValue(nodeSummary, "session.tokens.cumulative");
+  const fsharpTokens = metricValue(fsharpSummary, "session.tokens.cumulative");
   // sess-A's latest (150, EXE-FIX-2) plus sess-B's only sample (50) = 200.
-  assert.equal(nodeTokens.value, 200);
-  assert.equal(nodeTokens.aggregation, "latest-per-session");
-  assert.equal(nodeTokens.measurements, 3);
-  assert.equal(nodeTokens.note, "latest value per unique provider session; cumulative snapshots are not summed");
+  assert.equal(fsharpTokens.value, 200);
+  assert.equal(fsharpTokens.aggregation, "latest-per-session");
+  assert.equal(fsharpTokens.measurements, 3);
+  assert.equal(fsharpTokens.note, "latest value per unique provider session; cumulative snapshots are not summed");
 
-  const nodeWindow = metricValue(nodeSummary, "context.window_size");
-  assert.equal(nodeWindow.value, null);
-  assert.equal(nodeWindow.aggregation, "none");
-  assert.equal(nodeWindow.measurements, 1);
-  assert.equal(nodeWindow.note, "not aggregated; inspect per-execution measurements");
+  const fsharpWindow = metricValue(fsharpSummary, "context.window_size");
+  assert.equal(fsharpWindow.value, null);
+  assert.equal(fsharpWindow.aggregation, "none");
+  assert.equal(fsharpWindow.measurements, 1);
+  assert.equal(fsharpWindow.note, "not aggregated; inspect per-execution measurements");
 });

@@ -422,5 +422,41 @@
     "title": "Full Node replacement is the accepted end-state; starter template ./ros becomes F#",
     "updated": "2026-09-11",
     "version": "1.0.0"
+  },
+  {
+    "author_agent": "claude-sonnet-5",
+    "confidence": "high",
+    "created": "2026-09-11",
+    "id": "DF-ROS-2026-A033",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A033--node-internal-library-only-golden-master-tests.md",
+    "related_documents": [
+      "DF-ROS-2026-A028",
+      "DF-ROS-2026-A030",
+      "DF-ROS-2026-A031",
+      "DF-ROS-2026-A032",
+      "AGENTS.md",
+      "PACKAGE-USAGE.md"
+    ],
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A047",
+      "EV-ROS-2026-A048"
+    ],
+    "tags": [
+      "architecture",
+      "fsharp",
+      "migration",
+      "testing",
+      "sde",
+      "decision"
+    ],
+    "title": "Node retained as internal-library-only; test suite stops treating it as a live CLI oracle",
+    "updated": "2026-09-11",
+    "version": "1.0.0"
   }
 ]
