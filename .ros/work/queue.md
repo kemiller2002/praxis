@@ -87,7 +87,8 @@
 | WI-0048 | Add additive F# ros-fs launcher to the greenfield starter template (DF-ROS-2026-A031) | complete |  | high |
 | WI-0049 | Replace Node with F# by default in the greenfield starter template (DF-ROS-2026-A032) | complete |  | high |
 | WI-0050 | Execute DF-ROS-2026-A032 Phase 2 with refined scope: Node internal-library-only, golden-master tests (DF-ROS-2026-A033) | complete | fsharp-migration | high |
-| WI-0051 | Root-cause and document the session-long CI empty-output failure pattern (EV-ROS-2026-A049) | ready | ci-infra | medium |
+| WI-0051 | Root-cause and document the session-long CI empty-output failure pattern (EV-ROS-2026-A049) | complete | ci-infra | medium |
+| WI-0052 | Bump to 2.0.1 to actually publish the first working stable release (2.0.0 never published, EV-ROS-2026-A050) | ready |  | high |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |
