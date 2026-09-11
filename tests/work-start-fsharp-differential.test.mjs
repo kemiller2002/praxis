@@ -12,6 +12,21 @@ const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url))
 const installWorkItemId = `ROS-INSTALL-${JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8")).version.replaceAll(".", "-")}`;
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
 
+// This test's golden capability data includes runtime-identity detection
+// (Ros.Domain.Telemetry.Identity.discover), which whitelists whichever CI/
+// agent environment the caller happens to run in (CLAUDE_CODE_SESSION_ID,
+// GITHUB_ACTIONS, etc.) ahead of an explicit override. Clearing every
+// whitelisted variable makes the captured execution's identity
+// deterministic across environments (a contributor's own machine, this
+// sandbox, or a real CI runner) instead of baking in whichever one
+// captured the golden literal.
+const DETERMINISTIC_ENV = { ...process.env };
+for (const key of [
+  "CLAUDE_CODE_SESSION_ID", "CODEX_SESSION_ID", "CODEX_THREAD_ID",
+  "GEMINI_SESSION_ID", "COPILOT_SESSION_ID", "GITHUB_ACTIONS", "GITHUB_RUN_ID",
+  "OLLAMA_HOST", "ROS_TELEMETRY_PROVIDER", "ROS_TELEMETRY_RUNTIME"
+]) delete DETERMINISTIC_ENV[key];
+
 function fixture(t, label) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), `ros-work-start-${label}-`));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
@@ -43,7 +58,7 @@ function readExecutions(root) {
 }
 
 function runFsharp(root, args) {
-  const result = spawnSync("dotnet", [fsharpCli, "--root", root, "work", "start", ...args], { cwd: repositoryRoot, encoding: "utf8" });
+  const result = spawnSync("dotnet", [fsharpCli, "--root", root, "work", "start", ...args], { cwd: repositoryRoot, encoding: "utf8", env: DETERMINISTIC_ENV });
   return { status: result.status, stdout: result.stdout, stderr: result.stderr };
 }
 
@@ -235,18 +250,18 @@ const GOLDEN ={
   ],
   "test1StartedTelemetryExecutionsLength": 1,
   "test1ExecutionsLength": 1,
-  "test1Execution0": {
+  "test1Execution0":   {
     "schemaVersion": "1.0.0",
     "workItemId": "WI-NEW",
     "status": "active",
     "finalizedAt": null,
     "identity": {
-      "provider": "anthropic",
+      "provider": "unknown",
       "model": null,
       "modelVersion": null,
-      "runtime": "claude-code",
+      "runtime": "unknown",
       "runtimeVersion": null,
-      "sessionId": "2e7f0e65-d777-5ebc-8c73-7be02ea2909c",
+      "sessionId": null,
       "conversationId": null,
       "runId": null,
       "agentId": null,
@@ -261,7 +276,7 @@ const GOLDEN ={
         {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         },
         {
           "type": "ros-git",
@@ -281,22 +296,22 @@ const GOLDEN ={
     "capabilities": [
       {
         "metricId": "tokens.input",
-        "status": "supported-unavailable",
-        "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
         "metricId": "tokens.output",
-        "status": "supported-unavailable",
-        "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -306,27 +321,27 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
         "metricId": "tokens.cache_read",
-        "status": "supported-unavailable",
-        "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
         "metricId": "tokens.cache_write",
-        "status": "supported-unavailable",
-        "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -336,7 +351,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -346,7 +361,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -356,27 +371,27 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
         "metricId": "context.window_size",
-        "status": "supported-unavailable",
-        "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
         "metricId": "context.utilization",
-        "status": "supported-unavailable",
-        "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -386,7 +401,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -396,7 +411,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -406,7 +421,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -416,7 +431,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -426,7 +441,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -436,7 +451,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -446,7 +461,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -456,7 +471,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -466,7 +481,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -476,7 +491,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -486,7 +501,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -496,17 +511,17 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
         "metricId": "cost.session_cumulative",
-        "status": "supported-unavailable",
-        "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -516,17 +531,17 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
         "metricId": "time.active_ms",
-        "status": "supported-unavailable",
-        "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -536,17 +551,17 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
         "metricId": "time.model_ms",
-        "status": "supported-unavailable",
-        "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -556,7 +571,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -566,7 +581,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -576,7 +591,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -586,7 +601,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -596,7 +611,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -606,7 +621,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -616,7 +631,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -626,7 +641,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -636,7 +651,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -646,7 +661,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -656,7 +671,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -666,7 +681,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -676,7 +691,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -686,7 +701,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -696,7 +711,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -706,7 +721,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -716,7 +731,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -726,7 +741,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -736,7 +751,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -746,7 +761,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -756,7 +771,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -766,47 +781,47 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
         "metricId": "model.requests",
-        "status": "supported-unavailable",
-        "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
         "metricId": "model.request_failures",
-        "status": "supported-unavailable",
-        "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
         "metricId": "tool.calls",
-        "status": "supported-unavailable",
-        "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
         "metricId": "tool.failures",
-        "status": "supported-unavailable",
-        "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -816,17 +831,17 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
         "metricId": "tool.duration_ms",
-        "status": "supported-unavailable",
-        "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -836,7 +851,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -846,7 +861,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -856,7 +871,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -866,7 +881,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -876,7 +891,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -886,7 +901,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -896,7 +911,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -906,7 +921,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -916,7 +931,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -926,7 +941,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -936,7 +951,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -946,7 +961,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -956,7 +971,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -975,7 +990,7 @@ const GOLDEN ={
             "source": {
               "type": "environment",
               "name": "runtime-identity",
-              "mechanism": "whitelisted-claude-environment"
+              "mechanism": "explicit-or-unmapped-environment"
             }
           }
         ]
@@ -987,7 +1002,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -997,7 +1012,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1007,7 +1022,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1017,7 +1032,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1027,7 +1042,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1037,7 +1052,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1047,7 +1062,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1057,7 +1072,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1067,7 +1082,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1077,7 +1092,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1087,7 +1102,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1097,7 +1112,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1107,7 +1122,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1117,7 +1132,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1127,7 +1142,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1137,7 +1152,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1147,7 +1162,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1157,7 +1172,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1167,7 +1182,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1177,7 +1192,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1187,7 +1202,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1197,7 +1212,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1207,7 +1222,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1217,7 +1232,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1227,7 +1242,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1237,7 +1252,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1247,7 +1262,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1257,7 +1272,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1267,7 +1282,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1277,7 +1292,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1287,7 +1302,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1297,7 +1312,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1307,7 +1322,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1317,7 +1332,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1327,7 +1342,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1337,7 +1352,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1347,7 +1362,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1357,7 +1372,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1367,7 +1382,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1377,7 +1392,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1387,7 +1402,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1397,7 +1412,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1407,7 +1422,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1417,7 +1432,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1427,7 +1442,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       },
       {
@@ -1437,7 +1452,7 @@ const GOLDEN ={
         "source": {
           "type": "environment",
           "name": "runtime-identity",
-          "mechanism": "whitelisted-claude-environment"
+          "mechanism": "explicit-or-unmapped-environment"
         }
       }
     ],
