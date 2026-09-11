@@ -83,7 +83,8 @@
 | WI-0044 | F# status command: Phase A increment 12 (closes EV-ROS-2026-A046's full inventory) | complete |  | high |
 | WI-0045 | Record Phase A closure evidence and point agents at F# for already-ported read-only commands | complete |  | high |
 | WI-0046 | Distribute ros-fs via npm as a self-contained single-file binary from GitHub Releases (DF-ROS-2026-A029) | complete |  | high |
-| WI-0047 | Redirect this repository's own ./ros dispatch to the F# CLI (DF-ROS-2026-A030) | ready |  | high |
+| WI-0047 | Redirect this repository's own ./ros dispatch to the F# CLI (DF-ROS-2026-A030) | complete |  | high |
+| WI-0048 | Add additive F# ros-fs launcher to the greenfield starter template (DF-ROS-2026-A031) | ready |  | high |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |

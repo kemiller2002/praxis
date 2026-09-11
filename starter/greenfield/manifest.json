@@ -11,6 +11,8 @@
     {"source": "starter/greenfield/gitattributes.template", "destination": ".gitattributes", "template": false, "policy": "preserve-existing"},
     {"source": "starter/greenfield/gitignore.template", "destination": ".gitignore", "template": false, "policy": "preserve-existing"},
     {"source": "starter/greenfield/ros", "destination": "ros", "template": false, "executable": true},
+    {"source": "starter/greenfield/ros-fs", "destination": "ros-fs", "template": false, "executable": true},
+    {"source": "starter/greenfield/tools/ros_fs_launcher.mjs", "destination": "tools/ros_fs_launcher.mjs", "template": false},
     {"source": "starter/greenfield/.github/workflows/ros-validation.yml", "destination": ".github/workflows/ros-validation.yml", "template": false},
     {"source": "starter/greenfield/ros.json", "destination": "ros.json", "template": true},
     {"source": "starter/greenfield/README.md", "destination": "README.md", "template": true, "policy": "preserve-existing"},
