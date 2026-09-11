@@ -8,7 +8,7 @@ import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { deriveProjectName, initializeProject, verifyProject } from "../lib/bootstrap.mjs";
+import { deriveProjectName, initializeProject, resolveRosVersion, verifyProject } from "../lib/bootstrap.mjs";
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageVersion = JSON.parse(
@@ -188,6 +188,27 @@ test("scaffolded ros_fs_launcher.mjs refuses a main-branch snapshot rosVersion b
   assert.equal(hits.length, 0, "must not attempt any network request for an unsupported snapshot version");
   assert.ok(logs.some((line) => line.includes("main-branch snapshot")), logs.join("\n"));
   assert.ok(logs.some((line) => line.includes("2.0.1-main.78.1")), logs.join("\n"));
+});
+
+test("resolveRosVersion falls back to the installed package's own version when publish.yml never bundled a stable-version override", () => {
+  assert.equal(resolveRosVersion({ version: "2.0.1" }, null), "2.0.1");
+  assert.equal(resolveRosVersion({ version: "2.0.1-main.78.1" }, null), "2.0.1-main.78.1");
+});
+
+test("resolveRosVersion prefers the bundled stable-version override, so a main-branch snapshot install still pins a real release", () => {
+  assert.equal(
+    resolveRosVersion({ version: "2.0.1-main.78.1" }, { version: "2.0.1" }),
+    "2.0.1"
+  );
+});
+
+test("a normal install's scaffolded ros.json rosVersion matches the installed package version (no override present)", (t) => {
+  const target = temporaryDirectory(t);
+  const result = initializeProject({ target, project: "Rosversion Sandbox" });
+
+  assert.equal(result.rosVersion, result.packageVersion);
+  const rosJson = JSON.parse(fs.readFileSync(path.join(target, "ros.json"), "utf8"));
+  assert.equal(rosJson.rosVersion, result.packageVersion);
 });
 
 test("project name is derived from the target folder when omitted", (t) => {

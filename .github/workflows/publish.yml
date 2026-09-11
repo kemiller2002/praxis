@@ -74,6 +74,25 @@ jobs:
           fi
           echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
 
+      # ros-bootstrap init reads this back (lib/bootstrap.mjs's
+      # resolveRosVersion) to pin a scaffolded project's ros.json at a
+      # version ./ros can actually fetch a binary for, regardless of which
+      # exact snapshot was installed to run ros-bootstrap itself -- a
+      # main-snapshot install's own package.json version never has a
+      # matching GitHub Release. steps.version-check.outputs.current is
+      # always the real committed version at this point in the job (a plain
+      # stable release, either already published or -- when this run is
+      # itself the version-bump publish -- about to be, by the "Create
+      # GitHub Release" step below); if anything later in this job fails,
+      # the job stops before either "Publish stable release" or "Publish
+      # main snapshot" runs, so no tarball ever ships a version this file
+      # doesn't actually back by the time it's downloadable.
+      - name: Record the stable ros-fs version for bootstrapped snapshot installs
+        env:
+          STABLE_VERSION: ${{ steps.version-check.outputs.current }}
+        run: |
+          node -e "require('fs').writeFileSync('lib/stable-ros-version.json', JSON.stringify({ version: process.env.STABLE_VERSION }) + '\n')"
+
       - name: Check whether this version is already on the registry
         id: registry-check
         if: steps.version-check.outputs.changed == 'true'
@@ -97,7 +116,10 @@ jobs:
       # for the caller's platform from this tagged release on first use and
       # caches it; see DF-ROS-2026-A029. Built here, once, on a stable
       # version bump only -- main-snapshot versions have no matching release
-      # and the launcher falls back to erroring with a clear message.
+      # of their own (a direct `ros-fs` invocation from a snapshot install
+      # fails clearly rather than guessing); ros-bootstrap init instead pins
+      # a scaffolded project at the version this step just built, via
+      # lib/stable-ros-version.json above.
       - name: Build self-contained ros-fs binaries for release
         if: steps.version-check.outputs.changed == 'true' && steps.registry-check.outputs.already_published == 'false'
         run: |

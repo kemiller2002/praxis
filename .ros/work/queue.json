@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 54,
+  "nextSeq": 55,
   "items": [
     {
       "id": "WI-0001",
@@ -993,6 +993,20 @@
       "attachments": [],
       "createdAt": "2026-09-11T12:45:00.024Z",
       "updatedAt": "2026-09-11T12:45:03.000Z",
+      "createdBy": "claude-code",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0054",
+      "title": "Fix ros-bootstrap init pinning a scaffolded project to a binary-less @main snapshot version",
+      "description": "Bootstrapping via the documented @main install flow writes a ros.json rosVersion (e.g. 2.0.1-main.78.1) that never has a matching GitHub Release, so ./ros can never run -- the earlier launcher fix (WI-0053) only made the failure message clearer. Fixed by pinning ros.json to the newest stable release with real binaries instead, via a version bundled into the npm tarball at publish time (DF-ROS-2026-A034).",
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-11T13:23:10.444Z",
+      "updatedAt": "2026-09-11T13:23:13.000Z",
       "createdBy": "claude-code",
       "source": "manual",
       "sourceReference": null
