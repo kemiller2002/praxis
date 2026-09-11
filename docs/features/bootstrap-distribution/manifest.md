@@ -118,8 +118,8 @@ default.
   itself (a real npm-exec install, and `ros-hub create`'s shell-out to a
   spoke's `./ros`))
 - Known gaps: initialization writes related state without a multi-file
-  transaction; the root lockfile version is stale relative to `package.json`;
-  bootstrap prints validation as a next step but does not execute it.
+  transaction; bootstrap prints validation as a next step but does not
+  execute it.
   `ros-fs`'s cross-platform startup timing (macOS/Windows) is buildability-only,
   not independently measured (`EV-ROS-2026-A048`); `osx-x64` is not built at
   all; a `@main`-tagged snapshot version has no matching GitHub Release, so
