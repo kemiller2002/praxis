@@ -1964,11 +1964,32 @@
         "EXE-20260911T132314620Z-5812be21"
       ],
       "completedAt": "2026-09-11T13:23:18.000Z"
+    },
+    {
+      "id": "WI-0055",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileBacklogQueueRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "research/evidence/EV-ROS-2026-A052--queue-json-status-never-tracked-live-completion.md"
+        }
+      ],
+      "updatedAt": "2026-09-11T15:45:54.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260911T154548047Z-fe95b217"
+      ],
+      "completedAt": "2026-09-11T15:45:54.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-11T13:23:18.000Z",
+  "updatedAt": "2026-09-11T15:45:54.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

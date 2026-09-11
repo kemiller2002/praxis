@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 55,
+  "nextSeq": 56,
   "items": [
     {
       "id": "WI-0001",
@@ -1007,6 +1007,20 @@
       "attachments": [],
       "createdAt": "2026-09-11T13:23:10.444Z",
       "updatedAt": "2026-09-11T13:23:13.000Z",
+      "createdBy": "claude-code",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0055",
+      "title": "Sync queue.json's own backlog status to complete when a promoted item finishes",
+      "description": "The backlog triage lifecycle has no complete transition (ready|block|abandon only), so a promoted-then-completed item's raw queue.json status stayed frozen forever, only ever looking correct in queue.md's merged rendering after some later, unrelated backlog write. Fixed at the source: FileBacklogQueueRepository.markComplete, wired into work complete.",
+      "tags": [],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-11T15:45:40.178Z",
+      "updatedAt": "2026-09-11T15:45:54.000Z",
       "createdBy": "claude-code",
       "source": "manual",
       "sourceReference": null

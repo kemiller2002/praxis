@@ -90,7 +90,8 @@
 | WI-0051 | Root-cause and document the session-long CI empty-output failure pattern (EV-ROS-2026-A049) | complete | ci-infra | medium |
 | WI-0052 | Bump to 2.0.1 to actually publish the first working stable release (2.0.0 never published, EV-ROS-2026-A050) | complete |  | high |
 | WI-0053 | Fix ./ros hitting an unhandled 404 for a main-branch snapshot rosVersion | complete |  | high |
-| WI-0054 | Fix ros-bootstrap init pinning a scaffolded project to a binary-less @main snapshot version | ready |  | high |
+| WI-0054 | Fix ros-bootstrap init pinning a scaffolded project to a binary-less @main snapshot version | complete |  | high |
+| WI-0055 | Sync queue.json's own backlog status to complete when a promoted item finishes | complete |  | medium |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |

@@ -58,6 +58,10 @@ module QueueValidationTests =
                         item "WI-0004" "abandoned" (Some "low") ]
 
                   Assert.empty (BacklogQueueValidation.findings items) }
+          { Name = "a 'complete' status is valid, since work complete writes it for a promoted item (EV-ROS-2026-A052)"
+            Run =
+              fun () ->
+                  Assert.empty (BacklogQueueValidation.findings [ item "WI-0001" "complete" (Some "high") ]) }
           { Name = "file backlog queue repository reads real items and defaults to empty when the file is absent"
             Run =
               fun () ->

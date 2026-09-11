@@ -17,7 +17,7 @@ type BacklogQueueFinding =
 [<RequireQualifiedAccess>]
 module BacklogQueueValidation =
     let private queuePath = ".ros/work/queue.json"
-    let private statusValues = set [ "captured"; "ready"; "blocked"; "abandoned" ]
+    let private statusValues = set [ "captured"; "ready"; "blocked"; "abandoned"; "complete" ]
     let private priorityValues = set [ "high"; "medium"; "low" ]
 
     let findings (items: BacklogQueueItemRecord list) : BacklogQueueFinding list =

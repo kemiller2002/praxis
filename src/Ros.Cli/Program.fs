@@ -1509,11 +1509,35 @@ let private runWorkComplete root arguments =
                                                     |> List.map (fun itemPlan -> itemPlan.Item.Id, conclusion)
                                                     |> Map.ofList
 
-                                                FileWorkContextRepository.applyContextPlanWithConclusions
-                                                    root
-                                                    repositoryId
-                                                    conclusions
-                                                    resolvedPlan
+                                                match
+                                                    FileWorkContextRepository.applyContextPlanWithConclusions
+                                                        root
+                                                        repositoryId
+                                                        conclusions
+                                                        resolvedPlan
+                                                with
+                                                | Error message -> Error message
+                                                | Ok(writtenItems, eventIds) ->
+                                                    match readWorkContext root with
+                                                    | Error message -> Error message
+                                                    | Ok updatedContext ->
+                                                        let backlogSync =
+                                                            ids
+                                                            |> List.fold
+                                                                (fun acc workItemId ->
+                                                                    match acc with
+                                                                    | Error _ -> acc
+                                                                    | Ok() ->
+                                                                        FileBacklogQueueRepository.markComplete
+                                                                            root
+                                                                            workItemId
+                                                                            timestamp
+                                                                            updatedContext.WorkItems)
+                                                                (Ok())
+
+                                                        match backlogSync with
+                                                        | Error message -> Error message
+                                                        | Ok() -> Ok(writtenItems, eventIds)
                 with error ->
                     lease.Release() |> ignore
                     reraise ()
