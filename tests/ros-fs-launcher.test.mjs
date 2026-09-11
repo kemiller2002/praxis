@@ -7,7 +7,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { run, unsupportedPlatformMessage, internal } from "../lib/ros-fs-launcher.mjs";
+import { run, unsupportedPlatformMessage, nonStableVersionMessage, internal } from "../lib/ros-fs-launcher.mjs";
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageVersion = JSON.parse(
@@ -74,6 +74,21 @@ test("releaseAssetName adds .exe only for the win- RID family", () => {
   assert.equal(internal.releaseAssetName("linux-x64"), "ros-fs-linux-x64");
   assert.equal(internal.releaseAssetName("osx-arm64"), "ros-fs-osx-arm64");
   assert.equal(internal.releaseAssetName("win-x64"), "ros-fs-win-x64.exe");
+});
+
+test("isStableVersion accepts only a plain X.Y.Z release, rejecting main-branch snapshots", () => {
+  assert.equal(internal.isStableVersion("2.0.1"), true);
+  assert.equal(internal.isStableVersion("1.1.0"), true);
+  assert.equal(internal.isStableVersion("2.0.1-main.78.1"), false);
+  assert.equal(internal.isStableVersion("2.0.1-beta.1"), false);
+  assert.equal(internal.isStableVersion("2.0"), false);
+});
+
+test("nonStableVersionMessage names the version and points at a stable install instead", () => {
+  const message = nonStableVersionMessage("2.0.1-main.78.1");
+  assert.match(message, /2\.0\.1-main\.78\.1/);
+  assert.match(message, /main-branch snapshot/);
+  assert.match(message, /PACKAGE-USAGE\.md/);
 });
 
 test("parseChecksums reads sha256sum-style lines and ignores blanks", () => {

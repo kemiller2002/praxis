@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 53,
+  "nextSeq": 54,
   "items": [
     {
       "id": "WI-0001",
@@ -979,6 +979,20 @@
       "attachments": [],
       "createdAt": "2026-09-11T11:28:06.823Z",
       "updatedAt": "2026-09-11T11:28:10.000Z",
+      "createdBy": "claude-code",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0053",
+      "title": "Fix ./ros hitting an unhandled 404 for a main-branch snapshot rosVersion",
+      "description": "A project bootstrapped via the documented @main install flow gets a ros.json rosVersion like 2.0.1-main.78.1; publish.yml never builds/publishes a binary for snapshot versions, so the launcher's blind download attempt surfaced a raw 404 instead of a clear error.",
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-11T12:45:00.024Z",
+      "updatedAt": "2026-09-11T12:45:03.000Z",
       "createdBy": "claude-code",
       "source": "manual",
       "sourceReference": null

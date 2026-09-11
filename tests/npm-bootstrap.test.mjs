@@ -146,6 +146,50 @@ test("scaffolded ros_fs_launcher.mjs downloads, verifies, caches, and execs a re
   assert.equal(second, 0, secondLogs.join("\n"));
 });
 
+test("scaffolded ros_fs_launcher.mjs refuses a main-branch snapshot rosVersion before any network request", async (t) => {
+  const target = temporaryDirectory(t);
+  initializeProject({ target, project: "Snapshot Version Sandbox" });
+
+  // A project bootstrapped via `@main` (PACKAGE-USAGE.md's documented
+  // "install the newest continuously published snapshot" flow) gets a
+  // ros.json rosVersion like "2.0.1-main.78.1" -- publish.yml only ever
+  // builds/publishes ros-fs binaries on a stable version bump, so no
+  // GitHub Release, and therefore no binary, ever exists for a snapshot
+  // version. This must fail fast and clearly rather than attempting (and
+  // failing) a real network round-trip.
+  const rosJsonPath = path.join(target, "ros.json");
+  const rosJson = JSON.parse(fs.readFileSync(rosJsonPath, "utf8"));
+  rosJson.rosVersion = "2.0.1-main.78.1";
+  fs.writeFileSync(rosJsonPath, JSON.stringify(rosJson, null, 2), "utf8");
+
+  const { run } = await import(path.join(target, "tools", "ros_fs_launcher.mjs"));
+
+  const hits = [];
+  const server = http.createServer((req, res) => {
+    hits.push(req.url);
+    res.writeHead(404);
+    res.end("not found");
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  const { port } = server.address();
+
+  const previousBase = process.env.ROS_FS_RELEASE_BASE_URL;
+  process.env.ROS_FS_RELEASE_BASE_URL = `http://127.0.0.1:${port}`;
+  t.after(() => {
+    if (previousBase === undefined) delete process.env.ROS_FS_RELEASE_BASE_URL;
+    else process.env.ROS_FS_RELEASE_BASE_URL = previousBase;
+  });
+
+  const logs = [];
+  const status = await run([], { log: (message) => logs.push(message) });
+
+  assert.equal(status, 1);
+  assert.equal(hits.length, 0, "must not attempt any network request for an unsupported snapshot version");
+  assert.ok(logs.some((line) => line.includes("main-branch snapshot")), logs.join("\n"));
+  assert.ok(logs.some((line) => line.includes("2.0.1-main.78.1")), logs.join("\n"));
+});
+
 test("project name is derived from the target folder when omitted", (t) => {
   const parent = temporaryDirectory(t);
   const target = path.join(parent, "communication-engineering");

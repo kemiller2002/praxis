@@ -49,8 +49,13 @@ gets a clear error naming the gap rather than a silent failure.
 
 This launcher only resolves a release for a **stable** version (the one
 tagged `vX.Y.Z` on GitHub); `@main`-tagged prerelease snapshots have no
-matching release and the CLI reports that plainly rather than guessing. Only
-already-ported, differential-tested commands are safe to rely on here —
+matching release, so the CLI checks the version's shape before making any
+network request and fails immediately with a plain, specific error rather
+than attempting (and failing) a download. `ros-bootstrap init` itself warns
+at install time when it detects it is scaffolding a snapshot version, since
+the resulting project's `./ros` cannot work until it is upgraded to a
+stable release. Only already-ported, differential-tested commands are
+safe to rely on here —
 consult `docs/migrations/fsharp/STATUS.md` for current command-surface
 parity.
 
