@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 49,
+  "nextSeq": 50,
   "items": [
     {
       "id": "WI-0001",
@@ -919,6 +919,20 @@
       "attachments": [],
       "createdAt": "2026-09-11T01:00:47.583Z",
       "updatedAt": "2026-09-11T01:00:54.000Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0049",
+      "title": "Replace Node with F# by default in the greenfield starter template (DF-ROS-2026-A032)",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-11T01:39:41.996Z",
+      "updatedAt": "2026-09-11T01:40:00.000Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null

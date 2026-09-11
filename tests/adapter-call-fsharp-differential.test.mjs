@@ -47,10 +47,11 @@ function readStore(root) {
 }
 
 function nodeCall(root) {
-  const result = spawnSync(path.join(root, "ros"), ["adapter", "call", "--store", "adapter-store.json", "--request", "adapter-request.json"], {
-    cwd: root,
-    encoding: "utf8"
-  });
+  const result = spawnSync(
+    "node",
+    [path.join(root, "tools", "ros_cli.mjs"), "adapter", "call", "--store", "adapter-store.json", "--request", "adapter-request.json"],
+    { cwd: root, encoding: "utf8" }
+  );
   return { status: result.status, stdout: result.stdout, stderr: result.stderr };
 }
 
@@ -232,10 +233,11 @@ test("F# adapter call rejects a missing required field and a missing request fil
   assert.match(nodeMissing.stderr, /adapter request is missing 'protocolVersion'/);
   assert.equal(fsharpMissing.stderr.trim(), "ERROR adapter request is missing 'protocolVersion'");
 
-  const nodeNotFound = spawnSync(path.join(node, "ros"), ["adapter", "call", "--store", "adapter-store.json", "--request", "nope.json"], {
-    cwd: node,
-    encoding: "utf8"
-  });
+  const nodeNotFound = spawnSync(
+    "node",
+    [path.join(node, "tools", "ros_cli.mjs"), "adapter", "call", "--store", "adapter-store.json", "--request", "nope.json"],
+    { cwd: node, encoding: "utf8" }
+  );
   const fsharpNotFound = spawnSync(
     "dotnet",
     [fsharpCli, "--root", fsharp, "adapter", "call", "--store", "adapter-store.json", "--request", "nope.json"],

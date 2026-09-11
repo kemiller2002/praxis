@@ -73,7 +73,7 @@ test("F# artifact slice matches Node registry bytes and characterized findings",
 });
 
 test("F# shadow smoke-checks the current repository without becoming its authority", () => {
-  const node = spawnSync(path.join(repositoryRoot, "ros"), ["registry", "check"], {
+  const node = spawnSync("node", [path.join(repositoryRoot, "tools", "ros_cli.mjs"), "registry", "check"], {
     cwd: repositoryRoot,
     encoding: "utf8"
   });

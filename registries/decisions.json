@@ -364,8 +364,10 @@
       "DF-ROS-2026-A030",
       "PACKAGE-USAGE.md"
     ],
-    "status": "accepted",
-    "superseded_by": [],
+    "status": "superseded",
+    "superseded_by": [
+      "DF-ROS-2026-A032"
+    ],
     "supersedes": [],
     "supporting_evidence": [
       "EV-ROS-2026-A048"
@@ -380,6 +382,44 @@
       "decision"
     ],
     "title": "Add an additive F# ros-fs launcher to the greenfield starter template",
+    "updated": "2026-09-11",
+    "version": "1.0.0"
+  },
+  {
+    "author_agent": "claude-sonnet-5",
+    "confidence": "high",
+    "created": "2026-09-11",
+    "id": "DF-ROS-2026-A032",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A032--fsharp-full-node-replacement.md",
+    "related_documents": [
+      "DF-ROS-2026-A028",
+      "DF-ROS-2026-A029",
+      "DF-ROS-2026-A030",
+      "DF-ROS-2026-A031",
+      "AGENTS.md",
+      "PACKAGE-USAGE.md"
+    ],
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [
+      "DF-ROS-2026-A031"
+    ],
+    "supporting_evidence": [
+      "EV-ROS-2026-A047",
+      "EV-ROS-2026-A048"
+    ],
+    "tags": [
+      "architecture",
+      "fsharp",
+      "migration",
+      "distribution",
+      "sde",
+      "decision"
+    ],
+    "title": "Full Node replacement is the accepted end-state; starter template ./ros becomes F#",
     "updated": "2026-09-11",
     "version": "1.0.0"
   }

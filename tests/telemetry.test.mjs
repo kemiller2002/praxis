@@ -24,7 +24,7 @@ function fixture(t) {
 
 function ros(root, args, options = {}) {
   try {
-    return { status: 0, output: execFileSync(path.join(root, "ros"), args, { cwd: root, encoding: "utf8", ...options }) };
+    return { status: 0, output: execFileSync("node", [path.join(root, "tools", "ros_cli.mjs"), ...args], { cwd: root, encoding: "utf8", ...options }) };
   } catch (error) {
     return { status: error.status, output: `${error.stdout ?? ""}${error.stderr ?? ""}` };
   }
@@ -32,7 +32,7 @@ function ros(root, args, options = {}) {
 
 function rosAsync(root, args) {
   return new Promise((resolve, reject) => {
-    const child = spawn(path.join(root, "ros"), args, { cwd: root, stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn("node", [path.join(root, "tools", "ros_cli.mjs"), ...args], { cwd: root, stdio: ["ignore", "pipe", "pipe"] });
     let output = "";
     child.stdout.on("data", (chunk) => { output += chunk; });
     child.stderr.on("data", (chunk) => { output += chunk; });
