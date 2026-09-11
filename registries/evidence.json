@@ -1008,5 +1008,32 @@
     "title": "The ros-fs launcher gave a raw 404 instead of a clear error for a main-branch snapshot rosVersion; fixed with a fail-fast version check",
     "updated": "2026-09-11",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-11",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A052",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A052--queue-json-status-never-tracked-live-completion.md",
+    "related_documents": [
+      "src/Ros.Domain/Work/QueuePresentation.fs",
+      "src/Ros.Infrastructure/Work/FileBacklogQueueRepository.fs",
+      "src/Ros.Cli/Program.fs"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [],
+    "tags": [
+      "work-protocol",
+      "backlog",
+      "sde",
+      "bug"
+    ],
+    "title": "queue.json's own status field never tracked a promoted item's completion, relying on an unrelated later backlog write to self-heal in queue.md",
+    "updated": "2026-09-11",
+    "version": "1.0.0"
   }
 ]

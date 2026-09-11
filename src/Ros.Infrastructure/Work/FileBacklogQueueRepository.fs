@@ -294,6 +294,72 @@ module FileBacklogQueueRepository =
                 | Error failure -> Error failure.Message
                 | Ok() -> Ok row
 
+    /// The backlog triage lifecycle itself has no "complete" transition
+    /// (only ready/block/abandon: `BacklogTransition.decide`) -- only a
+    /// live work item can ever complete. Without this, an id promoted out
+    /// of the backlog (`work start`) and later completed there stays
+    /// frozen in `queue.json` at whatever raw backlog status it had at
+    /// promotion time forever, even though `queue.md`'s own merged
+    /// rendering (`QueuePresentation.effectiveStatus`) already shows the
+    /// correct completed state on every subsequent backlog write, since a
+    /// live item's state always wins there. Marks the backlog row's own
+    /// `status` field "complete" too, at the source, so the raw record
+    /// agrees immediately rather than relying on some later, unrelated
+    /// backlog write to incidentally re-derive the right answer. A no-op
+    /// (not an error) when the id was never captured to the backlog at
+    /// all -- most completing ids are live-only and have no queue.json
+    /// row to correct.
+    let markComplete (root: string) (id: string) (occurredAt: string) (contextItems: LiveWorkItem list) : Result<unit, string> =
+        let path = queuePath root
+
+        if not (File.Exists path) then
+            Ok()
+        else
+            try
+                match JsonNode.Parse(File.ReadAllText path) with
+                | :? JsonObject as queue ->
+                    match queue["items"] with
+                    | :? JsonArray as items ->
+                        let target =
+                            items
+                            |> Seq.choose (fun node ->
+                                match node with
+                                | :? JsonObject as item when stringField item "id" = Some id -> Some item
+                                | _ -> None)
+                            |> Seq.tryHead
+
+                        match target with
+                        | None -> Ok()
+                        | Some item ->
+                            item["status"] <- JsonValue.Create "complete"
+                            item["updatedAt"] <- JsonValue.Create occurredAt
+
+                            let rows =
+                                items
+                                |> Seq.choose (fun node ->
+                                    match node with
+                                    | :? JsonObject as obj -> rowOf obj
+                                    | _ -> None)
+                                |> Seq.toList
+
+                            let queueContent = queue.ToJsonString serializerOptions + "\n"
+                            let markdownContent = QueuePresentation.mergedRows rows contextItems |> QueuePresentation.renderMarkdown
+
+                            let writes: BacklogStateWrite list =
+                                [ { Path = queueRelativePath; Content = queueContent }
+                                  { Path = markdownRelativePath; Content = markdownContent } ]
+
+                            match BacklogStateTransaction.prepare root writes with
+                            | Error failure -> Error failure.Message
+                            | Ok() ->
+                                match BacklogStateTransaction.recover root with
+                                | Error failure -> Error failure.Message
+                                | Ok() -> Ok()
+                    | _ -> Error "queue.json 'items' must be an array"
+                | _ -> Error "queue.json must contain a JSON object"
+            with error ->
+                Error error.Message
+
     /// Mirrors production `captureWorkUnlocked` + `saveQueueUnlocked`
     /// (`tools/ros_cli.mjs`), excluding `--file` attachment: synthesizes the
     /// same default document production's `loadQueue` default produces when

@@ -88,6 +88,14 @@ function readContext(root) {
   return JSON.parse(fs.readFileSync(path.join(root, ".ros", "context", "current.json"), "utf8"));
 }
 
+function readQueue(root) {
+  return JSON.parse(fs.readFileSync(path.join(root, ".ros", "work", "queue.json"), "utf8"));
+}
+
+function readQueueMarkdown(root) {
+  return fs.readFileSync(path.join(root, ".ros", "work", "queue.md"), "utf8");
+}
+
 function readExecutions(root) {
   const dir = path.join(root, ".ros", "telemetry", "executions");
   return fs.existsSync(dir) ? fs.readdirSync(dir).sort().map((name) => JSON.parse(fs.readFileSync(path.join(dir, name), "utf8"))) : [];
@@ -304,4 +312,47 @@ test("F# work complete writes a research item's conclusion, defaulting to 'incon
 
   assert.equal(fsharpDefault.conclusion, "inconclusive");
   assert.equal(fsharpExplicit.conclusion, "confirmed: caching reduces latency");
+});
+
+// The backlog triage lifecycle itself has no "complete" transition (only
+// ready/block/abandon), so an id promoted out of the backlog and completed
+// in the live work protocol would otherwise stay frozen in queue.json's own
+// status field at whatever it was when promoted -- even though queue.md's
+// merged rendering already shows the correct completed state on any later,
+// unrelated backlog write. This is a real F#-only behavior with no Node
+// production equivalent to compare against, so these are plain assertions
+// rather than a golden-master comparison.
+test("F# work complete marks a promoted backlog item's own queue.json status complete, not just queue.md's merged rendering", (t) => {
+  const fsharpRoot = fixture(t, "backlog-sync-fsharp");
+
+  runFsharp(fsharpRoot, "capture", ["--id", "WI-PROMOTED", "--title", "Promoted item", "--occurred-at", "2026-09-09T18:00:00.000Z"]);
+  runFsharp(fsharpRoot, "backlog-transition", ["--id", "WI-PROMOTED", "--action", "ready", "--occurred-at", "2026-09-09T18:01:00.000Z"]);
+  runFsharp(fsharpRoot, "start", ["--id", "WI-PROMOTED", "--occurred-at", "2026-09-09T18:02:00.000Z", "--type", "task"]);
+
+  const queueBeforeComplete = readQueue(fsharpRoot).items.find((item) => item.id === "WI-PROMOTED");
+  assert.equal(queueBeforeComplete.status, "ready", "the raw backlog record has no way to reflect 'active' yet");
+
+  const evidence = ["--evidence", "implementation=README.md", "--evidence", "tests=README.md"];
+  const fsharpResult = runFsharp(fsharpRoot, "complete", ["--id", "WI-PROMOTED", "--occurred-at", "2026-09-09T18:05:00.000Z", ...evidence]);
+  assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
+
+  const queueAfterComplete = readQueue(fsharpRoot).items.find((item) => item.id === "WI-PROMOTED");
+  assert.equal(queueAfterComplete.status, "complete");
+
+  assert.match(readQueueMarkdown(fsharpRoot), /\| WI-PROMOTED \| Promoted item \| complete \|/);
+});
+
+test("F# work complete on a live-only id (never captured to the backlog) leaves queue.json untouched", (t) => {
+  const fsharpRoot = fixture(t, "backlog-sync-live-only-fsharp");
+  const queueBefore = readQueue(fsharpRoot);
+
+  runFsharp(fsharpRoot, "start", ["--id", "WI-LIVE-ONLY", "--occurred-at", "2026-09-09T18:00:00.000Z", "--type", "task"]);
+  const fsharpResult = runFsharp(fsharpRoot, "complete", [
+    "--id", "WI-LIVE-ONLY", "--occurred-at", "2026-09-09T18:05:00.000Z",
+    "--evidence", "implementation=README.md", "--evidence", "tests=README.md"
+  ]);
+  assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
+
+  const queueAfter = readQueue(fsharpRoot);
+  assert.deepEqual(queueAfter.items, queueBefore.items, "completing a live-only id must not synthesize a backlog row for it");
 });
