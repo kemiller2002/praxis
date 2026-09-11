@@ -4,9 +4,10 @@
 
 Route changes to npm acquisition, profile materialization, installation
 attribution, installation-integrity verification, and (since
-`DF-ROS-2026-A029`/`DF-ROS-2026-A031`) on-demand acquisition of the
-compiled F# CLI binary, both for this package's own `ros-fs` and for a
-`ros-fs` scaffolded into bootstrapped projects.
+`DF-ROS-2026-A029`/`DF-ROS-2026-A032`) on-demand acquisition of the
+compiled F# CLI binary, both for this package's own `ros-fs` bin entry and
+for the scaffolded project's own `./ros`, which is that same launcher by
+default.
 
 ## Ownership
 
@@ -23,9 +24,10 @@ compiled F# CLI binary, both for this package's own `ros-fs` and for a
   its release's `checksums.txt` entry; a platform with no known RID mapping
   fails with a named, actionable message rather than guessing.
 - Capabilities / authority: caller selects profile/target/force; manifest is
-  authoritative for declared package materialization. `ros-fs` is additive
-  and optional: it never changes what `ros-bootstrap init` scaffolds, and
-  `./ros` (Node) remains the only thing that scaffolded project runs.
+  authoritative for declared package materialization. Per `DF-ROS-2026-A032`,
+  the scaffolded project's `./ros` is this same F# launcher by default,
+  replacing Node; Node's own implementation is still scaffolded alongside it
+  (`tools/ros_cli.mjs` and companions), untouched, as a rollback path.
 - Important effects and effect contracts: filesystem creation/copy/render,
   cleanup of newly written declared files after failure, and no network/Git
   semantics inside the bootstrap implementation. `ros-fs-launcher.mjs` is the
@@ -85,17 +87,24 @@ compiled F# CLI binary, both for this package's own `ros-fs` and for a
 ## Maintenance
 
 - Owner: repository-governance
-- Last checked against implementation: 2026-09-11 (DF-ROS-2026-A031: added
-  an additive `ros-fs` launcher to the greenfield starter template; a
-  near-miss during this change found and reverted an earlier design that
-  would have redirected the scaffolded `ros` itself, which would have
-  invalidated this whole migration's differential-test methodology --
-  every such test spawns a bootstrapped project's `ros` as its Node
-  baseline)
+- Last checked against implementation: 2026-09-11 (DF-ROS-2026-A032,
+  superseding DF-ROS-2026-A031: the scaffolded `./ros` itself is now the
+  F# launcher by default, not merely an additive `ros-fs` alongside it.
+  A031's own build had already found and reverted this exact redesign once
+  as too risky without further work -- doing it safely required first
+  fixing every differential/smoke test whose Node-comparison side spawned
+  a bootstrapped `./ros` (now F#) to invoke `node tools/ros_cli.mjs`
+  directly instead, and pre-seeding a delegating fake binary in the
+  launcher's cache for the two tests that need the real launcher mechanism
+  itself (a real npm-exec install, and `ros-hub create`'s shell-out to a
+  spoke's `./ros`))
 - Known gaps: initialization writes related state without a multi-file
   transaction; the root lockfile version is stale relative to `package.json`;
   bootstrap prints validation as a next step but does not execute it.
   `ros-fs`'s cross-platform startup timing (macOS/Windows) is buildability-only,
   not independently measured (`EV-ROS-2026-A048`); `osx-x64` is not built at
   all; a `@main`-tagged snapshot version has no matching GitHub Release, so
-  `ros-fs` only works against stable version installs.
+  the launcher only works against stable version installs. Node's own source
+  is still fully present as `DF-ROS-2026-A032` Phase 2's future deletion
+  target; that phase (and converting the ~20 differential tests that still
+  import Node functions directly) is not attempted yet.

@@ -36,7 +36,7 @@ function fixture(t, label) {
 }
 
 function ros(root, args) {
-  const result = spawnSync(path.join(root, "ros"), args, { cwd: root, encoding: "utf8" });
+  const result = spawnSync("node", [path.join(root, "tools", "ros_cli.mjs"), ...args], { cwd: root, encoding: "utf8" });
   return { status: result.status, output: `${result.stdout ?? ""}${result.stderr ?? ""}` };
 }
 

@@ -1,7 +1,7 @@
 ---
 id: DF-ROS-2026-A031
 title: Add an additive F# ros-fs launcher to the greenfield starter template
-status: accepted
+status: superseded
 version: 1.0.0
 owners:
   - repository-governance
@@ -16,7 +16,8 @@ related_documents:
   - DF-ROS-2026-A030
   - PACKAGE-USAGE.md
 supersedes: []
-superseded_by: []
+superseded_by:
+  - DF-ROS-2026-A032
 tags: [architecture, fsharp, migration, distribution, npm, sde, decision]
 confidence: high
 ---

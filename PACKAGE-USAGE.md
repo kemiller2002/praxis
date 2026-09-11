@@ -30,9 +30,8 @@ Every push to the canonical GitHub `main` branch publishes a unique prerelease v
 ## Run the F# CLI (`ros-fs`) via npm
 
 The package also exposes `ros-fs`, a launcher for the project's F# CLI
-(`DF-ROS-2026-A029`). It is additive: `ros-bootstrap init`'s scaffolded
-`./ros` continues to run the Node CLI unchanged, and `ros-fs` is a separate,
-optional binary any project depending on this package can invoke:
+(`DF-ROS-2026-A029`), for any project that depends on this package directly
+without going through `ros-bootstrap init`:
 
 ```bash
 npx --package=@echelon-foundry/repository-operating-system@<version> ros-fs status
@@ -53,15 +52,17 @@ tagged `vX.Y.Z` on GitHub); `@main`-tagged prerelease snapshots have no
 matching release and the CLI reports that plainly rather than guessing. Only
 already-ported, differential-tested commands are safe to rely on here —
 consult `docs/migrations/fsharp/STATUS.md` for current command-surface
-parity. `ros-fs` does not replace `./ros`; see `AGENTS.md` for the
-in-repository rule that governs which one to use for real work inside this
-source checkout.
+parity.
 
-A project scaffolded by `ros-bootstrap init` (`DF-ROS-2026-A031`) also gets
-its own `./ros-fs`, using the same download-verify-cache-exec mechanism
+**A project scaffolded by `ros-bootstrap init` gets this same launcher as
+its own `./ros`** (`DF-ROS-2026-A032`, superseding `DF-ROS-2026-A031`'s
+earlier additive-only `ros-fs`): F# is that project's sole CLI by default,
+using the identical acquire-verify-cache-exec mechanism
 (`tools/ros_fs_launcher.mjs`, reading the target version from that
-project's own `ros.json`). It is additive there too: the scaffolded
-`./ros` stays Node, unchanged.
+project's own `ros.json`). Node's own implementation
+(`tools/ros_cli.mjs`/`ros_git.mjs`/`ros_telemetry.mjs`/`ros_persistence.mjs`)
+is still scaffolded alongside it, untouched, as a rollback path — invoke it
+directly with `node tools/ros_cli.mjs <command>` if you ever need to.
 
 ## Install the latest directly from GitHub
 

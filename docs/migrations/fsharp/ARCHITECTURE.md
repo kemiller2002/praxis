@@ -2001,6 +2001,48 @@ Phase C's own scope note), since a bootstrapped consumer repo has no
 source checkout to build F# from and needs `DF-ROS-2026-A029`'s
 self-contained-binary mechanism instead.
 
+## Full Node replacement (Phase 1: the starter template)
+
+The user's own direction -- "F# is the successor to node. The goal is to
+replace node completely with F#" -- is `DF-ROS-2026-A032`, superseding
+`DF-ROS-2026-A031`'s narrower, additive-only `ros-fs` launcher.
+`starter/greenfield/ros` (what `npx ros-bootstrap init` scaffolds into
+every new project) is now the same F# launcher this repository's own
+`./ros` conceptually mirrors, using `DF-ROS-2026-A029`'s
+self-contained-binary mechanism (the bootstrapped project has no F# source
+to build from, unlike this repository). The separate `ros-fs` entrypoint
+`DF-ROS-2026-A031` added is retired as redundant.
+
+This was not a one-file change: roughly a third of this migration's own
+differential/smoke tests spawn a bootstrapped project's `./ros` as their
+"real Node" comparison baseline. Flipping that file to F# without further
+changes would have silently turned those tests into F#-vs-F# comparisons
+via two different invocation paths -- a real near-miss caught before
+shipping (see `tests/artifact-fsharp-differential.test.mjs`'s "F# shadow
+smoke-checks the current repository" test, whose "node" side had already
+silently become F# after `DF-ROS-2026-A030`, without any test failure to
+flag it, since F#'s output for `registry check` matches Node's exactly).
+Every affected test now invokes `node tools/ros_cli.mjs` directly for its
+Node-side comparison instead of spawning `./ros`; Node's own implementation
+is unchanged, only what `./ros` itself dispatches to. Tests whose purpose
+specifically requires the real F# launcher mechanism (the npm-packed,
+npm-exec'd end-to-end test; `ros-hub create`'s shell-out to a spoke's own
+`./ros`) pre-seed the launcher's cache with a fake "binary" that delegates
+to that project's own real `tools/ros_cli.mjs` (a relative-path shell
+script, so one seeded cache entry works for any bootstrapped project),
+proving the real acquire-cache-exec mechanism works without depending on
+network access to a real GitHub release in the test suite.
+
+Node's source (`tools/ros_cli.mjs`/`ros_git.mjs`/`ros_telemetry.mjs`/
+`ros_persistence.mjs`) remains fully present, in this repository and in
+the starter template, as both a rollback path and Phase 2's future
+starting point: actually deleting it needs the ~20 differential test
+files that still import its functions directly (not merely spawn `./ros`)
+converted to fixed-expectation ("golden master") tests first, since
+deletion removes their live comparison oracle. That conversion is a
+separate, larger undertaking `DF-ROS-2026-A032` names but does not
+attempt.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

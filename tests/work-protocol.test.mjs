@@ -27,7 +27,7 @@ function fixture(t) {
 
 function ros(root, args, options = {}) {
   try {
-    return { status: 0, output: execFileSync(path.join(root, "ros"), args, { cwd: root, encoding: "utf8", ...options }) };
+    return { status: 0, output: execFileSync("node", [path.join(root, "tools", "ros_cli.mjs"), ...args], { cwd: root, encoding: "utf8", ...options }) };
   } catch (error) {
     return { status: error.status, output: `${error.stdout ?? ""}${error.stderr ?? ""}` };
   }
@@ -400,9 +400,9 @@ test("backlog recovery rejects divergence before starting another mutation", (t)
 
 test("parallel backlog captures retain every queue entry under the shared work lease", async (t) => {
   const root = fixture(t);
-  const executable = path.join(root, "ros");
+  const cliScript = path.join(root, "tools", "ros_cli.mjs");
   const ids = Array.from({ length: 8 }, (_, index) => `WI-PARALLEL-${index + 1}`);
-  await Promise.all(ids.map((id) => execFileAsync(executable, ["add", `Parallel ${id}`, "--id", id], { cwd: root, encoding: "utf8" })));
+  await Promise.all(ids.map((id) => execFileAsync("node", [cliScript, "add", `Parallel ${id}`, "--id", id], { cwd: root, encoding: "utf8" })));
 
   const queue = JSON.parse(fs.readFileSync(path.join(root, ".ros", "work", "queue.json"), "utf8"));
   assert.deepEqual(queue.items.map((item) => item.id).sort(), ids.sort());
