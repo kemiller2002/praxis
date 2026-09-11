@@ -23,8 +23,8 @@ function fixture(t) {
   return root;
 }
 
-function ros(root, args) {
-  const result = spawnSync("node", [path.join(root, "tools", "ros_cli.mjs"), ...args], { cwd: root, encoding: "utf8" });
+function runFsharp(root, args) {
+  const result = spawnSync("dotnet", [fsharpCli, "--root", root, ...args], { cwd: repositoryRoot, encoding: "utf8" });
   return { status: result.status, output: `${result.stdout ?? ""}${result.stderr ?? ""}` };
 }
 
@@ -78,33 +78,39 @@ function resetToReadyWithNoLinkedTelemetry(root, workItemId) {
   });
 }
 
+// Real (not backdated) timestamps: a new execution's own startedAt is always
+// production's real wall clock, so a synthetic --occurred-at earlier than
+// "now" on a later transition could spuriously fail a chronological-order
+// check elsewhere.
+const at = () => new Date().toISOString();
+
 test("F# telemetry resolution recovers the single orphaned active execution production adopts on begin", (t) => {
   const root = fixture(t);
-  assert.equal(ros(root, ["work", "begin", "TASK-TELEMETRY"]).status, 0);
+  assert.equal(runFsharp(root, ["work", "begin", "--id", "TASK-TELEMETRY", "--occurred-at", at()]).status, 0);
   const original = executionRecords(root, "TASK-TELEMETRY")[0];
   resetToReadyWithNoLinkedTelemetry(root, "TASK-TELEMETRY");
 
-  const again = ros(root, ["work", "begin", "TASK-TELEMETRY"]);
+  const again = runFsharp(root, ["work", "begin", "--id", "TASK-TELEMETRY", "--occurred-at", at()]);
   assert.equal(again.status, 0, again.output);
-  const node = contextItem(root, "TASK-TELEMETRY");
-  assert.deepEqual(node.telemetryExecutionIds, [original.executionId]);
+  const committed = contextItem(root, "TASK-TELEMETRY");
+  assert.deepEqual(committed.telemetryExecutionIds, [original.executionId]);
   assert.equal(executionRecords(root, "TASK-TELEMETRY").length, 1, "begin recovers rather than duplicates");
 
   const fsharp = fsharpResolveTelemetry(root, "ready", "begin", []);
   assert.equal(fsharp.status, 0, fsharp.stderr);
   assert.equal(fsharp.json.outcome, "resolved");
-  assert.deepEqual(fsharp.json.plan.item.telemetryExecutionIds, node.telemetryExecutionIds);
-  assert.deepEqual(fsharp.json.plan.event.telemetryExecutions, node.telemetryExecutionIds);
+  assert.deepEqual(fsharp.json.plan.item.telemetryExecutionIds, committed.telemetryExecutionIds);
+  assert.deepEqual(fsharp.json.plan.event.telemetryExecutions, committed.telemetryExecutionIds);
 });
 
 test("F# telemetry resolution rejects the same ambiguous orphaned executions production rejects on begin", (t) => {
   const root = fixture(t);
-  assert.equal(ros(root, ["work", "begin", "TASK-TELEMETRY"]).status, 0);
-  assert.equal(ros(root, ["telemetry", "start", "TASK-TELEMETRY", "--execution-id", "EXE-second-link"]).status, 0);
+  assert.equal(runFsharp(root, ["work", "begin", "--id", "TASK-TELEMETRY", "--occurred-at", at()]).status, 0);
+  assert.equal(runFsharp(root, ["telemetry", "start", "TASK-TELEMETRY", "--execution-id", "EXE-second-link"]).status, 0);
   const [first, second] = executionRecords(root, "TASK-TELEMETRY");
   resetToReadyWithNoLinkedTelemetry(root, "TASK-TELEMETRY");
 
-  const again = ros(root, ["work", "begin", "TASK-TELEMETRY"]);
+  const again = runFsharp(root, ["work", "begin", "--id", "TASK-TELEMETRY", "--occurred-at", at()]);
   assert.equal(again.status, 1);
   assert.match(again.output, /multiple detached telemetry executions require explicit selection/);
 
@@ -117,32 +123,32 @@ test("F# telemetry resolution rejects the same ambiguous orphaned executions pro
 
 test("F# telemetry resolution links every currently active execution production links on resume", (t) => {
   const root = fixture(t);
-  assert.equal(ros(root, ["work", "begin", "TASK-TELEMETRY"]).status, 0);
-  assert.equal(ros(root, ["telemetry", "start", "TASK-TELEMETRY", "--execution-id", "EXE-second-active"]).status, 0);
-  assert.equal(ros(root, ["work", "block", "TASK-TELEMETRY", "--reason", "waiting"]).status, 0);
+  assert.equal(runFsharp(root, ["work", "begin", "--id", "TASK-TELEMETRY", "--occurred-at", at()]).status, 0);
+  assert.equal(runFsharp(root, ["telemetry", "start", "TASK-TELEMETRY", "--execution-id", "EXE-second-active"]).status, 0);
+  assert.equal(runFsharp(root, ["work", "block", "--id", "TASK-TELEMETRY", "--reason", "waiting", "--occurred-at", at()]).status, 0);
   const candidateStatuses = executionRecords(root, "TASK-TELEMETRY").map((record) => record.status);
   assert.deepEqual(candidateStatuses, ["active", "active"], "block never finalizes");
   writeContextItem(root, "TASK-TELEMETRY", (item) => { item.telemetryExecutionIds = []; });
 
-  const resumed = ros(root, ["work", "resume", "TASK-TELEMETRY"]);
+  const resumed = runFsharp(root, ["work", "resume", "--id", "TASK-TELEMETRY", "--occurred-at", at()]);
   assert.equal(resumed.status, 0, resumed.output);
-  const node = contextItem(root, "TASK-TELEMETRY");
+  const committed = contextItem(root, "TASK-TELEMETRY");
 
   const fsharp = fsharpResolveTelemetry(root, "blocked", "resume", []);
   assert.equal(fsharp.status, 0, fsharp.stderr);
-  assert.deepEqual([...fsharp.json.plan.item.telemetryExecutionIds].sort(), [...node.telemetryExecutionIds].sort());
+  assert.deepEqual([...fsharp.json.plan.item.telemetryExecutionIds].sort(), [...committed.telemetryExecutionIds].sort());
 });
 
 test("F# telemetry resolution recovers an orphan then finalizes it on completion, matching production", (t) => {
   const root = fixture(t);
-  assert.equal(ros(root, ["work", "begin", "TASK-TELEMETRY"]).status, 0);
+  assert.equal(runFsharp(root, ["work", "begin", "--id", "TASK-TELEMETRY", "--occurred-at", at()]).status, 0);
   const original = executionRecords(root, "TASK-TELEMETRY")[0];
   writeContextItem(root, "TASK-TELEMETRY", (item) => { item.telemetryExecutionIds = []; });
 
-  const completed = ros(root, ["work", "complete", "TASK-TELEMETRY", "--evidence", `implementation=${path.join(root, "ros.json")}`, "--evidence", `tests=${path.join(root, "ros.json")}`]);
+  const completed = runFsharp(root, ["work", "complete", "--id", "TASK-TELEMETRY", "--evidence", `implementation=${path.join(root, "ros.json")}`, "--evidence", `tests=${path.join(root, "ros.json")}`, "--occurred-at", at()]);
   assert.equal(completed.status, 0, completed.output);
-  const node = contextItem(root, "TASK-TELEMETRY");
-  assert.deepEqual(node.telemetryExecutionIds, [original.executionId]);
+  const committed = contextItem(root, "TASK-TELEMETRY");
+  assert.deepEqual(committed.telemetryExecutionIds, [original.executionId]);
   assert.equal(executionRecords(root, "TASK-TELEMETRY")[0].status, "finalized");
 
   // Re-resolve with an empty linked set against the now-finalized real
@@ -151,23 +157,23 @@ test("F# telemetry resolution recovers an orphan then finalizes it on completion
   // production reached via recover-then-finalize.
   const fsharp = fsharpResolveTelemetry(root, "active", "complete", []);
   assert.equal(fsharp.status, 0, fsharp.stderr);
-  assert.deepEqual(fsharp.json.plan.item.telemetryExecutionIds, node.telemetryExecutionIds);
+  assert.deepEqual(fsharp.json.plan.item.telemetryExecutionIds, committed.telemetryExecutionIds);
 });
 
 test("F# telemetry resolution finalizes an already-linked execution without re-ensuring it, matching production", (t) => {
   const root = fixture(t);
-  assert.equal(ros(root, ["work", "begin", "TASK-TELEMETRY"]).status, 0);
+  assert.equal(runFsharp(root, ["work", "begin", "--id", "TASK-TELEMETRY", "--occurred-at", at()]).status, 0);
   const original = executionRecords(root, "TASK-TELEMETRY")[0];
 
-  const completed = ros(root, ["work", "complete", "TASK-TELEMETRY", "--evidence", `implementation=${path.join(root, "ros.json")}`, "--evidence", `tests=${path.join(root, "ros.json")}`]);
+  const completed = runFsharp(root, ["work", "complete", "--id", "TASK-TELEMETRY", "--evidence", `implementation=${path.join(root, "ros.json")}`, "--evidence", `tests=${path.join(root, "ros.json")}`, "--occurred-at", at()]);
   assert.equal(completed.status, 0, completed.output);
-  const node = contextItem(root, "TASK-TELEMETRY");
-  assert.deepEqual(node.telemetryExecutionIds, [original.executionId]);
+  const committed = contextItem(root, "TASK-TELEMETRY");
+  assert.deepEqual(committed.telemetryExecutionIds, [original.executionId]);
 
   // original.executionId is already linked, so ensure-completable is
   // skipped; finalize re-scans for active candidates and finds none (it is
   // already finalized on disk), leaving the linked ID unchanged.
   const fsharp = fsharpResolveTelemetry(root, "active", "complete", [original.executionId]);
   assert.equal(fsharp.status, 0, fsharp.stderr);
-  assert.deepEqual(fsharp.json.plan.item.telemetryExecutionIds, node.telemetryExecutionIds);
+  assert.deepEqual(fsharp.json.plan.item.telemetryExecutionIds, committed.telemetryExecutionIds);
 });
