@@ -1922,11 +1922,32 @@
         "EXE-20260911T112811095Z-55205ed5"
       ],
       "completedAt": "2026-09-11T11:46:37.000Z"
+    },
+    {
+      "id": "WI-0053",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "lib/ros-fs-launcher.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "research/evidence/EV-ROS-2026-A051--ros-fs-launcher-unhandled-404-for-main-snapshot-versions.md"
+        }
+      ],
+      "updatedAt": "2026-09-11T12:45:37.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260911T124508408Z-ca593166"
+      ],
+      "completedAt": "2026-09-11T12:45:37.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-11T11:46:37.000Z",
+  "updatedAt": "2026-09-11T12:45:37.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
