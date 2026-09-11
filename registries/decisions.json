@@ -311,5 +311,42 @@
     "title": "Distribute ros-fs via npm as a self-contained single-file binary fetched from GitHub Releases",
     "updated": "2026-09-10",
     "version": "1.0.0"
+  },
+  {
+    "author_agent": "claude-sonnet-5",
+    "confidence": "high",
+    "created": "2026-09-11",
+    "id": "DF-ROS-2026-A030",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A030--fsharp-authority-switch-this-repository.md",
+    "related_documents": [
+      "DF-ROS-2026-A027",
+      "DF-ROS-2026-A028",
+      "DF-ROS-2026-A029",
+      "AGENTS.md",
+      "docs/work-protocol.md",
+      "docs/migrations/fsharp/ARCHITECTURE.md",
+      "docs/migrations/fsharp/STATUS.md"
+    ],
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A047",
+      "EV-ROS-2026-A048"
+    ],
+    "tags": [
+      "architecture",
+      "fsharp",
+      "migration",
+      "distribution",
+      "sde",
+      "decision"
+    ],
+    "title": "Redirect this repository's own ./ros dispatch to the F# CLI",
+    "updated": "2026-09-11",
+    "version": "1.0.0"
   }
 ]

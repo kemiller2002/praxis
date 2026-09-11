@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 47,
+  "nextSeq": 48,
   "items": [
     {
       "id": "WI-0001",
@@ -891,6 +891,20 @@
       "attachments": [],
       "createdAt": "2026-09-10T23:51:49.095Z",
       "updatedAt": "2026-09-10T23:51:55.907Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0047",
+      "title": "Redirect this repository's own ./ros dispatch to the F# CLI (DF-ROS-2026-A030)",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-11T00:28:39.723Z",
+      "updatedAt": "2026-09-11T00:28:47.000Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
