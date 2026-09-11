@@ -1977,6 +1977,30 @@ unchanged by its existence, and Phase C (redirecting `./ros`'s own
 dispatch) remains open, gated on its own future decision record per
 `DF-ROS-2026-A028`.
 
+## Phase C closure (this repository only)
+
+`DF-ROS-2026-A030` redirects this repository's own `./ros` to exec the F#
+CLI directly (framework-dependent `dotnet .../ros-fs.dll`), closing
+`DF-ROS-2026-A028` Phase C here. Getting there required three small,
+additive F# CLI-surface fixes the prior "Full parity" census had not
+caught, because it measured per-command effect parity, not command-line
+vocabulary: `add` as a top-level command (delegating to the existing
+`work capture` effect, defaulting `--occurred-at` to the real clock only
+when the caller omits it), `--tag`/`--status` filtering on `work`/`work
+list` (so bare `work ready` reproduces Node's status-filtered read view),
+and `begin`/`done` accepted alongside `start`/`complete`. A Node-syntax
+compatibility shim was considered and rejected as a second, largely
+untested translation layer working against the actual goal; instead
+`AGENTS.md`'s Work Protocol section now documents F#'s real `--id`/
+`--occurred-at`-flag syntax for the commands that differ from Node's
+positional/implicit-clock convention. `tools/ros_cli.mjs` is untouched and
+remains the decision's rollback path. `starter/greenfield/ros` (the
+npm-distributed template other projects get) is unaffected and still runs
+Node -- redirecting it is a separate, larger decision (`DF-ROS-2026-A028`
+Phase C's own scope note), since a bootstrapped consumer repo has no
+source checkout to build F# from and needs `DF-ROS-2026-A029`'s
+self-contained-binary mechanism instead.
+
 ## Work-state recovery seam
 
 The second MIG-05 sub-slice defines a bounded `work-state` recovery journal for

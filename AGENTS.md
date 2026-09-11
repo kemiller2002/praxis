@@ -2,11 +2,11 @@
 id: GV-START-001
 title: Agent Startup Guide
 status: canonical
-version: 1.2.0
+version: 1.3.0
 owners:
   - repository-governance
 created: 2026-07-22
-updated: 2026-09-10
+updated: 2026-09-11
 review_cycle: quarterly
 supersedes: []
 superseded_by: []
@@ -55,26 +55,41 @@ For substantial work, record: objective; work completed; files changed; decision
 
 ## Work Protocol
 
-Before meaningful mutation, identify the external work item and run `./ros work begin ID`. That transition starts an execution-telemetry record; inspect `./ros work context ID`, classify the work, and ingest runtime telemetry that the current environment can expose. Preserve unknown provider fields through the sanitized raw layer and record unsupported/unavailable capability explicitly. Perform the bounded work, gather configured evidence, request a legal transition with `work complete` (which finalizes active telemetry), then run `./ros registry build` and `./ros validate`. Use `work block --reason` and `work resume` rather than hand-editing context. Use `./ros status` when resuming unfamiliar work. Meaningful committed changes require machine-readable attribution; see `docs/work-protocol.md` and `docs/development-telemetry.md`.
+Before meaningful mutation, identify the external work item and run `./ros work begin --id ID --occurred-at TIMESTAMP` (see the F# CLI note below for the timestamp — it must be the real current time, not an arbitrary one). That transition starts an execution-telemetry record; inspect `./ros work context ID`, classify the work, and ingest runtime telemetry that the current environment can expose. Preserve unknown provider fields through the sanitized raw layer and record unsupported/unavailable capability explicitly. Perform the bounded work, gather configured evidence, request a legal transition with `./ros work complete --id ID --occurred-at TIMESTAMP --evidence TYPE=PATH` (repeatable; finalizes active telemetry), then run `./ros registry build` and `./ros validate`. Use `./ros work block --id ID --occurred-at TIMESTAMP --reason TEXT` and `./ros work resume --id ID --occurred-at TIMESTAMP` rather than hand-editing context. Use `./ros status` when resuming unfamiliar work. Meaningful committed changes require machine-readable attribution; see `docs/work-protocol.md` and `docs/development-telemetry.md`.
 
-No externally-assigned ID yet? Check `./ros work ready` for capturable, unblocked repository work before assuming none exists, and use `./ros add "..."` to record a newly discovered obligation instead of leaving it as an unfiled comment or dropped observation. `./ros work start ID` promotes a ready backlog item into the protocol above. This local backlog is repository-scoped triage, not a project-management system; see the "Local backlog" section of `docs/work-protocol.md`.
+No externally-assigned ID yet? Check `./ros work ready` for capturable, unblocked repository work before assuming none exists, and use `./ros add "..."` to record a newly discovered obligation instead of leaving it as an unfiled comment or dropped observation (`add` does not require `--occurred-at`; it defaults to the real current time). `./ros work start --id ID --occurred-at TIMESTAMP` (`begin` is also accepted) promotes a ready backlog item into the protocol above. This local backlog is repository-scoped triage, not a project-management system; see the "Local backlog" section of `docs/work-protocol.md`.
 
-## F# shadow CLI
+## F# CLI
 
-`./ros` is Node and remains the sole production authority for every command,
-including every state-mutating one, per `DF-ROS-2026-A028`. A parallel F#
-CLI (`dotnet src/Ros.Cli/bin/Release/net10.0/ros-fs.dll ...`) now has real,
-differential-tested effect parity for every command `./ros` exposes
-(`EV-ROS-2026-A047` closes `DF-ROS-2026-A028` Phase A), but that parity does
-not by itself authorize using it as a substitute for `./ros`: Phase B
-(consumer distribution evidence) is uncollected, and Phase C (the actual
-authority switch) requires its own accepted decision record. Do not run
-`ros-fs` state-mutating commands (`work start`/`resume`/`block`/`complete`,
-`work capture`/`update`/`attach`/`backlog-transition`, any `telemetry` or
-`adapter` producer command) against this repository's real `.ros/` state —
-use `./ros` for all actual work. Read-only `ros-fs` commands (`status`,
-`validate`, `telemetry validate`, `work`/`work show`/`work context`,
-`artifacts validate`, `registry check`, `git status`) may be run standalone
-against real repository state for verification or cross-checking, since they
-mutate nothing, but their output is not an alternate source of truth —
-`./ros`'s own output is authoritative whenever the two could be compared.
+`./ros` in this source checkout runs the F# CLI (`DF-ROS-2026-A030`).
+Node's own implementation (`tools/ros_cli.mjs`) remains in the repository,
+fully tested, as this decision's rollback path, but `./ros` no longer
+invokes it. If `./ros` reports it needs building, run `npm run
+build:fsharp` first; CI always builds it before `./ros` runs, so this only
+affects local/manual use after a source change.
+
+F#'s command syntax differs from Node's in ways worth knowing rather than
+guessing from memory:
+
+- Every mutating command shown above except `add` requires an explicit
+  `--id ID` (repeatable) and `--occurred-at TIMESTAMP`, rather than a
+  positional ID with an implicit clock read. **Pass the real current
+  time** (e.g. `` `date -u +%Y-%m-%dT%H:%M:%S.000Z` ``), not an arbitrary
+  or backdated one: a telemetry execution's own `startedAt` always reads
+  the real wall clock (matching production), and a later transition whose
+  supplied `--occurred-at` predates it fails `./ros validate` with a
+  spurious "capability state recording order must be chronological"
+  finding — a real trap this decision's own preparation hit and diagnosed,
+  not a defect to work around.
+- `work start` and `work begin` are both accepted, as are `work complete`
+  and `work done`.
+- `work context ID` and `work show ID` keep Node's positional-ID form
+  unchanged.
+- `docs/migrations/fsharp/STATUS.md` is the authoritative ledger of any
+  remaining command-surface gaps (e.g. `telemetry finalize --input`, a
+  deliberately unported adapter-ingestion-at-finalize path).
+
+This section describes `./ros` in this source checkout only.
+`starter/greenfield/ros` — what other projects get via `npx ros-bootstrap
+init` — still runs Node; redirecting it is a separate, not-yet-made
+decision (`DF-ROS-2026-A028` Phase C's own scope note).

@@ -1,3 +1,27 @@
 #!/usr/bin/env node
-import { main } from "./tools/ros_cli.mjs";
-process.exitCode = main(process.argv.slice(2));
+
+// Runs the F# CLI (DF-ROS-2026-A030). Node's own implementation
+// (tools/ros_cli.mjs) remains in this repository, fully tested, as this
+// decision's rollback path -- see research/decisions/DF-ROS-2026-A030.
+
+import { spawnSync } from "node:child_process";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import fs from "node:fs";
+
+const repoRoot = path.dirname(fileURLToPath(import.meta.url));
+const dll =
+  process.env.ROS_FS_DLL_PATH_OVERRIDE ??
+  path.join(repoRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
+
+if (!fs.existsSync(dll)) {
+  console.error(`./ros needs the F# CLI built first. Run 'npm run build:fsharp', then retry.\nMissing: ${dll}`);
+  process.exit(1);
+}
+
+const result = spawnSync("dotnet", [dll, ...process.argv.slice(2)], { stdio: "inherit" });
+if (result.error) {
+  console.error(`./ros: failed to invoke dotnet: ${result.error.message}`);
+  process.exit(1);
+}
+process.exitCode = result.status ?? 1;

@@ -400,7 +400,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 ## Maintenance
 
 - Owner: repository-governance
-- Last checked against implementation: 2026-09-10 (EV-ROS-2026-A047, closing DF-ROS-2026-A028 Phase A)
+- Last checked against implementation: 2026-09-11 (DF-ROS-2026-A030, closing DF-ROS-2026-A028 Phase C for this repository)
 - Known gaps: backlog and live work intentionally remain separate recovery
   units; the F# planner now owns pure whole-context/multi-item and
   backlog-promotion plans, post-plan evidence observation, telemetry
@@ -488,6 +488,22 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   using `./ros` (Node) for every actual operation in this repository,
   reserving the F# shadow CLI's read-only commands for standalone
   verification only.
+
+  `DF-ROS-2026-A030` then closed Phase C for this repository: `./ros`
+  now execs the F# CLI directly. Doing so safely required closing a
+  command-vocabulary gap the parity census above never measured (it
+  checks effects, not syntax): `add` (new top-level command, delegating
+  to `work capture`), `--tag`/`--status` filtering on `work`/`work list`
+  (closing the last known gap noted where that row was ported), and
+  `begin`/`done` accepted alongside `start`/`complete`. `AGENTS.md`'s
+  Work Protocol section now documents F#'s real `--id`/`--occurred-at`
+  syntax for the commands that differ from Node's positional/implicit-clock
+  convention, including a real trap this switch's own sandbox testing
+  found: a transition's `--occurred-at` must not predate its telemetry
+  execution's real-wall-clock `startedAt`, or `validate` reports a
+  spurious chronological-order finding. `tools/ros_cli.mjs` is untouched
+  and remains the rollback path; `starter/greenfield/ros` (what other
+  projects get via `ros-bootstrap init`) is unaffected and still Node.
 
   Still remaining: every
   telemetry-producer command (in the execution-telemetry manifest — all

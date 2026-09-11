@@ -138,6 +138,17 @@ let private optionValues name arguments =
     |> List.mapi (fun index value -> index, value)
     |> List.choose (fun (index, value) -> if value = name then arguments |> List.tryItem (index + 1) else None)
 
+/// Positional tokens left over after removing every `flag value` pair whose
+/// flag is in `flagsWithValues`. Used to detect production's positional-ID
+/// syntax (e.g. `work ready ID1 ID2`) where this CLI's own convention is a
+/// repeated `--id` flag instead, so a caller using that syntax gets a clear
+/// redirect rather than a silently wrong read-only result.
+let rec private residualPositionalArgs (flagsWithValues: Set<string>) (arguments: string list) =
+    match arguments with
+    | flag :: _ :: rest when flagsWithValues.Contains flag -> residualPositionalArgs flagsWithValues rest
+    | token :: rest -> token :: residualPositionalArgs flagsWithValues rest
+    | [] -> []
+
 let private parseWorkState value =
     match value with
     | "ready" -> Some LiveWorkState.Ready
@@ -693,13 +704,29 @@ let private renderWorkListRows (rows: WorkListRow list) =
 /// context, merged and augmented exactly as `Ros.Domain.Work.WorkListView`
 /// decides. `--tag`/`--status` filtering is not yet ported -- a known gap,
 /// documented alongside this increment's docs update.
+/// Mirrors production `mergedWorkView`'s own `--tag`/`--status` filters
+/// (`tools/ros_cli.mjs`): every requested tag must be present (`--tag`
+/// repeatable, AND semantics), and `--status` matches a row's `status`
+/// field exactly. Filtering happens here, over `readListView`'s already-real
+/// merged rows, matching production's own wrapper-over-`mergedRows` shape.
 let private runWorkList root (arguments: string list) =
     match FileWorkListRepository.readListView root with
     | Error message ->
         eprintfn "ERROR %s" message
         1
     | Ok rows ->
-        printf "%s" (renderWorkListRows rows)
+        let tags = optionValues "--tag" arguments
+        let status = optionValue "--status" arguments
+
+        let filtered =
+            rows
+            |> List.filter (fun row -> tags |> List.forall (fun tag -> List.contains tag row.Tags))
+            |> List.filter (fun row ->
+                match status with
+                | Some expected -> row.Status = expected
+                | None -> true)
+
+        printf "%s" (renderWorkListRows filtered)
         0
 
 /// Mirrors production `showWork` (`tools/ros_cli.mjs`): the same merged
@@ -805,6 +832,28 @@ let private runWorkCapture root arguments =
                 0
     | _ ->
         eprintfn "ERROR work capture requires valid --title and --occurred-at"
+        2
+
+/// `add TITLE ...` is production's own shorthand for `captureWork`
+/// (`tools/ros_cli.mjs`), which supplies `new Date().toISOString()`
+/// internally rather than requiring the caller to pass one. This CLI-shell
+/// wrapper reads the real clock (a legitimate Tier 4 host effect) only when
+/// the caller does not already supply `--occurred-at`, then delegates to
+/// `runWorkCapture` unchanged -- no new decision logic. Unlike production,
+/// trailing file-attachment arguments are not supported here (`work attach`
+/// is the F# equivalent effect) and are silently ignored rather than
+/// attached, matching how `runWorkCapture` already ignores any token it
+/// does not recognize as one of its own flags.
+let private runAdd root (arguments: string list) =
+    match arguments with
+    | title :: rest when not (title.StartsWith "--") ->
+        let occurredAt =
+            optionValue "--occurred-at" arguments
+            |> Option.defaultValue (DateTimeOffset.UtcNow.ToString "yyyy-MM-ddTHH:mm:ss.fffZ")
+
+        runWorkCapture root ("--title" :: title :: "--occurred-at" :: occurredAt :: rest)
+    | _ ->
+        eprintfn "ERROR add requires a title, e.g. ros add \"Title\""
         2
 
 /// Mirrors production `updateWorkUnlocked`/`findOrCreateQueueEntry`
@@ -2366,14 +2415,26 @@ let private dispatch root arguments =
     | "work" :: "context" :: rest -> runWorkContext root rest
     | [ "work" ] -> runWorkList root []
     | "work" :: "list" :: rest -> runWorkList root rest
+    | "work" :: "ready" :: rest ->
+        match residualPositionalArgs (Set.ofList [ "--tag" ]) rest with
+        | [] -> runWorkList root ("--status" :: "ready" :: rest)
+        | ids ->
+            eprintfn
+                "ERROR 'work ready %s' with an ID is not supported here; use 'work backlog-transition --action ready --id ID --occurred-at TIMESTAMP' instead"
+                (String.concat " " ids)
+
+            2
     | "work" :: "show" :: rest -> runWorkShow root rest
     | "work" :: "capture" :: rest -> runWorkCapture root rest
+    | "add" :: rest -> runAdd root rest
     | "work" :: "update" :: rest -> runWorkUpdate root rest
     | "work" :: "attach" :: rest -> runWorkAttach root rest
+    | "work" :: "begin" :: rest -> runWorkStart root rest
     | "work" :: "start" :: rest -> runWorkStart root rest
     | "work" :: "resume" :: rest -> runWorkResume root rest
     | "work" :: "block" :: rest -> runWorkBlock root rest
     | "work" :: "complete" :: rest -> runWorkComplete root rest
+    | "work" :: "done" :: rest -> runWorkComplete root rest
     | [ "telemetry"; "adapters" ] -> runTelemetryAdapters ()
     | "telemetry" :: "show" :: rest -> runTelemetryShow root rest
     | "telemetry" :: ("summary" | "summarize") :: rest -> runTelemetrySummary root rest
