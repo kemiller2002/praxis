@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 52,
+  "nextSeq": 53,
   "items": [
     {
       "id": "WI-0001",
@@ -966,6 +966,20 @@
       "createdAt": "2026-09-11T10:37:59.929Z",
       "updatedAt": "2026-09-11T10:38:04.000Z",
       "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0052",
+      "title": "Bump to 2.0.1 to actually publish the first working stable release (2.0.0 never published, EV-ROS-2026-A050)",
+      "description": "publish.yml's version-changed detection cannot retry 2.0.0's own failed publish attempt; bump forward to 2.0.1 now that the blocking test bugs are already fixed on main.",
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-11T11:28:06.823Z",
+      "updatedAt": "2026-09-11T11:28:10.000Z",
+      "createdBy": "claude-code",
       "source": "manual",
       "sourceReference": null
     }

@@ -1884,18 +1884,39 @@
     {
       "id": "WI-0051",
       "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/evidence/EV-ROS-2026-A050--2-0-0-was-never-actually-published.md"
+        },
+        {
+          "type": "tests",
+          "path": "research/evidence/EV-ROS-2026-A049--ci-empty-output-failures-root-caused-to-actions-billing.md"
+        }
+      ],
+      "updatedAt": "2026-09-11T11:28:01.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260911T103805449Z-4656d793"
+      ],
+      "completedAt": "2026-09-11T11:28:01.000Z"
+    },
+    {
+      "id": "WI-0052",
+      "type": "task",
       "state": "active",
       "semanticState": "active",
       "evidence": [],
-      "updatedAt": "2026-09-11T10:38:05.000Z",
+      "updatedAt": "2026-09-11T11:28:10.000Z",
       "telemetryExecutionIds": [
-        "EXE-20260911T103805449Z-4656d793"
+        "EXE-20260911T112811095Z-55205ed5"
       ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-11T10:38:05.000Z",
+  "updatedAt": "2026-09-11T11:28:10.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

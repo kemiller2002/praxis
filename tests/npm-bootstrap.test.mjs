@@ -18,7 +18,7 @@ const fsharpDll = path.join(repository, "src", "Ros.Cli", "bin", "Release", "net
 
 function temporaryDirectory(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "ros-bootstrap-"));
-  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
   return directory;
 }
 
@@ -111,7 +111,7 @@ test("scaffolded ros_fs_launcher.mjs downloads, verifies, caches, and execs a re
   const { port } = server.address();
 
   const cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), "ros-fs-scaffold-cache-"));
-  t.after(() => fs.rmSync(cacheDir, { recursive: true, force: true }));
+  t.after(() => fs.rmSync(cacheDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
 
   const previousBase = process.env.ROS_FS_RELEASE_BASE_URL;
   const previousCache = process.env.ROS_FS_CACHE_DIR;
@@ -371,7 +371,7 @@ test("npm tarball contains the executable and every scaffold source", async (t) 
   const installedRid = installedLauncher.resolveRid();
   assert.ok(installedRid, "this test host's platform/arch must resolve to a known RID");
   const installedCacheDir = fs.mkdtempSync(path.join(os.tmpdir(), "ros-npm-exec-cache-"));
-  t.after(() => fs.rmSync(installedCacheDir, { recursive: true, force: true }));
+  t.after(() => fs.rmSync(installedCacheDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
 
   const previousCacheDirEnv = process.env.ROS_FS_CACHE_DIR;
   process.env.ROS_FS_CACHE_DIR = installedCacheDir;
@@ -457,7 +457,7 @@ test("project-administration profile installs a working hub, self-contained and 
   const spokeRid = spokeLauncher.resolveRid();
   assert.ok(spokeRid, "this test host's platform/arch must resolve to a known RID");
   const spokeCacheDir = fs.mkdtempSync(path.join(os.tmpdir(), "ros-hub-spoke-cache-"));
-  t.after(() => fs.rmSync(spokeCacheDir, { recursive: true, force: true }));
+  t.after(() => fs.rmSync(spokeCacheDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
   const previousSpokeCacheEnv = process.env.ROS_FS_CACHE_DIR;
   process.env.ROS_FS_CACHE_DIR = spokeCacheDir;
   t.after(() => {

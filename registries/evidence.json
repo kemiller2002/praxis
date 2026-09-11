@@ -947,5 +947,34 @@
     "title": "The session-long \"empty-output\" CI failure pattern is GitHub Actions billing, not repository or workflow defect",
     "updated": "2026-09-11",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-11",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A050",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A050--2-0-0-was-never-actually-published.md",
+    "related_documents": [
+      "EV-ROS-2026-A049",
+      ".github/workflows/publish.yml"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [],
+    "tags": [
+      "ci",
+      "release",
+      "npm",
+      "publish",
+      "sde"
+    ],
+    "title": "2.0.0 was never actually published to npm or released on GitHub; publish.yml's version-changed detection cannot retry it",
+    "updated": "2026-09-11",
+    "version": "1.0.0"
   }
 ]
