@@ -1859,18 +1859,32 @@
     {
       "id": "WI-0050",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-11T05:56:24.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "starter/greenfield/manifest.json"
+        },
+        {
+          "type": "decision",
+          "path": "research/decisions/DF-ROS-2026-A033--node-internal-library-only-golden-master-tests.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-block-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-11T06:14:18.000Z",
       "telemetryExecutionIds": [
         "EXE-20260911T055624458Z-ea3dd9ed"
-      ]
+      ],
+      "completedAt": "2026-09-11T06:14:18.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-11T05:56:24.000Z",
+  "updatedAt": "2026-09-11T06:14:18.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
