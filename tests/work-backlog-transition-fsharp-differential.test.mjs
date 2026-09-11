@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { initializeProject } from "../lib/bootstrap.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const installWorkItemId = `ROS-INSTALL-${JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8")).version.replaceAll(".", "-")}`;
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
 
 // Golden masters below were captured once from production's own Node
@@ -47,7 +48,7 @@ const GOLDEN = {
       }
     ]
   },
-  test1Markdown: "# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| ROS-INSTALL-1-2-1 | ROS-INSTALL-1-2-1 | complete |  |  |\n| WI-0001 | It's a \"quoted\" title | blocked | code, testing | high |\n| WI-0002 | Second | ready |  |  |\n",
+  test1Markdown: `# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| ${installWorkItemId} | ${installWorkItemId} | complete |  |  |\n| WI-0001 | It's a "quoted" title | blocked | code, testing | high |\n| WI-0002 | Second | ready |  |  |\n`,
   test2HasBlockedReason: false,
   test2Queue: {
     schemaVersion: "1.0.0",
@@ -77,7 +78,7 @@ const GOLDEN = {
       }
     ]
   },
-  test2Markdown: "# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| ROS-INSTALL-1-2-1 | ROS-INSTALL-1-2-1 | complete |  |  |\n| WI-0001 | It's a \"quoted\" title | ready | code, testing | high |\n| WI-0002 | Second | ready |  |  |\n",
+  test2Markdown: `# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| ${installWorkItemId} | ${installWorkItemId} | complete |  |  |\n| WI-0001 | It's a "quoted" title | ready | code, testing | high |\n| WI-0002 | Second | ready |  |  |\n`,
   test3Queue: {
     schemaVersion: "1.0.0",
     repository: "repository",
@@ -107,7 +108,7 @@ const GOLDEN = {
       }
     ]
   },
-  test3Markdown: "# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| ROS-INSTALL-1-2-1 | ROS-INSTALL-1-2-1 | complete |  |  |\n| WI-0001 | It's a \"quoted\" title | ready | code, testing | high |\n| WI-0002 | Second | abandoned |  |  |\n",
+  test3Markdown: `# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| ${installWorkItemId} | ${installWorkItemId} | complete |  |  |\n| WI-0001 | It's a "quoted" title | ready | code, testing | high |\n| WI-0002 | Second | abandoned |  |  |\n`,
   test4Message: "cannot ready backlog item 'WI-0001' from 'abandoned'",
   test4Queue: {
     schemaVersion: "1.0.0",

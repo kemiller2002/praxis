@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { initializeProject } from "../lib/bootstrap.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const installWorkItemId = `ROS-INSTALL-${JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8")).version.replaceAll(".", "-")}`;
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
 
 // Golden masters below were captured once from production's own Node
@@ -38,7 +39,7 @@ const GOLDEN = {
       }
     ]
   },
-  test1Markdown: "# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| ROS-INSTALL-1-2-1 | ROS-INSTALL-1-2-1 | complete |  |  |\n| WI-0001 | It's a \"quoted\" title | ready | code | high |\n| WI-0003 | My new task | captured | alpha, beta | high |\n",
+  test1Markdown: `# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| ${installWorkItemId} | ${installWorkItemId} | complete |  |  |\n| WI-0001 | It's a "quoted" title | ready | code | high |\n| WI-0003 | My new task | captured | alpha, beta | high |\n`,
   test1SecondId: "WI-0003",
   test2Queue: {
     schemaVersion: "1.0.0",
@@ -59,7 +60,7 @@ const GOLDEN = {
       }
     ]
   },
-  test2Markdown: "# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| ROS-INSTALL-1-2-1 | ROS-INSTALL-1-2-1 | complete |  |  |\n| WI-0001 | First ever | captured |  | medium |\n",
+  test2Markdown: `# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| ${installWorkItemId} | ${installWorkItemId} | complete |  |  |\n| WI-0001 | First ever | captured |  | medium |\n`,
   test3Queue: {
     schemaVersion: "1.0.0",
     repository: "repository",

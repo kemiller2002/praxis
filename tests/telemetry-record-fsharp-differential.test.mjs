@@ -11,6 +11,21 @@ import { initializeProject } from "../lib/bootstrap.mjs";
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
 
+// This test's golden capability data includes runtime-identity detection
+// (Ros.Domain.Telemetry.Identity.discover), which whitelists whichever CI/
+// agent environment the caller happens to run in (CLAUDE_CODE_SESSION_ID,
+// GITHUB_ACTIONS, etc.) ahead of an explicit override. Clearing every
+// whitelisted variable makes the captured execution's identity
+// deterministic across environments (a contributor's own machine, this
+// sandbox, or a real CI runner) instead of baking in whichever one
+// captured the golden literal.
+const DETERMINISTIC_ENV = { ...process.env };
+for (const key of [
+  "CLAUDE_CODE_SESSION_ID", "CODEX_SESSION_ID", "CODEX_THREAD_ID",
+  "GEMINI_SESSION_ID", "COPILOT_SESSION_ID", "GITHUB_ACTIONS", "GITHUB_RUN_ID",
+  "OLLAMA_HOST", "ROS_TELEMETRY_PROVIDER", "ROS_TELEMETRY_RUNTIME"
+]) delete DETERMINISTIC_ENV[key];
+
 // Golden masters below were captured once from production's own Node
 // implementation (tools/ros_telemetry.mjs's recordTelemetryMetric, called
 // with the exact defaults `tools/ros_cli.mjs`'s CLI dispatch itself applies
@@ -38,7 +53,7 @@ const GOLDEN = {
     schemaVersion: "1.0.0"
   },
   test7MeasurementId: "MEAS-6cf5ce5166c3e0786d967b26",
-  test8HistoryStatus: "supported-unavailable",
+  test8HistoryStatus: "unknown",
   test9CostMetric: {
     measurementId: "MEAS-041a30e3db0284e7b85a0f96",
     id: "cost.input",
@@ -86,7 +101,7 @@ function fixture(t, label) {
 }
 
 function runFsharp(root, args) {
-  const result = spawnSync("dotnet", [fsharpCli, "--root", root, "telemetry", "record", ...args], { cwd: repositoryRoot, encoding: "utf8" });
+  const result = spawnSync("dotnet", [fsharpCli, "--root", root, "telemetry", "record", ...args], { cwd: repositoryRoot, encoding: "utf8", env: DETERMINISTIC_ENV });
   return { status: result.status, stdout: result.stdout, stderr: result.stderr };
 }
 
@@ -110,7 +125,7 @@ test("F# telemetry record with no target resolves the single active work item's 
   assert.ok(fs.existsSync(fsharpCli), "build:fsharp must produce the shadow CLI before this test runs");
   const fsharpRoot = fixture(t, "no-target-fsharp");
 
-  execFileSync("dotnet", [fsharpCli, "--root", fsharpRoot, "work", "start", "--id", "WI-A", "--occurred-at", "2026-09-10T18:00:00.000Z", "--type", "task"]);
+  execFileSync("dotnet", [fsharpCli, "--root", fsharpRoot, "work", "start", "--id", "WI-A", "--occurred-at", "2026-09-10T18:00:00.000Z", "--type", "task"], { env: DETERMINISTIC_ENV });
 
   const fsharpResult = runFsharp(fsharpRoot, ["--metric", "tokens.input", "--value", "42", "--collected-at", "2026-01-01T00:00:00.000Z"]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
@@ -163,8 +178,8 @@ test("F# telemetry record with no target and zero or multiple active-or-blocked 
 
   const fsharpRootMany = fixture(t, "ambiguous-many-fsharp");
 
-  execFileSync("dotnet", [fsharpCli, "--root", fsharpRootMany, "work", "start", "--id", "WI-A", "--occurred-at", "2026-09-10T18:00:00.000Z", "--type", "task"]);
-  execFileSync("dotnet", [fsharpCli, "--root", fsharpRootMany, "work", "start", "--id", "WI-B", "--occurred-at", "2026-09-10T18:00:01.000Z", "--type", "task"]);
+  execFileSync("dotnet", [fsharpCli, "--root", fsharpRootMany, "work", "start", "--id", "WI-A", "--occurred-at", "2026-09-10T18:00:00.000Z", "--type", "task"], { env: DETERMINISTIC_ENV });
+  execFileSync("dotnet", [fsharpCli, "--root", fsharpRootMany, "work", "start", "--id", "WI-B", "--occurred-at", "2026-09-10T18:00:01.000Z", "--type", "task"], { env: DETERMINISTIC_ENV });
 
   const fsharpResultMany = runFsharp(fsharpRootMany, ["--metric", "tokens.input", "--value", "1"]);
 
@@ -215,7 +230,7 @@ test("F# telemetry record deduplicates an identical repeated call by its content
 test("F# telemetry record upserts a real registry-seeded capability from unobserved into supported-observed, matching production's real effect", (t) => {
   const fsharpRoot = fixture(t, "capability-fsharp");
 
-  execFileSync("dotnet", [fsharpCli, "--root", fsharpRoot, "work", "start", "--id", "WI-A", "--occurred-at", "2026-09-10T18:00:00.000Z", "--type", "task"]);
+  execFileSync("dotnet", [fsharpCli, "--root", fsharpRoot, "work", "start", "--id", "WI-A", "--occurred-at", "2026-09-10T18:00:00.000Z", "--type", "task"], { env: DETERMINISTIC_ENV });
 
   const fsharpResult = runFsharp(fsharpRoot, ["WI-A", "--metric", "tokens.input", "--value", "10", "--collected-at", "2026-01-01T00:00:00.000Z"]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);

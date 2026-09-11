@@ -917,5 +917,35 @@
     "title": "Consumer distribution evidence for the F# CLI (DF-ROS-2026-A028 Phase B)",
     "updated": "2026-09-10",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-11",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A049",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A049--ci-empty-output-failures-root-caused-to-actions-billing.md",
+    "related_documents": [
+      "DF-ROS-2026-A033",
+      ".github/workflows/ros-validation.yml",
+      ".github/workflows/publish.yml"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [],
+    "tags": [
+      "ci",
+      "infrastructure",
+      "github-actions",
+      "billing",
+      "sde"
+    ],
+    "title": "The session-long \"empty-output\" CI failure pattern is GitHub Actions billing, not repository or workflow defect",
+    "updated": "2026-09-11",
+    "version": "1.0.0"
   }
 ]

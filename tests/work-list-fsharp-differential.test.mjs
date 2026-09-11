@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { initializeProject } from "../lib/bootstrap.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const installWorkItemId = `ROS-INSTALL-${JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8")).version.replaceAll(".", "-")}`;
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
 
 // Golden masters below were captured once from production's own Node
@@ -62,8 +63,8 @@ const CAPTURED_ROW = {
   attachments: []
 };
 const INSTALL_ROW = {
-  id: "ROS-INSTALL-1-2-1",
-  title: "ROS-INSTALL-1-2-1",
+  id: installWorkItemId,
+  title: installWorkItemId,
   description: null,
   tags: [],
   priority: null,
@@ -88,7 +89,7 @@ const GOLDEN = {
   readyView: [ATTACH_ROW],
   addItem: { id: "WI-NEW", title: "A new obligation", status: "captured", tags: ["alpha", "beta"], priority: "high" },
   addList: [
-    { id: "ROS-INSTALL-1-2-1", title: "ROS-INSTALL-1-2-1", tags: [], priority: null, status: "complete" },
+    { id: installWorkItemId, title: installWorkItemId, tags: [], priority: null, status: "complete" },
     { id: "WI-NEW", title: "A new obligation", tags: ["alpha", "beta"], priority: "high", status: "captured" }
   ]
 };
