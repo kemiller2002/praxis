@@ -458,5 +458,37 @@
     "title": "Node retained as internal-library-only; test suite stops treating it as a live CLI oracle",
     "updated": "2026-09-11",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-11",
+    "decision_type": "architecture",
+    "id": "DF-ROS-2026-A034",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A034--pin-bootstrapped-ros-version-to-latest-stable-release.md",
+    "related_documents": [
+      "EV-ROS-2026-A051",
+      "DF-ROS-2026-A029",
+      "PACKAGE-USAGE.md",
+      "lib/bootstrap.mjs",
+      ".github/workflows/publish.yml"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [],
+    "tags": [
+      "ros-fs",
+      "bootstrap",
+      "launcher",
+      "npm",
+      "release"
+    ],
+    "title": "ros-bootstrap init pins a scaffolded project's ros.json to the latest stable release, not the installed package's own version",
+    "updated": "2026-09-11",
+    "version": "1.0.0"
   }
 ]

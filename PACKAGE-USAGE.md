@@ -27,6 +27,16 @@ npx --yes \
 
 Every push to the canonical GitHub `main` branch publishes a unique prerelease version such as `1.1.0-main.42.1` and moves the npm `main` dist-tag. Stable releases and the `latest` tag remain deliberate release actions.
 
+A snapshot version never has its own GitHub Release, so it never has a
+matching `ros-fs` binary either. `ros-bootstrap init` handles this
+automatically (`DF-ROS-2026-A034`): the scaffolded project's `ros.json`
+is pinned to the newest **stable** release instead of the exact snapshot
+just installed, and `./ros` reports which version it was pinned to and
+why. Installing via `@main` gets you the newest scaffolding and
+bootstrap-logic fixes; it does not get you a preview of unreleased F#
+CLI behavior through `./ros` — building from source is still the way to
+do that.
+
 ## Run the F# CLI (`ros-fs`) via npm
 
 The package also exposes `ros-fs`, a launcher for the project's F# CLI
