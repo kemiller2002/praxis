@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 48,
+  "nextSeq": 49,
   "items": [
     {
       "id": "WI-0001",
@@ -905,6 +905,20 @@
       "attachments": [],
       "createdAt": "2026-09-11T00:28:39.723Z",
       "updatedAt": "2026-09-11T00:28:47.000Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0048",
+      "title": "Add additive F# ros-fs launcher to the greenfield starter template (DF-ROS-2026-A031)",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-11T01:00:47.583Z",
+      "updatedAt": "2026-09-11T01:00:54.000Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null

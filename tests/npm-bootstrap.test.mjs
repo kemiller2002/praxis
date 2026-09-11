@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import fs from "node:fs";
+import http from "node:http";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -30,6 +32,8 @@ test("greenfield initialization is self-contained and immediately valid", (t) =>
   assert.ok(result.files.length >= 60);
   assert.match(fs.readFileSync(path.join(target, "README.md"), "utf8"), /Communication Engineering/);
   assert.equal(fs.statSync(path.join(target, "ros")).mode & 0o777, 0o755);
+  assert.equal(fs.statSync(path.join(target, "ros-fs")).mode & 0o777, 0o755);
+  assert.ok(fs.existsSync(path.join(target, "tools", "ros_fs_launcher.mjs")));
   assert.ok(fs.existsSync(path.join(target, ".ros", "installation.json")));
   const workContext = JSON.parse(fs.readFileSync(path.join(target, ".ros", "context", "current.json"), "utf8"));
   assert.equal(workContext.workItems[0].semanticState, "complete");
@@ -54,6 +58,71 @@ test("greenfield initialization is self-contained and immediately valid", (t) =>
   assert.match(workflow, /ROS_BASE_REF/);
   assert.doesNotMatch(workflow, /npm test/);
   assert.deepEqual(verifyProject({ target }).findings, []);
+});
+
+test("scaffolded ros_fs_launcher.mjs downloads, verifies, caches, and execs a real binary, then runs offline on a cache hit", async (t) => {
+  const target = temporaryDirectory(t);
+  initializeProject({ target, project: "FSharp Launcher Sandbox" });
+  // Exercises the scaffolded launcher module in-process (matching
+  // tests/ros-fs-launcher.test.mjs's own pattern) rather than spawning
+  // the ros-fs script as a subprocess: a subprocess fetch to a
+  // same-machine ephemeral port does not complete in this sandbox
+  // (unrelated to the launcher's own correctness -- the identical logic,
+  // invoked directly, works; only a spawned-child's own network path
+  // through this sandbox's outbound proxy setup does not), so this stays
+  // a real, meaningful test of the download/verify/cache/exec logic
+  // without depending on that sandbox quirk.
+  const { run, internal } = await import(path.join(target, "tools", "ros_fs_launcher.mjs"));
+
+  const rid = internal.resolveRid();
+  assert.ok(rid, `this test host's platform/arch must resolve to a known RID`);
+  const script = "#!/bin/sh\necho fake-ros-fs-scaffold-output\nexit 0\n";
+  const assetName = internal.releaseAssetName(rid);
+  const checksum = crypto.createHash("sha256").update(script).digest("hex");
+
+  const hits = [];
+  const server = http.createServer((req, res) => {
+    hits.push(req.url);
+    if (req.url === "/checksums.txt") {
+      res.writeHead(200, { "content-type": "text/plain" });
+      res.end(`${checksum}  ${assetName}\n`);
+      return;
+    }
+    if (req.url === `/${assetName}`) {
+      res.writeHead(200, { "content-type": "application/octet-stream" });
+      res.end(script);
+      return;
+    }
+    res.writeHead(404);
+    res.end("not found");
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  const { port } = server.address();
+
+  const cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), "ros-fs-scaffold-cache-"));
+  t.after(() => fs.rmSync(cacheDir, { recursive: true, force: true }));
+
+  const previousBase = process.env.ROS_FS_RELEASE_BASE_URL;
+  const previousCache = process.env.ROS_FS_CACHE_DIR;
+  process.env.ROS_FS_RELEASE_BASE_URL = `http://127.0.0.1:${port}`;
+  process.env.ROS_FS_CACHE_DIR = cacheDir;
+  t.after(() => {
+    if (previousBase === undefined) delete process.env.ROS_FS_RELEASE_BASE_URL;
+    else process.env.ROS_FS_RELEASE_BASE_URL = previousBase;
+    if (previousCache === undefined) delete process.env.ROS_FS_CACHE_DIR;
+    else process.env.ROS_FS_CACHE_DIR = previousCache;
+  });
+
+  const logs = [];
+  const first = await run([], { log: (message) => logs.push(message) });
+  assert.equal(first, 0, logs.join("\n"));
+  assert.deepEqual(hits.sort(), ["/checksums.txt", `/${assetName}`]);
+
+  process.env.ROS_FS_RELEASE_BASE_URL = "http://127.0.0.1:1";
+  const secondLogs = [];
+  const second = await run([], { log: (message) => secondLogs.push(message) });
+  assert.equal(second, 0, secondLogs.join("\n"));
 });
 
 test("project name is derived from the target folder when omitted", (t) => {
@@ -249,6 +318,8 @@ test("npm tarball contains the executable and every scaffold source", (t) => {
   assert.ok(files.has("tools/ros_persistence.mjs"));
   assert.ok(files.has("tools/ros_git.mjs"));
   assert.ok(files.has("starter/greenfield/ros"));
+  assert.ok(files.has("starter/greenfield/ros-fs"));
+  assert.ok(files.has("starter/greenfield/tools/ros_fs_launcher.mjs"));
 
   for (const profile of ["greenfield", "project-administration"]) {
     const manifest = JSON.parse(

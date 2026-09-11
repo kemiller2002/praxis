@@ -4,7 +4,9 @@
 
 Route changes to npm acquisition, profile materialization, installation
 attribution, installation-integrity verification, and (since
-`DF-ROS-2026-A029`) on-demand acquisition of the compiled F# CLI binary.
+`DF-ROS-2026-A029`/`DF-ROS-2026-A031`) on-demand acquisition of the
+compiled F# CLI binary, both for this package's own `ros-fs` and for a
+`ros-fs` scaffolded into bootstrapped projects.
 
 ## Ownership
 
@@ -83,8 +85,13 @@ attribution, installation-integrity verification, and (since
 ## Maintenance
 
 - Owner: repository-governance
-- Last checked against implementation: 2026-09-10 (DF-ROS-2026-A029: added
-  `ros-fs` npm binary launcher)
+- Last checked against implementation: 2026-09-11 (DF-ROS-2026-A031: added
+  an additive `ros-fs` launcher to the greenfield starter template; a
+  near-miss during this change found and reverted an earlier design that
+  would have redirected the scaffolded `ros` itself, which would have
+  invalidated this whole migration's differential-test methodology --
+  every such test spawns a bootstrapped project's `ros` as its Node
+  baseline)
 - Known gaps: initialization writes related state without a multi-file
   transaction; the root lockfile version is stale relative to `package.json`;
   bootstrap prints validation as a next step but does not execute it.

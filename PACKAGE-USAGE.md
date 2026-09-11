@@ -57,6 +57,12 @@ parity. `ros-fs` does not replace `./ros`; see `AGENTS.md` for the
 in-repository rule that governs which one to use for real work inside this
 source checkout.
 
+A project scaffolded by `ros-bootstrap init` (`DF-ROS-2026-A031`) also gets
+its own `./ros-fs`, using the same download-verify-cache-exec mechanism
+(`tools/ros_fs_launcher.mjs`, reading the target version from that
+project's own `ros.json`). It is additive there too: the scaffolded
+`./ros` stays Node, unchanged.
+
 ## Install the latest directly from GitHub
 
 Run inside the target repository:
