@@ -13,7 +13,13 @@ const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", 
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-telemetry-resolution-"));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
+  t.after(() => {
+    try {
+      fs.rmSync(root, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   initializeProject({ target: root, project: "Telemetry Resolution Differential" });
   execFileSync("git", ["init", "-q"], { cwd: root });
   execFileSync("git", ["config", "user.email", "test@example.invalid"], { cwd: root });

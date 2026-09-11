@@ -42,7 +42,13 @@ function writeContext(root, context) {
 
 function fixture(t, options = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-work-attribution-differential-"));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
+  t.after(() => {
+    try {
+      fs.rmSync(root, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   initializeProject({ target: root, project: "Work Attribution Differential" });
 
   const configFile = path.join(root, "ros.json");

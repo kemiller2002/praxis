@@ -31,7 +31,13 @@ const fsharpCli = path.join(repository, "src", "Ros.Cli", "bin", "Release", "net
 // Node -- this is a real spoke's real backend, not a Node stand-in.
 const spokeCacheDir = fs.mkdtempSync(path.join(os.tmpdir(), "ros-hub-spoke-cache-"));
 process.env.ROS_FS_CACHE_DIR = spokeCacheDir;
-test.after(() => fs.rmSync(spokeCacheDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
+test.after(() => {
+  try {
+    fs.rmSync(spokeCacheDir, { recursive: true, force: true });
+  } catch {
+    // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+  }
+});
 const spokeRid = launcherInternal.resolveRid();
 assert.ok(spokeRid, "this test host's platform/arch must resolve to a known RID");
 assert.ok(fs.existsSync(fsharpCli), "build:fsharp must produce the shadow CLI before this test runs");
@@ -45,7 +51,13 @@ fs.writeFileSync(
 
 function spokeRepo(t, project) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-spoke-"));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
+  t.after(() => {
+    try {
+      fs.rmSync(root, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   initializeProject({ target: root, project });
   execFileSync("git", ["init", "-q"], { cwd: root });
   execFileSync("git", ["config", "user.email", "test@example.invalid"], { cwd: root });
@@ -57,7 +69,13 @@ function spokeRepo(t, project) {
 
 function hubRoot(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-hub-"));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
+  t.after(() => {
+    try {
+      fs.rmSync(root, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   return root;
 }
 
@@ -84,7 +102,13 @@ test("registration rejects a second repo whose repository.id collides with an al
 test("registration rejects a non-ROS directory and a directory without ./ros", (t) => {
   const hub = hubRoot(t);
   const plain = fs.mkdtempSync(path.join(os.tmpdir(), "not-ros-"));
-  t.after(() => fs.rmSync(plain, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
+  t.after(() => {
+    try {
+      fs.rmSync(plain, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   assert.throws(() => registerRepo(hub, plain), /not a ROS repository/);
 });
 
@@ -136,8 +160,13 @@ test("aggregated listing merges rows across repos and isolates one broken repo's
   // Simulate a spoke that has since moved/vanished.
   const movedAway = `${repoB}-moved`;
   fs.renameSync(repoB, movedAway);
-  t.after(() => fs.rmSync(movedAway, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
-
+  t.after(() => {
+    try {
+      fs.rmSync(movedAway, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   const afterMove = listWorkAcrossRepos(hub);
   const stillOk = afterMove.find((row) => row.repoId === entryA.id && !row.error);
   const broken = afterMove.find((row) => row.repoId === entryB.id);
