@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 51,
+  "nextSeq": 52,
   "items": [
     {
       "id": "WI-0001",
@@ -949,6 +949,22 @@
       "attachments": [],
       "createdAt": "2026-09-11T05:56:20.744Z",
       "updatedAt": "2026-09-11T05:56:23.000Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0051",
+      "title": "Root-cause and document the session-long CI empty-output failure pattern (EV-ROS-2026-A049)",
+      "description": null,
+      "tags": [
+        "ci-infra"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-11T10:37:59.929Z",
+      "updatedAt": "2026-09-11T10:38:04.000Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
