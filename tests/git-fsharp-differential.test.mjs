@@ -55,7 +55,13 @@ function git(root, args) {
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-git-differential-"));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 }));
+  t.after(() => {
+    try {
+      fs.rmSync(root, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   git(root, ["init", "-q"]);
   git(root, ["config", "user.email", "test@example.invalid"]);
   git(root, ["config", "user.name", "ROS Test"]);
@@ -121,7 +127,13 @@ test("F# Git shadow matches changed paths, statuses, and rename origin", (t) => 
 
 test("F# Git shadow reports unavailable instead of clean outside a repository", (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-git-unavailable-"));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 }));
+  t.after(() => {
+    try {
+      fs.rmSync(root, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   const result = runFsharp(root);
   assert.equal(result.status, 1);
   assert.equal(result.json.outcome, "unavailable");

@@ -1324,7 +1324,13 @@ const WI_B_RESEARCH_RECORD = {
 
 function fixture(t, label) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), `ros-telemetry-show-${label}-`));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 }));
+  t.after(() => {
+    try {
+      fs.rmSync(root, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   initializeProject({ target: root, project: "Telemetry Show Differential" });
   execFileSync("git", ["init", "-q"], { cwd: root });
   execFileSync("git", ["config", "user.email", "test@example.invalid"], { cwd: root });
@@ -1362,8 +1368,13 @@ function stripVolatile(value) {
 test("F# telemetry adapters matches production's static catalog exactly", (t) => {
   assert.ok(fs.existsSync(fsharpCli), "build:fsharp must produce the shadow CLI before this test runs");
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-telemetry-adapters-"));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 }));
-
+  t.after(() => {
+    try {
+      fs.rmSync(root, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   const fsharpResult = runFsharp(root, ["adapters"]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
   assert.deepEqual(JSON.parse(fsharpResult.stdout), TELEMETRY_ADAPTERS);

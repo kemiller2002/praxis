@@ -39,7 +39,13 @@ const GOLDEN = {
 
 function fixture(t, label) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), `ros-telemetry-finalize-${label}-`));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 }));
+  t.after(() => {
+    try {
+      fs.rmSync(root, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   initializeProject({ target: root, project: "Telemetry Finalize Differential" });
   execFileSync("git", ["init", "-q"], { cwd: root });
   execFileSync("git", ["config", "user.email", "test@example.invalid"], { cwd: root });

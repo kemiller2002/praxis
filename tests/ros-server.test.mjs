@@ -13,7 +13,13 @@ const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-server-"));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 }));
+  t.after(() => {
+    try {
+      fs.rmSync(root, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   initializeProject({ target: root, project: "Server Consumer" });
   execFileSync("git", ["init", "-q"], { cwd: root });
   execFileSync("git", ["config", "user.email", "test@example.invalid"], { cwd: root });
