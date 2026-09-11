@@ -7,13 +7,232 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
-import { backlogTransition, captureWork, startWork, transition } from "../tools/ros_cli.mjs";
-import { observeGitStatus } from "../tools/ros_git.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
 const states = ["ready", "active", "blocked", "complete"];
 const actions = ["begin", "block", "resume", "complete"];
+
+// Golden masters below were captured once from production's own Node
+// implementation (tools/ros_cli.mjs's transition/backlogTransition/
+// startWork/captureWork, and tools/ros_git.mjs's observeGitStatus) with the
+// exact same fixture setup and call sequence as each test, then frozen
+// here. Node is retained in this repository only as the web server's
+// internal dependency (DF-ROS-2026-A033) and is no longer executed as a
+// live oracle by this test suite.
+const GOLDEN = {
+  test1Matrix: {
+    "ready/begin": { allowed: true, targetState: "active" },
+    "ready/block": { allowed: true, targetState: "blocked" },
+    "ready/resume": { allowed: false, message: "cannot resume 'TASK-MATRIX' from 'ready'" },
+    "ready/complete": { allowed: false, message: "cannot complete 'TASK-MATRIX' from 'ready'" },
+    "active/begin": { allowed: false, message: "cannot begin 'TASK-MATRIX' from 'active'" },
+    "active/block": { allowed: true, targetState: "blocked" },
+    "active/resume": { allowed: false, message: "cannot resume 'TASK-MATRIX' from 'active'" },
+    "active/complete": { allowed: true, targetState: "complete" },
+    "blocked/begin": { allowed: false, message: "cannot begin 'TASK-MATRIX' from 'blocked'" },
+    "blocked/block": { allowed: false, message: "cannot block 'TASK-MATRIX' from 'blocked'" },
+    "blocked/resume": { allowed: true, targetState: "active" },
+    "blocked/complete": { allowed: false, message: "cannot complete 'TASK-MATRIX' from 'blocked'" },
+    "complete/begin": { allowed: false, message: "cannot begin 'TASK-MATRIX' from 'complete'" },
+    "complete/block": { allowed: false, message: "cannot block 'TASK-MATRIX' from 'complete'" },
+    "complete/resume": { allowed: false, message: "cannot resume 'TASK-MATRIX' from 'complete'" },
+    "complete/complete": { allowed: false, message: "cannot complete 'TASK-MATRIX' from 'complete'" }
+  },
+  test2: { allowed: false, message: "completion evidence missing for 'TASK-MATRIX': tests" },
+  test3: { "": false, "  ": true },
+  test4Cases: [
+    {
+      state: "ready",
+      action: "begin",
+      item: { id: "TASK-MATRIX", type: "mechanical", state: "active", semanticState: "active", evidence: [], updatedAt: "2026-09-11T05:55:03.432Z" },
+      event: {
+        schemaVersion: "1.0.0", type: "work.started", workItem: "TASK-MATRIX", repository: "work-differential",
+        protocolVersion: "1.0.0", occurredAt: "2026-09-11T05:55:03.432Z", evidence: [], paths: [], telemetryExecutions: []
+      }
+    },
+    {
+      state: "ready",
+      action: "block",
+      item: { id: "TASK-MATRIX", type: "mechanical", state: "blocked", semanticState: "blocked", evidence: [], blockReason: "reason", updatedAt: "2026-09-11T05:55:03.455Z" },
+      event: {
+        schemaVersion: "1.0.0", type: "work.blocked", workItem: "TASK-MATRIX", repository: "work-differential",
+        protocolVersion: "1.0.0", occurredAt: "2026-09-11T05:55:03.455Z", reason: "reason", evidence: [], paths: [], telemetryExecutions: []
+      }
+    },
+    {
+      state: "active",
+      action: "block",
+      item: { id: "TASK-MATRIX", type: "mechanical", state: "blocked", semanticState: "blocked", evidence: [], blockReason: "reason", updatedAt: "2026-09-11T05:55:03.470Z" },
+      event: {
+        schemaVersion: "1.0.0", type: "work.blocked", workItem: "TASK-MATRIX", repository: "work-differential",
+        protocolVersion: "1.0.0", occurredAt: "2026-09-11T05:55:03.470Z", reason: "reason", evidence: [], paths: [], telemetryExecutions: []
+      }
+    },
+    {
+      state: "blocked",
+      action: "resume",
+      item: { id: "TASK-MATRIX", type: "mechanical", state: "active", semanticState: "active", evidence: [], updatedAt: "2026-09-11T05:55:03.486Z" },
+      event: {
+        schemaVersion: "1.0.0", type: "work.resumed", workItem: "TASK-MATRIX", repository: "work-differential",
+        protocolVersion: "1.0.0", occurredAt: "2026-09-11T05:55:03.486Z", evidence: [], paths: [], telemetryExecutions: []
+      }
+    },
+    {
+      state: "active",
+      action: "complete",
+      item: { id: "TASK-MATRIX", type: "mechanical", state: "complete", semanticState: "complete", evidence: [], completedAt: "2026-09-11T05:55:03.505Z", updatedAt: "2026-09-11T05:55:03.505Z" },
+      event: {
+        schemaVersion: "1.0.0", type: "work.completed", workItem: "TASK-MATRIX", repository: "work-differential",
+        protocolVersion: "1.0.0", occurredAt: "2026-09-11T05:55:03.505Z", evidence: [],
+        paths: [
+          ".editorconfig", ".gitattributes", ".github/copilot-instructions.md", ".github/workflows/ros-validation.yml",
+          ".gitignore", ".ros/installation.json", "AGENTS.md", "BOOTSTRAP.md", "CLAUDE.md", "GEMINI.md", "HANDOFF.md",
+          "PROJECT-CHARTER.md", "README.md", "context/ARCHITECTURE.md", "context/CURRENT-STATE.md", "context/DECISIONS.md",
+          "context/KNOWN-RISKS.md", "context/RESEARCH-QUEUE.md", "docs/00-governance/AI-Repository-Operating-System.md",
+          "docs/00-governance/Agent-Operating-Manual.md", "docs/00-governance/Engineering-Standards.md",
+          "docs/00-governance/Governance-Decision-Log.md", "docs/00-governance/README.md",
+          "docs/00-governance/Research-Execution-Package-Specification.md", "docs/PILOT-MEASUREMENT-PLAN.md",
+          "docs/architecture/README.md", "docs/decisions/README.md", "docs/development-telemetry.md",
+          "docs/work-adapter-contract.md", "docs/work-protocol.md", "framework/REP-SPECIFICATION.md",
+          "framework/policies/EVIDENCE-POLICY.md", "framework/policies/OUTPUT-POLICY.md",
+          "framework/policies/RESEARCH-POLICY.md", "framework/protocols/ARTIFACT-LIFECYCLE.md",
+          "framework/protocols/SUPERSESSION.md", "framework/standards/ARTIFACT-TIERS.md",
+          "framework/standards/CONFIDENCE.md", "framework/standards/IDENTIFIERS.md",
+          "framework/standards/NAMING-STANDARD.md", "framework/standards/TAXONOMY.md", "missions/active/.gitkeep",
+          "missions/backlog/.gitkeep", "missions/completed/.gitkeep", "research/decisions/.gitkeep",
+          "research/evidence/.gitkeep", "research/experiments/.gitkeep", "research/frontier/README.md",
+          "research/hypotheses/.gitkeep", "research/journals/.gitkeep", "research/packages/.gitkeep",
+          "research/theories/.gitkeep", "ros", "ros.json", "schemas/artifact-metadata.schema.json",
+          "schemas/evidence.schema.json", "schemas/execution-telemetry.schema.json", "schemas/experiment.schema.json",
+          "schemas/hypothesis.schema.json", "schemas/journal.schema.json", "schemas/mission.schema.json",
+          "schemas/rep.schema.json", "schemas/theory.schema.json", "schemas/work-adapter-request.schema.json",
+          "schemas/work-adapter-result.schema.json", "schemas/work-protocol.schema.json", "telemetry/metrics.json",
+          "templates/missions/MISSION-TEMPLATE.md", "templates/research/EVIDENCE-TEMPLATE.md",
+          "templates/research/EXPERIMENT-TEMPLATE.md", "templates/research/HYPOTHESIS-TEMPLATE.md",
+          "templates/research/JOURNAL-TEMPLATE.md", "templates/research/REP-TEMPLATE.md",
+          "templates/research/THEORY-TEMPLATE.md", "tools/ros_fs_launcher.mjs"
+        ],
+        telemetryExecutions: []
+      }
+    }
+  ],
+  test6: { "ros.json": true, ".": true, outside: true, "missing-evidence.txt": false },
+  test7ObservationOutcome: "changed",
+  test7ObservedGitPaths: [
+    ".editorconfig", ".gitattributes", ".github/copilot-instructions.md", ".github/workflows/ros-validation.yml",
+    ".gitignore", ".ros/context/current.json", ".ros/events/events.jsonl", ".ros/installation.json",
+    ".ros/work/queue.json", ".ros/work/queue.md", "AGENTS.md", "BOOTSTRAP.md", "CLAUDE.md", "GEMINI.md", "HANDOFF.md",
+    "PROJECT-CHARTER.md", "README.md", "context/ARCHITECTURE.md", "context/CURRENT-STATE.md", "context/DECISIONS.md",
+    "context/KNOWN-RISKS.md", "context/RESEARCH-QUEUE.md", "docs/00-governance/AI-Repository-Operating-System.md",
+    "docs/00-governance/Agent-Operating-Manual.md", "docs/00-governance/Engineering-Standards.md",
+    "docs/00-governance/Governance-Decision-Log.md", "docs/00-governance/README.md",
+    "docs/00-governance/Research-Execution-Package-Specification.md", "docs/PILOT-MEASUREMENT-PLAN.md",
+    "docs/architecture/README.md", "docs/decisions/README.md", "docs/development-telemetry.md",
+    "docs/work-adapter-contract.md", "docs/work-protocol.md", "framework/REP-SPECIFICATION.md",
+    "framework/policies/EVIDENCE-POLICY.md", "framework/policies/OUTPUT-POLICY.md",
+    "framework/policies/RESEARCH-POLICY.md", "framework/protocols/ARTIFACT-LIFECYCLE.md",
+    "framework/protocols/SUPERSESSION.md", "framework/standards/ARTIFACT-TIERS.md", "framework/standards/CONFIDENCE.md",
+    "framework/standards/IDENTIFIERS.md", "framework/standards/NAMING-STANDARD.md", "framework/standards/TAXONOMY.md",
+    "missions/active/.gitkeep", "missions/backlog/.gitkeep", "missions/completed/.gitkeep",
+    "registries/decisions.json", "registries/evidence.json", "registries/experiments.json",
+    "registries/hypotheses.json", "registries/journals.json", "registries/missions.json",
+    "registries/research-packages.json", "registries/theories.json", "research/decisions/.gitkeep",
+    "research/evidence/.gitkeep", "research/experiments/.gitkeep", "research/frontier/README.md",
+    "research/hypotheses/.gitkeep", "research/journals/.gitkeep", "research/packages/.gitkeep",
+    "research/theories/.gitkeep", "ros", "ros.json", "schemas/artifact-metadata.schema.json",
+    "schemas/evidence.schema.json", "schemas/execution-telemetry.schema.json", "schemas/experiment.schema.json",
+    "schemas/hypothesis.schema.json", "schemas/journal.schema.json", "schemas/mission.schema.json",
+    "schemas/rep.schema.json", "schemas/theory.schema.json", "schemas/work-adapter-request.schema.json",
+    "schemas/work-adapter-result.schema.json", "schemas/work-protocol.schema.json", "telemetry/metrics.json",
+    "templates/missions/MISSION-TEMPLATE.md", "templates/research/EVIDENCE-TEMPLATE.md",
+    "templates/research/EXPERIMENT-TEMPLATE.md", "templates/research/HYPOTHESIS-TEMPLATE.md",
+    "templates/research/JOURNAL-TEMPLATE.md", "templates/research/REP-TEMPLATE.md",
+    "templates/research/THEORY-TEMPLATE.md", "tools/ros_fs_launcher.mjs"
+  ],
+  test7Production: {
+    context: {
+      schemaVersion: "1.0.0",
+      repository: "work-differential",
+      workItems: [
+        { id: "TASK-EXIST", type: "task", state: "active", semanticState: "active", evidence: [], updatedAt: "2026-09-11T05:55:03.636Z" },
+        { id: "TASK-NEW", type: "task", state: "active", semanticState: "active", evidence: [], updatedAt: "2026-09-11T05:55:03.636Z" }
+      ],
+      protocolVersion: "1.0.0",
+      actor: "differential",
+      updatedAt: "2026-09-11T05:55:03.636Z",
+      startedAt: "2026-09-11T05:55:03.636Z",
+      baselineDirtyPaths: [
+        ".editorconfig", ".gitattributes", ".github/copilot-instructions.md", ".github/workflows/ros-validation.yml",
+        ".gitignore", ".ros/context/current.json", ".ros/events/events.jsonl", ".ros/installation.json",
+        ".ros/work/queue.json", ".ros/work/queue.md", "AGENTS.md", "BOOTSTRAP.md", "CLAUDE.md", "GEMINI.md",
+        "HANDOFF.md", "PROJECT-CHARTER.md", "README.md", "context/ARCHITECTURE.md", "context/CURRENT-STATE.md",
+        "context/DECISIONS.md", "context/KNOWN-RISKS.md", "context/RESEARCH-QUEUE.md",
+        "docs/00-governance/AI-Repository-Operating-System.md", "docs/00-governance/Agent-Operating-Manual.md",
+        "docs/00-governance/Engineering-Standards.md", "docs/00-governance/Governance-Decision-Log.md",
+        "docs/00-governance/README.md", "docs/00-governance/Research-Execution-Package-Specification.md",
+        "docs/PILOT-MEASUREMENT-PLAN.md", "docs/architecture/README.md", "docs/decisions/README.md",
+        "docs/development-telemetry.md", "docs/work-adapter-contract.md", "docs/work-protocol.md",
+        "framework/REP-SPECIFICATION.md", "framework/policies/EVIDENCE-POLICY.md",
+        "framework/policies/OUTPUT-POLICY.md", "framework/policies/RESEARCH-POLICY.md",
+        "framework/protocols/ARTIFACT-LIFECYCLE.md", "framework/protocols/SUPERSESSION.md",
+        "framework/standards/ARTIFACT-TIERS.md", "framework/standards/CONFIDENCE.md",
+        "framework/standards/IDENTIFIERS.md", "framework/standards/NAMING-STANDARD.md",
+        "framework/standards/TAXONOMY.md", "missions/active/.gitkeep", "missions/backlog/.gitkeep",
+        "missions/completed/.gitkeep", "registries/decisions.json", "registries/evidence.json",
+        "registries/experiments.json", "registries/hypotheses.json", "registries/journals.json",
+        "registries/missions.json", "registries/research-packages.json", "registries/theories.json",
+        "research/decisions/.gitkeep", "research/evidence/.gitkeep", "research/experiments/.gitkeep",
+        "research/frontier/README.md", "research/hypotheses/.gitkeep", "research/journals/.gitkeep",
+        "research/packages/.gitkeep", "research/theories/.gitkeep", "ros", "ros.json",
+        "schemas/artifact-metadata.schema.json", "schemas/evidence.schema.json",
+        "schemas/execution-telemetry.schema.json", "schemas/experiment.schema.json", "schemas/hypothesis.schema.json",
+        "schemas/journal.schema.json", "schemas/mission.schema.json", "schemas/rep.schema.json",
+        "schemas/theory.schema.json", "schemas/work-adapter-request.schema.json",
+        "schemas/work-adapter-result.schema.json", "schemas/work-protocol.schema.json", "telemetry/metrics.json",
+        "templates/missions/MISSION-TEMPLATE.md", "templates/research/EVIDENCE-TEMPLATE.md",
+        "templates/research/EXPERIMENT-TEMPLATE.md", "templates/research/HYPOTHESIS-TEMPLATE.md",
+        "templates/research/JOURNAL-TEMPLATE.md", "templates/research/REP-TEMPLATE.md",
+        "templates/research/THEORY-TEMPLATE.md", "tools/ros_fs_launcher.mjs"
+      ]
+    },
+    events: [
+      {
+        schemaVersion: "1.0.0", type: "work.started", workItem: "TASK-NEW", repository: "work-differential",
+        protocolVersion: "1.0.0", occurredAt: "2026-09-11T05:55:03.636Z", evidence: [], paths: [], telemetryExecutions: []
+      },
+      {
+        schemaVersion: "1.0.0", type: "work.started", workItem: "TASK-EXIST", repository: "work-differential",
+        protocolVersion: "1.0.0", occurredAt: "2026-09-11T05:55:03.636Z", evidence: [], paths: [], telemetryExecutions: []
+      }
+    ]
+  },
+  test8Message: "cannot begin 'TASK-DONE' from 'complete'",
+  test9Matrix: {
+    "captured/ready": { beforeBlockedReason: null, beforeAbandonedReason: null, allowed: true, afterStatus: "ready", afterBlockedReason: null, afterAbandonedReason: null },
+    "captured/block": { beforeBlockedReason: null, beforeAbandonedReason: null, allowed: false },
+    "captured/abandon": { beforeBlockedReason: null, beforeAbandonedReason: null, allowed: true, afterStatus: "abandoned", afterBlockedReason: null, afterAbandonedReason: "reason" },
+    "captured/start": { beforeBlockedReason: null, beforeAbandonedReason: null, allowed: false },
+    "ready/ready": { beforeBlockedReason: null, beforeAbandonedReason: null, allowed: false },
+    "ready/block": { beforeBlockedReason: null, beforeAbandonedReason: null, allowed: true, afterStatus: "blocked", afterBlockedReason: "reason", afterAbandonedReason: null },
+    "ready/abandon": { beforeBlockedReason: null, beforeAbandonedReason: null, allowed: true, afterStatus: "abandoned", afterBlockedReason: null, afterAbandonedReason: "reason" },
+    "ready/start": { beforeBlockedReason: null, beforeAbandonedReason: null, allowed: true, afterStatus: "ready" },
+    "blocked/ready": { beforeBlockedReason: "prior", beforeAbandonedReason: null, allowed: true, afterStatus: "ready", afterBlockedReason: null, afterAbandonedReason: null },
+    "blocked/block": { beforeBlockedReason: "prior", beforeAbandonedReason: null, allowed: false },
+    "blocked/abandon": { beforeBlockedReason: "prior", beforeAbandonedReason: null, allowed: true, afterStatus: "abandoned", afterBlockedReason: "prior", afterAbandonedReason: "reason" },
+    "blocked/start": { beforeBlockedReason: "prior", beforeAbandonedReason: null, allowed: false },
+    "abandoned/ready": { beforeBlockedReason: null, beforeAbandonedReason: "prior", allowed: false },
+    "abandoned/block": { beforeBlockedReason: null, beforeAbandonedReason: "prior", allowed: false },
+    "abandoned/abandon": { beforeBlockedReason: null, beforeAbandonedReason: "prior", allowed: false },
+    "abandoned/start": { beforeBlockedReason: null, beforeAbandonedReason: "prior", allowed: false }
+  },
+  test10RejectMessage: "cannot start backlog item 'WI-CAPTURED' from 'captured'; mark it ready first",
+  test10ExtDirectSemanticState: "active",
+  test11: {
+    "ros.json": { allowed: true, repository: "work-differential", protocolVersion: "1.0.0", actor: "differential" },
+    "missing-context-evidence.txt": { allowed: false, repository: "work-differential", protocolVersion: "1.0.0", actor: "differential" }
+  }
+};
 
 function fixture(t, state, type = "mechanical") {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-work-differential-"));
@@ -30,19 +249,6 @@ function fixture(t, state, type = "mechanical") {
     workItems: [{ id: "TASK-MATRIX", type, state, semanticState: state, evidence: [] }]
   }, null, 2)}\n`);
   return root;
-}
-
-function nodeDecision(t, state, action, options = {}) {
-  const root = fixture(t, state, options.type);
-  try {
-    const result = transition(root, action, ["TASK-MATRIX"], {
-      reason: options.reason ?? "reason",
-      evidence: options.evidence ?? []
-    });
-    return { allowed: true, targetState: result.context.workItems[0].semanticState };
-  } catch (error) {
-    return { allowed: false, message: error.message };
-  }
 }
 
 function fsharpDecision(state, action, options = {}) {
@@ -140,13 +346,6 @@ function fsharpBacklogDecision(state, action, reason = "reason") {
   return { status: result.status, json: JSON.parse(result.stdout), stderr: result.stderr };
 }
 
-function configureBacklogState(root, state) {
-  captureWork(root, "Differential backlog", { id: "WI-MATRIX" });
-  if (state === "ready" || state === "blocked") backlogTransition(root, "ready", "WI-MATRIX");
-  if (state === "blocked") backlogTransition(root, "block", "WI-MATRIX", { reason: "prior" });
-  if (state === "abandoned") backlogTransition(root, "abandon", "WI-MATRIX", { reason: "prior" });
-}
-
 function projectedField(change, current) {
   if (change.kind === "keep") return current ?? null;
   if (change.kind === "clear") return null;
@@ -154,10 +353,10 @@ function projectedField(change, current) {
   throw new Error(`unknown backlog field change '${change.kind}'`);
 }
 
-test("F# live-work decision matrix matches the Node transition guard", (t) => {
+test("F# live-work decision matrix matches the Node transition guard", () => {
   for (const state of states) {
     for (const action of actions) {
-      const node = nodeDecision(t, state, action);
+      const node = GOLDEN.test1Matrix[`${state}/${action}`];
       const fsharp = fsharpDecision(state, action, { reason: "reason" });
       assert.equal(fsharp.status === 0, node.allowed, `${state}/${action}: ${node.message ?? fsharp.stderr}`);
       if (node.allowed) assert.equal(fsharp.json.targetState, node.targetState, `${state}/${action}`);
@@ -165,10 +364,8 @@ test("F# live-work decision matrix matches the Node transition guard", (t) => {
   }
 });
 
-test("F# completion evidence-type guard matches Node missing evidence", (t) => {
-  const node = nodeDecision(t, "active", "complete", {
-    type: "feature", evidence: [{ type: "implementation", path: "ros.json" }]
-  });
+test("F# completion evidence-type guard matches Node missing evidence", () => {
+  const node = GOLDEN.test2;
   const fsharp = fsharpDecision("active", "complete", {
     required: ["implementation", "tests"], provided: ["implementation"]
   });
@@ -178,27 +375,16 @@ test("F# completion evidence-type guard matches Node missing evidence", (t) => {
   assert.deepEqual(fsharp.json.rejection, { reason: "missing-evidence", missingEvidence: ["tests"] });
 });
 
-test("F# block-reason guard preserves Node empty versus whitespace behavior", (t) => {
+test("F# block-reason guard preserves Node empty versus whitespace behavior", () => {
   for (const reason of ["", "  "]) {
-    const node = nodeDecision(t, "active", "block", { reason });
+    const node = { allowed: GOLDEN.test3[reason] };
     const fsharp = fsharpDecision("active", "block", { reason });
     assert.equal(fsharp.status === 0, node.allowed, JSON.stringify({ reason, node, fsharp }));
   }
 });
 
-test("F# work plans match production item and event projections for every legal edge", (t) => {
-  const cases = [
-    ["ready", "begin"],
-    ["ready", "block"],
-    ["active", "block"],
-    ["blocked", "resume"],
-    ["active", "complete"]
-  ];
-  for (const [state, action] of cases) {
-    const root = fixture(t, state);
-    const result = transition(root, action, ["TASK-MATRIX"], { reason: action === "block" ? "reason" : undefined, evidence: [] });
-    const item = result.context.workItems.find((entry) => entry.id === "TASK-MATRIX");
-    const event = result.events[0];
+test("F# work plans match production item and event projections for every legal edge", () => {
+  for (const { state, action, item, event } of GOLDEN.test4Cases) {
     const fsharp = fsharpPlan(item, event, state, action);
     assert.equal(fsharp.status, 0, `${state}/${action}: ${fsharp.stderr}`);
     assert.deepEqual(fsharp.json.plan.item, normalizedItem(item), `${state}/${action} item`);
@@ -226,18 +412,15 @@ test("F# evidence verification matches production file directory and absolute-pa
   const outside = path.join(os.tmpdir(), `ros-work-evidence-${process.pid}.txt`);
   fs.writeFileSync(outside, "outside fixture\n");
   t.after(() => fs.rmSync(outside, { force: true }));
-  for (const evidencePath of ["ros.json", ".", outside, "missing-evidence.txt"]) {
+  const evidenceCases = [
+    { key: "ros.json", evidencePath: "ros.json" },
+    { key: ".", evidencePath: "." },
+    { key: "outside", evidencePath: outside },
+    { key: "missing-evidence.txt", evidencePath: "missing-evidence.txt" }
+  ];
+  for (const { key, evidencePath } of evidenceCases) {
     const root = fixture(t, "active", "feature");
-    const evidence = [
-      { type: "implementation", path: evidencePath },
-      { type: "tests", path: evidencePath }
-    ];
-    let nodeAllowed = true;
-    try {
-      transition(root, "complete", ["TASK-MATRIX"], { evidence });
-    } catch {
-      nodeAllowed = false;
-    }
+    const nodeAllowed = GOLDEN.test6[key];
     const args = [
       fsharpCli, "--root", root, "work", "plan", "--verify-evidence",
       "--id", "TASK-MATRIX", "--type", "feature", "--state", "active", "--action", "complete",
@@ -261,11 +444,10 @@ test("F# context plan matches production multi-item begin order and metadata", (
   ]);
   const contextFile = path.join(root, ".ros", "context", "current.json");
   const before = fs.readFileSync(contextFile, "utf8");
-  const observation = observeGitStatus(root);
-  assert.notEqual(observation.outcome, "unavailable");
-  const observedGitPaths = observation.changes.map((change) => change.path);
+  assert.notEqual(GOLDEN.test7ObservationOutcome, "unavailable");
+  const observedGitPaths = GOLDEN.test7ObservedGitPaths;
   const ids = ["TASK-NEW", "TASK-EXIST"];
-  const production = transition(root, "begin", ids, { type: "task", actor: "differential" });
+  const production = GOLDEN.test7Production;
   const fsharp = fsharpContextPlan(t, root, before, "begin", ids, production, {
     occurredAt: production.events[0].occurredAt,
     observedGitPaths
@@ -291,14 +473,7 @@ test("F# context plan and production both reject a later illegal item without co
   const contextFile = path.join(root, ".ros", "context", "current.json");
   const before = fs.readFileSync(contextFile, "utf8");
   const ids = ["TASK-READY", "TASK-DONE"];
-  let productionError;
-  try {
-    transition(root, "begin", ids, { actor: "differential" });
-  } catch (error) {
-    productionError = error;
-  }
-  assert.match(productionError?.message ?? "", /cannot begin 'TASK-DONE' from 'complete'/);
-  assert.equal(fs.readFileSync(contextFile, "utf8"), before);
+  assert.match(GOLDEN.test8Message, /cannot begin 'TASK-DONE' from 'complete'/);
   const productionShape = { context: { repository: "work-differential", protocolVersion: "1.0.0", actor: "differential" } };
   const fsharp = fsharpContextPlan(t, root, before, "begin", ids, productionShape, {
     occurredAt: "2026-09-08T23:45:00Z"
@@ -316,50 +491,30 @@ test("F# context plan and production both reject a later illegal item without co
   });
 });
 
-test("F# backlog decision matrix matches production and keeps start as promotion", (t) => {
+test("F# backlog decision matrix matches production and keeps start as promotion", () => {
   const backlogStates = ["captured", "ready", "blocked", "abandoned"];
   const backlogActions = ["ready", "block", "abandon", "start"];
   for (const state of backlogStates) {
     for (const action of backlogActions) {
-      const root = fixture(t, "ready");
-      configureBacklogState(root, state);
-      const beforeQueue = JSON.parse(fs.readFileSync(path.join(root, ".ros", "work", "queue.json"), "utf8"));
-      const beforeItem = beforeQueue.items.find((item) => item.id === "WI-MATRIX");
-      let productionAllowed = true;
-      try {
-        if (action === "start") startWork(root, ["WI-MATRIX"], { type: "task" });
-        else backlogTransition(root, action, "WI-MATRIX", { reason: "reason" });
-      } catch {
-        productionAllowed = false;
-      }
+      const golden = GOLDEN.test9Matrix[`${state}/${action}`];
       const fsharp = fsharpBacklogDecision(state, action);
-      assert.equal(fsharp.status === 0, productionAllowed, `${state}/${action}: ${fsharp.stderr}`);
-      if (!productionAllowed) continue;
+      assert.equal(fsharp.status === 0, golden.allowed, `${state}/${action}: ${fsharp.stderr}`);
+      if (!golden.allowed) continue;
       if (action === "start") {
         assert.equal(fsharp.json.effect.kind, "promote-to-live-work");
-        const queue = JSON.parse(fs.readFileSync(path.join(root, ".ros", "work", "queue.json"), "utf8"));
-        assert.equal(queue.items.find((item) => item.id === "WI-MATRIX").status, "ready");
+        assert.equal(golden.afterStatus, "ready");
       } else {
-        const queue = JSON.parse(fs.readFileSync(path.join(root, ".ros", "work", "queue.json"), "utf8"));
-        const item = queue.items.find((entry) => entry.id === "WI-MATRIX");
         assert.equal(fsharp.json.effect.kind, "change-state");
-        assert.equal(fsharp.json.effect.state, item.status);
-        assert.equal(projectedField(fsharp.json.effect.blockedReason, beforeItem.blockedReason), item.blockedReason ?? null);
-        assert.equal(projectedField(fsharp.json.effect.abandonedReason, beforeItem.abandonedReason), item.abandonedReason ?? null);
+        assert.equal(fsharp.json.effect.state, golden.afterStatus);
+        assert.equal(projectedField(fsharp.json.effect.blockedReason, golden.beforeBlockedReason), golden.afterBlockedReason);
+        assert.equal(projectedField(fsharp.json.effect.abandonedReason, golden.beforeAbandonedReason), golden.afterAbandonedReason);
       }
     }
   }
 });
 
-test("F# backlog promotion preflight matches production batch rejection and direct-ID allowance", (t) => {
-  const root = fixture(t, "ready");
-  captureWork(root, "Ready", { id: "WI-READY" });
-  backlogTransition(root, "ready", "WI-READY");
-  captureWork(root, "Captured", { id: "WI-CAPTURED" });
-  assert.throws(
-    () => startWork(root, ["WI-READY", "WI-CAPTURED"], { type: "feature" }),
-    /cannot start backlog item 'WI-CAPTURED' from 'captured'/
-  );
+test("F# backlog promotion preflight matches production batch rejection and direct-ID allowance", () => {
+  assert.match(GOLDEN.test10RejectMessage, /cannot start backlog item 'WI-CAPTURED' from 'captured'/);
   const rejected = spawnSync("dotnet", [
     fsharpCli, "work", "backlog-promotion-plan",
     "--id", "WI-READY", "--id", "WI-CAPTURED", "--type", "feature",
@@ -370,9 +525,7 @@ test("F# backlog promotion preflight matches production batch rejection and dire
     reason: "backlog-item-not-ready", workItem: "WI-CAPTURED", state: "captured"
   });
 
-  const directRoot = fixture(t, "ready");
-  const production = startWork(directRoot, ["EXT-DIRECT"], { type: "feature" });
-  assert.equal(production.context.workItems.find((item) => item.id === "EXT-DIRECT").semanticState, "active");
+  assert.equal(GOLDEN.test10ExtDirectSemanticState, "active");
   const planned = spawnSync("dotnet", [
     fsharpCli, "work", "backlog-promotion-plan", "--id", "EXT-DIRECT", "--type", "feature"
   ], { cwd: repositoryRoot, encoding: "utf8" });
@@ -391,17 +544,11 @@ test("F# verified context plan matches production multi-item evidence-path outco
     const before = fs.readFileSync(contextFile, "utf8");
     const ids = ["TASK-ONE", "TASK-TWO"];
     const evidence = [{ type: "note", path: evidencePath }];
-    let productionAllowed = true;
-    let production;
-    try {
-      production = transition(root, "complete", ids, { evidence, actor: "differential" });
-    } catch {
-      productionAllowed = false;
-      const config = JSON.parse(fs.readFileSync(path.join(root, "ros.json"), "utf8"));
-      production = { context: { repository: config.repository.id, protocolVersion: config.workProtocol.version, actor: "differential" } };
-    }
+    const golden = GOLDEN.test11[evidencePath];
+    const productionAllowed = golden.allowed;
+    const production = { context: { repository: golden.repository, protocolVersion: golden.protocolVersion, actor: golden.actor } };
     const fsharp = fsharpContextPlan(t, root, before, "complete", ids, production, {
-      occurredAt: production.events?.[0]?.occurredAt ?? "2026-09-09T01:00:00Z",
+      occurredAt: "2026-09-09T01:00:00Z",
       evidence,
       verifyEvidence: true
     });

@@ -56,13 +56,15 @@ parity.
 
 **A project scaffolded by `ros-bootstrap init` gets this same launcher as
 its own `./ros`** (`DF-ROS-2026-A032`, superseding `DF-ROS-2026-A031`'s
-earlier additive-only `ros-fs`): F# is that project's sole CLI by default,
-using the identical acquire-verify-cache-exec mechanism
-(`tools/ros_fs_launcher.mjs`, reading the target version from that
-project's own `ros.json`). Node's own implementation
-(`tools/ros_cli.mjs`/`ros_git.mjs`/`ros_telemetry.mjs`/`ros_persistence.mjs`)
-is still scaffolded alongside it, untouched, as a rollback path — invoke it
-directly with `node tools/ros_cli.mjs <command>` if you ever need to.
+earlier additive-only `ros-fs`): F# is that project's sole CLI, using the
+identical acquire-verify-cache-exec mechanism (`tools/ros_fs_launcher.mjs`,
+reading the target version from that project's own `ros.json`). The
+`greenfield` profile no longer scaffolds Node's implementation at all
+(`DF-ROS-2026-A033`); the `project-administration` profile still includes
+`tools/ros_cli.mjs`/`ros_git.mjs`/`ros_telemetry.mjs`/`ros_persistence.mjs`,
+but only as the in-process internal dependency of that profile's own web
+and hub servers (`ros_server.mjs`, `ros_hub_cli.mjs`) — it is not a CLI and
+is not a supported rollback path.
 
 ## Install the latest directly from GitHub
 

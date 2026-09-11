@@ -14,6 +14,7 @@ const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".
 const packageVersion = JSON.parse(
   fs.readFileSync(path.join(repository, "package.json"), "utf8")
 ).version;
+const fsharpDll = path.join(repository, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
 
 function temporaryDirectory(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "ros-bootstrap-"));
@@ -21,16 +22,19 @@ function temporaryDirectory(t) {
   return directory;
 }
 
-// The scaffolded ./ros is now the F# launcher (DF-ROS-2026-A032), which
-// needs a real release to fetch from on a cache miss. For tests whose own
-// purpose is "the bootstrapped content validates correctly" rather than
-// "the F# launcher itself works" (that is covered by the dedicated
-// ros_fs_launcher.mjs test below, and the real end-to-end npm-exec test
-// exercises the launcher for real), invoke the scaffolded tools/ros_cli.mjs
-// directly as a reliable, network-free oracle -- Node's implementation is
-// unchanged and still fully correct, only ./ros no longer dispatches to it.
-function nodeCli(target, args, options = {}) {
-  return spawnSync("node", [path.join(target, "tools", "ros_cli.mjs"), ...args], { cwd: target, encoding: "utf8", ...options });
+// The scaffolded ./ros is now the F# launcher (DF-ROS-2026-A032) for both
+// profiles; Node's CLI modules are retained in this repository only as the
+// web server's internal dependency (DF-ROS-2026-A033) and are no longer
+// scaffolded into greenfield projects. For tests whose own purpose is "the
+// bootstrapped content validates correctly" rather than "the F# launcher
+// itself works" (that is covered by the dedicated ros_fs_launcher.mjs test
+// below, and the real end-to-end npm-exec test exercises the launcher for
+// real), invoke this repository's own already-built F# CLI directly against
+// the bootstrapped target's --root as a reliable, network-free verifier --
+// this is exactly what a real installed ./ros does once it has acquired a
+// real release binary.
+function fsharpCli(target, args, options = {}) {
+  return spawnSync("dotnet", [fsharpDll, "--root", target, ...args], { cwd: repository, encoding: "utf8", ...options });
 }
 
 test("greenfield initialization is self-contained and immediately valid", (t) => {
@@ -45,7 +49,7 @@ test("greenfield initialization is self-contained and immediately valid", (t) =>
   assert.match(fs.readFileSync(path.join(target, "README.md"), "utf8"), /Communication Engineering/);
   assert.equal(fs.statSync(path.join(target, "ros")).mode & 0o777, 0o755);
   assert.ok(fs.existsSync(path.join(target, "tools", "ros_fs_launcher.mjs")));
-  assert.ok(fs.existsSync(path.join(target, "tools", "ros_cli.mjs")));
+  assert.equal(fs.existsSync(path.join(target, "tools", "ros_cli.mjs")), false, "greenfield no longer scaffolds Node's CLI modules (DF-ROS-2026-A033)");
   assert.ok(fs.existsSync(path.join(target, ".ros", "installation.json")));
   const workContext = JSON.parse(fs.readFileSync(path.join(target, ".ros", "context", "current.json"), "utf8"));
   assert.equal(workContext.workItems[0].semanticState, "complete");
@@ -53,11 +57,11 @@ test("greenfield initialization is self-contained and immediately valid", (t) =>
   assert.ok(fs.existsSync(path.join(target, ".ros", "events", "events.jsonl")));
   assert.ok(fs.existsSync(path.join(target, ".github", "workflows", "ros-validation.yml")));
 
-  const registry = nodeCli(target, ["registry", "check"]);
+  const registry = fsharpCli(target, ["registry", "check"]);
   assert.equal(registry.status, 0, registry.stderr || registry.stdout);
   assert.match(registry.stdout, /registries are current/);
 
-  const validation = nodeCli(target, ["validate"]);
+  const validation = fsharpCli(target, ["validate"]);
   assert.equal(validation.status, 0, validation.stderr || validation.stdout);
   assert.match(validation.stdout, /validation passed/);
   const workflow = fs.readFileSync(path.join(target, ".github", "workflows", "ros-validation.yml"), "utf8");
@@ -204,7 +208,7 @@ test("installation is automatically attributed in an existing git repository", (
   spawnSync("git", ["add", "README.md"], { cwd: target });
   spawnSync("git", ["commit", "-qm", "baseline"], { cwd: target });
   initializeProject({ target, project: "Existing Repository" });
-  const validation = nodeCli(target, ["validate"]);
+  const validation = fsharpCli(target, ["validate"]);
   assert.equal(validation.status, 0, validation.stderr || validation.stdout);
 });
 
@@ -217,7 +221,7 @@ test("verification detects installed snapshot drift", (t) => {
   assert.match(result.findings[0], /BOOTSTRAP\.md: differs/);
 });
 
-test("installed Node validator catches broken lineage and accepts repaired lineage", (t) => {
+test("installed F# validator catches broken lineage and accepts repaired lineage", (t) => {
   const target = temporaryDirectory(t);
   initializeProject({ target, project: "Communication Engineering" });
   const hypothesis = path.join(
@@ -240,7 +244,7 @@ supporting_evidence: [EV-COMM-2026-A002]
 `,
     "utf8"
   );
-  const broken = nodeCli(target, ["validate"]);
+  const broken = fsharpCli(target, ["validate"]);
   assert.equal(broken.status, 1);
   assert.match(broken.stderr, /broken reference 'EV-COMM-2026-A002'/);
 
@@ -264,9 +268,9 @@ supports: [HY-COMM-2026-A001]
 `,
     "utf8"
   );
-  const build = nodeCli(target, ["registry", "build"]);
+  const build = fsharpCli(target, ["registry", "build"]);
   assert.equal(build.status, 0, build.stderr || build.stdout);
-  const repaired = nodeCli(target, ["validate"]);
+  const repaired = fsharpCli(target, ["validate"]);
   assert.equal(repaired.status, 0, repaired.stderr || repaired.stdout);
 });
 
@@ -278,9 +282,9 @@ test("installed validator accepts preserved legacy REP identity and confidence",
     `---\nidentifier: RP-2026-07-30-NHE-COMPARATIVE-REVIEW\ntitle: Legacy review\nstatus: draft\nconfidence: medium-high\n---\n`,
     "utf8"
   );
-  const build = nodeCli(target, ["registry", "build"]);
+  const build = fsharpCli(target, ["registry", "build"]);
   assert.equal(build.status, 0, build.stderr || build.stdout);
-  const validation = nodeCli(target, ["validate"]);
+  const validation = fsharpCli(target, ["validate"]);
   assert.equal(validation.status, 0, validation.stderr || validation.stdout);
 });
 
@@ -361,7 +365,7 @@ test("npm tarball contains the executable and every scaffold source", async (t) 
   // depending on network access to a real GitHub release in this test
   // suite: pre-seed the cache with a fake "binary" the same way
   // tests/ros-fs-launcher.test.mjs does. Bootstrap content correctness
-  // itself is already covered by this file's nodeCli(...)-based tests.
+  // itself is already covered by this file's fsharpCli(...)-based tests.
   const installedTarget = path.join(target, "communication-engineering");
   const { internal: installedLauncher } = await import(path.join(installedTarget, "tools", "ros_fs_launcher.mjs"));
   const installedRid = installedLauncher.resolveRid();
@@ -376,14 +380,16 @@ test("npm tarball contains the executable and every scaffold source", async (t) 
     else process.env.ROS_FS_CACHE_DIR = previousCacheDirEnv;
   });
 
-  // The fake "binary" delegates to the installed project's own real
-  // tools/ros_cli.mjs rather than being an inert stub, so ./ros validate
-  // genuinely re-validates the real bootstrapped content.
+  // The fake "binary" delegates to this repository's own already-built real
+  // F# CLI rather than being an inert stub, so ./ros validate genuinely
+  // re-validates the real bootstrapped content. Greenfield no longer
+  // scaffolds Node's CLI modules (DF-ROS-2026-A033), so there is no
+  // installed tools/ros_cli.mjs to delegate to here even as a stand-in.
   const installedBinaryPath = installedLauncher.cacheDirectory(packageVersion, installedRid);
   fs.mkdirSync(installedBinaryPath, { recursive: true });
   fs.writeFileSync(
     path.join(installedBinaryPath, installedLauncher.binaryName(installedRid)),
-    `#!/bin/sh\nexec node "${path.join(installedTarget, "tools", "ros_cli.mjs")}" "$@"\n`,
+    `#!/bin/sh\nexec dotnet "${fsharpDll}" "$@"\n`,
     { mode: 0o755 }
   );
 
@@ -430,11 +436,11 @@ test("project-administration profile installs a working hub, self-contained and 
   assert.deepEqual(registry.repos, []);
   assert.match(fs.readFileSync(path.join(target, ".ros", "hub", "registry.md"), "utf8"), /Registered Repositories/);
 
-  const validation = nodeCli(target, ["validate"]);
+  const validation = fsharpCli(target, ["validate"]);
   assert.equal(validation.status, 0, validation.stderr || validation.stdout);
   assert.match(validation.stdout, /validation passed/);
 
-  const registryCheck = nodeCli(target, ["registry", "check"]);
+  const registryCheck = fsharpCli(target, ["registry", "check"]);
   assert.equal(registryCheck.status, 0, registryCheck.stderr || registryCheck.stdout);
 
   // The hub CLI itself works against the freshly installed, copied files --
@@ -458,14 +464,16 @@ test("project-administration profile installs a working hub, self-contained and 
     if (previousSpokeCacheEnv === undefined) delete process.env.ROS_FS_CACHE_DIR;
     else process.env.ROS_FS_CACHE_DIR = previousSpokeCacheEnv;
   });
-  // The fake "binary" delegates to the spoke's own real tools/ros_cli.mjs
-  // rather than being an inert stub, so ros-hub create's actual write to
-  // the spoke's queue.json is genuinely exercised, not merely invoked.
+  // The fake "binary" delegates to this repository's own already-built real
+  // F# CLI rather than being an inert stub, so ros-hub create's actual write
+  // to the spoke's queue.json is genuinely exercised, not merely invoked.
+  // The spoke is a greenfield-profiled bootstrap, which no longer scaffolds
+  // Node's CLI modules (DF-ROS-2026-A033).
   const spokeBinaryPath = spokeLauncher.cacheDirectory(packageVersion, spokeRid);
   fs.mkdirSync(spokeBinaryPath, { recursive: true });
   fs.writeFileSync(
     path.join(spokeBinaryPath, spokeLauncher.binaryName(spokeRid)),
-    `#!/bin/sh\nexec node "${path.join(otherSpoke, "tools", "ros_cli.mjs")}" "$@"\n`,
+    `#!/bin/sh\nexec dotnet "${fsharpDll}" "$@"\n`,
     { mode: 0o755 }
   );
 

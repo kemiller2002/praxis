@@ -6,8 +6,6 @@ import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { buildRegistries, validate } from "../tools/ros_cli.mjs";
-
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fixtureRoot = path.join(repositoryRoot, "tests", "fixtures", "artifacts");
 const fixtureManifest = JSON.parse(fs.readFileSync(path.join(fixtureRoot, "manifest.json"), "utf8"));
@@ -31,29 +29,22 @@ function runFsharp(commandArgs) {
   });
 }
 
-function artifactFindings(findings) {
-  return findings
-    .filter(({ path: findingPath }) => findingPath.startsWith("research/") || findingPath.startsWith("missions/"))
-    .map(({ path: findingPath, field, message }) => ({ path: findingPath, field, message }));
-}
-
-test("F# artifact slice matches Node registry bytes and characterized findings", (t) => {
+test("F# artifact slice matches the frozen registry bytes and characterized findings", (t) => {
+  // Golden bytes and findings below come from the fixture manifest itself
+  // (tests/fixtures/artifacts/manifest.json's registrySha256/expectedFindings),
+  // frozen at experiment EX-ROS-2026-A020 -- not from a live Node oracle.
+  // Node is retained in this repository only as the web server's internal
+  // dependency (DF-ROS-2026-A033) and is no longer executed by this test.
   assert.ok(fs.existsSync(fsharpCli), "build:fsharp must produce the shadow CLI before this test runs");
 
-  const nodeRoot = temporaryFixture(t, valid.root);
   const fsharpRoot = temporaryFixture(t, valid.root);
-  fs.rmSync(path.join(nodeRoot, "registries"), { recursive: true, force: true });
   fs.rmSync(path.join(fsharpRoot, "registries"), { recursive: true, force: true });
-
-  const nodeBuild = buildRegistries(nodeRoot);
-  assert.equal(nodeBuild.findings.length, 0);
-  assert.equal(nodeBuild.changed, registryNames.length);
 
   const fsharpBuild = runFsharp(["--root", fsharpRoot, "registry", "build"]);
   assert.equal(fsharpBuild.status, 0, fsharpBuild.stderr);
 
   for (const name of registryNames) {
-    const expected = fs.readFileSync(path.join(nodeRoot, "registries", name), "utf8");
+    const expected = fs.readFileSync(path.join(fixtureRoot, valid.root, "registries", name), "utf8");
     const actual = fs.readFileSync(path.join(fsharpRoot, "registries", name), "utf8");
     assert.equal(actual, expected, name);
   }
@@ -62,14 +53,12 @@ test("F# artifact slice matches Node registry bytes and characterized findings",
   assert.equal(repeat.status, 0, repeat.stderr);
   assert.match(repeat.stdout, /^0 registry file\(s\) changed\n$/);
 
-  const nodeInvalid = artifactFindings(validate(temporaryFixture(t, invalid.root), { checkRegistries: false }));
   const fsharpInvalid = runFsharp(["--root", temporaryFixture(t, invalid.root), "artifacts", "validate", "--json"]);
   assert.equal(fsharpInvalid.status, 1, fsharpInvalid.stderr);
   assert.deepEqual(
     JSON.parse(fsharpInvalid.stdout).findings.map(({ path: findingPath, field, message }) => ({ path: findingPath, field, message })),
-    nodeInvalid
+    invalid.expectedFindings
   );
-  assert.deepEqual(nodeInvalid, invalid.expectedFindings);
 });
 
 test("F# shadow smoke-checks the current repository without becoming its authority", () => {

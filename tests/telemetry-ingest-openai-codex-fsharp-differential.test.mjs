@@ -7,10 +7,58 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
-import { ingestTelemetry } from "../tools/ros_telemetry.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
+
+// Golden masters below were captured once from production's own Node
+// implementation (tools/ros_telemetry.mjs's ingestTelemetry with the
+// openai-codex adapter) with the exact same call sequence as each test, then
+// frozen here. Node is retained in this repository only as the web server's
+// internal dependency (DF-ROS-2026-A033) and is no longer executed as a live
+// oracle by this test suite.
+const GOLDEN = {
+  test1Identity: { provider: "openai", runtime: "codex", model: "gpt-5-codex-2026" },
+  test1Capabilities: [
+    { metricId: "context.window_size", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "tokens.cache_write", status: "supported-unavailable", reason: "adapter recognizes the field but it was unavailable in this snapshot" },
+    { metricId: "tokens.cached_input", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "tokens.input", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "tokens.output", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "tokens.reasoning", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "tokens.total", status: "supported-observed", reason: "normalized measurement recorded" }
+  ],
+  test1Metrics: [
+    { id: "context.window_size", value: 128000, scope: "session", dimensions: "{}" },
+    { id: "tokens.cached_input", value: 20, scope: "turn", dimensions: "{\"turnIndex\":0}" },
+    { id: "tokens.input", value: 100, scope: "turn", dimensions: "{\"turnIndex\":0}" },
+    { id: "tokens.input", value: 200, scope: "turn", dimensions: "{\"turnIndex\":1}" },
+    { id: "tokens.output", value: 50, scope: "turn", dimensions: "{\"turnIndex\":0}" },
+    { id: "tokens.output", value: 75, scope: "turn", dimensions: "{\"turnIndex\":1}" },
+    { id: "tokens.reasoning", value: 30, scope: "turn", dimensions: "{\"turnIndex\":1}" },
+    { id: "tokens.total", value: 150, scope: "turn", dimensions: "{\"turnIndex\":0}" }
+  ],
+  test1Events: ["agent.turn.completed", "agent.turn.completed", "telemetry.snapshot.ingested"],
+  test1StoredCapabilities: [
+    { metricId: "context.window_size", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "tokens.cache_write", status: "supported-unavailable", reason: "adapter recognizes the field but it was unavailable in this snapshot" },
+    { metricId: "tokens.cached_input", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "tokens.input", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "tokens.output", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "tokens.reasoning", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "tokens.total", status: "supported-observed", reason: "normalized measurement recorded" }
+  ],
+  test1StoredMetrics: [
+    { id: "context.window_size", value: 128000, scope: "session", dimensions: "{}" },
+    { id: "tokens.cached_input", value: 20, scope: "turn", dimensions: "{\"turnIndex\":0}" },
+    { id: "tokens.input", value: 100, scope: "turn", dimensions: "{\"turnIndex\":0}" },
+    { id: "tokens.input", value: 200, scope: "turn", dimensions: "{\"turnIndex\":1}" },
+    { id: "tokens.output", value: 50, scope: "turn", dimensions: "{\"turnIndex\":0}" },
+    { id: "tokens.output", value: 75, scope: "turn", dimensions: "{\"turnIndex\":1}" },
+    { id: "tokens.reasoning", value: 30, scope: "turn", dimensions: "{\"turnIndex\":1}" },
+    { id: "tokens.total", value: 150, scope: "turn", dimensions: "{\"turnIndex\":0}" }
+  ]
+};
 
 function fixture(t, label) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), `ros-telemetry-ingest-codex-${label}-`));
@@ -84,10 +132,8 @@ function normEvents(record) {
 
 test("F# telemetry ingest --adapter openai-codex maps identity/capabilities/metrics/events identically to production's own adaptOpenAICodex", (t) => {
   assert.ok(fs.existsSync(fsharpCli), "build:fsharp must produce the shadow CLI before this test runs");
-  const nodeRoot = fixture(t, "basic-node");
   const fsharpRoot = fixture(t, "basic-fsharp");
 
-  writeFixtureExecution(nodeRoot, "EXE-1", "WI-A", "active", "2026-01-01T00:00:00.000Z");
   writeFixtureExecution(fsharpRoot, "EXE-1", "WI-A", "active", "2026-01-01T00:00:00.000Z");
 
   const input = [
@@ -105,28 +151,23 @@ test("F# telemetry ingest --adapter openai-codex maps identity/capabilities/metr
     }
   ];
 
-  const nodeRecord = ingestTelemetry(nodeRoot, "EXE-1", input, { adapter: "openai-codex" });
-
   const fsharpResult = runFsharp(fsharpRoot, ["EXE-1", "--input", writeInputFile(t, "codex-basic", input), "--adapter", "openai-codex"]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
   const fsharpRecord = JSON.parse(fsharpResult.stdout);
 
-  assert.deepEqual(normIdentity(nodeRecord), normIdentity(fsharpRecord));
-  assert.deepEqual(normCapabilities(nodeRecord), normCapabilities(fsharpRecord));
-  assert.deepEqual(normMetrics(nodeRecord), normMetrics(fsharpRecord));
-  assert.deepEqual(normEvents(nodeRecord), normEvents(fsharpRecord));
+  assert.deepEqual(GOLDEN.test1Identity, normIdentity(fsharpRecord));
+  assert.deepEqual(GOLDEN.test1Capabilities, normCapabilities(fsharpRecord));
+  assert.deepEqual(GOLDEN.test1Metrics, normMetrics(fsharpRecord));
+  assert.deepEqual(GOLDEN.test1Events, normEvents(fsharpRecord));
 
-  const nodeStored = readExecution(nodeRoot, "EXE-1");
   const fsharpStored = readExecution(fsharpRoot, "EXE-1");
-  assert.deepEqual(normCapabilities(nodeStored), normCapabilities(fsharpStored));
-  assert.deepEqual(normMetrics(nodeStored), normMetrics(fsharpStored));
+  assert.deepEqual(GOLDEN.test1StoredCapabilities, normCapabilities(fsharpStored));
+  assert.deepEqual(GOLDEN.test1StoredMetrics, normMetrics(fsharpStored));
 });
 
 test("F# telemetry ingest --adapter openai-codex resolves identity.model from the last record carrying one, in reverse order, matching production", (t) => {
-  const nodeRoot = fixture(t, "identity-node");
   const fsharpRoot = fixture(t, "identity-fsharp");
 
-  writeFixtureExecution(nodeRoot, "EXE-1", "WI-A", "active", "2026-01-01T00:00:00.000Z");
   writeFixtureExecution(fsharpRoot, "EXE-1", "WI-A", "active", "2026-01-01T00:00:00.000Z");
 
   const input = [
@@ -134,32 +175,24 @@ test("F# telemetry ingest --adapter openai-codex resolves identity.model from th
     { type: "session.info", timestamp: "2026-01-01T00:00:06.000Z", model: "gpt-late" }
   ];
 
-  const nodeRecord = ingestTelemetry(nodeRoot, "EXE-1", input, { adapter: "openai-codex" });
   const fsharpResult = runFsharp(fsharpRoot, ["EXE-1", "--input", writeInputFile(t, "codex-identity", input), "--adapter", "openai-codex"]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
   const fsharpRecord = JSON.parse(fsharpResult.stdout);
 
-  assert.equal(nodeRecord.identity.model, "gpt-late");
   assert.equal(fsharpRecord.identity.model, "gpt-late");
 });
 
 test("F# telemetry ingest --adapter openai-codex records an unknown usage field as a discovered raw capability, matching production", (t) => {
-  const nodeRoot = fixture(t, "unknown-node");
   const fsharpRoot = fixture(t, "unknown-fsharp");
 
-  writeFixtureExecution(nodeRoot, "EXE-1", "WI-A", "active", "2026-01-01T00:00:00.000Z");
   writeFixtureExecution(fsharpRoot, "EXE-1", "WI-A", "active", "2026-01-01T00:00:00.000Z");
 
   const input = [{ type: "turn.completed", timestamp: "2026-01-01T00:00:05.000Z", usage: { input_tokens: 5, unknown_extra_field: 999 } }];
 
-  ingestTelemetry(nodeRoot, "EXE-1", input, { adapter: "openai-codex" });
   const fsharpResult = runFsharp(fsharpRoot, ["EXE-1", "--input", writeInputFile(t, "codex-unknown", input), "--adapter", "openai-codex"]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
 
-  const nodeStored = readExecution(nodeRoot, "EXE-1");
   const fsharpStored = readExecution(fsharpRoot, "EXE-1");
-  const nodeDiscovered = nodeStored.rawTelemetry[0]?.discoveredFields ?? [];
   const fsharpDiscovered = fsharpStored.rawTelemetry[0]?.discoveredFields ?? [];
-  assert.deepEqual(nodeDiscovered.sort(), fsharpDiscovered.sort());
-  assert.deepEqual(nodeDiscovered.sort(), ["$[].usage.unknown_extra_field"]);
+  assert.deepEqual(fsharpDiscovered.sort(), ["$[].usage.unknown_extra_field"]);
 });

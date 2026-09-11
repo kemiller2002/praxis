@@ -10,6 +10,45 @@ import { observeGitStatus, parseGitStatus } from "../tools/ros_git.mjs";
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
 
+// Golden masters below were captured once from production's own Node
+// observeGitStatus with the exact same fixture as each test, then frozen
+// here. Node is retained in this repository only as the web server's
+// internal dependency (DF-ROS-2026-A033) and is no longer executed as a
+// live oracle by this test suite; the two "Node production boundary" tests
+// below still exercise ros_git.mjs directly since it remains shipped code.
+const GOLDEN = {
+  clean: {
+    schemaVersion: "1.0.0",
+    outcome: "clean",
+    changes: [],
+    failure: null,
+    source: { tool: "git", command: "status", format: "porcelain-v1-z" }
+  },
+  changed: {
+    schemaVersion: "1.0.0",
+    outcome: "changed",
+    changes: [
+      { code: " M", kind: "tracked", index: "unmodified", workTree: "modified", path: "modified.txt", originalPath: null },
+      { code: "R ", kind: "tracked", index: "renamed", workTree: "unmodified", path: "renamed.txt", originalPath: "original.txt" },
+      { code: "??", kind: "untracked", path: "untracked.txt", originalPath: null }
+    ],
+    failure: null,
+    source: { tool: "git", command: "status", format: "porcelain-v1-z" }
+  },
+  unavailable: {
+    schemaVersion: "1.0.0",
+    outcome: "unavailable",
+    changes: [],
+    failure: {
+      operation: "git status",
+      reason: "not-repository",
+      message: "fatal: not a git repository (or any of the parent directories): .git",
+      exitCode: 128
+    },
+    source: { tool: "git", command: "status", format: "porcelain-v1-z" }
+  }
+};
+
 function git(root, args) {
   return execFileSync("git", ["-C", root, ...args], { encoding: "utf8" });
 }
@@ -59,7 +98,7 @@ test("F# Git shadow matches clean porcelain status", (t) => {
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.json.outcome, "clean");
   assert.deepEqual(result.json.changes, []);
-  assert.deepEqual(observeGitStatus(root), result.json);
+  assert.deepEqual(result.json, GOLDEN.clean);
 });
 
 test("F# Git shadow matches changed paths, statuses, and rename origin", (t) => {
@@ -73,7 +112,7 @@ test("F# Git shadow matches changed paths, statuses, and rename origin", (t) => 
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.json.outcome, "changed");
   assert.deepEqual(projected(result.json.changes), expected);
-  assert.deepEqual(observeGitStatus(root), result.json);
+  assert.deepEqual(result.json, GOLDEN.changed);
   assert.deepEqual(result.json.changes.find(({ code }) => code.startsWith("R")), {
     code: "R ", kind: "tracked", index: "renamed", workTree: "unmodified",
     path: "renamed.txt", originalPath: "original.txt"
@@ -88,7 +127,7 @@ test("F# Git shadow reports unavailable instead of clean outside a repository", 
   assert.equal(result.json.outcome, "unavailable");
   assert.equal(result.json.failure.reason, "not-repository");
   assert.equal(result.json.failure.exitCode, 128);
-  assert.deepEqual(observeGitStatus(root), result.json);
+  assert.deepEqual(result.json, GOLDEN.unavailable);
 });
 
 test("Node production boundary rejects malformed porcelain output", () => {
