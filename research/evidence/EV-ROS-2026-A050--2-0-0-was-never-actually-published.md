@@ -110,3 +110,17 @@ with `conclusion: "success"`, followed by an independent check of
 `npm view @echelon-foundry/repository-operating-system version` and
 `GET /repos/.../releases/tags/v<version>` against the real registry and
 API -- not the workflow run's own reported conclusion alone.
+
+# Addendum: 2.0.1 verified live
+
+`2.0.1`'s own publish run (`34595220569`, triggered by merging PR `#46`)
+reached every previously-skipped step with `conclusion: "success"`:
+`Publish stable release`, `Build self-contained ros-fs binaries`, and
+`Create GitHub Release with ros-fs binaries`. Independently confirmed
+against the real deliverables (not the workflow's own report): `npm view
+@echelon-foundry/repository-operating-system dist-tags` shows
+`"latest": "2.0.1"`, and `GET /repos/.../releases/tags/v2.0.1` returns a
+published, non-draft, non-prerelease release with all 6 expected assets
+(`ros-fs-linux-x64`, `ros-fs-linux-arm64`, `ros-fs-osx-x64`,
+`ros-fs-osx-arm64`, `ros-fs-win-x64.exe`, `checksums.txt`). This is the
+first version of this package with a real, verified end-to-end release.

@@ -1905,18 +1905,28 @@
     {
       "id": "WI-0052",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-11T11:28:10.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/publish.yml"
+        },
+        {
+          "type": "tests",
+          "path": "research/evidence/EV-ROS-2026-A050--2-0-0-was-never-actually-published.md"
+        }
+      ],
+      "updatedAt": "2026-09-11T11:46:37.000Z",
       "telemetryExecutionIds": [
         "EXE-20260911T112811095Z-55205ed5"
-      ]
+      ],
+      "completedAt": "2026-09-11T11:46:37.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "codex",
-  "updatedAt": "2026-09-11T11:28:10.000Z",
+  "updatedAt": "2026-09-11T11:46:37.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
