@@ -5,8 +5,10 @@
     <Project Path="src/Ros.Application/Ros.Application.fsproj" />
     <Project Path="src/Ros.Infrastructure/Ros.Infrastructure.fsproj" />
     <Project Path="src/Ros.Cli/Ros.Cli.fsproj" />
+    <Project Path="src/Ros.Integration/Ros.Integration.fsproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Ros.Tests/Ros.Tests.fsproj" />
+    <Project Path="tests/Ros.Integration.Tests/Ros.Integration.Tests.fsproj" />
   </Folder>
 </Solution>
