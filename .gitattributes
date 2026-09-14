@@ -1,2 +1,13 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Auto detect text files and perform LF normalization.
+#
+# eol=lf is required, not cosmetic: without it, Git for Windows' default
+# core.autocrlf=true materialises every text file as CRLF in the working tree.
+# That breaks the byte-exact comparisons this repository relies on -- a CRLF
+# copy of a registry seed makes `ros registry check` report every registry as
+# stale against its own LF projection -- and a package built from such a
+# checkout would ship CRLF files to consumers. This mirrors the .gitattributes
+# this repository already scaffolds into the projects it installs
+# (starter/*/gitattributes.template).
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf

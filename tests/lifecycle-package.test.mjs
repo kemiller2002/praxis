@@ -166,6 +166,15 @@ test("the packed artifact declares the documented executables and ships what the
     entry.startsWith("tests/")
   );
   assert.deepEqual(forbidden, [], `packed tarball contains files it should not publish: ${forbidden.join(", ")}`);
+
+  // The registry seeds are compared byte-for-byte against the CLI's own LF
+  // projection, so a CRLF copy makes every registry read as stale the moment
+  // it is installed. A checkout without `eol=lf` in .gitattributes produces
+  // exactly that on Windows, so assert the bytes rather than trusting config.
+  for (const seed of entries.filter((entry) => /^starter\/.+\/registries\/.+\.json$/.test(entry))) {
+    const content = fs.readFileSync(path.join(root, seed));
+    assert.ok(!content.includes(0x0d), `${seed} must be packed with LF endings, not CRLF`);
+  }
 });
 
 test("--version reports the package version and --help documents every command", () => {
