@@ -311,6 +311,12 @@ module LifecycleTests =
 
                   Assert.isTrue (not embedded.IsEmpty) "no scaffold is embedded; the build is not shipping a usable binary"
 
+                  // MSBuild names a resource with the building platform's
+                  // separator, so a Windows build would otherwise index the
+                  // scaffold under backslashes and match nothing the manifests
+                  // ask for. The index normalises; this asserts it stays so.
+                  Assert.empty (embedded |> Set.filter (fun path -> path.Contains '\\') |> Set.toList)
+
                   let declared =
                       [ "greenfield"; "project-administration" ]
                       |> List.collect (fun profile ->

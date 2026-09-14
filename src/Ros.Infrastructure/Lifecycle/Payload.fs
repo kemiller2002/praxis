@@ -48,20 +48,35 @@ module Payload =
 
     let private embeddedAssembly = typeof<PayloadFile>.Assembly
 
-    let private embeddedNames =
+    /// Repository-relative path -> the resource name that actually holds it.
+    ///
+    /// MSBuild writes a resource name using the building platform's directory
+    /// separator, so the same scaffold compiled on Windows is named with
+    /// backslashes and on Linux with forward slashes. The manifests only ever
+    /// use forward slashes, so the index is normalised here and every lookup
+    /// goes through it -- a binary behaves identically whichever platform
+    /// built it.
+    let private embeddedResources =
         lazy
             (embeddedAssembly.GetManifestResourceNames()
              |> Array.filter (fun name -> name.StartsWith(EmbeddedPrefix, StringComparison.Ordinal))
-             |> Array.map (fun name -> name.Substring EmbeddedPrefix.Length)
-             |> Set.ofArray)
+             |> Array.map (fun name -> name.Substring(EmbeddedPrefix.Length).Replace('\\', '/'), name)
+             |> Map.ofArray)
 
-    /// Every scaffold path compiled into this assembly, repository-relative.
-    let embeddedPaths () = embeddedNames.Force()
+    /// Every scaffold path compiled into this assembly, repository-relative and
+    /// forward-slashed whatever platform built it.
+    let embeddedPaths () =
+        embeddedResources.Force() |> Map.toSeq |> Seq.map fst |> Set.ofSeq
+
+    let private embeddedStream (relative: string) =
+        match Map.tryFind relative (embeddedResources.Force()) with
+        | None -> null
+        | Some name -> embeddedAssembly.GetManifestResourceStream name
 
     /// One embedded scaffold file as text, for callers that only need to read
     /// the compiled-in copy (the manifest drift guard).
     let embeddedText (relative: string) : string option =
-        match embeddedAssembly.GetManifestResourceStream(EmbeddedPrefix + relative) with
+        match embeddedStream relative with
         | null -> None
         | stream ->
             use stream = stream
@@ -69,7 +84,7 @@ module Payload =
             Some(reader.ReadToEnd())
 
     let private readEmbedded (relative: string) : byte array option =
-        match embeddedAssembly.GetManifestResourceStream(EmbeddedPrefix + relative) with
+        match embeddedStream relative with
         | null -> None
         | stream ->
             use stream = stream
