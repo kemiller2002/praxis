@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Ros.Integration/Ros.Integration.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="ChronaPlaceholder.fs" />
+    <Compile Include="GitHubDatastoreWriter.fs" />
+    <Compile Include="LocalGitSimulation.fs" />
+  </ItemGroup>
+</Project>

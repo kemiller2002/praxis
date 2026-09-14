@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Ros.Integrations.GitHub.Tests</AssemblyName>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Ros.Integration/Ros.Integration.fsproj" />
+    <ProjectReference Include="../../src/Ros.Integrations.GitHub/Ros.Integrations.GitHub.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="TestFramework.fs" />
+    <Compile Include="ChronaShadowAdapterTests.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+</Project>

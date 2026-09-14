@@ -16,7 +16,8 @@ module ArchitectureTests =
               "Ros.Integration", Set.empty
               "Ros.ProjectAdministration", Set.ofList [ "Ros.Integration" ]
               "Ros.Persistence", Set.ofList [ "Ros.Integration"; "Ros.ProjectAdministration" ]
-              "Ros.Host", Set.ofList [ "Ros.Integration"; "Ros.ProjectAdministration"; "Ros.Persistence" ] ]
+              "Ros.Host", Set.ofList [ "Ros.Integration"; "Ros.ProjectAdministration"; "Ros.Persistence" ]
+              "Ros.Integrations.GitHub", Set.ofList [ "Ros.Integration" ] ]
 
     let private validateGraph (graph: Map<string, Set<string>>) =
         expectedReferences

@@ -9,6 +9,7 @@
     <Project Path="src/Ros.ProjectAdministration/Ros.ProjectAdministration.fsproj" />
     <Project Path="src/Ros.Persistence/Ros.Persistence.fsproj" />
     <Project Path="src/Ros.Host/Ros.Host.fsproj" />
+    <Project Path="src/Ros.Integrations.GitHub/Ros.Integrations.GitHub.fsproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Ros.Tests/Ros.Tests.fsproj" />
@@ -18,5 +19,6 @@
     <Project Path="tests/Ros.ProjectAdministration.Tests/Ros.ProjectAdministration.Tests.fsproj" />
     <Project Path="tests/Ros.Persistence.Tests/Ros.Persistence.Tests.fsproj" />
     <Project Path="tests/Ros.Host.Tests/Ros.Host.Tests.fsproj" />
+    <Project Path="tests/Ros.Integrations.GitHub.Tests/Ros.Integrations.GitHub.Tests.fsproj" />
   </Folder>
 </Solution>

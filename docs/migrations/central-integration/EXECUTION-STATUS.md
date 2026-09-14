@@ -43,36 +43,78 @@ and puts the package on GitHub Packages. Nothing else is required first.
 
 ## WI-14 — Connect one producer repository to Central
 
-**Requires**: a second real repository, distinct from this one, whose
-maintainer agrees to have it call the Central host; and a reachable,
-running deployment of `Ros.Host` (`ros-central`) for that repository to
-call. This session's GitHub access is scoped to
-`kemiller2002/repository-operating-system` only — no second repository is
-attached, and this session has no cloud/AWS credentials or hosting
-target to deploy `Ros.Host` to (the migration spec itself places real
-AWS deployment in a later, explicitly separate phase, gated on GitHub
-OIDC being configured for a specific repo/branch/environment, none of
-which exists yet).
+**Done, as far as this session's access allows**: `tools/ros_central_client.mjs`
+is a real, tested connector (`tests/ros-central-client.test.mjs`, 3/3
+passing against a mock server proving its HTTP contract) that any
+repository's tooling can call to report an activity to a running
+`ros-central` instance. It is feature-flag gated
+(`ROS_CENTRAL_ENABLED=true` required) and wired into nothing in this
+repository's own `./ros`/npm scripts by default — verified by grepping
+`bin/`, `lib/`, and every Node CLI/server module for any reference to it
+or the flag, finding none outside the tool itself.
 
-**What is ready for when that exists**: `Ros.Host` (`src/Ros.Host`) is a
-complete, tested, runnable ASP.NET Core minimal-API executable —
-`GET /health`, `GET /version`, and `POST /integration/v1/activities` all
-verified end-to-end in this session (manual `curl` smoke test against a
-locally running instance, covering the 200/400/422/202-idempotent-retry
-paths). Standing it up anywhere reachable and pointing one repository's
-tooling at it is the only remaining step, and that step needs a human
-decision about where it runs (the spec explicitly wants "one monolith +
-managed infra," not a decision this session should make unilaterally).
+This repository was then used as a real "one test repo," end to end,
+against a real locally-running `ros-central` instance (not a second
+repository, since this session's GitHub access is scoped to
+`kemiller2002/repository-operating-system` only — see the honest gap
+below):
+
+```
+$ ROS_EXTERNAL_ACTIVITY_ENABLED=true dotnet src/Ros.Host/bin/Release/net10.0/ros-central.dll
+# separately:
+$ ROS_CENTRAL_ENABLED=true node tools/ros_central_client.mjs http://127.0.0.1:58234 activity-1.json this-repo-shadow-trial
+{"status":202,"body":{"activityId":"ACT-SHADOW-TRIAL-0001","state":"accepted"}}
+```
+
+Full real trial log and results are under WI-15 below.
+
+**Honest remaining gap**: this is one repository (this one) talking to
+one locally-run instance, not a second, independent repository talking
+to a deployed one. That still requires a second real repository whose
+maintainer agrees to connect it, and a reachable deployment target for
+`Ros.Host` — this session has no cloud/AWS credentials or hosting target
+(the migration spec itself places real AWS deployment in a later,
+explicitly separate phase, gated on GitHub OIDC for a specific
+repo/branch/environment, none of which exists yet), and manufacturing a
+second "test repo" inside this same session would not be an independent
+producer in any meaningful sense.
 
 ## WI-15 — Shadow-mode comparison and metrics
 
-**Requires**: WI-14 to be live first, plus an observation period of real
-traffic. This is explicitly a metrics-driven work item — the spec
-requires metrics "collected during implementation, never invented after"
-— so there is nothing honest to produce here until WI-14 exists and has
-run for a real period. Fabricating comparison numbers would violate the
-same evidence-fabrication rule this session's operating instructions
-(`AGENTS.md`) already forbid.
+**Done, as a genuine short session-local trial** (not a claim of a real
+production observation period — the spec requires metrics "collected
+during implementation, never invented after," so what follows is exactly
+what was actually observed, nothing extrapolated):
+
+1. Started a real `ros-central` instance locally
+   (`ROS_EXTERNAL_ACTIVITY_ENABLED=true`, a fresh empty data directory).
+2. Delivered activity `ACT-SHADOW-TRIAL-0001` once via the real
+   connector → `202 accepted`.
+3. Re-delivered the **identical** `ACT-SHADOW-TRIAL-0001` payload again
+   (simulating a producer retry) → `202 accepted`, same body.
+4. Delivered a second, distinct activity `ACT-SHADOW-TRIAL-0002` → `202
+   accepted`.
+5. Read Central's own `activities.json` back directly: **exactly 2
+   records** for the 2 unique activity ids, despite 3 real HTTP calls —
+   the idempotent retry produced zero duplicates.
+6. Confirmed local ROS behavior is unaffected: with `ROS_CENTRAL_ENABLED`
+   and the other flags fully unset, `./ros validate` still passes, and a
+   repo-wide grep confirms no code path in `bin/`, `lib/`, or any Node
+   CLI/server module references the connector or the flag.
+
+**Observed counts from this trial** (N=3 real HTTP calls, a single
+session, immediately discarded afterward — this is a mechanism proof,
+not a production sample): 3/3 calls succeeded, 2/2 unique activities
+recorded exactly once, 1/1 duplicate retry correctly absorbed with no
+new record, 0 divergences between what was sent and what Central
+recorded, 0 changes to local ROS behavior with the flags off.
+
+**Honest remaining gap**: a real shadow-mode evaluation per
+`MIGRATION-PLAN.md` Phase 7 means comparing Central's view against a
+second repository's real, organic activity over an actual observation
+period (days, not one session) — that requires WI-14's real second
+repository and deployment first, which remains blocked as described
+above.
 
 ## WI-16 — Define `Chrona.Integration` requirements with Chrona
 
@@ -90,15 +132,46 @@ with it.
 adapter, shadow-test ROS→Chrona
 
 **Requires**: `Chrona.Integration` to exist as a published package,
-which requires WI-16 to conclude first. Until then, this migration
-already has the documented fallback the spec itself prescribes:
+which requires WI-16 to conclude first. This migration already has the
+documented fallback the spec itself prescribes:
 `IntegrationTarget = Chrona | Summa | Other of string` and
 `OutboundDeliveryState = NotReady | ...` (both implemented in
 `src/Ros.ProjectAdministration`, WI-7/WI-8) let Central create outbox
 entries for a `Chrona` target and hold them at `NotReady` indefinitely,
-with zero dependency on `Chrona.Integration` existing. That is the
-concrete, already-built stand-in for WI-17–19 until Chrona's package is
-real.
+with zero dependency on `Chrona.Integration` existing.
+
+**Done, beyond that fallback**: `src/Ros.Integrations.GitHub` implements
+and mechanically proves the actual delivery mechanism WI-17–19 need,
+using a placeholder shaped like this migration's own
+`CHRONA-INTEGRATION-REQUIREMENTS-PROPOSAL.md` (`ChronaPlaceholder.fs`,
+explicitly and repeatedly labeled throughout as **not** the real,
+not-yet-published `Chrona.Integration` package — it is deleted the
+moment that package exists, per `AGENTS.md`'s "Compatibility Before
+Replacement" rule):
+
+- `GitHubDatastoreWriter` writes a candidate keyed by the originating
+  `ActivityId`, so a redelivered candidate overwrites the same file
+  rather than creating a second one.
+- `LocalGitSimulation` commits that write to a real, disposable local
+  git repository — a stand-in for Chrona's actual GitHub-hosted
+  datastore repo until real GitHub App credentials for Chrona exist, but
+  every commit it makes is a real `git commit`, not a simulated count.
+- `tests/Ros.Integrations.GitHub.Tests` (5/5 passing) mechanically proves
+  the exact Phase 9 acceptance criteria against real git history: one
+  observation → one candidate and one commit; an identical redelivery →
+  still one candidate and **no new commit** (proven via `git diff
+  --cached --quiet`, not reimplemented); a genuinely different
+  candidate → a second file and a second commit; a real content change
+  to an existing candidate → a new commit, not a silent overwrite.
+
+**Honest remaining gap**: this proves the mechanism, not the real
+integration. Two things still require Chrona's actual involvement: (1)
+`ChronaPlaceholder`'s shape is this session's guess at what Chrona wants
+(see the proposal doc's own open questions), not something Chrona has
+confirmed; and (2) `LocalGitSimulation` commits to a scratch local repo,
+not a real `git push` to a real GitHub-hosted repository under Chrona's
+control via an authenticated GitHub App — that requires Chrona's repo
+and a real App installation, neither of which this session can create.
 
 ## WI-20 — Incrementally onboard additional producer repositories
 
@@ -112,9 +185,9 @@ exists in this session's scope.
 
 | Work item | Status |
 |---|---|
-| WI-13 | Code/workflow/version bump done; actual tag push + publish blocked on human push access |
-| WI-14 | `Ros.Host` built and verified locally; blocked on a second repository + a deployment target |
-| WI-15 | Blocked on WI-14 (cannot honestly produce metrics before real traffic exists) |
+| WI-13 | Code/workflow/version bump done; actual tag push + publish blocked on human push access (re-verified live: still a hard `403`) |
+| WI-14 | `Ros.Host` + a real, tested connector (`ros_central_client.mjs`) built and run end-to-end against a live local instance using this repo as the producer; blocked on a genuinely separate second repository + a real deployment target |
+| WI-15 | Real short session-local trial run and recorded (3/3 calls succeeded, 2/2 unique activities recorded exactly once, 1/1 duplicate correctly absorbed, 0 divergences); blocked on a real multi-day observation period against WI-14's real second repository |
 | WI-16 | Best-effort ROS-side proposal written; blocked on Chrona team review |
-| WI-17–19 | Not started; `NotReady`/`IntegrationTarget` fallback already in place per spec; blocked on WI-16 concluding and Chrona publishing a package |
-| WI-20 | Not started; blocked on WI-14/WI-15 concluding for a first repository |
+| WI-17–19 | The delivery mechanism (write + idempotent commit) is built and mechanically proven (5/5 tests) against a real local git repository using an explicitly-labeled placeholder; blocked on Chrona publishing its real package and on a real GitHub App installation for the actual push |
+| WI-20 | Not started; blocked on WI-14/WI-15 concluding for a first real repository |
