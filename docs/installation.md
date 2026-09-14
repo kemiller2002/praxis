@@ -121,6 +121,40 @@ derived, and the derivation is part of the contract:
 - `"template": true` → **shared**
 - otherwise → **tool-owned**
 
+## Where the scaffold comes from
+
+The CLI carries its own copy of everything it installs, compiled into the
+executable. That is what lets a project run its own lifecycle:
+
+```bash
+cd /path/to/your/repository
+./ros verify      # is the installation intact?
+./ros init        # heal: restore anything tool-owned that is missing
+./ros upgrade     # update to this CLI's version
+```
+
+No npm package on disk, no network, and no `--package-root` are needed for any
+of those. A project scaffolded by `init` gets a `./ros` launcher that downloads
+the binary for the version pinned in its `ros.json`; that binary is
+self-sufficient from then on.
+
+The scaffold is resolved in this order:
+
+1. `--package-root PATH`, when given.
+2. `ROS_PACKAGE_ROOT`, when set.
+3. A package directory found by walking up from the executable, then from the
+   working directory — this is what a source checkout and an `npx` invocation
+   both hit.
+4. The copy compiled into the binary.
+
+A real directory wins so that a source checkout installs the files you are
+editing rather than the ones compiled in. Everywhere else, step 4 applies.
+
+The compiled-in copy is exactly the set of files the profile manifests
+reference — no more, no less; a test asserts that equality in both directions,
+so a manifest entry that was never embedded fails the build's tests rather than
+shipping a binary that cannot install itself.
+
 ## Installation manifest
 
 `.echelon/ros.json` is the machine-readable record of what is installed. The
@@ -172,6 +206,10 @@ target folder.
 ./ros registry check
 ./ros validate
 ```
+
+The scaffolded repository can also run its own lifecycle — `./ros verify`,
+`./ros init` to heal, `./ros upgrade` to update — without reaching for npx; see
+[Where the scaffold comes from](#where-the-scaffold-comes-from).
 
 The scaffolded repository gets its own `./ros`, which runs the same F# CLI
 pinned to the version recorded in its `ros.json`. It does not read from, or

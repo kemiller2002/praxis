@@ -92,9 +92,10 @@ Options:
   -h, --help            Show this help, or 'ros <command> --help'.
   -V, --version         Print the CLI version and exit.
   --root PATH           Repository to act on (default: current directory).
-  --package-root PATH   Where this package's scaffold lives. Normally supplied
-                        by the npm launcher; needed only when running the
-                        executable directly from outside the package.
+  --package-root PATH   Install from this scaffold directory instead of the one
+                        compiled into this binary. Rarely needed: the CLI
+                        carries its own scaffold, so init and upgrade work with
+                        no package on disk and no network.
   --json                Emit machine-readable JSON on stdout.
   --verbose             Emit extra detail.
 
@@ -374,9 +375,9 @@ let parse (packageRoot: string option) (arguments: string list) : Result<Command
 let environment: LifecycleEnvironment<Payload> =
     { LoadPayload =
         fun request ->
-            match Payload.locate request.PackageRoot with
+            match Payload.resolveSource request.PackageRoot with
             | None -> None
-            | Some packageRoot ->
+            | Some payloadSource ->
                 let projectName =
                     match request.Project with
                     | Some name when name.Trim().Length > 0 -> Ok(name.Trim())
@@ -387,7 +388,7 @@ let environment: LifecycleEnvironment<Payload> =
 
                 match projectName with
                 | Error message -> Some(Error message)
-                | Ok name -> Some(Payload.load packageRoot request.Profile name)
+                | Ok name -> Some(Payload.load payloadSource request.Profile name)
       PayloadEntries = fun payload -> payload.Files |> List.map (fun file -> file.Entry)
       PayloadProfile = fun payload -> payload.Profile
       PayloadPackageName = fun payload -> payload.PackageName

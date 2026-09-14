@@ -288,9 +288,9 @@ module Diagnostics =
             (Some(InstallationProblem.remedy problem))
 
     /// Every diagnosis the repository's observed state supports, most severe
-    /// first. `payload` is `None` when this CLI was invoked without its own
-    /// packaged scaffold available (a cached binary run outside the npm
-    /// package), which limits what can be checked but is not itself an error.
+    /// first. `payload` is `None` only when this CLI has no scaffold at all --
+    /// neither a directory nor the copy compiled into it -- which limits what
+    /// can be checked but is not itself an error.
     let inspect
         (availableVersion: string)
         (payload: PayloadEntry list option)
@@ -362,9 +362,9 @@ module Diagnostics =
                 [ diagnosis
                       Severity.Information
                       "payload-unavailable"
-                      "this CLI cannot see its own packaged scaffold, so init and upgrade are unavailable here"
+                      "this CLI has no scaffold available, so init and upgrade are unavailable here"
                       None
-                      (Some "Run the command through the npm package (npx --package=... ros ...) so the scaffold ships alongside the CLI.") ]
+                      (Some "This build shipped without its embedded scaffold; reinstall the package, or pass --package-root at a checkout.") ]
             | Some entries ->
                 let planned =
                     Planning.initialize

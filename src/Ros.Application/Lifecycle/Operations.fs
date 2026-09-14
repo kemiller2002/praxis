@@ -68,7 +68,7 @@ module Lifecycle =
         | None ->
             Error(
                 LifecycleFailure.PayloadUnavailable
-                    "this CLI cannot see its own packaged scaffold; run it through the npm package or pass --package-root"
+                    "this CLI has no scaffold available; this build shipped without its embedded copy, so pass --package-root at a checkout"
             )
         | Some(Error message) -> Error(LifecycleFailure.PayloadUnavailable message)
         | Some(Ok payload) -> Ok payload

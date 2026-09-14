@@ -298,6 +298,43 @@ module LifecycleTests =
                   | Conflict.MigrationPreconditionFailed(0, 1, _) -> ()
                   | other -> failwith $"Expected a precondition failure, got {other}" }
 
+          // The scaffold is compiled into the assembly so a released binary can
+          // install and upgrade a repository on its own. If the embedded set
+          // and the manifests ever drift, that binary ships unable to do the
+          // thing it exists for -- so the two must match exactly, in both
+          // directions: a missing file breaks `init`, an extra one is dead
+          // weight in every published binary.
+          { Name = "the embedded scaffold is exactly what the starter manifests reference"
+            Run =
+              fun () ->
+                  let embedded = Ros.Infrastructure.Lifecycle.Payload.embeddedPaths ()
+
+                  Assert.isTrue (not embedded.IsEmpty) "no scaffold is embedded; the build is not shipping a usable binary"
+
+                  let declared =
+                      [ "greenfield"; "project-administration" ]
+                      |> List.collect (fun profile ->
+                          let manifest = $"starter/{profile}/manifest.json"
+
+                          match Ros.Infrastructure.Lifecycle.Payload.embeddedText manifest with
+                          | None -> failwith $"{manifest} is not embedded"
+                          | Some text ->
+                              use document = System.Text.Json.JsonDocument.Parse text
+
+                              document.RootElement.GetProperty("files").EnumerateArray()
+                              |> Seq.map (fun entry -> entry.GetProperty("source").GetString())
+                              |> List.ofSeq
+                              |> fun sources -> manifest :: sources)
+                      // package.json is read for the installed name and version.
+                      |> fun sources -> "package.json" :: sources
+                      |> Set.ofList
+
+                  let missing = Set.difference declared embedded |> Set.toList
+                  let extra = Set.difference embedded declared |> Set.toList
+
+                  Assert.empty missing
+                  Assert.empty extra }
+
           { Name = "every exit code has exactly one documented meaning"
             Run =
               fun () ->

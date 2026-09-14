@@ -1038,6 +1038,20 @@
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "WI-0057",
+      "title": "Embed the starter scaffold in the CLI binary so init/upgrade run standalone",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-14T14:00:34.000Z",
+      "updatedAt": "2026-09-14T14:00:35.000Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

@@ -93,6 +93,7 @@
 | WI-0054 | Fix ros-bootstrap init pinning a scaffolded project to a binary-less @main snapshot version | complete |  | high |
 | WI-0055 | Sync queue.json's own backlog status to complete when a promoted item finishes | complete |  | medium |
 | WI-0056 | Add the standardized Echelon Foundry lifecycle CLI (init/status/verify/upgrade/doctor) in F#, distributed through npm | complete |  | high |
+| WI-0057 | Embed the starter scaffold in the CLI binary so init/upgrade run standalone | complete |  | high |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |

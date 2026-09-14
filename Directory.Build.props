@@ -7,6 +7,11 @@
     <DebugType>portable</DebugType>
   </PropertyGroup>
 
+  <!-- Repository root, used to locate the scaffold this CLI embeds. -->
+  <PropertyGroup>
+    <RosRepositoryRoot>$(MSBuildThisFileDirectory)</RosRepositoryRoot>
+  </PropertyGroup>
+
   <!-- package.json is the single authoritative version source for both the
        npm package and the F# CLI, so the CLI's reported version can never
        drift from the released package version. The CLI reads it back at

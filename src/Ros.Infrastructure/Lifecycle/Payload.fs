@@ -28,9 +28,54 @@ type Payload =
       ProjectName: string
       Files: PayloadFile list }
 
+/// Where a payload's bytes come from. A released binary carries its own copy,
+/// so `init` and `upgrade` work inside a repository that only has the
+/// downloaded executable -- no npm package, no network, no `--package-root`.
+/// A directory still wins when one is available, so a source checkout installs
+/// the scaffold you are editing rather than the one compiled in.
+type PayloadSource =
+    | PayloadDirectory of root: string
+    | EmbeddedPayload
+
 [<RequireQualifiedAccess>]
 module Payload =
     let private jsonOptions = JsonDocumentOptions(CommentHandling = JsonCommentHandling.Skip)
+
+    /// Resource-name prefix for the compiled-in scaffold; see the
+    /// `EmbeddedResource` items in Ros.Infrastructure.fsproj.
+    [<Literal>]
+    let private EmbeddedPrefix = "ros.payload/"
+
+    let private embeddedAssembly = typeof<PayloadFile>.Assembly
+
+    let private embeddedNames =
+        lazy
+            (embeddedAssembly.GetManifestResourceNames()
+             |> Array.filter (fun name -> name.StartsWith(EmbeddedPrefix, StringComparison.Ordinal))
+             |> Array.map (fun name -> name.Substring EmbeddedPrefix.Length)
+             |> Set.ofArray)
+
+    /// Every scaffold path compiled into this assembly, repository-relative.
+    let embeddedPaths () = embeddedNames.Force()
+
+    /// One embedded scaffold file as text, for callers that only need to read
+    /// the compiled-in copy (the manifest drift guard).
+    let embeddedText (relative: string) : string option =
+        match embeddedAssembly.GetManifestResourceStream(EmbeddedPrefix + relative) with
+        | null -> None
+        | stream ->
+            use stream = stream
+            use reader = new StreamReader(stream)
+            Some(reader.ReadToEnd())
+
+    let private readEmbedded (relative: string) : byte array option =
+        match embeddedAssembly.GetManifestResourceStream(EmbeddedPrefix + relative) with
+        | null -> None
+        | stream ->
+            use stream = stream
+            use buffer = new MemoryStream()
+            stream.CopyTo buffer
+            Some(buffer.ToArray())
 
     let private readJson (path: string) =
         JsonDocument.Parse(File.ReadAllText path, jsonOptions)
@@ -139,17 +184,48 @@ module Payload =
                 elif boolProperty entry "template" then Ok Ownership.Shared
                 else Ok Ownership.ToolOwned
 
-    let availableProfiles (packageRoot: string) =
-        let starter = Path.Combine(packageRoot, "starter")
+    /// Read one repository-relative file from whichever source this payload
+    /// came from. Every read in this module goes through here, so the
+    /// directory and embedded cases cannot drift apart.
+    let private readPayloadFile (source: PayloadSource) (relative: string) : Result<byte array option, string> =
+        match source with
+        | EmbeddedPayload ->
+            // A resource name is not a path, but the manifest is still data, so
+            // reject traversal rather than trusting it.
+            if relative.Contains ".." then Error $"unsafe path in the starter manifest: {relative}"
+            else Ok(readEmbedded relative)
+        | PayloadDirectory root ->
+            match resolveWithin root relative with
+            | Error message -> Error message
+            | Ok absolute -> Ok(if File.Exists absolute then Some(File.ReadAllBytes absolute) else None)
 
-        if Directory.Exists starter then
-            Directory.GetDirectories starter
-            |> Array.filter (fun directory -> File.Exists(Path.Combine(directory, "manifest.json")))
-            |> Array.map Path.GetFileName
-            |> Array.sortWith (fun a b -> String.CompareOrdinal(a, b))
-            |> List.ofArray
-        else
-            []
+    let private readPayloadText source relative =
+        readPayloadFile source relative |> Result.map (Option.map Encoding.UTF8.GetString)
+
+    let availableProfiles (source: PayloadSource) =
+        match source with
+        | EmbeddedPayload ->
+            embeddedPaths ()
+            |> Set.toList
+            |> List.choose (fun path ->
+                let parts = path.Split '/'
+
+                if parts.Length = 3 && parts[0] = "starter" && parts[2] = "manifest.json" then
+                    Some parts[1]
+                else
+                    None)
+            |> List.sortWith (fun a b -> String.CompareOrdinal(a, b))
+        | PayloadDirectory root ->
+            let starter = Path.Combine(root, "starter")
+
+            if Directory.Exists starter then
+                Directory.GetDirectories starter
+                |> Array.filter (fun directory -> File.Exists(Path.Combine(directory, "manifest.json")))
+                |> Array.map Path.GetFileName
+                |> Array.sortWith (fun a b -> String.CompareOrdinal(a, b))
+                |> List.ofArray
+            else
+                []
 
     let private looksLikePackageRoot (candidate: string) =
         File.Exists(Path.Combine(candidate, "package.json"))
@@ -159,9 +235,8 @@ module Payload =
     /// wins; otherwise the environment variable the npm launcher sets; then a
     /// walk up from the executable (a source checkout, or a cached binary
     /// sitting inside the package); then a walk up from the working
-    /// directory. Returning None is not an error -- `status`, `verify` and
-    /// `doctor` all work without a payload.
-    let locate (explicit: string option) : string option =
+    /// directory.
+    let private locateDirectory (explicit: string option) : string option =
         let candidates =
             [ match explicit with
               | Some value -> yield Path.GetFullPath value
@@ -190,92 +265,116 @@ module Payload =
             | Some found -> Some found
             | None -> walkUp (Path.GetFullPath(Directory.GetCurrentDirectory()))
 
-    let private readPackageMetadata (packageRoot: string) =
-        use document = readJson (Path.Combine(packageRoot, "package.json"))
-        let root = document.RootElement
-        stringProperty root "name" |> Option.defaultValue "", stringProperty root "version" |> Option.defaultValue "0.0.0"
+    /// Resolve the scaffold this CLI should install. A real directory wins so
+    /// that a source checkout installs the files being edited; otherwise the
+    /// copy compiled into this binary is used, which is what lets `init` and
+    /// `upgrade` run from a repository that only has the executable.
+    /// None means neither is available, which only a build without the payload
+    /// can produce.
+    let resolveSource (explicit: string option) : PayloadSource option =
+        match locateDirectory explicit with
+        | Some root -> Some(PayloadDirectory root)
+        | None -> if (embeddedPaths ()).IsEmpty then None else Some EmbeddedPayload
+
+    let private readPackageMetadata (source: PayloadSource) =
+        match readPayloadText source "package.json" with
+        | Error message -> Error message
+        | Ok None -> Error "the payload has no package.json, so its name and version cannot be read"
+        | Ok(Some text) ->
+            use document = JsonDocument.Parse(text, jsonOptions)
+            let root = document.RootElement
+
+            Ok(
+                stringProperty root "name" |> Option.defaultValue "",
+                stringProperty root "version" |> Option.defaultValue "0.0.0"
+            )
 
     /// `publish.yml` bundles `lib/stable-ros-version.json` into every
     /// published tarball, naming the newest stable release. A snapshot
     /// install must scaffold that version rather than its own, since a
     /// snapshot has no GitHub Release and therefore no runnable binary.
-    let private readTargetVersion (packageRoot: string) (packageVersion: string) =
-        let overridePath = Path.Combine(packageRoot, "lib", "stable-ros-version.json")
+    ///
+    /// Only a directory payload can carry that file. An embedded payload is
+    /// only ever reached from a binary that a real release published, so its
+    /// own version is already the one to pin.
+    let private readTargetVersion (source: PayloadSource) (packageVersion: string) =
+        match source with
+        | EmbeddedPayload -> packageVersion
+        | PayloadDirectory root ->
+            let overridePath = Path.Combine(root, "lib", "stable-ros-version.json")
 
-        if File.Exists overridePath then
-            use document = readJson overridePath
-            stringProperty document.RootElement "version" |> Option.defaultValue packageVersion
-        else
-            packageVersion
+            if File.Exists overridePath then
+                use document = readJson overridePath
+                stringProperty document.RootElement "version" |> Option.defaultValue packageVersion
+            else
+                packageVersion
 
     /// Read, render and hash the whole scaffold for one profile. Nothing is
     /// written; the result is the desired state the planner compares against.
-    let load (packageRoot: string) (profile: string) (projectName: string) : Result<Payload, string> =
-        let manifestPath = Path.Combine(packageRoot, "starter", profile, "manifest.json")
+    let load (payloadSource: PayloadSource) (profile: string) (projectName: string) : Result<Payload, string> =
+        let manifestRelative = $"starter/{profile}/manifest.json"
 
-        if not (File.Exists manifestPath) then
-            let available = availableProfiles packageRoot
+        let manifestText =
+            match readPayloadText payloadSource manifestRelative with
+            | Error message -> Error message
+            | Ok(Some text) -> Ok text
+            | Ok None ->
+                let names = String.concat ", " (availableProfiles payloadSource)
+                Error $"unsupported profile '{profile}'; available profiles: {names}"
 
-            let names = String.concat ", " available
-            Error $"unsupported profile '{profile}'; available profiles: {names}"
-        else
-            let packageName, packageVersion = readPackageMetadata packageRoot
-            let targetVersion = readTargetVersion packageRoot packageVersion
+        manifestText
+        |> Result.bind (fun manifestText ->
+            readPackageMetadata payloadSource
+            |> Result.bind (fun (packageName, packageVersion) ->
+                let targetVersion = readTargetVersion payloadSource packageVersion
 
-            let variables =
-                Map.ofList
-                    [ "PROJECT_NAME", projectName
-                      "PROJECT_SLUG", slugify projectName
-                      "CREATED_DATE", DateTime.UtcNow.ToString("yyyy-MM-dd")
-                      "ROS_VERSION", targetVersion ]
+                let variables =
+                    Map.ofList
+                        [ "PROJECT_NAME", projectName
+                          "PROJECT_SLUG", slugify projectName
+                          "CREATED_DATE", DateTime.UtcNow.ToString("yyyy-MM-dd")
+                          "ROS_VERSION", targetVersion ]
 
-            use document = readJson manifestPath
+                use document = JsonDocument.Parse(manifestText, jsonOptions)
 
-            let entries =
-                document.RootElement.GetProperty("files").EnumerateArray()
-                |> Seq.map (fun entry ->
-                    let source = stringProperty entry "source" |> Option.defaultValue ""
+                let readEntry (entry: JsonElement) =
+                    let sourcePath = stringProperty entry "source" |> Option.defaultValue ""
                     let destination = stringProperty entry "destination" |> Option.defaultValue ""
 
-                    if source = "" || destination = "" then
+                    if sourcePath = "" || destination = "" then
                         Error "starter manifest entry is missing 'source' or 'destination'"
                     else
-                        match resolveWithin packageRoot source with
-                        | Error message -> Error message
-                        | Ok sourcePath ->
-                            if not (File.Exists sourcePath) then
-                                Error $"starter manifest references a missing source file: {source}"
-                            else
-                                match ownershipOf entry with
-                                | Error message -> Error message
-                                | Ok ownership ->
-                                    let raw = File.ReadAllBytes sourcePath
+                        match readPayloadFile payloadSource sourcePath, ownershipOf entry with
+                        | Error message, _
+                        | _, Error message -> Error message
+                        | Ok None, _ -> Error $"starter manifest references a missing source file: {sourcePath}"
+                        | Ok(Some raw), Ok ownership ->
+                            let content =
+                                if boolProperty entry "template" then
+                                    render (Encoding.UTF8.GetString raw) variables |> Result.map Encoding.UTF8.GetBytes
+                                else
+                                    Ok raw
 
-                                    let contentResult =
-                                        if boolProperty entry "template" then
-                                            render (Encoding.UTF8.GetString raw) variables
-                                            |> Result.map Encoding.UTF8.GetBytes
-                                        else
-                                            Ok raw
+                            content
+                            |> Result.map (fun content ->
+                                { Entry =
+                                    { Path = destination
+                                      Ownership = ownership
+                                      Sha256 = sha256Hex content
+                                      Executable = boolProperty entry "executable"
+                                      Integration = stringProperty entry "integration" }
+                                  Content = content })
 
-                                    contentResult
-                                    |> Result.map (fun content ->
-                                        { Entry =
-                                            { Path = destination
-                                              Ownership = ownership
-                                              Sha256 = sha256Hex content
-                                              Executable = boolProperty entry "executable"
-                                              Integration = stringProperty entry "integration" }
-                                          Content = content }))
-                |> List.ofSeq
+                let entries =
+                    document.RootElement.GetProperty("files").EnumerateArray() |> Seq.map readEntry |> List.ofSeq
 
-            match entries |> List.tryPick (function Error message -> Some message | Ok _ -> None) with
-            | Some message -> Error message
-            | None ->
-                Ok
-                    { Profile = profile
-                      PackageName = packageName
-                      PackageVersion = packageVersion
-                      TargetVersion = targetVersion
-                      ProjectName = projectName
-                      Files = entries |> List.choose (function Ok file -> Some file | Error _ -> None) }
+                match entries |> List.tryPick (function Error message -> Some message | Ok _ -> None) with
+                | Some message -> Error message
+                | None ->
+                    Ok
+                        { Profile = profile
+                          PackageName = packageName
+                          PackageVersion = packageVersion
+                          TargetVersion = targetVersion
+                          ProjectName = projectName
+                          Files = entries |> List.choose (function Ok file -> Some file | Error _ -> None) }))

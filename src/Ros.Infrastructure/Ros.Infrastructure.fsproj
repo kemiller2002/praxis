@@ -33,4 +33,42 @@
     <Compile Include="Lifecycle/Payload.fs" />
     <Compile Include="Lifecycle/Installation.fs" />
   </ItemGroup>
+
+  <!-- The scaffold this CLI installs, compiled into the assembly so a released
+       binary can run `init` and `upgrade` inside a repository that has only the
+       executable: no npm package on disk, no network, and no explicitly supplied
+       package root. A
+       directory payload still wins when one is present (Payload.resolveSource),
+       so a source checkout installs the files being edited.
+
+       These items must cover exactly the `source` paths in both starter
+       manifests. LifecycleTests asserts that set equality, so adding a manifest
+       entry outside these rules fails the tests rather than shipping a binary
+       that cannot install itself. -->
+  <ItemGroup>
+    <EmbeddedResource Include="$(RosRepositoryRoot)package.json" LogicalName="ros.payload/package.json" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)AGENTS.md" LogicalName="ros.payload/AGENTS.md" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)BOOTSTRAP.md" LogicalName="ros.payload/BOOTSTRAP.md" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)CLAUDE.md" LogicalName="ros.payload/CLAUDE.md" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)GEMINI.md" LogicalName="ros.payload/GEMINI.md" />
+    <EmbeddedResource Include="$(RosRepositoryRoot).github/copilot-instructions.md" LogicalName="ros.payload/.github/copilot-instructions.md" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)telemetry/metrics.json" LogicalName="ros.payload/telemetry/metrics.json" />
+
+    <EmbeddedResource Include="$(RosRepositoryRoot)docs/development-telemetry.md" LogicalName="ros.payload/docs/development-telemetry.md" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)docs/project-administration-hub.md" LogicalName="ros.payload/docs/project-administration-hub.md" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)docs/web-interface.md" LogicalName="ros.payload/docs/web-interface.md" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)docs/work-adapter-contract.md" LogicalName="ros.payload/docs/work-adapter-contract.md" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)docs/work-backlog-guide.md" LogicalName="ros.payload/docs/work-backlog-guide.md" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)docs/work-protocol.md" LogicalName="ros.payload/docs/work-protocol.md" />
+
+    <EmbeddedResource Include="$(RosRepositoryRoot)docs/00-governance/**/*.*" LogicalName="ros.payload/docs/00-governance/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)framework/**/*.*" LogicalName="ros.payload/framework/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)schemas/**/*.*" LogicalName="ros.payload/schemas/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)templates/**/*.*" LogicalName="ros.payload/templates/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)tools/*.mjs" LogicalName="ros.payload/tools/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)web/*.*" LogicalName="ros.payload/web/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)web-hub/*.*" LogicalName="ros.payload/web-hub/%(Filename)%(Extension)" />
+
+    <EmbeddedResource Include="$(RosRepositoryRoot)starter/**/*.*" LogicalName="ros.payload/starter/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
 </Project>

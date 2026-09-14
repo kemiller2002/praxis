@@ -485,6 +485,72 @@ test("the project-administration profile installs and verifies through the packe
   assert.equal(ros(root, ["init"]).status, 0);
 });
 
+// The scaffold is compiled into the CLI assembly, so a released binary can
+// install, heal and upgrade a repository on its own. This is what makes
+// `./ros init` and `./ros upgrade` work inside a scaffolded project, whose own
+// launcher downloads that binary and has no npm package to point at.
+//
+// Everything below runs the assembly from a directory outside this checkout,
+// with the working directory outside it too, so neither the package-root walk
+// nor --package-root can supply the scaffold: only the embedded copy can.
+test("a binary on its own, with no npm package reachable, can install heal and upgrade", (t) => {
+  const detached = temporaryDirectory("detached");
+  const project = temporaryDirectory("standalone");
+  t.after(() => {
+    for (const directory of [detached, project]) {
+      try {
+        fs.rmSync(directory, { recursive: true, force: true });
+      } catch {
+        // Best effort.
+      }
+    }
+  });
+
+  fs.cpSync(path.dirname(builtAssembly), detached, { recursive: true });
+  const detachedAssembly = path.join(detached, path.basename(builtAssembly));
+
+  const standalone = (args) => {
+    const result = spawnSync("dotnet", [detachedAssembly, "--root", project, ...args], {
+      // Outside the repository, so the package-root walk finds nothing.
+      cwd: detached,
+      encoding: "utf8",
+      env: process.env
+    });
+    assert.ok(
+      !(result.stderr ?? "").includes("packaged scaffold"),
+      `'${args.join(" ")}' fell back to needing the npm package: ${result.stderr}`
+    );
+    return { status: result.status, stdout: result.stdout ?? "", stderr: result.stderr ?? "" };
+  };
+
+  const installed = standalone(["init", "--project", "Standalone Service"]);
+  assert.equal(installed.status, 0, installed.stderr);
+  assert.ok(fs.existsSync(path.join(project, ".echelon", "ros.json")));
+  assert.ok(fs.existsSync(path.join(project, "framework", "REP-SPECIFICATION.md")));
+
+  // Idempotent from the embedded copy too.
+  const again = standalone(["init"]);
+  assert.equal(again.status, 0, again.stderr);
+  assert.match(again.stdout, /no changes needed/);
+
+  assert.equal(standalone(["verify", "--strict"]).status, 0);
+
+  // Heal: the installed repository repairs itself with no package present.
+  fs.rmSync(path.join(project, "framework", "REP-SPECIFICATION.md"));
+  assert.equal(standalone(["verify"]).status, 3, "a deleted tool-owned file must fail verification");
+  assert.equal(standalone(["init"]).status, 0, "init must restore it from the embedded scaffold");
+  assert.equal(standalone(["verify"]).status, 0);
+  assert.ok(fs.existsSync(path.join(project, "framework", "REP-SPECIFICATION.md")));
+
+  // Update: already current, so a clean no-op rather than exit 6.
+  assert.equal(standalone(["upgrade"]).status, 0);
+  assert.equal(standalone(["upgrade", "--check"]).status, 0);
+
+  // And the installed repository is valid on its own terms.
+  assert.equal(standalone(["registry", "check"]).status, 0);
+  assert.equal(standalone(["validate"]).status, 0);
+});
+
 test("an unsupported profile names the profiles that exist", (t) => {
   const root = repository(t, "profile");
   const result = ros(root, ["init", "--profile", "nope"]);

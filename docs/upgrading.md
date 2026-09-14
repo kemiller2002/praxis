@@ -1,11 +1,21 @@
 # Upgrading
 
-```bash
-# See exactly what would change.
-npx --package=@echelon-foundry/repository-operating-system ros upgrade --dry-run --json
+From inside an installed repository, using its own launcher:
 
-# Apply it.
-npx --package=@echelon-foundry/repository-operating-system ros upgrade
+```bash
+./ros upgrade --dry-run --json   # see exactly what would change
+./ros upgrade                    # apply it
+```
+
+That works with no npm package on disk and no network, because the CLI carries
+its own scaffold — see
+[Where the scaffold comes from](installation.md#where-the-scaffold-comes-from).
+
+To upgrade to a version newer than the one the repository is pinned to, run
+that version's package instead:
+
+```bash
+npx --package=@echelon-foundry/repository-operating-system@<version> ros upgrade
 ```
 
 ## The migration model
@@ -117,12 +127,7 @@ Nothing stronger is claimed than what those tests exercise.
 
 ## Upgrading the CLI itself
 
-`npx` resolves the package version you name, so an upgrade is a version
-change at the call site:
-
-```bash
-npx --package=@echelon-foundry/repository-operating-system@<version> ros upgrade
-```
-
-A scaffolded project pins its own version in `ros.json`; changing that value
-is what moves that project's `./ros` to a new release.
+A scaffolded project pins its CLI version in `ros.json`, and its `./ros`
+downloads and caches that version's binary. Changing that value is what moves
+the project to a new release; `npx --package=...@<version> ros upgrade` does the
+same thing for a single run without changing the pin.

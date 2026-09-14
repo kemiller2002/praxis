@@ -28,7 +28,7 @@ to start that CLI; no lifecycle decision is made in JavaScript.
 | `-h`, `--help` | Show help. `ros <command> --help` shows that command's help. |
 | `-V`, `--version` | Print `ros-fs <version>`, where the version is the npm package version. |
 | `--root PATH` | Repository to act on. Defaults to the current directory. |
-| `--package-root PATH` | Where this package's scaffold lives. The npm launcher supplies it; you only need it when running the executable directly from outside the package. |
+| `--package-root PATH` | Install from this scaffold directory instead of the one compiled into the binary. Rarely needed — see [Where the scaffold comes from](installation.md#where-the-scaffold-comes-from). |
 | `--json` | Emit machine-readable JSON on stdout. |
 | `--verbose` | Emit extra detail. |
 
@@ -122,7 +122,7 @@ These are a public contract. Changing a value is a breaking change.
 | `3` | Verification failed, or `--check` found pending work. |
 | `4` | Incompatible installation (blocked `init`, unsupported configuration version). |
 | `5` | Migration blocked. |
-| `6` | Prerequisite or environment failure (for example, the packaged scaffold is unreachable). |
+| `6` | Prerequisite or environment failure. |
 | `7` | Unsupported platform. |
 
 The repository commands below predate this table and keep their historical

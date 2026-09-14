@@ -251,7 +251,6 @@ setup.
 | `ros verify` exits `3` | Run `ros doctor` — it names each problem and the command that fixes it. |
 | `no prebuilt binary for <platform>/<arch>` | That platform is not supported. Build from source in a checkout with `npm run build:fsharp`. |
 | `version ... is a main-branch snapshot` | A `@main` snapshot has no GitHub Release and therefore no binary. Install a stable version. |
-| `this CLI cannot see its own packaged scaffold` (exit `6`) | `init`/`upgrade` need the package's files. Run through `npx --package=...` rather than invoking a cached binary directly, or pass `--package-root`. |
 | `installed configuration version N is newer than this CLI supports` | The repository was installed by a newer release. Upgrade the CLI. |
 
 ## Repository concepts
