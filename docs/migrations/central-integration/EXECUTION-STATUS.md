@@ -144,18 +144,30 @@ above.
 
 ## WI-16 — Define `Chrona.Integration` requirements with Chrona
 
-**Requires**: joint definition with whoever owns the Chrona
-repository/team — this session has no Chrona repository attached and no
-channel to that team. As a best-effort proxy for ROS's side of that
-conversation, see
-`docs/migrations/central-integration/CHRONA-INTEGRATION-REQUIREMENTS-PROPOSAL.md`,
-written from what ROS already knows it needs to send. It is a starting
-proposal for Chrona's team to react to, not a joint agreement — WI-16
-is not complete until Chrona's side has actually reviewed and (dis)agreed
-with it. Tracked as backlog item **`WI-0058`** and as
+**Corrected understanding, then real progress**: earlier drafts of this
+document assumed "Chrona" was an unreachable external team. That was
+wrong — `kemiller2002/chrona` is a real, accessible repository under the
+same account as this one. It turns out to be a very early-stage ROS
+pilot: its own `PROJECT-CHARTER.md` is still a draft, with no first
+bounded outcome, intended user, or decision authority chosen yet, and
+its charter explicitly excludes "autonomous acceptance of research or
+policy." So a formal decision record there would have been presumptuous
+— instead,
+[chrona#1](https://github.com/kemiller2002/chrona/issues/1) was opened
+as real, honest input: ROS's proposed `Chrona.Integration` shape
+(condensed from
+`docs/migrations/central-integration/CHRONA-INTEGRATION-REQUIREMENTS-PROPOSAL.md`),
+explicitly framed as "no action needed until Chrona has a first vertical
+slice," not a demand for immediate review.
+
+**Honest remaining gap**: this is real input placed where Chrona's
+eventual owner will actually find it, not the joint agreement WI-16
+ultimately needs — that still requires Chrona's project to mature enough
+to have an opinion, and its owner to actually engage with the issue.
+Tracked as backlog item **`WI-0058`** and as
 [issue #52](https://github.com/kemiller2002/repository-operating-system/issues/52)
-so the need for that review is a live, visible obligation, not just a
-sentence in this document.
+(updated to link to chrona#1) so the remaining need is a live, visible
+obligation, not just a sentence in this document.
 
 ## WI-17/WI-18/WI-19 — Consume `Chrona.Integration`, GitHub datastore
 adapter, shadow-test ROS→Chrona
@@ -227,7 +239,7 @@ target exists in this session's scope.
 | WI-13 | Code/workflow/version bump done; actual tag push + publish blocked on human push access — re-verified live via both `git push` (403) and a full scan of available GitHub API tools (no ref-creation tool exists) | `WI-0056` |
 | WI-14 | `Ros.Host` + a real, tested connector (`ros_central_client.mjs`) built and run end-to-end against a live local instance using this repo as the producer; blocked on a genuinely separate second repository + a real deployment target | `WI-0057` |
 | WI-15 | Real short session-local trial run and recorded (3/3 calls succeeded, 2/2 unique activities recorded exactly once, 1/1 duplicate correctly absorbed, 0 divergences); blocked on a real multi-day observation period against WI-14's real second repository | `WI-0057` |
-| WI-16 | Best-effort ROS-side proposal written; blocked on Chrona team review | `WI-0058` |
+| WI-16 | Real input opened as [chrona#1](https://github.com/kemiller2002/chrona/issues/1) in the actual (very early-stage) Chrona repository; blocked on that project maturing enough to have an opinion | `WI-0058` |
 | WI-17–19 | The delivery mechanism (write + idempotent commit) is built and mechanically proven (5/5 tests) against a real local git repository using an explicitly-labeled placeholder; blocked on Chrona publishing its real package and on a real GitHub App installation for the actual push | `WI-0058` |
 | WI-20 | Runbook written and its every step already exercised via WI-14's trial; actual multi-repository rollout blocked on the same second-repository/deployment gap as WI-14/WI-15 | `WI-0057` |
 

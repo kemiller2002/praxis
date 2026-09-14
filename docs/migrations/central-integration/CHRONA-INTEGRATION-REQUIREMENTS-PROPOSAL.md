@@ -1,10 +1,16 @@
 # `Chrona.Integration` — ROS-Side Requirements Proposal (WI-16 input)
 
-This is ROS's opening position for defining `Chrona.Integration`, written
-without input from Chrona's own team or repository (neither is available
-to this session). It is a proposal to react to, not an agreement — WI-16
-is only complete once Chrona's side has reviewed it and both sides have
-converged on an actual contract. Everything below follows the same
+This is ROS's opening position for defining `Chrona.Integration`. It has
+now been posted as
+[chrona#1](https://github.com/kemiller2002/chrona/issues/1) in the real
+`kemiller2002/chrona` repository — which turned out to be a genuinely
+early-stage ROS pilot (its own `PROJECT-CHARTER.md` is still a draft,
+with no first bounded outcome or intended user chosen yet), so it is
+posted there as input for whenever Chrona's own team takes up
+integration with ROS, not as a decision record demanding immediate
+review. It is a proposal to react to, not an agreement — WI-16 is only
+complete once Chrona's side has actually engaged with it and both sides
+have converged on a real contract. Everything below follows the same
 receiver-owned-contract standard ROS itself follows (see
 `INTEGRATION-CONTRACT-STANDARD.md`), applied in the direction the
 migration spec requires: **Chrona receives time-entry data from ROS, so
