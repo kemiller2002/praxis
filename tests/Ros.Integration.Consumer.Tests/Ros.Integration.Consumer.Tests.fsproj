@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Ros.Integration.Consumer.Tests</AssemblyName>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Ros.Integration/Ros.Integration.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="TestFramework.fs" />
+    <Compile Include="ConsumerScenarioTests.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+</Project>

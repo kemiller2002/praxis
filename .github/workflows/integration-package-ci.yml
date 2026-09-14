@@ -1,0 +1,63 @@
+name: Integration package CI
+
+# Thin, paths-scoped CI for the EchelonFoundry.Ros.Integration package.
+# Deliberately does not replace or touch ros-validation.yml -- see
+# docs/migrations/central-integration/MIGRATION-PLAN.md Phase 2. Builds,
+# tests, and packs the package on every change that could affect it, and
+# uploads the resulting .nupkg/.snupkg as a workflow artifact for
+# inspection. Never publishes -- see publish-integration-package.yml,
+# which only runs on an explicit ros-integration-v* tag.
+
+on:
+  pull_request:
+    paths:
+      - "src/Ros.Integration/**"
+      - "tests/Ros.Integration.Tests/**"
+      - "tests/Ros.Integration.Compatibility.Tests/**"
+      - "tests/Ros.Integration.Consumer.Tests/**"
+      - "tests/contracts/**"
+      - ".github/workflows/integration-package-ci.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "src/Ros.Integration/**"
+      - "tests/Ros.Integration.Tests/**"
+      - "tests/Ros.Integration.Compatibility.Tests/**"
+      - "tests/Ros.Integration.Consumer.Tests/**"
+      - "tests/contracts/**"
+      - ".github/workflows/integration-package-ci.yml"
+
+jobs:
+  build-test-pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore src/Ros.Integration/Ros.Integration.fsproj
+
+      - name: Build (Release)
+        run: dotnet build src/Ros.Integration/Ros.Integration.fsproj -c Release --no-restore
+
+      - name: Unit and contract serialization / golden-fixture tests
+        run: dotnet run --project tests/Ros.Integration.Tests/Ros.Integration.Tests.fsproj -c Release
+
+      - name: Compatibility fixture tests
+        run: dotnet run --project tests/Ros.Integration.Compatibility.Tests/Ros.Integration.Compatibility.Tests.fsproj -c Release
+
+      - name: Isolated consumer tests
+        run: dotnet run --project tests/Ros.Integration.Consumer.Tests/Ros.Integration.Consumer.Tests.fsproj -c Release
+
+      - name: Pack
+        run: dotnet pack src/Ros.Integration/Ros.Integration.fsproj -c Release -o ./nupkg
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: EchelonFoundry.Ros.Integration-nupkg
+          path: ./nupkg/*.*nupkg
+          if-no-files-found: error

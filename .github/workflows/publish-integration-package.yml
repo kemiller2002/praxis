@@ -1,0 +1,55 @@
+name: Publish Ros.Integration package
+
+# Publishes EchelonFoundry.Ros.Integration to GitHub Packages. Runs only
+# on an explicit ros-integration-v* tag -- never on an ordinary commit
+# or merge to main, per
+# docs/migrations/central-integration/MIGRATION-PLAN.md Phase 6. Uses
+# the workflow's own short-lived GITHUB_TOKEN (packages: write), never a
+# long-lived personal access token. Every test step below must pass
+# before the pack/publish steps run: a package must never publish if any
+# required test fails.
+
+on:
+  push:
+    tags:
+      - "ros-integration-v*"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore src/Ros.Integration/Ros.Integration.fsproj
+
+      - name: Build (Release)
+        run: dotnet build src/Ros.Integration/Ros.Integration.fsproj -c Release --no-restore
+
+      - name: Unit and contract serialization / golden-fixture tests
+        run: dotnet run --project tests/Ros.Integration.Tests/Ros.Integration.Tests.fsproj -c Release
+
+      - name: Compatibility fixture tests
+        run: dotnet run --project tests/Ros.Integration.Compatibility.Tests/Ros.Integration.Compatibility.Tests.fsproj -c Release
+
+      - name: Isolated consumer tests
+        run: dotnet run --project tests/Ros.Integration.Consumer.Tests/Ros.Integration.Consumer.Tests.fsproj -c Release
+
+      - name: Pack
+        run: dotnet pack src/Ros.Integration/Ros.Integration.fsproj -c Release -o ./nupkg
+
+      - name: Publish to GitHub Packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          dotnet nuget push "./nupkg/*.nupkg" \
+            --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+            --api-key "$GITHUB_TOKEN" \
+            --skip-duplicate

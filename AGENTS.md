@@ -2,11 +2,11 @@
 id: GV-START-001
 title: Agent Startup Guide
 status: canonical
-version: 1.3.0
+version: 1.4.0
 owners:
   - repository-governance
 created: 2026-07-22
-updated: 2026-09-11
+updated: 2026-09-14
 review_cycle: quarterly
 supersedes: []
 superseded_by: []
@@ -48,6 +48,14 @@ Apply, in descending order: explicit user instruction; applicable safety, legal,
 - Do not claim a test passed unless it ran and passed. Name skipped or unavailable checks and their implications.
 - Treat execution telemetry as evidence: discover capabilities, distinguish zero from unavailable, preserve normalized and sanitized raw provider data, prefer deterministic collection, and never invent a metric.
 - Not every edit needs a REP. Use the artifact threshold in the Agent Operating Manual.
+
+## Integration Architecture Rules
+
+Permanent rules governing any integration between ROS and another application or repository (established by the ROS Central Service and Integration Contract Upgrade; see `docs/migrations/central-integration/MIGRATION-PLAN.md`):
+
+- **Receiver-Owned Integration Contracts.** The application that receives a given piece of data owns the public type describing it. A sender depends on the receiver's published contract package; the receiver never depends on a sender's package for data the sender pushes to it — unless the "receiver" in that exchange is ROS itself accepting externally-owned input, in which case ROS owns that contract instead. Never let a producer define a receiver's schema.
+- **Compatibility Before Replacement.** No existing component is deleted, moved, or mechanically rewritten because a preferred replacement exists. A replacement is only trusted once its behavior is characterized, tested to equivalence, run in parallel with the original where practical, and proven in real use. Architectural cleanliness alone never justifies sacrificing operational stability.
+- **Complexity Requires Evidence.** Infrastructure beyond what a demonstrated need requires — a database, a message bus, a microservice, an orchestration framework — is never added speculatively. Start with the smallest number of moving parts that solves the problem in front of you; add more only once real load or a real failure mode proves it necessary.
 
 ## Handoff
 
