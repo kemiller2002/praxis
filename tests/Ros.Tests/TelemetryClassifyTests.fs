@@ -7,6 +7,18 @@ open Ros.Infrastructure.Work
 
 [<RequireQualifiedAccess>]
 module TelemetryClassifyTests =
+    /// production's classify snapshotId is `classification-{unix ms}`, so two
+    /// calls inside one millisecond share an id and the second is genuinely
+    /// deduplicated -- real behaviour mirrored from Node, not a defect. A test
+    /// about *distinct* calls has to let the clock advance first, or it fails
+    /// whenever the runner is fast enough to make both calls in one
+    /// millisecond.
+    let private waitForNextMillisecond () =
+        let start = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+
+        while DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() = start do
+            Threading.Thread.Sleep 1
+
     let private withTemporaryRoot (run: string -> unit) =
         let root = Path.Combine(Path.GetTempPath(), $"ros-telemetry-classify-{Guid.NewGuid():N}")
         Directory.CreateDirectory root |> ignore
@@ -106,6 +118,8 @@ module TelemetryClassifyTests =
                     match FileTelemetryFinalizationRepository.classifyTarget root (Some "EXE-1") [ "research" ] None [] None with
                     | Error message -> failwith message
                     | Ok _ ->
+                        waitForNextMillisecond ()
+
                         match FileTelemetryFinalizationRepository.classifyTarget root (Some "EXE-1") [ "documentation" ] None [] None with
                         | Error message -> failwith message
                         | Ok _ ->
