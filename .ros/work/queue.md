@@ -92,6 +92,7 @@
 | WI-0053 | Fix ./ros hitting an unhandled 404 for a main-branch snapshot rosVersion | complete |  | high |
 | WI-0054 | Fix ros-bootstrap init pinning a scaffolded project to a binary-less @main snapshot version | complete |  | high |
 | WI-0055 | Sync queue.json's own backlog status to complete when a promoted item finishes | complete |  | medium |
+| WI-0056 | Add the standardized Echelon Foundry lifecycle CLI (init/status/verify/upgrade/doctor) in F#, distributed through npm | complete |  | high |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |

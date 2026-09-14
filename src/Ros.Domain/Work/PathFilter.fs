@@ -57,9 +57,19 @@ module PathFilter =
     let globMatch (pattern: string) (value: string) =
         Regex.IsMatch(value, toRegexPattern pattern)
 
+    /// The lifecycle CLI's own bookkeeping is never a meaningful change,
+    /// whatever a repository's `ignoredPaths` says. A repository's ros.json
+    /// replaces the default ignore list wholesale, so repositories installed
+    /// before `.echelon/` existed have no rule for it; without this invariant
+    /// the first `ros init`/`ros upgrade` in such a repository would make its
+    /// next `validate` demand work-item attribution for the tool's own
+    /// installation manifest.
+    let private alwaysIgnoredPatterns = [ ".echelon/**" ]
+
     let isMeaningful (config: PathFilterConfig) (path: string) =
         (config.MeaningfulPatterns |> List.exists (fun pattern -> globMatch pattern path))
         && not (config.IgnoredPatterns |> List.exists (fun pattern -> globMatch pattern path))
+        && not (alwaysIgnoredPatterns |> List.exists (fun pattern -> globMatch pattern path))
 
     let meaningfulPaths (config: PathFilterConfig) (paths: string list) =
         paths |> List.filter (isMeaningful config)

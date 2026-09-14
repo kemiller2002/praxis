@@ -24,3 +24,31 @@ jobs:
       - run: ./ros validate
         env:
           ROS_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+
+  # package.json declares "engines": { "node": ">=20" }. This job is the
+  # evidence for that claim: the lowest supported Node version has to run the
+  # real packed artifact, not just the source tree.
+  packaged-lifecycle:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The declared minimum, and the versions in normal use.
+          - { os: ubuntu-latest, node-version: "20" }
+          - { os: ubuntu-latest, node-version: "24" }
+          # One run per remaining supported operating system.
+          - { os: windows-latest, node-version: "22" }
+          - { os: macos-latest, node-version: "22" }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+      - run: npm run build:fsharp
+      - run: npm pack --dry-run
+      - name: Exercise the packed npm artifact
+        run: node --test tests/lifecycle-package.test.mjs

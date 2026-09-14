@@ -1024,6 +1024,20 @@
       "createdBy": "claude-code",
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "WI-0056",
+      "title": "Add the standardized Echelon Foundry lifecycle CLI (init/status/verify/upgrade/doctor) in F#, distributed through npm",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-14T13:11:48.000Z",
+      "updatedAt": "2026-09-14T13:11:55.000Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

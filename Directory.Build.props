@@ -6,4 +6,14 @@
     <Deterministic>true</Deterministic>
     <DebugType>portable</DebugType>
   </PropertyGroup>
+
+  <!-- package.json is the single authoritative version source for both the
+       npm package and the F# CLI, so the CLI's reported version can never
+       drift from the released package version. The CLI reads it back at
+       runtime from its own AssemblyInformationalVersion. -->
+  <PropertyGroup>
+    <RosPackageVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)package.json')), '"version"\s*:\s*"([^"]+)"').Groups.get_Item(1).Value)</RosPackageVersion>
+    <Version>$(RosPackageVersion)</Version>
+    <InformationalVersion>$(RosPackageVersion)</InformationalVersion>
+  </PropertyGroup>
 </Project>

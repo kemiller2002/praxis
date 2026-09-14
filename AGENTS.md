@@ -2,17 +2,20 @@
 id: GV-START-001
 title: Agent Startup Guide
 status: canonical
-version: 1.3.0
+version: 1.4.0
 owners:
   - repository-governance
 created: 2026-07-22
-updated: 2026-09-11
+updated: 2026-09-14
 review_cycle: quarterly
 supersedes: []
 superseded_by: []
 related_documents:
   - docs/00-governance/README.md
   - docs/development-telemetry.md
+  - docs/cli.md
+  - docs/installation.md
+  - docs/upgrading.md
 tags: [governance, agents, startup]
 ---
 
@@ -58,6 +61,34 @@ For substantial work, record: objective; work completed; files changed; decision
 Before meaningful mutation, identify the external work item and run `./ros work begin --id ID --occurred-at TIMESTAMP` (see the F# CLI note below for the timestamp — it must be the real current time, not an arbitrary one). That transition starts an execution-telemetry record; inspect `./ros work context ID`, classify the work, and ingest runtime telemetry that the current environment can expose. Preserve unknown provider fields through the sanitized raw layer and record unsupported/unavailable capability explicitly. Perform the bounded work, gather configured evidence, request a legal transition with `./ros work complete --id ID --occurred-at TIMESTAMP --evidence TYPE=PATH` (repeatable; finalizes active telemetry), then run `./ros registry build` and `./ros validate`. Use `./ros work block --id ID --occurred-at TIMESTAMP --reason TEXT` and `./ros work resume --id ID --occurred-at TIMESTAMP` rather than hand-editing context. Use `./ros status` when resuming unfamiliar work. Meaningful committed changes require machine-readable attribution; see `docs/work-protocol.md` and `docs/development-telemetry.md`.
 
 No externally-assigned ID yet? Check `./ros work ready` for capturable, unblocked repository work before assuming none exists, and use `./ros add "..."` to record a newly discovered obligation instead of leaving it as an unfiled comment or dropped observation (`add` does not require `--occurred-at`; it defaults to the real current time). `./ros work start --id ID --occurred-at TIMESTAMP` (`begin` is also accepted) promotes a ready backlog item into the protocol above. This local backlog is repository-scoped triage, not a project-management system; see the "Local backlog" section of `docs/work-protocol.md`.
+
+## Lifecycle commands
+
+Installation, verification, diagnosis and upgrade go through the standard
+lifecycle interface, implemented in F# and distributed through npm:
+
+```
+npx --package=@echelon-foundry/repository-operating-system ros init
+npx --package=@echelon-foundry/repository-operating-system ros status
+npx --package=@echelon-foundry/repository-operating-system ros verify
+npx --package=@echelon-foundry/repository-operating-system ros upgrade
+npx --package=@echelon-foundry/repository-operating-system ros doctor
+```
+
+In this source checkout the same commands are available as `./ros init`,
+`./ros verify` and so on. `init` is idempotent, every command is
+non-interactive, `--dry-run` and `--check` change nothing, and `--json` puts a
+single document on stdout. Exit codes are a documented contract: `0` success,
+`2` invalid arguments, `3` verification failed, `4` incompatible installation,
+`5` migration blocked, `6` prerequisite failure. See
+[`docs/cli.md`](docs/cli.md), [`docs/installation.md`](docs/installation.md)
+and [`docs/upgrading.md`](docs/upgrading.md).
+
+Installation state lives in `.echelon/ros.json`; it is tool bookkeeping, not
+repository work, and is never treated as a meaningful change for attribution.
+Before editing a file the tool installed, check its ownership there: a
+`tool-owned` file is replaced on upgrade, so a local edit belongs in a
+`user-owned` or `shared` file instead.
 
 ## F# CLI
 

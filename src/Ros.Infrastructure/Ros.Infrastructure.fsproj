@@ -30,5 +30,7 @@
     <Compile Include="Work/FileTelemetryQueryRepository.fs" />
     <Compile Include="Work/FileTelemetryValidationRepository.fs" />
     <Compile Include="Work/FileAdapterRepository.fs" />
+    <Compile Include="Lifecycle/Payload.fs" />
+    <Compile Include="Lifecycle/Installation.fs" />
   </ItemGroup>
 </Project>
