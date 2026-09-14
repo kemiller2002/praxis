@@ -1,0 +1,22 @@
+{
+  "contractVersion": "1",
+  "activityId": "ACT-0001",
+  "organizationId": "ORG-ECHELON",
+  "projectId": "PROJ-ROS",
+  "repositoryId": "REPO-ROS-CORE",
+  "workItemId": "WI-0100",
+  "actorId": "octocat",
+  "startedAt": "2026-01-01T09:00:00.0000000+00:00",
+  "endedAt": "2026-01-01T10:30:00.0000000+00:00",
+  "description": "Implemented the WI-2 governance note and the Ros.Integration package skeleton.",
+  "evidence": [
+    {
+      "kind": "commit",
+      "reference": "abc123"
+    },
+    {
+      "kind": "pull-request",
+      "reference": "https://github.com/kemiller2002/repository-operating-system/pull/51"
+    }
+  ]
+}

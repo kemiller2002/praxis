@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <IsPackable>true</IsPackable>
+    <PackageId>EchelonFoundry.Ros.Integration</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Echelon Foundry</Authors>
+    <Description>Structural contract types external applications use to send activity data to ROS Central. Zero dependency on ROS's internal domain, persistence, or transport -- see docs/migrations/central-integration/INTEGRATION-CONTRACT-STANDARD.md.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/kemiller2002/repository-operating-system</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Identifiers.fs" />
+    <Compile Include="Evidence.fs" />
+    <Compile Include="ActivityObservation.fs" />
+    <Compile Include="Serialization.fs" />
+  </ItemGroup>
+</Project>

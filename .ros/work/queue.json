@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 56,
+  "nextSeq": 59,
   "items": [
     {
       "id": "WI-0001",
@@ -1022,6 +1022,48 @@
       "createdAt": "2026-09-11T15:45:40.178Z",
       "updatedAt": "2026-09-11T15:45:54.000Z",
       "createdBy": "claude-code",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0056",
+      "title": "Push ros-integration-v1.0.0 tag and verify publish-integration-package.yml (WI-13)",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-14T00:36:08.030Z",
+      "updatedAt": "2026-09-14T00:36:08.030Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0057",
+      "title": "Connect a real second repository to ros-central and run a real multi-day shadow-mode observation (WI-14/WI-15/WI-20)",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-14T00:36:08.348Z",
+      "updatedAt": "2026-09-14T00:36:08.348Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0058",
+      "title": "Get Chrona team review of CHRONA-INTEGRATION-REQUIREMENTS-PROPOSAL.md (WI-16)",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-14T00:36:08.657Z",
+      "updatedAt": "2026-09-14T00:36:08.657Z",
+      "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
     }

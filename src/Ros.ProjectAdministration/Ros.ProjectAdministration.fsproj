@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Ros.Integration/Ros.Integration.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Organization.fs" />
+    <Compile Include="ExternalActivityState.fs" />
+    <Compile Include="OutboundDeliveryState.fs" />
+    <Compile Include="OutboundIntegration.fs" />
+  </ItemGroup>
+</Project>

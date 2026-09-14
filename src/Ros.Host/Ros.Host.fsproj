@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>ros-central</AssemblyName>
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Ros.Integration/Ros.Integration.fsproj" />
+    <ProjectReference Include="../Ros.ProjectAdministration/Ros.ProjectAdministration.fsproj" />
+    <ProjectReference Include="../Ros.Persistence/Ros.Persistence.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="ActivityIngestion.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+</Project>
