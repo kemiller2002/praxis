@@ -42,6 +42,33 @@ npx --package=@echelon-foundry/repository-operating-system ros verify
 Nothing happens during `npm install`. The package has no install lifecycle
 scripts and never mutates a repository as a side effect of being downloaded.
 
+Once installed, the repository runs its own lifecycle through the `./ros`
+launcher `init` leaves behind — no npx, no network, no flags:
+
+```bash
+./ros verify      # is the installation intact?
+./ros doctor      # if not: what is wrong, and the command that fixes it
+./ros init        # heal: restore anything tool-owned that is missing
+./ros upgrade     # update to this CLI's version
+```
+
+## New in 3.0
+
+- The **standard lifecycle interface** — `init`, `status`, `verify`, `upgrade`,
+  `doctor` — as the `ros` executable, implemented in F#.
+- **Self-contained:** the CLI carries the scaffold it installs, so a repository
+  can heal and upgrade itself with no package on disk and no network.
+- An explicit **file-ownership model** (tool-owned, generated, user-owned,
+  shared) that decides what may be replaced and what is never touched.
+- A versioned **installation manifest** at `.echelon/ros.json`, and **sequential
+  migrations** rather than delete-and-recopy upgrades.
+- **Machine-readable output** (`--json`) and a documented exit-code contract for
+  CI and agents.
+
+`ros-bootstrap init`/`verify` are unchanged and still published; a repository
+they installed keeps working, and `ros upgrade` adopts it. See
+[Compatibility](#compatibility).
+
 ## Commands
 
 | Command | Writes? | Purpose |
@@ -187,9 +214,10 @@ F# CLI (src/Ros.Cli)
 F# domain and application core (src/Ros.Domain, src/Ros.Application)
 ```
 
-The Node launcher only detects the platform, locates the CLI binary, tells it
-where the package's own files are, forwards arguments and stdio, and returns
-the exit code. Every lifecycle decision — what to install, what the repository's
+The Node launcher only detects the platform, locates the CLI binary, forwards
+arguments and stdio, and returns the exit code. The binary carries the scaffold
+it installs, so it needs nothing else from the package at run time. Every
+lifecycle decision — what to install, what the repository's
 state means, whether an installation is valid, which migrations apply, what is
 stale — is made in F#. Planning is pure and separate from execution:
 `inspect -> desired state -> transition -> validate -> execute -> verify`.

@@ -149,8 +149,8 @@ was added:
     "schemaVersion": 1,
     "tool": "ros",
     "package": "@echelon-foundry/repository-operating-system",
-    "cliVersion": "2.0.1",
-    "installedVersion": "2.0.1",     // null when nothing is installed
+    "cliVersion": "3.0.0",
+    "installedVersion": "3.0.0",     // null when nothing is installed
     "configurationVersion": 1,        // null when there is no manifest
     "profile": "greenfield",
     "managedArtifactCount": 82,
@@ -195,7 +195,7 @@ document either way:
   "command": "init",
   "schemaVersion": 1,
   "package": "@echelon-foundry/repository-operating-system",
-  "cliVersion": "2.0.1",
+  "cliVersion": "3.0.0",
   "dryRun": true,
   "applied": false,
   "changesRequired": true,

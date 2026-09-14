@@ -165,7 +165,7 @@ presence of arbitrary files is never the source of truth; this file is.
   "schemaVersion": 1,
   "tool": "ros",
   "package": "@echelon-foundry/repository-operating-system",
-  "installedVersion": "2.0.1",
+  "installedVersion": "3.0.0",
   "configurationVersion": 1,
   "profile": "greenfield",
   "managedArtifacts": [

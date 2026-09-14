@@ -47,6 +47,11 @@ Inside a source checkout, or in CI after `npm run build:fsharp`, the launcher
 runs the freshly built assembly instead of downloading anything;
 `ROS_FS_DLL_PATH_OVERRIDE` points it at a specific build.
 
+The binary carries the scaffold it installs, compiled in, so it needs nothing
+else from the package at run time: a repository's own `./ros` can run `init` and
+`upgrade` with no npm package on disk and no network. See
+[Where the scaffold comes from](docs/installation.md#where-the-scaffold-comes-from).
+
 Supported platforms: `linux/x64`, `linux/arm64`, `darwin/x64`, `darwin/arm64`,
 `win32/x64`. An unsupported platform gets a clear error naming the gap rather
 than a silent failure.
@@ -54,7 +59,7 @@ than a silent failure.
 ### Snapshot versions
 
 Every push to the canonical `main` branch publishes a unique prerelease such as
-`2.0.1-main.42.1` and moves the npm `main` dist-tag. Stable releases and the
+`3.0.0-main.42.1` and moves the npm `main` dist-tag. Stable releases and the
 `latest` tag remain deliberate release actions.
 
 A snapshot version never has its own GitHub Release, so it never has a matching
