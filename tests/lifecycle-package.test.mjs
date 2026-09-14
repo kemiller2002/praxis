@@ -36,12 +36,28 @@ function packedPackage() {
   if (installedPackage) return installedPackage;
 
   const staging = temporaryDirectory("pack");
+
+  // npm passes its own config to child processes through npm_config_* env
+  // vars, so when this suite is reached through another npm command's
+  // prepack -- `npm pack --dry-run` and `npm publish` both do that -- the
+  // pack below would inherit `--dry-run` and print a filename while writing
+  // nothing. Clearing the inherited settings that would change what this
+  // call does keeps it a real pack however it was invoked.
+  const packEnvironment = { ...process.env };
+  for (const key of ["npm_config_dry_run", "npm_config_pack_destination", "npm_config_ignore_scripts"]) {
+    delete packEnvironment[key];
+  }
+
   // --ignore-scripts: `prepack` runs the test suite, and this test is part of it.
-  // npm is a .cmd shim on Windows, which execFileSync cannot launch directly.
+  // npm is a .cmd shim on Windows, which execFileSync cannot launch directly;
+  // running it through a shell there means the destination needs quoting, since
+  // a Windows temp path can contain spaces.
+  const onWindows = process.platform === "win32";
+  const destination = onWindows ? `"${staging}"` : staging;
   const output = execFileSync(
-    process.platform === "win32" ? "npm.cmd" : "npm",
-    ["pack", "--ignore-scripts", "--pack-destination", staging],
-    { cwd: repositoryRoot, encoding: "utf8", shell: process.platform === "win32" }
+    onWindows ? "npm.cmd" : "npm",
+    ["pack", "--ignore-scripts", "--dry-run=false", "--pack-destination", destination],
+    { cwd: repositoryRoot, encoding: "utf8", shell: onWindows, env: packEnvironment }
   );
   const tarball = path.join(staging, output.trim().split("\n").pop().trim());
   assert.ok(fs.existsSync(tarball), `npm pack must produce a tarball; got ${tarball}`);

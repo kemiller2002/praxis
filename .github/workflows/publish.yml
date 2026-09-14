@@ -57,7 +57,7 @@ jobs:
       # step prints the file list so a packaging change is visible in the job
       # log of the run that published it.
       - name: Review the package contents
-        run: npm pack --dry-run
+        run: npm pack --dry-run --ignore-scripts
 
       # A stable "latest" release happens only when this push actually
       # changed package.json's committed version -- publishing on every push

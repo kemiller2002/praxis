@@ -49,6 +49,8 @@ jobs:
         with:
           dotnet-version: "10.0.x"
       - run: npm run build:fsharp
-      - run: npm pack --dry-run
+      # This test packs the artifact itself and asserts its contents, so there
+      # is no separate pack step: `npm pack` would only re-run the whole suite
+      # through prepack.
       - name: Exercise the packed npm artifact
         run: node --test tests/lifecycle-package.test.mjs
