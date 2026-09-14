@@ -73,6 +73,9 @@ function packedPackage() {
 function listTarball(tarball) {
   return execFileSync("tar", ["-tzf", tarball], { encoding: "utf8" })
     .split("\n")
+    // Windows tar terminates lines with CRLF, so each entry keeps a trailing
+    // \r unless it is trimmed here.
+    .map((entry) => entry.trim())
     .filter(Boolean)
     .map((entry) => entry.replace(/^package\//, ""));
 }
@@ -244,7 +247,16 @@ test("status, verify and doctor agree on a freshly installed repository", (t) =>
   assert.equal(status.parsed.installation.cliVersion, packageMetadata.version);
   assert.equal(status.parsed.installation.installedVersion, packageMetadata.version);
   assert.equal(status.parsed.installation.verified, true);
-  assert.equal(status.parsed.validation, "passed");
+
+  // Name the findings rather than reporting only 'failed' !== 'passed': this
+  // assertion covers the repository validation a fresh install has to satisfy,
+  // and which artifact it is unhappy about is the whole diagnosis.
+  const validation = ros(root, ["validate", "--json"]);
+  assert.equal(
+    status.parsed.validation,
+    "passed",
+    `a fresh install must validate cleanly; validate reported: ${validation.stdout || validation.stderr}`
+  );
 
   const verify = json(root, ["verify", "--json"]);
   assert.equal(verify.status, 0, verify.stderr);
