@@ -22,12 +22,23 @@ missing piece; each blocker names exactly what unblocks it.
   -c Release` produces a clean `EchelonFoundry.Ros.Integration.1.0.0.nupkg`
   /`.snupkg` pair.
 
-**Blocked:** actually triggering a publish requires pushing the tag
-`ros-integration-v1.0.0`. This session's git credentials returned a hard,
-non-transient `403` pushing the earlier `ros-central-integration-baseline`
-tag (see `BASELINE.md`'s "Tag push status") — the same credential-scope
-restriction applies to any tag push, not just that one. No GitHub API
-tool available in this session can create a tag ref directly either.
+**Blocked, re-verified twice, by two independent mechanisms:**
+1. `git push` of a tag returns a hard, non-transient `403` — re-tested
+   live in this session (not assumed from the earlier
+   `ros-central-integration-baseline` attempt in `BASELINE.md`): fetched
+   `origin/main`, created a local tag at the current HEAD, attempted to
+   push it, got `HTTP 403` / "unexpected disconnect" again, deleted the
+   local probe tag afterward.
+2. No available GitHub API tool can create a tag ref as a workaround
+   either — checked the full current MCP tool surface for anything
+   ref/tag-creating; the only tag-related tools available are read-only
+   (`get_tag`, `list_tags`, `get_release_by_tag`) or create a *branch*
+   ref (`create_branch`), never an arbitrary `refs/tags/...` ref.
+
+This is a genuine, currently-in-effect credential-scope restriction, not
+a stale or assumed one. Tracked as backlog item **`WI-0056`** in this
+repository's own work queue (`.ros/work/queue.json`) so it isn't lost to
+this document alone.
 
 **Action needed from a human with full push access**, once this PR (or
 whichever PR carries this work) has merged to `main`:
@@ -77,7 +88,9 @@ maintainer agrees to connect it, and a reachable deployment target for
 explicitly separate phase, gated on GitHub OIDC for a specific
 repo/branch/environment, none of which exists yet), and manufacturing a
 second "test repo" inside this same session would not be an independent
-producer in any meaningful sense.
+producer in any meaningful sense. Tracked as backlog item **`WI-0057`**.
+See `PRODUCER-ONBOARDING-RUNBOOK.md` for the exact steps a real second
+repository would follow once one is available.
 
 ## WI-15 — Shadow-mode comparison and metrics
 
@@ -126,7 +139,9 @@ conversation, see
 written from what ROS already knows it needs to send. It is a starting
 proposal for Chrona's team to react to, not a joint agreement — WI-16
 is not complete until Chrona's side has actually reviewed and (dis)agreed
-with it.
+with it. Tracked as backlog item **`WI-0058`** so the need for that
+review is a live, visible obligation in this repository's own work
+queue, not just a sentence in this document.
 
 ## WI-17/WI-18/WI-19 — Consume `Chrona.Integration`, GitHub datastore
 adapter, shadow-test ROS→Chrona
@@ -175,19 +190,35 @@ and a real App installation, neither of which this session can create.
 
 ## WI-20 — Incrementally onboard additional producer repositories
 
-**Requires**: WI-14 and WI-15 to have concluded for a first repository,
-then the same for each additional one, one at a time, per
-`MIGRATION-PLAN.md`'s own Phase 10 acceptance criteria. Not started for
-the same reason as WI-14: no second repository or live deployment target
-exists in this session's scope.
+**Done, as far as this session's access allows**:
+`PRODUCER-ONBOARDING-RUNBOOK.md` is a concrete, step-by-step runbook for
+onboarding an additional repository, built directly on the connector and
+Central instance already proven working in WI-14/WI-15 — copy the
+connector (or, once WI-13 unblocks, depend on the published package),
+set the feature flag, construct a payload, report it, verify the
+response. Every step in it has already been exercised for real using
+this repository as the producer.
+
+**Requires** to actually execute: WI-14 and WI-15 concluding for a first
+*genuinely separate* repository, then the same for each additional one,
+per `MIGRATION-PLAN.md`'s own Phase 10 acceptance criteria. Tracked
+together with WI-14/WI-15 as backlog item **`WI-0057`**, since all three
+share the same root blocker: no second repository or live deployment
+target exists in this session's scope.
 
 ## Summary
 
-| Work item | Status |
-|---|---|
-| WI-13 | Code/workflow/version bump done; actual tag push + publish blocked on human push access (re-verified live: still a hard `403`) |
-| WI-14 | `Ros.Host` + a real, tested connector (`ros_central_client.mjs`) built and run end-to-end against a live local instance using this repo as the producer; blocked on a genuinely separate second repository + a real deployment target |
-| WI-15 | Real short session-local trial run and recorded (3/3 calls succeeded, 2/2 unique activities recorded exactly once, 1/1 duplicate correctly absorbed, 0 divergences); blocked on a real multi-day observation period against WI-14's real second repository |
-| WI-16 | Best-effort ROS-side proposal written; blocked on Chrona team review |
-| WI-17–19 | The delivery mechanism (write + idempotent commit) is built and mechanically proven (5/5 tests) against a real local git repository using an explicitly-labeled placeholder; blocked on Chrona publishing its real package and on a real GitHub App installation for the actual push |
-| WI-20 | Not started; blocked on WI-14/WI-15 concluding for a first real repository |
+| Work item | Status | Backlog |
+|---|---|---|
+| WI-13 | Code/workflow/version bump done; actual tag push + publish blocked on human push access — re-verified live via both `git push` (403) and a full scan of available GitHub API tools (no ref-creation tool exists) | `WI-0056` |
+| WI-14 | `Ros.Host` + a real, tested connector (`ros_central_client.mjs`) built and run end-to-end against a live local instance using this repo as the producer; blocked on a genuinely separate second repository + a real deployment target | `WI-0057` |
+| WI-15 | Real short session-local trial run and recorded (3/3 calls succeeded, 2/2 unique activities recorded exactly once, 1/1 duplicate correctly absorbed, 0 divergences); blocked on a real multi-day observation period against WI-14's real second repository | `WI-0057` |
+| WI-16 | Best-effort ROS-side proposal written; blocked on Chrona team review | `WI-0058` |
+| WI-17–19 | The delivery mechanism (write + idempotent commit) is built and mechanically proven (5/5 tests) against a real local git repository using an explicitly-labeled placeholder; blocked on Chrona publishing its real package and on a real GitHub App installation for the actual push | `WI-0058` |
+| WI-20 | Runbook written and its every step already exercised via WI-14's trial; actual multi-repository rollout blocked on the same second-repository/deployment gap as WI-14/WI-15 | `WI-0057` |
+
+Backlog items `WI-0056`, `WI-0057`, and `WI-0058` are captured (not yet
+ready/active, since none is actionable until its external blocker
+lifts) in this repository's own `.ros/work/queue.json` — visible to
+`./ros status`/`./ros work ready` once each becomes actionable, not just
+recorded in this document.
