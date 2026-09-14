@@ -36,9 +36,16 @@ missing piece; each blocker names exactly what unblocks it.
    ref (`create_branch`), never an arbitrary `refs/tags/...` ref.
 
 This is a genuine, currently-in-effect credential-scope restriction, not
-a stale or assumed one. Tracked as backlog item **`WI-0056`** in this
-repository's own work queue (`.ros/work/queue.json`) so it isn't lost to
-this document alone.
+a stale or assumed one. As further confirmation: an attempt to create a
+brand-new, disposable repository (to serve as a real second producer for
+WI-14/WI-15/WI-20, see below) via the `create_repository` API also
+returned `403 Resource not accessible by integration` — this session's
+GitHub credentials are scoped to operating on the existing repository's
+content and issues only, never to creating new refs, tags, or
+repositories. Tracked as backlog item **`WI-0056`** in this repository's
+own work queue (`.ros/work/queue.json`) and as
+[issue #53](https://github.com/kemiller2002/repository-operating-system/issues/53)
+so it isn't lost to this document alone.
 
 **Action needed from a human with full push access**, once this PR (or
 whichever PR carries this work) has merged to `main`:
@@ -88,7 +95,13 @@ maintainer agrees to connect it, and a reachable deployment target for
 explicitly separate phase, gated on GitHub OIDC for a specific
 repo/branch/environment, none of which exists yet), and manufacturing a
 second "test repo" inside this same session would not be an independent
-producer in any meaningful sense. Tracked as backlog item **`WI-0057`**.
+producer in any meaningful sense. Attempting to provision one via a real
+`create_repository` API call was tried and refused
+(`403 Resource not accessible by integration`) — this session's GitHub
+credentials cannot create a new repository, only operate on the
+existing one's content and issues. Tracked as backlog item
+**`WI-0057`** and as
+[issue #54](https://github.com/kemiller2002/repository-operating-system/issues/54).
 See `PRODUCER-ONBOARDING-RUNBOOK.md` for the exact steps a real second
 repository would follow once one is available.
 
@@ -139,9 +152,10 @@ conversation, see
 written from what ROS already knows it needs to send. It is a starting
 proposal for Chrona's team to react to, not a joint agreement — WI-16
 is not complete until Chrona's side has actually reviewed and (dis)agreed
-with it. Tracked as backlog item **`WI-0058`** so the need for that
-review is a live, visible obligation in this repository's own work
-queue, not just a sentence in this document.
+with it. Tracked as backlog item **`WI-0058`** and as
+[issue #52](https://github.com/kemiller2002/repository-operating-system/issues/52)
+so the need for that review is a live, visible obligation, not just a
+sentence in this document.
 
 ## WI-17/WI-18/WI-19 — Consume `Chrona.Integration`, GitHub datastore
 adapter, shadow-test ROS→Chrona
@@ -221,4 +235,16 @@ Backlog items `WI-0056`, `WI-0057`, and `WI-0058` are captured (not yet
 ready/active, since none is actionable until its external blocker
 lifts) in this repository's own `.ros/work/queue.json` — visible to
 `./ros status`/`./ros work ready` once each becomes actionable, not just
-recorded in this document.
+recorded in this document. Each also has a real, open GitHub issue
+tracking it externally:
+[#52](https://github.com/kemiller2002/repository-operating-system/issues/52) (WI-16),
+[#53](https://github.com/kemiller2002/repository-operating-system/issues/53) (WI-13),
+[#54](https://github.com/kemiller2002/repository-operating-system/issues/54) (WI-14/WI-15/WI-20).
+
+Two of these blockers were independently confirmed, not merely assumed,
+via real API calls this session made and that were refused: `git push`
+of a tag (`403`) and `create_repository` to provision a disposable
+second producer (`403 Resource not accessible by integration`). This
+session's GitHub credentials can read, comment on, open issues against,
+and push commits/branches to the existing repository — and nothing
+beyond that.
