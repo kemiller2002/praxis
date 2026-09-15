@@ -19,25 +19,41 @@ open Ros.Infrastructure.Work
 open System.Text.Json
 open System.Text.Json.Nodes
 
-[<Literal>]
-let Version = "0.2.0-shadow"
+/// Single authoritative version, read from package.json at build time; see
+/// Ros.Cli.Lifecycle.Version and Directory.Build.props.
+let Version = Lifecycle.Version
 
 let private usage =
     "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--quiet] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | adapter publish --target FILE"
 
-let private parseRoot (arguments: string array) =
-    let values = ResizeArray<string>(arguments)
-    let rootIndex = values.IndexOf("--root")
+/// Removes one global `--name VALUE` option from the argument list wherever
+/// it appears, so the command parsers below only ever see their own flags.
+let private takeGlobalOption (name: string) (values: ResizeArray<string>) : Result<string option, string> =
+    let index = values.IndexOf(name)
 
-    if rootIndex < 0 then
-        Ok(Path.GetFullPath(Directory.GetCurrentDirectory()), values |> Seq.toList)
-    elif rootIndex + 1 >= values.Count || values[rootIndex + 1].StartsWith("--", StringComparison.Ordinal) then
-        Error "--root requires a value"
+    if index < 0 then
+        Ok None
+    elif index + 1 >= values.Count || values[index + 1].StartsWith("--", StringComparison.Ordinal) then
+        Error $"{name} requires a value"
     else
-        let root = Path.GetFullPath values[rootIndex + 1]
-        values.RemoveAt(rootIndex + 1)
-        values.RemoveAt(rootIndex)
-        Ok(root, values |> Seq.toList)
+        let value = values[index + 1]
+        values.RemoveAt(index + 1)
+        values.RemoveAt(index)
+        Ok(Some value)
+
+let private parseGlobals (arguments: string array) =
+    let values = ResizeArray<string>(arguments)
+
+    match takeGlobalOption "--root" values with
+    | Error message -> Error message
+    | Ok root ->
+        match takeGlobalOption "--package-root" values with
+        | Error message -> Error message
+        | Ok packageRoot ->
+            let resolvedRoot =
+                root |> Option.map Path.GetFullPath |> Option.defaultWith (fun () -> Path.GetFullPath(Directory.GetCurrentDirectory()))
+
+            Ok(resolvedRoot, packageRoot |> Option.map Path.GetFullPath, values |> Seq.toList)
 
 let private renderFinding (finding: ArtifactFinding) =
     let location =
@@ -1831,7 +1847,7 @@ let private runValidateUnified root arguments =
 /// item, plus the unified `validate` findings' count/pass-fail summary
 /// and deduplicated repair hints, plus real execution/active-execution
 /// counts from `telemetry show`'s own read.
-let private runStatus root =
+let private runStatus root packageRoot verbose =
     match computeUnifiedFindings root with
     | Error message ->
         eprintfn "ERROR %s" message
@@ -1902,6 +1918,19 @@ let private runStatus root =
             output["workItems"] <- workItemsNode
             output["telemetry"] <- telemetryNode
             output["nextActions"] <- nextActionsNode
+
+            // Additive: every key above predates the lifecycle interface and
+            // is unchanged. `installation` is new, so an existing consumer
+            // that reads only the keys it already knows is unaffected.
+            match Lifecycle.installationNode root packageRoot with
+            | Some(node: JsonNode) ->
+                if not verbose then
+                    match node with
+                    | :? JsonObject as installation -> installation.Remove "managedArtifacts" |> ignore
+                    | _ -> ()
+
+                output["installation"] <- node
+            | None -> ()
 
             printf "%s" (output.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
             0
@@ -2403,23 +2432,32 @@ let private runAdapterPublish root (arguments: string list) =
             printfn "published %d event(s); %d duplicate(s) skipped" outcome.Published outcome.Duplicates
             0
 
-let private dispatch root arguments =
+/// `ros --help` is public documentation, so it carries both the lifecycle
+/// commands and the repository commands this CLI has always had.
+let private fullHelp topic =
+    match topic with
+    | Some("init" | "status" | "verify" | "upgrade" | "doctor") -> Lifecycle.helpFor topic
+    // Anything else -- no topic, or one this CLI does not have a page for --
+    // gets the overview, which has to name the repository commands too.
+    | _ -> Lifecycle.helpFor None + "\n\nRepository commands:\n  " + usage
+
+let private repositoryDispatch root packageRoot arguments =
     let repository = FileArtifactRepository.create root
     let gitRepository = ProcessGitRepository.create root
 
     match arguments with
-    | [ "version" ]
-    | [ "--version" ] ->
+    | [ "version" ] ->
         printfn "ros-fs %s" Version
         0
     | []
     | [ "help" ]
     | [ "--help" ]
     | [ "-h" ] ->
-        printfn "%s" usage
+        printfn "%s" (fullHelp None)
         0
     | "validate" :: rest -> runValidateUnified root rest
-    | [ "status" ] -> runStatus root
+    | "status" :: rest when rest |> List.forall (fun value -> value = "--json" || value = "--verbose") ->
+        runStatus root packageRoot (rest |> List.contains "--verbose")
     | "artifacts" :: "validate" :: rest when rest |> List.forall ((=) "--json") ->
         runValidation (rest |> List.contains "--json") repository
     | "registry" :: "build" :: rest when rest |> List.forall ((=) "--dry-run") ->
@@ -2470,17 +2508,32 @@ let private dispatch root arguments =
     | "adapter" :: "call" :: rest -> runAdapterCall root rest
     | "adapter" :: "publish" :: rest -> runAdapterPublish root rest
     | _ ->
-        eprintfn "%s" usage
+        eprintfn "%s" (fullHelp None)
         2
+
+/// Lifecycle commands are parsed first, by a typed parser that owns its own
+/// flags. Anything it does not claim -- and `status`, which it only
+/// flag-checks -- falls through to the repository commands above.
+let private dispatch root packageRoot arguments =
+    match Lifecycle.parse packageRoot arguments with
+    | Some(Error message) ->
+        eprintfn "ERROR %s" message
+        eprintfn "%s" (fullHelp (arguments |> List.tryHead))
+        Ros.Domain.Lifecycle.ExitCode.InvalidArguments
+    | Some(Ok command) ->
+        match Lifecycle.run fullHelp root command with
+        | Some code -> code
+        | None -> repositoryDispatch root packageRoot arguments
+    | None -> repositoryDispatch root packageRoot arguments
 
 [<EntryPoint>]
 let main arguments =
     try
-        match parseRoot arguments with
+        match parseGlobals arguments with
         | Error message ->
             eprintfn "ERROR %s" message
             1
-        | Ok(root, remaining) -> dispatch root remaining
+        | Ok(root, packageRoot, remaining) -> dispatch root packageRoot remaining
     with error ->
         eprintfn "ERROR %s" error.Message
         1

@@ -9,13 +9,24 @@ compiled F# CLI binary, both for this package's own `ros-fs` bin entry and
 for the scaffolded project's own `./ros`, which is that same launcher by
 default.
 
+Since the lifecycle interface landed, the canonical entry point is the `ros`
+bin: `init`, `status`, `verify`, `upgrade` and `doctor`, all implemented in
+F# (`Ros.Domain.Lifecycle`, `Ros.Application.Lifecycle`,
+`Ros.Infrastructure.Lifecycle`). `ros-bootstrap` is retained unchanged as
+legacy compatibility.
+
 ## Ownership
 
-- State, including presentation state: `starter/*/manifest.json`, `package.json`,
-  package contents, installed `.ros/installation.json`, and the per-user
-  `ros-fs` binary cache (`~/.cache/ros-fs/`, override `ROS_FS_CACHE_DIR`).
-- Transitions / commands / messages: `bin/ros-bootstrap.mjs` delegates to
-  `lib/bootstrap.mjs` symbols `initializeProject`, `verifyProject`, and `main`.
+- State, including presentation state: `starter/*/manifest.json` (including
+  each entry's declared `ownership`/`integration`), `package.json`, package
+  contents, the installed `.echelon/ros.json` manifest, the legacy
+  `.ros/installation.json` snapshot, and the per-user `ros-fs` binary cache
+  (`~/.cache/ros-fs/`, override `ROS_FS_CACHE_DIR`).
+- Transitions / commands / messages: `bin/ros.mjs` delegates to
+  `lib/lifecycle-launcher.mjs`'s `run`, which only locates the CLI, supplies
+  `--package-root`, and forwards argv/stdio/exit code -- every lifecycle
+  decision is in F#. `bin/ros-bootstrap.mjs` delegates to `lib/bootstrap.mjs`
+  symbols `initializeProject`, `verifyProject`, and `main` (legacy).
   `bin/ros-fs.mjs` delegates to `lib/ros-fs-launcher.mjs`'s `run`.
 - Invariants and guards: safe destination checks, collision preflight,
   preserve-existing policy, profile/manifest validation, checksums, file modes,
@@ -40,9 +51,10 @@ default.
 
 ## Interfaces
 
-- Inbound: npm `ros-bootstrap` binary and `init`/`verify` CLI arguments; npm
-  `ros-fs` binary and whatever arguments it forwards verbatim to the
-  downloaded F# CLI.
+- Inbound: npm `ros` binary and the lifecycle commands/options documented in
+  `docs/cli.md`; npm `ros-bootstrap` binary and `init`/`verify` CLI arguments
+  (legacy); npm `ros-fs` binary and whatever arguments it forwards verbatim to
+  the downloaded F# CLI.
 - Outbound: installed files/directories/modes, installation attribution JSON,
   stdout/stderr, and process exit status. `ros-fs` additionally writes the
   cached binary under `ROS_FS_CACHE_DIR`/`~/.cache/ros-fs/` and inherits
@@ -51,7 +63,12 @@ default.
 ## Tests and verification
 
 - Local behavior tests: `tests/npm-bootstrap.test.mjs`,
-  `tests/ros-fs-launcher.test.mjs`.
+  `tests/ros-fs-launcher.test.mjs`, `tests/Ros.Tests/LifecycleTests.fs` (the
+  pure ownership, planning, migration and diagnosis rules).
+- Packed-artifact tests: `tests/lifecycle-package.test.mjs` packs the real
+  tarball, extracts it as `npx` would, and runs every documented command
+  against throwaway repositories, including idempotency, the legacy upgrade
+  path, and each failure mode.
 - Boundary/contract tests: both profile manifests, npm pack inventory, checksum
   verification, and collision/rollback assertions. `ros-fs-launcher.mjs`'s
   RID mapping, checksum parsing, download/cache/exec cycle (against a real

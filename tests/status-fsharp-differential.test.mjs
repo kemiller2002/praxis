@@ -96,11 +96,56 @@ function fsharpWork(root, args) {
   return { status: result.status, stdout: result.stdout, stderr: result.stderr };
 }
 
+// `installation` is an additive block the lifecycle interface introduced; it
+// did not exist when these golden masters were captured. Stripping it here
+// keeps the goldens proving exactly what they were frozen to prove -- that
+// every pre-existing key is byte-for-byte unchanged -- while the dedicated
+// assertions below cover the new block. Any change to a pre-existing key
+// still fails these tests.
 function normalize(record) {
+  const { installation, ...rest } = record;
   return {
-    ...record,
+    ...rest,
     workItems: record.workItems.map(({ telemetryExecutionIds, ...itemRest }) => ({ ...itemRest, hasExecIds: telemetryExecutionIds.length > 0 }))
   };
+}
+
+const packageMetadata = JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8"));
+
+function assertCommonInstallationFields(installation) {
+  assert.ok(installation, "status must carry the additive installation block");
+  assert.equal(installation.schemaVersion, 1);
+  assert.equal(installation.tool, "ros");
+  assert.equal(installation.package, packageMetadata.name);
+  // One authoritative version source: the CLI reports package.json's version.
+  assert.equal(installation.cliVersion, packageMetadata.version);
+  // Not verbose: the full artifact list stays out of the default document.
+  assert.equal(installation.managedArtifacts, undefined);
+}
+
+// These fixtures are built by `ros-bootstrap init`, which records its state
+// only in the legacy .ros/installation.json. That is exactly what an existing
+// consumer's repository looks like today, so status must report it as a real
+// installation that is one migration behind -- not as missing or broken.
+function assertLegacyInstallationBlock(installation) {
+  assertCommonInstallationFields(installation);
+  assert.equal(installation.state, "upgrade-required");
+  assert.equal(installation.installedVersion, "legacy");
+  assert.equal(installation.upgradeAvailable, packageMetadata.version);
+  assert.equal(installation.configurationVersion, null);
+  assert.equal(installation.managedArtifactCount, null);
+  assert.equal(installation.verified, true, "a legacy install is a warning, never an error");
+}
+
+function assertCurrentInstallationBlock(installation) {
+  assertCommonInstallationFields(installation);
+  assert.equal(installation.state, "installed");
+  assert.equal(installation.installedVersion, packageMetadata.version);
+  assert.equal(installation.configurationVersion, 1);
+  assert.equal(installation.profile, "greenfield");
+  assert.equal(installation.verified, true);
+  assert.equal(installation.upgradeAvailable, null);
+  assert.ok(installation.managedArtifactCount > 0);
 }
 
 test("F# status matches production for a clean bootstrap with no findings", (t) => {
@@ -114,6 +159,43 @@ test("F# status matches production for a clean bootstrap with no findings", (t) 
   assert.deepEqual(normalize(fsharpParsed), GOLDEN.test1);
   assert.equal(fsharpParsed.validation, "passed");
   assert.deepEqual(fsharpParsed.nextActions, ["Select an allowed work transition or begin a new work item."]);
+  assertLegacyInstallationBlock(fsharpParsed.installation);
+});
+
+test("status --json is identical to status, and --verbose adds the managed artifact list", (t) => {
+  const root = fixture(t, "verbose");
+
+  const plain = fsharpStatus(root);
+  assert.equal(plain.status, 0, plain.stderr);
+
+  const explicit = spawnSync("dotnet", [fsharpCli, "--root", root, "status", "--json"], {
+    cwd: repositoryRoot,
+    encoding: "utf8"
+  });
+  assert.equal(explicit.status, 0, explicit.stderr);
+  assert.equal(explicit.stdout, plain.stdout, "--json must not change the long-standing default output");
+
+  // Adopt the .echelon manifest so there is a managed artifact list to show.
+  const upgraded = spawnSync("dotnet", [fsharpCli, "--root", root, "upgrade"], {
+    cwd: repositoryRoot,
+    encoding: "utf8"
+  });
+  assert.equal(upgraded.status, 0, upgraded.stderr);
+
+  const verbose = spawnSync("dotnet", [fsharpCli, "--root", root, "status", "--verbose"], {
+    cwd: repositoryRoot,
+    encoding: "utf8"
+  });
+  assert.equal(verbose.status, 0, verbose.stderr);
+
+  const verboseParsed = JSON.parse(verbose.stdout);
+  assertCurrentInstallationBlock(JSON.parse(fsharpStatus(root).stdout).installation);
+  assert.ok(Array.isArray(verboseParsed.installation.managedArtifacts));
+  assert.equal(verboseParsed.installation.managedArtifacts.length, verboseParsed.installation.managedArtifactCount);
+  for (const artifact of verboseParsed.installation.managedArtifacts) {
+    assert.ok(["tool-owned", "generated", "user-owned", "shared"].includes(artifact.ownership), artifact.ownership);
+    assert.match(artifact.sha256, /^[0-9a-f]{64}$/);
+  }
 });
 
 test("F# status matches production with real active/blocked work items, telemetry counts, and a real finding", (t) => {
@@ -158,4 +240,5 @@ test("F# status matches production with real active/blocked work items, telemetr
   assert.equal(fsharpParsed.telemetry.executionCount, 2);
   assert.equal(fsharpParsed.telemetry.activeExecutionCount, 2);
   assert.equal(fsharpParsed.workItems.length, 3);
+  assertLegacyInstallationBlock(fsharpParsed.installation);
 });

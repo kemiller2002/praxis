@@ -44,4 +44,5 @@ let main _ =
     @ AdapterContractTests.tests
     @ AdapterCallEffectTests.tests
     @ AdapterPublishEffectTests.tests
+    @ LifecycleTests.tests
     |> TestRunner.run

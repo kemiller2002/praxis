@@ -52,6 +52,13 @@ jobs:
         env:
           ROS_BASE_REF: ${{ github.event.before }}
 
+      # npm run test:all already packs the artifact and runs every documented
+      # lifecycle command against it (tests/lifecycle-package.test.mjs). This
+      # step prints the file list so a packaging change is visible in the job
+      # log of the run that published it.
+      - name: Review the package contents
+        run: npm pack --dry-run --ignore-scripts
+
       # A stable "latest" release happens only when this push actually
       # changed package.json's committed version -- publishing on every push
       # would make every commit a public release and empty the version
