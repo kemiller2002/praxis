@@ -204,11 +204,31 @@ test("resolveRosVersion prefers the bundled stable-version override, so a main-b
 
 test("a normal install's scaffolded ros.json rosVersion matches the installed package version (no override present)", (t) => {
   const target = temporaryDirectory(t);
-  const result = initializeProject({ target, project: "Rosversion Sandbox" });
+  // Stated, not inherited: publish.yml writes lib/stable-ros-version.json
+  // into the working tree before the snapshot publish that re-runs this
+  // suite via `prepack`, so the absence of an override has to be declared.
+  const result = initializeProject({
+    target,
+    project: "Rosversion Sandbox",
+    stableVersionOverride: null
+  });
 
   assert.equal(result.rosVersion, result.packageVersion);
   const rosJson = JSON.parse(fs.readFileSync(path.join(target, "ros.json"), "utf8"));
   assert.equal(rosJson.rosVersion, result.packageVersion);
+});
+
+test("a snapshot install's scaffolded ros.json pins the bundled stable override, not the snapshot version", (t) => {
+  const target = temporaryDirectory(t);
+  const result = initializeProject({
+    target,
+    project: "Snapshot Sandbox",
+    stableVersionOverride: { version: "9.9.9" }
+  });
+
+  assert.equal(result.rosVersion, "9.9.9");
+  const rosJson = JSON.parse(fs.readFileSync(path.join(target, "ros.json"), "utf8"));
+  assert.equal(rosJson.rosVersion, "9.9.9", "a scaffolded project must pin a binary-backed release");
 });
 
 test("project name is derived from the target folder when omitted", (t) => {
@@ -491,6 +511,11 @@ test("main publishing workflow uses an OIDC-compatible npm CLI", () => {
   assert.match(workflow, /npm install --global npm@11/);
   assert.match(workflow, /npm publish --access public --tag main/);
   assert.match(workflow, /kemiller2002\/repository-operating-system/);
+  // A pre-existing release for the tag must not short-circuit asset upload:
+  // v3.0.1 shipped to npm with an empty release that way, so bin/ros-fs.mjs
+  // 404ed on checksums.txt for every user of that version.
+  assert.match(workflow, /gh release upload "v\$\{VERSION\}"/);
+  assert.doesNotMatch(workflow, /already exists; skipping/);
   const manifest = JSON.parse(fs.readFileSync(path.join(repository, "package.json"), "utf8"));
   assert.equal(
     manifest.repository.url,
