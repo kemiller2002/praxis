@@ -66,6 +66,6 @@
     {"source": "starter/greenfield/registries/journals.json", "destination": "registries/journals.json", "template": false, "ownership": "generated"},
     {"source": "starter/greenfield/registries/missions.json", "destination": "registries/missions.json", "template": false, "ownership": "generated"},
     {"source": "starter/greenfield/registries/research-packages.json", "destination": "registries/research-packages.json", "template": false, "ownership": "generated"},
-    {"source": "starter/greenfield/registries/theories.json", "destination": "registries/theories.json", "template": false}
+    {"source": "starter/greenfield/registries/theories.json", "destination": "registries/theories.json", "template": false, "ownership": "generated"}
   ]
 }
