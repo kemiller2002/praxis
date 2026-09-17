@@ -153,19 +153,41 @@ jobs:
           VERSION: ${{ steps.version-check.outputs.current }}
         run: |
           set -euo pipefail
+          ASSETS=(
+            dist/ros-fs/ros-fs-linux-x64
+            dist/ros-fs/ros-fs-linux-arm64
+            dist/ros-fs/ros-fs-osx-x64
+            dist/ros-fs/ros-fs-osx-arm64
+            dist/ros-fs/ros-fs-win-x64.exe
+            dist/ros-fs/checksums.txt
+          )
+          # A release for this tag can already exist because someone cut it by
+          # hand before the version bump landed. That must never mean "publish
+          # the npm package and ship no binaries": bin/ros-fs.mjs resolves
+          # v${VERSION} on first use, so a release without these assets 404s
+          # for every user of that version. Upload into the existing release
+          # instead of skipping, and --clobber so a re-run is idempotent.
           if gh release view "v${VERSION}" >/dev/null 2>&1; then
-            echo "release v${VERSION} already exists; skipping"
+            echo "release v${VERSION} already exists; uploading binaries into it"
+            gh release upload "v${VERSION}" "${ASSETS[@]}" --clobber
           else
             gh release create "v${VERSION}" \
-              dist/ros-fs/ros-fs-linux-x64 \
-              dist/ros-fs/ros-fs-linux-arm64 \
-              dist/ros-fs/ros-fs-osx-x64 \
-              dist/ros-fs/ros-fs-osx-arm64 \
-              dist/ros-fs/ros-fs-win-x64.exe \
-              dist/ros-fs/checksums.txt \
+              "${ASSETS[@]}" \
               --title "v${VERSION}" \
               --notes "ros-fs self-contained binaries for @echelon-foundry/repository-operating-system@${VERSION}. Fetched automatically by the npm package's ros-fs launcher (bin/ros-fs.mjs) on first use; not intended for direct manual download."
           fi
+          # Fail loudly rather than leave a release whose binaries are missing.
+          # Matched in-shell against one listing: a `grep -q` pipeline can
+          # SIGPIPE its producer, which `set -o pipefail` would then report as
+          # a failure even when the asset is present.
+          published="$(gh release view "v${VERSION}" --json assets --jq '.assets[].name')"
+          for asset in "${ASSETS[@]}"; do
+            name="$(basename "$asset")"
+            case $'\n'"${published}"$'\n' in
+              *$'\n'"${name}"$'\n'*) ;;
+              *) echo "::error::v${VERSION} is missing release asset ${name}"; exit 1 ;;
+            esac
+          done
 
       - name: Create unique main-snapshot version
         id: version
