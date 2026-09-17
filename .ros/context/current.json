@@ -2060,11 +2060,32 @@
         "EXE-20260917T144753063Z-54093160"
       ],
       "completedAt": "2026-09-17T14:52:00Z"
+    },
+    {
+      "id": "WI-0060",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "package.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-17T18:53:23.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260917T185206295Z-e49d115e"
+      ],
+      "completedAt": "2026-09-17T18:53:23.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "claude",
-  "updatedAt": "2026-09-17T14:52:00Z",
+  "updatedAt": "2026-09-17T18:53:23.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
