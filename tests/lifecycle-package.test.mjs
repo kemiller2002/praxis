@@ -353,6 +353,49 @@ test("a user-owned file is never overwritten, and is recorded as the repository'
   assert.equal(ros(root, ["verify"]).status, 0);
 });
 
+test("a populated registry is generated output, not a local edit to a tool-owned file", (t) => {
+  const root = repository(t, "registries");
+  assert.equal(ros(root, ["init"]).status, 0);
+
+  // Every registry is written by `ros registry build`. Classifying one as
+  // tool-owned makes the tool's own output indistinguishable from a local
+  // edit, so assert the classification for all of them rather than the one
+  // that regressed.
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, ".echelon", "ros.json"), "utf8"));
+  const registries = manifest.managedArtifacts.filter((entry) => /^registries\/.+\.json$/.test(entry.path));
+  assert.ok(registries.length > 0, "the scaffold must install registry seeds");
+  assert.deepEqual(
+    registries.filter((entry) => entry.ownership !== "generated").map((entry) => entry.path),
+    [],
+    "every registry is produced by `ros registry build`, so every registry is generated"
+  );
+
+  // The regression this guards is a deadlock, not a warning: one artifact in
+  // the corpus was enough to fail verification permanently, with init and
+  // upgrade both refusing to run and doctor advising that the index be
+  // reverted.
+  const template = fs.readFileSync(path.join(root, "templates", "research", "THEORY-TEMPLATE.md"), "utf8");
+  fs.mkdirSync(path.join(root, "research", "theories"), { recursive: true });
+  fs.writeFileSync(
+    path.join(root, "research", "theories", "TH-DEMO-2026-0001--registry-ownership.md"),
+    template
+      .replace(/^id: .*$/m, "id: TH-DEMO-2026-0001")
+      .replace(/^title: .*$/m, "title: A theory that reaches the registry")
+      .replace(/^research_area: .*$/m, "research_area: demo")
+      .replaceAll("YYYY-MM-DD", "2026-09-17")
+  );
+
+  assert.equal(ros(root, ["registry", "build"]).status, 0);
+  assert.notEqual(
+    JSON.parse(fs.readFileSync(path.join(root, "registries", "theories.json"), "utf8")).length,
+    0,
+    "the theory must actually reach the registry, or the assertions below prove nothing"
+  );
+
+  assert.equal(ros(root, ["verify"]).status, 0, "generated output must not fail verification");
+  assert.equal(ros(root, ["init"]).status, 0, "init must stay available once the corpus has content");
+});
+
 test("a legacy ros-bootstrap installation upgrades, keeping user edits and the legacy snapshot", (t) => {
   const root = repository(t, "upgrade");
   const { root: packageRoot } = packedPackage();

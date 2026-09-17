@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 56,
+  "nextSeq": 60,
   "items": [
     {
       "id": "WI-0001",
@@ -1063,6 +1063,20 @@
       "attachments": [],
       "createdAt": "2026-09-14T16:30:12.000Z",
       "updatedAt": "2026-09-14T16:30:13.000Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0059",
+      "title": "Classify registries/theories.json as generated in both starter manifests",
+      "description": "registries/theories.json is the only registry whose manifest entry omits ownership, so ownershipOf falls through to tool-owned. Because ros registry build writes it, any repository containing a theory fails ros verify and cannot run init or upgrade. Upstream issue #57.",
+      "tags": [],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-17T14:47:44.816Z",
+      "updatedAt": "2026-09-17T14:52:00Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null

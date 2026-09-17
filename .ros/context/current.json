@@ -2039,11 +2039,32 @@
         "EXE-20260914T163013271Z-ec1aa5c1"
       ],
       "completedAt": "2026-09-14T16:30:13.000Z"
+    },
+    {
+      "id": "WI-0059",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "starter/greenfield/manifest.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/lifecycle-package.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-17T14:52:00Z",
+      "telemetryExecutionIds": [
+        "EXE-20260917T144753063Z-54093160"
+      ],
+      "completedAt": "2026-09-17T14:52:00Z"
     }
   ],
   "protocolVersion": "1.0.0",
-  "actor": "codex",
-  "updatedAt": "2026-09-14T16:30:13.000Z",
+  "actor": "claude",
+  "updatedAt": "2026-09-17T14:52:00Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

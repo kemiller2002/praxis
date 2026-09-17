@@ -95,6 +95,7 @@
 | WI-0056 | Add the standardized Echelon Foundry lifecycle CLI (init/status/verify/upgrade/doctor) in F#, distributed through npm | complete |  | high |
 | WI-0057 | Embed the starter scaffold in the CLI binary so init/upgrade run standalone | complete |  | high |
 | WI-0058 | Release 3.0.0: version bump plus refreshed README and instructions | complete |  | high |
+| WI-0059 | Classify registries/theories.json as generated in both starter manifests | complete |  | high |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |
