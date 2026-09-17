@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 60,
+  "nextSeq": 61,
   "items": [
     {
       "id": "WI-0001",
@@ -1077,6 +1077,23 @@
       "attachments": [],
       "createdAt": "2026-09-17T14:47:44.816Z",
       "updatedAt": "2026-09-17T14:52:00Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0060",
+      "title": "Bump npm package version to 3.0.3",
+      "description": "Routine version bump requested by the maintainer for the next npm release.",
+      "tags": [
+        "release",
+        "npm"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-17T18:51:58.623Z",
+      "updatedAt": "2026-09-17T18:53:23.000Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
