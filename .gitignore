@@ -29,6 +29,9 @@ web/app.js.map
 web-hub/app.js
 web-hub/app.js.map
 
+# Written by publish.yml into the npm tarball only; never committed to source
+lib/stable-ros-version.json
+
 # Generated transient work
 .ros/locks/
 work/staging/*

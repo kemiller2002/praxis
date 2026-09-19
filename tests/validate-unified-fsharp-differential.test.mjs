@@ -11,19 +11,105 @@ import { initializeProject } from "../lib/bootstrap.mjs";
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
 
+// Golden masters below were captured once from production's own Node
+// `validate` command with the exact same call sequence as each test, then
+// frozen here. Node is retained in this repository only as the web server's
+// internal dependency (DF-ROS-2026-A033) and is no longer executed as a live
+// oracle by this test suite.
+const GOLDEN = {
+  clean: {
+    textStdout: "validation passed\n",
+    json: { valid: true, findings: [] }
+  },
+  combined: {
+    json: {
+      valid: false,
+      findings: [
+        {
+          severity: "error",
+          path: ".ros/work/queue.json",
+          field: "status",
+          message: "invalid status 'not-a-status' for 'WI-BAD'",
+          repair: "Correct the named file and field, then run './ros validate' again."
+        },
+        {
+          severity: "error",
+          path: "ros.json",
+          field: "telemetry.disabledReason",
+          message: "disabled telemetry requires an explicit reason",
+          repair: "Correct the named file and field, then run './ros validate' again."
+        }
+      ]
+    }
+  },
+  stale: {
+    json: {
+      valid: false,
+      findings: [
+        {
+          severity: "error",
+          path: "registries/decisions.json",
+          field: null,
+          message: "registry is stale; run 'ros registry build'",
+          repair: "Run './ros registry build'."
+        }
+      ]
+    }
+  },
+  artifactAndAttribution: {
+    json: {
+      valid: false,
+      findings: [
+        {
+          severity: "error",
+          path: "research/decisions/DF-BROKEN--test.md",
+          field: "id",
+          message: "filename must start with 'not valid!!--'",
+          repair: "Correct the named file and field, then run './ros validate' again."
+        },
+        {
+          severity: "error",
+          path: "research/decisions/DF-BROKEN--test.md",
+          field: "id",
+          message: "invalid identifier 'not valid!!'",
+          repair: "Correct the named file and field, then run './ros validate' again."
+        },
+        {
+          severity: "error",
+          path: "research/decisions/DF-BROKEN--test.md",
+          field: "work_items",
+          message: "meaningful change has no active or completed work-item attribution",
+          repair: "Run './ros work begin WORK-ID', perform the change, then complete it with configured evidence."
+        }
+      ]
+    },
+    textStatus: 1,
+    textStdout: "",
+    textStderr:
+      "ERROR research/decisions/DF-BROKEN--test.md:id: filename must start with 'not valid!!--'\n" +
+      "  REPAIR Correct the named file and field, then run './ros validate' again.\n" +
+      "ERROR research/decisions/DF-BROKEN--test.md:id: invalid identifier 'not valid!!'\n" +
+      "  REPAIR Correct the named file and field, then run './ros validate' again.\n" +
+      "ERROR research/decisions/DF-BROKEN--test.md:work_items: meaningful change has no active or completed work-item attribution\n" +
+      "  REPAIR Run './ros work begin WORK-ID', perform the change, then complete it with configured evidence.\n" +
+      "validation failed with 3 error(s)\n"
+  }
+};
+
 function fixture(t, label) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), `ros-validate-unified-${label}-`));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  t.after(() => {
+    try {
+      fs.rmSync(root, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   initializeProject({ target: root, project: "Validate Unified Differential" });
   execFileSync("git", ["-C", root, "init", "-q"]);
   execFileSync("git", ["-C", root, "-c", "user.email=a@b.c", "-c", "user.name=a", "add", "-A"]);
   execFileSync("git", ["-C", root, "-c", "user.email=a@b.c", "-c", "user.name=a", "commit", "-q", "-m", "init"]);
   return root;
-}
-
-function ros(root, args) {
-  const result = spawnSync(path.join(root, "ros"), args, { cwd: root, encoding: "utf8" });
-  return { status: result.status, stdout: result.stdout, stderr: result.stderr };
 }
 
 function fsharpValidate(root, extraArgs = []) {
@@ -35,15 +121,12 @@ test("F# unified validate matches production for a clean bootstrap, both --json 
   assert.ok(fs.existsSync(fsharpCli), "build:fsharp must produce the shadow CLI before this test runs");
   const root = fixture(t, "clean");
 
-  const nodeText = ros(root, ["validate"]);
   const fsharpText = fsharpValidate(root);
-  assert.equal(nodeText.status, 0);
   assert.equal(fsharpText.status, 0);
-  assert.equal(fsharpText.stdout, nodeText.stdout);
+  assert.equal(fsharpText.stdout, GOLDEN.clean.textStdout);
 
-  const nodeJson = ros(root, ["validate", "--json"]);
   const fsharpJson = fsharpValidate(root, ["--json"]);
-  assert.deepEqual(JSON.parse(fsharpJson.stdout), JSON.parse(nodeJson.stdout));
+  assert.deepEqual(JSON.parse(fsharpJson.stdout), GOLDEN.clean.json);
 });
 
 test("F# unified validate matches production combining a backlog-queue finding and a disabled-telemetry finding", (t) => {
@@ -70,10 +153,9 @@ test("F# unified validate matches production combining a backlog-queue finding a
   rosConfig.telemetry = { enabled: false };
   fs.writeFileSync(rosConfigPath, JSON.stringify(rosConfig, null, 2));
 
-  const nodeJson = JSON.parse(ros(root, ["validate", "--json"]).stdout);
   const fsharpJson = JSON.parse(fsharpValidate(root, ["--json"]).stdout);
-  assert.deepEqual(fsharpJson, nodeJson);
-  assert.equal(nodeJson.findings.length, 2);
+  assert.deepEqual(fsharpJson, GOLDEN.combined.json);
+  assert.equal(fsharpJson.findings.length, 2);
 });
 
 test("F# unified validate matches production for a stale registry, sorted together with other findings", (t) => {
@@ -82,10 +164,9 @@ test("F# unified validate matches production for a stale registry, sorted togeth
   const decisionsRegistry = path.join(root, "registries", "decisions.json");
   fs.writeFileSync(decisionsRegistry, JSON.stringify({ broken: true }));
 
-  const nodeJson = JSON.parse(ros(root, ["validate", "--json"]).stdout);
   const fsharpJson = JSON.parse(fsharpValidate(root, ["--json"]).stdout);
-  assert.deepEqual(fsharpJson, nodeJson);
-  assert.ok(nodeJson.findings.some((f) => f.message.includes("registry is stale")));
+  assert.deepEqual(fsharpJson, GOLDEN.stale.json);
+  assert.ok(fsharpJson.findings.some((f) => f.message.includes("registry is stale")));
 });
 
 test("F# unified validate matches production combining an artifact parse finding, a work-attribution finding, and text-format rendering", (t) => {
@@ -96,15 +177,12 @@ test("F# unified validate matches production combining an artifact parse finding
     "---\nid: not valid!!\ntitle: Broken\nstatus: accepted\n---\nBody.\n"
   );
 
-  const nodeJson = JSON.parse(ros(root, ["validate", "--json"]).stdout);
   const fsharpJson = JSON.parse(fsharpValidate(root, ["--json"]).stdout);
-  assert.deepEqual(fsharpJson, nodeJson);
-  assert.ok(nodeJson.findings.length >= 3, "expected at least the artifact id/filename findings plus the work-attribution finding");
+  assert.deepEqual(fsharpJson, GOLDEN.artifactAndAttribution.json);
+  assert.ok(fsharpJson.findings.length >= 3, "expected at least the artifact id/filename findings plus the work-attribution finding");
 
-  const nodeText = ros(root, ["validate"]);
   const fsharpText = fsharpValidate(root);
-  assert.equal(nodeText.status, 1);
-  assert.equal(fsharpText.status, 1);
-  assert.equal(fsharpText.stdout, nodeText.stdout);
-  assert.equal(fsharpText.stderr, nodeText.stderr);
+  assert.equal(fsharpText.status, GOLDEN.artifactAndAttribution.textStatus);
+  assert.equal(fsharpText.stdout, GOLDEN.artifactAndAttribution.textStdout);
+  assert.equal(fsharpText.stderr, GOLDEN.artifactAndAttribution.textStderr);
 });

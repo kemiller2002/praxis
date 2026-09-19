@@ -11,9 +11,249 @@ import { initializeProject } from "../lib/bootstrap.mjs";
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
 
+// Golden masters below were captured once from production's own Node
+// implementation (tools/ros_cli.mjs's callFileAdapter) with the exact same
+// call sequence as each test, then frozen here. Node is retained in this
+// repository only as the web server's internal dependency (DF-ROS-2026-A033)
+// and is no longer executed as a live oracle by this test suite.
+const GOLDEN = {
+  test1: {
+    readStdout: JSON.stringify(
+      {
+        schemaVersion: "1.0.0",
+        protocolVersion: "1.0.0",
+        requestId: "req-get-1",
+        operation: "getWorkItem",
+        outcome: "success",
+        data: { workItem: { id: "FEAT-900", state: "ready", type: "feature" } }
+      },
+      null,
+      2
+    ),
+    transitionStdout: JSON.stringify(
+      {
+        schemaVersion: "1.0.0",
+        protocolVersion: "1.0.0",
+        requestId: "req-transition-1",
+        operation: "transitionWorkItem",
+        outcome: "success",
+        data: { workItem: { id: "FEAT-900", state: "active", type: "feature", updatedBy: "agent:test" } }
+      },
+      null,
+      2
+    ),
+    store: {
+      schemaVersion: "1.0.0",
+      protocolVersion: "1.0.0",
+      repositories: ["protocol-consumer"],
+      workItems: { "FEAT-900": { id: "FEAT-900", state: "active", type: "feature", updatedBy: "agent:test" } },
+      events: [],
+      requests: {
+        "req-get-1": {
+          schemaVersion: "1.0.0",
+          protocolVersion: "1.0.0",
+          requestId: "req-get-1",
+          operation: "getWorkItem",
+          outcome: "success",
+          data: { workItem: { id: "FEAT-900", state: "ready", type: "feature" } }
+        },
+        "req-transition-1": {
+          schemaVersion: "1.0.0",
+          protocolVersion: "1.0.0",
+          requestId: "req-transition-1",
+          operation: "transitionWorkItem",
+          outcome: "success",
+          data: { workItem: { id: "FEAT-900", state: "active", type: "feature", updatedBy: "agent:test" } }
+        }
+      }
+    }
+  },
+  test2: {
+    firstStdout: JSON.stringify(
+      {
+        schemaVersion: "1.0.0",
+        protocolVersion: "1.0.0",
+        requestId: "req-same",
+        operation: "transitionWorkItem",
+        outcome: "success",
+        data: { workItem: { id: "FEAT-900", state: "active", type: "feature", updatedBy: "agent:test" } }
+      },
+      null,
+      2
+    ),
+    conflictStdout: JSON.stringify(
+      {
+        schemaVersion: "1.0.0",
+        protocolVersion: "1.0.0",
+        requestId: "req-conflict",
+        operation: "transitionWorkItem",
+        outcome: "failure",
+        error: { code: "state_conflict", message: "expected 'ready', found 'active'" }
+      },
+      null,
+      2
+    ),
+    store: {
+      schemaVersion: "1.0.0",
+      protocolVersion: "1.0.0",
+      repositories: ["protocol-consumer"],
+      workItems: { "FEAT-900": { id: "FEAT-900", state: "active", type: "feature", updatedBy: "agent:test" } },
+      events: [],
+      requests: {
+        "req-same": {
+          schemaVersion: "1.0.0",
+          protocolVersion: "1.0.0",
+          requestId: "req-same",
+          operation: "transitionWorkItem",
+          outcome: "success",
+          data: { workItem: { id: "FEAT-900", state: "active", type: "feature", updatedBy: "agent:test" } }
+        },
+        "req-conflict": {
+          schemaVersion: "1.0.0",
+          protocolVersion: "1.0.0",
+          requestId: "req-conflict",
+          operation: "transitionWorkItem",
+          outcome: "failure",
+          error: { code: "state_conflict", message: "expected 'ready', found 'active'" }
+        }
+      }
+    }
+  },
+  test3: {
+    results: [
+      {
+        status: 1,
+        stdout: JSON.stringify(
+          {
+            schemaVersion: "1.0.0",
+            protocolVersion: "1.0.0",
+            requestId: "req-forbidden",
+            operation: "transitionWorkItem",
+            outcome: "failure",
+            error: { code: "forbidden", message: "principal lacks work:transition scope" }
+          },
+          null,
+          2
+        )
+      },
+      {
+        status: 1,
+        stdout: JSON.stringify(
+          {
+            schemaVersion: "1.0.0",
+            protocolVersion: "1.0.0",
+            requestId: "req-repo",
+            operation: "transitionWorkItem",
+            outcome: "failure",
+            error: { code: "repository_unknown", message: "repository 'other' is not authorized" }
+          },
+          null,
+          2
+        )
+      },
+      {
+        status: 1,
+        stdout: JSON.stringify(
+          {
+            schemaVersion: "1.0.0",
+            protocolVersion: "2.0.0",
+            requestId: "req-version",
+            operation: "transitionWorkItem",
+            outcome: "failure",
+            error: { code: "protocol_mismatch", message: "adapter supports protocol 1.0.0" }
+          },
+          null,
+          2
+        )
+      },
+      {
+        status: 2,
+        stdout: JSON.stringify(
+          {
+            schemaVersion: "1.0.0",
+            protocolVersion: "1.0.0",
+            requestId: "req-unknown",
+            operation: "transitionWorkItem",
+            outcome: "unknown",
+            error: { code: "remote_outcome_unknown", message: "the remote effect could not be confirmed" }
+          },
+          null,
+          2
+        )
+      }
+    ],
+    store: {
+      schemaVersion: "1.0.0",
+      protocolVersion: "1.0.0",
+      repositories: ["protocol-consumer"],
+      workItems: { "FEAT-900": { id: "FEAT-900", state: "ready", type: "feature" } },
+      events: [],
+      requests: {
+        "req-forbidden": {
+          schemaVersion: "1.0.0",
+          protocolVersion: "1.0.0",
+          requestId: "req-forbidden",
+          operation: "transitionWorkItem",
+          outcome: "failure",
+          error: { code: "forbidden", message: "principal lacks work:transition scope" }
+        },
+        "req-repo": {
+          schemaVersion: "1.0.0",
+          protocolVersion: "1.0.0",
+          requestId: "req-repo",
+          operation: "transitionWorkItem",
+          outcome: "failure",
+          error: { code: "repository_unknown", message: "repository 'other' is not authorized" }
+        },
+        "req-unknown": {
+          schemaVersion: "1.0.0",
+          protocolVersion: "1.0.0",
+          requestId: "req-unknown",
+          operation: "transitionWorkItem",
+          outcome: "unknown",
+          error: { code: "remote_outcome_unknown", message: "the remote effect could not be confirmed" }
+        }
+      }
+    }
+  },
+  test4: {
+    store: {
+      schemaVersion: "1.0.0",
+      protocolVersion: "1.0.0",
+      repositories: ["protocol-consumer"],
+      workItems: { "FEAT-900": { id: "FEAT-900", state: "ready", type: "feature" } },
+      events: [{ eventId: "evt-1", type: "work.completed" }],
+      requests: {
+        "req-event-1": {
+          schemaVersion: "1.0.0",
+          protocolVersion: "1.0.0",
+          requestId: "req-event-1",
+          operation: "publishRepositoryEvent",
+          outcome: "success",
+          data: { eventId: "evt-1" }
+        },
+        "req-event-2": {
+          schemaVersion: "1.0.0",
+          protocolVersion: "1.0.0",
+          requestId: "req-event-2",
+          operation: "publishRepositoryEvent",
+          outcome: "success",
+          data: { eventId: "evt-1" }
+        }
+      }
+    }
+  }
+};
+
 function fixture(t, label) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), `ros-adapter-call-${label}-`));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  t.after(() => {
+    try {
+      fs.rmSync(root, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   initializeProject({ target: root, project: "Adapter Call Differential" });
   execFileSync("git", ["init", "-q"], { cwd: root });
   execFileSync("git", ["config", "user.email", "test@example.invalid"], { cwd: root });
@@ -46,14 +286,6 @@ function readStore(root) {
   return JSON.parse(fs.readFileSync(path.join(root, "adapter-store.json"), "utf8"));
 }
 
-function nodeCall(root) {
-  const result = spawnSync(path.join(root, "ros"), ["adapter", "call", "--store", "adapter-store.json", "--request", "adapter-request.json"], {
-    cwd: root,
-    encoding: "utf8"
-  });
-  return { status: result.status, stdout: result.stdout, stderr: result.stderr };
-}
-
 function fsharpCall(root) {
   const result = spawnSync(
     "dotnet",
@@ -65,9 +297,7 @@ function fsharpCall(root) {
 
 test("F# adapter call reads and transitions a work item without vendor assumptions, byte-identical to production", (t) => {
   assert.ok(fs.existsSync(fsharpCli), "build:fsharp must produce the shadow CLI before this test runs");
-  const node = fixture(t, "read-transition-node");
   const fsharp = fixture(t, "read-transition-fsharp");
-  writeStore(node, baseStore());
   writeStore(fsharp, baseStore());
 
   const readRequest = {
@@ -79,13 +309,10 @@ test("F# adapter call reads and transitions a work item without vendor assumptio
     scopes: ["work:read"],
     workItem: "FEAT-900"
   };
-  writeRequest(node, readRequest);
   writeRequest(fsharp, readRequest);
-  const nodeRead = nodeCall(node);
   const fsharpRead = fsharpCall(fsharp);
-  assert.equal(nodeRead.status, 0, nodeRead.stderr);
   assert.equal(fsharpRead.status, 0, fsharpRead.stderr);
-  assert.equal(nodeRead.stdout.trim(), fsharpRead.stdout.trim());
+  assert.equal(fsharpRead.stdout.trim(), GOLDEN.test1.readStdout);
 
   const transitionRequest = {
     protocolVersion: "1.0.0",
@@ -98,20 +325,15 @@ test("F# adapter call reads and transitions a work item without vendor assumptio
     expectedState: "ready",
     targetState: "active"
   };
-  writeRequest(node, transitionRequest);
   writeRequest(fsharp, transitionRequest);
-  const nodeTransition = nodeCall(node);
   const fsharpTransition = fsharpCall(fsharp);
-  assert.equal(nodeTransition.status, 0, nodeTransition.stderr);
   assert.equal(fsharpTransition.status, 0, fsharpTransition.stderr);
-  assert.equal(nodeTransition.stdout.trim(), fsharpTransition.stdout.trim());
-  assert.deepEqual(readStore(node), readStore(fsharp));
+  assert.equal(fsharpTransition.stdout.trim(), GOLDEN.test1.transitionStdout);
+  assert.deepEqual(readStore(fsharp), GOLDEN.test1.store);
 });
 
 test("F# adapter call retries are idempotent and state conflicts are explicit, matching production", (t) => {
-  const node = fixture(t, "idempotent-node");
   const fsharp = fixture(t, "idempotent-fsharp");
-  writeStore(node, baseStore());
   writeStore(fsharp, baseStore());
 
   const request = {
@@ -125,31 +347,22 @@ test("F# adapter call retries are idempotent and state conflicts are explicit, m
     expectedState: "ready",
     targetState: "active"
   };
-  writeRequest(node, request);
   writeRequest(fsharp, request);
-  const nodeFirst = nodeCall(node);
   const fsharpFirst = fsharpCall(fsharp);
-  const nodeRetry = nodeCall(node);
   const fsharpRetry = fsharpCall(fsharp);
-  assert.equal(nodeRetry.stdout.trim(), nodeFirst.stdout.trim());
   assert.equal(fsharpRetry.stdout.trim(), fsharpFirst.stdout.trim());
-  assert.equal(nodeFirst.stdout.trim(), fsharpFirst.stdout.trim());
+  assert.equal(fsharpFirst.stdout.trim(), GOLDEN.test2.firstStdout);
 
   const conflictRequest = { ...request, requestId: "req-conflict", targetState: "complete" };
-  writeRequest(node, conflictRequest);
   writeRequest(fsharp, conflictRequest);
-  const nodeConflict = nodeCall(node);
   const fsharpConflict = fsharpCall(fsharp);
-  assert.equal(nodeConflict.status, 1);
   assert.equal(fsharpConflict.status, 1);
-  assert.equal(nodeConflict.stdout.trim(), fsharpConflict.stdout.trim());
-  assert.deepEqual(readStore(node), readStore(fsharp));
+  assert.equal(fsharpConflict.stdout.trim(), GOLDEN.test2.conflictStdout);
+  assert.deepEqual(readStore(fsharp), GOLDEN.test2.store);
 });
 
 test("F# adapter call enforces repository, authorization, protocol, and unknown outcomes, matching production", (t) => {
-  const node = fixture(t, "enforce-node");
   const fsharp = fixture(t, "enforce-fsharp");
-  writeStore(node, baseStore());
   writeStore(fsharp, baseStore());
 
   const base = {
@@ -169,26 +382,21 @@ test("F# adapter call enforces repository, authorization, protocol, and unknown 
     { ...base, requestId: "req-unknown", scopes: ["work:transition"], simulateOutcome: "unknown" }
   ];
 
-  for (const scenario of scenarios) {
-    writeRequest(node, scenario);
+  scenarios.forEach((scenario, index) => {
     writeRequest(fsharp, scenario);
-    const nodeResult = nodeCall(node);
     const fsharpResult = fsharpCall(fsharp);
-    assert.equal(nodeResult.status, fsharpResult.status, JSON.stringify(scenario));
-    assert.equal(nodeResult.stdout.trim(), fsharpResult.stdout.trim(), JSON.stringify(scenario));
-  }
+    const golden = GOLDEN.test3.results[index];
+    assert.equal(fsharpResult.status, golden.status, JSON.stringify(scenario));
+    assert.equal(fsharpResult.stdout.trim(), golden.stdout, JSON.stringify(scenario));
+  });
 
-  const nodeStore = readStore(node);
   const fsharpStore = readStore(fsharp);
-  assert.equal(nodeStore.workItems["FEAT-900"].state, "ready");
   assert.equal(fsharpStore.workItems["FEAT-900"].state, "ready");
-  assert.deepEqual(nodeStore, fsharpStore);
+  assert.deepEqual(fsharpStore, GOLDEN.test3.store);
 });
 
 test("F# adapter call deduplicates published event IDs, matching production", (t) => {
-  const node = fixture(t, "publish-node");
   const fsharp = fixture(t, "publish-fsharp");
-  writeStore(node, baseStore());
   writeStore(fsharp, baseStore());
 
   const base = {
@@ -200,49 +408,31 @@ test("F# adapter call deduplicates published event IDs, matching production", (t
     event: { eventId: "evt-1", type: "work.completed" }
   };
 
-  writeRequest(node, { ...base, requestId: "req-event-1" });
   writeRequest(fsharp, { ...base, requestId: "req-event-1" });
-  assert.equal(nodeCall(node).status, 0);
   assert.equal(fsharpCall(fsharp).status, 0);
 
-  writeRequest(node, { ...base, requestId: "req-event-2" });
   writeRequest(fsharp, { ...base, requestId: "req-event-2" });
-  assert.equal(nodeCall(node).status, 0);
   assert.equal(fsharpCall(fsharp).status, 0);
 
-  const nodeStore = readStore(node);
   const fsharpStore = readStore(fsharp);
-  assert.equal(nodeStore.events.length, 1);
   assert.equal(fsharpStore.events.length, 1);
-  assert.deepEqual(nodeStore, fsharpStore);
+  assert.deepEqual(fsharpStore, GOLDEN.test4.store);
 });
 
 test("F# adapter call rejects a missing required field and a missing request file with production's exact messages", (t) => {
-  const node = fixture(t, "missing-node");
   const fsharp = fixture(t, "missing-fsharp");
-  writeStore(node, baseStore());
   writeStore(fsharp, baseStore());
 
-  writeRequest(node, { requestId: "r1", operation: "getWorkItem", repository: "x", principal: "p" });
   writeRequest(fsharp, { requestId: "r1", operation: "getWorkItem", repository: "x", principal: "p" });
-  const nodeMissing = nodeCall(node);
   const fsharpMissing = fsharpCall(fsharp);
-  assert.equal(nodeMissing.status, 1);
   assert.equal(fsharpMissing.status, 1);
-  assert.match(nodeMissing.stderr, /adapter request is missing 'protocolVersion'/);
   assert.equal(fsharpMissing.stderr.trim(), "ERROR adapter request is missing 'protocolVersion'");
 
-  const nodeNotFound = spawnSync(path.join(node, "ros"), ["adapter", "call", "--store", "adapter-store.json", "--request", "nope.json"], {
-    cwd: node,
-    encoding: "utf8"
-  });
   const fsharpNotFound = spawnSync(
     "dotnet",
     [fsharpCli, "--root", fsharp, "adapter", "call", "--store", "adapter-store.json", "--request", "nope.json"],
     { cwd: repositoryRoot, encoding: "utf8" }
   );
-  assert.equal(nodeNotFound.status, 1);
   assert.equal(fsharpNotFound.status, 1);
-  assert.match(nodeNotFound.stderr, /adapter request not found: nope\.json/);
   assert.equal(fsharpNotFound.stderr.trim(), "ERROR adapter request not found: nope.json");
 });

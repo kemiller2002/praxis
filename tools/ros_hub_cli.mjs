@@ -129,12 +129,28 @@ function fileArgs(files) {
 export function createWorkInRepo(root, repoId, input = {}) {
   if (!input.title || !input.title.trim()) throw new Error("create requires a non-empty title");
   const repo = findRepo(root, repoId);
-  const args = ["add", input.title, ...tagArgs(input.tags), ...fileArgs(input.files)];
+  // Files are attached via a separate `work attach` call rather than inline
+  // on `add`: an F#-backed spoke's `add` deliberately does not accept
+  // `--file` (its own equivalent effect is `work attach`), so this is the
+  // one call shape that lands attachments the same way on either backend.
+  const args = ["add", input.title, ...tagArgs(input.tags)];
   if (input.priority) args.push("--priority", input.priority);
   if (input.description) args.push("--description", input.description);
   if (input.id) args.push("--id", input.id);
   if (input.actor) args.push("--actor", input.actor);
   const item = runRepoCli(repo, args);
+  if (input.files?.length) {
+    runRepoCli(repo, [
+      "work", "attach",
+      "--id", item.id,
+      "--occurred-at", new Date().toISOString(),
+      ...fileArgs(input.files)
+    ]);
+    // `work attach`'s own stdout is a queue-row projection without
+    // attachments; `work show` returns the full item that has them.
+    const shown = runRepoCli(repo, ["work", "show", item.id]);
+    return { ...item, ...shown, repoId: repo.id, repoName: repo.name };
+  }
   return { ...item, repoId: repo.id, repoName: repo.name };
 }
 

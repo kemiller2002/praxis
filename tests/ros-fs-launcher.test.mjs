@@ -5,18 +5,27 @@ import http from "node:http";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
 
-import { run, unsupportedPlatformMessage, internal } from "../lib/ros-fs-launcher.mjs";
+import { run, unsupportedPlatformMessage, nonStableVersionMessage, internal } from "../lib/ros-fs-launcher.mjs";
 
-const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const packageVersion = JSON.parse(
-  fs.readFileSync(path.join(repository, "package.json"), "utf8")
-).version;
+// A fixed stable version, stated rather than read from the repository's own
+// package.json. These tests exercise the download/verify/cache/exec path,
+// which only runs for a stable vX.Y.Z version; publish.yml rewrites
+// package.json to a `-main.N.M` snapshot before the snapshot publish that
+// re-runs this suite through `prepack`, and against a snapshot version the
+// launcher correctly refuses before any request -- so inheriting the ambient
+// version made these tests assert the opposite of what they set up.
+const testVersion = "9.9.9";
 
 function temporaryDirectory(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "ros-fs-launcher-"));
-  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  t.after(() => {
+    try {
+      fs.rmSync(directory, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   return directory;
 }
 
@@ -70,6 +79,21 @@ test("releaseAssetName adds .exe only for the win- RID family", () => {
   assert.equal(internal.releaseAssetName("win-x64"), "ros-fs-win-x64.exe");
 });
 
+test("isStableVersion accepts only a plain X.Y.Z release, rejecting main-branch snapshots", () => {
+  assert.equal(internal.isStableVersion("2.0.1"), true);
+  assert.equal(internal.isStableVersion("1.1.0"), true);
+  assert.equal(internal.isStableVersion("2.0.1-main.78.1"), false);
+  assert.equal(internal.isStableVersion("2.0.1-beta.1"), false);
+  assert.equal(internal.isStableVersion("2.0"), false);
+});
+
+test("nonStableVersionMessage names the version and points at a stable install instead", () => {
+  const message = nonStableVersionMessage("2.0.1-main.78.1");
+  assert.match(message, /2\.0\.1-main\.78\.1/);
+  assert.match(message, /main-branch snapshot/);
+  assert.match(message, /PACKAGE-USAGE\.md/);
+});
+
 test("parseChecksums reads sha256sum-style lines and ignores blanks", () => {
   const hash = "a".repeat(64);
   const parsed = internal.parseChecksums(`\n${hash}  ros-fs-linux-x64\n${hash} *ros-fs-win-x64.exe\n\n`);
@@ -96,12 +120,12 @@ test("run downloads, verifies, caches, and executes the platform binary on a cac
   });
 
   const logs = [];
-  const status = await run([], { log: (message) => logs.push(message) });
+  const status = await run([], { log: (message) => logs.push(message), version: testVersion });
 
   assert.equal(status, 7);
   assert.ok(logs.some((line) => line.includes("not cached; downloading")));
 
-  const cachedBinary = path.join(cacheDir, packageVersion, rid, internal.binaryName(rid));
+  const cachedBinary = path.join(cacheDir, testVersion, rid, internal.binaryName(rid));
   assert.ok(fs.existsSync(cachedBinary));
   assert.equal(fs.statSync(cachedBinary).mode & 0o111, 0o111, "cached binary must be executable");
 
@@ -126,11 +150,11 @@ test("run reuses the cached binary on a second invocation without hitting the se
     else process.env.ROS_FS_CACHE_DIR = previousCache;
   });
 
-  const first = await run([], { log: () => {} });
+  const first = await run([], { log: () => {}, version: testVersion });
   assert.equal(first, 0);
   const totalHitsAfterFirst = Object.values(hitCounts).reduce((a, b) => a + b, 0);
 
-  const second = await run([], { log: () => {} });
+  const second = await run([], { log: () => {}, version: testVersion });
   assert.equal(second, 0);
   const totalHitsAfterSecond = Object.values(hitCounts).reduce((a, b) => a + b, 0);
 
@@ -155,11 +179,11 @@ test("run rejects a downloaded binary whose checksum does not match and does not
   });
 
   const logs = [];
-  const status = await run([], { log: (message) => logs.push(message) });
+  const status = await run([], { log: (message) => logs.push(message), version: testVersion });
 
   assert.equal(status, 1);
   assert.ok(logs.some((line) => line.includes("checksum mismatch")));
-  const cachedBinary = path.join(cacheDir, packageVersion, rid, internal.binaryName(rid));
+  const cachedBinary = path.join(cacheDir, testVersion, rid, internal.binaryName(rid));
   assert.ok(!fs.existsSync(cachedBinary), "a checksum-mismatched download must never be cached");
 });
 
@@ -192,7 +216,7 @@ test("run reports a clear error when checksums.txt has no entry for this platfor
   });
 
   const logs = [];
-  const status = await run([], { log: (message) => logs.push(message) });
+  const status = await run([], { log: (message) => logs.push(message), version: testVersion });
 
   assert.equal(status, 1);
   assert.ok(logs.some((line) => line.includes("no entry for")));

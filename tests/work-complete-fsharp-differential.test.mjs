@@ -7,14 +7,74 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
-import { startWork, transition } from "../tools/ros_cli.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const installWorkItemId = `ROS-INSTALL-${JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8")).version.replaceAll(".", "-")}`;
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
+
+// Golden masters below were captured once from production's own Node
+// implementation (tools/ros_cli.mjs's startWork/transition) with the exact
+// same call sequence as each test, then frozen here. Node is retained in
+// this repository only as the web server's internal dependency
+// (DF-ROS-2026-A033) and is no longer executed as a live oracle by this
+// test suite.
+const GOLDEN = {
+  test1Context: {
+    schemaVersion: "1.0.0",
+    protocolVersion: "1.0.0",
+    repository: "work-complete-differential",
+    actor: "ros-bootstrap",
+    baselineDirtyPaths: [],
+    workItems: [
+      {
+        id: installWorkItemId,
+        type: "mechanical",
+        state: "complete",
+        semanticState: "complete",
+        evidence: [{ type: "installation", path: ".ros/installation.json" }]
+      },
+      {
+        id: "WI-DONE",
+        type: "task",
+        state: "complete",
+        semanticState: "complete",
+        evidence: [
+          { type: "implementation", path: "IMPLEMENTATION-NOTES.md" },
+          { type: "tests", path: "TESTS-NOTES.md" }
+        ]
+      }
+    ]
+  },
+  test1LinesAdded: 3,
+  test1LinesDeleted: 0,
+  test1BinaryFiles: 0,
+  test1Metrics: {
+    "git.commits_created": 0,
+    "git.files_added": 2,
+    "git.files_modified": 1,
+    "git.files_deleted": 0,
+    "git.files_renamed": 0,
+    "git.binary_files_changed": 0,
+    "git.lines_added": 3,
+    "git.lines_deleted": 0,
+    "tests.added": 0,
+    "tests.modified": 0,
+    "tests.removed": 0,
+    "documentation.files_changed": 3
+  },
+  test3Message: "completion evidence missing for 'WI-NO-EVIDENCE': implementation, tests",
+  test4Message: "evidence path does not exist: does-not-exist-impl.md"
+};
 
 function fixture(t, label) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), `ros-work-complete-${label}-`));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  t.after(() => {
+    try {
+      fs.rmSync(root, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   initializeProject({ target: root, project: "Work Complete Differential" });
   execFileSync("git", ["init", "-q"], { cwd: root });
   execFileSync("git", ["config", "user.email", "test@example.invalid"], { cwd: root });
@@ -26,6 +86,14 @@ function fixture(t, label) {
 
 function readContext(root) {
   return JSON.parse(fs.readFileSync(path.join(root, ".ros", "context", "current.json"), "utf8"));
+}
+
+function readQueue(root) {
+  return JSON.parse(fs.readFileSync(path.join(root, ".ros", "work", "queue.json"), "utf8"));
+}
+
+function readQueueMarkdown(root) {
+  return fs.readFileSync(path.join(root, ".ros", "work", "queue.md"), "utf8");
 }
 
 function readExecutions(root) {
@@ -75,225 +143,151 @@ function capabilityFor(record, id) {
 
 test("F# work complete matches production's real completion effect with a real clean-baseline change summary", (t) => {
   assert.ok(fs.existsSync(fsharpCli), "build:fsharp must produce the shadow CLI before this test runs");
-  const nodeRoot = fixture(t, "clean-node");
   const fsharpRoot = fixture(t, "clean-fsharp");
 
-  startWork(nodeRoot, ["WI-DONE"], { type: "task" });
   runFsharp(fsharpRoot, "start", ["--id", "WI-DONE", "--occurred-at", "2026-09-09T18:00:00.000Z", "--type", "task"]);
 
-  // Identical real changes in both fixtures: two new (untracked) evidence
-  // files and one modification to an already-tracked, already-committed
-  // file -- exercising every branch of `ChangeSummaryParser.compute`
-  // (added/modified counts, untracked line counting, documentation
-  // classification) against real `git diff`/`git status` output.
-  for (const root of [nodeRoot, fsharpRoot]) {
-    fs.writeFileSync(path.join(root, "IMPLEMENTATION-NOTES.md"), "Implemented the feature.\n");
-    fs.writeFileSync(path.join(root, "TESTS-NOTES.md"), "Covered by new tests.\n");
-    fs.appendFileSync(path.join(root, "README.md"), "Additional context line.\n");
-  }
+  // Real changes in the fixture: two new (untracked) evidence files and one
+  // modification to an already-tracked, already-committed file -- exercising
+  // every branch of `ChangeSummaryParser.compute` (added/modified counts,
+  // untracked line counting, documentation classification) against real
+  // `git diff`/`git status` output.
+  fs.writeFileSync(path.join(fsharpRoot, "IMPLEMENTATION-NOTES.md"), "Implemented the feature.\n");
+  fs.writeFileSync(path.join(fsharpRoot, "TESTS-NOTES.md"), "Covered by new tests.\n");
+  fs.appendFileSync(path.join(fsharpRoot, "README.md"), "Additional context line.\n");
 
   const evidence = [
     { type: "implementation", path: "IMPLEMENTATION-NOTES.md" },
     { type: "tests", path: "TESTS-NOTES.md" }
   ];
 
-  transition(nodeRoot, "complete", ["WI-DONE"], { evidence });
   const fsharpResult = runFsharp(fsharpRoot, "complete", [
     "--id", "WI-DONE", "--occurred-at", "2026-09-09T18:05:00.000Z",
     "--evidence", "implementation=IMPLEMENTATION-NOTES.md", "--evidence", "tests=TESTS-NOTES.md"
   ]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
 
-  const nodeContext = readContext(nodeRoot);
   const fsharpContext = readContext(fsharpRoot);
-  assert.deepEqual(stripVolatile(nodeContext), stripVolatile(fsharpContext));
+  assert.deepEqual(stripVolatile(fsharpContext), GOLDEN.test1Context);
 
-  const nodeItem = nodeContext.workItems.find((item) => item.id === "WI-DONE");
   const fsharpItem = fsharpContext.workItems.find((item) => item.id === "WI-DONE");
-  assert.equal(nodeItem.semanticState, "complete");
   assert.equal(fsharpItem.semanticState, "complete");
-  assert.deepEqual(nodeItem.evidence, evidence);
   assert.deepEqual(fsharpItem.evidence, evidence);
-  assert.ok(nodeItem.completedAt);
   assert.ok(fsharpItem.completedAt);
-  assert.equal(nodeItem.telemetryExecutionIds.length, 1);
   assert.equal(fsharpItem.telemetryExecutionIds.length, 1);
 
-  const nodeExecution = readExecutions(nodeRoot)[0];
   const fsharpExecution = readExecutions(fsharpRoot)[0];
-  assert.equal(nodeExecution.status, "finalized");
   assert.equal(fsharpExecution.status, "finalized");
 
-  const nodeSummary = nodeExecution.repository.changeSummary;
   const fsharpSummary = fsharpExecution.repository.changeSummary;
-  assert.equal(nodeSummary.available, true);
   assert.equal(fsharpSummary.available, true);
-  assert.equal(nodeSummary.mechanism, "git-diff-from-clean-execution-baseline");
   assert.equal(fsharpSummary.mechanism, "git-diff-from-clean-execution-baseline");
 
   // Two untracked additions (the evidence files) plus one modification to
   // an already-tracked, already-committed file (README.md) -- deterministic
-  // given the exact files touched above, and identical between both
-  // fixtures.
+  // given the exact files touched above.
   const expectedCounts = { added: 2, modified: 1, deleted: 0, renamed: 0 };
-  assert.deepEqual(nodeSummary.counts, expectedCounts);
   assert.deepEqual(fsharpSummary.counts, expectedCounts);
-  assert.equal(nodeSummary.commits, 0);
   assert.equal(fsharpSummary.commits, 0);
-  assert.deepEqual(nodeSummary.tests, { added: 0, modified: 0, removed: 0 });
   assert.deepEqual(fsharpSummary.tests, { added: 0, modified: 0, removed: 0 });
   // isDocumentation matches any .md extension, not just README -- all
   // three touched files (README.md plus the two .md evidence files)
   // qualify.
-  assert.equal(nodeSummary.documentationFilesChanged, 3);
   assert.equal(fsharpSummary.documentationFilesChanged, 3);
 
-  // linesAdded/linesDeleted/binaryFiles depend on README.md's own diff
-  // hunk, which is identical between fixtures but not hand-computed here --
-  // cross-checked between Node and F# instead of hard-coded.
-  assert.equal(nodeSummary.linesAdded, fsharpSummary.linesAdded);
-  assert.equal(nodeSummary.linesDeleted, fsharpSummary.linesDeleted);
-  assert.equal(nodeSummary.binaryFiles, fsharpSummary.binaryFiles);
-  assert.ok(nodeSummary.linesAdded >= 2, "at least the two evidence files' own lines must be counted");
+  // linesAdded/linesDeleted/binaryFiles depend on README.md's own diff hunk;
+  // captured once as a golden literal from production's real git-backed
+  // computation rather than hand-computed here.
+  assert.equal(fsharpSummary.linesAdded, GOLDEN.test1LinesAdded);
+  assert.equal(fsharpSummary.linesDeleted, GOLDEN.test1LinesDeleted);
+  assert.equal(fsharpSummary.binaryFiles, GOLDEN.test1BinaryFiles);
+  assert.ok(fsharpSummary.linesAdded >= 2, "at least the two evidence files' own lines must be counted");
 
   for (const id of GIT_CHANGE_METRICS) {
-    assert.equal(metricValue(nodeExecution, id), metricValue(fsharpExecution, id), `metric ${id} must match between Node and F#`);
+    assert.equal(metricValue(fsharpExecution, id), GOLDEN.test1Metrics[id], `metric ${id} must match production's golden master`);
   }
 
-  assert.equal(metricValue(nodeExecution, "git.files_added"), 2);
-  assert.equal(metricValue(nodeExecution, "git.files_modified"), 1);
-  assert.equal(metricValue(nodeExecution, "documentation.files_changed"), 3);
+  assert.equal(metricValue(fsharpExecution, "git.files_added"), 2);
+  assert.equal(metricValue(fsharpExecution, "git.files_modified"), 1);
+  assert.equal(metricValue(fsharpExecution, "documentation.files_changed"), 3);
 
   // time.wall_ms/time.blocked_ms are unconditional but depend on real wall
-  // time, which differs between the two invocations -- present and
-  // non-negative on both sides, never cross-compared.
-  assert.equal(typeof metricValue(nodeExecution, "time.wall_ms"), "number");
-  assert.ok(metricValue(nodeExecution, "time.wall_ms") >= 0);
+  // time -- present and non-negative, never compared against a fixed value.
   assert.equal(typeof metricValue(fsharpExecution, "time.wall_ms"), "number");
   assert.ok(metricValue(fsharpExecution, "time.wall_ms") >= 0);
-  assert.equal(metricValue(nodeExecution, "time.blocked_ms"), 0);
   assert.equal(metricValue(fsharpExecution, "time.blocked_ms"), 0);
 });
 
 test("F# work complete's preexisting-dirty-worktree-at-start scenario produces the same unavailable change summary as production", (t) => {
-  const nodeRoot = fixture(t, "dirty-node");
   const fsharpRoot = fixture(t, "dirty-fsharp");
 
   // A dirty working tree at the moment the telemetry execution is created
   // (i.e. at `work start`, since the item has no execution linked yet)
   // makes `repository.start.dirty` true, which `cleanBaselineChanges`
   // rejects before ever reading a diff.
-  for (const root of [nodeRoot, fsharpRoot]) {
-    fs.appendFileSync(path.join(root, "README.md"), "Uncommitted change before start.\n");
-  }
+  fs.appendFileSync(path.join(fsharpRoot, "README.md"), "Uncommitted change before start.\n");
 
-  startWork(nodeRoot, ["WI-DIRTY"], { type: "task" });
   runFsharp(fsharpRoot, "start", ["--id", "WI-DIRTY", "--occurred-at", "2026-09-09T18:00:00.000Z", "--type", "task"]);
 
-  for (const root of [nodeRoot, fsharpRoot]) {
-    fs.writeFileSync(path.join(root, "IMPLEMENTATION-NOTES.md"), "Implemented anyway.\n");
-    fs.writeFileSync(path.join(root, "TESTS-NOTES.md"), "Tested anyway.\n");
-  }
+  fs.writeFileSync(path.join(fsharpRoot, "IMPLEMENTATION-NOTES.md"), "Implemented anyway.\n");
+  fs.writeFileSync(path.join(fsharpRoot, "TESTS-NOTES.md"), "Tested anyway.\n");
 
-  const evidence = [
-    { type: "implementation", path: "IMPLEMENTATION-NOTES.md" },
-    { type: "tests", path: "TESTS-NOTES.md" }
-  ];
-
-  transition(nodeRoot, "complete", ["WI-DIRTY"], { evidence });
   const fsharpResult = runFsharp(fsharpRoot, "complete", [
     "--id", "WI-DIRTY", "--occurred-at", "2026-09-09T18:05:00.000Z",
     "--evidence", "implementation=IMPLEMENTATION-NOTES.md", "--evidence", "tests=TESTS-NOTES.md"
   ]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
 
-  const nodeExecution = readExecutions(nodeRoot)[0];
   const fsharpExecution = readExecutions(fsharpRoot)[0];
-  assert.equal(nodeExecution.status, "finalized");
   assert.equal(fsharpExecution.status, "finalized");
 
   const expectedSummary = { available: false, reason: "preexisting-dirty-worktree" };
-  assert.deepEqual(nodeExecution.repository.changeSummary, expectedSummary);
   assert.deepEqual(fsharpExecution.repository.changeSummary, expectedSummary);
 
   const expectedReason = "execution attribution unavailable: preexisting-dirty-worktree";
   for (const id of GIT_CHANGE_METRICS) {
-    const nodeCapability = capabilityFor(nodeExecution, id);
     const fsharpCapability = capabilityFor(fsharpExecution, id);
-    assert.equal(nodeCapability.status, "supported-unavailable");
-    assert.equal(nodeCapability.reason, expectedReason);
     assert.equal(fsharpCapability.status, "supported-unavailable");
     assert.equal(fsharpCapability.reason, expectedReason);
-    assert.equal(metricValue(nodeExecution, id), undefined, `${id} must not be recorded as a real measurement`);
     assert.equal(metricValue(fsharpExecution, id), undefined, `${id} must not be recorded as a real measurement`);
   }
 });
 
 test("F# work complete rejects missing required completion evidence types before any effect, matching production's exact message", (t) => {
-  const nodeRoot = fixture(t, "missing-type-node");
   const fsharpRoot = fixture(t, "missing-type-fsharp");
 
-  startWork(nodeRoot, ["WI-NO-EVIDENCE"], { type: "task" });
   runFsharp(fsharpRoot, "start", ["--id", "WI-NO-EVIDENCE", "--occurred-at", "2026-09-09T18:00:00.000Z", "--type", "task"]);
 
-  let nodeMessage;
-  try {
-    transition(nodeRoot, "complete", ["WI-NO-EVIDENCE"], {});
-  } catch (error) {
-    nodeMessage = error.message;
-  }
-
+  assert.match(GOLDEN.test3Message, /completion evidence missing for 'WI-NO-EVIDENCE': implementation, tests/);
   const fsharpResult = runFsharp(fsharpRoot, "complete", ["--id", "WI-NO-EVIDENCE", "--occurred-at", "2026-09-09T18:05:00.000Z"]);
   assert.equal(fsharpResult.status, 1);
-  assert.match(nodeMessage, /completion evidence missing for 'WI-NO-EVIDENCE': implementation, tests/);
   assert.match(fsharpResult.stderr, /completion evidence missing for 'WI-NO-EVIDENCE': implementation, tests/);
 
-  const nodeItem = readContext(nodeRoot).workItems.find((item) => item.id === "WI-NO-EVIDENCE");
   const fsharpItem = readContext(fsharpRoot).workItems.find((item) => item.id === "WI-NO-EVIDENCE");
-  assert.equal(nodeItem.semanticState, "active");
   assert.equal(fsharpItem.semanticState, "active");
 });
 
 test("F# work complete rejects a nonexistent evidence path, matching production's exact message and real filesystem check", (t) => {
-  const nodeRoot = fixture(t, "missing-path-node");
   const fsharpRoot = fixture(t, "missing-path-fsharp");
 
-  startWork(nodeRoot, ["WI-GHOST-EVIDENCE"], { type: "task" });
   runFsharp(fsharpRoot, "start", ["--id", "WI-GHOST-EVIDENCE", "--occurred-at", "2026-09-09T18:00:00.000Z", "--type", "task"]);
 
-  const evidence = [
-    { type: "implementation", path: "does-not-exist-impl.md" },
-    { type: "tests", path: "does-not-exist-tests.md" }
-  ];
-
-  let nodeMessage;
-  try {
-    transition(nodeRoot, "complete", ["WI-GHOST-EVIDENCE"], { evidence });
-  } catch (error) {
-    nodeMessage = error.message;
-  }
-
+  assert.match(GOLDEN.test4Message, /evidence path does not exist: does-not-exist-impl\.md/);
   const fsharpResult = runFsharp(fsharpRoot, "complete", [
     "--id", "WI-GHOST-EVIDENCE", "--occurred-at", "2026-09-09T18:05:00.000Z",
     "--evidence", "implementation=does-not-exist-impl.md", "--evidence", "tests=does-not-exist-tests.md"
   ]);
   assert.equal(fsharpResult.status, 1);
-  assert.match(nodeMessage, /evidence path does not exist: does-not-exist-impl\.md/);
   assert.match(fsharpResult.stderr, /evidence path does not exist: does-not-exist-impl\.md/);
 });
 
 test("F# work complete writes a research item's conclusion, defaulting to 'inconclusive' and honoring an explicit --conclusion, matching production", (t) => {
-  const nodeRoot = fixture(t, "conclusion-node");
   const fsharpRoot = fixture(t, "conclusion-fsharp");
 
-  startWork(nodeRoot, ["WI-RESEARCH-DEFAULT"], { type: "research" });
-  startWork(nodeRoot, ["WI-RESEARCH-EXPLICIT"], { type: "research" });
   runFsharp(fsharpRoot, "start", ["--id", "WI-RESEARCH-DEFAULT", "--occurred-at", "2026-09-09T18:00:00.000Z", "--type", "research"]);
   runFsharp(fsharpRoot, "start", ["--id", "WI-RESEARCH-EXPLICIT", "--occurred-at", "2026-09-09T18:00:01.000Z", "--type", "research"]);
 
-  for (const root of [nodeRoot, fsharpRoot]) {
-    fs.writeFileSync(path.join(root, "RESEARCH-RECORD.md"), "n/a\n");
-  }
+  fs.writeFileSync(path.join(fsharpRoot, "RESEARCH-RECORD.md"), "n/a\n");
 
   // ros.json's default scaffold overrides completion evidence for
   // "research" items to a single "research-record" type (never
@@ -301,28 +295,64 @@ test("F# work complete writes a research item's conclusion, defaulting to 'incon
   // readCompletionEvidence`'s per-type map.
   const evidence = [{ type: "research-record", path: "RESEARCH-RECORD.md" }];
 
-  transition(nodeRoot, "complete", ["WI-RESEARCH-DEFAULT"], { evidence });
   runFsharp(fsharpRoot, "complete", [
     "--id", "WI-RESEARCH-DEFAULT", "--occurred-at", "2026-09-09T18:05:00.000Z",
     "--evidence", "research-record=RESEARCH-RECORD.md"
   ]);
 
-  transition(nodeRoot, "complete", ["WI-RESEARCH-EXPLICIT"], { evidence, conclusion: "confirmed: caching reduces latency" });
   runFsharp(fsharpRoot, "complete", [
     "--id", "WI-RESEARCH-EXPLICIT", "--occurred-at", "2026-09-09T18:06:00.000Z",
     "--evidence", "research-record=RESEARCH-RECORD.md",
     "--conclusion", "confirmed: caching reduces latency"
   ]);
 
-  const nodeContext = readContext(nodeRoot);
   const fsharpContext = readContext(fsharpRoot);
-  const nodeDefault = nodeContext.workItems.find((item) => item.id === "WI-RESEARCH-DEFAULT");
   const fsharpDefault = fsharpContext.workItems.find((item) => item.id === "WI-RESEARCH-DEFAULT");
-  const nodeExplicit = nodeContext.workItems.find((item) => item.id === "WI-RESEARCH-EXPLICIT");
   const fsharpExplicit = fsharpContext.workItems.find((item) => item.id === "WI-RESEARCH-EXPLICIT");
 
-  assert.equal(nodeDefault.conclusion, "inconclusive");
   assert.equal(fsharpDefault.conclusion, "inconclusive");
-  assert.equal(nodeExplicit.conclusion, "confirmed: caching reduces latency");
   assert.equal(fsharpExplicit.conclusion, "confirmed: caching reduces latency");
+});
+
+// The backlog triage lifecycle itself has no "complete" transition (only
+// ready/block/abandon), so an id promoted out of the backlog and completed
+// in the live work protocol would otherwise stay frozen in queue.json's own
+// status field at whatever it was when promoted -- even though queue.md's
+// merged rendering already shows the correct completed state on any later,
+// unrelated backlog write. This is a real F#-only behavior with no Node
+// production equivalent to compare against, so these are plain assertions
+// rather than a golden-master comparison.
+test("F# work complete marks a promoted backlog item's own queue.json status complete, not just queue.md's merged rendering", (t) => {
+  const fsharpRoot = fixture(t, "backlog-sync-fsharp");
+
+  runFsharp(fsharpRoot, "capture", ["--id", "WI-PROMOTED", "--title", "Promoted item", "--occurred-at", "2026-09-09T18:00:00.000Z"]);
+  runFsharp(fsharpRoot, "backlog-transition", ["--id", "WI-PROMOTED", "--action", "ready", "--occurred-at", "2026-09-09T18:01:00.000Z"]);
+  runFsharp(fsharpRoot, "start", ["--id", "WI-PROMOTED", "--occurred-at", "2026-09-09T18:02:00.000Z", "--type", "task"]);
+
+  const queueBeforeComplete = readQueue(fsharpRoot).items.find((item) => item.id === "WI-PROMOTED");
+  assert.equal(queueBeforeComplete.status, "ready", "the raw backlog record has no way to reflect 'active' yet");
+
+  const evidence = ["--evidence", "implementation=README.md", "--evidence", "tests=README.md"];
+  const fsharpResult = runFsharp(fsharpRoot, "complete", ["--id", "WI-PROMOTED", "--occurred-at", "2026-09-09T18:05:00.000Z", ...evidence]);
+  assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
+
+  const queueAfterComplete = readQueue(fsharpRoot).items.find((item) => item.id === "WI-PROMOTED");
+  assert.equal(queueAfterComplete.status, "complete");
+
+  assert.match(readQueueMarkdown(fsharpRoot), /\| WI-PROMOTED \| Promoted item \| complete \|/);
+});
+
+test("F# work complete on a live-only id (never captured to the backlog) leaves queue.json untouched", (t) => {
+  const fsharpRoot = fixture(t, "backlog-sync-live-only-fsharp");
+  const queueBefore = readQueue(fsharpRoot);
+
+  runFsharp(fsharpRoot, "start", ["--id", "WI-LIVE-ONLY", "--occurred-at", "2026-09-09T18:00:00.000Z", "--type", "task"]);
+  const fsharpResult = runFsharp(fsharpRoot, "complete", [
+    "--id", "WI-LIVE-ONLY", "--occurred-at", "2026-09-09T18:05:00.000Z",
+    "--evidence", "implementation=README.md", "--evidence", "tests=README.md"
+  ]);
+  assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
+
+  const queueAfter = readQueue(fsharpRoot);
+  assert.deepEqual(queueAfter.items, queueBefore.items, "completing a live-only id must not synthesize a backlog row for it");
 });

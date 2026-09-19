@@ -83,7 +83,20 @@
 | WI-0044 | F# status command: Phase A increment 12 (closes EV-ROS-2026-A046's full inventory) | complete |  | high |
 | WI-0045 | Record Phase A closure evidence and point agents at F# for already-ported read-only commands | complete |  | high |
 | WI-0046 | Distribute ros-fs via npm as a self-contained single-file binary from GitHub Releases (DF-ROS-2026-A029) | complete |  | high |
-| WI-0047 | Redirect this repository's own ./ros dispatch to the F# CLI (DF-ROS-2026-A030) | ready |  | high |
+| WI-0047 | Redirect this repository's own ./ros dispatch to the F# CLI (DF-ROS-2026-A030) | complete |  | high |
+| WI-0048 | Add additive F# ros-fs launcher to the greenfield starter template (DF-ROS-2026-A031) | complete |  | high |
+| WI-0049 | Replace Node with F# by default in the greenfield starter template (DF-ROS-2026-A032) | complete |  | high |
+| WI-0050 | Execute DF-ROS-2026-A032 Phase 2 with refined scope: Node internal-library-only, golden-master tests (DF-ROS-2026-A033) | complete | fsharp-migration | high |
+| WI-0051 | Root-cause and document the session-long CI empty-output failure pattern (EV-ROS-2026-A049) | complete | ci-infra | medium |
+| WI-0052 | Bump to 2.0.1 to actually publish the first working stable release (2.0.0 never published, EV-ROS-2026-A050) | complete |  | high |
+| WI-0053 | Fix ./ros hitting an unhandled 404 for a main-branch snapshot rosVersion | complete |  | high |
+| WI-0054 | Fix ros-bootstrap init pinning a scaffolded project to a binary-less @main snapshot version | complete |  | high |
+| WI-0055 | Sync queue.json's own backlog status to complete when a promoted item finishes | complete |  | medium |
+| WI-0056 | Add the standardized Echelon Foundry lifecycle CLI (init/status/verify/upgrade/doctor) in F#, distributed through npm | complete |  | high |
+| WI-0057 | Embed the starter scaffold in the CLI binary so init/upgrade run standalone | complete |  | high |
+| WI-0058 | Release 3.0.0: version bump plus refreshed README and instructions | complete |  | high |
+| WI-0059 | Classify registries/theories.json as generated in both starter manifests | complete |  | high |
+| WI-0060 | Bump npm package version to 3.0.3 | complete | release, npm | medium |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |

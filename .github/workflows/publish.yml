@@ -52,6 +52,13 @@ jobs:
         env:
           ROS_BASE_REF: ${{ github.event.before }}
 
+      # npm run test:all already packs the artifact and runs every documented
+      # lifecycle command against it (tests/lifecycle-package.test.mjs). This
+      # step prints the file list so a packaging change is visible in the job
+      # log of the run that published it.
+      - name: Review the package contents
+        run: npm pack --dry-run --ignore-scripts
+
       # A stable "latest" release happens only when this push actually
       # changed package.json's committed version -- publishing on every push
       # would make every commit a public release and empty the version
@@ -73,6 +80,25 @@ jobs:
             fi
           fi
           echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
+
+      # ros-bootstrap init reads this back (lib/bootstrap.mjs's
+      # resolveRosVersion) to pin a scaffolded project's ros.json at a
+      # version ./ros can actually fetch a binary for, regardless of which
+      # exact snapshot was installed to run ros-bootstrap itself -- a
+      # main-snapshot install's own package.json version never has a
+      # matching GitHub Release. steps.version-check.outputs.current is
+      # always the real committed version at this point in the job (a plain
+      # stable release, either already published or -- when this run is
+      # itself the version-bump publish -- about to be, by the "Create
+      # GitHub Release" step below); if anything later in this job fails,
+      # the job stops before either "Publish stable release" or "Publish
+      # main snapshot" runs, so no tarball ever ships a version this file
+      # doesn't actually back by the time it's downloadable.
+      - name: Record the stable ros-fs version for bootstrapped snapshot installs
+        env:
+          STABLE_VERSION: ${{ steps.version-check.outputs.current }}
+        run: |
+          node -e "require('fs').writeFileSync('lib/stable-ros-version.json', JSON.stringify({ version: process.env.STABLE_VERSION }) + '\n')"
 
       - name: Check whether this version is already on the registry
         id: registry-check
@@ -97,7 +123,10 @@ jobs:
       # for the caller's platform from this tagged release on first use and
       # caches it; see DF-ROS-2026-A029. Built here, once, on a stable
       # version bump only -- main-snapshot versions have no matching release
-      # and the launcher falls back to erroring with a clear message.
+      # of their own (a direct `ros-fs` invocation from a snapshot install
+      # fails clearly rather than guessing); ros-bootstrap init instead pins
+      # a scaffolded project at the version this step just built, via
+      # lib/stable-ros-version.json above.
       - name: Build self-contained ros-fs binaries for release
         if: steps.version-check.outputs.changed == 'true' && steps.registry-check.outputs.already_published == 'false'
         run: |
@@ -124,19 +153,41 @@ jobs:
           VERSION: ${{ steps.version-check.outputs.current }}
         run: |
           set -euo pipefail
+          ASSETS=(
+            dist/ros-fs/ros-fs-linux-x64
+            dist/ros-fs/ros-fs-linux-arm64
+            dist/ros-fs/ros-fs-osx-x64
+            dist/ros-fs/ros-fs-osx-arm64
+            dist/ros-fs/ros-fs-win-x64.exe
+            dist/ros-fs/checksums.txt
+          )
+          # A release for this tag can already exist because someone cut it by
+          # hand before the version bump landed. That must never mean "publish
+          # the npm package and ship no binaries": bin/ros-fs.mjs resolves
+          # v${VERSION} on first use, so a release without these assets 404s
+          # for every user of that version. Upload into the existing release
+          # instead of skipping, and --clobber so a re-run is idempotent.
           if gh release view "v${VERSION}" >/dev/null 2>&1; then
-            echo "release v${VERSION} already exists; skipping"
+            echo "release v${VERSION} already exists; uploading binaries into it"
+            gh release upload "v${VERSION}" "${ASSETS[@]}" --clobber
           else
             gh release create "v${VERSION}" \
-              dist/ros-fs/ros-fs-linux-x64 \
-              dist/ros-fs/ros-fs-linux-arm64 \
-              dist/ros-fs/ros-fs-osx-x64 \
-              dist/ros-fs/ros-fs-osx-arm64 \
-              dist/ros-fs/ros-fs-win-x64.exe \
-              dist/ros-fs/checksums.txt \
+              "${ASSETS[@]}" \
               --title "v${VERSION}" \
               --notes "ros-fs self-contained binaries for @echelon-foundry/repository-operating-system@${VERSION}. Fetched automatically by the npm package's ros-fs launcher (bin/ros-fs.mjs) on first use; not intended for direct manual download."
           fi
+          # Fail loudly rather than leave a release whose binaries are missing.
+          # Matched in-shell against one listing: a `grep -q` pipeline can
+          # SIGPIPE its producer, which `set -o pipefail` would then report as
+          # a failure even when the asset is present.
+          published="$(gh release view "v${VERSION}" --json assets --jq '.assets[].name')"
+          for asset in "${ASSETS[@]}"; do
+            name="$(basename "$asset")"
+            case $'\n'"${published}"$'\n' in
+              *$'\n'"${name}"$'\n'*) ;;
+              *) echo "::error::v${VERSION} is missing release asset ${name}"; exit 1 ;;
+            esac
+          done
 
       - name: Create unique main-snapshot version
         id: version

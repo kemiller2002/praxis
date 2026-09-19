@@ -917,5 +917,123 @@
     "title": "Consumer distribution evidence for the F# CLI (DF-ROS-2026-A028 Phase B)",
     "updated": "2026-09-10",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-11",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A049",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A049--ci-empty-output-failures-root-caused-to-actions-billing.md",
+    "related_documents": [
+      "DF-ROS-2026-A033",
+      ".github/workflows/ros-validation.yml",
+      ".github/workflows/publish.yml"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [],
+    "tags": [
+      "ci",
+      "infrastructure",
+      "github-actions",
+      "billing",
+      "sde"
+    ],
+    "title": "The session-long \"empty-output\" CI failure pattern is GitHub Actions billing, not repository or workflow defect",
+    "updated": "2026-09-11",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-11",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A050",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A050--2-0-0-was-never-actually-published.md",
+    "related_documents": [
+      "EV-ROS-2026-A049",
+      ".github/workflows/publish.yml"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [],
+    "tags": [
+      "ci",
+      "release",
+      "npm",
+      "publish",
+      "sde"
+    ],
+    "title": "2.0.0 was never actually published to npm or released on GitHub; publish.yml's version-changed detection cannot retry it",
+    "updated": "2026-09-11",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-11",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A051",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A051--ros-fs-launcher-unhandled-404-for-main-snapshot-versions.md",
+    "related_documents": [
+      "PACKAGE-USAGE.md",
+      "lib/ros-fs-launcher.mjs",
+      "starter/greenfield/tools/ros_fs_launcher.mjs",
+      "lib/bootstrap.mjs"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [],
+    "tags": [
+      "ros-fs",
+      "bootstrap",
+      "launcher",
+      "npm",
+      "bug",
+      "sde"
+    ],
+    "title": "The ros-fs launcher gave a raw 404 instead of a clear error for a main-branch snapshot rosVersion; fixed with a fail-fast version check",
+    "updated": "2026-09-11",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-11",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A052",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A052--queue-json-status-never-tracked-live-completion.md",
+    "related_documents": [
+      "src/Ros.Domain/Work/QueuePresentation.fs",
+      "src/Ros.Infrastructure/Work/FileBacklogQueueRepository.fs",
+      "src/Ros.Cli/Program.fs"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [],
+    "tags": [
+      "work-protocol",
+      "backlog",
+      "sde",
+      "bug"
+    ],
+    "title": "queue.json's own status field never tracked a promoted item's completion, relying on an unrelated later backlog write to self-heal in queue.md",
+    "updated": "2026-09-11",
+    "version": "1.0.0"
   }
 ]

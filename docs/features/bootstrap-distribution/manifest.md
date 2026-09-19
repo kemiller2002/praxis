@@ -4,15 +4,29 @@
 
 Route changes to npm acquisition, profile materialization, installation
 attribution, installation-integrity verification, and (since
-`DF-ROS-2026-A029`) on-demand acquisition of the compiled F# CLI binary.
+`DF-ROS-2026-A029`/`DF-ROS-2026-A032`) on-demand acquisition of the
+compiled F# CLI binary, both for this package's own `ros-fs` bin entry and
+for the scaffolded project's own `./ros`, which is that same launcher by
+default.
+
+Since the lifecycle interface landed, the canonical entry point is the `ros`
+bin: `init`, `status`, `verify`, `upgrade` and `doctor`, all implemented in
+F# (`Ros.Domain.Lifecycle`, `Ros.Application.Lifecycle`,
+`Ros.Infrastructure.Lifecycle`). `ros-bootstrap` is retained unchanged as
+legacy compatibility.
 
 ## Ownership
 
-- State, including presentation state: `starter/*/manifest.json`, `package.json`,
-  package contents, installed `.ros/installation.json`, and the per-user
-  `ros-fs` binary cache (`~/.cache/ros-fs/`, override `ROS_FS_CACHE_DIR`).
-- Transitions / commands / messages: `bin/ros-bootstrap.mjs` delegates to
-  `lib/bootstrap.mjs` symbols `initializeProject`, `verifyProject`, and `main`.
+- State, including presentation state: `starter/*/manifest.json` (including
+  each entry's declared `ownership`/`integration`), `package.json`, package
+  contents, the installed `.echelon/ros.json` manifest, the legacy
+  `.ros/installation.json` snapshot, and the per-user `ros-fs` binary cache
+  (`~/.cache/ros-fs/`, override `ROS_FS_CACHE_DIR`).
+- Transitions / commands / messages: `bin/ros.mjs` delegates to
+  `lib/lifecycle-launcher.mjs`'s `run`, which only locates the CLI, supplies
+  `--package-root`, and forwards argv/stdio/exit code -- every lifecycle
+  decision is in F#. `bin/ros-bootstrap.mjs` delegates to `lib/bootstrap.mjs`
+  symbols `initializeProject`, `verifyProject`, and `main` (legacy).
   `bin/ros-fs.mjs` delegates to `lib/ros-fs-launcher.mjs`'s `run`.
 - Invariants and guards: safe destination checks, collision preflight,
   preserve-existing policy, profile/manifest validation, checksums, file modes,
@@ -21,9 +35,13 @@ attribution, installation-integrity verification, and (since
   its release's `checksums.txt` entry; a platform with no known RID mapping
   fails with a named, actionable message rather than guessing.
 - Capabilities / authority: caller selects profile/target/force; manifest is
-  authoritative for declared package materialization. `ros-fs` is additive
-  and optional: it never changes what `ros-bootstrap init` scaffolds, and
-  `./ros` (Node) remains the only thing that scaffolded project runs.
+  authoritative for declared package materialization. Per `DF-ROS-2026-A032`,
+  the scaffolded project's `./ros` is this same F# launcher, replacing Node,
+  in both starter profiles. Per `DF-ROS-2026-A033`, the `greenfield` profile
+  no longer scaffolds Node's implementation at all; `project-administration`
+  still includes `tools/ros_cli.mjs` and companions, but only as that
+  profile's own web/hub servers' in-process internal dependency, not as a
+  CLI or a rollback path.
 - Important effects and effect contracts: filesystem creation/copy/render,
   cleanup of newly written declared files after failure, and no network/Git
   semantics inside the bootstrap implementation. `ros-fs-launcher.mjs` is the
@@ -33,9 +51,10 @@ attribution, installation-integrity verification, and (since
 
 ## Interfaces
 
-- Inbound: npm `ros-bootstrap` binary and `init`/`verify` CLI arguments; npm
-  `ros-fs` binary and whatever arguments it forwards verbatim to the
-  downloaded F# CLI.
+- Inbound: npm `ros` binary and the lifecycle commands/options documented in
+  `docs/cli.md`; npm `ros-bootstrap` binary and `init`/`verify` CLI arguments
+  (legacy); npm `ros-fs` binary and whatever arguments it forwards verbatim to
+  the downloaded F# CLI.
 - Outbound: installed files/directories/modes, installation attribution JSON,
   stdout/stderr, and process exit status. `ros-fs` additionally writes the
   cached binary under `ROS_FS_CACHE_DIR`/`~/.cache/ros-fs/` and inherits
@@ -44,7 +63,12 @@ attribution, installation-integrity verification, and (since
 ## Tests and verification
 
 - Local behavior tests: `tests/npm-bootstrap.test.mjs`,
-  `tests/ros-fs-launcher.test.mjs`.
+  `tests/ros-fs-launcher.test.mjs`, `tests/Ros.Tests/LifecycleTests.fs` (the
+  pure ownership, planning, migration and diagnosis rules).
+- Packed-artifact tests: `tests/lifecycle-package.test.mjs` packs the real
+  tarball, extracts it as `npx` would, and runs every documented command
+  against throwaway repositories, including idempotency, the legacy upgrade
+  path, and each failure mode.
 - Boundary/contract tests: both profile manifests, npm pack inventory, checksum
   verification, and collision/rollback assertions. `ros-fs-launcher.mjs`'s
   RID mapping, checksum parsing, download/cache/exec cycle (against a real
@@ -83,12 +107,41 @@ attribution, installation-integrity verification, and (since
 ## Maintenance
 
 - Owner: repository-governance
-- Last checked against implementation: 2026-09-10 (DF-ROS-2026-A029: added
-  `ros-fs` npm binary launcher)
+- Last checked against implementation: 2026-09-11 (DF-ROS-2026-A033: the
+  `greenfield` starter profile no longer scaffolds
+  `tools/ros_cli.mjs`/`ros_git.mjs`/`ros_telemetry.mjs`/`ros_persistence.mjs`
+  at all -- discovered, while attempting `DF-ROS-2026-A032` Phase 2's
+  planned deletion of Node's source, that `tools/ros_server.mjs` still
+  imports these modules in-process for the separate, permanently
+  out-of-scope web UI feature, making wholesale deletion unsafe. The
+  `project-administration` profile keeps them scaffolded, since that
+  profile's own `ros_server.mjs`/`ros_hub_cli.mjs`/`ros_hub_server.mjs`
+  depend on them; there they are documented purely as that profile's
+  internal library dependency, never again as a CLI rollback path. The
+  differential test suite's own Node-comparison mechanism was converted
+  from a live oracle -- importing Node's functions directly, or spawning
+  `node tools/ros_cli.mjs` against a bootstrapped fixture -- to golden-master
+  literals captured once from Node's real behavior, so the test suite no
+  longer executes Node as a CLI at all.)
+- Last checked against implementation: 2026-09-11 (DF-ROS-2026-A032,
+  superseding DF-ROS-2026-A031: the scaffolded `./ros` itself is now the
+  F# launcher by default, not merely an additive `ros-fs` alongside it.
+  A031's own build had already found and reverted this exact redesign once
+  as too risky without further work -- doing it safely required first
+  fixing every differential/smoke test whose Node-comparison side spawned
+  a bootstrapped `./ros` (now F#) to invoke `node tools/ros_cli.mjs`
+  directly instead, and pre-seeding a delegating fake binary in the
+  launcher's cache for the two tests that need the real launcher mechanism
+  itself (a real npm-exec install, and `ros-hub create`'s shell-out to a
+  spoke's `./ros`))
 - Known gaps: initialization writes related state without a multi-file
-  transaction; the root lockfile version is stale relative to `package.json`;
-  bootstrap prints validation as a next step but does not execute it.
+  transaction; bootstrap prints validation as a next step but does not
+  execute it.
   `ros-fs`'s cross-platform startup timing (macOS/Windows) is buildability-only,
   not independently measured (`EV-ROS-2026-A048`); `osx-x64` is not built at
   all; a `@main`-tagged snapshot version has no matching GitHub Release, so
-  `ros-fs` only works against stable version installs.
+  the launcher only works against stable version installs. Node's source
+  remains in this repository and in the `project-administration` starter
+  profile only, as `DF-ROS-2026-A033` describes; it is not scheduled for
+  deletion since `tools/ros_server.mjs`/`ros_hub_cli.mjs` depend on it
+  in-process and both are permanently out of this migration's scope.

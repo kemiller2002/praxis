@@ -4,8 +4,10 @@ import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
+import { internal as launcherInternal } from "../starter/greenfield/tools/ros_fs_launcher.mjs";
 import {
   createWorkInRepo,
   listRepos,
@@ -15,9 +17,47 @@ import {
 } from "../tools/ros_hub_cli.mjs";
 import { createServer } from "../tools/ros_hub_server.mjs";
 
+const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const packageVersion = JSON.parse(fs.readFileSync(path.join(repository, "package.json"), "utf8")).version;
+const fsharpCli = path.join(repository, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
+
+// Every spoke repo's own ./ros is now the F# launcher (DF-ROS-2026-A032),
+// which ros_hub_cli.mjs's runRepoCli shells out to. Node's CLI modules are
+// retained in this repository only as the web server's internal dependency
+// (DF-ROS-2026-A033) and are no longer scaffolded into new spoke repos, so
+// the delegator seeded here execs the real, already-built F# CLI binary
+// directly (inheriting execFileSync's cwd, exactly like the real launcher
+// would after acquiring a real release binary) rather than standing in with
+// Node -- this is a real spoke's real backend, not a Node stand-in.
+const spokeCacheDir = fs.mkdtempSync(path.join(os.tmpdir(), "ros-hub-spoke-cache-"));
+process.env.ROS_FS_CACHE_DIR = spokeCacheDir;
+test.after(() => {
+  try {
+    fs.rmSync(spokeCacheDir, { recursive: true, force: true });
+  } catch {
+    // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+  }
+});
+const spokeRid = launcherInternal.resolveRid();
+assert.ok(spokeRid, "this test host's platform/arch must resolve to a known RID");
+assert.ok(fs.existsSync(fsharpCli), "build:fsharp must produce the shadow CLI before this test runs");
+const spokeBinaryPath = launcherInternal.cacheDirectory(packageVersion, spokeRid);
+fs.mkdirSync(spokeBinaryPath, { recursive: true });
+fs.writeFileSync(
+  path.join(spokeBinaryPath, launcherInternal.binaryName(spokeRid)),
+  `#!/bin/sh\nexec dotnet "${fsharpCli}" "$@"\n`,
+  { mode: 0o755 }
+);
+
 function spokeRepo(t, project) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-spoke-"));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  t.after(() => {
+    try {
+      fs.rmSync(root, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   initializeProject({ target: root, project });
   execFileSync("git", ["init", "-q"], { cwd: root });
   execFileSync("git", ["config", "user.email", "test@example.invalid"], { cwd: root });
@@ -29,7 +69,13 @@ function spokeRepo(t, project) {
 
 function hubRoot(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-hub-"));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  t.after(() => {
+    try {
+      fs.rmSync(root, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   return root;
 }
 
@@ -56,7 +102,13 @@ test("registration rejects a second repo whose repository.id collides with an al
 test("registration rejects a non-ROS directory and a directory without ./ros", (t) => {
   const hub = hubRoot(t);
   const plain = fs.mkdtempSync(path.join(os.tmpdir(), "not-ros-"));
-  t.after(() => fs.rmSync(plain, { recursive: true, force: true }));
+  t.after(() => {
+    try {
+      fs.rmSync(plain, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   assert.throws(() => registerRepo(hub, plain), /not a ROS repository/);
 });
 
@@ -108,8 +160,13 @@ test("aggregated listing merges rows across repos and isolates one broken repo's
   // Simulate a spoke that has since moved/vanished.
   const movedAway = `${repoB}-moved`;
   fs.renameSync(repoB, movedAway);
-  t.after(() => fs.rmSync(movedAway, { recursive: true, force: true }));
-
+  t.after(() => {
+    try {
+      fs.rmSync(movedAway, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   const afterMove = listWorkAcrossRepos(hub);
   const stillOk = afterMove.find((row) => row.repoId === entryA.id && !row.error);
   const broken = afterMove.find((row) => row.repoId === entryB.id);

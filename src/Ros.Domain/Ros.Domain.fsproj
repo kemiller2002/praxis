@@ -31,5 +31,8 @@
     <Compile Include="Telemetry/Summary.fs" />
     <Compile Include="Telemetry/Validation.fs" />
     <Compile Include="Telemetry/TelemetryValidation.fs" />
+    <Compile Include="Lifecycle/Model.fs" />
+    <Compile Include="Lifecycle/Migration.fs" />
+    <Compile Include="Lifecycle/Planning.fs" />
   </ItemGroup>
 </Project>

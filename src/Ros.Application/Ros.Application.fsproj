@@ -12,5 +12,6 @@
     <Compile Include="Work/Operations.fs" />
     <Compile Include="Telemetry/Operations.fs" />
     <Compile Include="Artifacts/Operations.fs" />
+    <Compile Include="Lifecycle/Operations.fs" />
   </ItemGroup>
 </Project>

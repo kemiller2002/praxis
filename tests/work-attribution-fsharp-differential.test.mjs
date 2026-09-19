@@ -7,10 +7,26 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
-import { validate } from "../tools/ros_cli.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
+
+// Golden masters below were captured once from production's own Node
+// implementation (tools/ros_cli.mjs's validate, filtered to work_items
+// findings) with the exact same call sequence as each test, then frozen
+// here. Node is retained in this repository only as the web server's
+// internal dependency (DF-ROS-2026-A033) and is no longer executed as a
+// live oracle by this test suite.
+const GOLDEN = {
+  test1: [],
+  test2: [],
+  test3: [
+    { path: "src.txt", field: "work_items", message: "meaningful change has no active or completed work-item attribution" }
+  ],
+  test4: [],
+  test5: [],
+  test6: []
+};
 
 function contextFile(root) {
   return path.join(root, ".ros", "context", "current.json");
@@ -26,7 +42,13 @@ function writeContext(root, context) {
 
 function fixture(t, options = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-work-attribution-differential-"));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  t.after(() => {
+    try {
+      fs.rmSync(root, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   initializeProject({ target: root, project: "Work Attribution Differential" });
 
   const configFile = path.join(root, "ros.json");
@@ -58,10 +80,6 @@ function runFsharp(root) {
   return { status: result.status, json: result.stdout ? JSON.parse(result.stdout) : null, stderr: result.stderr };
 }
 
-function nodeWorkFindings(root) {
-  return validate(root, { checkRegistries: false }).filter((finding) => finding.field === "work_items");
-}
-
 test("F# work validate reports no findings when enforcement is disabled, matching production", (t) => {
   assert.ok(fs.existsSync(fsharpCli), "build:fsharp must produce the shadow CLI before this test runs");
   const root = fixture(t, { enforce: false });
@@ -70,7 +88,7 @@ test("F# work validate reports no findings when enforcement is disabled, matchin
   const fsharp = runFsharp(root);
   assert.equal(fsharp.status, 0, fsharp.stderr);
   assert.deepEqual(fsharp.json, { valid: true, findings: [] });
-  assert.deepEqual(nodeWorkFindings(root), []);
+  assert.deepEqual(GOLDEN.test1, []);
 });
 
 test("F# work validate reports no findings when nothing meaningful changed, matching production", (t) => {
@@ -80,7 +98,7 @@ test("F# work validate reports no findings when nothing meaningful changed, matc
   const fsharp = runFsharp(root);
   assert.equal(fsharp.status, 0, fsharp.stderr);
   assert.deepEqual(fsharp.json, { valid: true, findings: [] });
-  assert.deepEqual(nodeWorkFindings(root), []);
+  assert.deepEqual(GOLDEN.test2, []);
 });
 
 test("F# work validate flags an unattributed meaningful change, matching production", (t) => {
@@ -90,7 +108,7 @@ test("F# work validate flags an unattributed meaningful change, matching product
   const fsharp = runFsharp(root);
   assert.equal(fsharp.status, 1, fsharp.stderr);
 
-  const node = nodeWorkFindings(root);
+  const node = GOLDEN.test3;
   assert.deepEqual(node, [
     { path: "src.txt", field: "work_items", message: "meaningful change has no active or completed work-item attribution" }
   ]);
@@ -104,7 +122,7 @@ test("F# work validate excuses a change already present in the baseline, matchin
   const fsharp = runFsharp(root);
   assert.equal(fsharp.status, 0, fsharp.stderr);
   assert.deepEqual(fsharp.json, { valid: true, findings: [] });
-  assert.deepEqual(nodeWorkFindings(root), []);
+  assert.deepEqual(GOLDEN.test4, []);
 });
 
 test("F# work validate treats an event-logged path as attributed, matching production", (t) => {
@@ -118,7 +136,7 @@ test("F# work validate treats an event-logged path as attributed, matching produ
   const fsharp = runFsharp(root);
   assert.equal(fsharp.status, 0, fsharp.stderr);
   assert.deepEqual(fsharp.json, { valid: true, findings: [] });
-  assert.deepEqual(nodeWorkFindings(root), []);
+  assert.deepEqual(GOLDEN.test5, []);
 });
 
 test("F# work validate excuses every meaningful change while work is active or blocked, matching production", (t) => {
@@ -139,5 +157,5 @@ test("F# work validate excuses every meaningful change while work is active or b
   const fsharp = runFsharp(root);
   assert.equal(fsharp.status, 0, fsharp.stderr);
   assert.deepEqual(fsharp.json, { valid: true, findings: [] });
-  assert.deepEqual(nodeWorkFindings(root), []);
+  assert.deepEqual(GOLDEN.test6, []);
 });

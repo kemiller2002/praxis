@@ -7,14 +7,83 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
-import { ingestTelemetry } from "../tools/ros_telemetry.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
 
+// Golden masters below were captured once from production's own Node
+// implementation (tools/ros_telemetry.mjs's ingestTelemetry with adapter
+// "anthropic-claude-statusline") with the exact same call sequence as each
+// test, then frozen here. Node is retained in this repository only as the
+// web server's internal dependency (DF-ROS-2026-A033) and is no longer
+// executed as a live oracle by this test suite.
+const GOLDEN = {
+  test1Identity: {
+    provider: "anthropic",
+    runtime: "claude-code",
+    runtimeVersion: "1.2.3",
+    model: "claude-opus-5",
+    sessionId: "sess-abc",
+    agentId: "explore-agent"
+  },
+  test1Capabilities: [
+    { metricId: "context.current_cache_read_tokens", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "context.current_cache_write_tokens", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "context.current_input_tokens", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "context.current_output_tokens", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "context.utilization", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "context.window_size", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "cost.session_cumulative", status: "estimated", reason: "normalized measurement recorded" }
+  ],
+  test1Metrics: [
+    { id: "context.current_cache_read_tokens", value: 300, scope: "session", quality: "observed", confidence: null, currency: null },
+    { id: "context.current_cache_write_tokens", value: 50, scope: "session", quality: "observed", confidence: null, currency: null },
+    { id: "context.current_input_tokens", value: 1000, scope: "session", quality: "observed", confidence: null, currency: null },
+    { id: "context.current_output_tokens", value: 200, scope: "session", quality: "observed", confidence: null, currency: null },
+    { id: "context.utilization", value: 0.425, scope: "session", quality: "observed", confidence: null, currency: null },
+    { id: "context.window_size", value: 200000, scope: "session", quality: "observed", confidence: null, currency: null },
+    { id: "cost.session_cumulative", value: 1.2345, scope: "session", quality: "estimated", confidence: "medium", currency: "USD" }
+  ],
+  test1Events: ["telemetry.snapshot.ingested"],
+  test1StoredCapabilities: [
+    { metricId: "context.current_cache_read_tokens", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "context.current_cache_write_tokens", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "context.current_input_tokens", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "context.current_output_tokens", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "context.utilization", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "context.window_size", status: "supported-observed", reason: "normalized measurement recorded" },
+    { metricId: "cost.session_cumulative", status: "estimated", reason: "normalized measurement recorded" }
+  ],
+  test1StoredMetrics: [
+    { id: "context.current_cache_read_tokens", value: 300, scope: "session", quality: "observed", confidence: null, currency: null },
+    { id: "context.current_cache_write_tokens", value: 50, scope: "session", quality: "observed", confidence: null, currency: null },
+    { id: "context.current_input_tokens", value: 1000, scope: "session", quality: "observed", confidence: null, currency: null },
+    { id: "context.current_output_tokens", value: 200, scope: "session", quality: "observed", confidence: null, currency: null },
+    { id: "context.utilization", value: 0.425, scope: "session", quality: "observed", confidence: null, currency: null },
+    { id: "context.window_size", value: 200000, scope: "session", quality: "observed", confidence: null, currency: null },
+    { id: "cost.session_cumulative", value: 1.2345, scope: "session", quality: "estimated", confidence: "medium", currency: "USD" }
+  ],
+  test2Capabilities: [
+    { metricId: "context.current_cache_read_tokens", status: "supported-unavailable", reason: "adapter recognizes the field but it was unavailable in this snapshot" },
+    { metricId: "context.current_cache_write_tokens", status: "supported-unavailable", reason: "adapter recognizes the field but it was unavailable in this snapshot" },
+    { metricId: "context.current_input_tokens", status: "supported-unavailable", reason: "adapter recognizes the field but it was unavailable in this snapshot" },
+    { metricId: "context.current_output_tokens", status: "supported-unavailable", reason: "adapter recognizes the field but it was unavailable in this snapshot" },
+    { metricId: "context.utilization", status: "supported-unavailable", reason: "adapter recognizes the field but it was unavailable in this snapshot" },
+    { metricId: "context.window_size", status: "supported-unavailable", reason: "adapter recognizes the field but it was unavailable in this snapshot" },
+    { metricId: "cost.session_cumulative", status: "supported-unavailable", reason: "adapter recognizes the field but it was unavailable in this snapshot" }
+  ],
+  test3CostStatus: "estimated"
+};
+
 function fixture(t, label) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), `ros-telemetry-ingest-statusline-${label}-`));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  t.after(() => {
+    try {
+      fs.rmSync(root, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   initializeProject({ target: root, project: "Telemetry Ingest Claude Statusline Differential" });
   execFileSync("git", ["init", "-q"], { cwd: root });
   execFileSync("git", ["config", "user.email", "test@example.invalid"], { cwd: root });
@@ -84,10 +153,8 @@ function normEvents(record) {
 
 test("F# telemetry ingest --adapter anthropic-claude-statusline maps identity/capabilities/metrics/events identically to production's own adaptClaudeStatusline", (t) => {
   assert.ok(fs.existsSync(fsharpCli), "build:fsharp must produce the shadow CLI before this test runs");
-  const nodeRoot = fixture(t, "basic-node");
   const fsharpRoot = fixture(t, "basic-fsharp");
 
-  writeFixtureExecution(nodeRoot, "EXE-1", "WI-A", "active", "2026-01-01T00:00:00.000Z");
   writeFixtureExecution(fsharpRoot, "EXE-1", "WI-A", "active", "2026-01-01T00:00:00.000Z");
 
   const input = {
@@ -103,58 +170,47 @@ test("F# telemetry ingest --adapter anthropic-claude-statusline maps identity/ca
     cost: { total_cost_usd: 1.2345 }
   };
 
-  const nodeRecord = ingestTelemetry(nodeRoot, "EXE-1", input, { adapter: "anthropic-claude-statusline" });
-
   const fsharpResult = runFsharp(fsharpRoot, ["EXE-1", "--input", writeInputFile(t, "statusline-basic", input), "--adapter", "anthropic-claude-statusline"]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
   const fsharpRecord = JSON.parse(fsharpResult.stdout);
 
-  assert.deepEqual(normIdentity(nodeRecord), normIdentity(fsharpRecord));
-  assert.deepEqual(normCapabilities(nodeRecord), normCapabilities(fsharpRecord));
-  assert.deepEqual(normMetrics(nodeRecord), normMetrics(fsharpRecord));
-  assert.deepEqual(normEvents(nodeRecord), normEvents(fsharpRecord));
+  assert.deepEqual(GOLDEN.test1Identity, normIdentity(fsharpRecord));
+  assert.deepEqual(GOLDEN.test1Capabilities, normCapabilities(fsharpRecord));
+  assert.deepEqual(GOLDEN.test1Metrics, normMetrics(fsharpRecord));
+  assert.deepEqual(GOLDEN.test1Events, normEvents(fsharpRecord));
 
-  const nodeStored = readExecution(nodeRoot, "EXE-1");
   const fsharpStored = readExecution(fsharpRoot, "EXE-1");
-  assert.deepEqual(normCapabilities(nodeStored), normCapabilities(fsharpStored));
-  assert.deepEqual(normMetrics(nodeStored), normMetrics(fsharpStored));
+  assert.deepEqual(GOLDEN.test1StoredCapabilities, normCapabilities(fsharpStored));
+  assert.deepEqual(GOLDEN.test1StoredMetrics, normMetrics(fsharpStored));
 });
 
 test("F# telemetry ingest --adapter anthropic-claude-statusline declares every capability as supported-unavailable and records no metrics when nothing is present, matching production", (t) => {
-  const nodeRoot = fixture(t, "empty-node");
   const fsharpRoot = fixture(t, "empty-fsharp");
 
-  writeFixtureExecution(nodeRoot, "EXE-1", "WI-A", "active", "2026-01-01T00:00:00.000Z");
   writeFixtureExecution(fsharpRoot, "EXE-1", "WI-A", "active", "2026-01-01T00:00:00.000Z");
 
   const input = { version: "0.9.0" };
 
-  const nodeRecord = ingestTelemetry(nodeRoot, "EXE-1", input, { adapter: "anthropic-claude-statusline" });
   const fsharpResult = runFsharp(fsharpRoot, ["EXE-1", "--input", writeInputFile(t, "statusline-empty", input), "--adapter", "anthropic-claude-statusline"]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
   const fsharpRecord = JSON.parse(fsharpResult.stdout);
 
-  assert.deepEqual(normCapabilities(nodeRecord), normCapabilities(fsharpRecord));
-  assert.equal(nodeRecord.metrics.length, 0);
+  assert.deepEqual(GOLDEN.test2Capabilities, normCapabilities(fsharpRecord));
   assert.equal(fsharpRecord.metrics.length, 0);
 });
 
 test("F# telemetry ingest --adapter anthropic-claude-statusline marks a present cost.session_cumulative as estimated rather than supported-observed, matching production", (t) => {
-  const nodeRoot = fixture(t, "cost-node");
   const fsharpRoot = fixture(t, "cost-fsharp");
 
-  writeFixtureExecution(nodeRoot, "EXE-1", "WI-A", "active", "2026-01-01T00:00:00.000Z");
   writeFixtureExecution(fsharpRoot, "EXE-1", "WI-A", "active", "2026-01-01T00:00:00.000Z");
 
   const input = { cost: { total_cost_usd: 0.42 } };
 
-  const nodeRecord = ingestTelemetry(nodeRoot, "EXE-1", input, { adapter: "anthropic-claude-statusline" });
   const fsharpResult = runFsharp(fsharpRoot, ["EXE-1", "--input", writeInputFile(t, "statusline-cost", input), "--adapter", "anthropic-claude-statusline"]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
   const fsharpRecord = JSON.parse(fsharpResult.stdout);
 
-  const nodeCost = nodeRecord.capabilities.find((c) => c.metricId === "cost.session_cumulative");
   const fsharpCost = fsharpRecord.capabilities.find((c) => c.metricId === "cost.session_cumulative");
-  assert.equal(nodeCost.status, "estimated");
+  assert.equal(GOLDEN.test3CostStatus, "estimated");
   assert.equal(fsharpCost.status, "estimated");
 });

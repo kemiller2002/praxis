@@ -1,22 +1,46 @@
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import fs from "node:fs";
+import http from "node:http";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { deriveProjectName, initializeProject, verifyProject } from "../lib/bootstrap.mjs";
+import { deriveProjectName, initializeProject, resolveRosVersion, verifyProject } from "../lib/bootstrap.mjs";
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageVersion = JSON.parse(
   fs.readFileSync(path.join(repository, "package.json"), "utf8")
 ).version;
+const fsharpDll = path.join(repository, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
 
 function temporaryDirectory(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "ros-bootstrap-"));
-  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  t.after(() => {
+    try {
+      fs.rmSync(directory, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   return directory;
+}
+
+// The scaffolded ./ros is now the F# launcher (DF-ROS-2026-A032) for both
+// profiles; Node's CLI modules are retained in this repository only as the
+// web server's internal dependency (DF-ROS-2026-A033) and are no longer
+// scaffolded into greenfield projects. For tests whose own purpose is "the
+// bootstrapped content validates correctly" rather than "the F# launcher
+// itself works" (that is covered by the dedicated ros_fs_launcher.mjs test
+// below, and the real end-to-end npm-exec test exercises the launcher for
+// real), invoke this repository's own already-built F# CLI directly against
+// the bootstrapped target's --root as a reliable, network-free verifier --
+// this is exactly what a real installed ./ros does once it has acquired a
+// real release binary.
+function fsharpCli(target, args, options = {}) {
+  return spawnSync("dotnet", [fsharpDll, "--root", target, ...args], { cwd: repository, encoding: "utf8", ...options });
 }
 
 test("greenfield initialization is self-contained and immediately valid", (t) => {
@@ -30,6 +54,8 @@ test("greenfield initialization is self-contained and immediately valid", (t) =>
   assert.ok(result.files.length >= 60);
   assert.match(fs.readFileSync(path.join(target, "README.md"), "utf8"), /Communication Engineering/);
   assert.equal(fs.statSync(path.join(target, "ros")).mode & 0o777, 0o755);
+  assert.ok(fs.existsSync(path.join(target, "tools", "ros_fs_launcher.mjs")));
+  assert.equal(fs.existsSync(path.join(target, "tools", "ros_cli.mjs")), false, "greenfield no longer scaffolds Node's CLI modules (DF-ROS-2026-A033)");
   assert.ok(fs.existsSync(path.join(target, ".ros", "installation.json")));
   const workContext = JSON.parse(fs.readFileSync(path.join(target, ".ros", "context", "current.json"), "utf8"));
   assert.equal(workContext.workItems[0].semanticState, "complete");
@@ -37,23 +63,172 @@ test("greenfield initialization is self-contained and immediately valid", (t) =>
   assert.ok(fs.existsSync(path.join(target, ".ros", "events", "events.jsonl")));
   assert.ok(fs.existsSync(path.join(target, ".github", "workflows", "ros-validation.yml")));
 
-  const registry = spawnSync(path.join(target, "ros"), ["registry", "check"], {
-    cwd: target,
-    encoding: "utf8"
-  });
+  const registry = fsharpCli(target, ["registry", "check"]);
   assert.equal(registry.status, 0, registry.stderr || registry.stdout);
   assert.match(registry.stdout, /registries are current/);
 
-  const validation = spawnSync(path.join(target, "ros"), ["validate"], {
-    cwd: target,
-    encoding: "utf8"
-  });
+  const validation = fsharpCli(target, ["validate"]);
   assert.equal(validation.status, 0, validation.stderr || validation.stdout);
   assert.match(validation.stdout, /validation passed/);
   const workflow = fs.readFileSync(path.join(target, ".github", "workflows", "ros-validation.yml"), "utf8");
   assert.match(workflow, /ROS_BASE_REF/);
   assert.doesNotMatch(workflow, /npm test/);
   assert.deepEqual(verifyProject({ target }).findings, []);
+});
+
+test("scaffolded ros_fs_launcher.mjs downloads, verifies, caches, and execs a real binary, then runs offline on a cache hit", async (t) => {
+  const target = temporaryDirectory(t);
+  initializeProject({ target, project: "FSharp Launcher Sandbox" });
+  // Exercises the scaffolded launcher module in-process (matching
+  // tests/ros-fs-launcher.test.mjs's own pattern) rather than spawning
+  // the ros-fs script as a subprocess: a subprocess fetch to a
+  // same-machine ephemeral port does not complete in this sandbox
+  // (unrelated to the launcher's own correctness -- the identical logic,
+  // invoked directly, works; only a spawned-child's own network path
+  // through this sandbox's outbound proxy setup does not), so this stays
+  // a real, meaningful test of the download/verify/cache/exec logic
+  // without depending on that sandbox quirk.
+  const { run, internal } = await import(path.join(target, "tools", "ros_fs_launcher.mjs"));
+
+  const rid = internal.resolveRid();
+  assert.ok(rid, `this test host's platform/arch must resolve to a known RID`);
+  const script = "#!/bin/sh\necho fake-ros-fs-scaffold-output\nexit 0\n";
+  const assetName = internal.releaseAssetName(rid);
+  const checksum = crypto.createHash("sha256").update(script).digest("hex");
+
+  const hits = [];
+  const server = http.createServer((req, res) => {
+    hits.push(req.url);
+    if (req.url === "/checksums.txt") {
+      res.writeHead(200, { "content-type": "text/plain" });
+      res.end(`${checksum}  ${assetName}\n`);
+      return;
+    }
+    if (req.url === `/${assetName}`) {
+      res.writeHead(200, { "content-type": "application/octet-stream" });
+      res.end(script);
+      return;
+    }
+    res.writeHead(404);
+    res.end("not found");
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  const { port } = server.address();
+
+  const cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), "ros-fs-scaffold-cache-"));
+  t.after(() => {
+    try {
+      fs.rmSync(cacheDir, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
+  const previousBase = process.env.ROS_FS_RELEASE_BASE_URL;
+  const previousCache = process.env.ROS_FS_CACHE_DIR;
+  process.env.ROS_FS_RELEASE_BASE_URL = `http://127.0.0.1:${port}`;
+  process.env.ROS_FS_CACHE_DIR = cacheDir;
+  t.after(() => {
+    if (previousBase === undefined) delete process.env.ROS_FS_RELEASE_BASE_URL;
+    else process.env.ROS_FS_RELEASE_BASE_URL = previousBase;
+    if (previousCache === undefined) delete process.env.ROS_FS_CACHE_DIR;
+    else process.env.ROS_FS_CACHE_DIR = previousCache;
+  });
+
+  const logs = [];
+  const first = await run([], { log: (message) => logs.push(message) });
+  assert.equal(first, 0, logs.join("\n"));
+  assert.deepEqual(hits.sort(), ["/checksums.txt", `/${assetName}`]);
+
+  process.env.ROS_FS_RELEASE_BASE_URL = "http://127.0.0.1:1";
+  const secondLogs = [];
+  const second = await run([], { log: (message) => secondLogs.push(message) });
+  assert.equal(second, 0, secondLogs.join("\n"));
+});
+
+test("scaffolded ros_fs_launcher.mjs refuses a main-branch snapshot rosVersion before any network request", async (t) => {
+  const target = temporaryDirectory(t);
+  initializeProject({ target, project: "Snapshot Version Sandbox" });
+
+  // A project bootstrapped via `@main` (PACKAGE-USAGE.md's documented
+  // "install the newest continuously published snapshot" flow) gets a
+  // ros.json rosVersion like "2.0.1-main.78.1" -- publish.yml only ever
+  // builds/publishes ros-fs binaries on a stable version bump, so no
+  // GitHub Release, and therefore no binary, ever exists for a snapshot
+  // version. This must fail fast and clearly rather than attempting (and
+  // failing) a real network round-trip.
+  const rosJsonPath = path.join(target, "ros.json");
+  const rosJson = JSON.parse(fs.readFileSync(rosJsonPath, "utf8"));
+  rosJson.rosVersion = "2.0.1-main.78.1";
+  fs.writeFileSync(rosJsonPath, JSON.stringify(rosJson, null, 2), "utf8");
+
+  const { run } = await import(path.join(target, "tools", "ros_fs_launcher.mjs"));
+
+  const hits = [];
+  const server = http.createServer((req, res) => {
+    hits.push(req.url);
+    res.writeHead(404);
+    res.end("not found");
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  const { port } = server.address();
+
+  const previousBase = process.env.ROS_FS_RELEASE_BASE_URL;
+  process.env.ROS_FS_RELEASE_BASE_URL = `http://127.0.0.1:${port}`;
+  t.after(() => {
+    if (previousBase === undefined) delete process.env.ROS_FS_RELEASE_BASE_URL;
+    else process.env.ROS_FS_RELEASE_BASE_URL = previousBase;
+  });
+
+  const logs = [];
+  const status = await run([], { log: (message) => logs.push(message) });
+
+  assert.equal(status, 1);
+  assert.equal(hits.length, 0, "must not attempt any network request for an unsupported snapshot version");
+  assert.ok(logs.some((line) => line.includes("main-branch snapshot")), logs.join("\n"));
+  assert.ok(logs.some((line) => line.includes("2.0.1-main.78.1")), logs.join("\n"));
+});
+
+test("resolveRosVersion falls back to the installed package's own version when publish.yml never bundled a stable-version override", () => {
+  assert.equal(resolveRosVersion({ version: "2.0.1" }, null), "2.0.1");
+  assert.equal(resolveRosVersion({ version: "2.0.1-main.78.1" }, null), "2.0.1-main.78.1");
+});
+
+test("resolveRosVersion prefers the bundled stable-version override, so a main-branch snapshot install still pins a real release", () => {
+  assert.equal(
+    resolveRosVersion({ version: "2.0.1-main.78.1" }, { version: "2.0.1" }),
+    "2.0.1"
+  );
+});
+
+test("a normal install's scaffolded ros.json rosVersion matches the installed package version (no override present)", (t) => {
+  const target = temporaryDirectory(t);
+  // Stated, not inherited: publish.yml writes lib/stable-ros-version.json
+  // into the working tree before the snapshot publish that re-runs this
+  // suite via `prepack`, so the absence of an override has to be declared.
+  const result = initializeProject({
+    target,
+    project: "Rosversion Sandbox",
+    stableVersionOverride: null
+  });
+
+  assert.equal(result.rosVersion, result.packageVersion);
+  const rosJson = JSON.parse(fs.readFileSync(path.join(target, "ros.json"), "utf8"));
+  assert.equal(rosJson.rosVersion, result.packageVersion);
+});
+
+test("a snapshot install's scaffolded ros.json pins the bundled stable override, not the snapshot version", (t) => {
+  const target = temporaryDirectory(t);
+  const result = initializeProject({
+    target,
+    project: "Snapshot Sandbox",
+    stableVersionOverride: { version: "9.9.9" }
+  });
+
+  assert.equal(result.rosVersion, "9.9.9");
+  const rosJson = JSON.parse(fs.readFileSync(path.join(target, "ros.json"), "utf8"));
+  assert.equal(rosJson.rosVersion, "9.9.9", "a scaffolded project must pin a binary-backed release");
 });
 
 test("project name is derived from the target folder when omitted", (t) => {
@@ -129,7 +304,7 @@ test("installation is automatically attributed in an existing git repository", (
   spawnSync("git", ["add", "README.md"], { cwd: target });
   spawnSync("git", ["commit", "-qm", "baseline"], { cwd: target });
   initializeProject({ target, project: "Existing Repository" });
-  const validation = spawnSync(path.join(target, "ros"), ["validate"], { cwd: target, encoding: "utf8" });
+  const validation = fsharpCli(target, ["validate"]);
   assert.equal(validation.status, 0, validation.stderr || validation.stdout);
 });
 
@@ -142,7 +317,7 @@ test("verification detects installed snapshot drift", (t) => {
   assert.match(result.findings[0], /BOOTSTRAP\.md: differs/);
 });
 
-test("installed Node validator catches broken lineage and accepts repaired lineage", (t) => {
+test("installed F# validator catches broken lineage and accepts repaired lineage", (t) => {
   const target = temporaryDirectory(t);
   initializeProject({ target, project: "Communication Engineering" });
   const hypothesis = path.join(
@@ -165,10 +340,7 @@ supporting_evidence: [EV-COMM-2026-A002]
 `,
     "utf8"
   );
-  const broken = spawnSync(path.join(target, "ros"), ["validate"], {
-    cwd: target,
-    encoding: "utf8"
-  });
+  const broken = fsharpCli(target, ["validate"]);
   assert.equal(broken.status, 1);
   assert.match(broken.stderr, /broken reference 'EV-COMM-2026-A002'/);
 
@@ -192,15 +364,9 @@ supports: [HY-COMM-2026-A001]
 `,
     "utf8"
   );
-  const build = spawnSync(path.join(target, "ros"), ["registry", "build"], {
-    cwd: target,
-    encoding: "utf8"
-  });
+  const build = fsharpCli(target, ["registry", "build"]);
   assert.equal(build.status, 0, build.stderr || build.stdout);
-  const repaired = spawnSync(path.join(target, "ros"), ["validate"], {
-    cwd: target,
-    encoding: "utf8"
-  });
+  const repaired = fsharpCli(target, ["validate"]);
   assert.equal(repaired.status, 0, repaired.stderr || repaired.stdout);
 });
 
@@ -212,13 +378,13 @@ test("installed validator accepts preserved legacy REP identity and confidence",
     `---\nidentifier: RP-2026-07-30-NHE-COMPARATIVE-REVIEW\ntitle: Legacy review\nstatus: draft\nconfidence: medium-high\n---\n`,
     "utf8"
   );
-  const build = spawnSync(path.join(target, "ros"), ["registry", "build"], { cwd: target, encoding: "utf8" });
+  const build = fsharpCli(target, ["registry", "build"]);
   assert.equal(build.status, 0, build.stderr || build.stdout);
-  const validation = spawnSync(path.join(target, "ros"), ["validate"], { cwd: target, encoding: "utf8" });
+  const validation = fsharpCli(target, ["validate"]);
   assert.equal(validation.status, 0, validation.stderr || validation.stdout);
 });
 
-test("npm tarball contains the executable and every scaffold source", (t) => {
+test("npm tarball contains the executable and every scaffold source", async (t) => {
   assert.equal(
     fs.statSync(path.join(repository, "bin", "ros-bootstrap.mjs")).mode & 0o111,
     0o111,
@@ -249,6 +415,7 @@ test("npm tarball contains the executable and every scaffold source", (t) => {
   assert.ok(files.has("tools/ros_persistence.mjs"));
   assert.ok(files.has("tools/ros_git.mjs"));
   assert.ok(files.has("starter/greenfield/ros"));
+  assert.ok(files.has("starter/greenfield/tools/ros_fs_launcher.mjs"));
 
   for (const profile of ["greenfield", "project-administration"]) {
     const manifest = JSON.parse(
@@ -289,10 +456,48 @@ test("npm tarball contains the executable and every scaffold source", (t) => {
   assert.match(executed.stdout, new RegExp(`installed ROS ${packageVersion.replaceAll(".", "\\.")}`));
   assert.match(executed.stdout, /project: Communication Engineering/);
 
+  // Proves the real npm-packed, npm-exec'd ./ros launcher genuinely runs
+  // end to end (real RID resolution, real cache path, real exec) without
+  // depending on network access to a real GitHub release in this test
+  // suite: pre-seed the cache with a fake "binary" the same way
+  // tests/ros-fs-launcher.test.mjs does. Bootstrap content correctness
+  // itself is already covered by this file's fsharpCli(...)-based tests.
   const installedTarget = path.join(target, "communication-engineering");
+  const { internal: installedLauncher } = await import(path.join(installedTarget, "tools", "ros_fs_launcher.mjs"));
+  const installedRid = installedLauncher.resolveRid();
+  assert.ok(installedRid, "this test host's platform/arch must resolve to a known RID");
+  const installedCacheDir = fs.mkdtempSync(path.join(os.tmpdir(), "ros-npm-exec-cache-"));
+  t.after(() => {
+    try {
+      fs.rmSync(installedCacheDir, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
+  const previousCacheDirEnv = process.env.ROS_FS_CACHE_DIR;
+  process.env.ROS_FS_CACHE_DIR = installedCacheDir;
+  t.after(() => {
+    if (previousCacheDirEnv === undefined) delete process.env.ROS_FS_CACHE_DIR;
+    else process.env.ROS_FS_CACHE_DIR = previousCacheDirEnv;
+  });
+
+  // The fake "binary" delegates to this repository's own already-built real
+  // F# CLI rather than being an inert stub, so ./ros validate genuinely
+  // re-validates the real bootstrapped content. Greenfield no longer
+  // scaffolds Node's CLI modules (DF-ROS-2026-A033), so there is no
+  // installed tools/ros_cli.mjs to delegate to here even as a stand-in.
+  const installedBinaryPath = installedLauncher.cacheDirectory(packageVersion, installedRid);
+  fs.mkdirSync(installedBinaryPath, { recursive: true });
+  fs.writeFileSync(
+    path.join(installedBinaryPath, installedLauncher.binaryName(installedRid)),
+    `#!/bin/sh\nexec dotnet "${fsharpDll}" "$@"\n`,
+    { mode: 0o755 }
+  );
+
   const validation = spawnSync(path.join(installedTarget, "ros"), ["validate"], {
     cwd: installedTarget,
-    encoding: "utf8"
+    encoding: "utf8",
+    env: { ...process.env, ROS_FS_CACHE_DIR: installedCacheDir }
   });
   assert.equal(validation.status, 0, validation.stderr || validation.stdout);
 });
@@ -306,6 +511,11 @@ test("main publishing workflow uses an OIDC-compatible npm CLI", () => {
   assert.match(workflow, /npm install --global npm@11/);
   assert.match(workflow, /npm publish --access public --tag main/);
   assert.match(workflow, /kemiller2002\/repository-operating-system/);
+  // A pre-existing release for the tag must not short-circuit asset upload:
+  // v3.0.1 shipped to npm with an empty release that way, so bin/ros-fs.mjs
+  // 404ed on checksums.txt for every user of that version.
+  assert.match(workflow, /gh release upload "v\$\{VERSION\}"/);
+  assert.doesNotMatch(workflow, /already exists; skipping/);
   const manifest = JSON.parse(fs.readFileSync(path.join(repository, "package.json"), "utf8"));
   assert.equal(
     manifest.repository.url,
@@ -313,7 +523,7 @@ test("main publishing workflow uses an OIDC-compatible npm CLI", () => {
   );
 });
 
-test("project-administration profile installs a working hub, self-contained and immediately valid", (t) => {
+test("project-administration profile installs a working hub, self-contained and immediately valid", async (t) => {
   const target = temporaryDirectory(t);
   const result = initializeProject({
     target,
@@ -332,11 +542,11 @@ test("project-administration profile installs a working hub, self-contained and 
   assert.deepEqual(registry.repos, []);
   assert.match(fs.readFileSync(path.join(target, ".ros", "hub", "registry.md"), "utf8"), /Registered Repositories/);
 
-  const validation = spawnSync(path.join(target, "ros"), ["validate"], { cwd: target, encoding: "utf8" });
+  const validation = fsharpCli(target, ["validate"]);
   assert.equal(validation.status, 0, validation.stderr || validation.stdout);
   assert.match(validation.stdout, /validation passed/);
 
-  const registryCheck = spawnSync(path.join(target, "ros"), ["registry", "check"], { cwd: target, encoding: "utf8" });
+  const registryCheck = fsharpCli(target, ["registry", "check"]);
   assert.equal(registryCheck.status, 0, registryCheck.stderr || registryCheck.stdout);
 
   // The hub CLI itself works against the freshly installed, copied files --
@@ -344,6 +554,40 @@ test("project-administration profile installs a working hub, self-contained and 
   const otherSpoke = temporaryDirectory(t);
   initializeProject({ target: otherSpoke, project: "Spoke Repo" });
   spawnSync("git", ["init", "-q"], { cwd: otherSpoke });
+
+  // ros-hub create shells out to the spoke's own ./ros (now the F#
+  // launcher) to actually add the work item, so it needs a cached binary
+  // too -- pre-seed one the same way as the npm-exec test above, via
+  // process.env so execFileSync's inherited environment carries it down.
+  const { internal: spokeLauncher } = await import(path.join(otherSpoke, "tools", "ros_fs_launcher.mjs"));
+  const spokeRid = spokeLauncher.resolveRid();
+  assert.ok(spokeRid, "this test host's platform/arch must resolve to a known RID");
+  const spokeCacheDir = fs.mkdtempSync(path.join(os.tmpdir(), "ros-hub-spoke-cache-"));
+  t.after(() => {
+    try {
+      fs.rmSync(spokeCacheDir, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
+  const previousSpokeCacheEnv = process.env.ROS_FS_CACHE_DIR;
+  process.env.ROS_FS_CACHE_DIR = spokeCacheDir;
+  t.after(() => {
+    if (previousSpokeCacheEnv === undefined) delete process.env.ROS_FS_CACHE_DIR;
+    else process.env.ROS_FS_CACHE_DIR = previousSpokeCacheEnv;
+  });
+  // The fake "binary" delegates to this repository's own already-built real
+  // F# CLI rather than being an inert stub, so ros-hub create's actual write
+  // to the spoke's queue.json is genuinely exercised, not merely invoked.
+  // The spoke is a greenfield-profiled bootstrap, which no longer scaffolds
+  // Node's CLI modules (DF-ROS-2026-A033).
+  const spokeBinaryPath = spokeLauncher.cacheDirectory(packageVersion, spokeRid);
+  fs.mkdirSync(spokeBinaryPath, { recursive: true });
+  fs.writeFileSync(
+    path.join(spokeBinaryPath, spokeLauncher.binaryName(spokeRid)),
+    `#!/bin/sh\nexec dotnet "${fsharpDll}" "$@"\n`,
+    { mode: 0o755 }
+  );
 
   const registered = spawnSync(path.join(target, "ros-hub"), ["register", otherSpoke, "--name", "Spoke"], { cwd: target, encoding: "utf8" });
   assert.equal(registered.status, 0, registered.stderr || registered.stdout);

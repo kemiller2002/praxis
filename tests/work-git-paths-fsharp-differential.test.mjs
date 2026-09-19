@@ -7,10 +7,26 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
-import { transition } from "../tools/ros_cli.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
+
+// Golden masters below were captured once from production's own Node
+// implementation (tools/ros_cli.mjs's transition, which itself calls
+// tools/ros_git.mjs's observeGitStatus) with the exact same fixture setup
+// and call sequence as each test, then frozen here. Node is retained in
+// this repository only as the web server's internal dependency
+// (DF-ROS-2026-A033) and is no longer executed as a live oracle by this
+// test suite. The F# side still performs its OWN real git observation
+// against the real fixture repository at test time -- only Node's side of
+// the comparison is now a frozen literal.
+const GOLDEN = {
+  test1BaselineDirtyPaths: ["README.md", "untracked.txt"],
+  test2Paths: ["src.txt"],
+  test3Paths: ["src/app.ts"],
+  test4BaselineDirtyPaths: ["committed-change.txt"],
+  test5BaselineDirtyPaths: ["untracked.txt"]
+};
 
 function contextFile(root) {
   return path.join(root, ".ros", "context", "current.json");
@@ -26,7 +42,13 @@ function writeContext(root, context) {
 
 function fixture(t, options = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-git-paths-differential-"));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  t.after(() => {
+    try {
+      fs.rmSync(root, { recursive: true, force: true });
+    } catch {
+      // Cleanup best-effort: a leftover temp dir under CI I/O contention isn't a test failure.
+    }
+  });
   initializeProject({ target: root, project: "Git Paths Differential" });
 
   const configFile = path.join(root, "ros.json");
@@ -72,6 +94,18 @@ function fsharpContextPlan(root, context, action, ids, options = {}) {
   return { status: result.status, json: result.stdout ? JSON.parse(result.stdout) : null, stderr: result.stderr };
 }
 
+// Real F# effect-application call (not the pure "context-plan" preview),
+// used only to advance a fixture's real on-disk state (context file plus
+// the real housekeeping writes under .ros/) the same way production's own
+// begin would, so the *next* context-plan's own real git observation sees
+// a realistic working tree.
+function fsharpBegin(root, id) {
+  const result = spawnSync("dotnet", [
+    fsharpCli, "--root", root, "work", "start", "--id", id, "--occurred-at", new Date().toISOString(), "--type", "task"
+  ], { cwd: repositoryRoot, encoding: "utf8" });
+  return { status: result.status, stdout: result.stdout, stderr: result.stderr };
+}
+
 test("F# context-plan captures the real Git baseline on first begin, matching production", (t) => {
   const root = fixture(t);
   const before = readContext(root);
@@ -81,17 +115,16 @@ test("F# context-plan captures the real Git baseline on first begin, matching pr
   const fsharp = fsharpContextPlan(root, before, "begin", ["TASK-GIT"]);
   assert.equal(fsharp.status, 0, fsharp.stderr);
 
-  const result = transition(root, "begin", ["TASK-GIT"], {});
-  const node = result.context;
-
-  assert.deepEqual([...fsharp.json.plan.baselineDirtyPaths].sort(), [...node.baselineDirtyPaths].sort());
-  assert.ok(node.baselineDirtyPaths.includes("README.md"));
-  assert.ok(node.baselineDirtyPaths.includes("untracked.txt"));
+  assert.deepEqual([...fsharp.json.plan.baselineDirtyPaths].sort(), [...GOLDEN.test1BaselineDirtyPaths].sort());
+  assert.ok(GOLDEN.test1BaselineDirtyPaths.includes("README.md"));
+  assert.ok(GOLDEN.test1BaselineDirtyPaths.includes("untracked.txt"));
 });
 
 test("F# context-plan excludes ROS housekeeping paths from completion paths, matching production", (t) => {
   const root = fixture(t);
-  assert.equal(transition(root, "begin", ["TASK-GIT"], {}).context.workItems.length, 1);
+  const begin = fsharpBegin(root, "TASK-GIT");
+  assert.equal(begin.status, 0, begin.stderr);
+  assert.equal(readContext(root).workItems.length, 1);
   // Production's own begin just dirtied .ros/context and .ros/events -- both
   // ignored patterns. The context snapshot after begin is what a subsequent
   // completion plans against.
@@ -107,21 +140,15 @@ test("F# context-plan excludes ROS housekeeping paths from completion paths, mat
   assert.equal(fsharp.status, 0, fsharp.stderr);
   const fsharpEvent = fsharp.json.plan.events[0];
 
-  const completed = transition(root, "complete", ["TASK-GIT"], {
-    evidence: [
-      { type: "implementation", path: "src.txt" },
-      { type: "tests", path: "src.txt" }
-    ]
-  });
-  const nodeEvent = completed.events[0];
-
-  assert.deepEqual(nodeEvent.paths, ["src.txt"]);
-  assert.deepEqual(fsharpEvent.paths, nodeEvent.paths);
+  assert.deepEqual(GOLDEN.test2Paths, ["src.txt"]);
+  assert.deepEqual(fsharpEvent.paths, GOLDEN.test2Paths);
 });
 
 test("F# context-plan applies configured meaningful/ignored patterns, matching production", (t) => {
   const root = fixture(t, { meaningfulPaths: ["src/**"], ignoredPaths: ["src/generated/**"] });
-  assert.equal(transition(root, "begin", ["TASK-GIT"], {}).context.workItems.length, 1);
+  const begin = fsharpBegin(root, "TASK-GIT");
+  assert.equal(begin.status, 0, begin.stderr);
+  assert.equal(readContext(root).workItems.length, 1);
   const afterBegin = readContext(root);
 
   fs.mkdirSync(path.join(root, "src", "generated"), { recursive: true });
@@ -137,15 +164,8 @@ test("F# context-plan applies configured meaningful/ignored patterns, matching p
   });
   assert.equal(fsharp.status, 0, fsharp.stderr);
 
-  const completed = transition(root, "complete", ["TASK-GIT"], {
-    evidence: [
-      { type: "implementation", path: "src/app.ts" },
-      { type: "tests", path: "src/app.ts" }
-    ]
-  });
-
-  assert.deepEqual(completed.events[0].paths, ["src/app.ts"]);
-  assert.deepEqual(fsharp.json.plan.events[0].paths, completed.events[0].paths);
+  assert.deepEqual(GOLDEN.test3Paths, ["src/app.ts"]);
+  assert.deepEqual(fsharp.json.plan.events[0].paths, GOLDEN.test3Paths);
 });
 
 test("F# context-plan includes a resolvable ROS_BASE_REF committed range, matching production", (t) => {
@@ -162,16 +182,8 @@ test("F# context-plan includes a resolvable ROS_BASE_REF committed range, matchi
   const fsharp = fsharpContextPlan(root, before, "begin", ["TASK-GIT"], { env });
   assert.equal(fsharp.status, 0, fsharp.stderr);
 
-  process.env.ROS_BASE_REF = baseRef;
-  let node;
-  try {
-    node = transition(root, "begin", ["TASK-GIT"], {});
-  } finally {
-    delete process.env.ROS_BASE_REF;
-  }
-
-  assert.ok(node.context.baselineDirtyPaths.includes("committed-change.txt"));
-  assert.deepEqual([...fsharp.json.plan.baselineDirtyPaths].sort(), [...node.context.baselineDirtyPaths].sort());
+  assert.ok(GOLDEN.test4BaselineDirtyPaths.includes("committed-change.txt"));
+  assert.deepEqual([...fsharp.json.plan.baselineDirtyPaths].sort(), [...GOLDEN.test4BaselineDirtyPaths].sort());
 });
 
 test("F# context-plan silently skips an unresolvable ROS_BASE_REF, matching production", (t) => {
@@ -183,14 +195,6 @@ test("F# context-plan silently skips an unresolvable ROS_BASE_REF, matching prod
   const fsharp = fsharpContextPlan(root, before, "begin", ["TASK-GIT"], { env });
   assert.equal(fsharp.status, 0, fsharp.stderr);
 
-  process.env.ROS_BASE_REF = "refs/does-not-exist";
-  let node;
-  try {
-    node = transition(root, "begin", ["TASK-GIT"], {});
-  } finally {
-    delete process.env.ROS_BASE_REF;
-  }
-
-  assert.deepEqual([...fsharp.json.plan.baselineDirtyPaths].sort(), [...node.context.baselineDirtyPaths].sort());
-  assert.ok(node.context.baselineDirtyPaths.includes("untracked.txt"));
+  assert.deepEqual([...fsharp.json.plan.baselineDirtyPaths].sort(), [...GOLDEN.test5BaselineDirtyPaths].sort());
+  assert.ok(GOLDEN.test5BaselineDirtyPaths.includes("untracked.txt"));
 });
