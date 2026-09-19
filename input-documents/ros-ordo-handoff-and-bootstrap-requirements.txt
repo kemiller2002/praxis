@@ -1,0 +1,626 @@
+# ROS Requirements — Ordo Decision Handoff and Automatic Ordo/SDE Bootstrap
+
+Status: Initial requirements
+Purpose: Define ROS requirements for serialized, provider-neutral Ordo decision state, cross-agent continuation, and automatic installation/verification of the current approved Ordo/SDE tooling.
+
+Terminology note:
+State-Directed Engineering (SDE) is now named Ordo. These requirements may refer to SDE when describing legacy package/repository/bootstrap mechanisms, but new user-facing terminology should use Ordo where practical.
+
+======================================================================
+1. ORDO DECISION STATE SERIALIZATION
+======================================================================
+
+### ROS-ORDO-001 — ROS shall serialize Ordo resolution state
+ROS shall persist the current authoritative Ordo resolution state for work that uses executable Ordo.
+
+The serialized state shall be provider-neutral and must not depend on a specific ChatGPT, Claude, Gemini, Codex, or other agent conversation.
+
+### ROS-ORDO-002 — Serialized state shall support agent handoff
+Another authorized agent shall be able to load the serialized state and continue the work without needing the previous agent's chat transcript.
+
+### ROS-ORDO-003 — Do not serialize hidden chain-of-thought
+ROS shall persist structured decision facts, evidence, state, obligations, and outcomes.
+
+ROS shall not require private chain-of-thought or hidden model reasoning for continuation.
+
+### ROS-ORDO-004 — Current resolution state shall be distinct from decision history
+ROS shall maintain two concepts:
+
+1. Current resumable resolution state.
+2. Append-oriented decision/execution history.
+
+The physical storage format may combine them if semantics remain distinct.
+
+### ROS-ORDO-005 — Current state shall include enough information to resume safely
+At minimum, resumable state shall be capable of representing:
+
+- work item/task identity
+- current Ordo state
+- current resolution mode
+- current DecisionContract ID and version, where applicable
+- state version/fingerprint
+- available evidence references
+- missing evidence requirements
+- capabilities relevant to next action
+- unresolved obligations
+- last authoritative decision
+- confidence and confidence provenance, where present
+- policy result
+- escalation state/history
+- verification status
+- transition status
+- legal next actions
+- blocked reasons
+- current provider/model metadata, where relevant
+
+### ROS-ORDO-006 — Decision history shall preserve prior decisions
+A new decision, override, correction, or later outcome shall not erase an earlier decision.
+
+### ROS-ORDO-007 — Decision history shall preserve provenance
+Each decision record shall be able to identify:
+
+- resolution ID
+- parent work item
+- DecisionContract ID/version
+- provider
+- model/system identifier
+- provider/model version where available
+- adapter version where relevant
+- timestamp
+- state version/fingerprint
+- evidence references
+- choice
+- confidence
+- confidence provenance
+- policy result
+- escalation
+- verification
+- later outcome
+- override or correction relationship
+
+### ROS-ORDO-008 — Decision history shall preserve causality
+ROS shall preserve parent/child relationships among:
+
+- work item
+- resolution
+- computation
+- decision
+- deliberation
+- evidence acquisition
+- verification
+- human review
+- transition
+- outcome
+
+### ROS-ORDO-009 — Handoff format shall be provider-neutral
+No serialized handoff schema may require provider-specific SDK types.
+
+### ROS-ORDO-010 — Handoff shall work across agents
+A state produced by one supported agent/provider shall be consumable by another supported agent/provider through ROS.
+
+Example:
+
+Claude
+→ ROS state
+→ ChatGPT
+→ ROS state
+→ Codex
+
+without requiring previous conversational context.
+
+======================================================================
+2. RESUME AND STALENESS SAFETY
+======================================================================
+
+### ROS-ORDO-020 — Agents shall not resume blindly
+Before continuing from serialized Ordo state, ROS or the consuming agent shall verify that the underlying authoritative state still matches the recorded version/fingerprint.
+
+### ROS-ORDO-021 — Stale handoff shall be explicit
+If the repository/application/domain state has changed materially, the handoff shall enter a stale state rather than silently continuing.
+
+### ROS-ORDO-022 — Stale state shall trigger reacquisition
+When state is stale, ROS shall require appropriate actions such as:
+
+- reacquire evidence
+- recompute deterministic facts
+- rerun verification
+- reevaluate the DecisionContract
+- escalate where necessary
+
+### ROS-ORDO-023 — Previous work shall not be discarded on staleness
+Historical decisions and evidence remain part of the audit trail even when they are no longer valid for current execution.
+
+### ROS-ORDO-024 — Legal next actions shall be serialized
+ROS shall persist the legal next actions available from the current Ordo state where those actions can be derived mechanically.
+
+### ROS-ORDO-025 — Agent continuation shall be constrained by legal next actions
+A resumed agent shall not treat serialized state as an invitation for unrestricted action.
+
+The agent must operate within current Ordo capabilities, obligations, policy, and transition rules.
+
+======================================================================
+3. STORAGE FORMAT AND VERSIONING
+======================================================================
+
+### ROS-ORDO-030 — Serialized state shall have a schema version
+The handoff and decision-history formats shall identify their schema version.
+
+### ROS-ORDO-031 — Ordo semantic versions shall be recorded
+Where relevant, records shall include:
+
+- Ordo package/runtime version
+- DecisionContract version
+- policy version/identity
+- state schema version
+- provider adapter version
+
+### ROS-ORDO-032 — Historical records shall remain interpretable
+A newer ROS/Ordo version shall not silently reinterpret historical records using newer semantics.
+
+### ROS-ORDO-033 — Wire format shall be language-neutral
+The serialized format shall be consumable independently from F# runtime-specific representation.
+
+JSON is acceptable where consistent with existing ROS conventions.
+
+### ROS-ORDO-034 — F# discriminated unions require deliberate serialization
+CLR/F# case/type names shall not be treated as the durable external schema by accident.
+
+### ROS-ORDO-035 — Unknown schema versions shall fail safely
+Unsupported future schema versions shall not be silently coerced into older semantics.
+
+### ROS-ORDO-036 — State and history may use separate files
+A simple initial representation may use:
+
+- current-resolution-state.json
+- decision-history.jsonl
+
+or equivalent existing ROS-native storage conventions.
+
+This is illustrative, not mandatory.
+
+### ROS-ORDO-037 — Do not introduce event sourcing merely for handoff
+Append-oriented history is required.
+
+A general event-sourcing framework is not.
+
+======================================================================
+4. CHECKPOINTING AND RECOVERY
+======================================================================
+
+### ROS-ORDO-040 — ROS shall checkpoint meaningful resolution progress
+A checkpoint should occur after material state changes such as:
+
+- evidence acquired
+- decision completed
+- deliberation completed
+- obligation created/satisfied
+- verification completed
+- transition accepted/rejected
+- human review completed
+
+### ROS-ORDO-041 — Agent interruption shall not require rediscovery
+After a process/agent interruption, ROS should recover from the most recent valid checkpoint rather than requiring complete repository rediscovery.
+
+### ROS-ORDO-042 — Checkpoint writes shall be atomic where practical
+ROS shall avoid leaving a partially written authoritative handoff record.
+
+### ROS-ORDO-043 — Corrupt checkpoint shall fail safely
+A corrupt serialized state shall not be treated as valid authority.
+
+### ROS-ORDO-044 — Recovery shall preserve decision history
+Recovery may reconstruct current state but shall not discard historical records.
+
+======================================================================
+5. HANDOFF CONTEXT MINIMIZATION
+======================================================================
+
+### ROS-ORDO-050 — Handoff shall prefer structured state over prose
+The receiving agent should receive structured state/evidence references first.
+
+### ROS-ORDO-051 — Prose summaries may be supplemental
+A concise human-readable summary may be generated for convenience but must not become the authoritative state.
+
+### ROS-ORDO-052 — Handoff shall not automatically transmit entire repositories or chats
+Context should be reacquired from referenced authoritative sources as needed.
+
+### ROS-ORDO-053 — Evidence references should be dereferenceable
+Where possible, another agent should be able to locate the evidence from its reference rather than receiving copied opaque text.
+
+======================================================================
+6. SECURITY AND AUTHORIZATION
+======================================================================
+
+### ROS-ORDO-060 — Serialized state shall not contain secrets by default
+Do not persist:
+
+- API keys
+- access tokens
+- passwords
+- raw credentials
+
+inside Ordo decision state.
+
+### ROS-ORDO-061 — Handoff does not grant capability
+Possession of serialized state does not grant permission to perform the actions described in it.
+
+### ROS-ORDO-062 — Resume shall re-evaluate current capabilities
+The receiving agent/process must operate under its current authorized capabilities.
+
+### ROS-ORDO-063 — Sensitive evidence remains access-controlled
+An evidence reference does not imply that every agent may dereference it.
+
+======================================================================
+7. ROS OBSERVABILITY FOR HANDOFF
+======================================================================
+
+### ROS-ORDO-070 — ROS shall measure handoff behavior
+ROS should record:
+
+- number of agent handoffs
+- time to resume
+- context reacquisition required
+- stale handoffs
+- failed handoffs
+- repeated work after handoff
+- provider changes
+- cost before/after handoff
+- tokens before/after handoff where available
+
+### ROS-ORDO-071 — ROS should measure rediscovery savings
+Where measurable, ROS should estimate how much duplicated discovery was avoided by structured continuation.
+
+### ROS-ORDO-072 — ROS should distinguish handoff failure causes
+Examples:
+
+- stale state
+- incompatible schema
+- missing evidence
+- missing capability
+- corrupt record
+- unavailable source
+- unsupported contract version
+
+======================================================================
+8. AUTOMATIC ORDO/SDE BOOTSTRAP
+======================================================================
+
+### ROS-BOOT-001 — ROS shall declare Ordo/SDE as an explicit prerequisite
+ROS must know whether the required Ordo/SDE tooling is installed and usable.
+
+### ROS-BOOT-002 — ROS shall automatically bootstrap Ordo/SDE when absent
+At initialization or other approved setup boundary, ROS shall be capable of downloading/installing the required Ordo/SDE tooling automatically.
+
+### ROS-BOOT-003 — ROS shall verify installation after bootstrap
+Successful package-manager exit alone is not sufficient.
+
+ROS shall verify that the installed Ordo/SDE tooling:
+
+- exists
+- can be invoked/loaded
+- reports a version
+- satisfies compatibility requirements
+
+### ROS-BOOT-004 — ROS shall check prerequisite health on startup/use
+ROS shall verify that required Ordo/SDE components are available before executing features that depend on them.
+
+### ROS-BOOT-005 — Missing prerequisite shall fail clearly
+If automatic installation is impossible, ROS shall stop the dependent operation with a clear actionable error.
+
+It shall not silently run without required Ordo semantics.
+
+======================================================================
+9. VERSION POLICY FOR AUTOMATIC INSTALLATION
+======================================================================
+
+### ROS-BOOT-010 — "Latest" shall mean latest approved compatible release
+ROS shall not blindly install an arbitrary newest release if that release has not been validated for the currently installed ROS version.
+
+### ROS-BOOT-011 — ROS shall support a release channel
+At minimum support the concept of:
+
+- stable/current approved release
+
+Future channels may include preview/experimental if needed.
+
+### ROS-BOOT-012 — Exact installed version shall be recorded
+Even when selecting the latest approved version, ROS shall record the exact resolved Ordo/SDE version.
+
+### ROS-BOOT-013 — Historical runs preserve exact version provenance
+A future newer Ordo release must not cause ROS to claim an old run used the newer version.
+
+### ROS-BOOT-014 — Compatibility shall be machine-checkable
+ROS shall define or consume a compatibility contract/range between ROS and Ordo versions.
+
+### ROS-BOOT-015 — Incompatible latest version shall not be installed silently
+If newest available Ordo is incompatible, ROS shall use the newest approved compatible version or fail with a clear compatibility error.
+
+### ROS-BOOT-016 — Upgrade decisions shall be observable
+When ROS upgrades Ordo/SDE automatically, record:
+
+- prior version
+- new version
+- source
+- time
+- compatibility result
+- upgrade result
+
+======================================================================
+10. UPDATE CHECKING
+======================================================================
+
+### ROS-BOOT-020 — ROS shall be able to check for newer approved Ordo releases
+The check may occur during initialization, explicit update command, or another controlled execution boundary.
+
+### ROS-BOOT-021 — Update checks shall not make every ROS operation network-dependent
+Normal operation must not require an internet check on every task.
+
+### ROS-BOOT-022 — Cached version information may be used
+Update-check frequency should be bounded to avoid unnecessary network/package-registry calls.
+
+### ROS-BOOT-023 — Installed version shall be reverified after update
+ROS shall validate the executable/library after upgrade.
+
+### ROS-BOOT-024 — Failed upgrade shall not leave an ambiguous installation
+If possible, retain or restore the last known-good compatible version.
+
+### ROS-BOOT-025 — Update failure shall preserve diagnostic evidence
+ROS shall record enough information to diagnose:
+
+- registry unavailable
+- package missing
+- version incompatibility
+- checksum/integrity failure
+- install failure
+- verification failure
+
+======================================================================
+11. INSTALL SOURCE AND INTEGRITY
+======================================================================
+
+### ROS-BOOT-030 — Installation source shall be explicit
+ROS shall install Ordo/SDE only from approved package/artifact sources.
+
+Examples may include the project's approved:
+
+- npm package
+- NuGet package
+- GitHub release
+- GitHub Packages
+- OCI artifact
+
+The implementation shall use the actual distribution mechanism established by the Ordo repository.
+
+### ROS-BOOT-031 — Do not invent a second distribution mechanism
+If Ordo already publishes through an approved mechanism, ROS shall consume it rather than creating a competing release channel.
+
+### ROS-BOOT-032 — Package integrity shall be verified where supported
+Use registry/package-manager integrity mechanisms and checksums/signatures where the chosen distribution system supports them.
+
+### ROS-BOOT-033 — Repository source branches are not production package versions
+ROS shall not treat arbitrary repository HEAD/main as equivalent to a released compatible Ordo version unless an explicit development mode is enabled.
+
+======================================================================
+12. DEVELOPMENT MODE
+======================================================================
+
+### ROS-BOOT-040 — Local development override shall be supported if needed
+Developers may need ROS to consume a local Ordo build.
+
+If implemented, this override must be explicit.
+
+### ROS-BOOT-041 — Development override shall be visible
+ROS shall record that a local/development Ordo build was used instead of a released package.
+
+### ROS-BOOT-042 — Development mode shall not silently leak into normal execution
+A local override must not become the hidden default.
+
+======================================================================
+13. BOOTSTRAP IDEMPOTENCY
+======================================================================
+
+### ROS-BOOT-050 — Bootstrap shall be idempotent
+Repeated setup/init shall not unnecessarily reinstall the same valid compatible version.
+
+### ROS-BOOT-051 — Existing valid installation shall be reused
+If a compatible verified version is already present, use it.
+
+### ROS-BOOT-052 — Corrupt/incomplete installation shall be repaired
+A package that exists but cannot pass health verification must not be considered installed.
+
+======================================================================
+14. BOOTSTRAP COMMAND EXPERIENCE
+======================================================================
+
+### ROS-BOOT-060 — Existing ROS init/setup path shall own bootstrap
+Automatic Ordo setup should integrate with existing ROS initialization rather than create unrelated setup workflows.
+
+### ROS-BOOT-061 — npx/init compatibility
+If ROS already supports or is planned to support:
+
+npx <ros-package> init
+
+the init process shall verify and bootstrap Ordo/SDE as part of initialization.
+
+### ROS-BOOT-062 — Non-init execution shall still verify prerequisites
+A repository created before this feature must receive the same prerequisite checks when ROS executes.
+
+### ROS-BOOT-063 — Bootstrap output shall be concise and actionable
+Report:
+
+- detected version
+- compatibility
+- whether installation/update occurred
+- final verified version
+- errors requiring user/agent action
+
+======================================================================
+15. FAILURE AND OFFLINE BEHAVIOR
+======================================================================
+
+### ROS-BOOT-070 — Offline operation shall use verified installed version
+If the network is unavailable but a compatible verified Ordo/SDE version is installed, ROS may continue.
+
+### ROS-BOOT-071 — First-time setup without network shall fail clearly
+If no compatible installation exists and download is impossible, dependent ROS features shall not pretend to work.
+
+### ROS-BOOT-072 — Update check failure shall not invalidate a working installation
+An inability to determine whether a newer version exists does not make the installed compatible version invalid.
+
+======================================================================
+16. TESTING REQUIREMENTS
+======================================================================
+
+### ROS-TEST-001 — Serialize/deserialize handoff round-trip tests
+
+### ROS-TEST-002 — Cross-agent/provider-neutral schema tests
+
+### ROS-TEST-003 — Stale state detection tests
+
+### ROS-TEST-004 — Legal-next-action tests
+
+### ROS-TEST-005 — Corrupt handoff state tests
+
+### ROS-TEST-006 — Historical decision preservation tests
+
+### ROS-TEST-007 — Schema compatibility tests
+
+### ROS-TEST-008 — Missing Ordo installation bootstrap test
+
+### ROS-TEST-009 — Existing compatible installation reuse test
+
+### ROS-TEST-010 — Incompatible version test
+
+### ROS-TEST-011 — Upgrade test
+
+### ROS-TEST-012 — Failed upgrade/rollback or safe-failure test
+
+### ROS-TEST-013 — Offline with valid installation test
+
+### ROS-TEST-014 — Offline without installation test
+
+### ROS-TEST-015 — Corrupt installation repair test
+
+### ROS-TEST-016 — Exact installed version provenance test
+
+### ROS-TEST-017 — Development/local override test if supported
+
+Normal unit tests must mock package registries/downloads and shall not require real network access.
+
+======================================================================
+17. IMPLEMENTATION ORDER
+======================================================================
+
+### ROS-IMPL-001 — Inspect existing Ordo/SDE distribution first
+Before implementing automatic bootstrap, determine:
+
+- current package/artifact name
+- current registry/distribution mechanism
+- versioning convention
+- init mechanism
+- current compatibility expectations
+- whether SDE legacy naming remains in package identifiers
+
+Do not guess these details.
+
+### ROS-IMPL-002 — Inspect current ROS setup/init mechanism
+Reuse it.
+
+### ROS-IMPL-003 — Add version/compatibility contract
+
+### ROS-IMPL-004 — Add installation detection and health verification
+
+### ROS-IMPL-005 — Add idempotent bootstrap
+
+### ROS-IMPL-006 — Add update-check mechanism
+
+### ROS-IMPL-007 — Add exact-version provenance recording
+
+### ROS-IMPL-008 — Add Ordo handoff serialization
+
+### ROS-IMPL-009 — Add current resolution-state checkpointing
+
+### ROS-IMPL-010 — Add append-oriented decision history
+
+### ROS-IMPL-011 — Add resume validation/staleness check
+
+### ROS-IMPL-012 — Add cross-agent continuation path
+
+### ROS-IMPL-013 — Add observation metrics
+
+### ROS-IMPL-014 — Verify existing ROS behavior remains compatible
+
+======================================================================
+18. DEFINITION OF DONE
+======================================================================
+
+This feature set is complete when:
+
+1. ROS can detect whether required Ordo/SDE tooling exists.
+2. ROS can determine its exact version.
+3. ROS can verify compatibility.
+4. ROS can automatically install the latest approved compatible version when missing.
+5. ROS can update to a newer approved compatible version through a controlled path.
+6. ROS records the exact version used by a run.
+7. ROS can operate offline with a previously verified compatible version.
+8. A failed update does not silently corrupt the working installation.
+9. ROS serializes current Ordo resolution state.
+10. ROS maintains historical decision records.
+11. Another agent can consume the state without the previous chat transcript.
+12. Resumption validates repository/domain state before continuing.
+13. Stale state is detected and cannot silently authorize continuation.
+14. Legal next actions can be represented in the handoff.
+15. Capabilities are rechecked on resume.
+16. Secrets are not serialized into handoff state.
+17. Provider/model provenance is preserved.
+18. Contract/state/policy versions are preserved where relevant.
+19. Replay remains distinct from execution.
+20. Decision history remains append-oriented.
+21. Schema versions are explicit.
+22. Normal tests do not require network access.
+23. Existing ROS behavior remains functional.
+24. Ordo semantics remain owned by Ordo, not duplicated inside ROS.
+25. No generic event-sourcing framework, workflow engine, or agent-memory framework was introduced merely to implement handoff.
+
+======================================================================
+19. GOVERNING PRINCIPLE
+======================================================================
+
+ROS shall make agent execution resumable through explicit state rather than conversational continuity.
+
+The handoff model is:
+
+Agent A
+    ↓
+Ordo-constrained work
+    ↓
+ROS serialized resolution state + decision history
+    ↓
+state/version verification
+    ↓
+Agent B
+    ↓
+continues from legal next action
+
+The package/bootstrap model is:
+
+ROS starts
+    ↓
+detect Ordo/SDE
+    ↓
+verify exact version
+    ↓
+compatible?
+  yes → continue
+  no  → resolve latest approved compatible release
+             ↓
+          install
+             ↓
+          verify
+             ↓
+          record exact version
+             ↓
+          continue
+
+ROS shall optimize for continuity, reproducibility, and explicit authority.
+
+It shall not optimize for convenience by hiding semantic versions, stale state, compatibility, or failed prerequisites.
