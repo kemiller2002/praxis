@@ -27,7 +27,7 @@ Semantic and operational assessment are deliberately separate:
 - semantic: `confirmed | incorrect | unresolved | not-assessable`
 - operational: `succeeded | neutral | refused-or-dead-end | harmful-or-failed | outcome-unknown | not-assessable`
 
-Every assessment names evidence references, method, assessment time, and limitations. This history is calibration-ready, but ROS does not automate provider/model routing or calibration policy.
+Every assessment names evidence references, method, assessor, assessment time, recording time, and limitations. Assessment time and recording time are separate so imported historical labels do not pretend to have been observed live. This history is calibration-ready, but ROS does not automate provider/model routing or calibration policy.
 
 ## Scoped search observations
 
@@ -43,17 +43,19 @@ A search record names target, scope, method/query, state reference, scoped cover
 ros ordo observe-effect --input effect-observation.json
 ```
 
-Effect outcomes are `succeeded | failed | unknown`. Unknown is a first-class state. Reconciliation, retry blocking, and compensation blocking are recorded independently so an observer cannot silently convert uncertainty into a safe retry.
+Effect outcomes are `succeeded | failed | unknown`. Unknown is a first-class state. Reconciliation, retry blocking, and compensation blocking are recorded independently so an observer cannot silently convert uncertainty into a safe retry. A settled reconciliation carries `reconciledAt`, allowing time-to-resolution to be derived from the original effect attempt without inventing a synthetic duration.
 
 ## Effective current projection
 
 ```bash
-ros ordo current
+ros ordo current \
+  --resolution-id RESOLUTION_ID \
+  --superseded-resolution PRIOR_RESOLUTION_ID
 ```
 
-The projection is derived deterministically from immutable observation history. The latest resolution is selected by `completedAt`, then `ResolutionId` as a stable tie-breaker; the latest matching assessment is selected by `assessedAt`, then `AssessmentId`. Superseded resolution IDs remain visible.
+ROS **never infers authority from recency**. The caller supplies the resolution that the application/repository currently treats as authoritative and any explicitly superseded resolution IDs. ROS validates those references against immutable ingested history and builds a deterministic projection. A matching retrospective assessment is selected by `assessedAt`, then `recordedAt`, then `AssessmentId`.
 
-No history is overwritten to make a record "current."
+A newer observation is not authoritative merely because it completed later. No history is overwritten to make a record "current."
 
 ## Structured handoff
 
@@ -61,13 +63,18 @@ No history is overwritten to make a record "current."
 ros ordo handoff \
   --revision "$(git rev-parse HEAD)" \
   --source "context/CURRENT-STATE.md" \
+  --resolution-id RESOLUTION_ID \
+  --authority-artifact "context/CURRENT-STATE.md" \
+  --authority-artifact "SDE-MAP.md" \
+  --historical-decision "DF-OLD" \
   --fact "Publisher input remains canonical Markdown" \
   --unknown "One external source is not yet verified" \
   --obligation "Run semantic projection verification" \
+  --verification "ros validate" \
   --next-action "Execute the verified build plan"
 ```
 
-A handoff is bound to a repository revision and source and carries facts, assumptions, unknowns, obligations, legal-next-action descriptions, the current resolution/state fingerprint when available, and superseded resolution IDs.
+A handoff is bound to a repository revision and source and carries current authoritative artifact references, relevant historical/superseded decision references, facts, assumptions, unknowns, obligations, completed verification, legal-next-action descriptions, and an explicitly selected resolution/state fingerprint when supplied. Superseded resolution IDs are caller-declared and validated; ROS does not infer them from timestamps.
 
 The phrase “legal next action” is descriptive handoff data. ROS never decides whether an application action is legal; the application/Ordo boundary remains authoritative.
 
