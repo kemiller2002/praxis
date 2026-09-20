@@ -123,7 +123,7 @@ module ObservationJson =
                 Error "$.coverage must be an array."
             else
                 coverage.EnumerateArray()
-                |> Seq.map (fun item ->
+                |> Seq.map (fun (item: JsonElement) ->
                     let scope = requiredString "scope" item
                     let status =
                         requiredString "status" item
@@ -605,9 +605,9 @@ module ObservationJson =
             writeOptionalString writer "stateFingerprint" value.Authority.StateFingerprint
             writer.WriteEndObject()
             writeOptionalString writer "resolutionId" value.ResolutionId
-            let writeArray name values =
+            let writeArray (name: string) (values: string list) =
                 writer.WriteStartArray(name)
-                values |> List.iter writer.WriteStringValue
+                values |> List.iter (fun value -> writer.WriteStringValue(value))
                 writer.WriteEndArray()
             writeArray "authoritativeArtifacts" value.AuthoritativeArtifacts
             writeArray "historicalDecisionReferences" value.HistoricalDecisionReferences
