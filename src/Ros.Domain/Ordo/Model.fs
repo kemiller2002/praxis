@@ -130,7 +130,12 @@ type ResolutionAssessment =
       ResolutionId: string
       Semantic: SemanticAssessment
       Operational: OperationalAssessment
+      /// Who or what made the retrospective assessment. Provider-neutral.
+      Assessor: string
       AssessedAt: DateTimeOffset
+      /// When ROS recorded the assessment. Kept separate from AssessedAt so
+      /// imported/historical labels do not pretend they were recorded live.
+      RecordedAt: DateTimeOffset
       EvidenceReferences: string list
       Method: string
       Limitations: string list }
@@ -195,8 +200,16 @@ type EffectObservation =
       ObservedAt: DateTimeOffset
       ReconciliationRequested: bool
       ReconciliationResult: string option
+      /// When reconciliation established a settled external state, if it has.
+      ReconciledAt: DateTimeOffset option
       RetryBlocked: bool
       CompensationBlocked: bool }
+
+[<RequireQualifiedAccess>]
+module EffectObservation =
+    let timeToResolution (observation: EffectObservation) =
+        observation.ReconciledAt
+        |> Option.map (fun reconciledAt -> reconciledAt - observation.AttemptedAt)
 
 type EffectiveCurrentProjection =
     { Resolution: ResolutionObservation option
@@ -214,52 +227,94 @@ type AuthorityReference =
 type HandoffAuthority =
     { Authority: AuthorityReference
       ResolutionId: string option
+      /// Current repository/domain artifacts the receiving agent should treat
+      /// as authority. These are references, not copied rules.
+      AuthoritativeArtifacts: string list
+      /// Historical/superseded decisions relevant to interpreting the handoff.
+      HistoricalDecisionReferences: string list
       Facts: string list
       Assumptions: string list
       Unknowns: string list
       Obligations: string list
+      CompletedVerification: string list
       LegalNextActions: string list
       SupersededResolutionIds: string list }
 
 [<RequireQualifiedAccess>]
 module Projection =
-    let effectiveCurrent (observations: ResolutionObservation list) (assessments: ResolutionAssessment list) =
-        let ordered =
+    /// Build an effective-current view from an explicit authority selection.
+    ///
+    /// ROS must not infer application authority merely because an observation
+    /// is newer. The caller supplies the currently authoritative resolution
+    /// identity and any explicitly superseded resolution identities; this
+    /// function only resolves those references against immutable history.
+    let effectiveCurrent
+        (selectedResolutionId: string option)
+        (supersededResolutionIds: string list)
+        (observations: ResolutionObservation list)
+        (assessments: ResolutionAssessment list)
+        : Result<EffectiveCurrentProjection, string> =
+        let byId =
             observations
-            |> List.sortBy (fun observation -> observation.CompletedAt, observation.ResolutionId)
+            |> List.map (fun observation -> observation.ResolutionId, observation)
+            |> Map.ofList
 
-        let current = ordered |> List.tryLast
+        let superseded = supersededResolutionIds |> List.distinct |> List.sort
 
-        let assessment =
-            current
-            |> Option.bind (fun observation ->
-                assessments
-                |> List.filter (fun candidate -> candidate.ResolutionId = observation.ResolutionId)
-                |> List.sortBy (fun candidate -> candidate.AssessedAt, candidate.AssessmentId)
-                |> List.tryLast)
+        match selectedResolutionId with
+        | None when not superseded.IsEmpty ->
+            Error "Superseded resolution ids require an explicit current resolution selection."
+        | None ->
+            Ok
+                { Resolution = None
+                  Assessment = None
+                  BasisCount = observations.Length
+                  SupersededResolutionIds = [] }
+        | Some selected when superseded |> List.contains selected ->
+            Error $"Current resolution '{selected}' cannot also be marked superseded."
+        | Some selected ->
+            match Map.tryFind selected byId with
+            | None -> Error $"Selected current ResolutionId '{selected}' has not been ingested."
+            | Some current ->
+                match superseded |> List.tryFind (fun id -> not (Map.containsKey id byId)) with
+                | Some missing -> Error $"Superseded ResolutionId '{missing}' has not been ingested."
+                | None ->
+                    let assessment =
+                        assessments
+                        |> List.filter (fun candidate -> candidate.ResolutionId = current.ResolutionId)
+                        |> List.sortBy (fun candidate -> candidate.AssessedAt, candidate.RecordedAt, candidate.AssessmentId)
+                        |> List.tryLast
 
-        let superseded =
-            match current with
-            | None -> []
-            | Some latest ->
-                ordered
-                |> List.filter (fun observation -> observation.ResolutionId <> latest.ResolutionId)
-                |> List.map (fun observation -> observation.ResolutionId)
+                    Ok
+                        { Resolution = Some current
+                          Assessment = assessment
+                          BasisCount = observations.Length
+                          SupersededResolutionIds = superseded }
 
-        { Resolution = current
-          Assessment = assessment
-          BasisCount = observations.Length
-          SupersededResolutionIds = superseded }
-
-    let handoff revision source facts assumptions unknowns obligations legalNextActions current =
+    let handoff
+        revision
+        source
+        authoritativeArtifacts
+        historicalDecisionReferences
+        facts
+        assumptions
+        unknowns
+        obligations
+        completedVerification
+        legalNextActions
+        (current: EffectiveCurrentProjection)
+        =
         { Authority =
             { RepositoryRevision = revision
               Source = source
               StateFingerprint = current.Resolution |> Option.map (fun observation -> observation.StateFingerprint) }
           ResolutionId = current.Resolution |> Option.map (fun observation -> observation.ResolutionId)
+          AuthoritativeArtifacts = authoritativeArtifacts
+          HistoricalDecisionReferences = historicalDecisionReferences
           Facts = facts
           Assumptions = assumptions
           Unknowns = unknowns
           Obligations = obligations
+          CompletedVerification = completedVerification
           LegalNextActions = legalNextActions
           SupersededResolutionIds = current.SupersededResolutionIds }
