@@ -56,6 +56,7 @@
     <Compile Include="AdapterCallEffectTests.fs" />
     <Compile Include="AdapterPublishEffectTests.fs" />
     <Compile Include="LifecycleTests.fs" />
+    <Compile Include="OrdoObservationTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

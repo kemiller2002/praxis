@@ -19,6 +19,7 @@
     <Compile Include="Work/TelemetryValidationJson.fs" />
     <Compile Include="Artifacts/RegistryJson.fs" />
     <Compile Include="Cli/FindingJson.fs" />
+    <Compile Include="Ordo/ObservationJson.fs" />
     <Compile Include="Lifecycle/LifecycleJson.fs" />
   </ItemGroup>
 </Project>

@@ -1,6 +1,6 @@
 {
   "name": "@echelon-foundry/repository-operating-system",
-  "version": "3.0.3",
+  "version": "3.1.0",
   "description": "Echelon Foundry Repository Operating System: initialization, verification, diagnostics, and upgrade tooling for research and engineering repositories.",
   "license": "MIT",
   "repository": {
@@ -37,6 +37,7 @@
     "docs/web-interface.md",
     "docs/project-administration-hub.md",
     "docs/development-telemetry.md",
+    "docs/ordo-observation.md",
     "docs/migrations/",
     "framework/",
     "schemas/",
