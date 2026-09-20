@@ -6,9 +6,11 @@ open System.IO
 open Ros.Application.Artifacts
 open Ros.Application.Git
 open Ros.Application.Work
+open Ros.Application.Ordo
 open Ros.Contracts.Cli
 open Ros.Contracts.Git
 open Ros.Contracts.Work
+open Ros.Contracts.Ordo
 open Ros.Domain.Artifacts
 open Ros.Domain.Git
 open Ros.Domain.Telemetry
@@ -16,6 +18,7 @@ open Ros.Domain.Work
 open Ros.Infrastructure.Artifacts
 open Ros.Infrastructure.Git
 open Ros.Infrastructure.Work
+open Ros.Infrastructure.Ordo
 open System.Text.Json
 open System.Text.Json.Nodes
 
@@ -24,7 +27,7 @@ open System.Text.Json.Nodes
 let Version = Lifecycle.Version
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--quiet] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | adapter publish --target FILE"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--quiet] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | adapter publish --target FILE | ordo ingest --input FILE | ordo assess --input FILE | ordo observe-search --input FILE | ordo observe-effect --input FILE | ordo current | ordo handoff --revision REV --source SOURCE [--fact TEXT]* [--assumption TEXT]* [--unknown TEXT]* [--obligation TEXT]* [--next-action TEXT]*"
 
 /// Removes one global `--name VALUE` option from the argument list wherever
 /// it appears, so the command parsers below only ever see their own flags.
@@ -2432,6 +2435,112 @@ let private runAdapterPublish root (arguments: string list) =
             printfn "published %d event(s); %d duplicate(s) skipped" outcome.Published outcome.Duplicates
             0
 
+let private readOrdoInput root arguments =
+    match optionValue "--input" arguments with
+    | None -> Error "--input FILE is required"
+    | Some relative ->
+        let path = Path.GetFullPath(Path.Combine(root, relative))
+        if not (File.Exists path) then Error $"input file not found: {relative}"
+        else Ok(File.ReadAllText path)
+
+let private reportStoreOutcome = function
+    | StoreOutcome.Stored ->
+        printfn "{\"status\":\"stored\"}"
+        0
+    | StoreOutcome.AlreadyPresent ->
+        printfn "{\"status\":\"already-present\"}"
+        0
+    | StoreOutcome.Conflict message ->
+        eprintfn "ERROR %s" message
+        1
+
+let private runOrdoIngest root arguments =
+    match readOrdoInput root arguments with
+    | Error message ->
+        eprintfn "ERROR %s" message
+        2
+    | Ok raw ->
+        match ObservationJson.parseResolutionObservation raw with
+        | Error message ->
+            eprintfn "ERROR %s" message
+            1
+        | Ok observation ->
+            let repository = FileObservationRepository.create root
+            ObservationOperations.ingestResolution repository raw observation
+            |> reportStoreOutcome
+
+let private runOrdoAssessment root arguments =
+    match readOrdoInput root arguments with
+    | Error message ->
+        eprintfn "ERROR %s" message
+        2
+    | Ok raw ->
+        match ObservationJson.parseAssessment raw with
+        | Error message ->
+            eprintfn "ERROR %s" message
+            1
+        | Ok assessment ->
+            FileObservationRepository.create root
+            |> fun repository -> ObservationOperations.recordAssessment repository assessment
+            |> reportStoreOutcome
+
+let private runOrdoSearchObservation root arguments =
+    match readOrdoInput root arguments with
+    | Error message ->
+        eprintfn "ERROR %s" message
+        2
+    | Ok raw ->
+        match ObservationJson.parseSearchObservation raw with
+        | Error message ->
+            eprintfn "ERROR %s" message
+            1
+        | Ok observation ->
+            FileObservationRepository.create root
+            |> fun repository -> ObservationOperations.recordSearchObservation repository observation
+            |> reportStoreOutcome
+
+let private runOrdoEffectObservation root arguments =
+    match readOrdoInput root arguments with
+    | Error message ->
+        eprintfn "ERROR %s" message
+        2
+    | Ok raw ->
+        match ObservationJson.parseEffectObservation raw with
+        | Error message ->
+            eprintfn "ERROR %s" message
+            1
+        | Ok observation ->
+            FileObservationRepository.create root
+            |> fun repository -> ObservationOperations.recordEffectObservation repository observation
+            |> reportStoreOutcome
+
+let private runOrdoCurrent root =
+    let repository = FileObservationRepository.create root
+    ObservationOperations.effectiveCurrent repository
+    |> ObservationJson.renderEffectiveCurrent
+    |> printf "%s"
+    0
+
+let private runOrdoHandoff root arguments =
+    match optionValue "--revision" arguments, optionValue "--source" arguments with
+    | Some revision, Some source ->
+        let repository = FileObservationRepository.create root
+        ObservationOperations.handoff
+            repository
+            revision
+            source
+            (optionValues "--fact" arguments)
+            (optionValues "--assumption" arguments)
+            (optionValues "--unknown" arguments)
+            (optionValues "--obligation" arguments)
+            (optionValues "--next-action" arguments)
+        |> ObservationJson.renderHandoff
+        |> printf "%s"
+        0
+    | _ ->
+        eprintfn "ERROR ordo handoff requires --revision and --source"
+        2
+
 /// `ros --help` is public documentation, so it carries both the lifecycle
 /// commands and the repository commands this CLI has always had.
 let private fullHelp topic =
@@ -2505,6 +2614,12 @@ let private repositoryDispatch root packageRoot arguments =
     | "telemetry" :: "ingest" :: rest -> runTelemetryIngest root rest
     | "telemetry" :: "classify" :: rest -> runTelemetryClassify root rest
     | "telemetry" :: "start" :: rest -> runTelemetryStart root rest
+    | "ordo" :: "ingest" :: rest -> runOrdoIngest root rest
+    | "ordo" :: "assess" :: rest -> runOrdoAssessment root rest
+    | "ordo" :: "observe-search" :: rest -> runOrdoSearchObservation root rest
+    | "ordo" :: "observe-effect" :: rest -> runOrdoEffectObservation root rest
+    | [ "ordo"; "current" ] -> runOrdoCurrent root
+    | "ordo" :: "handoff" :: rest -> runOrdoHandoff root rest
     | "adapter" :: "call" :: rest -> runAdapterCall root rest
     | "adapter" :: "publish" :: rest -> runAdapterPublish root rest
     | _ ->
