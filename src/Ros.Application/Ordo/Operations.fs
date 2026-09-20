@@ -10,7 +10,7 @@ type StoreOutcome =
 
 type ObservationRepository =
     { TryResolution: string -> ResolutionObservation option
-      SaveResolution: ResolutionObservation -> rawJson: string -> unit
+      SaveResolution: ResolutionObservation -> string -> unit
       ListResolutions: unit -> ResolutionObservation list
       TryAssessment: string -> ResolutionAssessment option
       SaveAssessment: ResolutionAssessment -> unit
@@ -22,7 +22,7 @@ type ObservationRepository =
 
 [<RequireQualifiedAccess>]
 module ObservationOperations =
-    let ingestResolution repository raw observation =
+    let ingestResolution (repository: ObservationRepository) (raw: string) (observation: ResolutionObservation) =
         match repository.TryResolution observation.ResolutionId with
         | None ->
             repository.SaveResolution observation raw
@@ -31,7 +31,7 @@ module ObservationOperations =
         | Some _ ->
             StoreOutcome.Conflict $"ResolutionId '{observation.ResolutionId}' already exists with different observed facts."
 
-    let recordAssessment repository assessment =
+    let recordAssessment (repository: ObservationRepository) (assessment: ResolutionAssessment) =
         match repository.TryAssessment assessment.AssessmentId with
         | None ->
             match repository.TryResolution assessment.ResolutionId with
@@ -42,7 +42,7 @@ module ObservationOperations =
         | Some existing when existing = assessment -> StoreOutcome.AlreadyPresent
         | Some _ -> StoreOutcome.Conflict $"AssessmentId '{assessment.AssessmentId}' already exists with different facts."
 
-    let recordSearchObservation repository observation =
+    let recordSearchObservation (repository: ObservationRepository) (observation: SearchObservation) =
         match repository.TrySearchObservation observation.ObservationId with
         | None ->
             repository.SaveSearchObservation observation
@@ -50,7 +50,7 @@ module ObservationOperations =
         | Some existing when existing = observation -> StoreOutcome.AlreadyPresent
         | Some _ -> StoreOutcome.Conflict $"ObservationId '{observation.ObservationId}' already exists with different facts."
 
-    let recordEffectObservation repository observation =
+    let recordEffectObservation (repository: ObservationRepository) (observation: EffectObservation) =
         match repository.TryEffectObservation observation.ObservationId with
         | None ->
             repository.SaveEffectObservation observation
@@ -58,7 +58,7 @@ module ObservationOperations =
         | Some existing when existing = observation -> StoreOutcome.AlreadyPresent
         | Some _ -> StoreOutcome.Conflict $"ObservationId '{observation.ObservationId}' already exists with different facts."
 
-    let effectiveCurrent repository selectedResolutionId supersededResolutionIds =
+    let effectiveCurrent (repository: ObservationRepository) (selectedResolutionId: string option) (supersededResolutionIds: string list) =
         Projection.effectiveCurrent
             selectedResolutionId
             supersededResolutionIds
