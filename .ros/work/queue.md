@@ -99,7 +99,7 @@
 | WI-0060 | Bump npm package version to 3.0.3 | complete | release, npm | medium |
 | WI-0061 | WI-0061 | complete |  |  |
 | WI-0062 | Triage SDE 1.3.0 structural review findings | captured | sde, structural-review | high |
-| WI-0063 | Implement ROS next-pass Ordo observation and structured handoff (#63) | ready | ordo,next-pass | high |
+| WI-0063 | Implement ROS next-pass Ordo observation and structured handoff (#63) | complete | ordo,next-pass | high |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |
