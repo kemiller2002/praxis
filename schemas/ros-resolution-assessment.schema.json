@@ -11,7 +11,9 @@
     "resolutionId",
     "semantic",
     "operational",
+    "assessor",
     "assessedAt",
+    "recordedAt",
     "evidenceReferences",
     "method",
     "limitations"
@@ -70,6 +72,14 @@
       "items": {
         "type": "string"
       }
+    },
+    "assessor": {
+      "type": "string",
+      "minLength": 1
+    },
+    "recordedAt": {
+      "type": "string",
+      "format": "date-time"
     }
   }
 }
