@@ -2081,11 +2081,22 @@
         "EXE-20260917T185206295Z-e49d115e"
       ],
       "completedAt": "2026-09-17T18:53:23.000Z"
+    },
+    {
+      "id": "WI-0061",
+      "type": "maintenance",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-20T15:32:22Z",
+      "telemetryExecutionIds": [
+        "EXE-20260920T153222246Z-2e95db71"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
-  "actor": "claude",
-  "updatedAt": "2026-09-17T18:53:23.000Z",
+  "actor": "ChatGPT",
+  "updatedAt": "2026-09-20T15:32:22Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

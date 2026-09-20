@@ -219,5 +219,44 @@
     "title": "ROS F# application migration execution and handoff",
     "updated": "2026-09-08",
     "version": "0.2.0"
+  },
+  {
+    "author_agent": "ChatGPT",
+    "completion": "complete",
+    "confidence": "high",
+    "created": "2026-09-20",
+    "discipline": [
+      "software-architecture",
+      "software-engineering",
+      "developer-tooling",
+      "empirical-software-engineering"
+    ],
+    "id": "RP-ROS-2026-A030",
+    "path": "research/packages/RP-ROS-2026-A030--ordo-observation-and-next-pass-requirements.md",
+    "priority": "high",
+    "related_projects": [
+      "repository-operating-system",
+      "state-directed-engineering"
+    ],
+    "research_area": "repository-operating-system",
+    "source_commit": "6f69ad93f5f410d19499cce9d49c5e15888b67aa",
+    "source_document": "research/ordo-foundations/deep-research-program/requirement-candidates/ros-next-pass.md",
+    "source_repository": "kemiller2002/research-documents",
+    "status": "review",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "ordo",
+      "ros",
+      "next-pass",
+      "requirements",
+      "observations",
+      "outcomes",
+      "handoff",
+      "calibration"
+    ],
+    "title": "ROS next-pass Ordo observation and empirical-learning requirements intake",
+    "updated": "2026-09-20",
+    "version": "0.1.0"
   }
 ]
