@@ -1,0 +1,74 @@
+name: WI-0061 SDE 1.3.0 upgrade
+
+on:
+  push:
+    branches:
+      - work/wi-0061-sde-1.3.0-upgrade
+
+permissions:
+  contents: write
+
+jobs:
+  upgrade:
+    if: ${{ !contains(github.event.head_commit.message, '[wi0061-upgraded]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Begin ROS work item
+        run: |
+          ./ros work begin WI-0061 --type maintenance --actor ChatGPT
+          ./ros work context WI-0061
+
+      - name: Prove the SDE dry run is non-mutating
+        run: |
+          npx --yes @echelon-foundry/sde@1.3.0 upgrade --dry-run --json | tee /tmp/sde-upgrade-plan.json
+          git diff --exit-code -- .sde .echelon
+          node - <<'NODE'
+          const fs = require('fs');
+          const plan = JSON.parse(fs.readFileSync('/tmp/sde-upgrade-plan.json', 'utf8'));
+          if (plan.command !== 'upgrade' || plan.dryRun !== true) {
+            throw new Error('expected an upgrade dry-run plan');
+          }
+          if (!Array.isArray(plan.changes) || plan.changes.length === 0) {
+            throw new Error('expected the 1.1.1 installation to require changes');
+          }
+          NODE
+
+      - name: Upgrade SDE to 1.3.0
+        run: |
+          npx --yes @echelon-foundry/sde@1.3.0 upgrade
+          npx --yes @echelon-foundry/sde@1.3.0 verify --strict
+          test "$(tr -d '\r\n' < .sde/VERSION)" = "1.3.0"
+          test -f .sde/architecture/DECISION-AND-EVIDENCE-SEMANTICS.md
+          node - <<'NODE'
+          const fs = require('fs');
+          const record = JSON.parse(fs.readFileSync('.echelon/sde.json', 'utf8'));
+          if (record.installedVersion !== '1.3.0') throw new Error('installation record is not 1.3.0');
+          if (record.configurationVersion !== 2) throw new Error('expected configuration version 2');
+          NODE
+
+      - name: Validate ROS after the methodology upgrade
+        run: |
+          ./ros registry check
+          ./ros validate
+
+      - name: Commit upgrade and ROS-generated state
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/wi0061-sde-upgrade.yml
+          git add -A .sde .echelon .ros .github/workflows/wi0061-sde-upgrade.yml
+          git commit -m "chore: upgrade SDE to 1.3.0 under ROS [wi0061-upgraded]"
+          git push
