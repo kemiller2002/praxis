@@ -26,8 +26,9 @@ jobs:
         run: npm run build:fsharp
       - name: Start WI-0062 through ROS
         run: |
-          ./ros work ready WI-0062
-          ./ros work start WI-0062 --actor ChatGPT
+          NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          ./ros work backlog-transition --action ready --id WI-0062 --occurred-at "$NOW"
+          ./ros work start --id WI-0062 --occurred-at "$NOW" --type maintenance --actor ChatGPT
           ./ros work context WI-0062
       - name: Commit ROS state and remove bootstrap
         run: |
