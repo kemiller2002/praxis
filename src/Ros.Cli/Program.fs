@@ -2514,29 +2514,58 @@ let private runOrdoEffectObservation root arguments =
             |> fun repository -> ObservationOperations.recordEffectObservation repository observation
             |> reportStoreOutcome
 
-let private runOrdoCurrent root =
-    let repository = FileObservationRepository.create root
-    ObservationOperations.effectiveCurrent repository
-    |> ObservationJson.renderEffectiveCurrent
-    |> printf "%s"
-    0
+let private runOrdoCurrent root arguments =
+    match optionValue "--resolution-id" arguments with
+    | None ->
+        eprintfn "ERROR ordo current requires --resolution-id; ROS never infers authority from observation recency"
+        2
+    | Some resolutionId ->
+        let repository = FileObservationRepository.create root
+
+        match
+            ObservationOperations.effectiveCurrent
+                repository
+                (Some resolutionId)
+                (optionValues "--superseded-resolution" arguments)
+        with
+        | Error message ->
+            eprintfn "ERROR %s" message
+            1
+        | Ok projection ->
+            projection
+            |> ObservationJson.renderEffectiveCurrent
+            |> printf "%s"
+            0
 
 let private runOrdoHandoff root arguments =
     match optionValue "--revision" arguments, optionValue "--source" arguments with
     | Some revision, Some source ->
         let repository = FileObservationRepository.create root
-        ObservationOperations.handoff
-            repository
-            revision
-            source
-            (optionValues "--fact" arguments)
-            (optionValues "--assumption" arguments)
-            (optionValues "--unknown" arguments)
-            (optionValues "--obligation" arguments)
-            (optionValues "--next-action" arguments)
-        |> ObservationJson.renderHandoff
-        |> printf "%s"
-        0
+
+        match
+            ObservationOperations.handoff
+                repository
+                (optionValue "--resolution-id" arguments)
+                (optionValues "--superseded-resolution" arguments)
+                revision
+                source
+                (optionValues "--authority-artifact" arguments)
+                (optionValues "--historical-decision" arguments)
+                (optionValues "--fact" arguments)
+                (optionValues "--assumption" arguments)
+                (optionValues "--unknown" arguments)
+                (optionValues "--obligation" arguments)
+                (optionValues "--verification" arguments)
+                (optionValues "--next-action" arguments)
+        with
+        | Error message ->
+            eprintfn "ERROR %s" message
+            1
+        | Ok handoff ->
+            handoff
+            |> ObservationJson.renderHandoff
+            |> printf "%s"
+            0
     | _ ->
         eprintfn "ERROR ordo handoff requires --revision and --source"
         2
@@ -2618,7 +2647,7 @@ let private repositoryDispatch root packageRoot arguments =
     | "ordo" :: "assess" :: rest -> runOrdoAssessment root rest
     | "ordo" :: "observe-search" :: rest -> runOrdoSearchObservation root rest
     | "ordo" :: "observe-effect" :: rest -> runOrdoEffectObservation root rest
-    | [ "ordo"; "current" ] -> runOrdoCurrent root
+    | "ordo" :: "current" :: rest -> runOrdoCurrent root rest
     | "ordo" :: "handoff" :: rest -> runOrdoHandoff root rest
     | "adapter" :: "call" :: rest -> runAdapterCall root rest
     | "adapter" :: "publish" :: rest -> runAdapterPublish root rest
