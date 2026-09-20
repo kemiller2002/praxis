@@ -125,6 +125,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git rm .github/workflows/wi0061-sde-upgrade.yml
-          git add -A .sde .echelon .ros registries docs/upgrades .github/workflows/wi0061-sde-upgrade.yml
+          git add -A .sde .echelon .ros registries docs/upgrades
           git commit -m "chore: upgrade SDE to 1.3.0 under ROS [wi0061-upgraded]"
           git push
