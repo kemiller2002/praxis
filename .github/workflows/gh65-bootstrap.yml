@@ -1,0 +1,33 @@
+name: GH-65 ROS bootstrap
+
+on:
+  push:
+    branches:
+      - work/gh-65-sde-1.3.0-upgrade
+
+permissions:
+  contents: write
+
+jobs:
+  start:
+    if: ${{ !contains(github.event.head_commit.message, '[gh65-started]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Start GH-65 through ROS
+        run: |
+          ./ros work begin GH-65 --type task --actor ChatGPT
+          ./ros work context GH-65
+      - name: Commit ROS-generated state and remove bootstrap
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/gh65-bootstrap.yml
+          git add .ros/context/current.json .ros/events/events.jsonl
+          git commit -m "chore: start GH-65 under ROS [gh65-started]"
+          git push
