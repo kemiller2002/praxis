@@ -1,0 +1,43 @@
+name: WI-0061 ROS completion
+
+on:
+  push:
+    branches:
+      - work/wi-0061-sde-1.3.0-upgrade
+
+permissions:
+  contents: write
+
+jobs:
+  complete:
+    if: ${{ !contains(github.event.head_commit.message, '[wi0061-complete]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+      - name: Build ROS F# CLI
+        run: npm run build:fsharp
+      - name: Complete WI-0061 through ROS
+        run: |
+          NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          ./ros work complete --id WI-0061 --occurred-at "$NOW" --actor ChatGPT \
+            --evidence implementation=.echelon/sde.json \
+            --evidence implementation=.sde/MANIFEST.json \
+            --evidence tests=tests/lifecycle-package.test.mjs \
+            --evidence tests=.github/workflows/ros-validation.yml
+          ./ros validate
+      - name: Commit ROS completion
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/wi0061-complete.yml
+          git add -A .ros
+          git commit -m "chore: complete WI-0061 under ROS [wi0061-complete]"
+          git push
