@@ -72,6 +72,61 @@ module OrdoObservationTests =
                   | Error message -> Assert.isTrue (message.Contains("supported: 2")) message
                   | Ok _ -> failwith "Future schema was accepted." }
 
+          { Name = "Ordo v2 ingestion tolerates unknown additive fields"
+            Run =
+              fun () ->
+                  let raw =
+                      resolutionJson "res-additive" "2026-09-20T10:00:01+00:00"
+                      |> fun text -> text.Replace("\"transportRetries\": 0", "\"futureSemanticDecoration\":{\"ignored\":true},\n  \"transportRetries\": 0")
+
+                  match ObservationJson.parseResolutionObservation raw with
+                  | Ok value -> Assert.equal "res-additive" value.ResolutionId
+                  | Error error -> failwith error }
+
+          { Name = "unavailable provider usage remains unavailable rather than synthetic zero"
+            Run =
+              fun () ->
+                  let raw =
+                      resolutionJson "res-unavailable" "2026-09-20T10:00:01+00:00"
+                      |> fun text -> text.Replace("\"inputTokens\":10", "\"inputTokens\":null")
+                      |> fun text -> text.Replace("\"outputTokens\":5", "\"outputTokens\":null")
+
+                  match ObservationJson.parseResolutionObservation raw with
+                  | Ok value ->
+                      Assert.equal None value.Usage.InputTokens
+                      Assert.equal None value.Usage.OutputTokens
+                      Assert.equal None value.Usage.CachedInputTokens
+                  | Error error -> failwith error }
+
+          { Name = "missing required Ordo semantic fields fail closed rather than being guessed"
+            Run =
+              fun () ->
+                  let raw =
+                      resolutionJson "res-missing" "2026-09-20T10:00:01+00:00"
+                      |> fun text -> text.Replace("  \"stateViewSchema\": {\"id\":\"state-view\",\"version\":1},\n", "")
+
+                  match ObservationJson.parseResolutionObservation raw with
+                  | Error message -> Assert.isTrue (message.Contains("stateViewSchema")) message
+                  | Ok _ -> failwith "Missing stateViewSchema was silently accepted." }
+
+          { Name = "resolution ingestion retains the exact raw payload separately from normalization"
+            Run =
+              fun () ->
+                  withTempRoot (fun root ->
+                      let repository = FileObservationRepository.create root
+                      let raw =
+                          resolutionJson "res-raw" "2026-09-20T10:00:01+00:00"
+                          |> fun text -> text.Replace("\"transportRetries\": 0", "\"unknownAdditiveField\":\"preserve me\",\n  \"transportRetries\": 0")
+                      let observation =
+                          match ObservationJson.parseResolutionObservation raw with
+                          | Ok value -> value
+                          | Error error -> failwith error
+
+                      Assert.equal StoreOutcome.Stored (ObservationOperations.ingestResolution repository raw observation)
+                      let rawFiles = Directory.GetFiles(Path.Combine(root, ".ros", "ordo", "raw", "resolutions"), "*.json")
+                      Assert.equal 1 rawFiles.Length
+                      Assert.equal raw (File.ReadAllText rawFiles[0])) }
+
           { Name = "effective current requires explicit authority and never infers latest as current"
             Run =
               fun () ->
