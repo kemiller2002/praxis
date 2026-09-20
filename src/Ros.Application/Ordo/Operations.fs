@@ -58,9 +58,39 @@ module ObservationOperations =
         | Some existing when existing = observation -> StoreOutcome.AlreadyPresent
         | Some _ -> StoreOutcome.Conflict $"ObservationId '{observation.ObservationId}' already exists with different facts."
 
-    let effectiveCurrent repository =
-        Projection.effectiveCurrent (repository.ListResolutions()) (repository.ListAssessments())
+    let effectiveCurrent repository selectedResolutionId supersededResolutionIds =
+        Projection.effectiveCurrent
+            selectedResolutionId
+            supersededResolutionIds
+            (repository.ListResolutions())
+            (repository.ListAssessments())
 
-    let handoff repository revision source facts assumptions unknowns obligations legalNextActions =
-        effectiveCurrent repository
-        |> Projection.handoff revision source facts assumptions unknowns obligations legalNextActions
+    let handoff
+        repository
+        selectedResolutionId
+        supersededResolutionIds
+        revision
+        source
+        authoritativeArtifacts
+        historicalDecisionReferences
+        facts
+        assumptions
+        unknowns
+        obligations
+        completedVerification
+        legalNextActions
+        =
+        effectiveCurrent repository selectedResolutionId supersededResolutionIds
+        |> Result.map (
+            Projection.handoff
+                revision
+                source
+                authoritativeArtifacts
+                historicalDecisionReferences
+                facts
+                assumptions
+                unknowns
+                obligations
+                completedVerification
+                legalNextActions
+        )
