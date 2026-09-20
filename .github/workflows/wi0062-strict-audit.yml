@@ -1,0 +1,44 @@
+name: WI-0062 current strict SDE report
+
+on:
+  push:
+    branches:
+      - work/wi-0062-structural-review
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    if: ${{ !contains(github.event.head_commit.message, '[wi0062-audited]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify installed SDE version
+        run: |
+          test "$(cat .sde/VERSION)" = "1.3.0"
+          test -f .sde/architecture/DECISION-AND-EVIDENCE-SEMANTICS.md
+      - name: Capture current strict SDE report
+        run: |
+          mkdir -p docs/upgrades
+          set +e
+          npx --yes @echelon-foundry/sde@1.3.0 verify --strict --json > docs/upgrades/SDE-1.3.0-STRICT-CURRENT.json 2> docs/upgrades/SDE-1.3.0-STRICT-CURRENT.stderr
+          STATUS=$?
+          set -e
+          echo "$STATUS" > docs/upgrades/SDE-1.3.0-STRICT-CURRENT.exitcode
+          cat docs/upgrades/SDE-1.3.0-STRICT-CURRENT.json || true
+          cat docs/upgrades/SDE-1.3.0-STRICT-CURRENT.stderr || true
+          if [ "$STATUS" -gt 1 ]; then exit "$STATUS"; fi
+      - name: Commit report and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/wi0062-strict-audit.yml
+          git add docs/upgrades/SDE-1.3.0-STRICT-CURRENT.json docs/upgrades/SDE-1.3.0-STRICT-CURRENT.stderr docs/upgrades/SDE-1.3.0-STRICT-CURRENT.exitcode
+          git commit -m "chore: capture current SDE strict report [wi0062-audited]"
+          git push
