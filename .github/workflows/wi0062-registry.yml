@@ -33,6 +33,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git rm .github/workflows/wi0062-registry.yml
-          git add registries .github/workflows/wi0062-registry.yml
+          git add registries
+          git add -u .github/workflows
           git commit -m "research: index WI-0062 structural-locality decision [wi0062-indexed]"
           git push
