@@ -19,6 +19,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+      - name: Build authoritative F# ROS CLI
+        run: npm run build:fsharp
       - name: Start GH-65 through ROS
         run: |
           ./ros work begin GH-65 --type task --actor ChatGPT
