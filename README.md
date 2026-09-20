@@ -52,6 +52,16 @@ launcher `init` leaves behind — no npx, no network, no flags:
 ./ros upgrade     # update to this CLI's version
 ```
 
+## New in 3.1
+
+- **Executable Ordo observation:** ingest versioned `ordo.resolution-observation` v2 records without taking over Ordo's semantic authority.
+- **Retrospective outcomes:** record separate semantic and operational assessments with evidence, method, time, and limitations.
+- **Effective-current projections:** derive current repository views from immutable observation history instead of rewriting prior records.
+- **Scoped negative knowledge:** retain search target, scope, method, state, coverage, exclusions, errors, and `searched-not-found` without claiming global absence.
+- **Unknown-effect safety:** preserve `unknown` external effects and reconciliation/retry facts without collapsing uncertainty into failure.
+- **Revision-bound handoff:** emit structured facts, assumptions, unknowns, obligations, legal-next-action descriptions, and supersession state.
+- Versioned schemas and usage are documented in [Ordo Observation and Handoff](docs/ordo-observation.md).
+
 ## New in 3.0
 
 - The **standard lifecycle interface** — `init`, `status`, `verify`, `upgrade`,
