@@ -22,7 +22,7 @@ module FileObservationRepository =
     let private pathFor root kind id =
         Path.Combine(directory root kind, $"{hashId id}.json")
 
-    let private writeAtomic path content =
+    let private writeAtomic (path: string) (content: string) =
         Directory.CreateDirectory(Path.GetDirectoryName path) |> ignore
         let temporary = path + ".tmp"
         File.WriteAllText(temporary, content, UTF8Encoding(false))
