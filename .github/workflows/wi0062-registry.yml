@@ -1,0 +1,38 @@
+name: WI-0062 registry refresh
+
+on:
+  push:
+    branches:
+      - work/wi-0062-structural-review
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    if: ${{ !contains(github.event.head_commit.message, '[wi0062-indexed]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+      - name: Build ROS and refresh registries
+        run: |
+          npm run build:fsharp
+          ./ros registry build
+          ./ros registry check
+          ./ros validate
+      - name: Commit generated registry and remove workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/wi0062-registry.yml
+          git add registries .github/workflows/wi0062-registry.yml
+          git commit -m "research: index WI-0062 structural-locality decision [wi0062-indexed]"
+          git push
