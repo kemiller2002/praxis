@@ -72,15 +72,24 @@ module OrdoObservationTests =
                   | Error message -> Assert.isTrue (message.Contains("supported: 2")) message
                   | Ok _ -> failwith "Future schema was accepted." }
 
-          { Name = "effective current is deterministic and retains superseded resolutions"
+          { Name = "effective current requires explicit authority and never infers latest as current"
             Run =
               fun () ->
                   let older = parsed "res-a" "2026-09-20T10:00:01+00:00"
                   let newer = parsed "res-b" "2026-09-20T10:00:02+00:00"
-                  let projection = Projection.effectiveCurrent [ newer; older ] []
-                  Assert.equal (Some "res-b") (projection.Resolution |> Option.map (fun x -> x.ResolutionId))
-                  Assert.equal [ "res-a" ] projection.SupersededResolutionIds
-                  Assert.equal 2 projection.BasisCount }
+
+                  match Projection.effectiveCurrent None [] [ newer; older ] [] with
+                  | Ok projection ->
+                      Assert.equal None (projection.Resolution |> Option.map (fun x -> x.ResolutionId))
+                      Assert.equal [] projection.SupersededResolutionIds
+                  | Error error -> failwith error
+
+                  match Projection.effectiveCurrent (Some "res-a") [ "res-b" ] [ newer; older ] [] with
+                  | Ok projection ->
+                      Assert.equal (Some "res-a") (projection.Resolution |> Option.map (fun x -> x.ResolutionId))
+                      Assert.equal [ "res-b" ] projection.SupersededResolutionIds
+                      Assert.equal 2 projection.BasisCount
+                  | Error error -> failwith error }
 
           { Name = "search observation keeps searched-not-found separate from absence"
             Run =
@@ -97,11 +106,12 @@ module OrdoObservationTests =
             Run =
               fun () ->
                   let raw =
-                      """{"schema":"ros.effect-observation","schemaVersion":1,"observationId":"effect-1","resolutionId":"res-1","effectId":"github-write","outcome":"unknown","attemptedAt":"2026-09-20T10:00:00+00:00","observedAt":"2026-09-20T10:00:02+00:00","reconciliationRequested":true,"reconciliationResult":null,"retryBlocked":true,"compensationBlocked":false}"""
+                      """{"schema":"ros.effect-observation","schemaVersion":1,"observationId":"effect-1","resolutionId":"res-1","effectId":"github-write","outcome":"unknown","attemptedAt":"2026-09-20T10:00:00+00:00","observedAt":"2026-09-20T10:00:02+00:00","reconciliationRequested":true,"reconciliationResult":null,"reconciledAt":null,"retryBlocked":true,"compensationBlocked":false}"""
                   match ObservationJson.parseEffectObservation raw with
                   | Ok value ->
                       Assert.equal EffectOutcome.Unknown value.Outcome
                       Assert.equal true value.ReconciliationRequested
+                      Assert.equal None (EffectObservation.timeToResolution value)
                       Assert.equal true value.RetryBlocked
                   | Error error -> failwith error }
 
@@ -131,10 +141,54 @@ module OrdoObservationTests =
                             ResolutionId = "res-1"
                             Semantic = SemanticAssessment.Confirmed
                             Operational = OperationalAssessment.Succeeded
+                            Assessor = "integration-test"
                             AssessedAt = DateTimeOffset.Parse("2026-09-20T11:00:00+00:00")
+                            RecordedAt = DateTimeOffset.Parse("2026-09-20T11:01:00+00:00")
                             EvidenceReferences = [ "EV-outcome" ]
                             Method = "post-condition"
                             Limitations = [] }
                       Assert.equal StoreOutcome.Stored (ObservationOperations.recordAssessment repository assessment)
-                      let projection = ObservationOperations.effectiveCurrent repository
-                      Assert.equal (Some "assess-1") (projection.Assessment |> Option.map (fun x -> x.AssessmentId))) } ]
+
+                      match ObservationOperations.effectiveCurrent repository (Some "res-1") [] with
+                      | Ok projection ->
+                          Assert.equal (Some "assess-1") (projection.Assessment |> Option.map (fun x -> x.AssessmentId))
+                      | Error error -> failwith error) }
+
+          { Name = "effect reconciliation records measurable time to resolution"
+            Run =
+              fun () ->
+                  let raw =
+                      """{"schema":"ros.effect-observation","schemaVersion":1,"observationId":"effect-resolved","resolutionId":"res-1","effectId":"github-write","outcome":"unknown","attemptedAt":"2026-09-20T10:00:00+00:00","observedAt":"2026-09-20T10:00:02+00:00","reconciliationRequested":true,"reconciliationResult":"write-present","reconciledAt":"2026-09-20T10:03:00+00:00","retryBlocked":true,"compensationBlocked":false}"""
+
+                  match ObservationJson.parseEffectObservation raw with
+                  | Ok value ->
+                      Assert.equal (Some(TimeSpan.FromMinutes 3.0)) (EffectObservation.timeToResolution value)
+                  | Error error -> failwith error }
+
+          { Name = "handoff carries explicit authority artifacts history verification and selected resolution"
+            Run =
+              fun () ->
+                  let observation = parsed "res-1" "2026-09-20T10:00:01+00:00"
+
+                  match
+                      Projection.effectiveCurrent (Some "res-1") [] [ observation ] []
+                      |> Result.map (
+                          Projection.handoff
+                              "commit:abc"
+                              "context/CURRENT-STATE.md"
+                              [ "SDE-MAP.md"; "context/CURRENT-STATE.md" ]
+                              [ "DF-OLD" ]
+                              [ "fact" ]
+                              [ "assumption" ]
+                              [ "unknown" ]
+                              [ "obligation" ]
+                              [ "ros validate"; "npm test" ]
+                              [ "next" ]
+                      )
+                  with
+                  | Ok handoff ->
+                      Assert.equal [ "SDE-MAP.md"; "context/CURRENT-STATE.md" ] handoff.AuthoritativeArtifacts
+                      Assert.equal [ "DF-OLD" ] handoff.HistoricalDecisionReferences
+                      Assert.equal [ "ros validate"; "npm test" ] handoff.CompletedVerification
+                      Assert.equal (Some "res-1") handoff.ResolutionId
+                  | Error error -> failwith error } ]
