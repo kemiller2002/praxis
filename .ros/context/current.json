@@ -2081,11 +2081,40 @@
         "EXE-20260917T185206295Z-e49d115e"
       ],
       "completedAt": "2026-09-17T18:53:23.000Z"
+    },
+    {
+      "id": "WI-0061",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".echelon/sde.json"
+        },
+        {
+          "type": "implementation",
+          "path": ".sde/MANIFEST.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/lifecycle-package.test.mjs"
+        },
+        {
+          "type": "tests",
+          "path": ".github/workflows/ros-validation.yml"
+        }
+      ],
+      "updatedAt": "2026-09-20T15:36:27Z",
+      "telemetryExecutionIds": [
+        "EXE-20260920T153222246Z-2e95db71"
+      ],
+      "completedAt": "2026-09-20T15:36:27Z"
     }
   ],
   "protocolVersion": "1.0.0",
-  "actor": "claude",
-  "updatedAt": "2026-09-17T18:53:23.000Z",
+  "actor": "ChatGPT",
+  "updatedAt": "2026-09-20T15:36:27Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
