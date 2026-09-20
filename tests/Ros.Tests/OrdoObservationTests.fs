@@ -10,7 +10,7 @@ open Ros.Infrastructure.Ordo
 [<RequireQualifiedAccess>]
 module OrdoObservationTests =
     let private resolutionJson id completedAt =
-        $"""{
+        $"""{{
   "schema": "ordo.resolution-observation",
   "schemaVersion": 2,
   "resolutionId": "{id}",
@@ -67,7 +67,7 @@ module OrdoObservationTests =
             Run =
               fun () ->
                   let raw = resolutionJson "res-1" "2026-09-20T10:00:01+00:00"
-                  let future = raw.Replace(""schemaVersion": 2", ""schemaVersion": 99")
+                  let future = raw.Replace("\"schemaVersion\": 2", "\"schemaVersion\": 99")
                   match ObservationJson.parseResolutionObservation future with
                   | Error message -> Assert.isTrue (message.Contains("supported: 2")) message
                   | Ok _ -> failwith "Future schema was accepted." }
