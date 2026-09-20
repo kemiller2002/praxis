@@ -26,6 +26,9 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
+      - name: Build ROS F# CLI
+        run: npm run build:fsharp
+
       - name: Begin ROS work item
         run: |
           ./ros work begin WI-0061 --type maintenance --actor ChatGPT
