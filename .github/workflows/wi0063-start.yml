@@ -36,6 +36,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git rm .github/workflows/wi0063-start.yml
-          git add .ros/work .ros/context .ros/events .ros/telemetry .github/workflows/wi0063-start.yml
+          git add .ros/work .ros/context .ros/events .ros/telemetry
           git commit -m "chore: start WI-0063 under ROS [wi0063-started]"
           git push
