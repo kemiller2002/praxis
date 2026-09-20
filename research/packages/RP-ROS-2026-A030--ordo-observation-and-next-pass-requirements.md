@@ -11,7 +11,7 @@ author_agent: ChatGPT
 version: 0.1.0
 confidence: high
 completion: complete
-status: candidate
+status: review
 priority: high
 created: 2026-09-20
 updated: 2026-09-20
