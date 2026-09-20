@@ -1,6 +1,14 @@
 # SDE 1.3.0 structural review obligations
 
+Status: initial upgrade snapshot; triaged by WI-0062 and DF-ROS-2026-A035.
+
 Generated during WI-0061 while upgrading ROS from SDE 1.1.1 to 1.3.0.
+
+The current ROS 3.1 tree is captured separately in
+`SDE-1.3.0-STRICT-CURRENT.json`; it contains 17 findings because
+`src/Ros.Contracts/Ordo/ObservationJson.fs` entered the review band after
+this initial snapshot. See `SDE-1.3.0-STRUCTURAL-TRIAGE.md` for the disposition
+of every current finding.
 
 The SDE installation itself verifies cleanly. Strict verification reports the review signals below.
 They are recorded as follow-up work rather than hidden by changing SDE thresholds.
