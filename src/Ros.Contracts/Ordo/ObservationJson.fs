@@ -12,12 +12,12 @@ module ObservationJson =
         try Ok(JsonDocument.Parse text)
         with error -> Error $"Malformed JSON: {error.Message}"
 
-    let private property name (element: JsonElement) =
+    let private property (name: string) (element: JsonElement) =
         match element.TryGetProperty name with
         | true, value -> Ok value
         | _ -> Error $"Missing required field '$.{name}'."
 
-    let private stringValue path (element: JsonElement) =
+    let private stringValue (path: string) (element: JsonElement) =
         if element.ValueKind = JsonValueKind.String then
             match element.GetString() with
             | null -> Error $"{path} must not be null."
@@ -25,46 +25,52 @@ module ObservationJson =
         else
             Error $"{path} must be a string."
 
-    let private intValue path (element: JsonElement) =
+    let private intValue (path: string) (element: JsonElement) =
         match element.TryGetInt32() with
         | true, value -> Ok value
         | _ -> Error $"{path} must be an integer."
 
-    let private boolValue path (element: JsonElement) =
+    let private boolValue (path: string) (element: JsonElement) =
         if element.ValueKind = JsonValueKind.True || element.ValueKind = JsonValueKind.False then Ok(element.GetBoolean())
         else Error $"{path} must be a boolean."
 
-    let private dateValue path (element: JsonElement) =
+    let private dateValue (path: string) (element: JsonElement) =
         stringValue path element
         |> Result.bind (fun value ->
             match DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind) with
             | true, parsed -> Ok parsed
             | _ -> Error $"{path} must be an ISO-8601 timestamp.")
 
-    let private requiredString name element = property name element |> Result.bind (stringValue $"$.{name}")
-    let private requiredInt name element = property name element |> Result.bind (intValue $"$.{name}")
-    let private requiredBool name element = property name element |> Result.bind (boolValue $"$.{name}")
-    let private requiredDate name element = property name element |> Result.bind (dateValue $"$.{name}")
+    let private requiredString (name: string) (element: JsonElement) = property name element |> Result.bind (stringValue $"$.{name}")
+    let private requiredInt (name: string) (element: JsonElement) = property name element |> Result.bind (intValue $"$.{name}")
+    let private requiredBool (name: string) (element: JsonElement) = property name element |> Result.bind (boolValue $"$.{name}")
+    let private requiredDate (name: string) (element: JsonElement) = property name element |> Result.bind (dateValue $"$.{name}")
 
-    let private optionalString name (element: JsonElement) =
+    let private optionalString (name: string) (element: JsonElement) =
         match element.TryGetProperty name with
         | false, _ -> Ok None
         | true, value when value.ValueKind = JsonValueKind.Null -> Ok None
         | true, value -> stringValue $"$.{name}" value |> Result.map Some
 
-    let private optionalInt name (element: JsonElement) =
+    let private optionalInt (name: string) (element: JsonElement) =
         match element.TryGetProperty name with
         | false, _ -> Ok None
         | true, value when value.ValueKind = JsonValueKind.Null -> Ok None
         | true, value -> intValue $"$.{name}" value |> Result.map Some
 
-    let private optionalBool name (element: JsonElement) =
+    let private optionalBool (name: string) (element: JsonElement) =
         match element.TryGetProperty name with
         | false, _ -> Ok None
         | true, value when value.ValueKind = JsonValueKind.Null -> Ok None
         | true, value -> boolValue $"$.{name}" value |> Result.map Some
 
-    let private stringArray name (element: JsonElement) =
+    let private optionalDate (name: string) (element: JsonElement) =
+        match element.TryGetProperty name with
+        | false, _ -> Ok None
+        | true, value when value.ValueKind = JsonValueKind.Null -> Ok None
+        | true, value -> dateValue $"$.{name}" value |> Result.map Some
+
+    let private stringArray (name: string) (element: JsonElement) =
         property name element
         |> Result.bind (fun value ->
             if value.ValueKind <> JsonValueKind.Array then
@@ -81,7 +87,7 @@ module ObservationJson =
                     (Ok [])
                 |> Result.map List.rev)
 
-    let private optionalStringArray name (element: JsonElement) =
+    let private optionalStringArray (name: string) (element: JsonElement) =
         match element.TryGetProperty name with
         | false, _ -> Ok []
         | true, value when value.ValueKind = JsonValueKind.Array ->
@@ -128,7 +134,8 @@ module ObservationJson =
                     let provenance = stringArray "provenanceEvidenceIds" item
                     match scope, status, provenance with
                     | Ok s, Ok st, Ok p when p.IsEmpty -> Error "$.coverage[].provenanceEvidenceIds must not be empty."
-                    | Ok s, Ok st, Ok p -> Ok { Scope = s; Status = st; ProvenanceEvidenceIds = p }
+                    | Ok s, Ok st, Ok p ->
+                        Ok ({ Scope = s; Status = st; ProvenanceEvidenceIds = p } : CoverageClaim)
                     | Error error, _, _ -> Error error
                     | _, Error error, _ -> Error error
                     | _, _, Error error -> Error error)
@@ -141,7 +148,7 @@ module ObservationJson =
                     (Ok [])
                 |> Result.map List.rev)
 
-    let private parseProvider root =
+    let private parseProvider (root: JsonElement) =
         match root.TryGetProperty "provider" with
         | false, _ -> Ok None
         | true, value when value.ValueKind = JsonValueKind.Null -> Ok None
@@ -154,7 +161,7 @@ module ObservationJson =
             | _, _, Error error, _
             | _, _, _, Error error -> Error error
 
-    let private parseConfidence root =
+    let private parseConfidence (root: JsonElement) =
         match root.TryGetProperty "confidence" with
         | false, _ -> Ok None
         | true, value when value.ValueKind = JsonValueKind.Null -> Ok None
@@ -168,7 +175,7 @@ module ObservationJson =
                 | _ -> Error "$.confidence.magnitude must be a number."
             bind2 magnitude (requiredString "provenance" value) (fun m p -> Some { Magnitude = m; Provenance = p })
 
-    let private parseUsage root =
+    let private parseUsage (root: JsonElement) =
         property "usage" root
         |> Result.bind (fun value ->
             match optionalInt "inputTokens" value, optionalInt "outputTokens" value, optionalInt "cachedInputTokens" value, optionalString "providerReportedCost" value with
@@ -179,12 +186,12 @@ module ObservationJson =
             | _, _, Error error, _
             | _, _, _, Error error -> Error error)
 
-    let private parseStateViewSchema root =
+    let private parseStateViewSchema (root: JsonElement) =
         property "stateViewSchema" root
         |> Result.bind (fun value ->
             bind2 (requiredString "id" value) (requiredInt "version" value) (fun id version -> { Id = id; Version = version }))
 
-    let private parsePolicy root =
+    let private parsePolicy (root: JsonElement) =
         match root.TryGetProperty "policy" with
         | false, _ -> Ok(None, None, None)
         | true, value when value.ValueKind = JsonValueKind.Null -> Ok(None, None, None)
@@ -195,7 +202,7 @@ module ObservationJson =
             | _, Error error, _
             | _, _, Error error -> Error error
 
-    let private parseEscalation root =
+    let private parseEscalation (root: JsonElement) =
         property "escalation" root
         |> Result.bind (fun value ->
             if value.ValueKind <> JsonValueKind.Array then Error "$.escalation must be an array."
@@ -308,11 +315,13 @@ module ObservationJson =
             | Error error, _ -> Error error
             | _, Error error -> Error error)
 
-    let private writeOptionalString (writer: Utf8JsonWriter) name = function
+    let private writeOptionalString (writer: Utf8JsonWriter) (name: string) (value: string option) =
+        match value with
         | Some value -> writer.WriteString(name, value)
         | None -> writer.WriteNull(name)
 
-    let private writeOptionalInt (writer: Utf8JsonWriter) name = function
+    let private writeOptionalInt (writer: Utf8JsonWriter) (name: string) (value: int option) =
+        match value with
         | Some value -> writer.WriteNumber(name, value)
         | None -> writer.WriteNull(name)
 
@@ -388,7 +397,7 @@ module ObservationJson =
             writeOptionalString writer "experimentReference" value.ExperimentReference
             writer.WriteEndObject())
 
-    let parseAssessment text =
+    let parseAssessment (text: string) =
         parseDocument text
         |> Result.bind (fun document ->
             use document = document
@@ -397,18 +406,43 @@ module ObservationJson =
             | Ok "ros.resolution-assessment", Ok 1 ->
                 let semantic = requiredString "semantic" root |> Result.bind (fun x -> SemanticAssessment.tryOfWire x |> Option.map Ok |> Option.defaultValue (Error $"Unknown semantic assessment '{x}'."))
                 let operational = requiredString "operational" root |> Result.bind (fun x -> OperationalAssessment.tryOfWire x |> Option.map Ok |> Option.defaultValue (Error $"Unknown operational assessment '{x}'."))
-                match requiredString "assessmentId" root, requiredString "resolutionId" root, semantic, operational, requiredDate "assessedAt" root, stringArray "evidenceReferences" root, requiredString "method" root, optionalStringArray "limitations" root with
-                | Ok assessmentId, Ok resolutionId, Ok semantic, Ok operational, Ok assessedAt, Ok evidenceReferences, Ok method, Ok limitations when evidenceReferences.IsEmpty ->
+                match
+                    requiredString "assessmentId" root,
+                    requiredString "resolutionId" root,
+                    semantic,
+                    operational,
+                    requiredString "assessor" root,
+                    requiredDate "assessedAt" root,
+                    requiredDate "recordedAt" root,
+                    stringArray "evidenceReferences" root,
+                    requiredString "method" root,
+                    optionalStringArray "limitations" root
+                with
+                | Ok assessmentId, Ok resolutionId, Ok semantic, Ok operational, Ok assessor, Ok assessedAt, Ok recordedAt, Ok evidenceReferences, Ok method, Ok limitations
+                    when evidenceReferences.IsEmpty ->
                     Error "$.evidenceReferences must not be empty."
-                | Ok assessmentId, Ok resolutionId, Ok semantic, Ok operational, Ok assessedAt, Ok evidenceReferences, Ok method, Ok limitations ->
-                    Ok { AssessmentId = assessmentId; ResolutionId = resolutionId; Semantic = semantic; Operational = operational; AssessedAt = assessedAt; EvidenceReferences = evidenceReferences; Method = method; Limitations = limitations }
+                | Ok assessmentId, Ok resolutionId, Ok semantic, Ok operational, Ok assessor, Ok assessedAt, Ok recordedAt, Ok evidenceReferences, Ok method, Ok limitations
+                    when recordedAt < assessedAt ->
+                    Error "$.recordedAt must not precede $.assessedAt."
+                | Ok assessmentId, Ok resolutionId, Ok semantic, Ok operational, Ok assessor, Ok assessedAt, Ok recordedAt, Ok evidenceReferences, Ok method, Ok limitations ->
+                    Ok
+                        { AssessmentId = assessmentId
+                          ResolutionId = resolutionId
+                          Semantic = semantic
+                          Operational = operational
+                          Assessor = assessor
+                          AssessedAt = assessedAt
+                          RecordedAt = recordedAt
+                          EvidenceReferences = evidenceReferences
+                          Method = method
+                          Limitations = limitations }
                 | _ -> Error "Invalid ros.resolution-assessment record."
             | Ok schema, _ when schema <> "ros.resolution-assessment" -> Error $"Unexpected schema '{schema}'."
             | Ok _, Ok version -> Error $"Unsupported ros.resolution-assessment schemaVersion {version}; supported: 1."
             | Error error, _ -> Error error
             | _, Error error -> Error error)
 
-    let renderAssessment value =
+    let renderAssessment (value: ResolutionAssessment) =
         JsonRendering.renderIndented (fun writer ->
             writer.WriteStartObject()
             writer.WriteString("schema", "ros.resolution-assessment")
@@ -417,7 +451,9 @@ module ObservationJson =
             writer.WriteString("resolutionId", value.ResolutionId)
             writer.WriteString("semantic", SemanticAssessment.toWire value.Semantic)
             writer.WriteString("operational", OperationalAssessment.toWire value.Operational)
+            writer.WriteString("assessor", value.Assessor)
             writer.WriteString("assessedAt", value.AssessedAt.ToString("O", CultureInfo.InvariantCulture))
+            writer.WriteString("recordedAt", value.RecordedAt.ToString("O", CultureInfo.InvariantCulture))
             writer.WriteStartArray("evidenceReferences")
             value.EvidenceReferences |> List.iter writer.WriteStringValue
             writer.WriteEndArray()
@@ -427,7 +463,7 @@ module ObservationJson =
             writer.WriteEndArray()
             writer.WriteEndObject())
 
-    let parseSearchObservation text =
+    let parseSearchObservation (text: string) =
         parseDocument text
         |> Result.bind (fun document ->
             use document = document
@@ -443,7 +479,7 @@ module ObservationJson =
             | Ok _, Ok version, _, _, _, _, _, _, _, _, _, _, _, _ when version <> 1 -> Error $"Unsupported ros.search-observation schemaVersion {version}; supported: 1."
             | _ -> Error "Invalid ros.search-observation record.")
 
-    let renderSearchObservation value =
+    let renderSearchObservation (value: SearchObservation) =
         JsonRendering.renderIndented (fun writer ->
             writer.WriteStartObject()
             writer.WriteString("schema", "ros.search-observation")
@@ -468,20 +504,54 @@ module ObservationJson =
             writer.WriteString("observedAt", value.ObservedAt.ToString("O", CultureInfo.InvariantCulture))
             writer.WriteEndObject())
 
-    let parseEffectObservation text =
+    let parseEffectObservation (text: string) =
         parseDocument text
         |> Result.bind (fun document ->
             use document = document
             let root = document.RootElement
             let outcome = requiredString "outcome" root |> Result.bind (fun x -> EffectOutcome.tryOfWire x |> Option.map Ok |> Option.defaultValue (Error $"Unknown effect outcome '{x}'."))
-            match requiredString "schema" root, requiredInt "schemaVersion" root, requiredString "observationId" root, optionalString "resolutionId" root, requiredString "effectId" root, outcome, requiredDate "attemptedAt" root, requiredDate "observedAt" root, requiredBool "reconciliationRequested" root, optionalString "reconciliationResult" root, requiredBool "retryBlocked" root, requiredBool "compensationBlocked" root with
-            | Ok "ros.effect-observation", Ok 1, Ok id, Ok resolution, Ok effectId, Ok outcome, Ok attemptedAt, Ok observedAt, Ok reconciliationRequested, Ok reconciliationResult, Ok retryBlocked, Ok compensationBlocked ->
-                Ok { ObservationId = id; ResolutionId = resolution; EffectId = effectId; Outcome = outcome; AttemptedAt = attemptedAt; ObservedAt = observedAt; ReconciliationRequested = reconciliationRequested; ReconciliationResult = reconciliationResult; RetryBlocked = retryBlocked; CompensationBlocked = compensationBlocked }
-            | Ok schema, _, _, _, _, _, _, _, _, _, _, _ when schema <> "ros.effect-observation" -> Error $"Unexpected schema '{schema}'."
-            | Ok _, Ok version, _, _, _, _, _, _, _, _, _, _ when version <> 1 -> Error $"Unsupported ros.effect-observation schemaVersion {version}; supported: 1."
+            match
+                requiredString "schema" root,
+                requiredInt "schemaVersion" root,
+                requiredString "observationId" root,
+                optionalString "resolutionId" root,
+                requiredString "effectId" root,
+                outcome,
+                requiredDate "attemptedAt" root,
+                requiredDate "observedAt" root,
+                requiredBool "reconciliationRequested" root,
+                optionalString "reconciliationResult" root,
+                optionalDate "reconciledAt" root,
+                requiredBool "retryBlocked" root,
+                requiredBool "compensationBlocked" root
+            with
+            | Ok "ros.effect-observation", Ok 1, Ok id, Ok resolution, Ok effectId, Ok outcome, Ok attemptedAt, Ok observedAt, Ok reconciliationRequested, Ok reconciliationResult, Ok reconciledAt, Ok retryBlocked, Ok compensationBlocked
+                when observedAt < attemptedAt ->
+                Error "$.observedAt must not precede $.attemptedAt."
+            | Ok "ros.effect-observation", Ok 1, Ok id, Ok resolution, Ok effectId, Ok outcome, Ok attemptedAt, Ok observedAt, Ok reconciliationRequested, Ok reconciliationResult, Ok reconciledAt, Ok retryBlocked, Ok compensationBlocked
+                when reconciledAt |> Option.exists (fun at -> at < attemptedAt) ->
+                Error "$.reconciledAt must not precede $.attemptedAt."
+            | Ok "ros.effect-observation", Ok 1, Ok id, Ok resolution, Ok effectId, Ok outcome, Ok attemptedAt, Ok observedAt, Ok reconciliationRequested, Ok reconciliationResult, Ok reconciledAt, Ok retryBlocked, Ok compensationBlocked
+                when Option.isSome reconciliationResult <> Option.isSome reconciledAt ->
+                Error "$.reconciliationResult and $.reconciledAt must either both be present or both be null."
+            | Ok "ros.effect-observation", Ok 1, Ok id, Ok resolution, Ok effectId, Ok outcome, Ok attemptedAt, Ok observedAt, Ok reconciliationRequested, Ok reconciliationResult, Ok reconciledAt, Ok retryBlocked, Ok compensationBlocked ->
+                Ok
+                    { ObservationId = id
+                      ResolutionId = resolution
+                      EffectId = effectId
+                      Outcome = outcome
+                      AttemptedAt = attemptedAt
+                      ObservedAt = observedAt
+                      ReconciliationRequested = reconciliationRequested
+                      ReconciliationResult = reconciliationResult
+                      ReconciledAt = reconciledAt
+                      RetryBlocked = retryBlocked
+                      CompensationBlocked = compensationBlocked }
+            | Ok schema, _, _, _, _, _, _, _, _, _, _, _, _ when schema <> "ros.effect-observation" -> Error $"Unexpected schema '{schema}'."
+            | Ok _, Ok version, _, _, _, _, _, _, _, _, _, _, _ when version <> 1 -> Error $"Unsupported ros.effect-observation schemaVersion {version}; supported: 1."
             | _ -> Error "Invalid ros.effect-observation record.")
 
-    let renderEffectObservation value =
+    let renderEffectObservation (value: EffectObservation) =
         JsonRendering.renderIndented (fun writer ->
             writer.WriteStartObject()
             writer.WriteString("schema", "ros.effect-observation")
@@ -494,11 +564,14 @@ module ObservationJson =
             writer.WriteString("observedAt", value.ObservedAt.ToString("O", CultureInfo.InvariantCulture))
             writer.WriteBoolean("reconciliationRequested", value.ReconciliationRequested)
             writeOptionalString writer "reconciliationResult" value.ReconciliationResult
+            match value.ReconciledAt with
+            | Some reconciledAt -> writer.WriteString("reconciledAt", reconciledAt.ToString("O", CultureInfo.InvariantCulture))
+            | None -> writer.WriteNull("reconciledAt")
             writer.WriteBoolean("retryBlocked", value.RetryBlocked)
             writer.WriteBoolean("compensationBlocked", value.CompensationBlocked)
             writer.WriteEndObject())
 
-    let renderEffectiveCurrent value =
+    let renderEffectiveCurrent (value: EffectiveCurrentProjection) =
         JsonRendering.renderIndented (fun writer ->
             writer.WriteStartObject()
             writer.WriteString("schema", "ros.effective-current")
@@ -521,7 +594,7 @@ module ObservationJson =
                 document.RootElement.WriteTo writer
             writer.WriteEndObject())
 
-    let renderHandoff value =
+    let renderHandoff (value: HandoffAuthority) =
         JsonRendering.renderIndented (fun writer ->
             writer.WriteStartObject()
             writer.WriteString("schema", "ros.handoff-authority")
@@ -536,10 +609,13 @@ module ObservationJson =
                 writer.WriteStartArray(name)
                 values |> List.iter writer.WriteStringValue
                 writer.WriteEndArray()
+            writeArray "authoritativeArtifacts" value.AuthoritativeArtifacts
+            writeArray "historicalDecisionReferences" value.HistoricalDecisionReferences
             writeArray "facts" value.Facts
             writeArray "assumptions" value.Assumptions
             writeArray "unknowns" value.Unknowns
             writeArray "obligations" value.Obligations
+            writeArray "completedVerification" value.CompletedVerification
             writeArray "legalNextActions" value.LegalNextActions
             writeArray "supersededResolutionIds" value.SupersededResolutionIds
             writer.WriteEndObject())
