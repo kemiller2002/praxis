@@ -31,7 +31,8 @@ jobs:
 
       - name: Begin ROS work item
         run: |
-          ./ros work begin WI-0061 --type maintenance --actor ChatGPT
+          NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          ./ros work start --id WI-0061 --occurred-at "$NOW" --type maintenance --actor ChatGPT
           ./ros work context WI-0061
 
       - name: Prove the SDE dry run is non-mutating
