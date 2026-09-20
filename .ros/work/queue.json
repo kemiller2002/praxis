@@ -1107,10 +1107,10 @@
         "structural-review"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-20T15:32:27Z",
-      "updatedAt": "2026-09-20T22:55:33Z",
+      "updatedAt": "2026-09-20T23:04:26Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
