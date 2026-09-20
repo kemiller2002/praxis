@@ -1,0 +1,41 @@
+name: WI-0063 ROS start
+
+on:
+  push:
+    branches:
+      - work/gh-63-ordo-observation-next-pass
+
+permissions:
+  contents: write
+
+jobs:
+  start:
+    if: ${{ !contains(github.event.head_commit.message, '[wi0063-started]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+      - name: Build authoritative ROS CLI
+        run: npm run build:fsharp
+      - name: Register and start WI-0063
+        run: |
+          NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          ./ros add "Implement ROS next-pass Ordo observation and structured handoff (#63)" --id WI-0063 --tag ordo,next-pass --priority high
+          ./ros work backlog-transition --action ready --id WI-0063 --occurred-at "$NOW"
+          ./ros work start --id WI-0063 --occurred-at "$NOW" --type feature --actor ChatGPT
+          ./ros work context WI-0063
+      - name: Commit governed work state and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/wi0063-start.yml
+          git add .ros/work .ros/context .ros/events .ros/telemetry .github/workflows/wi0063-start.yml
+          git commit -m "chore: start WI-0063 under ROS [wi0063-started]"
+          git push
