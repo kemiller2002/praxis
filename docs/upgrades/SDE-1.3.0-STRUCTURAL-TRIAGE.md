@@ -12,27 +12,34 @@ or 2000 lines as a refactoring target.
 
 No SDE threshold, ignore rule, or strict-verification behavior is changed.
 
+The current machine-readable report is
+`docs/upgrades/SDE-1.3.0-STRICT-CURRENT.json`. It inspected 189 files and
+reported exactly 17 SDE-STRUCT-001 findings, with zero installation problems.
+Because strict mode deliberately treats structural review findings as failures,
+its recorded exit code is 1. This triage is the review that exit code demands;
+it does not reinterpret the run as a mechanical pass.
+
 ## Dispositions
 
 | File | Current LOC | Band | Disposition | Reason / constraint |
 |---|---:|---|---|---|
-| `src/Ros.Infrastructure/Work/FileTelemetryFinalizationRepository.fs` | 2850 | justification-required | bounded exception | One telemetry mutation/lifecycle semantic area but several responsibility clusters. Parity-sensitive JSON mutation makes churn-only extraction risky. Next new mutation family or material cluster change must evaluate extraction first. |
-| `src/Ros.Cli/Program.fs` | 2684 | justification-required | bounded exception | CLI composition/root routing surface. Domain legality remains below the CLI. No new domain authority may accumulate here; substantial new command families must be extracted. |
-| `tests/work-start-fsharp-differential.test.mjs` | 1644 | strong-review | reviewed, no change | Large frozen Node-to-F# golden masters dominate LOC. Splitting the literal would move data without reducing reasoning scope. |
-| `tools/ros_cli.mjs` | 1564 | strong-review | frozen compatibility surface | Legacy Node/internal web dependency retained for compatibility after F# authority switch. Do not add new semantic authority here. |
-| `tools/ros_telemetry.mjs` | 1517 | strong-review | frozen compatibility surface | Legacy telemetry implementation retained for internal compatibility/differential history. New authoritative telemetry semantics belong in F#. |
-| `tests/telemetry-show-fsharp-differential.test.mjs` | 1444 | strong-review | reviewed, no change | Mostly frozen telemetry golden data used to prove F# parity. Physical split would not reduce the semantic test surface. |
-| `setup_ros_layout.py` | 1096 | strong-review | data-heavy bootstrap exception | Most size comes from the declarative scaffold/file payload for one bootstrap concern. Existing-file safety/idempotency remains one bounded responsibility. |
-| `src/Ros.Domain/Telemetry/TelemetryValidation.fs` | 723 | review | reviewed, no change | Cohesive pure Tier-2 telemetry-validation authority. Splitting individual validation rules would fragment one legality surface. |
-| `src/Ros.Contracts/Ordo/ObservationJson.fs` | 622 | review | reviewed, no change | One provider-neutral Ordo observation wire boundary. Multiple schema parsers share the same compatibility/error vocabulary and remain one contract area. |
-| `src/Ros.Cli/Lifecycle.fs` | 620 | review | reviewed, no change | Cohesive lifecycle command grammar, help, parsing, and rendering surface. Lifecycle decisions remain in Application/Domain. |
-| `tests/npm-bootstrap.test.mjs` | 611 | review | reviewed, no change | One npm/bootstrap acceptance-test area with scenario setup and assertions. |
-| `tests/lifecycle-package.test.mjs` | 604 | review | reviewed, no change | One packed lifecycle artifact acceptance surface. Splitting would duplicate package fixture/setup. |
-| `tests/work-fsharp-differential.test.mjs` | 566 | review | reviewed, no change | One work-protocol differential/parity suite with shared frozen expectations. |
-| `web/app.ts` | 548 | review | reviewed, no change | One backlog UI feature: state, boundary effects, rendering, and interaction. Server remains semantic authority; client does not duplicate transition legality. |
-| `src/Ros.Infrastructure/Work/FileBacklogQueueRepository.fs` | 530 | review | reviewed, no change | One backlog queue persistence adapter including atomic JSON/Markdown projection writes. |
-| `src/Ros.Infrastructure/Work/FileTelemetryExecutionRepository.fs` | 503 | review | reviewed, no change | One execution-creation persistence adapter. Finalization lives elsewhere, preserving the lifecycle boundary. |
-| `tests/Ros.Tests/TelemetryValidationTests.fs` | 503 | review | reviewed, no change | One typed regression suite for the single TelemetryValidation authority. |
+| `src/Ros.Infrastructure/Work/FileTelemetryFinalizationRepository.fs` | 2849 | justification-required | bounded exception | One telemetry mutation/lifecycle semantic area but several responsibility clusters. Parity-sensitive JSON mutation makes churn-only extraction risky. Next new mutation family or material cluster change must evaluate extraction first. |
+| `src/Ros.Cli/Program.fs` | 2683 | justification-required | bounded exception | CLI composition/root routing surface. Domain legality remains below the CLI. No new domain authority may accumulate here; substantial new command families must be extracted. |
+| `tests/work-start-fsharp-differential.test.mjs` | 1643 | strong-review | reviewed, no change | Large frozen Node-to-F# golden masters dominate LOC. Splitting the literal would move data without reducing reasoning scope. |
+| `tools/ros_cli.mjs` | 1563 | strong-review | frozen compatibility surface | Legacy Node/internal web dependency retained for compatibility after F# authority switch. Do not add new semantic authority here. |
+| `tools/ros_telemetry.mjs` | 1516 | strong-review | frozen compatibility surface | Legacy telemetry implementation retained for internal compatibility/differential history. New authoritative telemetry semantics belong in F#. |
+| `tests/telemetry-show-fsharp-differential.test.mjs` | 1443 | strong-review | reviewed, no change | Mostly frozen telemetry golden data used to prove F# parity. Physical split would not reduce the semantic test surface. |
+| `setup_ros_layout.py` | 1095 | strong-review | data-heavy bootstrap exception | Most size comes from the declarative scaffold/file payload for one bootstrap concern. Existing-file safety/idempotency remains one bounded responsibility. |
+| `src/Ros.Domain/Telemetry/TelemetryValidation.fs` | 722 | review | reviewed, no change | Cohesive pure Tier-2 telemetry-validation authority. Splitting individual validation rules would fragment one legality surface. |
+| `src/Ros.Contracts/Ordo/ObservationJson.fs` | 621 | review | reviewed, no change | One provider-neutral Ordo observation wire boundary. Multiple schema parsers share the same compatibility/error vocabulary and remain one contract area. |
+| `src/Ros.Cli/Lifecycle.fs` | 619 | review | reviewed, no change | Cohesive lifecycle command grammar, help, parsing, and rendering surface. Lifecycle decisions remain in Application/Domain. |
+| `tests/npm-bootstrap.test.mjs` | 610 | review | reviewed, no change | One npm/bootstrap acceptance-test area with scenario setup and assertions. |
+| `tests/lifecycle-package.test.mjs` | 603 | review | reviewed, no change | One packed lifecycle artifact acceptance surface. Splitting would duplicate package fixture/setup. |
+| `tests/work-fsharp-differential.test.mjs` | 565 | review | reviewed, no change | One work-protocol differential/parity suite with shared frozen expectations. |
+| `web/app.ts` | 547 | review | reviewed, no change | One backlog UI feature: state, boundary effects, rendering, and interaction. Server remains semantic authority; client does not duplicate transition legality. |
+| `src/Ros.Infrastructure/Work/FileBacklogQueueRepository.fs` | 529 | review | reviewed, no change | One backlog queue persistence adapter including atomic JSON/Markdown projection writes. |
+| `src/Ros.Infrastructure/Work/FileTelemetryExecutionRepository.fs` | 502 | review | reviewed, no change | One execution-creation persistence adapter. Finalization lives elsewhere, preserving the lifecycle boundary. |
+| `tests/Ros.Tests/TelemetryValidationTests.fs` | 502 | review | reviewed, no change | One typed regression suite for the single TelemetryValidation authority. |
 
 ## Important interpretation
 
