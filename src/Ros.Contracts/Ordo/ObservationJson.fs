@@ -201,91 +201,108 @@ module ObservationJson =
             if value.ValueKind <> JsonValueKind.Array then Error "$.escalation must be an array."
             else Ok(value.EnumerateArray() |> Seq.map (fun item -> item.GetRawText()) |> Seq.toList))
 
+    let private errorOf = function
+        | Ok _ -> None
+        | Error error -> Some error
+
     let parseResolutionObservation (text: string) : Result<ResolutionObservation, string> =
         parseDocument text
-        |> Result.bind (fun document ->
-            use document = document
+        |> Result.bind (fun parsed ->
+            use document = parsed
             let root = document.RootElement
             match requiredString "schema" root, requiredInt "schemaVersion" root with
             | Ok "ordo.resolution-observation", Ok 2 ->
-                let required =
-                    [ requiredString "resolutionId" root |> Result.map box
-                      requiredString "mode" root |> Result.map box
-                      requiredString "contractId" root |> Result.map box
-                      requiredInt "contractVersion" root |> Result.map box
-                      requiredString "requestId" root |> Result.map box
-                      requiredString "stateFingerprint" root |> Result.map box
-                      requiredDate "startedAt" root |> Result.map box
-                      requiredDate "completedAt" root |> Result.map box
-                      requiredString "outcome" root |> Result.map box
-                      requiredInt "transportRetries" root |> Result.map box ]
-                match required |> List.tryPick (function Error error -> Some error | _ -> None) with
-                | Some error -> Error error
-                | None ->
-                    match
-                        requiredString "resolutionId" root,
-                        optionalString "correlationId" root,
-                        optionalString "causedBy" root,
-                        requiredString "mode" root,
-                        requiredString "contractId" root,
-                        requiredInt "contractVersion" root,
-                        requiredString "requestId" root,
-                        requiredString "stateFingerprint" root,
-                        parseStateViewSchema root,
-                        parseCoverage root,
-                        parseProvider root,
-                        requiredDate "startedAt" root,
-                        requiredDate "completedAt" root,
-                        requiredString "outcome" root,
-                        optionalString "selectedChoice" root,
-                        parseConfidence root,
-                        stringArray "evidenceUsed" root,
-                        parseEscalation root,
-                        optionalString "transition" root,
-                        parsePolicy root,
-                        parseUsage root,
-                        requiredInt "transportRetries" root,
-                        optionalString "experimentReference" root
-                    with
-                    | Ok resolutionId, Ok correlationId, Ok causedBy, Ok mode, Ok contractId, Ok contractVersion,
-                      Ok requestId, Ok stateFingerprint, Ok stateViewSchema, Ok coverage, Ok provider,
-                      Ok startedAt, Ok completedAt, Ok outcome, Ok selectedChoice, Ok confidence,
-                      Ok evidenceUsed, Ok escalation, Ok transition, Ok (policyId, policyVersion, policyExperimental),
-                      Ok usage, Ok transportRetries, Ok experimentReference ->
-                        if completedAt < startedAt then Error "$.completedAt must not precede $.startedAt."
-                        else
-                            Ok
-                                { ResolutionId = resolutionId
-                                  CorrelationId = correlationId
-                                  CausedBy = causedBy
-                                  Mode = mode
-                                  ContractId = contractId
-                                  ContractVersion = contractVersion
-                                  RequestId = requestId
-                                  StateFingerprint = stateFingerprint
-                                  StateViewSchema = stateViewSchema
-                                  Coverage = coverage
-                                  Provider = provider
-                                  StartedAt = startedAt
-                                  CompletedAt = completedAt
-                                  Outcome = outcome
-                                  SelectedChoice = selectedChoice
-                                  Confidence = confidence
-                                  EvidenceUsed = evidenceUsed
-                                  Escalation = escalation
-                                  Transition = transition
-                                  PolicyId = policyId
-                                  PolicyVersion = policyVersion
-                                  PolicyExperimental = policyExperimental
-                                  Usage = usage
-                                  TransportRetries = transportRetries
-                                  ExperimentReference = experimentReference }
-                    | values ->
-                        let errors =
-                            values
-                            |> fun _ -> [ correlationId |> Result.map ignore; causedBy |> Result.map ignore; stateViewSchema |> Result.map ignore; coverage |> Result.map ignore; provider |> Result.map ignore; selectedChoice |> Result.map ignore; confidence |> Result.map ignore; evidenceUsed |> Result.map ignore; escalation |> Result.map ignore; transition |> Result.map ignore; parsePolicy root |> Result.map ignore; usage |> Result.map ignore; experimentReference |> Result.map ignore ]
-                        errors |> List.tryPick (function Error error -> Some error | _ -> None) |> Option.defaultValue "Invalid resolution observation." |> Error
-            | Ok schema, Ok version when schema <> "ordo.resolution-observation" ->
+                let resolutionId = requiredString "resolutionId" root
+                let correlationId = optionalString "correlationId" root
+                let causedBy = optionalString "causedBy" root
+                let mode = requiredString "mode" root
+                let contractId = requiredString "contractId" root
+                let contractVersion = requiredInt "contractVersion" root
+                let requestId = requiredString "requestId" root
+                let stateFingerprint = requiredString "stateFingerprint" root
+                let stateViewSchema = parseStateViewSchema root
+                let coverage = parseCoverage root
+                let provider = parseProvider root
+                let startedAt = requiredDate "startedAt" root
+                let completedAt = requiredDate "completedAt" root
+                let outcome = requiredString "outcome" root
+                let selectedChoice = optionalString "selectedChoice" root
+                let confidence = parseConfidence root
+                let evidenceUsed = stringArray "evidenceUsed" root
+                let escalation = parseEscalation root
+                let transition = optionalString "transition" root
+                let policy = parsePolicy root
+                let usage = parseUsage root
+                let transportRetries = requiredInt "transportRetries" root
+                let experimentReference = optionalString "experimentReference" root
+
+                match
+                    resolutionId, correlationId, causedBy, mode, contractId, contractVersion,
+                    requestId, stateFingerprint, stateViewSchema, coverage, provider,
+                    startedAt, completedAt, outcome, selectedChoice, confidence,
+                    evidenceUsed, escalation, transition, policy, usage, transportRetries, experimentReference
+                with
+                | Ok resolutionId, Ok correlationId, Ok causedBy, Ok mode, Ok contractId, Ok contractVersion,
+                  Ok requestId, Ok stateFingerprint, Ok stateViewSchema, Ok coverage, Ok provider,
+                  Ok startedAt, Ok completedAt, Ok outcome, Ok selectedChoice, Ok confidence,
+                  Ok evidenceUsed, Ok escalation, Ok transition, Ok (policyId, policyVersion, policyExperimental),
+                  Ok usage, Ok transportRetries, Ok experimentReference ->
+                    if completedAt < startedAt then Error "$.completedAt must not precede $.startedAt."
+                    else
+                        Ok
+                            { ResolutionId = resolutionId
+                              CorrelationId = correlationId
+                              CausedBy = causedBy
+                              Mode = mode
+                              ContractId = contractId
+                              ContractVersion = contractVersion
+                              RequestId = requestId
+                              StateFingerprint = stateFingerprint
+                              StateViewSchema = stateViewSchema
+                              Coverage = coverage
+                              Provider = provider
+                              StartedAt = startedAt
+                              CompletedAt = completedAt
+                              Outcome = outcome
+                              SelectedChoice = selectedChoice
+                              Confidence = confidence
+                              EvidenceUsed = evidenceUsed
+                              Escalation = escalation
+                              Transition = transition
+                              PolicyId = policyId
+                              PolicyVersion = policyVersion
+                              PolicyExperimental = policyExperimental
+                              Usage = usage
+                              TransportRetries = transportRetries
+                              ExperimentReference = experimentReference }
+                | _ ->
+                    [ errorOf resolutionId
+                      errorOf correlationId
+                      errorOf causedBy
+                      errorOf mode
+                      errorOf contractId
+                      errorOf contractVersion
+                      errorOf requestId
+                      errorOf stateFingerprint
+                      errorOf stateViewSchema
+                      errorOf coverage
+                      errorOf provider
+                      errorOf startedAt
+                      errorOf completedAt
+                      errorOf outcome
+                      errorOf selectedChoice
+                      errorOf confidence
+                      errorOf evidenceUsed
+                      errorOf escalation
+                      errorOf transition
+                      errorOf policy
+                      errorOf usage
+                      errorOf transportRetries
+                      errorOf experimentReference ]
+                    |> List.tryPick id
+                    |> Option.defaultValue "Invalid resolution observation."
+                    |> Error
+            | Ok schema, Ok _ when schema <> "ordo.resolution-observation" ->
                 Error $"Unexpected schema '{schema}'. Expected 'ordo.resolution-observation'."
             | Ok _, Ok version -> Error $"Unsupported ordo.resolution-observation schemaVersion {version}; supported: 2."
             | Error error, _ -> Error error
