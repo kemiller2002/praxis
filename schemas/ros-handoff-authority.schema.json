@@ -14,7 +14,10 @@
     "unknowns",
     "obligations",
     "legalNextActions",
-    "supersededResolutionIds"
+    "supersededResolutionIds",
+    "authoritativeArtifacts",
+    "historicalDecisionReferences",
+    "completedVerification"
   ],
   "properties": {
     "schema": {
@@ -85,6 +88,24 @@
       }
     },
     "supersededResolutionIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "authoritativeArtifacts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "historicalDecisionReferences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "completedVerification": {
       "type": "array",
       "items": {
         "type": "string"
