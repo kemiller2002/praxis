@@ -154,6 +154,23 @@ module LifecycleTests =
                   Assert.equal "theirs" artifact.Sha256
                   Assert.equal Ownership.UserOwned artifact.Ownership }
 
+          { Name = "shared ownership can adopt a previously tool-owned file without overwriting sibling capability regions"
+            Run =
+              fun () ->
+                  let payload = [ entry "AGENTS.md" Ownership.Shared "ros-seed" ]
+                  let state =
+                      observed
+                          [ "AGENTS.md", "ros-seed-plus-sibling-managed-regions" ]
+                          (Some [ recordedArtifact "AGENTS.md" Ownership.ToolOwned "ros-seed" ])
+
+                  let installation = Planning.initialize "greenfield" "pkg" "3.1.1" payload state
+                  Assert.empty (Plan.blockingConflicts installation.Plan)
+                  Assert.equal [ "AGENTS.md" ] installation.Plan.Preserved
+
+                  let artifact = Assert.single installation.Manifest.ManagedArtifacts
+                  Assert.equal Ownership.Shared artifact.Ownership
+                  Assert.equal "ros-seed-plus-sibling-managed-regions" artifact.Sha256 }
+
           { Name = "an installation already at the current configuration version needs no migration"
             Run = fun () -> Assert.empty (Migration.path Migration.CurrentConfigurationVersion |> Result.defaultValue [ Unchecked.defaultof<_> ]) }
 

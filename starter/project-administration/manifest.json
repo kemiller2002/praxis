@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "profile": "project-administration",
   "files": [
-    {"source": "AGENTS.md", "destination": "AGENTS.md", "template": false},
+    {"source": "AGENTS.md", "destination": "AGENTS.md", "template": false, "ownership": "shared"},
     {"source": "CLAUDE.md", "destination": "CLAUDE.md", "template": false, "policy": "preserve-existing"},
     {"source": "GEMINI.md", "destination": "GEMINI.md", "template": false, "policy": "preserve-existing"},
     {"source": ".github/copilot-instructions.md", "destination": ".github/copilot-instructions.md", "template": false, "policy": "preserve-existing"},

@@ -52,6 +52,10 @@ launcher `init` leaves behind — no npx, no network, no flags:
 ./ros upgrade     # update to this CLI's version
 ```
 
+## New in 3.1.1
+
+- **Cross-capability `AGENTS.md` ownership:** ROS now seeds `AGENTS.md` as a shared file so sibling Echelon capabilities such as Visual Engineering and Communication Engineering can maintain their own marked regions without making the ROS installation invalid. Running `ros init` with 3.1.1 preserves the current file bytes and updates the installation record to shared ownership.
+
 ## New in 3.1
 
 - **Executable Ordo observation:** ingest versioned `ordo.resolution-observation` v2 records without taking over Ordo's semantic authority.
