@@ -52,6 +52,11 @@ launcher `init` leaves behind — no npx, no network, no flags:
 ./ros upgrade     # update to this CLI's version
 ```
 
+## New in 3.1.3
+
+- **Launcher version authority:** installed repositories now launch the version recorded in `.echelon/ros.json`; `ros.json.rosVersion` is only the legacy fallback. An upgrade therefore cannot leave a current installation using an obsolete or snapshot launcher pin.
+- **Portable distributed documentation:** consumer copies of `docs/work-protocol.md` no longer contain source-repository-relative links that break after installation.
+
 ## New in 3.1.2
 
 - **Real legacy adoption:** `ros upgrade` now reads the file hashes and profile recorded in `.ros/installation.json`, so repositories installed by older ROS releases can be adopted safely. Untouched legacy tool-owned files can advance, local edits still block, and the original installation profile is preserved.
@@ -161,7 +166,7 @@ than on human-readable text. See [`docs/cli.md`](docs/cli.md#agent-usage).
 | `ros.json` | The repository's configuration. Yours to edit. |
 | `.echelon/ros.json` | The installation manifest: what is installed, at which version, and which artifacts it manages. |
 | `.ros/` | Work context, events, backlog and telemetry. |
-| `./ros` | The repository's own launcher for this CLI, pinned to the version in `ros.json`. |
+| `./ros` | The repository's own launcher. Current installs use `.echelon/ros.json.installedVersion`; legacy installs fall back to `ros.json.rosVersion`. |
 
 `.echelon/` is the shared Echelon Foundry root. Each tool owns its own manifest
 there and they coexist cleanly.
