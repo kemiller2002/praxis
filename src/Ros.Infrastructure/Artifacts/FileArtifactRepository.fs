@@ -25,7 +25,12 @@ module FileArtifactRepository =
                 if not (Directory.Exists directory) then
                     []
                 else
-                    Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories)
+                    let searchOption =
+                        match configuration.Kind with
+                        | ArtifactKind.Mission -> SearchOption.AllDirectories
+                        | _ -> SearchOption.TopDirectoryOnly
+
+                    Directory.EnumerateFiles(directory, "*", searchOption)
                     |> Seq.filter (fun file ->
                         Path.GetExtension(file) = ".md"
                         && not (Path.GetFileName(file).StartsWith(".", StringComparison.Ordinal)))

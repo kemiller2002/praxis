@@ -52,6 +52,10 @@ launcher `init` leaves behind — no npx, no network, no flags:
 ./ros upgrade     # update to this CLI's version
 ```
 
+## New in 3.1.5
+
+- **Canonical artifact root scope:** ROS now treats Markdown files directly inside each canonical artifact directory as artifact records. Nested folders beneath those roots are supporting experiment/workspace material and are not recursively reclassified as canonical artifacts. This prevents protocols, packets, reports, vendored dependencies, and other workspace Markdown from requiring ROS artifact front matter while preserving validation of actual canonical records.
+
 ## New in 3.1.4
 
 - **Legacy research-package compatibility:** established `RP-...-YYYY-NNN` and `REP-...-YYYY-NNN` package identifiers remain valid, including their historical exact `ID.md` filenames. New artifacts should still use the current canonical identifier format. The compatibility rule is intentionally limited to research packages and does not widen evidence, hypothesis, theory, experiment, decision, concept, glossary, or mission IDs.

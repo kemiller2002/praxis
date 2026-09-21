@@ -111,6 +111,18 @@ module ArtifactTests =
                     FileArtifactRepository.create fixture
                     |> artifactFindings
                     |> Assert.empty) }
+          { Name = "nested experiment workspace markdown is not treated as a canonical artifact"
+            Run = fun () ->
+                withFixture "valid-all-kinds" (fun fixture ->
+                    let workspace = Path.Combine(fixture, "research", "experiments", "FE-013-workspace")
+                    Directory.CreateDirectory workspace |> ignore
+                    File.WriteAllText(Path.Combine(workspace, "protocol.md"), "# Experiment protocol\n\nSupporting operational material only.\n")
+                    File.WriteAllText(Path.Combine(workspace, "notes.md"), "# Notes\n\nNo ROS artifact front matter is required here.\n")
+
+                    FileArtifactRepository.create fixture
+                    |> artifactFindings
+                    |> Assert.empty) }
+
           { Name = "invalid fixture preserves characterized finding identities"
             Run = fun () ->
                 withFixture "invalid-mixed" (fun fixture ->
