@@ -63,7 +63,20 @@ type LifecycleFailure =
 /// `Apply` or `RecordManifest`.
 [<RequireQualifiedAccess>]
 module Lifecycle =
+    let private requestForInstalledProfile environment (request: LifecycleRequest) =
+        let observed = environment.Observe request.Root []
+
+        let profile =
+            observed.Manifest
+            |> Option.orElse observed.LegacyManifest
+            |> Option.map (fun manifest -> manifest.Profile)
+            |> Option.defaultValue request.Profile
+
+        { request with Profile = profile }
+
     let private payloadOf environment request =
+        let request = requestForInstalledProfile environment request
+
         match environment.LoadPayload request with
         | None ->
             Error(
@@ -76,6 +89,8 @@ module Lifecycle =
     /// Inspect the repository without the packaged scaffold. The foundation of
     /// every read-only command.
     let inspectRepository environment (request: LifecycleRequest) : ObservedRepository =
+        let request = requestForInstalledProfile environment request
+
         let payloadPaths =
             match environment.LoadPayload request with
             | Some(Ok payload) -> environment.PayloadEntries payload |> List.map (fun entry -> entry.Path)
@@ -175,6 +190,8 @@ module Lifecycle =
 
     /// `doctor`, and the shared basis of `verify` and `status`.
     let diagnose environment request (availableVersion: string) : Diagnosis list =
+        let request = requestForInstalledProfile environment request
+
         let payloadEntries =
             match environment.LoadPayload request with
             | Some(Ok payload) -> Some(environment.PayloadEntries payload)
