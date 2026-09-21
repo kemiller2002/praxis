@@ -52,6 +52,10 @@ launcher `init` leaves behind — no npx, no network, no flags:
 ./ros upgrade     # update to this CLI's version
 ```
 
+## New in 3.1.2
+
+- **Real legacy adoption:** `ros upgrade` now reads the file hashes and profile recorded in `.ros/installation.json`, so repositories installed by older ROS releases can be adopted safely. Untouched legacy tool-owned files can advance, local edits still block, and the original installation profile is preserved.
+
 ## New in 3.1.1
 
 - **Cross-capability `AGENTS.md` ownership:** ROS now seeds `AGENTS.md` as a shared file so sibling Echelon capabilities such as Visual Engineering and Communication Engineering can maintain their own marked regions without making the ROS installation invalid. Running `ros init` with 3.1.1 preserves the current file bytes and updates the installation record to shared ownership.
