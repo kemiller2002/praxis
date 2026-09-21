@@ -55,7 +55,7 @@ launcher `init` leaves behind — no npx, no network, no flags:
 ## New in 3.1.3
 
 - **Launcher version authority:** installed repositories now launch the version recorded in `.echelon/ros.json`; `ros.json.rosVersion` is only the legacy fallback. An upgrade therefore cannot leave a current installation using an obsolete or snapshot launcher pin.
-- **Portable distributed documentation:** consumer copies of `docs/work-protocol.md` no longer contain source-repository-relative links that break after installation.
+- **Portable distributed documentation:** consumer copies of `docs/work-protocol.md` no longer contain source-repository-relative links that break after installation.\n- **Customizable validation integration:** `.github/workflows/ros-validation.yml` is now seeded as shared integration state, so repositories can wrap or strengthen ROS validation without blocking later upgrades.
 
 ## New in 3.1.2
 
