@@ -2,93 +2,465 @@
   "schema_version": "1.0.0",
   "profile": "greenfield",
   "files": [
-    {"source": "AGENTS.md", "destination": "AGENTS.md", "template": false, "ownership": "shared"},
-    {"source": "CLAUDE.md", "destination": "CLAUDE.md", "template": false, "policy": "preserve-existing"},
-    {"source": "GEMINI.md", "destination": "GEMINI.md", "template": false, "policy": "preserve-existing"},
-    {"source": ".github/copilot-instructions.md", "destination": ".github/copilot-instructions.md", "template": false, "policy": "preserve-existing"},
-    {"source": "BOOTSTRAP.md", "destination": "BOOTSTRAP.md", "template": false},
-    {"source": "starter/greenfield/editorconfig.template", "destination": ".editorconfig", "template": false, "policy": "preserve-existing"},
-    {"source": "starter/greenfield/gitattributes.template", "destination": ".gitattributes", "template": false, "policy": "preserve-existing"},
-    {"source": "starter/greenfield/gitignore.template", "destination": ".gitignore", "template": false, "policy": "preserve-existing"},
-    {"source": "starter/greenfield/ros", "destination": "ros", "template": false, "executable": true},
-    {"source": "starter/greenfield/tools/ros_fs_launcher.mjs", "destination": "tools/ros_fs_launcher.mjs", "template": false},
-    {"source": "starter/greenfield/.github/workflows/ros-validation.yml", "destination": ".github/workflows/ros-validation.yml", "template": false, "integration": "github-actions"},
-    {"source": "starter/greenfield/ros.json", "destination": "ros.json", "template": true},
-    {"source": "starter/greenfield/README.md", "destination": "README.md", "template": true, "policy": "preserve-existing"},
-    {"source": "starter/greenfield/PROJECT-CHARTER.md", "destination": "PROJECT-CHARTER.md", "template": true},
-    {"source": "starter/greenfield/HANDOFF.md", "destination": "HANDOFF.md", "template": true},
-    {"source": "starter/greenfield/context/CURRENT-STATE.md", "destination": "context/CURRENT-STATE.md", "template": true},
-    {"source": "starter/greenfield/context/ARCHITECTURE.md", "destination": "context/ARCHITECTURE.md", "template": true},
-    {"source": "starter/greenfield/context/DECISIONS.md", "destination": "context/DECISIONS.md", "template": true},
-    {"source": "starter/greenfield/context/KNOWN-RISKS.md", "destination": "context/KNOWN-RISKS.md", "template": true},
-    {"source": "starter/greenfield/context/RESEARCH-QUEUE.md", "destination": "context/RESEARCH-QUEUE.md", "template": true},
-    {"source": "starter/greenfield/docs/PILOT-MEASUREMENT-PLAN.md", "destination": "docs/PILOT-MEASUREMENT-PLAN.md", "template": true},
-    {"source": "starter/greenfield/docs/architecture/README.md", "destination": "docs/architecture/README.md", "template": true},
-    {"source": "starter/greenfield/docs/decisions/README.md", "destination": "docs/decisions/README.md", "template": true},
-    {"source": "starter/greenfield/research/frontier/README.md", "destination": "research/frontier/README.md", "template": true},
-    {"source": "starter/greenfield/empty.keep", "destination": "research/decisions/.gitkeep", "template": false},
-    {"source": "starter/greenfield/empty.keep", "destination": "research/evidence/.gitkeep", "template": false},
-    {"source": "starter/greenfield/empty.keep", "destination": "research/experiments/.gitkeep", "template": false},
-    {"source": "starter/greenfield/empty.keep", "destination": "research/hypotheses/.gitkeep", "template": false},
-    {"source": "starter/greenfield/empty.keep", "destination": "research/journals/.gitkeep", "template": false},
-    {"source": "starter/greenfield/empty.keep", "destination": "research/packages/.gitkeep", "template": false},
-    {"source": "starter/greenfield/empty.keep", "destination": "research/theories/.gitkeep", "template": false},
-    {"source": "starter/greenfield/empty.keep", "destination": "missions/active/.gitkeep", "template": false},
-    {"source": "starter/greenfield/empty.keep", "destination": "missions/backlog/.gitkeep", "template": false},
-    {"source": "starter/greenfield/empty.keep", "destination": "missions/completed/.gitkeep", "template": false},
-    {"source": "docs/00-governance/README.md", "destination": "docs/00-governance/README.md", "template": false},
-    {"source": "docs/00-governance/AI-Repository-Operating-System.md", "destination": "docs/00-governance/AI-Repository-Operating-System.md", "template": false},
-    {"source": "docs/00-governance/Agent-Operating-Manual.md", "destination": "docs/00-governance/Agent-Operating-Manual.md", "template": false},
-    {"source": "docs/00-governance/Engineering-Standards.md", "destination": "docs/00-governance/Engineering-Standards.md", "template": false},
-    {"source": "docs/00-governance/Research-Execution-Package-Specification.md", "destination": "docs/00-governance/Research-Execution-Package-Specification.md", "template": false},
-    {"source": "docs/00-governance/Governance-Decision-Log.md", "destination": "docs/00-governance/Governance-Decision-Log.md", "template": false},
-    {"source": "framework/REP-SPECIFICATION.md", "destination": "framework/REP-SPECIFICATION.md", "template": false},
-    {"source": "framework/policies/EVIDENCE-POLICY.md", "destination": "framework/policies/EVIDENCE-POLICY.md", "template": false},
-    {"source": "framework/policies/OUTPUT-POLICY.md", "destination": "framework/policies/OUTPUT-POLICY.md", "template": false},
-    {"source": "framework/policies/RESEARCH-POLICY.md", "destination": "framework/policies/RESEARCH-POLICY.md", "template": false},
-    {"source": "framework/protocols/ARTIFACT-LIFECYCLE.md", "destination": "framework/protocols/ARTIFACT-LIFECYCLE.md", "template": false},
-    {"source": "framework/protocols/SUPERSESSION.md", "destination": "framework/protocols/SUPERSESSION.md", "template": false},
-    {"source": "framework/standards/ARTIFACT-TIERS.md", "destination": "framework/standards/ARTIFACT-TIERS.md", "template": false},
-    {"source": "framework/standards/CONFIDENCE.md", "destination": "framework/standards/CONFIDENCE.md", "template": false},
-    {"source": "framework/standards/IDENTIFIERS.md", "destination": "framework/standards/IDENTIFIERS.md", "template": false},
-    {"source": "framework/standards/NAMING-STANDARD.md", "destination": "framework/standards/NAMING-STANDARD.md", "template": false},
-    {"source": "framework/standards/TAXONOMY.md", "destination": "framework/standards/TAXONOMY.md", "template": false},
-    {"source": "telemetry/metrics.json", "destination": "telemetry/metrics.json", "template": false, "ownership": "shared"},
-    {"source": "templates/missions/MISSION-TEMPLATE.md", "destination": "templates/missions/MISSION-TEMPLATE.md", "template": false},
-    {"source": "templates/research/EVIDENCE-TEMPLATE.md", "destination": "templates/research/EVIDENCE-TEMPLATE.md", "template": false},
-    {"source": "templates/research/EXPERIMENT-TEMPLATE.md", "destination": "templates/research/EXPERIMENT-TEMPLATE.md", "template": false},
-    {"source": "templates/research/HYPOTHESIS-TEMPLATE.md", "destination": "templates/research/HYPOTHESIS-TEMPLATE.md", "template": false},
-    {"source": "templates/research/JOURNAL-TEMPLATE.md", "destination": "templates/research/JOURNAL-TEMPLATE.md", "template": false},
-    {"source": "templates/research/REP-TEMPLATE.md", "destination": "templates/research/REP-TEMPLATE.md", "template": false},
-    {"source": "templates/research/THEORY-TEMPLATE.md", "destination": "templates/research/THEORY-TEMPLATE.md", "template": false},
-    {"source": "schemas/artifact-metadata.schema.json", "destination": "schemas/artifact-metadata.schema.json", "template": false},
-    {"source": "schemas/evidence.schema.json", "destination": "schemas/evidence.schema.json", "template": false},
-    {"source": "schemas/experiment.schema.json", "destination": "schemas/experiment.schema.json", "template": false},
-    {"source": "schemas/hypothesis.schema.json", "destination": "schemas/hypothesis.schema.json", "template": false},
-    {"source": "schemas/journal.schema.json", "destination": "schemas/journal.schema.json", "template": false},
-    {"source": "schemas/mission.schema.json", "destination": "schemas/mission.schema.json", "template": false},
-    {"source": "schemas/rep.schema.json", "destination": "schemas/rep.schema.json", "template": false},
-    {"source": "schemas/theory.schema.json", "destination": "schemas/theory.schema.json", "template": false},
-    {"source": "schemas/work-protocol.schema.json", "destination": "schemas/work-protocol.schema.json", "template": false},
-    {"source": "schemas/execution-telemetry.schema.json", "destination": "schemas/execution-telemetry.schema.json", "template": false},
-    {"source": "schemas/work-adapter-request.schema.json", "destination": "schemas/work-adapter-request.schema.json", "template": false},
-    {"source": "schemas/work-adapter-result.schema.json", "destination": "schemas/work-adapter-result.schema.json", "template": false},
-    {"source": "schemas/ros-resolution-assessment.schema.json", "destination": "schemas/ros-resolution-assessment.schema.json", "template": false},
-    {"source": "schemas/ros-search-observation.schema.json", "destination": "schemas/ros-search-observation.schema.json", "template": false},
-    {"source": "schemas/ros-effect-observation.schema.json", "destination": "schemas/ros-effect-observation.schema.json", "template": false},
-    {"source": "schemas/ros-effective-current.schema.json", "destination": "schemas/ros-effective-current.schema.json", "template": false},
-    {"source": "schemas/ros-handoff-authority.schema.json", "destination": "schemas/ros-handoff-authority.schema.json", "template": false},
-    {"source": "docs/ordo-observation.md", "destination": "docs/ordo-observation.md", "template": false},
-    {"source": "docs/work-protocol.md", "destination": "docs/work-protocol.md", "template": false},
-    {"source": "docs/development-telemetry.md", "destination": "docs/development-telemetry.md", "template": false},
-    {"source": "docs/work-adapter-contract.md", "destination": "docs/work-adapter-contract.md", "template": false},
-    {"source": "starter/greenfield/registries/decisions.json", "destination": "registries/decisions.json", "template": false, "ownership": "generated"},
-    {"source": "starter/greenfield/registries/evidence.json", "destination": "registries/evidence.json", "template": false, "ownership": "generated"},
-    {"source": "starter/greenfield/registries/experiments.json", "destination": "registries/experiments.json", "template": false, "ownership": "generated"},
-    {"source": "starter/greenfield/registries/hypotheses.json", "destination": "registries/hypotheses.json", "template": false, "ownership": "generated"},
-    {"source": "starter/greenfield/registries/journals.json", "destination": "registries/journals.json", "template": false, "ownership": "generated"},
-    {"source": "starter/greenfield/registries/missions.json", "destination": "registries/missions.json", "template": false, "ownership": "generated"},
-    {"source": "starter/greenfield/registries/research-packages.json", "destination": "registries/research-packages.json", "template": false, "ownership": "generated"},
-    {"source": "starter/greenfield/registries/theories.json", "destination": "registries/theories.json", "template": false, "ownership": "generated"}
+    {
+      "source": "AGENTS.md",
+      "destination": "AGENTS.md",
+      "template": false,
+      "ownership": "shared"
+    },
+    {
+      "source": "CLAUDE.md",
+      "destination": "CLAUDE.md",
+      "template": false,
+      "policy": "preserve-existing"
+    },
+    {
+      "source": "GEMINI.md",
+      "destination": "GEMINI.md",
+      "template": false,
+      "policy": "preserve-existing"
+    },
+    {
+      "source": ".github/copilot-instructions.md",
+      "destination": ".github/copilot-instructions.md",
+      "template": false,
+      "policy": "preserve-existing"
+    },
+    {
+      "source": "BOOTSTRAP.md",
+      "destination": "BOOTSTRAP.md",
+      "template": false
+    },
+    {
+      "source": "starter/greenfield/editorconfig.template",
+      "destination": ".editorconfig",
+      "template": false,
+      "policy": "preserve-existing"
+    },
+    {
+      "source": "starter/greenfield/gitattributes.template",
+      "destination": ".gitattributes",
+      "template": false,
+      "policy": "preserve-existing"
+    },
+    {
+      "source": "starter/greenfield/gitignore.template",
+      "destination": ".gitignore",
+      "template": false,
+      "policy": "preserve-existing"
+    },
+    {
+      "source": "starter/greenfield/ros",
+      "destination": "ros",
+      "template": false,
+      "executable": true
+    },
+    {
+      "source": "starter/greenfield/tools/ros_fs_launcher.mjs",
+      "destination": "tools/ros_fs_launcher.mjs",
+      "template": false
+    },
+    {
+      "source": "starter/greenfield/.github/workflows/ros-validation.yml",
+      "destination": ".github/workflows/ros-validation.yml",
+      "template": false,
+      "integration": "github-actions",
+      "ownership": "shared"
+    },
+    {
+      "source": "starter/greenfield/ros.json",
+      "destination": "ros.json",
+      "template": true
+    },
+    {
+      "source": "starter/greenfield/README.md",
+      "destination": "README.md",
+      "template": true,
+      "policy": "preserve-existing"
+    },
+    {
+      "source": "starter/greenfield/PROJECT-CHARTER.md",
+      "destination": "PROJECT-CHARTER.md",
+      "template": true
+    },
+    {
+      "source": "starter/greenfield/HANDOFF.md",
+      "destination": "HANDOFF.md",
+      "template": true
+    },
+    {
+      "source": "starter/greenfield/context/CURRENT-STATE.md",
+      "destination": "context/CURRENT-STATE.md",
+      "template": true
+    },
+    {
+      "source": "starter/greenfield/context/ARCHITECTURE.md",
+      "destination": "context/ARCHITECTURE.md",
+      "template": true
+    },
+    {
+      "source": "starter/greenfield/context/DECISIONS.md",
+      "destination": "context/DECISIONS.md",
+      "template": true
+    },
+    {
+      "source": "starter/greenfield/context/KNOWN-RISKS.md",
+      "destination": "context/KNOWN-RISKS.md",
+      "template": true
+    },
+    {
+      "source": "starter/greenfield/context/RESEARCH-QUEUE.md",
+      "destination": "context/RESEARCH-QUEUE.md",
+      "template": true
+    },
+    {
+      "source": "starter/greenfield/docs/PILOT-MEASUREMENT-PLAN.md",
+      "destination": "docs/PILOT-MEASUREMENT-PLAN.md",
+      "template": true
+    },
+    {
+      "source": "starter/greenfield/docs/architecture/README.md",
+      "destination": "docs/architecture/README.md",
+      "template": true
+    },
+    {
+      "source": "starter/greenfield/docs/decisions/README.md",
+      "destination": "docs/decisions/README.md",
+      "template": true
+    },
+    {
+      "source": "starter/greenfield/research/frontier/README.md",
+      "destination": "research/frontier/README.md",
+      "template": true
+    },
+    {
+      "source": "starter/greenfield/empty.keep",
+      "destination": "research/decisions/.gitkeep",
+      "template": false
+    },
+    {
+      "source": "starter/greenfield/empty.keep",
+      "destination": "research/evidence/.gitkeep",
+      "template": false
+    },
+    {
+      "source": "starter/greenfield/empty.keep",
+      "destination": "research/experiments/.gitkeep",
+      "template": false
+    },
+    {
+      "source": "starter/greenfield/empty.keep",
+      "destination": "research/hypotheses/.gitkeep",
+      "template": false
+    },
+    {
+      "source": "starter/greenfield/empty.keep",
+      "destination": "research/journals/.gitkeep",
+      "template": false
+    },
+    {
+      "source": "starter/greenfield/empty.keep",
+      "destination": "research/packages/.gitkeep",
+      "template": false
+    },
+    {
+      "source": "starter/greenfield/empty.keep",
+      "destination": "research/theories/.gitkeep",
+      "template": false
+    },
+    {
+      "source": "starter/greenfield/empty.keep",
+      "destination": "missions/active/.gitkeep",
+      "template": false
+    },
+    {
+      "source": "starter/greenfield/empty.keep",
+      "destination": "missions/backlog/.gitkeep",
+      "template": false
+    },
+    {
+      "source": "starter/greenfield/empty.keep",
+      "destination": "missions/completed/.gitkeep",
+      "template": false
+    },
+    {
+      "source": "docs/00-governance/README.md",
+      "destination": "docs/00-governance/README.md",
+      "template": false
+    },
+    {
+      "source": "docs/00-governance/AI-Repository-Operating-System.md",
+      "destination": "docs/00-governance/AI-Repository-Operating-System.md",
+      "template": false
+    },
+    {
+      "source": "docs/00-governance/Agent-Operating-Manual.md",
+      "destination": "docs/00-governance/Agent-Operating-Manual.md",
+      "template": false
+    },
+    {
+      "source": "docs/00-governance/Engineering-Standards.md",
+      "destination": "docs/00-governance/Engineering-Standards.md",
+      "template": false
+    },
+    {
+      "source": "docs/00-governance/Research-Execution-Package-Specification.md",
+      "destination": "docs/00-governance/Research-Execution-Package-Specification.md",
+      "template": false
+    },
+    {
+      "source": "docs/00-governance/Governance-Decision-Log.md",
+      "destination": "docs/00-governance/Governance-Decision-Log.md",
+      "template": false
+    },
+    {
+      "source": "framework/REP-SPECIFICATION.md",
+      "destination": "framework/REP-SPECIFICATION.md",
+      "template": false
+    },
+    {
+      "source": "framework/policies/EVIDENCE-POLICY.md",
+      "destination": "framework/policies/EVIDENCE-POLICY.md",
+      "template": false
+    },
+    {
+      "source": "framework/policies/OUTPUT-POLICY.md",
+      "destination": "framework/policies/OUTPUT-POLICY.md",
+      "template": false
+    },
+    {
+      "source": "framework/policies/RESEARCH-POLICY.md",
+      "destination": "framework/policies/RESEARCH-POLICY.md",
+      "template": false
+    },
+    {
+      "source": "framework/protocols/ARTIFACT-LIFECYCLE.md",
+      "destination": "framework/protocols/ARTIFACT-LIFECYCLE.md",
+      "template": false
+    },
+    {
+      "source": "framework/protocols/SUPERSESSION.md",
+      "destination": "framework/protocols/SUPERSESSION.md",
+      "template": false
+    },
+    {
+      "source": "framework/standards/ARTIFACT-TIERS.md",
+      "destination": "framework/standards/ARTIFACT-TIERS.md",
+      "template": false
+    },
+    {
+      "source": "framework/standards/CONFIDENCE.md",
+      "destination": "framework/standards/CONFIDENCE.md",
+      "template": false
+    },
+    {
+      "source": "framework/standards/IDENTIFIERS.md",
+      "destination": "framework/standards/IDENTIFIERS.md",
+      "template": false
+    },
+    {
+      "source": "framework/standards/NAMING-STANDARD.md",
+      "destination": "framework/standards/NAMING-STANDARD.md",
+      "template": false
+    },
+    {
+      "source": "framework/standards/TAXONOMY.md",
+      "destination": "framework/standards/TAXONOMY.md",
+      "template": false
+    },
+    {
+      "source": "telemetry/metrics.json",
+      "destination": "telemetry/metrics.json",
+      "template": false,
+      "ownership": "shared"
+    },
+    {
+      "source": "templates/missions/MISSION-TEMPLATE.md",
+      "destination": "templates/missions/MISSION-TEMPLATE.md",
+      "template": false
+    },
+    {
+      "source": "templates/research/EVIDENCE-TEMPLATE.md",
+      "destination": "templates/research/EVIDENCE-TEMPLATE.md",
+      "template": false
+    },
+    {
+      "source": "templates/research/EXPERIMENT-TEMPLATE.md",
+      "destination": "templates/research/EXPERIMENT-TEMPLATE.md",
+      "template": false
+    },
+    {
+      "source": "templates/research/HYPOTHESIS-TEMPLATE.md",
+      "destination": "templates/research/HYPOTHESIS-TEMPLATE.md",
+      "template": false
+    },
+    {
+      "source": "templates/research/JOURNAL-TEMPLATE.md",
+      "destination": "templates/research/JOURNAL-TEMPLATE.md",
+      "template": false
+    },
+    {
+      "source": "templates/research/REP-TEMPLATE.md",
+      "destination": "templates/research/REP-TEMPLATE.md",
+      "template": false
+    },
+    {
+      "source": "templates/research/THEORY-TEMPLATE.md",
+      "destination": "templates/research/THEORY-TEMPLATE.md",
+      "template": false
+    },
+    {
+      "source": "schemas/artifact-metadata.schema.json",
+      "destination": "schemas/artifact-metadata.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/evidence.schema.json",
+      "destination": "schemas/evidence.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/experiment.schema.json",
+      "destination": "schemas/experiment.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/hypothesis.schema.json",
+      "destination": "schemas/hypothesis.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/journal.schema.json",
+      "destination": "schemas/journal.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/mission.schema.json",
+      "destination": "schemas/mission.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/rep.schema.json",
+      "destination": "schemas/rep.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/theory.schema.json",
+      "destination": "schemas/theory.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/work-protocol.schema.json",
+      "destination": "schemas/work-protocol.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/execution-telemetry.schema.json",
+      "destination": "schemas/execution-telemetry.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/work-adapter-request.schema.json",
+      "destination": "schemas/work-adapter-request.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/work-adapter-result.schema.json",
+      "destination": "schemas/work-adapter-result.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/ros-resolution-assessment.schema.json",
+      "destination": "schemas/ros-resolution-assessment.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/ros-search-observation.schema.json",
+      "destination": "schemas/ros-search-observation.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/ros-effect-observation.schema.json",
+      "destination": "schemas/ros-effect-observation.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/ros-effective-current.schema.json",
+      "destination": "schemas/ros-effective-current.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/ros-handoff-authority.schema.json",
+      "destination": "schemas/ros-handoff-authority.schema.json",
+      "template": false
+    },
+    {
+      "source": "docs/ordo-observation.md",
+      "destination": "docs/ordo-observation.md",
+      "template": false
+    },
+    {
+      "source": "docs/work-protocol.md",
+      "destination": "docs/work-protocol.md",
+      "template": false
+    },
+    {
+      "source": "docs/development-telemetry.md",
+      "destination": "docs/development-telemetry.md",
+      "template": false
+    },
+    {
+      "source": "docs/work-adapter-contract.md",
+      "destination": "docs/work-adapter-contract.md",
+      "template": false
+    },
+    {
+      "source": "starter/greenfield/registries/decisions.json",
+      "destination": "registries/decisions.json",
+      "template": false,
+      "ownership": "generated"
+    },
+    {
+      "source": "starter/greenfield/registries/evidence.json",
+      "destination": "registries/evidence.json",
+      "template": false,
+      "ownership": "generated"
+    },
+    {
+      "source": "starter/greenfield/registries/experiments.json",
+      "destination": "registries/experiments.json",
+      "template": false,
+      "ownership": "generated"
+    },
+    {
+      "source": "starter/greenfield/registries/hypotheses.json",
+      "destination": "registries/hypotheses.json",
+      "template": false,
+      "ownership": "generated"
+    },
+    {
+      "source": "starter/greenfield/registries/journals.json",
+      "destination": "registries/journals.json",
+      "template": false,
+      "ownership": "generated"
+    },
+    {
+      "source": "starter/greenfield/registries/missions.json",
+      "destination": "registries/missions.json",
+      "template": false,
+      "ownership": "generated"
+    },
+    {
+      "source": "starter/greenfield/registries/research-packages.json",
+      "destination": "registries/research-packages.json",
+      "template": false,
+      "ownership": "generated"
+    },
+    {
+      "source": "starter/greenfield/registries/theories.json",
+      "destination": "registries/theories.json",
+      "template": false,
+      "ownership": "generated"
+    }
   ]
 }
