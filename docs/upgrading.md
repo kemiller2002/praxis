@@ -56,9 +56,12 @@ not, without writing anything.
 
 Adopts the `.echelon/ros.json` installation manifest. Its precondition is that
 a real installation exists to adopt — either `.ros/installation.json` or an
-existing `.echelon/ros.json`. The legacy snapshot is **left in place**, not
-deleted, so `ros-bootstrap verify` keeps working against the same repository
-afterwards.
+existing `.echelon/ros.json`. For a legacy snapshot, ROS reads its recorded
+file hashes as prior ownership evidence and preserves its recorded profile.
+That lets an untouched old tool-owned file advance while still blocking a file
+that was edited after the legacy install. The legacy snapshot is **left in
+place**, not deleted, so `ros-bootstrap verify` keeps working against the same
+repository afterwards.
 
 ## What upgrade does to your files
 
@@ -115,8 +118,8 @@ artifact rather than the source tree:
 
 - uninstalled → current (`init`)
 - current → current is a byte-identical no-op (idempotency)
-- legacy (`ros-bootstrap`) → current, with a locally edited shared file
-  surviving intact and the legacy snapshot left in place
+- legacy (`ros-bootstrap`) → current, including older recorded tool-owned bytes,
+  local-edit blocking, profile preservation, and the legacy snapshot left in place
 - a configuration version newer than the CLI is refused
 - a damaged installation fails `verify` and is explained by `doctor`
 - a locally modified tool-owned file blocks `init` and survives

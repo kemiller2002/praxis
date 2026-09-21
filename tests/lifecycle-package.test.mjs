@@ -462,6 +462,84 @@ test("a legacy ros-bootstrap installation upgrades, keeping user edits and the l
   assert.deepEqual(legacyVerify(), legacyBefore, "upgrade must be invisible to ros-bootstrap verify");
 });
 
+test("upgrade adopts an older legacy snapshot using its recorded tool-owned hashes", (t) => {
+  const root = repository(t, "upgrade-real-legacy");
+  const { root: packageRoot } = packedPackage();
+
+  const legacy = spawnSync(
+    process.execPath,
+    [path.join(packageRoot, "bin", "ros-bootstrap.mjs"), "init", "--target", root, "--project", "Older Legacy"],
+    { encoding: "utf8", env: cliEnvironment }
+  );
+  assert.equal(legacy.status, 0, legacy.stderr);
+
+  const legacyPath = path.join(root, ".ros", "installation.json");
+  const snapshot = JSON.parse(fs.readFileSync(legacyPath, "utf8"));
+  const bootstrap = snapshot.files.find((entry) => entry.path === "BOOTSTRAP.md");
+  assert.ok(bootstrap && bootstrap.managed, "fixture must contain a managed BOOTSTRAP.md");
+
+  const oldBytes = "# BOOTSTRAP from ROS 2.x\n";
+  fs.writeFileSync(path.join(root, "BOOTSTRAP.md"), oldBytes);
+  bootstrap.sha256 = crypto.createHash("sha256").update(oldBytes).digest("hex");
+  snapshot.package_version = "2.0.0";
+  fs.writeFileSync(legacyPath, `${JSON.stringify(snapshot, null, 2)}\n`);
+
+  const upgraded = ros(root, ["upgrade"]);
+  assert.equal(upgraded.status, 0, upgraded.stderr);
+  assert.notEqual(fs.readFileSync(path.join(root, "BOOTSTRAP.md"), "utf8"), oldBytes);
+
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, ".echelon", "ros.json"), "utf8"));
+  assert.equal(manifest.installedVersion, packageMetadata.version);
+  assert.equal(manifest.configurationVersion, 1);
+  assert.equal(ros(root, ["verify", "--strict"]).status, 0);
+});
+
+test("upgrade blocks a locally edited file from an older legacy snapshot", (t) => {
+  const root = repository(t, "upgrade-real-legacy-local-edit");
+  const { root: packageRoot } = packedPackage();
+
+  const legacy = spawnSync(
+    process.execPath,
+    [path.join(packageRoot, "bin", "ros-bootstrap.mjs"), "init", "--target", root, "--project", "Older Legacy Edited"],
+    { encoding: "utf8", env: cliEnvironment }
+  );
+  assert.equal(legacy.status, 0, legacy.stderr);
+
+  const target = path.join(root, "BOOTSTRAP.md");
+  const edited = fs.readFileSync(target, "utf8") + "\nlocal change after legacy installation\n";
+  fs.writeFileSync(target, edited);
+
+  const result = ros(root, ["upgrade"]);
+  assert.equal(result.status, 5);
+  assert.match(result.stderr, /tool-owned file was modified locally/);
+  assert.equal(fs.readFileSync(target, "utf8"), edited);
+  assert.ok(!fs.existsSync(path.join(root, ".echelon", "ros.json")), "blocked upgrade must not claim a current installation");
+});
+
+test("legacy profile is authoritative during adoption", (t) => {
+  const root = repository(t, "upgrade-legacy-profile");
+  const { root: packageRoot } = packedPackage();
+
+  const legacy = spawnSync(
+    process.execPath,
+    [path.join(packageRoot, "bin", "ros-bootstrap.mjs"), "init", "--target", root, "--project", "Legacy Profile"],
+    { encoding: "utf8", env: cliEnvironment }
+  );
+  assert.equal(legacy.status, 0, legacy.stderr);
+
+  const legacyPath = path.join(root, ".ros", "installation.json");
+  const snapshot = JSON.parse(fs.readFileSync(legacyPath, "utf8"));
+  snapshot.profile = "project-administration";
+  fs.writeFileSync(legacyPath, `${JSON.stringify(snapshot, null, 2)}\n`);
+
+  const upgraded = ros(root, ["upgrade"]);
+  assert.equal(upgraded.status, 0, upgraded.stderr);
+
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, ".echelon", "ros.json"), "utf8"));
+  assert.equal(manifest.profile, "project-administration");
+  assert.ok(fs.existsSync(path.join(root, "ros-hub")), "project-administration payload must be selected during upgrade");
+});
+
 test("upgrade leaves an unedited legacy installation verifying cleanly through ros-bootstrap", (t) => {
   const root = repository(t, "upgrade-clean");
   const { root: packageRoot } = packedPackage();

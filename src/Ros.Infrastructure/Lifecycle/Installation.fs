@@ -37,6 +37,12 @@ module Installation =
         | :? JsonValue as value when value.GetValueKind() = JsonValueKind.Number -> Some(value.GetValue<int>())
         | _ -> None
 
+    let private boolOf (node: JsonNode) (name: string) =
+        match node[name] with
+        | :? JsonValue as value when value.GetValueKind() = JsonValueKind.True -> Some true
+        | :? JsonValue as value when value.GetValueKind() = JsonValueKind.False -> Some false
+        | _ -> None
+
     /// Parse `.echelon/ros.json`. A present-but-unusable manifest becomes an
     /// InstallationProblem rather than an exception, so `doctor` can explain
     /// it instead of the process dying.
@@ -92,6 +98,55 @@ module Installation =
             | :? JsonException as error -> Error(InstallationProblem.ManifestUnreadable error.Message)
             | :? IOException as error -> Error(InstallationProblem.ManifestUnreadable error.Message)
 
+    /// Parse the legacy `.ros/installation.json` snapshot into the same
+    /// internal shape used for ownership planning. The snapshot remains a
+    /// legacy record on disk; this projection exists only so upgrade can tell
+    /// an untouched old tool-owned file from an unmanaged collision or a local
+    /// edit.
+    let readLegacyManifest (root: string) : InstallationManifest option =
+        let path = Path.Combine(root, Planning.LegacyManifestPath)
+
+        if not (File.Exists path) then
+            None
+        else
+            try
+                match JsonNode.Parse(File.ReadAllText path) with
+                | :? JsonObject as node ->
+                    let artifacts =
+                        match node["files"] with
+                        | :? JsonArray as items ->
+                            items
+                            |> Seq.choose (fun item ->
+                                match item with
+                                | :? JsonObject as entry ->
+                                    match stringOf entry "path", stringOf entry "sha256" with
+                                    | Some path, Some sha ->
+                                        Some
+                                            { Path = path
+                                              Ownership =
+                                                if boolOf entry "managed" |> Option.defaultValue true then
+                                                    Ownership.ToolOwned
+                                                else
+                                                    Ownership.UserOwned
+                                              Sha256 = sha }
+                                    | _ -> None
+                                | _ -> None)
+                            |> List.ofSeq
+                        | _ -> []
+
+                    Some
+                        { SchemaVersion = Planning.ManifestSchemaVersion
+                          Tool = "ros"
+                          Package = stringOf node "package" |> Option.defaultValue "@echelon-foundry/repository-operating-system"
+                          InstalledVersion = stringOf node "package_version" |> Option.defaultValue "legacy"
+                          ConfigurationVersion = Migration.LegacyConfigurationVersion
+                          Profile = stringOf node "profile" |> Option.defaultValue "greenfield"
+                          ManagedArtifacts = artifacts }
+                | _ -> None
+            with
+            | :? JsonException
+            | :? IOException -> None
+
     let private configurationProblem (root: string) =
         let path = Path.Combine(root, Planning.ConfigurationPath)
 
@@ -124,8 +179,12 @@ module Installation =
             | Ok _ -> None
             | Error problem -> Some problem
 
+        let legacyManifest = readLegacyManifest root
+
         let recordedPaths =
-            manifest |> Option.map (fun m -> m.ManagedArtifacts |> List.map (fun a -> a.Path)) |> Option.defaultValue []
+            [ manifest; legacyManifest ]
+            |> List.choose id
+            |> List.collect (fun value -> value.ManagedArtifacts |> List.map (fun artifact -> artifact.Path))
 
         let interesting = (payloadPaths @ recordedPaths) |> List.distinct
 
@@ -157,6 +216,7 @@ module Installation =
           Directories = directories
           Manifest = manifest
           ManifestProblem = manifestProblem
+          LegacyManifest = legacyManifest
           LegacyManifestPresent = File.Exists(Path.Combine(root, Planning.LegacyManifestPath))
           ConfigurationPresent =
             configurationProblem
