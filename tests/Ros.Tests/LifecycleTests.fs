@@ -117,6 +117,55 @@ module LifecycleTests =
                   | Ok _ -> failwith "a blocking conflict must fail validation"
                   | Error conflicts -> Assert.equal 1 conflicts.Length }
 
+          { Name = "a legacy recorded tool-owned file can upgrade when it still matches its old snapshot"
+            Run =
+              fun () ->
+                  let payload = [ entry "tool.md" Ownership.ToolOwned "current" ]
+                  let legacy =
+                      { SchemaVersion = 1
+                        Tool = "ros"
+                        Package = "pkg"
+                        InstalledVersion = "2.0.0"
+                        ConfigurationVersion = Migration.LegacyConfigurationVersion
+                        Profile = "greenfield"
+                        ManagedArtifacts = [ recordedArtifact "tool.md" Ownership.ToolOwned "old" ] }
+
+                  let state =
+                      { observed [ "tool.md", "old" ] None with
+                          LegacyManifest = Some legacy
+                          LegacyManifestPresent = true }
+
+                  let steps = Migration.path Migration.LegacyConfigurationVersion |> Result.defaultValue []
+                  let plan = (Planning.upgrade "greenfield" "pkg" "3.1.2" payload state steps).Plan
+
+                  match plan.Changes |> List.tryFind (function | PlannedChange.UpdateManagedFile("tool.md", _, _) -> true | _ -> false) with
+                  | Some(PlannedChange.UpdateManagedFile("tool.md", "old", "current")) -> ()
+                  | other -> failwith $"Expected legacy-owned update, got {other}"
+
+                  Assert.empty (Plan.blockingConflicts plan) }
+
+          { Name = "a legacy tool-owned file edited after installation still blocks upgrade"
+            Run =
+              fun () ->
+                  let payload = [ entry "tool.md" Ownership.ToolOwned "current" ]
+                  let legacy =
+                      { SchemaVersion = 1
+                        Tool = "ros"
+                        Package = "pkg"
+                        InstalledVersion = "2.0.0"
+                        ConfigurationVersion = Migration.LegacyConfigurationVersion
+                        Profile = "greenfield"
+                        ManagedArtifacts = [ recordedArtifact "tool.md" Ownership.ToolOwned "old" ] }
+
+                  let state =
+                      { observed [ "tool.md", "local-edit" ] None with
+                          LegacyManifest = Some legacy
+                          LegacyManifestPresent = true }
+
+                  let steps = Migration.path Migration.LegacyConfigurationVersion |> Result.defaultValue []
+                  let plan = (Planning.upgrade "greenfield" "pkg" "3.1.2" payload state steps).Plan
+                  Assert.equal (Conflict.LocallyModifiedToolFile "tool.md") (Assert.single (Plan.blockingConflicts plan)) }
+
           { Name = "an unrecorded file in the way of a tool-owned file blocks installation"
             Run =
               fun () ->
