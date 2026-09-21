@@ -14,8 +14,11 @@ type ObservedRepository =
       /// Why `.echelon/<tool>.json` could not be used, when it existed but
       /// could not be read or is from an unsupported schema.
       ManifestProblem: InstallationProblem option
-      /// The legacy `.ros/installation.json` snapshot written by
-      /// `ros-bootstrap init` before this manifest existed.
+      /// Parsed legacy `.ros/installation.json`, when present and usable.
+      /// It supplies prior file hashes and profile during adoption; it is not
+      /// treated as a current installation manifest.
+      LegacyManifest: InstallationManifest option
+      /// Whether the legacy snapshot exists, even when it could not be parsed.
       LegacyManifestPresent: bool
       /// `ros.json`, the repository's own configuration.
       ConfigurationPresent: bool
@@ -28,6 +31,7 @@ module ObservedRepository =
           Directories = Set.empty
           Manifest = None
           ManifestProblem = None
+          LegacyManifest = None
           LegacyManifestPresent = false
           ConfigurationPresent = false
           ConfigurationProblem = None }
@@ -59,9 +63,13 @@ module Planning =
     let LegacyManifestPath = ".ros/installation.json"
 
     let private recorded (observed: ObservedRepository) =
-        match observed.Manifest with
-        | None -> Map.empty
-        | Some manifest -> manifest.ManagedArtifacts |> List.map (fun a -> a.Path, a) |> Map.ofList
+        let manifest =
+            observed.Manifest
+            |> Option.orElse observed.LegacyManifest
+
+        manifest
+        |> Option.map (fun value -> value.ManagedArtifacts |> List.map (fun artifact -> artifact.Path, artifact) |> Map.ofList)
+        |> Option.defaultValue Map.empty
 
     /// The single per-file rule that decides what the tool may do, given the
     /// file's ownership, what is on disk, and what the last installation
