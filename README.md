@@ -52,10 +52,15 @@ launcher `init` leaves behind — no npx, no network, no flags:
 ./ros upgrade     # update to this CLI's version
 ```
 
+## New in 3.1.4
+
+- **Legacy research-package compatibility:** established `RP-...-YYYY-NNN` and `REP-...-YYYY-NNN` package identifiers remain valid, including their historical exact `ID.md` filenames. New artifacts should still use the current canonical identifier format. The compatibility rule is intentionally limited to research packages and does not widen evidence, hypothesis, theory, experiment, decision, concept, glossary, or mission IDs.
+
 ## New in 3.1.3
 
 - **Launcher version authority:** installed repositories now launch the version recorded in `.echelon/ros.json`; `ros.json.rosVersion` is only the legacy fallback. An upgrade therefore cannot leave a current installation using an obsolete or snapshot launcher pin.
-- **Portable distributed documentation:** consumer copies of `docs/work-protocol.md` no longer contain source-repository-relative links that break after installation.\n- **Customizable validation integration:** `.github/workflows/ros-validation.yml` is now seeded as shared integration state, so repositories can wrap or strengthen ROS validation without blocking later upgrades.
+- **Portable distributed documentation:** consumer copies of `docs/work-protocol.md` no longer contain source-repository-relative links that break after installation.
+- **Customizable validation integration:** `.github/workflows/ros-validation.yml` is now seeded as shared integration state, so repositories can wrap or strengthen ROS validation without blocking later upgrades.
 
 ## New in 3.1.2
 
