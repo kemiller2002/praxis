@@ -84,8 +84,28 @@ module ArtifactTests =
                   "status", ArtifactValue.Text "accepted"
                   "evidence_type", ArtifactValue.Text "primary" ] }
 
+    let private legacyResearchPackageDocuments =
+        [ { RelativePath = "research/packages/RP-EDF-2026-002.md"
+            FileName = "RP-EDF-2026-002.md"
+            Metadata =
+                Map.ofList
+                    [ "id", ArtifactValue.Text "RP-EDF-2026-002"
+                      "title", ArtifactValue.Text "Legacy EDF research package" ] }
+          { RelativePath = "research/packages/REP-NHEA-2026-001.md"
+            FileName = "REP-NHEA-2026-001.md"
+            Metadata =
+                Map.ofList
+                    [ "id", ArtifactValue.Text "REP-NHEA-2026-001"
+                      "title", ArtifactValue.Text "Legacy non-human evidence package" ] } ]
+
     let tests =
-        [ { Name = "valid fixture passes typed artifact validation"
+        [ { Name = "legacy research-package identifiers remain valid without widening other artifact kinds"
+            Run = fun () ->
+                Assert.equal true (ArtifactPolicy.isValidIdentifier "RP-EDF-2026-002")
+                Assert.equal true (ArtifactPolicy.isValidIdentifier "REP-NHEA-2026-001")
+                Assert.equal false (ArtifactPolicy.isValidIdentifier "EV-EDF-2026-001")
+                ArtifactPolicy.validate [] legacyResearchPackageDocuments |> Assert.empty }
+          { Name = "valid fixture passes typed artifact validation"
             Run = fun () ->
                 withFixture "valid-all-kinds" (fun fixture ->
                     FileArtifactRepository.create fixture
