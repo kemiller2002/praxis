@@ -535,6 +535,35 @@ test("upgrade adopts an older legacy snapshot using its recorded tool-owned hash
   assert.equal(ros(root, ["verify", "--strict"]).status, 0);
 });
 
+test("legacy upgrade preserves a customized ROS validation workflow as shared integration", (t) => {
+  const root = repository(t, "upgrade-shared-workflow");
+  const { root: packageRoot } = packedPackage();
+
+  const legacy = spawnSync(
+    process.execPath,
+    [path.join(packageRoot, "bin", "ros-bootstrap.mjs"), "init", "--target", root, "--project", "Shared Workflow"],
+    { encoding: "utf8", env: cliEnvironment }
+  );
+  assert.equal(legacy.status, 0, legacy.stderr);
+
+  const workflowPath = path.join(root, ".github", "workflows", "ros-validation.yml");
+  const customized = fs.readFileSync(workflowPath, "utf8") + "\n# repository-specific validation wrapper\n";
+  fs.writeFileSync(workflowPath, customized);
+
+  const upgraded = ros(root, ["upgrade"]);
+  assert.equal(upgraded.status, 0, upgraded.stderr);
+  assert.equal(fs.readFileSync(workflowPath, "utf8"), customized, "repository CI customization must survive adoption");
+
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, ".echelon", "ros.json"), "utf8"));
+  const workflow = manifest.managedArtifacts.find((entry) => entry.path === ".github/workflows/ros-validation.yml");
+  assert.equal(workflow.ownership, "shared");
+  assert.equal(
+    workflow.sha256,
+    crypto.createHash("sha256").update(customized).digest("hex"),
+    "the manifest must record the repository's preserved workflow bytes"
+  );
+});
+
 test("upgrade blocks a locally edited file from an older legacy snapshot", (t) => {
   const root = repository(t, "upgrade-real-legacy-local-edit");
   const { root: packageRoot } = packedPackage();
