@@ -13,7 +13,7 @@ import os from "node:os";
 import path from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageMetadata = JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8"));
@@ -244,6 +244,47 @@ test("init installs, then a second init is a no-op: the repository is byte-ident
 
   // --check is the CI form of the same question.
   assert.equal(ros(root, ["init", "--check"]).status, 0);
+});
+
+test("the scaffold launcher prefers the installed manifest version and falls back only for legacy installs", async (t) => {
+  const root = repository(t, "launcher-version-authority");
+  assert.equal(ros(root, ["init"]).status, 0);
+
+  const configurationPath = path.join(root, "ros.json");
+  const configuration = JSON.parse(fs.readFileSync(configurationPath, "utf8"));
+  configuration.rosVersion = "1.2.1-main.16.1";
+  fs.writeFileSync(configurationPath, `${JSON.stringify(configuration, null, 2)}\n`);
+
+  const launcherUrl = pathToFileURL(path.join(root, "tools", "ros_fs_launcher.mjs")).href;
+  const launcher = await import(`${launcherUrl}?manifest-authority`);
+  assert.equal(
+    launcher.internal.rosVersion(),
+    packageMetadata.version,
+    "a current installation manifest must outrank the legacy ros.json pin"
+  );
+
+  fs.rmSync(path.join(root, ".echelon", "ros.json"));
+  assert.equal(
+    launcher.internal.rosVersion(),
+    "1.2.1-main.16.1",
+    "without an installation manifest, legacy repositories still use ros.json"
+  );
+});
+
+test("distributed work protocol has no broken local Markdown references", (t) => {
+  const root = repository(t, "distributed-doc-links");
+  assert.equal(ros(root, ["init"]).status, 0);
+
+  const documentPath = path.join(root, "docs", "work-protocol.md");
+  const markdown = fs.readFileSync(documentPath, "utf8");
+  const localTargets = [...markdown.matchAll(/\[[^\]]*\]\(([^)]+)\)/g)]
+    .map((match) => match[1])
+    .filter((target) => !/^(?:[a-z]+:|#)/i.test(target))
+    .map((target) => target.split("#", 1)[0])
+    .filter(Boolean);
+
+  const broken = localTargets.filter((target) => !fs.existsSync(path.resolve(path.dirname(documentPath), target)));
+  assert.deepEqual(broken, [], `distributed work-protocol.md has broken local references: ${broken.join(", ")}`);
 });
 
 test("status, verify and doctor agree on a freshly installed repository", (t) => {
