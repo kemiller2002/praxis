@@ -38,9 +38,31 @@ function Invoke-Installer([string]$Name, [string]$RequestedVersion) {
     }
 }
 
+function Get-RepositoryRoot {
+    if (Get-Command git -ErrorAction SilentlyContinue) {
+        $candidate = @(& git rev-parse --show-toplevel 2>$null | Select-Object -First 1)
+        if ($LASTEXITCODE -eq 0 -and $candidate.Count -gt 0) {
+            return [string]$candidate[0]
+        }
+    }
+
+    return (Get-Location).Path
+}
+
+function Get-ManifestPath {
+    $root = Get-RepositoryRoot
+    $candidate = Join-Path $root ".echelon\toolchain.json"
+    if (Test-Path $candidate) { return $candidate }
+
+    $local = Join-Path (Get-Location) ".echelon\toolchain.json"
+    if (Test-Path $local) { return $local }
+
+    return $null
+}
+
 function Get-ManifestVersions {
-    $path = Join-Path (Get-Location) ".echelon\toolchain.json"
-    if (-not (Test-Path $path)) {
+    $path = Get-ManifestPath
+    if (-not $path) {
         return @{ ordo = $null; praxis = $null }
     }
 
@@ -257,15 +279,14 @@ function Invoke-Doctor([string[]]$Options) {
     Write-Host
     Write-Host "Repository"
 
-    $repoRoot = $null
+    $insideGit = $false
     if (Get-Command git -ErrorAction SilentlyContinue) {
-        $candidate = @(& git rev-parse --show-toplevel 2>$null | Select-Object -First 1)
-        if ($LASTEXITCODE -eq 0 -and $candidate.Count -gt 0) {
-            $repoRoot = [string]$candidate[0]
-        }
+        & git rev-parse --is-inside-work-tree *> $null
+        $insideGit = $LASTEXITCODE -eq 0
     }
 
-    if ($repoRoot) {
+    $repoRoot = Get-RepositoryRoot
+    if ($insideGit) {
         Write-DoctorRow "ok" "Git repository" $repoRoot
     }
     else {
@@ -273,8 +294,8 @@ function Invoke-Doctor([string[]]$Options) {
         $warnings++
     }
 
-    $manifestPath = Join-Path (Get-Location) ".echelon\toolchain.json"
-    if (Test-Path $manifestPath) {
+    $manifestPath = Get-ManifestPath
+    if ($manifestPath) {
         Write-DoctorRow "ok" "Toolchain manifest" ".echelon/toolchain.json"
         $required = Get-ManifestVersions
         $activeOrdo = Get-ActiveVersion "ordo"
@@ -315,11 +336,18 @@ function Invoke-Doctor([string[]]$Options) {
         $warnings++
     }
 
-    if (Test-Path (Join-Path (Get-Location) ".sde")) {
+    if (Test-Path (Join-Path $repoRoot ".sde")) {
         $ordo = Get-CommandFile "ordo"
         if (Test-Path $ordo) {
-            & $ordo verify *> $null
-            if ($LASTEXITCODE -eq 0) {
+            Push-Location $repoRoot
+            try {
+                & $ordo verify *> $null
+                $ordoExit = $LASTEXITCODE
+            }
+            finally {
+                Pop-Location
+            }
+            if ($ordoExit -eq 0) {
                 Write-DoctorRow "ok" "Ordo repository" "verify passed"
             }
             else {
@@ -336,11 +364,18 @@ function Invoke-Doctor([string[]]$Options) {
         Write-DoctorRow "ok" "Ordo repository" "not installed in this repository"
     }
 
-    if (Test-Path (Join-Path (Get-Location) ".ros")) {
+    if (Test-Path (Join-Path $repoRoot ".ros")) {
         $praxis = Get-CommandFile "praxis"
         if (Test-Path $praxis) {
-            & $praxis validate *> $null
-            if ($LASTEXITCODE -eq 0) {
+            Push-Location $repoRoot
+            try {
+                & $praxis validate *> $null
+                $praxisExit = $LASTEXITCODE
+            }
+            finally {
+                Pop-Location
+            }
+            if ($praxisExit -eq 0) {
                 Write-DoctorRow "ok" "Praxis repository" "validation passed"
             }
             else {
