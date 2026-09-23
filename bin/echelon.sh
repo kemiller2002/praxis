@@ -251,6 +251,76 @@ json_npm_packages() {
   printf ']'
 }
 
+json_finding() {
+  code="$1"
+  severity="$2"
+  message="$3"
+  remediation="$4"
+  [ "$findings_first" -eq 1 ] || printf ','
+  findings_first=0
+  printf '{"code":'
+  json_string "$code"
+  printf ',"severity":'
+  json_string "$severity"
+  printf ',"message":'
+  json_string "$message"
+  printf ',"remediation":'
+  json_string "$remediation"
+  printf '}'
+}
+
+json_findings() {
+  findings_first=1
+  printf '['
+
+  [ "$path_ok" -eq 1 ] || json_finding "ECHELON-DOC-001" "warning" "$BIN_DIR is not on PATH" "Add the Echelon bin directory to PATH."
+  [ "$is_git" -eq 1 ] || json_finding "ECHELON-DOC-002" "warning" "The current directory is not inside a Git repository." "Run Doctor from a repository when repository diagnostics are required."
+  [ -n "$active_ordo" ] || json_finding "ECHELON-DOC-010" "error" "Ordo has no active version." "Run echelon doctor --fix or echelon install ordo."
+  [ -n "$active_praxis" ] || json_finding "ECHELON-DOC-011" "error" "Praxis has no active version." "Run echelon doctor --fix or echelon install praxis."
+
+  for command_name in ordo sde praxis ros echelon; do
+    command_path="$BIN_DIR/$command_name"
+    command_ok=0
+    command_version=""
+    expected_version=""
+    if [ -x "$command_path" ]; then
+      if [ "$command_name" = "echelon" ]; then
+        command_ok=1
+      elif command_version="$("$command_path" --version 2>/dev/null | head -n 1)" && [ -n "$command_version" ]; then
+        case "$command_name" in
+          ordo|sde) expected_version="$active_ordo" ;;
+          praxis|ros) expected_version="$active_praxis" ;;
+        esac
+        if [ -z "$expected_version" ] || [ "$command_version" = "$expected_version" ]; then
+          command_ok=1
+        fi
+      fi
+    fi
+
+    if [ "$command_ok" -ne 1 ]; then
+      if [ -n "$command_version" ] && [ -n "$expected_version" ] && [ "$command_version" != "$expected_version" ]; then
+        json_finding "ECHELON-DOC-021" "error" "$command_name reports $command_version but the active version is $expected_version." "Run echelon doctor --fix to rebuild the command wrapper."
+      else
+        json_finding "ECHELON-DOC-020" "error" "$command_name is missing or does not execute successfully." "Run echelon doctor --fix to repair Echelon command wrappers."
+      fi
+    fi
+  done
+
+  if [ -n "$doctor_manifest" ] && [ -f "$doctor_manifest" ]; then
+    [ -n "$required_ordo" ] || json_finding "ECHELON-DOC-031" "warning" "The toolchain manifest does not pin Ordo." "Add an exact Ordo version to .echelon/toolchain.json."
+    [ -n "$required_praxis" ] || json_finding "ECHELON-DOC-032" "warning" "The toolchain manifest does not pin Praxis." "Add an exact Praxis version to .echelon/toolchain.json."
+    [ -z "$required_ordo" ] || [ "$active_ordo" = "$required_ordo" ] || json_finding "ECHELON-DOC-033" "error" "Ordo requires $required_ordo but $active_ordo is active." "Run echelon doctor --fix."
+    [ -z "$required_praxis" ] || [ "$active_praxis" = "$required_praxis" ] || json_finding "ECHELON-DOC-034" "error" "Praxis requires $required_praxis but $active_praxis is active." "Run echelon doctor --fix."
+  else
+    json_finding "ECHELON-DOC-030" "warning" "No .echelon/toolchain.json is present." "Add a toolchain manifest to make the repository reproducible."
+  fi
+
+  [ "$ordo_repo_status" != "invalid" ] || json_finding "ECHELON-DOC-040" "error" "Ordo repository verification failed." "Run ordo doctor in the repository for domain-specific diagnostics."
+  [ "$praxis_repo_status" != "invalid" ] || json_finding "ECHELON-DOC-041" "error" "Praxis repository validation failed." "Run praxis doctor in the repository for domain-specific diagnostics."
+
+  printf ']'
+}
+
 doctor_json() {
   platform="$(uname -s 2>/dev/null || echo unknown)"
   architecture="$(uname -m 2>/dev/null || echo unknown)"
@@ -273,6 +343,7 @@ doctor_json() {
   warnings=0
 
   [ "$path_ok" -eq 1 ] || warnings=$((warnings + 1))
+  [ "$is_git" -eq 1 ] || warnings=$((warnings + 1))
   [ -n "$active_ordo" ] || errors=$((errors + 1))
   [ -n "$active_praxis" ] || errors=$((errors + 1))
 
@@ -286,7 +357,14 @@ doctor_json() {
       if [ "$command_name" = "echelon" ]; then
         healthy=1
       elif version_output="$("$command_path" --version 2>/dev/null | head -n 1)" && [ -n "$version_output" ]; then
-        healthy=1
+        expected_version=""
+        case "$command_name" in
+          ordo|sde) expected_version="$active_ordo" ;;
+          praxis|ros) expected_version="$active_praxis" ;;
+        esac
+        if [ -z "$expected_version" ] || [ "$version_output" = "$expected_version" ]; then
+          healthy=1
+        fi
       fi
     fi
     [ "$healthy" -eq 1 ] || errors=$((errors + 1))
@@ -380,6 +458,8 @@ doctor_json() {
   printf ',"npmPackages":'
   json_npm_packages "$repo_root"
   printf '}'
+  printf ',"findings":'
+  json_findings
   printf ',"summary":{"errors":%s,"warnings":%s}' "$errors" "$warnings"
   printf '}\n'
   return "$exit_code"
@@ -606,7 +686,17 @@ doctor() {
       if [ "$command_name" = "echelon" ]; then
         doctor_row ok "$command_name command" "$command_path"
       elif version_output="$("$command_path" --version 2>/dev/null | head -n 1)" && [ -n "$version_output" ]; then
-        doctor_row ok "$command_name command" "$version_output"
+        expected_version=""
+        case "$command_name" in
+          ordo|sde) expected_version="$(active_version ordo)" ;;
+          praxis|ros) expected_version="$(active_version praxis)" ;;
+        esac
+        if [ -n "$expected_version" ] && [ "$version_output" != "$expected_version" ]; then
+          doctor_row error "$command_name command" "$version_output; active version is $expected_version"
+          errors=$((errors + 1))
+        else
+          doctor_row ok "$command_name command" "$version_output"
+        fi
       else
         doctor_row error "$command_name command" "present but failed --version"
         errors=$((errors + 1))
@@ -687,6 +777,28 @@ doctor() {
   else
     doctor_row warn "Toolchain manifest" "not present; setup will use latest stable releases"
     warnings=$((warnings + 1))
+  fi
+
+  echo
+  echo "Repository components"
+  components="$(repository_components_text "$repo_root")"
+  if [ -n "$components" ]; then
+    printf '%s\n' "$components" | while IFS="$(printf '\t')" read -r component_tool component_version component_file; do
+      doctor_row ok "$component_tool" "$component_version ($component_file)"
+    done
+  else
+    doctor_row ok "Components" "none"
+  fi
+
+  echo
+  echo "Installed Echelon npm packages"
+  packages="$(npm_packages_text "$repo_root")"
+  if [ -n "$packages" ]; then
+    printf '%s\n' "$packages" | while IFS="$(printf '\t')" read -r package_name package_version package_file; do
+      doctor_row ok "$package_name" "$package_version"
+    done
+  else
+    doctor_row ok "npm packages" "none"
   fi
 
   if [ -d "$repo_root/.sde" ]; then
