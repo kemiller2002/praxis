@@ -77,6 +77,8 @@ function Install-All {
     $versions = Get-ManifestVersions
     Invoke-Installer "ordo" $versions.ordo
     Invoke-Installer "praxis" $versions.praxis
+    Write-Host
+    Invoke-Doctor @()
 }
 
 function Get-ActiveVersion([string]$Name) {
