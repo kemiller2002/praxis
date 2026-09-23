@@ -279,3 +279,28 @@ test("F# change-health history identifies a file and line region touched across 
   assert.equal(region.touches, 2);
   assert.ok(region.startLine <= 3 && region.endLine >= 3);
 });
+
+
+test("F# change-health emits coded findings when repository thresholds are exceeded", (t) => {
+  const root = fixture(t, "threshold-fsharp");
+  const policyPath = path.join(root, "telemetry", "change-health.json");
+  const policy = JSON.parse(fs.readFileSync(policyPath, "utf8"));
+  policy.thresholds.filesChanged = { warning: 0, error: 10 };
+  fs.writeFileSync(policyPath, JSON.stringify(policy, null, 2) + "\n");
+
+  execFileSync("dotnet", [fsharpCli, "--root", root, "work", "start", "--id", "WI-THRESHOLD", "--occurred-at", "2026-09-23T12:00:00.000Z", "--type", "task"]);
+  fs.writeFileSync(path.join(root, "CHANGE.txt"), "one changed file\n");
+
+  const result = runFsharp(root, ["finalize", "WI-THRESHOLD"]);
+  assert.equal(result.status, 0, result.stderr);
+  const record = JSON.parse(result.stdout);
+  const finding = record.repository.changeHealth.findings.find((item) => item.code === "PRAXIS-CHG-001");
+
+  assert.equal(record.repository.changeHealth.status, "warning");
+  assert.equal(finding.metric, "filesChanged");
+  assert.equal(finding.severity, "warning");
+  assert.equal(finding.actual, 1);
+  assert.equal(finding.threshold, 0);
+  assert.equal(metricValue(record, "code.threshold_warnings"), 1);
+  assert.equal(metricValue(record, "code.threshold_errors"), 0);
+});
