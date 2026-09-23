@@ -59,7 +59,7 @@ if [ "$rid" = "linux-x64" ]; then
 fi
 
 asset="praxis-$rid.tar.gz"
-base_url="https://github.com/$REPO/releases/download/v$VERSION"
+base_url="${ECHELON_RELEASE_BASE_URL:-https://github.com/$REPO/releases/download/v$VERSION}"
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT HUP INT TERM
 
