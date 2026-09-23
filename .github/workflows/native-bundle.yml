@@ -1,0 +1,106 @@
+name: Native Praxis release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "package.json"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: praxis-native-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Build reusable package root
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(node -p "require('./package.json').version")"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+          rm -rf dist/native dist/native-stage
+          mkdir -p dist/native dist/native-stage/package-root
+
+          TGZ="$(npm pack --ignore-scripts --silent)"
+          tar -xzf "$TGZ" -C dist/native-stage/package-root --strip-components=1
+          rm -f "$TGZ"
+
+      - name: Build native Praxis bundles
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.package.outputs.version }}"
+
+          make_posix_bundle() {
+            rid="$1"
+            name="praxis-${rid}"
+            root="dist/native-stage/${name}"
+            rm -rf "${root}"
+            cp -R dist/native-stage/package-root "${root}"
+            mkdir -p "${root}/native"
+
+            dotnet publish src/Ros.Cli/Ros.Cli.fsproj               -c Release               -r "${rid}"               --self-contained true               -p:PublishSingleFile=true               -p:IncludeNativeLibrariesForSelfExtract=true               -o "dist/native-stage/publish-${rid}"
+
+            cp "dist/native-stage/publish-${rid}/ros-fs" "${root}/native/ros-fs"
+            chmod +x "${root}/native/ros-fs"
+            printf '%s\n' "${VERSION}" > "${root}/VERSION"
+            tar -czf "dist/native/${name}.tar.gz" -C dist/native-stage "${name}"
+          }
+
+          make_posix_bundle linux-x64
+          make_posix_bundle linux-arm64
+          make_posix_bundle osx-x64
+          make_posix_bundle osx-arm64
+
+          rid="win-x64"
+          root="dist/native-stage/praxis-${rid}"
+          rm -rf "${root}"
+          cp -R dist/native-stage/package-root "${root}"
+          mkdir -p "${root}/native"
+
+          dotnet publish src/Ros.Cli/Ros.Cli.fsproj             -c Release             -r "${rid}"             --self-contained true             -p:PublishSingleFile=true             -p:IncludeNativeLibrariesForSelfExtract=true             -o "dist/native-stage/publish-${rid}"
+
+          cp "dist/native-stage/publish-${rid}/ros-fs.exe" "${root}/native/ros-fs.exe"
+          printf '%s\n' "${VERSION}" > "${root}/VERSION"
+          (cd dist/native-stage && zip -qr "../native/praxis-win-x64.zip" praxis-win-x64)
+
+          (cd dist/native && sha256sum praxis-* > checksums.txt)
+          cat dist/native/checksums.txt
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.package.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          assets=(dist/native/praxis-* dist/native/checksums.txt)
+
+          if gh release view "v${VERSION}" >/dev/null 2>&1; then
+            gh release upload "v${VERSION}" "${assets[@]}" --clobber
+          else
+            if ! gh release create "v${VERSION}" "${assets[@]}"               --target "${GITHUB_SHA}"               --title "Praxis v${VERSION}"               --notes "Native Praxis/ROS bundles. These bundles require no Node.js or .NET runtime on the consuming machine."; then
+              gh release upload "v${VERSION}" "${assets[@]}" --clobber
+            fi
+          fi
