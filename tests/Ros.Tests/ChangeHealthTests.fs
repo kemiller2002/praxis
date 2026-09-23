@@ -73,16 +73,17 @@ module ChangeHealthTests =
                 let history =
                     { ChangeHealth.emptyHistory with
                         Updates =
-                            [ update "EXE-1" [ historyFile "src/Old.fs" None [ 3 ] ]
-                              update "EXE-2" [ historyFile "src/Other.fs" None [ 9 ] ]
-                              update "EXE-3" [ historyFile "src/New.fs" (Some "src/Old.fs") [ 3; 4 ] ] ] }
+                            [ update "EXE-1" [ historyFile "src/A.fs" None [ 3 ] ]
+                              update "EXE-2" [ historyFile "src/B.fs" (Some "src/A.fs") [ 3 ] ]
+                              update "EXE-3" [ historyFile "src/C.fs" (Some "src/B.fs") [ 3; 4 ] ] ] }
 
                 let fileTouches, regionTouches =
-                    ChangeHealth.recentTouches policy history "src/New.fs" (Some "src/Old.fs") [ 3 ]
+                    ChangeHealth.recentTouches policy history "src/C.fs" None [ 3 ]
 
-                // Two prior matching updates plus the current update.
-                Assert.equal 3 fileTouches
-                Assert.equal 3 regionTouches }
+                // Three prior observations remain connected through A -> B -> C,
+                // plus the current update.
+                Assert.equal 4 fileTouches
+                Assert.equal 4 regionTouches }
 
           { Name = "bounded history retains only the configured newest updates and records omissions"
             Run = fun () ->
@@ -112,4 +113,4 @@ module ChangeHealthTests =
                 Assert.equal 3 hunk.NewLines
                 Assert.equal [ 0 ] hunk.Buckets }
 
- ]
+        ]
