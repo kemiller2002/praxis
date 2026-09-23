@@ -6,8 +6,8 @@ Example:
 
     {
       "schemaVersion": 1,
-      "ordo": "1.3.0",
-      "praxis": "3.1.4"
+      "ordo": "1.4.0",
+      "praxis": "3.2.0"
     }
 
 Running echelon setup from that repository installs those exact stable releases. If the manifest is absent, echelon setup installs the latest stable Ordo and Praxis releases.
