@@ -498,6 +498,11 @@
       "source": "schemas/change-hotspots.schema.json",
       "destination": "schemas/change-hotspots.schema.json",
       "template": false
+    },
+    {
+      "source": "tools/ros_change_health.mjs",
+      "destination": "tools/ros_change_health.mjs",
+      "template": false
     }
   ]
 }
