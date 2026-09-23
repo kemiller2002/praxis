@@ -15,7 +15,7 @@ type ChangeHealthCapture =
       Metrics: ChangeHealthMetrics
       Findings: ChangeHealthFinding list
       Node: JsonObject
-      ShouldFail: bool }
+      Node: JsonObject }
 
 [<RequireQualifiedAccess>]
 module FileChangeHealthRepository =
@@ -118,7 +118,6 @@ module FileChangeHealthRepository =
                           HistoryWindow = intProperty policy "historyWindow" defaults.HistoryWindow
                           MaxHistoryUpdates = intProperty policy "maxHistoryUpdates" defaults.MaxHistoryUpdates
                           LineBucketSize = intProperty policy "lineBucketSize" defaults.LineBucketSize
-                          FailOnSeverity = optionalStringProperty policy "failOnSeverity"
                           Thresholds = thresholds }
 
                     if parsed.HistoryWindow < 1 then
@@ -127,8 +126,6 @@ module FileChangeHealthRepository =
                         Error "change-health maxHistoryUpdates must be at least 1"
                     elif parsed.LineBucketSize < 1 then
                         Error "change-health lineBucketSize must be at least 1"
-                    elif parsed.FailOnSeverity |> Option.exists (fun value -> value <> "warning" && value <> "error") then
-                        Error "change-health failOnSeverity must be null, 'warning', or 'error'"
                     else
                         [ "filesChanged", thresholds.FilesChanged
                           "linesChanged", thresholds.LinesChanged
@@ -534,8 +531,7 @@ module FileChangeHealthRepository =
                     { Enabled = false
                       Metrics = ChangeHealth.metrics 0 0 0 0 0 0 0 0 0 0 0 0
                       Findings = []
-                      Node = node
-                      ShouldFail = false }
+                      Node = node }
             else
                 let ignoredPatterns = FileWorkConfigRepository.readTelemetryIgnoredPaths root
 
@@ -690,8 +686,7 @@ module FileChangeHealthRepository =
                                     { Enabled = true
                                       Metrics = metrics
                                       Findings = findings
-                                      Node = node
-                                      ShouldFail = ChangeHealth.shouldFail policy findings }
+                                      Node = node }
                             with error ->
                                 Error error.Message
 
