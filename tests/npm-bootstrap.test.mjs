@@ -509,7 +509,7 @@ test("native Praxis release keeps bundle checksums separate from legacy ros-fs c
   );
   assert.match(workflow, /native-checksums\.txt/);
   assert.doesNotMatch(workflow, /dist\/native\/checksums\.txt/);
-  assert.match(workflow, /praxis-linux-x64/);
+  assert.match(workflow, /make_posix_bundle linux-x64/);
   assert.match(workflow, /praxis-win-x64/);
 });
 
