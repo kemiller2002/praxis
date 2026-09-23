@@ -149,7 +149,7 @@ function Get-LatestReleaseVersion([string]$Name) {
     }
 
     try {
-        $release = Invoke-RestMethod -Headers @{ "User-Agent" = "echelon-doctor" } -Uri "https://api.github.com/repos/kemiller2002/$repoName/releases/latest"
+        $release = Invoke-RestMethod -TimeoutSec 10 -Headers @{ "User-Agent" = "echelon-doctor" } -Uri "https://api.github.com/repos/kemiller2002/$repoName/releases/latest"
         return ([string]$release.tag_name) -replace '^v', ''
     }
     catch {
