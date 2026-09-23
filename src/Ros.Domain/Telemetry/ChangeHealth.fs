@@ -153,7 +153,20 @@ module ChangeHealth =
 
     let recentTouches (policy: ChangeHealthPolicy) (history: ChangeHistory) (path: string) (from: string option) (currentBuckets: int list) =
         let recent = history.Updates |> List.rev |> List.truncate policy.HistoryWindow
-        let names = currentAliases path from
+
+        let rec expandAliases names =
+            let expanded =
+                recent
+                |> List.collect _.Files
+                |> List.fold
+                    (fun known file ->
+                        let fileAliases = aliases file
+                        if intersects known fileAliases then Set.union known fileAliases else known)
+                    names
+
+            if expanded = names then names else expandAliases expanded
+
+        let names = currentAliases path from |> expandAliases
 
         let fileTouches =
             recent
