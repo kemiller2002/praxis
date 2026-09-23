@@ -30,7 +30,7 @@ Default settings:
 
 The longitudinal window defaults to the last 20 finalized updates. History retains at most 200 updates. Line regions use 25-line buckets so repeated nearby edits remain visible even when line numbers drift slightly over time.
 
-`failOnSeverity` is `null` by default. A repository may later set it to `error` or `warning` when it wants change-health findings to become a CI gate. Merely exceeding a default threshold does not prevent a legitimate large migration from completing.
+Praxis 3.5.0 treats threshold crossings as findings, not automatic blockers. This is deliberate: a legitimate migration can be large while still needing its size recorded and reviewed. A future explicit CI-gating contract can build on these stable finding codes without changing what the measurements mean.
 
 ## Per-update metrics
 
