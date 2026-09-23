@@ -11,7 +11,8 @@ open Ros.Infrastructure.Artifacts
 open Ros.Infrastructure.Git
 
 type ChangeHealthCapture =
-    { Metrics: ChangeHealthMetrics
+    { Enabled: bool
+      Metrics: ChangeHealthMetrics
       Findings: ChangeHealthFinding list
       Node: JsonObject
       ShouldFail: bool }
@@ -530,7 +531,8 @@ module FileChangeHealthRepository =
                 node["enabled"] <- JsonValue.Create false
 
                 Ok
-                    { Metrics = ChangeHealth.metrics 0 0 0 0 0 0 0 0 0 0 0 0
+                    { Enabled = false
+                      Metrics = ChangeHealth.metrics 0 0 0 0 0 0 0 0 0 0 0 0
                       Findings = []
                       Node = node
                       ShouldFail = false }
@@ -685,7 +687,8 @@ module FileChangeHealthRepository =
                                 node["history"] <- historyNode
 
                                 Ok
-                                    { Metrics = metrics
+                                    { Enabled = true
+                                      Metrics = metrics
                                       Findings = findings
                                       Node = node
                                       ShouldFail = ChangeHealth.shouldFail policy findings }
