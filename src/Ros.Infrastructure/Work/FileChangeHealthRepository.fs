@@ -337,6 +337,11 @@ module FileChangeHealthRepository =
         else
             match JsonNode.Parse(File.ReadAllText file) with
             | :? JsonObject as rootNode ->
+                let schemaVersion = stringNodeField rootNode "schemaVersion"
+
+                if schemaVersion <> Some "1.0.0" then
+                    raise (InvalidDataException($"change-health history is missing or unsupported: {file}"))
+
                 let omitted =
                     match rootNode["historyOmitted"] with
                     | :? JsonValue as value ->
@@ -398,10 +403,14 @@ module FileChangeHealthRepository =
                         |> Seq.toList
                     | _ -> []
 
+                match rootNode["updates"] with
+                | :? JsonArray -> ()
+                | _ -> raise (InvalidDataException($"change-health history is missing or unsupported: {file}"))
+
                 { SchemaVersion = "1.0.0"
                   HistoryOmitted = omitted
                   Updates = updates }
-            | _ -> ChangeHealth.emptyHistory
+            | _ -> raise (InvalidDataException($"change-health history is missing or unsupported: {file}"))
 
     let private hunkNode (hunk: HistoricalHunk) =
         let node = JsonObject()
