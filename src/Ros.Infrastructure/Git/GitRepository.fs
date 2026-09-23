@@ -248,6 +248,17 @@ module ProcessGitRepository =
 
     let readNumstatDiff root startCommit = readNumstatDiffWithExecutable "git" root startCommit
 
+    /// Reads a zero-context unified diff used only for metadata-level hunk
+    /// coordinates. Source text is never retained by Praxis change history.
+    let readZeroContextDiffWithExecutable executable root (startCommit: string) : Result<string, GitFailure> =
+        runGitTextTrimmed
+            executable
+            (IO.Path.GetFullPath root)
+            "git diff"
+            [ "diff"; "--unified=0"; "--no-color"; "--no-ext-diff"; "--find-renames"; startCommit ]
+
+    let readZeroContextDiff root startCommit = readZeroContextDiffWithExecutable "git" root startCommit
+
     /// `-z`-delimited output is never trimmed of a real trailing NUL, matching
     /// production's own `{trim: false}` override for this one read.
     let readUntrackedFilesWithExecutable executable root : Result<string, GitFailure> =
