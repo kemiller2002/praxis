@@ -347,7 +347,7 @@ module FileTelemetryFinalizationRepository =
                                       "tests.removed"; "documentation.files_changed" ]
 
                                 let codeChangeMetricIds =
-                                    [ "code.files_changed"; "code.source_files_changed"; "code.lines_changed"; "code.net_lines"
+                                    [ "code.files_changed"; "code.source_files_changed"; "code.lines_changed"
                                       "code.hunks_changed"; "code.max_hunks_per_file"; "code.largest_file_churn"
                                       "code.largest_changed_file_lines"; "code.repeat_file_touches"; "code.repeat_region_touches"
                                       "code.threshold_warnings"; "code.threshold_errors" ]
@@ -397,7 +397,6 @@ module FileTelemetryFinalizationRepository =
                                                 |> appendMetric "code.files_changed" (int64 changeHealth.Metrics.FilesChanged) changeHealthSource
                                                 |> appendMetric "code.source_files_changed" (int64 changeHealth.Metrics.SourceFilesChanged) changeHealthSource
                                                 |> appendMetric "code.lines_changed" (int64 changeHealth.Metrics.LinesChanged) changeHealthSource
-                                                |> appendMetric "code.net_lines" (int64 changeHealth.Metrics.NetLines) changeHealthSource
                                                 |> appendMetric "code.hunks_changed" (int64 changeHealth.Metrics.HunksChanged) changeHealthSource
                                                 |> appendMetric "code.max_hunks_per_file" (int64 changeHealth.Metrics.MaxHunksPerFile) changeHealthSource
                                                 |> appendMetric "code.largest_file_churn" (int64 changeHealth.Metrics.LargestFileChurn) changeHealthSource
