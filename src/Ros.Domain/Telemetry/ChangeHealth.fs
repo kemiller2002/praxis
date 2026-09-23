@@ -239,7 +239,12 @@ module ChangeHealth =
           RepeatRegionTouches = repeatRegionTouches }
 
     let appendHistory (policy: ChangeHealthPolicy) (update: HistoricalUpdate) (history: ChangeHistory) =
-        let updates = history.Updates @ [ update ]
+        // Retrying finalization for the same execution replaces its prior
+        // history observation instead of double-counting one logical update.
+        let withoutSameExecution =
+            history.Updates |> List.filter (fun existing -> existing.ExecutionId <> update.ExecutionId)
+
+        let updates = withoutSameExecution @ [ update ]
         let overflow = max 0 (updates.Length - policy.MaxHistoryUpdates)
 
         { SchemaVersion = "1.0.0"
