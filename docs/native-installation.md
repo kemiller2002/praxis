@@ -34,7 +34,7 @@ The installer creates these command names:
 
 praxis is the preferred product-facing command. ros remains a compatibility alias.
 
-## Install the whole Echelon engineering toolchain
+## Using the Echelon bootstrap after installation
 
 After Praxis is installed:
 
