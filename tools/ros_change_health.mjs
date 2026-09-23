@@ -249,6 +249,11 @@ export function captureChangeHealth(root, record, summary, finalizedAt, options)
       throw new Error("change-health history is missing or unsupported: " + policy.historyPath);
     }
 
+    const comparisonHistory = {
+      ...history,
+      updates: history.updates.filter((entry) => entry.executionId !== record.executionId)
+    };
+
     const files = summary.paths.map((entry) => {
       const currentLines = entry.status === "D" ? null : countTextLines(path.join(root, entry.path));
       const linesAdded = entry.untracked ? currentLines : entry.lineStats?.added ?? null;
@@ -260,7 +265,7 @@ export function captureChangeHealth(root, record, summary, finalizedAt, options)
           buckets: lineBuckets(policy.lineBucketSize, 0, 0, 1, currentLines) }];
       }
       const buckets = [...new Set(hunks.flatMap((hunk) => hunk.buckets))];
-      const touches = recentTouchCounts(policy, history, entry, buckets);
+      const touches = recentTouchCounts(policy, comparisonHistory, entry, buckets);
       return {
         path: entry.path,
         from: entry.from ?? null,
