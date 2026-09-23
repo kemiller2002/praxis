@@ -18,9 +18,9 @@ New-Item -ItemType Directory -Path $temp | Out-Null
 
 try {
     $archive = Join-Path $temp $asset
-    $checksums = Join-Path $temp "checksums.txt"
+    $checksums = Join-Path $temp "native-checksums.txt"
     Invoke-WebRequest -UseBasicParsing -Uri "$baseUrl/$asset" -OutFile $archive
-    Invoke-WebRequest -UseBasicParsing -Uri "$baseUrl/checksums.txt" -OutFile $checksums
+    Invoke-WebRequest -UseBasicParsing -Uri "$baseUrl/native-checksums.txt" -OutFile $checksums
 
     $line = Get-Content $checksums | Where-Object { $_ -match ("\s" + [Regex]::Escape($asset) + "$") } | Select-Object -First 1
     if (-not $line) { throw "No checksum found for $asset." }
