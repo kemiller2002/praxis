@@ -235,6 +235,8 @@ jobs:
 
           $env:ECHELON_HOME = $echelonHome
           $env:PATH = $bin + ";" + $env:PATH
+          $env:ECHELON_ORDO_LATEST_VERSION = "1.5.0"
+          $env:ECHELON_PRAXIS_LATEST_VERSION = "3.4.0"
           Push-Location $project
           try {
             & powershell -NoProfile -ExecutionPolicy Bypass -File $doctor doctor
@@ -242,7 +244,7 @@ jobs:
               throw "Echelon Doctor smoke test failed with exit code $LASTEXITCODE."
             }
 
-            $doctorJson = & powershell -NoProfile -ExecutionPolicy Bypass -File $doctor doctor --json
+            $doctorJson = & powershell -NoProfile -ExecutionPolicy Bypass -File $doctor doctor --json --updates
             if ($LASTEXITCODE -ne 0) {
               throw "Echelon Doctor JSON smoke test failed with exit code $LASTEXITCODE."
             }
@@ -255,6 +257,9 @@ jobs:
             }
             if ($doctorReport.repository.npmPackages.package -notcontains "@echelon-foundry/typescript-wasm-kernel") {
               throw "Doctor JSON did not discover the installed Limen npm package."
+            }
+            if (-not $doctorReport.updates.ordo.available -or $doctorReport.updates.praxis.available) {
+              throw "Doctor JSON update-awareness state was incorrect."
             }
 
             $inventoryJson = & powershell -NoProfile -ExecutionPolicy Bypass -File $doctor inventory --json
