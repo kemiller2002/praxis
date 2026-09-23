@@ -30,6 +30,8 @@ Default settings:
 
 The longitudinal window defaults to the last 20 finalized updates. History retains at most 200 updates. Line regions use 25-line buckets so repeated nearby edits remain visible even when line numbers drift slightly over time.
 
+A threshold is crossed only when the measured value is greater than the configured value. Equal-to-threshold values are not flagged. If both warning and error bands are crossed, Praxis emits only the error finding for that metric.
+
 Praxis 3.5.0 treats threshold crossings as findings, not automatic blockers. This is deliberate: a legitimate migration can be large while still needing its size recorded and reviewed. A future explicit CI-gating contract can build on these stable finding codes without changing what the measurements mean.
 
 ## Per-update metrics
