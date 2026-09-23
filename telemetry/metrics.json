@@ -947,14 +947,6 @@
       "description": "Total textual churn: lines added plus lines deleted."
     },
     {
-      "id": "code.net_lines",
-      "category": "code-change",
-      "unit": "lines",
-      "aggregation": "sum",
-      "collection": "ros-derived",
-      "description": "Net textual line change: lines added minus lines deleted."
-    },
-    {
       "id": "code.hunks_changed",
       "category": "code-change",
       "unit": "count",
