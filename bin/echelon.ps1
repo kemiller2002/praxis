@@ -269,10 +269,23 @@ function Invoke-Doctor([string[]]$Options) {
             Get-ChildItem -Path $ToolsDir -Directory -ErrorAction SilentlyContinue |
                 Where-Object { $_.Name -notin @("ordo", "praxis") } |
                 Sort-Object Name |
-                ForEach-Object { $_.Name }
+                ForEach-Object {
+                    $versions = @(
+                        Get-ChildItem -Path $_.FullName -Directory -ErrorAction SilentlyContinue |
+                            Where-Object { $_.Name -ne "current" } |
+                            Sort-Object Name |
+                            ForEach-Object { $_.Name }
+                    )
+                    if ($versions.Count -gt 0) {
+                        "$($_.Name) ($($versions -join ', '))"
+                    }
+                    else {
+                        $_.Name
+                    }
+                }
         )
         if ($extras.Count -gt 0) {
-            Write-DoctorRow "ok" "Other installed tools" ($extras -join ", ")
+            Write-DoctorRow "ok" "Other installed tools" ($extras -join "; ")
         }
     }
 
