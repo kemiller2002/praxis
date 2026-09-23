@@ -209,10 +209,21 @@ function Get-EchelonNpmPackages([string]$Root) {
 
 function Get-CommandHealth {
     $items = @()
+    $activeOrdo = Get-ActiveVersion "ordo"
+    $activePraxis = Get-ActiveVersion "praxis"
+
     foreach ($name in @("ordo", "sde", "praxis", "ros", "echelon")) {
         $cmd = Get-CommandFile $name
         $healthy = $false
         $versionOutput = $null
+        $expectedVersion = $null
+
+        switch ($name) {
+            "ordo" { $expectedVersion = $activeOrdo }
+            "sde" { $expectedVersion = $activeOrdo }
+            "praxis" { $expectedVersion = $activePraxis }
+            "ros" { $expectedVersion = $activePraxis }
+        }
 
         if (Test-Path $cmd) {
             if ($name -eq "echelon") {
@@ -223,8 +234,10 @@ function Get-CommandHealth {
                 $commandExit = $LASTEXITCODE
                 $firstLine = @($versionLines | Select-Object -First 1)
                 if ($commandExit -eq 0 -and $firstLine.Count -gt 0 -and $firstLine[0]) {
-                    $healthy = $true
                     $versionOutput = [string]$firstLine[0]
+                    if (-not $expectedVersion -or $versionOutput -eq $expectedVersion) {
+                        $healthy = $true
+                    }
                 }
             }
         }
@@ -234,6 +247,7 @@ function Get-CommandHealth {
             healthy = $healthy
             path = $cmd
             version = $versionOutput
+            expectedVersion = $(if ($expectedVersion) { $expectedVersion } else { $null })
         }
     }
 
@@ -275,6 +289,7 @@ function Get-DoctorReport {
         $insideGit = $LASTEXITCODE -eq 0
     }
     $repoRoot = Get-RepositoryRoot
+    if (-not $insideGit) { $warnings++ }
 
     $ordoStatus = "not-installed"
     if (Test-Path (Join-Path $repoRoot ".sde")) {
@@ -322,6 +337,65 @@ function Get-DoctorReport {
     $exitCode = if ($errors -gt 0) { 1 } else { 0 }
     $architecture = if ($env:PROCESSOR_ARCHITECTURE) { $env:PROCESSOR_ARCHITECTURE } else { "unknown" }
 
+    $findings = @()
+    if (-not $pathConfigured) {
+        $findings += [pscustomobject]@{ code = "ECHELON-DOC-001"; severity = "warning"; message = "$BinDir is not on PATH"; remediation = "Add the Echelon bin directory to PATH." }
+    }
+    if (-not $insideGit) {
+        $findings += [pscustomobject]@{ code = "ECHELON-DOC-002"; severity = "warning"; message = "The current directory is not inside a Git repository."; remediation = "Run Doctor from a repository when repository diagnostics are required." }
+    }
+    if (-not $activeOrdo) {
+        $findings += [pscustomobject]@{ code = "ECHELON-DOC-010"; severity = "error"; message = "Ordo has no active version."; remediation = "Run echelon doctor --fix or echelon install ordo." }
+    }
+    if (-not $activePraxis) {
+        $findings += [pscustomobject]@{ code = "ECHELON-DOC-011"; severity = "error"; message = "Praxis has no active version."; remediation = "Run echelon doctor --fix or echelon install praxis." }
+    }
+    foreach ($command in $commands) {
+        if (-not $command.healthy) {
+            if ($command.version -and $command.expectedVersion -and $command.version -ne $command.expectedVersion) {
+                $findings += [pscustomobject]@{
+                    code = "ECHELON-DOC-021"
+                    severity = "error"
+                    message = "$($command.name) reports $($command.version) but the active version is $($command.expectedVersion)."
+                    remediation = "Run echelon doctor --fix to rebuild the command wrapper."
+                }
+            }
+            else {
+                $findings += [pscustomobject]@{
+                    code = "ECHELON-DOC-020"
+                    severity = "error"
+                    message = "$($command.name) is missing or does not execute successfully."
+                    remediation = "Run echelon doctor --fix to repair Echelon command wrappers."
+                }
+            }
+        }
+    }
+
+    if ($manifestPath) {
+        if (-not $required.ordo) {
+            $findings += [pscustomobject]@{ code = "ECHELON-DOC-031"; severity = "warning"; message = "The toolchain manifest does not pin Ordo."; remediation = "Add an exact Ordo version to .echelon/toolchain.json." }
+        }
+        if (-not $required.praxis) {
+            $findings += [pscustomobject]@{ code = "ECHELON-DOC-032"; severity = "warning"; message = "The toolchain manifest does not pin Praxis."; remediation = "Add an exact Praxis version to .echelon/toolchain.json." }
+        }
+        if ($required.ordo -and $activeOrdo -ne $required.ordo) {
+            $findings += [pscustomobject]@{ code = "ECHELON-DOC-033"; severity = "error"; message = "Ordo requires $($required.ordo) but $activeOrdo is active."; remediation = "Run echelon doctor --fix." }
+        }
+        if ($required.praxis -and $activePraxis -ne $required.praxis) {
+            $findings += [pscustomobject]@{ code = "ECHELON-DOC-034"; severity = "error"; message = "Praxis requires $($required.praxis) but $activePraxis is active."; remediation = "Run echelon doctor --fix." }
+        }
+    }
+    else {
+        $findings += [pscustomobject]@{ code = "ECHELON-DOC-030"; severity = "warning"; message = "No .echelon/toolchain.json is present."; remediation = "Add a toolchain manifest to make the repository reproducible." }
+    }
+
+    if ($ordoStatus -eq "invalid") {
+        $findings += [pscustomobject]@{ code = "ECHELON-DOC-040"; severity = "error"; message = "Ordo repository verification failed."; remediation = "Run ordo doctor in the repository for domain-specific diagnostics." }
+    }
+    if ($praxisStatus -eq "invalid") {
+        $findings += [pscustomobject]@{ code = "ECHELON-DOC-041"; severity = "error"; message = "Praxis repository validation failed."; remediation = "Run praxis doctor in the repository for domain-specific diagnostics." }
+    }
+
     return [pscustomobject][ordered]@{
         schemaVersion = 1
         tool = "echelon"
@@ -350,6 +424,7 @@ function Get-DoctorReport {
             components = @(Get-RepositoryComponents $repoRoot)
             npmPackages = @(Get-EchelonNpmPackages $repoRoot)
         }
+        findings = @($findings)
         summary = [pscustomobject][ordered]@{
             errors = $errors
             warnings = $warnings
@@ -556,27 +631,21 @@ function Invoke-Doctor([string[]]$Options) {
         Write-DoctorRow "ok" "$name installed" $installedText
     }
 
-    foreach ($name in @("ordo", "sde", "praxis", "ros", "echelon")) {
-        $cmd = Get-CommandFile $name
-        if (Test-Path $cmd) {
-            if ($name -eq "echelon") {
-                Write-DoctorRow "ok" "$name command" $cmd
-            }
-            else {
-                $versionLines = @(& $cmd --version 2>$null)
-                $commandExit = $LASTEXITCODE
-                $versionOutput = @($versionLines | Select-Object -First 1)
-                if ($commandExit -eq 0 -and $versionOutput.Count -gt 0 -and $versionOutput[0]) {
-                    Write-DoctorRow "ok" "$name command" ([string]$versionOutput[0])
-                }
-                else {
-                    Write-DoctorRow "error" "$name command" "present but failed --version"
-                    $errors++
-                }
-            }
+    foreach ($commandHealth in @(Get-CommandHealth)) {
+        if ($commandHealth.healthy) {
+            $shown = if ($commandHealth.version) { $commandHealth.version } else { $commandHealth.path }
+            Write-DoctorRow "ok" "$($commandHealth.name) command" $shown
         }
         else {
-            Write-DoctorRow "error" "$name command" "missing: $cmd"
+            if ($commandHealth.version -and $commandHealth.expectedVersion -and $commandHealth.version -ne $commandHealth.expectedVersion) {
+                Write-DoctorRow "error" "$($commandHealth.name) command" "$($commandHealth.version); active version is $($commandHealth.expectedVersion)"
+            }
+            elseif (Test-Path $commandHealth.path) {
+                Write-DoctorRow "error" "$($commandHealth.name) command" "present but failed --version"
+            }
+            else {
+                Write-DoctorRow "error" "$($commandHealth.name) command" "missing: $($commandHealth.path)"
+            }
             $errors++
         }
     }
@@ -664,6 +733,30 @@ function Invoke-Doctor([string[]]$Options) {
     else {
         Write-DoctorRow "warn" "Toolchain manifest" "not present; setup will use latest stable releases"
         $warnings++
+    }
+
+    Write-Host
+    Write-Host "Repository components"
+    $components = @(Get-RepositoryComponents $repoRoot)
+    if ($components.Count -eq 0) {
+        Write-DoctorRow "ok" "Components" "none"
+    }
+    else {
+        foreach ($component in $components) {
+            Write-DoctorRow "ok" $component.tool "$($component.installedVersion) ($($component.manifest))"
+        }
+    }
+
+    Write-Host
+    Write-Host "Installed Echelon npm packages"
+    $npmPackages = @(Get-EchelonNpmPackages $repoRoot)
+    if ($npmPackages.Count -eq 0) {
+        Write-DoctorRow "ok" "npm packages" "none"
+    }
+    else {
+        foreach ($package in $npmPackages) {
+            Write-DoctorRow "ok" $package.package $package.version
+        }
     }
 
     if (Test-Path (Join-Path $repoRoot ".sde")) {
