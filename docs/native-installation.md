@@ -4,7 +4,19 @@ Praxis is the product name for the repository operating system previously expose
 
 Each stable release contains a self-contained F# executable plus the exact versioned package payload needed by lifecycle commands such as init, verify, doctor, and upgrade. The native wrapper supplies that payload to the executable explicitly. Existing repository-local ROS installations remain compatible.
 
-## Install Praxis
+## Install the complete Echelon toolchain
+
+macOS or Linux:
+
+    curl -fsSL https://raw.githubusercontent.com/kemiller2002/praxis/main/scripts/install-toolchain.sh | sh
+
+Windows PowerShell:
+
+    irm https://raw.githubusercontent.com/kemiller2002/praxis/main/scripts/install-toolchain.ps1 | iex
+
+That installs Praxis, Ordo, their compatibility aliases, and the reusable `echelon` command.
+
+## Install Praxis only
 
 macOS or Linux:
 
