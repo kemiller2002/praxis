@@ -17,7 +17,7 @@ Usage:
   echelon upgrade
   echelon install ordo [VERSION]
   echelon install praxis [VERSION]
-  echelon doctor [--fix] [--verbose] [--json]
+  echelon doctor [--fix] [--verbose] [--json] [--updates]
   echelon inventory [--json]
   echelon version
 "@ | Write-Host
@@ -133,6 +133,47 @@ function Normalize-VersionOutput([string]$Raw) {
     $match = [regex]::Match($Raw, '(?<![0-9A-Za-z])([0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?)')
     if ($match.Success) { return $match.Groups[1].Value }
     return ""
+}
+
+function Get-LatestReleaseVersion([string]$Name) {
+    switch ($Name) {
+        "ordo" {
+            if ($env:ECHELON_ORDO_LATEST_VERSION) { return $env:ECHELON_ORDO_LATEST_VERSION }
+            $repoName = "ordo"
+        }
+        "praxis" {
+            if ($env:ECHELON_PRAXIS_LATEST_VERSION) { return $env:ECHELON_PRAXIS_LATEST_VERSION }
+            $repoName = "praxis"
+        }
+        default { return $null }
+    }
+
+    try {
+        $release = Invoke-RestMethod -Headers @{ "User-Agent" = "echelon-doctor" } -Uri "https://api.github.com/repos/kemiller2002/$repoName/releases/latest"
+        return ([string]$release.tag_name) -replace '^v', ''
+    }
+    catch {
+        return $null
+    }
+}
+
+function Get-UpdateReport {
+    $result = [ordered]@{}
+    foreach ($name in @("ordo", "praxis")) {
+        $active = Get-ActiveVersion $name
+        $latest = Get-LatestReleaseVersion $name
+        $available = $null
+        if ($active -and $latest) { $available = [bool]($active -ne $latest) }
+
+        $result[$name] = [pscustomobject][ordered]@{
+            activeVersion = $(if ($active) { $active } else { $null })
+            latestStable = $(if ($latest) { $latest } else { $null })
+            available = $available
+            status = $(if ($latest) { "checked" } else { "unavailable" })
+        }
+    }
+
+    return [pscustomobject]$result
 }
 
 function Get-NativeToolInventory {
@@ -261,7 +302,7 @@ function Get-CommandHealth {
     return @($items)
 }
 
-function Get-DoctorReport {
+function Get-DoctorReport([bool]$IncludeUpdates = $false) {
     $errors = 0
     $warnings = 0
 
@@ -418,6 +459,7 @@ function Get-DoctorReport {
         }
         nativeTools = @(Get-NativeToolInventory)
         commands = $commands
+        updates = $(if ($IncludeUpdates) { Get-UpdateReport } else { $null })
         repository = [pscustomobject][ordered]@{
             root = $repoRoot
             isGit = [bool]$insideGit
@@ -562,6 +604,7 @@ function Invoke-Doctor([string[]]$Options) {
     $fix = $false
     $verbose = $false
     $json = $false
+    $updates = $false
 
     foreach ($option in @($Options)) {
         if (-not $option) { continue }
@@ -570,12 +613,13 @@ function Invoke-Doctor([string[]]$Options) {
             "--verbose" { $verbose = $true }
             "-v" { $verbose = $true }
             "--json" { $json = $true }
+            "--updates" { $updates = $true }
             "--help" {
-                Write-Host "Usage: echelon doctor [--fix] [--verbose] [--json]"
+                Write-Host "Usage: echelon doctor [--fix] [--verbose] [--json] [--updates]"
                 return
             }
             "-h" {
-                Write-Host "Usage: echelon doctor [--fix] [--verbose] [--json]"
+                Write-Host "Usage: echelon doctor [--fix] [--verbose] [--json] [--updates]"
                 return
             }
             default {
@@ -595,7 +639,7 @@ function Invoke-Doctor([string[]]$Options) {
     }
 
     if ($json) {
-        $report = Get-DoctorReport
+        $report = Get-DoctorReport $updates
         $report | ConvertTo-Json -Depth 8 -Compress
         exit $report.exitCode
     }
@@ -679,6 +723,27 @@ function Invoke-Doctor([string[]]$Options) {
         )
         if ($extras.Count -gt 0) {
             Write-DoctorRow "ok" "Other installed tools" ($extras -join "; ")
+        }
+    }
+
+    if ($updates) {
+        Write-Host
+        Write-Host "Updates"
+        $updateReport = Get-UpdateReport
+        foreach ($name in @("ordo", "praxis")) {
+            $entry = $updateReport.$name
+            if ($entry.status -eq "unavailable") {
+                Write-DoctorRow "ok" $name "update check unavailable"
+            }
+            elseif (-not $entry.activeVersion) {
+                Write-DoctorRow "ok" $name "latest stable $($entry.latestStable); no active version"
+            }
+            elseif ($entry.available) {
+                Write-DoctorRow "ok" $name "active $($entry.activeVersion); latest stable $($entry.latestStable)"
+            }
+            else {
+                Write-DoctorRow "ok" $name "$($entry.activeVersion) is current"
+            }
         }
     }
 
