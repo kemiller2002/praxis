@@ -4,8 +4,7 @@ on:
   pull_request:
     paths:
       - ".github/workflows/native-release.yml"
-      - "scripts/install-native.sh"
-      - "scripts/install-native.ps1"
+      - "scripts/**"
       - "bin/praxis-native.sh"
       - "bin/praxis-native.cmd"
       - "bin/echelon.sh"
@@ -17,8 +16,7 @@ on:
     paths:
       - "package.json"
       - ".github/workflows/native-release.yml"
-      - "scripts/install-native.sh"
-      - "scripts/install-native.ps1"
+      - "scripts/**"
       - "bin/praxis-native.sh"
       - "bin/praxis-native.cmd"
       - "bin/echelon.sh"
