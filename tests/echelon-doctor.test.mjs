@@ -132,7 +132,7 @@ test("echelon doctor fails when the active version violates the repository manif
   const result = runDoctor(environment);
 
   assert.equal(result.status, 1, result.stderr || result.stdout);
-  assert.match(result.stdout, /Praxis requirement\s+required 9\.9\.9; active 3\.3\.0/);
+  assert.match(result.stdout, /Praxis requirement\s+required 9\.9\.9; active 3\.4\.0/);
   assert.match(result.stdout, /Environment requires attention\./);
   assert.match(result.stdout, /echelon doctor --fix/);
 });
