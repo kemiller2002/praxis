@@ -42,7 +42,7 @@ manifest_version() {
   tool="$1"
   file=".echelon/toolchain.json"
   [ -f "$file" ] || return 0
-  sed -n 's/.*"'"$tool"'"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$file" | head -n 1
+  tr -d '\r\n' < "$file" | sed -n 's/.*"'"$tool"'"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1
 }
 
 setup_all() {
