@@ -56,6 +56,15 @@ Once installed, the repository can also run its own lifecycle through the
 ./ros upgrade     # update to this CLI's version
 ```
 
+## New in 3.4.0
+
+- **Agent-readable Doctor:** `echelon doctor --json` emits a versioned schema with health, commands, native tools, repository components, npm packages, findings, and remediation.
+- **Full inventory:** `echelon inventory` distinguishes native Echelon tools, repository-installed lifecycle components, and physically installed `@echelon-foundry/*` npm packages.
+- **Stable finding codes:** agents can react to `ECHELON-DOC-xxx` codes instead of scraping diagnostic prose.
+- **Stale alias detection:** `ordo`/`sde` and `praxis`/`ros` must report the version that is actually active.
+- **Published schemas:** Doctor and inventory JSON schema v1 ship under `schemas/`.
+- **Opt-in release awareness:** `echelon doctor --updates` compares active Ordo/Praxis versions with latest stable releases without making network access part of normal Doctor health.
+
 ## New in 3.3.0
 
 - **Expanded Echelon Doctor:** `echelon doctor` now reports machine/install health, active and side-by-side tool versions, command aliases, repository toolchain requirements, and repository-level Ordo/Praxis validation.

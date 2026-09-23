@@ -408,6 +408,11 @@ test("npm tarball contains the executable and every scaffold source", async (t) 
   const report = JSON.parse(packed.stdout);
   const files = new Set(report[0].files.map((entry) => entry.path));
   assert.ok(files.has("bin/ros-bootstrap.mjs"));
+  assert.ok(files.has("docs/echelon-doctor.md"));
+  assert.ok(files.has("docs/native-installation.md"));
+  assert.ok(files.has("docs/toolchain-manifest.md"));
+  assert.ok(files.has("schemas/echelon-doctor-v1.schema.json"));
+  assert.ok(files.has("schemas/echelon-inventory-v1.schema.json"));
   assert.ok(files.has("lib/bootstrap.mjs"));
   assert.ok(files.has("starter/greenfield/manifest.json"));
   assert.ok(files.has("framework/REP-SPECIFICATION.md"));

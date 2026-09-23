@@ -68,10 +68,17 @@ Useful forms:
     echelon doctor
     echelon doctor --verbose
     echelon doctor --fix
+    echelon doctor --json
+    echelon doctor --updates
+    echelon doctor --json --updates
+    echelon inventory
+    echelon inventory --json
 
 `--fix` is intentionally conservative. It creates missing Echelon directories and reinstalls/reactivates an exact pinned version, or the already-active version when a command wrapper is missing. It does not edit repository-managed Ordo/Praxis state and it does not silently modify shell startup files to change PATH.
 
-Warnings such as a missing PATH entry do not make the command fail. Broken command entry points, missing active tools, manifest mismatches, or failed repository validation return exit code 1.
+Warnings such as a missing PATH entry do not make the command fail. Broken command entry points, stale command aliases, missing active tools, manifest mismatches, or failed repository validation return exit code 1.
+
+Doctor also inventories repository lifecycle manifests under `.echelon/` and physically installed `node_modules/@echelon-foundry/*` packages. The JSON forms are stable agent-facing contracts documented in [echelon-doctor.md](echelon-doctor.md).
 
 ## Layout
 

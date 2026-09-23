@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echelonfoundry.com/schemas/echelon-inventory-v1.schema.json",
+  "title": "Echelon Inventory v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "tool", "command", "nativeTools", "repository"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "tool": { "const": "echelon" },
+    "command": { "const": "inventory" },
+    "nativeTools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "activeVersion", "installedVersions"],
+        "properties": {
+          "name": { "type": "string" },
+          "activeVersion": { "type": ["string", "null"] },
+          "installedVersions": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "components", "npmPackages"],
+      "properties": {
+        "root": { "type": "string" },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["tool", "installedVersion", "manifest"],
+            "properties": {
+              "tool": { "type": "string" },
+              "installedVersion": { "type": "string" },
+              "manifest": { "type": "string" }
+            }
+          }
+        },
+        "npmPackages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["package", "version", "manifest"],
+            "properties": {
+              "package": { "type": "string" },
+              "version": { "type": "string" },
+              "manifest": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
