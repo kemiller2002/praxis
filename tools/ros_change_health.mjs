@@ -165,6 +165,20 @@ function intersects(left, right) {
 function recentTouchCounts(policy, history, file, buckets) {
   const recent = history.updates.slice(-policy.historyWindow);
   const names = aliases(file);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const previous of recent.flatMap((update) => update.files ?? [])) {
+      const previousAliases = aliases(previous);
+      if (!intersects(names, previousAliases)) continue;
+      for (const value of previousAliases) {
+        if (!names.has(value)) {
+          names.add(value);
+          changed = true;
+        }
+      }
+    }
+  }
   const fileTouches = 1 + recent.filter((update) =>
     (update.files ?? []).some((previous) => intersects(names, aliases(previous)))).length;
   const regionTouches = buckets.length
@@ -350,25 +364,41 @@ export function showChangeHotspots(root) {
   const recent = history.updates.slice(-policy.historyWindow);
   const fileCounts = new Map();
   const regionCounts = new Map();
+  const renameTargets = new Map();
+  for (const update of recent) {
+    for (const file of update.files ?? []) {
+      if (file.from) renameTargets.set(file.from, file.path);
+    }
+  }
+  const canonicalPath = (initial) => {
+    let current = initial;
+    const seen = new Set();
+    while (renameTargets.has(current) && !seen.has(current)) {
+      seen.add(current);
+      current = renameTargets.get(current);
+    }
+    return current;
+  };
 
   for (const update of recent) {
     const fileSeen = new Set();
     const regionSeen = new Set();
     for (const file of update.files ?? []) {
-      if (!fileSeen.has(file.path)) {
-        fileSeen.add(file.path);
-        const current = fileCounts.get(file.path) ?? { path: file.path, touches: 0, lastTouchedAt: update.finalizedAt };
+      const canonical = canonicalPath(file.path);
+      if (!fileSeen.has(canonical)) {
+        fileSeen.add(canonical);
+        const current = fileCounts.get(canonical) ?? { path: canonical, touches: 0, lastTouchedAt: update.finalizedAt };
         current.touches += 1;
         if (update.finalizedAt > current.lastTouchedAt) current.lastTouchedAt = update.finalizedAt;
-        fileCounts.set(file.path, current);
+        fileCounts.set(canonical, current);
       }
       for (const hunk of file.hunks ?? []) {
         for (const bucket of hunk.buckets ?? []) {
-          const key = file.path + "\u0000" + bucket;
+          const key = canonical + "\u0000" + bucket;
           if (regionSeen.has(key)) continue;
           regionSeen.add(key);
           const current = regionCounts.get(key) ?? {
-            path: file.path, bucket,
+            path: canonical, bucket,
             startLine: bucket * policy.lineBucketSize + 1,
             endLine: (bucket + 1) * policy.lineBucketSize,
             touches: 0, lastTouchedAt: update.finalizedAt
