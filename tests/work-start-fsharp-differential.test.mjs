@@ -153,6 +153,7 @@ const GOLDEN ={
         }
       ],
       "paths": [
+        ".echelon/toolchain.json",
         ".editorconfig",
         ".gitattributes",
         ".github/copilot-instructions.md",
