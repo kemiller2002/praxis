@@ -56,6 +56,14 @@ Once installed, the repository can also run its own lifecycle through the
 ./ros upgrade     # update to this CLI's version
 ```
 
+## New in 3.2.0
+
+- **Praxis native distribution:** self-contained GitHub Release bundles for macOS, Linux, and Windows; no Node.js, npm, or machine-wide .NET runtime is required.
+- **Echelon bootstrap:** `echelon setup`, `install`, `upgrade`, and `doctor` manage the native Ordo/Praxis toolchain.
+- **Repository toolchain pinning:** `.echelon/toolchain.json` can require exact Ordo and Praxis releases.
+- **Compatibility aliases:** `praxis` is the preferred native command while `ros` remains supported.
+- **Immutable installs:** native versions live side-by-side and activation changes without rewriting an existing version directory.
+
 ## New in 3.1.4
 
 - **Legacy research-package compatibility:** established `RP-...-YYYY-NNN` and `REP-...-YYYY-NNN` package identifiers remain valid, including their historical exact `ID.md` filenames. New artifacts should still use the current canonical identifier format. The compatibility rule is intentionally limited to research packages and does not widen evidence, hypothesis, theory, experiment, decision, concept, glossary, or mission IDs.
