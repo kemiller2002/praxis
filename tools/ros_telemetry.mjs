@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { observeGitStatus, runGitText } from "./ros_git.mjs";
 import { readJson, withFileLock, writeJson } from "./ros_persistence.mjs";
-import { captureChangeHealth, loadChangeHealthPolicy, showChangeHotspots } from "./ros_change_health.mjs";
+import { captureChangeHealth, showChangeHotspots } from "./ros_change_health.mjs";
 
 export const TELEMETRY_SCHEMA_VERSION = "1.0.0";
 export const TELEMETRY_ADAPTERS = [
