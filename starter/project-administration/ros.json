@@ -14,14 +14,40 @@
   "registries": "registries",
   "templates": "templates",
   "generated": "generated",
-  "repository": {"id": "{{PROJECT_SLUG}}", "type": "hub"},
+  "repository": {
+    "id": "{{PROJECT_SLUG}}",
+    "type": "hub"
+  },
   "workProtocol": {
     "version": "1.0.0",
     "enforceAttribution": true,
-    "semanticMapping": {"ready": "ready", "active": "active", "blocked": "blocked", "complete": "complete"},
-    "completionEvidence": {"default": ["implementation", "tests"], "mechanical": []},
-    "meaningfulPaths": ["**"],
-    "ignoredPaths": [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", ".ros/telemetry/**", ".ros/locks/**", ".ros/hub/**", "registries/**", ".echelon/**"]
+    "semanticMapping": {
+      "ready": "ready",
+      "active": "active",
+      "blocked": "blocked",
+      "complete": "complete"
+    },
+    "completionEvidence": {
+      "default": [
+        "implementation",
+        "tests"
+      ],
+      "mechanical": []
+    },
+    "meaningfulPaths": [
+      "**"
+    ],
+    "ignoredPaths": [
+      ".git/**",
+      ".ros/context/**",
+      ".ros/events/**",
+      ".ros/work/**",
+      ".ros/telemetry/**",
+      ".ros/locks/**",
+      ".ros/hub/**",
+      "registries/**",
+      ".echelon/**"
+    ]
   },
   "telemetry": {
     "version": "1.0.0",
@@ -33,6 +59,7 @@
     "maxRawPayloadBytes": 262144,
     "maxRawSnapshotsPerExecution": 256,
     "maxRawBytesPerExecution": 8388608,
-    "maxCapabilityHistoryEntries": 64
+    "maxCapabilityHistoryEntries": 64,
+    "changeHealthPolicy": "telemetry/change-health.json"
   }
 }
