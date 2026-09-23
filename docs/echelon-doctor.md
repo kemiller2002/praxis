@@ -65,6 +65,13 @@ Agents should branch on `code` and `severity`, not English message text.
 
 `echelon doctor --json` writes exactly one JSON document to stdout. The contract has `schemaVersion: 1` and is defined by `schemas/echelon-doctor-v1.schema.json`.
 
+Update checks are opt-in:
+
+    echelon doctor --updates
+    echelon doctor --json --updates
+
+Without `--updates`, the JSON `updates` field is `null` and Doctor performs no release-network lookup. With `--updates`, Doctor checks the latest stable GitHub Release for Ordo and Praxis. An unavailable update lookup is represented as `status: "unavailable"` and does not make an otherwise healthy environment unhealthy. A newer release is informational because a repository may intentionally pin an older exact version.
+
 `echelon inventory --json` is defined by `schemas/echelon-inventory-v1.schema.json`.
 
 The Doctor report contains machine/platform and Echelon paths, native tools, command health, repository root and requirements, Ordo/Praxis validation status, repository component manifests, installed Echelon npm packages, coded findings, and summary counts.
