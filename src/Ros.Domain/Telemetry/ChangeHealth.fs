@@ -192,7 +192,7 @@ module ChangeHealth =
     let private evaluateOne code metric threshold actual remediation =
         match threshold.Error, threshold.Warning with
         | Some limit, _ when actual > limit -> Some(finding code metric "error" actual limit remediation)
-        | _, Some limit when actual > limit -> Some(finding code metric metric "warning" actual limit remediation)
+        | _, Some limit when actual > limit -> Some(finding code metric "warning" actual limit remediation)
         | _ -> None
 
     let evaluate (policy: ChangeHealthPolicy) (metrics: ChangeHealthMetrics) =
