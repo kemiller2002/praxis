@@ -32,6 +32,12 @@
       "template": false
     },
     {
+      "source": "templates/echelon-toolchain.json",
+      "destination": ".echelon/toolchain.json",
+      "template": false,
+      "ownership": "shared"
+    },
+    {
       "source": "starter/greenfield/editorconfig.template",
       "destination": ".editorconfig",
       "template": false,
