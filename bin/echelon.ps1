@@ -100,7 +100,8 @@ switch ($Command.ToLowerInvariant()) {
     "setup" { Install-All }
     "upgrade" { Install-All }
     "install" {
-        switch (($Tool ?? "").ToLowerInvariant()) {
+        $toolName = if ($null -eq $Tool) { "" } else { $Tool }
+        switch ($toolName.ToLowerInvariant()) {
             "ordo" { Invoke-Installer "ordo" $Version }
             "praxis" { Invoke-Installer "praxis" $Version }
             default { Show-Usage; exit 2 }
