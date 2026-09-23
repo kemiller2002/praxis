@@ -175,7 +175,7 @@ module ChangeHealth =
                 |> List.length
                 |> (+) 1)
             |> function
-                | [] -> 1
+                | [] -> 0
                 | values -> List.max values
 
         fileTouches, regionTouches
