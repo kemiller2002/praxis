@@ -339,16 +339,42 @@ module FileTelemetryFinalizationRepository =
                                             (rosGitSource "porcelain-v1")
 
                                 let changeSummaryOutcome = computeChangeSummary root startAvailable startCommit startDirty endSnapshot
+                                let workItemId = stringField record "workItemId" |> Option.defaultValue "unknown"
 
                                 let gitChangeMetricIds =
                                     [ "git.commits_created"; "git.files_added"; "git.files_modified"; "git.files_deleted"; "git.files_renamed"
                                       "git.binary_files_changed"; "git.lines_added"; "git.lines_deleted"; "tests.added"; "tests.modified"
                                       "tests.removed"; "documentation.files_changed" ]
 
-                                let capabilitiesAfterChangeSummary, changeSummaryNode, commitsToLink =
+                                let codeChangeMetricIds =
+                                    [ "code.files_changed"; "code.source_files_changed"; "code.lines_changed"; "code.net_lines"
+                                      "code.hunks_changed"; "code.max_hunks_per_file"; "code.largest_file_churn"
+                                      "code.largest_changed_file_lines"; "code.repeat_file_touches"; "code.repeat_region_touches"
+                                      "code.threshold_warnings"; "code.threshold_errors" ]
+
+                                let capabilitiesAfterChangeSummary, changeSummaryNode, changeHealthNode, commitsToLink =
                                     match changeSummaryOutcome with
                                     | Ok summary ->
-                                        let metricSource : CapabilitySource = { Type = "ros-git"; Name = "git-diff"; Mechanism = summary.Mechanism }
+                                        let metricSource : CapabilitySource =
+                                            { Type = "ros-git"
+                                              Name = "git-diff"
+                                              Mechanism = summary.Mechanism }
+
+                                        let changeHealth =
+                                            match FileChangeHealthRepository.capture root executionId workItemId finalizedAt summary with
+                                            | Ok capture -> capture
+                                            | Error message -> raise (InvalidOperationException($"change-health capture failed: {message}"))
+
+                                        let changeHealthSource : CapabilitySource =
+                                            { Type = "ros-git"
+                                              Name = "praxis-change-health"
+                                              Mechanism = "git-diff-and-bounded-history" }
+
+                                        let warningCount =
+                                            changeHealth.Findings |> List.filter (fun finding -> finding.Severity = "warning") |> List.length
+
+                                        let errorCount =
+                                            changeHealth.Findings |> List.filter (fun finding -> finding.Severity = "error") |> List.length
 
                                         let capabilities =
                                             capabilitiesAfterEnding
@@ -364,6 +390,18 @@ module FileTelemetryFinalizationRepository =
                                             |> appendMetric "tests.modified" (int64 summary.Tests.Modified) metricSource
                                             |> appendMetric "tests.removed" (int64 summary.Tests.Removed) metricSource
                                             |> appendMetric "documentation.files_changed" (int64 summary.DocumentationFilesChanged) metricSource
+                                            |> appendMetric "code.files_changed" (int64 changeHealth.Metrics.FilesChanged) changeHealthSource
+                                            |> appendMetric "code.source_files_changed" (int64 changeHealth.Metrics.SourceFilesChanged) changeHealthSource
+                                            |> appendMetric "code.lines_changed" (int64 changeHealth.Metrics.LinesChanged) changeHealthSource
+                                            |> appendMetric "code.net_lines" (int64 changeHealth.Metrics.NetLines) changeHealthSource
+                                            |> appendMetric "code.hunks_changed" (int64 changeHealth.Metrics.HunksChanged) changeHealthSource
+                                            |> appendMetric "code.max_hunks_per_file" (int64 changeHealth.Metrics.MaxHunksPerFile) changeHealthSource
+                                            |> appendMetric "code.largest_file_churn" (int64 changeHealth.Metrics.LargestFileChurn) changeHealthSource
+                                            |> appendMetric "code.largest_changed_file_lines" (int64 changeHealth.Metrics.LargestChangedFileLines) changeHealthSource
+                                            |> appendMetric "code.repeat_file_touches" (int64 changeHealth.Metrics.RepeatFileTouches) changeHealthSource
+                                            |> appendMetric "code.repeat_region_touches" (int64 changeHealth.Metrics.RepeatRegionTouches) changeHealthSource
+                                            |> appendMetric "code.threshold_warnings" (int64 warningCount) changeHealthSource
+                                            |> appendMetric "code.threshold_errors" (int64 errorCount) changeHealthSource
 
                                         let countsNode = JsonObject()
                                         countsNode["added"] <- JsonValue.Create summary.Counts.Added
@@ -394,13 +432,17 @@ module FileTelemetryFinalizationRepository =
                                         node["binaryFiles"] <- JsonValue.Create summary.BinaryFiles
                                         node["tests"] <- testsNode
                                         node["documentationFilesChanged"] <- JsonValue.Create summary.DocumentationFilesChanged
-                                        capabilities, (node: JsonNode), [ summary.StartCommit; summary.EndCommit ]
+
+                                        capabilities, (node: JsonNode), (changeHealth.Node: JsonNode), [ summary.StartCommit; summary.EndCommit ]
                                     | Error reason ->
                                         let reasonText = $"execution attribution unavailable: {reason}"
-                                        let unavailableSource : CapabilitySource = { Type = "ros-git"; Name = "git-diff"; Mechanism = "precondition-check" }
+                                        let unavailableSource : CapabilitySource =
+                                            { Type = "ros-git"
+                                              Name = "git-diff"
+                                              Mechanism = "precondition-check" }
 
                                         let capabilities =
-                                            gitChangeMetricIds
+                                            (gitChangeMetricIds @ codeChangeMetricIds)
                                             |> List.fold
                                                 (fun acc metricId -> upsertInto acc metricId "supported-unavailable" (Some reasonText) unavailableSource)
                                                 capabilitiesAfterEnding
@@ -408,7 +450,13 @@ module FileTelemetryFinalizationRepository =
                                         let node = JsonObject()
                                         node["available"] <- JsonValue.Create false
                                         node["reason"] <- JsonValue.Create reason
-                                        capabilities, (node: JsonNode), []
+
+                                        let healthNode = JsonObject()
+                                        healthNode["schemaVersion"] <- JsonValue.Create "1.0.0"
+                                        healthNode["available"] <- JsonValue.Create false
+                                        healthNode["reason"] <- JsonValue.Create reason
+
+                                        capabilities, (node: JsonNode), (healthNode: JsonNode), []
 
                                 let capabilitiesNode = JsonArray()
                                 capabilitiesAfterChangeSummary |> List.iter (fun capability -> capabilitiesNode.Add(FileTelemetryExecutionRepository.capabilityNode capability: JsonNode))
@@ -419,6 +467,7 @@ module FileTelemetryFinalizationRepository =
                                 | :? JsonObject as repository ->
                                     repository["end"] <- endNode
                                     repository["changeSummary"] <- changeSummaryNode
+                                    repository["changeHealth"] <- changeHealthNode
                                 | _ -> ()
 
                                 if not commitsToLink.IsEmpty then
