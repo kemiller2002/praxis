@@ -115,6 +115,26 @@ test("F# telemetry finalize with no target resolves and finalizes the single act
     assert.equal(GOLDEN.test1Metrics[id], metricValue(fsharpRecord, id), `metric ${id} value mismatch`);
   }
   assert.equal(metricValue(fsharpRecord, "documentation.files_changed"), 1);
+
+  assert.equal(fsharpRecord.repository.changeHealth.enabled, true);
+  assert.equal(fsharpRecord.repository.changeHealth.metrics.filesChanged, 1);
+  assert.equal(fsharpRecord.repository.changeHealth.metrics.documentationFilesChanged, 1);
+  assert.equal(fsharpRecord.repository.changeHealth.metrics.repeatFileTouches, 1);
+  assert.equal(metricValue(fsharpRecord, "code.files_changed"), 1);
+  assert.equal(metricValue(fsharpRecord, "code.lines_changed"), 1);
+  assert.equal(metricValue(fsharpRecord, "code.threshold_warnings"), 0);
+  assert.equal(metricValue(fsharpRecord, "code.threshold_errors"), 0);
+
+  const historyPath = path.join(fsharpRoot, ".ros", "telemetry", "change-history.json");
+  assert.ok(fs.existsSync(historyPath));
+  const history = JSON.parse(fs.readFileSync(historyPath, "utf8"));
+  assert.equal(history.updates.length, 1);
+  assert.equal(history.updates[0].executionId, fsharpRecord.executionId);
+  assert.equal(history.updates[0].files[0].path, "IMPLEMENTATION-NOTES.md");
+
+  const changeHealth = runFsharp(fsharpRoot, ["change-health", fsharpRecord.executionId]);
+  assert.equal(changeHealth.status, 0, changeHealth.stderr);
+  assert.deepEqual(JSON.parse(changeHealth.stdout), fsharpRecord.repository.changeHealth);
 });
 
 test("F# telemetry finalize with a work-item target matches by workItemId regardless of status, taking the latest startedAt", (t) => {
@@ -223,4 +243,39 @@ test("F# telemetry finalize --input is rejected by this CLI, unlike production's
 
   const record = readExecution(fsharpRoot, "EXE-1");
   assert.equal(record.status, "active");
+});
+
+
+test("F# change-health history identifies a file and line region touched across multiple updates", (t) => {
+  const root = fixture(t, "hotspots-fsharp");
+  fs.mkdirSync(path.join(root, "src"), { recursive: true });
+  fs.writeFileSync(path.join(root, "src", "Hot.fs"), "module Hot\n\nlet value = 1\n");
+  execFileSync("git", ["add", "src/Hot.fs"], { cwd: root });
+  execFileSync("git", ["commit", "-qm", "add hotspot fixture"], { cwd: root });
+
+  execFileSync("dotnet", [fsharpCli, "--root", root, "work", "start", "--id", "WI-HOT-1", "--occurred-at", "2026-09-23T10:00:00.000Z", "--type", "task"]);
+  fs.writeFileSync(path.join(root, "src", "Hot.fs"), "module Hot\n\nlet value = 2\n");
+  const first = runFsharp(root, ["finalize", "WI-HOT-1"]);
+  assert.equal(first.status, 0, first.stderr);
+  assert.equal(JSON.parse(first.stdout).repository.changeHealth.metrics.repeatFileTouches, 1);
+
+  execFileSync("git", ["add", "src/Hot.fs"], { cwd: root });
+  execFileSync("git", ["commit", "-qm", "first hotspot update"], { cwd: root });
+
+  execFileSync("dotnet", [fsharpCli, "--root", root, "work", "start", "--id", "WI-HOT-2", "--occurred-at", "2026-09-23T11:00:00.000Z", "--type", "task"]);
+  fs.writeFileSync(path.join(root, "src", "Hot.fs"), "module Hot\n\nlet value = 3\n");
+  const second = runFsharp(root, ["finalize", "WI-HOT-2"]);
+  assert.equal(second.status, 0, second.stderr);
+  const secondRecord = JSON.parse(second.stdout);
+  assert.equal(secondRecord.repository.changeHealth.metrics.repeatFileTouches, 2);
+  assert.equal(secondRecord.repository.changeHealth.metrics.repeatRegionTouches, 2);
+
+  const hotspots = runFsharp(root, ["hotspots"]);
+  assert.equal(hotspots.status, 0, hotspots.stderr);
+  const report = JSON.parse(hotspots.stdout);
+  const file = report.files.find((item) => item.path === "src/Hot.fs");
+  const region = report.regions.find((item) => item.path === "src/Hot.fs");
+  assert.equal(file.touches, 2);
+  assert.equal(region.touches, 2);
+  assert.ok(region.startLine <= 3 && region.endLine >= 3);
 });
