@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echelonfoundry.com/schemas/echelon-doctor-v1.schema.json",
+  "title": "Echelon Doctor Report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "tool",
+    "command",
+    "health",
+    "exitCode",
+    "machine",
+    "nativeTools",
+    "commands",
+    "repository",
+    "findings",
+    "summary"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "tool": { "const": "echelon" },
+    "command": { "const": "doctor" },
+    "health": { "enum": ["healthy", "warning", "error"] },
+    "exitCode": { "enum": [0, 1] },
+    "machine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform", "architecture", "echelonHome", "binDirectory", "pathConfigured"],
+      "properties": {
+        "platform": { "type": "string" },
+        "architecture": { "type": "string" },
+        "echelonHome": { "type": "string" },
+        "binDirectory": { "type": "string" },
+        "pathConfigured": { "type": "boolean" }
+      }
+    },
+    "nativeTools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "activeVersion", "installedVersions"],
+        "properties": {
+          "name": { "type": "string" },
+          "activeVersion": { "type": ["string", "null"] },
+          "installedVersions": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "healthy", "path", "version"],
+        "properties": {
+          "name": { "type": "string" },
+          "healthy": { "type": "boolean" },
+          "path": { "type": "string" },
+          "version": { "type": ["string", "null"] },
+          "expectedVersion": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "isGit",
+        "toolchainManifest",
+        "requirements",
+        "ordoStatus",
+        "praxisStatus",
+        "components",
+        "npmPackages"
+      ],
+      "properties": {
+        "root": { "type": "string" },
+        "isGit": { "type": "boolean" },
+        "toolchainManifest": { "type": ["string", "null"] },
+        "requirements": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ordo", "praxis"],
+          "properties": {
+            "ordo": { "type": ["string", "null"] },
+            "praxis": { "type": ["string", "null"] }
+          }
+        },
+        "ordoStatus": { "enum": ["not-installed", "valid", "invalid"] },
+        "praxisStatus": { "enum": ["not-installed", "valid", "invalid"] },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["tool", "installedVersion", "manifest"],
+            "properties": {
+              "tool": { "type": "string" },
+              "installedVersion": { "type": "string" },
+              "manifest": { "type": "string" }
+            }
+          }
+        },
+        "npmPackages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["package", "version", "manifest"],
+            "properties": {
+              "package": { "type": "string" },
+              "version": { "type": "string" },
+              "manifest": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "severity", "message", "remediation"],
+        "properties": {
+          "code": { "pattern": "^ECHELON-DOC-[0-9]{3}$" },
+          "severity": { "enum": ["warning", "error"] },
+          "message": { "type": "string" },
+          "remediation": { "type": "string" }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["errors", "warnings"],
+      "properties": {
+        "errors": { "type": "integer", "minimum": 0 },
+        "warnings": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}
