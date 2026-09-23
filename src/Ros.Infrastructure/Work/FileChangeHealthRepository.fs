@@ -571,14 +571,18 @@ module FileChangeHealthRepository =
                                 let details =
                                     entries
                                     |> List.map (fun entry ->
-                                        let currentLines =
+                                        let observedCurrentLines =
                                             if entry.Status = 'D' then None else countTextLines root entry.Path
 
                                         let added, deleted =
                                             if entry.Untracked then
-                                                currentLines, Some 0
+                                                observedCurrentLines, Some 0
                                             else
                                                 numstat |> Map.tryFind entry.Path |> Option.defaultValue (None, None)
+
+                                        let currentLines =
+                                            if not entry.Untracked && added.IsNone && deleted.IsNone then None
+                                            else observedCurrentLines
 
                                         let churn =
                                             match added, deleted with
