@@ -1099,7 +1099,7 @@ const GIT_CHANGE_METRICS = [
   "tests.removed", "documentation.files_changed"
 ];
 const CODE_CHANGE_METRICS = [
-  "code.files_changed", "code.source_files_changed", "code.lines_changed", "code.net_lines",
+  "code.files_changed", "code.source_files_changed", "code.lines_changed",
   "code.hunks_changed", "code.max_hunks_per_file", "code.largest_file_churn",
   "code.largest_changed_file_lines", "code.repeat_file_touches", "code.repeat_region_touches",
   "code.threshold_warnings", "code.threshold_errors"
@@ -1170,7 +1170,6 @@ export function finalizeExecution(root, target, options = {}) {
           "code.files_changed": changeHealth.metrics.filesChanged,
           "code.source_files_changed": changeHealth.metrics.sourceFilesChanged,
           "code.lines_changed": changeHealth.metrics.linesChanged,
-          "code.net_lines": changeHealth.metrics.netLines,
           "code.hunks_changed": changeHealth.metrics.hunksChanged,
           "code.max_hunks_per_file": changeHealth.metrics.maxHunksPerFile,
           "code.largest_file_churn": changeHealth.metrics.largestFileChurn,
