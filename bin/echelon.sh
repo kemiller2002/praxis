@@ -12,7 +12,7 @@ Usage:
   echelon upgrade
   echelon install ordo [VERSION]
   echelon install praxis [VERSION]
-  echelon doctor [--fix] [--verbose] [--json]
+  echelon doctor [--fix] [--verbose] [--json] [--updates]
   echelon inventory [--json]
   echelon version
 EOF
@@ -192,6 +192,77 @@ normalize_version_output() {
       }
     }
   }'
+}
+
+latest_release_version() {
+  tool="$1"
+
+  case "$tool" in
+    ordo)
+      if [ -n "${ECHELON_ORDO_LATEST_VERSION:-}" ]; then
+        printf '%s\n' "$ECHELON_ORDO_LATEST_VERSION"
+        return 0
+      fi
+      repo="ordo"
+      ;;
+    praxis)
+      if [ -n "${ECHELON_PRAXIS_LATEST_VERSION:-}" ]; then
+        printf '%s\n' "$ECHELON_PRAXIS_LATEST_VERSION"
+        return 0
+      fi
+      repo="praxis"
+      ;;
+    *) return 2 ;;
+  esac
+
+  command -v curl >/dev/null 2>&1 || return 1
+  curl -fsSL "https://api.github.com/repos/kemiller2002/$repo/releases/latest" 2>/dev/null |
+    sed -n 's/.*"tag_name":[[:space:]]*"v\([^"]*\)".*/\1/p' |
+    head -n 1
+}
+
+update_status_text() {
+  tool="$1"
+  active="$2"
+  latest="$(latest_release_version "$tool" || true)"
+  if [ -z "$latest" ]; then
+    printf 'update check unavailable'
+  elif [ -z "$active" ]; then
+    printf 'latest stable %s; no active version' "$latest"
+  elif [ "$active" = "$latest" ]; then
+    printf '%s is current' "$active"
+  else
+    printf 'active %s; latest stable %s' "$active" "$latest"
+  fi
+}
+
+json_updates() {
+  printf '{'
+  first_update=1
+  for tool in ordo praxis; do
+    active="$(active_version "$tool")"
+    latest="$(latest_release_version "$tool" || true)"
+    [ "$first_update" -eq 1 ] || printf ','
+    first_update=0
+    json_string "$tool"
+    printf ':{'
+    printf '"activeVersion":'
+    if [ -n "$active" ]; then json_string "$active"; else printf 'null'; fi
+    printf ',"latestStable":'
+    if [ -n "$latest" ]; then json_string "$latest"; else printf 'null'; fi
+    printf ',"available":'
+    if [ -z "$latest" ] || [ -z "$active" ]; then
+      printf 'null'
+    elif [ "$latest" = "$active" ]; then
+      printf 'false'
+    else
+      printf 'true'
+    fi
+    printf ',"status":'
+    if [ -n "$latest" ]; then json_string "checked"; else json_string "unavailable"; fi
+    printf '}'
+  done
+  printf '}'
 }
 
 json_native_tools() {
@@ -471,6 +542,10 @@ doctor_json() {
   printf ',"npmPackages":'
   json_npm_packages "$repo_root"
   printf '}'
+  if [ "${updates:-0}" -eq 1 ]; then
+    printf ',"updates":'
+    json_updates
+  fi
   printf ',"findings":'
   json_findings
   printf ',"summary":{"errors":%s,"warnings":%s}' "$errors" "$warnings"
@@ -623,14 +698,16 @@ doctor() {
   fix=0
   verbose=0
   json=0
+  updates=0
 
   while [ "$#" -gt 0 ]; do
     case "$1" in
       --fix) fix=1 ;;
       --verbose|-v) verbose=1 ;;
       --json) json=1 ;;
+      --updates) updates=1 ;;
       -h|--help)
-        echo "Usage: echelon doctor [--fix] [--verbose] [--json]"
+        echo "Usage: echelon doctor [--fix] [--verbose] [--json] [--updates]"
         return 0
         ;;
       *)
@@ -746,6 +823,13 @@ doctor() {
       if [ -n "$extras" ]; then extras="$extras; $item"; else extras="$item"; fi
     done
     [ -n "$extras" ] && doctor_row ok "Other installed tools" "$extras"
+  fi
+
+  if [ "$updates" -eq 1 ]; then
+    echo
+    echo "Updates"
+    doctor_row ok "Ordo" "$(update_status_text ordo "$(active_version ordo)")"
+    doctor_row ok "Praxis" "$(update_status_text praxis "$(active_version praxis)")"
   fi
 
   echo
