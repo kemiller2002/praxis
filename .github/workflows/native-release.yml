@@ -1,10 +1,28 @@
 name: Native Praxis release
 
 on:
+  pull_request:
+    paths:
+      - ".github/workflows/native-release.yml"
+      - "scripts/install-native.sh"
+      - "scripts/install-native.ps1"
+      - "bin/praxis-native.sh"
+      - "bin/praxis-native.cmd"
+      - "bin/echelon.sh"
+      - "bin/echelon.ps1"
+      - "src/**"
+      - "package.json"
   push:
     branches: [main]
     paths:
       - "package.json"
+      - ".github/workflows/native-release.yml"
+      - "scripts/install-native.sh"
+      - "scripts/install-native.ps1"
+      - "bin/praxis-native.sh"
+      - "bin/praxis-native.cmd"
+      - "bin/echelon.sh"
+      - "bin/echelon.ps1"
   workflow_dispatch: {}
 
 permissions:
@@ -111,7 +129,18 @@ jobs:
           (cd dist/native && sha256sum praxis-* > checksums.txt)
           cat dist/native/checksums.txt
 
+      - name: Smoke test Linux native bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./dist/native-stage/praxis-linux-x64/praxis --version
+          ./dist/native-stage/praxis-linux-x64/echelon --help
+          sh -n scripts/install-native.sh
+          sh -n bin/praxis-native.sh
+          sh -n bin/echelon.sh
+
       - name: Create or update GitHub release
+        if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.package.outputs.version }}
