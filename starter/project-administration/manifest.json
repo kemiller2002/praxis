@@ -405,6 +405,16 @@
       "source": "docs/code-change-metrics.md",
       "destination": "docs/code-change-metrics.md",
       "template": false
+    },
+    {
+      "source": "schemas/change-health-report.schema.json",
+      "destination": "schemas/change-health-report.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/change-hotspots.schema.json",
+      "destination": "schemas/change-hotspots.schema.json",
+      "template": false
     }
   ]
 }
