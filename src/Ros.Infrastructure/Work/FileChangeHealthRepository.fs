@@ -32,7 +32,7 @@ module FileChangeHealthRepository =
             Encoder = Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
         )
 
-    let private intProperty (element: JsonElement) name fallback =
+    let private intProperty (element: JsonElement) (name: string) (fallback: int) : int =
         match element.TryGetProperty name with
         | true, value when value.ValueKind = JsonValueKind.Number ->
             match value.TryGetInt32() with
@@ -40,23 +40,23 @@ module FileChangeHealthRepository =
             | _ -> fallback
         | _ -> fallback
 
-    let private boolProperty (element: JsonElement) name fallback =
+    let private boolProperty (element: JsonElement) (name: string) (fallback: bool) : bool =
         match element.TryGetProperty name with
         | true, value when value.ValueKind = JsonValueKind.True -> true
         | true, value when value.ValueKind = JsonValueKind.False -> false
         | _ -> fallback
 
-    let private stringProperty (element: JsonElement) name fallback =
+    let private stringProperty (element: JsonElement) (name: string) (fallback: string) : string =
         match element.TryGetProperty name with
         | true, value when value.ValueKind = JsonValueKind.String -> value.GetString()
         | _ -> fallback
 
-    let private optionalStringProperty (element: JsonElement) name =
+    let private optionalStringProperty (element: JsonElement) (name: string) : string option =
         match element.TryGetProperty name with
         | true, value when value.ValueKind = JsonValueKind.String -> Some(value.GetString())
         | _ -> None
 
-    let private optionalIntProperty (element: JsonElement) name =
+    let private optionalIntProperty (element: JsonElement) (name: string) : int option =
         match element.TryGetProperty name with
         | true, value when value.ValueKind = JsonValueKind.Number ->
             match value.TryGetInt32() with
@@ -65,14 +65,14 @@ module FileChangeHealthRepository =
         | true, value when value.ValueKind = JsonValueKind.Null -> None
         | _ -> None
 
-    let private threshold (element: JsonElement) name fallback =
+    let private threshold (element: JsonElement) (name: string) (fallback: ChangeThreshold) : ChangeThreshold =
         match element.TryGetProperty name with
         | true, value when value.ValueKind = JsonValueKind.Object ->
             { Warning = optionalIntProperty value "warning"
               Error = optionalIntProperty value "error" }
         | _ -> fallback
 
-    let private validateThreshold name value =
+    let private validateThreshold (name: string) (value: ChangeThreshold) : Result<unit, string> =
         let values = [ value.Warning; value.Error ] |> List.choose id
 
         if values |> List.exists (fun item -> item < 0) then
@@ -147,10 +147,10 @@ module FileChangeHealthRepository =
             with error ->
                 Error $"change-health policy is unreadable: {relative}: {error.Message}"
 
-    let private ignored ignoredPatterns path =
+    let private ignored (ignoredPatterns: string list) (path: string) : bool =
         ignoredPatterns |> List.exists (fun pattern -> Ros.Domain.Work.PathFilter.globMatch pattern path)
 
-    let private parseNameStatus ignoredPatterns (text: string) =
+    let private parseNameStatus (ignoredPatterns: string list) (text: string) : RawFileChange list =
         if String.IsNullOrEmpty text then
             []
         else
@@ -178,7 +178,7 @@ module FileChangeHealthRepository =
                                   Untracked = false })
             |> Array.toList
 
-    let private parseUntracked ignoredPatterns known (text: string) =
+    let private parseUntracked (ignoredPatterns: string list) (known: Set<string>) (text: string) : RawFileChange list =
         if String.IsNullOrEmpty text then
             []
         else
@@ -191,7 +191,7 @@ module FileChangeHealthRepository =
                   Untracked = true })
             |> Array.toList
 
-    let private parseNumstat ignoredPatterns (text: string) =
+    let private parseNumstat (ignoredPatterns: string list) (text: string) : Map<string, int option * int option> =
         if String.IsNullOrEmpty text then
             Map.empty
         else
@@ -238,12 +238,12 @@ module FileChangeHealthRepository =
             RegexOptions.Compiled
         )
 
-    let parseHunks bucketSize ignoredPatterns (text: string) =
+    let parseHunks (bucketSize: int) (ignoredPatterns: string list) (text: string) : Map<string, ChangeHunk list> =
         let mutable oldPath: string option = None
         let mutable newPath: string option = None
         let mutable map: Map<string, ChangeHunk list> = Map.empty
 
-        let addHunk path hunk =
+        let addHunk (path: string) (hunk: ChangeHunk) =
             let current = map |> Map.tryFind path |> Option.defaultValue []
             map <- map |> Map.add path (current @ [ hunk ])
 
@@ -258,7 +258,7 @@ module FileChangeHealthRepository =
                 let matched = hunkPattern.Match line
 
                 if matched.Success then
-                    let parse name fallback =
+                    let parse (name: string) (fallback: int) : int =
                         let value = matched.Groups[name]
                         if value.Success && value.Value <> "" then int value.Value else fallback
 
@@ -299,11 +299,11 @@ module FileChangeHealthRepository =
         with _ ->
             None
 
-    let private historyFile root (policy: ChangeHealthPolicy) =
+    let private historyFile (root: string) (policy: ChangeHealthPolicy) : string =
         Path.GetFullPath(Path.Combine(root, policy.HistoryPath))
 
     let private parseHunkNode (node: JsonObject) =
-        let intField name =
+        let intField (name: string) : int =
             match node[name] with
             | :? JsonValue as value ->
                 match value.TryGetValue<int>() with
@@ -330,7 +330,7 @@ module FileChangeHealthRepository =
           NewLines = intField "newLines"
           Buckets = buckets }
 
-    let private stringNodeField (node: JsonObject) name =
+    let private stringNodeField (node: JsonObject) (name: string) : string option =
         match node[name] with
         | :? JsonValue as value when value.GetValueKind() = JsonValueKind.String -> Some(value.GetValue<string>())
         | _ -> None
@@ -449,7 +449,7 @@ module FileChangeHealthRepository =
         root["updates"] <- updates
         root
 
-    let private writeHistoryAtomic file history =
+    let private writeHistoryAtomic (file: string) (history: ChangeHistory) =
         let directory = Path.GetDirectoryName file
         Directory.CreateDirectory directory |> ignore
         let temporary = Path.Combine(directory, $".{Path.GetFileName file}.{Environment.ProcessId}.{Guid.NewGuid():N}.tmp")
