@@ -17,7 +17,8 @@ Usage:
   echelon upgrade
   echelon install ordo [VERSION]
   echelon install praxis [VERSION]
-  echelon doctor [--fix] [--verbose]
+  echelon doctor [--fix] [--verbose] [--json]
+  echelon inventory [--json]
   echelon version
 "@ | Write-Host
 }
@@ -127,6 +128,294 @@ function Get-CommandFile([string]$Name) {
     return Join-Path $BinDir "$Name.cmd"
 }
 
+function Get-NativeToolInventory {
+    if (-not (Test-Path $ToolsDir)) { return @() }
+
+    return @(
+        Get-ChildItem -Path $ToolsDir -Directory -ErrorAction SilentlyContinue |
+            Sort-Object Name |
+            ForEach-Object {
+                [pscustomobject]@{
+                    name = $_.Name
+                    activeVersion = $(if (Get-ActiveVersion $_.Name) { Get-ActiveVersion $_.Name } else { $null })
+                    installedVersions = @(Get-InstalledVersions $_.Name)
+                }
+            }
+    )
+}
+
+function Get-RepositoryComponents([string]$Root) {
+    $echelonDir = Join-Path $Root ".echelon"
+    if (-not (Test-Path $echelonDir)) { return @() }
+
+    $items = @()
+    foreach ($file in @(Get-ChildItem -Path $echelonDir -Filter "*.json" -File -ErrorAction SilentlyContinue | Sort-Object Name)) {
+        if ($file.Name -eq "toolchain.json" -or $file.Name -like "*.config.json") { continue }
+
+        try {
+            $manifest = Get-Content -Raw $file.FullName | ConvertFrom-Json
+        }
+        catch {
+            continue
+        }
+
+        $tool = [string]$manifest.tool
+        $version = [string]$manifest.installedVersion
+        if (-not $version) { $version = [string]$manifest.version }
+        if (-not $tool -and $version) { $tool = [IO.Path]::GetFileNameWithoutExtension($file.Name) }
+        if (-not $tool) { continue }
+        if (-not $version) { $version = "unknown" }
+
+        $items += [pscustomobject]@{
+            tool = $tool
+            installedVersion = $version
+            manifest = $file.FullName
+        }
+    }
+
+    return @($items)
+}
+
+function Get-EchelonNpmPackages([string]$Root) {
+    $scope = Join-Path $Root "node_modules\@echelon-foundry"
+    if (-not (Test-Path $scope)) { return @() }
+
+    $items = @()
+    foreach ($directory in @(Get-ChildItem -Path $scope -Directory -ErrorAction SilentlyContinue | Sort-Object Name)) {
+        $packageJson = Join-Path $directory.FullName "package.json"
+        if (-not (Test-Path $packageJson)) { continue }
+
+        try {
+            $manifest = Get-Content -Raw $packageJson | ConvertFrom-Json
+        }
+        catch {
+            continue
+        }
+
+        $name = [string]$manifest.name
+        $version = [string]$manifest.version
+        if (-not $name) { $name = "@echelon-foundry/$($directory.Name)" }
+        if (-not $version) { $version = "unknown" }
+
+        $items += [pscustomobject]@{
+            package = $name
+            version = $version
+            manifest = $packageJson
+        }
+    }
+
+    return @($items)
+}
+
+function Get-CommandHealth {
+    $items = @()
+    foreach ($name in @("ordo", "sde", "praxis", "ros", "echelon")) {
+        $cmd = Get-CommandFile $name
+        $healthy = $false
+        $versionOutput = $null
+
+        if (Test-Path $cmd) {
+            if ($name -eq "echelon") {
+                $healthy = $true
+            }
+            else {
+                $versionLines = @(& $cmd --version 2>$null)
+                $commandExit = $LASTEXITCODE
+                $firstLine = @($versionLines | Select-Object -First 1)
+                if ($commandExit -eq 0 -and $firstLine.Count -gt 0 -and $firstLine[0]) {
+                    $healthy = $true
+                    $versionOutput = [string]$firstLine[0]
+                }
+            }
+        }
+
+        $items += [pscustomobject]@{
+            name = $name
+            healthy = $healthy
+            path = $cmd
+            version = $versionOutput
+        }
+    }
+
+    return @($items)
+}
+
+function Get-DoctorReport {
+    $errors = 0
+    $warnings = 0
+
+    $pathConfigured = Test-BinOnPath
+    if (-not $pathConfigured) { $warnings++ }
+
+    $activeOrdo = Get-ActiveVersion "ordo"
+    $activePraxis = Get-ActiveVersion "praxis"
+    if (-not $activeOrdo) { $errors++ }
+    if (-not $activePraxis) { $errors++ }
+
+    $commands = @(Get-CommandHealth)
+    foreach ($command in $commands) {
+        if (-not $command.healthy) { $errors++ }
+    }
+
+    $manifestPath = Get-ManifestPath
+    $required = Get-ManifestVersions
+    if ($manifestPath) {
+        if (-not $required.ordo) { $warnings++ }
+        if (-not $required.praxis) { $warnings++ }
+        if ($required.ordo -and $activeOrdo -ne $required.ordo) { $errors++ }
+        if ($required.praxis -and $activePraxis -ne $required.praxis) { $errors++ }
+    }
+    else {
+        $warnings++
+    }
+
+    $insideGit = $false
+    if (Get-Command git -ErrorAction SilentlyContinue) {
+        & git rev-parse --is-inside-work-tree *> $null
+        $insideGit = $LASTEXITCODE -eq 0
+    }
+    $repoRoot = Get-RepositoryRoot
+
+    $ordoStatus = "not-installed"
+    if (Test-Path (Join-Path $repoRoot ".sde")) {
+        $ordo = Get-CommandFile "ordo"
+        if (Test-Path $ordo) {
+            Push-Location $repoRoot
+            try {
+                & $ordo verify *> $null
+                $ordoExit = $LASTEXITCODE
+            }
+            finally {
+                Pop-Location
+            }
+            if ($ordoExit -eq 0) { $ordoStatus = "valid" }
+            else { $ordoStatus = "invalid"; $errors++ }
+        }
+        else {
+            $ordoStatus = "invalid"
+            $errors++
+        }
+    }
+
+    $praxisStatus = "not-installed"
+    if (Test-Path (Join-Path $repoRoot ".ros")) {
+        $praxis = Get-CommandFile "praxis"
+        if (Test-Path $praxis) {
+            Push-Location $repoRoot
+            try {
+                & $praxis validate *> $null
+                $praxisExit = $LASTEXITCODE
+            }
+            finally {
+                Pop-Location
+            }
+            if ($praxisExit -eq 0) { $praxisStatus = "valid" }
+            else { $praxisStatus = "invalid"; $errors++ }
+        }
+        else {
+            $praxisStatus = "invalid"
+            $errors++
+        }
+    }
+
+    $health = if ($errors -gt 0) { "error" } elseif ($warnings -gt 0) { "warning" } else { "healthy" }
+    $exitCode = if ($errors -gt 0) { 1 } else { 0 }
+    $architecture = if ($env:PROCESSOR_ARCHITECTURE) { $env:PROCESSOR_ARCHITECTURE } else { "unknown" }
+
+    return [pscustomobject][ordered]@{
+        schemaVersion = 1
+        tool = "echelon"
+        command = "doctor"
+        health = $health
+        exitCode = $exitCode
+        machine = [pscustomobject][ordered]@{
+            platform = "Windows"
+            architecture = $architecture
+            echelonHome = $HomeDir
+            binDirectory = $BinDir
+            pathConfigured = [bool]$pathConfigured
+        }
+        nativeTools = @(Get-NativeToolInventory)
+        commands = $commands
+        repository = [pscustomobject][ordered]@{
+            root = $repoRoot
+            isGit = [bool]$insideGit
+            toolchainManifest = $(if ($manifestPath) { $manifestPath } else { $null })
+            requirements = [pscustomobject][ordered]@{
+                ordo = $(if ($required.ordo) { $required.ordo } else { $null })
+                praxis = $(if ($required.praxis) { $required.praxis } else { $null })
+            }
+            ordoStatus = $ordoStatus
+            praxisStatus = $praxisStatus
+            components = @(Get-RepositoryComponents $repoRoot)
+            npmPackages = @(Get-EchelonNpmPackages $repoRoot)
+        }
+        summary = [pscustomobject][ordered]@{
+            errors = $errors
+            warnings = $warnings
+        }
+    }
+}
+
+function Invoke-Inventory([bool]$Json) {
+    $repoRoot = Get-RepositoryRoot
+    $nativeTools = @(Get-NativeToolInventory)
+    $components = @(Get-RepositoryComponents $repoRoot)
+    $npmPackages = @(Get-EchelonNpmPackages $repoRoot)
+
+    if ($Json) {
+        [pscustomobject][ordered]@{
+            schemaVersion = 1
+            tool = "echelon"
+            command = "inventory"
+            nativeTools = $nativeTools
+            repository = [pscustomobject][ordered]@{
+                root = $repoRoot
+                components = $components
+                npmPackages = $npmPackages
+            }
+        } | ConvertTo-Json -Depth 8 -Compress
+        return
+    }
+
+    Write-Host "Echelon Inventory"
+    Write-Host "================="
+    Write-Host
+    Write-Host "Native tools"
+    if ($nativeTools.Count -eq 0) {
+        Write-DoctorRow "ok" "Native tools" "none"
+    }
+    else {
+        foreach ($native in $nativeTools) {
+            $active = if ($native.activeVersion) { $native.activeVersion } else { "none" }
+            $installed = if ($native.installedVersions.Count -gt 0) { $native.installedVersions -join ", " } else { "none" }
+            Write-DoctorRow "ok" $native.name "active $active; installed $installed"
+        }
+    }
+
+    Write-Host
+    Write-Host "Repository components"
+    if ($components.Count -eq 0) {
+        Write-DoctorRow "ok" "Components" "none"
+    }
+    else {
+        foreach ($component in $components) {
+            Write-DoctorRow "ok" $component.tool "$($component.installedVersion) ($($component.manifest))"
+        }
+    }
+
+    Write-Host
+    Write-Host "Installed Echelon npm packages"
+    if ($npmPackages.Count -eq 0) {
+        Write-DoctorRow "ok" "npm packages" "none"
+    }
+    else {
+        foreach ($package in $npmPackages) {
+            Write-DoctorRow "ok" $package.package $package.version
+        }
+    }
+}
+
 function Repair-DoctorTool([string]$Name, [string]$Required, [string]$Active) {
     $target = if ($Required) { $Required } else { $Active }
     if (-not $target) {
@@ -190,6 +479,7 @@ function Invoke-DoctorFix {
 function Invoke-Doctor([string[]]$Options) {
     $fix = $false
     $verbose = $false
+    $json = $false
 
     foreach ($option in @($Options)) {
         if (-not $option) { continue }
@@ -197,12 +487,13 @@ function Invoke-Doctor([string[]]$Options) {
             "--fix" { $fix = $true }
             "--verbose" { $verbose = $true }
             "-v" { $verbose = $true }
+            "--json" { $json = $true }
             "--help" {
-                Write-Host "Usage: echelon doctor [--fix] [--verbose]"
+                Write-Host "Usage: echelon doctor [--fix] [--verbose] [--json]"
                 return
             }
             "-h" {
-                Write-Host "Usage: echelon doctor [--fix] [--verbose]"
+                Write-Host "Usage: echelon doctor [--fix] [--verbose] [--json]"
                 return
             }
             default {
@@ -212,8 +503,19 @@ function Invoke-Doctor([string[]]$Options) {
         }
     }
 
+    if ($fix -and $json) {
+        Write-Error "echelon doctor --fix and --json cannot be combined"
+        exit 2
+    }
+
     if ($fix) {
         Invoke-DoctorFix
+    }
+
+    if ($json) {
+        $report = Get-DoctorReport
+        $report | ConvertTo-Json -Depth 8 -Compress
+        exit $report.exitCode
     }
 
     $errors = 0
@@ -470,6 +772,18 @@ switch ($Command.ToLowerInvariant()) {
         if ($Version) { $doctorOptions += $Version }
         if ($Remaining) { $doctorOptions += $Remaining }
         Invoke-Doctor $doctorOptions
+    }
+    "inventory" {
+        $inventoryOptions = @()
+        if ($Tool) { $inventoryOptions += $Tool }
+        if ($Version) { $inventoryOptions += $Version }
+        if ($Remaining) { $inventoryOptions += $Remaining }
+        $jsonInventory = $false
+        foreach ($option in $inventoryOptions) {
+            if ($option -eq "--json") { $jsonInventory = $true }
+            elseif ($option) { Write-Error "Usage: echelon inventory [--json]"; exit 2 }
+        }
+        Invoke-Inventory $jsonInventory
     }
     "version" {
         $cmd = Get-CommandFile "praxis"
