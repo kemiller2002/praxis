@@ -63,6 +63,7 @@ Once installed, the repository can also run its own lifecycle through the
 - **Stable finding codes:** agents can react to `ECHELON-DOC-xxx` codes instead of scraping diagnostic prose.
 - **Stale alias detection:** `ordo`/`sde` and `praxis`/`ros` must report the version that is actually active.
 - **Published schemas:** Doctor and inventory JSON schema v1 ship under `schemas/`.
+- **Opt-in release awareness:** `echelon doctor --updates` compares active Ordo/Praxis versions with latest stable releases without making network access part of normal Doctor health.
 
 ## New in 3.3.0
 
