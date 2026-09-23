@@ -64,9 +64,9 @@ tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT HUP INT TERM
 
 curl -fsSL "$base_url/$asset" -o "$tmp/$asset"
-curl -fsSL "$base_url/checksums.txt" -o "$tmp/checksums.txt"
+curl -fsSL "$base_url/native-checksums.txt" -o "$tmp/native-checksums.txt"
 
-expected="$(awk -v file="$asset" '$2 == file { print $1 }' "$tmp/checksums.txt")"
+expected="$(awk -v file="$asset" '$2 == file { print $1 }' "$tmp/native-checksums.txt")"
 [ -n "$expected" ] || { echo "No checksum found for $asset." >&2; exit 1; }
 
 if command -v sha256sum >/dev/null 2>&1; then
