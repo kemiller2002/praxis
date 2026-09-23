@@ -107,7 +107,8 @@
           "name",
           "healthy",
           "path",
-          "version"
+          "version",
+          "expectedVersion"
         ],
         "properties": {
           "name": {
