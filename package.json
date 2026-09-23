@@ -57,7 +57,10 @@
     "GEMINI.md",
     ".github/copilot-instructions.md",
     "README.md",
-    "PACKAGE-USAGE.md"
+    "PACKAGE-USAGE.md",
+    "docs/echelon-doctor.md",
+    "docs/native-installation.md",
+    "docs/toolchain-manifest.md"
   ],
   "engines": {
     "node": ">=20"
