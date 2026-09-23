@@ -510,7 +510,7 @@ test("main publishing workflow uses an OIDC-compatible npm CLI", () => {
   assert.match(workflow, /id-token: write/);
   assert.match(workflow, /npm install --global npm@11/);
   assert.match(workflow, /npm publish --access public --tag main/);
-  assert.match(workflow, /kemiller2002\/repository-operating-system/);
+  assert.match(workflow, /kemiller2002\\/praxis/);
   // A pre-existing release for the tag must not short-circuit asset upload:
   // v3.0.1 shipped to npm with an empty release that way, so bin/ros-fs.mjs
   // 404ed on checksums.txt for every user of that version.
@@ -519,7 +519,7 @@ test("main publishing workflow uses an OIDC-compatible npm CLI", () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(repository, "package.json"), "utf8"));
   assert.equal(
     manifest.repository.url,
-    "git+https://github.com/kemiller2002/repository-operating-system.git"
+    "git+https://github.com/kemiller2002/praxis.git"
   );
 });
 
