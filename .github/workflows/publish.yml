@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   publish:
-    if: github.repository == 'kemiller2002/repository-operating-system'
+    if: github.repository == 'kemiller2002/praxis'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
