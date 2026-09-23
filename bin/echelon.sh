@@ -43,10 +43,23 @@ install_praxis() {
   fi
 }
 
+repository_root() {
+  git rev-parse --show-toplevel 2>/dev/null || pwd
+}
+
+manifest_path() {
+  root="$(repository_root)"
+  if [ -f "$root/.echelon/toolchain.json" ]; then
+    printf '%s\n' "$root/.echelon/toolchain.json"
+  elif [ -f ".echelon/toolchain.json" ]; then
+    printf '%s\n' ".echelon/toolchain.json"
+  fi
+}
+
 manifest_version() {
   tool="$1"
-  file=".echelon/toolchain.json"
-  [ -f "$file" ] || return 0
+  file="$(manifest_path)"
+  [ -n "$file" ] && [ -f "$file" ] || return 0
   tr -d '\r\n' < "$file" | sed -n 's/.*"'"$tool"'"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1
 }
 
@@ -251,7 +264,7 @@ doctor() {
   echo "Repository"
 
   if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+    repo_root="$(repository_root)"
     doctor_row ok "Git repository" "$repo_root"
   else
     repo_root="$(pwd)"
@@ -259,8 +272,9 @@ doctor() {
     warnings=$((warnings + 1))
   fi
 
-  if [ -f ".echelon/toolchain.json" ]; then
-    doctor_row ok "Toolchain manifest" ".echelon/toolchain.json"
+  doctor_manifest="$(manifest_path)"
+  if [ -n "$doctor_manifest" ] && [ -f "$doctor_manifest" ]; then
+    doctor_row ok "Toolchain manifest" "$doctor_manifest"
     required_ordo="$(manifest_version ordo || true)"
     required_praxis="$(manifest_version praxis || true)"
     active_ordo="$(active_version ordo)"
@@ -294,8 +308,8 @@ doctor() {
     warnings=$((warnings + 1))
   fi
 
-  if [ -d ".sde" ]; then
-    if [ -x "$BIN_DIR/ordo" ] && "$BIN_DIR/ordo" verify >/dev/null 2>&1; then
+  if [ -d "$repo_root/.sde" ]; then
+    if [ -x "$BIN_DIR/ordo" ] && (cd "$repo_root" && "$BIN_DIR/ordo" verify >/dev/null 2>&1); then
       doctor_row ok "Ordo repository" "verify passed"
     else
       doctor_row error "Ordo repository" "verify failed"
@@ -305,8 +319,8 @@ doctor() {
     doctor_row ok "Ordo repository" "not installed in this repository"
   fi
 
-  if [ -d ".ros" ]; then
-    if [ -x "$BIN_DIR/praxis" ] && "$BIN_DIR/praxis" validate >/dev/null 2>&1; then
+  if [ -d "$repo_root/.ros" ]; then
+    if [ -x "$BIN_DIR/praxis" ] && (cd "$repo_root" && "$BIN_DIR/praxis" validate >/dev/null 2>&1); then
       doctor_row ok "Praxis repository" "validation passed"
     else
       doctor_row error "Praxis repository" "validation failed"
