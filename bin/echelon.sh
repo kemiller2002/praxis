@@ -90,8 +90,8 @@ case "$command" in
     doctor
     ;;
   version|--version|-V)
-    if [ -f "$(dirname "$0")/../tools/praxis/current/VERSION" ]; then
-      cat "$(dirname "$0")/../tools/praxis/current/VERSION"
+    if [ -x "$BIN_DIR/praxis" ]; then
+      "$BIN_DIR/praxis" --version
     else
       echo "echelon bootstrap"
     fi
