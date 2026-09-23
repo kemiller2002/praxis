@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "1.0.0",
+  "enabled": true,
+  "historyPath": ".ros/telemetry/change-history.json",
+  "historyWindow": 20,
+  "maxHistoryUpdates": 200,
+  "lineBucketSize": 25,
+  "failOnSeverity": null,
+  "thresholds": {
+    "filesChanged": {
+      "warning": 25,
+      "error": 60
+    },
+    "linesChanged": {
+      "warning": 800,
+      "error": 2000
+    },
+    "largestFileChurn": {
+      "warning": 300,
+      "error": 800
+    },
+    "largestChangedFileLines": {
+      "warning": 800,
+      "error": 1500
+    },
+    "hunksChanged": {
+      "warning": 30,
+      "error": 80
+    },
+    "maxHunksPerFile": {
+      "warning": 10,
+      "error": 25
+    },
+    "repeatFileTouches": {
+      "warning": 5,
+      "error": 10
+    },
+    "repeatRegionTouches": {
+      "warning": 3,
+      "error": 6
+    }
+  }
+}
