@@ -105,6 +105,16 @@ module FileWorkConfigRepository =
             | true, value when value.ValueKind = JsonValueKind.String -> value.GetString()
             | _ -> "telemetry/metrics.json"
 
+    /// Reads the repository change-health policy path, defaulting to the
+    /// versioned policy shipped with Praxis.
+    let readTelemetryChangeHealthPolicyPath (root: string) : string =
+        match readTelemetry root with
+        | None -> "telemetry/change-health.json"
+        | Some element ->
+            match element.TryGetProperty "changeHealthPolicy" with
+            | true, value when value.ValueKind = JsonValueKind.String -> value.GetString()
+            | _ -> "telemetry/change-health.json"
+
     /// Mirrors production `telemetryConfig().ignoredPaths`: the same
     /// `workProtocol.ignoredPaths` configuration key `readPathFilterConfig`
     /// reads, but with telemetry's own distinct default list (it additionally
