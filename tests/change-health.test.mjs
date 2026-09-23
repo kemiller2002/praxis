@@ -29,7 +29,6 @@ function fixture(t) {
     historyWindow: 20,
     maxHistoryUpdates: 200,
     lineBucketSize: 25,
-    failOnSeverity: null,
     thresholds: {
       filesChanged: { warning: 25, error: 60 },
       linesChanged: { warning: 800, error: 2000 },
