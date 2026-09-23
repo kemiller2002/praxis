@@ -105,6 +105,12 @@ function Get-InstalledVersions([string]$Name) {
     )
 }
 
+function Get-SingleInstalledVersion([string]$Name) {
+    $versions = @(Get-InstalledVersions $Name)
+    if ($versions.Count -eq 1) { return [string]$versions[0] }
+    return ""
+}
+
 function Write-DoctorRow([string]$State, [string]$Label, [string]$Value) {
     Write-Host ("  [{0,-5}] {1,-24} {2}" -f $State, $Label, $Value)
 }
@@ -138,6 +144,8 @@ function Invoke-DoctorFix {
     $required = Get-ManifestVersions
     $activeOrdo = Get-ActiveVersion "ordo"
     $activePraxis = Get-ActiveVersion "praxis"
+    if (-not $activeOrdo) { $activeOrdo = Get-SingleInstalledVersion "ordo" }
+    if (-not $activePraxis) { $activePraxis = Get-SingleInstalledVersion "praxis" }
 
     Write-Host "Repairs"
     New-Item -ItemType Directory -Force -Path $BinDir, $ToolsDir | Out-Null
