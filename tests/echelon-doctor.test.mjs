@@ -224,6 +224,7 @@ test("echelon doctor --json emits the stable agent-readable health contract", { 
   assert.equal(report.summary.errors, 0);
   assert.equal(report.summary.warnings, 0);
   assert.deepEqual(report.findings, []);
+  assert.equal(report.updates, null);
   assert.equal(report.machine.pathConfigured, true);
   assert.equal(report.repository.requirements.ordo, "1.4.0");
   assert.equal(report.repository.requirements.praxis, "3.4.0");
@@ -268,7 +269,7 @@ test("echelon doctor detects a command alias that reports the wrong active versi
   const environment = makeEnvironment(t);
   fs.writeFileSync(
     path.join(environment.bin, "ros"),
-    "#!/bin/sh\nprintf '%s\\n' '2.0.0'\n",
+    "#!/bin/sh\nprintf '%s\\n' 'ros-fs 2.0.0'\n",
     { mode: 0o755 }
   );
 
@@ -325,9 +326,37 @@ test("Doctor and inventory JSON schemas are versioned and shipped from schemas",
   assert.ok(doctorSchema.required.includes("findings"));
   assert.ok(doctorSchema.required.includes("nativeTools"));
   assert.ok(doctorSchema.required.includes("repository"));
+  assert.ok(doctorSchema.required.includes("updates"));
 
   assert.equal(inventorySchema.properties.schemaVersion.const, 1);
   assert.equal(inventorySchema.properties.command.const, "inventory");
   assert.ok(inventorySchema.required.includes("nativeTools"));
   assert.ok(inventorySchema.required.includes("repository"));
+});
+
+
+test("echelon doctor --updates exposes release awareness without changing health", { skip: process.platform === "win32" }, (t) => {
+  const environment = makeEnvironment(t);
+  environment.env.ECHELON_ORDO_LATEST_VERSION = "1.5.0";
+  environment.env.ECHELON_PRAXIS_LATEST_VERSION = "3.4.0";
+
+  const machine = runDoctor(environment, ["--json", "--updates"]);
+  assert.equal(machine.status, 0, machine.stderr || machine.stdout);
+  const report = JSON.parse(machine.stdout);
+
+  assert.equal(report.health, "healthy");
+  assert.equal(report.summary.errors, 0);
+  assert.equal(report.summary.warnings, 0);
+  assert.equal(report.updates.ordo.status, "checked");
+  assert.equal(report.updates.ordo.activeVersion, "1.4.0");
+  assert.equal(report.updates.ordo.latestStable, "1.5.0");
+  assert.equal(report.updates.ordo.available, true);
+  assert.equal(report.updates.praxis.latestStable, "3.4.0");
+  assert.equal(report.updates.praxis.available, false);
+
+  const human = runDoctor(environment, ["--updates"]);
+  assert.equal(human.status, 0, human.stderr || human.stdout);
+  assert.match(human.stdout, /Updates/);
+  assert.match(human.stdout, /Ordo\s+active 1\.4\.0; latest stable 1\.5\.0/);
+  assert.match(human.stdout, /Praxis\s+3\.4\.0 is current/);
 });
