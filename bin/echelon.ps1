@@ -21,7 +21,8 @@ Usage:
 }
 
 function Invoke-Installer([string]$Name, [string]$RequestedVersion) {
-    $uri = "https://raw.githubusercontent.com/kemiller2002/$Name/main/scripts/install-native.ps1"
+    $ref = if ($RequestedVersion) { "v$RequestedVersion" } else { "main" }
+    $uri = "https://raw.githubusercontent.com/kemiller2002/$Name/$ref/scripts/install-native.ps1"
     $temp = Join-Path ([IO.Path]::GetTempPath()) ("echelon-" + [Guid]::NewGuid().ToString("N") + ".ps1")
     try {
         Invoke-WebRequest -UseBasicParsing -Uri $uri -OutFile $temp
