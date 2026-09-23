@@ -231,7 +231,11 @@ test("echelon doctor --json emits the stable agent-readable health contract", { 
 
   const praxisCommand = report.commands.find((item) => item.name === "praxis");
   assert.equal(praxisCommand.version, "3.4.0");
+  assert.equal(praxisCommand.expectedVersion, "3.4.0");
   assert.equal(praxisCommand.healthy, true);
+
+  const echelonCommand = report.commands.find((item) => item.name === "echelon");
+  assert.equal(echelonCommand.expectedVersion, null);
 
   const praxis = report.nativeTools.find((item) => item.name === "praxis");
   assert.equal(praxis.activeVersion, "3.4.0");
