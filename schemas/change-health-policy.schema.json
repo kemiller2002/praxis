@@ -11,7 +11,6 @@
     "historyWindow",
     "maxHistoryUpdates",
     "lineBucketSize",
-    "failOnSeverity",
     "thresholds"
   ],
   "properties": {
@@ -39,13 +38,6 @@
       "type": "integer",
       "minimum": 1,
       "maximum": 1000
-    },
-    "failOnSeverity": {
-      "enum": [
-        null,
-        "warning",
-        "error"
-      ]
     },
     "thresholds": {
       "type": "object",
