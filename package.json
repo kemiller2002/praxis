@@ -5,11 +5,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kemiller2002/repository-operating-system.git"
+    "url": "git+https://github.com/kemiller2002/praxis.git"
   },
-  "homepage": "https://github.com/kemiller2002/repository-operating-system#readme",
+  "homepage": "https://github.com/kemiller2002/praxis#readme",
   "bugs": {
-    "url": "https://github.com/kemiller2002/repository-operating-system/issues"
+    "url": "https://github.com/kemiller2002/praxis/issues"
   },
   "type": "module",
   "bin": {
