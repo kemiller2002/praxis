@@ -564,6 +564,9 @@ module FileChangeHealthRepository =
                         let result =
                             try
                                 let history = parseHistory historyPath
+                                let comparisonHistory =
+                                    { history with
+                                        Updates = history.Updates |> List.filter (fun update -> update.ExecutionId <> executionId) }
 
                                 let details =
                                     entries
@@ -599,7 +602,7 @@ module FileChangeHealthRepository =
 
                                         let buckets = hunks |> List.collect _.Buckets |> List.distinct
                                         let recentTouches, maxRegionTouches =
-                                            ChangeHealth.recentTouches policy history entry.Path entry.From buckets
+                                            ChangeHealth.recentTouches policy comparisonHistory entry.Path entry.From buckets
 
                                         { Path = entry.Path
                                           From = entry.From
