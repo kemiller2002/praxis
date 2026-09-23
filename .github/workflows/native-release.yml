@@ -124,8 +124,8 @@ jobs:
           printf '%s\n' "${VERSION}" > "$root/VERSION"
           (cd dist/native-stage && zip -qr "../native/praxis-win-x64.zip" praxis-win-x64)
 
-          (cd dist/native && sha256sum praxis-* > checksums.txt)
-          cat dist/native/checksums.txt
+          (cd dist/native && sha256sum praxis-* > native-checksums.txt)
+          cat dist/native/native-checksums.txt
 
       - name: Smoke test Linux native bundle
         shell: bash
@@ -145,7 +145,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          assets=(dist/native/praxis-* dist/native/checksums.txt)
+          assets=(dist/native/praxis-* dist/native/native-checksums.txt)
 
           if gh release view "v${VERSION}" >/dev/null 2>&1; then
             gh release upload "v${VERSION}" "${assets[@]}" --clobber
