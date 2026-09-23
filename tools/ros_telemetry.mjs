@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { observeGitStatus, runGitText } from "./ros_git.mjs";
 import { readJson, withFileLock, writeJson } from "./ros_persistence.mjs";
+import { captureChangeHealth, loadChangeHealthPolicy, showChangeHotspots } from "./ros_change_health.mjs";
 
 export const TELEMETRY_SCHEMA_VERSION = "1.0.0";
 export const TELEMETRY_ADAPTERS = [
@@ -120,6 +121,7 @@ function telemetryConfig(root) {
     requireFinalization: telemetry.requireFinalization !== false,
     executionRoot: telemetry.executionRoot ?? ".ros/telemetry/executions",
     metricRegistry: telemetry.metricRegistry ?? "telemetry/metrics.json",
+    changeHealthPolicy: telemetry.changeHealthPolicy ?? "telemetry/change-health.json",
     maxRawPayloadBytes: telemetry.maxRawPayloadBytes ?? 262_144,
     maxRawSnapshotsPerExecution: telemetry.maxRawSnapshotsPerExecution ?? 256,
     maxRawBytesPerExecution: telemetry.maxRawBytesPerExecution ?? 8_388_608,
@@ -1096,6 +1098,12 @@ const GIT_CHANGE_METRICS = [
   "git.binary_files_changed", "git.lines_added", "git.lines_deleted", "tests.added", "tests.modified",
   "tests.removed", "documentation.files_changed"
 ];
+const CODE_CHANGE_METRICS = [
+  "code.files_changed", "code.source_files_changed", "code.lines_changed", "code.net_lines",
+  "code.hunks_changed", "code.max_hunks_per_file", "code.largest_file_churn",
+  "code.largest_changed_file_lines", "code.repeat_file_touches", "code.repeat_region_touches",
+  "code.threshold_warnings", "code.threshold_errors"
+];
 
 export function finalizeExecution(root, target, options = {}) {
   const selected = resolveExecution(root, target);
@@ -1112,6 +1120,21 @@ export function finalizeExecution(root, target, options = {}) {
     refreshed.repository.end = gitSnapshot(root);
     const summary = cleanBaselineChanges(root, refreshed.repository.start);
     refreshed.repository.changeSummary = summary;
+    let changeHealth = null;
+    if (summary.available) {
+      changeHealth = captureChangeHealth(root, refreshed, summary, finalizedAt, {
+        ignored: (file) => ignoredMetricPath(root, file),
+        isTestFile,
+        isDocumentation
+      });
+      refreshed.repository.changeHealth = changeHealth.node;
+    } else {
+      refreshed.repository.changeHealth = {
+        schemaVersion: "1.0.0",
+        available: false,
+        reason: summary.reason
+      };
+    }
     addMetric(root, refreshed, metric("time.wall_ms", Math.max(0, Date.parse(finalizedAt) - Date.parse(refreshed.startedAt)), finalizedAt, source("ros-clock", "ros", "timestamp-difference"), { quality: "derived" }));
     addMetric(root, refreshed, metric("time.blocked_ms", blockedDuration(refreshed.events, finalizedAt), finalizedAt, source("calculated", "ros-work-lifecycle", "block-resume-intervals"), { quality: "derived" }));
     if (refreshed.repository.end.available) {
@@ -1141,9 +1164,38 @@ export function finalizeExecution(root, target, options = {}) {
         "documentation.files_changed": summary.documentationFilesChanged
       };
       for (const [id, value] of Object.entries(values)) addMetric(root, refreshed, metric(id, value, finalizedAt, source("ros-git", "git-diff", summary.mechanism), { quality: "derived" }));
+
+      if (changeHealth?.enabled) {
+        const codeValues = {
+          "code.files_changed": changeHealth.metrics.filesChanged,
+          "code.source_files_changed": changeHealth.metrics.sourceFilesChanged,
+          "code.lines_changed": changeHealth.metrics.linesChanged,
+          "code.net_lines": changeHealth.metrics.netLines,
+          "code.hunks_changed": changeHealth.metrics.hunksChanged,
+          "code.max_hunks_per_file": changeHealth.metrics.maxHunksPerFile,
+          "code.largest_file_churn": changeHealth.metrics.largestFileChurn,
+          "code.largest_changed_file_lines": changeHealth.metrics.largestChangedFileLines,
+          "code.repeat_file_touches": changeHealth.metrics.repeatFileTouches,
+          "code.repeat_region_touches": changeHealth.metrics.repeatRegionTouches,
+          "code.threshold_warnings": changeHealth.findings.filter((finding) => finding.severity === "warning").length,
+          "code.threshold_errors": changeHealth.findings.filter((finding) => finding.severity === "error").length
+        };
+        for (const [id, value] of Object.entries(codeValues)) {
+          addMetric(root, refreshed, metric(id, value, finalizedAt, source("ros-git", "praxis-change-health", "git-diff-and-bounded-history"), { quality: "derived" }));
+        }
+      } else {
+        for (const id of CODE_CHANGE_METRICS) upsertCapability(root, refreshed, {
+          metricId: id,
+          status: "supported-unavailable",
+          reason: "change-health collection disabled by repository policy",
+          discoveredAt: finalizedAt,
+          source: source("calculated", "praxis-change-health", "repository-policy-disabled")
+        });
+      }
+
       refreshed.links.commits = [...new Set([...(refreshed.links.commits ?? []), summary.startCommit, summary.endCommit].filter(Boolean))];
     } else {
-      for (const id of GIT_CHANGE_METRICS) upsertCapability(root, refreshed, {
+      for (const id of [...GIT_CHANGE_METRICS, ...CODE_CHANGE_METRICS]) upsertCapability(root, refreshed, {
         metricId: id,
         status: "supported-unavailable",
         reason: `execution attribution unavailable: ${summary.reason}`,
@@ -1163,6 +1215,20 @@ export function finalizeWorkExecutions(root, workItemId, options = {}) {
   return loadExecutions(root)
     .filter(({ record }) => record.workItemId === workItemId && record.status === "active")
     .map(({ record }) => finalizeExecution(root, record.executionId, options));
+}
+
+export function showChangeHealth(root, target) {
+  const records = loadExecutions(root);
+  let selected = null;
+  if (target?.startsWith("EXE-")) selected = resolveExecution(root, target).record;
+  else if (target) selected = records.filter(({ record }) => record.workItemId === target && record.repository?.changeHealth).at(-1)?.record ?? null;
+  else selected = records.filter(({ record }) => record.repository?.changeHealth).at(-1)?.record ?? null;
+  if (!selected?.repository?.changeHealth) throw new Error("no finalized change-health record was found");
+  return selected.repository.changeHealth;
+}
+
+export function showChangeHealthHotspots(root) {
+  return showChangeHotspots(root);
 }
 
 export function showTelemetry(root, target) {
