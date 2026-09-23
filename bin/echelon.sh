@@ -66,6 +66,24 @@ doctor() {
 
   if [ -f ".echelon/toolchain.json" ]; then
     echo "toolchain manifest: .echelon/toolchain.json"
+
+    required_ordo="$(manifest_version ordo || true)"
+    required_praxis="$(manifest_version praxis || true)"
+    active_ordo=""
+    active_praxis=""
+
+    [ -f "$HOME_DIR/tools/ordo/current/VERSION" ] && active_ordo="$(cat "$HOME_DIR/tools/ordo/current/VERSION")"
+    [ -f "$HOME_DIR/tools/praxis/current/VERSION" ] && active_praxis="$(cat "$HOME_DIR/tools/praxis/current/VERSION")"
+
+    if [ -n "$required_ordo" ] && [ "$active_ordo" != "$required_ordo" ]; then
+      echo "ordo requirement mismatch: required $required_ordo, active ${active_ordo:-none}"
+      failed=1
+    fi
+
+    if [ -n "$required_praxis" ] && [ "$active_praxis" != "$required_praxis" ]; then
+      echo "praxis requirement mismatch: required $required_praxis, active ${active_praxis:-none}"
+      failed=1
+    fi
   else
     echo "toolchain manifest: not present; latest releases will be used by setup"
   fi
