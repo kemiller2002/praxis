@@ -152,7 +152,9 @@ test("history is idempotent for a retried execution", (t) => {
   const options = { ignored: () => false, isTestFile: () => false, isDocumentation: () => false };
 
   captureChangeHealth(root, { executionId: "EXE-1", workItemId: "WI-1" }, summary, "2026-09-23T10:00:00.000Z", options);
-  captureChangeHealth(root, { executionId: "EXE-1", workItemId: "WI-1" }, summary, "2026-09-23T10:01:00.000Z", options);
+  const retry = captureChangeHealth(root, { executionId: "EXE-1", workItemId: "WI-1" }, summary, "2026-09-23T10:01:00.000Z", options);
+  assert.equal(retry.metrics.repeatFileTouches, 1);
+  assert.equal(retry.metrics.repeatRegionTouches, 1);
 
   const history = JSON.parse(fs.readFileSync(path.join(root, ".ros", "telemetry", "change-history.json"), "utf8"));
   assert.equal(history.updates.length, 1);
