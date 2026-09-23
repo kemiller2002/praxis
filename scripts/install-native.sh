@@ -95,7 +95,12 @@ else
   chmod +x "$target/praxis" "$target/praxis-bin" "$target/echelon"
 fi
 
-ln -sfn "$target" "$current"
+if [ -e "$current" ] && [ ! -L "$current" ]; then
+  echo "Cannot activate $VERSION because $current exists and is not a symlink." >&2
+  exit 1
+fi
+rm -f "$current"
+ln -s "$target" "$current"
 
 for command_name in praxis ros; do
   cat > "$bin_dir/$command_name" <<EOF
