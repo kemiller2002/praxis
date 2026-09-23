@@ -10,7 +10,6 @@ const DEFAULT_POLICY = {
   historyWindow: 20,
   maxHistoryUpdates: 200,
   lineBucketSize: 25,
-  failOnSeverity: null,
   thresholds: {
     filesChanged: { warning: 25, error: 60 },
     linesChanged: { warning: 800, error: 2000 },
@@ -88,7 +87,6 @@ export function loadChangeHealthPolicy(root) {
     historyWindow: Number.isInteger(raw.historyWindow) ? raw.historyWindow : DEFAULT_POLICY.historyWindow,
     maxHistoryUpdates: Number.isInteger(raw.maxHistoryUpdates) ? raw.maxHistoryUpdates : DEFAULT_POLICY.maxHistoryUpdates,
     lineBucketSize: Number.isInteger(raw.lineBucketSize) ? raw.lineBucketSize : DEFAULT_POLICY.lineBucketSize,
-    failOnSeverity: raw.failOnSeverity ?? null,
     thresholds,
     file: relative
   };
@@ -96,9 +94,6 @@ export function loadChangeHealthPolicy(root) {
   if (policy.historyWindow < 1) throw new Error("change-health historyWindow must be at least 1");
   if (policy.maxHistoryUpdates < 1) throw new Error("change-health maxHistoryUpdates must be at least 1");
   if (policy.lineBucketSize < 1) throw new Error("change-health lineBucketSize must be at least 1");
-  if (![null, "warning", "error"].includes(policy.failOnSeverity)) {
-    throw new Error("change-health failOnSeverity must be null, 'warning', or 'error'");
-  }
   return policy;
 }
 
@@ -237,7 +232,7 @@ function countTextLines(file) {
 export function captureChangeHealth(root, record, summary, finalizedAt, options) {
   const policy = loadChangeHealthPolicy(root);
   if (!policy.enabled) {
-    return { enabled: false, metrics: null, findings: [], shouldFail: false,
+    return { enabled: false, metrics: null, findings: [],
       node: { schemaVersion: "1.0.0", enabled: false } };
   }
 
@@ -319,14 +314,10 @@ export function captureChangeHealth(root, record, summary, finalizedAt, options)
 
     const status = findings.some((finding) => finding.severity === "error") ? "error"
       : findings.some((finding) => finding.severity === "warning") ? "warning" : "healthy";
-    const shouldFail = policy.failOnSeverity === "warning" ? findings.length > 0
-      : policy.failOnSeverity === "error" ? findings.some((finding) => finding.severity === "error") : false;
-
     return {
       enabled: true,
       metrics,
       findings,
-      shouldFail,
       node: {
         schemaVersion: "1.0.0",
         enabled: true,
