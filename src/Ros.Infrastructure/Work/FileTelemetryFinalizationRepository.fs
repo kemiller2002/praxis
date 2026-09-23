@@ -376,7 +376,7 @@ module FileTelemetryFinalizationRepository =
                                         let errorCount =
                                             changeHealth.Findings |> List.filter (fun finding -> finding.Severity = "error") |> List.length
 
-                                        let capabilities =
+                                        let capabilitiesAfterGit =
                                             capabilitiesAfterEnding
                                             |> appendMetric "git.commits_created" (int64 summary.Commits) metricSource
                                             |> appendMetric "git.files_added" (int64 summary.Counts.Added) metricSource
@@ -390,18 +390,38 @@ module FileTelemetryFinalizationRepository =
                                             |> appendMetric "tests.modified" (int64 summary.Tests.Modified) metricSource
                                             |> appendMetric "tests.removed" (int64 summary.Tests.Removed) metricSource
                                             |> appendMetric "documentation.files_changed" (int64 summary.DocumentationFilesChanged) metricSource
-                                            |> appendMetric "code.files_changed" (int64 changeHealth.Metrics.FilesChanged) changeHealthSource
-                                            |> appendMetric "code.source_files_changed" (int64 changeHealth.Metrics.SourceFilesChanged) changeHealthSource
-                                            |> appendMetric "code.lines_changed" (int64 changeHealth.Metrics.LinesChanged) changeHealthSource
-                                            |> appendMetric "code.net_lines" (int64 changeHealth.Metrics.NetLines) changeHealthSource
-                                            |> appendMetric "code.hunks_changed" (int64 changeHealth.Metrics.HunksChanged) changeHealthSource
-                                            |> appendMetric "code.max_hunks_per_file" (int64 changeHealth.Metrics.MaxHunksPerFile) changeHealthSource
-                                            |> appendMetric "code.largest_file_churn" (int64 changeHealth.Metrics.LargestFileChurn) changeHealthSource
-                                            |> appendMetric "code.largest_changed_file_lines" (int64 changeHealth.Metrics.LargestChangedFileLines) changeHealthSource
-                                            |> appendMetric "code.repeat_file_touches" (int64 changeHealth.Metrics.RepeatFileTouches) changeHealthSource
-                                            |> appendMetric "code.repeat_region_touches" (int64 changeHealth.Metrics.RepeatRegionTouches) changeHealthSource
-                                            |> appendMetric "code.threshold_warnings" (int64 warningCount) changeHealthSource
-                                            |> appendMetric "code.threshold_errors" (int64 errorCount) changeHealthSource
+
+                                        let capabilities =
+                                            if changeHealth.Enabled then
+                                                capabilitiesAfterGit
+                                                |> appendMetric "code.files_changed" (int64 changeHealth.Metrics.FilesChanged) changeHealthSource
+                                                |> appendMetric "code.source_files_changed" (int64 changeHealth.Metrics.SourceFilesChanged) changeHealthSource
+                                                |> appendMetric "code.lines_changed" (int64 changeHealth.Metrics.LinesChanged) changeHealthSource
+                                                |> appendMetric "code.net_lines" (int64 changeHealth.Metrics.NetLines) changeHealthSource
+                                                |> appendMetric "code.hunks_changed" (int64 changeHealth.Metrics.HunksChanged) changeHealthSource
+                                                |> appendMetric "code.max_hunks_per_file" (int64 changeHealth.Metrics.MaxHunksPerFile) changeHealthSource
+                                                |> appendMetric "code.largest_file_churn" (int64 changeHealth.Metrics.LargestFileChurn) changeHealthSource
+                                                |> appendMetric "code.largest_changed_file_lines" (int64 changeHealth.Metrics.LargestChangedFileLines) changeHealthSource
+                                                |> appendMetric "code.repeat_file_touches" (int64 changeHealth.Metrics.RepeatFileTouches) changeHealthSource
+                                                |> appendMetric "code.repeat_region_touches" (int64 changeHealth.Metrics.RepeatRegionTouches) changeHealthSource
+                                                |> appendMetric "code.threshold_warnings" (int64 warningCount) changeHealthSource
+                                                |> appendMetric "code.threshold_errors" (int64 errorCount) changeHealthSource
+                                            else
+                                                let disabledSource : CapabilitySource =
+                                                    { Type = "calculated"
+                                                      Name = "praxis-change-health"
+                                                      Mechanism = "repository-policy-disabled" }
+
+                                                codeChangeMetricIds
+                                                |> List.fold
+                                                    (fun acc metricId ->
+                                                        upsertInto
+                                                            acc
+                                                            metricId
+                                                            "supported-unavailable"
+                                                            (Some "change-health collection disabled by repository policy")
+                                                            disabledSource)
+                                                    capabilitiesAfterGit
 
                                         let countsNode = JsonObject()
                                         countsNode["added"] <- JsonValue.Create summary.Counts.Added
