@@ -55,7 +55,7 @@ try {
 
     Copy-Item -Force (Join-Path $target "echelon.ps1") (Join-Path $binDir "echelon.ps1")
     $echelonCmd = Join-Path $binDir "echelon.cmd"
-    $echelonContent = "@echo off" + [Environment]::NewLine + 'powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0echelon.ps1" %*' + [Environment]::NewLine
+    $echelonContent = "@echo off" + [Environment]::NewLine + "setlocal" + [Environment]::NewLine + 'set "ECHELON_HOME=%~dp0.."' + [Environment]::NewLine + 'powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0echelon.ps1" %*' + [Environment]::NewLine + "endlocal" + [Environment]::NewLine
     Set-Content -Encoding Ascii -Path $echelonCmd -Value $echelonContent
 
     Set-Content -Encoding Ascii -Path (Join-Path $toolRoot "current-version") -Value $Version
