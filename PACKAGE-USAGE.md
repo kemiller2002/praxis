@@ -188,7 +188,7 @@ no published release:
 
 ```bash
 npx --yes --prefer-online \
-  --package=github:kemiller2002/repository-operating-system#<commit> \
+  --package=github:kemiller2002/praxis#<commit> \
   ros-bootstrap init --target .
 ```
 
