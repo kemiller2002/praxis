@@ -1,0 +1,251 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echelonfoundry.com/schemas/praxis-change-health-policy-v1.schema.json",
+  "title": "Praxis change-health policy v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "enabled",
+    "historyPath",
+    "historyWindow",
+    "maxHistoryUpdates",
+    "lineBucketSize",
+    "thresholds"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "historyPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "historyWindow": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000
+    },
+    "maxHistoryUpdates": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10000
+    },
+    "lineBucketSize": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000
+    },
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filesChanged",
+        "linesChanged",
+        "largestFileChurn",
+        "largestChangedFileLines",
+        "hunksChanged",
+        "maxHunksPerFile",
+        "repeatFileTouches",
+        "repeatRegionTouches"
+      ],
+      "properties": {
+        "filesChanged": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "warning",
+            "error"
+          ],
+          "properties": {
+            "warning": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "error": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        },
+        "linesChanged": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "warning",
+            "error"
+          ],
+          "properties": {
+            "warning": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "error": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        },
+        "largestFileChurn": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "warning",
+            "error"
+          ],
+          "properties": {
+            "warning": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "error": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        },
+        "largestChangedFileLines": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "warning",
+            "error"
+          ],
+          "properties": {
+            "warning": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "error": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        },
+        "hunksChanged": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "warning",
+            "error"
+          ],
+          "properties": {
+            "warning": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "error": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        },
+        "maxHunksPerFile": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "warning",
+            "error"
+          ],
+          "properties": {
+            "warning": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "error": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        },
+        "repeatFileTouches": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "warning",
+            "error"
+          ],
+          "properties": {
+            "warning": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "error": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        },
+        "repeatRegionTouches": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "warning",
+            "error"
+          ],
+          "properties": {
+            "warning": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "error": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        }
+      }
+    }
+  }
+}

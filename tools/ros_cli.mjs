@@ -15,6 +15,8 @@ import {
   readTelemetryInput,
   recordTelemetryLifecycle,
   recordTelemetryMetric,
+  showChangeHealth,
+  showChangeHealthHotspots,
   showTelemetry,
   startExecution,
   summarizeTelemetry,
@@ -1510,6 +1512,12 @@ export function main(argv) {
     if (args[0] === "telemetry" && args[1] === "show") {
       console.log(JSON.stringify(showTelemetry(root, telemetryTarget(args)), null, 2)); return 0;
     }
+    if (args[0] === "telemetry" && args[1] === "change-health") {
+      console.log(JSON.stringify(showChangeHealth(root, telemetryTarget(args)), null, 2)); return 0;
+    }
+    if (args[0] === "telemetry" && args[1] === "hotspots") {
+      console.log(JSON.stringify(showChangeHealthHotspots(root), null, 2)); return 0;
+    }
     if (args[0] === "telemetry" && (args[1] === "summary" || args[1] === "summarize")) {
       console.log(JSON.stringify(summarizeTelemetry(root, telemetryTarget(args)), null, 2)); return 0;
     }
@@ -1550,7 +1558,7 @@ export function main(argv) {
       console.log("registries are current");
       return 0;
     }
-    console.error("Usage: ros [--root PATH] validate [--json] | status | registry build [--dry-run] | registry check | add TITLE ... | work [list|ready|show|start|block|abandon|update|attach|begin|resume|complete|done|context] ... | telemetry [start|ingest|record|classify|finalize|show|summary|adapters] ... | adapter call ... | adapter publish ...");
+    console.error("Usage: ros [--root PATH] validate [--json] | status | registry build [--dry-run] | registry check | add TITLE ... | work [list|ready|show|start|block|abandon|update|attach|begin|resume|complete|done|context] ... | telemetry [start|ingest|record|classify|finalize|show|change-health|hotspots|summary|adapters] ... | adapter call ... | adapter publish ...");
     return 2;
   } catch (error) {
     console.error(`ERROR ${error.message}`);

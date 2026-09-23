@@ -413,6 +413,13 @@ test("npm tarball contains the executable and every scaffold source", async (t) 
   assert.ok(files.has("docs/toolchain-manifest.md"));
   assert.ok(files.has("schemas/echelon-doctor-v1.schema.json"));
   assert.ok(files.has("schemas/echelon-inventory-v1.schema.json"));
+  assert.ok(files.has("docs/code-change-metrics.md"));
+  assert.ok(files.has("telemetry/change-health.json"));
+  assert.ok(files.has("schemas/change-health-policy.schema.json"));
+  assert.ok(files.has("schemas/change-history.schema.json"));
+  assert.ok(files.has("schemas/change-health-report.schema.json"));
+  assert.ok(files.has("schemas/change-hotspots.schema.json"));
+  assert.ok(files.has("tools/ros_change_health.mjs"));
   assert.ok(files.has("lib/bootstrap.mjs"));
   assert.ok(files.has("starter/greenfield/manifest.json"));
   assert.ok(files.has("framework/REP-SPECIFICATION.md"));

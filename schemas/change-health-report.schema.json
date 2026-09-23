@@ -1,0 +1,347 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echelonfoundry.com/schemas/praxis-change-health-report-v1.schema.json",
+  "title": "Praxis change-health report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "available"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "available": {
+      "type": "boolean"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "healthy",
+        "warning",
+        "error"
+      ]
+    },
+    "policy": {
+      "type": "string"
+    },
+    "historyWindow": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "lineBucketSize": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filesChanged",
+        "sourceFilesChanged",
+        "testFilesChanged",
+        "documentationFilesChanged",
+        "linesAdded",
+        "linesDeleted",
+        "linesChanged",
+        "netLines",
+        "hunksChanged",
+        "maxHunksPerFile",
+        "largestFileChurn",
+        "largestChangedFileLines",
+        "repeatFileTouches",
+        "repeatRegionTouches"
+      ],
+      "properties": {
+        "filesChanged": {
+          "type": "integer"
+        },
+        "sourceFilesChanged": {
+          "type": "integer"
+        },
+        "testFilesChanged": {
+          "type": "integer"
+        },
+        "documentationFilesChanged": {
+          "type": "integer"
+        },
+        "linesAdded": {
+          "type": "integer"
+        },
+        "linesDeleted": {
+          "type": "integer"
+        },
+        "linesChanged": {
+          "type": "integer"
+        },
+        "netLines": {
+          "type": "integer"
+        },
+        "hunksChanged": {
+          "type": "integer"
+        },
+        "maxHunksPerFile": {
+          "type": "integer"
+        },
+        "largestFileChurn": {
+          "type": "integer"
+        },
+        "largestChangedFileLines": {
+          "type": "integer"
+        },
+        "repeatFileTouches": {
+          "type": "integer"
+        },
+        "repeatRegionTouches": {
+          "type": "integer"
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "metric",
+          "severity",
+          "actual",
+          "threshold",
+          "message",
+          "remediation"
+        ],
+        "properties": {
+          "code": {
+            "pattern": "^PRAXIS-CHG-[0-9]{3}$"
+          },
+          "metric": {
+            "type": "string"
+          },
+          "severity": {
+            "enum": [
+              "warning",
+              "error"
+            ]
+          },
+          "actual": {
+            "type": "integer"
+          },
+          "threshold": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "remediation": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "from",
+          "status",
+          "linesAdded",
+          "linesDeleted",
+          "churn",
+          "currentLines",
+          "hunks",
+          "recentTouches",
+          "maxRegionTouches"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "from": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1
+          },
+          "linesAdded": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "linesDeleted": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "churn": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "currentLines": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "recentTouches": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "maxRegionTouches": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "hunks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/defs/hunk"
+            }
+          }
+        }
+      }
+    },
+    "history": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "retainedUpdates",
+        "historyOmitted"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "retainedUpdates": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "historyOmitted": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "defs": {
+    "hunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "oldStart",
+        "oldLines",
+        "newStart",
+        "newLines",
+        "buckets"
+      ],
+      "properties": {
+        "oldStart": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "oldLines": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "newStart": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "newLines": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "buckets": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "uniqueItems": true
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "available": {
+            "const": false
+          }
+        },
+        "required": [
+          "available"
+        ]
+      },
+      "then": {
+        "required": [
+          "reason"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "available": {
+            "const": true
+          }
+        },
+        "required": [
+          "available"
+        ]
+      },
+      "then": {
+        "required": [
+          "enabled"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "available": {
+            "const": true
+          },
+          "enabled": {
+            "const": true
+          }
+        },
+        "required": [
+          "available",
+          "enabled"
+        ]
+      },
+      "then": {
+        "required": [
+          "status",
+          "policy",
+          "historyWindow",
+          "lineBucketSize",
+          "metrics",
+          "findings",
+          "files",
+          "history"
+        ]
+      }
+    }
+  ]
+}

@@ -110,6 +110,30 @@ where one exists, the command that fixes it. Findings are classified:
 `doctor` exits `3` when any error is present, or — with `--strict` — when any
 warning is.
 
+## Development telemetry change health
+
+Praxis records code-change health automatically when a telemetry execution is finalized from a clean Git baseline.
+
+```text
+ros telemetry change-health [TARGET]
+ros telemetry hotspots
+```
+
+`telemetry change-health` is read-only and writes the selected finalized execution's `repository.changeHealth` JSON report. `TARGET` may be an execution ID, a work-item ID, or omitted to select the latest finalized execution with change-health data.
+
+The report includes per-update file and line churn, source/test/documentation counts, current changed-file sizes, zero-context hunk ranges, repeated file/region touch counts, and threshold findings. Threshold findings use stable `PRAXIS-CHG-xxx` codes and are informational in Praxis 3.5.0; they do not change command exit status or block completion.
+
+`telemetry hotspots` is read-only and projects the bounded repository-local history in `.ros/telemetry/change-history.json`. It ranks files and approximate line regions repeatedly modified within the configured recent-update window. History contains paths, commit/execution identifiers, hunk coordinates, and numeric line buckets only. Praxis does not persist source text or diff bodies in hotspot history.
+
+The repository policy is `telemetry/change-health.json`. Output contracts are:
+
+- `schemas/change-health-policy.schema.json`
+- `schemas/change-history.schema.json`
+- `schemas/change-health-report.schema.json`
+- `schemas/change-hotspots.schema.json`
+
+See [Code change metrics and change health](code-change-metrics.md) for threshold defaults and interpretation guidance.
+
 ## Exit codes
 
 These are a public contract. Changing a value is a breaking change.

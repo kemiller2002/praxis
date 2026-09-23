@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echelonfoundry.com/schemas/praxis-change-hotspots-v1.schema.json",
+  "title": "Praxis change-hotspots report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "policy",
+    "historyWindow",
+    "retainedUpdates",
+    "historyOmitted",
+    "files",
+    "regions"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "policy": {
+      "type": "string"
+    },
+    "historyWindow": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "retainedUpdates": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "historyOmitted": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "touches",
+          "lastTouchedAt"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "touches": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "lastTouchedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "regions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "bucket",
+          "startLine",
+          "endLine",
+          "touches",
+          "lastTouchedAt"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "bucket": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "startLine": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "endLine": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "touches": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "lastTouchedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}

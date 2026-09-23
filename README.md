@@ -56,6 +56,15 @@ Once installed, the repository can also run its own lifecycle through the
 ./ros upgrade     # update to this CLI's version
 ```
 
+## New in 3.5.0
+
+- **Per-update code change health:** every attributable finalized execution records files changed, source/test/doc counts, lines added/deleted/changed, net lines, per-file churn, current changed-file size, and hunk counts.
+- **Configurable thresholds:** repositories own `telemetry/change-health.json`; warning/error bands produce stable `PRAXIS-CHG-xxx` findings without blocking work by default.
+- **Longitudinal hotspots:** Praxis retains bounded metadata-only file/hunk history under `.ros/telemetry/change-history.json` and detects files and 25-line regions repeatedly modified across recent updates.
+- **Hotspot projections:** `ros telemetry change-health [TARGET]` shows one finalized update and `ros telemetry hotspots` ranks repeated file/region activity.
+- **No source duplication:** hunk history stores paths, ranges and line buckets only. Source text and diff bodies are not retained.
+- **Normalized metrics:** change-health measurements participate in the existing telemetry registry and summaries instead of living in a separate reporting silo.
+
 ## New in 3.4.0
 
 - **Agent-readable Doctor:** `echelon doctor --json` emits a versioned schema with health, commands, native tools, repository components, npm packages, findings, and remediation.
@@ -379,11 +388,13 @@ core model.
 
 ```bash
 ./ros telemetry show WORK-ID
+./ros telemetry change-health WORK-ID
+./ros telemetry hotspots
 ./ros telemetry ingest WORK-ID --adapter openai-codex --input events.jsonl
 ./ros telemetry summary WORK-ID
 ```
 
-See [`docs/development-telemetry.md`](docs/development-telemetry.md).
+See [`docs/development-telemetry.md`](docs/development-telemetry.md) and [`docs/code-change-metrics.md`](docs/code-change-metrics.md).
 
 ### Central aggregation and reporting
 
@@ -435,5 +446,6 @@ repository.
 | [`docs/00-governance/`](docs/00-governance/README.md) | Governance, operating manual, engineering standards, REP specification |
 | [`docs/work-protocol.md`](docs/work-protocol.md) | Work transitions, evidence, attribution |
 | [`docs/development-telemetry.md`](docs/development-telemetry.md) | Telemetry schema, privacy boundary, provider integrations |
+| [`docs/code-change-metrics.md`](docs/code-change-metrics.md) | Per-update code metrics, thresholds, and longitudinal file/hunk hotspots |
 | [`PACKAGE-USAGE.md`](PACKAGE-USAGE.md) | Publication, release gate, trusted publishing |
 | [`docs/migrations/fsharp/`](docs/migrations/fsharp/README.md) | The F# migration's staged architecture and command-surface status |

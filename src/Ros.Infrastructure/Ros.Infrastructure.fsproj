@@ -26,6 +26,7 @@
     <Compile Include="Work/FileWorkContextRepository.fs" />
     <Compile Include="Work/FileMetricRegistryRepository.fs" />
     <Compile Include="Work/FileTelemetryExecutionRepository.fs" />
+    <Compile Include="Work/FileChangeHealthRepository.fs" />
     <Compile Include="Work/FileTelemetryFinalizationRepository.fs" />
     <Compile Include="Work/FileTelemetryQueryRepository.fs" />
     <Compile Include="Work/FileTelemetryValidationRepository.fs" />
@@ -54,8 +55,10 @@
     <EmbeddedResource Include="$(RosRepositoryRoot)GEMINI.md" LogicalName="ros.payload/GEMINI.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot).github/copilot-instructions.md" LogicalName="ros.payload/.github/copilot-instructions.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot)telemetry/metrics.json" LogicalName="ros.payload/telemetry/metrics.json" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)telemetry/change-health.json" LogicalName="ros.payload/telemetry/change-health.json" />
 
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/development-telemetry.md" LogicalName="ros.payload/docs/development-telemetry.md" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)docs/code-change-metrics.md" LogicalName="ros.payload/docs/code-change-metrics.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/ordo-observation.md" LogicalName="ros.payload/docs/ordo-observation.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/project-administration-hub.md" LogicalName="ros.payload/docs/project-administration-hub.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/web-interface.md" LogicalName="ros.payload/docs/web-interface.md" />

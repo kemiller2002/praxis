@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echelonfoundry.com/schemas/praxis-change-history-v1.schema.json",
+  "title": "Praxis bounded change history v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "historyOmitted",
+    "updates"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "historyOmitted": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "updates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "executionId",
+          "workItemId",
+          "finalizedAt",
+          "startCommit",
+          "endCommit",
+          "files"
+        ],
+        "properties": {
+          "executionId": {
+            "type": "string"
+          },
+          "workItemId": {
+            "type": "string"
+          },
+          "finalizedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "startCommit": {
+            "type": "string"
+          },
+          "endCommit": {
+            "type": "string"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "status",
+                "from",
+                "hunks"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1
+                },
+                "from": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "hunks": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "oldStart",
+                      "oldLines",
+                      "newStart",
+                      "newLines",
+                      "buckets"
+                    ],
+                    "properties": {
+                      "oldStart": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "oldLines": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "newStart": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "newLines": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "buckets": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "uniqueItems": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
