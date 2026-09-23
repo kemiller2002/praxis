@@ -139,7 +139,7 @@ For every finalized execution with a clean Git baseline, Praxis now derives a st
 
 Threshold policy lives in `telemetry/change-health.json`. Threshold crossings produce stable `PRAXIS-CHG-xxx` findings with warning/error severity, actual value, configured threshold, and remediation text. Defaults flag unusual change shape without blocking completion. A dirty execution baseline makes both Git delta and change-health attribution explicitly unavailable rather than attributing pre-existing work to the current execution.
 
-Longitudinal metadata lives in the bounded `.ros/telemetry/change-history.json` file. It stores execution/work-item identity, commit boundaries, file paths/rename origin, hunk line ranges, and numeric line buckets only. It never stores source text or diff bodies. The history file is locked and atomically replaced; retries for one execution replace that execution's prior history observation rather than double-counting it.
+Longitudinal metadata lives in the bounded `.ros/telemetry/change-history.json` file. It stores execution/work-item identity, commit boundaries, file paths/rename origin, hunk line ranges, and numeric line buckets only. Git diff content is processed transiently to derive those coordinates and is never persisted in change history. The history file is locked and atomically replaced; retries for one execution replace that execution's prior history observation rather than double-counting it.
 
 Use:
 
