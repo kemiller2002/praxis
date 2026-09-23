@@ -1,0 +1,183 @@
+name: Native Praxis release
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/native-release.yml"
+      - "scripts/**"
+      - "bin/praxis-native.sh"
+      - "bin/praxis-native.cmd"
+      - "bin/echelon.sh"
+      - "bin/echelon.ps1"
+      - "src/**"
+      - "package.json"
+  push:
+    branches: [main]
+    paths:
+      - "package.json"
+      - ".github/workflows/native-release.yml"
+      - "scripts/**"
+      - "bin/praxis-native.sh"
+      - "bin/praxis-native.cmd"
+      - "bin/echelon.sh"
+      - "bin/echelon.ps1"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: praxis-native-release-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Test and validate
+        run: |
+          npm run test:all
+          ./ros registry check
+          ./ros validate
+
+      - name: Build package payload
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(node -p "require('./package.json').version")"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          rm -rf dist/native dist/native-stage dist/native-package
+          mkdir -p dist/native dist/native-stage dist/native-package
+          npm pack --ignore-scripts --json > /tmp/praxis-pack.json
+          TARBALL="$(node -e "const x=require('/tmp/praxis-pack.json'); process.stdout.write(x[0].filename)")"
+          tar -xzf "$TARBALL" -C dist/native-package
+
+      - name: Build self-contained Praxis binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          publish_one() {
+            rid="$1"
+            out="dist/publish/${rid}"
+            rm -rf "$out"
+            dotnet publish src/Ros.Cli/Ros.Cli.fsproj               -c Release -r "$rid" --self-contained true               -p:PublishSingleFile=true               -p:IncludeNativeLibrariesForSelfExtract=true               -o "$out"
+          }
+
+          publish_one linux-x64
+          publish_one linux-musl-x64
+          publish_one linux-arm64
+          publish_one osx-x64
+          publish_one osx-arm64
+          publish_one win-x64
+
+      - name: Assemble native bundles
+        env:
+          VERSION: ${{ steps.package.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          make_posix_bundle() {
+            rid="$1"
+            name="praxis-${rid}"
+            root="dist/native-stage/${name}"
+            mkdir -p "$root"
+            cp -R dist/native-package/package "$root/package"
+            cp "dist/publish/${rid}/ros-fs" "$root/praxis-bin"
+            cp bin/praxis-native.sh "$root/praxis"
+            cp bin/echelon.sh "$root/echelon"
+            chmod +x "$root/praxis-bin" "$root/praxis" "$root/echelon"
+            printf '%s\n' "${VERSION}" > "$root/VERSION"
+            tar -czf "dist/native/${name}.tar.gz" -C dist/native-stage "$name"
+          }
+
+          make_posix_bundle linux-x64
+          make_posix_bundle linux-musl-x64
+          make_posix_bundle linux-arm64
+          make_posix_bundle osx-x64
+          make_posix_bundle osx-arm64
+
+          root="dist/native-stage/praxis-win-x64"
+          mkdir -p "$root"
+          cp -R dist/native-package/package "$root/package"
+          cp dist/publish/win-x64/ros-fs.exe "$root/praxis-bin.exe"
+          cp bin/praxis-native.cmd "$root/praxis.cmd"
+          cp bin/echelon.ps1 "$root/echelon.ps1"
+          printf '%s\n' "${VERSION}" > "$root/VERSION"
+          (cd dist/native-stage && zip -qr "../native/praxis-win-x64.zip" praxis-win-x64)
+
+          (cd dist/native && sha256sum praxis-* > native-checksums.txt)
+          cat dist/native/native-checksums.txt
+
+      - name: Smoke test native installer and installed Praxis
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(node -p "require('./package.json').version")"
+          install_root="$(mktemp -d)"
+          project_root="$(mktemp -d)"
+          trap 'rm -rf "$install_root" "$project_root"' EXIT
+
+          ECHELON_RELEASE_BASE_URL="file://$PWD/dist/native"             sh scripts/install-native.sh --version "$VERSION" --install-base "$install_root"
+
+          "$install_root/bin/praxis" --version
+          "$install_root/bin/ros" --version
+          "$install_root/bin/echelon" --help
+          (
+            cd "$project_root"
+            "$install_root/bin/praxis" init
+            "$install_root/bin/praxis" verify
+          )
+          sh -n scripts/install-native.sh
+          sh -n bin/praxis-native.sh
+          sh -n bin/echelon.sh
+
+      - name: Create or update GitHub release
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.package.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          assets=(dist/native/praxis-* dist/native/native-checksums.txt)
+
+          if gh release view "v${VERSION}" >/dev/null 2>&1; then
+            gh release upload "v${VERSION}" "${assets[@]}" --clobber
+          else
+            if ! gh release create "v${VERSION}" "${assets[@]}"               --target "${GITHUB_SHA}"               --title "Praxis v${VERSION}"               --notes "Native Praxis/ROS bundles plus the Echelon bootstrap command. No Node.js or .NET runtime is required on the consuming machine."; then
+              gh release upload "v${VERSION}" "${assets[@]}" --clobber
+            fi
+          fi
+
+
+  windows-powershell-syntax:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse installer scripts with Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          $files = @("scripts/install-native.ps1", "scripts/install-toolchain.ps1", "bin/echelon.ps1")
+          foreach ($file in $files) {
+            [scriptblock]::Create((Get-Content -Raw $file)) | Out-Null
+            Write-Host "parsed $file"
+          }

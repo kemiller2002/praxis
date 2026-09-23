@@ -150,7 +150,7 @@ npmjs.com with this trusted publisher:
 
 - Provider: GitHub Actions
 - GitHub organization or user: `kemiller2002`
-- Repository: `repository-operating-system`
+- Repository: `praxis`
 - Workflow filename: `publish.yml`
 - Allowed action: `npm publish`
 
@@ -188,9 +188,16 @@ no published release:
 
 ```bash
 npx --yes --prefer-online \
-  --package=github:kemiller2002/repository-operating-system#<commit> \
+  --package=github:kemiller2002/praxis#<commit> \
   ros-bootstrap init --target .
 ```
 
 A branch name is convenient but not reproducible; prefer a tag or an exact
 commit SHA.
+
+
+## Repository rename and npm publishing
+
+The source repository is now `kemiller2002/praxis`. npm trusted publishing validates the repository identity in GitHub's OIDC claim, so the npm package's Trusted Publisher configuration must name `kemiller2002/praxis` and `.github/workflows/publish.yml`.
+
+Until that external npm setting is updated, the npm publish job is intentionally gated by the GitHub repository variable `NPM_PUBLISH_ENABLED`. Leave it unset or false while native GitHub Release distribution is being adopted. After the npm Trusted Publisher entry is updated, set `NPM_PUBLISH_ENABLED=true` to resume compatibility snapshot and stable npm publication.

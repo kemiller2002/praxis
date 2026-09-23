@@ -1,15 +1,15 @@
 {
   "name": "@echelon-foundry/repository-operating-system",
-  "version": "3.1.4",
+  "version": "3.2.0",
   "description": "Echelon Foundry Repository Operating System: initialization, verification, diagnostics, and upgrade tooling for research and engineering repositories.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kemiller2002/repository-operating-system.git"
+    "url": "git+https://github.com/kemiller2002/praxis.git"
   },
-  "homepage": "https://github.com/kemiller2002/repository-operating-system#readme",
+  "homepage": "https://github.com/kemiller2002/praxis#readme",
   "bugs": {
-    "url": "https://github.com/kemiller2002/repository-operating-system/issues"
+    "url": "https://github.com/kemiller2002/praxis/issues"
   },
   "type": "module",
   "bin": {

@@ -1,6 +1,6 @@
-# Repository Operating System
+# Praxis
 
-**`@echelon-foundry/repository-operating-system`**
+**Repository Operating System (ROS) compatibility name:** `@echelon-foundry/repository-operating-system`
 
 Repository initialization, verification, diagnostics, and upgrade tooling that
 makes research, engineering, decisions, and handoffs durable without relying on
@@ -26,24 +26,28 @@ Installing ROS into a repository gives it a governed operating environment:
 
 ## Quick start
 
+The preferred installation path is now the native GitHub Release distribution:
+
 ```bash
-cd /path/to/your/repository
+curl -fsSL https://raw.githubusercontent.com/kemiller2002/praxis/main/scripts/install-native.sh | sh
 
-# Initialize, or bring an existing installation up to date.
-npx --package=@echelon-foundry/repository-operating-system ros init
-
-# Confirm what is installed.
-npx --package=@echelon-foundry/repository-operating-system ros status
-
-# Verify the repository.
-npx --package=@echelon-foundry/repository-operating-system ros verify
+praxis init
+praxis status
+praxis verify
 ```
 
-Nothing happens during `npm install`. The package has no install lifecycle
-scripts and never mutates a repository as a side effect of being downloaded.
+The native bundle is self-contained. A consuming machine does not need Node.js,
+npm, or a machine-wide .NET runtime. The established `ros` command remains a
+compatibility alias, and npm remains a compatibility distribution channel.
 
-Once installed, the repository runs its own lifecycle through the `./ros`
-launcher `init` leaves behind — no npx, no network, no flags:
+To install the Echelon engineering toolchain, including Ordo:
+
+```bash
+echelon setup
+```
+
+Once installed, the repository can also run its own lifecycle through the
+`./ros` launcher `init` leaves behind:
 
 ```bash
 ./ros verify      # is the installation intact?
@@ -51,6 +55,14 @@ launcher `init` leaves behind — no npx, no network, no flags:
 ./ros init        # heal: restore anything tool-owned that is missing
 ./ros upgrade     # update to this CLI's version
 ```
+
+## New in 3.2.0
+
+- **Praxis native distribution:** self-contained GitHub Release bundles for macOS, Linux, and Windows; no Node.js, npm, or machine-wide .NET runtime is required.
+- **Echelon bootstrap:** `echelon setup`, `install`, `upgrade`, and `doctor` manage the native Ordo/Praxis toolchain.
+- **Repository toolchain pinning:** `.echelon/toolchain.json` can require exact Ordo and Praxis releases.
+- **Compatibility aliases:** `praxis` is the preferred native command while `ros` remains supported.
+- **Immutable installs:** native versions live side-by-side and activation changes without rewriting an existing version directory.
 
 ## New in 3.1.4
 

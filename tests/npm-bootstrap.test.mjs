@@ -502,6 +502,17 @@ test("npm tarball contains the executable and every scaffold source", async (t) 
   assert.equal(validation.status, 0, validation.stderr || validation.stdout);
 });
 
+test("native Praxis release keeps bundle checksums separate from legacy ros-fs checksums", () => {
+  const workflow = fs.readFileSync(
+    path.join(repository, ".github", "workflows", "native-release.yml"),
+    "utf8"
+  );
+  assert.match(workflow, /native-checksums\.txt/);
+  assert.doesNotMatch(workflow, /dist\/native\/checksums\.txt/);
+  assert.match(workflow, /praxis-linux-x64/);
+  assert.match(workflow, /praxis-win-x64/);
+});
+
 test("main publishing workflow uses an OIDC-compatible npm CLI", () => {
   const workflow = fs.readFileSync(
     path.join(repository, ".github", "workflows", "publish.yml"),
@@ -510,7 +521,7 @@ test("main publishing workflow uses an OIDC-compatible npm CLI", () => {
   assert.match(workflow, /id-token: write/);
   assert.match(workflow, /npm install --global npm@11/);
   assert.match(workflow, /npm publish --access public --tag main/);
-  assert.match(workflow, /kemiller2002\/repository-operating-system/);
+  assert.match(workflow, /kemiller2002\/praxis/);
   // A pre-existing release for the tag must not short-circuit asset upload:
   // v3.0.1 shipped to npm with an empty release that way, so bin/ros-fs.mjs
   // 404ed on checksums.txt for every user of that version.
@@ -519,7 +530,7 @@ test("main publishing workflow uses an OIDC-compatible npm CLI", () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(repository, "package.json"), "utf8"));
   assert.equal(
     manifest.repository.url,
-    "git+https://github.com/kemiller2002/repository-operating-system.git"
+    "git+https://github.com/kemiller2002/praxis.git"
   );
 });
 
