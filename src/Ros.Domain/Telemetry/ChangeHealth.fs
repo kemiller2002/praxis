@@ -23,7 +23,6 @@ type ChangeHealthPolicy =
       HistoryWindow: int
       MaxHistoryUpdates: int
       LineBucketSize: int
-      FailOnSeverity: string option
       Thresholds: ChangeHealthThresholds }
 
 type ChangeHunk =
@@ -104,7 +103,6 @@ module ChangeHealth =
           HistoryWindow = 20
           MaxHistoryUpdates = 200
           LineBucketSize = 25
-          FailOnSeverity = None
           Thresholds =
             { FilesChanged = { Warning = Some 25; Error = Some 60 }
               LinesChanged = { Warning = Some 800; Error = Some 2000 }
@@ -250,16 +248,3 @@ module ChangeHealth =
         { SchemaVersion = "1.0.0"
           HistoryOmitted = history.HistoryOmitted + overflow
           Updates = if overflow > 0 then updates |> List.skip overflow else updates }
-
-    let severityRank severity =
-        match severity with
-        | "error" -> 2
-        | "warning" -> 1
-        | _ -> 0
-
-    let shouldFail (policy: ChangeHealthPolicy) findings =
-        match policy.FailOnSeverity with
-        | None -> false
-        | Some severity ->
-            let threshold = severityRank severity
-            findings |> List.exists (fun finding -> severityRank finding.Severity >= threshold)
