@@ -72,6 +72,22 @@ function Invoke-Doctor {
     $manifest = Join-Path (Get-Location) ".echelon\toolchain.json"
     if (Test-Path $manifest) {
         Write-Host "toolchain manifest: .echelon/toolchain.json"
+        $required = Get-Content -Raw $manifest | ConvertFrom-Json
+
+        $ordoVersionFile = Join-Path $HomeDir "tools\ordo\current-version"
+        $praxisVersionFile = Join-Path $HomeDir "tools\praxis\current-version"
+        $activeOrdo = if (Test-Path $ordoVersionFile) { (Get-Content -Raw $ordoVersionFile).Trim() } else { "" }
+        $activePraxis = if (Test-Path $praxisVersionFile) { (Get-Content -Raw $praxisVersionFile).Trim() } else { "" }
+
+        if ($required.ordo -and ([string]$required.ordo -ne $activeOrdo)) {
+            Write-Host "ordo requirement mismatch: required $($required.ordo), active $(if ($activeOrdo) { $activeOrdo } else { 'none' })"
+            $failed = $true
+        }
+
+        if ($required.praxis -and ([string]$required.praxis -ne $activePraxis)) {
+            Write-Host "praxis requirement mismatch: required $($required.praxis), active $(if ($activePraxis) { $activePraxis } else { 'none' })"
+            $failed = $true
+        }
     }
     else {
         Write-Host "toolchain manifest: not present; latest releases will be used by setup"
