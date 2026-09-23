@@ -722,9 +722,25 @@ module FileChangeHealthRepository =
             let history = parseHistory (historyFile root policy)
             let recent = history.Updates |> List.rev |> List.truncate policy.HistoryWindow |> List.rev
 
+            let renameTargets =
+                recent
+                |> List.collect _.Files
+                |> List.choose (fun file -> file.From |> Option.map (fun from -> from, file.Path))
+                |> Map.ofList
+
+            let rec canonicalPath visited path =
+                if Set.contains path visited then
+                    path
+                else
+                    match renameTargets |> Map.tryFind path with
+                    | Some next -> canonicalPath (Set.add path visited) next
+                    | None -> path
+
+            let canonical path = canonicalPath Set.empty path
+
             let fileCounts =
                 recent
-                |> List.collect (fun update -> update.Files |> List.map (fun file -> file.Path, update.FinalizedAt))
+                |> List.collect (fun update -> update.Files |> List.map (fun file -> canonical file.Path, update.FinalizedAt))
                 |> List.groupBy fst
                 |> List.map (fun (path, values) ->
                     let timestamps = values |> List.map snd
@@ -738,7 +754,7 @@ module FileChangeHealthRepository =
                     |> List.collect (fun file ->
                         file.Hunks
                         |> List.collect (fun hunk ->
-                            hunk.Buckets |> List.map (fun bucket -> file.Path, bucket, update.FinalizedAt))))
+                            hunk.Buckets |> List.map (fun bucket -> canonical file.Path, bucket, update.FinalizedAt))))
                 |> List.distinct
                 |> List.groupBy (fun (path, bucket, _) -> path, bucket)
                 |> List.map (fun ((path, bucket), values) ->
