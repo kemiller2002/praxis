@@ -147,10 +147,12 @@ doctor_fix_tool() {
 doctor_fix() {
   required_ordo="$(manifest_version ordo || true)"
   required_praxis="$(manifest_version praxis || true)"
-  active_ordo="$(active_version ordo)"
-  active_praxis="$(active_version praxis)"
-  [ -n "$active_ordo" ] || active_ordo="$(single_installed_version ordo)"
-  [ -n "$active_praxis" ] || active_praxis="$(single_installed_version praxis)"
+  actual_active_ordo="$(active_version ordo)"
+  actual_active_praxis="$(active_version praxis)"
+  repair_ordo="$actual_active_ordo"
+  repair_praxis="$actual_active_praxis"
+  [ -n "$repair_ordo" ] || repair_ordo="$(single_installed_version ordo)"
+  [ -n "$repair_praxis" ] || repair_praxis="$(single_installed_version praxis)"
 
   echo "Repairs"
   mkdir -p "$BIN_DIR" "$TOOLS_DIR"
@@ -160,21 +162,23 @@ doctor_fix() {
 
   [ ! -x "$BIN_DIR/ordo" ] && needs_ordo=1
   [ ! -x "$BIN_DIR/sde" ] && needs_ordo=1
-  [ -n "$required_ordo" ] && [ "$active_ordo" != "$required_ordo" ] && needs_ordo=1
+  [ -z "$actual_active_ordo" ] && [ -n "$repair_ordo" ] && needs_ordo=1
+  [ -n "$required_ordo" ] && [ "$actual_active_ordo" != "$required_ordo" ] && needs_ordo=1
 
   [ ! -x "$BIN_DIR/praxis" ] && needs_praxis=1
   [ ! -x "$BIN_DIR/ros" ] && needs_praxis=1
   [ ! -x "$BIN_DIR/echelon" ] && needs_praxis=1
-  [ -n "$required_praxis" ] && [ "$active_praxis" != "$required_praxis" ] && needs_praxis=1
+  [ -z "$actual_active_praxis" ] && [ -n "$repair_praxis" ] && needs_praxis=1
+  [ -n "$required_praxis" ] && [ "$actual_active_praxis" != "$required_praxis" ] && needs_praxis=1
 
   if [ "$needs_ordo" -eq 1 ]; then
-    doctor_fix_tool ordo "$required_ordo" "$active_ordo"
+    doctor_fix_tool ordo "$required_ordo" "$repair_ordo"
   else
     doctor_row ok "Ordo" "no mechanical repair needed"
   fi
 
   if [ "$needs_praxis" -eq 1 ]; then
-    doctor_fix_tool praxis "$required_praxis" "$active_praxis"
+    doctor_fix_tool praxis "$required_praxis" "$repair_praxis"
   else
     doctor_row ok "Praxis" "no mechanical repair needed"
   fi
