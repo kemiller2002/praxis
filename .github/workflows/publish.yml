@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   publish:
-    if: github.repository == 'kemiller2002/praxis'
+    if: github.repository == 'kemiller2002/praxis' && vars.NPM_PUBLISH_ENABLED == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
