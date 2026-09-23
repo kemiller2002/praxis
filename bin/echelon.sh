@@ -255,7 +255,18 @@ doctor() {
       case "$name" in
         ordo|praxis) continue ;;
       esac
-      if [ -n "$extras" ]; then extras="$extras, $name"; else extras="$name"; fi
+
+      versions=""
+      for version_entry in "$entry"/*; do
+        [ -d "$version_entry" ] || continue
+        version_name="$(basename "$version_entry")"
+        [ "$version_name" = "current" ] && continue
+        if [ -n "$versions" ]; then versions="$versions, $version_name"; else versions="$version_name"; fi
+      done
+
+      item="$name"
+      [ -n "$versions" ] && item="$name ($versions)"
+      if [ -n "$extras" ]; then extras="$extras; $item"; else extras="$item"; fi
     done
     [ -n "$extras" ] && doctor_row ok "Other installed tools" "$extras"
   fi
