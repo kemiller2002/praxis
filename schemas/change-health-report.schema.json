@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": [
     "schemaVersion",
-    "enabled"
+    "available"
   ],
   "properties": {
     "schemaVersion": {
@@ -284,11 +284,49 @@
     {
       "if": {
         "properties": {
+          "available": {
+            "const": false
+          }
+        },
+        "required": [
+          "available"
+        ]
+      },
+      "then": {
+        "required": [
+          "reason"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "available": {
+            "const": true
+          }
+        },
+        "required": [
+          "available"
+        ]
+      },
+      "then": {
+        "required": [
+          "enabled"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "available": {
+            "const": true
+          },
           "enabled": {
             "const": true
           }
         },
         "required": [
+          "available",
           "enabled"
         ]
       },
@@ -302,23 +340,6 @@
           "findings",
           "files",
           "history"
-        ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "available": {
-            "const": false
-          }
-        },
-        "required": [
-          "available"
-        ]
-      },
-      "then": {
-        "required": [
-          "reason"
         ]
       }
     }
