@@ -11,4 +11,4 @@ sh "$tmp/install-praxis.sh" --install-base "$INSTALL_BASE"
 "$INSTALL_BASE/bin/echelon" install ordo
 
 printf '%s\n' "Echelon engineering toolchain installed."
-"$INSTALL_BASE/bin/echelon" doctor || true
+"$INSTALL_BASE/bin/echelon" doctor

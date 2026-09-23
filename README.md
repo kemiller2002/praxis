@@ -56,6 +56,14 @@ Once installed, the repository can also run its own lifecycle through the
 ./ros upgrade     # update to this CLI's version
 ```
 
+## New in 3.3.0
+
+- **Expanded Echelon Doctor:** `echelon doctor` now reports machine/install health, active and side-by-side tool versions, command aliases, repository toolchain requirements, and repository-level Ordo/Praxis validation.
+- **Safe mechanical repair:** `echelon doctor --fix` can restore missing command wrappers or activate/reinstall an exact pinned/active Ordo or Praxis version without rewriting repository state.
+- **Verbose diagnostics:** `echelon doctor --verbose` exposes the effective Echelon paths and activation targets for debugging.
+- **Future tool discovery:** Doctor lists additional directories under the Echelon tools root without pretending to validate capabilities it does not yet understand.
+- **Meaningful exit status:** warning-only environments remain exit 0; broken toolchain or repository invariants return exit 1.
+
 ## New in 3.2.0
 
 - **Praxis native distribution:** self-contained GitHub Release bundles for macOS, Linux, and Windows; no Node.js, npm, or machine-wide .NET runtime is required.
