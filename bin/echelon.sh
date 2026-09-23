@@ -68,6 +68,8 @@ setup_all() {
   praxis_version="$(manifest_version praxis || true)"
   install_ordo "$ordo_version"
   install_praxis "$praxis_version"
+  echo
+  doctor
 }
 
 active_version() {
