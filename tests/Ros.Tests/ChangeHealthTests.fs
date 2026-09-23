@@ -1,6 +1,7 @@
 namespace Ros.Tests
 
 open Ros.Domain.Telemetry
+open Ros.Infrastructure.Work
 
 [<RequireQualifiedAccess>]
 module ChangeHealthTests =
@@ -94,6 +95,22 @@ module ChangeHealthTests =
                 Assert.equal 3 history.Updates.Length
                 Assert.equal [ "EXE-3"; "EXE-4"; "EXE-5" ] (history.Updates |> List.map _.ExecutionId)
                 Assert.equal 2 history.HistoryOmitted }
+
+          { Name = "zero-context hunk parser records metadata only and filters ignored paths"
+            Run = fun () ->
+                let diff =
+                    "diff --git a/src/A.fs b/src/A.fs\n--- a/src/A.fs\n+++ b/src/A.fs\n@@ -10,2 +10,3 @@\n-old\n+new\n" +
+                    "diff --git a/.ros/telemetry/x.json b/.ros/telemetry/x.json\n--- a/.ros/telemetry/x.json\n+++ b/.ros/telemetry/x.json\n@@ -1 +1 @@\n-old\n+new\n"
+
+                let parsed = FileChangeHealthRepository.parseHunks 25 [ ".ros/**" ] diff
+                Assert.equal 1 parsed.Count
+                let hunks = parsed["src/A.fs"]
+                let hunk = Assert.single hunks
+                Assert.equal 10 hunk.OldStart
+                Assert.equal 2 hunk.OldLines
+                Assert.equal 10 hunk.NewStart
+                Assert.equal 3 hunk.NewLines
+                Assert.equal [ 0 ] hunk.Buckets }
 
           { Name = "failOnSeverity remains opt-in and respects severity ordering"
             Run = fun () ->
