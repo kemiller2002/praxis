@@ -162,13 +162,13 @@ doctor_fix() {
 
   [ ! -x "$BIN_DIR/ordo" ] && needs_ordo=1
   [ ! -x "$BIN_DIR/sde" ] && needs_ordo=1
-  [ -z "$actual_active_ordo" ] && [ -n "$repair_ordo" ] && needs_ordo=1
+  [ -z "$actual_active_ordo" ] && needs_ordo=1
   [ -n "$required_ordo" ] && [ "$actual_active_ordo" != "$required_ordo" ] && needs_ordo=1
 
   [ ! -x "$BIN_DIR/praxis" ] && needs_praxis=1
   [ ! -x "$BIN_DIR/ros" ] && needs_praxis=1
   [ ! -x "$BIN_DIR/echelon" ] && needs_praxis=1
-  [ -z "$actual_active_praxis" ] && [ -n "$repair_praxis" ] && needs_praxis=1
+  [ -z "$actual_active_praxis" ] && needs_praxis=1
   [ -n "$required_praxis" ] && [ "$actual_active_praxis" != "$required_praxis" ] && needs_praxis=1
 
   if [ "$needs_ordo" -eq 1 ]; then
