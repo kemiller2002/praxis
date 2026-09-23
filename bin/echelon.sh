@@ -18,22 +18,26 @@ EOF
 
 install_ordo() {
   version="${1:-}"
+  ref="main"
+  [ -n "$version" ] && ref="v$version"
   if [ -n "$version" ]; then
-    curl -fsSL https://raw.githubusercontent.com/kemiller2002/ordo/main/scripts/install-native.sh |
+    curl -fsSL "https://raw.githubusercontent.com/kemiller2002/ordo/$ref/scripts/install-native.sh" |
       sh -s -- --version "$version" --install-base "$HOME_DIR"
   else
-    curl -fsSL https://raw.githubusercontent.com/kemiller2002/ordo/main/scripts/install-native.sh |
+    curl -fsSL "https://raw.githubusercontent.com/kemiller2002/ordo/$ref/scripts/install-native.sh" |
       sh -s -- --install-base "$HOME_DIR"
   fi
 }
 
 install_praxis() {
   version="${1:-}"
+  ref="main"
+  [ -n "$version" ] && ref="v$version"
   if [ -n "$version" ]; then
-    curl -fsSL https://raw.githubusercontent.com/kemiller2002/praxis/main/scripts/install-native.sh |
+    curl -fsSL "https://raw.githubusercontent.com/kemiller2002/praxis/$ref/scripts/install-native.sh" |
       sh -s -- --version "$version" --install-base "$HOME_DIR"
   else
-    curl -fsSL https://raw.githubusercontent.com/kemiller2002/praxis/main/scripts/install-native.sh |
+    curl -fsSL "https://raw.githubusercontent.com/kemiller2002/praxis/$ref/scripts/install-native.sh" |
       sh -s -- --install-base "$HOME_DIR"
   fi
 }
