@@ -35,11 +35,18 @@ try {
     $target = Join-Path $toolRoot $Version
     $binDir = Join-Path $InstallBase "bin"
 
-    if (Test-Path $target) { Remove-Item -Recurse -Force $target }
     New-Item -ItemType Directory -Force -Path $toolRoot, $binDir | Out-Null
-    Copy-Item -Recurse -Force $sourceRoot $target
-
     $nativeCmd = Join-Path $target "praxis.cmd"
+    $nativeExe = Join-Path $target "praxis-bin.exe"
+    $versionFile = Join-Path $target "VERSION"
+    if (Test-Path $target) {
+        if (-not (Test-Path $nativeCmd) -or -not (Test-Path $nativeExe) -or -not (Test-Path $versionFile)) {
+            throw "Existing Praxis $Version installation is incomplete. Remove $target and retry."
+        }
+    }
+    else {
+        Copy-Item -Recurse -Force $sourceRoot $target
+    }
     foreach ($name in @("praxis", "ros")) {
         $cmd = Join-Path $binDir "$name.cmd"
         $cmdContent = "@echo off" + [Environment]::NewLine + 'call "' + $nativeCmd + '" %*' + [Environment]::NewLine
