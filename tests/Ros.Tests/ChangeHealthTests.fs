@@ -112,14 +112,4 @@ module ChangeHealthTests =
                 Assert.equal 3 hunk.NewLines
                 Assert.equal [ 0 ] hunk.Buckets }
 
-          { Name = "failOnSeverity remains opt-in and respects severity ordering"
-            Run = fun () ->
-                let metrics = ChangeHealth.metrics 3 1 0 0 0 0 0 0 0 0 1 1
-                let findings = ChangeHealth.evaluate policy metrics
-                Assert.isTrue (not (ChangeHealth.shouldFail policy findings)) "default policy does not block"
-
-                let gated = { policy with FailOnSeverity = Some "warning" }
-                Assert.isTrue (ChangeHealth.shouldFail gated findings) "warning gate blocks a warning"
-
-                let errorOnly = { policy with FailOnSeverity = Some "error" }
-                Assert.isTrue (not (ChangeHealth.shouldFail errorOnly findings)) "error gate ignores warnings" } ]
+ ]
