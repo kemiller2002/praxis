@@ -542,10 +542,8 @@ doctor_json() {
   printf ',"npmPackages":'
   json_npm_packages "$repo_root"
   printf '}'
-  if [ "${updates:-0}" -eq 1 ]; then
-    printf ',"updates":'
-    json_updates
-  fi
+  printf ',"updates":'
+  if [ "${updates:-0}" -eq 1 ]; then json_updates; else printf 'null'; fi
   printf ',"findings":'
   json_findings
   printf ',"summary":{"errors":%s,"warnings":%s}' "$errors" "$warnings"
