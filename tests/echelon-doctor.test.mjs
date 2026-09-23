@@ -129,3 +129,21 @@ test("echelon doctor --fix is a safe no-op when the toolchain is already healthy
   assert.match(result.stdout, /Praxis\s+no mechanical repair needed/);
   assert.match(result.stdout, /Environment healthy\./);
 });
+
+
+test("echelon doctor resolves manifest and repository state from a nested directory", { skip: process.platform === "win32" }, (t) => {
+  const environment = makeEnvironment(t);
+  const nested = path.join(environment.project, "src", "feature");
+  fs.mkdirSync(nested, { recursive: true });
+
+  const result = spawnSync("sh", [doctorScript, "doctor"], {
+    cwd: nested,
+    env: environment.env,
+    encoding: "utf8"
+  });
+
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /Toolchain manifest\s+.*\.echelon\/toolchain\.json/);
+  assert.match(result.stdout, /Praxis requirement\s+3\.3\.0/);
+  assert.match(result.stdout, /Environment healthy\./);
+});
