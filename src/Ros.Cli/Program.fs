@@ -27,7 +27,7 @@ open System.Text.Json.Nodes
 let Version = Lifecycle.Version
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--quiet] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | adapter publish --target FILE | ordo ingest --input FILE | ordo assess --input FILE | ordo observe-search --input FILE | ordo observe-effect --input FILE | ordo current | ordo handoff --revision REV --source SOURCE [--fact TEXT]* [--assumption TEXT]* [--unknown TEXT]* [--obligation TEXT]* [--next-action TEXT]*"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | telemetry adapters | telemetry show [TARGET] | telemetry change-health [TARGET] | telemetry hotspots | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--quiet] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | adapter publish --target FILE | ordo ingest --input FILE | ordo assess --input FILE | ordo observe-search --input FILE | ordo observe-effect --input FILE | ordo current | ordo handoff --revision REV --source SOURCE [--fact TEXT]* [--assumption TEXT]* [--unknown TEXT]* [--obligation TEXT]* [--next-action TEXT]*"
 
 /// Removes one global `--name VALUE` option from the argument list wherever
 /// it appears, so the command parsers below only ever see their own flags.
@@ -1995,6 +1995,63 @@ let private runTelemetryShow root (arguments: string list) =
             0
     | Some workItemId -> renderRecords (FileTelemetryQueryRepository.readByWorkItemId root workItemId)
 
+
+let private changeHealthFromRecord (record: JsonObject) =
+    match record["repository"] with
+    | :? JsonObject as repository ->
+        match repository["changeHealth"] with
+        | :? JsonObject as changeHealth -> Some(changeHealth.DeepClone() :?> JsonObject)
+        | _ -> None
+    | _ -> None
+
+let private runTelemetryChangeHealth root (arguments: string list) =
+    let target =
+        arguments
+        |> List.tryHead
+        |> Option.filter (fun value -> not (value.StartsWith("--", StringComparison.Ordinal)))
+
+    let selected =
+        match target with
+        | Some value when value.StartsWith("EXE-", StringComparison.Ordinal) ->
+            FileTelemetryQueryRepository.readByExecutionId root value |> Result.map Some
+        | Some workItemId ->
+            Ok(
+                FileTelemetryQueryRepository.readByWorkItemId root workItemId
+                |> List.filter (fun record -> changeHealthFromRecord record |> Option.isSome)
+                |> List.tryLast
+            )
+        | None ->
+            Ok(
+                FileTelemetryQueryRepository.readAll root
+                |> List.filter (fun record -> changeHealthFromRecord record |> Option.isSome)
+                |> List.tryLast
+            )
+
+    match selected with
+    | Error message ->
+        eprintfn "ERROR %s" message
+        1
+    | Ok None ->
+        eprintfn "ERROR no finalized change-health record was found"
+        1
+    | Ok(Some record) ->
+        match changeHealthFromRecord record with
+        | None ->
+            eprintfn "ERROR selected execution has no change-health record"
+            1
+        | Some changeHealth ->
+            printf "%s" (changeHealth.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
+            0
+
+let private runTelemetryHotspots root =
+    match FileChangeHealthRepository.hotspots root with
+    | Error message ->
+        eprintfn "ERROR %s" message
+        1
+    | Ok hotspots ->
+        printf "%s" (hotspots.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
+        0
+
 /// Mirrors production `telemetry summary`/`telemetry summarize [TARGET]`
 /// (`summarizeTelemetry`, `tools/ros_telemetry.mjs`) -- MIG-08's third
 /// increment, and the largest read-only telemetry command: four real
@@ -2637,6 +2694,8 @@ let private repositoryDispatch root packageRoot arguments =
     | "work" :: "done" :: rest -> runWorkComplete root rest
     | [ "telemetry"; "adapters" ] -> runTelemetryAdapters ()
     | "telemetry" :: "show" :: rest -> runTelemetryShow root rest
+    | "telemetry" :: "change-health" :: rest -> runTelemetryChangeHealth root rest
+    | [ "telemetry"; "hotspots" ] -> runTelemetryHotspots root
     | "telemetry" :: ("summary" | "summarize") :: rest -> runTelemetrySummary root rest
     | "telemetry" :: "finalize" :: rest -> runTelemetryFinalize root rest
     | "telemetry" :: "record" :: rest -> runTelemetryRecord root rest
