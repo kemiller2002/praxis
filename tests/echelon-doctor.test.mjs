@@ -4,8 +4,9 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
-const repository = path.resolve(import.meta.dirname, "..");
+const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const doctorScript = path.join(repository, "bin", "echelon.sh");
 
 function makeEnvironment(t, { manifestPraxis = "3.3.0", includeBinOnPath = true } = {}) {
