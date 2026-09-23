@@ -524,6 +524,7 @@ module FileChangeHealthRepository =
             if not policy.Enabled then
                 let node = JsonObject()
                 node["schemaVersion"] <- JsonValue.Create "1.0.0"
+                node["available"] <- JsonValue.Create true
                 node["enabled"] <- JsonValue.Create false
 
                 Ok
@@ -655,6 +656,7 @@ module FileChangeHealthRepository =
 
                                 let node = JsonObject()
                                 node["schemaVersion"] <- JsonValue.Create "1.0.0"
+                                node["available"] <- JsonValue.Create true
                                 node["enabled"] <- JsonValue.Create true
                                 node["status"] <-
                                     JsonValue.Create(
