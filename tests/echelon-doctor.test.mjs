@@ -147,3 +147,33 @@ test("echelon doctor resolves manifest and repository state from a nested direct
   assert.match(result.stdout, /Praxis requirement\s+3\.3\.0/);
   assert.match(result.stdout, /Environment healthy\./);
 });
+
+
+test("echelon doctor delegates repository validation from the Git root", { skip: process.platform === "win32" }, (t) => {
+  const environment = makeEnvironment(t);
+  fs.mkdirSync(path.join(environment.project, ".sde"), { recursive: true });
+  fs.mkdirSync(path.join(environment.project, ".ros"), { recursive: true });
+
+  fs.writeFileSync(
+    path.join(environment.bin, "ordo"),
+    "#!/bin/sh\nif [ \"$1\" = verify ]; then [ \"$PWD\" = \"" + environment.project + "\" ]; exit $?; fi\nprintf '%s\\n' '1.4.0'\n",
+    { mode: 0o755 }
+  );
+  fs.writeFileSync(
+    path.join(environment.bin, "praxis"),
+    "#!/bin/sh\nif [ \"$1\" = validate ]; then [ \"$PWD\" = \"" + environment.project + "\" ]; exit $?; fi\nprintf '%s\\n' '3.3.0'\n",
+    { mode: 0o755 }
+  );
+
+  const nested = path.join(environment.project, "src", "nested");
+  fs.mkdirSync(nested, { recursive: true });
+  const result = spawnSync("sh", [doctorScript, "doctor"], {
+    cwd: nested,
+    env: environment.env,
+    encoding: "utf8"
+  });
+
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /Ordo repository\s+verify passed/);
+  assert.match(result.stdout, /Praxis repository\s+validation passed/);
+});
