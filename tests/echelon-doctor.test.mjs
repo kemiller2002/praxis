@@ -39,7 +39,8 @@ function makeEnvironment(t, { manifestPraxis = "3.4.0", includeBinOnPath = true 
 
   for (const [name, version] of Object.entries(commands)) {
     const script = path.join(bin, name);
-    fs.writeFileSync(script, "#!/bin/sh\nprintf '%s\\n' '" + version + "'\n", { mode: 0o755 });
+    const reported = name === "praxis" || name === "ros" ? "ros-fs " + version : version;
+    fs.writeFileSync(script, "#!/bin/sh\nprintf '%s\\n' '" + reported + "'\n", { mode: 0o755 });
   }
 
   fs.writeFileSync(path.join(bin, "echelon"), "#!/bin/sh\nexit 0\n", { mode: 0o755 });
@@ -227,6 +228,10 @@ test("echelon doctor --json emits the stable agent-readable health contract", { 
   assert.equal(report.repository.requirements.ordo, "1.4.0");
   assert.equal(report.repository.requirements.praxis, "3.4.0");
 
+  const praxisCommand = report.commands.find((item) => item.name === "praxis");
+  assert.equal(praxisCommand.version, "3.4.0");
+  assert.equal(praxisCommand.healthy, true);
+
   const praxis = report.nativeTools.find((item) => item.name === "praxis");
   assert.equal(praxis.activeVersion, "3.4.0");
   assert.ok(praxis.installedVersions.includes("3.4.0"));
@@ -304,4 +309,25 @@ test("echelon doctor refuses to mix repair side effects with JSON stdout", { ski
   assert.equal(result.status, 2);
   assert.match(result.stderr, /cannot be combined/);
   assert.equal(result.stdout, "");
+});
+
+
+test("Doctor and inventory JSON schemas are versioned and shipped from schemas", () => {
+  const doctorSchema = JSON.parse(
+    fs.readFileSync(path.join(repository, "schemas", "echelon-doctor-v1.schema.json"), "utf8")
+  );
+  const inventorySchema = JSON.parse(
+    fs.readFileSync(path.join(repository, "schemas", "echelon-inventory-v1.schema.json"), "utf8")
+  );
+
+  assert.equal(doctorSchema.properties.schemaVersion.const, 1);
+  assert.equal(doctorSchema.properties.command.const, "doctor");
+  assert.ok(doctorSchema.required.includes("findings"));
+  assert.ok(doctorSchema.required.includes("nativeTools"));
+  assert.ok(doctorSchema.required.includes("repository"));
+
+  assert.equal(inventorySchema.properties.schemaVersion.const, 1);
+  assert.equal(inventorySchema.properties.command.const, "inventory");
+  assert.ok(inventorySchema.required.includes("nativeTools"));
+  assert.ok(inventorySchema.required.includes("repository"));
 });
