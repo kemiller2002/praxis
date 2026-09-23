@@ -160,3 +160,37 @@ test("history is idempotent for a retried execution", (t) => {
   assert.equal(history.updates.length, 1);
   assert.equal(history.updates[0].executionId, "EXE-1");
 });
+
+
+test("hotspot projection carries file identity across rename chains", (t) => {
+  const { root } = fixture(t);
+  const historyPath = path.join(root, ".ros", "telemetry", "change-history.json");
+  fs.mkdirSync(path.dirname(historyPath), { recursive: true });
+  fs.writeFileSync(historyPath, JSON.stringify({
+    schemaVersion: "1.0.0",
+    historyOmitted: 0,
+    updates: [
+      {
+        executionId: "EXE-A", workItemId: "WI-A", finalizedAt: "2026-09-23T10:00:00.000Z",
+        startCommit: "a", endCommit: "b",
+        files: [{ path: "src/A.fs", from: null, status: "M", hunks: [{ oldStart: 1, oldLines: 1, newStart: 1, newLines: 1, buckets: [0] }] }]
+      },
+      {
+        executionId: "EXE-B", workItemId: "WI-B", finalizedAt: "2026-09-23T11:00:00.000Z",
+        startCommit: "b", endCommit: "c",
+        files: [{ path: "src/B.fs", from: "src/A.fs", status: "R", hunks: [{ oldStart: 1, oldLines: 1, newStart: 1, newLines: 1, buckets: [0] }] }]
+      },
+      {
+        executionId: "EXE-C", workItemId: "WI-C", finalizedAt: "2026-09-23T12:00:00.000Z",
+        startCommit: "c", endCommit: "d",
+        files: [{ path: "src/C.fs", from: "src/B.fs", status: "R", hunks: [{ oldStart: 1, oldLines: 1, newStart: 1, newLines: 1, buckets: [0] }] }]
+      }
+    ]
+  }, null, 2));
+
+  const report = showChangeHotspots(root);
+  assert.equal(report.files[0].path, "src/C.fs");
+  assert.equal(report.files[0].touches, 3);
+  assert.equal(report.regions[0].path, "src/C.fs");
+  assert.equal(report.regions[0].touches, 3);
+});
