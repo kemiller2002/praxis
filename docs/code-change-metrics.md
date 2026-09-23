@@ -61,7 +61,7 @@ The execution record stores the current update under `repository.changeHealth`. 
 
 ## Hunk and hotspot tracking
 
-Praxis uses `git diff --unified=0` to capture changed line ranges without copying code text. Each hunk stores only:
+Praxis uses `git diff --unified=0` to derive changed line ranges. The Git diff is processed transiently; change history persists only metadata and never stores source text or diff bodies. Each hunk stores only:
 
 - old start/count;
 - new start/count;
