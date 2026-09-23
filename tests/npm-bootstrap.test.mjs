@@ -502,6 +502,17 @@ test("npm tarball contains the executable and every scaffold source", async (t) 
   assert.equal(validation.status, 0, validation.stderr || validation.stdout);
 });
 
+test("native Praxis release keeps bundle checksums separate from legacy ros-fs checksums", () => {
+  const workflow = fs.readFileSync(
+    path.join(repository, ".github", "workflows", "native-release.yml"),
+    "utf8"
+  );
+  assert.match(workflow, /native-checksums\.txt/);
+  assert.doesNotMatch(workflow, /dist\/native\/checksums\.txt/);
+  assert.match(workflow, /praxis-linux-x64/);
+  assert.match(workflow, /praxis-win-x64/);
+});
+
 test("main publishing workflow uses an OIDC-compatible npm CLI", () => {
   const workflow = fs.readFileSync(
     path.join(repository, ".github", "workflows", "publish.yml"),
