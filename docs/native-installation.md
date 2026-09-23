@@ -69,6 +69,8 @@ Useful forms:
     echelon doctor --verbose
     echelon doctor --fix
     echelon doctor --json
+    echelon doctor --updates
+    echelon doctor --json --updates
     echelon inventory
     echelon inventory --json
 
