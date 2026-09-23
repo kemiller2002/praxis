@@ -233,7 +233,7 @@ export function captureChangeHealth(root, record, summary, finalizedAt, options)
   const policy = loadChangeHealthPolicy(root);
   if (!policy.enabled) {
     return { enabled: false, metrics: null, findings: [],
-      node: { schemaVersion: "1.0.0", enabled: false } };
+      node: { schemaVersion: "1.0.0", available: true, enabled: false } };
   }
 
   const unified = runGitText(root, ["diff", "--unified=0", "--no-color", "--no-ext-diff", "--find-renames", summary.startCommit]);
@@ -320,6 +320,7 @@ export function captureChangeHealth(root, record, summary, finalizedAt, options)
       findings,
       node: {
         schemaVersion: "1.0.0",
+        available: true,
         enabled: true,
         status,
         policy: policy.file,
