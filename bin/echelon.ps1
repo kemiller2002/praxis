@@ -26,9 +26,9 @@ function Invoke-Installer([string]$Name, [string]$RequestedVersion) {
     $temp = Join-Path ([IO.Path]::GetTempPath()) ("echelon-" + [Guid]::NewGuid().ToString("N") + ".ps1")
     try {
         Invoke-WebRequest -UseBasicParsing -Uri $uri -OutFile $temp
-        $args = @("-InstallBase", $HomeDir)
-        if ($RequestedVersion) { $args += @("-Version", $RequestedVersion) }
-        & powershell -NoProfile -ExecutionPolicy Bypass -File $temp @args
+        $installerArgs = @("-InstallBase", $HomeDir)
+        if ($RequestedVersion) { $installerArgs += @("-Version", $RequestedVersion) }
+        & powershell -NoProfile -ExecutionPolicy Bypass -File $temp @installerArgs
         if ($LASTEXITCODE -ne 0) { throw "$Name installer exited with code $LASTEXITCODE." }
     }
     finally {
@@ -60,12 +60,12 @@ function Invoke-Doctor {
     foreach ($name in @("ordo", "praxis")) {
         $cmd = Join-Path $BinDir "$name.cmd"
         if (Test-Path $cmd) {
-            Write-Host -NoNewline "$name: "
+            Write-Host -NoNewline "${name}: "
             & $cmd --version
             if ($LASTEXITCODE -ne 0) { $failed = $true }
         }
         else {
-            Write-Host "$name: not installed"
+            Write-Host "${name}: not installed"
             $failed = $true
         }
     }
