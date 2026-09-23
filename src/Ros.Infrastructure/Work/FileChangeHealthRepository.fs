@@ -14,7 +14,6 @@ type ChangeHealthCapture =
     { Enabled: bool
       Metrics: ChangeHealthMetrics
       Findings: ChangeHealthFinding list
-      Node: JsonObject
       Node: JsonObject }
 
 [<RequireQualifiedAccess>]
