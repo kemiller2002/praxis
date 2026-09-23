@@ -436,6 +436,7 @@ doctor_json() {
     command_path="$BIN_DIR/$command_name"
     healthy=0
     version_output=""
+    expected_version=""
     if [ -x "$command_path" ]; then
       if [ "$command_name" = "echelon" ]; then
         healthy=1
@@ -460,6 +461,11 @@ doctor_json() {
       command_health_json="$command_health_json,\"version\":\"$(json_escape "$version_output")\""
     else
       command_health_json="$command_health_json,\"version\":null"
+    fi
+    if [ -n "$expected_version" ]; then
+      command_health_json="$command_health_json,\"expectedVersion\":\"$(json_escape "$expected_version")\""
+    else
+      command_health_json="$command_health_json,\"expectedVersion\":null"
     fi
     command_health_json="$command_health_json}"
   done
