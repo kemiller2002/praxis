@@ -142,10 +142,10 @@ function Repair-DoctorTool([string]$Name, [string]$Required, [string]$Active) {
 
 function Invoke-DoctorFix {
     $required = Get-ManifestVersions
-    $activeOrdo = Get-ActiveVersion "ordo"
-    $activePraxis = Get-ActiveVersion "praxis"
-    if (-not $activeOrdo) { $activeOrdo = Get-SingleInstalledVersion "ordo" }
-    if (-not $activePraxis) { $activePraxis = Get-SingleInstalledVersion "praxis" }
+    $actualActiveOrdo = Get-ActiveVersion "ordo"
+    $actualActivePraxis = Get-ActiveVersion "praxis"
+    $repairOrdo = if ($actualActiveOrdo) { $actualActiveOrdo } else { Get-SingleInstalledVersion "ordo" }
+    $repairPraxis = if ($actualActivePraxis) { $actualActivePraxis } else { Get-SingleInstalledVersion "praxis" }
 
     Write-Host "Repairs"
     New-Item -ItemType Directory -Force -Path $BinDir, $ToolsDir | Out-Null
@@ -153,23 +153,25 @@ function Invoke-DoctorFix {
     $needsOrdo =
         -not (Test-Path (Get-CommandFile "ordo")) -or
         -not (Test-Path (Get-CommandFile "sde")) -or
-        ($required.ordo -and $activeOrdo -ne $required.ordo)
+        (-not $actualActiveOrdo -and $repairOrdo) -or
+        ($required.ordo -and $actualActiveOrdo -ne $required.ordo)
 
     $needsPraxis =
         -not (Test-Path (Get-CommandFile "praxis")) -or
         -not (Test-Path (Get-CommandFile "ros")) -or
         -not (Test-Path (Get-CommandFile "echelon")) -or
-        ($required.praxis -and $activePraxis -ne $required.praxis)
+        (-not $actualActivePraxis -and $repairPraxis) -or
+        ($required.praxis -and $actualActivePraxis -ne $required.praxis)
 
     if ($needsOrdo) {
-        Repair-DoctorTool "ordo" $required.ordo $activeOrdo
+        Repair-DoctorTool "ordo" $required.ordo $repairOrdo
     }
     else {
         Write-DoctorRow "ok" "Ordo" "no mechanical repair needed"
     }
 
     if ($needsPraxis) {
-        Repair-DoctorTool "praxis" $required.praxis $activePraxis
+        Repair-DoctorTool "praxis" $required.praxis $repairPraxis
     }
     else {
         Write-DoctorRow "ok" "Praxis" "no mechanical repair needed"
