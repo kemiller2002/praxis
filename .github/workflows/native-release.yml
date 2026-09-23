@@ -154,3 +154,17 @@ jobs:
               gh release upload "v${VERSION}" "${assets[@]}" --clobber
             fi
           fi
+
+
+  windows-powershell-syntax:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse installer scripts with Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          $files = @("scripts/install-native.ps1", "scripts/install-toolchain.ps1", "bin/echelon.ps1")
+          foreach ($file in $files) {
+            [scriptblock]::Create((Get-Content -Raw $file)) | Out-Null
+            Write-Host "parsed $file"
+          }
