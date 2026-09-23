@@ -60,7 +60,9 @@
     "PACKAGE-USAGE.md",
     "docs/echelon-doctor.md",
     "docs/native-installation.md",
-    "docs/toolchain-manifest.md"
+    "docs/toolchain-manifest.md",
+    "docs/code-change-metrics.md",
+    "tools/ros_change_health.mjs"
   ],
   "engines": {
     "node": ">=20"
