@@ -27,6 +27,7 @@
     <Compile Include="Telemetry/Identity.fs" />
     <Compile Include="Telemetry/Capability.fs" />
     <Compile Include="Telemetry/ChangeSummary.fs" />
+    <Compile Include="Telemetry/ChangeHealth.fs" />
     <Compile Include="Telemetry/TelemetryAdapters.fs" />
     <Compile Include="Telemetry/Summary.fs" />
     <Compile Include="Telemetry/Validation.fs" />
