@@ -96,9 +96,24 @@ else
 fi
 
 ln -sfn "$target" "$current"
-ln -sfn "$current/praxis" "$bin_dir/praxis"
-ln -sfn "$current/praxis" "$bin_dir/ros"
-ln -sfn "$current/echelon" "$bin_dir/echelon"
+
+for command_name in praxis ros; do
+  cat > "$bin_dir/$command_name" <<EOF
+#!/usr/bin/env sh
+set -eu
+tool_root="\${ECHELON_HOME:-\$HOME/.echelon}/tools/praxis/current"
+exec "\$tool_root/praxis" "\$@"
+EOF
+  chmod +x "$bin_dir/$command_name"
+done
+
+cat > "$bin_dir/echelon" <<EOF
+#!/usr/bin/env sh
+set -eu
+tool_root="\${ECHELON_HOME:-\$HOME/.echelon}/tools/praxis/current"
+exec "\$tool_root/echelon" "\$@"
+EOF
+chmod +x "$bin_dir/echelon"
 
 printf '%s\n' "Installed Praxis $VERSION to $target"
 printf '%s\n' "Commands: $bin_dir/praxis, $bin_dir/ros, and $bin_dir/echelon"
