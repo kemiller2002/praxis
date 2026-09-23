@@ -127,12 +127,25 @@ jobs:
           (cd dist/native && sha256sum praxis-* > native-checksums.txt)
           cat dist/native/native-checksums.txt
 
-      - name: Smoke test Linux native bundle
+      - name: Smoke test native installer and installed Praxis
         shell: bash
         run: |
           set -euo pipefail
-          ./dist/native-stage/praxis-linux-x64/praxis --version
-          ./dist/native-stage/praxis-linux-x64/echelon --help
+          VERSION="$(node -p "require('./package.json').version")"
+          install_root="$(mktemp -d)"
+          project_root="$(mktemp -d)"
+          trap 'rm -rf "$install_root" "$project_root"' EXIT
+
+          ECHELON_RELEASE_BASE_URL="file://$PWD/dist/native"             sh scripts/install-native.sh --version "$VERSION" --install-base "$install_root"
+
+          "$install_root/bin/praxis" --version
+          "$install_root/bin/ros" --version
+          "$install_root/bin/echelon" --help
+          (
+            cd "$project_root"
+            "$install_root/bin/praxis" init
+            "$install_root/bin/praxis" verify
+          )
           sh -n scripts/install-native.sh
           sh -n bin/praxis-native.sh
           sh -n bin/echelon.sh
