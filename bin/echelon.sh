@@ -216,7 +216,7 @@ latest_release_version() {
   esac
 
   command -v curl >/dev/null 2>&1 || return 1
-  curl -fsSL "https://api.github.com/repos/kemiller2002/$repo/releases/latest" 2>/dev/null |
+  curl -fsSL --max-time 10 "https://api.github.com/repos/kemiller2002/$repo/releases/latest" 2>/dev/null |
     sed -n 's/.*"tag_name":[[:space:]]*"v\([^"]*\)".*/\1/p' |
     head -n 1
 }
