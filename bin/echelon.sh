@@ -183,6 +183,17 @@ json_bool() {
   if [ "$1" -eq 1 ]; then printf 'true'; else printf 'false'; fi
 }
 
+normalize_version_output() {
+  printf '%s\n' "$1" | awk '{
+    for (i = NF; i >= 1; i--) {
+      if ($i ~ /^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$/) {
+        print $i
+        exit
+      }
+    }
+  }'
+}
+
 json_native_tools() {
   first_tool=1
   printf '['
@@ -286,7 +297,8 @@ json_findings() {
     if [ -x "$command_path" ]; then
       if [ "$command_name" = "echelon" ]; then
         command_ok=1
-      elif command_version="$("$command_path" --version 2>/dev/null | head -n 1)" && [ -n "$command_version" ]; then
+      elif raw_command_version="$("$command_path" --version 2>/dev/null | head -n 1)" && [ -n "$raw_command_version" ]; then
+        command_version="$(normalize_version_output "$raw_command_version")"
         case "$command_name" in
           ordo|sde) expected_version="$active_ordo" ;;
           praxis|ros) expected_version="$active_praxis" ;;
@@ -356,13 +368,14 @@ doctor_json() {
     if [ -x "$command_path" ]; then
       if [ "$command_name" = "echelon" ]; then
         healthy=1
-      elif version_output="$("$command_path" --version 2>/dev/null | head -n 1)" && [ -n "$version_output" ]; then
+      elif raw_version_output="$("$command_path" --version 2>/dev/null | head -n 1)" && [ -n "$raw_version_output" ]; then
+        version_output="$(normalize_version_output "$raw_version_output")"
         expected_version=""
         case "$command_name" in
           ordo|sde) expected_version="$active_ordo" ;;
           praxis|ros) expected_version="$active_praxis" ;;
         esac
-        if [ -z "$expected_version" ] || [ "$version_output" = "$expected_version" ]; then
+        if [ -n "$version_output" ] && { [ -z "$expected_version" ] || [ "$version_output" = "$expected_version" ]; }; then
           healthy=1
         fi
       fi
@@ -685,13 +698,17 @@ doctor() {
     if [ -x "$command_path" ]; then
       if [ "$command_name" = "echelon" ]; then
         doctor_row ok "$command_name command" "$command_path"
-      elif version_output="$("$command_path" --version 2>/dev/null | head -n 1)" && [ -n "$version_output" ]; then
+      elif raw_version_output="$("$command_path" --version 2>/dev/null | head -n 1)" && [ -n "$raw_version_output" ]; then
+        version_output="$(normalize_version_output "$raw_version_output")"
         expected_version=""
         case "$command_name" in
           ordo|sde) expected_version="$(active_version ordo)" ;;
           praxis|ros) expected_version="$(active_version praxis)" ;;
         esac
-        if [ -n "$expected_version" ] && [ "$version_output" != "$expected_version" ]; then
+        if [ -z "$version_output" ]; then
+          doctor_row error "$command_name command" "unrecognized version output: $raw_version_output"
+          errors=$((errors + 1))
+        elif [ -n "$expected_version" ] && [ "$version_output" != "$expected_version" ]; then
           doctor_row error "$command_name command" "$version_output; active version is $expected_version"
           errors=$((errors + 1))
         else
