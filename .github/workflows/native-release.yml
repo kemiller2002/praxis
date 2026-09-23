@@ -181,3 +181,52 @@ jobs:
             [scriptblock]::Create((Get-Content -Raw $file)) | Out-Null
             Write-Host "parsed $file"
           }
+
+      - name: Exercise Echelon Doctor with Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          $doctor = (Resolve-Path "bin/echelon.ps1").Path
+          $root = Join-Path $env:RUNNER_TEMP "echelon-doctor-smoke"
+          $home = Join-Path $root "home"
+          $bin = Join-Path $home "bin"
+          $tools = Join-Path $home "tools"
+          $project = Join-Path $root "project"
+
+          Remove-Item -Recurse -Force $root -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path $bin, $project | Out-Null
+
+          foreach ($tool in @(@("ordo", "1.4.0"), @("praxis", "3.3.0"))) {
+            $name = $tool[0]
+            $version = $tool[1]
+            $toolRoot = Join-Path $tools $name
+            $versionRoot = Join-Path $toolRoot $version
+            New-Item -ItemType Directory -Force -Path $versionRoot | Out-Null
+            Set-Content -Encoding Ascii -Path (Join-Path $versionRoot "VERSION") -Value $version
+            Set-Content -Encoding Ascii -Path (Join-Path $toolRoot "current-version") -Value $version
+          }
+
+          foreach ($command in @(@("ordo", "1.4.0"), @("sde", "1.4.0"), @("praxis", "3.3.0"), @("ros", "3.3.0"))) {
+            $name = $command[0]
+            $version = $command[1]
+            $cmd = Join-Path $bin ($name + ".cmd")
+            "@echo off`r`necho $version`r`nexit /b 0`r`n" | Set-Content -Encoding Ascii $cmd
+          }
+          "@echo off`r`nexit /b 0`r`n" | Set-Content -Encoding Ascii (Join-Path $bin "echelon.cmd")
+
+          New-Item -ItemType Directory -Force -Path (Join-Path $project ".echelon") | Out-Null
+          '{"schemaVersion":1,"ordo":"1.4.0","praxis":"3.3.0"}' |
+            Set-Content -Encoding Ascii (Join-Path $project ".echelon\toolchain.json")
+          git -C $project init -q
+
+          $env:ECHELON_HOME = $home
+          $env:PATH = $bin + ";" + $env:PATH
+          Push-Location $project
+          try {
+            & powershell -NoProfile -ExecutionPolicy Bypass -File $doctor doctor
+            if ($LASTEXITCODE -ne 0) {
+              throw "Echelon Doctor smoke test failed with exit code $LASTEXITCODE."
+            }
+          }
+          finally {
+            Pop-Location
+          }
