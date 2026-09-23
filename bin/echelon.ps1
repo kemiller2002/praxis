@@ -153,14 +153,14 @@ function Invoke-DoctorFix {
     $needsOrdo =
         -not (Test-Path (Get-CommandFile "ordo")) -or
         -not (Test-Path (Get-CommandFile "sde")) -or
-        (-not $actualActiveOrdo -and $repairOrdo) -or
+        (-not $actualActiveOrdo) -or
         ($required.ordo -and $actualActiveOrdo -ne $required.ordo)
 
     $needsPraxis =
         -not (Test-Path (Get-CommandFile "praxis")) -or
         -not (Test-Path (Get-CommandFile "ros")) -or
         -not (Test-Path (Get-CommandFile "echelon")) -or
-        (-not $actualActivePraxis -and $repairPraxis) -or
+        (-not $actualActivePraxis) -or
         ($required.praxis -and $actualActivePraxis -ne $required.praxis)
 
     if ($needsOrdo) {
