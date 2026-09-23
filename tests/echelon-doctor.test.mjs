@@ -77,7 +77,7 @@ test("echelon doctor reports a healthy pinned toolchain", { skip: process.platfo
   assert.match(result.stdout, /Echelon Doctor/);
   assert.match(result.stdout, /ordo active\s+1\.4\.0/);
   assert.match(result.stdout, /praxis active\s+3\.3\.0/);
-  assert.match(result.stdout, /Other installed tools\s+limen/);
+  assert.match(result.stdout, /Other installed tools\s+limen \(0\.9\.0\)/);
   assert.match(result.stdout, /Ordo requirement\s+1\.4\.0/);
   assert.match(result.stdout, /Praxis requirement\s+3\.3\.0/);
   assert.match(result.stdout, /Errors:\s+0/);
