@@ -255,9 +255,12 @@ export function captureChangeHealth(root, record, summary, finalizedAt, options)
     };
 
     const files = summary.paths.map((entry) => {
-      const currentLines = entry.status === "D" ? null : countTextLines(path.join(root, entry.path));
-      const linesAdded = entry.untracked ? currentLines : entry.lineStats?.added ?? null;
+      const observedCurrentLines = entry.status === "D" ? null : countTextLines(path.join(root, entry.path));
+      const linesAdded = entry.untracked ? observedCurrentLines : entry.lineStats?.added ?? null;
       const linesDeleted = entry.untracked ? 0 : entry.lineStats?.deleted ?? null;
+      const currentLines = !entry.untracked && linesAdded === null && linesDeleted === null
+        ? null
+        : observedCurrentLines;
       const churn = Number.isInteger(linesAdded) && Number.isInteger(linesDeleted) ? linesAdded + linesDeleted : null;
       let hunks = hunkMap.get(entry.path) ?? [];
       if (entry.untracked && currentLines > 0 && !hunks.length) {
