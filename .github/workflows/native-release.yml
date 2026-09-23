@@ -187,9 +187,9 @@ jobs:
         run: |
           $doctor = (Resolve-Path "bin/echelon.ps1").Path
           $root = Join-Path $env:RUNNER_TEMP "echelon-doctor-smoke"
-          $home = Join-Path $root "home"
-          $bin = Join-Path $home "bin"
-          $tools = Join-Path $home "tools"
+          $echelonHome = Join-Path $root "home"
+          $bin = Join-Path $echelonHome "bin"
+          $tools = Join-Path $echelonHome "tools"
           $project = Join-Path $root "project"
 
           Remove-Item -Recurse -Force $root -ErrorAction SilentlyContinue
@@ -218,7 +218,7 @@ jobs:
             Set-Content -Encoding Ascii (Join-Path $project ".echelon\toolchain.json")
           git -C $project init -q
 
-          $env:ECHELON_HOME = $home
+          $env:ECHELON_HOME = $echelonHome
           $env:PATH = $bin + ";" + $env:PATH
           Push-Location $project
           try {
