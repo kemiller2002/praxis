@@ -27,8 +27,8 @@ permissions:
   contents: write
 
 concurrency:
-  group: praxis-native-release
-  cancel-in-progress: false
+  group: praxis-native-release-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   release:
