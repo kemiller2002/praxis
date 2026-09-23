@@ -128,6 +128,13 @@ function Get-CommandFile([string]$Name) {
     return Join-Path $BinDir "$Name.cmd"
 }
 
+function Normalize-VersionOutput([string]$Raw) {
+    if (-not $Raw) { return "" }
+    $match = [regex]::Match($Raw, '(?<![0-9A-Za-z])([0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?)')
+    if ($match.Success) { return $match.Groups[1].Value }
+    return ""
+}
+
 function Get-NativeToolInventory {
     if (-not (Test-Path $ToolsDir)) { return @() }
 
@@ -234,8 +241,8 @@ function Get-CommandHealth {
                 $commandExit = $LASTEXITCODE
                 $firstLine = @($versionLines | Select-Object -First 1)
                 if ($commandExit -eq 0 -and $firstLine.Count -gt 0 -and $firstLine[0]) {
-                    $versionOutput = [string]$firstLine[0]
-                    if (-not $expectedVersion -or $versionOutput -eq $expectedVersion) {
+                    $versionOutput = Normalize-VersionOutput ([string]$firstLine[0])
+                    if ($versionOutput -and (-not $expectedVersion -or $versionOutput -eq $expectedVersion)) {
                         $healthy = $true
                     }
                 }
