@@ -15,6 +15,7 @@ try {
 
     Write-Host "Echelon engineering toolchain installed."
     & (Join-Path $InstallBase "bin\echelon.cmd") doctor
+    if ($LASTEXITCODE -ne 0) { throw "Echelon Doctor reported an unhealthy toolchain." }
 }
 finally {
     if (Test-Path $temp) { Remove-Item -Force $temp }
