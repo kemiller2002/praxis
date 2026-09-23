@@ -133,6 +133,24 @@ Classification is multi-valued. The core vocabulary is: Research, Development, R
 
 `scope.initial` and `scope.actual` can preserve expected versus discovered root cause, files/components, blockers, complexity, time/cost, dependencies, discoveries, new work, variance, and variance reason. Trivial work can leave these objects empty. `qualitySignals` records how a correction was detected—compiler, type system, test, static analysis, architecture check, runtime, agent self-review, human review, escaped defect, mutation test, or ROS state guard—only when the source is known.
 
+## Per-update code change health
+
+For every finalized execution with a clean Git baseline, Praxis now derives a structured `repository.changeHealth` record in addition to `repository.changeSummary`. It measures per-update code churn, current changed-file size, zero-context hunk coordinates, and recent file/region touch frequency. The same scalar measurements are registered as normalized `code.*` metrics so work-item and portfolio telemetry can aggregate them normally.
+
+Threshold policy lives in `telemetry/change-health.json`. Threshold crossings produce stable `PRAXIS-CHG-xxx` findings with warning/error severity, actual value, configured threshold, and remediation text. Defaults flag unusual change shape without blocking completion. A dirty execution baseline makes both Git delta and change-health attribution explicitly unavailable rather than attributing pre-existing work to the current execution.
+
+Longitudinal metadata lives in the bounded `.ros/telemetry/change-history.json` file. It stores execution/work-item identity, commit boundaries, file paths/rename origin, hunk line ranges, and numeric line buckets only. It never stores source text or diff bodies. The history file is locked and atomically replaced; retries for one execution replace that execution's prior history observation rather than double-counting it.
+
+Use:
+
+```bash
+./ros telemetry change-health WORK-ID
+./ros telemetry change-health EXE-...
+./ros telemetry hotspots
+```
+
+The first command projects one finalized update. The second report ranks files and approximate line regions repeatedly touched in the configured recent history window. See [Code change metrics and change health](code-change-metrics.md) for the complete metric/threshold contract and interpretation guidance.
+
 ## Mechanical and cooperative guarantees
 
 | Capture | Guarantee |
@@ -140,6 +158,7 @@ Classification is multi-valued. The core vocabulary is: Research, Development, R
 | execution ID, work-item link, start/final times, wall/blocked duration | mechanical when work uses the ROS CLI |
 | repository ID, branch, starting/ending SHA, dirty-state counts | mechanical when Git is available |
 | commits, files, lines, extensions, test-file changes, documentation changes | mechanical only from a clean execution baseline; otherwise explicitly unavailable because pre-existing edits prevent trustworthy attribution |
+| per-file churn/size, zero-context hunk ranges, threshold findings, recent file/region touch counts | mechanical from the same clean Git baseline plus bounded repository-local metadata history; source text is not retained |
 | completion finalization and structural validation | mechanical for work items that have entered the telemetry contract |
 | provider/model/runtime/session identity | discovered from a small whitelist of non-secret environment fields, adapter input, or explicit flags; unknown values remain explicit |
 | tokens, cost, model/tool time, turns, retries, subagents, and detailed tool events | mechanical only when a provider runtime stream, hook, API, or OpenTelemetry exporter is connected |
