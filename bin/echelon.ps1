@@ -40,8 +40,9 @@ function Invoke-Installer([string]$Name, [string]$RequestedVersion) {
 
 function Get-RepositoryRoot {
     if (Get-Command git -ErrorAction SilentlyContinue) {
-        $candidate = @(& git rev-parse --show-toplevel 2>$null | Select-Object -First 1)
-        if ($LASTEXITCODE -eq 0 -and $candidate.Count -gt 0) {
+        $candidate = @(& git rev-parse --show-toplevel 2>$null)
+        $gitExit = $LASTEXITCODE
+        if ($gitExit -eq 0 -and $candidate.Count -gt 0) {
             return [string]$candidate[0]
         }
     }
@@ -260,8 +261,10 @@ function Invoke-Doctor([string[]]$Options) {
                 Write-DoctorRow "ok" "$name command" $cmd
             }
             else {
-                $versionOutput = @(& $cmd --version 2>$null | Select-Object -First 1)
-                if ($LASTEXITCODE -eq 0 -and $versionOutput.Count -gt 0 -and $versionOutput[0]) {
+                $versionLines = @(& $cmd --version 2>$null)
+                $commandExit = $LASTEXITCODE
+                $versionOutput = @($versionLines | Select-Object -First 1)
+                if ($commandExit -eq 0 -and $versionOutput.Count -gt 0 -and $versionOutput[0]) {
                     Write-DoctorRow "ok" "$name command" ([string]$versionOutput[0])
                 }
                 else {
