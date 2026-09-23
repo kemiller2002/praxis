@@ -50,11 +50,6 @@ module FileChangeHealthRepository =
         | true, value when value.ValueKind = JsonValueKind.String -> value.GetString()
         | _ -> fallback
 
-    let private optionalStringProperty (element: JsonElement) (name: string) : string option =
-        match element.TryGetProperty name with
-        | true, value when value.ValueKind = JsonValueKind.String -> Some(value.GetString())
-        | _ -> None
-
     let private optionalIntProperty (element: JsonElement) (name: string) : int option =
         match element.TryGetProperty name with
         | true, value when value.ValueKind = JsonValueKind.Number ->
