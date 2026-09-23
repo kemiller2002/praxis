@@ -49,6 +49,30 @@ Other commands:
     echelon upgrade
     echelon doctor
 
+## Doctor
+
+`echelon doctor` is the first diagnostic command to run when the Echelon environment or a repository looks wrong.
+
+It reports:
+
+- platform, architecture, Echelon home, and whether the Echelon bin directory is on PATH;
+- active Ordo and Praxis versions plus every side-by-side installed version;
+- health of the `ordo`, `sde`, `praxis`, `ros`, and `echelon` command entry points;
+- additional tools discovered under the Echelon tools directory;
+- the current repository's `.echelon/toolchain.json` pins and whether active versions satisfy them;
+- Ordo verification when the repository contains `.sde/`;
+- Praxis validation when the repository contains `.ros/`.
+
+Useful forms:
+
+    echelon doctor
+    echelon doctor --verbose
+    echelon doctor --fix
+
+`--fix` is intentionally conservative. It creates missing Echelon directories and reinstalls/reactivates an exact pinned version, or the already-active version when a command wrapper is missing. It does not edit repository-managed Ordo/Praxis state and it does not silently modify shell startup files to change PATH.
+
+Warnings such as a missing PATH entry do not make the command fail. Broken command entry points, missing active tools, manifest mismatches, or failed repository validation return exit code 1.
+
 ## Layout
 
 On macOS and Linux:
