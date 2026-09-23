@@ -93,6 +93,24 @@ installed_versions() {
   done
 }
 
+single_installed_version() {
+  tool="$1"
+  root="$TOOLS_DIR/$tool"
+  [ -d "$root" ] || return 0
+
+  count=0
+  candidate=""
+  for entry in "$root"/*; do
+    [ -d "$entry" ] || continue
+    name="$(basename "$entry")"
+    [ "$name" = "current" ] && continue
+    count=$((count + 1))
+    candidate="$name"
+  done
+
+  [ "$count" -eq 1 ] && printf '%s\n' "$candidate" || true
+}
+
 doctor_row() {
   state="$1"
   label="$2"
@@ -131,6 +149,8 @@ doctor_fix() {
   required_praxis="$(manifest_version praxis || true)"
   active_ordo="$(active_version ordo)"
   active_praxis="$(active_version praxis)"
+  [ -n "$active_ordo" ] || active_ordo="$(single_installed_version ordo)"
+  [ -n "$active_praxis" ] || active_praxis="$(single_installed_version praxis)"
 
   echo "Repairs"
   mkdir -p "$BIN_DIR" "$TOOLS_DIR"
