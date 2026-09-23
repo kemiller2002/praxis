@@ -84,10 +84,16 @@ target="$tool_root/$VERSION"
 current="$tool_root/current"
 bin_dir="$INSTALL_BASE/bin"
 
-rm -rf "$target"
 mkdir -p "$tool_root" "$bin_dir"
-cp -R "$source_root" "$target"
-chmod +x "$target/praxis" "$target/praxis-bin" "$target/echelon"
+if [ -d "$target" ]; then
+  [ -x "$target/praxis" ] && [ -x "$target/praxis-bin" ] && [ -x "$target/echelon" ] && [ -f "$target/VERSION" ] || {
+    echo "Existing Praxis $VERSION installation is incomplete. Remove $target and retry." >&2
+    exit 1
+  }
+else
+  cp -R "$source_root" "$target"
+  chmod +x "$target/praxis" "$target/praxis-bin" "$target/echelon"
+fi
 
 ln -sfn "$target" "$current"
 ln -sfn "$current/praxis" "$bin_dir/praxis"
