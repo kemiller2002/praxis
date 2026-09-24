@@ -2593,7 +2593,9 @@ let private repositoryDispatch root packageRoot arguments =
     | [ "-h" ] ->
         printfn "%s" (fullHelp None)
         0
-    | "validate" :: rest -> runValidateUnified root rest\n    | "foundations" :: "verify" :: rest when rest |> List.forall ((=) "--json") ->\n        Foundations.run root (rest |> List.contains "--json")
+    | "validate" :: rest -> runValidateUnified root rest
+    | "foundations" :: "verify" :: rest when rest |> List.forall ((=) "--json") ->
+        Foundations.run root (rest |> List.contains "--json")
     | "status" :: rest when rest |> List.forall (fun value -> value = "--json" || value = "--verbose") ->
         runStatus root packageRoot (rest |> List.contains "--verbose")
     | "artifacts" :: "validate" :: rest when rest |> List.forall ((=) "--json") ->
