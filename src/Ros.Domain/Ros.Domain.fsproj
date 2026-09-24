@@ -30,6 +30,7 @@
     <Compile Include="Telemetry/TelemetryAdapters.fs" />
     <Compile Include="Telemetry/Summary.fs" />
     <Compile Include="Telemetry/Tutela.fs" />
+    <Compile Include="Telemetry/TutelaTrend.fs" />
     <Compile Include="Telemetry/Validation.fs" />
     <Compile Include="Telemetry/TelemetryValidation.fs" />
     <Compile Include="Ordo/Model.fs" />
