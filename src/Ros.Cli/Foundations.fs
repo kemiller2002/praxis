@@ -58,7 +58,8 @@ module Foundations =
               ".cache"
               "archive"
               "research"
-              "input-documents"\n              "docs" ]
+              "input-documents"
+              "docs" ]
 
     let private sourceExtensions =
         set
@@ -319,7 +320,8 @@ module Foundations =
                   "<ef-checkbox"
                   "<ef-toggle" ]
 
-        installed, pinned, used, used, [ $"dependency: {spec |> Option.defaultValue "missing"}" ]
+        installed, pinned, used, used, let dependencyDetail = spec |> Option.defaultValue "missing"
+        installed, pinned, used, used, [ $"dependency: {dependencyDetail}" ]
 
     let private verifyFolio root rule =
         let spec = tryPackageSpec root "@echelon-foundry/print-components"
@@ -355,7 +357,8 @@ module Foundations =
                   "limen"
                   "WebAssembly" ]
 
-        installed, pinned, used, manifest.IsSome, [ $"manifest: {manifest |> Option.defaultValue "missing"}" ]
+        installed, pinned, used, manifest.IsSome, let manifestDetail = manifest |> Option.defaultValue "missing"
+        installed, pinned, used, manifest.IsSome, [ $"manifest: {manifestDetail}" ]
 
     let private verifyOrdo root rule =
         let manifestInstalled, manifestPinned = manifestVersionMatches root ".echelon/sde.json" rule.Version
