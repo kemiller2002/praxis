@@ -320,7 +320,7 @@ module Foundations =
                   "<ef-checkbox"
                   "<ef-toggle" ]
 
-        installed, pinned, used, used, let dependencyDetail = spec |> Option.defaultValue "missing"
+        let dependencyDetail = spec |> Option.defaultValue "missing"
         installed, pinned, used, used, [ $"dependency: {dependencyDetail}" ]
 
     let private verifyFolio root rule =
@@ -336,7 +336,8 @@ module Foundations =
                   "print-components/print.css"
                   "print-components/register" ]
 
-        installed, pinned, used, used, [ $"dependency: {spec |> Option.defaultValue "missing"}" ]
+        let dependencyDetail = spec |> Option.defaultValue "missing"
+        installed, pinned, used, used, [ $"dependency: {dependencyDetail}" ]
 
     let private verifyLimen root rule =
         let spec = tryPackageSpec root "@echelon-foundry/typescript-wasm-kernel"
@@ -357,7 +358,7 @@ module Foundations =
                   "limen"
                   "WebAssembly" ]
 
-        installed, pinned, used, manifest.IsSome, let manifestDetail = manifest |> Option.defaultValue "missing"
+        let manifestDetail = manifest |> Option.defaultValue "missing"
         installed, pinned, used, manifest.IsSome, [ $"manifest: {manifestDetail}" ]
 
     let private verifyOrdo root rule =
