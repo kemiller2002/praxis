@@ -285,8 +285,7 @@ module Foundations =
         let used =
             anySourceContains
                 root
-                [ "open EchelonFoundry.Aegis"
-                  "EchelonFoundry.Aegis."
+                [ "open Aegis"
                   "Aegis.capture"
                   "Aegis.captureAsync"
                   "Aegis.guard"
