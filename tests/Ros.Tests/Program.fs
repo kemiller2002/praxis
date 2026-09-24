@@ -32,6 +32,7 @@ let main _ =
     @ TelemetryQueryTests.tests
     @ TelemetryLifecycleTests.tests
     @ TelemetrySummaryTests.tests
+    @ TutelaTelemetryTests.tests
     @ TelemetryFinalizeTargetTests.tests
     @ TelemetryRecordMetricTests.tests
     @ TelemetryIngestTests.tests
