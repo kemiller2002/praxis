@@ -1,0 +1,30 @@
+{
+  "$schema": "../schemas/echelon-foundations-v1.schema.json",
+  "schemaVersion": 1,
+  "application": "APPLICATION_NAME",
+  "capabilities": {
+    "aegis": {
+      "required": true,
+      "version": "1.0.0",
+      "boundaryManifest": "aegis-boundaries.json"
+    },
+    "forma": {
+      "required": true,
+      "version": "0.2.0"
+    },
+    "folio": {
+      "required": true,
+      "version": "0.3.0",
+      "sourceCommit": "2b101b6d840a670abb959148fff8e1477c059eda"
+    },
+    "limen": {
+      "required": true
+    },
+    "ordo": {
+      "required": true
+    },
+    "praxis": {
+      "required": true
+    }
+  }
+}
