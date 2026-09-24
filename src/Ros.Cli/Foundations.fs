@@ -58,7 +58,7 @@ module Foundations =
               ".cache"
               "archive"
               "research"
-              "input-documents" ]
+              "input-documents"\n              "docs" ]
 
     let private sourceExtensions =
         set
@@ -246,7 +246,8 @@ module Foundations =
             | Some version ->
                 installed
                 && text.Contains(version, StringComparison.OrdinalIgnoreCase)
-                && not (Regex.IsMatch(text, $"(?i){Regex.Escape packageName}[^\r\n>]*(\*|latest)"))
+                && not (text.Contains("Version=\"*\"", StringComparison.OrdinalIgnoreCase))
+                && not (text.Contains("Version=\"latest\"", StringComparison.OrdinalIgnoreCase))
 
         installed, pinned
 
