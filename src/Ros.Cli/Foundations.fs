@@ -176,14 +176,14 @@ module Foundations =
         |> Seq.filter (fun path -> sourceExtensions.Contains(Path.GetExtension(path).ToLowerInvariant()))
         |> Seq.toList
 
-    let private fileContainsAny needles path =
+    let private fileContainsAny (needles: string list) (path: string) =
         try
             let text = File.ReadAllText path
             needles |> List.exists (fun needle -> text.Contains(needle, StringComparison.OrdinalIgnoreCase))
         with _ ->
             false
 
-    let private anySourceContains root needles =
+    let private anySourceContains (root: string) (needles: string list) =
         sourceFiles root |> List.exists (fileContainsAny needles)
 
     let private allProjectText root =
@@ -192,7 +192,7 @@ module Foundations =
             try Some(File.ReadAllText path) with _ -> None)
         |> String.concat "\n"
 
-    let private tryPackageSpec root packageName =
+    let private tryPackageSpec (root: string) (packageName: string) : string option =
         let packageJson = Path.Combine(root, "package.json")
 
         if not (File.Exists packageJson) then
@@ -223,7 +223,7 @@ module Foundations =
         || value.Equals("latest", StringComparison.OrdinalIgnoreCase)
         || Regex.IsMatch(value, "(^|[#/@])main($|[/?#])", RegexOptions.IgnoreCase)
 
-    let private npmPinned expectedVersion sourceCommit spec =
+    let private npmPinned (expectedVersion: string option) (sourceCommit: string option) (spec: string option) =
         match spec with
         | None -> false
         | Some value when isFloatingSpec value -> false
@@ -237,7 +237,7 @@ module Foundations =
                 || value.EndsWith($"@{version}", StringComparison.OrdinalIgnoreCase)
             | None, None -> true
 
-    let private projectDependencyStatus root packageName expectedVersion =
+    let private projectDependencyStatus (root: string) (packageName: string) (expectedVersion: string option) =
         let projectTexts =
             projectFiles root
             |> List.choose (fun path ->
@@ -262,7 +262,7 @@ module Foundations =
 
         installed, pinned
 
-    let private manifestVersionMatches root relativePath expectedVersion =
+    let private manifestVersionMatches (root: string) (relativePath: string) (expectedVersion: string option) =
         let path = Path.Combine(root, relativePath.Replace('/', Path.DirectorySeparatorChar))
 
         if not (File.Exists path) then
@@ -276,10 +276,10 @@ module Foundations =
 
             true, pinned
 
-    let private findingCode capability suffix =
+    let private findingCode (capability: string) (suffix: string) =
         $"ECHELON-FND-{capability.ToUpperInvariant()}-{suffix}"
 
-    let private verifyAegis root rule =
+    let private verifyAegis (root: string) (rule: CapabilityRule) =
         let installed, pinned = projectDependencyStatus root "EchelonFoundry.Aegis.Core" rule.Version
 
         let used =
@@ -300,7 +300,7 @@ module Foundations =
         let evidence = File.Exists(Path.Combine(root, boundaryManifest.Replace('/', Path.DirectorySeparatorChar)))
         installed, pinned, used, evidence, [ $"boundary manifest: {boundaryManifest}" ]
 
-    let private verifyForma root rule =
+    let private verifyForma (root: string) (rule: CapabilityRule) =
         let spec = tryPackageSpec root "@echelon-foundry/design-system"
         let installed = spec.IsSome
         let pinned = npmPinned rule.Version rule.SourceCommit spec
@@ -323,7 +323,7 @@ module Foundations =
         let dependencyDetail = spec |> Option.defaultValue "missing"
         installed, pinned, used, used, [ $"dependency: {dependencyDetail}" ]
 
-    let private verifyFolio root rule =
+    let private verifyFolio (root: string) (rule: CapabilityRule) =
         let spec = tryPackageSpec root "@echelon-foundry/print-components"
         let installed = spec.IsSome
         let pinned = npmPinned rule.Version rule.SourceCommit spec
@@ -339,7 +339,7 @@ module Foundations =
         let dependencyDetail = spec |> Option.defaultValue "missing"
         installed, pinned, used, used, [ $"dependency: {dependencyDetail}" ]
 
-    let private verifyLimen root rule =
+    let private verifyLimen (root: string) (rule: CapabilityRule) =
         let spec = tryPackageSpec root "@echelon-foundry/typescript-wasm-kernel"
         let manifest =
             [ ".echelon/limen.json"; "limen.config.json" ]
@@ -361,21 +361,21 @@ module Foundations =
         let manifestDetail = manifest |> Option.defaultValue "missing"
         installed, pinned, used, manifest.IsSome, [ $"manifest: {manifestDetail}" ]
 
-    let private verifyOrdo root rule =
+    let private verifyOrdo (root: string) (rule: CapabilityRule) =
         let manifestInstalled, manifestPinned = manifestVersionMatches root ".echelon/sde.json" rule.Version
         let directoryInstalled = Directory.Exists(Path.Combine(root, ".sde"))
         let installed = manifestInstalled || directoryInstalled
         let pinned = if rule.Version.IsSome then manifestPinned else installed
         installed, pinned, installed, manifestInstalled, [ "manifest: .echelon/sde.json"; "state: .sde/" ]
 
-    let private verifyPraxis root rule =
+    let private verifyPraxis (root: string) (rule: CapabilityRule) =
         let manifestInstalled, manifestPinned = manifestVersionMatches root ".echelon/ros.json" rule.Version
         let directoryInstalled = Directory.Exists(Path.Combine(root, ".ros"))
         let installed = manifestInstalled || directoryInstalled
         let pinned = if rule.Version.IsSome then manifestPinned else installed
         installed, pinned, installed, manifestInstalled, [ "manifest: .echelon/ros.json"; "state: .ros/" ]
 
-    let private evaluate root rule =
+    let private evaluate (root: string) (rule: CapabilityRule) =
         if not rule.Required then
             { Name = rule.Name
               Required = false
@@ -450,7 +450,7 @@ module Foundations =
 
             result, findings
 
-    let verify root =
+    let verify (root: string) : Result<Report, string> =
         let absoluteRoot = Path.GetFullPath root
 
         match readConfig absoluteRoot with
@@ -468,7 +468,7 @@ module Foundations =
                   Capabilities = capabilities
                   Findings = findings }
 
-    let private optionNode value =
+    let private optionNode (value: string option) =
         match value with
         | Some text -> JsonValue.Create(text) :> JsonNode
         | None -> null
