@@ -46,5 +46,6 @@ let main _ =
     @ AdapterCallEffectTests.tests
     @ AdapterPublishEffectTests.tests
     @ LifecycleTests.tests
+    @ FoundationsTests.tests
     @ OrdoObservationTests.tests
     |> TestRunner.run
