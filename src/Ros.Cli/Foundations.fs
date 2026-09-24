@@ -237,8 +237,18 @@ module Foundations =
             | None, None -> true
 
     let private projectDependencyStatus root packageName expectedVersion =
-        let text = allProjectText root
-        let installed = text.Contains(packageName, StringComparison.OrdinalIgnoreCase)
+        let projectTexts =
+            projectFiles root
+            |> List.choose (fun path ->
+                try Some(File.ReadAllText path) with _ -> None)
+
+        let text = String.concat "\n" projectTexts
+
+        let installed =
+            projectTexts
+            |> List.exists (fun projectText ->
+                projectText.Contains("PackageReference", StringComparison.OrdinalIgnoreCase)
+                && projectText.Contains(packageName, StringComparison.OrdinalIgnoreCase))
 
         let pinned =
             match expectedVersion with
