@@ -8,6 +8,8 @@ conversation history or tribal knowledge.
 
 Distributed under the [MIT License](LICENSE).
 
+The cross-cutting Aegis, Forma, and Folio application requirements are in [`requirements/SHARED-APPLICATION-FOUNDATIONS.md`](requirements/SHARED-APPLICATION-FOUNDATIONS.md) and apply to native runtime, web UI, and future printable/report surfaces as specified there.
+
 ## What it provides
 
 Installing ROS into a repository gives it a governed operating environment:
