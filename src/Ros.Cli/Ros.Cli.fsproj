@@ -11,6 +11,9 @@
     <ProjectReference Include="../Ros.Infrastructure/Ros.Infrastructure.fsproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="EchelonFoundry.Aegis.Core" Version="1.0.0" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="Lifecycle.fs" />
     <Compile Include="Foundations.fs" />
     <Compile Include="Program.fs" />
