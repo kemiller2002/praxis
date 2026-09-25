@@ -21,6 +21,7 @@ open Ros.Infrastructure.Work
 open Ros.Infrastructure.Ordo
 open System.Text.Json
 open System.Text.Json.Nodes
+open Aegis
 
 /// Single authoritative version, read from package.json at build time; see
 /// Ros.Cli.Lifecycle.Version and Directory.Build.props.
@@ -2672,14 +2673,47 @@ let private dispatch root packageRoot arguments =
         | None -> repositoryDispatch root packageRoot arguments
     | None -> repositoryDispatch root packageRoot arguments
 
+let private execute arguments =
+    match parseGlobals arguments with
+    | Error message ->
+        eprintfn "ERROR %s" message
+        1
+    | Ok(root, packageRoot, remaining) -> dispatch root packageRoot remaining
+
 [<EntryPoint>]
 let main arguments =
-    try
-        match parseGlobals arguments with
-        | Error message ->
-            eprintfn "ERROR %s" message
-            1
-        | Ok(root, packageRoot, remaining) -> dispatch root packageRoot remaining
-    with error ->
-        eprintfn "ERROR %s" error.Message
+    let version =
+        System.Reflection.Assembly.GetExecutingAssembly().GetName().Version
+        |> Option.ofObj
+        |> Option.map string
+
+    let config = Aegis.configure "Praxis.Cli" version [ Sinks.console ]
+
+    match Bootstrap.validate None config with
+    | Result.Error problems ->
+        for problem in problems do
+            let _, message = Bootstrap.describe problem
+            eprintfn "ERROR Aegis configuration: %s" message
+
         1
+    | Ok validated ->
+        let scope = Aegis.scope validated "Praxis.Cli.Main" Map.empty
+
+        let classify scope ex =
+            Aegis.faultOf
+                validated
+                scope
+                (FaultCode "PRAXIS.CLI.UNHANDLED")
+                UnknownFailure
+                FaultSeverity.Error
+                DegradedApplication
+                RequiresIntervention
+                ManualIntervention
+                "Praxis encountered an unexpected operational failure."
+                ex
+
+        match Aegis.capture validated scope classify (fun () -> execute arguments) with
+        | Ok exitCode -> exitCode
+        | Result.Error fault ->
+            eprintfn "ERROR %s Reference %s" fault.UserMessage fault.Id.Value
+            1
