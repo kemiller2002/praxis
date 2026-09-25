@@ -16,13 +16,13 @@ module FoundationsTests =
             if Directory.Exists root then
                 Directory.Delete(root, true)
 
-    let private write root relativePath content =
+    let private write (root: string) (relativePath: string) (content: string) =
         let path = Path.Combine(root, relativePath.Replace('/', Path.DirectorySeparatorChar))
         let parent = Path.GetDirectoryName path
         if not (String.IsNullOrWhiteSpace parent) then Directory.CreateDirectory(parent) |> ignore
         File.WriteAllText(path, content)
 
-    let private config application capability =
+    let private config (application: string) (capability: string) =
         $"""{{
   "schemaVersion": 1,
   "application": "{application}",
