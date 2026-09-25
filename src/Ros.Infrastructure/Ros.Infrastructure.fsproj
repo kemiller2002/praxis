@@ -65,8 +65,8 @@
 
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/00-governance/**/*.*" LogicalName="ros.payload/docs/00-governance/%(RecursiveDir)%(Filename)%(Extension)" />
     <EmbeddedResource Include="$(RosRepositoryRoot)framework/**/*.*" LogicalName="ros.payload/framework/%(RecursiveDir)%(Filename)%(Extension)" />
-    <EmbeddedResource Include="$(RosRepositoryRoot)schemas/**/*.*" Exclude="$(RosRepositoryRoot)schemas/echelon-doctor-v1.schema.json;$(RosRepositoryRoot)schemas/echelon-inventory-v1.schema.json" LogicalName="ros.payload/schemas/%(RecursiveDir)%(Filename)%(Extension)" />
-    <EmbeddedResource Include="$(RosRepositoryRoot)templates/**/*.*" LogicalName="ros.payload/templates/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)schemas/**/*.*" Exclude="$(RosRepositoryRoot)schemas/echelon-doctor-v1.schema.json;$(RosRepositoryRoot)schemas/echelon-inventory-v1.schema.json;$(RosRepositoryRoot)schemas/echelon-foundations-v1.schema.json" LogicalName="ros.payload/schemas/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)templates/**/*.*" Exclude="$(RosRepositoryRoot)templates/application-foundations.json" LogicalName="ros.payload/templates/%(RecursiveDir)%(Filename)%(Extension)" />
     <EmbeddedResource Include="$(RosRepositoryRoot)tools/*.mjs" LogicalName="ros.payload/tools/%(Filename)%(Extension)" />
     <EmbeddedResource Include="$(RosRepositoryRoot)web/*.*" LogicalName="ros.payload/web/%(Filename)%(Extension)" />
     <EmbeddedResource Include="$(RosRepositoryRoot)web-hub/*.*" LogicalName="ros.payload/web-hub/%(Filename)%(Extension)" />
