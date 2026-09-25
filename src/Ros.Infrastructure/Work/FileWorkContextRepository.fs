@@ -7,6 +7,8 @@ open System.Text.Json.Nodes
 open Ros.Application.Work
 open Ros.Domain.Work
 open Ros.Infrastructure.Json
+open Ros.Contracts.Provenance
+open Ros.Domain.Provenance
 
 /// The real effect behind every live-work transition CLI command
 /// (`DF-ROS-2026-A028` Phase A): production's `transitionUnlocked` +
@@ -259,7 +261,10 @@ module FileWorkContextRepository =
     /// omits `reason` entirely when it is absent (matching `JSON.stringify`
     /// dropping an `undefined`-valued key), and `eventId` itself is appended
     /// last, after the hash is computed over everything before it.
-    let private eventNode (event: WorkEventPlan) : JsonObject =
+    /// `actor` (`praxis.actor/1`) is part of the hashed content: the same
+    /// transition recorded by a different actor or execution is a different
+    /// event, while a retried identical command stays idempotent.
+    let private eventNode (actor: Actor) (event: WorkEventPlan) : JsonObject =
         let hashInput = JsonObject()
         hashInput["schemaVersion"] <- JsonValue.Create "1.0.0"
         hashInput["type"] <- JsonValue.Create event.EventType
@@ -271,6 +276,7 @@ module FileWorkContextRepository =
         hashInput["evidence"] <- evidenceArrayNode event.Evidence
         hashInput["paths"] <- stringArrayNode event.Paths
         hashInput["telemetryExecutions"] <- stringArrayNode event.TelemetryExecutionIds
+        hashInput["actor"] <- ProvenanceJson.actorNode actor
         let publication = JsonObject()
         publication["status"] <- JsonValue.Create "pending"
         hashInput["publication"] <- publication
@@ -327,6 +333,7 @@ module FileWorkContextRepository =
     let applyContextPlanWithConclusions
         (root: string)
         (repositoryId: string)
+        (actor: Actor)
         (conclusions: Map<string, string>)
         (plan: WorkContextPlan)
         : Result<JsonArray * string list, string> =
@@ -349,7 +356,7 @@ module FileWorkContextRepository =
                         contextNode["baselineDirtyPaths"] <- stringArrayNode plan.BaselineDirtyPaths
                     | None -> ()
 
-                    let eventNodes = plan.ItemPlans |> List.map (fun itemPlan -> eventNode itemPlan.Event)
+                    let eventNodes = plan.ItemPlans |> List.map (fun itemPlan -> eventNode actor itemPlan.Event)
                     let eventIds = eventNodes |> List.choose (fun node -> stringField node "eventId")
                     let eventsContent = appendEvents root eventNodes
                     let contextContent = contextNode.ToJsonString serializerOptions + "\n"
@@ -373,5 +380,5 @@ module FileWorkContextRepository =
 
     /// `applyContextPlanWithConclusions` with no research-conclusion writes
     /// -- every action but `complete` (on a research item) needs this.
-    let applyContextPlan (root: string) (repositoryId: string) (plan: WorkContextPlan) : Result<JsonArray * string list, string> =
-        applyContextPlanWithConclusions root repositoryId Map.empty plan
+    let applyContextPlan (root: string) (repositoryId: string) (actor: Actor) (plan: WorkContextPlan) : Result<JsonArray * string list, string> =
+        applyContextPlanWithConclusions root repositoryId actor Map.empty plan

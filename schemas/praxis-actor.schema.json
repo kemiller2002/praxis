@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echelonfoundry.com/schemas/praxis-actor.schema.json",
+  "title": "Praxis actor (praxis.actor/1)",
+  "description": "Who performed an action. Stable identity: kind, id, provider. Execution identity: executionId, model, runtime, versions, sessionId. Required attributes that are not known are the literal 'unknown'. Self-reported provenance, not authentication (DF-ROS-2026-A036).",
+  "type": "object",
+  "required": [
+    "kind",
+    "id"
+  ],
+  "properties": {
+    "kind": {
+      "enum": [
+        "agent",
+        "human",
+        "automation",
+        "unknown"
+      ]
+    },
+    "id": {
+      "$ref": "#/$defs/token"
+    },
+    "provider": {
+      "$ref": "#/$defs/token"
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1
+    },
+    "modelVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "runtime": {
+      "$ref": "#/$defs/token"
+    },
+    "runtimeVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "executionId": {
+      "$ref": "#/$defs/token"
+    },
+    "sessionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "assurance": {
+      "type": "string",
+      "minLength": 1,
+      "description": "'self-reported' for every Praxis-produced actor; any other level is preserved and reported as unverified."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "agent"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "provider",
+          "model",
+          "runtime",
+          "executionId"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "automation"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "runtime",
+          "executionId"
+        ]
+      }
+    }
+  ],
+  "additionalProperties": true,
+  "$defs": {
+    "token": {
+      "type": "string",
+      "pattern": "^\\S+$"
+    }
+  }
+}

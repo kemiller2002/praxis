@@ -47,6 +47,7 @@ type ArtifactKind =
     | Hypothesis
     | Journal
     | Mission
+    | Requirement
     | ResearchPackage
     | Theory
 
@@ -55,7 +56,15 @@ type ArtifactKindConfiguration =
       Name: string
       SourceDirectory: string
       RegistryPath: string
-      IdentifierPrefix: string }
+      IdentifierPrefix: string
+      /// When set, only files whose names start with this prefix are
+      /// canonical artifacts of the kind, so a directory may also hold
+      /// free-form prose (`requirements/` predates formal requirements).
+      FileNamePrefix: string option
+      /// An optional registry is not reported stale, and is not written,
+      /// while it does not exist and the kind has no artifacts -- so adding
+      /// a kind never invalidates a repository that has none of it.
+      RegistryOptionalWhenEmpty: bool }
 
 [<RequireQualifiedAccess>]
 module ArtifactKinds =
@@ -64,42 +73,65 @@ module ArtifactKinds =
             Name = "decisions"
             SourceDirectory = "research/decisions"
             RegistryPath = "registries/decisions.json"
-            IdentifierPrefix = "DF" }
+            IdentifierPrefix = "DF"
+            FileNamePrefix = None
+            RegistryOptionalWhenEmpty = false }
           { Kind = ArtifactKind.Evidence
             Name = "evidence"
             SourceDirectory = "research/evidence"
             RegistryPath = "registries/evidence.json"
-            IdentifierPrefix = "EV" }
+            IdentifierPrefix = "EV"
+            FileNamePrefix = None
+            RegistryOptionalWhenEmpty = false }
           { Kind = ArtifactKind.Experiment
             Name = "experiments"
             SourceDirectory = "research/experiments"
             RegistryPath = "registries/experiments.json"
-            IdentifierPrefix = "EX" }
+            IdentifierPrefix = "EX"
+            FileNamePrefix = None
+            RegistryOptionalWhenEmpty = false }
           { Kind = ArtifactKind.Hypothesis
             Name = "hypotheses"
             SourceDirectory = "research/hypotheses"
             RegistryPath = "registries/hypotheses.json"
-            IdentifierPrefix = "HY" }
+            IdentifierPrefix = "HY"
+            FileNamePrefix = None
+            RegistryOptionalWhenEmpty = false }
           { Kind = ArtifactKind.Journal
             Name = "journals"
             SourceDirectory = "research/journals"
             RegistryPath = "registries/journals.json"
-            IdentifierPrefix = "JR" }
+            IdentifierPrefix = "JR"
+            FileNamePrefix = None
+            RegistryOptionalWhenEmpty = false }
           { Kind = ArtifactKind.Mission
             Name = "missions"
             SourceDirectory = "missions"
             RegistryPath = "registries/missions.json"
-            IdentifierPrefix = "MS" }
+            IdentifierPrefix = "MS"
+            FileNamePrefix = None
+            RegistryOptionalWhenEmpty = false }
+          { Kind = ArtifactKind.Requirement
+            Name = "requirements"
+            SourceDirectory = "requirements"
+            RegistryPath = "registries/requirements.json"
+            IdentifierPrefix = "RQ"
+            FileNamePrefix = Some "RQ-"
+            RegistryOptionalWhenEmpty = true }
           { Kind = ArtifactKind.ResearchPackage
             Name = "research-packages"
             SourceDirectory = "research/packages"
             RegistryPath = "registries/research-packages.json"
-            IdentifierPrefix = "RP" }
+            IdentifierPrefix = "RP"
+            FileNamePrefix = None
+            RegistryOptionalWhenEmpty = false }
           { Kind = ArtifactKind.Theory
             Name = "theories"
             SourceDirectory = "research/theories"
             RegistryPath = "registries/theories.json"
-            IdentifierPrefix = "TH" } ]
+            IdentifierPrefix = "TH"
+            FileNamePrefix = None
+            RegistryOptionalWhenEmpty = false } ]
 
     let identifierPrefix (identifier: string) =
         let separator = identifier.IndexOf('-')

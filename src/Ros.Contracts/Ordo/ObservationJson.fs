@@ -594,7 +594,10 @@ module ObservationJson =
                 document.RootElement.WriteTo writer
             writer.WriteEndObject())
 
-    let renderHandoff (value: HandoffAuthority) =
+    /// `producedBy` (`praxis.actor/1`) names the actor and execution that
+    /// packaged the handoff, so a receiving agent or system keeps the
+    /// originating provenance across the boundary.
+    let renderHandoff (producedBy: Ros.Domain.Provenance.Actor option) (value: HandoffAuthority) =
         JsonRendering.renderIndented (fun writer ->
             writer.WriteStartObject()
             writer.WriteString("schema", "ros.handoff-authority")
@@ -618,4 +621,10 @@ module ObservationJson =
             writeArray "completedVerification" value.CompletedVerification
             writeArray "legalNextActions" value.LegalNextActions
             writeArray "supersededResolutionIds" value.SupersededResolutionIds
+
+            producedBy
+            |> Option.iter (fun actor ->
+                writer.WritePropertyName("producedBy")
+                (Ros.Contracts.Provenance.ProvenanceJson.actorNode actor).WriteTo(writer))
+
             writer.WriteEndObject())

@@ -49,7 +49,7 @@ module WorkCaptureEffectTests =
             Run =
               fun () ->
                   withTemporaryRoot (fun root ->
-                      match FileBacklogQueueRepository.captureItem root (plan "WI-0001") [] with
+                      match FileBacklogQueueRepository.captureItem root (plan "WI-0001") ProvenanceFixtures.contribution [] with
                       | Error message -> failwith message
                       | Ok row ->
                           Assert.equal "WI-0001" row.Id
@@ -68,7 +68,7 @@ module WorkCaptureEffectTests =
                           root
                           """{"schemaVersion":"1.0.0","repository":"repository","nextSeq":2,"items":[{"id":"WI-0001","title":"It's a \"quoted\" title","description":null,"tags":[],"priority":"high","status":"ready","attachments":[{"id":"att-1"}],"createdAt":"2026-01-01T00:00:00.000Z","updatedAt":"2026-01-01T00:00:00.000Z","createdBy":"unknown","source":"manual","sourceReference":null}]}"""
 
-                      match FileBacklogQueueRepository.captureItem root (plan "WI-0002") [] with
+                      match FileBacklogQueueRepository.captureItem root (plan "WI-0002") ProvenanceFixtures.contribution [] with
                       | Error message -> failwith message
                       | Ok row -> Assert.equal "WI-0002" row.Id
 
@@ -98,7 +98,7 @@ module WorkCaptureEffectTests =
                               CompletedAt = None
                               TelemetryExecutionIds = [] } ]
 
-                      FileBacklogQueueRepository.captureItem root (plan "WI-0001") contextItems |> ignore
+                      FileBacklogQueueRepository.captureItem root (plan "WI-0001") ProvenanceFixtures.contribution contextItems |> ignore
 
                       let markdownContent = File.ReadAllText(Path.Combine(root, ".ros", "work", "queue.md"))
                       Assert.isTrue (markdownContent.Contains "| WI-LIVE | WI-LIVE | active |  |  |") "a live-only item must appear in the merged table") } ]

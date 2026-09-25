@@ -265,9 +265,25 @@ ros work <capture|list|ready|show|start|resume|block|complete|update|attach|cont
 ros add "..."
 ros telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
 ros adapter <call|publish>
+ros identity [--json] [--actor NAME]
+ros provenance record PATH [PATH]* [--operation created|modified|reviewed|approved]
+                         [--reason TEXT] [--evidence REF]* [--work-item ID] [--basis REF] [--at TIMESTAMP]
+ros provenance show TARGET [--json]
+ros provenance validate [--json]
+ros provenance summary [--json]
 ```
+
+`identity` prints the actor (`praxis.actor/1`) this process will stamp on
+everything it records and how its execution was bound. Work events, execution
+records, and backlog items are attributed automatically; `provenance record`
+appends an attributed contribution to a canonical artifact's front matter
+(new file: `created`; committed file: `modified`). `provenance validate` exits
+`1` when any provenance error exists and lists warnings and legacy records;
+provenance errors also fail `validate`. See
+[`agent-identity-and-provenance.md`](agent-identity-and-provenance.md).
 
 Run `ros --help` for the full argument list, and see
 [`work-protocol.md`](work-protocol.md),
-[`development-telemetry.md`](development-telemetry.md) and
-[`work-adapter-contract.md`](work-adapter-contract.md) for what they mean.
+[`development-telemetry.md`](development-telemetry.md),
+[`work-adapter-contract.md`](work-adapter-contract.md) and
+[`agent-identity-and-provenance.md`](agent-identity-and-provenance.md) for what they mean.

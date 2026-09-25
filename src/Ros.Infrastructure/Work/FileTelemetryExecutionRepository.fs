@@ -6,6 +6,8 @@ open System.Security.Cryptography
 open System.Text.Json
 open System.Text.Json.Nodes
 open Ros.Application.Git
+open Ros.Contracts.Provenance
+open Ros.Domain.Provenance
 open Ros.Domain.Telemetry
 open Ros.Infrastructure.Artifacts
 open Ros.Infrastructure.Git
@@ -35,7 +37,7 @@ module FileTelemetryExecutionRepository =
         let suffix = RandomNumberGenerator.GetBytes 4 |> Convert.ToHexString |> fun value -> value.ToLowerInvariant()
         $"EXE-{stamp}-{suffix}"
 
-    let private environmentIdentityInputs () : IdentityInputs =
+    let environmentIdentityInputs () : IdentityInputs =
         let variable name =
             match Environment.GetEnvironmentVariable(name: string) with
             | null
@@ -60,6 +62,19 @@ module FileTelemetryExecutionRepository =
             GitHubActions = (variable "GITHUB_ACTIONS" = Some "true")
             GitHubRunId = variable "GITHUB_RUN_ID"
             OllamaHost = variable "OLLAMA_HOST" }
+
+    /// The provenance inputs a process declares once per execution:
+    /// `ROS_ACTOR_KIND` (agent, human, automation) and, when a process must
+    /// join an execution it did not start, `ROS_EXECUTION_ID`.
+    let environmentActorInputs () : ActorInputs =
+        let variable (name: string) =
+            match Environment.GetEnvironmentVariable name with
+            | null
+            | "" -> None
+            | value -> Some value
+
+        { ExplicitKind = variable "ROS_ACTOR_KIND"
+          ExplicitExecutionId = variable "ROS_EXECUTION_ID" }
 
     /// Reused by `FileTelemetryFinalizationRepository` for an execution's
     /// ending snapshot -- the same shape production's own `gitSnapshot`
@@ -402,6 +417,16 @@ module FileTelemetryExecutionRepository =
                             identityNode["parentExecutionId"] <- optionalString identity.ParentExecutionId
                             identityNode["orchestration"] <- JsonObject()
                             record["identity"] <- identityNode
+
+                            // The execution's own actor (`praxis.actor/1`): the one point
+                            // at which a run declares who it is. Every record stamped
+                            // during this run references this execution id.
+                            record["actor"] <-
+                                ActorResolution.resolve
+                                    (environmentActorInputs ())
+                                    (identity, discoverySource)
+                                    (ExecutionBinding.Explicit executionId)
+                                |> ProvenanceJson.actorNode
 
                             let provenanceNode = JsonObject()
                             provenanceNode["collector"] <- JsonValue.Create "ros"

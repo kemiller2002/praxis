@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echelonfoundry.com/schemas/praxis-provenance.schema.json",
+  "title": "Praxis provenance (praxis.provenance/1)",
+  "description": "Append-only contribution history of one record. 'created' appears at most once and first. Lineage is recorded separately in the record's derived_from field.",
+  "type": "object",
+  "required": [
+    "contributions"
+  ],
+  "properties": {
+    "contributions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/contribution"
+      }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "contribution": {
+      "title": "Praxis contribution (praxis.contribution/1)",
+      "type": "object",
+      "required": [
+        "operation",
+        "at",
+        "actor"
+      ],
+      "properties": {
+        "operation": {
+          "enum": [
+            "created",
+            "modified",
+            "reviewed",
+            "approved"
+          ]
+        },
+        "at": {
+          "type": "string",
+          "description": "ISO-8601 date or UTC date-time."
+        },
+        "actor": {
+          "$ref": "praxis-actor.schema.json"
+        },
+        "workItem": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "basis": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The prior state the contribution operated on (version, blob, or commit)."
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

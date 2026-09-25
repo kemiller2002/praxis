@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
+import { withoutProvenance } from "./support/provenance-golden.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const installWorkItemId = `ROS-INSTALL-${JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8")).version.replaceAll(".", "-")}`;
@@ -49,16 +50,16 @@ function writeQueue(root, queue) {
   fs.writeFileSync(path.join(root, ".ros", "work", "queue.json"), `${JSON.stringify(queue, null, 2)}\n`);
 }
 
-function readContext(root) {
+function readContextRaw(root) {
   return JSON.parse(fs.readFileSync(path.join(root, ".ros", "context", "current.json"), "utf8"));
 }
 
-function readEvents(root) {
+function readEventsRaw(root) {
   const file = path.join(root, ".ros", "events", "events.jsonl");
   return fs.existsSync(file) ? fs.readFileSync(file, "utf8").split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line)) : [];
 }
 
-function readExecutions(root) {
+function readExecutionsRaw(root) {
   const dir = path.join(root, ".ros", "telemetry", "executions");
   return fs.readdirSync(dir).sort().map((name) => JSON.parse(fs.readFileSync(path.join(dir, name), "utf8")));
 }
@@ -179,6 +180,7 @@ const GOLDEN ={
         "docs/00-governance/README.md",
         "docs/00-governance/Research-Execution-Package-Specification.md",
         "docs/PILOT-MEASUREMENT-PLAN.md",
+        "docs/agent-identity-and-provenance.md",
         "docs/architecture/README.md",
         "docs/decisions/README.md",
         "docs/development-telemetry.md",
@@ -224,6 +226,8 @@ const GOLDEN ={
         "schemas/hypothesis.schema.json",
         "schemas/journal.schema.json",
         "schemas/mission.schema.json",
+        "schemas/praxis-actor.schema.json",
+        "schemas/praxis-provenance.schema.json",
         "schemas/rep.schema.json",
         "schemas/ros-effect-observation.schema.json",
         "schemas/ros-effective-current.schema.json",
@@ -236,6 +240,7 @@ const GOLDEN ={
         "schemas/work-protocol.schema.json",
         "telemetry/metrics.json",
         "templates/missions/MISSION-TEMPLATE.md",
+        "templates/requirements/REQUIREMENT-TEMPLATE.md",
         "templates/research/EVIDENCE-TEMPLATE.md",
         "templates/research/EXPERIMENT-TEMPLATE.md",
         "templates/research/HYPOTHESIS-TEMPLATE.md",
@@ -1642,3 +1647,15 @@ test("F# work start rejects starting an already-active work item with production
   assert.equal(fsharpResult.status, 1);
   assert.match(fsharpResult.stderr, /cannot begin 'WI-ACTIVE' from 'active'/);
 });
+
+function readContext(root) {
+  return withoutProvenance(readContextRaw(root));
+}
+
+function readEvents(root) {
+  return withoutProvenance(readEventsRaw(root));
+}
+
+function readExecutions(root) {
+  return withoutProvenance(readExecutionsRaw(root));
+}

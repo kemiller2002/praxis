@@ -110,6 +110,10 @@
       "items": {
         "type": "string"
       }
+    },
+    "producedBy": {
+      "$ref": "praxis-actor.schema.json",
+      "description": "The actor and execution that packaged this handoff (optional; DF-ROS-2026-A036)."
     }
   }
 }

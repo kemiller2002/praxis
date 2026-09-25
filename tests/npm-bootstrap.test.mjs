@@ -364,6 +364,15 @@ supports: [HY-COMM-2026-A001]
 `,
     "utf8"
   );
+  // A greenfield repository enforces provenance for every new record
+  // (DF-ROS-2026-A036): hand-written artifacts are attributed before they
+  // validate, under an identity declared once in the environment.
+  const unattributed = fsharpCli(target, ["validate"]);
+  assert.equal(unattributed.status, 1);
+  assert.match(unattributed.stderr, /missing-provenance/);
+  const author = { env: { ...process.env, ROS_ACTOR_KIND: "human", ROS_ACTOR: "test-author" } };
+  const attributed = fsharpCli(target, ["provenance", "record", path.relative(target, hypothesis), path.relative(target, evidence)], author);
+  assert.equal(attributed.status, 0, attributed.stderr || attributed.stdout);
   const build = fsharpCli(target, ["registry", "build"]);
   assert.equal(build.status, 0, build.stderr || build.stdout);
   const repaired = fsharpCli(target, ["validate"]);
@@ -373,6 +382,12 @@ supports: [HY-COMM-2026-A001]
 test("installed validator accepts preserved legacy REP identity and confidence", (t) => {
   const target = temporaryDirectory(t);
   initializeProject({ target, project: "Compatibility Pilot" });
+  // Adopting pre-existing artifacts: the documented migration path sets an
+  // adoption cutoff so older records stay legacy (DF-ROS-2026-A036).
+  const configPath = path.join(target, "ros.json");
+  const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+  config.provenance = { enforce: true, requiredSince: new Date().toISOString() };
+  fs.writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`, "utf8");
   fs.writeFileSync(
     path.join(target, "research", "packages", "RP-2026-07-30-NHE-COMPARATIVE-REVIEW.md"),
     `---\nidentifier: RP-2026-07-30-NHE-COMPARATIVE-REVIEW\ntitle: Legacy review\nstatus: draft\nconfidence: medium-high\n---\n`,

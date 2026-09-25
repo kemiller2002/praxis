@@ -265,3 +265,14 @@ module ProcessGitRepository =
         |> Result.map int
 
     let readCommitCount root startCommit endCommit = readCommitCountWithExecutable "git" root startCommit endCommit
+
+    /// The committed (`HEAD`) content of one repository-relative path, or
+    /// `None` when the path is not committed (a new file) or Git is
+    /// unavailable. Used to tell a new record from an existing one and to
+    /// check that an edit preserved the committed provenance.
+    let readCommittedFileWithExecutable executable root (relativePath: string) : string option =
+        match runGit executable (IO.Path.GetFullPath root) "git show" [ "show"; $"HEAD:{relativePath.Replace('\\', '/')}" ] with
+        | Ok result when result.ExitCode = 0 -> Some result.Output
+        | _ -> None
+
+    let readCommittedFile root relativePath = readCommittedFileWithExecutable "git" root relativePath

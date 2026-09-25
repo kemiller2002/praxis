@@ -68,16 +68,21 @@ module ArtifactOperations =
         |> ArtifactProjection.plan
         |> List.map (fun projection ->
             { Path = projection.RegistryPath
-              Content = RegistryJson.render projection.Documents })
+              Content = RegistryJson.render projection.Documents },
+            projection.Documents.IsEmpty
+            && ArtifactKinds.configurations
+               |> List.exists (fun configuration ->
+                   configuration.RegistryPath = projection.RegistryPath && configuration.RegistryOptionalWhenEmpty))
 
     let private changedRegistries repository projections =
         let rec collect changed remaining =
             match remaining with
             | [] -> Ok(List.rev changed)
-            | projection :: rest ->
+            | (projection: RegistryChange, optionalWhenAbsent) :: rest ->
                 match repository.ReadRegistry projection.Path with
                 | Error failure -> Error failure
                 | Ok(Some current) when current = projection.Content -> collect changed rest
+                | Ok None when optionalWhenAbsent -> collect changed rest
                 | Ok _ -> collect (projection :: changed) rest
 
         collect [] projections

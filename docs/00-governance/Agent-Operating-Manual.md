@@ -2,11 +2,11 @@
 id: GV-AGENT-001
 title: Agent Operating Manual
 status: canonical
-version: 1.1.0
+version: 1.2.0
 owners:
   - repository-governance
 created: 2026-07-22
-updated: 2026-09-05
+updated: 2026-09-25
 review_cycle: quarterly
 supersedes: []
 superseded_by: []
@@ -15,6 +15,7 @@ related_documents:
   - Engineering-Standards.md
   - Research-Execution-Package-Specification.md
   - ../development-telemetry.md
+  - ../agent-identity-and-provenance.md
 tags: [governance, agents, operations]
 ---
 
@@ -25,7 +26,7 @@ tags: [governance, agents, operations]
 1. Read root `AGENTS.md` and the [governance index](README.md).
 2. Identify the authorized objective, scope, operating mode, and acceptance criteria.
 3. Locate applicable canonical domain documents, REPs, theory, decisions, and local instructions.
-4. Begin the authorized work item so ROS starts an execution record; inspect repository state, including uncommitted user work, and establish a baseline where practical.
+4. Establish your identity for this execution (`ROS_ACTOR_KIND`, `ROS_ACTOR`, and provider/runtime/model variables only when known), begin the authorized work item so ROS starts an execution record bound to that identity, and confirm it with `./ros identity`; inspect repository state, including uncommitted user work, and establish a baseline where practical.
 5. Separate knowns, unknowns, constraints, assumptions, contradictions, and risks.
 6. Choose the smallest sufficient process and artifact threshold.
 7. Execute within scope, making reversible decisions where justified.
@@ -85,6 +86,21 @@ For each material hypothesis record: statement; evidence for; evidence against; 
 ## Tool Honesty
 
 Never say a file was read when it was not; a command succeeded when it failed; a test passed when it did not run and pass; a user approved what they did not; or evidence exists when it does not. Distinguish observed output, inference, and assumption. Capture enough command/test identity and outcome for a successor to verify important claims.
+
+## Identity and Provenance
+
+Every agent working under Praxis is attributable. Recorded identity is self-reported provenance, not proof; it must therefore be honest. Rules, independent of provider:
+
+1. Establish your identity once, at the start of the execution, and confirm it with `./ros identity`.
+2. Never impersonate another agent or a human, and never reuse another execution's identity.
+3. Never fabricate a model, provider, or version. Record `unknown` when you do not know a value.
+4. Preserve existing provenance: never edit, reorder, or remove another contributor's entry.
+5. Add your own contribution instead of replacing someone else's; the original author stays the author.
+6. When you create a record from other records, list them in `derived_from` (lineage) and record yourself as its creator (authorship).
+7. Attribute every requirement you create and every meaningful modification you make with `./ros provenance record PATH`; backlog items and work events are attributed automatically.
+8. Ensure the evidence, findings, and results you generate trace to your execution, and run `./ros provenance validate` before handoff.
+
+The model, legacy policy, and validation rules are canonical in `docs/agent-identity-and-provenance.md`.
 
 ## Execution Telemetry
 

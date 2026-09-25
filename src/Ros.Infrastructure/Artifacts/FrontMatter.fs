@@ -70,6 +70,12 @@ module FrontMatter =
             |> Map.ofSeq
             |> ArtifactValue.Mapping
 
+    /// `key: value` or `key:` as the first entry of a list item. Quoted
+    /// items and items without a `key:` shape stay scalars, so every list
+    /// that parsed before still parses identically.
+    let private mappingItemPattern =
+        Regex("^([A-Za-z_][A-Za-z0-9_]*):(?:\\s+(.*))?$", RegexOptions.CultureInvariant)
+
     let private indentation (line: string) =
         line.Length - line.TrimStart().Length
 
@@ -98,6 +104,14 @@ module FrontMatter =
             | Some closingIndex ->
                 let root = MutableMapping(Dictionary<string, MutableArtifactValue>(StringComparer.Ordinal))
 
+                let childFor keyIndent index =
+                    let next = if index + 1 < lines.Length then lines[index + 1] else ""
+
+                    if indentation next > keyIndent && next.Trim().StartsWith("- ", StringComparison.Ordinal) then
+                        MutableSequence(ResizeArray<MutableArtifactValue>())
+                    else
+                        MutableMapping(Dictionary<string, MutableArtifactValue>(StringComparer.Ordinal))
+
                 let rec parseLines index stack =
                     if index >= closingIndex then
                         Ok()
@@ -116,8 +130,30 @@ module FrontMatter =
                             | (_, parent) :: _ when stripped.StartsWith("- ", StringComparison.Ordinal) ->
                                 match parent with
                                 | MutableSequence values ->
-                                    values.Add(MutableScalar(scalar stripped[2..]))
-                                    parseLines (index + 1) parentStack
+                                    let itemText = stripped[2..]
+                                    let entry = mappingItemPattern.Match itemText
+
+                                    if entry.Success then
+                                        // A `- key: value` item opens a mapping whose further
+                                        // keys sit at the key's column (provenance
+                                        // contribution lists need this shape).
+                                        let item = Dictionary<string, MutableArtifactValue>(StringComparer.Ordinal)
+                                        values.Add(MutableMapping item)
+                                        let keyColumn = indent + 2 + (itemText.Length - itemText.TrimStart().Length)
+                                        let itemStack = (indent, MutableMapping item) :: parentStack
+                                        let key = entry.Groups[1].Value
+                                        let rawValue = entry.Groups[2].Value
+
+                                        if rawValue.Trim().Length > 0 then
+                                            item[key] <- MutableScalar(scalar rawValue)
+                                            parseLines (index + 1) itemStack
+                                        else
+                                            let child = childFor keyColumn index
+                                            item[key] <- child
+                                            parseLines (index + 1) ((keyColumn, child) :: itemStack)
+                                    else
+                                        values.Add(MutableScalar(scalar itemText))
+                                        parseLines (index + 1) parentStack
                                 | _ -> Error $"line {index + 1}: list item has no list field"
                             | (_, MutableSequence _) :: _ ->
                                 Error $"line {index + 1}: expected 'field: value'"
@@ -136,18 +172,7 @@ module FrontMatter =
                                         mapping[key] <- MutableScalar(scalar rawValue)
                                         parseLines (index + 1) parentStack
                                     else
-                                        let next =
-                                            if index + 1 < lines.Length then lines[index + 1] else ""
-
-                                        let nextIndent = indentation next
-
-                                        let child =
-                                            if nextIndent > indent
-                                               && next.Trim().StartsWith("- ", StringComparison.Ordinal) then
-                                                MutableSequence(ResizeArray<MutableArtifactValue>())
-                                            else
-                                                MutableMapping(Dictionary<string, MutableArtifactValue>(StringComparer.Ordinal))
-
+                                        let child = childFor indent index
                                         mapping[key] <- child
                                         parseLines (index + 1) ((indent, child) :: parentStack)
 

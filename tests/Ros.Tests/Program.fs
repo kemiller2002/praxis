@@ -48,4 +48,5 @@ let main _ =
     @ LifecycleTests.tests
     @ FoundationsTests.tests
     @ OrdoObservationTests.tests
+    @ ProvenanceTests.tests
     |> TestRunner.run

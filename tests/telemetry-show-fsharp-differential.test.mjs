@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
+import { withoutProvenance } from "./support/provenance-golden.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
@@ -1377,7 +1378,7 @@ test("F# telemetry adapters matches production's static catalog exactly", (t) =>
   });
   const fsharpResult = runFsharp(root, ["adapters"]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
-  assert.deepEqual(JSON.parse(fsharpResult.stdout), TELEMETRY_ADAPTERS);
+  assert.deepEqual(withoutProvenance(JSON.parse(fsharpResult.stdout)), TELEMETRY_ADAPTERS);
 });
 
 test("F# telemetry show with no target lists every execution record, matching production's real showTelemetry", (t) => {
@@ -1388,7 +1389,7 @@ test("F# telemetry show with no target lists every execution record, matching pr
 
   const fsharpResult = runFsharp(fsharpRoot, ["show"]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
-  const fsharpRecords = JSON.parse(fsharpResult.stdout);
+  const fsharpRecords = withoutProvenance(JSON.parse(fsharpResult.stdout));
 
   assert.equal(fsharpRecords.length, 2);
   assert.deepEqual([WI_A_TASK_RECORD, WI_B_RESEARCH_RECORD], stripVolatile(fsharpRecords));
@@ -1401,7 +1402,7 @@ test("F# telemetry show with no executions yet lists an empty array, matching pr
 
   const fsharpResult = runFsharp(fsharpRoot, ["show"]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
-  assert.deepEqual(JSON.parse(fsharpResult.stdout), []);
+  assert.deepEqual(withoutProvenance(JSON.parse(fsharpResult.stdout)), []);
 });
 
 test("F# telemetry show TARGET filters to a matching work item, and an unmatched id returns an empty array, matching production", (t) => {
@@ -1412,7 +1413,7 @@ test("F# telemetry show TARGET filters to a matching work item, and an unmatched
 
   const fsharpResult = runFsharp(fsharpRoot, ["show", "WI-A"]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
-  const fsharpRecords = JSON.parse(fsharpResult.stdout);
+  const fsharpRecords = withoutProvenance(JSON.parse(fsharpResult.stdout));
 
   assert.equal(fsharpRecords.length, 1);
   assert.deepEqual([WI_A_TASK_RECORD], stripVolatile(fsharpRecords));
@@ -1432,7 +1433,7 @@ test("F# telemetry show EXE-ID resolves the single matching record, and an unkno
 
   const fsharpResult = runFsharp(fsharpRoot, ["show", fsharpExecutionId]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
-  const fsharpRecord = JSON.parse(fsharpResult.stdout);
+  const fsharpRecord = withoutProvenance(JSON.parse(fsharpResult.stdout));
 
   assert.deepEqual(WI_A_TASK_RECORD, stripVolatile(fsharpRecord));
   assert.equal(fsharpRecord.workItemId, "WI-A");

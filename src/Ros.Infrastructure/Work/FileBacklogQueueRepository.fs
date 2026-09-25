@@ -5,6 +5,8 @@ open System.Text.Encodings.Web
 open System.Text.Json
 open System.Text.Json.Nodes
 open Ros.Application.Work
+open Ros.Contracts.Provenance
+open Ros.Domain.Provenance
 open Ros.Domain.Work
 
 [<RequireQualifiedAccess>]
@@ -143,6 +145,7 @@ module FileBacklogQueueRepository =
         (blockedReasonChange: BacklogFieldChange)
         (abandonedReasonChange: BacklogFieldChange)
         (occurredAt: string)
+        (contribution: Contribution)
         (contextItems: LiveWorkItem list)
         : Result<BacklogQueueRow, string> =
         let path = queuePath root
@@ -166,6 +169,9 @@ module FileBacklogQueueRepository =
                         match target with
                         | None -> Error $"'{id}' is not a captured local work item"
                         | Some item ->
+                          match ProvenanceJson.appendContribution item contribution with
+                          | Error message -> Error message
+                          | Ok() ->
                             item["status"] <- JsonValue.Create(BacklogState.code newState)
 
                             let applyChange (field: string) change =
@@ -367,14 +373,21 @@ module FileBacklogQueueRepository =
     /// production's own key order, persists the decided `nextSeq`, and
     /// commits both `queue.json` and the regenerated `queue.md` through the
     /// same `backlog-state` recovery journal every other backlog effect uses.
-    let captureItem (root: string) (plan: WorkCapturePlan) (contextItems: LiveWorkItem list) : Result<BacklogQueueRow, string> =
+    let captureItem
+        (root: string)
+        (plan: WorkCapturePlan)
+        (contribution: Contribution)
+        (contextItems: LiveWorkItem list)
+        : Result<BacklogQueueRow, string> =
         try
             match loadOrCreateQueueNode root with
             | Error message -> Error message
             | Ok queueNode ->
                 match queueNode["items"] with
                 | :? JsonArray as items ->
-                    items.Add(itemNode plan.Item: JsonNode)
+                    let created = itemNode plan.Item
+                    ProvenanceJson.appendContribution created contribution |> ignore
+                    items.Add(created: JsonNode)
                     queueNode["nextSeq"] <- JsonValue.Create plan.NextSeq
 
                     commitQueue root queueNode items contextItems (fun rows ->
@@ -426,14 +439,24 @@ module FileBacklogQueueRepository =
     /// the id is not yet in the queue, then applies only the fields the
     /// decided plan names as changed, preserving every other item and field
     /// verbatim, and commits through the same `backlog-state` journal.
-    let applyUpdate (root: string) (id: string) (plan: WorkUpdatePlan) (contextItems: LiveWorkItem list) : Result<BacklogQueueRow, string> =
+    let applyUpdate
+        (root: string)
+        (id: string)
+        (plan: WorkUpdatePlan)
+        (contribution: Contribution)
+        (contextItems: LiveWorkItem list)
+        : Result<BacklogQueueRow, string> =
         try
             match loadOrCreateQueueNode root with
             | Error message -> Error message
             | Ok queueNode ->
                 match queueNode["items"] with
                 | :? JsonArray as items ->
-                    let target = findOrAppendItem items id (fun () -> defaultCapturedItem id plan.UpdatedAt)
+                  let target = findOrAppendItem items id (fun () -> defaultCapturedItem id plan.UpdatedAt)
+
+                  match ProvenanceJson.appendContribution target contribution with
+                  | Error message -> Error message
+                  | Ok() ->
 
                     match plan.Title with
                     | WorkTitleChange.Set title -> target["title"] <- JsonValue.Create title
@@ -481,6 +504,7 @@ module FileBacklogQueueRepository =
         (id: string)
         (plan: WorkAttachmentPlan)
         (fileBytes: byte array)
+        (contribution: Contribution)
         (contextItems: LiveWorkItem list)
         : Result<BacklogQueueRow, string> =
         try
@@ -493,8 +517,11 @@ module FileBacklogQueueRepository =
             | Ok queueNode ->
                 match queueNode["items"] with
                 | :? JsonArray as items ->
-                    let target = findOrAppendItem items id (fun () -> defaultCapturedItem id plan.UpdatedAt)
+                  let target = findOrAppendItem items id (fun () -> defaultCapturedItem id plan.UpdatedAt)
 
+                  match ProvenanceJson.appendContribution target contribution with
+                  | Error message -> Error message
+                  | Ok() ->
                     let attachments =
                         match target["attachments"] with
                         | :? JsonArray as existing -> existing

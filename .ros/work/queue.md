@@ -100,6 +100,8 @@
 | WI-0061 | WI-0061 | complete |  |  |
 | WI-0062 | Triage SDE 1.3.0 structural review findings | complete | sde, structural-review | high |
 | WI-0063 | Implement ROS next-pass Ordo observation and structured handoff (#63) | complete | ordo,next-pass | high |
+| WI-0070 | Agent identity and provenance: explicit machine-readable actor/execution identity on events, backlog items, requirements and canonical artifacts, with validation | complete | provenance, identity | high |
+| WI-0071 | Route local web interface (tools/ros_server.mjs) work writes through the F# CLI so web-created backlog items and events carry praxis provenance | captured | provenance | medium |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |

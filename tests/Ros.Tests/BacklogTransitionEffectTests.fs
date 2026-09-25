@@ -38,6 +38,7 @@ module BacklogTransitionEffectTests =
                               (BacklogFieldChange.Set "needs review")
                               BacklogFieldChange.Keep
                               "2026-09-09T17:00:00.000Z"
+                              ProvenanceFixtures.contribution
                               []
 
                       match outcome with
@@ -74,6 +75,7 @@ module BacklogTransitionEffectTests =
                               BacklogFieldChange.Clear
                               BacklogFieldChange.Keep
                               "2026-09-09T17:00:00.000Z"
+                              ProvenanceFixtures.contribution
                               []
 
                       match outcome with
@@ -108,6 +110,7 @@ module BacklogTransitionEffectTests =
                           (BacklogFieldChange.Set "reason")
                           BacklogFieldChange.Keep
                           "2026-09-09T17:00:00.000Z"
+                          ProvenanceFixtures.contribution
                           contextItems
                       |> ignore
 
@@ -127,6 +130,7 @@ module BacklogTransitionEffectTests =
                               BacklogFieldChange.Keep
                               BacklogFieldChange.Keep
                               "2026-09-09T17:00:00.000Z"
+                              ProvenanceFixtures.contribution
                               []
                       with
                       | Ok row -> failwith $"expected rejection but got {row}"
@@ -147,6 +151,7 @@ module BacklogTransitionEffectTests =
                               BacklogFieldChange.Keep
                               BacklogFieldChange.Keep
                               "2026-09-09T17:00:00.000Z"
+                              ProvenanceFixtures.contribution
                               []
                       with
                       | Ok row -> failwith $"expected rejection but got {row}"

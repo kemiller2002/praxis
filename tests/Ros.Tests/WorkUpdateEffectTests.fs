@@ -43,7 +43,7 @@ module WorkUpdateEffectTests =
                               Title = WorkTitleChange.Set "New title"
                               Priority = WorkPriorityChange.Set "low" }
 
-                      match FileBacklogQueueRepository.applyUpdate root "WI-0001" plan [] with
+                      match FileBacklogQueueRepository.applyUpdate root "WI-0001" plan ProvenanceFixtures.contribution [] with
                       | Error message -> failwith message
                       | Ok row ->
                           Assert.equal "New title" row.Title
@@ -64,7 +64,7 @@ module WorkUpdateEffectTests =
 
                       let plan = { keepAll with Description = WorkDescriptionChange.Set None }
 
-                      FileBacklogQueueRepository.applyUpdate root "WI-0001" plan [] |> ignore
+                      FileBacklogQueueRepository.applyUpdate root "WI-0001" plan ProvenanceFixtures.contribution [] |> ignore
 
                       let queueContent = File.ReadAllText(Path.Combine(root, ".ros", "work", "queue.json"))
                       Assert.isTrue (queueContent.Contains "\"description\": null") "a cleared description must be written as JSON null") }
@@ -76,7 +76,7 @@ module WorkUpdateEffectTests =
 
                       let plan = { keepAll with Tags = WorkTagsChange.Set [ "x" ] }
 
-                      match FileBacklogQueueRepository.applyUpdate root "WI-LIVE" plan [] with
+                      match FileBacklogQueueRepository.applyUpdate root "WI-LIVE" plan ProvenanceFixtures.contribution [] with
                       | Error message -> failwith message
                       | Ok row ->
                           Assert.equal "WI-LIVE" row.Id
@@ -91,7 +91,7 @@ module WorkUpdateEffectTests =
             Run =
               fun () ->
                   withTemporaryRoot (fun root ->
-                      match FileBacklogQueueRepository.applyUpdate root "WI-0001" keepAll [] with
+                      match FileBacklogQueueRepository.applyUpdate root "WI-0001" keepAll ProvenanceFixtures.contribution [] with
                       | Error message -> failwith message
                       | Ok row -> Assert.equal "WI-0001" row.Id
 

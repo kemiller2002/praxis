@@ -63,7 +63,7 @@ module WorkAttachmentEffectTests =
 
                       let bytes = Encoding.UTF8.GetBytes "hello"
 
-                      match FileBacklogQueueRepository.applyAttachment root "WI-0001" plan bytes [] with
+                      match FileBacklogQueueRepository.applyAttachment root "WI-0001" plan bytes ProvenanceFixtures.contribution [] with
                       | Error message -> failwith message
                       | Ok row -> Assert.equal "WI-0001" row.Id
 
@@ -95,7 +95,7 @@ module WorkAttachmentEffectTests =
                                 UploadedAt = "2026-09-09T18:00:00.000Z" }
                             UpdatedAt = "2026-09-09T18:00:00.000Z" }
 
-                      match FileBacklogQueueRepository.applyAttachment root "WI-LIVE" plan (Encoding.UTF8.GetBytes "abc") [] with
+                      match FileBacklogQueueRepository.applyAttachment root "WI-LIVE" plan (Encoding.UTF8.GetBytes "abc") ProvenanceFixtures.contribution [] with
                       | Error message -> failwith message
                       | Ok row ->
                           Assert.equal "WI-LIVE" row.Id

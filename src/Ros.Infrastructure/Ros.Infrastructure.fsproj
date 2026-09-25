@@ -19,6 +19,7 @@
     <Compile Include="Work/FileBacklogQueueRepository.fs" />
     <Compile Include="Work/FileWorkListRepository.fs" />
     <Compile Include="Artifacts/FrontMatter.fs" />
+    <Compile Include="Artifacts/FrontMatterProvenance.fs" />
     <Compile Include="Artifacts/RegistryLock.fs" />
     <Compile Include="Artifacts/RegistryTransaction.fs" />
     <Compile Include="Artifacts/FileArtifactRepository.fs" />
@@ -30,6 +31,7 @@
     <Compile Include="Work/FileTelemetryQueryRepository.fs" />
     <Compile Include="Work/FileTelemetryValidationRepository.fs" />
     <Compile Include="Work/FileAdapterRepository.fs" />
+    <Compile Include="Provenance/FileProvenanceRepository.fs" />
     <Compile Include="Ordo/FileObservationRepository.fs" />
     <Compile Include="Lifecycle/Payload.fs" />
     <Compile Include="Lifecycle/Installation.fs" />
@@ -55,6 +57,7 @@
     <EmbeddedResource Include="$(RosRepositoryRoot).github/copilot-instructions.md" LogicalName="ros.payload/.github/copilot-instructions.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot)telemetry/metrics.json" LogicalName="ros.payload/telemetry/metrics.json" />
 
+    <EmbeddedResource Include="$(RosRepositoryRoot)docs/agent-identity-and-provenance.md" LogicalName="ros.payload/docs/agent-identity-and-provenance.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/development-telemetry.md" LogicalName="ros.payload/docs/development-telemetry.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/ordo-observation.md" LogicalName="ros.payload/docs/ordo-observation.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/project-administration-hub.md" LogicalName="ros.payload/docs/project-administration-hub.md" />

@@ -24,7 +24,7 @@ Beginning work automatically starts a segmented execution record under `.ros/tel
 
 `work context` is the normal agent entry point. It reports current state, legal next actions, and evidence required for completion. `status` combines compact work state with repository validation and recommended next actions. Validation errors include deterministic repair guidance; `validate --json` provides a stable structured result for agents and CI consumers.
 
-`.ros/context/current.json` is local work context. `.ros/events/events.jsonl` contains small immutable, idempotently identified semantic events and durable file attribution. `.ros/telemetry/executions/` contains per-execution observations linked from work context and events. These files do not replace the external work item.
+`.ros/context/current.json` is local work context. `.ros/events/events.jsonl` contains small immutable, idempotently identified semantic events and durable file attribution. Every event carries the acting `actor` (`praxis.actor/1`: kind, stable id, provider/model/runtime when known, and the bound execution id), which is part of its `eventId`; backlog items accumulate a `provenance` contribution list. See `docs/agent-identity-and-provenance.md`. `.ros/telemetry/executions/` contains per-execution observations linked from work context and events. These files do not replace the external work item.
 
 Completion validates configured evidence types and paths before changing state. `./ros validate` rejects meaningful dirty paths when enforcement is enabled and neither active context nor a completed event attributes them. CI is the authoritative enforcement boundary; hooks are optional convenience.
 

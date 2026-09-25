@@ -46,6 +46,15 @@
         }
       ],
       "additionalProperties": true
+    },
+    "provenance": {
+      "type": "object",
+      "description": "Provenance policy (DF-ROS-2026-A036). Absent: legacy mode.",
+      "properties": {
+        "enforce": {"type": "boolean"},
+        "requiredSince": {"type": "string", "description": "ISO-8601 date or date-time; records created earlier are legacy."}
+      },
+      "additionalProperties": true
     }
   },
   "additionalProperties": true

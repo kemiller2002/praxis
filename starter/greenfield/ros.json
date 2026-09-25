@@ -34,5 +34,6 @@
     "maxRawSnapshotsPerExecution": 256,
     "maxRawBytesPerExecution": 8388608,
     "maxCapabilityHistoryEntries": 64
-  }
+  },
+  "provenance": {"enforce": true}
 }

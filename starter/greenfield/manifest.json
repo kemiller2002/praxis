@@ -316,6 +316,11 @@
       "template": false
     },
     {
+      "source": "templates/requirements/REQUIREMENT-TEMPLATE.md",
+      "destination": "templates/requirements/REQUIREMENT-TEMPLATE.md",
+      "template": false
+    },
+    {
       "source": "schemas/artifact-metadata.schema.json",
       "destination": "schemas/artifact-metadata.schema.json",
       "template": false
@@ -401,6 +406,16 @@
       "template": false
     },
     {
+      "source": "schemas/praxis-actor.schema.json",
+      "destination": "schemas/praxis-actor.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/praxis-provenance.schema.json",
+      "destination": "schemas/praxis-provenance.schema.json",
+      "template": false
+    },
+    {
       "source": "docs/ordo-observation.md",
       "destination": "docs/ordo-observation.md",
       "template": false
@@ -418,6 +433,11 @@
     {
       "source": "docs/work-adapter-contract.md",
       "destination": "docs/work-adapter-contract.md",
+      "template": false
+    },
+    {
+      "source": "docs/agent-identity-and-provenance.md",
+      "destination": "docs/agent-identity-and-provenance.md",
       "template": false
     },
     {

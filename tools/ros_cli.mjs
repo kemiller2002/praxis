@@ -905,7 +905,27 @@ export function parseFrontMatter(text) {
     const parent = stack.at(-1).value;
     if (stripped.startsWith("- ")) {
       if (!Array.isArray(parent)) throw new Error(`line ${index + 1}: list item has no list field`);
-      parent.push(scalar(stripped.slice(2)));
+      const itemText = stripped.slice(2);
+      const entry = /^([A-Za-z_][A-Za-z0-9_]*):(?:\s+(.*))?$/.exec(itemText);
+      if (!entry) {
+        parent.push(scalar(itemText));
+        continue;
+      }
+      // A `- key: value` item opens a mapping whose further keys sit at the
+      // key's column (the F# parser accepts the identical shape).
+      const item = {};
+      parent.push(item);
+      stack.push({ indent, value: item });
+      const keyColumn = indent + 2 + (itemText.length - itemText.trimStart().length);
+      if (entry[2] && entry[2].trim()) {
+        item[entry[1]] = scalar(entry[2]);
+        continue;
+      }
+      const following = lines[index + 1];
+      const followingIndent = following ? following.length - following.trimStart().length : -1;
+      const nested = following && followingIndent > keyColumn && following.trim().startsWith("- ") ? [] : {};
+      item[entry[1]] = nested;
+      stack.push({ indent: keyColumn, value: nested });
       continue;
     }
     const separator = stripped.indexOf(":");

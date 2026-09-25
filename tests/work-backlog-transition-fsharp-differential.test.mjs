@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
+import { withoutProvenance } from "./support/provenance-golden.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const installWorkItemId = `ROS-INSTALL-${JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8")).version.replaceAll(".", "-")}`;
@@ -191,7 +192,7 @@ function fixture(t) {
   return root;
 }
 
-function readQueue(root) {
+function readQueueRaw(root) {
   return JSON.parse(fs.readFileSync(path.join(root, ".ros", "work", "queue.json"), "utf8"));
 }
 
@@ -273,3 +274,7 @@ test("F# work backlog-transition rejects an unknown id exactly like production",
   assert.equal(fsharp.status, 1);
   assert.equal(fsharp.stderr.trim(), `ERROR ${GOLDEN.test6Message}`);
 });
+
+function readQueue(root) {
+  return withoutProvenance(readQueueRaw(root));
+}

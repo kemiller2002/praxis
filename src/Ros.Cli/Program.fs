@@ -13,11 +13,13 @@ open Ros.Contracts.Work
 open Ros.Contracts.Ordo
 open Ros.Domain.Artifacts
 open Ros.Domain.Git
+open Ros.Domain.Provenance
 open Ros.Domain.Telemetry
 open Ros.Domain.Work
 open Ros.Infrastructure.Artifacts
 open Ros.Infrastructure.Git
 open Ros.Infrastructure.Work
+open Ros.Infrastructure.Provenance
 open Ros.Infrastructure.Ordo
 open System.Text.Json
 open System.Text.Json.Nodes
@@ -162,6 +164,17 @@ let private optionValues name arguments =
 /// syntax (e.g. `work ready ID1 ID2`) where this CLI's own convention is a
 /// repeated `--id` flag instead, so a caller using that syntax gets a clear
 /// redirect rather than a silently wrong read-only result.
+/// The actor (`praxis.actor/1`) this invocation stamps on what it records:
+/// discovered once from the execution's environment, bound to its active
+/// execution, with an explicit `--actor` taking the stable id.
+let private currentActorContext root arguments =
+    FileProvenanceRepository.currentActor root (optionValue "--actor" arguments)
+
+let private currentActor root arguments = (currentActorContext root arguments).Actor
+
+let private contributionFor root arguments operation timestamp reason =
+    FileProvenanceRepository.contribution (currentActorContext root arguments) operation timestamp None reason [] None
+
 let rec private residualPositionalArgs (flagsWithValues: Set<string>) (arguments: string list) =
     match arguments with
     | flag :: _ :: rest when flagsWithValues.Contains flag -> residualPositionalArgs flagsWithValues rest
@@ -559,6 +572,7 @@ let private applyBacklogTransition
     (actionText: string)
     (reason: string option)
     (timestamp: string)
+    (contribution: Contribution)
     (contextItems: LiveWorkItem list)
     : Result<BacklogQueueRow, string> =
     match FileBacklogQueueRepository.readItems root |> List.tryFind (fun item -> item.Id = id) with
@@ -575,7 +589,7 @@ let private applyBacklogTransition
             | BacklogTransitionDecision.Allowed BacklogTransitionEffect.PromoteToLiveWork ->
                 Error "this command does not support 'start'; use production './ros work start'"
             | BacklogTransitionDecision.Allowed(BacklogTransitionEffect.ChangeState(newState, blockedChange, abandonedChange)) ->
-                FileBacklogQueueRepository.applyStateChange root id newState blockedChange abandonedChange timestamp contextItems
+                FileBacklogQueueRepository.applyStateChange root id newState blockedChange abandonedChange timestamp contribution contextItems
 
 /// Mirrors production `backlogTransition`/`backlogTransitionUnlocked`
 /// (`tools/ros_cli.mjs`): a real effect on `.ros/work/queue.json` and
@@ -608,7 +622,11 @@ let private runBacklogTransitionEffect root arguments =
                         | Ok() ->
                             match readWorkContext root with
                             | Error message -> Error message
-                            | Ok context -> applyBacklogTransition root id action actionText reason timestamp context.WorkItems
+                            | Ok context ->
+                                let contribution =
+                                    contributionFor root arguments Operation.Modified timestamp (Some $"backlog {actionText}")
+
+                                applyBacklogTransition root id action actionText reason timestamp contribution context.WorkItems
                 with error ->
                     lease.Release() |> ignore
                     reraise ()
@@ -834,7 +852,9 @@ let private runWorkCapture root arguments =
                                         | WorkCaptureRejection.DuplicateInContext id ->
                                             $"work item '{id}' already exists in repository context"
                                     )
-                                | WorkCaptureOutcome.Planned plan -> FileBacklogQueueRepository.captureItem root plan context.WorkItems
+                                | WorkCaptureOutcome.Planned plan ->
+                                    let contribution = contributionFor root arguments Operation.Created timestamp None
+                                    FileBacklogQueueRepository.captureItem root plan contribution context.WorkItems
                 with error ->
                     lease.Release() |> ignore
                     reraise ()
@@ -929,7 +949,10 @@ let private runWorkUpdate root arguments =
                                             $"invalid priority '{priority}'; use high, medium, or low"
                                     )
                                 | WorkUpdateOutcome.Planned plan ->
-                                    FileBacklogQueueRepository.applyUpdate root workItemId plan context.WorkItems
+                                    let contribution =
+                                        contributionFor root arguments Operation.Modified timestamp (Some "backlog fields updated")
+
+                                    FileBacklogQueueRepository.applyUpdate root workItemId plan contribution context.WorkItems
                 with error ->
                     lease.Release() |> ignore
                     reraise ()
@@ -977,7 +1000,14 @@ let private parseFileArguments (arguments: string list) : Result<(string * strin
 /// its own loop -- not once for the whole batch -- so this attaches
 /// exactly one file per lock acquisition too, matching that same
 /// per-file commit granularity.
-let private attachOneFile root (id: string) (sourcePath: string) (nameOverride: string option) (occurredAt: string) : Result<BacklogQueueRow, string> =
+let private attachOneFile
+    root
+    (current: CurrentActor)
+    (id: string)
+    (sourcePath: string)
+    (nameOverride: string option)
+    (occurredAt: string)
+    : Result<BacklogQueueRow, string> =
     match RegistryLock.acquire root "work-protocol" RegistryLock.defaultSettings with
     | Error failure -> Error failure.Message
     | Ok lease ->
@@ -1021,7 +1051,17 @@ let private attachOneFile root (id: string) (sourcePath: string) (nameOverride: 
                                         | WorkAttachmentRejection.NotFound id -> $"work item '{id}' was not found"
                                     )
                                 | WorkAttachmentOutcome.Planned plan ->
-                                    FileBacklogQueueRepository.applyAttachment root id plan fileBytes context.WorkItems
+                                    let contribution =
+                                        FileProvenanceRepository.contribution
+                                            current
+                                            Operation.Modified
+                                            occurredAt
+                                            None
+                                            (Some $"attached {plan.Record.Name}")
+                                            []
+                                            None
+
+                                    FileBacklogQueueRepository.applyAttachment root id plan fileBytes contribution context.WorkItems
                             with error ->
                                 Error error.Message
             with error ->
@@ -1039,11 +1079,13 @@ let private runWorkAttach root arguments =
 
     match id, occurredAt, parseFileArguments arguments with
     | Some workItemId, Some timestamp, Ok((_ :: _) as files) ->
+        let current = currentActorContext root arguments
+
         let rec attachAll remaining =
             match remaining with
-            | [ (sourcePath, nameOverride) ] -> attachOneFile root workItemId sourcePath nameOverride timestamp
+            | [ (sourcePath, nameOverride) ] -> attachOneFile root current workItemId sourcePath nameOverride timestamp
             | (sourcePath, nameOverride) :: rest ->
-                match attachOneFile root workItemId sourcePath nameOverride timestamp with
+                match attachOneFile root current workItemId sourcePath nameOverride timestamp with
                 | Error message -> Error message
                 | Ok _ -> attachAll rest
             | [] -> Error "work attach requires at least one --file PATH[=NAME]"
@@ -1266,7 +1308,8 @@ let private runWorkStart root arguments =
                                         | WorkContextPlanOutcome.Planned plan ->
                                             match resolveContextTelemetryWithCreation root classifications (fun _ -> None) (ids.Length + 1) plan with
                                             | Error message -> Error message
-                                            | Ok resolvedPlan -> FileWorkContextRepository.applyContextPlan root repositoryId resolvedPlan
+                                            | Ok resolvedPlan ->
+                                                FileWorkContextRepository.applyContextPlan root repositoryId (currentActor root arguments) resolvedPlan
                 with error ->
                     lease.Release() |> ignore
                     reraise ()
@@ -1388,7 +1431,8 @@ let private runWorkResume root arguments =
                                                 plan
                                         with
                                         | Error message -> Error message
-                                        | Ok resolvedPlan -> FileWorkContextRepository.applyContextPlan root repositoryId resolvedPlan
+                                        | Ok resolvedPlan ->
+                                            FileWorkContextRepository.applyContextPlan root repositoryId (currentActor root arguments) resolvedPlan
                 with error ->
                     lease.Release() |> ignore
                     reraise ()
@@ -1504,6 +1548,10 @@ let private runWorkComplete root arguments =
                                         match resolveContextTelemetryWithCreation root [] (fun _ -> None) (ids.Length + 1) plan with
                                         | Error message -> Error message
                                         | Ok resolvedPlan ->
+                                            // Bound before finalization: the executions this completion
+                                            // closes are still active, so the completing run is found.
+                                            let actorRecord = currentActor root arguments
+
                                             let finalizeResult =
                                                 if telemetryEnabled then
                                                     ids
@@ -1532,6 +1580,7 @@ let private runWorkComplete root arguments =
                                                     FileWorkContextRepository.applyContextPlanWithConclusions
                                                         root
                                                         repositoryId
+                                                        actorRecord
                                                         conclusions
                                                         resolvedPlan
                                                 with
@@ -1655,7 +1704,10 @@ let private runWorkBlock root arguments =
                                     match remaining with
                                     | [] -> Ok(List.rev acc)
                                     | id :: rest ->
-                                        match applyBacklogTransition root id BacklogAction.Block "block" reason timestamp context.WorkItems with
+                                        let contribution =
+                                            contributionFor root arguments Operation.Modified timestamp (Some "backlog block")
+
+                                        match applyBacklogTransition root id BacklogAction.Block "block" reason timestamp contribution context.WorkItems with
                                         | Error message -> Error message
                                         | Ok _ ->
                                             match readRawQueueItem root id with
@@ -1715,7 +1767,7 @@ let private runWorkBlock root arguments =
                                                 match resolveContextTelemetryWithCreation root [] (fun _ -> None) (contextIds.Length + 1) plan with
                                                 | Error message -> Error message
                                                 | Ok resolvedPlan ->
-                                                    match FileWorkContextRepository.applyContextPlan root repositoryId resolvedPlan with
+                                                    match FileWorkContextRepository.applyContextPlan root repositoryId (currentActor root arguments) resolvedPlan with
                                                     | Error message -> Error message
                                                     | Ok(writtenItems, _) ->
                                                         let contextIdSet = Set.ofList contextIds
@@ -1818,7 +1870,10 @@ let private computeUnifiedFindings root : Result<ArtifactFinding list, string> =
 
                 let workFindingsConverted = workFindings |> List.map (fun f -> convert f.Path f.Field f.Message)
 
-                artifactFindings @ staleFindings @ workFindingsConverted @ queueFindings @ telemetryFindingsConverted
+                let provenanceFindings =
+                    ProvenanceCommands.unifiedErrors root |> List.map (fun (path, field, message) -> convert path field message)
+
+                artifactFindings @ staleFindings @ workFindingsConverted @ queueFindings @ telemetryFindingsConverted @ provenanceFindings
                 |> List.sortWith (fun a b -> System.String.CompareOrdinal($"{a.Path}\000{a.Field}\000{a.Message}", $"{b.Path}\000{b.Field}\000{b.Message}"))
                 |> Ok
 
@@ -2563,7 +2618,7 @@ let private runOrdoHandoff root arguments =
             1
         | Ok handoff ->
             handoff
-            |> ObservationJson.renderHandoff
+            |> ObservationJson.renderHandoff (Some(currentActor root arguments))
             |> printf "%s"
             0
     | _ ->
@@ -2577,7 +2632,7 @@ let private fullHelp topic =
     | Some("init" | "status" | "verify" | "upgrade" | "doctor") -> Lifecycle.helpFor topic
     // Anything else -- no topic, or one this CLI does not have a page for --
     // gets the overview, which has to name the repository commands too.
-    | _ -> Lifecycle.helpFor None + "\n\nRepository commands:\n  " + usage
+    | _ -> Lifecycle.helpFor None + "\n\nRepository commands:\n  " + usage + " | " + ProvenanceCommands.usage
 
 let private repositoryDispatch root packageRoot arguments =
     let repository = FileArtifactRepository.create root
@@ -2654,8 +2709,11 @@ let private repositoryDispatch root packageRoot arguments =
     | "adapter" :: "call" :: rest -> runAdapterCall root rest
     | "adapter" :: "publish" :: rest -> runAdapterPublish root rest
     | _ ->
-        eprintfn "%s" (fullHelp None)
-        2
+        match ProvenanceCommands.dispatch root arguments with
+        | Some code -> code
+        | None ->
+            eprintfn "%s" (fullHelp None)
+            2
 
 /// Lifecycle commands are parsed first, by a typed parser that owns its own
 /// flags. Anything it does not claim -- and `status`, which it only

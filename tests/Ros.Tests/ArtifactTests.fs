@@ -70,8 +70,12 @@ module ArtifactTests =
         use stream = File.OpenRead file
         SHA256.HashData(stream) |> Convert.ToHexString
 
+    /// Registries every repository carries; an optional-when-empty registry
+    /// (requirements) is neither expected nor written for a fixture that
+    /// has no artifacts of that kind.
     let private registryNames =
         ArtifactKinds.configurations
+        |> List.filter (fun configuration -> not configuration.RegistryOptionalWhenEmpty)
         |> List.map (fun configuration -> Path.GetFileName configuration.RegistryPath)
 
     let private validDocument =

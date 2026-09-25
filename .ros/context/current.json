@@ -2176,11 +2176,60 @@
         "EXE-20260920T225534185Z-f3738e9b"
       ],
       "completedAt": "2026-09-20T23:04:26Z"
+    },
+    {
+      "id": "WI-0070",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Provenance/Actor.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Provenance/Contribution.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Provenance/Policy.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Provenance/FileProvenanceRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/ProvenanceCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "research/decisions/DF-ROS-2026-A036--agent-identity-and-provenance.md"
+        },
+        {
+          "type": "implementation",
+          "path": "docs/agent-identity-and-provenance.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ProvenanceTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/provenance-cli.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-25T18:28:02.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260925T174822557Z-7d2ee77c"
+      ],
+      "completedAt": "2026-09-25T18:28:02.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
-  "actor": "ChatGPT",
-  "updatedAt": "2026-09-20T23:04:26Z",
+  "actor": "claude-code",
+  "updatedAt": "2026-09-25T18:28:02.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

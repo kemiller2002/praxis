@@ -2,17 +2,18 @@
 id: GV-START-001
 title: Agent Startup Guide
 status: canonical
-version: 1.4.0
+version: 1.5.0
 owners:
   - repository-governance
 created: 2026-07-22
-updated: 2026-09-14
+updated: 2026-09-25
 review_cycle: quarterly
 supersedes: []
 superseded_by: []
 related_documents:
   - docs/00-governance/README.md
   - docs/development-telemetry.md
+  - docs/agent-identity-and-provenance.md
   - docs/cli.md
   - docs/installation.md
   - docs/upgrading.md
@@ -51,6 +52,18 @@ Apply, in descending order: explicit user instruction; applicable safety, legal,
 - Do not claim a test passed unless it ran and passed. Name skipped or unavailable checks and their implications.
 - Treat execution telemetry as evidence: discover capabilities, distinguish zero from unavailable, preserve normalized and sanitized raw provider data, prefer deterministic collection, and never invent a metric.
 - Not every edit needs a REP. Use the artifact threshold in the Agent Operating Manual.
+
+## Agent Identity and Provenance
+
+Every agent, human, and automation acting under Praxis is recorded as a structured actor; see [`docs/agent-identity-and-provenance.md`](docs/agent-identity-and-provenance.md). Provider-neutral obligations:
+
+1. At the start of an execution, establish identity once -- `ROS_ACTOR_KIND` (`agent`, `human`, `automation`), `ROS_ACTOR` (your stable id), and provider/runtime/model variables only when known -- then `work begin` and confirm with `./ros identity`.
+2. Never impersonate another agent or human. Never fabricate model, provider, or version information; record `unknown`.
+3. Preserve existing provenance and add your own contribution; never replace another contributor or claim authorship of prior work.
+4. Attribute requirements you create and meaningful modifications you make with `./ros provenance record PATH`; record lineage in `derived_from` when deriving from other records.
+5. Ensure generated evidence, findings, and results trace to your execution; `./ros validate` fails on missing or broken provenance for new work.
+
+Recorded identity is self-reported provenance, not authentication or attestation.
 
 ## Handoff
 

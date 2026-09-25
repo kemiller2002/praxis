@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
+import { withoutProvenance } from "./support/provenance-golden.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const installWorkItemId = `ROS-INSTALL-${JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8")).version.replaceAll(".", "-")}`;
@@ -128,7 +129,7 @@ function writeQueue(root, queue) {
   fs.writeFileSync(path.join(root, ".ros", "work", "queue.json"), `${JSON.stringify(queue, null, 2)}\n`);
 }
 
-function readQueue(root) {
+function readQueueRaw(root) {
   return JSON.parse(fs.readFileSync(path.join(root, ".ros", "work", "queue.json"), "utf8"));
 }
 
@@ -232,3 +233,7 @@ test("F# work attach rejects an invalidly-shaped id exactly like production", (t
   assert.equal(fsharp.status, 1);
   assert.equal(fsharp.stderr.trim(), `ERROR ${GOLDEN.test5Message}`);
 });
+
+function readQueue(root) {
+  return withoutProvenance(readQueueRaw(root));
+}

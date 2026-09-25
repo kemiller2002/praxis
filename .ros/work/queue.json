@@ -1130,6 +1130,57 @@
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "WI-0070",
+      "title": "Agent identity and provenance: explicit machine-readable actor/execution identity on events, backlog items, requirements and canonical artifacts, with validation",
+      "description": null,
+      "tags": [
+        "provenance",
+        "identity"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-25T17:48:21.766Z",
+      "updatedAt": "2026-09-25T18:28:02.000Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0071",
+      "title": "Route local web interface (tools/ros_server.mjs) work writes through the F# CLI so web-created backlog items and events carry praxis provenance",
+      "description": "Discovered during WI-0070: ros_server.mjs calls the retained Node library in-process (captureWork, updateWork, startWork, transition), which writes records without actor/provenance. project-administration profile stays in legacy provenance mode until fixed. See DF-ROS-2026-A036.",
+      "tags": [
+        "provenance"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-25T18:25:28.544Z",
+      "updatedAt": "2026-09-25T18:25:28.544Z",
+      "createdBy": "claude-code",
+      "source": "manual",
+      "sourceReference": null,
+      "provenance": {
+        "contributions": [
+          {
+            "operation": "created",
+            "at": "2026-09-25T18:25:28.544Z",
+            "actor": {
+              "kind": "agent",
+              "id": "claude-code",
+              "provider": "anthropic",
+              "model": "unknown",
+              "runtime": "claude-code",
+              "executionId": "EXE-20260925T174822557Z-7d2ee77c",
+              "sessionId": "0cb6dd40-ee60-5a05-8f85-35e2927960fe",
+              "assurance": "self-reported"
+            }
+          }
+        ]
+      }
     }
   ]
 }

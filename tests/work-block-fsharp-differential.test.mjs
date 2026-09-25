@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
+import { withoutProvenance } from "./support/provenance-golden.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const installWorkItemId = `ROS-INSTALL-${JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8")).version.replaceAll(".", "-")}`;
@@ -129,11 +130,11 @@ function fixture(t, label) {
   return root;
 }
 
-function readQueue(root) {
+function readQueueRaw(root) {
   return JSON.parse(fs.readFileSync(path.join(root, ".ros", "work", "queue.json"), "utf8"));
 }
 
-function readContext(root) {
+function readContextRaw(root) {
   return JSON.parse(fs.readFileSync(path.join(root, ".ros", "context", "current.json"), "utf8"));
 }
 
@@ -255,3 +256,11 @@ test("F# work block rejects an id in neither the queue nor the live context, mat
   assert.match(GOLDEN.test5Message, /work item 'WI-GHOST' is not in repository context/);
   assert.match(fsharpResult.stderr, /work item 'WI-GHOST' is not in repository context/);
 });
+
+function readQueue(root) {
+  return withoutProvenance(readQueueRaw(root));
+}
+
+function readContext(root) {
+  return withoutProvenance(readContextRaw(root));
+}

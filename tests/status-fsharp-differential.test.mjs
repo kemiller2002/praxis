@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
+import { useLegacyProvenancePolicy } from "./support/provenance-golden.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const installWorkItemId = `ROS-INSTALL-${JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8")).version.replaceAll(".", "-")}`;
@@ -82,6 +83,7 @@ function fixture(t, label) {
     }
   });
   initializeProject({ target: root, project: "Status Differential" });
+  useLegacyProvenancePolicy(root);
   execFileSync("git", ["-C", root, "init", "-q"]);
   return root;
 }

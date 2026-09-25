@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
+import { withoutProvenance } from "./support/provenance-golden.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const installWorkItemId = `ROS-INSTALL-${JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8")).version.replaceAll(".", "-")}`;
@@ -82,16 +83,16 @@ function fixture(t, label) {
   return root;
 }
 
-function readContext(root) {
+function readContextRaw(root) {
   return JSON.parse(fs.readFileSync(path.join(root, ".ros", "context", "current.json"), "utf8"));
 }
 
-function readEvents(root) {
+function readEventsRaw(root) {
   const file = path.join(root, ".ros", "events", "events.jsonl");
   return fs.existsSync(file) ? fs.readFileSync(file, "utf8").split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line)) : [];
 }
 
-function readExecutions(root) {
+function readExecutionsRaw(root) {
   const dir = path.join(root, ".ros", "telemetry", "executions");
   return fs.readdirSync(dir).sort().map((name) => JSON.parse(fs.readFileSync(path.join(dir, name), "utf8")));
 }
@@ -224,3 +225,15 @@ test("F# work resume rejects resuming an already-active item with production's e
   assert.match(GOLDEN.test4Message, /cannot resume 'WI-ACTIVE' from 'active'/);
   assert.match(fsharpResult.stderr, /cannot resume 'WI-ACTIVE' from 'active'/);
 });
+
+function readContext(root) {
+  return withoutProvenance(readContextRaw(root));
+}
+
+function readEvents(root) {
+  return withoutProvenance(readEventsRaw(root));
+}
+
+function readExecutions(root) {
+  return withoutProvenance(readExecutionsRaw(root));
+}

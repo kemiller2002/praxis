@@ -28,7 +28,9 @@ module FileArtifactRepository =
                     Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories)
                     |> Seq.filter (fun file ->
                         Path.GetExtension(file) = ".md"
-                        && not (Path.GetFileName(file).StartsWith(".", StringComparison.Ordinal)))
+                        && not (Path.GetFileName(file).StartsWith(".", StringComparison.Ordinal))
+                        && configuration.FileNamePrefix
+                           |> Option.forall (fun prefix -> Path.GetFileName(file).StartsWith(prefix, StringComparison.Ordinal)))
                     |> Seq.map (fun file -> Path.GetRelativePath(root, file) |> normalizePath)
                     |> Seq.toList)
             |> Set.ofList

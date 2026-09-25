@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
+import { useLegacyProvenancePolicy } from "./support/provenance-golden.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
@@ -106,6 +107,7 @@ function fixture(t, label) {
     }
   });
   initializeProject({ target: root, project: "Validate Unified Differential" });
+  useLegacyProvenancePolicy(root);
   execFileSync("git", ["-C", root, "init", "-q"]);
   execFileSync("git", ["-C", root, "-c", "user.email=a@b.c", "-c", "user.name=a", "add", "-A"]);
   execFileSync("git", ["-C", root, "-c", "user.email=a@b.c", "-c", "user.name=a", "commit", "-q", "-m", "init"]);

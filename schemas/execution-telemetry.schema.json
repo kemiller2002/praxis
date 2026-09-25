@@ -11,6 +11,7 @@
     "status": {"enum": ["active", "finalized"]},
     "startedAt": {"type": "string", "format": "date-time"},
     "finalizedAt": {"type": ["string", "null"], "format": "date-time"},
+    "actor": {"$ref": "praxis-actor.schema.json", "description": "The execution's own actor (DF-ROS-2026-A036); absent on records created before it."},
     "identity": {
       "type": "object",
       "required": ["provider", "runtime"],

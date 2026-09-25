@@ -25,6 +25,12 @@
     <Compile Include="Work/Attachment.fs" />
     <Compile Include="Work/AdapterContract.fs" />
     <Compile Include="Telemetry/Identity.fs" />
+    <Compile Include="Provenance/Actor.fs" />
+    <Compile Include="Provenance/Contribution.fs" />
+    <Compile Include="Provenance/Codec.fs" />
+    <Compile Include="Provenance/ActorResolution.fs" />
+    <Compile Include="Provenance/Policy.fs" />
+    <Compile Include="Provenance/Summary.fs" />
     <Compile Include="Telemetry/Capability.fs" />
     <Compile Include="Telemetry/ChangeSummary.fs" />
     <Compile Include="Telemetry/TelemetryAdapters.fs" />
