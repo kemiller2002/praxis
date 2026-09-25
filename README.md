@@ -20,6 +20,14 @@ Installing ROS into a repository gives it a governed operating environment:
   and generated registries projected from them;
 - **adaptive execution telemetry** that distinguishes unavailable from zero and
   observed from derived;
+- **agent identity and provenance**:
+  - every execution, work event, and captured item records an explicit
+    agent, human, or automation actor;
+  - requirements and other canonical records accumulate an append-only,
+    execution-keyed contributor history, with lineage kept separate from
+    authorship;
+  - validation enforces this for new work without rewriting legacy history
+    (see [`docs/agent-provenance.md`](docs/agent-provenance.md));
 - **validation** that fails on malformed front matter, invalid or duplicate
   IDs, broken references, nonreciprocal supersession, and stale registries;
 - a **CI workflow** that runs all of the above.

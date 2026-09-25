@@ -113,7 +113,10 @@ Optional provenance, useful when tooling (not a human) files the item:
 ```
 
 `--actor` records who captured it (defaults to the `ROS_ACTOR` environment
-variable, then `"unknown"`).
+variable, then `"unknown"`). The item also receives `createdByActor`: the
+structured actor (`kind`, `id`, and `provider`/`model`/`runtime` when
+applicable) resolved exactly as a work execution's identity is. `createdBy`
+stays as the legacy free-text field. See `agent-provenance.md`.
 
 ### With a description
 

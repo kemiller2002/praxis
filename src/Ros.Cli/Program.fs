@@ -13,6 +13,7 @@ open Ros.Contracts.Work
 open Ros.Contracts.Ordo
 open Ros.Domain.Artifacts
 open Ros.Domain.Git
+open Ros.Domain.Provenance
 open Ros.Domain.Telemetry
 open Ros.Domain.Work
 open Ros.Infrastructure.Artifacts
@@ -27,7 +28,7 @@ open System.Text.Json.Nodes
 let Version = Lifecycle.Version
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--quiet] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | foundations verify [--json] | adapter publish --target FILE | ordo ingest --input FILE | ordo assess --input FILE | ordo observe-search --input FILE | ordo observe-effect --input FILE | ordo current | ordo handoff --revision REV --source SOURCE [--fact TEXT]* [--assumption TEXT]* [--unknown TEXT]* [--obligation TEXT]* [--next-action TEXT]*"
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--quiet] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | foundations verify [--json] | adapter publish --target FILE | ordo ingest --input FILE | ordo assess --input FILE | ordo observe-search --input FILE | ordo observe-effect --input FILE | ordo current | ordo handoff --revision REV --source SOURCE [--fact TEXT]* [--assumption TEXT]* [--unknown TEXT]* [--obligation TEXT]* [--next-action TEXT]* | provenance identity [--json] [IDENTITY] | provenance record (--path PATH|--id ID) --operation {created|modified|reviewed|approved|superseded|migrated} [--reason TEXT] [--evidence REF]* [--derived-from REF]* [--execution EXE-ID] [--occurred-at TIMESTAMP] [--json] | provenance show ID|PATH [--json] | provenance audit [--json]; IDENTITY (work start/resume/block/complete, add, telemetry start): [--actor-kind {agent|human|automation|unknown|x-...}] [--agent ID|--actor ID] [--provider P] [--model M] [--runtime R] ..."
 
 /// Removes one global `--name VALUE` option from the argument list wherever
 /// it appears, so the command parsers below only ever see their own flags.
@@ -778,7 +779,7 @@ let private runWorkShow root (arguments: string list) =
 /// `--file` attachment (a separate, larger effect). A real effect,
 /// guarded by the same "work-protocol" lock and `backlog-state` recovery
 /// journal as `work backlog-transition`.
-let private runWorkCapture root arguments =
+let private runWorkCapture root arguments (createdByActor: Actor) =
     let title = optionValue "--title" arguments
     let occurredAt = optionValue "--occurred-at" arguments
 
@@ -834,7 +835,8 @@ let private runWorkCapture root arguments =
                                         | WorkCaptureRejection.DuplicateInContext id ->
                                             $"work item '{id}' already exists in repository context"
                                     )
-                                | WorkCaptureOutcome.Planned plan -> FileBacklogQueueRepository.captureItem root plan context.WorkItems
+                                | WorkCaptureOutcome.Planned plan ->
+                                    FileBacklogQueueRepository.captureItem root plan createdByActor context.WorkItems
                 with error ->
                     lease.Release() |> ignore
                     reraise ()
@@ -870,7 +872,7 @@ let private runAdd root (arguments: string list) =
             optionValue "--occurred-at" arguments
             |> Option.defaultValue (DateTimeOffset.UtcNow.ToString "yyyy-MM-ddTHH:mm:ss.fffZ")
 
-        runWorkCapture root ("--title" :: title :: "--occurred-at" :: occurredAt :: rest)
+        ProvenanceCommands.withResolvedActor rest (runWorkCapture root ("--title" :: title :: "--occurred-at" :: occurredAt :: rest))
     | _ ->
         eprintfn "ERROR add requires a title, e.g. ros add \"Title\""
         2
@@ -1120,6 +1122,7 @@ let private evidenceIssueMessage (issue: EvidenceIssue) =
 /// rather than replicates, production's own behavior here).
 let private resolveContextTelemetryWithCreation
     root
+    (identityOverrides: IdentityInputs)
     (classifications: string list)
     (parentExecutionIdFor: string -> string option)
     attemptsLeft
@@ -1153,7 +1156,7 @@ let private resolveContextTelemetryWithCreation
                           Classifications = classifications
                           ClassificationRationale = None
                           ExecutionId = None
-                          IdentityOverrides = { IdentityInputs.empty with ParentExecutionId = parentExecutionIdFor workItemId } }
+                          IdentityOverrides = { identityOverrides with ParentExecutionId = parentExecutionIdFor workItemId } }
 
                     match FileTelemetryExecutionRepository.createExecution root createRequest with
                     | Error message -> Error message
@@ -1187,7 +1190,7 @@ let private renderWorkTransitionOutput (writtenItems: JsonArray) (eventIds: stri
 /// discovered purely from the environment), and
 /// `recordTelemetryLifecycle`'s within-execution "blocked"/"resumed" event
 /// bookkeeping (not reachable from `begin`).
-let private runWorkStart root arguments =
+let private runWorkStart root arguments (eventActor: Actor) =
     let ids = optionValues "--id" arguments
     let occurredAt = optionValue "--occurred-at" arguments
 
@@ -1264,9 +1267,9 @@ let private runWorkStart root arguments =
                                         match WorkContextPlanning.plan request with
                                         | WorkContextPlanOutcome.Rejected rejection -> Error(workContextRejectionMessage rejection)
                                         | WorkContextPlanOutcome.Planned plan ->
-                                            match resolveContextTelemetryWithCreation root classifications (fun _ -> None) (ids.Length + 1) plan with
+                                            match resolveContextTelemetryWithCreation root (ProvenanceCommands.identityOverridesFrom arguments) classifications (fun _ -> None) (ids.Length + 1) plan with
                                             | Error message -> Error message
-                                            | Ok resolvedPlan -> FileWorkContextRepository.applyContextPlan root repositoryId resolvedPlan
+                                            | Ok resolvedPlan -> FileWorkContextRepository.applyContextPlan root repositoryId eventActor resolvedPlan
                 with error ->
                     lease.Release() |> ignore
                     reraise ()
@@ -1313,7 +1316,7 @@ let private runWorkStart root arguments =
 /// behavior instead of the bug. Deliberately still excludes explicit
 /// `--identity-*`/`--execution-id` overrides (no CLI exposes them for
 /// `resume`).
-let private runWorkResume root arguments =
+let private runWorkResume root arguments (eventActor: Actor) =
     let ids = optionValues "--id" arguments
     let occurredAt = optionValue "--occurred-at" arguments
 
@@ -1382,13 +1385,14 @@ let private runWorkResume root arguments =
                                         match
                                             resolveContextTelemetryWithCreation
                                                 root
+                                                (ProvenanceCommands.identityOverridesFrom arguments)
                                                 []
                                                 (FileTelemetryQueryRepository.readLatestExecutionId root)
                                                 (ids.Length + 1)
                                                 plan
                                         with
                                         | Error message -> Error message
-                                        | Ok resolvedPlan -> FileWorkContextRepository.applyContextPlan root repositoryId resolvedPlan
+                                        | Ok resolvedPlan -> FileWorkContextRepository.applyContextPlan root repositoryId eventActor resolvedPlan
                 with error ->
                     lease.Release() |> ignore
                     reraise ()
@@ -1434,7 +1438,7 @@ let private runWorkResume root arguments =
 /// `options.input`/adapter-ingestion (unreachable from any CLI path) and
 /// explicit `--identity-*`/`--execution-id` overrides, matching every
 /// prior increment.
-let private runWorkComplete root arguments =
+let private runWorkComplete root arguments (eventActor: Actor) =
     let ids = optionValues "--id" arguments
     let occurredAt = optionValue "--occurred-at" arguments
     let providedEvidence = optionValues "--evidence" arguments |> List.map parseEvidence
@@ -1501,7 +1505,7 @@ let private runWorkComplete root arguments =
                                         | issue :: _ -> Error(evidenceIssueMessage issue)
                                         | [] -> Error "evidence rejected"
                                     | VerifiedWorkContextPlanOutcome.Planned plan ->
-                                        match resolveContextTelemetryWithCreation root [] (fun _ -> None) (ids.Length + 1) plan with
+                                        match resolveContextTelemetryWithCreation root (ProvenanceCommands.identityOverridesFrom arguments) [] (fun _ -> None) (ids.Length + 1) plan with
                                         | Error message -> Error message
                                         | Ok resolvedPlan ->
                                             let finalizeResult =
@@ -1533,6 +1537,7 @@ let private runWorkComplete root arguments =
                                                         root
                                                         repositoryId
                                                         conclusions
+                                                        eventActor
                                                         resolvedPlan
                                                 with
                                                 | Error message -> Error message
@@ -1618,7 +1623,7 @@ let private readRawQueueItem root (id: string) : JsonObject option =
 /// currently-active execution before telemetry resolution runs, matching
 /// production's own ordering -- backlog-only ids never reach telemetry at
 /// all, since a never-started item has no execution to record against.
-let private runWorkBlock root arguments =
+let private runWorkBlock root arguments (eventActor: Actor) =
     let ids = optionValues "--id" arguments
     let reason = optionValue "--reason" arguments
     let occurredAt = optionValue "--occurred-at" arguments
@@ -1712,10 +1717,10 @@ let private runWorkBlock root arguments =
                                             match lifecycleResult with
                                             | Error message -> Error message
                                             | Ok() ->
-                                                match resolveContextTelemetryWithCreation root [] (fun _ -> None) (contextIds.Length + 1) plan with
+                                                match resolveContextTelemetryWithCreation root (ProvenanceCommands.identityOverridesFrom arguments) [] (fun _ -> None) (contextIds.Length + 1) plan with
                                                 | Error message -> Error message
                                                 | Ok resolvedPlan ->
-                                                    match FileWorkContextRepository.applyContextPlan root repositoryId resolvedPlan with
+                                                    match FileWorkContextRepository.applyContextPlan root repositoryId eventActor resolvedPlan with
                                                     | Error message -> Error message
                                                     | Ok(writtenItems, _) ->
                                                         let contextIdSet = Set.ofList contextIds
@@ -1818,32 +1823,51 @@ let private computeUnifiedFindings root : Result<ArtifactFinding list, string> =
 
                 let workFindingsConverted = workFindings |> List.map (fun f -> convert f.Path f.Field f.Message)
 
-                artifactFindings @ staleFindings @ workFindingsConverted @ queueFindings @ telemetryFindingsConverted
-                |> List.sortWith (fun a b -> System.String.CompareOrdinal($"{a.Path}\000{a.Field}\000{a.Message}", $"{b.Path}\000{b.Field}\000{b.Message}"))
-                |> Ok
+                match ProvenanceCommands.findingsOf FindingSeverity.Error root with
+                | Error message -> Error message
+                | Ok provenanceErrors ->
+                    artifactFindings
+                    @ staleFindings
+                    @ workFindingsConverted
+                    @ queueFindings
+                    @ telemetryFindingsConverted
+                    @ (provenanceErrors |> List.map ProvenanceCommands.toArtifactFinding)
+                    |> List.sortWith (fun a b -> System.String.CompareOrdinal($"{a.Path}\000{a.Field}\000{a.Message}", $"{b.Path}\000{b.Field}\000{b.Message}"))
+                    |> Ok
 
 let private runValidateUnified root arguments =
     if not (arguments |> List.forall ((=) "--json")) then
         eprintfn "%s" usage
         2
     else
-        match computeUnifiedFindings root with
-        | Error message ->
+        match computeUnifiedFindings root, ProvenanceCommands.findingsOf FindingSeverity.Warning root with
+        | Error message, _
+        | _, Error message ->
             eprintfn "ERROR %s" message
             1
-        | Ok all ->
-            if arguments |> List.contains "--json" then
-                printf "%s" (FindingContract.renderJson all)
-                if all.IsEmpty then 0 else 1
-            elif all.IsEmpty then
-                printfn "validation passed"
-                0
-            else
-                for finding in all do
-                    eprintfn "ERROR %s\n  REPAIR %s" (renderFinding finding) (FindingContract.repair finding)
+        | Ok all, Ok provenanceWarnings ->
+            let warnings = provenanceWarnings |> List.map ProvenanceCommands.toArtifactFinding
 
-                eprintfn "validation failed with %d error(s)" all.Length
-                1
+            if arguments |> List.contains "--json" then
+                printf "%s" (FindingContract.renderJsonWithWarnings all warnings)
+                if all.IsEmpty then 0 else 1
+            else
+                for warning in warnings do
+                    eprintfn "WARN %s\n  REPAIR %s" (renderFinding warning) (FindingContract.repair warning)
+
+                if all.IsEmpty then
+                    if warnings.IsEmpty then
+                        printfn "validation passed"
+                    else
+                        printfn "validation passed with %d warning(s)" warnings.Length
+
+                    0
+                else
+                    for finding in all do
+                        eprintfn "ERROR %s\n  REPAIR %s" (renderFinding finding) (FindingContract.repair finding)
+
+                    eprintfn "validation failed with %d error(s)" all.Length
+                    1
 
 /// Mirrors production `statusView` (`tools/ros_cli.mjs`): the same
 /// `contextView` read `work context` uses, narrowed to six fields per
@@ -2351,17 +2375,8 @@ let private runTelemetryStart root (arguments: string list) =
         let requestedExecutionId = optionValue "--execution-id" arguments
 
         let identityOverrides: IdentityInputs =
-            { IdentityInputs.empty with
-                Provider = optionValue "--provider" arguments
-                Model = optionValue "--model" arguments
-                ModelVersion = optionValue "--model-version" arguments
-                Runtime = optionValue "--runtime" arguments
-                RuntimeVersion = optionValue "--runtime-version" arguments
-                SessionId = optionValue "--session" arguments
-                ConversationId = optionValue "--conversation" arguments
-                RunId = optionValue "--run" arguments
+            { ProvenanceCommands.identityOverridesFrom arguments with
                 AgentId = optionValue "--agent" arguments
-                SubagentId = optionValue "--subagent" arguments
                 ParentExecutionId = optionValue "--parent-execution" arguments }
 
         match FileTelemetryFinalizationRepository.startTarget root workItemId classifications classificationRationale requestedExecutionId identityOverrides with
@@ -2627,16 +2642,14 @@ let private repositoryDispatch root packageRoot arguments =
 
             2
     | "work" :: "show" :: rest -> runWorkShow root rest
-    | "work" :: "capture" :: rest -> runWorkCapture root rest
+    | "work" :: "capture" :: rest -> ProvenanceCommands.withResolvedActor rest (runWorkCapture root rest)
     | "add" :: rest -> runAdd root rest
     | "work" :: "update" :: rest -> runWorkUpdate root rest
     | "work" :: "attach" :: rest -> runWorkAttach root rest
-    | "work" :: "begin" :: rest -> runWorkStart root rest
-    | "work" :: "start" :: rest -> runWorkStart root rest
-    | "work" :: "resume" :: rest -> runWorkResume root rest
-    | "work" :: "block" :: rest -> runWorkBlock root rest
-    | "work" :: "complete" :: rest -> runWorkComplete root rest
-    | "work" :: "done" :: rest -> runWorkComplete root rest
+    | "work" :: ("begin" | "start") :: rest -> ProvenanceCommands.withResolvedActor rest (runWorkStart root rest)
+    | "work" :: "resume" :: rest -> ProvenanceCommands.withResolvedActor rest (runWorkResume root rest)
+    | "work" :: "block" :: rest -> ProvenanceCommands.withResolvedActor rest (runWorkBlock root rest)
+    | "work" :: ("complete" | "done") :: rest -> ProvenanceCommands.withResolvedActor rest (runWorkComplete root rest)
     | [ "telemetry"; "adapters" ] -> runTelemetryAdapters ()
     | "telemetry" :: "show" :: rest -> runTelemetryShow root rest
     | "telemetry" :: ("summary" | "summarize") :: rest -> runTelemetrySummary root rest
@@ -2651,6 +2664,7 @@ let private repositoryDispatch root packageRoot arguments =
     | "ordo" :: "observe-effect" :: rest -> runOrdoEffectObservation root rest
     | "ordo" :: "current" :: rest -> runOrdoCurrent root rest
     | "ordo" :: "handoff" :: rest -> runOrdoHandoff root rest
+    | "provenance" :: rest -> ProvenanceCommands.run root rest
     | "adapter" :: "call" :: rest -> runAdapterCall root rest
     | "adapter" :: "publish" :: rest -> runAdapterPublish root rest
     | _ ->

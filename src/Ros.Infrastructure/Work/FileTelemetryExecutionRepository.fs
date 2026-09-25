@@ -6,6 +6,7 @@ open System.Security.Cryptography
 open System.Text.Json
 open System.Text.Json.Nodes
 open Ros.Application.Git
+open Ros.Domain.Provenance
 open Ros.Domain.Telemetry
 open Ros.Infrastructure.Artifacts
 open Ros.Infrastructure.Git
@@ -52,6 +53,7 @@ module FileTelemetryExecutionRepository =
             RosTelemetryConversationId = variable "ROS_TELEMETRY_CONVERSATION_ID"
             RosTelemetryRunId = variable "ROS_TELEMETRY_RUN_ID"
             RosActor = variable "ROS_ACTOR"
+            RosActorKind = variable "ROS_ACTOR_KIND"
             CodexSessionId = variable "CODEX_SESSION_ID"
             CodexThreadId = variable "CODEX_THREAD_ID"
             ClaudeCodeSessionId = variable "CLAUDE_CODE_SESSION_ID"
@@ -307,7 +309,20 @@ module FileTelemetryExecutionRepository =
             RunId = overrides.RunId
             AgentId = overrides.AgentId
             SubagentId = overrides.SubagentId
-            ParentExecutionId = overrides.ParentExecutionId }
+            ParentExecutionId = overrides.ParentExecutionId
+            ActorKind = overrides.ActorKind }
+
+    /// The actor this process acts as, resolved from explicit overrides and
+    /// the whitelisted environment exactly as a newly created execution's
+    /// identity is -- so events and records written by the same command
+    /// always agree with the execution they belong to.
+    let resolveActor (overrides: IdentityInputs) : Result<Actor, string> =
+        ActorResolution.resolve (mergeIdentityOverrides (environmentIdentityInputs ()) overrides)
+
+    /// `resolveActor` plus the full discovered identity and the mechanism
+    /// that produced it (for `provenance identity`).
+    let resolveIdentity (overrides: IdentityInputs) : Result<Actor * Identity * IdentitySource, string> =
+        ActorResolution.resolveWith (mergeIdentityOverrides (environmentIdentityInputs ()) overrides)
 
     /// Mirrors production `startExecution`, excluding every explicit
     /// override option no current CLI command supplies (`startedAt`,
@@ -331,167 +346,169 @@ module FileTelemetryExecutionRepository =
                             let startedAt = nowIso ()
                             let executionId = request.ExecutionId |> Option.defaultValue (newExecutionId startedAt)
                             let repositoryId = FileWorkConfigRepository.readRepositoryId root
-                            let identity, discoverySource =
-                                Identity.discover (mergeIdentityOverrides (environmentIdentityInputs ()) request.IdentityOverrides)
-                            let git = observeGitBaseline root repositoryId
-                            let definitions = FileMetricRegistryRepository.read root
+                            match ActorResolution.resolveWith (mergeIdentityOverrides (environmentIdentityInputs ()) request.IdentityOverrides) with
+                            | Error message -> Error message
+                            | Ok(actor, identity, discoverySource) ->
+                                let git = observeGitBaseline root repositoryId
+                                let definitions = FileMetricRegistryRepository.read root
 
-                            let classifications =
-                                if request.Classifications.IsEmpty then
-                                    [ WorkClassification.defaultFor request.WorkType ]
+                                let classifications =
+                                    if request.Classifications.IsEmpty then
+                                        [ WorkClassification.defaultFor request.WorkType ]
+                                    else
+                                        request.Classifications |> List.distinct
+
+                                let capabilities =
+                                    definitions
+                                    |> List.map (Capability.initial startedAt (asCapabilitySource discoverySource) identity.Runtime git.Available)
+
+                                let baselineDefinition = definitions |> List.tryFind (fun metric -> metric.Id = "git.baseline_dirty_files")
+
+                                let metricsNode = JsonArray()
+
+                                let capabilities =
+                                    match baselineDefinition with
+                                    | None -> capabilities
+                                    | Some definition ->
+                                        let baselineNode, upserted =
+                                            derivedMetricNode
+                                                definition
+                                                (int64 git.DirtyPaths.Length)
+                                                { Type = "ros-git"; Name = "git-status"; Mechanism = "porcelain-v1" }
+                                                startedAt
+
+                                        metricsNode.Add(baselineNode: JsonNode)
+
+                                        let maxHistory = FileWorkConfigRepository.readTelemetryMaxCapabilityHistoryEntries root
+
+                                        capabilities
+                                        |> List.map (fun capability ->
+                                            if capability.MetricId = Some definition.Id then
+                                                Capability.upsert
+                                                    maxHistory
+                                                    startedAt
+                                                    startedAt
+                                                    startedAt
+                                                    upserted.Status
+                                                    upserted.Reason
+                                                    upserted.Source
+                                                    capability
+                                            else
+                                                capability)
+
+                                let record = JsonObject()
+                                record["schemaVersion"] <- JsonValue.Create "1.0.0"
+                                record["executionId"] <- JsonValue.Create executionId
+                                record["workItemId"] <- JsonValue.Create request.WorkItemId
+                                record["status"] <- JsonValue.Create "active"
+                                record["startedAt"] <- JsonValue.Create startedAt
+                                record["finalizedAt"] <- null
+
+                                let identityNode = JsonObject()
+                                identityNode["provider"] <- JsonValue.Create identity.Provider
+                                identityNode["model"] <- optionalString identity.Model
+                                identityNode["modelVersion"] <- optionalString identity.ModelVersion
+                                identityNode["runtime"] <- JsonValue.Create identity.Runtime
+                                identityNode["runtimeVersion"] <- optionalString identity.RuntimeVersion
+                                identityNode["sessionId"] <- optionalString identity.SessionId
+                                identityNode["conversationId"] <- optionalString identity.ConversationId
+                                identityNode["runId"] <- optionalString identity.RunId
+                                identityNode["agentId"] <- optionalString identity.AgentId
+                                identityNode["subagentId"] <- optionalString identity.SubagentId
+                                identityNode["parentExecutionId"] <- optionalString identity.ParentExecutionId
+                                identityNode["actorKind"] <- JsonValue.Create(ActorKind.code actor.Kind)
+                                identityNode["orchestration"] <- JsonObject()
+                                record["identity"] <- identityNode
+
+                                let provenanceNode = JsonObject()
+                                provenanceNode["collector"] <- JsonValue.Create "ros"
+                                provenanceNode["collectorVersion"] <- JsonValue.Create "1.0.0"
+                                provenanceNode["discoveredAt"] <- JsonValue.Create startedAt
+                                let sources = JsonArray()
+                                sources.Add(sourceNode (asCapabilitySource discoverySource): JsonNode)
+                                sources.Add(sourceNode { Type = "ros-git"; Name = "git"; Mechanism = "repository-baseline" }: JsonNode)
+                                provenanceNode["sources"] <- sources
+                                record["provenance"] <- provenanceNode
+
+                                let classificationNode = JsonObject()
+                                classificationNode["types"] <- stringArrayNode classifications
+
+                                classificationNode["rationale"] <-
+                                    match request.ClassificationRationale with
+                                    | Some rationale -> JsonValue.Create rationale
+                                    | None -> null
+                                classificationNode["evidence"] <- JsonArray()
+                                classificationNode["rd"] <- null
+                                record["classification"] <- classificationNode
+
+                                let capabilitiesNode = JsonArray()
+                                capabilities |> List.iter (fun capability -> capabilitiesNode.Add(capabilityNode capability: JsonNode))
+                                record["capabilities"] <- capabilitiesNode
+
+                                record["metrics"] <- metricsNode
+                                record["rawTelemetry"] <- JsonArray()
+
+                                let startedEvent = JsonObject()
+                                startedEvent["type"] <- JsonValue.Create "execution.started"
+                                startedEvent["occurredAt"] <- JsonValue.Create startedAt
+                                startedEvent["source"] <- sourceNode { Type = "ros-clock"; Name = "ros"; Mechanism = "work-lifecycle" }
+                                let eventsNode = JsonArray()
+                                eventsNode.Add(startedEvent: JsonNode)
+                                record["events"] <- eventsNode
+
+                                let gitStartNode = JsonObject()
+                                gitStartNode["available"] <- JsonValue.Create git.Available
+                                gitStartNode["repository"] <- JsonValue.Create git.Repository
+                                gitStartNode["branch"] <- optionalString git.Branch
+                                gitStartNode["commit"] <- optionalString git.Commit
+
+                                gitStartNode["dirty"] <-
+                                    match git.Dirty with
+                                    | Some value -> JsonValue.Create value
+                                    | None -> null
+
+                                gitStartNode["dirtyPaths"] <- stringArrayNode git.DirtyPaths
+                                let repositoryNode = JsonObject()
+                                repositoryNode["start"] <- gitStartNode
+                                repositoryNode["end"] <- null
+                                repositoryNode["changeSummary"] <- null
+                                record["repository"] <- repositoryNode
+
+                                let scopeNode = JsonObject()
+                                scopeNode["initial"] <- JsonObject()
+                                scopeNode["actual"] <- JsonObject()
+                                record["scope"] <- scopeNode
+                                record["qualitySignals"] <- JsonArray()
+
+                                let linksNode = JsonObject()
+                                linksNode["workItemId"] <- JsonValue.Create request.WorkItemId
+                                linksNode["parentWorkItemId"] <- null
+                                linksNode["requirements"] <- JsonArray()
+                                linksNode["acceptanceCriteria"] <- JsonArray()
+
+                                linksNode["commits"] <-
+                                    match git.Commit with
+                                    | Some commit -> stringArrayNode [ commit ]
+                                    | None -> JsonArray()
+
+                                linksNode["pullRequests"] <- JsonArray()
+                                linksNode["experiments"] <- JsonArray()
+                                linksNode["researchQuestions"] <- JsonArray()
+                                linksNode["decisions"] <- JsonArray()
+                                linksNode["defects"] <- JsonArray()
+                                linksNode["dependencies"] <- JsonArray()
+                                linksNode["evidence"] <- JsonArray()
+                                record["links"] <- linksNode
+
+                                let executionRoot = Path.Combine(root, FileWorkConfigRepository.readTelemetryExecutionRoot root)
+                                Directory.CreateDirectory executionRoot |> ignore
+                                let file = Path.Combine(executionRoot, $"{executionId}.json")
+
+                                if File.Exists file then
+                                    Error $"duplicate execution ID '{executionId}'"
                                 else
-                                    request.Classifications |> List.distinct
-
-                            let capabilities =
-                                definitions
-                                |> List.map (Capability.initial startedAt (asCapabilitySource discoverySource) identity.Runtime git.Available)
-
-                            let baselineDefinition = definitions |> List.tryFind (fun metric -> metric.Id = "git.baseline_dirty_files")
-
-                            let metricsNode = JsonArray()
-
-                            let capabilities =
-                                match baselineDefinition with
-                                | None -> capabilities
-                                | Some definition ->
-                                    let baselineNode, upserted =
-                                        derivedMetricNode
-                                            definition
-                                            (int64 git.DirtyPaths.Length)
-                                            { Type = "ros-git"; Name = "git-status"; Mechanism = "porcelain-v1" }
-                                            startedAt
-
-                                    metricsNode.Add(baselineNode: JsonNode)
-
-                                    let maxHistory = FileWorkConfigRepository.readTelemetryMaxCapabilityHistoryEntries root
-
-                                    capabilities
-                                    |> List.map (fun capability ->
-                                        if capability.MetricId = Some definition.Id then
-                                            Capability.upsert
-                                                maxHistory
-                                                startedAt
-                                                startedAt
-                                                startedAt
-                                                upserted.Status
-                                                upserted.Reason
-                                                upserted.Source
-                                                capability
-                                        else
-                                            capability)
-
-                            let record = JsonObject()
-                            record["schemaVersion"] <- JsonValue.Create "1.0.0"
-                            record["executionId"] <- JsonValue.Create executionId
-                            record["workItemId"] <- JsonValue.Create request.WorkItemId
-                            record["status"] <- JsonValue.Create "active"
-                            record["startedAt"] <- JsonValue.Create startedAt
-                            record["finalizedAt"] <- null
-
-                            let identityNode = JsonObject()
-                            identityNode["provider"] <- JsonValue.Create identity.Provider
-                            identityNode["model"] <- optionalString identity.Model
-                            identityNode["modelVersion"] <- optionalString identity.ModelVersion
-                            identityNode["runtime"] <- JsonValue.Create identity.Runtime
-                            identityNode["runtimeVersion"] <- optionalString identity.RuntimeVersion
-                            identityNode["sessionId"] <- optionalString identity.SessionId
-                            identityNode["conversationId"] <- optionalString identity.ConversationId
-                            identityNode["runId"] <- optionalString identity.RunId
-                            identityNode["agentId"] <- optionalString identity.AgentId
-                            identityNode["subagentId"] <- optionalString identity.SubagentId
-                            identityNode["parentExecutionId"] <- optionalString identity.ParentExecutionId
-                            identityNode["orchestration"] <- JsonObject()
-                            record["identity"] <- identityNode
-
-                            let provenanceNode = JsonObject()
-                            provenanceNode["collector"] <- JsonValue.Create "ros"
-                            provenanceNode["collectorVersion"] <- JsonValue.Create "1.0.0"
-                            provenanceNode["discoveredAt"] <- JsonValue.Create startedAt
-                            let sources = JsonArray()
-                            sources.Add(sourceNode (asCapabilitySource discoverySource): JsonNode)
-                            sources.Add(sourceNode { Type = "ros-git"; Name = "git"; Mechanism = "repository-baseline" }: JsonNode)
-                            provenanceNode["sources"] <- sources
-                            record["provenance"] <- provenanceNode
-
-                            let classificationNode = JsonObject()
-                            classificationNode["types"] <- stringArrayNode classifications
-
-                            classificationNode["rationale"] <-
-                                match request.ClassificationRationale with
-                                | Some rationale -> JsonValue.Create rationale
-                                | None -> null
-                            classificationNode["evidence"] <- JsonArray()
-                            classificationNode["rd"] <- null
-                            record["classification"] <- classificationNode
-
-                            let capabilitiesNode = JsonArray()
-                            capabilities |> List.iter (fun capability -> capabilitiesNode.Add(capabilityNode capability: JsonNode))
-                            record["capabilities"] <- capabilitiesNode
-
-                            record["metrics"] <- metricsNode
-                            record["rawTelemetry"] <- JsonArray()
-
-                            let startedEvent = JsonObject()
-                            startedEvent["type"] <- JsonValue.Create "execution.started"
-                            startedEvent["occurredAt"] <- JsonValue.Create startedAt
-                            startedEvent["source"] <- sourceNode { Type = "ros-clock"; Name = "ros"; Mechanism = "work-lifecycle" }
-                            let eventsNode = JsonArray()
-                            eventsNode.Add(startedEvent: JsonNode)
-                            record["events"] <- eventsNode
-
-                            let gitStartNode = JsonObject()
-                            gitStartNode["available"] <- JsonValue.Create git.Available
-                            gitStartNode["repository"] <- JsonValue.Create git.Repository
-                            gitStartNode["branch"] <- optionalString git.Branch
-                            gitStartNode["commit"] <- optionalString git.Commit
-
-                            gitStartNode["dirty"] <-
-                                match git.Dirty with
-                                | Some value -> JsonValue.Create value
-                                | None -> null
-
-                            gitStartNode["dirtyPaths"] <- stringArrayNode git.DirtyPaths
-                            let repositoryNode = JsonObject()
-                            repositoryNode["start"] <- gitStartNode
-                            repositoryNode["end"] <- null
-                            repositoryNode["changeSummary"] <- null
-                            record["repository"] <- repositoryNode
-
-                            let scopeNode = JsonObject()
-                            scopeNode["initial"] <- JsonObject()
-                            scopeNode["actual"] <- JsonObject()
-                            record["scope"] <- scopeNode
-                            record["qualitySignals"] <- JsonArray()
-
-                            let linksNode = JsonObject()
-                            linksNode["workItemId"] <- JsonValue.Create request.WorkItemId
-                            linksNode["parentWorkItemId"] <- null
-                            linksNode["requirements"] <- JsonArray()
-                            linksNode["acceptanceCriteria"] <- JsonArray()
-
-                            linksNode["commits"] <-
-                                match git.Commit with
-                                | Some commit -> stringArrayNode [ commit ]
-                                | None -> JsonArray()
-
-                            linksNode["pullRequests"] <- JsonArray()
-                            linksNode["experiments"] <- JsonArray()
-                            linksNode["researchQuestions"] <- JsonArray()
-                            linksNode["decisions"] <- JsonArray()
-                            linksNode["defects"] <- JsonArray()
-                            linksNode["dependencies"] <- JsonArray()
-                            linksNode["evidence"] <- JsonArray()
-                            record["links"] <- linksNode
-
-                            let executionRoot = Path.Combine(root, FileWorkConfigRepository.readTelemetryExecutionRoot root)
-                            Directory.CreateDirectory executionRoot |> ignore
-                            let file = Path.Combine(executionRoot, $"{executionId}.json")
-
-                            if File.Exists file then
-                                Error $"duplicate execution ID '{executionId}'"
-                            else
-                                File.WriteAllText(file, record.ToJsonString serializerOptions + "\n")
-                                Ok(Some executionId)
+                                    File.WriteAllText(file, record.ToJsonString serializerOptions + "\n")
+                                    Ok(Some executionId)
                         with error ->
                             Error error.Message
 

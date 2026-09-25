@@ -521,5 +521,73 @@
     "title": "Govern SDE structural-locality warnings as review obligations, not LOC targets",
     "updated": "2026-09-21",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-25",
+    "decision_type": "architecture",
+    "derived_from": [
+      "RQ-ROS-2026-A001",
+      "RQ-ROS-2026-A004",
+      "RQ-ROS-2026-A007"
+    ],
+    "id": "DF-ROS-2026-A036",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A036--agent-identity-and-provenance.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260925T193942361Z-84dc9b22": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-25T20:16:23.378Z",
+          "last": "2026-09-25T20:29:55.830Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "Architecture decision for agent identity and provenance"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A001",
+      "RQ-ROS-2026-A002",
+      "RQ-ROS-2026-A003",
+      "RQ-ROS-2026-A004",
+      "RQ-ROS-2026-A005",
+      "RQ-ROS-2026-A006",
+      "RQ-ROS-2026-A007",
+      "RQ-ROS-2026-A008",
+      "RQ-ROS-2026-A009",
+      "RQ-ROS-2026-A010",
+      "RQ-ROS-2026-A011",
+      "RQ-ROS-2026-A012",
+      "DF-ROS-2026-A010",
+      "DF-ROS-2026-A035",
+      "docs/agent-provenance.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [],
+    "tags": [
+      "provenance",
+      "identity",
+      "agents",
+      "attribution",
+      "requirements",
+      "validation"
+    ],
+    "title": "Agent identity and provenance as a first-class, execution-keyed extension of existing ROS records",
+    "updated": "2026-09-25",
+    "version": "1.0.0"
   }
 ]

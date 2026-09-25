@@ -1,0 +1,508 @@
+[
+  {
+    "created": "2026-09-25",
+    "id": "RQ-ROS-2026-A001",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A001--actor-identity-model.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260925T193942361Z-84dc9b22": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-25T20:16:17.996Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A036",
+      "docs/agent-provenance.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "provenance",
+      "agent",
+      "identity",
+      "provider-neutral"
+    ],
+    "title": "Actor identity is explicit, structured, and provider-neutral",
+    "updated": "2026-09-25",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-25",
+    "id": "RQ-ROS-2026-A002",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A002--execution-identity.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260925T193942361Z-84dc9b22": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-25T20:16:18.438Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A036",
+      "docs/agent-provenance.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "provenance",
+      "execution",
+      "identity",
+      "telemetry"
+    ],
+    "title": "Every execution has its own identity, separate from the actor's stable identity",
+    "updated": "2026-09-25",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-25",
+    "id": "RQ-ROS-2026-A003",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A003--action-event-attribution.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260925T193942361Z-84dc9b22": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-25T20:16:18.916Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A036",
+      "docs/agent-provenance.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "provenance",
+      "events",
+      "work-protocol",
+      "attribution"
+    ],
+    "title": "Work events and captured work items record the acting actor",
+    "updated": "2026-09-25",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-25",
+    "id": "RQ-ROS-2026-A004",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A004--artifact-contribution-history.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260925T193942361Z-84dc9b22": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-25T20:16:19.440Z",
+          "last": "2026-09-25T20:23:33.871Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A036",
+      "docs/agent-provenance.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "provenance",
+      "artifacts",
+      "provenance",
+      "contributors"
+    ],
+    "title": "Canonical artifacts accumulate an append-only contribution history",
+    "updated": "2026-09-25",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-25",
+    "id": "RQ-ROS-2026-A005",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A005--requirement-provenance.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260925T193942361Z-84dc9b22": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-25T20:16:19.872Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A036",
+      "docs/agent-provenance.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "provenance",
+      "requirements",
+      "provenance"
+    ],
+    "title": "Requirements are first-class records whose creator and modifiers are attributed",
+    "updated": "2026-09-25",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-25",
+    "id": "RQ-ROS-2026-A006",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A006--identity-establishment.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260925T193942361Z-84dc9b22": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-25T20:16:20.303Z",
+          "last": "2026-09-25T20:34:17.189Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A036",
+      "docs/agent-provenance.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "provenance",
+      "identity",
+      "developer-experience",
+      "impersonation"
+    ],
+    "title": "An agent establishes identity once per execution and later operations inherit it",
+    "updated": "2026-09-25",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-25",
+    "id": "RQ-ROS-2026-A007",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A007--provenance-validation.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260925T193942361Z-84dc9b22": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-25T20:16:20.772Z",
+          "last": "2026-09-25T20:23:34.384Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A036",
+      "docs/agent-provenance.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "provenance",
+      "validation",
+      "legacy",
+      "migration"
+    ],
+    "title": "Validation enforces provenance for new work and stays compatible with legacy repositories",
+    "updated": "2026-09-25",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-25",
+    "id": "RQ-ROS-2026-A008",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A008--derived-lineage.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260925T193942361Z-84dc9b22": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-25T20:16:21.199Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A036",
+      "docs/agent-provenance.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "provenance",
+      "lineage",
+      "derivation"
+    ],
+    "title": "Derivation lineage is recorded separately from authorship",
+    "updated": "2026-09-25",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-25",
+    "id": "RQ-ROS-2026-A009",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A009--integration-portability.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260925T193942361Z-84dc9b22": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-25T20:16:21.656Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A036",
+      "docs/agent-provenance.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "provenance",
+      "integration",
+      "export",
+      "echelon"
+    ],
+    "title": "Provenance survives integration and export boundaries",
+    "updated": "2026-09-25",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-25",
+    "id": "RQ-ROS-2026-A010",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A010--provenance-not-attestation.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260925T193942361Z-84dc9b22": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-25T20:16:22.115Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A036",
+      "docs/agent-provenance.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "provenance",
+      "security",
+      "attestation",
+      "assurance"
+    ],
+    "title": "Recorded identity is provenance, not authentication, and remains open to attestation",
+    "updated": "2026-09-25",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-25",
+    "id": "RQ-ROS-2026-A011",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A011--provenance-metrics.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260925T193942361Z-84dc9b22": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-25T20:16:22.523Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A036",
+      "docs/agent-provenance.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "provenance",
+      "metrics",
+      "analysis"
+    ],
+    "title": "Provenance is queryable for per-agent metrics",
+    "updated": "2026-09-25",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-25",
+    "id": "RQ-ROS-2026-A012",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A012--agent-obligations.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260925T193942361Z-84dc9b22": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-25T20:16:22.955Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A036",
+      "docs/agent-provenance.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "provenance",
+      "governance",
+      "agents"
+    ],
+    "title": "Agent guidance requires identity, honesty, and preservation of provenance",
+    "updated": "2026-09-25",
+    "version": "1.0.0"
+  }
+]

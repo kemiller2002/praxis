@@ -49,13 +49,18 @@ type ArtifactKind =
     | Mission
     | ResearchPackage
     | Theory
+    | Requirement
 
 type ArtifactKindConfiguration =
     { Kind: ArtifactKind
       Name: string
       SourceDirectory: string
       RegistryPath: string
-      IdentifierPrefix: string }
+      IdentifierPrefix: string
+      /// A kind introduced after repositories were already installed: with
+      /// no documents its registry file is optional, so upgrading does not
+      /// make every existing installation's registries "stale".
+      OptionalRegistry: bool }
 
 [<RequireQualifiedAccess>]
 module ArtifactKinds =
@@ -64,42 +69,56 @@ module ArtifactKinds =
             Name = "decisions"
             SourceDirectory = "research/decisions"
             RegistryPath = "registries/decisions.json"
-            IdentifierPrefix = "DF" }
+            IdentifierPrefix = "DF"
+            OptionalRegistry = false }
           { Kind = ArtifactKind.Evidence
             Name = "evidence"
             SourceDirectory = "research/evidence"
             RegistryPath = "registries/evidence.json"
-            IdentifierPrefix = "EV" }
+            IdentifierPrefix = "EV"
+            OptionalRegistry = false }
           { Kind = ArtifactKind.Experiment
             Name = "experiments"
             SourceDirectory = "research/experiments"
             RegistryPath = "registries/experiments.json"
-            IdentifierPrefix = "EX" }
+            IdentifierPrefix = "EX"
+            OptionalRegistry = false }
           { Kind = ArtifactKind.Hypothesis
             Name = "hypotheses"
             SourceDirectory = "research/hypotheses"
             RegistryPath = "registries/hypotheses.json"
-            IdentifierPrefix = "HY" }
+            IdentifierPrefix = "HY"
+            OptionalRegistry = false }
           { Kind = ArtifactKind.Journal
             Name = "journals"
             SourceDirectory = "research/journals"
             RegistryPath = "registries/journals.json"
-            IdentifierPrefix = "JR" }
+            IdentifierPrefix = "JR"
+            OptionalRegistry = false }
           { Kind = ArtifactKind.Mission
             Name = "missions"
             SourceDirectory = "missions"
             RegistryPath = "registries/missions.json"
-            IdentifierPrefix = "MS" }
+            IdentifierPrefix = "MS"
+            OptionalRegistry = false }
           { Kind = ArtifactKind.ResearchPackage
             Name = "research-packages"
             SourceDirectory = "research/packages"
             RegistryPath = "registries/research-packages.json"
-            IdentifierPrefix = "RP" }
+            IdentifierPrefix = "RP"
+            OptionalRegistry = false }
           { Kind = ArtifactKind.Theory
             Name = "theories"
             SourceDirectory = "research/theories"
             RegistryPath = "registries/theories.json"
-            IdentifierPrefix = "TH" } ]
+            IdentifierPrefix = "TH"
+            OptionalRegistry = false }
+          { Kind = ArtifactKind.Requirement
+            Name = "requirements"
+            SourceDirectory = "research/requirements"
+            RegistryPath = "registries/requirements.json"
+            IdentifierPrefix = "RQ"
+            OptionalRegistry = true } ]
 
     let identifierPrefix (identifier: string) =
         let separator = identifier.IndexOf('-')

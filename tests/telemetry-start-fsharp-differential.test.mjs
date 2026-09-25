@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
+import { deterministicIdentityEnv } from "./deterministic-identity-env.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
@@ -33,7 +34,8 @@ const GOLDEN = {
     runId: "run-789",
     agentId: "agent-1",
     subagentId: "subagent-2",
-    parentExecutionId: "EXE-PARENT"
+    parentExecutionId: "EXE-PARENT",
+    actorKind: "unknown"
   }
 };
 
@@ -103,7 +105,7 @@ function contextItem(root, workItemId) {
 }
 
 function runFsharp(root, args) {
-  const result = spawnSync("dotnet", [fsharpCli, "--root", root, "telemetry", "start", ...args], { cwd: repositoryRoot, encoding: "utf8" });
+  const result = spawnSync("dotnet", [fsharpCli, "--root", root, "telemetry", "start", ...args], { cwd: repositoryRoot, encoding: "utf8", env: deterministicIdentityEnv() });
   return { status: result.status, stdout: result.stdout, stderr: result.stderr };
 }
 

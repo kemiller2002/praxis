@@ -5,6 +5,8 @@ open System.Text.Encodings.Web
 open System.Text.Json
 open System.Text.Json.Nodes
 open Ros.Application.Work
+open Ros.Contracts.Provenance
+open Ros.Domain.Provenance
 open Ros.Domain.Work
 
 [<RequireQualifiedAccess>]
@@ -209,8 +211,12 @@ module FileBacklogQueueRepository =
 
     /// Same field key order production's own object literal writes:
     /// `id, title, description, tags, priority, status, attachments,
-    /// createdAt, updatedAt, createdBy, source, sourceReference`.
-    let private itemNode (item: CapturedWorkItem) : JsonObject =
+    /// createdAt, updatedAt, createdBy, source, sourceReference`. A freshly
+    /// captured item also records `createdByActor` (the structured actor
+    /// that captured it) right after the legacy free-text `createdBy`; a
+    /// minimal record upserted on first touch records none, because nobody
+    /// is known to have created it.
+    let private itemNode (createdByActor: Actor option) (item: CapturedWorkItem) : JsonObject =
         let node = JsonObject()
         node["id"] <- JsonValue.Create item.Id
         node["title"] <- JsonValue.Create item.Title
@@ -229,6 +235,7 @@ module FileBacklogQueueRepository =
         node["createdAt"] <- JsonValue.Create item.CreatedAt
         node["updatedAt"] <- JsonValue.Create item.UpdatedAt
         node["createdBy"] <- JsonValue.Create item.CreatedBy
+        createdByActor |> Option.iter (fun actor -> node["createdByActor"] <- ActorJson.node actor)
         node["source"] <- JsonValue.Create item.Source
 
         node["sourceReference"] <-
@@ -367,14 +374,19 @@ module FileBacklogQueueRepository =
     /// production's own key order, persists the decided `nextSeq`, and
     /// commits both `queue.json` and the regenerated `queue.md` through the
     /// same `backlog-state` recovery journal every other backlog effect uses.
-    let captureItem (root: string) (plan: WorkCapturePlan) (contextItems: LiveWorkItem list) : Result<BacklogQueueRow, string> =
+    let captureItem
+        (root: string)
+        (plan: WorkCapturePlan)
+        (createdByActor: Actor)
+        (contextItems: LiveWorkItem list)
+        : Result<BacklogQueueRow, string> =
         try
             match loadOrCreateQueueNode root with
             | Error message -> Error message
             | Ok queueNode ->
                 match queueNode["items"] with
                 | :? JsonArray as items ->
-                    items.Add(itemNode plan.Item: JsonNode)
+                    items.Add(itemNode (Some createdByActor) plan.Item: JsonNode)
                     queueNode["nextSeq"] <- JsonValue.Create plan.NextSeq
 
                     commitQueue root queueNode items contextItems (fun rows ->
@@ -417,7 +429,7 @@ module FileBacklogQueueRepository =
         match existing with
         | Some item -> item
         | None ->
-            let created = itemNode (defaultItem ())
+            let created = itemNode None (defaultItem ())
             items.Add(created: JsonNode)
             created
 

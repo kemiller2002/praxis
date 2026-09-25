@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
+import { UNKNOWN_ACTOR, deterministicIdentityEnv } from "./deterministic-identity-env.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const installWorkItemId = `ROS-INSTALL-${JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8")).version.replaceAll(".", "-")}`;
@@ -33,6 +34,7 @@ const GOLDEN = {
         status: "blocked",
         attachments: [],
         createdBy: "unknown",
+        createdByActor: UNKNOWN_ACTOR,
         source: "manual",
         sourceReference: null,
         blockedReason: "waiting on design"
@@ -77,6 +79,7 @@ const GOLDEN = {
         status: "blocked",
         attachments: [],
         createdBy: "unknown",
+        createdByActor: UNKNOWN_ACTOR,
         source: "manual",
         sourceReference: null,
         blockedReason: "batch block"
@@ -138,7 +141,7 @@ function readContext(root) {
 }
 
 function runFsharp(root, command, args) {
-  const result = spawnSync("dotnet", [fsharpCli, "--root", root, "work", command, ...args], { cwd: repositoryRoot, encoding: "utf8" });
+  const result = spawnSync("dotnet", [fsharpCli, "--root", root, "work", command, ...args], { cwd: repositoryRoot, encoding: "utf8", env: deterministicIdentityEnv() });
   return { status: result.status, stdout: result.stdout, stderr: result.stderr };
 }
 

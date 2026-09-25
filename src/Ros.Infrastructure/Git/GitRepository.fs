@@ -265,3 +265,11 @@ module ProcessGitRepository =
         |> Result.map int
 
     let readCommitCount root startCommit endCommit = readCommitCountWithExecutable "git" root startCommit endCommit
+
+    /// `git show REVISION:PATH` verbatim, or `None` when the path did not
+    /// exist at that revision (or Git is unavailable). Used to compare an
+    /// artifact's provenance with its base-revision version.
+    let readFileAtRevision root (revision: string) (relativePath: string) : string option =
+        match runGit "git" (IO.Path.GetFullPath root) "git show" [ "show"; $"{revision}:{relativePath.Replace('\\', '/')}" ] with
+        | Ok result when result.ExitCode = 0 -> Some result.Output
+        | _ -> None

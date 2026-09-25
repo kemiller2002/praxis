@@ -23,6 +23,7 @@
     "meaningfulPaths": ["**"],
     "ignoredPaths": [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", ".ros/telemetry/**", ".ros/locks/**", ".ros/hub/**", "registries/**", ".echelon/**"]
   },
+  "provenance": {"version": "1.0.0", "enforce": true, "requiredFrom": "2026-09-25", "requireOriginator": ["RQ"]},
   "telemetry": {
     "version": "1.0.0",
     "enabled": true,

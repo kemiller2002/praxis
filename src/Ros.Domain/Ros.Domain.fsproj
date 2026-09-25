@@ -33,6 +33,9 @@
     <Compile Include="Telemetry/TutelaTrend.fs" />
     <Compile Include="Telemetry/Validation.fs" />
     <Compile Include="Telemetry/TelemetryValidation.fs" />
+    <Compile Include="Provenance/Actor.fs" />
+    <Compile Include="Provenance/ArtifactProvenance.fs" />
+    <Compile Include="Provenance/ProvenancePolicy.fs" />
     <Compile Include="Ordo/Model.fs" />
     <Compile Include="Lifecycle/Model.fs" />
     <Compile Include="Lifecycle/Migration.fs" />

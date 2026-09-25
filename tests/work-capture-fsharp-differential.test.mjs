@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
+import { UNKNOWN_ACTOR, deterministicIdentityEnv, unknownActorWithId } from "./deterministic-identity-env.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const installWorkItemId = `ROS-INSTALL-${JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8")).version.replaceAll(".", "-")}`;
@@ -17,7 +18,9 @@ const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", 
 // sequence as each test, then frozen here. Node is retained in this
 // repository only as the web server's internal dependency
 // (DF-ROS-2026-A033) and is no longer executed as a live oracle by this
-// test suite.
+// test suite. `createdByActor` was added afterwards with actor
+// attribution (RQ-ROS-2026-A003); the value is the one tools/ros_cli.mjs's
+// captureWork now produces under the deterministic identity environment.
 const GOLDEN = {
   test1Queue: {
     schemaVersion: "1.0.0",
@@ -34,6 +37,7 @@ const GOLDEN = {
         status: "captured",
         attachments: [],
         createdBy: "tester",
+        createdByActor: unknownActorWithId("tester"),
         source: "manual",
         sourceReference: null
       }
@@ -55,6 +59,7 @@ const GOLDEN = {
         status: "captured",
         attachments: [],
         createdBy: "unknown",
+        createdByActor: UNKNOWN_ACTOR,
         source: "manual",
         sourceReference: null
       }
@@ -75,6 +80,7 @@ const GOLDEN = {
         status: "captured",
         attachments: [],
         createdBy: "unknown",
+        createdByActor: UNKNOWN_ACTOR,
         source: "manual",
         sourceReference: null
       }
@@ -141,7 +147,7 @@ function runFsharp(root, title, options = {}) {
   if (options.description) args.push("--description", options.description);
   for (const tag of options.tags ?? []) args.push("--tag", tag);
   if (options.actor) args.push("--actor", options.actor);
-  const result = spawnSync("dotnet", args, { cwd: repositoryRoot, encoding: "utf8" });
+  const result = spawnSync("dotnet", args, { cwd: repositoryRoot, encoding: "utf8", env: deterministicIdentityEnv() });
   return { status: result.status, json: result.stdout ? JSON.parse(result.stdout) : null, stderr: result.stderr };
 }
 

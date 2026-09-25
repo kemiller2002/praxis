@@ -411,6 +411,11 @@
       "template": false
     },
     {
+      "source": "docs/agent-provenance.md",
+      "destination": "docs/agent-provenance.md",
+      "template": false
+    },
+    {
       "source": "docs/development-telemetry.md",
       "destination": "docs/development-telemetry.md",
       "template": false

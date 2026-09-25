@@ -17,6 +17,8 @@ type IdentityInputs =
       AgentId: string option
       SubagentId: string option
       ParentExecutionId: string option
+      /// Explicit actor kind (`--actor-kind`); see `Ros.Domain.Provenance.ActorKind`.
+      ActorKind: string option
       RosTelemetryProvider: string option
       RosTelemetryRuntime: string option
       RosTelemetryModel: string option
@@ -26,6 +28,7 @@ type IdentityInputs =
       RosTelemetryConversationId: string option
       RosTelemetryRunId: string option
       RosActor: string option
+      RosActorKind: string option
       CodexSessionId: string option
       CodexThreadId: string option
       ClaudeCodeSessionId: string option
@@ -52,6 +55,7 @@ module IdentityInputs =
           AgentId = None
           SubagentId = None
           ParentExecutionId = None
+          ActorKind = None
           RosTelemetryProvider = None
           RosTelemetryRuntime = None
           RosTelemetryModel = None
@@ -61,6 +65,7 @@ module IdentityInputs =
           RosTelemetryConversationId = None
           RosTelemetryRunId = None
           RosActor = None
+          RosActorKind = None
           CodexSessionId = None
           CodexThreadId = None
           ClaudeCodeSessionId = None

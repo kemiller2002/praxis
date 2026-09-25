@@ -2176,11 +2176,48 @@
         "EXE-20260920T225534185Z-f3738e9b"
       ],
       "completedAt": "2026-09-20T23:04:26Z"
+    },
+    {
+      "id": "FEAT-AGENT-PROVENANCE",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Provenance/ArtifactProvenance.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Provenance/FileProvenanceRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/ProvenanceCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ProvenanceTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ProvenanceEffectTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/provenance-actor-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-25T20:36:01.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260925T193942361Z-84dc9b22"
+      ],
+      "completedAt": "2026-09-25T20:36:01.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-20T23:04:26Z",
+  "updatedAt": "2026-09-25T20:36:01.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

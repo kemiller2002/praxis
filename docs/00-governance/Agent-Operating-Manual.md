@@ -2,11 +2,11 @@
 id: GV-AGENT-001
 title: Agent Operating Manual
 status: canonical
-version: 1.1.0
+version: 1.2.0
 owners:
   - repository-governance
 created: 2026-07-22
-updated: 2026-09-05
+updated: 2026-09-25
 review_cycle: quarterly
 supersedes: []
 superseded_by: []
@@ -15,6 +15,7 @@ related_documents:
   - Engineering-Standards.md
   - Research-Execution-Package-Specification.md
   - ../development-telemetry.md
+  - ../agent-provenance.md
 tags: [governance, agents, operations]
 ---
 
@@ -25,13 +26,13 @@ tags: [governance, agents, operations]
 1. Read root `AGENTS.md` and the [governance index](README.md).
 2. Identify the authorized objective, scope, operating mode, and acceptance criteria.
 3. Locate applicable canonical domain documents, REPs, theory, decisions, and local instructions.
-4. Begin the authorized work item so ROS starts an execution record; inspect repository state, including uncommitted user work, and establish a baseline where practical.
+4. Establish your identity (`./ros provenance identity`; declare it with `ROS_ACTOR_KIND`/`ROS_ACTOR`/`ROS_TELEMETRY_*` when your runtime is not detected, never fabricating unknown values), then begin the authorized work item so ROS starts an execution record carrying that identity; inspect repository state, including uncommitted user work, and establish a baseline where practical.
 5. Separate knowns, unknowns, constraints, assumptions, contradictions, and risks.
 6. Choose the smallest sufficient process and artifact threshold.
 7. Execute within scope, making reversible decisions where justified.
 8. Validate in proportion to risk.
 9. Finalize execution telemetry, preserving runtime limitations, deterministic metrics, scope changes, and evidence links.
-10. Update affected code, documentation, decisions, journals, packages, and registries.
+10. Update affected code, documentation, decisions, journals, packages, and registries, attributing every canonical record you create or materially change with `./ros provenance record`.
 11. Leave a self-contained handoff.
 
 ## Operating Modes
@@ -91,6 +92,36 @@ Never say a file was read when it was not; a command succeeded when it failed; a
 Every newly begun ROS work item receives one or more provider-neutral execution records. At execution start, discover provider/model/runtime/session identity and capability state, classify the work, and capture a deterministic repository baseline. During work, ingest runtime/tool events and record R&D facts, scope discoveries, correction signals, and evidence links when they are trustworthy. At completion, finalize all active records and validate them.
 
 Use normalized metrics only when their semantics, unit, scope, and aggregation are understood. Preserve legitimate unmapped provider fields through the bounded, sanitized raw layer. A supported but unavailable metric is not zero; an estimate is not observed; an agent report is not a Git- or tool-derived fact. Do not collect prompts, responses, commands, file contents, credentials, or personal data merely to increase metric coverage. Detailed commands, adapters, classification vocabulary, and aggregation rules are canonical in `docs/development-telemetry.md`.
+
+## Agent Identity and Provenance
+
+Identity has two separate parts:
+
+- the **stable actor**: kind, id, provider, model, and runtime;
+- the **execution**: the `EXE-...` record created by `work begin`.
+
+Establish identity once per execution and let later commands inherit it.
+
+Record your own contribution to every canonical record you create or
+materially modify:
+
+- `created` for a requirement or other record you originate;
+- `modified` for a material change;
+- `reviewed` or `approved` only for review or approval you actually
+  performed.
+
+Record lineage with `--derived-from`. Lineage is not authorship.
+
+Never impersonate another actor or execution. Never fabricate a provider,
+model, or version; unknown stays `unknown`. Never edit, reorder, or remove
+another contributor's provenance.
+
+Legacy records stay unattributed unless a real contribution is recorded. Do not
+infer historical authorship from style, timestamps, filenames, or Git metadata.
+
+Recorded identity is self-reported provenance, not authentication. The
+canonical model, validation rules, and examples are in
+`docs/agent-provenance.md`.
 
 ## Artifact Thresholds
 

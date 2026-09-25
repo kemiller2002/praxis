@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
+import { UNKNOWN_ACTOR, deterministicIdentityEnv } from "./deterministic-identity-env.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const installWorkItemId = `ROS-INSTALL-${JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8")).version.replaceAll(".", "-")}`;
@@ -48,11 +49,11 @@ const GOLDEN = {
   test1Events: [
     {
       schemaVersion: "1.0.0", type: "work.started", workItem: "WI-BLOCKED", repository: "work-resume-differential",
-      protocolVersion: "1.0.0", evidence: [], paths: [], publication: { status: "pending" }
+      protocolVersion: "1.0.0", evidence: [], paths: [], actor: UNKNOWN_ACTOR, publication: { status: "pending" }
     },
     {
       schemaVersion: "1.0.0", type: "work.resumed", workItem: "WI-BLOCKED", repository: "work-resume-differential",
-      protocolVersion: "1.0.0", evidence: [], paths: [], publication: { status: "pending" }
+      protocolVersion: "1.0.0", evidence: [], paths: [], actor: UNKNOWN_ACTOR, publication: { status: "pending" }
     }
   ],
   test1ExecutionsLength: 1,
@@ -97,7 +98,7 @@ function readExecutions(root) {
 }
 
 function runFsharp(root, command, args) {
-  const result = spawnSync("dotnet", [fsharpCli, "--root", root, "work", command, ...args], { cwd: repositoryRoot, encoding: "utf8" });
+  const result = spawnSync("dotnet", [fsharpCli, "--root", root, "work", command, ...args], { cwd: repositoryRoot, encoding: "utf8", env: deterministicIdentityEnv() });
   return { status: result.status, stdout: result.stdout, stderr: result.stderr };
 }
 
