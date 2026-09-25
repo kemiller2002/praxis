@@ -44,7 +44,7 @@ module FoundationsTests =
                       write
                           root
                           ".echelon/foundations.json"
-                          (config "Example" """\"forma\": { \"required\": true, \"version\": \"0.2.0\" }""")
+                          (config "Example" "\"forma\": { \"required\": true, \"version\": \"0.2.0\" }")
 
                       write
                           root
@@ -76,7 +76,7 @@ module FoundationsTests =
                       write
                           root
                           ".echelon/foundations.json"
-                          (config "Example" """\"forma\": { \"required\": true, \"version\": \"0.2.0\" }""")
+                          (config "Example" "\"forma\": { \"required\": true, \"version\": \"0.2.0\" }")
 
                       write
                           root
@@ -103,7 +103,7 @@ module FoundationsTests =
                           ".echelon/foundations.json"
                           (config
                               "Example"
-                              """\"aegis\": { \"required\": true, \"version\": \"1.0.0\", \"boundaryManifest\": \"aegis-boundaries.json\" }""")
+                              "\"aegis\": { \"required\": true, \"version\": \"1.0.0\", \"boundaryManifest\": \"aegis-boundaries.json\" }")
 
                       write
                           root
