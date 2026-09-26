@@ -298,6 +298,31 @@ received block, or gives a created record its own block. The rule is stated
 above under "Creating a record versus relaying one". The registry, Vigila,
 Chrona, and Summa now all implement it.
 
+### Second pass
+
+A second, read-only review ran the round-2 heads of every repository. It
+compared 96 new classify inputs and append inputs across the JavaScript,
+Python, and F# codecs. The codec cores agreed, but integration paths did not.
+Contract revision 1.2 (Praxis) and a third round in each repository address:
+
+| # | Finding | Fix |
+|---|---|---|
+| 1 | High. Vigila stored a credential taken from the follow-up payload's `context.source.ref` in `derivedFrom`. The item then could not be reloaded. | `addLineage` credential-checks and re-classifies (contract 1.2). Receivers reject the request on refusal. |
+| 2 | The registry reference receiver had the same lineage bypass. | Same fix. |
+| 3 | The registry and Vigila disagreed on the shape of `followup.create` `context.source`, and the lineage was silently lost. | Vigila's object shape `{ ref }` is canonical. The registry reads it. |
+| 4 | The registry made an agent that updated an unattributed record its creator. | Only create capabilities record `created`. Updates record their own role and leave the origin unknown, as Vigila does. |
+| 5 | Duplicate JSON member names: readers disagreed on the originator, and several threw. | Text is classified as text. A repeated name is malformed, and `classify` never throws. |
+| 6 | Key escaping collided for characters outside the BMP. This was an incomplete fix of #7 above. | Escaping is per code point (`escapeKeySegment`). |
+| 7 | The Dokimos CLI mixed flag and environment identities, and the run came from `ROS_EXECUTION_ID`. | One identity source (RQ-ROS-2026-A016 revision 1.2). |
+| 8 | Aegis applied key-name redaction rules to free text, rejecting ordinary finding reasons such as "Session cookie ...". | Key rules apply to keys. Values get the contract credential check. |
+| 9 | The EDF blinding check could still be bypassed (snake_case keys, escaped values, `CLAUDE_CODE_SESSION_ID=`). This was an incomplete fix of #9 above. | Keys are normalised, and patterns run on parsed values. |
+| 10 | Codecs threw on unpaired surrogates. | They are malformed (contract 1.2). |
+| 11 | Unicode whitespace and credential regex semantics diverged across languages. | ASCII-only semantics (contract 1.2). |
+| 12 | Tutela's gate accepts malformed `contributionProvenance`. | Known limitation: the gate is a trust root and needs independent approval (see below). |
+| 13 | Vigila read a stored `"provenance": null` as absent. | It is malformed. |
+| 14 | A namespaced registry run key could equal an un-namespaced one. | `.` is escaped in every segment. |
+| 15 | Registry envelope timestamps went through `Date.parse`, which depends on the host. | The contract's `parseTimestamp` is used. |
+
 ## Coupling review
 
 - No repository imports Praxis code at runtime or build time for provenance.
@@ -325,6 +350,12 @@ Chrona, and Summa now all implement it.
   Percepta events claiming `id: claude` under the Codex runtime, or Chrona,
   Summa, and EDF CI runs labelled `agent:chatgpt`) stay as they are, labelled
   legacy.
+- Tutela's gate does not check `contributionProvenance`. Only the opt-in
+  evidence CLI classifies it. Making the gate reject a malformed block changes
+  a trust root and needs independent approval, like the missing Aegis rule in
+  `PROVENANCE-AUTHORITY.json`.
+- Aegis's default redaction rules reject any block with a `signature` field.
+  This must be revisited once an attestation authority is chosen.
 
 ## Follow-up work
 

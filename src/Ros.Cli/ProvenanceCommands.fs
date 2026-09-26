@@ -243,6 +243,15 @@ module ProvenanceCommands =
         let occurredAt = optionValue "--occurred-at" arguments |> Option.defaultWith nowTimestamp
         let unsafeReferences = evidence @ derivedFrom |> List.filter (ProvenanceFrontMatter.isListSafe >> not)
 
+        // RQ-ROS-2026-A017 applies to what is written, not only to what is
+        // exported (contract 1.2): a credential never reaches front matter.
+        let credentialArguments =
+            [ "--reason", Option.toList (optionValue "--reason" arguments)
+              "--evidence", evidence
+              "--derived-from", derivedFrom ]
+            |> List.filter (fun (_, values) -> values |> List.exists ProvenanceInterchangeJson.isCredentialLike)
+            |> List.map fst
+
         match target, operation |> Option.bind ContributionOperation.tryParse with
         | None, _ ->
             eprintfn "ERROR provenance record requires --path PATH or --id ARTIFACT-ID"
@@ -252,6 +261,9 @@ module ProvenanceCommands =
             2
         | _ when not (Contribution.isTimestamp occurredAt) ->
             eprintfn "ERROR --occurred-at must be an ISO-8601 UTC timestamp (yyyy-MM-ddTHH:mm:ss[.fff]Z)"
+            2
+        | _ when not credentialArguments.IsEmpty ->
+            eprintfn "ERROR %s looks like a credential; provenance must never carry authentication material" (String.concat ", " credentialArguments)
             2
         | _ when not unsafeReferences.IsEmpty ->
             eprintfn "ERROR references must not contain whitespace, commas, brackets, or quotes: %s" (String.concat ", " unsafeReferences)

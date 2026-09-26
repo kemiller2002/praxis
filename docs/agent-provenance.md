@@ -431,6 +431,55 @@ review. Every implementation must also meet these rules:
   as `IDENTITY_ENVIRONMENT_VARIABLES`). Only then does it set that actor's
   explicit identity.
 
+**Contract revision 1.2** closes gaps found by the second adversarial review.
+New fixtures `text-cases.json`, `envelope-key-cases.json`, and
+`lineage-cases.json` pin them, and `cases.json` adds the whitespace and
+credential cases.
+
+- **Well-formed text.** A block received as JSON text is malformed, whatever
+  its major version, when:
+  - it is not valid JSON;
+  - it repeats a member name within any one object; readers disagree about
+    which duplicate wins, so a second `created` could be smuggled past one of
+    them;
+  - it holds an unpaired UTF-16 surrogate, which has no UTF-8 form and cannot
+    be carried verbatim.
+
+  The reference and Praxis read text through `classifyText`. `classify` never
+  throws.
+- **ASCII whitespace only.**
+  - "Blank" means empty after trimming tab, LF, VT, FF, CR, and space. Every
+    other character is content, including U+0085, U+FEFF, and U+001C.
+  - Credential patterns use no `\b`, `\s`, or case folding. Their meaning
+    differs between JavaScript, .NET, and Python.
+- **Lineage is checked like contributions.** `addLineage` returns
+  `{ ok, block }` or `{ ok: false, error }`:
+  - it refuses a credential, a blank reference, and a block that is not
+    supported;
+  - its result must classify as supported.
+
+  A receiver that derives lineage from a payload uses it and rejects the
+  request on refusal. `ros provenance record` refuses a credential in
+  `--reason`, `--evidence`, or `--derived-from` before writing.
+- **Key segments.**
+  - `escapeKeySegment` escapes per Unicode code point. Every code point except
+    ASCII letters, digits, and `-` becomes `_xx` per UTF-8 byte, so `.`, `_`,
+    and characters outside the BMP are escaped injectively.
+  - A namespaced key `EXT-run.<namespace>.<id>` can therefore never equal an
+    un-namespaced one.
+  - An id that is empty or not well-formed Unicode cannot form a key; the
+    envelope is rejected.
+- **One identity source.** A system that cannot check an execution against its
+  execution record takes the actor wholly from one source:
+  - An explicit declaration (flags, `--actor-json`, an envelope) replaces the
+    environment's identity field by field and completely. It also does not
+    inherit `ROS_EXECUTION_ID`; the execution must be declared with it.
+  - `ROS_EXECUTION_ID` is honoured only together with an identity declared in
+    the same environment.
+
+  Praxis itself may combine sources, because it verifies the named execution
+  against its record (the actor must agree) before it attributes anything.
+
 **Versioning.** The tag names only the major version. Adding an operation, an
 optional field, or an `x-` kind is a minor change: older major-1 readers
 tolerate and preserve it. Anything that changes the meaning of an existing field

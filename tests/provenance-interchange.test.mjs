@@ -10,7 +10,7 @@ import { createHash } from "node:crypto";
 import {
   classify, appendContribution, addLineage, preservationViolations, originator, modifiers,
   withRole, emptyBlock, actorFromEnvelopeV1, keyFromEnvelopeV1, foreignExecutionKey, foreignSystem,
-  IDENTITY_ENVIRONMENT_VARIABLES, identityEnvironment, parseTimestamp,
+  IDENTITY_ENVIRONMENT_VARIABLES, identityEnvironment, parseTimestamp, classifyText, escapeKeySegment,
 } from "../lib/provenance-interchange.mjs";
 
 const fixture = (name) => JSON.parse(readFileSync(new URL(`./fixtures/provenance-interchange/${name}`, import.meta.url), "utf8"));
@@ -22,6 +22,41 @@ for (const item of cases) {
     const result = classify(item.block);
     assert.equal(result.verdict, item.expect, JSON.stringify(result.problems));
     assert.equal(result.warnings.length, item.warnings);
+  });
+}
+
+// Contract 1.2 fixtures: raw JSON text, v1 envelope keys, and lineage additions.
+for (const item of fixture("text-cases.json").cases) {
+  test(`conformance (text): ${item.name} is ${item.expect}`, () => {
+    const result = classifyText(item.text);
+    assert.equal(result.verdict, item.expect, JSON.stringify(result.problems));
+  });
+}
+
+for (const item of fixture("envelope-key-cases.json").cases) {
+  test(`conformance (envelope key): ${item.name}`, () => {
+    const envelope = item.envelope ?? JSON.parse(item.envelopeText);
+    if (item.error) assert.throws(() => keyFromEnvelopeV1(envelope));
+    else assert.equal(keyFromEnvelopeV1(envelope), item.key);
+  });
+}
+
+test("envelope key escaping is injective across every fixture id", () => {
+  const produced = fixture("envelope-key-cases.json").cases.filter((item) => !item.error).map((item) => item.key);
+  assert.equal(new Set(produced).size, produced.length);
+  assert.notEqual(`EXT-run.${escapeKeySegment("vigila")}.${escapeKeySegment("7")}`, `EXT-run.${escapeKeySegment("vigila.7")}`);
+});
+
+for (const item of fixture("lineage-cases.json").cases) {
+  test(`conformance (lineage): ${item.name}`, () => {
+    const before = JSON.stringify(item.block);
+    const result = addLineage(item.block, item.references);
+    assert.equal(result.ok, item.ok, result.error);
+    if (item.ok) {
+      assert.deepEqual(result.block.derivedFrom, item.derivedFrom);
+      assert.equal(classify(result.block).verdict, "supported");
+    }
+    assert.equal(JSON.stringify(item.block), before);
   });
 }
 
@@ -93,7 +128,7 @@ test("unsupported and malformed blocks are never appended to", () => {
 });
 
 test("preservation detects removal, overwrite, replaced history, and lost lineage", () => {
-  const base = addLineage(appendContribution(appendContribution(emptyBlock(), "EXE-1", { operations: ["created"], at: t(0), actor: A }).block, "EXE-2", { operations: ["modified"], at: t(5), actor: B }).block, ["RQ-APP-2026-A001"]);
+  const base = addLineage(appendContribution(appendContribution(emptyBlock(), "EXE-1", { operations: ["created"], at: t(0), actor: A }).block, "EXE-2", { operations: ["modified"], at: t(5), actor: B }).block, ["RQ-APP-2026-A001"]).block;
   assert.match(preservationViolations(base, { schema: base.schema }).join(), /provenance was removed/);
   const overwritten = JSON.parse(JSON.stringify(base));
   overwritten.contributions["EXE-1"].actor = B;
@@ -108,7 +143,7 @@ test("preservation detects removal, overwrite, replaced history, and lost lineag
 
 test("lineage is recorded separately and never adds an author", () => {
   const created = appendContribution(emptyBlock(), "EXE-2", { operations: ["created"], at: t(0), actor: B }).block;
-  const derived = addLineage(created, ["RQ-APP-2026-A001", "ordo:resolution/r-17"]);
+  const derived = addLineage(created, ["RQ-APP-2026-A001", "ordo:resolution/r-17"]).block;
   assert.deepEqual(Object.keys(derived.contributions), ["EXE-2"]);
   assert.deepEqual(derived.derivedFrom, ["RQ-APP-2026-A001", "ordo:resolution/r-17"]);
 });
@@ -212,7 +247,7 @@ test("a child environment for another actor carries none of the launcher's ident
 const replay = () =>
   chain.steps.reduce((records, step) => {
     const current = records[step.record] ?? emptyBlock();
-    if (step.lineage) return { ...records, [step.record]: addLineage(current, step.lineage) };
+    if (step.lineage) return { ...records, [step.record]: addLineage(current, step.lineage).block };
     const result = appendContribution(current, step.append.key, step.append.contribution);
     assert.ok(result.ok, `${step.record} ${step.append.key}: ${result.error}`);
     assert.deepEqual(preservationViolations(current, result.block), [], `${step.record} lost provenance at ${step.append.key}`);

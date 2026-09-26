@@ -76,13 +76,25 @@ type Actor =
       Model: string option
       Runtime: string option }
 
+/// Contract 1.2: whether a value is blank is judged over ASCII whitespace
+/// only (tab, LF, VT, FF, CR, space). .NET, JavaScript, and Python disagree
+/// about Unicode whitespace (U+0085, U+FEFF, U+001C, ...), so every other
+/// character counts as content and all readers reach the same verdict.
+[<RequireQualifiedAccess>]
+module AsciiText =
+    let private whitespace = [| '\t'; '\n'; '\011'; '\012'; '\r'; ' ' |]
+
+    let trim (value: string) = value.Trim whitespace
+
+    let isBlank (value: string) = (trim value).Length = 0
+
 [<RequireQualifiedAccess>]
 module Actor =
     [<Literal>]
     let UnknownValue = "unknown"
 
     let private known (value: string) =
-        value.Trim().Length > 0 && value.Trim() <> UnknownValue
+        not (AsciiText.isBlank value) && AsciiText.trim value <> UnknownValue
 
     let unknown =
         { Kind = ActorKind.Unknown
@@ -128,7 +140,7 @@ module Actor =
     /// provider, model, and runtime -- possibly as `unknown` -- so absence
     /// can never be mistaken for "not applicable".
     let problems (actor: Actor) : (string * string) list =
-        [ if actor.Id.Trim().Length = 0 then
+        [ if AsciiText.isBlank actor.Id then
               "id", "actor id must not be empty; use 'unknown' when it is not known"
           match actor.Kind with
           | ActorKind.Extension value when ActorKind.tryParse value <> Some actor.Kind ->
@@ -137,7 +149,7 @@ module Actor =
               for field, value in [ "provider", actor.Provider; "model", actor.Model; "runtime", actor.Runtime ] do
                   match value with
                   | None -> field, $"agent actor must record {field} (use 'unknown' when it is not known)"
-                  | Some text when text.Trim().Length = 0 -> field, $"agent actor {field} must not be empty"
+                  | Some text when AsciiText.isBlank text -> field, $"agent actor {field} must not be empty"
                   | Some _ -> ()
           | _ -> () ]
 

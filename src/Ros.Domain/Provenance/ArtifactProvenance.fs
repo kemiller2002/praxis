@@ -230,7 +230,7 @@ module Contribution =
           yield! Actor.problems contribution.Actor |> List.map (fun (field, message) -> $"actor.{field}", message)
           if contribution.Actor.Kind = ActorKind.Agent && anyExecution contribution |> Option.isNone then
               "key", "an agent contribution must be keyed by the execution (EXE-... or EXT-<system>.<run-id>) that produced it"
-          if contribution.Evidence |> List.exists (fun item -> item.Trim().Length = 0) then
+          if contribution.Evidence |> List.exists AsciiText.isBlank then
               "evidence", "evidence references must not be empty" ]
 
 /// The accumulated, append-only provenance of one artifact. Contributions

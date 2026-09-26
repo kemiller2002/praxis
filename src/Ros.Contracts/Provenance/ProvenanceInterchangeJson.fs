@@ -1,6 +1,9 @@
 namespace Ros.Contracts.Provenance
 
 open System
+open System.Collections.Generic
+open System.Text
+open System.Text.Json
 open System.Text.Json.Nodes
 open System.Text.RegularExpressions
 open Ros.Domain.Provenance
@@ -61,7 +64,9 @@ module ProvenanceInterchangeJson =
           "AKIA[0-9A-Z]{16}"
           "xox[abprs]-[A-Za-z0-9-]{10,}"
           "-----BEGIN [A-Z ]*PRIVATE KEY-----"
-          "(?i)\\bbearer\\s+[A-Za-z0-9._~+/=-]{16,}"
+          // ASCII-only semantics (contract 1.2): no \\b, \\s, or case folding,
+          // whose meaning differs between .NET, JavaScript, and Python.
+          "(?:^|[^A-Za-z0-9_])[Bb][Ee][Aa][Rr][Ee][Rr][\\t\\n\\v\\f\\r ]+[A-Za-z0-9._~+/=-]{16,}"
           "eyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\." ]
         |> List.map (fun pattern -> Regex(pattern, RegexOptions.CultureInvariant))
 
@@ -147,7 +152,7 @@ module ProvenanceInterchangeJson =
         | Some(:? JsonArray as items) ->
             let values = items |> Seq.map stringOf |> Seq.toList
 
-            if values |> List.forall (fun value -> value |> Option.exists (fun text -> text.Trim().Length > 0)) then
+            if values |> List.forall (fun value -> value |> Option.exists (AsciiText.isBlank >> not)) then
                 Ok(values |> List.choose id)
             else
                 Error $"{field} must be an array of non-empty strings"
@@ -239,11 +244,9 @@ module ProvenanceInterchangeJson =
             | problems, _, _, _ -> Error problems
         | _ -> Error [ $"{prefix} must be an object" ]
 
-    /// Classifies a received block. A block with no `schema` tag is read as
-    /// `praxis.provenance/1` only when it is the bare front-matter/registry
-    /// projection (`contributions` present), so provenance copied out of a
-    /// registry stays usable.
-    let classify (node: JsonNode) : InterchangeVerdict =
+    /// Structural classification of a parsed block; `classify` wraps it so
+    /// that no input can escape as an exception.
+    let private classifyNode (node: JsonNode) : InterchangeVerdict =
         match node with
         | :? JsonObject as block when not (credentialFindings block).IsEmpty ->
             Malformed(
@@ -294,3 +297,99 @@ module ProvenanceInterchangeJson =
                 | null -> Malformed [ "contributions is required" ]
                 | _ -> Malformed [ "contributions must be an object keyed by EXE-, EXT-, or CTB- keys" ]
         | _ -> Malformed [ "provenance must be a JSON object" ]
+
+    let private strictUtf8 = UTF8Encoding(false, true)
+
+    /// Contract 1.2: whether a string is well-formed Unicode (no unpaired
+    /// UTF-16 surrogate). Such a string has no UTF-8 form, so a block holding
+    /// one could not be carried verbatim.
+    let private isWellFormed (value: string) =
+        try
+            strictUtf8.GetByteCount value |> ignore
+            true
+        with :? EncoderFallbackException ->
+            false
+
+    /// Every member name or string value that is not well-formed Unicode,
+    /// as dotted paths. Reading such a value from a parsed node throws, which
+    /// counts as the same finding.
+    let private surrogateFindings (node: JsonNode) : string list =
+        let rec walk (path: string) (current: JsonNode) : string list =
+            match current with
+            | :? JsonObject as item ->
+                item
+                |> Seq.collect (fun pair ->
+                    let child = if path.Length = 0 then pair.Key else $"{path}.{pair.Key}"
+                    (if isWellFormed pair.Key then [] else [ child ]) @ walk child pair.Value)
+                |> Seq.toList
+            | :? JsonArray as items -> items |> Seq.mapi (fun index value -> walk $"{path}[{index}]" value) |> Seq.concat |> Seq.toList
+            | :? JsonValue as value ->
+                try
+                    match value.TryGetValue<string>() with
+                    | true, text when not (isWellFormed text) -> [ path ]
+                    | _ -> []
+                with :? InvalidOperationException ->
+                    [ path ]
+            | _ -> []
+
+        walk "" node
+
+    /// Classifies a received block. A block with no `schema` tag is read as
+    /// `praxis.provenance/1` only when it is the bare front-matter/registry
+    /// projection. Never throws (contract 1.2): a block that is not
+    /// well-formed Unicode, or a node whose repeated member names surface
+    /// only on enumeration, is malformed rather than an exception.
+    let classify (node: JsonNode) : InterchangeVerdict =
+        try
+            match surrogateFindings node with
+            | [] -> classifyNode node
+            | paths -> Malformed(paths |> List.map (fun path -> $"{path}: unpaired UTF-16 surrogate; provenance must be well-formed Unicode"))
+        with
+        | :? ArgumentException as error -> Malformed [ $"provenance repeats a member name within one object: {error.Message}" ]
+        | :? InvalidOperationException as error -> Malformed [ $"provenance is not well-formed: {error.Message}" ]
+
+    /// Member names repeated within any one object, read from the JSON text
+    /// itself: a node-based reader keeps only one of them, so two readers
+    /// could disagree about which contribution (or originator) is real.
+    let private duplicateMembers (bytes: byte array) : string list =
+        let mutable reader = Utf8JsonReader(ReadOnlySpan<byte>(bytes), JsonReaderOptions(CommentHandling = JsonCommentHandling.Disallow))
+        let scopes = Stack<HashSet<string> option>()
+        let found = List<string>()
+
+        while reader.Read() do
+            match reader.TokenType with
+            | JsonTokenType.StartObject -> scopes.Push(Some(HashSet<string>(StringComparer.Ordinal)))
+            | JsonTokenType.StartArray -> scopes.Push None
+            | JsonTokenType.EndObject
+            | JsonTokenType.EndArray -> scopes.Pop() |> ignore
+            | JsonTokenType.PropertyName ->
+                let name = reader.GetString()
+
+                match scopes.Peek() with
+                | Some seen when not (seen.Add name) -> found.Add name
+                | _ -> ()
+            | JsonTokenType.String -> reader.GetString() |> ignore
+            | _ -> ()
+
+        found |> Seq.toList
+
+    /// Classifies a block received as JSON text (contract 1.2): text that is
+    /// not JSON, that is not well-formed Unicode, or that repeats a member
+    /// name within any object is malformed, whatever its major version.
+    let classifyText (text: string) : InterchangeVerdict =
+        match text with
+        | null -> Malformed [ "provenance text is required" ]
+        | _ ->
+            try
+                let bytes = strictUtf8.GetBytes text
+
+                match duplicateMembers bytes with
+                | [] ->
+                    match JsonNode.Parse(text) with
+                    | null -> Malformed [ "provenance must be a JSON object" ]
+                    | node -> classify node
+                | names -> Malformed(names |> List.map (fun name -> $"'{name}': member name repeated within one object"))
+            with
+            | :? EncoderFallbackException -> Malformed [ "provenance text is not well-formed Unicode" ]
+            | :? JsonException as error -> Malformed [ $"provenance is not valid JSON: {error.Message}" ]
+            | :? InvalidOperationException -> Malformed [ "provenance holds an unpaired UTF-16 surrogate escape" ]

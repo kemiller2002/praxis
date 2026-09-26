@@ -89,6 +89,34 @@ module ProvenanceInterchangeTests =
                       if actual <> expected then
                           failwith $"{name}: expected {expected}, got {actual} ({verdict})" }
 
+          { Name = "interchange conformance (contract 1.2): raw JSON text reaches the reference verdicts"
+            Run =
+              fun () ->
+                  let cases = (fixture "text-cases.json").["cases"].AsArray()
+                  Assert.isTrue (cases.Count >= 10) "expected the full text conformance set"
+
+                  for item in cases do
+                      let name = item["name"].GetValue<string>()
+                      let expected = item["expect"].GetValue<string>()
+                      let verdict = ProvenanceInterchangeJson.classifyText (item["text"].GetValue<string>())
+                      let actual = fst (verdictCode verdict)
+
+                      if actual <> expected then
+                          failwith $"{name}: expected {expected}, got {actual} ({verdict})" }
+
+          { Name = "interchange classify never throws on duplicate members or unpaired surrogates (contract 1.2)"
+            Run =
+              fun () ->
+                  let duplicate =
+                      JsonNode.Parse("""{"schema":"praxis.provenance/1","contributions":{"EXE-A":{"operations":["created"],"at":"2026-09-26T08:00:00.000Z","actor":{"kind":"human","id":"m"}},"EXE-A":{"operations":["modified"],"at":"2026-09-26T09:00:00.000Z","actor":{"kind":"human","id":"a"}}}}""")
+
+                  let surrogate = JsonNode.Parse("""{"schema":"praxis.provenance/2","x-a":"\ud800"}""")
+
+                  for node in [ duplicate; surrogate ] do
+                      match ProvenanceInterchangeJson.classify node with
+                      | Malformed _ -> ()
+                      | other -> failwith $"expected malformed, got {other}" }
+
           { Name = "interchange export round-trips: toNode then classify yields the same history and lineage"
             Run =
               fun () ->

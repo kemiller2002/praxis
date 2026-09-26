@@ -2,7 +2,7 @@
 id: RQ-ROS-2026-A015
 title: Provenance crosses system boundaries as a versioned interchange block with deterministic receiving rules
 status: implemented
-version: 1.1.0
+version: 1.2.0
 owners:
   - repository-governance
 created: 2026-09-26
@@ -29,6 +29,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Cross-system Echelon provenance upgrade (work item FEAT-ECHELON-PROVENANCE)"
+    EXE-20260926T094012488Z-15a65e61:
+      operations: [modified]
+      at: 2026-09-26T09:40:38.540Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Contract revision 1.2 after the second adversarial review (FEAT-ECHELON-PROVENANCE-R12)"
 ---
 
 # Requirement
@@ -54,9 +64,17 @@ No Echelon system may silently strip valid provenance, yet each is independently
   - An unknown actor cannot extend a known actor's entry.
   - The v1 envelope key escaping is injective.
   - Newer grammar-valid operations are warned about, not rejected, by Praxis's front-matter reader.
+- Revision 1.2 (after the second adversarial review):
+  - JSON text that repeats a member name within an object, holds an unpaired UTF-16 surrogate, or is not JSON is malformed, whatever its major version (`text-cases.json`, `classifyText`).
+  - `classify` never throws.
+  - Blankness is judged over ASCII whitespace only.
+  - `addLineage` refuses what `classify` would reject (`lineage-cases.json`).
+  - Key segments are escaped per code point, including `.` (`envelope-key-cases.json`).
 
 ## Verification
 
 - ProvenanceInterchangeTests: interchange conformance: every shared fixture reaches the same verdict as the reference library
+- ProvenanceInterchangeTests: interchange conformance (contract 1.2): raw JSON text reaches the reference verdicts
+- ProvenanceInterchangeTests: interchange classify never throws on duplicate members or unpaired surrogates (contract 1.2)
 - ProvenanceInterchangeTests: interchange export round-trips: toNode then classify yields the same history and lineage
 - tests/provenance-interchange.test.mjs (conformance, appending, preservation, serialization)
