@@ -335,7 +335,7 @@ The round-3 commits are:
 | ros-workerdaemon | `9819782` |
 | conditor | `f87cf00` |
 | tutela | `a281263` |
-| EDF | `4bce5ba` |
+| EDF | `4bce5ba`, then `b40156a` (false-positive fix after the third pass) |
 | percepta | `ce1b53a` |
 | chrona | `62c7695` |
 | summa | `4051033` |
