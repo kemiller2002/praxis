@@ -32,6 +32,12 @@ type ContributionRecordRequest =
       Evidence: string list
       DerivedFrom: string list
       ExecutionId: string option
+      /// `ExecutionId` came from the inherited `ROS_EXECUTION_ID`
+      /// environment rather than an explicit `--execution` flag. An
+      /// inherited assertion is honoured only by a process that has an
+      /// identity of its own (RQ-ROS-2026-A016): environment inheritance
+      /// must never attribute an unrelated, identity-less process to a run.
+      ExecutionFromEnvironment: bool
       OccurredAt: string
       IdentityOverrides: IdentityInputs }
 
@@ -311,6 +317,9 @@ module FileProvenanceRepository =
                         $"this process identifies as {Actor.describe current}, which does not match execution '{execution.ExecutionId}' ({Actor.describe execution.Actor}, session {session}); a contribution cannot be attributed to another actor's or another run's execution"
 
             match request.ExecutionId with
+            | Some executionId when request.ExecutionFromEnvironment && not declared ->
+                Error
+                    $"ROS_EXECUTION_ID names execution '{executionId}', but this process has no identity of its own, so it cannot inherit that run from its environment; declare yourself (ROS_ACTOR_KIND and ROS_ACTOR, or --actor-kind and --actor), or name the execution explicitly with --execution"
             | Some executionId ->
                 match executions |> List.tryFind (fun view -> view.ExecutionId = executionId) with
                 | Some execution -> attribute execution

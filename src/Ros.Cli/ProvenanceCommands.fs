@@ -257,6 +257,14 @@ module ProvenanceCommands =
             eprintfn "ERROR references must not contain whitespace, commas, brackets, or quotes: %s" (String.concat ", " unsafeReferences)
             2
         | Some targetValue, Some parsedOperation ->
+            let explicitExecution = optionValue "--execution" arguments
+
+            let inheritedExecution =
+                Environment.GetEnvironmentVariable "ROS_EXECUTION_ID"
+                |> Option.ofObj
+                |> Option.map _.Trim()
+                |> Option.filter (fun value -> value.Length > 0)
+
             let request: ContributionRecordRequest =
                 { Target = targetValue
                   Operation = parsedOperation
@@ -268,14 +276,8 @@ module ProvenanceCommands =
                   // an execution names it without repeating the flag. It is
                   // the same explicit assertion, so the same guards apply,
                   // and an explicit flag always wins.
-                  ExecutionId =
-                    optionValue "--execution" arguments
-                    |> Option.orElse (
-                        Environment.GetEnvironmentVariable "ROS_EXECUTION_ID"
-                        |> Option.ofObj
-                        |> Option.map _.Trim()
-                        |> Option.filter (fun value -> value.Length > 0)
-                    )
+                  ExecutionId = explicitExecution |> Option.orElse inheritedExecution
+                  ExecutionFromEnvironment = explicitExecution.IsNone && inheritedExecution.IsSome
                   OccurredAt = occurredAt
                   IdentityOverrides = identityOverridesFrom arguments }
 

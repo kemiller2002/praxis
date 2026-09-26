@@ -255,6 +255,15 @@ module ArtifactProvenance =
         | Some existing when not (Actor.agrees existing.Actor contribution.Actor) ->
             Error
                 $"contribution '{contribution.Key}' is already attributed to {Actor.describe existing.Actor}; refusing to re-attribute it to {Actor.describe contribution.Actor}"
+        | Some existing when
+            Contribution.isCreation contribution
+            && not (Contribution.isCreation existing)
+            && ((originator provenance).IsSome
+                || provenance.Contributions |> List.exists (fun item -> item.Key <> existing.Key && Contribution.instant item < Contribution.instant existing))
+            ->
+            // Merging 'created' into a later entry would give the artifact a
+            // second or out-of-order originator (DF-ROS-2026-A037 review).
+            Error "the artifact's originator is already recorded or precedes this contribution; record 'modified' instead of 'created'"
         | Some existing ->
             let operations =
                 existing.Operations

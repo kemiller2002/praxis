@@ -20,8 +20,8 @@ without destroying earlier provenance.
     `artifact.contributed` events;
   - `createdByActor` on `.ros/work/queue.json` items;
   - the policy in `ros.json` `provenance`;
-  - authority decision `DF-ROS-2026-A036`, requirements
-    `RQ-ROS-2026-A001`..`A012`.
+  - authority decisions `DF-ROS-2026-A036` and `DF-ROS-2026-A037`
+    (cross-system interchange), requirements `RQ-ROS-2026-A001`..`A019`.
 - Transitions / commands / messages:
   - `src/Ros.Cli/Program.fs` `runProvenanceIdentity`,
     `runProvenanceRecord`, `runProvenanceShow`, `runProvenanceAudit`,
@@ -46,7 +46,10 @@ without destroying earlier provenance.
 ## Interfaces
 
 - Inbound:
-  - `./ros provenance identity|record|show|audit`;
+  - `./ros provenance identity|record|show|export|audit`;
+  - `ROS_EXECUTION_ID` (the environment form of `--execution`);
+  - `praxis.provenance/1` blocks from other Echelon systems
+    (`Ros.Contracts.Provenance.ProvenanceInterchangeJson.classify`);
   - identity flags (`--actor-kind`, `--agent`/`--actor`, `--provider`,
     `--model`, `--runtime`, …) on work transitions, `add`, and
     `telemetry start`;
@@ -56,8 +59,11 @@ without destroying earlier provenance.
     with `"severity":"warning"`);
   - events exported by `./ros adapter publish`;
   - `provenance` projected into `registries/*.json`;
-  - `schemas/provenance-actor.schema.json` and
-    `schemas/artifact-provenance.schema.json`.
+  - `schemas/provenance-actor.schema.json`,
+    `schemas/artifact-provenance.schema.json`, and
+    `schemas/provenance-interchange.schema.json`;
+  - `./ros provenance export` (interchange block) and the dependency-free
+    reference library `lib/provenance-interchange.mjs`.
 
 ## Tests and verification
 
@@ -68,7 +74,11 @@ without destroying earlier provenance.
     export, registries, and impersonation refusal;
   - `tests/provenance-actor-fsharp-differential.test.mjs` checks Node/F#
     actor parity;
-  - the updated work and telemetry differential goldens.
+  - the updated work and telemetry differential goldens;
+  - `tests/Ros.Tests/ProvenanceInterchangeTests.fs` and
+    `tests/provenance-interchange.test.mjs` assert the shared conformance
+    fixtures and the end-to-end scenario in
+    `tests/fixtures/provenance-interchange/` from both implementations.
 - Integration/live verification: `./ros validate` and `./ros provenance audit`
   on this repository, whose own requirements are attributed.
 
@@ -90,7 +100,10 @@ without destroying earlier provenance.
   - the actor JSON shape and the event `actor` field, which are hashed into
     event IDs and consumed across integration boundaries;
   - the front-matter serialization;
-  - the policy severities.
+  - the policy severities;
+  - the interchange block, its receiving verdicts, and the conformance
+    fixtures, which downstream Echelon systems vendor
+    (`docs/echelon-provenance-architecture.md`).
 
   Change these only through a new decision with a migration.
 
@@ -102,7 +115,7 @@ without destroying earlier provenance.
 ## Maintenance
 
 - Owner: repository-governance
-- Last checked against implementation: 2026-09-25
+- Last checked against implementation: 2026-09-26
 - Known gaps:
   - no cryptographic attestation, by design (see `DF-ROS-2026-A036`);
   - modification detection is Git-based, with a date-based fallback when no

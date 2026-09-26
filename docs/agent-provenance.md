@@ -197,6 +197,21 @@ makes "one entry per execution" a structural property.
 and `migrated`, plus `x-...` extensions. At most one contribution may claim
 `created`, and nothing may precede it.
 
+The **role operations** `discovered`, `measured`, `transformed`, `remediated`,
+`validated`, and `resolved` (`RQ-ROS-2026-A014`) let other Echelon systems say
+which part an actor played: who found a problem, who measured something, which
+integration carried a record into another representation, who fixed it, who
+confirmed the fix, and who closed it. They never transfer authorship, and
+`discovered`, `measured`, `reviewed`, `approved`, and `validated` do not count
+as modifying the artifact.
+
+**Keys.** `EXE-...` is a Praxis execution and `CTB-...` a non-agent
+contribution outside any execution. `EXT-<system>.<run-id>`
+(`RQ-ROS-2026-A013`) is a run owned by another Echelon system, named by its
+registry id (for example `EXT-dokimos.snapshot-20260926-01`). Praxis carries
+foreign keys verbatim, cannot cross-check them, and reports them in
+`provenance audit` only.
+
 **Timestamps.** `at` is an ISO-8601 UTC timestamp.
 
 **Registries.** Generated registries (`registries/*.json`) project the whole
@@ -342,15 +357,75 @@ Provenance travels with data rather than being stripped at a boundary.
 - **Ordo.** Ordo resolution observations already carry `provider`
   `{id, model, …}`, and assessments carry a provider-neutral `assessor`. ROS
   preserves raw Ordo records verbatim.
-- **Other Echelon systems.** Vigila, Aegis, Dokimos, Percepta, and EDF
-  experiments can adopt the same actor object
-  (`schemas/provenance-actor.schema.json`) and contribution shape
-  (`schemas/artifact-provenance.schema.json`). There is no dependency on any of
-  them: Praxis remains independently usable, and those systems need only the
-  JSON shapes.
+- **Other Echelon systems.** Provenance crosses a system boundary as the
+  versioned interchange block described below. There is no dependency on any
+  other system: Praxis remains independently usable, and other systems need
+  only the JSON contract. See
+  [`echelon-provenance-architecture.md`](echelon-provenance-architecture.md)
+  for how each Echelon system carries it.
 - **Git host neutrality.** Nothing here assumes GitHub. `github-actions` is one
   whitelisted automation runtime among others, and a future attestation from a
   GitHub App or OIDC token would be one attestation source among others.
+
+## Interchange across Echelon systems
+
+`DF-ROS-2026-A037` and `RQ-ROS-2026-A013`..`A019` define how provenance leaves
+Praxis and comes back without being stripped, forked, or corrupted.
+
+**The block.** `./ros provenance export ID|PATH` prints an artifact's provenance
+as `praxis.provenance/1` (`schemas/provenance-interchange.schema.json`):
+
+```json
+{"schema":"praxis.provenance/1",
+ "subject":{"id":"RQ-APP-2026-A007","path":"research/requirements/RQ-APP-2026-A007--x.md"},
+ "contributions":{"EXE-20260925T194000000Z-ab12cd34":{"operations":["created"],"at":"2026-09-25T19:40:00.000Z",
+   "actor":{"kind":"agent","id":"anthropic/claude-code","provider":"anthropic","model":"unknown","runtime":"claude-code"}}},
+ "derivedFrom":["EV-APP-2026-A002"]}
+```
+
+Other systems embed the same block in their own records (a follow-up, a fault
+event, a quality snapshot, an execution envelope). It has exactly the
+contribution shape of front matter, so a block written by another system can be
+placed into a Praxis artifact and validated unchanged.
+
+**Receiving rules** (every implementation, `RQ-ROS-2026-A015`):
+
+| Verdict | When | What the receiver does |
+|---|---|---|
+| `supported` | `praxis.provenance/1`, or no tag with a `contributions` map (the registry projection) | keeps it, preserving unknown fields; an unknown operation code is tolerated, reported, and kept verbatim |
+| `unsupported` | another major, such as `praxis.provenance/2` | carries it verbatim; never interprets, merges into, or rewrites it |
+| `malformed` | anything else, including a credential-like value anywhere | rejects it at the boundary with an error; never drops or repairs it silently |
+
+Appending follows the rules of `provenance record`: the same key merges and
+advances `last` only when the actor agrees, another contributor is never
+replaced, and a second or late `created` is refused.
+
+**Versioning.** The tag names only the major version. Adding an operation, an
+optional field, or an `x-` kind is a minor change: older major-1 readers
+tolerate and preserve it. Anything that changes the meaning of an existing field
+is a new major, which older readers carry without interpreting. Praxis's own
+front-matter validator knows the vocabulary of its release, so an artifact
+carrying newer operations needs a Praxis version that knows them.
+
+**Propagating the current actor and execution** (`RQ-ROS-2026-A016`). A tool
+launched inside a Praxis execution reads the execution from `ROS_EXECUTION_ID`
+(the environment form of `--execution`) and the actor from explicit
+declarations: an execution envelope, flags, or `ROS_ACTOR_KIND`, `ROS_ACTOR`,
+and `ROS_TELEMETRY_PROVIDER`/`MODEL`/`RUNTIME`. When Praxis is available it may
+also ask `./ros provenance identity --json`. Anything else is recorded as
+`unknown`; nothing is guessed.
+
+**Conformance.** `tests/fixtures/provenance-interchange/cases.json` pins the
+verdict for 40 cases and `echelon-chain.json` is a replayable end-to-end
+scenario (requirement, change, measurement, security finding, follow-up,
+remediation, validation). Both the F# implementation and the dependency-free
+reference library `lib/provenance-interchange.mjs` are tested against them;
+downstream systems vendor them with the source commit and SHA-256.
+
+**Never credentials, never authority.** A block containing something that looks
+like a token, key, or bearer credential is malformed (`RQ-ROS-2026-A017`). And a
+recorded actor never becomes authentication, authorization, or evidence weight
+in any system (`RQ-ROS-2026-A019`).
 
 ## Metrics
 

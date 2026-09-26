@@ -186,6 +186,40 @@ module ProvenanceInterchangeTests =
                   | Ok(Ok(Some parsed)) -> Assert.equal (build items) parsed
                   | other -> failwith $"expected round trip: {other}" }
 
+          { Name = "a later execution cannot merge 'created' into its own entry to become a second originator"
+            Run =
+              fun () ->
+                  let history =
+                      build
+                          [ contribution "EXE-20260926T080000000Z-a1a1a1a1" [ ContributionOperation.Created ] "2026-09-26T08:00:00.000Z" codex
+                            contribution "EXE-20260926T090000000Z-b1b1b1b1" [ ContributionOperation.Modified ] "2026-09-26T09:00:00.000Z" claude ]
+
+                  let forged =
+                      ArtifactProvenance.record
+                          (contribution "EXE-20260926T090000000Z-b1b1b1b1" [ ContributionOperation.Created ] "2026-09-26T09:30:00.000Z" claude)
+                          history
+
+                  Assert.isTrue (Result.isError forged) "a second originator must be refused"
+
+                  let originless =
+                      build
+                          [ contribution "EXE-20260926T080000000Z-a1a1a1a1" [ ContributionOperation.Modified ] "2026-09-26T08:00:00.000Z" codex
+                            contribution "EXE-20260926T090000000Z-b1b1b1b1" [ ContributionOperation.Modified ] "2026-09-26T09:00:00.000Z" claude ]
+
+                  let late =
+                      ArtifactProvenance.record
+                          (contribution "EXE-20260926T090000000Z-b1b1b1b1" [ ContributionOperation.Created ] "2026-09-26T09:30:00.000Z" claude)
+                          originless
+
+                  Assert.isTrue (Result.isError late) "a late originator must be refused"
+
+                  let own =
+                      ArtifactProvenance.record
+                          (contribution "EXE-20260926T080000000Z-a1a1a1a1" [ ContributionOperation.Created ] "2026-09-26T08:10:00.000Z" codex)
+                          originless
+
+                  Assert.isTrue (Result.isOk own) "the earliest entry may still record its own creation" }
+
           { Name = "credential-like values are refused wherever they appear in a provenance block"
             Run =
               fun () ->
