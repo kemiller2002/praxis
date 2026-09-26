@@ -22,8 +22,8 @@
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "description": "created/modified/reviewed/approved/superseded/migrated (RQ-ROS-2026-A004) plus the Echelon role operations discovered/measured/transformed/remediated/validated/resolved (RQ-ROS-2026-A014). Only created establishes authorship.",
-          "items": { "type": "string", "pattern": "^(created|modified|reviewed|approved|superseded|migrated|discovered|measured|transformed|remediated|validated|resolved|x-[a-z0-9][a-z0-9-]*)$" }
+          "description": "created/modified/reviewed/approved/superseded/migrated (RQ-ROS-2026-A004) plus the Echelon role operations discovered/measured/transformed/remediated/validated/resolved (RQ-ROS-2026-A014), and x-... extensions. Only created establishes authorship. Contract 1.1: a grammar-valid code from a later 1.x release is preserved and reported as a warning, never rejected.",
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" }
         },
         "at": {
           "description": "ISO-8601 UTC time of this execution's first recorded operation on the artifact.",

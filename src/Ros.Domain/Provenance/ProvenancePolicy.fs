@@ -129,6 +129,16 @@ module ProvenanceValidation =
                               $"recorded actor {Actor.describe contribution.Actor} contradicts execution '{executionId}' identity {Actor.describe executionActor}" ]
                     | Some _ -> []
 
+            let vocabularyFindings =
+                contribution.Operations
+                |> List.filter (ContributionOperation.isKnown >> not)
+                |> List.map (fun operation ->
+                    finding
+                        FindingSeverity.Warning
+                        document.RelativePath
+                        $"{field}.operations"
+                        $"operation '{ContributionOperation.code operation}' is not known to this Praxis version; it is preserved verbatim (upgrade Praxis to interpret it)")
+
             let evidenceFindings =
                 contribution.Evidence
                 |> List.filter (fun reference ->
@@ -136,7 +146,7 @@ module ProvenanceValidation =
                 |> List.map (fun reference ->
                     finding FindingSeverity.Error document.RelativePath $"{field}.evidence" $"broken reference '{reference}'")
 
-            executionFindings @ evidenceFindings)
+            executionFindings @ vocabularyFindings @ evidenceFindings)
 
     let private policyFindings request (document: ArtifactDocument) (provenance: ArtifactProvenance option) =
         match request.Policy.Enforced, request.Policy.RequiredFrom with

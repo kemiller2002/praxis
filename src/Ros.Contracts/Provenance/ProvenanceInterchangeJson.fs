@@ -42,13 +42,13 @@ module ProvenanceInterchangeJson =
     let SchemaFamily = "praxis.provenance/"
 
     let private schemaPattern =
-        Regex("^praxis\\.provenance/([1-9][0-9]*)$", RegexOptions.CultureInvariant)
+        Regex("^praxis\\.provenance/([1-9][0-9]*)\\z", RegexOptions.CultureInvariant)
 
     /// Operation grammar every major-1 reader accepts. Vocabulary it does not
     /// know is tolerated (and preserved) so a newer minor release can add an
     /// operation without breaking older consumers.
     let private operationGrammar =
-        Regex("^[a-z][a-z0-9-]*$", RegexOptions.CultureInvariant)
+        Regex("^[a-z][a-z0-9-]*\\z", RegexOptions.CultureInvariant)
 
     /// Recognisable credential shapes (RQ-ROS-2026-A017). Provenance
     /// identifies an actor and a run; it never needs, and must never carry,
@@ -134,26 +134,50 @@ module ProvenanceInterchangeJson =
             | _ -> None
         | _ -> None
 
-    let private stringArray (field: string) (node: JsonNode) : Result<string list, string> =
-        match node with
-        | null -> Ok []
-        | :? JsonArray as items ->
+    /// A present property's value (which may be JSON `null`), or `None` when
+    /// the property is absent: the two are never conflated (contract 1.1).
+    let private property (container: JsonObject) (name: string) : JsonNode option =
+        if container.ContainsKey name then Some container[name] else None
+
+    /// An optional array of non-empty strings. Absent is empty; JSON `null`
+    /// is not absent (contract 1.1) and is rejected like any other non-array.
+    let private stringArray (field: string) (container: JsonObject) (name: string) : Result<string list, string> =
+        match property container name with
+        | None -> Ok []
+        | Some(:? JsonArray as items) ->
             let values = items |> Seq.map stringOf |> Seq.toList
 
             if values |> List.forall (fun value -> value |> Option.exists (fun text -> text.Trim().Length > 0)) then
                 Ok(values |> List.choose id)
             else
                 Error $"{field} must be an array of non-empty strings"
-        | _ -> Error $"{field} must be an array of non-empty strings"
+        | Some _ -> Error $"{field} must be an array of non-empty strings"
 
     let private parseContribution (key: string) (node: JsonNode) : Result<Contribution * string list, string list> =
         let prefix = $"contributions.{key}"
 
         match node with
         | :? JsonObject as entry ->
-            let operations = stringArray $"{prefix}.operations" entry["operations"]
-            let evidence = stringArray $"{prefix}.evidence" entry["evidence"]
+            let operations =
+                if entry.ContainsKey "operations" then
+                    stringArray $"{prefix}.operations" entry "operations"
+                else
+                    Error $"{prefix}.operations is required"
+
+            let evidence = stringArray $"{prefix}.evidence" entry "evidence"
             let actor = ActorJson.tryParse entry["actor"]
+
+            // A present actor field must be a string: JSON null never means
+            // "not applicable" (that is expressed by omitting the field).
+            let actorFieldProblems =
+                match entry["actor"] with
+                | :? JsonObject as actorNode ->
+                    [ "kind"; "id"; "provider"; "model"; "runtime" ]
+                    |> List.choose (fun name ->
+                        match property actorNode name with
+                        | Some value when (stringOf value).IsNone -> Some $"{prefix}.actor.{name} must be a string"
+                        | _ -> None)
+                | _ -> []
 
             let structural =
                 [ match operations with
@@ -177,10 +201,11 @@ module ProvenanceInterchangeJson =
                   | :? JsonValue as value when (stringOf value).IsSome -> ()
                   | _ -> $"{prefix}.at is required"
                   for optional in [ "last"; "reason" ] do
-                      match entry[optional] with
-                      | null -> ()
-                      | value when (stringOf value).IsSome -> ()
-                      | _ -> $"{prefix}.{optional} must be a string" ]
+                      match property entry optional with
+                      | None -> ()
+                      | Some value when (stringOf value).IsSome -> ()
+                      | Some _ -> $"{prefix}.{optional} must be a string"
+                  yield! actorFieldProblems ]
 
             match structural, operations, evidence, actor with
             | [], Ok operationCodes, Ok evidenceItems, Ok(Some parsedActor) ->
@@ -236,7 +261,7 @@ module ProvenanceInterchangeJson =
                     Malformed [ $"schema '{tag}' is not a valid version tag; expected praxis.provenance/<major>" ]
                 else
                     Malformed [ $"schema '{tag}' is not a Praxis provenance schema" ]
-            | _ when block["schema"] <> null && schema.IsNone -> Malformed [ "schema must be a string" ]
+            | _ when block.ContainsKey "schema" && schema.IsNone -> Malformed [ "schema must be a string" ]
             | _ ->
                 match block["contributions"] with
                 | :? JsonObject as contributions ->
@@ -245,7 +270,7 @@ module ProvenanceInterchangeJson =
                         |> Seq.map (fun pair -> parseContribution pair.Key pair.Value)
                         |> Seq.toList
 
-                    let lineage = stringArray "derivedFrom" block["derivedFrom"]
+                    let lineage = stringArray "derivedFrom" block "derivedFrom"
 
                     let problems =
                         (parsed |> List.collect (function Error problems -> problems | Ok _ -> []))

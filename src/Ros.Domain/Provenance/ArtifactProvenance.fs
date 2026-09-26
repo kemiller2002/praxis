@@ -41,7 +41,7 @@ type ContributionOperation =
 [<RequireQualifiedAccess>]
 module ContributionOperation =
     let private extensionPattern =
-        Regex("^x-[a-z0-9][a-z0-9-]*$", RegexOptions.CultureInvariant)
+        Regex("^x-[a-z0-9][a-z0-9-]*\\z", RegexOptions.CultureInvariant)
 
     let code operation =
         match operation with
@@ -75,6 +75,19 @@ module ContributionOperation =
         | "resolved" -> Some ContributionOperation.Resolved
         | extension when extensionPattern.IsMatch extension -> Some(ContributionOperation.Extension extension)
         | _ -> None
+
+    let private operationGrammar =
+        Regex("^[a-z][a-z0-9-]*\\z", RegexOptions.CultureInvariant)
+
+    /// The operation grammar every contract-1 reader accepts.
+    let isGrammarValid (value: string) = not (isNull value) && operationGrammar.IsMatch value
+
+    /// Whether a code is known to this version (a core operation or an
+    /// `x-...` extension), as opposed to one from a later 1.x release.
+    let isKnown (operation: ContributionOperation) =
+        match operation with
+        | ContributionOperation.Extension value -> extensionPattern.IsMatch value
+        | _ -> true
 
     /// Whether the operation changed the artifact's content or standing (and
     /// so counts toward "modified by"). Observing, measuring, reviewing,
@@ -121,18 +134,18 @@ type Contribution =
 [<RequireQualifiedAccess>]
 module Contribution =
     let private executionPattern =
-        Regex("^EXE-[A-Za-z0-9._-]+$", RegexOptions.CultureInvariant)
+        Regex("^EXE-[A-Za-z0-9._-]+\\z", RegexOptions.CultureInvariant)
 
     let private contributionKeyPattern =
-        Regex("^CTB-[A-Za-z0-9._-]+$", RegexOptions.CultureInvariant)
+        Regex("^CTB-[A-Za-z0-9._-]+\\z", RegexOptions.CultureInvariant)
 
     /// `EXT-<system>.<run-id>`: `<system>` is an Echelon registry system id
     /// (no dots), so the first dot always separates it from the run id.
     let private foreignExecutionPattern =
-        Regex("^EXT-([a-z][a-z0-9-]*)\\.([A-Za-z0-9._-]+)$", RegexOptions.CultureInvariant)
+        Regex("^EXT-([a-z][a-z0-9-]*)\\.([A-Za-z0-9._-]+)\\z", RegexOptions.CultureInvariant)
 
     let private timestampPattern =
-        Regex("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{1,9})?Z$", RegexOptions.CultureInvariant)
+        Regex("^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})(?:\\.([0-9]{1,9}))?Z\\z", RegexOptions.CultureInvariant)
 
     let isExecutionId (value: string) = executionPattern.IsMatch value
 
@@ -149,10 +162,28 @@ module Contribution =
         let matched = foreignExecutionPattern.Match value
         if matched.Success then Some matched.Groups[1].Value else None
 
-    let isTimestamp (value: string) =
-        timestampPattern.IsMatch value
-        && DateTimeOffset.TryParse(value, Globalization.CultureInfo.InvariantCulture, Globalization.DateTimeStyles.AssumeUniversal)
-           |> fst
+    /// A calendar-valid UTC instant (year 0001-9999, no rollover such as
+    /// Feb 30 or 24:00), truncated to millisecond precision: contract 1.1
+    /// compares contribution times in milliseconds everywhere, so every
+    /// implementation orders a history identically.
+    let parseTimestamp (value: string) : DateTimeOffset option =
+        match value with
+        | null -> None
+        | text ->
+            let matched = timestampPattern.Match text
+
+            if not matched.Success then
+                None
+            else
+                let number (index: int) = int matched.Groups[index].Value
+                let fraction = matched.Groups[7].Value.PadRight(3, '0').Substring(0, 3)
+
+                try
+                    Some(DateTimeOffset(number 1, number 2, number 3, number 4, number 5, number 6, int fraction, TimeSpan.Zero))
+                with :? ArgumentOutOfRangeException ->
+                    None
+
+    let isTimestamp (value: string) = (parseTimestamp value).IsSome
 
     /// The local Praxis execution (`EXE-...`) that produced the
     /// contribution, which this repository can cross-check.
@@ -176,15 +207,7 @@ module Contribution =
     /// `at` as a comparable instant; invalid timestamps sort last so they
     /// never masquerade as the earliest (originating) contribution.
     let instant (contribution: Contribution) =
-        match
-            DateTimeOffset.TryParse(
-                contribution.At,
-                Globalization.CultureInfo.InvariantCulture,
-                Globalization.DateTimeStyles.AssumeUniversal
-            )
-        with
-        | true, value -> value
-        | _ -> DateTimeOffset.MaxValue
+        parseTimestamp contribution.At |> Option.defaultValue DateTimeOffset.MaxValue
 
     /// The calendar date (`yyyy-MM-dd`) of the contribution's latest recorded
     /// operation, comparable with the date-granular `created`/`updated`
@@ -376,9 +399,21 @@ module ArtifactProvenance =
         | ArtifactValue.Mapping entry ->
             let operationTexts = field "operations" entry |> Option.map textList |> Option.defaultValue []
 
+            // Contract 1.1: a grammar-valid operation this version does not
+            // know (added by a later 1.x) is carried as an extension and
+            // reported by validation, not rejected; anything else is malformed.
+            let parseOperation (operation: string) =
+                ContributionOperation.tryParse operation
+                |> Option.orElse (
+                    if ContributionOperation.isGrammarValid operation then
+                        Some(ContributionOperation.Extension operation)
+                    else
+                        None
+                )
+
             let unknownOperations =
                 operationTexts
-                |> List.filter (fun operation -> ContributionOperation.tryParse operation |> Option.isNone)
+                |> List.filter (fun operation -> parseOperation operation |> Option.isNone)
                 |> List.map (fun operation ->
                     { Field = $"{prefix}.operations"
                       Message = $"unknown operation '{operation}'" })
@@ -389,7 +424,7 @@ module ArtifactProvenance =
             | Ok actor ->
                 Ok
                     { Key = key
-                      Operations = operationTexts |> List.choose ContributionOperation.tryParse |> List.distinct
+                      Operations = operationTexts |> List.choose parseOperation |> List.distinct
                       At = field "at" entry |> Option.bind text |> Option.defaultValue ""
                       Last = field "last" entry |> Option.bind text
                       Actor = actor

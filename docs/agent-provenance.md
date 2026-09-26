@@ -400,6 +400,37 @@ Appending follows the rules of `provenance record`: the same key merges and
 advances `last` only when the actor agrees, another contributor is never
 replaced, and a second or late `created` is refused.
 
+**Contract revision 1.1** closes gaps found by the cross-system adversarial
+review. Every implementation must also meet these rules:
+
+- **Exact matching.** Keys, codes, kinds, and tags are matched exactly. A
+  trailing newline makes the block malformed. In .NET, anchor patterns with
+  `\z`, not `$`.
+- **Timestamps.**
+  - They must be calendar-valid: year 0001-9999, no February 30, no `24:00`.
+  - They are ordered at millisecond precision. Extra fraction digits are
+    truncated.
+- **Null is not absence.** A field present with the value `null` is
+  malformed; it never means "absent" or "not applicable".
+- **Appends stay valid.** An append must itself classify as `supported`:
+  - it never admits a credential;
+  - it never admits a contribution dated before the creation;
+  - it never adds a second originator.
+- **Merging the same key.**
+  - The incoming contribution's unknown fields are kept; the existing entry
+    wins on conflict.
+  - `last` becomes the later of the two times.
+  - An actor with unknown identity cannot extend an entry held by a known
+    actor.
+- **Unknown operations.** Praxis's own front-matter reader carries a
+  grammar-valid operation it does not know as an extension and warns; it does
+  not reject it.
+- **Launching for another actor.** A launcher, hub, or worker that starts a
+  process for another actor first removes every identity variable in
+  `tests/fixtures/provenance-interchange/identity-environment.json` (exported
+  as `IDENTITY_ENVIRONMENT_VARIABLES`). Only then does it set that actor's
+  explicit identity.
+
 **Versioning.** The tag names only the major version. Adding an operation, an
 optional field, or an `x-` kind is a minor change: older major-1 readers
 tolerate and preserve it. Anything that changes the meaning of an existing field

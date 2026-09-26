@@ -2,7 +2,7 @@
 id: RQ-ROS-2026-A016
 title: The current actor and execution propagate to tools without re-implementing identity discovery
 status: implemented
-version: 1.0.0
+version: 1.1.0
 owners:
   - repository-governance
 created: 2026-09-26
@@ -19,8 +19,9 @@ derived_from: [RQ-ROS-2026-A009]
 provenance:
   contributions:
     EXE-20260926T075049280Z-9919ff63:
-      operations: [created]
+      operations: [created, modified]
       at: 2026-09-26T08:05:34.633Z
+      last: 2026-09-26T08:52:35.463Z
       actor:
         kind: agent
         id: anthropic/claude-code
@@ -42,6 +43,7 @@ Re-implementing runtime detection in every system would fork the identity model 
 
 - `provenance record` without `--execution` uses `ROS_EXECUTION_ID` when set.
 - docs/echelon-provenance-architecture.md documents the propagation contract and the unknown fallback.
+- A process launched on behalf of another actor starts from an environment with every identity-bearing variable removed. The canonical list is `tests/fixtures/provenance-interchange/identity-environment.json` (`IDENTITY_ENVIRONMENT_VARIABLES`), pinned against the variables Praxis identity discovery actually reads.
 
 ## Verification
 

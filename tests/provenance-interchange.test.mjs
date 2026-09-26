@@ -10,6 +10,7 @@ import { createHash } from "node:crypto";
 import {
   classify, appendContribution, addLineage, preservationViolations, originator, modifiers,
   withRole, emptyBlock, actorFromEnvelopeV1, keyFromEnvelopeV1, foreignExecutionKey, foreignSystem,
+  IDENTITY_ENVIRONMENT_VARIABLES, identityEnvironment, parseTimestamp,
 } from "../lib/provenance-interchange.mjs";
 
 const fixture = (name) => JSON.parse(readFileSync(new URL(`./fixtures/provenance-interchange/${name}`, import.meta.url), "utf8"));
@@ -137,8 +138,73 @@ test("echelon envelope v1 actors map to Praxis actors without invention", () => 
   assert.deepEqual(
     actorFromEnvelopeV1({ kind: "human", provider: { state: "not-applicable" }, identity: known("kevin") }),
     { kind: "human", id: "kevin" });
-  assert.equal(keyFromEnvelopeV1({ operationId: "op 1", actor: { runId: { state: "unknown" } } }), "EXT-op.op-1");
-  assert.equal(keyFromEnvelopeV1({ operationId: "op-1", actor: { runId: known("gh/99") } }), "EXT-run.gh-99");
+  assert.equal(keyFromEnvelopeV1({ operationId: "op 1", actor: { runId: { state: "unknown" } } }), "EXT-op.op_201");
+  assert.equal(keyFromEnvelopeV1({ operationId: "op-1", actor: { runId: known("gh/99") } }), "EXT-run.gh_2f99");
+  // Injective (review finding): distinct ids never share a key.
+  const keys = ["a/b", "a:b", "a_b", "a-b", "a_2fb"].map((operationId) => keyFromEnvelopeV1({ operationId, actor: {} }));
+  assert.equal(new Set(keys).size, keys.length);
+});
+
+// ---- contract revision 1.1: adversarial-review regressions -------------------
+
+test("an append never returns a block that classify rejects: credentials in the new contribution", () => {
+  const created = appendContribution(emptyBlock(), "EXE-1", { operations: ["created"], at: t(0), actor: A }).block;
+  const leaked = appendContribution(created, "CTB-20260926-5f2e19aa", { operations: ["reviewed"], at: t(5), actor: { kind: "human", id: "ghp_0123456789abcdefghijABCDEFGHIJ0123" } });
+  assert.equal(leaked.ok, false);
+  const reason = appendContribution(created, "EXE-2", { operations: ["modified"], at: t(5), actor: B, reason: "Bearer abcdefghijklmnopqrstuvwxyz012345" });
+  assert.equal(reason.ok, false);
+});
+
+test("an append never returns a block that classify rejects: created merged into a later entry", () => {
+  const history = appendContribution(appendContribution(emptyBlock(), "EXE-1", { operations: ["modified"], at: t(0), actor: A }).block,
+    "EXE-2", { operations: ["modified"], at: t(5), actor: B }).block;
+  assert.equal(appendContribution(history, "EXE-2", { operations: ["created"], at: t(6), actor: B }).ok, false);
+});
+
+test("an append never returns a block that classify rejects: a contribution dated before the creation", () => {
+  const created = appendContribution(emptyBlock(), "EXE-1", { operations: ["created"], at: t(30), actor: A }).block;
+  const backdated = appendContribution(created, "EXE-2", { operations: ["modified"], at: t(5), actor: B });
+  assert.equal(backdated.ok, false);
+  assert.match(backdated.error, /precedes the recorded creation/);
+});
+
+test("an unknown actor cannot extend an entry a known actor holds", () => {
+  const created = appendContribution(emptyBlock(), "EXT-run.7", { operations: ["created"], at: t(0), actor: B }).block;
+  const unknownAgent = { kind: "agent", id: "unknown", provider: "unknown", model: "unknown", runtime: "unknown" };
+  assert.equal(appendContribution(created, "EXT-run.7", { operations: ["transformed"], at: t(5), actor: unknownAgent }).ok, false);
+});
+
+test("a same-key merge keeps the incoming unknown fields and its latest time", () => {
+  const created = appendContribution(emptyBlock(), "CTB-1", { operations: ["created"], at: t(0), actor: H, evidence: ["e1"] }).block;
+  const merged = appendContribution(created, "CTB-1", { operations: ["modified"], at: t(1), last: t(9), actor: H, "x-ticket": "T-9" });
+  assert.ok(merged.ok);
+  assert.equal(merged.block.contributions["CTB-1"]["x-ticket"], "T-9");
+  assert.equal(merged.block.contributions["CTB-1"].last, t(9));
+  assert.deepEqual(merged.block.contributions["CTB-1"].evidence, ["e1"]);
+});
+
+test("timestamps are calendar-valid and ordered at millisecond precision", () => {
+  assert.equal(parseTimestamp("2026-02-30T00:00:00Z"), undefined);
+  assert.equal(parseTimestamp("2026-09-26T24:00:00Z"), undefined);
+  assert.equal(parseTimestamp("0000-01-01T00:00:00Z"), undefined);
+  assert.equal(parseTimestamp("2026-09-26T08:00:00.0009Z"), parseTimestamp("2026-09-26T08:00:00.0001Z"));
+  assert.equal(parseTimestamp("9999-12-31T23:59:59.999999999Z"), Date.UTC(9999, 11, 31, 23, 59, 59, 999));
+});
+
+test("the identity environment list is exactly what Praxis identity discovery reads", () => {
+  const pinned = fixture("identity-environment.json").variables;
+  assert.deepEqual([...IDENTITY_ENVIRONMENT_VARIABLES], pinned);
+  const source = readFileSync(new URL("../src/Ros.Infrastructure/Work/FileTelemetryExecutionRepository.fs", import.meta.url), "utf8");
+  const discovery = source.slice(source.indexOf("environmentIdentityInputs"), source.indexOf("resolveIdentity"));
+  const read = new Set([...discovery.matchAll(/"([A-Z][A-Z0-9_]+)"/g)].map((match) => match[1]));
+  for (const name of read) assert.ok(pinned.includes(name), `${name} is read by identity discovery but not pinned`);
+  for (const name of pinned.filter((name) => name !== "ROS_EXECUTION_ID")) assert.ok(read.has(name), `${name} is pinned but not read`);
+});
+
+test("a child environment for another actor carries none of the launcher's identity", () => {
+  const inherited = { PATH: "/bin", HOME: "/h", CLAUDE_CODE_SESSION_ID: "operator", GITHUB_RUN_ID: "77", ROS_ACTOR: "hub", ROS_TELEMETRY_SESSION_ID: "s" };
+  const child = identityEnvironment(inherited, { ROS_ACTOR_KIND: "agent", ROS_TELEMETRY_PROVIDER: "openai", ROS_TELEMETRY_RUNTIME: "codex", ROS_TELEMETRY_MODEL: undefined });
+  assert.deepEqual(child, { PATH: "/bin", HOME: "/h", ROS_ACTOR_KIND: "agent", ROS_TELEMETRY_PROVIDER: "openai", ROS_TELEMETRY_RUNTIME: "codex" });
 });
 
 // ---- cross-system end-to-end scenario --------------------------------------

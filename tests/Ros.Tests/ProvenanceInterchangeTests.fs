@@ -220,6 +220,49 @@ module ProvenanceInterchangeTests =
 
                   Assert.isTrue (Result.isOk own) "the earliest entry may still record its own creation" }
 
+          { Name = "an operation from a later contract-1 release is preserved and warned about, not rejected (contract 1.1)"
+            Run =
+              fun () ->
+                  let text =
+                      "---\nid: RQ-TEST-2026-A001\ntitle: Imported\nstatus: draft\ncreated: 2026-09-26\nupdated: 2026-09-26\nprovenance:\n  contributions:\n    CTB-20260926-aaaaaaaa:\n      operations: [created, quarantined]\n      at: 2026-09-26T08:00:00.000Z\n      actor:\n        kind: human\n        id: kevin\n---\n\n# Body\n"
+
+                  let document =
+                      match FrontMatter.parse "research/requirements/RQ-TEST-2026-A001--r.md" text with
+                      | Ok value -> value
+                      | Error message -> failwith message
+
+                  match ArtifactProvenance.parse document.Metadata with
+                  | Ok(Some parsed) ->
+                      Assert.equal
+                          [ ContributionOperation.Created; ContributionOperation.Extension "quarantined" ]
+                          (Assert.single parsed.Contributions).Operations
+                  | other -> failwith $"expected the newer operation to be carried: {other}"
+
+                  let findings =
+                      ProvenanceValidation.findings
+                          { Policy = ProvenancePolicy.notConfigured
+                            Documents = [ document ]
+                            Executions = Map.empty
+                            KnownIdentifiers = Set.ofList [ "RQ-TEST-2026-A001" ] }
+
+                  Assert.empty (findings |> List.filter (fun finding -> finding.Severity = FindingSeverity.Error))
+                  Assert.isTrue (findings |> List.exists (fun finding -> finding.Severity = FindingSeverity.Warning && finding.Message.Contains "quarantined")) "warned"
+
+                  let newline = text.Replace("[created, quarantined]", "[created, \"Created!\"]")
+
+                  match FrontMatter.parse "research/requirements/RQ-TEST-2026-A001--r.md" newline |> Result.map (fun document -> ArtifactProvenance.parse document.Metadata) with
+                  | Ok(Error _) -> ()
+                  | other -> failwith $"a code outside the grammar must stay malformed: {other}" }
+
+          { Name = "timestamps are calendar-valid and compared at millisecond precision (contract 1.1)"
+            Run =
+              fun () ->
+                  for invalid in [ "2026-02-30T00:00:00Z"; "2026-09-26T24:00:00Z"; "0000-01-01T00:00:00Z"; "2026-09-26T08:00:00Z\n" ] do
+                      Assert.isTrue (not (Contribution.isTimestamp invalid)) $"expected {invalid} to be rejected"
+
+                  Assert.equal (Contribution.parseTimestamp "2026-09-26T08:00:00.0009Z") (Contribution.parseTimestamp "2026-09-26T08:00:00.0001Z")
+                  Assert.isTrue (Contribution.isTimestamp "9999-12-31T23:59:59.999999999Z") "maximum with nine fractional digits" }
+
           { Name = "credential-like values are refused wherever they appear in a provenance block"
             Run =
               fun () ->

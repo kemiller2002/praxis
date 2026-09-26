@@ -2,7 +2,7 @@
 id: RQ-ROS-2026-A015
 title: Provenance crosses system boundaries as a versioned interchange block with deterministic receiving rules
 status: implemented
-version: 1.0.0
+version: 1.1.0
 owners:
   - repository-governance
 created: 2026-09-26
@@ -19,8 +19,9 @@ derived_from: [RQ-ROS-2026-A009]
 provenance:
   contributions:
     EXE-20260926T075049280Z-9919ff63:
-      operations: [created]
+      operations: [created, modified]
       at: 2026-09-26T08:05:34.115Z
+      last: 2026-09-26T08:52:34.874Z
       actor:
         kind: agent
         id: anthropic/claude-code
@@ -44,6 +45,15 @@ No Echelon system may silently strip valid provenance, yet each is independently
 - `tests/fixtures/provenance-interchange/cases.json` pins the verdict for every case, and both the F# codec and `lib/provenance-interchange.mjs` reach it.
 - A block with no `schema` tag and a `contributions` map (the registry projection) is read as major 1.
 - `provenance export` output classifies as `supported` and round-trips to the same history.
+- Revision 1.1 (after adversarial review):
+  - Matching is exact: no trailing newlines.
+  - Timestamps are calendar-valid and compared at millisecond precision.
+  - JSON `null` is never treated as absent.
+  - Every append yields a supported block.
+  - A merge keeps the incoming unknown fields and the later `last`.
+  - An unknown actor cannot extend a known actor's entry.
+  - The v1 envelope key escaping is injective.
+  - Newer grammar-valid operations are warned about, not rejected, by Praxis's front-matter reader.
 
 ## Verification
 

@@ -19,7 +19,7 @@ type ActorKind =
 [<RequireQualifiedAccess>]
 module ActorKind =
     let private extensionPattern =
-        Regex("^x-[a-z0-9][a-z0-9-]*$", RegexOptions.CultureInvariant)
+        Regex("^x-[a-z0-9][a-z0-9-]*\\z", RegexOptions.CultureInvariant)
 
     let code kind =
         match kind with
