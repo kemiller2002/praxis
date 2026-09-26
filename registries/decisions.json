@@ -589,5 +589,60 @@
     "title": "Agent identity and provenance as a first-class, execution-keyed extension of existing ROS records",
     "updated": "2026-09-25",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-26",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A036"
+    ],
+    "id": "DF-ROS-2026-A037",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A037--cross-system-provenance-interchange.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260926T204846052Z-8cef0d1e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-26T20:50:07.971Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Architecture decision for cross-system provenance interchange"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A036",
+      "RQ-ROS-2026-A009",
+      "RQ-ROS-2026-A013",
+      "RQ-ROS-2026-A014",
+      "RQ-ROS-2026-A015",
+      "docs/agent-provenance.md",
+      "docs/echelon-provenance-architecture.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [],
+    "tags": [
+      "provenance",
+      "echelon",
+      "integration",
+      "versioning",
+      "lineage"
+    ],
+    "title": "Echelon systems exchange Praxis provenance as a versioned interchange record, propagate the execution, and never strip history",
+    "updated": "2026-09-26",
+    "version": "1.0.0"
   }
 ]

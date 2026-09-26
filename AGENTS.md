@@ -2,11 +2,11 @@
 id: GV-START-001
 title: Agent Startup Guide
 status: canonical
-version: 1.5.0
+version: 1.6.0
 owners:
   - repository-governance
 created: 2026-07-22
-updated: 2026-09-25
+updated: 2026-09-26
 review_cycle: quarterly
 supersedes: []
 superseded_by: []
@@ -100,7 +100,11 @@ every provider and runtime, and equally to humans and automation. See
    the source's author an author of your artifact.
 9. **Make generated evidence, findings, and results traceable** to your
    execution. Record them inside the work execution, and name supporting
-   records with `--evidence`.
+   records with `--evidence`. When you run another Echelon tool, pass your
+   identity and execution to it with
+   `eval "$(./ros provenance identity --env)"`. Carry any provenance another
+   system gave you verbatim; never strip it or re-attribute it
+   (see "Cross-system interchange" in `docs/agent-provenance.md`).
 10. **Run `./ros validate` before finishing.** Missing or contradictory
     provenance on new work is an error.
 

@@ -126,7 +126,11 @@ module Contribution =
           if contribution.Actor.Kind = ActorKind.Agent && execution contribution |> Option.isNone then
               "key", "an agent contribution must be keyed by the execution (EXE-...) that produced it"
           if contribution.Evidence |> List.exists (fun item -> item.Trim().Length = 0) then
-              "evidence", "evidence references must not be empty" ]
+              "evidence", "evidence references must not be empty"
+          if contribution.Reason |> Option.exists Credentials.looksLikeCredential then
+              "reason", "reason looks like it contains a credential; provenance must never carry secrets"
+          if contribution.Evidence |> List.exists Credentials.looksLikeCredential then
+              "evidence", "an evidence reference looks like a credential; provenance must never carry secrets" ]
 
 /// The accumulated, append-only provenance of one artifact. Contributions
 /// are ordered by time; the history is never rewritten, only extended.

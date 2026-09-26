@@ -166,7 +166,37 @@ module ProvenanceCommands =
 
             let active = FileProvenanceRepository.readExecutions root |> List.filter (fun view -> view.Status = "active")
 
-            if arguments |> List.contains "--json" then
+            if arguments |> List.contains "--env" then
+                // Propagation to downstream tools (RQ-ROS-2026-A014): only the
+                // whitelisted, non-secret identity keys, plus the one active
+                // execution that is evidently this process's own run.
+                let quote (value: string) = "'" + value.Replace("'", "'\\''") + "'"
+                let knownValue (value: string option) = value |> Option.filter (fun text -> text.Trim().Length > 0 && text <> Actor.UnknownValue)
+
+                let own =
+                    active
+                    |> List.filter (fun view ->
+                        Actor.agrees actor view.Actor
+                        && ActorResolution.evidentlySameRun actor identity view.Actor view.Identity)
+
+                [ "ROS_ACTOR_KIND", Some(ActorKind.code actor.Kind)
+                  "ROS_ACTOR", knownValue (Some actor.Id)
+                  "ROS_TELEMETRY_PROVIDER", knownValue actor.Provider
+                  "ROS_TELEMETRY_MODEL", knownValue actor.Model
+                  "ROS_TELEMETRY_RUNTIME", knownValue actor.Runtime
+                  "ROS_TELEMETRY_SESSION_ID", knownValue identity.SessionId
+                  "ROS_TELEMETRY_CONVERSATION_ID", knownValue identity.ConversationId
+                  "ROS_TELEMETRY_RUN_ID", knownValue identity.RunId
+                  "ROS_EXECUTION_ID",
+                  (match own with
+                   | [ view ] -> Some view.ExecutionId
+                   | _ -> None) ]
+                |> List.choose (fun (name, value) -> value |> Option.map (fun text -> name, text))
+                |> List.iter (fun (name, value) -> printfn "export %s=%s" name (quote value))
+
+                if own.Length > 1 then
+                    eprintfn "NOTE several active executions belong to this actor; ROS_EXECUTION_ID was not exported (name one with --execution when recording)"
+            elif arguments |> List.contains "--json" then
                 let node = JsonObject()
                 node["actor"] <- ActorJson.node actor
                 let identityNode = JsonObject()
@@ -531,12 +561,109 @@ module ProvenanceCommands =
             if count FindingSeverity.Error = 0 then 0 else 1
 
 
+    /// `provenance check-record --path FILE [--previous FILE] [--json]`:
+    /// validates a provenance interchange record (RQ-ROS-2026-A013) and, with
+    /// `--previous`, proves it is a non-destructive successor of an earlier
+    /// version of the same record (RQ-ROS-2026-A015). Any Echelon system can
+    /// run it in CI against what it emits, without depending on Praxis code.
+    let private runProvenanceCheckRecord root (arguments: string list) =
+        let read (relative: string) =
+            let path = Path.GetFullPath(Path.Combine(root, relative))
+
+            if File.Exists path then
+                try
+                    match JsonNode.Parse(File.ReadAllText path) with
+                    | :? JsonObject as node -> Ok node
+                    | _ -> Error $"{relative}: a provenance record must be a JSON object"
+                with error ->
+                    Error $"{relative}: not valid JSON: {error.Message}"
+            else
+                Error $"{relative}: file not found"
+
+        match optionValue "--path" arguments with
+        | None ->
+            eprintfn "ERROR usage: provenance check-record --path FILE [--previous FILE] [--json]"
+            2
+        | Some target ->
+            let previous = optionValue "--previous" arguments |> Option.map read
+
+            match read target, previous with
+            | Error message, _
+            | _, Some(Error message) ->
+                eprintfn "ERROR %s" message
+                2
+            | Ok current, previous ->
+                let reading = ProvenanceRecordJson.validate current
+
+                let status, version, problems, links =
+                    match reading with
+                    | Ok(ProvenanceRecordReading.Current(record, _)) -> "valid", ContractVersion.code record.Version, [], ProvenanceRecord.chain record
+                    | Ok(ProvenanceRecordReading.Unversioned(record, _)) -> "valid-unversioned", "1.0.0", [], ProvenanceRecord.chain record
+                    | Ok(ProvenanceRecordReading.Unsupported(version, _)) -> "unsupported-version", version, [], []
+                    | Error problems -> "invalid", "", problems, []
+
+                let successor =
+                    match previous with
+                    | Some(Ok before) -> ProvenanceRecordJson.successorProblems before current
+                    | _ -> []
+
+                // Where this repository ran an execution the record names,
+                // the recorded actor must agree (forgery detection).
+                let impersonation =
+                    match reading with
+                    | Ok(ProvenanceRecordReading.Current(record, _))
+                    | Ok(ProvenanceRecordReading.Unversioned(record, _)) ->
+                        ProvenanceRecord.impersonationProblems (FileProvenanceRepository.readExecutionActors root) record
+                    | _ -> []
+
+                let allProblems = problems @ successor @ impersonation
+
+                if arguments |> List.contains "--json" then
+                    let node = JsonObject()
+                    node["path"] <- JsonValue.Create target
+                    node["status"] <- JsonValue.Create(if allProblems.IsEmpty then status else "invalid")
+                    node["version"] <- JsonValue.Create version
+
+                    node["problems"] <-
+                        allProblems
+                        |> List.map (fun item ->
+                            let entry = JsonObject()
+                            entry["field"] <- JsonValue.Create item.Field
+                            entry["message"] <- JsonValue.Create item.Message
+                            entry :> JsonNode)
+                        |> ProvenanceReportJson.nodes
+
+                    node["chain"] <-
+                        links
+                        |> List.map (fun link ->
+                            let entry = ProvenanceReportJson.contribution link.Contribution
+                            entry["subject"] <- ProvenanceReportJson.optional link.Subject
+                            entry["depth"] <- JsonValue.Create link.Depth
+                            entry :> JsonNode)
+                        |> ProvenanceReportJson.nodes
+
+                    node["assurance"] <- JsonValue.Create "self-reported"
+                    printf "%s" (ProvenanceReportJson.render node)
+                else
+                    for item in allProblems do
+                        printfn "ERROR %s: %s" (if item.Field = "" then target else $"{target}:{item.Field}") item.Message
+
+                    match status with
+                    | "unsupported-version" when allProblems.IsEmpty ->
+                        printfn "%s: version %s is not supported by this Praxis; carry it verbatim" target version
+                    | _ when allProblems.IsEmpty ->
+                        printfn "%s: %s (version %s, %d contribution(s) across its lineage)" target status version links.Length
+                    | _ -> ()
+
+                if allProblems.IsEmpty then 0 else 1
+
     let usage =
-        "provenance identity [--json] | provenance record (--path PATH|--id ID) --operation OP [--reason TEXT] [--evidence REF]* [--derived-from REF]* [--execution EXE-ID] [--occurred-at TIMESTAMP] [--json] | provenance show ID|PATH [--json] | provenance audit [--json]"
+        "provenance identity [--json|--env] | provenance check-record --path FILE [--previous FILE] [--json] | provenance record (--path PATH|--id ID) --operation OP [--reason TEXT] [--evidence REF]* [--derived-from REF]* [--execution EXE-ID] [--occurred-at TIMESTAMP] [--json] | provenance show ID|PATH [--json] | provenance audit [--json]"
 
     let run root (arguments: string list) =
         match arguments with
         | "identity" :: rest -> runProvenanceIdentity root rest
+        | "check-record" :: rest -> runProvenanceCheckRecord root rest
         | "record" :: rest -> runProvenanceRecord root rest
         | "show" :: rest -> runProvenanceShow root rest
         | "audit" :: rest when rest |> List.forall ((=) "--json") -> runProvenanceAudit root rest

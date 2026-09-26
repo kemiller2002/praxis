@@ -339,18 +339,126 @@ Provenance travels with data rather than being stripped at a boundary.
   copying it to another repository or system keeps its origin. A receiving
   repository without the originating execution records reports those
   contributions as a *warning*, not an error, and keeps them intact.
-- **Ordo.** Ordo resolution observations already carry `provider`
-  `{id, model, …}`, and assessments carry a provider-neutral `assessor`. ROS
+- **Ordo.** Ordo resolution observations carry `provider`
+  `{id, model, …}`: the model service that answered, not the agent that asked.
+  The provider-neutral `assessor` belongs to the ROS-side assessments of
+  imported observations (`docs/ordo-observation.md`), not to Ordo. ROS
   preserves raw Ordo records verbatim.
-- **Other Echelon systems.** Vigila, Aegis, Dokimos, Percepta, and EDF
-  experiments can adopt the same actor object
-  (`schemas/provenance-actor.schema.json`) and contribution shape
-  (`schemas/artifact-provenance.schema.json`). There is no dependency on any of
-  them: Praxis remains independently usable, and those systems need only the
-  JSON shapes.
+- **Other Echelon systems.** Provenance crosses a system boundary as the
+  versioned [interchange record](#cross-system-interchange). Each system
+  implements a small codec in its own language and tier and tests it against
+  Praxis's conformance fixtures. No system depends on another being
+  installed. See [`echelon-provenance-architecture.md`](echelon-provenance-architecture.md)
+  for the per-system inventory and what each system records.
 - **Git host neutrality.** Nothing here assumes GitHub. `github-actions` is one
   whitelisted automation runtime among others, and a future attestation from a
   GitHub App or OIDC token would be one attestation source among others.
+
+## Cross-system interchange
+
+Requirements `RQ-ROS-2026-A013` to `A015`; decision `DF-ROS-2026-A037`.
+
+### The interchange record
+
+When provenance leaves an artifact's front matter for another system, it
+travels as a `praxis.provenance-record`
+([`schemas/provenance-record.schema.json`](../schemas/provenance-record.schema.json)):
+
+```json
+{
+  "contract": "praxis.provenance-record",
+  "version": "1.0.0",
+  "subject": "vigila:item/ITEM-42",
+  "contributions": { "EXE-vigila.20260926T130000000Z-0c0c0c0c": { "operations": ["created"], "at": "…", "actor": { "kind": "automation", "id": "echelon/vigila", "provider": "echelon", "model": "unknown", "runtime": "vigila" } } },
+  "derivedFrom": ["aegis:fault/F-17"],
+  "sources": { "aegis:fault/F-17": { "contract": "praxis.provenance-record", "version": "1.0.0", "contributions": { "…": "…" } } }
+}
+```
+
+- **Not a second model.** `contributions` and `actor` are exactly the
+  artifact-provenance and actor shapes above. The record adds only:
+  - an explicit contract name and semantic version;
+  - the `subject`;
+  - lineage (`derivedFrom`);
+  - optional verbatim lineage snapshots (`sources`). A consumer that cannot
+    resolve a source still keeps the source's originating actors, and never
+    merges them into its own contributions.
+- **Versioning.**
+  - A consumer interprets any minor version of a supported major version and
+    preserves every field it does not model.
+  - It carries a record in an unsupported major version verbatim.
+  - It rejects malformed records.
+  - It reads a bare `{"contributions": …}` block, as projected into
+    registries, as version 1.
+- **Conformance.** [`schemas/conformance/provenance-record/`](../schemas/conformance/provenance-record/)
+  lists valid, legacy, unsupported, and invalid cases; successor pairs that
+  are either preserving or destructive; and an end-to-end chain:
+
+  requirement → modification → implementation → Dokimos measurement → Aegis
+  finding → Vigila follow-up → handled → resolved → validated.
+
+  Praxis's own codec is tested against these cases, and every Echelon system
+  that implements the record vendors them with the Praxis commit and file
+  digests they came from.
+- **Checking a record.** `./ros provenance check-record --path FILE` validates a
+  record. With `--previous OLD`, it also proves the new record is a
+  non-destructive successor of the old one. The checks are:
+  - no contribution removed;
+  - no actor overwritten;
+  - no history replaced;
+  - no execution re-keyed;
+  - no operation, evidence, or reason lost;
+  - no lineage or snapshot dropped or rewritten;
+  - no unknown field dropped;
+  - no major version changed in place.
+- **No secrets.** Credential-shaped values are refused in actors, reasons,
+  evidence, subjects, and lineage. This guard also applies to artifact
+  provenance and event actors inside Praxis.
+
+### Propagating identity and execution
+
+An agent that invokes another Echelon tool passes its identity along:
+
+```bash
+eval "$(./ros provenance identity --env)"   # exports ROS_ACTOR_KIND, ROS_ACTOR, ROS_TELEMETRY_*, ROS_EXECUTION_ID
+```
+
+The command prints only the whitelisted, non-secret identity keys. It prints
+`ROS_EXECUTION_ID` only when exactly one active execution is evidently this
+process's own run.
+
+A downstream system:
+
+- keys its contributions by `ROS_EXECUTION_ID` when that variable is set;
+- otherwise keys them by its own run, namespaced as `EXE-<system>.<run>`, so
+  the run can never be mistaken for, or impersonate, a Praxis execution;
+- keys a human or automation acting outside any run as `CTB-…`.
+
+Praxis reports a foreign or imported execution with no local record as a
+warning, and keeps it intact.
+
+The variable is inherited by child processes. An orchestrator that launches
+a different actor, for example a sub-agent or another agent runtime, must
+override or remove it for that child. Otherwise the child's work would be
+keyed to the parent's execution. ros-workerdaemon does this for every
+attempt. Praxis detects such a mix-up when the record returns:
+`check-record` and `validate` compare every contribution keyed by a local
+execution against that execution's recorded actor.
+
+### Transformation rules
+
+| What happens to the record | What the system records |
+|---|---|
+| Transported | nothing new; the record is carried verbatim |
+| Representation changed | `migrated` |
+| Content changed | `modified`, or one of `x-handled`, `x-resolved`, `x-remediated`, `x-validated`, `x-dismissed` |
+| A new subject is derived from it | a new record: the deriving actor's own `created` contribution, the source in `derivedFrom`, and the source record in `sources` |
+
+- **The originating actor is never replaced.** The actor that transports or
+  transforms an artifact records its own contribution. It never replaces
+  the originator.
+- **Identity is not authorization or evidence.** Recorded identity is never
+  authorization and never evidence. It never adds weight to evidence.
 
 ## Metrics
 
