@@ -4,8 +4,8 @@ open System
 open System.Text.RegularExpressions
 
 type EnvelopeActor = {
-    Kind: string
-    Id: string
+    ActorKind: string
+    ActorId: string
     Provider: string option
     Model: string option
     Runtime: string option
@@ -18,7 +18,7 @@ type EnvelopeTimelineEntry = {
 }
 
 type EnvelopeRequest = {
-    Type: string
+    RequestType: string
 }
 
 type ReconciliationEnvelope = {
@@ -67,7 +67,7 @@ module Reconciliation =
             let findings = [
                 if envelope.SchemaVersion <> "1.0" then UnsupportedSchemaVersion envelope.SchemaVersion
                 if String.IsNullOrWhiteSpace envelope.TransactionId then MissingTransactionId
-                if String.IsNullOrWhiteSpace envelope.Agent.Kind || String.IsNullOrWhiteSpace envelope.Agent.Id then MissingAgentIdentity
+                if String.IsNullOrWhiteSpace envelope.Agent.ActorKind || String.IsNullOrWhiteSpace envelope.Agent.ActorId then MissingAgentIdentity
                 if not (workItem.IsMatch envelope.WorkItem) then InvalidWorkItemId envelope.WorkItem
                 if envelope.WorkItem <> envelope.Branch then WorkItemBranchMismatch(envelope.WorkItem, envelope.Branch)
                 if envelope.Branch <> observed.ActualBranch then ObservedBranchMismatch(envelope.Branch, observed.ActualBranch)
