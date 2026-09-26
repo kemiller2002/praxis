@@ -91,6 +91,25 @@ Every integration boundary passes two things:
 | Child process / agent launch | lineage in the launch context | `ROS_ACTOR_KIND`, `ROS_TELEMETRY_*`, `ROS_EXECUTION_ID` (or the launcher's own run id) |
 | Published catalogs (research-publisher) | block kept per document; lineage becomes graph edges | not applicable |
 
+**Creating a record versus relaying one.** The received block always describes
+what came in. What the receiver does with it depends on the operation:
+
+- **Create** (`followup.create`, `time.record`, `billing.record`, and any other
+  operation that makes a new domain record): the new record gets a **new**
+  block.
+  - The invoking actor is `created`, keyed by its execution.
+  - The receiving system may add its own `transformed`.
+  - `derivedFrom` names the source.
+  - The received block is stored verbatim beside the new block as source
+    provenance, and is never appended to. Otherwise the source's discoverer
+    would appear to be an author of the follow-up.
+- **Relay or update** of an existing record (the received block is that
+  record's own history): the invoking actor is appended with a
+  non-authorship operation (`transformed`, or a more specific role). It is
+  never `created` when an originator exists.
+
+The invoking actor is always recorded.
+
 `EXT-run.*` and `EXT-op.*` are reserved pseudo-systems. They say honestly that
 the executing system is unknown (only a run id or operation id is), and they
 never impersonate a real system's run.
