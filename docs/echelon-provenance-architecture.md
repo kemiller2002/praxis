@@ -323,6 +323,43 @@ Contract revision 1.2 (Praxis) and a third round in each repository address:
 | 14 | A namespaced registry run key could equal an un-namespaced one. | `.` is escaped in every segment. |
 | 15 | Registry envelope timestamps went through `Date.parse`, which depends on the host. | The contract's `parseTimestamp` is used. |
 
+The round-3 commits are:
+
+| Repository | Commit |
+|---|---|
+| registry | `b8cd6df` |
+| vigila | `b3bdf55` |
+| aegis | `9c6f644` |
+| dokimos | `033aa4e` |
+| ordo | `f289de9` |
+| ros-workerdaemon | `9819782` |
+| conditor | `f87cf00` |
+| tutela | `a281263` |
+| EDF | `4bce5ba` |
+| percepta | `ce1b53a` |
+| chrona | `62c7695` |
+| summa | `4051033` |
+| research-publisher | `cc820ca` |
+
+### Third pass
+
+A third read-only review re-ran every round-2 repro against the round-3 heads.
+Each of the 15 findings is fixed, except #12, which is an accepted limitation.
+It also ran a larger differential across JavaScript, Python, and six F# codecs:
+
+- 267 `classifyText` inputs;
+- 28 lineage cases;
+- 81 key cases;
+- 34 end-to-end `followup.create` requests through the registry and Vigila.
+
+The codecs agreed everywhere except on nesting depth. The review found no high
+findings, two medium, and seven low. Returns are diminishing, so the adversarial
+cycle stops here:
+
+- **Fixed:** the medium EDF regression. The round-3 blinding check flagged
+  ordinary incident prose ("Threat actor:", "session_id:", "EXT-4").
+- **Recorded:** everything else, under Known limitations and Follow-up work.
+
 ## Coupling review
 
 - No repository imports Praxis code at runtime or build time for provenance.
@@ -356,6 +393,27 @@ Contract revision 1.2 (Praxis) and a third round in each repository address:
   `PROVENANCE-AUTHORITY.json`.
 - Aegis's default redaction rules reject any block with a `signature` field.
   This must be revisited once an attestation authority is chosen.
+- Nesting depth is not bounded by the contract (third pass, medium).
+  - The .NET codecs reject blocks deeper than 64 levels as malformed.
+  - JavaScript and Python accept them.
+  - The recursive JavaScript reference, and the JS receivers built on it
+    (registry, Chrona, Summa), throw `RangeError` at a few thousand levels
+    (about 12 KB of brackets). research-publisher's JSON front-matter walk does
+    the same on very long lists.
+- Numbers are not carried byte-for-byte by JavaScript and Python receivers.
+  - Tutela can write `Infinity` for `1e400` inside an unsupported block.
+  - The registry rounds large integers.
+  - Tutela alone rejects integers over 4,300 digits.
+- Summa forwards a legacy `--actor` string alongside a structured actor. The
+  spoke may therefore attribute the item to the legacy string while the hub's
+  dispatch record names the structured actor.
+- Vigila's public `keyFromEnvelopeV1` throws on an unpaired surrogate (its
+  request path is guarded).
+- Vigila's replay check is looser than the registry's full-request fingerprint.
+- Aegis applies key-name redaction to contribution keys of unsupported blocks,
+  rejecting some valid ones.
+- Summa cannot see duplicate member names in an object-shaped `actorJson`,
+  because the tool-owned `http_body.mjs` parses it first.
 
 ## Follow-up work
 
@@ -379,3 +437,12 @@ Contract revision 1.2 (Praxis) and a third round in each repository address:
    `ros ordo ingest` projection and idempotency check. Today it is preserved
    in the raw copy only, so a re-ingest that differs only in that member
    reports `already-present`.
+9. Contract revision 1.3:
+   - a contract-wide nesting depth limit (for example 64), with iterative
+     walks in the reference and fixtures that pin it;
+   - a rule that JSON numbers are carried verbatim, or that a block that
+     cannot round-trip is refused.
+
+   Then fix the low items listed under Known limitations in each
+   repository: Summa's legacy `--actor`, Vigila's key function and replay
+   fingerprint, and Aegis's unsupported-block redaction.

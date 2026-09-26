@@ -445,8 +445,15 @@ credential cases.
   - it holds an unpaired UTF-16 surrogate, which has no UTF-8 form and cannot
     be carried verbatim.
 
-  The reference and Praxis read text through `classifyText`. `classify` never
-  throws.
+  The reference and Praxis read text through `classifyText`. `classify` is
+  meant never to throw. Known gap: nesting depth is not yet bounded by the
+  contract.
+  - The .NET codecs reject a block nested deeper than 64 levels as malformed.
+  - JavaScript and Python accept it.
+  - The recursive JavaScript reference throws `RangeError` at a few thousand
+    levels.
+
+  A contract-wide depth limit is follow-up work.
 - **ASCII whitespace only.**
   - "Blank" means empty after trimming tab, LF, VT, FF, CR, and space. Every
     other character is content, including U+0085, U+FEFF, and U+001C.
