@@ -15,10 +15,9 @@ module ReconciliationEnvelopeJson =
             else
                 let value = JsonSerializer.Deserialize<ReconciliationEnvelope>(File.ReadAllText path, options)
                 if isNull (box value) then Error [ "invalid-envelope-json" ] else Ok value
-        with :? JsonException ->
-            Error [ "invalid-envelope-json" ]
-        with _ ->
-            Error [ "envelope-read-failed" ]
+        with
+        | :? JsonException -> Error [ "invalid-envelope-json" ]
+        | _ -> Error [ "envelope-read-failed" ]
 
 [<RequireQualifiedAccess>]
 module InputDocuments =
