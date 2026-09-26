@@ -205,19 +205,19 @@ Discovery covered 25 repositories. Legend: **P** produces, **C** consumes,
 | Repository | Relationship to Praxis | P/C/T | Preserves actor today? | Loses actor today | Change required | Outcome |
 |---|---|---|---|---|---|---|
 | praxis | canonical owner | P C T | yes (A036) | no interchange contract; `EXE`/`CTB` keys only | contract, versioning, conformance, export | **changed** |
-| echelon-registry | integration routing spec | T | no | envelope v1 defines a competing actor (tri-state `knownValue`, `system` kind, no model/runtime; closed schema) | envelope v2 carrying the Praxis actor and block; lossless v1 mapping; manifest provenance descriptor; conformance harness | **changed** |
-| vigila | follow-up provider (`followup.*`) | C P | partly (`{type,name}` free text) | no provider/model/execution; roles collapsed; codec drops unknown fields; hard-coded `local` user | provenance block on items, envelope intake, role separation, lossless codec | **changed** |
-| aegis | fault/security-finding library | P | category only (`RecoveryActor`) | no discovering/validation actor, no execution; resolution has no actor | provenance on faults and events; remediation/validation roles; lineage; Tutela projection | **changed** |
-| dokimos | code-quality evidence | P | no (tool name only) | no measuring actor or execution; no artifact author | snapshot provenance; author ≠ measurer ≠ remediator ≠ validator | **changed** |
-| tutela | security evidence gate | C | authenticated bindings (separate concept) | Aegis evidence cannot carry contributions; `provenance` key means attestation | namespaced `contributionProvenance`, proven unable to change gate outcomes | **changed** |
-| ordo | state-transition methodology/library | C | provider identity on observations only | no requester of a transition | requester provenance kept outside capability/evidence evaluation | **changed** |
-| percepta | UI contracts + experiments | P | legacy free text; inconsistent legacy event identity | – | requirements and templates for future experiment provenance; frozen experiments untouched | **changed** (requirements/templates) |
-| echelon-diagnostic-framework | diagnostic research | P | free text `author_agent` | – | rule and validator: identity is never evidence weight; blinded material stays clean | **changed** |
-| chrona | time system (planned) | C | requirements only | CI attributes an Actions job to an agent | provenance on time observations; no fabricated time; CI actor fix | **changed** |
-| summa | hub + billing (planned) | C T | bare `--actor` string | hub identity never recorded; CI mislabels automation | hub records its own actor and passes identity explicitly; billing provenance | **changed** |
-| conditor | installer for new repos | T | free text `--actor conditor` | launched agents get no identity; installed Praxis 3.1.4 predates provenance | provenance-readiness verification; automation identity; true agent identity for launched runtimes | **changed** |
-| ros-workerdaemon | executes agents | P T | provider/model config only | child processes receive no identity; attempts not linked to Praxis executions | identity environment for agents; actor + `EXT-ros-worker` key on attempts | **changed** |
-| research-publisher | publishes Praxis research | T | `authorAgent` string | drops `provenance` and `derived_from`; mis-maps `author_agent` | preserve the block; lineage edges; legacy authors labelled self-declared | **changed** |
+| echelon-registry | integration routing spec | T | no | envelope v1 defines a competing actor (tri-state `knownValue`, `system` kind, no model/runtime; closed schema) | envelope v2 carrying the Praxis actor and block; lossless v1 mapping; manifest provenance descriptor; conformance harness | **changed** (kemiller2002/echelon-registry#1) |
+| vigila | follow-up provider (`followup.*`) | C P | partly (`{type,name}` free text) | no provider/model/execution; roles collapsed; codec drops unknown fields; hard-coded `local` user | provenance block on items, envelope intake, role separation, lossless codec | **changed** (kemiller2002/vigila#18) |
+| aegis | fault/security-finding library | P | category only (`RecoveryActor`) | no discovering/validation actor, no execution; resolution has no actor | provenance on faults and events; remediation/validation roles; lineage; Tutela projection | **changed** (kemiller2002/aegis#3) |
+| dokimos | code-quality evidence | P | no (tool name only) | no measuring actor or execution; no artifact author | snapshot provenance; author ≠ measurer ≠ remediator ≠ validator | **changed** (kemiller2002/dokimos#1) |
+| tutela | security evidence gate | C | authenticated bindings (separate concept) | Aegis evidence cannot carry contributions; `provenance` key means attestation | namespaced `contributionProvenance`, proven unable to change gate outcomes | **changed** (kemiller2002/tutela#2) |
+| ordo | state-transition methodology/library | C | provider identity on observations only | no requester of a transition | requester provenance kept outside capability/evidence evaluation | **changed** (kemiller2002/ordo (pending)) |
+| percepta | UI contracts + experiments | P | legacy free text; inconsistent legacy event identity | – | requirements and templates for future experiment provenance; frozen experiments untouched | **changed**: requirements and templates (kemiller2002/percepta#13) |
+| echelon-diagnostic-framework | diagnostic research | P | free text `author_agent` | – | rule and validator: identity is never evidence weight; blinded material stays clean | **changed** (kemiller2002/echelon-diagnostic-framework#19) |
+| chrona | time system (planned) | C | requirements only | CI attributes an Actions job to an agent | provenance on time observations; no fabricated time; CI actor fix | **changed** (kemiller2002/chrona#5) |
+| summa | hub + billing (planned) | C T | bare `--actor` string | hub identity never recorded; CI mislabels automation | hub records its own actor and passes identity explicitly; billing provenance | **changed** (kemiller2002/summa#6) |
+| conditor | installer for new repos | T | free text `--actor conditor` | launched agents get no identity; installed Praxis 3.1.4 predates provenance | provenance-readiness verification; automation identity; true agent identity for launched runtimes | **changed** (kemiller2002/conditor#1) |
+| ros-workerdaemon | executes agents | P T | provider/model config only | child processes receive no identity; attempts not linked to Praxis executions | identity environment for agents; actor + `EXT-ros-worker` key on attempts | **changed** (kemiller2002/ROS-WorkerDaemon#4) |
+| research-publisher | publishes Praxis research | T | `authorAgent` string | drops `provenance` and `derived_from`; mis-maps `author_agent` | preserve the block; lineage edges; legacy authors labelled self-declared | **changed** (kemiller2002/research-publisher#12) |
 | forma | design system | – | n/a | – | none: provenance does not belong in tokens, CSS, or components; its "provenance trail" pattern displays data lineage | unchanged |
 | folio | print components | – | n/a | – | none: export provenance is already caller-owned (EPC-RPT-076/077) | unchanged |
 | limen | browser boundary kernel | – | n/a | – | none: runtime messages are application data | unchanged |
@@ -269,6 +269,34 @@ Discovery covered 25 repositories. Legend: **P** produces, **C** consumes,
 - **Forma, Folio, Limen, Strata** stay unchanged by design. Provenance belongs
   to the record that stores or publishes their outputs, not to the
   presentation, document, runtime, or schema artifact itself.
+
+## Adversarial review
+
+An independent review tried to make provenance get dropped, overwritten,
+forged, confused, duplicated, wrongly inherited, lost at integration, or
+broken by schema change. Its confirmed findings, and the fixes that closed
+them (contract revision 1.1, Praxis `c2657ef`, re-vendored everywhere):
+
+| # | Finding | Fix |
+|---|---|---|
+| 1 | .NET `$` matched before a trailing newline. A `created\n` operation could smuggle a second originator past the F# codecs (Praxis, Aegis, worker). | All patterns anchored with `\z`. Newline cases added to the fixtures. |
+| 2 | Hub, launcher, and worker identity (session ids, CI run id, runtime signals) leaked into another actor's execution. | Canonical `identity-environment.json`. Launchers remove every listed variable, then declare explicitly. Summa, Conditor, and the worker are fixed. |
+| 3 | Reference `appendContribution` could return a block that `classify` rejects: credentials, back-dated entries, a merged `created`. | Appends credential-check their input and re-classify their output. Chrona and Summa store only library results. |
+| 4 | Timestamp semantics diverged: JS, F#, and Python disagreed on Feb 30, 24:00, year 0, and sub-millisecond ordering. Python crashed on year 0. | Calendar-valid timestamps, millisecond ordering, never crash. Fixtures added. |
+| 5 | Praxis F# treated JSON `null` as an absent field. | `null` is never absent. Fixtures added. |
+| 6 | Aegis let an identity-less process claim an execution from `ROS_EXECUTION_ID`. | The execution is honoured only with a declared identity (Praxis already refuses this). |
+| 7 | An unknown invoker could merge into a known actor's entry. v1 run ids from different senders could collide, and `EXT-op` escaping was not injective. | Unknown-identity merges are refused. v1 runs are namespaced by repository (REG-PROV-008). Key escaping is injective. |
+| 8 | A same-key merge dropped incoming unknown fields and `last`. | Incoming unknown fields are kept (the existing value wins) and the later `last` is kept. |
+| 9 | EDF blinding check missed author and agent keys and execution ids. | Full identity key set plus text patterns (EDF `d81e25b`). |
+| 10 | Praxis front matter rejected operations from a later 1.x release. | Grammar-valid unknown operations are carried with a warning. |
+| 11 | Aegis serialization bypassed redaction and could rewrite text inside a "verbatim" block. | Structural serialization. Blocks that match redaction rules are rejected, not altered. |
+| 12 | research-publisher published malformed provenance as `null`, which looks unattributed. It also split author names on commas. | `provenanceWithheld`. Scalars stay single values. Catalog schema 1.2. |
+| 13 | The worker schema copied and weakened the Praxis actor schema. The Conditor guidance check depended on an exact heading. | The worker uses the vendored actor schema. Conditor uses a tolerant guidance marker. |
+
+A design issue surfaced as well: whether a receiver appends the invoker to a
+received block, or gives a created record its own block. The rule is stated
+above under "Creating a record versus relaying one". The registry, Vigila,
+Chrona, and Summa now all implement it.
 
 ## Coupling review
 
