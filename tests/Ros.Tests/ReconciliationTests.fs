@@ -6,7 +6,7 @@ open Ros.Domain.Work
 [<RequireQualifiedAccess>]
 module ReconciliationTests =
     let private actor =
-        { Kind = "agent"; Id = "openai"; Provider = Some "openai"; Model = None; Runtime = None }
+        { ActorKind = "agent"; ActorId = "openai"; Provider = Some "openai"; Model = None; Runtime = None }
 
     let private envelope =
         { SchemaVersion = "1.0"
@@ -16,7 +16,7 @@ module ReconciliationTests =
           BaseCommit = String.replicate 40 "a"
           Agent = actor
           Timeline = [{ Sequence = 1; Timestamp = DateTimeOffset.Parse("2026-09-26T10:00:00Z"); Action = "start" }]
-          Requests = [{ Type = "work.start" }] }
+          Requests = [{ RequestType = "work.start" }] }
 
     let private observed =
         { ActualBranch = "WI-0064"; HeadCommit = String.replicate 40 "b"; BaseCommitExists = true; TransactionAlreadyApplied = false }
