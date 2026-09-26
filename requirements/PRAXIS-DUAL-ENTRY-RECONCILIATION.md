@@ -23,6 +23,17 @@ Praxis MUST remain usable when an agent cannot execute the native Praxis runtime
 13. Cross-work-item contamination MUST be rejected unless an explicit multi-work-item protocol is introduced later.
 14. The protocol MUST be sufficient to bootstrap participation in a repository where Praxis cannot yet execute locally.
 15. CI is the authoritative reconciliation boundary.
+16. Every Praxis installation MUST have a stable Praxis instance identity that is distinct from repository identity, agent identity, agent-session identity, work-item identity and transaction identity.
+17. Praxis MUST generate and persist its instance identity locally before any external registration is attempted. The local instance record is authoritative for that identity.
+18. A Praxis instance MUST remain fully operational when Echelon Registry, Vigila, the network, credentials or any other Echelon component is unavailable. Registration MUST NOT be an installation, execution or reconciliation dependency.
+19. When Echelon Registry is available and authorized, Praxis SHOULD register or refresh a discoverable projection of the instance. Registration MUST be retryable and idempotent.
+20. Instance registration SHOULD advertise repository/provider coordinates, Praxis version, reconciliation protocol version, supported capabilities and the known availability state of optional Echelon integrations. Unknown capability/integration state MUST be representable without being treated as failure.
+21. Registry data is a discovery/heartbeat projection and MUST NOT replace the locally authoritative instance identity or local canonical Praxis state.
+22. Native execution and fallback envelopes MUST carry the Praxis instance identity so canonical provenance can establish instance -> repository -> work item -> branch -> agent -> agent session -> transaction -> event/evidence/artifact.
+23. Reconciliation MUST reject a claimed instance identity that conflicts with the locally authoritative Praxis instance identity, except through an explicit and auditable instance migration/recovery operation.
+24. Instance identity MUST survive Praxis upgrades and normal repository lifecycle operations. Cloning, templating, repository transfer and intentional reinstallation MUST have explicit rules preventing accidental identity duplication.
+25. Instance registration MUST minimize disclosed data and MUST NOT publish credentials, secrets, private artifact contents or agent-private runtime data.
+26. The instance model MUST support capability/version discovery without requiring all Echelon systems to be installed, preserving independently installable components.
 
 ## Required repository layout
 ```
@@ -39,6 +50,14 @@ The physical layout MAY evolve only if the same lifecycle and discoverability gu
 
 ## Acceptance criteria
 - Native and envelope paths produce semantically equivalent canonical outcomes for the same legal work.
+- A fresh Praxis installation creates a stable local instance identity before attempting Registry access.
+- Praxis continues to install, execute and reconcile when Registry is absent or unreachable.
+- Registration retry is idempotent and does not create duplicate instance identities.
+- Reconciliation rejects a spoofed/mismatched Praxis instance identity.
+- Upgrade tests prove instance identity is preserved.
+- Clone/template tests prove an instance identity is not accidentally duplicated into a logically new installation.
+- Registry projection tests prove capability/version/integration states can be advertised independently and can represent unknown/unavailable states.
+- Registration output contains no credentials or secret material.
 - Invalid schema, missing identity, branch mismatch, stale/invalid base, illegal transition, invalid evidence and duplicate transaction tests exist.
 - Crash/retry tests prove idempotency before and after canonical commit.
 - Inbox claim/retry/reconcile tests prove no source is lost.
