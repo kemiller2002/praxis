@@ -36,7 +36,24 @@ jobs:
         run: dotnet build praxis-verifier/src/Ros.Cli/Ros.Cli.fsproj --configuration Release
 
       - name: Verify declared Echelon application foundations
+        id: foundations
+        shell: bash
         run: |
+          set +e
           dotnet praxis-verifier/src/Ros.Cli/bin/Release/net10.0/ros-fs.dll \
             --root "$GITHUB_WORKSPACE/application" \
-            foundations verify
+            foundations verify --json > "$RUNNER_TEMP/echelon-foundations.json"
+          code=$?
+          set -e
+          cat "$RUNNER_TEMP/echelon-foundations.json"
+          cp "$RUNNER_TEMP/echelon-foundations.json" "$GITHUB_WORKSPACE/echelon-foundations.json"
+          exit "$code"
+
+      - name: Preserve foundation verification report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: echelon-foundations
+          path: echelon-foundations.json
+          if-no-files-found: error
+          retention-days: 30
