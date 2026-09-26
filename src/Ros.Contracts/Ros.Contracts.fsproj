@@ -24,5 +24,6 @@
     <Compile Include="Provenance/ActorJson.fs" />
     <Compile Include="Provenance/ProvenanceFrontMatter.fs" />
     <Compile Include="Provenance/ProvenanceReportJson.fs" />
+    <Compile Include="Provenance/ProvenanceInterchangeJson.fs" />
   </ItemGroup>
 </Project>

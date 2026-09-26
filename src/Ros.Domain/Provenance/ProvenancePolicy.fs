@@ -99,7 +99,20 @@ module ProvenanceValidation =
 
             let executionFindings =
                 match Contribution.execution contribution with
-                | None -> []
+                | None ->
+                    // A foreign (EXT-...) execution belongs to another
+                    // Echelon system: carried verbatim, never cross-checkable
+                    // here, and never an error in itself (RQ-ROS-2026-A013).
+                    match Contribution.foreignExecution contribution with
+                    | Some foreignId ->
+                        let system = Contribution.foreignSystem foreignId |> Option.defaultValue "unknown"
+
+                        [ finding
+                              FindingSeverity.Info
+                              document.RelativePath
+                              field
+                              $"execution '{foreignId}' belongs to Echelon system '{system}'; its self-reported identity is carried verbatim and cannot be cross-checked in this repository" ]
+                    | None -> []
                 | Some executionId ->
                     match request.Executions |> Map.tryFind executionId with
                     | None ->
@@ -116,6 +129,16 @@ module ProvenanceValidation =
                               $"recorded actor {Actor.describe contribution.Actor} contradicts execution '{executionId}' identity {Actor.describe executionActor}" ]
                     | Some _ -> []
 
+            let vocabularyFindings =
+                contribution.Operations
+                |> List.filter (ContributionOperation.isKnown >> not)
+                |> List.map (fun operation ->
+                    finding
+                        FindingSeverity.Warning
+                        document.RelativePath
+                        $"{field}.operations"
+                        $"operation '{ContributionOperation.code operation}' is not known to this Praxis version; it is preserved verbatim (upgrade Praxis to interpret it)")
+
             let evidenceFindings =
                 contribution.Evidence
                 |> List.filter (fun reference ->
@@ -123,7 +146,7 @@ module ProvenanceValidation =
                 |> List.map (fun reference ->
                     finding FindingSeverity.Error document.RelativePath $"{field}.evidence" $"broken reference '{reference}'")
 
-            executionFindings @ evidenceFindings)
+            executionFindings @ vocabularyFindings @ evidenceFindings)
 
     let private policyFindings request (document: ArtifactDocument) (provenance: ArtifactProvenance option) =
         match request.Policy.Enforced, request.Policy.RequiredFrom with
@@ -380,5 +403,5 @@ module ProvenanceIndex =
                         Contribution.has ContributionOperation.Reviewed contribution
                         || Contribution.has ContributionOperation.Approved contribution)
                     rows
-              Executions = rows |> List.choose (fun row -> Contribution.execution row.Contribution) |> List.distinct |> List.length })
+              Executions = rows |> List.choose (fun row -> Contribution.anyExecution row.Contribution) |> List.distinct |> List.length })
         |> List.sortBy (fun summary -> -summary.Artifacts, Actor.describe summary.Actor)

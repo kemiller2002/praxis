@@ -504,7 +504,7 @@ module ProvenanceTests =
                   let malformed =
                       document
                           "research/requirements/RQ-TEST-2026-A001--r.md"
-                          "---\nid: RQ-TEST-2026-A001\ntitle: R\ncreated: 2026-01-01\nprovenance:\n  contributions:\n    EXE-1:\n      operations: [invented]\n      at: 2026-09-25T10:00:00Z\n      actor:\n        kind: robot\n---\n"
+                          "---\nid: RQ-TEST-2026-A001\ntitle: R\ncreated: 2026-01-01\nprovenance:\n  contributions:\n    EXE-1:\n      operations: [Invented]\n      at: 2026-09-25T10:00:00Z\n      actor:\n        kind: robot\n---\n"
 
                   let errors = validation [ malformed ] Map.empty |> withStatus FindingSeverity.Error
                   Assert.isTrue (errors.Length >= 2) $"{errors}" }

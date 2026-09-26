@@ -92,6 +92,7 @@ module ProvenanceEffectTests =
           Evidence = []
           DerivedFrom = []
           ExecutionId = None
+          ExecutionFromEnvironment = false
           OccurredAt = "2026-09-25T10:05:00.000Z"
           IdentityOverrides = overrides }
 
@@ -237,6 +238,36 @@ module ProvenanceEffectTests =
                       Assert.equal first.Contribution.Key later.Contribution.Key
                       Assert.equal (Some "2026-09-25T18:00:00.000Z") later.Contribution.Last
                       Assert.equal 1 (readProvenance root).Contributions.Length) }
+          { Name = "an execution inherited from ROS_EXECUTION_ID is honoured only by a process with its own identity (RQ-ROS-2026-A016)"
+            Run =
+              fun () ->
+                  withRepository (fun root ->
+                      writeExecution root exeClaude "active" "anthropic" "claude-code" (Some "agent") "whitelisted-claude-environment"
+                      let inherited = { request ContributionOperation.Created IdentityInputs.empty with ExecutionId = Some exeClaude; ExecutionFromEnvironment = true }
+
+                      // Run the refusal with no identity environment at all, so the
+                      // outcome does not depend on the agent or CI running the suite.
+                      let identityVariables =
+                          [ "CLAUDE_CODE_SESSION_ID"; "CODEX_SESSION_ID"; "CODEX_THREAD_ID"; "COPILOT_SESSION_ID"; "GEMINI_SESSION_ID"
+                            "GITHUB_ACTIONS"; "GITHUB_RUN_ID"; "OLLAMA_HOST"; "ROS_ACTOR"; "ROS_ACTOR_KIND"; "ROS_TELEMETRY_CONVERSATION_ID"
+                            "ROS_TELEMETRY_MODEL"; "ROS_TELEMETRY_MODEL_VERSION"; "ROS_TELEMETRY_PROVIDER"; "ROS_TELEMETRY_RUNTIME"
+                            "ROS_TELEMETRY_RUNTIME_VERSION"; "ROS_TELEMETRY_RUN_ID"; "ROS_TELEMETRY_SESSION_ID" ]
+
+                      let saved = identityVariables |> List.map (fun name -> name, Environment.GetEnvironmentVariable name)
+
+                      let refused =
+                          try
+                              identityVariables |> List.iter (fun name -> Environment.SetEnvironmentVariable(name, null))
+                              FileProvenanceRepository.record root inherited
+                          finally
+                              saved |> List.iter (fun (name, value) -> Environment.SetEnvironmentVariable(name, value))
+
+                      Assert.isTrue (refused |> Result.isError) "an identity-less process must not inherit a run from its environment"
+                      Assert.isTrue (not ((File.ReadAllText(Path.Combine(root, requirementPath))).Contains "provenance:")) "a refused recording writes nothing"
+                      let honoured = recordOk root { inherited with IdentityOverrides = claudeOverrides }
+                      Assert.equal exeClaude honoured.Contribution.Key
+                      let otherAgent = FileProvenanceRepository.record root { inherited with Operation = ContributionOperation.Modified; IdentityOverrides = codexOverrides }
+                      Assert.isTrue (otherAgent |> Result.isError) "an inherited execution still must agree with the process identity") }
           { Name = "a multi-line or padded reason is normalized and recorded, and a blank reason is none"
             Run =
               fun () ->
