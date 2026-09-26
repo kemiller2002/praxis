@@ -204,13 +204,13 @@ Discovery covered 25 repositories. Legend: **P** produces, **C** consumes,
 
 | Repository | Relationship to Praxis | P/C/T | Preserves actor today? | Loses actor today | Change required | Outcome |
 |---|---|---|---|---|---|---|
-| praxis | canonical owner | P C T | yes (A036) | no interchange contract; `EXE`/`CTB` keys only | contract, versioning, conformance, export | **changed** |
+| praxis | canonical owner | P C T | yes (A036) | no interchange contract; `EXE`/`CTB` keys only | contract, versioning, conformance, export | **changed** (kemiller2002/praxis#78) |
 | echelon-registry | integration routing spec | T | no | envelope v1 defines a competing actor (tri-state `knownValue`, `system` kind, no model/runtime; closed schema) | envelope v2 carrying the Praxis actor and block; lossless v1 mapping; manifest provenance descriptor; conformance harness | **changed** (kemiller2002/echelon-registry#1) |
 | vigila | follow-up provider (`followup.*`) | C P | partly (`{type,name}` free text) | no provider/model/execution; roles collapsed; codec drops unknown fields; hard-coded `local` user | provenance block on items, envelope intake, role separation, lossless codec | **changed** (kemiller2002/vigila#18) |
 | aegis | fault/security-finding library | P | category only (`RecoveryActor`) | no discovering/validation actor, no execution; resolution has no actor | provenance on faults and events; remediation/validation roles; lineage; Tutela projection | **changed** (kemiller2002/aegis#3) |
 | dokimos | code-quality evidence | P | no (tool name only) | no measuring actor or execution; no artifact author | snapshot provenance; author ≠ measurer ≠ remediator ≠ validator | **changed** (kemiller2002/dokimos#1) |
 | tutela | security evidence gate | C | authenticated bindings (separate concept) | Aegis evidence cannot carry contributions; `provenance` key means attestation | namespaced `contributionProvenance`, proven unable to change gate outcomes | **changed** (kemiller2002/tutela#2) |
-| ordo | state-transition methodology/library | C | provider identity on observations only | no requester of a transition | requester provenance kept outside capability/evidence evaluation | **changed** (kemiller2002/ordo (pending)) |
+| ordo | state-transition methodology/library | C | provider identity on observations only | no requester of a transition | requester provenance kept outside capability/evidence evaluation | **changed** (kemiller2002/ordo#36) |
 | percepta | UI contracts + experiments | P | legacy free text; inconsistent legacy event identity | – | requirements and templates for future experiment provenance; frozen experiments untouched | **changed**: requirements and templates (kemiller2002/percepta#13) |
 | echelon-diagnostic-framework | diagnostic research | P | free text `author_agent` | – | rule and validator: identity is never evidence weight; blinded material stays clean | **changed** (kemiller2002/echelon-diagnostic-framework#19) |
 | chrona | time system (planned) | C | requirements only | CI attributes an Actions job to an agent | provenance on time observations; no fabricated time; CI actor fix | **changed** (kemiller2002/chrona#5) |
@@ -344,3 +344,7 @@ Chrona, and Summa now all implement it.
    provenance is exercised end to end.
 7. Build the analytics described under Metrics readiness on top of
    `provenance audit --json` and the downstream blocks.
+8. Model Ordo's optional `requestProvenance` observation member in the
+   `ros ordo ingest` projection and idempotency check. Today it is preserved
+   in the raw copy only, so a re-ingest that differs only in that member
+   reports `already-present`.
