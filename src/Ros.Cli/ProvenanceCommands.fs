@@ -248,7 +248,7 @@ module ProvenanceCommands =
             eprintfn "ERROR provenance record requires --path PATH or --id ARTIFACT-ID"
             2
         | _, None ->
-            eprintfn "ERROR provenance record requires --operation {created|modified|reviewed|approved|superseded|migrated|x-...}"
+            eprintfn "ERROR provenance record requires --operation {created|modified|reviewed|approved|superseded|migrated|discovered|measured|transformed|remediated|validated|resolved|x-...}"
             2
         | _ when not (Contribution.isTimestamp occurredAt) ->
             eprintfn "ERROR --occurred-at must be an ISO-8601 UTC timestamp (yyyy-MM-ddTHH:mm:ss[.fff]Z)"
@@ -263,7 +263,19 @@ module ProvenanceCommands =
                   Reason = optionValue "--reason" arguments
                   Evidence = evidence
                   DerivedFrom = derivedFrom
-                  ExecutionId = optionValue "--execution" arguments
+                  // `ROS_EXECUTION_ID` is the environment form of
+                  // `--execution` (RQ-ROS-2026-A016): a tool launched inside
+                  // an execution names it without repeating the flag. It is
+                  // the same explicit assertion, so the same guards apply,
+                  // and an explicit flag always wins.
+                  ExecutionId =
+                    optionValue "--execution" arguments
+                    |> Option.orElse (
+                        Environment.GetEnvironmentVariable "ROS_EXECUTION_ID"
+                        |> Option.ofObj
+                        |> Option.map _.Trim()
+                        |> Option.filter (fun value -> value.Length > 0)
+                    )
                   OccurredAt = occurredAt
                   IdentityOverrides = identityOverridesFrom arguments }
 
@@ -443,6 +455,43 @@ module ProvenanceCommands =
             eprintfn "ERROR provenance show requires exactly one artifact ID or path"
             2
 
+    /// `provenance export TARGET`: the artifact's provenance as a versioned
+    /// `praxis.provenance/1` interchange block (RQ-ROS-2026-A015) -- the form
+    /// another Echelon system embeds in its own records. An unattributed
+    /// artifact exports an empty contribution map (nothing is inferred); a
+    /// malformed block is refused rather than exported.
+    let private runProvenanceExport root (arguments: string list) =
+        match arguments |> List.filter (fun value -> value <> "--json") with
+        | [ target ] ->
+            match loadDocumentForShow root target with
+            | Error message ->
+                eprintfn "ERROR %s" message
+                1
+            | Ok(document, _) ->
+                let identifier = ArtifactDocument.identifier document
+
+                match ArtifactProvenance.parse document.Metadata with
+                | Error problems ->
+                    eprintfn "ERROR %s: provenance is malformed and will not be exported" document.RelativePath
+
+                    for problem in problems do
+                        eprintfn "  %s: %s" problem.Field problem.Message
+
+                    1
+                | Ok provenance ->
+                    let subject = Some((if identifier.Length > 0 then Some identifier else None), Some document.RelativePath)
+
+                    provenance
+                    |> Option.defaultValue ArtifactProvenance.empty
+                    |> ProvenanceInterchangeJson.toNode subject (Lineage.sources document)
+                    |> ProvenanceReportJson.render
+                    |> printf "%s"
+
+                    0
+        | _ ->
+            eprintfn "ERROR provenance export requires exactly one artifact ID or path"
+            2
+
     /// `provenance audit [--json]`: repository-wide provenance coverage, every
     /// finding (errors, warnings, and informational legacy notes), the
     /// flattened contribution facts behind provenance metrics, and per-actor
@@ -532,13 +581,14 @@ module ProvenanceCommands =
 
 
     let usage =
-        "provenance identity [--json] | provenance record (--path PATH|--id ID) --operation OP [--reason TEXT] [--evidence REF]* [--derived-from REF]* [--execution EXE-ID] [--occurred-at TIMESTAMP] [--json] | provenance show ID|PATH [--json] | provenance audit [--json]"
+        "provenance identity [--json] | provenance record (--path PATH|--id ID) --operation OP [--reason TEXT] [--evidence REF]* [--derived-from REF]* [--execution EXE-ID] [--occurred-at TIMESTAMP] [--json] | provenance show ID|PATH [--json] | provenance export ID|PATH | provenance audit [--json]"
 
     let run root (arguments: string list) =
         match arguments with
         | "identity" :: rest -> runProvenanceIdentity root rest
         | "record" :: rest -> runProvenanceRecord root rest
         | "show" :: rest -> runProvenanceShow root rest
+        | "export" :: rest -> runProvenanceExport root rest
         | "audit" :: rest when rest |> List.forall ((=) "--json") -> runProvenanceAudit root rest
         | _ ->
             eprintfn "ERROR usage: %s" usage

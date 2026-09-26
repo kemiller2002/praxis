@@ -33,7 +33,7 @@ module ProvenanceReportJson =
     let contribution (item: Contribution) : JsonObject =
         let node = JsonObject()
         node["key"] <- JsonValue.Create item.Key
-        node["execution"] <- optional (Contribution.execution item)
+        node["execution"] <- optional (Contribution.anyExecution item)
         node["operations"] <- strings (item.Operations |> List.map ContributionOperation.code)
         node["at"] <- JsonValue.Create item.At
         node["last"] <- optional item.Last

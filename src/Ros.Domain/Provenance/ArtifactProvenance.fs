@@ -7,6 +7,13 @@ open Ros.Domain.Artifacts
 /// What a contribution did to an artifact. `Created` establishes the
 /// originator; every other operation adds to, and never replaces, the
 /// accumulated history.
+///
+/// The role operations (`Discovered` .. `Resolved`, RQ-ROS-2026-A014) let
+/// other Echelon systems record *what part* an actor played in a record's
+/// life -- finding something, measuring it, carrying it across a boundary,
+/// fixing it, confirming the fix, closing it -- without inventing a second
+/// vocabulary. None of them transfers authorship: the originator is always
+/// the single `Created` contribution.
 [<RequireQualifiedAccess>]
 type ContributionOperation =
     | Created
@@ -15,6 +22,20 @@ type ContributionOperation =
     | Approved
     | Superseded
     | Migrated
+    /// Found the fact, defect, or risk the record reports.
+    | Discovered
+    /// Measured the record's subject; says nothing about who authored it.
+    | Measured
+    /// Converted the record into another system's representation without
+    /// changing its meaning (an integration executable).
+    | Transformed
+    /// Changed the subject to address what the record reports.
+    | Remediated
+    /// Independently confirmed an outcome (for example that a remediation
+    /// worked).
+    | Validated
+    /// Closed or dispositioned the record.
+    | Resolved
     | Extension of string
 
 [<RequireQualifiedAccess>]
@@ -30,6 +51,12 @@ module ContributionOperation =
         | ContributionOperation.Approved -> "approved"
         | ContributionOperation.Superseded -> "superseded"
         | ContributionOperation.Migrated -> "migrated"
+        | ContributionOperation.Discovered -> "discovered"
+        | ContributionOperation.Measured -> "measured"
+        | ContributionOperation.Transformed -> "transformed"
+        | ContributionOperation.Remediated -> "remediated"
+        | ContributionOperation.Validated -> "validated"
+        | ContributionOperation.Resolved -> "resolved"
         | ContributionOperation.Extension value -> value
 
     let tryParse (value: string) =
@@ -40,15 +67,44 @@ module ContributionOperation =
         | "approved" -> Some ContributionOperation.Approved
         | "superseded" -> Some ContributionOperation.Superseded
         | "migrated" -> Some ContributionOperation.Migrated
+        | "discovered" -> Some ContributionOperation.Discovered
+        | "measured" -> Some ContributionOperation.Measured
+        | "transformed" -> Some ContributionOperation.Transformed
+        | "remediated" -> Some ContributionOperation.Remediated
+        | "validated" -> Some ContributionOperation.Validated
+        | "resolved" -> Some ContributionOperation.Resolved
         | extension when extensionPattern.IsMatch extension -> Some(ContributionOperation.Extension extension)
         | _ -> None
+
+    /// Whether the operation changed the artifact's content or standing (and
+    /// so counts toward "modified by"). Observing, measuring, reviewing,
+    /// approving, and validating do not; an unrecognized `x-...` extension is
+    /// conservatively treated as a modification.
+    let isModification operation =
+        match operation with
+        | ContributionOperation.Created
+        | ContributionOperation.Reviewed
+        | ContributionOperation.Approved
+        | ContributionOperation.Discovered
+        | ContributionOperation.Measured
+        | ContributionOperation.Validated -> false
+        | ContributionOperation.Modified
+        | ContributionOperation.Superseded
+        | ContributionOperation.Migrated
+        | ContributionOperation.Transformed
+        | ContributionOperation.Remediated
+        | ContributionOperation.Resolved
+        | ContributionOperation.Extension _ -> true
 
 /// One actor's contribution to one artifact. Keyed by the execution that
 /// produced it (`EXE-...`) so every contribution made during one execution
 /// is traceable to that execution, and two executions of the same agent can
 /// never collapse into one entry. A contribution made outside any ROS
 /// execution (typically a human editing directly) uses a generated
-/// `CTB-...` key and records no execution.
+/// `CTB-...` key and records no execution. A contribution imported from
+/// another Echelon system is keyed by that system's own run as
+/// `EXT-<system>.<run-id>` (RQ-ROS-2026-A013): a foreign execution this
+/// repository carries verbatim but cannot cross-check.
 type Contribution =
     { Key: string
       Operations: ContributionOperation list
@@ -70,21 +126,47 @@ module Contribution =
     let private contributionKeyPattern =
         Regex("^CTB-[A-Za-z0-9._-]+$", RegexOptions.CultureInvariant)
 
+    /// `EXT-<system>.<run-id>`: `<system>` is an Echelon registry system id
+    /// (no dots), so the first dot always separates it from the run id.
+    let private foreignExecutionPattern =
+        Regex("^EXT-([a-z][a-z0-9-]*)\\.([A-Za-z0-9._-]+)$", RegexOptions.CultureInvariant)
+
     let private timestampPattern =
         Regex("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{1,9})?Z$", RegexOptions.CultureInvariant)
 
     let isExecutionId (value: string) = executionPattern.IsMatch value
 
+    let isForeignExecutionId (value: string) = foreignExecutionPattern.IsMatch value
+
     let isValidKey (value: string) =
-        executionPattern.IsMatch value || contributionKeyPattern.IsMatch value
+        executionPattern.IsMatch value
+        || contributionKeyPattern.IsMatch value
+        || foreignExecutionPattern.IsMatch value
+
+    /// The owning system of a foreign execution key (`EXT-dokimos.run-7` ->
+    /// `dokimos`).
+    let foreignSystem (value: string) =
+        let matched = foreignExecutionPattern.Match value
+        if matched.Success then Some matched.Groups[1].Value else None
 
     let isTimestamp (value: string) =
         timestampPattern.IsMatch value
         && DateTimeOffset.TryParse(value, Globalization.CultureInfo.InvariantCulture, Globalization.DateTimeStyles.AssumeUniversal)
            |> fst
 
+    /// The local Praxis execution (`EXE-...`) that produced the
+    /// contribution, which this repository can cross-check.
     let execution (contribution: Contribution) =
         if isExecutionId contribution.Key then Some contribution.Key else None
+
+    /// Another Echelon system's execution (`EXT-...`), carried verbatim.
+    let foreignExecution (contribution: Contribution) =
+        if isForeignExecutionId contribution.Key then Some contribution.Key else None
+
+    /// Any execution, local or foreign: a run, as opposed to a `CTB-...`
+    /// contribution made outside any execution.
+    let anyExecution (contribution: Contribution) =
+        execution contribution |> Option.orElse (foreignExecution contribution)
 
     let has operation (contribution: Contribution) =
         contribution.Operations |> List.contains operation
@@ -113,7 +195,7 @@ module Contribution =
 
     let problems (contribution: Contribution) : (string * string) list =
         [ if not (isValidKey contribution.Key) then
-              "key", $"contribution key '{contribution.Key}' must be an execution ID (EXE-...) or a contribution ID (CTB-...)"
+              "key", $"contribution key '{contribution.Key}' must be an execution ID (EXE-...), a foreign execution ID (EXT-<system>.<run-id>), or a contribution ID (CTB-...)"
           if contribution.Operations.IsEmpty then
               "operations", "contribution must record at least one operation"
           if not (isTimestamp contribution.At) then
@@ -123,8 +205,8 @@ module Contribution =
           | Some last when instant { contribution with At = last } < instant contribution -> "last", "last must not precede at"
           | _ -> ()
           yield! Actor.problems contribution.Actor |> List.map (fun (field, message) -> $"actor.{field}", message)
-          if contribution.Actor.Kind = ActorKind.Agent && execution contribution |> Option.isNone then
-              "key", "an agent contribution must be keyed by the execution (EXE-...) that produced it"
+          if contribution.Actor.Kind = ActorKind.Agent && anyExecution contribution |> Option.isNone then
+              "key", "an agent contribution must be keyed by the execution (EXE-... or EXT-<system>.<run-id>) that produced it"
           if contribution.Evidence |> List.exists (fun item -> item.Trim().Length = 0) then
               "evidence", "evidence references must not be empty" ]
 
@@ -327,7 +409,7 @@ module ArtifactProvenance =
             | Some _ ->
                 Error
                     [ { Field = "provenance.contributions"
-                        Message = "'contributions' must be a mapping keyed by execution (EXE-...) or contribution (CTB-...) ID" } ]
+                        Message = "'contributions' must be a mapping keyed by execution (EXE-... or EXT-...) or contribution (CTB-...) ID" } ]
         | Some _ -> Error [ { Field = FieldName; Message = "'provenance' must be a mapping" } ]
 
 /// How humans and agents were involved in an artifact, derived purely from
@@ -358,10 +440,7 @@ module Involvement =
             others |> List.filter predicate |> List.map _.Actor |> List.distinct
 
         let modifiers =
-            actorsWith (fun item ->
-                item.Operations
-                |> List.exists (fun operation ->
-                    operation <> ContributionOperation.Reviewed && operation <> ContributionOperation.Approved))
+            actorsWith (fun item -> item.Operations |> List.exists ContributionOperation.isModification)
 
         let reviewers = actorsWith (Contribution.has ContributionOperation.Reviewed)
         let approvers = actorsWith (Contribution.has ContributionOperation.Approved)

@@ -99,7 +99,20 @@ module ProvenanceValidation =
 
             let executionFindings =
                 match Contribution.execution contribution with
-                | None -> []
+                | None ->
+                    // A foreign (EXT-...) execution belongs to another
+                    // Echelon system: carried verbatim, never cross-checkable
+                    // here, and never an error in itself (RQ-ROS-2026-A013).
+                    match Contribution.foreignExecution contribution with
+                    | Some foreignId ->
+                        let system = Contribution.foreignSystem foreignId |> Option.defaultValue "unknown"
+
+                        [ finding
+                              FindingSeverity.Info
+                              document.RelativePath
+                              field
+                              $"execution '{foreignId}' belongs to Echelon system '{system}'; its self-reported identity is carried verbatim and cannot be cross-checked in this repository" ]
+                    | None -> []
                 | Some executionId ->
                     match request.Executions |> Map.tryFind executionId with
                     | None ->
@@ -380,5 +393,5 @@ module ProvenanceIndex =
                         Contribution.has ContributionOperation.Reviewed contribution
                         || Contribution.has ContributionOperation.Approved contribution)
                     rows
-              Executions = rows |> List.choose (fun row -> Contribution.execution row.Contribution) |> List.distinct |> List.length })
+              Executions = rows |> List.choose (fun row -> Contribution.anyExecution row.Contribution) |> List.distinct |> List.length })
         |> List.sortBy (fun summary -> -summary.Artifacts, Actor.describe summary.Actor)
