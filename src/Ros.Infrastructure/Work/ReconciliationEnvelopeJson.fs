@@ -7,14 +7,14 @@ open Ros.Domain.Work
 
 [<RequireQualifiedAccess>]
 module ReconciliationEnvelopeJson =
-    let private requiredString name (element: JsonElement) =
+    let private requiredString (name: string) (element: JsonElement) =
         match element.TryGetProperty name with
         | true, value when value.ValueKind = JsonValueKind.String ->
             let text = value.GetString()
             if String.IsNullOrWhiteSpace text then Error ("missing-" + name) else Ok text
         | _ -> Error ("missing-" + name)
 
-    let private optionalString name (element: JsonElement) =
+    let private optionalString (name: string) (element: JsonElement) =
         match element.TryGetProperty name with
         | true, value when value.ValueKind = JsonValueKind.String -> Some (value.GetString())
         | _ -> None
