@@ -346,50 +346,89 @@ function source(type, name, mechanism, extra = {}) {
   return { type, name, mechanism, ...extra };
 }
 
+// Mirrors Ros.Domain.Telemetry.Identity.discover exactly (the F# CLI is the
+// authority; DF-ROS-2026-A030): an empty environment variable counts as
+// unset, and an explicit provider/runtime -- even the literal "unknown" --
+// suppresses runtime detection. The actor derived from this identity is
+// hashed into event IDs, so the two implementations must agree.
+function identityEnv(name) {
+  const value = process.env[name];
+  return value === undefined || value === "" ? undefined : value;
+}
+
 function discoverIdentity(options = {}) {
-  let provider = options.provider ?? process.env.ROS_TELEMETRY_PROVIDER ?? "unknown";
-  let runtime = options.runtime ?? process.env.ROS_TELEMETRY_RUNTIME ?? "unknown";
-  let mechanism = "explicit-or-unmapped-environment";
-  if (provider === "unknown" && runtime === "unknown" && (process.env.CODEX_SESSION_ID || process.env.CODEX_THREAD_ID)) {
-    provider = "openai";
-    runtime = "codex";
-    mechanism = "whitelisted-codex-environment";
-  } else if (provider === "unknown" && runtime === "unknown" && process.env.CLAUDE_CODE_SESSION_ID) {
-    provider = "anthropic";
-    runtime = "claude-code";
-    mechanism = "whitelisted-claude-environment";
-  } else if (provider === "unknown" && runtime === "unknown" && process.env.GEMINI_SESSION_ID) {
-    provider = "google";
-    runtime = "gemini-cli";
-    mechanism = "whitelisted-gemini-environment";
-  } else if (provider === "unknown" && runtime === "unknown" && process.env.COPILOT_SESSION_ID) {
-    provider = "github";
-    runtime = "copilot";
-    mechanism = "whitelisted-copilot-environment";
-  } else if (provider === "unknown" && process.env.GITHUB_ACTIONS === "true") {
-    provider = "github";
-    runtime = runtime === "unknown" ? "github-actions" : runtime;
-    mechanism = "whitelisted-github-actions-environment";
-  } else if (provider === "unknown" && process.env.OLLAMA_HOST) {
-    provider = "local";
-    runtime = runtime === "unknown" ? "ollama" : runtime;
-    mechanism = "whitelisted-local-runtime-environment";
+  const explicitProvider = options.provider ?? identityEnv("ROS_TELEMETRY_PROVIDER");
+  const explicitRuntime = options.runtime ?? identityEnv("ROS_TELEMETRY_RUNTIME");
+  const unknownBoth = explicitProvider == null && explicitRuntime == null;
+  let provider;
+  let runtime;
+  let mechanism;
+  if (unknownBoth && (identityEnv("CODEX_SESSION_ID") || identityEnv("CODEX_THREAD_ID"))) {
+    [provider, runtime, mechanism] = ["openai", "codex", "whitelisted-codex-environment"];
+  } else if (unknownBoth && identityEnv("CLAUDE_CODE_SESSION_ID")) {
+    [provider, runtime, mechanism] = ["anthropic", "claude-code", "whitelisted-claude-environment"];
+  } else if (unknownBoth && identityEnv("GEMINI_SESSION_ID")) {
+    [provider, runtime, mechanism] = ["google", "gemini-cli", "whitelisted-gemini-environment"];
+  } else if (unknownBoth && identityEnv("COPILOT_SESSION_ID")) {
+    [provider, runtime, mechanism] = ["github", "copilot", "whitelisted-copilot-environment"];
+  } else if (explicitProvider == null && process.env.GITHUB_ACTIONS === "true") {
+    [provider, runtime, mechanism] = ["github", explicitRuntime ?? "github-actions", "whitelisted-github-actions-environment"];
+  } else if (explicitProvider == null && identityEnv("OLLAMA_HOST")) {
+    [provider, runtime, mechanism] = ["local", explicitRuntime ?? "ollama", "whitelisted-local-runtime-environment"];
+  } else {
+    [provider, runtime, mechanism] = [explicitProvider ?? "unknown", explicitRuntime ?? "unknown", "explicit-or-unmapped-environment"];
   }
   return {
     provider,
-    model: options.model ?? process.env.ROS_TELEMETRY_MODEL ?? null,
-    modelVersion: options.modelVersion ?? process.env.ROS_TELEMETRY_MODEL_VERSION ?? null,
+    model: options.model ?? identityEnv("ROS_TELEMETRY_MODEL") ?? null,
+    modelVersion: options.modelVersion ?? identityEnv("ROS_TELEMETRY_MODEL_VERSION") ?? null,
     runtime,
-    runtimeVersion: options.runtimeVersion ?? process.env.ROS_TELEMETRY_RUNTIME_VERSION ?? null,
-    sessionId: options.sessionId ?? process.env.ROS_TELEMETRY_SESSION_ID ?? process.env.CODEX_SESSION_ID ?? process.env.CLAUDE_CODE_SESSION_ID ?? process.env.GEMINI_SESSION_ID ?? process.env.COPILOT_SESSION_ID ?? null,
-    conversationId: options.conversationId ?? process.env.ROS_TELEMETRY_CONVERSATION_ID ?? process.env.CODEX_THREAD_ID ?? null,
-    runId: options.runId ?? process.env.ROS_TELEMETRY_RUN_ID ?? process.env.GITHUB_RUN_ID ?? null,
-    agentId: options.agentId ?? process.env.ROS_ACTOR ?? null,
+    runtimeVersion: options.runtimeVersion ?? identityEnv("ROS_TELEMETRY_RUNTIME_VERSION") ?? null,
+    sessionId: options.sessionId ?? identityEnv("ROS_TELEMETRY_SESSION_ID") ?? identityEnv("CODEX_SESSION_ID") ?? identityEnv("CLAUDE_CODE_SESSION_ID") ?? identityEnv("GEMINI_SESSION_ID") ?? identityEnv("COPILOT_SESSION_ID") ?? null,
+    conversationId: options.conversationId ?? identityEnv("ROS_TELEMETRY_CONVERSATION_ID") ?? identityEnv("CODEX_THREAD_ID") ?? null,
+    runId: options.runId ?? identityEnv("ROS_TELEMETRY_RUN_ID") ?? identityEnv("GITHUB_RUN_ID") ?? null,
+    agentId: options.agentId ?? identityEnv("ROS_ACTOR") ?? null,
     subagentId: options.subagentId ?? null,
     parentExecutionId: options.parentExecutionId ?? null,
+    actorKind: resolveActorKind(options.actorKind ?? identityEnv("ROS_ACTOR_KIND"), mechanism),
     orchestration: options.orchestration ?? {},
     discoverySource: source("environment", "runtime-identity", mechanism)
   };
+}
+
+// Mirrors Ros.Domain.Provenance.ActorKind: an explicit kind always wins;
+// otherwise only a mechanism that identifies an agent runtime or CI
+// automation implies a kind, and anything else is recorded as unknown.
+const ACTOR_KINDS = new Set(["agent", "human", "automation", "unknown"]);
+const AGENT_MECHANISMS = new Set([
+  "whitelisted-codex-environment", "whitelisted-claude-environment",
+  "whitelisted-gemini-environment", "whitelisted-copilot-environment"
+]);
+
+export function resolveActorKind(explicit, mechanism) {
+  if (explicit !== undefined && explicit !== null && explicit !== "") {
+    if (ACTOR_KINDS.has(explicit) || /^x-[a-z0-9][a-z0-9-]*$/.test(explicit)) return explicit;
+    throw new Error(`unknown actor kind '${explicit}'; expected agent, human, automation, unknown, or x-<extension>`);
+  }
+  if (AGENT_MECHANISMS.has(mechanism)) return "agent";
+  if (mechanism === "whitelisted-github-actions-environment") return "automation";
+  return "unknown";
+}
+
+// Mirrors Ros.Domain.Provenance.Actor.fromIdentity: the portable actor
+// carried by events and records, with the same key order the F# CLI hashes.
+export function actorFromIdentity(identity) {
+  const kind = identity.actorKind ?? "unknown";
+  const known = (value) => typeof value === "string" && value.trim().length > 0 && value.trim() !== "unknown";
+  const agentId = typeof identity.agentId === "string" && identity.agentId.trim() ? identity.agentId.trim() : null;
+  const id = agentId ?? (kind !== "human" && known(identity.provider) && known(identity.runtime) ? `${identity.provider}/${identity.runtime}` : "unknown");
+  if (kind === "human") return { kind, id };
+  const orUnknown = (value) => (typeof value === "string" && value.trim() ? value : "unknown");
+  return { kind, id, provider: orUnknown(identity.provider), model: orUnknown(identity.model), runtime: orUnknown(identity.runtime) };
+}
+
+export function resolveActor(options = {}) {
+  return actorFromIdentity(discoverIdentity(options));
 }
 
 const RUNTIME_CAPABILITIES = {

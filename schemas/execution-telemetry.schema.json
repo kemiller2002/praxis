@@ -26,6 +26,7 @@
         "agentId": {"type": ["string", "null"]},
         "subagentId": {"type": ["string", "null"]},
         "parentExecutionId": {"type": ["string", "null"]},
+        "actorKind": {"description": "Kind of actor that performed this execution (RQ-ROS-2026-A002); absent on records written before actor attribution, which are projected from provenance.sources.", "type": "string", "pattern": "^(agent|human|automation|unknown|x-[a-z0-9][a-z0-9-]*)$"},
         "orchestration": {"type": "object", "additionalProperties": true}
       },
       "additionalProperties": true

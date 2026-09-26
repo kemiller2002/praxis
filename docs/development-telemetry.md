@@ -142,6 +142,7 @@ Classification is multi-valued. The core vocabulary is: Research, Development, R
 | commits, files, lines, extensions, test-file changes, documentation changes | mechanical only from a clean execution baseline; otherwise explicitly unavailable because pre-existing edits prevent trustworthy attribution |
 | completion finalization and structural validation | mechanical for work items that have entered the telemetry contract |
 | provider/model/runtime/session identity | discovered from a small whitelist of non-secret environment fields, adapter input, or explicit flags; unknown values remain explicit |
+| actor kind (`identity.actorKind`: agent, human, automation, unknown) | explicit `--actor-kind`/`ROS_ACTOR_KIND`, else implied only by a whitelisted agent runtime (agent) or CI (automation); otherwise `unknown`. Records predating the field are projected from `provenance.sources`; see `agent-provenance.md` |
 | tokens, cost, model/tool time, turns, retries, subagents, and detailed tool events | mechanical only when a provider runtime stream, hook, API, or OpenTelemetry exporter is connected |
 | research context, failed approaches, scope variance, requirements, decisions, and evidence links | dependent on agent/human/work-system reporting unless a domain tool exposes them |
 

@@ -59,6 +59,8 @@
     <Compile Include="LifecycleTests.fs" />
     <Compile Include="FoundationsTests.fs" />
     <Compile Include="OrdoObservationTests.fs" />
+    <Compile Include="ProvenanceTests.fs" />
+    <Compile Include="ProvenanceEffectTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

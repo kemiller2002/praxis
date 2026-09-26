@@ -265,9 +265,37 @@ ros work <capture|list|ready|show|start|resume|block|complete|update|attach|cont
 ros add "..."
 ros telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
 ros adapter <call|publish>
+ros provenance <identity|record|show|audit>
 ```
 
 Run `ros --help` for the full argument list, and see
 [`work-protocol.md`](work-protocol.md),
-[`development-telemetry.md`](development-telemetry.md) and
-[`work-adapter-contract.md`](work-adapter-contract.md) for what they mean.
+[`development-telemetry.md`](development-telemetry.md),
+[`work-adapter-contract.md`](work-adapter-contract.md) and
+[`agent-provenance.md`](agent-provenance.md) for what they mean.
+
+### Identity flags and provenance commands
+
+Every work transition (`work start|begin|resume|block|complete|done`), `add`
+or `work capture`, and `telemetry start` accepts the same identity
+declaration. Each flag overrides the whitelisted environment:
+
+```
+--actor-kind agent|human|automation|unknown|x-...   (env ROS_ACTOR_KIND)
+--agent ID | --actor ID                              (env ROS_ACTOR; stable identity)
+--provider P --model M --model-version V --runtime R --runtime-version V
+--session S --conversation C --run R --subagent ID   (env ROS_TELEMETRY_*)
+```
+
+An invalid `--actor-kind` is an argument error (exit `2`).
+
+| Command | Purpose |
+|---|---|
+| `provenance identity [--json]` | who this process is recorded as, how that was determined, and the active executions |
+| `provenance record --path PATH\|--id ID --operation OP [--reason T] [--evidence REF]* [--derived-from REF]* [--execution EXE] [--occurred-at TS] [--json]` | attribute a contribution to an artifact's front matter and append an `artifact.contributed` event; identity is inherited from the active execution; idempotent |
+| `provenance show ID\|PATH [--json]` | contributors, involvement label, lineage (sources and derivatives), legacy-declared authors, and events |
+| `provenance audit [--json]` | coverage, per-actor summaries, flattened contribution facts for metrics, and every finding including informational ones; exits `1` on errors |
+
+`validate` reports provenance errors (which fail validation) and provenance
+warnings (which do not). In `--json`, warnings carry `"severity":"warning"`,
+and `valid` reflects errors only.

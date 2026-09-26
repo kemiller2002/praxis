@@ -26,8 +26,12 @@ replaceable projections.
 
 - Inbound: artifact front matter, `./ros validate [--json]`, and
   `./ros registry build|check`.
-- Outbound: findings on stdout/stderr, process exit status, and eight managed
-  registry JSON files.
+- Outbound: findings on stdout/stderr, process exit status, eight managed
+  registry JSON files, and the optional `registries/requirements.json` for
+  requirement records (`RQ-`, `research/requirements/`). That registry is
+  written only once a requirement exists, so upgraded repositories are not
+  made stale. Artifact `provenance` blocks are owned by
+  `docs/features/agent-provenance/manifest.md`.
 
 ## Tests and verification
 

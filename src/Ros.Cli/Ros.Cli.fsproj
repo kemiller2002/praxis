@@ -16,6 +16,7 @@
   <ItemGroup>
     <Compile Include="Lifecycle.fs" />
     <Compile Include="Foundations.fs" />
+    <Compile Include="ProvenanceCommands.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

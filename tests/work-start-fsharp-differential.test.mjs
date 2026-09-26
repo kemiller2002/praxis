@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
+import { UNKNOWN_ACTOR, deterministicIdentityEnv } from "./deterministic-identity-env.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const installWorkItemId = `ROS-INSTALL-${JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8")).version.replaceAll(".", "-")}`;
@@ -20,12 +21,7 @@ const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", 
 // deterministic across environments (a contributor's own machine, this
 // sandbox, or a real CI runner) instead of baking in whichever one
 // captured the golden literal.
-const DETERMINISTIC_ENV = { ...process.env };
-for (const key of [
-  "CLAUDE_CODE_SESSION_ID", "CODEX_SESSION_ID", "CODEX_THREAD_ID",
-  "GEMINI_SESSION_ID", "COPILOT_SESSION_ID", "GITHUB_ACTIONS", "GITHUB_RUN_ID",
-  "OLLAMA_HOST", "ROS_TELEMETRY_PROVIDER", "ROS_TELEMETRY_RUNTIME"
-]) delete DETERMINISTIC_ENV[key];
+const DETERMINISTIC_ENV = deterministicIdentityEnv();
 
 function fixture(t, label) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), `ros-work-start-${label}-`));
@@ -179,6 +175,7 @@ const GOLDEN ={
         "docs/00-governance/README.md",
         "docs/00-governance/Research-Execution-Package-Specification.md",
         "docs/PILOT-MEASUREMENT-PLAN.md",
+        "docs/agent-provenance.md",
         "docs/architecture/README.md",
         "docs/decisions/README.md",
         "docs/development-telemetry.md",
@@ -256,6 +253,7 @@ const GOLDEN ={
       "protocolVersion": "1.0.0",
       "evidence": [],
       "paths": [],
+      "actor": UNKNOWN_ACTOR,
       "publication": {
         "status": "pending"
       }
@@ -280,6 +278,7 @@ const GOLDEN ={
       "agentId": null,
       "subagentId": null,
       "parentExecutionId": null,
+      "actorKind": "unknown",
       "orchestration": {}
     },
     "provenance": {

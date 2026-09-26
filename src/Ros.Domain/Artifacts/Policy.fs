@@ -7,7 +7,7 @@ open System.Text.RegularExpressions
 module ArtifactPolicy =
     let private identifierPattern =
         Regex(
-            "^(?:(RP|JR|EV|HY|TH|EX|DF|CN|GL|MS)-[A-Z0-9]+(?:-[A-Z0-9]+)*-[0-9]{4}-(?:[0-9]{4}|[A-F0-9]{4})|RP-[0-9]{4}-[0-9]{2}-[0-9]{2}-[A-Z0-9]+(?:-[A-Z0-9]+)*|(?:RP|REP)-[A-Z0-9]+(?:-[A-Z0-9]+)*-[0-9]{4}-[0-9]{3})$",
+            "^(?:(RP|JR|EV|HY|TH|EX|DF|CN|GL|MS|RQ)-[A-Z0-9]+(?:-[A-Z0-9]+)*-[0-9]{4}-(?:[0-9]{4}|[A-F0-9]{4})|RP-[0-9]{4}-[0-9]{2}-[0-9]{2}-[A-Z0-9]+(?:-[A-Z0-9]+)*|(?:RP|REP)-[A-Z0-9]+(?:-[A-Z0-9]+)*-[0-9]{4}-[0-9]{3})$",
             RegexOptions.CultureInvariant
         )
 
@@ -43,7 +43,8 @@ module ArtifactPolicy =
               "HY", Set.ofList [ "proposed"; "active"; "supported"; "rejected"; "superseded"; "withdrawn" ]
               "MS", Set.ofList [ "proposed"; "approved"; "active"; "blocked"; "completed"; "cancelled"; "archived" ]
               "RP", Set.ofList [ "draft"; "review"; "accepted"; "canonical"; "deprecated"; "archived"; "superseded"; "withdrawn" ]
-              "TH", Set.ofList [ "candidate"; "supported"; "established"; "challenged"; "superseded"; "rejected" ] ]
+              "TH", Set.ofList [ "candidate"; "supported"; "established"; "challenged"; "superseded"; "rejected" ]
+              "RQ", Set.ofList [ "draft"; "proposed"; "accepted"; "implemented"; "verified"; "deprecated"; "superseded"; "rejected" ] ]
 
     let private confidenceLabels =
         Set.ofList [ "very-low"; "low"; "medium"; "medium-high"; "high"; "very-high" ]

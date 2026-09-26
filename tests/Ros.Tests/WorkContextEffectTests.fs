@@ -4,6 +4,7 @@ open System
 open System.IO
 open System.Text.Json.Nodes
 open Ros.Domain.Telemetry
+open Ros.Domain.Provenance
 open Ros.Domain.Work
 open Ros.Infrastructure.Work
 
@@ -62,7 +63,7 @@ module WorkContextEffectTests =
                   withTemporaryRoot (fun root ->
                       let plan = planFor (beginItem "WI-NEW" [ "EXE-1" ])
 
-                      match FileWorkContextRepository.applyContextPlan root "repo" plan with
+                      match FileWorkContextRepository.applyContextPlan root "repo" Actor.unknown plan with
                       | Error message -> failwith message
                       | Ok(writtenItems, eventIds) ->
                           Assert.equal 1 eventIds.Length
@@ -78,7 +79,7 @@ module WorkContextEffectTests =
 
                       let plan = planFor (beginItem "WI-NEW" [ "EXE-1" ])
 
-                      match FileWorkContextRepository.applyContextPlan root "repo" plan with
+                      match FileWorkContextRepository.applyContextPlan root "repo" Actor.unknown plan with
                       | Error message -> failwith message
                       | Ok(writtenItems, _) ->
                           Assert.equal 2 writtenItems.Count
@@ -93,7 +94,7 @@ module WorkContextEffectTests =
                   withTemporaryRoot (fun root ->
                       let plan = planFor (beginItem "WI-NEW" [])
 
-                      match FileWorkContextRepository.applyContextPlan root "repo" plan with
+                      match FileWorkContextRepository.applyContextPlan root "repo" Actor.unknown plan with
                       | Error message -> failwith message
                       | Ok _ ->
                           let raw = File.ReadAllText(Path.Combine(root, ".ros", "context", "current.json"))
@@ -104,8 +105,8 @@ module WorkContextEffectTests =
               fun () ->
                   withTemporaryRoot (fun root ->
                       let plan = planFor (beginItem "WI-NEW" [ "EXE-1" ])
-                      FileWorkContextRepository.applyContextPlan root "repo" plan |> ignore
-                      FileWorkContextRepository.applyContextPlan root "repo" plan |> ignore
+                      FileWorkContextRepository.applyContextPlan root "repo" Actor.unknown plan |> ignore
+                      FileWorkContextRepository.applyContextPlan root "repo" Actor.unknown plan |> ignore
                       let eventsFile = Path.Combine(root, ".ros", "events", "events.jsonl")
 
                       let lines =
@@ -118,7 +119,7 @@ module WorkContextEffectTests =
               fun () ->
                   withTemporaryRoot (fun root ->
                       let beginPlan = planFor (beginItem "WI-BLOCKED" [ "EXE-1" ])
-                      FileWorkContextRepository.applyContextPlan root "repo" beginPlan |> ignore
+                      FileWorkContextRepository.applyContextPlan root "repo" Actor.unknown beginPlan |> ignore
 
                       let blockedItem =
                           { (beginItem "WI-BLOCKED" [ "EXE-1" ]) with
@@ -133,7 +134,7 @@ module WorkContextEffectTests =
                                     Event = { eventFor blockedItem with EventType = "work.blocked"; Reason = Some "waiting on review" }
                                     Telemetry = [] } ] }
 
-                      match FileWorkContextRepository.applyContextPlan root "repo" blockPlan with
+                      match FileWorkContextRepository.applyContextPlan root "repo" Actor.unknown blockPlan with
                       | Error message -> failwith message
                       | Ok _ ->
                           let raw = File.ReadAllText(Path.Combine(root, ".ros", "context", "current.json"))

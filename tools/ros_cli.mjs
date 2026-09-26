@@ -15,6 +15,7 @@ import {
   readTelemetryInput,
   recordTelemetryLifecycle,
   recordTelemetryMetric,
+  resolveActor,
   showTelemetry,
   startExecution,
   summarizeTelemetry,
@@ -308,6 +309,7 @@ function captureWorkUnlocked(root, title, options = {}) {
     createdAt: now,
     updatedAt: now,
     createdBy: options.actor ?? process.env.ROS_ACTOR ?? "unknown",
+    createdByActor: resolveActor({ agentId: options.agentId ?? options.actor, actorKind: options.actorKind }),
     source: options.source ?? "manual",
     sourceReference: options.sourceReference ?? null
   };
@@ -813,6 +815,7 @@ function transitionUnlocked(root, action, ids, options = {}) {
       occurredAt: now, reason: options.reason, evidence: item.evidence,
       paths: action === "complete" ? meaningfulPaths(root, observedGitPaths).filter((p) => !(context.baselineDirtyPaths ?? []).includes(p)) : [],
       telemetryExecutions: item.telemetryExecutionIds ?? [],
+      actor: resolveActor(options.telemetryIdentity ?? {}),
       publication: { status: "pending" }
     });
     events.push(event);
@@ -1242,8 +1245,15 @@ function telemetryIdentityOptions(args) {
     runId: option(args, "--run"),
     agentId: option(args, "--agent"),
     subagentId: option(args, "--subagent"),
-    parentExecutionId: option(args, "--parent-execution")
+    parentExecutionId: option(args, "--parent-execution"),
+    actorKind: option(args, "--actor-kind")
   };
+}
+
+// Work transitions also accept `--actor` as the stable agent identity, so
+// the execution they create and the events they write agree (F# parity).
+function transitionIdentityOptions(args) {
+  return { ...telemetryIdentityOptions(args), agentId: option(args, "--agent") ?? option(args, "--actor") };
 }
 
 function telemetryInput(root, args) {
@@ -1314,6 +1324,8 @@ export function main(argv) {
         priority: option(args, "--priority"),
         id: option(args, "--id"),
         actor: option(args, "--actor"),
+        agentId: option(args, "--agent"),
+        actorKind: option(args, "--actor-kind"),
         source: option(args, "--source"),
         sourceReference: option(args, "--source-reference"),
         description: option(args, "--description"),
@@ -1368,7 +1380,7 @@ export function main(argv) {
       const ids = idArgs(args.slice(2));
       const result = startWork(root, ids, {
         type: option(args, "--type"), actor: option(args, "--actor"),
-        telemetryIdentity: telemetryIdentityOptions(args), classifications: options(args, "--classification")
+        telemetryIdentity: transitionIdentityOptions(args), classifications: options(args, "--classification")
       });
       console.log(JSON.stringify({ workItems: result.context.workItems, events: result.events.map((event) => event.eventId) }, null, 2)); return 0;
     }
@@ -1380,7 +1392,7 @@ export function main(argv) {
     }
     if (args[0] === "work" && args[1] === "block") {
       const ids = idArgs(args.slice(2));
-      console.log(JSON.stringify(blockWork(root, ids, { reason: option(args, "--reason") }), null, 2)); return 0;
+      console.log(JSON.stringify(blockWork(root, ids, { reason: option(args, "--reason"), telemetryIdentity: transitionIdentityOptions(args) }), null, 2)); return 0;
     }
     if (args[0] === "work" && ["begin", "resume", "complete", "done"].includes(args[1])) {
       const action = ACTION_ALIASES[args[1]] ?? args[1];
@@ -1388,7 +1400,7 @@ export function main(argv) {
       const result = transition(root, action, ids, {
         type: option(args, "--type"), actor: option(args, "--actor"), reason: option(args, "--reason"),
         localState: option(args, "--local-state"), conclusion: option(args, "--conclusion"), evidence: evidenceOptions(args),
-        telemetryIdentity: telemetryIdentityOptions(args), classifications: options(args, "--classification")
+        telemetryIdentity: transitionIdentityOptions(args), classifications: options(args, "--classification")
       });
       console.log(JSON.stringify({ workItems: result.context.workItems, events: result.events.map((event) => event.eventId) }, null, 2)); return 0;
     }

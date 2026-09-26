@@ -30,6 +30,7 @@
     <Compile Include="Work/FileTelemetryQueryRepository.fs" />
     <Compile Include="Work/FileTelemetryValidationRepository.fs" />
     <Compile Include="Work/FileAdapterRepository.fs" />
+    <Compile Include="Provenance/FileProvenanceRepository.fs" />
     <Compile Include="Ordo/FileObservationRepository.fs" />
     <Compile Include="Lifecycle/Payload.fs" />
     <Compile Include="Lifecycle/Installation.fs" />
@@ -62,10 +63,11 @@
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/work-adapter-contract.md" LogicalName="ros.payload/docs/work-adapter-contract.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/work-backlog-guide.md" LogicalName="ros.payload/docs/work-backlog-guide.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/work-protocol.md" LogicalName="ros.payload/docs/work-protocol.md" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)docs/agent-provenance.md" LogicalName="ros.payload/docs/agent-provenance.md" />
 
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/00-governance/**/*.*" LogicalName="ros.payload/docs/00-governance/%(RecursiveDir)%(Filename)%(Extension)" />
     <EmbeddedResource Include="$(RosRepositoryRoot)framework/**/*.*" LogicalName="ros.payload/framework/%(RecursiveDir)%(Filename)%(Extension)" />
-    <EmbeddedResource Include="$(RosRepositoryRoot)schemas/**/*.*" Exclude="$(RosRepositoryRoot)schemas/echelon-doctor-v1.schema.json;$(RosRepositoryRoot)schemas/echelon-inventory-v1.schema.json;$(RosRepositoryRoot)schemas/echelon-foundations-v1.schema.json" LogicalName="ros.payload/schemas/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)schemas/**/*.*" Exclude="$(RosRepositoryRoot)schemas/provenance-actor.schema.json;$(RosRepositoryRoot)schemas/artifact-provenance.schema.json;$(RosRepositoryRoot)schemas/echelon-doctor-v1.schema.json;$(RosRepositoryRoot)schemas/echelon-inventory-v1.schema.json;$(RosRepositoryRoot)schemas/echelon-foundations-v1.schema.json" LogicalName="ros.payload/schemas/%(RecursiveDir)%(Filename)%(Extension)" />
     <EmbeddedResource Include="$(RosRepositoryRoot)templates/**/*.*" Exclude="$(RosRepositoryRoot)templates/application-foundations.json" LogicalName="ros.payload/templates/%(RecursiveDir)%(Filename)%(Extension)" />
     <EmbeddedResource Include="$(RosRepositoryRoot)tools/*.mjs" LogicalName="ros.payload/tools/%(Filename)%(Extension)" />
     <EmbeddedResource Include="$(RosRepositoryRoot)web/*.*" LogicalName="ros.payload/web/%(Filename)%(Extension)" />

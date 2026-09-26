@@ -63,20 +63,31 @@ module ArtifactOperations =
             let compareField = StringComparer.Ordinal.Compare(left.Field, right.Field)
             if compareField <> 0 then compareField else StringComparer.Ordinal.Compare(left.Message, right.Message)
 
+    /// An optional-registry kind (`ArtifactKindConfiguration.
+    /// OptionalRegistry`) that has no documents needs no registry file; an
+    /// existing file for it is still kept current.
+    let private optionalWhenEmpty (projection: RegistryProjection) =
+        projection.Documents.IsEmpty
+        && ArtifactKinds.configurations
+           |> List.exists (fun configuration ->
+               configuration.RegistryPath = projection.RegistryPath && configuration.OptionalRegistry)
+
     let private renderedProjections documents =
         documents
         |> ArtifactProjection.plan
         |> List.map (fun projection ->
             { Path = projection.RegistryPath
-              Content = RegistryJson.render projection.Documents })
+              Content = RegistryJson.render projection.Documents },
+            optionalWhenEmpty projection)
 
     let private changedRegistries repository projections =
         let rec collect changed remaining =
             match remaining with
             | [] -> Ok(List.rev changed)
-            | projection :: rest ->
+            | (projection, optional) :: rest ->
                 match repository.ReadRegistry projection.Path with
                 | Error failure -> Error failure
+                | Ok None when optional -> collect changed rest
                 | Ok(Some current) when current = projection.Content -> collect changed rest
                 | Ok _ -> collect (projection :: changed) rest
 

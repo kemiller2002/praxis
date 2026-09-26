@@ -70,8 +70,11 @@ module ArtifactTests =
         use stream = File.OpenRead file
         SHA256.HashData(stream) |> Convert.ToHexString
 
+    /// The frozen golden fixtures predate optional-registry kinds (RQ); an
+    /// optional kind with no documents writes no registry file at all.
     let private registryNames =
         ArtifactKinds.configurations
+        |> List.filter (fun configuration -> not configuration.OptionalRegistry)
         |> List.map (fun configuration -> Path.GetFileName configuration.RegistryPath)
 
     let private validDocument =
