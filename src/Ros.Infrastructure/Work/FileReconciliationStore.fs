@@ -16,7 +16,7 @@ module FileReconciliationStore =
         |> Seq.toArray
         |> String
 
-    let private atomicWrite path content =
+    let private atomicWrite (path: string) (content: string) =
         let directory = Path.GetDirectoryName path
         Directory.CreateDirectory directory |> ignore
         let temp = path + "." + Guid.NewGuid().ToString("N") + ".tmp"
