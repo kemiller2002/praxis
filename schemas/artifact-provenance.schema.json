@@ -2,13 +2,13 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/kemiller2002/praxis/schemas/artifact-provenance.schema.json",
   "title": "Praxis artifact provenance",
-  "description": "The accumulated contribution history carried in an artifact's front matter as `provenance` (RQ-ROS-2026-A004) and projected verbatim into generated registries. Contributions are keyed by the execution (EXE-...) that produced them, or by a generated contribution ID (CTB-...) for a non-agent contributor acting outside any execution. The history is append-only: entries are added or extended, never replaced. Unknown fields are preserved so stronger attestation can be added later.",
+  "description": "The accumulated contribution history carried in an artifact's front matter as `provenance` (RQ-ROS-2026-A004) and projected verbatim into generated registries. Contributions are keyed by the execution (EXE-...) that produced them, by another Echelon system's execution (EXT-<system>.<run-id>, RQ-ROS-2026-A013), or by a generated contribution ID (CTB-...) for a non-agent contributor acting outside any execution. The history is append-only: entries are added or extended, never replaced. Unknown fields are preserved so stronger attestation can be added later.",
   "type": "object",
   "required": ["contributions"],
   "properties": {
     "contributions": {
       "type": "object",
-      "propertyNames": { "pattern": "^(EXE|CTB)-[A-Za-z0-9._-]+$" },
+      "propertyNames": { "pattern": "^(EXE-[A-Za-z0-9._-]+|CTB-[A-Za-z0-9._-]+|EXT-[a-z][a-z0-9-]*\\.[A-Za-z0-9._-]+)$" },
       "additionalProperties": { "$ref": "#/$defs/contribution" }
     }
   },
@@ -22,7 +22,8 @@
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": { "type": "string", "pattern": "^(created|modified|reviewed|approved|superseded|migrated|x-[a-z0-9][a-z0-9-]*)$" }
+          "description": "created/modified/reviewed/approved/superseded/migrated (RQ-ROS-2026-A004) plus the Echelon role operations discovered/measured/transformed/remediated/validated/resolved (RQ-ROS-2026-A014), and x-... extensions. Only created establishes authorship. Contract 1.1: a grammar-valid code from a later 1.x release is preserved and reported as a warning, never rejected.",
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" }
         },
         "at": {
           "description": "ISO-8601 UTC time of this execution's first recorded operation on the artifact.",

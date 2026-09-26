@@ -2213,11 +2213,77 @@
         "EXE-20260925T193942361Z-84dc9b22"
       ],
       "completedAt": "2026-09-25T20:36:01.000Z"
+    },
+    {
+      "id": "FEAT-ECHELON-PROVENANCE",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "lib/provenance-interchange.mjs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Contracts/Provenance/ProvenanceInterchangeJson.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/provenance-interchange.test.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ProvenanceInterchangeTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/echelon-provenance-architecture.md"
+        }
+      ],
+      "updatedAt": "2026-09-26T09:07:34.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260926T075049280Z-9919ff63"
+      ],
+      "completedAt": "2026-09-26T09:07:34.000Z"
+    },
+    {
+      "id": "FEAT-ECHELON-PROVENANCE-R12",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "lib/provenance-interchange.mjs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Contracts/Provenance/ProvenanceInterchangeJson.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/fixtures/provenance-interchange/text-cases.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/provenance-interchange.test.mjs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/agent-provenance.md"
+        }
+      ],
+      "updatedAt": "2026-09-26T09:41:03.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260926T094012488Z-15a65e61"
+      ],
+      "completedAt": "2026-09-26T09:41:03.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-25T20:36:01.000Z",
+  "updatedAt": "2026-09-26T09:41:03.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

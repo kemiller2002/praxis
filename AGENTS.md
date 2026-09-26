@@ -2,11 +2,11 @@
 id: GV-START-001
 title: Agent Startup Guide
 status: canonical
-version: 1.5.0
+version: 1.6.0
 owners:
   - repository-governance
 created: 2026-07-22
-updated: 2026-09-25
+updated: 2026-09-26
 review_cycle: quarterly
 supersedes: []
 superseded_by: []
@@ -103,6 +103,15 @@ every provider and runtime, and equally to humans and automation. See
    records with `--evidence`.
 10. **Run `./ros validate` before finishing.** Missing or contradictory
     provenance on new work is an error.
+11. **Carry provenance across system boundaries.** When your work hands a
+    record to another Echelon system (a finding, a follow-up, a measurement,
+    an integration message), pass its provenance as the versioned
+    `praxis.provenance/1` block (`./ros provenance export ID`) and pass your
+    execution to tools you launch as `ROS_EXECUTION_ID`. Never strip, rewrite,
+    or re-attribute provenance you received; add your own contribution with a
+    role operation (`discovered`, `measured`, `transformed`, `remediated`,
+    `validated`, `resolved`) when you played that role. Never put credentials
+    in provenance. See `docs/agent-provenance.md#interchange-across-echelon-systems`.
 
 Identity recorded this way is provenance, not authentication. It is
 self-reported and cross-checked, not cryptographically proven.

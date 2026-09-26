@@ -265,7 +265,7 @@ ros work <capture|list|ready|show|start|resume|block|complete|update|attach|cont
 ros add "..."
 ros telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
 ros adapter <call|publish>
-ros provenance <identity|record|show|audit>
+ros provenance <identity|record|show|export|audit>
 ```
 
 Run `ros --help` for the full argument list, and see
@@ -292,8 +292,9 @@ An invalid `--actor-kind` is an argument error (exit `2`).
 | Command | Purpose |
 |---|---|
 | `provenance identity [--json]` | who this process is recorded as, how that was determined, and the active executions |
-| `provenance record --path PATH\|--id ID --operation OP [--reason T] [--evidence REF]* [--derived-from REF]* [--execution EXE] [--occurred-at TS] [--json]` | attribute a contribution to an artifact's front matter and append an `artifact.contributed` event; identity is inherited from the active execution; idempotent |
+| `provenance record --path PATH\|--id ID --operation OP [--reason T] [--evidence REF]* [--derived-from REF]* [--execution EXE] [--occurred-at TS] [--json]` | attribute a contribution to an artifact's front matter and append an `artifact.contributed` event; identity is inherited from the active execution; idempotent. `OP` is `created`, `modified`, `reviewed`, `approved`, `superseded`, `migrated`, or a role operation (`discovered`, `measured`, `transformed`, `remediated`, `validated`, `resolved`); `ROS_EXECUTION_ID` is the environment form of `--execution` |
 | `provenance show ID\|PATH [--json]` | contributors, involvement label, lineage (sources and derivatives), legacy-declared authors, and events |
+| `provenance export ID\|PATH` | the artifact's provenance as a versioned `praxis.provenance/1` interchange block (JSON) for another Echelon system; an unattributed artifact exports an empty contribution map, and malformed provenance is refused (exit `1`) |
 | `provenance audit [--json]` | coverage, per-actor summaries, flattened contribution facts for metrics, and every finding including informational ones; exits `1` on errors |
 
 `validate` reports provenance errors (which fail validation) and provenance
