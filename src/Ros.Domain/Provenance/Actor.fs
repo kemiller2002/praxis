@@ -139,7 +139,12 @@ module Actor =
                   | None -> field, $"agent actor must record {field} (use 'unknown' when it is not known)"
                   | Some text when text.Trim().Length = 0 -> field, $"agent actor {field} must not be empty"
                   | Some _ -> ()
-          | _ -> () ]
+          | _ -> ()
+          for field, value in [ "id", Some actor.Id; "provider", actor.Provider; "model", actor.Model; "runtime", actor.Runtime ] do
+              match value with
+              | Some text when Credentials.looksLikeCredential text ->
+                  field, "value looks like a credential; identity must never carry secrets"
+              | _ -> () ]
 
     /// Two actor records describe the same actor when kind, stable id, and
     /// every applicable, known attribute agree. An `unknown` attribute on

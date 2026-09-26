@@ -50,4 +50,5 @@ let main _ =
     @ OrdoObservationTests.tests
     @ ProvenanceTests.tests
     @ ProvenanceEffectTests.tests
+    @ ProvenanceRecordTests.tests
     |> TestRunner.run

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kemiller2002/praxis/schemas/provenance-record.schema.json",
+  "title": "Praxis provenance interchange record",
+  "description": "The versioned, portable form in which Praxis provenance crosses a system boundary (RQ-ROS-2026-A013). It is the artifact provenance of RQ-ROS-2026-A004 (the same `contributions` mapping and the same actor), plus lineage (`derivedFrom`) and optional verbatim lineage snapshots (`sources`), under an explicit contract name and semantic version. It is not a second identity model: every contribution and actor is exactly the Praxis shape. Unknown fields at every level are preserved by conforming consumers. Self-reported provenance, not authentication, authorization, or evidence quality (RQ-ROS-2026-A010).",
+  "type": "object",
+  "required": ["contract", "version", "contributions"],
+  "properties": {
+    "contract": {
+      "description": "Contract discriminator. Always this value; a consumer that sees a different value MUST NOT treat the object as Praxis provenance.",
+      "const": "praxis.provenance-record"
+    },
+    "version": {
+      "description": "Semantic version of this contract. A consumer supports a major version; it accepts any minor/patch of a supported major (preserving fields it does not model) and preserves an unsupported major verbatim without modifying or appending to it.",
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "subject": {
+      "description": "Optional namespaced reference to what this provenance describes, for example `aegis:fault/F-17` or `praxis:RQ-ROS-2026-A001`.",
+      "$ref": "#/$defs/reference"
+    },
+    "contributions": {
+      "description": "Who contributed what, keyed by execution (EXE-...) or contribution (CTB-...) ID. Identical to artifact provenance: append-only, at most one `created`, nothing precedes `created`, an agent contribution is keyed by an execution.",
+      "$ref": "artifact-provenance.schema.json#/properties/contributions"
+    },
+    "derivedFrom": {
+      "description": "Lineage: the references this subject was derived from. Lineage names sources; it never makes a source's contributors contributors of the subject.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/reference" }
+    },
+    "sources": {
+      "description": "Optional verbatim provenance snapshots of lineage sources, keyed by a reference that MUST also appear in `derivedFrom`. Carried so that a consumer which cannot resolve the source still keeps its originating actors and executions. Never merged into `contributions`.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/reference" },
+      "additionalProperties": { "$ref": "#" }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "reference": {
+      "description": "An artifact ID (for example RQ-ROS-2026-A001) or a namespaced foreign reference `<system>:<local-reference>`.",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^\\s]+$"
+    }
+  },
+  "examples": [
+    {
+      "contract": "praxis.provenance-record",
+      "version": "1.0.0",
+      "subject": "vigila:item/ITEM-42",
+      "contributions": {
+        "EXE-vigila.20260926T101500000Z-3f9a1c2e": {
+          "operations": ["created"],
+          "at": "2026-09-26T10:15:00.000Z",
+          "actor": { "kind": "automation", "id": "echelon/vigila", "provider": "echelon", "model": "unknown", "runtime": "vigila" }
+        }
+      },
+      "derivedFrom": ["aegis:fault/F-17"]
+    }
+  ]
+}
