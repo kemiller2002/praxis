@@ -1,0 +1,42 @@
+name: Echelon application foundations
+
+on:
+  workflow_call:
+    inputs:
+      praxis_ref:
+        description: Immutable Praxis commit containing the verifier implementation.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  verify-foundations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out application repository
+        uses: actions/checkout@v6
+        with:
+          path: application
+
+      - name: Check out pinned Praxis verifier
+        uses: actions/checkout@v6
+        with:
+          repository: kemiller2002/praxis
+          ref: ${{ inputs.praxis_ref }}
+          path: praxis-verifier
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Build pinned Praxis verifier
+        run: dotnet build praxis-verifier/src/Ros.Cli/Ros.Cli.fsproj --configuration Release
+
+      - name: Verify declared Echelon application foundations
+        run: |
+          dotnet praxis-verifier/src/Ros.Cli/bin/Release/net10.0/ros-fs.dll \
+            --root "$GITHUB_WORKSPACE/application" \
+            foundations verify
