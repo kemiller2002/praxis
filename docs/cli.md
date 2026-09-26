@@ -265,7 +265,7 @@ ros work <capture|list|ready|show|start|resume|block|complete|update|attach|cont
 ros add "..."
 ros telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
 ros adapter <call|publish>
-ros provenance <identity|record|show|audit>
+ros provenance <identity|record|show|audit|check-record>
 ```
 
 Run `ros --help` for the full argument list, and see
@@ -292,6 +292,8 @@ An invalid `--actor-kind` is an argument error (exit `2`).
 | Command | Purpose |
 |---|---|
 | `provenance identity [--json]` | who this process is recorded as, how that was determined, and the active executions |
+| `provenance identity --env` | `export` lines for the whitelisted, non-secret identity keys and, when exactly one active execution is this process's own run, `ROS_EXECUTION_ID`, for propagating identity to downstream tools (`RQ-ROS-2026-A014`) |
+| `provenance check-record --path FILE [--previous FILE] [--json]` | validate a provenance interchange record (`schemas/provenance-record.schema.json`); with `--previous`, also prove it is a non-destructive successor; contributions keyed by an execution this repository recorded must agree with its actor; exits `1` on problems, `2` on unreadable input (`RQ-ROS-2026-A013`, `RQ-ROS-2026-A015`) |
 | `provenance record --path PATH\|--id ID --operation OP [--reason T] [--evidence REF]* [--derived-from REF]* [--execution EXE] [--occurred-at TS] [--json]` | attribute a contribution to an artifact's front matter and append an `artifact.contributed` event; identity is inherited from the active execution; idempotent |
 | `provenance show ID\|PATH [--json]` | contributors, involvement label, lineage (sources and derivatives), legacy-declared authors, and events |
 | `provenance audit [--json]` | coverage, per-actor summaries, flattened contribution facts for metrics, and every finding including informational ones; exits `1` on errors |

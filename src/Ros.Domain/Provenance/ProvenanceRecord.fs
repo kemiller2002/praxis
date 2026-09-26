@@ -133,9 +133,16 @@ module ProvenanceRecord =
               | _ -> ()
               if List.length (List.distinct record.DerivedFrom) <> List.length record.DerivedFrom then
                   problem (at "derivedFrom") "lineage references must be unique"
-              for reference, _ in record.Sources do
+              for reference, snapshot in record.Sources do
                   if not (List.contains reference record.DerivedFrom) then
-                      problem (at $"sources.{reference}") "a lineage snapshot must name a reference listed in derivedFrom" ]
+                      problem (at $"sources.{reference}") "a lineage snapshot must name a reference listed in derivedFrom"
+
+                  match snapshot with
+                  | SourceSnapshot.Known source when source.Subject.IsSome && source.Subject <> Some reference ->
+                      problem
+                          (at $"sources.{reference}.subject")
+                          $"the snapshot describes '{source.Subject.Value}', not '{reference}'; a lineage snapshot must be the named source's own provenance"
+                  | _ -> () ]
 
         let sourceProblems =
             record.Sources
@@ -208,6 +215,26 @@ module ProvenanceRecord =
 
         walk 0 record
 
+    /// Forgery detection where it is possible: a contribution keyed by an
+    /// execution this repository has a record of must agree with that
+    /// execution's actor. `executions` maps execution IDs to their recorded
+    /// actors; keys with no record (foreign, imported, pruned) are not
+    /// judged here -- Praxis reports those as warnings elsewhere.
+    let impersonationProblems (executions: Map<string, Actor>) (record: ProvenanceRecord) : ProvenanceProblem list =
+        chain record
+        |> List.choose (fun link ->
+            match executions |> Map.tryFind link.Contribution.Key with
+            | Some recorded when not (Actor.agrees recorded link.Contribution.Actor) ->
+                let subject = link.Subject |> Option.defaultValue "record"
+
+                Some(
+                    problem
+                        $"contributions.{link.Contribution.Key}.actor"
+                        $"{subject}: attributed to {Actor.describe link.Contribution.Actor}, but execution {link.Contribution.Key} is recorded as {Actor.describe recorded}"
+                )
+            | _ -> None)
+        |> List.distinct
+
     /// Destructive-transformation check for one hop: `after` must keep
     /// every contribution of `before` (same key, same actor, same `at`, no
     /// operation or evidence removed), every lineage reference, and every
@@ -256,6 +283,10 @@ module ProvenanceRecord =
               if before.Subject.IsSome && after.Subject <> before.Subject then
                   problem "subject" "subject changed; a different subject needs its own record that derives from this one"
               if after.Version.Major <> before.Version.Major then
-                  problem "version" "major version changed in place; an unsupported major must be carried verbatim" ]
+                  problem "version" "major version changed in place; an unsupported major must be carried verbatim"
+              elif compare (after.Version.Minor, after.Version.Patch) (before.Version.Minor, before.Version.Patch) < 0 then
+                  problem
+                      "version"
+                      $"version was lowered from {ContractVersion.code before.Version} to {ContractVersion.code after.Version}; a consumer must not relabel a newer record as an older one" ]
 
         contributionProblems @ originProblems @ lineageProblems

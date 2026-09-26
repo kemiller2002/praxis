@@ -276,6 +276,27 @@ module ProvenanceRecordTests =
                   Assert.isTrue (ContractVersion.isSupported { Major = 1; Minor = 9; Patch = 0 }) "minor rejected"
                   Assert.isTrue (not (ContractVersion.isSupported { Major = 2; Minor = 0; Patch = 0 })) "future major accepted" }
 
+          { Name = "interchange record: a contribution that contradicts a locally recorded execution is reported as impersonation"
+            Run =
+              fun () ->
+                  let record = recordOf (load "e2e/09-followup-validated.json")
+                  let codex = agent "openai/codex" "openai" "gpt-5-codex" "codex"
+
+                  // Execution E really is Codex's run: no problem. Execution F
+                  // is recorded locally as Codex, but the record claims Claude
+                  // resolved the follow-up in it -- inside a lineage snapshot
+                  // or not, that is detected.
+                  let executions =
+                      Map.ofList [ "EXE-20260926T140000000Z-e5e5e5e5", codex; "EXE-20260926T150000000Z-f6f6f6f6", codex ]
+
+                  let problems = ProvenanceRecord.impersonationProblems executions record
+                  Assert.equal 1 problems.Length
+                  Assert.isTrue (problems.Head.Field.Contains "EXE-20260926T150000000Z-f6f6f6f6") $"{problems}"
+
+                  // Keys with no local record (foreign runs, other repositories)
+                  // are not judged.
+                  Assert.equal [] (ProvenanceRecord.impersonationProblems Map.empty record) }
+
           { Name = "identity never carries credentials, in actors, reasons, or evidence"
             Run =
               fun () ->

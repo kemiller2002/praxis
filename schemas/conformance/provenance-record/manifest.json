@@ -142,6 +142,11 @@
       "file": "invalid/malformed-source-snapshot.json",
       "expect": "invalid",
       "why": "a malformed lineage snapshot is reported, not silently dropped"
+    },
+    {
+      "file": "invalid/snapshot-subject-mismatch.json",
+      "expect": "invalid",
+      "why": "a lineage snapshot must be the named source's own provenance, not another subject's"
     }
   ],
   "successors": [
@@ -228,6 +233,12 @@
       "after": "successor/major-changed-in-place.after.json",
       "expect": "destructive",
       "why": "a record's major version never changes in place"
+    },
+    {
+      "before": "successor/version-lowered.before.json",
+      "after": "successor/version-lowered.after.json",
+      "expect": "destructive",
+      "why": "a newer minor record must not be relabelled as an older version"
     },
     {
       "before": "successor/rewritten-reason.before.json",

@@ -607,7 +607,16 @@ module ProvenanceCommands =
                     | Some(Ok before) -> ProvenanceRecordJson.successorProblems before current
                     | _ -> []
 
-                let allProblems = problems @ successor
+                // Where this repository ran an execution the record names,
+                // the recorded actor must agree (forgery detection).
+                let impersonation =
+                    match reading with
+                    | Ok(ProvenanceRecordReading.Current(record, _))
+                    | Ok(ProvenanceRecordReading.Unversioned(record, _)) ->
+                        ProvenanceRecord.impersonationProblems (FileProvenanceRepository.readExecutionActors root) record
+                    | _ -> []
+
+                let allProblems = problems @ successor @ impersonation
 
                 if arguments |> List.contains "--json" then
                     let node = JsonObject()
