@@ -9,6 +9,7 @@
     <Compile Include="Work/PathFilter.fs" />
     <Compile Include="Work/Attribution.fs" />
     <Compile Include="Work/Reconciliation.fs" />
+    <Compile Include="Work/ReconciliationReceipt.fs" />
     <Compile Include="Work/Model.fs" />
     <Compile Include="Work/Plan.fs" />
     <Compile Include="Work/ContextPlan.fs" />
