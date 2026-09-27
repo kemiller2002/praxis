@@ -3,8 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Praxis</title>
+<title>Praxis — You said it's done. Prove it.</title>
 <meta name="description" content="Praxis connects requirements, execution, agents, changes, tests, evidence, provenance, and cost into a verifiable engineering record.">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#f2efe7">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Manrope:wght@400;600;700;800&amp;family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&amp;display=swap">
@@ -13,15 +15,42 @@
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="site-header">
-  <p class="wordmark">Praxis</p>
-  <nav aria-label="Primary"><a href="#main">What is Praxis</a></nav>
+  <div class="wrap site-header__inner">
+    <a class="brand" href="#top" aria-label="Praxis, top of page">
+      <span class="brand__name">Praxis</span>
+      <span class="brand__parent">Echelon Foundry</span>
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav-list">
+        <li><a href="#top">What is Praxis</a></li>
+      </ul>
+    </nav>
+  </div>
 </header>
 <main id="main">
-  <h1>Praxis</h1>
-  <p>You said it's done. Prove it.</p>
+  <section class="hero" id="top" aria-labelledby="hero-title">
+    <div class="wrap hero__grid">
+      <p class="hero__foundry"><span>Echelon</span> <span>Foundry</span></p>
+      <p class="hero__mark">Praxis</p>
+      <h1 class="hero__title" id="hero-title">
+        <span class="hero__claim">You said it's done.</span>
+        <span class="hero__demand">Prove it.</span>
+      </h1>
+      <div class="hero__body">
+        <p class="lede">Praxis connects requirements, execution, agents, changes, tests, evidence, provenance, and cost into a verifiable engineering record.</p>
+        <p class="hero__statement">Trust is not an engineering control. <strong>Evidence is.</strong></p>
+        <div class="actions">
+          <a class="button" href="#top">See the evidence</a>
+          <a class="button button--ghost" href="https://github.com/kemiller2002/praxis">View on GitHub</a>
+        </div>
+      </div>
+    </div>
+  </section>
 </main>
 <footer class="site-footer">
-  <p>Praxis is part of Echelon Foundry.</p>
+  <div class="wrap">
+    <p>Praxis is part of Echelon Foundry.</p>
+  </div>
 </footer>
 </body>
 </html>
