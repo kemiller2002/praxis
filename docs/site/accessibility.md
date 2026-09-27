@@ -4,16 +4,16 @@ Accessibility is a release requirement for `site/`. This file records what was
 checked, how, and what was found and fixed. Target: WCAG 2.2 AA.
 
 Date: 2026-09-27. Browser: Chromium (Playwright 1.56, headless). Page served by
-`node scripts/site/serve.mjs`. Web fonts were unreachable from the build
+`node site-tools/serve.mjs`. Web fonts were unreachable from the build
 container, so every rendered check ran on the fallback font stacks. That is the
 harder case for layout, but it means the Google Fonts rendering was not
 inspected.
 
 ## Automated, in the repository (runs in CI)
 
-`npm run site:check` runs:
+`node site-tools/verify.mjs` runs:
 
-- `scripts/site/check.mjs`: `lang`, a title, the four landmarks, one `main`,
+- `site-tools/check.mjs`: `lang`, a title, the four landmarks, one `main`,
   one `h1`, no skipped heading levels, unique ids, in-page links and
   `aria-labelledby` targets that exist, image alternatives, accessible names
   for links and buttons, meaningful link text, and a skip link to `#main`.

@@ -8,7 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { accessibilityProblems, boundaryProblems, referenceProblems, structureProblems } from "./lib.mjs";
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const siteRoot = path.join(repoRoot, "site");
 
 export const requiredFiles = ["index.html", "assets/css/site.css", "robots.txt", ".nojekyll"];

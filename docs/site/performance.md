@@ -1,7 +1,7 @@
 # Public site performance and resilience evidence (PRAXIS-SITE-19)
 
 Date: 2026-09-27. Measured on the build container against
-`node scripts/site/serve.mjs` (loopback, no network latency), Chromium via
+`node site-tools/serve.mjs` (loopback, no network latency), Chromium via
 Playwright. Loopback timings show relative behaviour, not what a visitor on a
 real network will see.
 
@@ -51,7 +51,7 @@ does not delay reading.
   adds the step-by-step reveal.
 - **Without the evidence snapshot.** The page does not fetch
   `data/gh-84.json`; it links to it. Values are rendered into the HTML at
-  build time by `scripts/site/evidence.mjs --render` and verified by
+  build time by `site-tools/evidence.mjs --render` and verified by
   `--check`.
 - **Reduced motion.** Motion is removed, not shortened.
 

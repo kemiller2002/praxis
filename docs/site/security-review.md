@@ -1,8 +1,8 @@
 # Public site security and privacy review (PRAXIS-SITE-20)
 
 Date: 2026-09-27. Scope: everything under `site/`, the generator
-`scripts/site/evidence.mjs`, the preview server `scripts/site/serve.mjs`, and
-the deployment workflow. Enforced by `scripts/site/check.mjs`,
+`site-tools/evidence.mjs`, the preview server `site-tools/serve.mjs`, and
+the deployment workflow. Enforced by `site-tools/check.mjs`,
 `tests/site/security.test.mjs` and `tests/site/evidence.test.mjs`.
 
 ## What the site is

@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { contrast } from "../../scripts/site/lib.mjs";
+import { contrast } from "../../site-tools/lib.mjs";
 
 const css = readFileSync(new URL("../../site/assets/css/site.css", import.meta.url), "utf8");
 const html = readFileSync(new URL("../../site/index.html", import.meta.url), "utf8");

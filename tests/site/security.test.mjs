@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { checkSite } from "../../scripts/site/check.mjs";
+import { checkSite } from "../../site-tools/check.mjs";
 
 const html = readFileSync(new URL("../../site/index.html", import.meta.url), "utf8");
 const csp = html.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)">/)?.[1];

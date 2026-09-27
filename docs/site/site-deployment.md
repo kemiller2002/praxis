@@ -7,12 +7,12 @@ release workflows, and it cannot publish a package or a release.
 
 ## What the workflow does
 
-1. Runs on a push to `main` that changes `site/`, `scripts/site/` or the
+1. Runs on a push to `main` that changes `site/`, `site-tools/` or the
    workflow itself, or when started by hand (`workflow_dispatch`).
-2. Runs `npm run site:check`: structure, references, accessibility rules, the
+2. Runs `node site-tools/verify.mjs`: structure, references, accessibility rules, the
    public/private boundary, the evidence check against `.ros` records, and the
    site tests. A failure stops the deployment.
-3. Assembles `site/` into `_site/` with `scripts/site/assemble.mjs` and checks
+3. Assembles `site/` into `_site/` with `site-tools/assemble.mjs` and checks
    the copy again.
 4. Uploads `_site/` as the Pages artifact and deploys it with
    `actions/deploy-pages`. Only the deploy job has `pages: write` and

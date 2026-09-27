@@ -4,14 +4,14 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { withLedger, withValues } from "../../scripts/site/evidence.mjs";
+import { withLedger, withValues } from "../../site-tools/evidence.mjs";
 
 const html = readFileSync(new URL("../../site/index.html", import.meta.url), "utf8");
 const snapshot = JSON.parse(readFileSync(new URL("../../site/data/gh-84.json", import.meta.url), "utf8"));
 const caseStudy = html.slice(html.indexOf('id="case-study"'), html.indexOf('id="closing"'));
 
 test("the ledger is exactly what the renderer produces from the snapshot", () => {
-  assert.equal(withValues(withLedger(html, snapshot), snapshot), html, "run node scripts/site/evidence.mjs --render");
+  assert.equal(withValues(withLedger(html, snapshot), snapshot), html, "run node site-tools/evidence.mjs --render");
   const rows = caseStudy.match(/<tr>\s*<th scope="row">/g) ?? [];
   assert.equal(rows.length, snapshot.workItems.length);
 });

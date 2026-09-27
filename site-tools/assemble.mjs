@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Assembles the deployable public-site artifact (docs/public-site.md).
 //
-//   node scripts/site/assemble.mjs [OUT]     copy site/ to OUT (default _site/) and check the copy
+//   node site-tools/assemble.mjs [OUT]     copy site/ to OUT (default _site/) and check the copy
 //
 // The artifact is exactly the files under site/: nothing is generated, bundled
 // or fetched at this stage. The copy is checked again with the same rules as
@@ -12,7 +12,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { checkSite, requiredFiles } from "./check.mjs";
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 export const assemble = (out) => {
   const target = path.resolve(repoRoot, out);

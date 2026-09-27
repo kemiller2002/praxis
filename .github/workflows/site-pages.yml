@@ -10,7 +10,7 @@ on:
     branches: [main]
     paths:
       - "site/**"
-      - "scripts/site/**"
+      - "site-tools/**"
       - ".github/workflows/site-pages.yml"
   workflow_dispatch:
 
@@ -32,9 +32,9 @@ jobs:
         with:
           node-version: "22"
       - name: Check the site before anything is published
-        run: npm run site:check
+        run: node site-tools/verify.mjs
       - name: Assemble and re-check the static artifact
-        run: node scripts/site/assemble.mjs _site
+        run: node site-tools/assemble.mjs _site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

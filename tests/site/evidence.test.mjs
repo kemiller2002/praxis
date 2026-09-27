@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { buildSnapshot, htmlProblems, lookup, snapshotProblems } from "../../scripts/site/evidence.mjs";
+import { buildSnapshot, htmlProblems, lookup, snapshotProblems } from "../../site-tools/evidence.mjs";
 
 const snapshot = JSON.parse(readFileSync(new URL("../../site/data/gh-84.json", import.meta.url), "utf8"));
 const html = readFileSync(new URL("../../site/index.html", import.meta.url), "utf8");
@@ -49,7 +49,7 @@ test("the snapshot never carries private identifiers", () => {
 });
 
 test("the ledger renderer fills an empty ledger and is idempotent", async () => {
-  const { withLedger } = await import("../../scripts/site/evidence.mjs");
+  const { withLedger } = await import("../../site-tools/evidence.mjs");
   const empty = "<tbody>\n            <!-- ledger:start -->\n            <!-- ledger:end -->\n</tbody>";
   const once = withLedger(empty, snapshot);
   assert.equal((once.match(/<tr>/g) ?? []).length, snapshot.workItems.length);

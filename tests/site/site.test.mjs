@@ -3,9 +3,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { checkSite } from "../../scripts/site/check.mjs";
-import { accessibilityProblems, boundaryProblems, referenceProblems, structureProblems } from "../../scripts/site/lib.mjs";
-import { resolveRequest } from "../../scripts/site/serve.mjs";
+import { checkSite } from "../../site-tools/check.mjs";
+import { accessibilityProblems, boundaryProblems, referenceProblems, structureProblems } from "../../site-tools/lib.mjs";
+import { resolveRequest } from "../../site-tools/serve.mjs";
 
 const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "site");
 

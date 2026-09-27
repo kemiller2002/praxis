@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { accessibilityProblems } from "../../scripts/site/lib.mjs";
+import { accessibilityProblems } from "../../site-tools/lib.mjs";
 
 const html = readFileSync(new URL("../../site/index.html", import.meta.url), "utf8");
 const css = readFileSync(new URL("../../site/assets/css/site.css", import.meta.url), "utf8");

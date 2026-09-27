@@ -8,24 +8,22 @@ on:
   pull_request:
     paths:
       - "site/**"
-      - "scripts/site/**"
+      - "site-tools/**"
       - "tests/site/**"
       - "docs/public-site.md"
       - "docs/site/**"
       - ".ros/**"
-      - "package.json"
       - ".github/workflows/site.yml"
       - ".github/workflows/site-pages.yml"
   push:
     branches: [main]
     paths:
       - "site/**"
-      - "scripts/site/**"
+      - "site-tools/**"
       - "tests/site/**"
       - "docs/public-site.md"
       - "docs/site/**"
       - ".ros/**"
-      - "package.json"
       - ".github/workflows/site.yml"
       - ".github/workflows/site-pages.yml"
 
@@ -44,9 +42,9 @@ jobs:
         with:
           node-version: "22"
       - name: Structure, references, accessibility rules, boundary, evidence, tests
-        run: npm run site:check
+        run: node site-tools/verify.mjs
       - name: Assemble and re-check the static artifact
-        run: node scripts/site/assemble.mjs _site
+        run: node site-tools/assemble.mjs _site
       - uses: actions/upload-artifact@v4
         with:
           name: public-site
