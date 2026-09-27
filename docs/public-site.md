@@ -45,7 +45,9 @@ mechanism.
 ## Checks
 
 ```bash
-node scripts/site/evidence.mjs --check   # the evidence snapshot matches the Praxis records
+node scripts/site/evidence.mjs           # regenerate site/data/gh-84.json from .ros records
+node scripts/site/evidence.mjs --render  # rewrite the ledger and every data-evidence value in the page
+node scripts/site/evidence.mjs --check   # the snapshot matches the records, the page matches the snapshot
 node scripts/site/check.mjs              # structure, references, accessibility rules, boundary
 node --test tests/site/*.test.mjs        # the same rules as tests, plus contrast
 ```
@@ -60,7 +62,11 @@ The site deliberately shows real Praxis evidence about its own construction
 - the recorded actor kind, provider, runtime, and model (as recorded,
   including `unknown`);
 - the parent-execution link;
-- the repository branch and commit at the start and end of an execution;
+- the repository branch and short commit at the start and end of an execution;
+- derived execution measurements: wall time, commits created, files added and
+  modified, tests added;
+- completion evidence paths (repository-relative) and the work item's source
+  reference;
 - whether each telemetry metric is recorded, unavailable, or unknown, but not
   the raw provider payloads.
 
@@ -81,3 +87,9 @@ Pages artifact, and deploys it with GitHub's Pages actions. It is independent
 of the npm and native release workflows. See
 [`site-deployment.md`](site/site-deployment.md) for the one-time repository
 setting that a maintainer must make.
+
+## Security review
+
+See [`site/security-review.md`](site/security-review.md) for the content
+security policy, third-party boundary, and the findings of the PRAXIS-SITE-20
+review.
