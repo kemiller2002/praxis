@@ -1155,6 +1155,54 @@
       },
       "source": "github-issue",
       "sourceReference": "https://github.com/kemiller2002/praxis/issues/80"
+    },
+    {
+      "id": "ATTR-COMPLETE-BASE-REF-SWEEP",
+      "title": "Stop work complete from sweeping ROS_BASE_REF committed-range paths into its completion event",
+      "description": "With ROS_BASE_REF set, work complete includes committed-range paths (possibly from before the work item began) in its work.completed paths, recording them as contemporaneous attribution. Post-hoc changes should go through work reconcile instead. Changing this diverges from the frozen Node golden masters (work-complete differential), so it needs a decision. Follow-up from GH-80 / DF-ROS-2026-A040.",
+      "tags": [
+        "attribution",
+        "reconciliation"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-27T02:00:52.000Z",
+      "updatedAt": "2026-09-27T02:00:52.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/80"
+    },
+    {
+      "id": "ATTR-RECONCILE-SYMLINK-SUBMODULE",
+      "title": "Content-match symbolic links and submodules for reconciled attribution",
+      "description": "ReconciliationCoverage hashes working-tree content with git hash-object, which follows symlinks and cannot hash submodules, so a reconciled symlink or submodule path never matches its recorded blob and always fails validation (fail closed). Compare the link target text / gitlink commit instead. Follow-up from GH-80 / DF-ROS-2026-A040.",
+      "tags": [
+        "attribution",
+        "reconciliation"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-27T02:00:52.000Z",
+      "updatedAt": "2026-09-27T02:00:52.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/80"
     }
   ]
 }
