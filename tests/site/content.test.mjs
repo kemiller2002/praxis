@@ -197,3 +197,11 @@ test("the footer connects Praxis to Echelon Foundry and states the privacy facts
   assert.match(footer, /No analytics, no cookies, no tracking\./);
   assert.ok(!/<script/.test(html.replace('<script src="assets/js/claim.js" defer></script>', "")), "only the claim script");
 });
+
+test("no broken entities or duplicated sentences", () => {
+  assert.ok(!/(?<!&)(rsquo|ldquo|rdquo|hellip|amp);/.test(html.replace(/&(rsquo|ldquo|rdquo|hellip|amp);/g, "")), "entity without its ampersand");
+  const sentences = text.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter((s) => s.split(" ").length >= 8);
+  const repeated = sentences.filter((s, i) => sentences.indexOf(s) !== i);
+  assert.deepEqual(repeated, []);
+  assert.ok(!/[a-z][A-Z][a-z]+ CI\b|repositoryWhen/.test(text), "run-together words");
+});
