@@ -154,3 +154,16 @@ test("integrations listed as available are backed by CLI commands", () => {
   const available = independence.slice(0, independence.indexOf("availability__col--planned"));
   ["Aegis", "Forma", "Folio", "Tutela", "Vigila", "Dokimos", "Percepta", "Chrona", "Summa"].forEach((name) => assert.ok(!available.includes(name), `${name} is not an available integration`));
 });
+
+test("each principle links to the section that explains it", () => {
+  const principles = section("principles");
+  const items = [...principles.matchAll(/<h3>([^<]+)<\/h3>[\s\S]*?href="#([a-z-]+)"/g)].map(([, name, target]) => [name, target]);
+  assert.deepEqual(items.map(([name]) => name), [
+    "Done is a claim.",
+    "Every change has to answer for itself.",
+    "No anonymous work.",
+    "Trust is not an engineering control.",
+    "The process survives the tool.",
+  ]);
+  items.forEach(([, target]) => assert.ok(html.includes(`id="${target}"`), target));
+});

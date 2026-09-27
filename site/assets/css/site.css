@@ -1383,6 +1383,65 @@ ol {
   }
 }
 
+/* ---- principles (PRAXIS-SITE-14) --------------------------------------- */
+
+.principles {
+  list-style: none;
+  counter-reset: principle;
+  border-top: 1px solid var(--graphite-on-dark);
+}
+
+.principles__item {
+  counter-increment: principle;
+  display: grid;
+  gap: var(--space-2) var(--space-6);
+  padding: var(--space-5) 0;
+  border-bottom: 1px solid var(--forged-iron);
+}
+
+.principles__item::before {
+  content: counter(principle, upper-roman);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--bronze-on-dark);
+}
+
+.principles__item h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.625rem, 3.4vw, 2.5rem);
+  line-height: 1.1;
+}
+
+.principles__item p {
+  margin: 0;
+  color: var(--stone);
+}
+
+.principles__link a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--parchment);
+  font-weight: 600;
+}
+
+@media (min-width: 60rem) {
+  .principles__item {
+    grid-template-columns: 4rem minmax(0, 6fr) minmax(0, 5fr);
+    grid-template-rows: auto auto;
+    align-items: baseline;
+  }
+
+  .principles__item::before {
+    grid-row: 1 / span 2;
+  }
+
+  .principles__item h3 {
+    grid-row: 1 / span 2;
+  }
+}
+
 /* ---- footer ----------------------------------------------------------- */
 
 .site-footer {
