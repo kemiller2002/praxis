@@ -1,0 +1,54 @@
+name: Public site deployment
+
+# Deploys site/ to GitHub Pages. Isolated from the npm and native release
+# workflows: it builds nothing, publishes no package, and only ever uploads the
+# checked contents of site/. Requires the one-time repository setting in
+# docs/site/site-deployment.md (Settings > Pages > Source: GitHub Actions).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "scripts/site/**"
+      - ".github/workflows/site-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check the site before anything is published
+        run: npm run site:check
+      - name: Assemble and re-check the static artifact
+        run: node scripts/site/assemble.mjs _site
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -37,3 +37,22 @@ test("the assembled artifact is exactly the checked site", () => {
   assert.equal(readFileSync(`${target}/index.html`, "utf8"), read("site/index.html"));
   assert.ok(existsSync(`${target}/.nojekyll`));
 });
+
+test("the Pages workflow deploys only the checked artifact, with least privilege", () => {
+  const workflow = read(".github/workflows/site-pages.yml");
+  assert.match(workflow, /^permissions:\n  contents: read/m);
+  const build = workflow.slice(workflow.indexOf("  build:"), workflow.indexOf("  deploy:"));
+  const deploy = workflow.slice(workflow.indexOf("  deploy:"));
+  assert.ok(!/pages: write|id-token: write/.test(build), "build job cannot deploy");
+  assert.match(deploy, /pages: write\n      id-token: write/);
+  assert.ok(build.indexOf("npm run site:check") < build.indexOf("upload-pages-artifact"), "checks run before upload");
+  assert.match(build, /path: _site/);
+  assert.match(workflow, /branches: \[main\]/);
+  assert.match(deploy, /actions\/deploy-pages@v4/);
+});
+
+test("the deployment document never reports a deployment that has not happened", () => {
+  const doc = read("docs/site/site-deployment.md");
+  assert.match(doc, /Source: GitHub Actions/);
+  assert.match(doc, /\*\*Nothing has been deployed\.\*\*|has been deployed by run/);
+});
