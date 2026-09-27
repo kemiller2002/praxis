@@ -2,6 +2,8 @@
 
 | ID | Work | Status | Tags | Priority |
 |---|---|---|---|---|
+| ATTR-COMPLETE-BASE-REF-SWEEP | Stop work complete from sweeping ROS_BASE_REF committed-range paths into its completion event | captured | attribution, reconciliation | medium |
+| ATTR-RECONCILE-SYMLINK-SUBMODULE | Content-match symbolic links and submodules for reconciled attribution | captured | attribution, reconciliation | low |
 | BOOTSTRAP-ADOPTION-FIX | BOOTSTRAP-ADOPTION-FIX | complete |  |  |
 | CI-BASE-REF-FIX | CI-BASE-REF-FIX | complete |  |  |
 | CI-LATEST-ON-VERSION-BUMP | CI-LATEST-ON-VERSION-BUMP | blocked |  |  |
