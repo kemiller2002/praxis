@@ -1,0 +1,61 @@
+name: Deploy Site
+
+# Mirrors kemiller2002/echelon-foundry .github/workflows/deploy-pages.yml.
+# The Praxis site has no build step of its own: "Build site" runs the site
+# checks and assembles site/ into dist/. It deliberately does not use npm
+# scripts, so no site change touches package.json (which native-release.yml
+# watches on main). See docs/site/site-deployment.md.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # The case-study tests compare the page's claims with Git history.
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build site
+        run: node site-tools/verify.mjs && node site-tools/assemble.mjs dist
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

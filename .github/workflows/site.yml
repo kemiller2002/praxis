@@ -1,7 +1,7 @@
 name: Public site
 
 # Checks the static public site (site/) and assembles the artifact that
-# site-pages.yml deploys. Independent of the npm and native release workflows.
+# deploy-pages.yml deploys. Independent of the npm and native release workflows.
 # Needs Node only: the site has no dependencies to install.
 
 on:
@@ -14,7 +14,7 @@ on:
       - "docs/site/**"
       - ".ros/**"
       - ".github/workflows/site.yml"
-      - ".github/workflows/site-pages.yml"
+      - ".github/workflows/deploy-pages.yml"
   push:
     branches: [main]
     paths:
@@ -25,7 +25,7 @@ on:
       - "docs/site/**"
       - ".ros/**"
       - ".github/workflows/site.yml"
-      - ".github/workflows/site-pages.yml"
+      - ".github/workflows/deploy-pages.yml"
 
 permissions:
   contents: read
