@@ -216,6 +216,9 @@ module FileTelemetryFinalizationRepository =
                         | :? JsonObject as record ->
                             match stringField record "status" with
                             | Some "finalized" -> Ok()
+                            | _ when not (FileStepRepository.unresolvedStepIds record).IsEmpty ->
+                                let unresolved = FileStepRepository.unresolvedStepIds record |> String.concat ", "
+                                Error $"execution '{executionId}' has unresolved steps ({unresolved}); complete or abandon them before finalizing"
                             | _ ->
                                 let finalizedAt = FileTelemetryExecutionRepository.nowIso ()
                                 let startedAt = stringField record "startedAt" |> Option.defaultValue finalizedAt

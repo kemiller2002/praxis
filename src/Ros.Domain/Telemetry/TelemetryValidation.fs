@@ -73,11 +73,11 @@ module TelemetryValidation =
     let private capabilityStatuses = set [ "supported-observed"; "supported-unavailable"; "unsupported"; "unknown"; "derived"; "estimated" ]
     let private qualities = set [ "observed"; "derived"; "estimated" ]
     let private confidenceLabels = set [ "low"; "medium"; "high" ]
-    let private metricScopes = set [ "operation"; "turn"; "tool"; "execution"; "session"; "work-item"; "repository" ]
+    let private metricScopes = set [ "operation"; "turn"; "tool"; "step"; "execution"; "session"; "work-item"; "repository" ]
     let private aggregations = set [ "sum"; "latest"; "latest-per-session"; "maximum"; "none" ]
 
     let private sourceTypes =
-        set [ "runtime-api"; "runtime-hook"; "runtime-output"; "environment"; "ros-git"; "ros-clock"; "agent-report"; "human-report"; "external-tool"; "calculated" ]
+        set [ "runtime-api"; "runtime-hook"; "runtime-output"; "environment"; "ros-git"; "ros-clock"; "ros-cli"; "agent-report"; "human-report"; "external-tool"; "calculated" ]
 
     let private qualityDetectors =
         set [ "compiler"; "type-system"; "test"; "static-analysis"; "architecture-check"; "runtime"; "agent-self"; "human"; "escaped-defect"; "mutation-test"; "ros-state-system" ]

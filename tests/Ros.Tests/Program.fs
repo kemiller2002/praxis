@@ -43,6 +43,7 @@ let main _ =
     @ TelemetryIngestOtelTests.tests
     @ TelemetryClassifyTests.tests
     @ TelemetryStartTests.tests
+    @ StepTelemetryTests.tests
     @ AdapterContractTests.tests
     @ AdapterCallEffectTests.tests
     @ AdapterPublishEffectTests.tests

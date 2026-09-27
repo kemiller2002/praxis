@@ -9,13 +9,19 @@ capabilities, lifecycle capture, classification, and aggregation.
 
 - State, including presentation state: `.ros/telemetry/executions/*.json`,
   linked from `.ros/context/current.json`; semantic decision
-  `DF-ROS-2026-A010` and metric authority `telemetry/metrics.json`.
+  `DF-ROS-2026-A010`, step extension `DF-ROS-2026-A037`, and metric authority
+  `telemetry/metrics.json`. Optional `steps` are ordered execution-owned
+  evidence; historical records without them remain valid.
 - Transitions / commands / messages: `tools/ros_telemetry.mjs` symbols
   `startExecution`, `ingestTelemetry`, `recordTelemetryMetric`,
   `recordTelemetryLifecycle`, `finalizeExecution`, and `summarizeTelemetry`.
 - Invariants and guards: `telemetryFindings`, `loadMetricRegistry`, capability
   statuses, measurement quality/source/unit/scope/aggregation checks, raw-data
   redaction and retention limits.
+  `Ros.Domain.Telemetry.Step` additionally owns the explicit step transition
+  matrix, one-active-ancestor-path invariant, timestamp/order rules, and
+  unresolved-step finalization guard. `FileStepRepository` owns the locked
+  JSON effect, measurement/checkpoint references, querying, and validation.
 - Capabilities / authority: runtime/provider observations may report supported,
   unavailable, unsupported, or unknown fields; ROS-derived and estimated
   values require distinct provenance.

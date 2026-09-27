@@ -54,6 +54,7 @@
     <Compile Include="TelemetryIngestOtelTests.fs" />
     <Compile Include="TelemetryClassifyTests.fs" />
     <Compile Include="TelemetryStartTests.fs" />
+    <Compile Include="StepTelemetryTests.fs" />
     <Compile Include="AdapterContractTests.fs" />
     <Compile Include="AdapterCallEffectTests.fs" />
     <Compile Include="AdapterPublishEffectTests.fs" />

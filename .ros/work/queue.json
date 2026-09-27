@@ -1130,6 +1130,30 @@
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "WI-0065",
+      "title": "Implement first-class step-level execution telemetry",
+      "description": null,
+      "tags": [
+        "telemetry",
+        "execution"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T01:36:53.000Z",
+      "updatedAt": "2026-09-27T12:12:42Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

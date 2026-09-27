@@ -49,6 +49,11 @@ module FileReconciliationStore =
                      transactionId = envelope.TransactionId
                      workItem = envelope.WorkItem
                      branch = envelope.Branch
-                     findingCodes = codes |}
+                     findingCodes = codes
+                     // Rejected input remains durable and inspectable. The
+                     // typed envelope retains step boundaries plus each raw
+                     // measurement/provider JSON string; it is never applied
+                     // as canonical state by this quarantine write.
+                     envelope = envelope |}
               JsonSerializer.Serialize(value, options)
               |> atomicWrite (quarantinePath fullRoot envelope.TransactionId) }

@@ -36,6 +36,18 @@ module FileTelemetryExecutionRepository =
         let suffix = RandomNumberGenerator.GetBytes 4 |> Convert.ToHexString |> fun value -> value.ToLowerInvariant()
         $"EXE-{stamp}-{suffix}"
 
+    let private localPraxisInstanceId (root: string) =
+        let path = Path.Combine(root, ".praxis", "instance.json")
+
+        if not (File.Exists path) then None
+        else
+            try
+                use document = JsonDocument.Parse(File.ReadAllText path)
+                match document.RootElement.TryGetProperty "instanceId" with
+                | true, value when value.ValueKind = JsonValueKind.String && not (String.IsNullOrWhiteSpace(value.GetString())) -> Some(value.GetString())
+                | _ -> None
+            with _ -> None
+
     let private environmentIdentityInputs () : IdentityInputs =
         let variable name =
             match Environment.GetEnvironmentVariable(name: string) with
@@ -400,6 +412,9 @@ module FileTelemetryExecutionRepository =
                                 record["schemaVersion"] <- JsonValue.Create "1.0.0"
                                 record["executionId"] <- JsonValue.Create executionId
                                 record["workItemId"] <- JsonValue.Create request.WorkItemId
+                                match localPraxisInstanceId root with
+                                | Some instanceId -> record["instanceId"] <- JsonValue.Create instanceId
+                                | None -> ()
                                 record["status"] <- JsonValue.Create "active"
                                 record["startedAt"] <- JsonValue.Create startedAt
                                 record["finalizedAt"] <- null
