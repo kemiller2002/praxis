@@ -1525,10 +1525,10 @@
         "public-site"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-27T07:53:32.000Z",
-      "updatedAt": "2026-09-27T07:53:50.000Z",
+      "updatedAt": "2026-09-27T08:13:24.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
