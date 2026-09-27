@@ -49,3 +49,4 @@ logs/*
 !.env.example
 *.pem
 *.key
+_site/
