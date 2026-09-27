@@ -1203,6 +1203,630 @@
       },
       "source": "github-issue",
       "sourceReference": "https://github.com/kemiller2002/praxis/issues/80"
+    },
+    {
+      "id": "PRAXIS-SITE-01",
+      "title": "Establish public-site architecture",
+      "description": "Child of GH-84 (Build the public Praxis website). Create the independent site/ boundary (public static content) and document why it is separate from web/ (privileged localhost operational UI). No privileged Praxis API exposed; local static serving works; relative paths support GitHub Pages project-site deployment.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:46.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-02",
+      "title": "Implement Echelon Foundry design foundation",
+      "description": "Child of GH-84 (Build the public Praxis website). Echelon Foundry tokens (parchment #f2efe7, charcoal #202421, forged iron #3a403c, oxide bronze #905831, verdigris #47756b, carbon #171a18, graphite #686d68, stone #e3e0d7); Newsreader / Manrope / IBM Plex Mono with fallbacks; no committed font binaries; square geometry, strong grid, restrained color.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:46.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-03",
+      "title": "Build the hero",
+      "description": "Child of GH-84 (Build the public Praxis website). PRAXIS. You said it's done. Prove it. Supporting copy and \"Trust is not an engineering control. Evidence is.\" Calm, commanding, skeptical authority; no film quotes, imagery, or imitation.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:47.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-04",
+      "title": "Build the \"Done is a claim\" interaction",
+      "description": "Child of GH-84 (Build the public Praxis website). A claim interrogated by Praxis with progressive verification; fully understandable without JavaScript; respects prefers-reduced-motion.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:47.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-05",
+      "title": "Explain the execution chain",
+      "description": "Child of GH-84 (Build the public Praxis website). Requirement -> work item -> execution -> steps -> changes -> tests -> evidence -> reconciliation -> verified history. From intent to execution to evidence.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:47.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-06",
+      "title": "Build \"Git knows what. Praxis knows why.\"",
+      "description": "Child of GH-84 (Build the public Praxis website). Complementary comparison of what Git establishes and what Praxis adds, without criticizing Git.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:48.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-07",
+      "title": "Explain agent accountability",
+      "description": "Child of GH-84 (Build the public Praxis website). Agent identity, provider, runtime, model when reliably known, execution boundaries, telemetry when available; observed / derived / declared / unknown / unavailable are distinguished.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:48.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-08",
+      "title": "Show the real GH-84 agent handoff",
+      "description": "Child of GH-84 (Build the public Praxis website). Render the actual GH-84 executions from Praxis records; Praxis did not transfer identity; the next agent required a separate execution. No fabricated values.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:48.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-09",
+      "title": "Explain unattributed-change protection",
+      "description": "Child of GH-84 (Build the public Praxis website). Every change has to answer for itself: unattributed changes require reconciliation; manufactured attribution is worse than explicitly unresolved attribution.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:49.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-10",
+      "title": "Explain resilient/double-entry execution",
+      "description": "Child of GH-84 (Build the public Praxis website). The process survives the tool: fallback conforming execution records and later CI reconciliation, clearly labelled current versus planned per repository evidence.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:49.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-11",
+      "title": "Explain repository-native engineering records",
+      "description": "Child of GH-84 (Build the public Praxis website). Versionable, inspectable, portable, attributable, reviewable, automatable records alongside the repository, including external evidence references.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:49.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-12",
+      "title": "Explain independent installation and integrations",
+      "description": "Child of GH-84 (Build the public Praxis website). Praxis is useful independently; Echelon integrations are optional; available capability is separated from architectural direction.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:50.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-13",
+      "title": "Create a realistic execution record component",
+      "description": "Child of GH-84 (Build the public Praxis website). Reusable IBM Plex Mono execution artifact; anything not populated from real Praxis records is visibly labelled ILLUSTRATIVE EXECUTION.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:50.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-14",
+      "title": "Build the product principles section",
+      "description": "Child of GH-84 (Build the public Praxis website). Done is a claim; Every change has to answer for itself; No anonymous work...; Trust is not an engineering control; The process survives the tool. Each principle supports an explanation.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:50.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-15",
+      "title": "Build installation/get-started surface",
+      "description": "Child of GH-84 (Build the public Praxis website). Only commands verified against the current repository/release; the ROS-to-Praxis naming transition handled explicitly.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:51.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-16",
+      "title": "Build navigation and footer",
+      "description": "Child of GH-84 (Build the public Praxis website). Restrained single-page navigation (What is Praxis, How it works, Evidence, Agents, Get started, GitHub) and a footer connecting Praxis to Echelon Foundry.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:51.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-17",
+      "title": "Accessibility hardening",
+      "description": "Child of GH-84 (Build the public Praxis website). Landmarks, heading hierarchy, keyboard, visible focus, skip link, contrast, non-color status, reduced motion, reflow, touch targets, accessible names, no hover-only interaction; automated checks plus reasoned manual review with recorded evidence.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:51.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-18",
+      "title": "Responsive/mobile engineering",
+      "description": "Child of GH-84 (Build the public Praxis website). Intentional layouts for narrow mobile, mobile, tablet, desktop and wide desktop; reflow over horizontal scrolling; navigation usable without a JavaScript menu.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:51.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-19",
+      "title": "Performance and resilience",
+      "description": "Child of GH-84 (Build the public Praxis website). Static-first, minimal JavaScript, no dependency bundle, usable without web fonts or JavaScript, no analytics; measured evidence.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:52.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-20",
+      "title": "Security/privacy review",
+      "description": "Child of GH-84 (Build the public Praxis website). No secrets, privileged endpoints, sensitive telemetry, raw session IDs, local paths or tokens; safe external links; documented public/private evidence boundary.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:52.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-21",
+      "title": "GitHub Actions verification",
+      "description": "Child of GH-84 (Build the public Praxis website). CI for the public site: expected files, structural HTML validity, internal references resolve, no localhost/privileged API references, static artifact assembly, affected repository tests.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:53.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-22",
+      "title": "GitHub Pages deployment",
+      "description": "Child of GH-84 (Build the public Praxis website). Isolated Pages deployment workflow for the site/ artifact; unrelated release workflows untouched; human-required Pages configuration documented, never reported as done unless it is.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:53.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-23",
+      "title": "Make the site itself a Praxis case study",
+      "description": "Child of GH-84 (Build the public Praxis website). \"This website was built under Praxis\": a safe subset of the real GH-84 evidence chain from requirement to deployment, with no fabricated completion evidence.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:53.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-24",
+      "title": "Final communication/polish pass",
+      "description": "Child of GH-84 (Build the public Praxis website). Typography, spacing, rhythm, hierarchy, density, mobile, focus, transitions, link states and copy consistency, without ornamental excess.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:53.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-25",
+      "title": "Adversarial claim audit",
+      "description": "Child of GH-84 (Build the public Praxis website). Classify every meaningful claim as implemented, demonstrated, direction, planned, or illustrative, and correct overstatement (telemetry, cost, reconciliation, fallback, integrations, identity, tracing, deployment, CLI naming).",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:54.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-26",
+      "title": "Final verification and evidence",
+      "description": "Child of GH-84 (Build the public Praxis website). Run site checks, repository tests, Praxis validation, accessibility checks, static artifact and deployment workflow checks; record actual evidence; GH-84 completes only when acceptance criteria have evidence.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:53:54.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
     }
   ]
 }
