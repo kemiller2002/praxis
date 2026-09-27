@@ -2699,11 +2699,36 @@
         "EXE-20260927T082409668Z-cb5a036b"
       ],
       "completedAt": "2026-09-27T08:25:34.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-20",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/index.html"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/security.test.mjs"
+        },
+        {
+          "type": "review",
+          "path": "docs/site/security-review.md"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:27:02.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T082551296Z-e61c47d5"
+      ],
+      "completedAt": "2026-09-27T08:27:02.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-27T08:25:34.000Z",
+  "updatedAt": "2026-09-27T08:27:02.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
