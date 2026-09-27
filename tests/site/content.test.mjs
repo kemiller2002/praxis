@@ -141,3 +141,16 @@ test("the record locations the page names exist in this repository", () => {
     assert.ok(existsSync(new URL(`../../${location}`, import.meta.url)), location)
   );
 });
+
+test("integrations listed as available are backed by CLI commands", () => {
+  const independence = section("independence");
+  const cli = readFileSync(new URL("../../src/Ros.Cli/Program.fs", import.meta.url), "utf8");
+  assert.match(independence, />Available now</);
+  assert.match(independence, />Architectural direction</);
+  [["Ordo", '"ordo"'], ["adapter contract", '"adapter"']].forEach(([claim, command]) => {
+    assert.ok(independence.includes(claim), claim);
+    assert.ok(cli.includes(command), command);
+  });
+  const available = independence.slice(0, independence.indexOf("availability__col--planned"));
+  ["Aegis", "Forma", "Folio", "Tutela", "Vigila", "Dokimos", "Percepta", "Chrona", "Summa"].forEach((name) => assert.ok(!available.includes(name), `${name} is not an available integration`));
+});
