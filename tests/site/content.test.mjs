@@ -22,7 +22,7 @@ test("hero states the claim and the demand", () => {
   const hero = section("top");
   assert.match(hero, /Echelon<\/span> <span>Foundry/);
   assert.match(hero, /class="hero__mark">Praxis</);
-  assert.match(hero, /<h1[^>]*>\s*<span class="hero__claim">You said it's done\.<\/span>\s*<span class="hero__demand">Prove it\.<\/span>\s*<\/h1>/);
+  assert.match(hero, /<h1[^>]*>\s*<span class="hero__claim">You said it&rsquo;s done\.<\/span>\s*<span class="hero__demand">Prove it\.<\/span>\s*<\/h1>/);
   assert.ok(text.includes("Praxis connects requirements, execution, agents, changes, tests, evidence, provenance, and cost into a verifiable engineering record."));
   assert.ok(text.includes("Trust is not an engineering control. Evidence is."));
   assert.match(hero, />See the evidence</);
