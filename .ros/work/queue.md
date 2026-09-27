@@ -42,7 +42,7 @@
 | PRAXIS-SITE-05 | Explain the execution chain | complete | gh-84, public-site | high |
 | PRAXIS-SITE-06 | Build "Git knows what. Praxis knows why." | complete | gh-84, public-site | medium |
 | PRAXIS-SITE-07 | Explain agent accountability | complete | gh-84, public-site | medium |
-| PRAXIS-SITE-08 | Show the real GH-84 agent handoff | ready | gh-84, public-site | high |
+| PRAXIS-SITE-08 | Show the real GH-84 agent handoff | complete | gh-84, public-site | high |
 | PRAXIS-SITE-09 | Explain unattributed-change protection | ready | gh-84, public-site | medium |
 | PRAXIS-SITE-10 | Explain resilient/double-entry execution | ready | gh-84, public-site | medium |
 | PRAXIS-SITE-11 | Explain repository-native engineering records | ready | gh-84, public-site | medium |
