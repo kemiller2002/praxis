@@ -444,6 +444,36 @@ ERROR src/report.fs:work_items: meaningful change has no active or completed wor
       </div>
     </div>
   </section>
+  <section class="section" id="resilience" aria-labelledby="resilience-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">Resilience</p>
+        <div>
+          <h2 id="resilience-title">The process survives the tool.</h2>
+          <p class="lede">An engineering record that exists only while one program is running is not a record. Praxis keeps the record in files, so the obligation outlives any agent, runtime or version of Praxis itself.</p>
+        </div>
+      </div>
+      <div class="grid-2 availability">
+        <div class="availability__col">
+          <p class="availability__label"><span class="status status--verified">Available now</span></p>
+          <ul class="availability__list">
+            <li>Work state, events, executions and provenance are plain JSON and JSON Lines files in the repository. Any tool can read them; Git versions them.</li>
+            <li>Validation re-checks the records against each other and against Git history, in CI, independent of whoever wrote them.</li>
+            <li>Changes committed without a work item can be reconciled later, from Git history, on the record.</li>
+            <li>A finalized execution is closed. Continuing the work opens a new one rather than reopening the old.</li>
+          </ul>
+        </div>
+        <div class="availability__col availability__col--planned">
+          <p class="availability__label"><span class="status status--pending">Architectural direction</span></p>
+          <ul class="availability__list">
+            <li>Double-entry execution: when the Praxis CLI cannot run, an agent writes a conforming fallback execution record by hand.</li>
+            <li>CI later reconciles fallback records against Git and the protocol, and accepts or rejects them on evidence.</li>
+          </ul>
+          <p class="availability__note">Not implemented. Not scheduled. This is the direction the record format is designed to allow, stated so nobody mistakes it for a feature.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 </main>
 <footer class="site-footer">
   <div class="wrap">

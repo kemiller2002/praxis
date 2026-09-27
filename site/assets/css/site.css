@@ -1289,6 +1289,39 @@ ol {
   line-height: 1.35;
 }
 
+/* ---- current versus planned (PRAXIS-SITE-10, 12) ----------------------- */
+
+.availability__col {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+  padding: var(--space-5);
+  border: 2px solid var(--charcoal);
+}
+
+.availability__col--planned {
+  border-style: dashed;
+  border-color: var(--forged-iron);
+}
+
+.availability__label {
+  margin: 0;
+}
+
+.availability__list {
+  display: grid;
+  gap: var(--space-3);
+  padding-left: 1.1rem;
+}
+
+.availability__note {
+  margin: 0;
+  padding-top: var(--space-3);
+  border-top: var(--rule-soft);
+  color: var(--graphite);
+  font-size: 0.9375rem;
+}
+
 /* ---- footer ----------------------------------------------------------- */
 
 .site-footer {

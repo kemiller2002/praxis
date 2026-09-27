@@ -123,3 +123,13 @@ test("unattributed changes: the message shown is the one the CLI prints", () => 
   ["Attributed", "Reconciled", "Unresolved"].forEach((state) => assert.match(reconciliation, new RegExp(`>${state}<`)));
   assert.match(reconciliation, /Manufactured attribution is worse than explicitly unresolved attribution\./);
 });
+
+test("resilience separates what exists from what is only direction", () => {
+  const resilience = section("resilience");
+  assert.match(resilience, /The process survives the tool\./);
+  assert.match(resilience, />Available now</);
+  assert.match(resilience, />Architectural direction</);
+  const planned = resilience.slice(resilience.indexOf("availability__col--planned"));
+  assert.match(planned, /Not implemented\./);
+  assert.ok(!/fallback|double-entry/i.test(resilience.slice(0, resilience.indexOf("availability__col--planned"))), "fallback appears only under direction");
+});
