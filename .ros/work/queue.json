@@ -1827,6 +1827,29 @@
       },
       "source": "github-issue",
       "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "WI-0072",
+      "title": "Port provenance follow-ups onto the merged model: collaboration aggregates in provenance audit, producedBy on ordo handoffs, installer event actor",
+      "description": null,
+      "tags": [
+        "provenance"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T08:41:29.325Z",
+      "updatedAt": "2026-09-27T08:50:44.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

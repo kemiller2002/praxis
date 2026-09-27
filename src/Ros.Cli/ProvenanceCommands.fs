@@ -458,6 +458,7 @@ module ProvenanceCommands =
         | Ok findings, Ok loaded ->
             let facts = ProvenanceIndex.facts loaded.Documents
             let byActor = ProvenanceIndex.byActor facts
+            let collaboration = ProvenanceIndex.collaboration loaded.Documents
             let attributed = facts |> List.map _.Path |> List.distinct |> List.length
             let events = FileProvenanceRepository.readEventViews root
 
@@ -503,6 +504,7 @@ module ProvenanceCommands =
                 summary["info"] <- JsonValue.Create(count FindingSeverity.Info)
                 node["summary"] <- summary
                 node["byActor"] <- byActor |> List.map (fun item -> ProvenanceReportJson.actorSummary item :> JsonNode) |> ProvenanceReportJson.nodes
+                node["collaboration"] <- ProvenanceReportJson.collaboration collaboration
                 node["contributions"] <- facts |> List.map (fun item -> ProvenanceReportJson.fact item :> JsonNode) |> ProvenanceReportJson.nodes
                 node["findings"] <- findings |> List.map (fun item -> ProvenanceReportJson.finding item :> JsonNode) |> ProvenanceReportJson.nodes
                 printf "%s" (ProvenanceReportJson.render node)
@@ -521,6 +523,15 @@ module ProvenanceCommands =
                         item.Modified
                         item.Reviewed
                         item.Executions
+
+                let listed (label: string) (identifiers: string list) =
+                    if not identifiers.IsEmpty then
+                        printfn "%s: %s" label (String.concat ", " identifiers)
+
+                listed "agent-to-agent revisions" collaboration.AgentToAgentRevisions
+                listed "human corrections of agent work" collaboration.HumanCorrectionsOfAgentWork
+                listed "human-approved agent work" collaboration.HumanApprovedAgentWork
+                listed "hotspots" (collaboration.Hotspots |> List.map (fun (identifier, total) -> $"{identifier} ({total})"))
 
                 for finding in findings do
                     let location = if finding.Field.Length = 0 then finding.Path else $"{finding.Path}:{finding.Field}"

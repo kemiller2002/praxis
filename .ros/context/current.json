@@ -2841,11 +2841,44 @@
         "EXE-20260927T083901012Z-464201ab"
       ],
       "completedAt": "2026-09-27T08:40:46.000Z"
+    },
+    {
+      "id": "WI-0072",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Provenance/ProvenancePolicy.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Contracts/Ordo/ObservationJson.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Lifecycle/Installation.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ProvenanceTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/provenance-followups.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:50:44.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T084130164Z-78bc9271"
+      ],
+      "completedAt": "2026-09-27T08:50:44.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-27T08:40:46.000Z",
+  "updatedAt": "2026-09-27T08:50:44.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

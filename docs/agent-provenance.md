@@ -341,7 +341,15 @@ Provenance travels with data rather than being stripped at a boundary.
   contributions as a *warning*, not an error, and keeps them intact.
 - **Ordo.** Ordo resolution observations already carry `provider`
   `{id, model, …}`, and assessments carry a provider-neutral `assessor`. ROS
-  preserves raw Ordo records verbatim.
+  preserves raw Ordo records verbatim. `./ros ordo handoff` adds
+  `producedBy: {actor, execution}`: the packaging actor in canonical form and
+  its execution when exactly one active execution is evidently the same run
+  (otherwise `null`, never a guess), so the receiving agent or system keeps
+  the handoff's origin.
+- **Installation.** The `ROS-INSTALL-*` bookkeeping event that both installers
+  write is attributed to the installer itself,
+  `{"kind":"automation","id":"ros-bootstrap","runtime":"ros-bootstrap"}`, so
+  no event in a fresh repository lacks an actor.
 - **Other Echelon systems.** Vigila, Aegis, Dokimos, Percepta, and EDF
   experiments can adopt the same actor object
   (`schemas/provenance-actor.schema.json`) and contribution shape
@@ -363,7 +371,13 @@ analysis needs.
   key, execution, operations, time, actor, and whether it is the origin;
 - per-actor summaries: artifacts, created, modified, reviewed or approved, and
   executions;
-- coverage counts for artifacts, events, executions, and backlog items.
+- coverage counts for artifacts, events, executions, and backlog items;
+- `collaboration`: the artifacts where one agent revised another agent's work
+  (`agentToAgentRevisions`), where a human corrected agent work
+  (`humanCorrectionsOfAgentWork`), where a human approved agent work
+  (`humanApprovedAgentWork`), and `hotspots` (artifacts with more than one
+  contribution, most first). Each is derived from the artifact's recorded
+  involvement, never from the last modifier.
 
 Joined with telemetry execution records (cost, duration, and tokens by
 execution) and with defect or validation data by path or ID, these rows

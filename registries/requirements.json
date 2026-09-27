@@ -362,6 +362,20 @@
             "created"
           ],
           "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        },
+        "EXE-20260927T084130164Z-78bc9271": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-27T08:48:17.633Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "WI-0072: acceptance criteria for provenance follow-ups"
         }
       }
     },
@@ -446,6 +460,20 @@
             "created"
           ],
           "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        },
+        "EXE-20260927T084130164Z-78bc9271": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-27T08:48:17.164Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "WI-0072: acceptance criteria for provenance follow-ups"
         }
       }
     },
