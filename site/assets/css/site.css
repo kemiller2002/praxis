@@ -1532,10 +1532,10 @@ ol {
   }
 }
 
-/* ---- footer ----------------------------------------------------------- */
+/* ---- footer (PRAXIS-SITE-16) ------------------------------------------ */
 
 .site-footer {
-  padding: var(--space-7) 0;
+  padding: var(--space-8) 0 var(--space-7);
   background: var(--carbon);
   color: var(--stone);
   font-size: 0.9375rem;
@@ -1547,6 +1547,81 @@ ol {
 
 .site-footer :focus-visible {
   outline-color: var(--bronze-on-dark);
+}
+
+.site-footer__grid {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.site-footer__brand {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.site-footer__brand p {
+  margin: 0;
+}
+
+.site-footer__foundry {
+  display: flex;
+  gap: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--graphite-on-dark);
+}
+
+.site-footer__foundry span + span::before {
+  content: "/";
+  margin-right: var(--space-3);
+  color: var(--bronze-on-dark);
+}
+
+.site-footer__name {
+  font-weight: 800;
+  font-size: 1.125rem;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--parchment);
+}
+
+.site-footer__nav ul {
+  list-style: none;
+  display: grid;
+  gap: 0;
+}
+
+.site-footer__nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.site-footer__note {
+  margin: 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--forged-iron);
+  color: var(--graphite-on-dark);
+  font-size: 0.8125rem;
+  max-width: none;
+}
+
+@media (min-width: 48rem) {
+  .site-footer__grid {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+
+  .site-footer__note {
+    grid-column: 1 / -1;
+  }
+}
+
+.external {
+  margin-left: 0.2em;
+  font-size: 0.85em;
 }
 
 @media print {

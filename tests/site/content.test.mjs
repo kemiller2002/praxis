@@ -182,3 +182,18 @@ test("get started uses only commands and installers that exist, and names the RO
   assert.match(start, /From ROS to Praxis/);
   assert.match(start, /still provides only <code>ros<\/code>/);
 });
+
+test("primary navigation is the six specified destinations and needs no script", () => {
+  const nav = html.match(/<nav aria-label="Primary">([\s\S]*?)<\/nav>/)[1];
+  const links = [...nav.matchAll(/<a href="([^"]+)">([^<]+)/g)].map(([, href, label]) => [label.trim(), href]);
+  assert.deepEqual(links.map(([label]) => label), ["What is Praxis", "How it works", "Evidence", "Agents", "Get started", "GitHub"]);
+  links.filter(([, href]) => href.startsWith("#")).forEach(([, href]) => assert.ok(html.includes(`id="${href.slice(1)}"`), href));
+  assert.ok(!/<button/.test(nav), "no script-driven menu");
+});
+
+test("the footer connects Praxis to Echelon Foundry and states the privacy facts", () => {
+  const footer = html.match(/<footer[\s\S]*?<\/footer>/)[0];
+  assert.match(footer, /Praxis is part of Echelon Foundry\./);
+  assert.match(footer, /No analytics, no cookies, no tracking\./);
+  assert.ok(!/<script/.test(html.replace('<script src="assets/js/claim.js" defer></script>', "")), "only the claim script");
+});
