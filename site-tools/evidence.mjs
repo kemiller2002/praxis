@@ -69,6 +69,8 @@ export const lifecycle = (events) =>
       executions: event.telemetryExecutions ?? [],
     }));
 
+// Status of one headline metric: recorded when any metric in its family was
+// observed, otherwise the capability status of the total itself.
 const metricStatus = (record, prefix, total) => {
   const observed = record.metrics.filter((metric) => metric.id.startsWith(prefix));
   const capability = record.capabilities.find((entry) => entry.metricId === total);
@@ -98,8 +100,8 @@ export const execution = (record) => ({
     filesAdded: metricValue(record, "git.files_added"),
     filesModified: metricValue(record, "git.files_modified"),
     testsAdded: metricValue(record, "tests.added"),
-    tokens: metricStatus(record, "tokens.", "tokens.input"),
-    cost: metricStatus(record, "cost.", "cost.session_cumulative"),
+    tokens: metricStatus(record, "tokens.", "tokens.total"),
+    cost: metricStatus(record, "cost.", "cost.execution_total"),
   },
 });
 

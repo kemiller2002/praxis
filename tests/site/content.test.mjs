@@ -83,9 +83,15 @@ test("Git and Praxis are compared as complements, in an accessible table", () =>
 
 test("agent accountability distinguishes every quality of knowledge", () => {
   const agents = section("agents");
-  ["Observed", "Derived", "Declared", "Unknown", "Unavailable"].forEach((quality) => assert.match(agents, new RegExp(`>${quality}<`), quality));
-  assert.match(agents, /never mistaken for a detection/);
+  // Metric qualities in code are observed, derived and estimated
+  // (TelemetryValidation.fs); unknown and unavailable are capability states.
+  ["Observed", "Derived", "Estimated", "Unknown", "Unavailable"].forEach((quality) => assert.match(agents, new RegExp(`>${quality}<`), quality));
+  assert.ok(!/>Declared</.test(agents), "declared is not a metric quality");
+  const validation = readFileSync(new URL("../../src/Ros.Domain/Telemetry/TelemetryValidation.fs", import.meta.url), "utf8");
+  ["observed", "derived", "estimated"].forEach((quality) => assert.ok(validation.includes(`"${quality}"`), quality));
+  assert.match(agents, /a declaration takes precedence/);
   assert.match(agents, /does not infer a model/);
+  assert.match(agents, /Praxis does not compute cost/);
 });
 
 test("the runtimes the page says are detected are the ones the CLI detects", () => {

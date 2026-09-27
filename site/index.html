@@ -137,8 +137,8 @@
           </li>
           <li class="claim__step">
             <span class="claim__q">How many tokens? What did it cost?</span>
-            <span class="claim__a">Tokens <span data-evidence="EXE-20260927T075631195Z-0a515aae:metrics.tokens">unavailable</span>, cost <span data-evidence="EXE-20260927T075631195Z-0a515aae:metrics.cost">unavailable</span>. The runtime can report them; nothing was ingested for this execution.</span>
-            <span class="status status--unavailable">Unavailable</span>
+            <span class="claim__a">Tokens <span data-evidence="EXE-20260927T075631195Z-0a515aae:metrics.tokens">unknown</span>, cost <span data-evidence="EXE-20260927T075631195Z-0a515aae:metrics.cost">unknown</span>. No token or cost telemetry reached Praxis for this execution, so neither total is known.</span>
+            <span class="status status--unknown">Unknown</span>
           </li>
         </ol>
         <figcaption class="claim__verdict">
@@ -170,22 +170,22 @@
         </li>
         <li class="chain__link">
           <h3 class="chain__name">Execution</h3>
-          <p>One bounded attempt at the work by one actor. Identity, start, end and repository baseline are recorded when it opens.</p>
+          <p>A record of one attempt at the work. Identity and repository baseline are recorded when it opens; its end and change summary when it is finalized.</p>
           <p class="chain__cmd"><code>EXE-&hellip;</code></p>
         </li>
         <li class="chain__link">
           <h3 class="chain__name">Steps</h3>
-          <p>Starting, blocking, resuming and completing are events, appended to a log in the repository with the actor that performed them.</p>
+          <p>Starting, blocking, resuming and completing are events, appended to a log in the repository. Current versions record the actor that performed each one.</p>
           <p class="chain__cmd"><code>work block · work resume</code></p>
         </li>
         <li class="chain__link">
           <h3 class="chain__name">Changes</h3>
-          <p>Commits made during the execution are measured against its clean baseline: files, lines, tests touched.</p>
+          <p>Changes since the execution&rsquo;s starting baseline, committed or not, are summarized when it is finalized: files, lines, tests touched. If the baseline was dirty, the summary is marked unavailable.</p>
           <p class="chain__cmd"><code>git</code></p>
         </li>
         <li class="chain__link">
           <h3 class="chain__name">Tests</h3>
-          <p>Test evidence is required to complete. A work item without it stays open.</p>
+          <p>By default, completion requires naming an existing test file as evidence. Praxis checks the file exists; whether the tests pass is for CI to show.</p>
           <p class="chain__cmd"><code>--evidence tests=&hellip;</code></p>
         </li>
         <li class="chain__link">
@@ -195,7 +195,7 @@
         </li>
         <li class="chain__link">
           <h3 class="chain__name">Reconciliation</h3>
-          <p>A commit made outside any work item is not silently absorbed. It is attributed explicitly, with a reason, or it stays unresolved.</p>
+          <p>A commit made outside any work item can be assigned to one after the fact, explicitly and with a reason. Reconciliation never invents a work item.</p>
           <p class="chain__cmd"><code>work reconcile</code></p>
         </li>
         <li class="chain__link">
@@ -209,7 +209,7 @@
         <div class="anatomy__text">
           <h3>Anatomy of an execution record</h3>
           <p>This is what one execution looks like when every source reports. The values are an example of layout, not a measurement: nothing in it came from a real run, and it is labelled so.</p>
-          <p>Every value carries its quality. <strong>Observed</strong> came from the runtime. <strong>Derived</strong> was calculated by Praxis from other records. <strong>Estimated</strong> is labelled as such, with its source. A value no source supplied is <strong>unknown</strong> or <strong>unavailable</strong>, never zero.</p>
+          <p>Every value carries its quality. <strong>Observed</strong> was reported by the runtime or the agent. <strong>Derived</strong> was calculated by Praxis from other records. <strong>Estimated</strong> is labelled as such, with its source. A value no source supplied is <strong>unknown</strong> or <strong>unavailable</strong>, never zero.</p>
         </div>
         <figure class="record" data-record="illustrative" aria-labelledby="illustrative-title">
           <div class="record__bar">
@@ -268,7 +268,7 @@
           <tr>
             <th scope="row">What changed</th>
             <td data-label="Git">The exact content of every change, line by line.</td>
-            <td data-label="Praxis adds">Summarizes the changes each execution made, measured from its own clean baseline.</td>
+            <td data-label="Praxis adds">Summarizes the changes each execution made, measured from its starting baseline when that baseline was clean.</td>
           </tr>
           <tr>
             <th scope="row">Who</th>
@@ -312,7 +312,7 @@
       <div class="grid-2 agents">
         <div class="agents__item">
           <h3>Identity</h3>
-          <p>Actor kind, provider and runtime are detected from the runtime environment for OpenAI Codex, Claude Code, Gemini CLI, GitHub Copilot and GitHub Actions. They can also be declared explicitly. The record keeps the mechanism, so a declaration is never mistaken for a detection.</p>
+          <p>Actor kind, provider and runtime are detected from the runtime environment for OpenAI Codex, Claude Code, Gemini CLI, GitHub Copilot and GitHub Actions. They can also be declared explicitly, and a declaration takes precedence. The record keeps how provider and runtime were identified: from a known runtime environment, or explicitly or from an unmapped one.</p>
         </div>
         <div class="agents__item">
           <h3>Model</h3>
@@ -320,18 +320,18 @@
         </div>
         <div class="agents__item">
           <h3>Execution boundaries</h3>
-          <p>Every attempt at a work item is its own execution with a start, an end and a repository baseline. When work changes hands, the next actor opens a new execution that points to its parent.</p>
+          <p>Each execution has a start and a repository baseline, and an end once it is finalized. Blocking work does not close its execution, and resuming rejoins any execution still open. Once an execution is finalized, resuming opens a new one that points to it as its parent.</p>
         </div>
         <div class="agents__item">
           <h3>Telemetry, when it exists</h3>
-          <p>Tokens, cost and runtime measurements are recorded when a runtime stream, hook or OpenTelemetry exporter supplies them. Cost is taken from the runtime or calculated from a named price source; it is never guessed.</p>
+          <p>Tokens, cost and runtime measurements are recorded when a runtime stream, hook, OpenTelemetry exporter or the agent itself supplies them. Every value keeps its source. Praxis does not compute cost; a cost calculated elsewhere must name its price table and version, and an estimate is labelled as one.</p>
         </div>
         <div class="agents__item agents__item--wide">
           <h3>Every value says how it is known</h3>
           <dl class="quality">
-            <dt><span class="status status--recorded">Observed</span></dt><dd>Reported by the runtime or its telemetry.</dd>
+            <dt><span class="status status--recorded">Observed</span></dt><dd>Reported by the runtime, its telemetry, or the agent itself, with that source recorded.</dd>
             <dt><span class="status status--recorded">Derived</span></dt><dd>Calculated by Praxis from other records, such as wall time from timestamps.</dd>
-            <dt><span class="status status--recorded">Declared</span></dt><dd>Stated explicitly by the actor or its configuration, and recorded as a declaration.</dd>
+            <dt><span class="status status--recorded">Estimated</span></dt><dd>Labelled as an estimate, with a confidence.</dd>
             <dt><span class="status status--unknown">Unknown</span></dt><dd>No source could say. Recorded as unknown.</dd>
             <dt><span class="status status--unavailable">Unavailable</span></dt><dd>The runtime can report it, but nothing was supplied for this execution.</dd>
           </dl>
@@ -345,8 +345,8 @@
       <div class="section__head">
         <p class="kicker">Integrity</p>
         <div>
-          <h2 id="evidence-title">The work continued. <span class="accent">The identity did not transfer.</span></h2>
-          <p class="lede">GH-84 is the issue for this website. Partway through, the work was handed off. These are the two executions exactly as Praxis recorded them, as of <span data-evidence="asOf:date">2026-09-27</span>.</p>
+          <h2 id="evidence-title">The work continued. <span class="accent">The identity was not assumed.</span></h2>
+          <p class="lede">GH-84 is the issue for this website. Partway through, its first execution was blocked for a handoff and finalized, and the work was then resumed. These are the two executions exactly as Praxis recorded them, as of <span data-evidence="asOf:date">2026-09-27</span>.</p>
         </div>
       </div>
       <div class="handoff">
@@ -366,8 +366,8 @@
               <dt>Finalized</dt><dd data-evidence="EXE-20260927T074026833Z-d1d7ea06:finalizedAt">2026-09-27T07:47:24.532Z</dd>
               <dt>Baseline</dt><dd><span data-evidence="EXE-20260927T074026833Z-d1d7ea06:start.branch">main</span> @ <span data-evidence="EXE-20260927T074026833Z-d1d7ea06:start.commit">251ac22</span> → <span data-evidence="EXE-20260927T074026833Z-d1d7ea06:end.branch">claude/gh-84</span> @ <span data-evidence="EXE-20260927T074026833Z-d1d7ea06:end.commit">9789e26</span></dd>
               <dt>Wall time</dt><dd><span data-evidence="EXE-20260927T074026833Z-d1d7ea06:metrics.wallMs">417699</span> ms · derived</dd>
-              <dt>Tokens</dt><dd data-evidence="EXE-20260927T074026833Z-d1d7ea06:metrics.tokens">unavailable</dd>
-              <dt>Cost</dt><dd data-evidence="EXE-20260927T074026833Z-d1d7ea06:metrics.cost">unavailable</dd>
+              <dt>Tokens</dt><dd data-evidence="EXE-20260927T074026833Z-d1d7ea06:metrics.tokens">unknown</dd>
+              <dt>Cost</dt><dd data-evidence="EXE-20260927T074026833Z-d1d7ea06:metrics.cost">unknown</dd>
             </dl>
             <ol class="record__steps" aria-label="Lifecycle of execution 1">
               <li><span><span data-evidence="lifecycle:0.type">work.started</span> at <span data-evidence="lifecycle:0.occurredAt">2026-09-27T07:40:22.000Z</span></span><span class="status status--recorded">Recorded</span></li>
@@ -394,8 +394,8 @@
               <dt>Parent</dt><dd data-evidence="EXE-20260927T075155507Z-fcdf36ca:parentExecutionId">EXE-20260927T074026833Z-d1d7ea06</dd>
               <dt>Started</dt><dd data-evidence="EXE-20260927T075155507Z-fcdf36ca:startedAt">2026-09-27T07:51:55.507Z</dd>
               <dt>Baseline</dt><dd><span data-evidence="EXE-20260927T075155507Z-fcdf36ca:start.branch">claude/gh-84</span> @ <span data-evidence="EXE-20260927T075155507Z-fcdf36ca:start.commit">60fea68</span></dd>
-              <dt>Tokens</dt><dd data-evidence="EXE-20260927T075155507Z-fcdf36ca:metrics.tokens">unavailable</dd>
-              <dt>Cost</dt><dd data-evidence="EXE-20260927T075155507Z-fcdf36ca:metrics.cost">unavailable</dd>
+              <dt>Tokens</dt><dd data-evidence="EXE-20260927T075155507Z-fcdf36ca:metrics.tokens">unknown</dd>
+              <dt>Cost</dt><dd data-evidence="EXE-20260927T075155507Z-fcdf36ca:metrics.cost">unknown</dd>
             </dl>
             <ol class="record__steps" aria-label="Lifecycle of execution 2">
               <li><span><span data-evidence="lifecycle:2.type">work.resumed</span> at <span data-evidence="lifecycle:2.occurredAt">2026-09-27T07:51:54.000Z</span></span><span class="status status--recorded">Recorded</span></li>
@@ -408,8 +408,8 @@
         </figure>
       </div>
       <div class="handoff__read grid-2">
-        <p>The first execution was blocked with a handoff reason and finalized. When the work resumed, Praxis did not reopen it or relabel it. It opened a new execution, linked it to the first as its parent, and recorded the identity it detected in the environment of whoever resumed the work.</p>
-        <p>The handoff note anticipated a different agent. The actor that actually resumed was detected as <span class="mono">anthropic / claude-code</span>, so that is what the record says. No model was reported to either execution, so both say unknown. No token or cost telemetry was ingested for either, so both say unavailable.</p>
+        <p>Blocking did not close the first execution; it was finalized explicitly, six seconds later. Because it was finalized, resuming did not reopen it. Praxis opened a new execution, linked it to the first as its parent, and identified the actor from the environment of the process that resumed the work, not from the record it continued.</p>
+        <p>The handoff note anticipated a different agent. That is not what happened: the same Claude Code session resumed the work. Both executions carry the same runtime session identifier, which the public snapshot deliberately leaves out. The record says what ran, not what was planned. No model was reported to either execution, and no token or cost telemetry reached either, so those say unknown.</p>
       </div>
       <p class="handoff__rule">Praxis will not transfer identity merely because the work continued.</p>
     </div>
@@ -420,7 +420,7 @@
         <p class="kicker">Reconciliation</p>
         <div>
           <h2 id="reconciliation-title">Every change has to answer for itself.</h2>
-          <p class="lede">A meaningful change that no work item accounts for is not absorbed into the nearest one. When CI validates against a base commit, as this repository&rsquo;s does, it names the change and fails.</p>
+          <p class="lede">With attribution enforcement on, validation names a meaningful change that no work item accounts for and fails. The check is deliberately lenient while work is still open: when any work item is active or blocked, unattributed changes are not reported, and completing an item attributes the changes in the working tree to it.</p>
         </div>
       </div>
       <figure class="terminal-figure">
@@ -442,7 +442,7 @@ ERROR src/report.fs:work_items: meaningful change has no active or completed wor
         <li class="outcomes__item">
           <p class="status status--unresolved">Unresolved</p>
           <h3>Until someone can say</h3>
-          <p>If nobody can honestly name the work item, the change stays unresolved and validation keeps saying so.</p>
+          <p>If nobody can honestly name the work item, the change stays unresolved, and validation reports it whenever no work is open.</p>
         </li>
       </ol>
       <div class="grid-2 reconcile__notes">
@@ -498,7 +498,7 @@ ERROR src/report.fs:work_items: meaningful change has no active or completed wor
   events/events.jsonl               <span class="tree__note">append-only lifecycle and provenance events</span>
   telemetry/executions/EXE-*.json   <span class="tree__note">one file per execution</span>
 research/                           <span class="tree__note">research records: decisions, evidence, experiments</span>
-registries/                         <span class="tree__note">generated indexes of the above</span></code></pre>
+registries/                         <span class="tree__note">generated indexes of research records</span></code></pre>
         </figure>
         <dl class="props">
           <div class="props__item">
@@ -515,7 +515,7 @@ registries/                         <span class="tree__note">generated indexes o
           </div>
           <div class="props__item">
             <dt>Attributable</dt>
-            <dd>Each event carries the actor that caused it; each execution carries the identity that ran it.</dd>
+            <dd>Events written by current versions carry the actor that caused them; each execution carries the identity that ran it.</dd>
           </div>
           <div class="props__item">
             <dt>Reviewable</dt>
@@ -543,7 +543,7 @@ registries/                         <span class="tree__note">generated indexes o
           <p class="availability__label"><span class="status status--verified">Available now</span></p>
           <ul class="availability__list">
             <li><strong>Standalone.</strong> Install it into any Git repository. No server, account or other Echelon tool.</li>
-            <li><strong>External work systems.</strong> A transport-neutral adapter contract reads and transitions work items in an external tracker, and reports conflicts instead of overwriting either side.</li>
+            <li><strong>External work systems.</strong> A transport-neutral adapter contract through which an adapter reads and transitions work items in an external tracker, reporting conflicts instead of overwriting either side. The contract ships; tracker-specific adapters are yours to write.</li>
             <li><strong>Ordo.</strong> Praxis can record Ordo decisions and their later outcomes, and package handoff context, without becoming Ordo&rsquo;s authority.</li>
             <li><strong>Echelon bootstrap.</strong> The native bundle includes <code>echelon</code>, which reports which Echelon tools are present and whether the environment is coherent.</li>
           </ul>
@@ -572,7 +572,7 @@ registries/                         <span class="tree__note">generated indexes o
         </li>
         <li class="principles__item">
           <h3>Every change has to answer for itself.</h3>
-          <p>A change no work item accounts for is named, reconciled on the record, or left unresolved. Never quietly absorbed.</p>
+          <p>Changes are attributed while the work happens, or reconciled later on the record, with a reason. Reconciliation never invents a work item to absorb them.</p>
           <p class="principles__link"><a href="#reconciliation">How reconciliation works</a></p>
         </li>
         <li class="principles__item">
@@ -626,7 +626,7 @@ registries/                         <span class="tree__note">generated indexes o
           <ul>
             <li>The native installer provides <code>praxis</code>, and keeps <code>ros</code> as an alias for the same program.</li>
             <li>The npm package <code>@echelon-foundry/repository-operating-system</code> still provides only <code>ros</code>: <code>npx --package=@echelon-foundry/repository-operating-system ros init</code>.</li>
-            <li><code>init</code> adds a repository-local <code>./ros</code> launcher.</li>
+            <li><code>init</code> adds a repository-local <code>./ros</code> launcher. It runs on Node.js; the installed <code>praxis</code> command does not need Node.</li>
             <li>Help text and some output still say ROS.</li>
           </ul>
           <p>Same tool, same records. Commands on this page use <code>praxis</code>; wherever you have <code>ros</code>, the arguments are identical.</p>
