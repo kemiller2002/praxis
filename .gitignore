@@ -50,3 +50,4 @@ logs/*
 *.pem
 *.key
 _site/
+dist/

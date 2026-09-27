@@ -18,7 +18,7 @@ test("the site workflow checks, assembles and uploads with read-only permissions
 test("no site file can trigger a release workflow on main", () => {
   // native-release.yml republishes release assets on pushes to main that touch
   // its paths, so the site must live entirely outside them.
-  const sitePaths = ["site/index.html", "site-tools/check.mjs", "tests/site/site.test.mjs", "docs/site/site-deployment.md", "docs/public-site.md", ".github/workflows/site.yml", ".github/workflows/site-pages.yml"];
+  const sitePaths = ["site/index.html", "site-tools/check.mjs", "tests/site/site.test.mjs", "docs/site/site-deployment.md", "docs/public-site.md", ".github/workflows/site.yml", ".github/workflows/deploy-pages.yml"];
   const glob = (pattern) => new RegExp(`^${pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*\*/g, "\u0000").replace(/\*/g, "[^/]*").replace(/\u0000/g, ".*")}$`);
   ["native-release.yml", "publish.yml"].forEach((file) => {
     const workflow = read(`.github/workflows/${file}`);
@@ -55,21 +55,32 @@ test("the assembled artifact is exactly the checked site", () => {
   assert.ok(existsSync(`${target}/.nojekyll`));
 });
 
-test("the Pages workflow deploys only the checked artifact, with least privilege", () => {
-  const workflow = read(".github/workflows/site-pages.yml");
-  assert.match(workflow, /^permissions:\n  contents: read/m);
+test("the Pages workflow mirrors echelon-foundry's deploy-pages.yml and deploys only the checked artifact", () => {
+  // Same shape as kemiller2002/echelon-foundry .github/workflows/deploy-pages.yml.
+  const workflow = read(".github/workflows/deploy-pages.yml");
+  assert.match(workflow, /^name: Deploy Site$/m);
+  assert.match(workflow, /^on:\n  push:\n    branches:\n      - main\n  workflow_dispatch:$/m);
+  assert.match(workflow, /^permissions:\n  contents: read\n  pages: write\n  id-token: write$/m);
+  assert.match(workflow, /^concurrency:\n  group: pages\n  cancel-in-progress: true$/m);
   const build = workflow.slice(workflow.indexOf("  build:"), workflow.indexOf("  deploy:"));
   const deploy = workflow.slice(workflow.indexOf("  deploy:"));
-  assert.ok(!/pages: write|id-token: write/.test(build), "build job cannot deploy");
-  assert.match(deploy, /pages: write\n      id-token: write/);
+  ["Checkout repository", "Set up Node.js", "Build site", "Configure Pages", "Upload Pages artifact"].forEach((step) =>
+    assert.ok(build.includes(`- name: ${step}`), step)
+  );
   assert.ok(build.indexOf("node site-tools/verify.mjs") < build.indexOf("upload-pages-artifact"), "checks run before upload");
-  assert.match(build, /path: _site/);
-  assert.match(workflow, /branches: \[main\]/);
-  assert.match(deploy, /actions\/deploy-pages@v4/);
+  assert.match(build, /node site-tools\/assemble\.mjs dist/);
+  assert.match(build, /path: dist/);
+  assert.ok(!/npm run/.test(build), "no npm scripts: package.json stays out of the site");
+  assert.match(deploy, /needs: build/);
+  assert.match(deploy, /- name: Deploy to GitHub Pages\n        id: deployment\n        uses: actions\/deploy-pages@v4/);
+  assert.ok(!existsSync(new URL("../../.github/workflows/site-pages.yml", import.meta.url)), "old workflow removed");
 });
 
 test("the deployment document never reports a deployment that has not happened", () => {
   const doc = read("docs/site/site-deployment.md");
   assert.match(doc, /Source: GitHub Actions/);
-  assert.match(doc, /\*\*Nothing has been deployed\.\*\*|has been deployed by run/);
+  // Every deployment the document claims names the Actions run that did it.
+  const deployments = doc.slice(doc.indexOf("## Deployments"));
+  const claimed = deployments.split("\n- ").slice(1);
+  claimed.forEach((entry) => assert.match(entry, /Actions run \d+/, entry));
 });

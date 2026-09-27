@@ -1850,6 +1850,30 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-SITE-27",
+      "title": "Align Pages deployment workflow with echelon-foundry deploy-pages.yml",
+      "description": "Child of GH-84. Mirror kemiller2002/echelon-foundry .github/workflows/deploy-pages.yml (name, triggers, permissions, concurrency, step names, dist artifact) for the Praxis public site, keeping the site checks as the build and package.json untouched.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T09:55:33.000Z",
+      "updatedAt": "2026-09-27T09:56:52.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
     }
   ]
 }
