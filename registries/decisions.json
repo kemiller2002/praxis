@@ -589,5 +589,67 @@
     "title": "Agent identity and provenance as a first-class, execution-keyed extension of existing ROS records",
     "updated": "2026-09-25",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-27",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A010",
+      "DF-ROS-2026-A036"
+    ],
+    "id": "DF-ROS-2026-A037",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A037--execution-step-telemetry.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T013711437Z-b3dfcbfc": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-27T01:55:35.666Z",
+          "last": "2026-09-27T07:23:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "First-class step-level execution telemetry requirements and architecture"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A010",
+      "DF-ROS-2026-A036",
+      "RQ-ROS-2026-A013",
+      "RQ-ROS-2026-A014",
+      "RQ-ROS-2026-A015",
+      "RQ-ROS-2026-A016",
+      "RQ-ROS-2026-A017",
+      "RQ-ROS-2026-A018",
+      "RQ-ROS-2026-A019",
+      "RQ-ROS-2026-A020",
+      "requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [],
+    "tags": [
+      "architecture",
+      "execution",
+      "steps",
+      "telemetry",
+      "provenance"
+    ],
+    "title": "Execution-owned step ledger with referenced canonical telemetry",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
   }
 ]

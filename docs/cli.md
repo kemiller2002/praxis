@@ -295,6 +295,16 @@ An invalid `--actor-kind` is an argument error (exit `2`).
 | `provenance record --path PATH\|--id ID --operation OP [--reason T] [--evidence REF]* [--derived-from REF]* [--execution EXE] [--occurred-at TS] [--json]` | attribute a contribution to an artifact's front matter and append an `artifact.contributed` event; identity is inherited from the active execution; idempotent |
 | `provenance show ID\|PATH [--json]` | contributors, involvement label, lineage (sources and derivatives), legacy-declared authors, and events |
 | `provenance audit [--json]` | coverage, per-actor summaries, flattened contribution facts for metrics, and every finding including informational ones; exits `1` on errors |
+| `step plan --name NAME --occurred-at TS [--description TEXT] [--classification TYPE]* [--parent STEP] [--execution EXE] [--json]` | add a planned step to the current execution |
+| `step begin --name NAME --occurred-at TS [...]` | create and activate a step; use `--parent` for a nested child |
+| `step begin\|resume --id STEP --occurred-at TS [--execution EXE]` | activate a planned or blocked step |
+| `step complete\|block\|abandon [--id STEP] --occurred-at TS [--reason TEXT]` | transition the explicit step or current active leaf; block requires a reason |
+| `step record --metric ID --value N --collected-at TS [--id STEP] [--quality observed\|derived\|estimated] [cost provenance flags]` | record one canonical step-attributed normalized measurement |
+| `step availability --metric ID --status supported-unavailable\|unsupported\|unknown --reason TEXT --occurred-at TS [--id STEP]` | record measurement availability without inventing a value |
+| `step checkpoint --phase begin\|end (--measurement MEAS\|--snapshot SNAP)+ --occurred-at TS [--id STEP]` | preserve source observations and derive compatible cumulative deltas |
+| `step link --kind KIND --value VALUE --occurred-at TS [--source SOURCE] [--id STEP]` | relate sourced engineering evidence without duplicating its canonical record |
+| `step list [--execution EXE\|--work-item ID] [--json]` | list ordered steps; JSON is deterministic and includes summaries |
+| `step show STEP-ID` | show the canonical step, availability, measurements, duration, nesting, and evidence as JSON |
 
 `validate` reports provenance errors (which fail validation) and provenance
 warnings (which do not). In `--json`, warnings carry `"severity":"warning"`,

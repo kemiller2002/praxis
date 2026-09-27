@@ -23,6 +23,52 @@ work begin
 
 Historical work records created before telemetry existed remain valid. The compatibility boundary is explicit: once a work item has `telemetryExecutionIds`, completed work requires those records to be finalized. ROS does not invent telemetry for older history.
 
+## Execution steps
+
+A step is a meaningful unit of the agent's actual execution plan inside one execution—for example, inspect requirements, implement a change, run tests, or review the result. It is execution evidence, not a requirement or separate work item. Do not create a step for every command or keystroke, and do not use a step to hide an independently governable obligation.
+
+Steps are created as the agent works; no central plan is required. Praxis preserves the supplied name and description as historical evidence. The lifecycle is state-directed:
+
+```text
+planned -> active -> completed
+   |          |  \-> blocked -> active
+   |          |       \-> abandoned
+   \----------+-----------> abandoned
+```
+
+Illegal and repeated transitions are rejected. Without a parallel-step protocol, active steps form one ancestor path: an active parent may have one active nested child, but unrelated active siblings cannot coexist. Nested parents are grouping steps; normalized usage and cumulative checkpoints belong to leaves, so parent and child intervals cannot both enter execution totals. A measured step cannot later acquire children. A parent cannot finish while a descendant is unresolved, and an execution cannot finalize while any step is planned, active, or blocked. After a crash, the unresolved step remains visible and must be resumed, completed, blocked, or abandoned explicitly.
+
+```bash
+./ros step begin --name "Inspect implementation" \
+  --classification research --occurred-at 2026-09-27T12:00:00Z
+./ros step begin --name "Inspect parser" --parent STEP-... \
+  --classification implementation --occurred-at 2026-09-27T12:02:00Z
+./ros step complete --occurred-at 2026-09-27T12:05:00Z
+./ros step complete --occurred-at 2026-09-27T12:06:00Z
+./ros step list --work-item WI-0065 --json
+./ros step show STEP-...
+```
+
+Classifications are open strings; `planning`, `research`, `requirements`, `design`, `implementation`, `testing`, `debugging`, `review`, `documentation`, `governance`, `integration`, `deployment`, and `other` are useful conventions, not a closed enum. Use a precise custom value rather than misclassifying work. `parentStepId` is optional, so ordinary flat execution remains simple.
+
+Each step snapshots the execution actor and available provider/model/runtime identity. Mutations require positive evidence that the current process owns the execution and session, even when an execution ID is supplied explicitly. The execution record stores each metric once; step records refer to canonical `measurementId` and sanitized `snapshotId` values. This prevents execution totals and nested parent/child views from double-counting the same observation.
+
+Use `step record` only for a value the named source actually exposes. Use `step availability` for `supported-unavailable`, `unsupported`, or `unknown`; never encode those states as zero. A late observation may be attached to a terminal step only with an explicit step ID. Praxis never assigns telemetry to a step merely because timestamps overlap.
+
+```bash
+./ros step record --metric tokens.input --value 0 --quality observed \
+  --source-type runtime-api --source-name provider-usage --source-mechanism reported \
+  --collected-at 2026-09-27T12:05:00Z
+./ros step availability --metric tokens.reasoning --status supported-unavailable \
+  --reason "provider response omitted this category" --occurred-at 2026-09-27T12:05:01Z
+```
+
+For a reliable cumulative provider counter, explicitly checkpoint existing canonical observations. An end checkpoint derives a delta only when there is exactly one compatible begin observation with the same cumulative metric, unit, currency, and source, and the counter did not decrease. The derived metric names both source measurements and the arithmetic method. Missing, ambiguous, incompatible, or decreasing observations produce an explicit `insufficient` result, not a guessed delta.
+
+Cost uses the same quality vocabulary. Provider-reported amounts are `observed`; arithmetic is `derived`; uncertain calculations are `estimated` with confidence. Calculated costs require pricing source and version (plus effective date, model, method, and token-measurement references when applicable). A delta of a provider-reported cumulative cost names `provider-cumulative` as its derivation source; it does not pretend Praxis applied a price table.
+
+`step link` records sourced references to files observed or changed, commits, commands, tests, validations, evidence, decisions, requirements, and outcomes. The default source is `agent-report`. A relationship does not transfer authorship and does not claim another contributor's pre-existing file change.
+
 ## Capability states and zero
 
 Each known normalized metric has a capability state for the execution:
@@ -161,6 +207,14 @@ The metric registry declares `sum`, `maximum`, `latest`, `latest-per-session`, o
 `time.wall_ms` is execution effort, so its work-item sum can exceed elapsed calendar time when agents overlap. Work-item summaries therefore include a separate `timing` object with earliest start, latest finalization, calendar span, total execution wall time, and overlapping execution milliseconds. Incomplete work returns null aggregate durations rather than a misleading partial total. Likewise, `tests.passed` counts reported passing results across executions; rerunning the same tests increments it and does not imply unique test-case count.
 
 Cross-provider comparisons must account for semantic differences. Providers may include reasoning in output tokens, define cache categories differently, estimate costs with a changing price table, route a configured model to a different served model, or expose current context rather than cumulative usage. Preserve the raw snapshot and source; do not coerce metrics merely to fill a comparison table.
+
+Step-attributed observations participate in execution and work-item aggregation because they are canonical execution metrics carrying `stepId`, not copied rollups. Parent grouping steps never carry or implicitly include child measurements. `telemetry summary` adds an exact `stepCount` when matching executions contain steps; token and cost totals remain grouped by metric/unit/currency/quality semantics rather than collapsed into a misleading scalar. Step views retain per-measurement quality and availability, so future analysis can derive tokens or cost per completed step, accepted requirement, defect, successful test, or transition, and can compare rework/implementation/testing shares without storing those ratios prematurely.
+
+## Fallback execution
+
+The approved `protocol/praxis-envelope-v1.schema.json` fallback remains a second entry path into the same model, not a second authority. Its optional `execution.steps` records preserve identity, order, nesting, transitions, measurement availability, raw provider objects, and evidence. Old envelopes without `execution` remain valid. Reconciliation validates boundaries, sequence, timestamps, availability/value consistency, duplicate measurement identity, work-item/execution identity, and optional `praxisInstanceId` before dispatch. If a locally authoritative instance identity exists, a conflicting claim is rejected.
+
+The current fallback dispatcher remains fail-closed (`request-dispatch-not-configured`) until every request maps to the existing application operations. Step-aware envelopes can therefore be parsed, validated, quarantined, and preserved now, but native/fallback canonical mutation equivalence remains part of the already-approved reconciliation follow-up rather than an unearned claim here.
 
 ## Privacy, storage, and schema evolution
 

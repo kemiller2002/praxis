@@ -12,6 +12,18 @@ open Ros.Infrastructure.Work
 
 [<RequireQualifiedAccess>]
 module ReconciliationCommands =
+    let private localInstanceId root =
+        let path = Path.Combine(root, ".praxis", "instance.json")
+
+        if not (File.Exists path) then None
+        else
+            try
+                use document = JsonDocument.Parse(File.ReadAllText path)
+                match document.RootElement.TryGetProperty "instanceId" with
+                | true, value when value.ValueKind = JsonValueKind.String -> Some(value.GetString())
+                | _ -> None
+            with _ -> None
+
     let private hashEnvelope envelope =
         let bytes = JsonSerializer.SerializeToUtf8Bytes envelope
         Convert.ToHexString(SHA256.HashData bytes).ToLowerInvariant()
@@ -21,7 +33,8 @@ module ReconciliationCommands =
         { ActualBranch = branch |> Option.defaultValue ""
           HeadCommit = head |> Option.defaultValue ""
           BaseCommitExists = ProcessGitRepository.commitExists root envelope.BaseCommit
-          TransactionAlreadyApplied = store.IsApplied envelope.TransactionId }
+          TransactionAlreadyApplied = store.IsApplied envelope.TransactionId
+          LocalPraxisInstanceId = localInstanceId root }
 
     // Request dispatch is intentionally closed until each request type is mapped
     // to an existing Ros.Application operation. Unknown requests never become state.

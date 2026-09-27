@@ -5,6 +5,7 @@
     {"id":"tokens.input","category":"tokens","unit":"tokens","aggregation":"sum","collection":"runtime","description":"Input tokens consumed by model calls."},
     {"id":"tokens.output","category":"tokens","unit":"tokens","aggregation":"sum","collection":"runtime","description":"Output tokens emitted by model calls, including reasoning when the provider combines them."},
     {"id":"tokens.cached_input","category":"tokens","unit":"tokens","aggregation":"sum","collection":"runtime","description":"Input tokens served from a provider cache when exposed under a combined cache category."},
+    {"id":"tokens.cached_output","category":"tokens","unit":"tokens","aggregation":"sum","collection":"runtime","description":"Output tokens served from a provider cache when separately exposed."},
     {"id":"tokens.cache_read","category":"tokens","unit":"tokens","aggregation":"sum","collection":"runtime","description":"Input tokens read from prompt cache."},
     {"id":"tokens.cache_write","category":"tokens","unit":"tokens","aggregation":"sum","collection":"runtime","description":"Input tokens written to prompt cache."},
     {"id":"tokens.reasoning","category":"tokens","unit":"tokens","aggregation":"sum","collection":"runtime","description":"Reasoning or thinking tokens when separately exposed."},
@@ -18,6 +19,11 @@
     {"id":"context.current_cache_write_tokens","category":"context","unit":"tokens","aggregation":"none","collection":"runtime","description":"Cache-write tokens in the current-context snapshot; a session gauge, not an additive total."},
     {"id":"context.compactions","category":"context","unit":"count","aggregation":"sum","collection":"runtime","description":"Context compression or compaction operations."},
     {"id":"session.tokens.cumulative","category":"tokens","unit":"tokens","aggregation":"latest-per-session","collection":"runtime","description":"Cumulative tokens for a provider session. Aggregation keeps one latest value per session."},
+    {"id":"session.tokens.input_cumulative","category":"tokens","unit":"tokens","aggregation":"latest-per-session","collection":"runtime","description":"Cumulative input tokens for a provider session; suitable for explicit checkpoint deltas."},
+    {"id":"session.tokens.output_cumulative","category":"tokens","unit":"tokens","aggregation":"latest-per-session","collection":"runtime","description":"Cumulative output tokens for a provider session; suitable for explicit checkpoint deltas."},
+    {"id":"session.tokens.cached_input_cumulative","category":"tokens","unit":"tokens","aggregation":"latest-per-session","collection":"runtime","description":"Cumulative cached-input tokens for a provider session; suitable for explicit checkpoint deltas."},
+    {"id":"session.tokens.cached_output_cumulative","category":"tokens","unit":"tokens","aggregation":"latest-per-session","collection":"runtime","description":"Cumulative cached-output tokens for a provider session; suitable for explicit checkpoint deltas."},
+    {"id":"session.tokens.reasoning_cumulative","category":"tokens","unit":"tokens","aggregation":"latest-per-session","collection":"runtime","description":"Cumulative reasoning tokens for a provider session; suitable for explicit checkpoint deltas."},
 
     {"id":"cost.input","category":"cost","unit":"currency","aggregation":"sum","collection":"runtime-or-calculated","description":"Input-token cost."},
     {"id":"cost.output","category":"cost","unit":"currency","aggregation":"sum","collection":"runtime-or-calculated","description":"Output-token cost."},
@@ -25,6 +31,7 @@
     {"id":"cost.cache","category":"cost","unit":"currency","aggregation":"sum","collection":"runtime-or-calculated","description":"Cache read/write cost."},
     {"id":"cost.tool_api","category":"cost","unit":"currency","aggregation":"sum","collection":"runtime","description":"Tool or external API cost."},
     {"id":"cost.execution_total","category":"cost","unit":"currency","aggregation":"sum","collection":"runtime-or-calculated","description":"Cost attributable to this execution."},
+    {"id":"cost.step_total","category":"cost","unit":"currency","aggregation":"sum","collection":"runtime-or-calculated","description":"Cost explicitly attributable to one execution step."},
     {"id":"cost.session_cumulative","category":"cost","unit":"currency","aggregation":"latest-per-session","collection":"runtime","description":"Cumulative provider session cost. Aggregation keeps one latest value per session."},
 
     {"id":"time.wall_ms","category":"time","unit":"milliseconds","aggregation":"sum","collection":"ros-derived","description":"Per-execution wall-clock duration from ROS start through finalization; work-item sums may overlap and are not calendar elapsed time."},
