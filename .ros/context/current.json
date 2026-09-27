@@ -2745,11 +2745,36 @@
         "EXE-20260927T082738028Z-41d10954"
       ],
       "completedAt": "2026-09-27T08:28:37.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-22",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/site-pages.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/workflow.test.mjs"
+        },
+        {
+          "type": "deployment",
+          "path": "docs/site/site-deployment.md"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:29:19.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T082911014Z-231deae9"
+      ],
+      "completedAt": "2026-09-27T08:29:19.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-27T08:28:37.000Z",
+  "updatedAt": "2026-09-27T08:29:19.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

@@ -56,7 +56,7 @@
 | PRAXIS-SITE-19 | Performance and resilience | complete | gh-84, public-site | medium |
 | PRAXIS-SITE-20 | Security/privacy review | complete | gh-84, public-site | high |
 | PRAXIS-SITE-21 | GitHub Actions verification | complete | gh-84, public-site | high |
-| PRAXIS-SITE-22 | GitHub Pages deployment | ready | gh-84, public-site | high |
+| PRAXIS-SITE-22 | GitHub Pages deployment | complete | gh-84, public-site | high |
 | PRAXIS-SITE-23 | Make the site itself a Praxis case study | complete | gh-84, public-site | high |
 | PRAXIS-SITE-24 | Final communication/polish pass | ready | gh-84, public-site | medium |
 | PRAXIS-SITE-25 | Adversarial claim audit | ready | gh-84, public-site | high |
