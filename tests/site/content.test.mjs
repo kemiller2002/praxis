@@ -101,3 +101,15 @@ test("the runtimes the page says are detected are the ones the CLI detects", () 
     assert.ok(identity.includes(mechanism), mechanism);
   });
 });
+
+test("the GH-84 handoff is rendered from real records only", () => {
+  const evidence = section("evidence");
+  assert.equal((evidence.match(/data-record="real"/g) ?? []).length, 2);
+  assert.ok(!/illustrative/i.test(evidence));
+  assert.match(evidence, /Praxis will not transfer identity merely because the work continued\./);
+  const snapshot = JSON.parse(readFileSync(new URL("../../site/data/gh-84.json", import.meta.url), "utf8"));
+  const gh84 = snapshot.executions.filter((execution) => execution.workItemId === "GH-84");
+  assert.equal(gh84.length, 2);
+  assert.equal(gh84[1].parentExecutionId, gh84[0].executionId, "second execution is the child of the first");
+  gh84.forEach((execution) => assert.ok(evidence.includes(`data-evidence="${execution.executionId}:identity.provider"`)));
+});

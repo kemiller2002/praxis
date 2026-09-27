@@ -1139,6 +1139,80 @@ ol {
   color: var(--parchment) !important;
 }
 
+/* ---- GH-84 handoff (PRAXIS-SITE-08) ------------------------------------ */
+
+.handoff {
+  display: grid;
+  gap: 0;
+}
+
+.handoff__join {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--forged-iron);
+  position: relative;
+}
+
+.handoff__join::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(50% - 1px);
+  width: 2px;
+  background: var(--forged-iron);
+}
+
+.handoff__join span {
+  position: relative;
+  padding: var(--space-1) var(--space-2);
+  background: var(--parchment);
+}
+
+@media (min-width: 72rem) {
+  .handoff {
+    grid-template-columns: minmax(0, 1fr) 5rem minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .handoff__join {
+    align-self: stretch;
+  }
+
+  .handoff__join::before {
+    top: calc(50% - 1px);
+    bottom: auto;
+    left: 0;
+    right: 0;
+    width: auto;
+    height: 2px;
+  }
+}
+
+.handoff__read {
+  margin-top: var(--space-6);
+}
+
+.handoff__read p {
+  margin: 0;
+}
+
+.handoff__rule {
+  margin: var(--space-7) 0 0;
+  padding-top: var(--space-5);
+  border-top: 2px solid var(--charcoal);
+  font-family: var(--font-display);
+  font-size: clamp(1.625rem, 3.4vw, 2.5rem);
+  line-height: 1.2;
+  max-width: 28ch;
+}
+
 /* ---- footer ----------------------------------------------------------- */
 
 .site-footer {

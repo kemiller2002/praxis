@@ -166,7 +166,8 @@ export const snapshotProblems = (snapshot, current) => {
   return [...executionProblems, ...itemProblems, ...lifecycleProblems];
 };
 
-// data-evidence="EXE-...:identity.runtime" or "GH-84:state" or "count:complete"
+// data-evidence="EXE-...:identity.runtime", "GH-84:state", "count:complete",
+// "lifecycle:1.reason" or "asOf:date"
 export const lookup = (snapshot, key) => {
   const [subject, field] = key.split(":");
   const counts = {
@@ -176,6 +177,11 @@ export const lookup = (snapshot, key) => {
   };
   if (subject === "count") return counts[field] === undefined ? undefined : String(counts[field]);
   if (subject === "asOf") return snapshot.asOf.slice(0, 10);
+  if (subject === "lifecycle") {
+    const [index, ...path] = field.split(".");
+    const found = path.reduce((node, part) => (node === null || node === undefined ? undefined : node[part]), snapshot.lifecycle[Number(index)]);
+    return found === undefined ? undefined : String(found);
+  }
   const entity = snapshot.executions.find((entry) => entry.executionId === subject) ?? snapshot.workItems.find((entry) => entry.id === subject);
   const [head, rest] = field.split(/\.(.*)/s);
   if (head === "evidence" && entity?.evidence) return entity.evidence.find((entry) => entry.type === rest)?.path;

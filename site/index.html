@@ -25,6 +25,7 @@
       <ul class="nav-list">
         <li><a href="#proposition">What is Praxis</a></li>
         <li><a href="#how">How it works</a></li>
+        <li><a href="#evidence">Evidence</a></li>
         <li><a href="#agents">Agents</a></li>
       </ul>
     </nav>
@@ -43,7 +44,7 @@
         <p class="lede">Praxis connects requirements, execution, agents, changes, tests, evidence, provenance, and cost into a verifiable engineering record.</p>
         <p class="hero__statement">Trust is not an engineering control. <strong>Evidence is.</strong></p>
         <div class="actions">
-          <a class="button" href="#verify">See the evidence</a>
+          <a class="button" href="#evidence">See the evidence</a>
           <a class="button button--ghost" href="https://github.com/kemiller2002/praxis">View on GitHub</a>
         </div>
       </div>
@@ -333,6 +334,80 @@
           <p class="agents__rule">A missing value is never filled with a zero.</p>
         </div>
       </div>
+    </div>
+  </section>
+  <section class="section" id="evidence" aria-labelledby="evidence-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">Integrity</p>
+        <div>
+          <h2 id="evidence-title">The work continued. <span class="accent">The identity did not transfer.</span></h2>
+          <p class="lede">GH-84 is the issue for this website. Partway through, the work was handed off. These are the two executions exactly as Praxis recorded them, as of <span data-evidence="asOf:date">2026-09-27</span>.</p>
+        </div>
+      </div>
+      <div class="handoff">
+        <figure class="record" data-record="real" aria-labelledby="d1d7ea06-title">
+          <div class="record__bar">
+            <p class="record__title" id="d1d7ea06-title">Execution 1</p>
+            <p class="record__label record__label--real">Real record · GH-84</p>
+          </div>
+          <div class="record__body">
+            <dl class="record__rows">
+              <dt>Execution</dt><dd data-evidence="EXE-20260927T074026833Z-d1d7ea06:executionId">EXE-20260927T074026833Z-d1d7ea06</dd>
+              <dt>Work item</dt><dd data-evidence="EXE-20260927T074026833Z-d1d7ea06:workItemId">GH-84</dd>
+              <dt>Actor</dt><dd><span data-evidence="EXE-20260927T074026833Z-d1d7ea06:identity.actorKind">agent</span> · <span data-evidence="EXE-20260927T074026833Z-d1d7ea06:identity.provider">anthropic</span> / <span data-evidence="EXE-20260927T074026833Z-d1d7ea06:identity.runtime">claude-code</span></dd>
+              <dt>Model</dt><dd data-evidence="EXE-20260927T074026833Z-d1d7ea06:identity.model">unknown</dd>
+              <dt>Parent</dt><dd class="none">none</dd>
+              <dt>Started</dt><dd data-evidence="EXE-20260927T074026833Z-d1d7ea06:startedAt">2026-09-27T07:40:26.833Z</dd>
+              <dt>Finalized</dt><dd data-evidence="EXE-20260927T074026833Z-d1d7ea06:finalizedAt">2026-09-27T07:47:24.532Z</dd>
+              <dt>Baseline</dt><dd><span data-evidence="EXE-20260927T074026833Z-d1d7ea06:start.branch">main</span> @ <span data-evidence="EXE-20260927T074026833Z-d1d7ea06:start.commit">251ac22</span> → <span data-evidence="EXE-20260927T074026833Z-d1d7ea06:end.branch">claude/gh-84</span> @ <span data-evidence="EXE-20260927T074026833Z-d1d7ea06:end.commit">9789e26</span></dd>
+              <dt>Wall time</dt><dd><span data-evidence="EXE-20260927T074026833Z-d1d7ea06:metrics.wallMs">417699</span> ms · derived</dd>
+              <dt>Tokens</dt><dd data-evidence="EXE-20260927T074026833Z-d1d7ea06:metrics.tokens">unavailable</dd>
+              <dt>Cost</dt><dd data-evidence="EXE-20260927T074026833Z-d1d7ea06:metrics.cost">unavailable</dd>
+            </dl>
+            <ol class="record__steps" aria-label="Lifecycle of execution 1">
+              <li><span><span data-evidence="lifecycle:0.type">work.started</span> at <span data-evidence="lifecycle:0.occurredAt">2026-09-27T07:40:22.000Z</span></span><span class="status status--recorded">Recorded</span></li>
+              <li><span><span data-evidence="lifecycle:1.type">work.blocked</span> at <span data-evidence="lifecycle:1.occurredAt">2026-09-27T07:47:18.000Z</span>: &ldquo;<span data-evidence="lifecycle:1.reason">Handoff: Claude session ends; GH-84 continues in a new execution by the next agent</span>&rdquo;</span><span class="status status--recorded">Recorded</span></li>
+            </ol>
+            <div class="record__final">
+              <span>Status</span>
+              <span class="status status--recorded" data-evidence="EXE-20260927T074026833Z-d1d7ea06:status">finalized</span>
+            </div>
+          </div>
+        </figure>
+        <div class="handoff__join" aria-hidden="true"><span>parent</span></div>
+        <figure class="record" data-record="real" aria-labelledby="fcdf36ca-title">
+          <div class="record__bar">
+            <p class="record__title" id="fcdf36ca-title">Execution 2</p>
+            <p class="record__label record__label--real">Real record · GH-84</p>
+          </div>
+          <div class="record__body">
+            <dl class="record__rows">
+              <dt>Execution</dt><dd data-evidence="EXE-20260927T075155507Z-fcdf36ca:executionId">EXE-20260927T075155507Z-fcdf36ca</dd>
+              <dt>Work item</dt><dd data-evidence="EXE-20260927T075155507Z-fcdf36ca:workItemId">GH-84</dd>
+              <dt>Actor</dt><dd><span data-evidence="EXE-20260927T075155507Z-fcdf36ca:identity.actorKind">agent</span> · <span data-evidence="EXE-20260927T075155507Z-fcdf36ca:identity.provider">anthropic</span> / <span data-evidence="EXE-20260927T075155507Z-fcdf36ca:identity.runtime">claude-code</span></dd>
+              <dt>Model</dt><dd data-evidence="EXE-20260927T075155507Z-fcdf36ca:identity.model">unknown</dd>
+              <dt>Parent</dt><dd data-evidence="EXE-20260927T075155507Z-fcdf36ca:parentExecutionId">EXE-20260927T074026833Z-d1d7ea06</dd>
+              <dt>Started</dt><dd data-evidence="EXE-20260927T075155507Z-fcdf36ca:startedAt">2026-09-27T07:51:55.507Z</dd>
+              <dt>Baseline</dt><dd><span data-evidence="EXE-20260927T075155507Z-fcdf36ca:start.branch">claude/gh-84</span> @ <span data-evidence="EXE-20260927T075155507Z-fcdf36ca:start.commit">60fea68</span></dd>
+              <dt>Tokens</dt><dd data-evidence="EXE-20260927T075155507Z-fcdf36ca:metrics.tokens">unavailable</dd>
+              <dt>Cost</dt><dd data-evidence="EXE-20260927T075155507Z-fcdf36ca:metrics.cost">unavailable</dd>
+            </dl>
+            <ol class="record__steps" aria-label="Lifecycle of execution 2">
+              <li><span><span data-evidence="lifecycle:2.type">work.resumed</span> at <span data-evidence="lifecycle:2.occurredAt">2026-09-27T07:51:54.000Z</span></span><span class="status status--recorded">Recorded</span></li>
+            </ol>
+            <div class="record__final">
+              <span>Status</span>
+              <span class="status status--pending" data-evidence="EXE-20260927T075155507Z-fcdf36ca:status">active</span>
+            </div>
+          </div>
+        </figure>
+      </div>
+      <div class="handoff__read grid-2">
+        <p>The first execution was blocked with a handoff reason and finalized. When the work resumed, Praxis did not reopen it or relabel it. It opened a new execution, linked it to the first as its parent, and recorded the identity it detected in the environment of whoever resumed the work.</p>
+        <p>The handoff note anticipated a different agent. The actor that actually resumed was detected as <span class="mono">anthropic / claude-code</span>, so that is what the record says. No model was reported to either execution, so both say unknown. No token or cost telemetry was ingested for either, so both say unavailable.</p>
+      </div>
+      <p class="handoff__rule">Praxis will not transfer identity merely because the work continued.</p>
     </div>
   </section>
 </main>
