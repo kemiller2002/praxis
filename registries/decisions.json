@@ -589,5 +589,62 @@
     "title": "Agent identity and provenance as a first-class, execution-keyed extension of existing ROS records",
     "updated": "2026-09-25",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-27",
+    "decision_type": "architecture",
+    "derived_from": [
+      "RQ-ROS-2026-A020"
+    ],
+    "id": "DF-ROS-2026-A040",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A040--post-hoc-attribution-reconciliation.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T011826712Z-9911b752": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-27T01:40:41.353Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Architecture decision for post-hoc attribution reconciliation (work item GH-80)"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A020",
+      "DF-ROS-2026-A033",
+      "DF-ROS-2026-A035",
+      "DF-ROS-2026-A036",
+      "docs/work-protocol.md",
+      "https://github.com/kemiller2002/praxis/issues/80"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "RQ-ROS-2026-A020"
+    ],
+    "tags": [
+      "attribution",
+      "reconciliation",
+      "work-protocol",
+      "provenance",
+      "git-evidence",
+      "validation"
+    ],
+    "title": "Post-hoc attribution reconciliation as an append-only, Git-evidenced, content-bound event",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
   }
 ]

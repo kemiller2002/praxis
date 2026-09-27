@@ -1130,6 +1130,31 @@
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "GH-80",
+      "title": "Support auditable post-commit work-item attribution reconciliation (#80)",
+      "description": "Reconcile meaningful committed changes made without an active work item, using Git history as evidence and recording a durable post-hoc attribution event.",
+      "tags": [
+        "attribution",
+        "reconciliation",
+        "provenance"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T01:18:22.000Z",
+      "updatedAt": "2026-09-27T01:45:22.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/80"
     }
   ]
 }
