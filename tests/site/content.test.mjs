@@ -2,7 +2,7 @@
 // verbatim, the narrative order, and the claims the page must never make.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 const html = readFileSync(new URL("../../site/index.html", import.meta.url), "utf8");
 const text = html
@@ -132,4 +132,12 @@ test("resilience separates what exists from what is only direction", () => {
   const planned = resilience.slice(resilience.indexOf("availability__col--planned"));
   assert.match(planned, /Not implemented\./);
   assert.ok(!/fallback|double-entry/i.test(resilience.slice(0, resilience.indexOf("availability__col--planned"))), "fallback appears only under direction");
+});
+
+test("the record locations the page names exist in this repository", () => {
+  const records = section("records");
+  ["Versionable", "Inspectable", "Portable", "Attributable", "Reviewable", "Automatable"].forEach((word) => assert.match(records, new RegExp(`<dt>${word}</dt>`)));
+  [".ros/work/queue.json", ".ros/events/events.jsonl", ".ros/telemetry/executions", "research", "registries"].forEach((location) =>
+    assert.ok(existsSync(new URL(`../../${location}`, import.meta.url)), location)
+  );
 });

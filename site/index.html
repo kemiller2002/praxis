@@ -474,6 +474,51 @@ ERROR src/report.fs:work_items: meaningful change has no active or completed wor
       </div>
     </div>
   </section>
+  <section class="section section--stone" id="records" aria-labelledby="records-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">Repository-native</p>
+        <div>
+          <h2 id="records-title">The record lives with the code.</h2>
+          <p class="lede">Praxis records are ordinary files next to the source they describe. Where evidence lives somewhere else, such as an issue, a pull request or a CI run, the record points to it by reference.</p>
+        </div>
+      </div>
+      <div class="records">
+        <pre class="tree" aria-label="Where Praxis keeps its records"><code>.ros/
+  work/queue.json                 <span class="tree__note">work items and backlog</span>
+  events/events.jsonl             <span class="tree__note">append-only lifecycle and provenance events</span>
+  telemetry/executions/EXE-*.json <span class="tree__note">one file per execution</span>
+research/                         <span class="tree__note">research records: decisions, evidence, experiments</span>
+registries/                       <span class="tree__note">generated indexes of the above</span></code></pre>
+        <dl class="props">
+          <div class="props__item">
+            <dt>Versionable</dt>
+            <dd>Every record is a file in the repository. It branches, merges and reverts with the code.</dd>
+          </div>
+          <div class="props__item">
+            <dt>Inspectable</dt>
+            <dd>JSON and JSON Lines. Open them in an editor, diff them in a pull request, query them with anything.</dd>
+          </div>
+          <div class="props__item">
+            <dt>Portable</dt>
+            <dd>No server and no account. Clone the repository and the record comes with it.</dd>
+          </div>
+          <div class="props__item">
+            <dt>Attributable</dt>
+            <dd>Each event carries the actor that caused it; each execution carries the identity that ran it.</dd>
+          </div>
+          <div class="props__item">
+            <dt>Reviewable</dt>
+            <dd>Changes to the record appear in the same pull request as the changes to the code.</dd>
+          </div>
+          <div class="props__item">
+            <dt>Automatable</dt>
+            <dd>A single CLI with machine-readable output, run the same way by people, agents and CI.</dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+  </section>
 </main>
 <footer class="site-footer">
   <div class="wrap">
