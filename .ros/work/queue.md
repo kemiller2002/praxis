@@ -13,6 +13,7 @@
 | DOC-WEB-README | DOC-WEB-README | complete |  |  |
 | FEAT-AGENT-PROVENANCE | FEAT-AGENT-PROVENANCE | complete |  |  |
 | GH-80 | Support auditable post-commit work-item attribution reconciliation (#80) | complete | attribution, reconciliation, provenance | high |
+| GH-84 | GH-84 | blocked |  |  |
 | MIG-05-BACKLOG-PERSISTENCE | Add bounded recovery for backlog queue and Markdown projection | complete | fsharp, migration, persistence | high |
 | MIG-05-PERSISTENCE | MIG-05 characterize and shadow transactional persistence recovery | complete | fsharp, migration, persistence | high |
 | MIG-05-TELEMETRY-RECOVERY | Recover telemetry execution backlinks without duplicating execution evidence | complete | fsharp, migration, telemetry, persistence | high |
@@ -34,6 +35,32 @@
 | PKG-ECHELON-FOUNDRY | PKG-ECHELON-FOUNDRY | complete |  |  |
 | PKG-MIT-LICENSE | PKG-MIT-LICENSE | complete |  |  |
 | PKG-PUBLISH-READINESS | PKG-PUBLISH-READINESS | complete |  |  |
+| PRAXIS-SITE-01 | Establish public-site architecture | complete | gh-84, public-site | high |
+| PRAXIS-SITE-02 | Implement Echelon Foundry design foundation | complete | gh-84, public-site | high |
+| PRAXIS-SITE-03 | Build the hero | complete | gh-84, public-site | high |
+| PRAXIS-SITE-04 | Build the "Done is a claim" interaction | complete | gh-84, public-site | high |
+| PRAXIS-SITE-05 | Explain the execution chain | complete | gh-84, public-site | high |
+| PRAXIS-SITE-06 | Build "Git knows what. Praxis knows why." | complete | gh-84, public-site | medium |
+| PRAXIS-SITE-07 | Explain agent accountability | complete | gh-84, public-site | medium |
+| PRAXIS-SITE-08 | Show the real GH-84 agent handoff | complete | gh-84, public-site | high |
+| PRAXIS-SITE-09 | Explain unattributed-change protection | complete | gh-84, public-site | medium |
+| PRAXIS-SITE-10 | Explain resilient/double-entry execution | complete | gh-84, public-site | medium |
+| PRAXIS-SITE-11 | Explain repository-native engineering records | complete | gh-84, public-site | medium |
+| PRAXIS-SITE-12 | Explain independent installation and integrations | complete | gh-84, public-site | medium |
+| PRAXIS-SITE-13 | Create a realistic execution record component | complete | gh-84, public-site | high |
+| PRAXIS-SITE-14 | Build the product principles section | complete | gh-84, public-site | medium |
+| PRAXIS-SITE-15 | Build installation/get-started surface | complete | gh-84, public-site | high |
+| PRAXIS-SITE-16 | Build navigation and footer | complete | gh-84, public-site | medium |
+| PRAXIS-SITE-17 | Accessibility hardening | complete | gh-84, public-site | high |
+| PRAXIS-SITE-18 | Responsive/mobile engineering | complete | gh-84, public-site | high |
+| PRAXIS-SITE-19 | Performance and resilience | complete | gh-84, public-site | medium |
+| PRAXIS-SITE-20 | Security/privacy review | complete | gh-84, public-site | high |
+| PRAXIS-SITE-21 | GitHub Actions verification | complete | gh-84, public-site | high |
+| PRAXIS-SITE-22 | GitHub Pages deployment | complete | gh-84, public-site | high |
+| PRAXIS-SITE-23 | Make the site itself a Praxis case study | complete | gh-84, public-site | high |
+| PRAXIS-SITE-24 | Final communication/polish pass | complete | gh-84, public-site | medium |
+| PRAXIS-SITE-25 | Adversarial claim audit | complete | gh-84, public-site | high |
+| PRAXIS-SITE-26 | Final verification and evidence | complete | gh-84, public-site | high |
 | PROJECT-ADMIN-HUB | PROJECT-ADMIN-HUB | complete |  |  |
 | ROADMAP-PHASE-2 | ROADMAP-PHASE-2 | complete |  |  |
 | ROADMAP-PHASE-3 | ROADMAP-PHASE-3 | complete |  |  |
