@@ -34,3 +34,26 @@ test("the page never borrows from the film it was inspired by", () => {
     assert.ok(!text.toLowerCase().includes(phrase.toLowerCase()), phrase)
   );
 });
+
+test("the claim is complete without JavaScript", () => {
+  const claim = section("verify");
+  assert.ok(!/\bhidden\b/.test(claim), "no content is hidden in the static page");
+  assert.equal((claim.match(/class="claim__step"/g) ?? []).length, 8);
+  assert.match(claim, /class="claim__verdict"/);
+  assert.match(claim, /Real record/);
+  assert.match(html, /<script src="assets\/js\/claim\.js" defer><\/script>/);
+});
+
+test("the claim enhancement respects reduced motion and announces progress", () => {
+  const js = readFileSync(new URL("../../site/assets/js/claim.js", import.meta.url), "utf8");
+  assert.match(js, /prefers-reduced-motion: reduce/);
+  assert.match(js, /role", "status"/);
+  assert.match(js, /button\.type = "button"/);
+  assert.ok(!/fetch\(|XMLHttpRequest|localStorage|document\.cookie/.test(js), "no network or storage");
+});
+
+test("the problem precedes the proposition, which precedes the verification", () => {
+  const order = ["top", "problem", "proposition", "verify"].map((id) => html.indexOf(`id="${id}"`));
+  assert.deepEqual([...order].sort((a, b) => a - b), order);
+  assert.ok(text.includes("Agents can write code. Praxis makes their work accountable."));
+});

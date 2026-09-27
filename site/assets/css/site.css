@@ -78,6 +78,10 @@ body {
   font-feature-settings: "kern", "liga";
 }
 
+[hidden] {
+  display: none !important;
+}
+
 img,
 svg {
   display: block;
@@ -193,6 +197,11 @@ ol {
   display: grid;
   gap: var(--space-4);
   margin-bottom: var(--space-7);
+}
+
+.section__head > div {
+  display: grid;
+  gap: var(--space-4);
 }
 
 @media (min-width: 60rem) {
@@ -407,6 +416,210 @@ ol {
     grid-column: 2;
     padding-top: var(--space-5);
   }
+}
+
+/* ---- problem, proposition --------------------------------------------- */
+
+.questions {
+  list-style: none;
+  counter-reset: question;
+  display: grid;
+  border-top: var(--rule);
+}
+
+.questions li {
+  counter-increment: question;
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  gap: var(--space-4);
+  padding: var(--space-4) 0;
+  border-bottom: var(--rule-soft);
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 2.4vw, 1.625rem);
+  line-height: 1.3;
+}
+
+.questions li::before {
+  content: counter(question, decimal-leading-zero);
+  padding-top: 0.35em;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--oxide-bronze);
+}
+
+@media (min-width: 60rem) {
+  .questions {
+    margin-left: calc(14rem + var(--space-6));
+  }
+
+  .questions__answer {
+    margin-left: calc(14rem + var(--space-6));
+  }
+}
+
+.questions__answer {
+  margin-top: var(--space-6);
+  font-size: 1.1875rem;
+  max-width: 44rem;
+}
+
+.proposition {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.proposition h2 {
+  font-size: clamp(2.25rem, 6vw, 4.75rem);
+  max-width: 18ch;
+}
+
+.proposition__turn {
+  display: block;
+  color: var(--bronze-on-dark);
+  font-style: italic;
+}
+
+.proposition .lede {
+  max-width: 44rem;
+  color: var(--stone);
+}
+
+/* ---- "Done is a claim" (PRAXIS-SITE-04) -------------------------------- */
+
+.claim {
+  margin: 0;
+  border: 2px solid var(--charcoal);
+  background: var(--parchment);
+}
+
+.claim__statement {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border-bottom: 2px solid var(--charcoal);
+}
+
+.claim__source {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--verdigris);
+}
+
+.claim__title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  max-width: none;
+}
+
+.claim__title .mono {
+  margin-right: var(--space-2);
+  color: var(--oxide-bronze);
+}
+
+.claim__said {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 7vw, 4.5rem);
+  line-height: 1;
+  font-style: italic;
+}
+
+.claim__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: var(--rule-soft);
+}
+
+.claim__progress {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--graphite);
+}
+
+.claim__steps {
+  list-style: none;
+}
+
+.claim__step {
+  display: grid;
+  gap: var(--space-1) var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: var(--rule-soft);
+}
+
+.claim__q {
+  font-weight: 700;
+}
+
+.claim__a {
+  overflow-wrap: anywhere;
+}
+
+.claim__a.mono,
+.claim__a .mono {
+  font-size: 0.875rem;
+}
+
+@media (min-width: 48rem) {
+  .claim__step {
+    grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr) 9rem;
+    align-items: baseline;
+  }
+
+  .claim__step .status {
+    justify-self: end;
+  }
+}
+
+.claim__verdict {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-5);
+  padding: var(--space-5);
+  background: var(--charcoal);
+  color: var(--parchment);
+}
+
+.claim__verdict-state {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3.2vw, 2.25rem);
+}
+
+.claim__verdict-note {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--stone);
+}
+
+.claim.is-enhanced .claim__step:not([hidden]),
+.claim.is-enhanced .claim__verdict:not([hidden]) {
+  animation: claim-in 320ms ease-out both;
+}
+
+@keyframes claim-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.35rem);
+  }
+}
+
+.claim__verdict :focus-visible {
+  outline-color: var(--bronze-on-dark);
+}
+
+.button:disabled {
+  cursor: progress;
+  opacity: 0.75;
 }
 
 /* ---- buttons ---------------------------------------------------------- */

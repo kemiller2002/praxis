@@ -76,7 +76,7 @@
     "web": "npm run build:web && node tools/ros_server.mjs",
     "hub": "npm run build:hub && node tools/ros_hub_server.mjs",
     "site": "node scripts/site/serve.mjs",
-    "site:check": "node scripts/site/check.mjs && node --test tests/site/*.test.mjs",
+    "site:check": "node scripts/site/check.mjs && node scripts/site/evidence.mjs --check && node --test tests/site/*.test.mjs",
     "pack:inspect": "npm pack --dry-run",
     "release:check": "npm run test:all && npm pack --dry-run && ./ros registry check && ./ros validate",
     "prepack": "npm test"

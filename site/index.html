@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Manrope:wght@400;600;700;800&amp;family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&amp;display=swap">
 <link rel="stylesheet" href="assets/css/site.css">
+<script src="assets/js/claim.js" defer></script>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -22,7 +23,7 @@
     </a>
     <nav aria-label="Primary">
       <ul class="nav-list">
-        <li><a href="#top">What is Praxis</a></li>
+        <li><a href="#proposition">What is Praxis</a></li>
       </ul>
     </nav>
   </div>
@@ -40,10 +41,104 @@
         <p class="lede">Praxis connects requirements, execution, agents, changes, tests, evidence, provenance, and cost into a verifiable engineering record.</p>
         <p class="hero__statement">Trust is not an engineering control. <strong>Evidence is.</strong></p>
         <div class="actions">
-          <a class="button" href="#top">See the evidence</a>
+          <a class="button" href="#verify">See the evidence</a>
           <a class="button button--ghost" href="https://github.com/kemiller2002/praxis">View on GitHub</a>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section class="section" id="problem" aria-labelledby="problem-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">The problem</p>
+        <h2 id="problem-title">An agent says the work is done. Now answer the questions.</h2>
+      </div>
+      <ol class="questions">
+        <li>Which requirement was this for?</li>
+        <li>Who, or what, did the work?</li>
+        <li>Which provider, runtime and model?</li>
+        <li>What changed, and why?</li>
+        <li>Which tests ran?</li>
+        <li>Where is the evidence?</li>
+        <li>What did it cost?</li>
+        <li>When the work changed hands, where did one agent stop and the next begin?</li>
+      </ol>
+      <p class="questions__answer">A commit message is not an answer. A green check is not an answer. <strong>&ldquo;Done&rdquo; is not an answer.</strong></p>
+    </div>
+  </section>
+
+  <section class="section section--dark" id="proposition" aria-labelledby="proposition-title">
+    <div class="wrap proposition">
+      <p class="kicker">What is Praxis</p>
+      <h2 id="proposition-title">Agents can write code. <span class="proposition__turn">Praxis makes their work accountable.</span></h2>
+      <p class="lede">Praxis is a repository-native work protocol. Work is captured, started, blocked, resumed and completed through one command-line interface, and every step is recorded next to the code it produced: which agent did it, in which execution, against which commits, with which evidence.</p>
+    </div>
+  </section>
+
+  <section class="section" id="verify" aria-labelledby="verify-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">Done is a claim</p>
+        <div>
+          <h2 id="verify-title">Praxis interrogates it.</h2>
+          <p class="lede">Below is a real claim from the build of this website. Each answer comes from the Praxis records committed with it. Where the record has no answer, Praxis says so instead of inventing one.</p>
+        </div>
+      </div>
+
+      <figure class="claim" data-claim aria-labelledby="claim-title">
+        <div class="claim__statement">
+          <p class="claim__source">Real record · <a href="data/gh-84.json">snapshot</a></p>
+          <p class="claim__title" id="claim-title"><span class="mono" data-evidence="PRAXIS-SITE-02:id">PRAXIS-SITE-02</span> <span data-evidence="PRAXIS-SITE-02:title">Implement Echelon Foundry design foundation</span></p>
+          <p class="claim__said">&ldquo;Done.&rdquo;</p>
+        </div>
+        <ol class="claim__steps" aria-label="Questions Praxis asks of the claim">
+          <li class="claim__step">
+            <span class="claim__q">For which requirement?</span>
+            <span class="claim__a">GitHub issue <a href="https://github.com/kemiller2002/praxis/issues/84" data-evidence="PRAXIS-SITE-02:sourceReference">https://github.com/kemiller2002/praxis/issues/84</a>, recorded as the work item&rsquo;s source</span>
+            <span class="status status--recorded">Recorded</span>
+          </li>
+          <li class="claim__step">
+            <span class="claim__q">Who did the work?</span>
+            <span class="claim__a"><span data-evidence="EXE-20260927T075631195Z-0a515aae:identity.actorKind">agent</span> · <span data-evidence="EXE-20260927T075631195Z-0a515aae:identity.provider">anthropic</span> / <span data-evidence="EXE-20260927T075631195Z-0a515aae:identity.runtime">claude-code</span></span>
+            <span class="status status--recorded">Detected</span>
+          </li>
+          <li class="claim__step">
+            <span class="claim__q">Which model?</span>
+            <span class="claim__a"><span data-evidence="EXE-20260927T075631195Z-0a515aae:identity.model">unknown</span>. The runtime did not report it, so Praxis did not guess.</span>
+            <span class="status status--unknown">Unknown</span>
+          </li>
+          <li class="claim__step">
+            <span class="claim__q">In which execution?</span>
+            <span class="claim__a"><span class="mono" data-evidence="EXE-20260927T075631195Z-0a515aae:executionId">EXE-20260927T075631195Z-0a515aae</span>, <span data-evidence="EXE-20260927T075631195Z-0a515aae:status">finalized</span></span>
+            <span class="status status--recorded">Recorded</span>
+          </li>
+          <li class="claim__step">
+            <span class="claim__q">What changed?</span>
+            <span class="claim__a"><span data-evidence="EXE-20260927T075631195Z-0a515aae:metrics.commitsCreated">1</span> commit, <span class="mono" data-evidence="EXE-20260927T075631195Z-0a515aae:start.commit">02b92e2</span> to <span class="mono" data-evidence="EXE-20260927T075631195Z-0a515aae:end.commit">99f4e6c</span></span>
+            <span class="status status--recorded">Derived</span>
+          </li>
+          <li class="claim__step">
+            <span class="claim__q">What was built?</span>
+            <span class="claim__a mono" data-evidence="PRAXIS-SITE-02:evidence.implementation">site/assets/css/site.css</span>
+            <span class="status status--verified">Evidence</span>
+          </li>
+          <li class="claim__step">
+            <span class="claim__q">What tests it?</span>
+            <span class="claim__a mono" data-evidence="PRAXIS-SITE-02:evidence.tests">tests/site/design.test.mjs</span>
+            <span class="status status--verified">Evidence</span>
+          </li>
+          <li class="claim__step">
+            <span class="claim__q">How many tokens? What did it cost?</span>
+            <span class="claim__a">Tokens <span data-evidence="EXE-20260927T075631195Z-0a515aae:metrics.tokens">unavailable</span>, cost <span data-evidence="EXE-20260927T075631195Z-0a515aae:metrics.cost">unavailable</span>. The runtime can report them; nothing was ingested for this execution.</span>
+            <span class="status status--unavailable">Unavailable</span>
+          </li>
+        </ol>
+        <figcaption class="claim__verdict">
+          <span class="claim__verdict-state">Complete, with evidence.</span>
+          <span class="claim__verdict-note">Unknowns stated, not invented.</span>
+        </figcaption>
+      </figure>
     </div>
   </section>
 </main>
