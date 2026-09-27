@@ -1442,6 +1442,96 @@ ol {
   }
 }
 
+/* ---- get started (PRAXIS-SITE-15) -------------------------------------- */
+
+.start {
+  display: grid;
+  gap: var(--space-7);
+}
+
+.start__steps {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+  min-width: 0;
+}
+
+.start__steps p {
+  margin: 0;
+}
+
+.start__steps .terminal {
+  margin: 0 0 var(--space-3);
+}
+
+.start__step-title {
+  display: flex;
+  gap: var(--space-3);
+  align-items: baseline;
+  margin-top: var(--space-5);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.625rem;
+}
+
+.start__step-title:first-child {
+  margin-top: 0;
+}
+
+.start__step-title .mono {
+  font-size: 0.875rem;
+  color: var(--oxide-bronze);
+}
+
+.start__small {
+  font-size: 0.9375rem;
+}
+
+.start__aside {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+  padding: var(--space-5);
+  background: var(--stone);
+  border-top: 4px solid var(--charcoal);
+}
+
+.start__aside h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.625rem;
+}
+
+.start__aside p {
+  margin: 0;
+}
+
+.start__aside ul {
+  display: grid;
+  gap: var(--space-2);
+  padding-left: 1.1rem;
+}
+
+.start__aside code {
+  overflow-wrap: anywhere;
+}
+
+.start__aside .status--verified {
+  color: var(--charcoal);
+}
+
+.start__verified {
+  padding-top: var(--space-3);
+  border-top: 1px solid #c9c5ba;
+  font-size: 0.9375rem;
+}
+
+@media (min-width: 72rem) {
+  .start {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  }
+}
+
 /* ---- footer ----------------------------------------------------------- */
 
 .site-footer {

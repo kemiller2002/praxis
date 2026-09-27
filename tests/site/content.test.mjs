@@ -167,3 +167,18 @@ test("each principle links to the section that explains it", () => {
   ]);
   items.forEach(([, target]) => assert.ok(html.includes(`id="${target}"`), target));
 });
+
+test("get started uses only commands and installers that exist, and names the ROS transition", () => {
+  const start = section("get-started");
+  ["scripts/install-native.sh", "scripts/install-native.ps1", "docs/work-protocol.md", "docs/cli.md", "docs/native-installation.md"].forEach((file) => {
+    assert.ok(start.includes(file), file);
+    assert.ok(existsSync(new URL(`../../${file}`, import.meta.url)), file);
+  });
+  const installer = readFileSync(new URL("../../scripts/install-native.sh", import.meta.url), "utf8");
+  assert.match(installer, /for command_name in praxis ros; do/, "installer provides praxis and ros");
+  const manifest = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"));
+  assert.ok(start.includes(manifest.name), "npm package name is current");
+  assert.ok(manifest.bin.ros && !manifest.bin.praxis, "npm still exposes ros, not praxis; the page says so");
+  assert.match(start, /From ROS to Praxis/);
+  assert.match(start, /still provides only <code>ros<\/code>/);
+});

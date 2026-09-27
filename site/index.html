@@ -27,6 +27,7 @@
         <li><a href="#how">How it works</a></li>
         <li><a href="#evidence">Evidence</a></li>
         <li><a href="#agents">Agents</a></li>
+        <li><a href="#get-started">Get started</a></li>
       </ul>
     </nav>
   </div>
@@ -581,6 +582,48 @@ registries/                       <span class="tree__note">generated indexes of 
           <p class="principles__link"><a href="#resilience">What survives, and what is still direction</a></p>
         </li>
       </ol>
+    </div>
+  </section>
+  <section class="section" id="get-started" aria-labelledby="get-started-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">Get started</p>
+        <div>
+          <h2 id="get-started-title">Put a repository under Praxis.</h2>
+          <p class="lede">Native bundles for macOS, Linux and Windows. No Node.js, npm or machine-wide .NET runtime is required.</p>
+        </div>
+      </div>
+      <div class="start">
+        <div class="start__steps">
+          <h3 class="start__step-title"><span class="mono">1</span> Install</h3>
+          <p>macOS or Linux:</p>
+          <pre class="terminal"><code>curl -fsSL https://raw.githubusercontent.com/kemiller2002/praxis/main/scripts/install-native.sh | sh</code></pre>
+          <p>Windows PowerShell:</p>
+          <pre class="terminal"><code>irm https://raw.githubusercontent.com/kemiller2002/praxis/main/scripts/install-native.ps1 | iex</code></pre>
+          <p class="start__small">Read the installers before you pipe them to a shell: <a href="https://github.com/kemiller2002/praxis/blob/main/scripts/install-native.sh">install-native.sh</a>, <a href="https://github.com/kemiller2002/praxis/blob/main/scripts/install-native.ps1">install-native.ps1</a>. Each downloads the latest <a href="https://github.com/kemiller2002/praxis/releases">release bundle</a> and checks it against the published checksums.</p>
+
+          <h3 class="start__step-title"><span class="mono">2</span> Initialize a repository</h3>
+          <pre class="terminal"><code><span class="terminal__prompt">$</span> cd your-repository
+<span class="terminal__prompt">$</span> praxis init
+<span class="terminal__prompt">$</span> praxis status
+<span class="terminal__prompt">$</span> praxis verify</code></pre>
+
+          <h3 class="start__step-title"><span class="mono">3</span> Read the protocol</h3>
+          <p>The work protocol, the CLI reference and the agent contract are in the repository: <a href="https://github.com/kemiller2002/praxis/blob/main/docs/work-protocol.md">work protocol</a>, <a href="https://github.com/kemiller2002/praxis/blob/main/docs/cli.md">CLI reference</a>, <a href="https://github.com/kemiller2002/praxis/blob/main/docs/native-installation.md">native installation</a>.</p>
+        </div>
+        <aside class="start__aside" aria-labelledby="rename-title">
+          <h3 id="rename-title">From ROS to Praxis</h3>
+          <p>Praxis was previously named ROS, the Repository Operating System. The rename is in progress, and both names are in use today:</p>
+          <ul>
+            <li>The native installer provides <code>praxis</code>, and keeps <code>ros</code> as an alias for the same program.</li>
+            <li>The npm package <code>@echelon-foundry/repository-operating-system</code> still provides only <code>ros</code>: <code>npx --package=@echelon-foundry/repository-operating-system ros init</code>.</li>
+            <li><code>init</code> adds a repository-local <code>./ros</code> launcher.</li>
+            <li>Help text and some output still say ROS.</li>
+          </ul>
+          <p>Same tool, same records. Commands on this page use <code>praxis</code>; wherever you have <code>ros</code>, the arguments are identical.</p>
+          <p class="start__verified"><span class="status status--verified">Checked</span> The commands in step 2 were run against release v3.4.0 on Linux x64, after verifying the bundle&rsquo;s checksum. Other platforms were not tested for this page.</p>
+        </aside>
+      </div>
     </div>
   </section>
 </main>
