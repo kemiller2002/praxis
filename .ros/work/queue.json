@@ -1140,10 +1140,10 @@
         "execution"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-27T01:36:53.000Z",
-      "updatedAt": "2026-09-27T01:37:00.000Z",
+      "updatedAt": "2026-09-27T12:12:42Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

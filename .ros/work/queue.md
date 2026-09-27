@@ -101,7 +101,7 @@
 | WI-0061 | WI-0061 | complete |  |  |
 | WI-0062 | Triage SDE 1.3.0 structural review findings | complete | sde, structural-review | high |
 | WI-0063 | Implement ROS next-pass Ordo observation and structured handoff (#63) | complete | ordo,next-pass | high |
-| WI-0065 | Implement first-class step-level execution telemetry | ready | telemetry, execution | high |
+| WI-0065 | Implement first-class step-level execution telemetry | complete | telemetry, execution | high |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |

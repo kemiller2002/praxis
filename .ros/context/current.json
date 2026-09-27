@@ -2217,18 +2217,28 @@
     {
       "id": "WI-0065",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-27T01:37:08.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileStepRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/StepTelemetryTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-27T12:12:42Z",
       "telemetryExecutionIds": [
         "EXE-20260927T013711437Z-b3dfcbfc"
-      ]
+      ],
+      "completedAt": "2026-09-27T12:12:42Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-27T01:37:08.000Z",
+  "updatedAt": "2026-09-27T12:12:42Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
