@@ -52,3 +52,4 @@ logs/*
 
 # GitHub Pages build output (site-tools/assemble.mjs, scripts/build-pages-site.mjs)
 _site/
+dist/

@@ -1,49 +1,52 @@
 # Public site deployment
 
 The public site (`site/`) is deployed to GitHub Pages by
-[`.github/workflows/site-pages.yml`](../../.github/workflows/site-pages.yml).
-It is separate from the npm (`publish.yml`) and native (`native-release.yml`)
-release workflows, and it cannot publish a package or a release.
+[`.github/workflows/deploy-pages.yml`](../../.github/workflows/deploy-pages.yml)
+("Deploy Site"). It has the same shape as
+`kemiller2002/echelon-foundry`'s `.github/workflows/deploy-pages.yml`, so the
+Echelon Foundry sites deploy the same way. It is separate from the npm
+(`publish.yml`) and native (`native-release.yml`) release workflows, and it
+cannot publish a package or a release.
 
 ## What the workflow does
 
-1. Runs on a push to `main` that changes `site/`, `site-tools/` or the
-   workflow itself, or when started by hand (`workflow_dispatch`).
-2. Runs `node site-tools/verify.mjs`: structure, references, accessibility rules, the
-   public/private boundary, the evidence check against `.ros` records, and the
-   site tests. A failure stops the deployment.
-3. Assembles `site/` into `_site/` with `site-tools/assemble.mjs` and checks
-   the copy again.
-4. Uploads `_site/` as the Pages artifact and deploys it with
-   `actions/deploy-pages`. Only the deploy job has `pages: write` and
-   `id-token: write`; the build job can only read.
+1. Runs on every push to `main`, or when started by hand
+   (`workflow_dispatch`). Concurrent runs share the `pages` group, and a newer
+   run cancels one in progress.
+2. **Build site** runs `node site-tools/verify.mjs`: structure, references,
+   accessibility rules, the public/private boundary, the evidence check against
+   `.ros` records, and the site tests. A failure stops the deployment. It then
+   assembles `site/` into `dist/` with `site-tools/assemble.mjs` and checks the
+   copy again.
+3. Uploads `dist/` as the Pages artifact and deploys it with
+   `actions/deploy-pages` to the `github-pages` environment.
 
-The pull-request side is [`.github/workflows/site.yml`](../../.github/workflows/site.yml),
-which runs the same checks and uploads the assembled artifact for review
-without deploying.
+Where it differs from echelon-foundry: Praxis has no `npm run build`. The site
+is static and its tooling stays out of `package.json`, because
+`native-release.yml` re-uploads release assets on pushes to `main` that touch
+`package.json` or `scripts/**`. So "Build site" calls the site tools directly.
+Permissions are set once for the workflow (`contents: read`, `pages: write`,
+`id-token: write`), as in echelon-foundry.
 
-## One-time setup a maintainer must do
+The pull-request side is [`.github/workflows/site.yml`](../../.github/workflows/site.yml).
+It runs the same checks with read-only permissions and uploads the assembled
+artifact for review without deploying.
 
-This cannot be done from a workflow or by an agent without repository admin
-rights.
+## Repository settings
 
-1. **Settings > Pages > Build and deployment > Source: GitHub Actions.**
-   Until this is set, `actions/configure-pages` fails and nothing is deployed.
-2. **Settings > Environments > `github-pages`.** GitHub creates this environment
-   the first time Pages is set to GitHub Actions. Its default deployment branch
-   rule allows `main`; keep it that way.
-3. After merging, run **Actions > Public site deployment > Run workflow** once,
-   or push a change under `site/`.
-4. The site is then served at `https://kemiller2002.github.io/praxis/` unless a
-   custom domain is configured. All references in the site are relative, so it
-   works under that sub-path and at a domain root.
+- **Settings > Pages > Build and deployment > Source: GitHub Actions.** This is
+  already set: the first run's `configure-pages` step succeeded.
+- **Settings > Environments > `github-pages`.** Keep its deployment branch rule
+  limited to `main`.
 
-## Status as of this change (2026-09-27)
+The site is served at `https://kemiller2002.github.io/praxis/` unless a custom
+domain is configured. All references in the site are relative, so it works
+under that sub-path and at a domain root.
 
-- The workflow is committed on branch `claude/gh-84`, not yet on `main`, so it
-  has never run.
-- Whether Pages is enabled for the repository is **unknown**: the build
-  environment could not reach the Pages API or `github.io`.
-- **Nothing has been deployed.** Do not treat the site as published until the
-  first successful run of "Public site deployment" on `main` is visible in the
-  Actions tab and the Pages URL serves the page.
+## Deployments
+
+- 2026-09-27: first deployment, by the previous workflow
+  (`site-pages.yml`, since replaced by `deploy-pages.yml`), on the merge of
+  PR #85 (`7086625`). Actions run 36310800569: build and deploy both succeeded.
+  The build environment could not reach `github.io`, so the served page was
+  not inspected from here.

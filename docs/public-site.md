@@ -88,11 +88,11 @@ credential.
 
 ## Deployment
 
-`.github/workflows/site-pages.yml` checks the site, assembles `site/` as the
-Pages artifact, and deploys it with GitHub's Pages actions. It is independent
-of the npm and native release workflows. See
-[`site-deployment.md`](site/site-deployment.md) for the one-time repository
-setting that a maintainer must make.
+`.github/workflows/deploy-pages.yml` ("Deploy Site", the same shape as
+echelon-foundry's `deploy-pages.yml`) checks the site, assembles `site/` into
+`dist/` as the Pages artifact, and deploys it with GitHub's Pages actions. It
+is independent of the npm and native release workflows. See
+[`site-deployment.md`](site/site-deployment.md).
 
 ## Security review
 
