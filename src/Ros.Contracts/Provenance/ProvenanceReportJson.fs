@@ -78,3 +78,23 @@ module ProvenanceReportJson =
         node["reviewed"] <- JsonValue.Create item.Reviewed
         node["executions"] <- JsonValue.Create item.Executions
         node
+
+    /// Cross-artifact collaboration facts (artifact identifiers) for metrics:
+    /// agent-to-agent revisions, human corrections and approvals of agent
+    /// work, and modification hotspots.
+    let collaboration (item: CollaborationSummary) : JsonObject =
+        let node = JsonObject()
+        node["agentToAgentRevisions"] <- strings item.AgentToAgentRevisions
+        node["humanCorrectionsOfAgentWork"] <- strings item.HumanCorrectionsOfAgentWork
+        node["humanApprovedAgentWork"] <- strings item.HumanApprovedAgentWork
+
+        node["hotspots"] <-
+            item.Hotspots
+            |> List.map (fun (identifier, total) ->
+                let hotspot = JsonObject()
+                hotspot["artifactId"] <- JsonValue.Create identifier
+                hotspot["contributions"] <- JsonValue.Create total
+                hotspot :> JsonNode)
+            |> nodes
+
+        node

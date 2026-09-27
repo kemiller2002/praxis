@@ -25,6 +25,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+    EXE-20260927T084130164Z-78bc9271:
+      operations: [modified]
+      at: 2026-09-27T08:48:17.633Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "WI-0072: acceptance criteria for provenance follow-ups"
 ---
 
 # Requirement
@@ -38,6 +48,8 @@ An artifact passed from one Echelon system to another should retain its origin r
 ## Acceptance criteria
 
 - `./ros adapter publish` exports events with their actor verbatim.
+- `./ros ordo handoff` records `producedBy` (the packaging actor and, when evidently the same run, its execution).
+- The installer's `ROS-INSTALL-*` event carries an automation actor, identically from both installers.
 - `schemas/provenance-actor.schema.json` and `schemas/artifact-provenance.schema.json` define the shapes other systems can adopt.
 
 ## Verification

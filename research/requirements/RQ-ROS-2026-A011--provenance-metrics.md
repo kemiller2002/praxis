@@ -25,6 +25,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+    EXE-20260927T084130164Z-78bc9271:
+      operations: [modified]
+      at: 2026-09-27T08:48:17.164Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "WI-0072: acceptance criteria for provenance follow-ups"
 ---
 
 # Requirement
@@ -38,6 +48,7 @@ Future analysis of agent output, rework, and outcomes needs trustworthy attribut
 ## Acceptance criteria
 
 - `./ros provenance audit --json` emits `contributions`, `byActor`, and coverage counts for artifacts, events, executions, and backlog items.
+- It also emits `collaboration`: agent-to-agent revisions, human corrections of agent work, human-approved agent work, and modification hotspots, each derived from recorded involvement.
 - Execution IDs join the facts to telemetry cost and duration.
 
 ## Verification
