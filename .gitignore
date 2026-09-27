@@ -50,5 +50,5 @@ logs/*
 *.pem
 *.key
 
-# GitHub Pages build output (scripts/build-pages-site.mjs)
+# GitHub Pages build output (site-tools/assemble.mjs, scripts/build-pages-site.mjs)
 _site/
