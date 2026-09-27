@@ -37,7 +37,7 @@
 | PKG-PUBLISH-READINESS | PKG-PUBLISH-READINESS | complete |  |  |
 | PRAXIS-SITE-01 | Establish public-site architecture | complete | gh-84, public-site | high |
 | PRAXIS-SITE-02 | Implement Echelon Foundry design foundation | complete | gh-84, public-site | high |
-| PRAXIS-SITE-03 | Build the hero | ready | gh-84, public-site | high |
+| PRAXIS-SITE-03 | Build the hero | complete | gh-84, public-site | high |
 | PRAXIS-SITE-04 | Build the "Done is a claim" interaction | ready | gh-84, public-site | high |
 | PRAXIS-SITE-05 | Explain the execution chain | ready | gh-84, public-site | high |
 | PRAXIS-SITE-06 | Build "Git knows what. Praxis knows why." | ready | gh-84, public-site | medium |
