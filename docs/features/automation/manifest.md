@@ -17,11 +17,12 @@ keeping platform mechanics separate from ROS semantic decisions.
 - Capabilities / authority: GitHub permissions declare `contents: read` and
   `id-token: write` only for trusted npm publication, and `pages: write` plus
   `id-token: write` only on the documentation site's `main` deploy job.
-- Documentation site: `.github/workflows/pages.yml` stages README, root guides,
-  `docs/`, `research/`, and `requirements/` with
-  `scripts/build-pages-site.mjs` (unpublished link targets become GitHub source
-  links), renders them with `actions/jekyll-build-pages`, builds on pull
-  requests as a check, and deploys to GitHub Pages from `main` only.
+- Documentation site: `.github/workflows/pages.yml` builds README, root
+  guides, `docs/`, `research/`, and `requirements/` into static HTML with
+  `scripts/build-pages-site.mjs` (Markdown rendered by the `marked`
+  devDependency; relative links throughout; unpublished link targets become
+  GitHub source links), tests and builds on pull requests as a check, and
+  deploys to GitHub Pages from `main` only.
 - Important effects and effect contracts: checkout/runtime setup, package/test
   subprocesses, npm registry reads and publication, and transient runner file
   mutation.
@@ -36,7 +37,10 @@ keeping platform mechanics separate from ROS semantic decisions.
 
 - Local behavior tests: release-policy text assertions in
   `tests/npm-bootstrap.test.mjs`; package scripts exercise runtime gates;
-  `tests/pages-site.test.mjs` covers documentation-site staging and links.
+  `tests/pages-site.test.mjs` covers the site builder's pure helpers (in
+  `npm test`), and `tests/pages-render.test.mjs` builds the real site and
+  checks every internal link and anchor (in the Pages workflow, after
+  `npm ci`).
 - Boundary/contract tests: `npm pack --dry-run`, `npm test`,
   `./ros registry check`, and `./ros validate`.
 - Integration/live verification: GitHub-hosted workflow and npm publication;

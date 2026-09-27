@@ -106,6 +106,7 @@
 | WI-0063 | Implement ROS next-pass Ordo observation and structured handoff (#63) | complete | ordo,next-pass | high |
 | WI-0072 | Port provenance follow-ups onto the merged model: collaboration aggregates in provenance audit, producedBy on ordo handoffs, installer event actor | complete | provenance | medium |
 | WI-0073 | Publish the documentation site to GitHub Pages with a GitHub Actions workflow | complete | docs, ci | medium |
+| WI-0074 | Build the GitHub Pages documentation site as static HTML instead of Jekyll | complete | docs, ci | medium |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |

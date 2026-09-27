@@ -1,8 +1,9 @@
 name: Documentation site
 
-# Publishes README.md, the root guides, docs/, and the canonical research and
-# requirement records to GitHub Pages. Pull requests build the site as a check;
-# only main deploys. Requires Settings -> Pages -> Source: "GitHub Actions".
+# Builds README.md, the root guides, docs/, and the canonical research and
+# requirement records into static HTML (scripts/build-pages-site.mjs) and
+# publishes it to GitHub Pages. Pull requests build and test the site as a
+# check; only main deploys. Requires Settings -> Pages -> Source: "GitHub Actions".
 
 on:
   push:
@@ -10,8 +11,10 @@ on:
     paths:
       - ".github/workflows/pages.yml"
       - "scripts/build-pages-site.mjs"
+      - "tests/pages-*.test.mjs"
+      - "package.json"
+      - "package-lock.json"
       - "*.md"
-      - "LICENSE"
       - "docs/**"
       - "research/**"
       - "requirements/**"
@@ -19,8 +22,10 @@ on:
     paths:
       - ".github/workflows/pages.yml"
       - "scripts/build-pages-site.mjs"
+      - "tests/pages-*.test.mjs"
+      - "package.json"
+      - "package-lock.json"
       - "*.md"
-      - "LICENSE"
       - "docs/**"
       - "research/**"
       - "requirements/**"
@@ -43,27 +48,24 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Install build dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Test the site builder
+        run: node --test tests/pages-site.test.mjs tests/pages-render.test.mjs
+
+      - name: Build static HTML
+        run: node scripts/build-pages-site.mjs _site --repository "${{ github.repository }}" --ref "${{ github.sha }}"
+
       - name: Configure Pages
-        id: pages
         if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
-
-      - name: Stage documentation
-        run: >
-          node scripts/build-pages-site.mjs _pages
-          --repository "${{ github.repository }}"
-          --ref "${{ github.sha }}"
-          --baseurl "${{ steps.pages.outputs.base_path || format('/{0}', github.event.repository.name) }}"
-
-      - name: Build with Jekyll
-        uses: actions/jekyll-build-pages@v1
-        with:
-          source: ./_pages
-          destination: ./_site
 
       - name: Upload artifact
         if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
 
   deploy:
     if: github.event_name != 'pull_request'

@@ -84,6 +84,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
+    "marked": "^18.0.14",
     "typescript": "^5.9.3"
   },
   "keywords": [

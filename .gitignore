@@ -50,6 +50,5 @@ logs/*
 *.pem
 *.key
 
-# GitHub Pages build output (scripts/build-pages-site.mjs, jekyll)
-_pages/
+# GitHub Pages build output (scripts/build-pages-site.mjs)
 _site/

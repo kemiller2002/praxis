@@ -2308,11 +2308,40 @@
         "EXE-20260927T090408830Z-b1b87822"
       ],
       "completedAt": "2026-09-27T09:10:08.000Z"
+    },
+    {
+      "id": "WI-0074",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "scripts/build-pages-site.mjs"
+        },
+        {
+          "type": "implementation",
+          "path": ".github/workflows/pages.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/pages-site.test.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/pages-render.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T09:20:22.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T092022554Z-31ed5c9b"
+      ],
+      "completedAt": "2026-09-27T09:20:22.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-27T09:10:08.000Z",
+  "updatedAt": "2026-09-27T09:20:22.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

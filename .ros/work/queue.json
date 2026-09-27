@@ -1250,6 +1250,30 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "WI-0074",
+      "title": "Build the GitHub Pages documentation site as static HTML instead of Jekyll",
+      "description": null,
+      "tags": [
+        "docs",
+        "ci"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T09:20:21.724Z",
+      "updatedAt": "2026-09-27T09:20:22.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
