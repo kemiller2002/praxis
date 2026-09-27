@@ -972,6 +972,105 @@ ol {
   }
 }
 
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.accent {
+  color: var(--oxide-bronze);
+  font-style: italic;
+}
+
+.section--dark .accent {
+  color: var(--bronze-on-dark);
+}
+
+/* ---- Git and Praxis (PRAXIS-SITE-06) ----------------------------------- */
+
+.compare__table {
+  width: 100%;
+  border-collapse: collapse;
+  border-top: 2px solid var(--charcoal);
+}
+
+.compare__table th,
+.compare__table td {
+  padding: var(--space-4) var(--space-4) var(--space-4) 0;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: var(--rule-soft);
+}
+
+.compare__table thead th {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.compare__table tbody th {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.375rem;
+  width: 20%;
+}
+
+.compare__table td:first-of-type {
+  color: var(--graphite);
+}
+
+@media (max-width: 47.99rem) {
+  .compare__table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .compare__table,
+  .compare__table tbody,
+  .compare__table tr,
+  .compare__table th,
+  .compare__table tbody th,
+  .compare__table td {
+    display: block;
+    width: 100%;
+  }
+
+  .compare__table tr {
+    padding: var(--space-4) 0;
+    border-bottom: var(--rule-soft);
+  }
+
+  .compare__table th,
+  .compare__table td {
+    padding: var(--space-1) 0;
+    border: 0;
+  }
+
+  .compare__table td::before {
+    content: attr(data-label);
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--forged-iron);
+  }
+}
+
 /* ---- footer ----------------------------------------------------------- */
 
 .site-footer {

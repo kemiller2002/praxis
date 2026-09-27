@@ -71,3 +71,12 @@ test("every command the chain names exists in the CLI", () => {
   assert.ok(verbs.length >= 5);
   verbs.forEach((verb) => assert.ok(cli.includes(`"${verb}"`), `work ${verb}`));
 });
+
+test("Git and Praxis are compared as complements, in an accessible table", () => {
+  const git = section("git");
+  assert.match(git, /Git knows what\. <span class="accent">Praxis knows why\.<\/span>/);
+  assert.match(git, /<caption/);
+  assert.equal((git.match(/<th scope="row">/g) ?? []).length, 6);
+  assert.equal((git.match(/<th scope="col">/g) ?? []).length, 3);
+  ["Git is bad", "broken", "fails to", "inadequate", "outdated", "legacy"].forEach((phrase) => assert.ok(!git.toLowerCase().includes(phrase.toLowerCase()), phrase));
+});
