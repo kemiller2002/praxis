@@ -2597,10 +2597,15 @@ let private runOrdoHandoff root arguments =
             eprintfn "ERROR %s" message
             1
         | Ok handoff ->
-            handoff
-            |> ObservationJson.renderHandoff
-            |> printf "%s"
-            0
+            match Ros.Infrastructure.Provenance.FileProvenanceRepository.currentProducer root (ProvenanceCommands.identityOverridesFrom arguments) with
+            | Error message ->
+                eprintfn "ERROR %s" message
+                2
+            | Ok producer ->
+                handoff
+                |> ObservationJson.renderHandoff (Some producer)
+                |> printf "%s"
+                0
     | _ ->
         eprintfn "ERROR ordo handoff requires --revision and --source"
         2

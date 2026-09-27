@@ -278,6 +278,17 @@ module Installation =
         node["files"] <- files
         node
 
+    /// The installer is deterministic, non-agent automation: its bookkeeping
+    /// event is attributed to the tool itself (no provider or model applies,
+    /// and no ROS execution exists yet). `lib/bootstrap.mjs` writes the
+    /// identical canonical actor so both installers hash the same event.
+    let installerActor: Ros.Domain.Provenance.Actor =
+        { Kind = Ros.Domain.Provenance.ActorKind.Automation
+          Id = "ros-bootstrap"
+          Provider = None
+          Model = None
+          Runtime = Some "ros-bootstrap" }
+
     let private installationAttribution (payload: Payload) (now: string) =
         let slug = Payload.slugify payload.ProjectName
         let workItem = $"""ROS-INSTALL-{payload.PackageVersion.Replace(".", "-")}"""
@@ -306,6 +317,7 @@ module Installation =
         event["occurredAt"] <- JsonValue.Create now
         event["evidence"] <- evidence
         event["paths"] <- (paths |> List.fold (fun (array: JsonArray) path -> array.Add(JsonValue.Create path: JsonNode); array) (JsonArray()))
+        event["actor"] <- Ros.Contracts.Provenance.ActorJson.node installerActor
 
         let publication = JsonObject()
         publication["status"] <- JsonValue.Create "pending"

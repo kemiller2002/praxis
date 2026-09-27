@@ -544,6 +544,75 @@ module ProvenanceTests =
                   Assert.empty (EventProvenance.findings [ view (Ok None) [] ])
                   Assert.empty (EventProvenance.findings [ view (Ok(Some claudeAgent)) [ exe1 ] ])
                   Assert.equal FindingSeverity.Error (Assert.single (EventProvenance.findings [ view (Error "bad") [] ])).Severity }
+          { Name = "metrics index: collaboration aggregates agent-to-agent revisions, human corrections and approvals, and hotspots"
+            Run =
+              fun () ->
+                  let requirement (identifier: string) = (requirementText "2026-09-25" "2026-09-25").Replace("RQ-TEST-2026-A001", identifier)
+                  let path (identifier: string) = $"research/requirements/{identifier}--r.md"
+                  let humanKey suffix = $"CTB-20260925T1{suffix}0000000Z-dddddddd"
+
+                  let revised =
+                      write (contribution exe1 ContributionOperation.Created "2026-09-25T10:00:00.000Z" claudeAgent) (requirement "RQ-TEST-2026-A001")
+                      |> write (contribution exe2 ContributionOperation.Modified "2026-09-25T11:00:00.000Z" codexAgent)
+                      |> document (path "RQ-TEST-2026-A001")
+
+                  let corrected =
+                      write (contribution exe1 ContributionOperation.Created "2026-09-25T10:00:00.000Z" claudeAgent) (requirement "RQ-TEST-2026-A002")
+                      |> write (contribution (humanKey "2") ContributionOperation.Modified "2026-09-25T12:00:00.000Z" (human "alice"))
+                      |> write (contribution (humanKey "3") ContributionOperation.Approved "2026-09-25T13:00:00.000Z" (human "bob"))
+                      |> document (path "RQ-TEST-2026-A002")
+
+                  let untouched =
+                      write (contribution exe1 ContributionOperation.Created "2026-09-25T10:00:00.000Z" claudeAgent) (requirement "RQ-TEST-2026-A003")
+                      |> document (path "RQ-TEST-2026-A003")
+
+                  let legacy = document (path "RQ-TEST-2026-A004") (requirement "RQ-TEST-2026-A004")
+
+                  let summary = ProvenanceIndex.collaboration [ revised; corrected; untouched; legacy ]
+                  Assert.equal [ "RQ-TEST-2026-A001" ] summary.AgentToAgentRevisions
+                  Assert.equal [ "RQ-TEST-2026-A002" ] summary.HumanCorrectionsOfAgentWork
+                  Assert.equal [ "RQ-TEST-2026-A002" ] summary.HumanApprovedAgentWork
+                  Assert.equal [ "RQ-TEST-2026-A002", 3; "RQ-TEST-2026-A001", 2 ] summary.Hotspots
+
+                  let rendered = ProvenanceReportJson.collaboration summary
+                  Assert.equal "\"RQ-TEST-2026-A002\"" (rendered.["hotspots"].[0].["artifactId"].ToJsonString()) }
+          { Name = "integration: an Ordo handoff names its producing actor and execution"
+            Run =
+              fun () ->
+                  let handoff =
+                      Ros.Domain.Ordo.Projection.handoff
+                          "abc"
+                          "praxis"
+                          []
+                          []
+                          []
+                          []
+                          []
+                          []
+                          []
+                          []
+                          { Resolution = None
+                            Assessment = None
+                            BasisCount = 0
+                            SupersededResolutionIds = [] }
+
+                  let render producer = Ros.Contracts.Ordo.ObservationJson.renderHandoff producer handoff |> JsonNode.Parse
+                  let produced = render (Some(claudeAgent, Some exe1))
+                  Assert.equal "\"anthropic/claude-code\"" (produced.["producedBy"].["actor"].["id"].ToJsonString())
+                  Assert.equal $"\"{exe1}\"" (produced.["producedBy"].["execution"].ToJsonString())
+                  Assert.equal (Ok(Some claudeAgent)) (ActorJson.tryParse produced.["producedBy"].["actor"])
+                  Assert.isTrue (isNull (render (Some(human "alice", None))).["producedBy"].["execution"]) "unknown execution is null"
+                  Assert.isTrue (isNull (render None).["producedBy"]) "producedBy is optional" }
+          { Name = "installer: bookkeeping events are attributed to a well-formed automation actor"
+            Run =
+              fun () ->
+                  let actor = Ros.Infrastructure.Lifecycle.Installation.installerActor
+                  Assert.equal ActorKind.Automation actor.Kind
+                  Assert.empty (Actor.problems actor)
+                  Assert.equal
+                      """{"kind":"automation","id":"ros-bootstrap","runtime":"ros-bootstrap"}"""
+                      ((ActorJson.node actor).ToJsonString())
+                  Assert.equal (Ok(Some actor)) (ActorJson.tryParse (ActorJson.node actor)) }
           { Name = "metrics index: contributions by actor across artifacts"
             Run =
               fun () ->

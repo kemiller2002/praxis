@@ -272,6 +272,30 @@ module FileProvenanceRepository =
             else
                 Ok(Path.GetRelativePath(root, full).Replace('\\', '/'))
 
+    /// The acting identity of this process and, when exactly one active
+    /// execution is evidently this same run, that execution -- the same
+    /// matching rules contribution attribution uses, applied read-only for
+    /// records that name their producer (an Ordo handoff). Ambiguity or no
+    /// match yields no execution rather than a guess.
+    let currentProducer (root: string) (overrides: IdentityInputs) : Result<Actor * string option, string> =
+        FileTelemetryExecutionRepository.resolveIdentity overrides
+        |> Result.map (fun (current, currentIdentity, _) ->
+            let execution =
+                if not (ActorResolution.isDeclared current) then
+                    None
+                else
+                    readExecutions root
+                    |> List.filter (fun view ->
+                        view.Status = "active"
+                        && Actor.agrees current view.Actor
+                        && ActorResolution.sameRun currentIdentity view.Identity
+                        && ActorResolution.evidentlySameRun current currentIdentity view.Actor view.Identity)
+                    |> function
+                        | [ single ] -> Some single.ExecutionId
+                        | _ -> None
+
+            current, execution)
+
     /// Chooses the execution a contribution belongs to and the actor it is
     /// attributed to. Identity is inherited from the execution record the
     /// agent established at `work begin`, so later commands need not repeat
