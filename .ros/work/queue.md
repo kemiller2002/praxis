@@ -49,7 +49,7 @@
 | PRAXIS-SITE-12 | Explain independent installation and integrations | complete | gh-84, public-site | medium |
 | PRAXIS-SITE-13 | Create a realistic execution record component | complete | gh-84, public-site | high |
 | PRAXIS-SITE-14 | Build the product principles section | complete | gh-84, public-site | medium |
-| PRAXIS-SITE-15 | Build installation/get-started surface | ready | gh-84, public-site | high |
+| PRAXIS-SITE-15 | Build installation/get-started surface | complete | gh-84, public-site | high |
 | PRAXIS-SITE-16 | Build navigation and footer | ready | gh-84, public-site | medium |
 | PRAXIS-SITE-17 | Accessibility hardening | ready | gh-84, public-site | high |
 | PRAXIS-SITE-18 | Responsive/mobile engineering | ready | gh-84, public-site | high |
