@@ -1213,6 +1213,82 @@ ol {
   max-width: 28ch;
 }
 
+/* ---- reconciliation (PRAXIS-SITE-09) ----------------------------------- */
+
+.terminal {
+  margin: 0 0 var(--space-7);
+  padding: var(--space-5);
+  background: var(--carbon);
+  color: var(--parchment);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  border-left: 4px solid var(--oxide-bronze);
+}
+
+.terminal code {
+  font-size: inherit;
+}
+
+.terminal__prompt {
+  color: var(--graphite-on-dark);
+}
+
+.outcomes {
+  list-style: none;
+  display: grid;
+  gap: var(--space-5);
+}
+
+.outcomes__item {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  padding-top: var(--space-4);
+  border-top: 2px solid var(--charcoal);
+}
+
+.outcomes__item p {
+  margin: 0;
+}
+
+.outcomes__item h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.5rem;
+}
+
+.section--stone .status--verified,
+.section--stone .status--recorded,
+.section--stone .status--unresolved,
+.section--stone .status--unknown,
+.section--stone .status--unavailable,
+.section--stone .status--pending {
+  color: var(--charcoal);
+}
+
+@media (min-width: 48rem) {
+  .outcomes {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.reconcile__notes {
+  margin-top: var(--space-7);
+}
+
+.reconcile__notes p {
+  margin: 0;
+}
+
+.reconcile__rule {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  line-height: 1.35;
+}
+
 /* ---- footer ----------------------------------------------------------- */
 
 .site-footer {

@@ -410,6 +410,40 @@
       <p class="handoff__rule">Praxis will not transfer identity merely because the work continued.</p>
     </div>
   </section>
+  <section class="section section--stone" id="reconciliation" aria-labelledby="reconciliation-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">Reconciliation</p>
+        <div>
+          <h2 id="reconciliation-title">Every change has to answer for itself.</h2>
+          <p class="lede">A meaningful change that no work item accounts for is not absorbed into the nearest one. When CI validates against a base commit, as this repositoryWhen CI validates against a base commit, as this repository&rsquo;s does, it names the change and fails.rsquo;s does, it names the change and fails.</p>
+        </div>
+      </div>
+      <pre class="terminal" aria-label="Validation output for an unattributed change"><code><span class="terminal__prompt">$</span> praxis validate
+ERROR src/report.fs:work_items: meaningful change has no active or completed work-item attribution</code></pre>
+      <ol class="outcomes">
+        <li class="outcomes__item">
+          <p class="status status--verified">Attributed</p>
+          <h3>While the work happened</h3>
+          <p>The change was made under an active work item and is recorded with it.</p>
+        </li>
+        <li class="outcomes__item">
+          <p class="status status--recorded">Reconciled</p>
+          <h3>After the fact, on the record</h3>
+          <p><code>work reconcile</code> assigns committed changes to a real work item using Git history as the evidence, with a stated reason. The record says permanently that attribution came later. Nothing is backdated.</p>
+        </li>
+        <li class="outcomes__item">
+          <p class="status status--unresolved">Unresolved</p>
+          <h3>Until someone can say</h3>
+          <p>If nobody can honestly name the work item, the change stays unresolved and validation keeps saying so.</p>
+        </li>
+      </ol>
+      <div class="grid-2 reconcile__notes">
+        <p>Reconciliation fails closed. It will not create a work item, sweep in unrelated history, assign a merge commit, reach past a shallow clone, or overwrite a change already reconciled elsewhere. When the evidence is not reliable, it records nothing.</p>
+        <p class="reconcile__rule">Manufactured attribution is worse than explicitly unresolved attribution. Touching files to make them look attributed destroys the history of who changed what. Praxis gives no reason to do it.</p>
+      </div>
+    </div>
+  </section>
 </main>
 <footer class="site-footer">
   <div class="wrap">

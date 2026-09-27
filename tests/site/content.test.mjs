@@ -113,3 +113,13 @@ test("the GH-84 handoff is rendered from real records only", () => {
   assert.equal(gh84[1].parentExecutionId, gh84[0].executionId, "second execution is the child of the first");
   gh84.forEach((execution) => assert.ok(evidence.includes(`data-evidence="${execution.executionId}:identity.provider"`)));
 });
+
+test("unattributed changes: the message shown is the one the CLI prints", () => {
+  const reconciliation = section("reconciliation");
+  const protocol = readFileSync(new URL("../../docs/work-protocol.md", import.meta.url), "utf8");
+  const message = "meaningful change has no active or completed work-item attribution";
+  assert.ok(reconciliation.includes(message));
+  assert.ok(protocol.includes(message));
+  ["Attributed", "Reconciled", "Unresolved"].forEach((state) => assert.match(reconciliation, new RegExp(`>${state}<`)));
+  assert.match(reconciliation, /Manufactured attribution is worse than explicitly unresolved attribution\./);
+});
