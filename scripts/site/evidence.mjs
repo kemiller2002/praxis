@@ -2,6 +2,7 @@
 // Public GH-84 evidence snapshot for the site (docs/public-site.md).
 //
 //   node scripts/site/evidence.mjs            write site/data/gh-84.json from .ros records
+//   node scripts/site/evidence.mjs --render   regenerate the ledger and data-evidence values in site/index.html
 //   node scripts/site/evidence.mjs --check    verify the snapshot against the records and
 //                                             every data-evidence value in site/*.html
 //
@@ -174,6 +175,9 @@ export const lookup = (snapshot, key) => {
     total: snapshot.workItems.filter((item) => item.id !== "GH-84").length,
     complete: snapshot.workItems.filter((item) => item.id !== "GH-84" && item.state === "complete").length,
     executions: snapshot.executions.length,
+    tokensRecorded: snapshot.executions.filter((execution) => execution.metrics.tokens === "recorded").length,
+    costRecorded: snapshot.executions.filter((execution) => execution.metrics.cost === "recorded").length,
+    models: snapshot.executions.filter((execution) => execution.identity.model !== "unknown").length,
   };
   if (subject === "count") return counts[field] === undefined ? undefined : String(counts[field]);
   if (subject === "asOf") return snapshot.asOf.slice(0, 10);
@@ -211,6 +215,36 @@ export const htmlProblems = (snapshot, name, html) =>
         : [`${name}: data-evidence "${key}" shows "${shown}" but the snapshot records "${expected}"`];
   });
 
+const escape = (text) => String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+const stateClass = { complete: "status--verified", active: "status--pending", blocked: "status--unresolved", ready: "status--ready", captured: "status--ready" };
+
+// The case-study ledger (PRAXIS-SITE-23) is generated, never typed: every row
+// cites the snapshot, so the evidence check covers it like any other value.
+export const renderLedger = (snapshot) =>
+  snapshot.workItems
+    .map(
+      (item) => `            <tr>
+              <th scope="row"><span class="mono" data-evidence="${item.id}:id">${item.id}</span></th>
+              <td data-evidence="${item.id}:title">${escape(item.title)}</td>
+              <td><span class="status ${stateClass[item.state] ?? "status--unknown"}" data-evidence="${item.id}:state">${item.state}</span></td>
+              <td class="mono" data-evidence="${item.id}:executions.length">${item.executions.length}</td>
+            </tr>`,
+    )
+    .join("\n");
+
+const ledgerPattern = /(<!-- ledger:start -->)[\s\S]*?(\n\s*<!-- ledger:end -->)/;
+
+export const withLedger = (html, snapshot) => html.replace(ledgerPattern, (_, start, end) => `${start}\n${renderLedger(snapshot)}${end}`);
+
+// Refreshes every leaf data-evidence value (text only, no markup inside) from
+// the snapshot. Values with markup inside are left alone and still checked.
+export const withValues = (html, snapshot) =>
+  html.replace(/(<([a-z0-9]+)\b[^>]*\bdata-evidence="([^"]+)"[^>]*>)([^<]*)(<\/\2>)/g, (whole, open, _tag, key, _inner, close) => {
+    const value = lookup(snapshot, key);
+    return value === undefined ? whole : `${open}${escape(value)}${close}`;
+  });
+
 const check = () => {
   if (!fs.existsSync(snapshotPath)) return ["site/data/gh-84.json is missing; run node scripts/site/evidence.mjs"];
   const snapshot = readJson(snapshotPath);
@@ -224,7 +258,12 @@ const check = () => {
 };
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  if (process.argv.includes("--check")) {
+  if (process.argv.includes("--render")) {
+    const page = path.join(siteRoot, "index.html");
+    const snapshot = readJson(snapshotPath);
+    fs.writeFileSync(page, withValues(withLedger(fs.readFileSync(page, "utf8"), snapshot), snapshot));
+    console.log("rendered ledger and evidence values into site/index.html");
+  } else if (process.argv.includes("--check")) {
     const problems = check();
     problems.forEach((problem) => console.error(problem));
     console.log(problems.length === 0 ? "evidence check passed" : `evidence check failed: ${problems.length} problem(s)`);

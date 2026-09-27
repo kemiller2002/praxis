@@ -47,3 +47,11 @@ test("the snapshot never carries private identifiers", () => {
   ["sessionId", "conversationId", "runId", "dirtyPaths", "/home/", "/root/"].forEach((field) => assert.ok(!raw.includes(field), field));
   assert.ok(!/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(raw), "no UUIDs");
 });
+
+test("the ledger renderer fills an empty ledger and is idempotent", async () => {
+  const { withLedger } = await import("../../scripts/site/evidence.mjs");
+  const empty = "<tbody>\n            <!-- ledger:start -->\n            <!-- ledger:end -->\n</tbody>";
+  const once = withLedger(empty, snapshot);
+  assert.equal((once.match(/<tr>/g) ?? []).length, snapshot.workItems.length);
+  assert.equal(withLedger(once, snapshot), once);
+});

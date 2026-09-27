@@ -627,6 +627,228 @@ registries/                       <span class="tree__note">generated indexes of 
       </div>
     </div>
   </section>
+  <section class="section section--stone" id="case-study" aria-labelledby="case-study-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">Case study</p>
+        <div>
+          <h2 id="case-study-title">This website was built under Praxis.</h2>
+          <p class="lede">The request was <a href="https://github.com/kemiller2002/praxis/issues/84">issue #84</a>. It was broken into <span data-evidence="count:total">26</span> work items, and each one goes through the protocol described above: started, evidenced, then completed. This ledger is generated from those records, and shows where every item stood as of <span data-evidence="asOf:date">2026-09-27</span>.</p>
+        </div>
+      </div>
+
+      <dl class="tally">
+        <div><dt>Work items complete</dt><dd><span data-evidence="count:complete">16</span> of <span data-evidence="count:total">26</span></dd></div>
+        <div><dt>Executions recorded</dt><dd data-evidence="count:executions">19</dd></div>
+        <div><dt>Executions with a reported model</dt><dd data-evidence="count:models">0</dd></div>
+        <div><dt>Executions with token telemetry</dt><dd data-evidence="count:tokensRecorded">0</dd></div>
+        <div><dt>Executions with cost telemetry</dt><dd data-evidence="count:costRecorded">0</dd></div>
+      </dl>
+      <p class="tally__note">Those zeros are counts of executions, not measurements. The agent that built this site ran in an environment that supplied no model, token or cost telemetry to Praxis, so none was recorded, and no estimate was put in its place.</p>
+
+      <div class="ledger">
+        <table class="ledger__table">
+          <caption>GH-84 work ledger, from <a href="data/gh-84.json">the public evidence snapshot</a></caption>
+          <thead>
+            <tr>
+              <th scope="col">Item</th>
+              <th scope="col">Title</th>
+              <th scope="col">State</th>
+              <th scope="col">Executions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- ledger:start -->
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="GH-84:id">GH-84</span></th>
+              <td data-evidence="GH-84:title">Build the public Praxis website</td>
+              <td><span class="status status--pending" data-evidence="GH-84:state">active</span></td>
+              <td class="mono" data-evidence="GH-84:executions.length">2</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-01:id">PRAXIS-SITE-01</span></th>
+              <td data-evidence="PRAXIS-SITE-01:title">Establish public-site architecture</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-01:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-01:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-02:id">PRAXIS-SITE-02</span></th>
+              <td data-evidence="PRAXIS-SITE-02:title">Implement Echelon Foundry design foundation</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-02:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-02:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-03:id">PRAXIS-SITE-03</span></th>
+              <td data-evidence="PRAXIS-SITE-03:title">Build the hero</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-03:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-03:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-04:id">PRAXIS-SITE-04</span></th>
+              <td data-evidence="PRAXIS-SITE-04:title">Build the &quot;Done is a claim&quot; interaction</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-04:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-04:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-05:id">PRAXIS-SITE-05</span></th>
+              <td data-evidence="PRAXIS-SITE-05:title">Explain the execution chain</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-05:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-05:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-06:id">PRAXIS-SITE-06</span></th>
+              <td data-evidence="PRAXIS-SITE-06:title">Build &quot;Git knows what. Praxis knows why.&quot;</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-06:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-06:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-07:id">PRAXIS-SITE-07</span></th>
+              <td data-evidence="PRAXIS-SITE-07:title">Explain agent accountability</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-07:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-07:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-08:id">PRAXIS-SITE-08</span></th>
+              <td data-evidence="PRAXIS-SITE-08:title">Show the real GH-84 agent handoff</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-08:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-08:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-09:id">PRAXIS-SITE-09</span></th>
+              <td data-evidence="PRAXIS-SITE-09:title">Explain unattributed-change protection</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-09:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-09:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-10:id">PRAXIS-SITE-10</span></th>
+              <td data-evidence="PRAXIS-SITE-10:title">Explain resilient/double-entry execution</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-10:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-10:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-11:id">PRAXIS-SITE-11</span></th>
+              <td data-evidence="PRAXIS-SITE-11:title">Explain repository-native engineering records</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-11:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-11:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-12:id">PRAXIS-SITE-12</span></th>
+              <td data-evidence="PRAXIS-SITE-12:title">Explain independent installation and integrations</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-12:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-12:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-13:id">PRAXIS-SITE-13</span></th>
+              <td data-evidence="PRAXIS-SITE-13:title">Create a realistic execution record component</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-13:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-13:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-14:id">PRAXIS-SITE-14</span></th>
+              <td data-evidence="PRAXIS-SITE-14:title">Build the product principles section</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-14:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-14:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-15:id">PRAXIS-SITE-15</span></th>
+              <td data-evidence="PRAXIS-SITE-15:title">Build installation/get-started surface</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-15:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-15:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-16:id">PRAXIS-SITE-16</span></th>
+              <td data-evidence="PRAXIS-SITE-16:title">Build navigation and footer</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-16:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-16:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-17:id">PRAXIS-SITE-17</span></th>
+              <td data-evidence="PRAXIS-SITE-17:title">Accessibility hardening</td>
+              <td><span class="status status--ready" data-evidence="PRAXIS-SITE-17:state">ready</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-17:executions.length">0</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-18:id">PRAXIS-SITE-18</span></th>
+              <td data-evidence="PRAXIS-SITE-18:title">Responsive/mobile engineering</td>
+              <td><span class="status status--ready" data-evidence="PRAXIS-SITE-18:state">ready</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-18:executions.length">0</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-19:id">PRAXIS-SITE-19</span></th>
+              <td data-evidence="PRAXIS-SITE-19:title">Performance and resilience</td>
+              <td><span class="status status--ready" data-evidence="PRAXIS-SITE-19:state">ready</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-19:executions.length">0</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-20:id">PRAXIS-SITE-20</span></th>
+              <td data-evidence="PRAXIS-SITE-20:title">Security/privacy review</td>
+              <td><span class="status status--ready" data-evidence="PRAXIS-SITE-20:state">ready</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-20:executions.length">0</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-21:id">PRAXIS-SITE-21</span></th>
+              <td data-evidence="PRAXIS-SITE-21:title">GitHub Actions verification</td>
+              <td><span class="status status--ready" data-evidence="PRAXIS-SITE-21:state">ready</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-21:executions.length">0</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-22:id">PRAXIS-SITE-22</span></th>
+              <td data-evidence="PRAXIS-SITE-22:title">GitHub Pages deployment</td>
+              <td><span class="status status--ready" data-evidence="PRAXIS-SITE-22:state">ready</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-22:executions.length">0</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-23:id">PRAXIS-SITE-23</span></th>
+              <td data-evidence="PRAXIS-SITE-23:title">Make the site itself a Praxis case study</td>
+              <td><span class="status status--pending" data-evidence="PRAXIS-SITE-23:state">active</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-23:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-24:id">PRAXIS-SITE-24</span></th>
+              <td data-evidence="PRAXIS-SITE-24:title">Final communication/polish pass</td>
+              <td><span class="status status--ready" data-evidence="PRAXIS-SITE-24:state">ready</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-24:executions.length">0</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-25:id">PRAXIS-SITE-25</span></th>
+              <td data-evidence="PRAXIS-SITE-25:title">Adversarial claim audit</td>
+              <td><span class="status status--ready" data-evidence="PRAXIS-SITE-25:state">ready</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-25:executions.length">0</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-26:id">PRAXIS-SITE-26</span></th>
+              <td data-evidence="PRAXIS-SITE-26:title">Final verification and evidence</td>
+              <td><span class="status status--ready" data-evidence="PRAXIS-SITE-26:state">ready</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-26:executions.length">0</td>
+            </tr>
+            <!-- ledger:end -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid-2 case__notes">
+        <div>
+          <h3>What the record caught</h3>
+          <p>Commit <span class="mono">588599e</span> in this site&rsquo;s history is titled as the completion of PRAXIS-SITE-15. The completion had in fact failed on a malformed argument. The Praxis record still showed the item active, and the next commit, <span class="mono">6d7b300</span>, records the real completion and says why. The commit message made a claim; the record did not agree; the record was right.</p>
+        </div>
+        <div>
+          <h3>What this page does not claim</h3>
+          <p>Deployment is not a Praxis record, so it is not in the ledger. When this snapshot was taken the site had not been deployed. If you are reading it on the web, deployment happened afterwards, and its record is the <a href="https://github.com/kemiller2002/praxis/actions">GitHub Actions run</a> that published it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--dark closing" id="closing" aria-labelledby="closing-title">
+    <div class="wrap closing__inner">
+      <h2 id="closing-title">Don&rsquo;t just ship software. <span class="closing__turn">Know how it came to exist.</span></h2>
+      <p class="closing__litany">Requirements. Execution. Evidence. Provenance.</p>
+      <div class="actions">
+        <a class="button" href="#evidence">Show me the record</a>
+        <a class="button button--ghost" href="#get-started">Get started</a>
+      </div>
+    </div>
+  </section>
 </main>
 <footer class="site-footer">
   <div class="wrap site-footer__grid">

@@ -790,6 +790,14 @@ ol {
   content: "?\00a0";
 }
 
+.status--ready {
+  color: var(--graphite);
+}
+
+.status--ready::before {
+  content: "\25CB\00a0";
+}
+
 .status--pending::before {
   content: "\2026\00a0";
 }
@@ -1530,6 +1538,149 @@ ol {
   .start {
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
   }
+}
+
+/* ---- case study (PRAXIS-SITE-23) --------------------------------------- */
+
+.tally {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.tally > div {
+  display: grid;
+  gap: var(--space-1);
+  padding-top: var(--space-3);
+  border-top: 2px solid var(--charcoal);
+}
+
+.tally dt {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--forged-iron);
+}
+
+.tally dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  line-height: 1.1;
+}
+
+.tally__note {
+  margin: var(--space-4) 0 var(--space-7);
+  max-width: 48rem;
+  font-size: 0.9375rem;
+}
+
+.ledger {
+  overflow-x: auto;
+  border: 2px solid var(--charcoal);
+  background: var(--parchment);
+}
+
+.ledger:focus-visible {
+  outline: var(--focus);
+}
+
+.ledger__table {
+  width: 100%;
+  min-width: 34rem;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.ledger__table caption {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  border-bottom: 2px solid var(--charcoal);
+}
+
+.ledger__table th,
+.ledger__table td {
+  padding: var(--space-2) var(--space-4);
+  text-align: left;
+  vertical-align: baseline;
+  border-bottom: var(--rule-soft);
+}
+
+.ledger__table thead th {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.ledger__table tbody th {
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.ledger__table .status--verified {
+  color: var(--verdigris);
+}
+
+.ledger__table .status--pending,
+.ledger__table .status--ready,
+.ledger__table .status--unknown {
+  color: var(--graphite);
+}
+
+.case__notes {
+  margin-top: var(--space-7);
+}
+
+.case__notes > div {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.case__notes h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.5rem;
+}
+
+.case__notes p {
+  margin: 0;
+}
+
+/* ---- closing ----------------------------------------------------------- */
+
+.closing__inner {
+  display: grid;
+  gap: var(--space-6);
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-6);
+}
+
+.closing h2 {
+  font-size: clamp(2.25rem, 6.5vw, 5rem);
+  max-width: 16ch;
+}
+
+.closing__turn {
+  display: block;
+  color: var(--bronze-on-dark);
+  font-style: italic;
+}
+
+.closing__litany {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: clamp(0.875rem, 1.6vw, 1rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--stone);
+  max-width: none;
 }
 
 /* ---- footer (PRAXIS-SITE-16) ------------------------------------------ */
