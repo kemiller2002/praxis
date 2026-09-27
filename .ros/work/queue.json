@@ -1154,6 +1154,30 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "WI-0064",
+      "title": "Complete dual-entry reconciliation and merge PR #79",
+      "description": null,
+      "tags": [
+        "reconciliation",
+        "integration"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-27T14:58:28.449Z",
+      "updatedAt": "2026-09-27T14:58:31.811Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
