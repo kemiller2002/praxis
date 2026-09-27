@@ -8,6 +8,9 @@ conversation history or tribal knowledge.
 
 Distributed under the [MIT License](LICENSE).
 
+Documentation site: <https://kemiller2002.github.io/praxis/> (built from this
+repository's Markdown by [`.github/workflows/pages.yml`](.github/workflows/pages.yml)).
+
 The cross-cutting Aegis, Forma, and Folio application requirements are in [`requirements/SHARED-APPLICATION-FOUNDATIONS.md`](requirements/SHARED-APPLICATION-FOUNDATIONS.md) and apply to native runtime, web UI, and future printable/report surfaces as specified there.
 
 ## What it provides

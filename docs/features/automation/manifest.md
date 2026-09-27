@@ -15,7 +15,13 @@ keeping platform mechanics separate from ROS semantic decisions.
   main-branch/repository gate, version-change check, registry lookup, and unique
   snapshot version construction.
 - Capabilities / authority: GitHub permissions declare `contents: read` and
-  `id-token: write` only for trusted npm publication.
+  `id-token: write` only for trusted npm publication, and `pages: write` plus
+  `id-token: write` only on the documentation site's `main` deploy job.
+- Documentation site: `.github/workflows/pages.yml` stages README, root guides,
+  `docs/`, `research/`, and `requirements/` with
+  `scripts/build-pages-site.mjs` (unpublished link targets become GitHub source
+  links), renders them with `actions/jekyll-build-pages`, builds on pull
+  requests as a check, and deploys to GitHub Pages from `main` only.
 - Important effects and effect contracts: checkout/runtime setup, package/test
   subprocesses, npm registry reads and publication, and transient runner file
   mutation.
@@ -29,7 +35,8 @@ keeping platform mechanics separate from ROS semantic decisions.
 ## Tests and verification
 
 - Local behavior tests: release-policy text assertions in
-  `tests/npm-bootstrap.test.mjs`; package scripts exercise runtime gates.
+  `tests/npm-bootstrap.test.mjs`; package scripts exercise runtime gates;
+  `tests/pages-site.test.mjs` covers documentation-site staging and links.
 - Boundary/contract tests: `npm pack --dry-run`, `npm test`,
   `./ros registry check`, and `./ros validate`.
 - Integration/live verification: GitHub-hosted workflow and npm publication;
