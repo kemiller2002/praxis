@@ -421,8 +421,11 @@
           <p class="lede">A meaningful change that no work item accounts for is not absorbed into the nearest one. When CI validates against a base commit, as this repositoryWhen CI validates against a base commit, as this repository&rsquo;s does, it names the change and fails.rsquo;s does, it names the change and fails.</p>
         </div>
       </div>
-      <pre class="terminal" aria-label="Validation output for an unattributed change"><code><span class="terminal__prompt">$</span> praxis validate
+      <figure class="terminal-figure">
+        <figcaption class="visually-hidden">Validation output for an unattributed change</figcaption>
+        <pre class="terminal"><code><span class="terminal__prompt">$</span> praxis validate
 ERROR src/report.fs:work_items: meaningful change has no active or completed work-item attribution</code></pre>
+      </figure>
       <ol class="outcomes">
         <li class="outcomes__item">
           <p class="status status--verified">Attributed</p>
@@ -486,12 +489,15 @@ ERROR src/report.fs:work_items: meaningful change has no active or completed wor
         </div>
       </div>
       <div class="records">
-        <pre class="tree" aria-label="Where Praxis keeps its records"><code>.ros/
+        <figure class="tree-figure">
+          <figcaption class="visually-hidden" id="tree-caption">Where Praxis keeps its records</figcaption>
+          <pre class="tree" role="region" tabindex="0" aria-labelledby="tree-caption"><code>.ros/
   work/queue.json                 <span class="tree__note">work items and backlog</span>
   events/events.jsonl             <span class="tree__note">append-only lifecycle and provenance events</span>
   telemetry/executions/EXE-*.json <span class="tree__note">one file per execution</span>
 research/                         <span class="tree__note">research records: decisions, evidence, experiments</span>
 registries/                       <span class="tree__note">generated indexes of the above</span></code></pre>
+        </figure>
         <dl class="props">
           <div class="props__item">
             <dt>Versionable</dt>
@@ -646,9 +652,9 @@ registries/                       <span class="tree__note">generated indexes of 
       </dl>
       <p class="tally__note">Those zeros are counts of executions, not measurements. The agent that built this site ran in an environment that supplied no model, token or cost telemetry to Praxis, so none was recorded, and no estimate was put in its place.</p>
 
-      <div class="ledger">
+      <div class="ledger" role="region" tabindex="0" aria-labelledby="ledger-caption">
         <table class="ledger__table">
-          <caption>GH-84 work ledger, from <a href="data/gh-84.json">the public evidence snapshot</a></caption>
+          <caption id="ledger-caption">GH-84 work ledger, from <a href="data/gh-84.json">the public evidence snapshot</a></caption>
           <thead>
             <tr>
               <th scope="col">Item</th>

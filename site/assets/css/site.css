@@ -62,9 +62,8 @@ html {
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    animation: none !important;
+    transition: none !important;
   }
 }
 
@@ -904,6 +903,20 @@ ol {
   counter-increment: step;
 }
 
+.record__steps li > span:first-child {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 30rem) {
+  .record__steps li {
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+  }
+
+  .record__steps li .status {
+    grid-column: 2;
+  }
+}
+
 .record__steps li::before {
   content: counter(step, decimal-leading-zero);
   color: var(--graphite-on-dark);
@@ -1223,6 +1236,14 @@ ol {
 
 /* ---- reconciliation (PRAXIS-SITE-09) ----------------------------------- */
 
+.terminal-figure {
+  margin: 0 0 var(--space-7);
+}
+
+.terminal-figure .terminal {
+  margin: 0;
+}
+
 .terminal {
   margin: 0 0 var(--space-7);
   padding: var(--space-5);
@@ -1268,12 +1289,7 @@ ol {
   font-size: 1.5rem;
 }
 
-.section--stone .status--verified,
-.section--stone .status--recorded,
-.section--stone .status--unresolved,
-.section--stone .status--unknown,
-.section--stone .status--unavailable,
-.section--stone .status--pending {
+.outcomes .status {
   color: var(--charcoal);
 }
 
@@ -1335,6 +1351,11 @@ ol {
 .records {
   display: grid;
   gap: var(--space-6);
+}
+
+.tree-figure {
+  margin: 0;
+  min-width: 0;
 }
 
 .tree {
