@@ -59,7 +59,7 @@
 | PRAXIS-SITE-22 | GitHub Pages deployment | complete | gh-84, public-site | high |
 | PRAXIS-SITE-23 | Make the site itself a Praxis case study | complete | gh-84, public-site | high |
 | PRAXIS-SITE-24 | Final communication/polish pass | complete | gh-84, public-site | medium |
-| PRAXIS-SITE-25 | Adversarial claim audit | ready | gh-84, public-site | high |
+| PRAXIS-SITE-25 | Adversarial claim audit | complete | gh-84, public-site | high |
 | PRAXIS-SITE-26 | Final verification and evidence | ready | gh-84, public-site | high |
 | PROJECT-ADMIN-HUB | PROJECT-ADMIN-HUB | complete |  |  |
 | ROADMAP-PHASE-2 | ROADMAP-PHASE-2 | complete |  |  |

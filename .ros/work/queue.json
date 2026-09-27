@@ -1789,10 +1789,10 @@
         "public-site"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-27T07:53:32.000Z",
-      "updatedAt": "2026-09-27T07:53:54.000Z",
+      "updatedAt": "2026-09-27T08:38:36.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

@@ -2795,18 +2795,32 @@
     {
       "id": "PRAXIS-SITE-25",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-27T08:31:51.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/index.html"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/claims.test.mjs"
+        },
+        {
+          "type": "audit",
+          "path": "docs/site/claim-audit.md"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:38:36.000Z",
       "telemetryExecutionIds": [
         "EXE-20260927T083152170Z-4d36eacd"
-      ]
+      ],
+      "completedAt": "2026-09-27T08:38:36.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-27T08:31:51.000Z",
+  "updatedAt": "2026-09-27T08:38:36.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
