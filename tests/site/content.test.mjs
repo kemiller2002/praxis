@@ -57,3 +57,17 @@ test("the problem precedes the proposition, which precedes the verification", ()
   assert.deepEqual([...order].sort((a, b) => a - b), order);
   assert.ok(text.includes("Agents can write code. Praxis makes their work accountable."));
 });
+
+test("the execution chain runs from requirement to verified history in order", () => {
+  const chain = section("how");
+  const names = [...chain.matchAll(/<h3 class="chain__name">([^<]+)<\/h3>/g)].map((m) => m[1]);
+  assert.deepEqual(names, ["Requirement", "Work item", "Execution", "Steps", "Changes", "Tests", "Evidence", "Reconciliation", "Verified history"]);
+});
+
+test("every command the chain names exists in the CLI", () => {
+  const cli = readFileSync(new URL("../../src/Ros.Cli/Program.fs", import.meta.url), "utf8");
+  const chain = section("how");
+  const verbs = [...chain.matchAll(/<code>([^<]+)<\/code>/g)].flatMap((m) => [...m[1].matchAll(/work ([a-z-]+)/g)].map((v) => v[1]));
+  assert.ok(verbs.length >= 5);
+  verbs.forEach((verb) => assert.ok(cli.includes(`"${verb}"`), `work ${verb}`));
+});

@@ -83,3 +83,8 @@ test("reduced motion is respected", () => {
 test("focus is always visible", () => {
   assert.match(css, /:focus-visible\s*\{\s*outline:/);
 });
+
+test("small labels on stone use a colour that meets AA there", () => {
+  assert.match(css, /\.section--stone \.kicker \{\s*color: var\(--forged-iron\);/);
+  assert.ok(contrast(tokens["forged-iron"], tokens.stone) >= 4.5);
+});

@@ -222,6 +222,10 @@ ol {
   color: var(--oxide-bronze);
 }
 
+.section--stone .kicker {
+  color: var(--forged-iron);
+}
+
 .section--dark .kicker {
   color: var(--bronze-on-dark);
 }
@@ -620,6 +624,58 @@ ol {
 .button:disabled {
   cursor: progress;
   opacity: 0.75;
+}
+
+/* ---- execution chain (PRAXIS-SITE-05) ---------------------------------- */
+
+.chain {
+  list-style: none;
+  counter-reset: link;
+  display: grid;
+  border-top: 2px solid var(--charcoal);
+}
+
+.chain__link {
+  counter-increment: link;
+  position: relative;
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-5) 0 var(--space-5) 3.25rem;
+  border-bottom: 1px solid #c9c5ba;
+}
+
+.chain__link::before {
+  content: counter(link, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: var(--space-5);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--charcoal);
+}
+
+.chain__name {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.5rem;
+}
+
+.chain__link p {
+  margin: 0;
+}
+
+.chain__cmd {
+  margin-top: auto;
+  padding-top: var(--space-2);
+  color: var(--forged-iron);
+}
+
+@media (min-width: 48rem) {
+  .chain {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: var(--space-6);
+  }
 }
 
 /* ---- buttons ---------------------------------------------------------- */

@@ -24,6 +24,7 @@
     <nav aria-label="Primary">
       <ul class="nav-list">
         <li><a href="#proposition">What is Praxis</a></li>
+        <li><a href="#how">How it works</a></li>
       </ul>
     </nav>
   </div>
@@ -139,6 +140,64 @@
           <span class="claim__verdict-note">Unknowns stated, not invented.</span>
         </figcaption>
       </figure>
+    </div>
+  </section>
+  <section class="section section--stone" id="how" aria-labelledby="how-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">How it works</p>
+        <div>
+          <h2 id="how-title">From intent, to execution, to evidence.</h2>
+          <p class="lede">Every link in the chain is a record in the repository. Each one points to the next, so a finished piece of work can be followed back to why it started.</p>
+        </div>
+      </div>
+      <ol class="chain">
+        <li class="chain__link">
+          <h3 class="chain__name">Requirement</h3>
+          <p>The intent. An issue, a requirement record, a decision. Praxis records where work came from as its source reference.</p>
+          <p class="chain__cmd"><code>work capture --source-reference</code></p>
+        </li>
+        <li class="chain__link">
+          <h3 class="chain__name">Work item</h3>
+          <p>A unit of work with a lifecycle: captured, ready, active, blocked, complete. The protocol refuses illegal transitions.</p>
+          <p class="chain__cmd"><code>work capture · work start</code></p>
+        </li>
+        <li class="chain__link">
+          <h3 class="chain__name">Execution</h3>
+          <p>One bounded attempt at the work by one actor. Identity, start, end and repository baseline are recorded when it opens.</p>
+          <p class="chain__cmd"><code>EXE-&hellip;</code></p>
+        </li>
+        <li class="chain__link">
+          <h3 class="chain__name">Steps</h3>
+          <p>Starting, blocking, resuming and completing are events, appended to a log in the repository with the actor that performed them.</p>
+          <p class="chain__cmd"><code>work block · work resume</code></p>
+        </li>
+        <li class="chain__link">
+          <h3 class="chain__name">Changes</h3>
+          <p>Commits made during the execution are measured against its clean baseline: files, lines, tests touched.</p>
+          <p class="chain__cmd"><code>git</code></p>
+        </li>
+        <li class="chain__link">
+          <h3 class="chain__name">Tests</h3>
+          <p>Test evidence is required to complete. A work item without it stays open.</p>
+          <p class="chain__cmd"><code>--evidence tests=&hellip;</code></p>
+        </li>
+        <li class="chain__link">
+          <h3 class="chain__name">Evidence</h3>
+          <p>Completion names the files that prove the claim. The execution is then finalized and its record closed.</p>
+          <p class="chain__cmd"><code>work complete</code></p>
+        </li>
+        <li class="chain__link">
+          <h3 class="chain__name">Reconciliation</h3>
+          <p>A commit made outside any work item is not silently absorbed. It is attributed explicitly, with a reason, or it stays unresolved.</p>
+          <p class="chain__cmd"><code>work reconcile</code></p>
+        </li>
+        <li class="chain__link">
+          <h3 class="chain__name">Verified history</h3>
+          <p>Repository validation checks the records against each other and against Git.</p>
+          <p class="chain__cmd"><code>validate</code></p>
+        </li>
+      </ol>
     </div>
   </section>
 </main>
