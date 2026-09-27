@@ -198,6 +198,45 @@
           <p class="chain__cmd"><code>validate</code></p>
         </li>
       </ol>
+
+      <div class="anatomy">
+        <div class="anatomy__text">
+          <h3>Anatomy of an execution record</h3>
+          <p>This is what one execution looks like when every source reports. The values are an example of layout, not a measurement: nothing in it came from a real run, and it is labelled so.</p>
+          <p>Every value carries its quality. <strong>Observed</strong> came from the runtime. <strong>Derived</strong> was calculated by Praxis from other records. <strong>Estimated</strong> is labelled as such, with its source. A value no source supplied is <strong>unknown</strong> or <strong>unavailable</strong>, never zero.</p>
+        </div>
+        <figure class="record" data-record="illustrative" aria-labelledby="illustrative-title">
+          <div class="record__bar">
+            <p class="record__title" id="illustrative-title">Execution record</p>
+            <p class="record__label">Illustrative execution</p>
+          </div>
+          <div class="record__body">
+            <dl class="record__rows">
+              <dt>Work item</dt><dd>EXAMPLE-142 · Add rate limiting to the export API</dd>
+              <dt>Execution</dt><dd>EXE-20260101T090000000Z-example</dd>
+              <dt>Actor</dt><dd>agent · example-provider / example-runtime</dd>
+              <dt>Model</dt><dd>example-model · observed</dd>
+              <dt>Parent</dt><dd>none</dd>
+            </dl>
+            <ol class="record__steps" aria-label="Lifecycle">
+              <li><span>work started</span><span class="status status--recorded">Recorded</span></li>
+              <li><span>3 commits against clean baseline</span><span class="status status--recorded">Derived</span></li>
+              <li><span>tests 47/47 passed</span><span class="status status--verified">Evidence</span></li>
+              <li><span>work completed</span><span class="status status--recorded">Recorded</span></li>
+            </ol>
+            <dl class="record__rows">
+              <dt>Tokens</dt><dd>38,421 · observed</dd>
+              <dt>Cost</dt><dd>$0.1847 · estimated · runtime-reported</dd>
+              <dt>Wall time</dt><dd>14m 06s · derived</dd>
+            </dl>
+            <div class="record__final">
+              <span>Final state</span>
+              <span class="status status--verified">Complete</span>
+            </div>
+          </div>
+          <figcaption class="record__note">Illustrative execution. Example values only; not evidence of any real run.</figcaption>
+        </figure>
+      </div>
     </div>
   </section>
 </main>

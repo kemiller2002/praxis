@@ -873,6 +873,16 @@ ol {
   overflow-wrap: anywhere;
 }
 
+@media (max-width: 30rem) {
+  .record__rows {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .record__rows dd + dt {
+    margin-top: var(--space-2);
+  }
+}
+
 .record__steps {
   list-style: none;
   counter-reset: step;
@@ -931,6 +941,35 @@ ol {
   color: var(--graphite-on-dark);
   font-size: 0.75rem;
   max-width: none;
+}
+
+.anatomy {
+  display: grid;
+  gap: var(--space-6);
+  margin-top: var(--space-8);
+}
+
+.anatomy__text {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+}
+
+.anatomy__text h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.625rem, 3vw, 2.25rem);
+}
+
+.anatomy__text p {
+  margin: 0;
+}
+
+@media (min-width: 60rem) {
+  .anatomy {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: var(--space-7);
+  }
 }
 
 /* ---- footer ----------------------------------------------------------- */
