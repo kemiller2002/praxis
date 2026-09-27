@@ -2263,11 +2263,32 @@
         "EXE-20260927T075155507Z-fcdf36ca"
       ],
       "blockReason": "Handoff: Claude session ends; GH-84 continues in a new execution by the next agent"
+    },
+    {
+      "id": "PRAXIS-SITE-01",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "docs/public-site.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/site.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T07:56:10.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T075408928Z-eaacd44b"
+      ],
+      "completedAt": "2026-09-27T07:56:10.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-27T07:51:54.000Z",
+  "updatedAt": "2026-09-27T07:56:10.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

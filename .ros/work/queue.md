@@ -35,7 +35,7 @@
 | PKG-ECHELON-FOUNDRY | PKG-ECHELON-FOUNDRY | complete |  |  |
 | PKG-MIT-LICENSE | PKG-MIT-LICENSE | complete |  |  |
 | PKG-PUBLISH-READINESS | PKG-PUBLISH-READINESS | complete |  |  |
-| PRAXIS-SITE-01 | Establish public-site architecture | ready | gh-84, public-site | high |
+| PRAXIS-SITE-01 | Establish public-site architecture | complete | gh-84, public-site | high |
 | PRAXIS-SITE-02 | Implement Echelon Foundry design foundation | ready | gh-84, public-site | high |
 | PRAXIS-SITE-03 | Build the hero | ready | gh-84, public-site | high |
 | PRAXIS-SITE-04 | Build the "Done is a claim" interaction | ready | gh-84, public-site | high |

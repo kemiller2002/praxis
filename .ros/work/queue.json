@@ -1213,10 +1213,10 @@
         "public-site"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-27T07:53:32.000Z",
-      "updatedAt": "2026-09-27T07:53:46.000Z",
+      "updatedAt": "2026-09-27T07:56:10.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
