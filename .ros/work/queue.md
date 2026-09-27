@@ -13,7 +13,7 @@
 | DOC-WEB-README | DOC-WEB-README | complete |  |  |
 | FEAT-AGENT-PROVENANCE | FEAT-AGENT-PROVENANCE | complete |  |  |
 | GH-80 | Support auditable post-commit work-item attribution reconciliation (#80) | complete | attribution, reconciliation, provenance | high |
-| GH-84 | GH-84 | active |  |  |
+| GH-84 | GH-84 | blocked |  |  |
 | MIG-05-BACKLOG-PERSISTENCE | Add bounded recovery for backlog queue and Markdown projection | complete | fsharp, migration, persistence | high |
 | MIG-05-PERSISTENCE | MIG-05 characterize and shadow transactional persistence recovery | complete | fsharp, migration, persistence | high |
 | MIG-05-TELEMETRY-RECOVERY | Recover telemetry execution backlinks without duplicating execution evidence | complete | fsharp, migration, telemetry, persistence | high |
@@ -60,7 +60,7 @@
 | PRAXIS-SITE-23 | Make the site itself a Praxis case study | complete | gh-84, public-site | high |
 | PRAXIS-SITE-24 | Final communication/polish pass | complete | gh-84, public-site | medium |
 | PRAXIS-SITE-25 | Adversarial claim audit | complete | gh-84, public-site | high |
-| PRAXIS-SITE-26 | Final verification and evidence | ready | gh-84, public-site | high |
+| PRAXIS-SITE-26 | Final verification and evidence | complete | gh-84, public-site | high |
 | PROJECT-ADMIN-HUB | PROJECT-ADMIN-HUB | complete |  |  |
 | ROADMAP-PHASE-2 | ROADMAP-PHASE-2 | complete |  |  |
 | ROADMAP-PHASE-3 | ROADMAP-PHASE-3 | complete |  |  |
