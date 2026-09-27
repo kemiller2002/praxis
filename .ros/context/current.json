@@ -2254,15 +2254,15 @@
     {
       "id": "GH-84",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
+      "state": "blocked",
+      "semanticState": "blocked",
       "evidence": [],
-      "updatedAt": "2026-09-27T07:51:54.000Z",
+      "updatedAt": "2026-09-27T08:39:01.000Z",
       "telemetryExecutionIds": [
         "EXE-20260927T074026833Z-d1d7ea06",
         "EXE-20260927T075155507Z-fcdf36ca"
       ],
-      "blockReason": "Handoff: Claude session ends; GH-84 continues in a new execution by the next agent"
+      "blockReason": "Site built and verified (PRAXIS-SITE-01..25); awaiting human review and merge of PR #85 and the one-time Pages setting (docs/site/site-deployment.md). Deployment is not yet captured, so GH-84 is not complete."
     },
     {
       "id": "PRAXIS-SITE-01",
@@ -2816,11 +2816,22 @@
         "EXE-20260927T083152170Z-4d36eacd"
       ],
       "completedAt": "2026-09-27T08:38:36.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-26",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-27T08:39:00.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T083901012Z-464201ab"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-27T08:38:36.000Z",
+  "updatedAt": "2026-09-27T08:39:01.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
