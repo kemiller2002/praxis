@@ -22,6 +22,7 @@
     <Compile Include="Ordo/ObservationJson.fs" />
     <Compile Include="Lifecycle/LifecycleJson.fs" />
     <Compile Include="Provenance/ActorJson.fs" />
+    <Compile Include="Work/ReconciliationJson.fs" />
     <Compile Include="Provenance/ProvenanceFrontMatter.fs" />
     <Compile Include="Provenance/ProvenanceReportJson.fs" />
   </ItemGroup>

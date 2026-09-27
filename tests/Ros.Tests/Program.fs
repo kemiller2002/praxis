@@ -50,4 +50,6 @@ let main _ =
     @ OrdoObservationTests.tests
     @ ProvenanceTests.tests
     @ ProvenanceEffectTests.tests
+    @ WorkReconciliationTests.tests
+    @ WorkReconciliationEffectTests.tests
     |> TestRunner.run

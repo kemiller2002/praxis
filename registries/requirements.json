@@ -504,5 +504,52 @@
     "title": "Agent guidance requires identity, honesty, and preservation of provenance",
     "updated": "2026-09-25",
     "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-27",
+    "id": "RQ-ROS-2026-A020",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A020--post-hoc-attribution-reconciliation.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T011826712Z-9911b752": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-27T01:40:40.952Z",
+          "evidence": [
+            "https://github.com/kemiller2002/praxis/issues/80"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "Captured from GitHub issue #80 (work item GH-80): post-hoc Git-evidenced attribution reconciliation"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A040",
+      "docs/work-protocol.md",
+      "https://github.com/kemiller2002/praxis/issues/80"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "attribution",
+      "reconciliation",
+      "work-protocol",
+      "provenance",
+      "git-evidence"
+    ],
+    "title": "Committed changes made without an active work item can be reconciled post hoc from Git evidence",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
   }
 ]

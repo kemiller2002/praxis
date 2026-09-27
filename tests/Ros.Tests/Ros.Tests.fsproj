@@ -61,6 +61,8 @@
     <Compile Include="OrdoObservationTests.fs" />
     <Compile Include="ProvenanceTests.fs" />
     <Compile Include="ProvenanceEffectTests.fs" />
+    <Compile Include="WorkReconciliationTests.fs" />
+    <Compile Include="WorkReconciliationEffectTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

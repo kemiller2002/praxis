@@ -9,6 +9,8 @@ module FindingContract =
     let repair finding =
         if finding.Message.Contains("registry is stale") then
             "Run './ros registry build'."
+        elif finding.Field = "work_reconciliation" then
+            "Never edit or hand-write reconciliation events. Restore the event log from version control, then re-run './ros work reconcile' with Git evidence."
         elif finding.Field = "work_items" then
             "Run './ros work begin WORK-ID', perform the change, then complete it with configured evidence."
         elif finding.Message.Contains("provenance record") then

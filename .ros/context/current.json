@@ -2213,11 +2213,48 @@
         "EXE-20260925T193942361Z-84dc9b22"
       ],
       "completedAt": "2026-09-25T20:36:01.000Z"
+    },
+    {
+      "id": "GH-80",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Reconciliation.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Application/Work/Reconciliation.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileReconciliationRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/ReconciliationCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkReconciliationTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkReconciliationEffectTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-27T01:45:22.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T011826712Z-9911b752"
+      ],
+      "completedAt": "2026-09-27T01:45:22.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-25T20:36:01.000Z",
+  "updatedAt": "2026-09-27T01:45:22.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
