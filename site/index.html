@@ -25,6 +25,7 @@
       <ul class="nav-list">
         <li><a href="#proposition">What is Praxis</a></li>
         <li><a href="#how">How it works</a></li>
+        <li><a href="#agents">Agents</a></li>
       </ul>
     </nav>
   </div>
@@ -291,6 +292,46 @@
           </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+  </section>
+  <section class="section section--dark" id="agents" aria-labelledby="agents-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">Agents</p>
+        <div>
+          <h2 id="agents-title">No anonymous work.</h2>
+          <p class="lede">Agents, people and automation work under the same protocol. Each execution records who ran it, and how Praxis knows.</p>
+        </div>
+      </div>
+      <div class="grid-2 agents">
+        <div class="agents__item">
+          <h3>Identity</h3>
+          <p>Actor kind, provider and runtime are detected from the runtime environment for OpenAI Codex, Claude Code, Gemini CLI, GitHub Copilot and GitHub Actions. They can also be declared explicitly. The record keeps the mechanism, so a declaration is never mistaken for a detection.</p>
+        </div>
+        <div class="agents__item">
+          <h3>Model</h3>
+          <p>Recorded when the runtime reports it or it is declared. Otherwise it is recorded as unknown. Praxis does not infer a model from a provider.</p>
+        </div>
+        <div class="agents__item">
+          <h3>Execution boundaries</h3>
+          <p>Every attempt at a work item is its own execution with a start, an end and a repository baseline. When work changes hands, the next actor opens a new execution that points to its parent.</p>
+        </div>
+        <div class="agents__item">
+          <h3>Telemetry, when it exists</h3>
+          <p>Tokens, cost and runtime measurements are recorded when a runtime stream, hook or OpenTelemetry exporter supplies them. Cost is taken from the runtime or calculated from a named price source; it is never guessed.</p>
+        </div>
+        <div class="agents__item agents__item--wide">
+          <h3>Every value says how it is known</h3>
+          <dl class="quality">
+            <dt><span class="status status--recorded">Observed</span></dt><dd>Reported by the runtime or its telemetry.</dd>
+            <dt><span class="status status--recorded">Derived</span></dt><dd>Calculated by Praxis from other records, such as wall time from timestamps.</dd>
+            <dt><span class="status status--recorded">Declared</span></dt><dd>Stated explicitly by the actor or its configuration, and recorded as a declaration.</dd>
+            <dt><span class="status status--unknown">Unknown</span></dt><dd>No source could say. Recorded as unknown.</dd>
+            <dt><span class="status status--unavailable">Unavailable</span></dt><dd>The runtime can report it, but nothing was supplied for this execution.</dd>
+          </dl>
+          <p class="agents__rule">A missing value is never filled with a zero.</p>
+        </div>
       </div>
     </div>
   </section>

@@ -80,3 +80,24 @@ test("Git and Praxis are compared as complements, in an accessible table", () =>
   assert.equal((git.match(/<th scope="col">/g) ?? []).length, 3);
   ["Git is bad", "broken", "fails to", "inadequate", "outdated", "legacy"].forEach((phrase) => assert.ok(!git.toLowerCase().includes(phrase.toLowerCase()), phrase));
 });
+
+test("agent accountability distinguishes every quality of knowledge", () => {
+  const agents = section("agents");
+  ["Observed", "Derived", "Declared", "Unknown", "Unavailable"].forEach((quality) => assert.match(agents, new RegExp(`>${quality}<`), quality));
+  assert.match(agents, /never mistaken for a detection/);
+  assert.match(agents, /does not infer a model/);
+});
+
+test("the runtimes the page says are detected are the ones the CLI detects", () => {
+  const identity = readFileSync(new URL("../../src/Ros.Domain/Telemetry/Identity.fs", import.meta.url), "utf8");
+  [
+    ["OpenAI Codex", "whitelisted-codex-environment"],
+    ["Claude Code", "whitelisted-claude-environment"],
+    ["Gemini CLI", "whitelisted-gemini-environment"],
+    ["GitHub Copilot", "whitelisted-copilot-environment"],
+    ["GitHub Actions", "whitelisted-github-actions-environment"],
+  ].forEach(([name, mechanism]) => {
+    assert.ok(section("agents").includes(name), name);
+    assert.ok(identity.includes(mechanism), mechanism);
+  });
+});

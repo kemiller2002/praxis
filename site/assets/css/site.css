@@ -1071,6 +1071,74 @@ ol {
   }
 }
 
+/* ---- agents (PRAXIS-SITE-07) ------------------------------------------- */
+
+.agents__item {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--graphite-on-dark);
+}
+
+.agents__item h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.5rem;
+}
+
+.agents__item p {
+  margin: 0;
+  color: var(--stone);
+}
+
+.agents__item--wide {
+  grid-column: 1 / -1;
+}
+
+.quality {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-1) var(--space-5);
+  margin: 0;
+}
+
+.quality dd {
+  margin: 0 0 var(--space-3);
+  color: var(--stone);
+}
+
+@media (min-width: 48rem) {
+  .quality {
+    grid-template-columns: 11rem minmax(0, 1fr);
+  }
+
+  .quality dd {
+    margin: 0;
+  }
+}
+
+.section--dark .status--verified {
+  color: var(--verdigris-on-dark);
+}
+
+.section--dark .status--recorded,
+.section--dark .status--unresolved {
+  color: var(--bronze-on-dark);
+}
+
+.section--dark .status--unknown,
+.section--dark .status--unavailable,
+.section--dark .status--pending {
+  color: var(--graphite-on-dark);
+}
+
+.agents__rule {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  color: var(--parchment) !important;
+}
+
 /* ---- footer ----------------------------------------------------------- */
 
 .site-footer {
