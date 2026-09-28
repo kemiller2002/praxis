@@ -19,8 +19,8 @@ related_documents:
   - RQ-ROS-2026-A017
   - RQ-ROS-2026-A018
   - RQ-ROS-2026-A019
-  - RQ-ROS-2026-A021
-  - DF-ROS-2026-A041
+  - RQ-ROS-2026-A023
+  - DF-ROS-2026-A042
   - requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md
 supersedes: []
 superseded_by: []
@@ -50,7 +50,7 @@ provenance:
         model: unknown
         runtime: codex
       reason: "Record closure of the fallback dispatcher follow-up"
-      evidence: [DF-ROS-2026-A041]
+      evidence: [DF-ROS-2026-A042]
 ---
 
 # Decision
@@ -85,7 +85,7 @@ The F# implementation will use a dedicated `Step` domain module, file repository
 - Finalization checks step state before it mutates the record.
 - A crashed active step stays visible and must be resumed, blocked, or abandoned explicitly.
 - Provider adapters remain provider-specific; the step model remains provider-neutral.
-- At this decision's acceptance boundary the fallback reconciler was fail-closed before canonical dispatch. `DF-ROS-2026-A041` now closes that follow-up with journaled native-planner dispatch and canonical step import; the optional schema design here did not require migration.
+- At this decision's acceptance boundary the fallback reconciler was fail-closed before canonical dispatch. `DF-ROS-2026-A042` now closes that follow-up with journaled native-planner dispatch and canonical step import; the optional schema design here did not require migration.
 - Local Praxis instance registration remains an upstream requirement. Step records preserve a nullable instance identity now and reject mismatches when a local authority exists; they do not depend on a registry.
 
 # Revisit when

@@ -36,12 +36,15 @@
     <Compile Include="Work/FileTelemetryQueryRepository.fs" />
     <Compile Include="Work/FileStepRepository.fs" />
     <Compile Include="Work/FileTelemetryFinalizationRepository.fs" />
+    <Compile Include="Work/FileTelemetryUsageRepository.fs" />
     <Compile Include="Work/FileTelemetryValidationRepository.fs" />
     <Compile Include="Work/FileAdapterRepository.fs" />
     <Compile Include="Provenance/FileProvenanceRepository.fs" />
     <Compile Include="Ordo/FileObservationRepository.fs" />
     <Compile Include="Lifecycle/Payload.fs" />
     <Compile Include="Lifecycle/Installation.fs" />
+    <Compile Include="Remote/GitHubActionsExecutor.fs" />
+    <Compile Include="Remote/FileRemoteRepository.fs" />
   </ItemGroup>
 
   <!-- The scaffold this CLI installs, compiled into the assembly so a released
@@ -67,6 +70,8 @@
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/development-telemetry.md" LogicalName="ros.payload/docs/development-telemetry.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/fallback-reconciliation.md" LogicalName="ros.payload/docs/fallback-reconciliation.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/ordo-observation.md" LogicalName="ros.payload/docs/ordo-observation.md" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)docs/remote-protocol.md" LogicalName="ros.payload/docs/remote-protocol.md" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)docs/remote-agent-contract.md" LogicalName="ros.payload/docs/remote-agent-contract.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/project-administration-hub.md" LogicalName="ros.payload/docs/project-administration-hub.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/web-interface.md" LogicalName="ros.payload/docs/web-interface.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/work-adapter-contract.md" LogicalName="ros.payload/docs/work-adapter-contract.md" />

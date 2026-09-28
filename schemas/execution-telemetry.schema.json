@@ -28,7 +28,25 @@
         "subagentId": {"type": ["string", "null"]},
         "parentExecutionId": {"type": ["string", "null"]},
         "actorKind": {"description": "Kind of actor that performed this execution (RQ-ROS-2026-A002); absent on records written before actor attribution, which are projected from provenance.sources.", "type": "string", "pattern": "^(agent|human|automation|unknown|x-[a-z0-9][a-z0-9-]*)$"},
-        "orchestration": {"type": "object", "additionalProperties": true}
+        "orchestration": {"type": "object", "additionalProperties": true},
+        "assurance": {"description": "How the identity was obtained. Present only as 'asserted-by-request' on executions created for a praxis.remote request (DF-ROS-2026-A041); absent means self-reported by the local process.", "const": "asserted-by-request"}
+      },
+      "additionalProperties": true
+    },
+    "executor": {
+      "description": "Observed facts about the runner that executed a praxis.remote request (DF-ROS-2026-A041 section 7). Recorded next to, never instead of, the identity; absent on local executions.",
+      "type": "object",
+      "required": ["kind", "praxisVersion", "assurance"],
+      "properties": {
+        "kind": {"type": "string", "minLength": 1},
+        "runId": {"type": ["string", "null"]},
+        "runAttempt": {"type": ["string", "null"]},
+        "workflowRef": {"type": ["string", "null"]},
+        "repository": {"type": ["string", "null"]},
+        "host": {"type": ["string", "null"]},
+        "principal": {"type": ["string", "null"]},
+        "praxisVersion": {"type": "string", "minLength": 1},
+        "assurance": {"const": "observed-by-executor"}
       },
       "additionalProperties": true
     },

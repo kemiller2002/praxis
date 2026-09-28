@@ -90,7 +90,8 @@ module TelemetryRecordMetricTests =
           Source = defaultSource
           PricingSource = None
           PricingVersion = None
-          CollectedAt = Some "2026-01-01T00:00:00.000Z" }
+          CollectedAt = Some "2026-01-01T00:00:00.000Z"
+          Step = None }
 
     let tests =
         [ { Name = "recordMetric with an EXE-prefixed target records a new metric and creates a fresh capability entry"

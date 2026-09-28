@@ -780,7 +780,10 @@ module FileTelemetryFinalizationRepository =
           Source: CapabilitySource
           PricingSource: string option
           PricingVersion: string option
-          CollectedAt: string option }
+          CollectedAt: string option
+          /// The step (PRAXIS-REMOTE-04) the measurement belongs to; recorded
+          /// as the `step` dimension. `None` keeps `dimensions` empty.
+          Step: string option }
 
     let private confidenceNode (confidence: MetricConfidence) : JsonNode =
         match confidence with
@@ -830,6 +833,88 @@ module FileTelemetryFinalizationRepository =
     /// registry's own value, since no current CLI flag can override either
     /// (production's `normalizeMetric` allows both, but nothing reaches
     /// that path with a non-default value).
+    /// The step events recorded on an execution record, in order.
+    let stepEvents (record: JsonObject) : StepEvent list =
+        match record["events"] with
+        | :? JsonArray as events ->
+            events
+            |> Seq.choose (function
+                | :? JsonObject as event ->
+                    match stringField event "type" |> Option.bind StepTransition.tryParseEventType, stringField event "stepId" with
+                    | Some transition, Some stepId ->
+                        Some
+                            { Transition = transition
+                              StepId = stepId
+                              Name = stringField event "name"
+                              Reason = stringField event "reason"
+                              OccurredAt = stringField event "occurredAt" |> Option.defaultValue "" }
+                    | _ -> None
+                | _ -> None)
+            |> Seq.toList
+        | _ -> []
+
+    let private dimensionsNode (step: string option) : JsonObject =
+        let node = JsonObject()
+        step |> Option.iter (fun value -> node["step"] <- JsonValue.Create value)
+        node
+
+    /// Records a step transition (`step.started|completed|failed`) on an
+    /// active execution, under that execution's lock. A repeated identical
+    /// transition writes nothing; an illegal one is refused.
+    let recordStep (root: string) (target: string option) (transition: StepTransition) (stepId: string) (name: string option) (reason: string option) (occurredAt: string) : Result<string * bool, string> =
+        match resolveExecutionTarget root target true with
+        | Error message -> Error message
+        | Ok executionId ->
+            match RegistryLock.acquire root $"telemetry-execution:{executionId}" RegistryLock.defaultSettings with
+            | Error failure -> Error failure.Message
+            | Ok lease ->
+                let result =
+                    try
+                        match resolveExecutionTarget root (Some executionId) true with
+                        | Error message -> Error message
+                        | Ok _ ->
+                            let file = executionFile root executionId
+
+                            match JsonNode.Parse(File.ReadAllText file) with
+                            | :? JsonObject as record ->
+                                let requested =
+                                    { Transition = transition
+                                      StepId = stepId
+                                      Name = name
+                                      Reason = reason
+                                      OccurredAt = occurredAt }
+
+                                match Steps.decide (stepEvents record) requested with
+                                | StepDecision.Rejected message -> Error message
+                                | StepDecision.AlreadyRecorded -> Ok(executionId, false)
+                                | StepDecision.Record event ->
+                                    let node = JsonObject()
+                                    node["type"] <- JsonValue.Create(StepTransition.eventType event.Transition)
+                                    node["stepId"] <- JsonValue.Create event.StepId
+                                    event.Name |> Option.iter (fun value -> node["name"] <- JsonValue.Create value)
+                                    event.Reason |> Option.iter (fun value -> node["reason"] <- JsonValue.Create value)
+                                    node["occurredAt"] <- JsonValue.Create event.OccurredAt
+                                    node["source"] <- FileTelemetryExecutionRepository.sourceNode { Type = "ros-clock"; Name = "ros"; Mechanism = "step-lifecycle" }
+
+                                    let events =
+                                        match record["events"] with
+                                        | :? JsonArray as array -> array
+                                        | _ ->
+                                            let created = JsonArray()
+                                            record["events"] <- created
+                                            created
+
+                                    events.Add(node: JsonNode)
+                                    File.WriteAllText(file, record.ToJsonString serializerOptions + "\n")
+                                    Ok(executionId, true)
+                            | _ -> Error $"execution record '{executionId}' is not a JSON object"
+                    with error ->
+                        Error error.Message
+
+                match lease.Release(), result with
+                | Error failure, Ok _ -> Error failure.Message
+                | _, value -> value
+
     let recordMetric (root: string) (target: string option) (request: RecordMetricRequest) : Result<JsonObject, string> =
         match resolveExecutionTarget root target true with
         | Error message -> Error message
@@ -850,6 +935,11 @@ module FileTelemetryFinalizationRepository =
                                 let file = executionFile root executionId
 
                                 match JsonNode.Parse(File.ReadAllText file) with
+                                | :? JsonObject as record when
+                                    request.Step.IsSome
+                                    && not (Steps.project (stepEvents record) |> List.exists (fun step -> Some step.StepId = request.Step))
+                                    ->
+                                    Error $"step '{request.Step.Value}' has not been started in execution '{executionId}'"
                                 | :? JsonObject as record ->
                                     let unit = request.Unit |> Option.defaultValue definition.Unit
                                     let collectedAt = request.CollectedAt |> Option.defaultValue (FileTelemetryExecutionRepository.nowIso ())
@@ -859,7 +949,7 @@ module FileTelemetryFinalizationRepository =
                                     sortedForDigest["collectedAt"] <- JsonValue.Create collectedAt
                                     sortedForDigest["confidence"] <- confidenceNode request.Confidence
                                     sortedForDigest["currency"] <- optionalStringNode request.Currency
-                                    sortedForDigest["dimensions"] <- JsonObject()
+                                    sortedForDigest["dimensions"] <- dimensionsNode request.Step
                                     sortedForDigest["id"] <- JsonValue.Create request.MetricId
                                     sortedForDigest["measurementId"] <- JsonValue.Create ""
                                     sortedForDigest["pricing"] <- pricingNode request.PricingSource request.PricingVersion
@@ -902,7 +992,7 @@ module FileTelemetryFinalizationRepository =
                                         metricNode["confidence"] <- confidenceNode request.Confidence
                                         metricNode["scope"] <- JsonValue.Create request.Scope
                                         metricNode["aggregation"] <- JsonValue.Create definition.Aggregation
-                                        metricNode["dimensions"] <- JsonObject()
+                                        metricNode["dimensions"] <- dimensionsNode request.Step
                                         metricNode["pricing"] <- pricingNode request.PricingSource request.PricingVersion
                                         metricNode["source"] <- FileTelemetryExecutionRepository.sourceNode request.Source
                                         metricNode["collectedAt"] <- JsonValue.Create collectedAt

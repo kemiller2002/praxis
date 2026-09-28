@@ -1,5 +1,5 @@
 ---
-id: DF-ROS-2026-A041
+id: DF-ROS-2026-A042
 title: Journaled exact-path fallback reconciliation with Git checkpoint
 status: accepted
 version: 1.0.0
@@ -31,6 +31,16 @@ provenance:
         model: unknown
         runtime: codex
       reason: "Journaled fallback reconciliation architecture"
+    EXE-20260928T122823444Z-e1fc1859:
+      operations: [migrated]
+      at: 2026-09-28T12:45:22Z
+      actor:
+        kind: agent
+        id: openai/codex
+        provider: openai
+        model: unknown
+        runtime: codex
+      reason: "Renumber canonical fallback decision after integrating main's independently assigned DF-ROS-2026-A041"
 ---
 
 # Decision

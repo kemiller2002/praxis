@@ -2,11 +2,11 @@
 id: GV-START-001
 title: Agent Startup Guide
 status: canonical
-version: 1.6.0
+version: 1.7.0
 owners:
   - repository-governance
 created: 2026-07-22
-updated: 2026-09-27
+updated: 2026-09-28
 review_cycle: quarterly
 supersedes: []
 superseded_by: []
@@ -17,6 +17,8 @@ related_documents:
   - docs/cli.md
   - docs/installation.md
   - docs/upgrading.md
+  - docs/remote-agent-contract.md
+  - docs/remote-protocol.md
 tags: [governance, agents, startup, provenance]
 ---
 
@@ -108,6 +110,23 @@ every provider and runtime, and equally to humans and automation. See
 
 Identity recorded this way is provenance, not authentication. It is
 self-reported and cross-checked, not cryptographically proven.
+
+## No local runtime? Use remote execution
+
+If you can reach this repository on GitHub but cannot run Praxis locally,
+for example because there is no .NET, you are governed the same way through
+typed remote requests. Follow
+[`docs/remote-agent-contract.md`](docs/remote-agent-contract.md): discover
+with a `praxis.describe` request, send typed operations with a stable
+`requestId` and the `expectedSha` you read, and read results from the
+repository.
+
+- Remote execution is available only when
+  `.github/workflows/praxis-remote.yml` exists. Remote mutation is available
+  only where `ros.json` lists it under `remote.capabilities`.
+- The rules above still apply: never impersonate, never fabricate identity,
+  and never touch files to manufacture attribution.
+- Do not work around a missing runtime by hand-editing `.ros/` state.
 
 ## Lifecycle commands
 

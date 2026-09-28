@@ -7,6 +7,7 @@ open System.Text.Json
 open System.Text.Json.Nodes
 open Ros.Application.Git
 open Ros.Domain.Provenance
+open Ros.Domain.Remote
 open Ros.Domain.Telemetry
 open Ros.Infrastructure.Artifacts
 open Ros.Infrastructure.Git
@@ -47,6 +48,32 @@ module FileTelemetryExecutionRepository =
                 | true, value when value.ValueKind = JsonValueKind.String && not (String.IsNullOrWhiteSpace(value.GetString())) -> Some(value.GetString())
                 | _ -> None
             with _ -> None
+
+    let private environmentVariable (name: string) =
+        match Environment.GetEnvironmentVariable name with
+        | null
+        | "" -> None
+        | value -> Some value
+
+    /// The runner/executor that ran a remote request, as it observed itself:
+    /// recorded next to -- never instead of -- the execution's identity.
+    let executorNode (facts: ExecutorFacts) : JsonObject =
+        let node = JsonObject()
+        let optional (value: string option) : JsonNode =
+            match value with
+            | Some text -> JsonValue.Create text
+            | None -> null
+
+        node["kind"] <- JsonValue.Create facts.Kind
+        node["runId"] <- optional facts.RunId
+        node["runAttempt"] <- optional facts.RunAttempt
+        node["workflowRef"] <- optional facts.WorkflowRef
+        node["repository"] <- optional facts.Repository
+        node["host"] <- optional facts.Host
+        node["principal"] <- optional facts.Principal
+        node["praxisVersion"] <- JsonValue.Create facts.PraxisVersion
+        node["assurance"] <- JsonValue.Create RemoteIdentity.ObservedByExecutor
+        node
 
     let private environmentIdentityInputs () : IdentityInputs =
         let variable name =
@@ -433,7 +460,20 @@ module FileTelemetryExecutionRepository =
                                 identityNode["parentExecutionId"] <- optionalString identity.ParentExecutionId
                                 identityNode["actorKind"] <- JsonValue.Create(ActorKind.code actor.Kind)
                                 identityNode["orchestration"] <- JsonObject()
+
+                                // An execution created for a remote request records
+                                // that its identity is the requester's assertion
+                                // (PRAXIS-REMOTE-02). Local executions keep their
+                                // historical shape: absence means self-reported.
+                                let assurance = RemoteIdentity.assurance environmentVariable
+
+                                if assurance = RemoteIdentity.AssertedByRequest then
+                                    identityNode["assurance"] <- JsonValue.Create assurance
+
                                 record["identity"] <- identityNode
+
+                                RemoteIdentity.readExecutor environmentVariable
+                                |> Option.iter (fun facts -> record["executor"] <- executorNode facts)
 
                                 let provenanceNode = JsonObject()
                                 provenanceNode["collector"] <- JsonValue.Create "ros"

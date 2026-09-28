@@ -2,11 +2,11 @@
 id: GV-DEC-001
 title: Governance Decision Log
 status: canonical
-version: 1.1.0
+version: 1.2.0
 owners:
   - repository-governance
 created: 2026-07-22
-updated: 2026-09-05
+updated: 2026-09-28
 review_cycle: quarterly
 supersedes: []
 superseded_by: []
@@ -166,3 +166,38 @@ On 2026-07-22, repository discovery found the Phase 1 execution prompt as the on
 - **Confidence:** High (0.86)
 - **Consequences:** Deterministic collection is inherited mechanically; detailed runtime and research facts remain capability-dependent. Records grow but are segmented and bounded. Historical work is not rewritten.
 - **Revisit trigger:** Cross-provider pilots reveal incompatible semantics, runtime hook security changes materially, or record volume requires an external retention tier.
+
+## DF-GOV-012 — Remote Execution Entry Point in `AGENTS.md`
+
+- **Date:** 2026-09-28
+- **Status:** accepted
+- **Context:** Issue #90 (`RQ-ROS-2026-A021`) requires that a cloud agent
+  without a local Praxis runtime be governed as rigorously as a local agent,
+  and that it be able to discover how without a large bespoke prompt
+  (`PRX-REMOTE-033`, `PRX-REMOTE-044`). The protocol, executor and adapter
+  exist (`DF-ROS-2026-A041`).
+- **Hypothesis:** Under `DF-GOV-010`, a short routing section in
+  `AGENTS.md` that points to one concise contract is enough for discovery. It
+  works only if the section embeds no scripts or protocol detail.
+- **Evidence considered:**
+  - `EV-ROS-2026-A053`;
+  - `docs/remote-agent-contract.md`;
+  - the machine-readable `praxis.describe` document.
+- **Alternatives:**
+  - Put the protocol and example scripts in `AGENTS.md`. This is fragile and
+    duplicates the specification.
+  - Give no pointer. Agents without a runtime then improvise or hand-edit
+    `.ros/`.
+- **Decision:** `AGENTS.md` gains the section "No local runtime? Use remote
+  execution". It routes agents to `docs/remote-agent-contract.md` and
+  restates only the conditions under which remote execution is available,
+  and the rule against hand-editing state. The contract and
+  `praxis.describe` hold the details.
+- **Confidence:** Medium (0.75). Live use by cloud agents
+  (`PRAXIS-REMOTE-11`) is still pending.
+- **Consequences:** Installed repositories receive the section through the
+  shared `AGENTS.md`, and both remote documents ship with the scaffold. A
+  repository without the workflow tells agents plainly that remote
+  execution is not installed.
+- **Revisit trigger:** The end-to-end proof or agent evaluations show that
+  agents cannot complete the flow from the contract alone.

@@ -1,5 +1,5 @@
 ---
-id: EV-ROS-2026-A053
+id: EV-ROS-2026-A055
 title: First-class step-level execution telemetry implementation and validation
 status: accepted
 version: 1.0.0
@@ -18,7 +18,7 @@ supports:
   - RQ-ROS-2026-A017
   - RQ-ROS-2026-A018
   - RQ-ROS-2026-A019
-  - RQ-ROS-2026-A021
+  - RQ-ROS-2026-A023
 related_documents:
   - docs/development-telemetry.md
   - docs/cli.md
@@ -49,6 +49,16 @@ provenance:
         model: unknown
         runtime: codex
       reason: "Migrate step CLI requirement reference after main integration"
+    EXE-20260928T122823444Z-e1fc1859:
+      operations: [migrated]
+      at: 2026-09-28T12:45:23Z
+      actor:
+        kind: agent
+        id: openai/codex
+        provider: openai
+        model: unknown
+        runtime: codex
+      reason: "Renumber canonical step-telemetry evidence after integrating main's independently assigned EV-ROS-2026-A053"
 ---
 
 # Evidence summary
@@ -110,7 +120,7 @@ that execution's canonical telemetry record.
 Provider adapters were not changed to fabricate measurements that the current
 runtime did not expose. Exact token and cost attribution therefore remains
 unavailable for this execution. The original fallback-dispatch limitation was
-closed by `DF-ROS-2026-A041` and is validated separately by
+closed by `DF-ROS-2026-A042` and is validated separately by
 `EV-ROS-2026-A054`; fallback steps now reconcile into the canonical execution
 model through the native planner and a crash-recoverable checkpoint.
 

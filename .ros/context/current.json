@@ -3,26 +3,8 @@
   "repository": "repository-operating-system",
   "workItems": [
     {
-      "id": "BOOTSTRAP-ADOPTION-FIX",
-      "type": "maintenance",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "lib/bootstrap.mjs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/npm-bootstrap.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-08-17T14:51:39.589Z",
-      "completedAt": "2026-08-17T14:51:39.589Z"
-    },
-    {
-      "id": "CI-BASE-REF-FIX",
-      "type": "bug",
+      "id": "TASK-20260816-PROMPTS",
+      "type": "task",
       "state": "complete",
       "semanticState": "complete",
       "evidence": [
@@ -35,1197 +17,8 @@
           "path": "tests/work-protocol.test.mjs"
         }
       ],
-      "updatedAt": "2026-08-17T17:30:57.772Z",
-      "completedAt": "2026-08-17T17:30:57.772Z"
-    },
-    {
-      "id": "CI-LATEST-ON-VERSION-BUMP",
-      "type": "infrastructure",
-      "state": "blocked",
-      "semanticState": "blocked",
-      "evidence": [],
-      "updatedAt": "2026-08-21T18:11:18.125Z",
-      "blockReason": "no test harness exists for GitHub Actions workflows in this repo; YAML syntax was checked locally but the version-bump/publish logic itself can only be confirmed by observing a real CI run after this is pushed and a version bump lands on main"
-    },
-    {
-      "id": "CI-NPM-PUBLISH",
-      "type": "infrastructure",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": ".github/workflows/npm-publish-main.yml"
-        },
-        {
-          "type": "tests",
-          "path": "tests/npm-bootstrap.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-08-17T16:33:50.513Z",
-      "completedAt": "2026-08-17T16:33:50.513Z"
-    },
-    {
-      "id": "DOC-BACKLOG-USAGE-GUIDE",
-      "type": "mechanical",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [],
-      "updatedAt": "2026-08-19T13:51:51.518Z",
-      "completedAt": "2026-08-19T13:51:51.518Z"
-    },
-    {
-      "id": "DOC-PROJECT-ADMIN-README",
-      "type": "mechanical",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [],
-      "updatedAt": "2026-08-18T00:33:25.670Z",
-      "completedAt": "2026-08-18T00:33:25.670Z"
-    },
-    {
-      "id": "DOC-WEB-README",
-      "type": "mechanical",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [],
-      "updatedAt": "2026-08-21T16:35:17.515Z",
-      "completedAt": "2026-08-21T16:35:17.515Z"
-    },
-    {
-      "id": "FEAT-AGENT-PROVENANCE",
-      "type": "feature",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "src/Ros.Domain/Provenance/ArtifactProvenance.fs"
-        },
-        {
-          "type": "implementation",
-          "path": "src/Ros.Infrastructure/Provenance/FileProvenanceRepository.fs"
-        },
-        {
-          "type": "implementation",
-          "path": "src/Ros.Cli/ProvenanceCommands.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/Ros.Tests/ProvenanceTests.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/Ros.Tests/ProvenanceEffectTests.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/provenance-actor-fsharp-differential.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-25T20:36:01.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260925T193942361Z-84dc9b22"
-      ],
-      "completedAt": "2026-09-25T20:36:01.000Z"
-    },
-    {
-      "id": "GH-80",
-      "type": "feature",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "src/Ros.Domain/Work/Reconciliation.fs"
-        },
-        {
-          "type": "implementation",
-          "path": "src/Ros.Application/Work/Reconciliation.fs"
-        },
-        {
-          "type": "implementation",
-          "path": "src/Ros.Infrastructure/Work/FileReconciliationRepository.fs"
-        },
-        {
-          "type": "implementation",
-          "path": "src/Ros.Cli/ReconciliationCommands.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/Ros.Tests/WorkReconciliationTests.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/Ros.Tests/WorkReconciliationEffectTests.fs"
-        }
-      ],
-      "updatedAt": "2026-09-27T01:45:22.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T011826712Z-9911b752"
-      ],
-      "completedAt": "2026-09-27T01:45:22.000Z"
-    },
-    {
-      "id": "GH-84",
-      "type": "task",
-      "state": "blocked",
-      "semanticState": "blocked",
-      "evidence": [],
-      "updatedAt": "2026-09-27T08:39:01.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T074026833Z-d1d7ea06",
-        "EXE-20260927T075155507Z-fcdf36ca"
-      ],
-      "blockReason": "Site built and verified (PRAXIS-SITE-01..25); awaiting human review and merge of PR #85 and the one-time Pages setting (docs/site/site-deployment.md). Deployment is not yet captured, so GH-84 is not complete."
-    },
-    {
-      "id": "MIG-05-BACKLOG-PERSISTENCE",
-      "type": "infrastructure",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "src/Ros.Infrastructure/Work/BacklogStateTransaction.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/work-protocol.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-08T13:56:19.583Z",
-      "telemetryExecutionIds": [
-        "EXE-20260908T122549568Z-b1bcf1e1"
-      ],
-      "completedAt": "2026-09-08T13:56:19.583Z"
-    },
-    {
-      "id": "MIG-05-PERSISTENCE",
-      "type": "infrastructure",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "src/Ros.Infrastructure/Artifacts/RegistryTransaction.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/Ros.Tests/PersistenceTests.fs"
-        }
-      ],
-      "updatedAt": "2026-09-08T11:32:38.937Z",
-      "telemetryExecutionIds": [
-        "EXE-20260908T063756006Z-488a5615"
-      ],
-      "completedAt": "2026-09-08T11:32:38.937Z"
-    },
-    {
-      "id": "MIG-05-TELEMETRY-RECOVERY",
-      "type": "infrastructure",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "src/Ros.Domain/Telemetry/ExecutionLink.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/telemetry.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-08T17:50:16.967Z",
-      "telemetryExecutionIds": [
-        "EXE-20260908T140008179Z-0d130adf"
-      ],
-      "completedAt": "2026-09-08T17:50:16.967Z"
-    },
-    {
-      "id": "MIG-05-WORK-INTEGRATION",
-      "type": "infrastructure",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "tools/ros_cli.mjs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/work-protocol.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-08T12:24:27.458Z",
-      "telemetryExecutionIds": [
-        "EXE-20260908T121300882Z-fe89c3e0"
-      ],
-      "completedAt": "2026-09-08T12:24:27.458Z"
-    },
-    {
-      "id": "MIG-05-WORK-PERSISTENCE",
-      "type": "infrastructure",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "src/Ros.Infrastructure/Work/WorkStateTransaction.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/Ros.Tests/PersistenceTests.fs"
-        }
-      ],
-      "updatedAt": "2026-09-08T12:10:44.041Z",
-      "telemetryExecutionIds": [
-        "EXE-20260908T120118252Z-e06c199f"
-      ],
-      "completedAt": "2026-09-08T12:10:44.041Z"
-    },
-    {
-      "id": "MIG-06-GIT-INTEGRATION",
-      "type": "infrastructure",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "tools/ros_git.mjs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/git-fsharp-differential.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-08T18:10:17.427Z",
-      "telemetryExecutionIds": [
-        "EXE-20260908T175137758Z-37978fda"
-      ],
-      "completedAt": "2026-09-08T18:10:17.427Z"
-    },
-    {
-      "id": "MIG-06-GIT-PROVENANCE",
-      "type": "infrastructure",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "src/Ros.Infrastructure/Git/GitRepository.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/Ros.Tests/GitTests.fs"
-        }
-      ],
-      "updatedAt": "2026-09-08T11:52:36.499Z",
-      "telemetryExecutionIds": [
-        "EXE-20260908T113835529Z-e8d6b91e"
-      ],
-      "completedAt": "2026-09-08T11:52:36.499Z"
-    },
-    {
-      "id": "MIG-07-BACKLOG-PLAN",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "src/Ros.Domain/Work/Backlog.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/Ros.Tests/BacklogTests.fs"
-        }
-      ],
-      "updatedAt": "2026-09-09T00:46:41.484Z",
-      "telemetryExecutionIds": [
-        "EXE-20260909T003403073Z-b80f117a"
-      ],
-      "completedAt": "2026-09-09T00:46:41.484Z"
-    },
-    {
-      "id": "MIG-07-FOUR-TIER-AUDIT",
-      "type": "maintenance",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "src/Ros.Infrastructure/Work/FileTelemetryStateRepository.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/Ros.Tests/TelemetryResolutionTests.fs"
-        }
-      ],
-      "updatedAt": "2026-09-09T14:34:40.973Z",
-      "telemetryExecutionIds": [
-        "EXE-20260909T143437626Z-392780ff"
-      ],
-      "completedAt": "2026-09-09T14:34:40.973Z"
-    },
-    {
-      "id": "MIG-07-GIT-PATH-COMPOSITION",
-      "type": "feature",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "src/Ros.Domain/Work/PathFilter.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/work-git-paths-fsharp-differential.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-09T15:18:35.146Z",
-      "telemetryExecutionIds": [
-        "EXE-20260909T151831832Z-fd282d7d"
-      ],
-      "completedAt": "2026-09-09T15:18:35.146Z"
-    },
-    {
-      "id": "MIG-07-TELEMETRY-RESOLUTION",
-      "type": "feature",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "src/Ros.Domain/Work/TelemetryResolution.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/work-telemetry-fsharp-differential.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-09T12:33:32.452Z",
-      "telemetryExecutionIds": [
-        "EXE-20260909T123214698Z-7e031cb6"
-      ],
-      "completedAt": "2026-09-09T12:33:32.452Z"
-    },
-    {
-      "id": "MIG-07-VERIFIED-CONTEXT",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "src/Ros.Application/Work/Operations.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/Ros.Tests/WorkPlanTests.fs"
-        }
-      ],
-      "updatedAt": "2026-09-09T01:03:05.598Z",
-      "telemetryExecutionIds": [
-        "EXE-20260909T005705798Z-55a690b1"
-      ],
-      "completedAt": "2026-09-09T01:03:05.598Z"
-    },
-    {
-      "id": "MIG-07-WORK-CONTEXT",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "src/Ros.Domain/Work/ContextPlan.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/work-fsharp-differential.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-08T23:51:13.385Z",
-      "telemetryExecutionIds": [
-        "EXE-20260908T233512457Z-e127ac8c"
-      ],
-      "completedAt": "2026-09-08T23:51:13.385Z"
-    },
-    {
-      "id": "MIG-07-WORK-EVIDENCE",
-      "type": "feature",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "src/Ros.Infrastructure/Work/FileEvidenceRepository.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/Ros.Tests/WorkPlanTests.fs"
-        }
-      ],
-      "updatedAt": "2026-09-08T23:34:02.256Z",
-      "telemetryExecutionIds": [
-        "EXE-20260908T182701803Z-a382e3c4"
-      ],
-      "completedAt": "2026-09-08T23:34:02.256Z"
-    },
-    {
-      "id": "MIG-07-WORK-LIFECYCLE",
-      "type": "feature",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "src/Ros.Domain/Work/Model.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/Ros.Tests/WorkTests.fs"
-        }
-      ],
-      "updatedAt": "2026-09-08T12:00:35.582Z",
-      "telemetryExecutionIds": [
-        "EXE-20260908T115323101Z-4ccf5eaa"
-      ],
-      "completedAt": "2026-09-08T12:00:35.582Z"
-    },
-    {
-      "id": "MIG-07-WORK-ORCHESTRATION",
-      "type": "feature",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "src/Ros.Domain/Work/Plan.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/work-fsharp-differential.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-08T18:25:16.833Z",
-      "telemetryExecutionIds": [
-        "EXE-20260908T181145717Z-9fbd14f5"
-      ],
-      "completedAt": "2026-09-08T18:25:16.833Z"
-    },
-    {
-      "id": "OIDC-REPO-IDENTITY",
-      "type": "bug",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "package.json"
-        },
-        {
-          "type": "tests",
-          "path": "tests/npm-bootstrap.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-08-17T19:22:26.900Z",
-      "completedAt": "2026-08-17T19:22:26.900Z"
-    },
-    {
-      "id": "PKG-BIN-EXECUTABLE",
-      "type": "bug",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "bin/ros-bootstrap.mjs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/npm-bootstrap.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-08-17T19:19:28.429Z",
-      "completedAt": "2026-08-17T19:19:28.429Z"
-    },
-    {
-      "id": "PKG-ECHELON-FOUNDRY",
-      "type": "maintenance",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "package.json"
-        },
-        {
-          "type": "tests",
-          "path": "tests/npm-bootstrap.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-08-17T13:51:45.212Z",
-      "completedAt": "2026-08-17T13:51:45.212Z"
-    },
-    {
-      "id": "PKG-MIT-LICENSE",
-      "type": "maintenance",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "LICENSE"
-        },
-        {
-          "type": "tests",
-          "path": "tests/npm-bootstrap.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-08-17T16:39:14.395Z",
-      "completedAt": "2026-08-17T16:39:14.395Z"
-    },
-    {
-      "id": "PKG-PUBLISH-READINESS",
-      "type": "maintenance",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": ".github/workflows/publish.yml"
-        },
-        {
-          "type": "tests",
-          "path": "tests/npm-bootstrap.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-08-17T19:13:40.527Z",
-      "blockReason": "npm login, echelon-foundry organization write access, initial manual publication, and npm trusted-publisher configuration are still required",
-      "completedAt": "2026-08-17T19:13:40.527Z"
-    },
-    {
-      "id": "PRAXIS-SITE-01",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "docs/public-site.md"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/site.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-27T07:56:10.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T075408928Z-eaacd44b"
-      ],
-      "completedAt": "2026-09-27T07:56:10.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-02",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/assets/css/site.css"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/design.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-27T07:59:28.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T075631195Z-0a515aae"
-      ],
-      "completedAt": "2026-09-27T07:59:28.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-03",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/index.html"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/content.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:02:13.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T080117625Z-24e1fcbb"
-      ],
-      "completedAt": "2026-09-27T08:02:13.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-04",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/assets/js/claim.js"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/content.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:04:51.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T080301582Z-eca50693"
-      ],
-      "completedAt": "2026-09-27T08:04:51.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-05",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/index.html"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/content.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:06:05.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T080536447Z-6ff9a765"
-      ],
-      "completedAt": "2026-09-27T08:06:05.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-06",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/index.html"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/content.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:07:38.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T080719573Z-29bf79ae"
-      ],
-      "completedAt": "2026-09-27T08:07:38.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-07",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/index.html"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/content.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:08:43.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T080825750Z-e8872d1d"
-      ],
-      "completedAt": "2026-09-27T08:08:43.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-08",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/index.html"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/content.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:09:52.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T080903178Z-a4429e5e"
-      ],
-      "completedAt": "2026-09-27T08:09:52.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-09",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/index.html"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/content.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:10:40.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T081022740Z-96ee8c89"
-      ],
-      "completedAt": "2026-09-27T08:10:40.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-10",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/index.html"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/content.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:11:08.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T081101436Z-8347aa56"
-      ],
-      "completedAt": "2026-09-27T08:11:08.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-11",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/index.html"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/content.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:11:44.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T081133564Z-91b64c29"
-      ],
-      "completedAt": "2026-09-27T08:11:44.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-12",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/index.html"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/content.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:12:17.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T081211310Z-40549ddf"
-      ],
-      "completedAt": "2026-09-27T08:12:17.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-13",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/index.html"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/record.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:06:52.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T080634202Z-67e756dd"
-      ],
-      "completedAt": "2026-09-27T08:06:52.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-14",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/index.html"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/content.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:13:24.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T081308932Z-4cd832ef"
-      ],
-      "completedAt": "2026-09-27T08:13:24.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-15",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/index.html"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/content.test.mjs"
-        },
-        {
-          "type": "verification",
-          "path": "docs/site/get-started-verification.md"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:15:04.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T081354844Z-0063c389"
-      ],
-      "completedAt": "2026-09-27T08:15:04.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-16",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/index.html"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/content.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:16:01.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T081542887Z-70295e26"
-      ],
-      "completedAt": "2026-09-27T08:16:01.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-17",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/assets/css/site.css"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/accessibility.test.mjs"
-        },
-        {
-          "type": "accessibility",
-          "path": "docs/site/accessibility.md"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:21:50.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T081841716Z-302e9888"
-      ],
-      "completedAt": "2026-09-27T08:21:50.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-18",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/assets/css/site.css"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/responsive.test.mjs"
-        },
-        {
-          "type": "responsive",
-          "path": "docs/site/responsive.md"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:23:54.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T082204354Z-9095bf98"
-      ],
-      "completedAt": "2026-09-27T08:23:54.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-19",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/index.html"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/performance.test.mjs"
-        },
-        {
-          "type": "performance",
-          "path": "docs/site/performance.md"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:25:34.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T082409668Z-cb5a036b"
-      ],
-      "completedAt": "2026-09-27T08:25:34.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-20",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/index.html"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/security.test.mjs"
-        },
-        {
-          "type": "review",
-          "path": "docs/site/security-review.md"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:27:02.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T082551296Z-e61c47d5"
-      ],
-      "completedAt": "2026-09-27T08:27:02.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-21",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": ".github/workflows/site.yml"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/workflow.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:28:37.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T082738028Z-41d10954"
-      ],
-      "completedAt": "2026-09-27T08:28:37.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-22",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": ".github/workflows/site-pages.yml"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/workflow.test.mjs"
-        },
-        {
-          "type": "deployment",
-          "path": "docs/site/site-deployment.md"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:29:19.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T082911014Z-231deae9"
-      ],
-      "completedAt": "2026-09-27T08:29:19.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-23",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/index.html"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/case-study.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:18:17.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T081619738Z-9b74e1fd"
-      ],
-      "completedAt": "2026-09-27T08:18:17.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-24",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/assets/css/site.css"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/content.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:31:27.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T083001032Z-429bc691"
-      ],
-      "completedAt": "2026-09-27T08:31:27.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-25",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "site/index.html"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/claims.test.mjs"
-        },
-        {
-          "type": "audit",
-          "path": "docs/site/claim-audit.md"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:38:36.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T083152170Z-4d36eacd"
-      ],
-      "completedAt": "2026-09-27T08:38:36.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-26",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "docs/site/verification.md"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/evidence.test.mjs"
-        },
-        {
-          "type": "verification",
-          "path": "docs/site/verification.md"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:40:46.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T083901012Z-464201ab"
-      ],
-      "completedAt": "2026-09-27T08:40:46.000Z"
-    },
-    {
-      "id": "PRAXIS-SITE-27",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": ".github/workflows/deploy-pages.yml"
-        },
-        {
-          "type": "tests",
-          "path": "tests/site/workflow.test.mjs"
-        },
-        {
-          "type": "deployment",
-          "path": "docs/site/site-deployment.md"
-        }
-      ],
-      "updatedAt": "2026-09-27T09:56:52.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T095535820Z-1652cb8f"
-      ],
-      "completedAt": "2026-09-27T09:56:52.000Z"
-    },
-    {
-      "id": "PROJECT-ADMIN-HUB",
-      "type": "feature",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "tools/ros_hub_cli.mjs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/ros-hub.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-08-22T13:30:53.645Z",
-      "completedAt": "2026-08-22T13:30:53.645Z"
+      "updatedAt": "2026-08-16T20:35:54.073Z",
+      "completedAt": "2026-08-16T20:35:54.073Z"
     },
     {
       "id": "ROADMAP-PHASE-2",
@@ -1282,30 +75,99 @@
       "completedAt": "2026-08-16T20:45:25.889Z"
     },
     {
-      "id": "ROS-AUTHORITY-SWITCH-DECISION",
-      "type": "research",
+      "id": "PKG-ECHELON-FOUNDRY",
+      "type": "maintenance",
       "state": "complete",
       "semanticState": "complete",
       "evidence": [
         {
-          "type": "research-record",
-          "path": "research/decisions/DF-ROS-2026-A028--fsharp-authority-switch-preconditions.md"
+          "type": "implementation",
+          "path": "package.json"
         },
         {
           "type": "tests",
-          "path": "research/evidence/EV-ROS-2026-A043--fsharp-node-command-parity-inventory.md"
+          "path": "tests/npm-bootstrap.test.mjs"
         }
       ],
-      "updatedAt": "2026-09-09T14:43:35.328Z",
-      "telemetryExecutionIds": [
-        "EXE-20260909T144329414Z-debd01e8"
-      ],
-      "completedAt": "2026-09-09T14:43:35.328Z",
-      "conclusion": "supported"
+      "updatedAt": "2026-08-17T13:51:45.212Z",
+      "completedAt": "2026-08-17T13:51:45.212Z"
     },
     {
-      "id": "TASK-20260816-PROMPTS",
-      "type": "task",
+      "id": "PKG-PUBLISH-READINESS",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/publish.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-17T19:13:40.527Z",
+      "blockReason": "npm login, echelon-foundry organization write access, initial manual publication, and npm trusted-publisher configuration are still required",
+      "completedAt": "2026-08-17T19:13:40.527Z"
+    },
+    {
+      "id": "BOOTSTRAP-ADOPTION-FIX",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "lib/bootstrap.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-17T14:51:39.589Z",
+      "completedAt": "2026-08-17T14:51:39.589Z"
+    },
+    {
+      "id": "CI-NPM-PUBLISH",
+      "type": "infrastructure",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/npm-publish-main.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-17T16:33:50.513Z",
+      "completedAt": "2026-08-17T16:33:50.513Z"
+    },
+    {
+      "id": "PKG-MIT-LICENSE",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "LICENSE"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-17T16:39:14.395Z",
+      "completedAt": "2026-08-17T16:39:14.395Z"
+    },
+    {
+      "id": "CI-BASE-REF-FIX",
+      "type": "bug",
       "state": "complete",
       "semanticState": "complete",
       "evidence": [
@@ -1318,8 +180,80 @@
           "path": "tests/work-protocol.test.mjs"
         }
       ],
-      "updatedAt": "2026-08-16T20:35:54.073Z",
-      "completedAt": "2026-08-16T20:35:54.073Z"
+      "updatedAt": "2026-08-17T17:30:57.772Z",
+      "completedAt": "2026-08-17T17:30:57.772Z"
+    },
+    {
+      "id": "PKG-BIN-EXECUTABLE",
+      "type": "bug",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "bin/ros-bootstrap.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-17T19:19:28.429Z",
+      "completedAt": "2026-08-17T19:19:28.429Z"
+    },
+    {
+      "id": "OIDC-REPO-IDENTITY",
+      "type": "bug",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "package.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-17T19:22:26.900Z",
+      "completedAt": "2026-08-17T19:22:26.900Z"
+    },
+    {
+      "id": "DOC-PROJECT-ADMIN-README",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-08-18T00:33:25.670Z",
+      "completedAt": "2026-08-18T00:33:25.670Z"
+    },
+    {
+      "id": "WORKQUEUE-BACKLOG-LAYER",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tools/ros_cli.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-protocol.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-19T13:25:23.279Z",
+      "completedAt": "2026-08-19T13:25:23.279Z"
+    },
+    {
+      "id": "DOC-BACKLOG-USAGE-GUIDE",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-08-19T13:51:51.518Z",
+      "completedAt": "2026-08-19T13:51:51.518Z"
     },
     {
       "id": "WEB-INTERFACE",
@@ -1338,6 +272,60 @@
       ],
       "updatedAt": "2026-08-20T14:15:30.376Z",
       "completedAt": "2026-08-20T14:15:30.376Z"
+    },
+    {
+      "id": "DOC-WEB-README",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-08-21T16:35:17.515Z",
+      "completedAt": "2026-08-21T16:35:17.515Z"
+    },
+    {
+      "id": "CI-LATEST-ON-VERSION-BUMP",
+      "type": "infrastructure",
+      "state": "blocked",
+      "semanticState": "blocked",
+      "evidence": [],
+      "updatedAt": "2026-08-21T18:11:18.125Z",
+      "blockReason": "no test harness exists for GitHub Actions workflows in this repo; YAML syntax was checked locally but the version-bump/publish logic itself can only be confirmed by observing a real CI run after this is pushed and a version bump lands on main"
+    },
+    {
+      "id": "WORK-ITEM-ATTACHMENTS",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tools/ros_cli.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/ros-server.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-21T19:01:31.398Z",
+      "completedAt": "2026-08-21T19:01:31.398Z"
+    },
+    {
+      "id": "PROJECT-ADMIN-HUB",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tools/ros_hub_cli.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/ros-hub.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-08-22T13:30:53.645Z",
+      "completedAt": "2026-08-22T13:30:53.645Z"
     },
     {
       "id": "WI-0003",
@@ -1524,6 +512,364 @@
         "EXE-20260907T203141590Z-54f547f8"
       ],
       "completedAt": "2026-09-08T06:29:33.997Z"
+    },
+    {
+      "id": "MIG-05-PERSISTENCE",
+      "type": "infrastructure",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Artifacts/RegistryTransaction.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PersistenceTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-08T11:32:38.937Z",
+      "telemetryExecutionIds": [
+        "EXE-20260908T063756006Z-488a5615"
+      ],
+      "completedAt": "2026-09-08T11:32:38.937Z"
+    },
+    {
+      "id": "MIG-06-GIT-PROVENANCE",
+      "type": "infrastructure",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Git/GitRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/GitTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-08T11:52:36.499Z",
+      "telemetryExecutionIds": [
+        "EXE-20260908T113835529Z-e8d6b91e"
+      ],
+      "completedAt": "2026-09-08T11:52:36.499Z"
+    },
+    {
+      "id": "MIG-07-WORK-LIFECYCLE",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Model.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-08T12:00:35.582Z",
+      "telemetryExecutionIds": [
+        "EXE-20260908T115323101Z-4ccf5eaa"
+      ],
+      "completedAt": "2026-09-08T12:00:35.582Z"
+    },
+    {
+      "id": "MIG-05-WORK-PERSISTENCE",
+      "type": "infrastructure",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/WorkStateTransaction.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PersistenceTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-08T12:10:44.041Z",
+      "telemetryExecutionIds": [
+        "EXE-20260908T120118252Z-e06c199f"
+      ],
+      "completedAt": "2026-09-08T12:10:44.041Z"
+    },
+    {
+      "id": "MIG-05-WORK-INTEGRATION",
+      "type": "infrastructure",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tools/ros_cli.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-protocol.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-08T12:24:27.458Z",
+      "telemetryExecutionIds": [
+        "EXE-20260908T121300882Z-fe89c3e0"
+      ],
+      "completedAt": "2026-09-08T12:24:27.458Z"
+    },
+    {
+      "id": "MIG-05-BACKLOG-PERSISTENCE",
+      "type": "infrastructure",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/BacklogStateTransaction.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-protocol.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-08T13:56:19.583Z",
+      "telemetryExecutionIds": [
+        "EXE-20260908T122549568Z-b1bcf1e1"
+      ],
+      "completedAt": "2026-09-08T13:56:19.583Z"
+    },
+    {
+      "id": "MIG-05-TELEMETRY-RECOVERY",
+      "type": "infrastructure",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Telemetry/ExecutionLink.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/telemetry.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-08T17:50:16.967Z",
+      "telemetryExecutionIds": [
+        "EXE-20260908T140008179Z-0d130adf"
+      ],
+      "completedAt": "2026-09-08T17:50:16.967Z"
+    },
+    {
+      "id": "MIG-06-GIT-INTEGRATION",
+      "type": "infrastructure",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tools/ros_git.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/git-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-08T18:10:17.427Z",
+      "telemetryExecutionIds": [
+        "EXE-20260908T175137758Z-37978fda"
+      ],
+      "completedAt": "2026-09-08T18:10:17.427Z"
+    },
+    {
+      "id": "MIG-07-WORK-ORCHESTRATION",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Plan.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-08T18:25:16.833Z",
+      "telemetryExecutionIds": [
+        "EXE-20260908T181145717Z-9fbd14f5"
+      ],
+      "completedAt": "2026-09-08T18:25:16.833Z"
+    },
+    {
+      "id": "MIG-07-WORK-EVIDENCE",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileEvidenceRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkPlanTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-08T23:34:02.256Z",
+      "telemetryExecutionIds": [
+        "EXE-20260908T182701803Z-a382e3c4"
+      ],
+      "completedAt": "2026-09-08T23:34:02.256Z"
+    },
+    {
+      "id": "MIG-07-WORK-CONTEXT",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/ContextPlan.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-08T23:51:13.385Z",
+      "telemetryExecutionIds": [
+        "EXE-20260908T233512457Z-e127ac8c"
+      ],
+      "completedAt": "2026-09-08T23:51:13.385Z"
+    },
+    {
+      "id": "MIG-07-BACKLOG-PLAN",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Backlog.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/BacklogTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-09T00:46:41.484Z",
+      "telemetryExecutionIds": [
+        "EXE-20260909T003403073Z-b80f117a"
+      ],
+      "completedAt": "2026-09-09T00:46:41.484Z"
+    },
+    {
+      "id": "MIG-07-VERIFIED-CONTEXT",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Application/Work/Operations.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkPlanTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-09T01:03:05.598Z",
+      "telemetryExecutionIds": [
+        "EXE-20260909T005705798Z-55a690b1"
+      ],
+      "completedAt": "2026-09-09T01:03:05.598Z"
+    },
+    {
+      "id": "MIG-07-TELEMETRY-RESOLUTION",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/TelemetryResolution.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-telemetry-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-09T12:33:32.452Z",
+      "telemetryExecutionIds": [
+        "EXE-20260909T123214698Z-7e031cb6"
+      ],
+      "completedAt": "2026-09-09T12:33:32.452Z"
+    },
+    {
+      "id": "MIG-07-FOUR-TIER-AUDIT",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileTelemetryStateRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/TelemetryResolutionTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-09T14:34:40.973Z",
+      "telemetryExecutionIds": [
+        "EXE-20260909T143437626Z-392780ff"
+      ],
+      "completedAt": "2026-09-09T14:34:40.973Z"
+    },
+    {
+      "id": "ROS-AUTHORITY-SWITCH-DECISION",
+      "type": "research",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "research-record",
+          "path": "research/decisions/DF-ROS-2026-A028--fsharp-authority-switch-preconditions.md"
+        },
+        {
+          "type": "tests",
+          "path": "research/evidence/EV-ROS-2026-A043--fsharp-node-command-parity-inventory.md"
+        }
+      ],
+      "updatedAt": "2026-09-09T14:43:35.328Z",
+      "telemetryExecutionIds": [
+        "EXE-20260909T144329414Z-debd01e8"
+      ],
+      "completedAt": "2026-09-09T14:43:35.328Z",
+      "conclusion": "supported"
+    },
+    {
+      "id": "MIG-07-GIT-PATH-COMPOSITION",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/PathFilter.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-git-paths-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-09T15:18:35.146Z",
+      "telemetryExecutionIds": [
+        "EXE-20260909T151831832Z-fd282d7d"
+      ],
+      "completedAt": "2026-09-09T15:18:35.146Z"
     },
     {
       "id": "WI-0012",
@@ -2222,6 +1568,29 @@
       "completedAt": "2026-09-10T20:27:23.373Z"
     },
     {
+      "id": "WI-READY",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-10T20:34:40.136Z",
+      "telemetryExecutionIds": [
+        "EXE-20260910T203440154Z-b25c0cf1"
+      ]
+    },
+    {
+      "id": "WI-ACTIVE",
+      "type": "task",
+      "state": "blocked",
+      "semanticState": "blocked",
+      "evidence": [],
+      "updatedAt": "2026-09-10T20:34:40.579Z",
+      "telemetryExecutionIds": [
+        "EXE-20260910T203440452Z-5ea56a27"
+      ],
+      "blockReason": "waiting"
+    },
+    {
       "id": "WI-0040",
       "type": "task",
       "state": "complete",
@@ -2743,35 +2112,6 @@
       "completedAt": "2026-09-20T15:36:27Z"
     },
     {
-      "id": "WI-0062",
-      "type": "maintenance",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "research/decisions/DF-ROS-2026-A035--govern-sde-structural-locality-warnings-as-review-obligations.md"
-        },
-        {
-          "type": "implementation",
-          "path": "docs/upgrades/SDE-1.3.0-STRUCTURAL-TRIAGE.md"
-        },
-        {
-          "type": "tests",
-          "path": "docs/upgrades/SDE-1.3.0-STRICT-CURRENT.json"
-        },
-        {
-          "type": "tests",
-          "path": ".github/workflows/ros-validation.yml"
-        }
-      ],
-      "updatedAt": "2026-09-20T23:04:26Z",
-      "telemetryExecutionIds": [
-        "EXE-20260920T225534185Z-f3738e9b"
-      ],
-      "completedAt": "2026-09-20T23:04:26Z"
-    },
-    {
       "id": "WI-0063",
       "type": "feature",
       "state": "complete",
@@ -2807,6 +2147,1128 @@
         "EXE-20260920T190918733Z-3e58bf30"
       ],
       "completedAt": "2026-09-20T19:18:11Z"
+    },
+    {
+      "id": "WI-0062",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/decisions/DF-ROS-2026-A035--govern-sde-structural-locality-warnings-as-review-obligations.md"
+        },
+        {
+          "type": "implementation",
+          "path": "docs/upgrades/SDE-1.3.0-STRUCTURAL-TRIAGE.md"
+        },
+        {
+          "type": "tests",
+          "path": "docs/upgrades/SDE-1.3.0-STRICT-CURRENT.json"
+        },
+        {
+          "type": "tests",
+          "path": ".github/workflows/ros-validation.yml"
+        }
+      ],
+      "updatedAt": "2026-09-20T23:04:26Z",
+      "telemetryExecutionIds": [
+        "EXE-20260920T225534185Z-f3738e9b"
+      ],
+      "completedAt": "2026-09-20T23:04:26Z"
+    },
+    {
+      "id": "FEAT-AGENT-PROVENANCE",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Provenance/ArtifactProvenance.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Provenance/FileProvenanceRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/ProvenanceCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ProvenanceTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ProvenanceEffectTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/provenance-actor-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-25T20:36:01.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260925T193942361Z-84dc9b22"
+      ],
+      "completedAt": "2026-09-25T20:36:01.000Z"
+    },
+    {
+      "id": "GH-80",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Reconciliation.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Application/Work/Reconciliation.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileReconciliationRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/ReconciliationCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkReconciliationTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkReconciliationEffectTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-27T01:45:22.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T011826712Z-9911b752"
+      ],
+      "completedAt": "2026-09-27T01:45:22.000Z"
+    },
+    {
+      "id": "GH-84",
+      "type": "task",
+      "state": "blocked",
+      "semanticState": "blocked",
+      "evidence": [],
+      "updatedAt": "2026-09-27T08:39:01.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T074026833Z-d1d7ea06",
+        "EXE-20260927T075155507Z-fcdf36ca"
+      ],
+      "blockReason": "Site built and verified (PRAXIS-SITE-01..25); awaiting human review and merge of PR #85 and the one-time Pages setting (docs/site/site-deployment.md). Deployment is not yet captured, so GH-84 is not complete."
+    },
+    {
+      "id": "PRAXIS-SITE-01",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "docs/public-site.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/site.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T07:56:10.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T075408928Z-eaacd44b"
+      ],
+      "completedAt": "2026-09-27T07:56:10.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-02",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/assets/css/site.css"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/design.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T07:59:28.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T075631195Z-0a515aae"
+      ],
+      "completedAt": "2026-09-27T07:59:28.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-03",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/index.html"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/content.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:02:13.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T080117625Z-24e1fcbb"
+      ],
+      "completedAt": "2026-09-27T08:02:13.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-04",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/assets/js/claim.js"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/content.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:04:51.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T080301582Z-eca50693"
+      ],
+      "completedAt": "2026-09-27T08:04:51.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-05",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/index.html"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/content.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:06:05.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T080536447Z-6ff9a765"
+      ],
+      "completedAt": "2026-09-27T08:06:05.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-13",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/index.html"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/record.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:06:52.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T080634202Z-67e756dd"
+      ],
+      "completedAt": "2026-09-27T08:06:52.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-06",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/index.html"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/content.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:07:38.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T080719573Z-29bf79ae"
+      ],
+      "completedAt": "2026-09-27T08:07:38.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-07",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/index.html"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/content.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:08:43.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T080825750Z-e8872d1d"
+      ],
+      "completedAt": "2026-09-27T08:08:43.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-08",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/index.html"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/content.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:09:52.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T080903178Z-a4429e5e"
+      ],
+      "completedAt": "2026-09-27T08:09:52.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-09",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/index.html"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/content.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:10:40.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T081022740Z-96ee8c89"
+      ],
+      "completedAt": "2026-09-27T08:10:40.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-10",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/index.html"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/content.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:11:08.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T081101436Z-8347aa56"
+      ],
+      "completedAt": "2026-09-27T08:11:08.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-11",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/index.html"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/content.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:11:44.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T081133564Z-91b64c29"
+      ],
+      "completedAt": "2026-09-27T08:11:44.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-12",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/index.html"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/content.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:12:17.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T081211310Z-40549ddf"
+      ],
+      "completedAt": "2026-09-27T08:12:17.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-14",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/index.html"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/content.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:13:24.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T081308932Z-4cd832ef"
+      ],
+      "completedAt": "2026-09-27T08:13:24.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-15",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/index.html"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/content.test.mjs"
+        },
+        {
+          "type": "verification",
+          "path": "docs/site/get-started-verification.md"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:15:04.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T081354844Z-0063c389"
+      ],
+      "completedAt": "2026-09-27T08:15:04.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-16",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/index.html"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/content.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:16:01.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T081542887Z-70295e26"
+      ],
+      "completedAt": "2026-09-27T08:16:01.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-23",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/index.html"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/case-study.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:18:17.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T081619738Z-9b74e1fd"
+      ],
+      "completedAt": "2026-09-27T08:18:17.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-17",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/assets/css/site.css"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/accessibility.test.mjs"
+        },
+        {
+          "type": "accessibility",
+          "path": "docs/site/accessibility.md"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:21:50.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T081841716Z-302e9888"
+      ],
+      "completedAt": "2026-09-27T08:21:50.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-18",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/assets/css/site.css"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/responsive.test.mjs"
+        },
+        {
+          "type": "responsive",
+          "path": "docs/site/responsive.md"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:23:54.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T082204354Z-9095bf98"
+      ],
+      "completedAt": "2026-09-27T08:23:54.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-19",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/index.html"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/performance.test.mjs"
+        },
+        {
+          "type": "performance",
+          "path": "docs/site/performance.md"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:25:34.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T082409668Z-cb5a036b"
+      ],
+      "completedAt": "2026-09-27T08:25:34.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-20",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/index.html"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/security.test.mjs"
+        },
+        {
+          "type": "review",
+          "path": "docs/site/security-review.md"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:27:02.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T082551296Z-e61c47d5"
+      ],
+      "completedAt": "2026-09-27T08:27:02.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-21",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/site.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/workflow.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:28:37.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T082738028Z-41d10954"
+      ],
+      "completedAt": "2026-09-27T08:28:37.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-22",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/site-pages.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/workflow.test.mjs"
+        },
+        {
+          "type": "deployment",
+          "path": "docs/site/site-deployment.md"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:29:19.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T082911014Z-231deae9"
+      ],
+      "completedAt": "2026-09-27T08:29:19.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-24",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/assets/css/site.css"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/content.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:31:27.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T083001032Z-429bc691"
+      ],
+      "completedAt": "2026-09-27T08:31:27.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-25",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "site/index.html"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/claims.test.mjs"
+        },
+        {
+          "type": "audit",
+          "path": "docs/site/claim-audit.md"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:38:36.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T083152170Z-4d36eacd"
+      ],
+      "completedAt": "2026-09-27T08:38:36.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-26",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "docs/site/verification.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/evidence.test.mjs"
+        },
+        {
+          "type": "verification",
+          "path": "docs/site/verification.md"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:40:46.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T083901012Z-464201ab"
+      ],
+      "completedAt": "2026-09-27T08:40:46.000Z"
+    },
+    {
+      "id": "WI-0072",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Provenance/ProvenancePolicy.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Contracts/Ordo/ObservationJson.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Lifecycle/Installation.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ProvenanceTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/provenance-followups.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-27T08:50:44.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T084130164Z-78bc9271"
+      ],
+      "completedAt": "2026-09-27T08:50:44.000Z"
+    },
+    {
+      "id": "PRAXIS-SITE-27",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/deploy-pages.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/workflow.test.mjs"
+        },
+        {
+          "type": "deployment",
+          "path": "docs/site/site-deployment.md"
+        }
+      ],
+      "updatedAt": "2026-09-27T09:56:52.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T095535820Z-1652cb8f"
+      ],
+      "completedAt": "2026-09-27T09:56:52.000Z"
+    },
+    {
+      "id": "GH-90",
+      "type": "task",
+      "state": "blocked",
+      "semanticState": "blocked",
+      "evidence": [],
+      "updatedAt": "2026-09-28T10:21:03.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T073932249Z-d48161b9"
+      ],
+      "blockReason": "Praxis-side work PRAXIS-REMOTE-01..10 complete and merged via PR #91; remaining PRAXIS-REMOTE-11 (live no-.NET proof) needs: an attested release containing 'remote execute', pinned, with remote.capabilities opted in; PRAXIS-REMOTE-12 follows 11."
+    },
+    {
+      "id": "PRAXIS-REMOTE-01",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Remote/Protocol.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Contracts/Remote/RemoteJson.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "schemas/praxis-remote-request.schema.json"
+        },
+        {
+          "type": "implementation",
+          "path": "schemas/praxis-remote-response.schema.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RemoteProtocolTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/remote-protocol.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T08:03:42.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T074530250Z-74614560"
+      ],
+      "completedAt": "2026-09-28T08:03:42.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-02",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Remote/Identity.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Remote/GitHubActionsExecutor.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileTelemetryExecutionRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RemoteIdentityTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/agent-provenance.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T08:12:11.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T080446917Z-eca18ac8"
+      ],
+      "completedAt": "2026-09-28T08:12:11.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-03",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/RemoteCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Remote/Execution.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Remote/FileRemoteRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Contracts/Remote/RemoteJson.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/remote-execute.test.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RemoteExecutionTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/remote-protocol.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T08:25:44.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T081238572Z-5e89d3ec"
+      ],
+      "completedAt": "2026-09-28T08:25:44.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-05",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "scripts/praxis-bootstrap.sh"
+        },
+        {
+          "type": "implementation",
+          "path": ".github/actions/praxis-setup/action.yml"
+        },
+        {
+          "type": "implementation",
+          "path": ".github/workflows/native-release.yml"
+        },
+        {
+          "type": "implementation",
+          "path": "bin/echelon.sh"
+        },
+        {
+          "type": "tests",
+          "path": "tests/praxis-bootstrap.test.mjs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/native-installation.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T08:33:09.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T082616372Z-37505b14"
+      ],
+      "completedAt": "2026-09-28T08:33:09.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-06",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/praxis-remote.yml"
+        },
+        {
+          "type": "implementation",
+          "path": ".github/actions/praxis-remote/action.yml"
+        },
+        {
+          "type": "implementation",
+          "path": "scripts/praxis-remote-persist.sh"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/RemoteCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/praxis-remote-adapter.test.mjs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/remote-protocol.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T08:43:08.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T083411615Z-1bbb720a"
+      ],
+      "completedAt": "2026-09-28T08:43:08.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-07",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/RemoteCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Remote/Protocol.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/remote-agent-contract.md"
+        },
+        {
+          "type": "documentation",
+          "path": "AGENTS.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/remote-execute.test.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RemoteProtocolTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-28T08:54:50.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T084528004Z-c8f60b3c"
+      ],
+      "completedAt": "2026-09-28T08:54:50.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-09",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/TelemetryResolution.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Provenance/Actor.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/RemoteCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/remote-execute.test.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/TelemetryResolutionTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/remote-agent-contract.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T09:08:20.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T085516032Z-f48cc840"
+      ],
+      "completedAt": "2026-09-28T09:08:20.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-04",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Telemetry/Steps.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Telemetry/Usage.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileTelemetryUsageRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Remote/Protocol.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/TelemetryStepsUsageTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/remote-execute.test.mjs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/development-telemetry.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T09:25:42.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T092542114Z-d9bf566a"
+      ],
+      "completedAt": "2026-09-28T09:25:42.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-10",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "docs/remote-execution-operations.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/praxis-remote-adapter.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-28T09:27:52.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T092610074Z-43504edb"
+      ],
+      "completedAt": "2026-09-28T09:27:52.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-08",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/RemoteCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Remote/Protocol.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Contracts/Remote/RemoteJson.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/remote-execute.test.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RemoteProtocolTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/remote-protocol.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T09:39:58.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T092830624Z-ab391e0d"
+      ],
+      "completedAt": "2026-09-28T09:39:58.000Z"
     },
     {
       "id": "WI-0064",
@@ -2849,98 +3311,6 @@
         "EXE-20260927T013711437Z-b3dfcbfc"
       ],
       "completedAt": "2026-09-27T12:12:42Z"
-    },
-    {
-      "id": "WI-0072",
-      "type": "feature",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "src/Ros.Domain/Provenance/ProvenancePolicy.fs"
-        },
-        {
-          "type": "implementation",
-          "path": "src/Ros.Contracts/Ordo/ObservationJson.fs"
-        },
-        {
-          "type": "implementation",
-          "path": "src/Ros.Infrastructure/Lifecycle/Installation.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/Ros.Tests/ProvenanceTests.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/provenance-followups.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-09-27T08:50:44.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260927T084130164Z-78bc9271"
-      ],
-      "completedAt": "2026-09-27T08:50:44.000Z"
-    },
-    {
-      "id": "WI-ACTIVE",
-      "type": "task",
-      "state": "blocked",
-      "semanticState": "blocked",
-      "evidence": [],
-      "updatedAt": "2026-09-10T20:34:40.579Z",
-      "telemetryExecutionIds": [
-        "EXE-20260910T203440452Z-5ea56a27"
-      ],
-      "blockReason": "waiting"
-    },
-    {
-      "id": "WI-READY",
-      "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-10T20:34:40.136Z",
-      "telemetryExecutionIds": [
-        "EXE-20260910T203440154Z-b25c0cf1"
-      ]
-    },
-    {
-      "id": "WORK-ITEM-ATTACHMENTS",
-      "type": "feature",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "tools/ros_cli.mjs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/ros-server.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-08-21T19:01:31.398Z",
-      "completedAt": "2026-08-21T19:01:31.398Z"
-    },
-    {
-      "id": "WORKQUEUE-BACKLOG-LAYER",
-      "type": "feature",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "tools/ros_cli.mjs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/work-protocol.test.mjs"
-        }
-      ],
-      "updatedAt": "2026-08-19T13:25:23.279Z",
-      "completedAt": "2026-08-19T13:25:23.279Z"
     },
     {
       "id": "PKG-FALLBACK-GUIDE",
@@ -3016,18 +3386,28 @@
     {
       "id": "PR79-MAIN-INTEGRATION",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-28T12:28:20Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Telemetry/Steps.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/StepTelemetryTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-28T13:27:30Z",
       "telemetryExecutionIds": [
         "EXE-20260928T122823444Z-e1fc1859"
-      ]
+      ],
+      "completedAt": "2026-09-28T13:27:30Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-28T12:28:20Z",
+  "updatedAt": "2026-09-28T13:27:30Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

@@ -9,7 +9,7 @@ updated: 2026-09-27
 research_area: repository-operating-system
 priority: high
 related_documents:
-  - DF-ROS-2026-A041
+  - DF-ROS-2026-A042
   - RQ-ROS-2026-A019
   - requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md
   - protocol/praxis-envelope-v1.schema.json
@@ -28,6 +28,17 @@ provenance:
         model: unknown
         runtime: codex
       reason: "Runtime-free canonical reconciliation requirement"
+    EXE-20260928T122823444Z-e1fc1859:
+      operations: [modified]
+      at: 2026-09-28T12:46:05Z
+      actor:
+        kind: agent
+        id: openai/codex
+        provider: openai
+        model: unknown
+        runtime: codex
+      reason: "Update fallback decision reference after resolving the canonical ID collision with main"
+      evidence: [DF-ROS-2026-A042]
 ---
 
 # Requirement

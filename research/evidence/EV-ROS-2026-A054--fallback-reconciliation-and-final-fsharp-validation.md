@@ -10,13 +10,13 @@ research_area: repository-operating-system
 evidence_type: primary
 supports:
   - DF-ROS-2026-A037
-  - DF-ROS-2026-A041
+  - DF-ROS-2026-A042
   - RQ-ROS-2026-A019
   - RQ-ROS-2026-A022
 related_documents:
   - docs/fallback-reconciliation.md
   - protocol/praxis-envelope-v1.schema.json
-  - research/evidence/EV-ROS-2026-A053--step-level-execution-telemetry-validation.md
+  - research/evidence/EV-ROS-2026-A055--step-level-execution-telemetry-validation.md
 tags: [telemetry, steps, fallback, reconciliation, fsharp, validation]
 confidence: high
 provenance:
@@ -32,7 +32,7 @@ provenance:
         model: unknown
         runtime: codex
       reason: "Final F# validation and adversarial evidence for journaled fallback step reconciliation"
-      evidence: [DF-ROS-2026-A041]
+      evidence: [DF-ROS-2026-A042]
 ---
 
 # Evidence summary
