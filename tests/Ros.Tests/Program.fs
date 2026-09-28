@@ -53,4 +53,11 @@ let main _ =
     @ ProvenanceEffectTests.tests
     @ WorkReconciliationTests.tests
     @ WorkReconciliationEffectTests.tests
+    @ TelemetryCliTests.tests
+    @ TelemetryAdapterCliTests.tests
+    @ AdapterCliTests.tests
+    @ ProvenanceCliTests.tests
+    @ LifecycleCliTests.tests
+    @ EchelonDoctorTests.tests
+    @ InstalledRepositoryTests.tests
     |> TestRunner.run

@@ -64,6 +64,14 @@
     <Compile Include="ProvenanceEffectTests.fs" />
     <Compile Include="WorkReconciliationTests.fs" />
     <Compile Include="WorkReconciliationEffectTests.fs" />
+    <Compile Include="CliPortSupport.fs" />
+    <Compile Include="TelemetryCliTests.fs" />
+    <Compile Include="TelemetryAdapterCliTests.fs" />
+    <Compile Include="AdapterCliTests.fs" />
+    <Compile Include="ProvenanceCliTests.fs" />
+    <Compile Include="LifecycleCliTests.fs" />
+    <Compile Include="EchelonDoctorTests.fs" />
+    <Compile Include="InstalledRepositoryTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>
