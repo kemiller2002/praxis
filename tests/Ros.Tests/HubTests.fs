@@ -326,8 +326,6 @@ module HubTests =
                           |> Seq.filter (fun path ->
                               [ ".js"; ".mjs"; ".ts" ] |> List.contains (Path.GetExtension path)
                               || [ "package.json"; "tsconfig.json" ] |> List.contains (Path.GetFileName path))
-                          // The ./ros launcher is ported separately from the hub.
-                          |> Seq.filter ((<>) "tools/ros_fs_launcher.mjs")
                           |> Seq.toList
 
                       Assert.empty nodeArtifacts
