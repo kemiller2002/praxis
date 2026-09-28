@@ -276,3 +276,22 @@ test("pull-request persistence proposes the state on its own branch instead of p
   assert.equal(git(origin, "rev-parse", "main"), before);
   assert.equal(git(origin, "rev-parse", adapter.branch), adapter.commit);
 });
+
+test("the operator documentation covers every failure code and names only files that exist", () => {
+  const operations = read("docs/remote-execution-operations.md");
+  const codes = JSON.parse(read("schemas/praxis-remote-response.schema.json")).properties.failure.oneOf[1].properties.code.enum;
+  for (const code of codes) assert.ok(operations.includes(`\`${code}\``), `failure code ${code} is documented`);
+  for (const file of [
+    ".github/workflows/praxis-remote.yml",
+    ".github/actions/praxis-remote/",
+    ".github/actions/praxis-setup/",
+    "scripts/praxis-bootstrap.sh",
+    "scripts/praxis-remote-persist.sh"
+  ]) {
+    assert.ok(operations.includes(file), `${file} is named`);
+    assert.ok(fs.existsSync(path.join(repositoryRoot, file)), `${file} exists`);
+  }
+  for (const heading of ["Installation", "Permissions", "Version pinning and upgrades", "Invocation and results", "Concurrency and idempotency", "Security model", "Failure and retry", "Reconciliation", "Troubleshooting"]) {
+    assert.match(operations, new RegExp(`^## ${heading}$`, "m"), heading);
+  }
+});

@@ -11,6 +11,8 @@ explicit Praxis operation.
   and [`schemas/praxis-remote-response.schema.json`](../schemas/praxis-remote-response.schema.json).
 - **Typed model:** `Ros.Domain.Remote` (`src/Ros.Domain/Remote/Protocol.fs`).
 - **JSON contract:** `Ros.Contracts.Remote.RemoteJson`.
+- **Operating it** (installation, permissions, upgrades, troubleshooting):
+  [`remote-execution-operations.md`](remote-execution-operations.md).
 
 > **Status.**
 >
