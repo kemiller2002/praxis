@@ -13,6 +13,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="TestFramework.fs" />
+    <Compile Include="CliHarness.fs" />
     <Compile Include="ArchitectureTests.fs" />
     <Compile Include="ArtifactTests.fs" />
     <Compile Include="PersistenceTests.fs" />
