@@ -3298,18 +3298,28 @@
     {
       "id": "FSHARP-ONLY-MAIN-MERGE",
       "type": "maintenance",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-28T10:37:57.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/decisions/DF-ROS-2026-A042--fsharp-dotnet-only-repository.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RemoteExecuteCliTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-28T11:23:44.000Z",
       "telemetryExecutionIds": [
         "EXE-20260928T103758056Z-43f11e6e"
-      ]
+      ],
+      "completedAt": "2026-09-28T11:23:44.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-28T10:37:57.000Z",
+  "updatedAt": "2026-09-28T11:23:44.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

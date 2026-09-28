@@ -2322,10 +2322,10 @@
         "follow-up"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-28T10:37:56.000Z",
-      "updatedAt": "2026-09-28T10:37:57.000Z",
+      "updatedAt": "2026-09-28T11:23:44.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

@@ -13,7 +13,7 @@
 | DOC-PROJECT-ADMIN-README | DOC-PROJECT-ADMIN-README | complete |  |  |
 | DOC-WEB-README | DOC-WEB-README | complete |  |  |
 | FEAT-AGENT-PROVENANCE | FEAT-AGENT-PROVENANCE | complete |  |  |
-| FSHARP-ONLY-MAIN-MERGE | After merging main (GH-90 remote execution): port its Node tests to F# and renumber the colliding DF/RQ records | active | fsharp, node-removal, follow-up | high |
+| FSHARP-ONLY-MAIN-MERGE | After merging main (GH-90 remote execution): port its Node tests to F# and renumber the colliding DF/RQ records | complete | fsharp, node-removal, follow-up | high |
 | FSHARP-ONLY-REPOSITORY | Remove repository-owned Node/JavaScript/TypeScript code and tooling; make Praxis F#/.NET only and enforce it | complete | fsharp, architecture, tooling, node-removal | high |
 | GH-80 | Support auditable post-commit work-item attribution reconciliation (#80) | complete | attribution, reconciliation, provenance | high |
 | GH-84 | GH-84 | blocked |  |  |
