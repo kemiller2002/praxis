@@ -677,6 +677,20 @@
             "created"
           ],
           "reason": "Architecture decision for the remote execution protocol and GitHub Actions adapter (work item GH-90)"
+        },
+        "EXE-20260928T081238572Z-5e89d3ec": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T08:23:07.277Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Amendment 1.1.0: child-process execution with derived environment; repository opt-in; dirty tree is stale-ref (PRAXIS-REMOTE-03)"
         }
       }
     },
@@ -714,6 +728,6 @@
     ],
     "title": "Remote execution is a typed, versioned Praxis request protocol, executed by the same command implementations, with GitHub Actions as a thin first adapter",
     "updated": "2026-09-28",
-    "version": "1.0.0"
+    "version": "1.1.0"
   }
 ]

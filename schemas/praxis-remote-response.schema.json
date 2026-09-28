@@ -14,7 +14,8 @@
     "repository",
     "praxisVersion",
     "failure",
-    "result"
+    "result",
+    "persistence"
   ],
   "properties": {
     "protocol": {
@@ -82,7 +83,60 @@
     },
     "executor": {
       "type": "object",
-      "description": "Observed executor facts (PRAXIS-REMOTE-02)."
+      "description": "Observed executor facts (DF-ROS-2026-A041 section 7).",
+      "required": [
+        "kind",
+        "praxisVersion",
+        "assurance"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "runId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "runAttempt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "workflowRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "repository": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "host": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "principal": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "praxisVersion": {
+          "type": "string"
+        },
+        "assurance": {
+          "const": "observed-by-executor"
+        }
+      },
+      "additionalProperties": false
     },
     "failure": {
       "oneOf": [
@@ -162,6 +216,23 @@
     },
     "result": {
       "description": "The executing command's own machine-readable output, verbatim, or null."
+    },
+    "persistence": {
+      "type": "object",
+      "description": "Praxis-owned paths this request changed and the adapter may persist (including its journal entry). Empty for reads, rejections and failures.",
+      "required": [
+        "paths"
+      ],
+      "properties": {
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^\\.ros/"
+          }
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,

@@ -39,7 +39,7 @@
 | PKG-PUBLISH-READINESS | PKG-PUBLISH-READINESS | complete |  |  |
 | PRAXIS-REMOTE-01 | Remote protocol v1 contract: schemas, typed domain model, validation, fingerprint, decision order | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-02 | Remote provenance roles: asserted request actor, observed executor, transport principal | complete | remote-execution, gh-90 | high |
-| PRAXIS-REMOTE-03 | praxis remote execute boundary with request journal, SHA binding and structured results | blocked | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-03 | praxis remote execute boundary with request journal, SHA binding and structured results | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-04 | Execution steps, step-scoped usage/cost and the evidence-quality projection | ready | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-05 | Deterministic verifiable Praxis bootstrap: immutable release assets, attestation, fail-closed pins | ready | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-06 | GitHub Actions reusable workflow adapter for praxis.remote | blocked | remote-execution, gh-90 | high |

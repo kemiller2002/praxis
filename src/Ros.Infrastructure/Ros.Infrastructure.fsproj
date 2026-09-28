@@ -36,6 +36,7 @@
     <Compile Include="Lifecycle/Payload.fs" />
     <Compile Include="Lifecycle/Installation.fs" />
     <Compile Include="Remote/GitHubActionsExecutor.fs" />
+    <Compile Include="Remote/FileRemoteRepository.fs" />
   </ItemGroup>
 
   <!-- The scaffold this CLI installs, compiled into the assembly so a released

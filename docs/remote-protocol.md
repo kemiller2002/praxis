@@ -12,12 +12,16 @@ explicit Praxis operation.
 - **Typed model:** `Ros.Domain.Remote` (`src/Ros.Domain/Remote/Protocol.fs`).
 - **JSON contract:** `Ros.Contracts.Remote.RemoteJson`.
 
-> **Status.** Only the contract layer is implemented: the typed model,
-> validation, fingerprint, decision order and failure taxonomy. The
-> executor entry point (`praxis remote execute`, PRAXIS-REMOTE-03) and the
-> GitHub Actions adapter (PRAXIS-REMOTE-06) are tracked work under `GH-90`
-> and do not exist yet. Nothing on this page implies a command you can run
-> today.
+> **Status.**
+>
+> - **Implemented:** the contract (PRAXIS-REMOTE-01), identity roles
+>   (PRAXIS-REMOTE-02), and the transport-independent executor boundary
+>   `praxis remote execute` (PRAXIS-REMOTE-03, see [Executing a
+>   request](#executing-a-request)).
+> - **Not implemented yet:** the GitHub Actions adapter (PRAXIS-REMOTE-06)
+>   and the verified release bootstrap (PRAXIS-REMOTE-05). Both are tracked
+>   under `GH-90`. Until they exist, a cloud agent still needs someone else
+>   to run the executor for it.
 
 ## Principles
 
@@ -285,3 +289,67 @@ Each of these is recorded separately. None is ever collapsed into another.
 | Work-item attribution | The work item a change is attributed to. |
 
 A runner never becomes the author of an agent's work (PRAXIS-REMOTE-02).
+
+## Executing a request
+
+```
+praxis remote execute --request FILE [--grant read|mutate|complete|reconcile]* [--output FILE] [--timeout-seconds N]
+```
+
+(`ros remote execute` works the same, for compatibility.) The command prints
+the response JSON, writes it to `--output` when given, and exits with one of
+these codes:
+
+- `0` when the outcome is `succeeded`.
+- `1` for any other outcome.
+- `2` for bad command-line arguments.
+
+**Who runs it.** The executor boundary is run by a trusted adapter, for
+example a CI job. It is not run by the requester.
+
+**Grants.** `--grant` is the transport's grant, set from trusted adapter
+configuration. It is intersected with the repository's own opt-in:
+
+```json
+{ "remote": { "capabilities": ["read", "mutate", "complete", "reconcile"] } }
+```
+
+This setting lives in `ros.json`. A repository that says nothing allows
+remote **reads only**, so adding the executor never grants mutation by
+itself.
+
+**How the command runs.** An accepted request runs this same binary's
+local command in a child process:
+
+- It passes a typed argument list and never uses a shell.
+- It uses the executor's clock for `--occurred-at`.
+- It uses a *derived* environment. The requester's asserted actor is set
+  explicitly, the executor's observed facts are included, and only an
+  operational allow-list of variables survives. Host identity markers and
+  credentials are never passed on. See `docs/agent-provenance.md`.
+
+**Around a mutation, the boundary also:**
+
+1. Refuses a working tree with uncommitted changes (`stale-ref`), because
+   such a tree is not the commit the request names.
+2. Records `validate` findings before and after. A mutation that introduces
+   a new validation error is undone and reported as `validation-failed`.
+3. Undoes anything written by a refused, failed, or timed-out command, and
+   keeps only Praxis-owned state (`.ros/**` outside locks and transactions).
+4. Writes the journal entry `.ros/remote/requests/<requestId>.json`. It
+   holds the fingerprint, asserted requester, principal, repository binding
+   and full response. `:` in a request ID becomes `~` in the file name.
+5. Reports every path the adapter may commit in `persistence.paths`,
+   including the journal entry. The adapter commits exactly those paths, in
+   one commit.
+
+**Concurrency.** Mutations are serialized per working tree, with the journal
+lookup, command and journal write held under one lock. Across runners,
+`expectedSha` and a non-fast-forward push serialize them. A request that
+lost the race fails as `stale-ref` and must be re-formed.
+
+**Finding out what happened.** `request.status` reports whether a request
+ID is recorded, and returns the recorded response when it is. A mutation
+whose result was lost is recovered by retrying it with the same
+`requestId`, or by asking `request.status`. The answer comes from the
+repository, never from guessing.

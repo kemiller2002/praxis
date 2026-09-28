@@ -54,4 +54,5 @@ let main _ =
     @ WorkReconciliationEffectTests.tests
     @ RemoteProtocolTests.tests
     @ RemoteIdentityTests.tests
+    @ RemoteExecutionTests.tests
     |> TestRunner.run

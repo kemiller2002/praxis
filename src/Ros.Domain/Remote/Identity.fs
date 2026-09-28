@@ -2,22 +2,6 @@ namespace Ros.Domain.Remote
 
 open Ros.Domain.Provenance
 
-/// What the executor itself observed about where and how a remote request
-/// ran (`DF-ROS-2026-A041` section 7). These are facts about the *runner*,
-/// kept apart from the *actor* the request asserts, so that a CI runner
-/// executing an agent's request can never become the apparent author of
-/// that agent's work. `Kind` names the executor family (for example
-/// `github-actions`); nothing in the Domain interprets it.
-type ExecutorFacts =
-    { Kind: string
-      RunId: string option
-      RunAttempt: string option
-      WorkflowRef: string option
-      Repository: string option
-      Host: string option
-      Principal: string option
-      PraxisVersion: string }
-
 /// Identity roles for a remote request (PRAXIS-REMOTE-02, `PRX-REMOTE-005`
 /// to `007`). The same command implementations run a remote request as a
 /// local one, but in a child process whose environment is *derived*, not

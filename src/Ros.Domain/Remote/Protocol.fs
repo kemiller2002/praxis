@@ -822,6 +822,22 @@ module RequestDecision =
                         [ { Field = "repository.expectedSha"; Message = "does not match the observed commit" } ]
                 | _ -> Decision.Execute
 
+/// What the executor itself observed about where and how a remote request
+/// ran (`DF-ROS-2026-A041` section 7). These are facts about the *runner*,
+/// kept apart from the *actor* the request asserts, so that a CI runner
+/// executing an agent's request can never become the apparent author of
+/// that agent's work. `Kind` names the executor family (for example
+/// `github-actions`); nothing in the Domain interprets it.
+type ExecutorFacts =
+    { Kind: string
+      RunId: string option
+      RunAttempt: string option
+      WorkflowRef: string option
+      Repository: string option
+      Host: string option
+      Principal: string option
+      PraxisVersion: string }
+
 /// The structured response. `Result` is the executing command's own
 /// machine-readable output, carried verbatim.
 type Response =
@@ -834,6 +850,8 @@ type Response =
       Repository: RepositoryBinding
       ObservedSha: string option
       PraxisVersion: string
+      Executor: ExecutorFacts option
+      Persistence: string list
       Result: string option }
 
 [<RequireQualifiedAccess>]
@@ -848,6 +866,8 @@ module Response =
           Repository = repository
           ObservedSha = observedSha
           PraxisVersion = praxisVersion
+          Executor = None
+          Persistence = []
           Result = None }
 
     let succeeded praxisVersion (request: Request) observedSha result =
@@ -860,6 +880,8 @@ module Response =
           Repository = request.Repository
           ObservedSha = observedSha
           PraxisVersion = praxisVersion
+          Executor = None
+          Persistence = []
           Result = result }
 
     /// A replay returns the recorded response unchanged except for the

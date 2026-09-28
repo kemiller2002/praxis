@@ -296,6 +296,33 @@ recorded; argument errors exit `2`. `--dry-run` shows the assessment without
 recording. See "Post-hoc attribution reconciliation" in
 [`work-protocol.md`](work-protocol.md) for when to use it and when not to.
 
+### `remote execute`
+
+```
+praxis remote execute --request FILE [--grant read|mutate|complete|reconcile]*
+                      [--output FILE] [--timeout-seconds N]
+```
+
+`remote execute` runs one `praxis.remote` request on behalf of an agent that
+has no local Praxis runtime. It is the executor side of the protocol and is
+run by a trusted adapter, not by the requester.
+
+- **Same rules as local commands.** The request is carried out by the same
+  command implementation as the local CLI.
+- **Grants.** `--grant` states what the transport allows. It is intersected
+  with the repository's `ros.json` setting `remote.capabilities`. When that
+  setting is absent, only reads are allowed.
+- **Idempotent retries.** A mutation is bound to `repository.expectedSha`
+  and journalled under `.ros/remote/requests/`, so retrying the same
+  request ID replays the recorded outcome instead of running again.
+- **Output.** The command prints the response JSON.
+- **Exit codes:**
+  - `0` when the outcome is `succeeded`
+  - `1` for any other outcome
+  - `2` for argument errors
+
+See [`remote-protocol.md`](remote-protocol.md) for the full protocol.
+
 ### Identity flags and provenance commands
 
 Every work transition (`work start|begin|resume|block|complete|done`), `work reconcile`, `add`

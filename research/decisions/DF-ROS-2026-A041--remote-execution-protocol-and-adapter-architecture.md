@@ -2,7 +2,7 @@
 id: DF-ROS-2026-A041
 title: Remote execution is a typed, versioned Praxis request protocol, executed by the same command implementations, with GitHub Actions as a thin first adapter
 status: accepted
-version: 1.0.0
+version: 1.1.0
 owners:
   - repository-governance
 created: 2026-09-28
@@ -39,6 +39,16 @@ provenance:
         runtime: claude-code
       reason: "Architecture decision for the remote execution protocol and GitHub Actions adapter (work item GH-90)"
       evidence: [EV-ROS-2026-A053]
+    EXE-20260928T081238572Z-5e89d3ec:
+      operations: [modified]
+      at: 2026-09-28T08:23:07.277Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Amendment 1.1.0: child-process execution with derived environment; repository opt-in; dirty tree is stale-ref (PRAXIS-REMOTE-03)"
 derived_from: [RQ-ROS-2026-A021]
 ---
 # Context
@@ -389,6 +399,32 @@ other increment builds on its types.
 The captured #80 follow-ups `ATTR-COMPLETE-BASE-REF-SWEEP` and
 `ATTR-RECONCILE-SYMLINK-SUBMODULE` stay separate. PRAXIS-REMOTE-09 depends
 on the reconciliation they harden but does not absorb them.
+
+# Amendment 1.1.0 (2026-09-28, PRAXIS-REMOTE-02/03)
+
+Section 3's "in-process" routing is implemented as a **child process of
+the same binary**, not as a call inside the executor's own process. The
+child receives the typed argument list and an environment *derived* by
+`RemoteIdentity.childEnvironment`.
+
+The command implementation and its rules are unchanged. The one difference
+is the environment:
+
+- A derived environment is the only way to guarantee that a runner's own
+  identity markers and credentials cannot reach the command.
+- Identity discovery reads the process environment. A shared process could
+  therefore not keep the requester's identity separate from the runner's.
+
+Validation parity is proven by `tests/remote-execute.test.mjs`: local and
+remote `work.start` produce the same work state, and remote `validate`
+returns the local validation document.
+
+Two rules added during implementation:
+
+- **Remote mutation is opt-in per repository.** It requires `ros.json`
+  `remote.capabilities`. Without it, the effective grant is `read`.
+- **A dirty working tree is `stale-ref`.** It is not the commit the request
+  names.
 
 # Consequences
 

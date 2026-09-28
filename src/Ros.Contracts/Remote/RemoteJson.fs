@@ -31,7 +31,7 @@ module RemoteJson =
 
     type private Parsed<'value> = 'value option * Problem list
 
-    let private problem field message = { Field = field; Message = message }
+    let private problem field message : Problem = { Field = field; Message = message }
 
     let private isExtension (name: string) = name.StartsWith "x-"
 
@@ -491,6 +491,27 @@ module RemoteJson =
             writer.WriteEndObject()
             writer.WriteString("praxisVersion", response.PraxisVersion)
 
+            match response.Executor with
+            | Some facts ->
+                writer.WriteStartObject("executor")
+                writer.WriteString("kind", facts.Kind)
+                writeOptionalString writer "runId" facts.RunId
+                writeOptionalString writer "runAttempt" facts.RunAttempt
+                writeOptionalString writer "workflowRef" facts.WorkflowRef
+                writeOptionalString writer "repository" facts.Repository
+                writeOptionalString writer "host" facts.Host
+                writeOptionalString writer "principal" facts.Principal
+                writer.WriteString("praxisVersion", facts.PraxisVersion)
+                writer.WriteString("assurance", "observed-by-executor")
+                writer.WriteEndObject()
+            | None -> ()
+
+            writer.WriteStartObject("persistence")
+            writer.WriteStartArray("paths")
+            response.Persistence |> List.iter writer.WriteStringValue
+            writer.WriteEndArray()
+            writer.WriteEndObject()
+
             match response.Failure with
             | Some value -> writeFailure writer value
             | None -> writer.WriteNull("failure")
@@ -498,7 +519,8 @@ module RemoteJson =
             match response.Result with
             | Some json ->
                 writer.WritePropertyName("result")
-                writer.WriteRawValue(json)
+                use result = JsonDocument.Parse json
+                result.RootElement.WriteTo writer
             | None -> writer.WriteNull("result")
 
             writer.WriteEndObject())
@@ -513,3 +535,144 @@ module RemoteJson =
             failure.Repository
             observedSha
             failure.Failure
+
+    /// The findings of a `validate --json` document, reduced to what
+    /// identifies each one. `None` when the text is not such a document.
+    let parseValidationFindings (text: string) : ValidationFinding list option =
+        try
+            use document = JsonDocument.Parse text
+            let root = document.RootElement
+
+            match root.TryGetProperty "findings" with
+            | true, findings when findings.ValueKind = JsonValueKind.Array ->
+                let read (item: JsonElement) name =
+                    match item.TryGetProperty(name: string) with
+                    | true, value when value.ValueKind = JsonValueKind.String -> value.GetString()
+                    | _ -> ""
+
+                findings.EnumerateArray()
+                |> Seq.map (fun item ->
+                    { Severity = read item "severity"
+                      Path = read item "path"
+                      Field = read item "field"
+                      Message = read item "message" })
+                |> Seq.toList
+                |> Some
+            | _ -> None
+        with :? JsonException ->
+            None
+
+    /// A command's standard output as a JSON value: embedded as-is when it
+    /// is a JSON document, otherwise carried as text so nothing is lost.
+    let commandResult (stdout: string) : string =
+        let trimmed = stdout.Trim()
+
+        let isJson =
+            trimmed.Length > 0
+            && (try
+                    use _ = JsonDocument.Parse trimmed
+                    true
+                with :? JsonException ->
+                    false)
+
+        if isJson then
+            trimmed
+        else
+            use stream = new IO.MemoryStream()
+            use writer = new Utf8JsonWriter(stream)
+            writer.WriteStartObject()
+            writer.WriteString("text", stdout)
+            writer.WriteEndObject()
+            writer.Flush()
+            Text.Encoding.UTF8.GetString(stream.ToArray())
+
+/// The durable request journal (`.ros/remote/requests/<id>.json`,
+/// `DF-ROS-2026-A041` section 5). One entry per accepted, successful
+/// mutating request, committed in the same commit as the state it
+/// describes, so a lost result is always recoverable from the repository
+/// itself: request -> actor/executor -> execution -> events -> state.
+[<RequireQualifiedAccess>]
+module RemoteJournal =
+    [<Literal>]
+    let Schema = "praxis.remote-journal"
+
+    [<Literal>]
+    let SchemaVersion = 1
+
+    type Entry =
+        { Request: Request
+          Fingerprint: string
+          RecordedAt: string
+          Principal: string option
+          Response: string }
+
+    let render (entry: Entry) =
+        JsonRendering.renderIndented (fun writer ->
+            let optional (name: string) (value: string option) =
+                match value with
+                | Some text -> writer.WriteString(name, text)
+                | None -> writer.WriteNull(name)
+
+            writer.WriteStartObject()
+            writer.WriteString("schema", Schema)
+            writer.WriteNumber("schemaVersion", SchemaVersion)
+            writer.WriteString("requestId", entry.Request.RequestId)
+            writer.WriteString("fingerprint", entry.Fingerprint)
+            writer.WriteString("protocolVersion", ProtocolVersion.code entry.Request.ProtocolVersion)
+            writer.WriteString("operation", Operation.code entry.Request.Operation)
+            writer.WriteString("recordedAt", entry.RecordedAt)
+            optional "requestedAt" (entry.Request.RequestedAt |> Option.map (fun value -> value.ToString("o", CultureInfo.InvariantCulture)))
+            writer.WriteStartObject("repository")
+            optional "ref" entry.Request.Repository.Ref
+            optional "expectedSha" entry.Request.Repository.ExpectedSha
+            writer.WriteEndObject()
+            writer.WriteStartObject("requester")
+            writer.WriteString("assurance", "asserted-by-request")
+
+            match entry.Request.Actor with
+            | Some requestActor ->
+                writer.WritePropertyName("actor")
+                writer.WriteRawValue((Ros.Contracts.Provenance.ActorJson.node requestActor.Actor).ToJsonString())
+                optional "sessionId" requestActor.SessionId
+            | None -> writer.WriteNull("actor")
+
+            optional "execution" entry.Request.ExecutionId
+            writer.WriteEndObject()
+            optional "principal" entry.Principal
+            writer.WritePropertyName("response")
+            writer.WriteRawValue(entry.Response)
+            writer.WriteEndObject())
+
+    /// The recorded fingerprint and response of an entry, or an error when
+    /// the entry is not a journal record this version understands (which
+    /// fails closed: an unreadable record is never treated as absent).
+    let read (text: string) : Result<string * string, string> =
+        try
+            use document = JsonDocument.Parse text
+            let root = document.RootElement
+
+            let property (name: string) =
+                match root.TryGetProperty name with
+                | true, value -> Some value
+                | _ -> None
+
+            match property "schema", property "schemaVersion", property "fingerprint", property "response" with
+            | Some schema, Some version, Some fingerprint, Some response when
+                schema.ValueKind = JsonValueKind.String
+                && schema.GetString() = Schema
+                && version.ValueKind = JsonValueKind.Number
+                && version.GetInt32() = SchemaVersion
+                && fingerprint.ValueKind = JsonValueKind.String
+                && response.ValueKind = JsonValueKind.Object ->
+                Ok(fingerprint.GetString(), response.GetRawText())
+            | _ -> Error "not a praxis.remote-journal version 1 record"
+        with :? JsonException as error ->
+            Error error.Message
+
+    /// The recorded response, flagged as a replay and re-rendered.
+    let replayedResponse (recorded: string) =
+        let node = Nodes.JsonNode.Parse recorded
+        node["replayed"] <- Nodes.JsonValue.Create true
+
+        node.ToJsonString(JsonSerializerOptions(WriteIndented = true, Encoder = Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping))
+        + "\n"
