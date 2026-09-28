@@ -18,30 +18,46 @@ Usage:
 EOF
 }
 
-install_ordo() {
-  version="${1:-}"
+# Downloads a tool's installer to a file before running it. Piping `curl`
+# straight into `sh` exits 0 when the download fails (a POSIX pipeline's
+# status is its last command's), which silently "succeeded" for a pinned
+# version that does not exist (EV-ROS-2026-A053, S1). A missing pinned
+# version must fail explicitly and never fall forward to another version.
+run_installer() {
+  repo="$1"
+  version="${2:-}"
   ref="main"
   [ -n "$version" ] && ref="v$version"
+  base="${ECHELON_INSTALLER_BASE_URL:-https://raw.githubusercontent.com/kemiller2002}"
+  installer="$(mktemp "${TMPDIR:-/tmp}/echelon-installer.XXXXXX")"
+  if ! curl -fsSL "$base/$repo/$ref/scripts/install-native.sh" -o "$installer"; then
+    rm -f "$installer"
+    if [ -n "$version" ]; then
+      echo "Could not download the $repo installer for pinned version $version; it may not exist. Nothing was installed." >&2
+    else
+      echo "Could not download the $repo installer. Nothing was installed." >&2
+    fi
+    return 1
+  fi
+  status=0
   if [ -n "$version" ]; then
-    curl -fsSL "https://raw.githubusercontent.com/kemiller2002/ordo/$ref/scripts/install-native.sh" |
-      sh -s -- --version "$version" --install-base "$HOME_DIR"
+    sh "$installer" --version "$version" --install-base "$HOME_DIR" || status=$?
   else
-    curl -fsSL "https://raw.githubusercontent.com/kemiller2002/ordo/$ref/scripts/install-native.sh" |
-      sh -s -- --install-base "$HOME_DIR"
+    sh "$installer" --install-base "$HOME_DIR" || status=$?
+  fi
+  rm -f "$installer"
+  if [ "$status" -ne 0 ]; then
+    echo "The $repo installer failed with exit code $status." >&2
+    return "$status"
   fi
 }
 
+install_ordo() {
+  run_installer ordo "${1:-}"
+}
+
 install_praxis() {
-  version="${1:-}"
-  ref="main"
-  [ -n "$version" ] && ref="v$version"
-  if [ -n "$version" ]; then
-    curl -fsSL "https://raw.githubusercontent.com/kemiller2002/praxis/$ref/scripts/install-native.sh" |
-      sh -s -- --version "$version" --install-base "$HOME_DIR"
-  else
-    curl -fsSL "https://raw.githubusercontent.com/kemiller2002/praxis/$ref/scripts/install-native.sh" |
-      sh -s -- --install-base "$HOME_DIR"
-  fi
+  run_installer praxis "${1:-}"
 }
 
 repository_root() {
@@ -67,6 +83,10 @@ manifest_version() {
 setup_all() {
   ordo_version="$(manifest_version ordo || true)"
   praxis_version="$(manifest_version praxis || true)"
+  if [ -n "$(manifest_path)" ]; then
+    [ -n "$ordo_version" ] || echo "warning: $(manifest_path) does not pin ordo; installing the latest release." >&2
+    [ -n "$praxis_version" ] || echo "warning: $(manifest_path) does not pin praxis; installing the latest release." >&2
+  fi
   install_ordo "$ordo_version"
   install_praxis "$praxis_version"
   echo

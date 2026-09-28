@@ -1874,6 +1874,368 @@
       },
       "source": "github-issue",
       "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "GH-90",
+      "title": "Make remote/cloud-agent Praxis execution a first-class capability (#90)",
+      "description": "Umbrella for issue #90 (PRX-REMOTE-001..044): govern cloud agents without a local .NET/Praxis runtime through a typed, versioned, transport-independent remote protocol, with GitHub Actions as the first thin adapter. Builds on #80 (GH-80, RQ-ROS-2026-A020). Children: PRAXIS-REMOTE-NN.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:39:24.585Z",
+      "updatedAt": "2026-09-28T07:39:31.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+    },
+    {
+      "id": "PRAXIS-REMOTE-01",
+      "title": "Remote protocol v1 contract: schemas, typed domain model, validation, fingerprint, decision order",
+      "description": "Child of GH-90 (DF-ROS-2026-A041 sec. 1-4). Versioned praxis.remote request/response schemas; typed Ros.Domain.Remote model; allow-listed operations with capability classes; untrusted-input and secret-material validation; semantic fingerprint excluding expectedSha; pure decision order (shape, version, operation, arguments, SHA presence, authorization, replay/idempotency-conflict, stale-ref); failure taxonomy with retry advice; JSON contract parse/render; docs/remote-protocol.md. Covers PRX-REMOTE-002/003/015/017/021/022/023/025/031/032/038/040 (contract level). Depends on: none.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:45:00.789Z",
+      "updatedAt": "2026-09-28T08:03:42.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+    },
+    {
+      "id": "PRAXIS-REMOTE-02",
+      "title": "Remote provenance roles: asserted request actor, observed executor, transport principal",
+      "description": "Child of GH-90 (DF-ROS-2026-A041 sec. 7). Record request actor (asserted), executor (observed: kind, run, attempt, workflow ref, Praxis version) and transport principal separately on executions and journal entries; host detection never replaces a supplied actor and a runner never becomes the actor of an agent's request; unknown stays unknown; record the Praxis binary version per execution. Covers PRX-REMOTE-005/006/007/024(version). Depends on: PRAXIS-REMOTE-01.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:45:01.577Z",
+      "updatedAt": "2026-09-28T08:12:11.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+    },
+    {
+      "id": "PRAXIS-REMOTE-03",
+      "title": "praxis remote execute boundary with request journal, SHA binding and structured results",
+      "description": "Child of GH-90 (DF-ROS-2026-A041 sec. 3-6). praxis remote execute --request FILE --context FILE routes typed requests in-process into the same command implementations as the local CLI; .ros/remote/requests journal (replay, idempotency-conflict, timeout-after-commit recovery); expectedSha vs observed HEAD; request.status; structured response; local/remote differential parity tests. Covers PRX-REMOTE-001/004/013/014/015/016/017/018/026/027/028. Depends on: PRAXIS-REMOTE-01, PRAXIS-REMOTE-02.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:45:02.843Z",
+      "updatedAt": "2026-09-28T08:25:44.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+    },
+    {
+      "id": "PRAXIS-REMOTE-04",
+      "title": "Execution steps, step-scoped usage/cost and the evidence-quality projection",
+      "description": "Child of GH-90 (DF-ROS-2026-A041 sec. 8). Steps with identity and outcome inside an execution; step-scoped token/cost measurements; documented and tested projection of quality x source.type onto measured/provider-reported/agent-reported/calculated/estimated/unavailable; aggregation by execution, step, provider, model and time period; missing stays unavailable. Covers PRX-REMOTE-003(steps)/004(steps)/008/009/010. Depends on: none.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:45:04.148Z",
+      "updatedAt": "2026-09-28T09:25:42.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+    },
+    {
+      "id": "PRAXIS-REMOTE-05",
+      "title": "Deterministic verifiable Praxis bootstrap: immutable release assets, attestation, fail-closed pins",
+      "description": "Child of GH-90 (DF-ROS-2026-A041 sec. 9; EV-ROS-2026-A053 S1-S3). Refuse to overwrite an existing version's assets with a different digest; build-provenance attestation; pinned install fails closed on a missing tag or key (fixes echelon.sh silent success); bootstrap reads .echelon/toolchain.json, verifies checksum and attestation, caches by version+digest, never falls forward; SHA-pin third-party actions. Covers PRX-REMOTE-012/024/036(cache). Depends on: none.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:45:04.826Z",
+      "updatedAt": "2026-09-28T08:33:09.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+    },
+    {
+      "id": "PRAXIS-REMOTE-06",
+      "title": "GitHub Actions reusable workflow adapter for praxis.remote",
+      "description": "Child of GH-90 (DF-ROS-2026-A041 sec. 10). Thin reusable workflow (workflow_dispatch + workflow_call): request via env/file never interpolated; read vs write jobs with least privilege; trusted context from GitHub; commit only Praxis-reported paths with request trailers; push without force or PR mode; result artifact, summary and outcome mapping; no fork/PR trust; no domain logic in YAML. Covers PRX-REMOTE-011/018/020/021/022/029/032. Depends on: PRAXIS-REMOTE-03, PRAXIS-REMOTE-05.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:45:05.564Z",
+      "updatedAt": "2026-09-28T08:43:08.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+    },
+    {
+      "id": "PRAXIS-REMOTE-07",
+      "title": "Remote discovery (praxis.describe) and concise agent contract",
+      "description": "Child of GH-90 (DF-ROS-2026-A041 sec. 11). praxis remote describe document (availability, versions, protocol versions, operations, required inputs, capabilities, current work/executions, result retrieval); docs/remote-agent-contract.md; AGENTS.md pointer without scripts; praxis npm bin. Covers PRX-REMOTE-013/033/039/044. Depends on: PRAXIS-REMOTE-03, PRAXIS-REMOTE-06.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:45:06.777Z",
+      "updatedAt": "2026-09-28T08:54:50.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+    },
+    {
+      "id": "PRAXIS-REMOTE-08",
+      "title": "Ordered batch/session remote requests",
+      "description": "Child of GH-90. Multiple ordered operations in one request/runner with per-operation identity, outcome, evidence and telemetry; stop-at-first-failure with unambiguous partial results. Covers PRX-REMOTE-036/037. Depends on: PRAXIS-REMOTE-03.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "low",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:45:08.011Z",
+      "updatedAt": "2026-09-28T09:39:58.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+    },
+    {
+      "id": "PRAXIS-REMOTE-09",
+      "title": "Remote reconciliation (#80), fallback records and successor continuation",
+      "description": "Child of GH-90. Expose work.reconcile remotely preserving Git author/committer and reconciliation actor (RQ-ROS-2026-A020); conforming fallback records later reconciled and never promoted to observed; successor execution linked to predecessor without impersonation. Related (not absorbed): ATTR-COMPLETE-BASE-REF-SWEEP, ATTR-RECONCILE-SYMLINK-SUBMODULE. Covers PRX-REMOTE-019/034/035. Depends on: PRAXIS-REMOTE-02, PRAXIS-REMOTE-03.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:45:09.369Z",
+      "updatedAt": "2026-09-28T09:08:20.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+    },
+    {
+      "id": "PRAXIS-REMOTE-10",
+      "title": "Remote execution operator documentation",
+      "description": "Child of GH-90. Installation, permissions, version pinning/upgrade, invocation, result retrieval, concurrency/idempotency, security model, failure/retry, reconciliation, troubleshooting. Covers PRX-REMOTE-043. Depends on: PRAXIS-REMOTE-06, PRAXIS-REMOTE-07.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:45:10.619Z",
+      "updatedAt": "2026-09-28T09:27:52.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+    },
+    {
+      "id": "PRAXIS-REMOTE-11",
+      "title": "End-to-end no-.NET cloud-agent proof",
+      "description": "Child of GH-90. Caller with GitHub access only, no .NET/Praxis, discovers the capability, starts work under its own execution, records step evidence/telemetry, pinned Praxis validates and persists, structured result retrieved, successor continues without impersonation; remaining PRX-REMOTE-041 live tests. Requires the adapter merged to the default branch (human action). Covers PRX-REMOTE-028/029/041/042. Depends on: PRAXIS-REMOTE-04, PRAXIS-REMOTE-06, PRAXIS-REMOTE-07, PRAXIS-REMOTE-09.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "high",
+      "status": "blocked",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:45:12.033Z",
+      "updatedAt": "2026-09-28T09:40:22.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90",
+      "blockedReason": "Praxis-side dependencies (04, 06, 07, 09) are complete. Blocked on human action: (1) merge PR #91 so praxis-remote.yml exists on the default branch (GitHub only dispatches workflows there); (2) publish a Praxis release containing 'remote execute' with build-provenance attestations (version bump; native-release.yml now attests and never clobbers); (3) pin that release in .echelon/toolchain.json and opt in via ros.json remote.capabilities in the proving repository."
+    },
+    {
+      "id": "PRAXIS-REMOTE-12",
+      "title": "Conditor installs and configures the Praxis remote surface",
+      "description": "Child of GH-90. Conditor pins the Praxis version and installs the standard remote workflow/policy without copying Praxis business logic; manual installation stays documented. External repository. Covers PRX-REMOTE-030. Depends on: PRAXIS-REMOTE-11.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "low",
+      "status": "blocked",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:45:13.354Z",
+      "updatedAt": "2026-09-28T07:45:14.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90",
+      "blockedReason": "Depends on PRAXIS-REMOTE-11 (DF-ROS-2026-A041 decomposition)"
+    },
+    {
+      "id": "ACTOR-KIND-ANCHOR",
+      "title": "ActorKind extension pattern accepts a trailing newline ($ anchor)",
+      "description": "ActorKind.tryParse (src/Ros.Domain/Provenance/Actor.fs) matches ^x-[a-z0-9][a-z0-9-]*$ with a .NET $ anchor, which also matches before a trailing newline, so 'x-agent\\n' parses as an extension kind. Found while hardening praxis.remote input validation (PRAXIS-REMOTE-01 guards its own path with a control-character check). Fix: anchor with \\z and add a test; audit other Domain patterns for the same anchor.",
+      "tags": [
+        "provenance",
+        "security"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:59:26.521Z",
+      "updatedAt": "2026-09-28T07:59:26.521Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "PRAXIS-REMOTE-01"
+    },
+    {
+      "id": "PRAXIS-NPM-BIN",
+      "title": "Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy",
+      "description": "PRX-REMOTE-039: new interfaces should say praxis. The native installer already provides praxis; the npm package still provides only ros, and site/index.html plus tests/site/content.test.mjs deliberately assert that. Adding the npm bin must change the site copy and its test together (GH-84's claim audit), so it was left out of PRAXIS-REMOTE-07.",
+      "tags": [
+        "rename",
+        "gh-90"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-28T09:09:00.360Z",
+      "updatedAt": "2026-09-28T09:09:00.360Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "PRAXIS-REMOTE-07"
     }
   ]
 }

@@ -160,6 +160,70 @@ Signed events, verified execution receipts, and key management are deferred.
 They belong behind the adapter boundary or in an attestation service, not in
 ROS core; see `DF-ROS-2026-A036`.
 
+## Remote execution: requester, executor, and principal
+
+A remote request can come from a cloud agent without a local Praxis
+runtime; see [`remote-protocol.md`](remote-protocol.md) and
+`DF-ROS-2026-A041`. When it does, the process that runs Praxis is a runner,
+for example a GitHub Actions job, acting on the agent's behalf. Three
+different facts are recorded, and none of them is ever collapsed into
+another:
+
+- **Requester (the actor).** This is the actor the request *asserts*. It
+  becomes the execution's `identity` and the actor on its events. The
+  execution marks it with `identity.assurance: "asserted-by-request"`.
+  - If the request does not name an actor, every field is `unknown`. It is
+    never recorded as the runner.
+- **Executor.** These are the facts the runner *observed* about itself: its
+  kind, run ID and attempt, workflow ref, repository, host, and the Praxis
+  version it ran. They are recorded as the execution's `executor` block,
+  marked `assurance: "observed-by-executor"`.
+  - The runner's run ID belongs to the executor, not to the agent. It is
+    never copied into `identity.runId`.
+- **Transport principal.** This is the account the transport authenticated,
+  such as the GitHub user who triggered the run. It is recorded as
+  `executor.principal`. It is who *asked the runner*, which can differ from
+  the actor who did the work.
+
+The command runs in a child process whose environment is *derived*, not
+inherited (`RemoteIdentity.childEnvironment`):
+
+- Every variable that identity discovery reads is removed, so the runner's
+  own markers cannot be read as the agent's identity. These include
+  `GITHUB_ACTIONS`, `GITHUB_RUN_ID`, an agent session variable, and a stray
+  `ROS_ACTOR`.
+- The requester's actor is set explicitly, with `unknown` for anything it
+  did not state.
+- Only an allow-list of operational variables survives, such as `PATH`,
+  `HOME` and the locale. Tokens and provider credentials never reach the
+  command, its telemetry, or its diagnostics.
+
+A local execution has no `executor` block and no `assurance` field. Its
+identity is self-reported by the local process, exactly as before.
+
+## Continuing another actor's work
+
+A work transition links only executions that the acting process may
+continue (`ActorResolution.mayContinue`). That means the same actor, and
+nothing known about the run (session, conversation, or CI run) differing.
+Two cases follow:
+
+- When a different agent resumes a work item, it gets a new execution whose
+  `identity.parentExecutionId` names the predecessor.
+- When the same agent resumes in a new session, the same happens.
+
+A predecessor's still-active execution is never linked to the successor's
+events or recovered for it. The one exception is completing the work item,
+which still finalizes every active execution for that item.
+
+The item's timeline events (`work.blocked`, `work.resumed`) are still
+recorded on every active execution as clock facts about the item. Such an
+event records when the item changed state. It does not attribute the
+successor's work to the predecessor.
+
+Remote requests follow the same rule. A request whose `execution.id` names
+an execution the requester may not continue is refused as `domain-rejected`.
+
 ## Artifact provenance
 
 ### Canonical serialization

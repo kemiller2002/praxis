@@ -25,5 +25,6 @@
     <Compile Include="Work/ReconciliationJson.fs" />
     <Compile Include="Provenance/ProvenanceFrontMatter.fs" />
     <Compile Include="Provenance/ProvenanceReportJson.fs" />
+    <Compile Include="Remote/RemoteJson.fs" />
   </ItemGroup>
 </Project>

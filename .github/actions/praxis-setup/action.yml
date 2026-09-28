@@ -1,0 +1,50 @@
+name: Praxis setup
+description: >-
+  Install the Praxis release the repository pins in .echelon/toolchain.json,
+  verified by SHA-256 and build-provenance attestation, without .NET, Node,
+  or building from source. Never falls forward to another version.
+  (PRAXIS-REMOTE-05, DF-ROS-2026-A041 section 9.)
+inputs:
+  manifest:
+    description: Toolchain manifest that pins the Praxis version.
+    default: .echelon/toolchain.json
+  attestation:
+    description: >-
+      'required' (default) verifies the release's build-provenance
+      attestation; 'skip' must be chosen explicitly and is reported, for
+      releases published before attestations existed.
+    default: required
+outputs:
+  praxis:
+    description: Path to the verified praxis executable.
+    value: ${{ steps.bootstrap.outputs.praxis }}
+  version:
+    description: The pinned and verified Praxis version.
+    value: ${{ steps.bootstrap.outputs.version }}
+  digest:
+    description: SHA-256 digest of the verified release bundle.
+    value: ${{ steps.bootstrap.outputs.digest }}
+  attestation:
+    description: Whether attestation was verified ('required') or explicitly skipped.
+    value: ${{ steps.bootstrap.outputs.attestation }}
+runs:
+  using: composite
+  steps:
+    # The cache only saves a download: every hit is re-verified against the
+    # published digest, and an entry populated with attestation skipped
+    # never satisfies a run that requires it.
+    - name: Restore cached Praxis release
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      with:
+        path: ${{ runner.tool_cache }}/praxis
+        key: praxis-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles(inputs.manifest) }}
+
+    - name: Install and verify the pinned Praxis release
+      id: bootstrap
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        PRAXIS_MANIFEST: ${{ inputs.manifest }}
+        PRAXIS_ATTESTATION: ${{ inputs.attestation }}
+        PRAXIS_BOOTSTRAP: ${{ github.action_path }}/../../../scripts/praxis-bootstrap.sh
+      run: sh "$PRAXIS_BOOTSTRAP" --manifest "$PRAXIS_MANIFEST" --attestation "$PRAXIS_ATTESTATION" --install-dir "$RUNNER_TOOL_CACHE/praxis"

@@ -186,6 +186,18 @@ module ProvenanceTests =
                   Assert.equal claudeAgent (ActorResolution.ofExecutionRecord None (Some "whitelisted-claude-environment") identity)
                   Assert.equal ActorKind.Unknown (ActorResolution.ofExecutionRecord None None identity).Kind
                   Assert.equal ActorKind.Human (ActorResolution.ofExecutionRecord (Some "human") (Some "whitelisted-claude-environment") identity).Kind }
+          { Name = "continuation: only the same actor in the same run may continue an execution"
+            Run =
+              fun () ->
+                  let identityA, _ = Identity.discover { claude with SessionId = Some "A" }
+                  let identityB, _ = Identity.discover { claude with SessionId = Some "B" }
+                  let codexIdentity, _ = Identity.discover codex
+                  Assert.equal true (ActorResolution.mayContinue claudeAgent identityA claudeAgent identityA)
+                  Assert.equal false (ActorResolution.mayContinue claudeAgent identityB claudeAgent identityA) // same agent, new session
+                  Assert.equal false (ActorResolution.mayContinue codexAgent codexIdentity claudeAgent identityA) // a different agent
+                  Assert.equal false (ActorResolution.mayContinue (human "kevin") identityA claudeAgent identityA) // a human is not the agent
+                  Assert.equal false (ActorResolution.mayContinue Actor.unknown identityA claudeAgent identityA) } // unknown never inherits
+
           { Name = "a process with no identity is undeclared; a session or CI run mismatch is a different run"
             Run =
               fun () ->

@@ -18,6 +18,7 @@
     <Compile Include="Foundations.fs" />
     <Compile Include="ProvenanceCommands.fs" />
     <Compile Include="ReconciliationCommands.fs" />
+    <Compile Include="RemoteCommands.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>
