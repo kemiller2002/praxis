@@ -373,7 +373,8 @@ work be captured before it has an externally assigned ID, and graduates into
 the same protocol via `work start`.
 
 See [`docs/work-protocol.md`](docs/work-protocol.md) and, for a UI over the same
-backlog, [`docs/web-interface.md`](docs/web-interface.md) (`npm run web`).
+backlog, [`docs/web-interface.md`](docs/web-interface.md) (`./ros web serve`; no Node.js
+or npm required).
 
 External project-management products integrate through the normalized
 [work adapter contract](docs/work-adapter-contract.md); they are not embedded

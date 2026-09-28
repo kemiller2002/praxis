@@ -85,12 +85,6 @@
       "template": true
     },
     {
-      "source": "starter/project-administration/package.json",
-      "destination": "package.json",
-      "template": true,
-      "policy": "preserve-existing"
-    },
-    {
       "source": "starter/project-administration/README.md",
       "destination": "README.md",
       "template": true,
@@ -257,55 +251,10 @@
       "template": false
     },
     {
-      "source": "tools/ros_cli.mjs",
-      "destination": "tools/ros_cli.mjs",
-      "template": false
-    },
-    {
-      "source": "tools/ros_telemetry.mjs",
-      "destination": "tools/ros_telemetry.mjs",
-      "template": false
-    },
-    {
-      "source": "tools/ros_git.mjs",
-      "destination": "tools/ros_git.mjs",
-      "template": false
-    },
-    {
-      "source": "tools/ros_persistence.mjs",
-      "destination": "tools/ros_persistence.mjs",
-      "template": false
-    },
-    {
       "source": "telemetry/metrics.json",
       "destination": "telemetry/metrics.json",
       "template": false,
       "ownership": "shared"
-    },
-    {
-      "source": "tools/http_body.mjs",
-      "destination": "tools/http_body.mjs",
-      "template": false
-    },
-    {
-      "source": "tools/ros_server.mjs",
-      "destination": "tools/ros_server.mjs",
-      "template": false
-    },
-    {
-      "source": "tools/ros_hub_cli.mjs",
-      "destination": "tools/ros_hub_cli.mjs",
-      "template": false
-    },
-    {
-      "source": "tools/ros_hub_server.mjs",
-      "destination": "tools/ros_hub_server.mjs",
-      "template": false
-    },
-    {
-      "source": "web/index.html",
-      "destination": "web/index.html",
-      "template": false
     },
     {
       "source": "web/styles.css",
@@ -313,33 +262,8 @@
       "template": false
     },
     {
-      "source": "web/app.ts",
-      "destination": "web/app.ts",
-      "template": false
-    },
-    {
-      "source": "web/tsconfig.json",
-      "destination": "web/tsconfig.json",
-      "template": false
-    },
-    {
-      "source": "web-hub/index.html",
-      "destination": "web-hub/index.html",
-      "template": false
-    },
-    {
       "source": "web-hub/styles.css",
       "destination": "web-hub/styles.css",
-      "template": false
-    },
-    {
-      "source": "web-hub/app.ts",
-      "destination": "web-hub/app.ts",
-      "template": false
-    },
-    {
-      "source": "web-hub/tsconfig.json",
-      "destination": "web-hub/tsconfig.json",
       "template": false
     },
     {

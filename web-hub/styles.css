@@ -1,8 +1,14 @@
+/* Styles for the server-rendered project-administration hub
+   (`ros hub serve`). The page carries no script: every action is a plain
+   form post. */
+
 :root {
   color-scheme: light dark;
   --border: color-mix(in srgb, currentColor 20%, transparent);
   --muted: color-mix(in srgb, currentColor 55%, transparent);
   --accent: #3d6fd6;
+  --danger: #d63d3d;
+  --ok: #2f9e5b;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
@@ -46,11 +52,12 @@ section {
 
 #register-form,
 #create-form,
-#filters {
+#filters form {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
+  margin-bottom: 0.75rem;
 }
 
 input,
@@ -68,6 +75,12 @@ button {
 #register-path,
 #create-title {
   flex: 1 1 16rem;
+}
+
+textarea {
+  width: 100%;
+  min-height: 3.5rem;
+  box-sizing: border-box;
 }
 
 button {
@@ -92,6 +105,15 @@ td {
   padding: 0.5rem;
   border-bottom: 1px solid var(--border);
   vertical-align: top;
+}
+
+td form {
+  margin: 0;
+}
+
+td button {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.8rem;
 }
 
 .status-pill {
@@ -119,31 +141,25 @@ td {
   background: color-mix(in srgb, currentColor 12%, transparent);
 }
 
-.row-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-}
-
-.row-actions button {
-  padding: 0.2rem 0.5rem;
-  font-size: 0.8rem;
-}
-
 .error-row td {
-  color: #d63d3d;
+  color: var(--danger);
 }
 
-#error,
-#repos-error,
-#create-error {
-  color: #d63d3d;
-  border: 1px solid #d63d3d;
+.notice,
+.error {
+  border: 1px solid currentColor;
   border-radius: 0.35rem;
   padding: 0.5rem 0.75rem;
 }
 
-.evidence-row,
+.notice {
+  color: var(--ok);
+}
+
+.error {
+  color: var(--danger);
+}
+
 .file-row {
   display: flex;
   gap: 0.5rem;
@@ -158,10 +174,4 @@ td {
 
 .file-row input[type="text"] {
   flex: 1 1 12rem;
-}
-
-#create-description {
-  width: 100%;
-  min-height: 3.5rem;
-  box-sizing: border-box;
 }

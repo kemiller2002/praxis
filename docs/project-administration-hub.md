@@ -64,33 +64,48 @@ explicitly out of scope here.
 
 ## CLI
 
+The hub is part of the ROS command-line tool itself; no Node.js or npm is
+required. From the hub repository's root (`./ros-hub ARGS` is a shorthand
+for `./ros hub ARGS`):
+
 ```bash
-./ros-hub register /path/to/some/repo --name "Display Name"
-./ros-hub repos
-./ros-hub unregister REPO-ID
-./ros-hub create REPO-ID "Title" --tag a,b --priority high --description "..." --file PATH[=NAME]
-./ros-hub work                       # aggregated, every registered repo
-./ros-hub work --repo REPO-ID --status ready
+./ros hub register /path/to/some/repo --name "Display Name"
+./ros hub repos
+./ros hub unregister REPO-ID
+./ros hub create REPO-ID "Title" --tag a,b --priority high --description "..." --file PATH[=NAME]
+./ros hub work                       # aggregated, every registered repo
+./ros hub work --repo REPO-ID --status ready
 ```
 
-`create`'s flags map directly onto the target repository's own `ros add` —
-tags, priority, description, and one or more `--file PATH[=NAME]` all work
-exactly as documented in `work-backlog-guide.md`, because the hub builds
-and runs that exact command.
+Each command prints JSON (the registered entry, the removed entry, the
+repository list, the created item with `repoId`/`repoName`, or the
+aggregated rows). `create` runs the target repository's own `./ros add`
+with the title, tags, priority, description, `--id` and `--actor`, then --
+when files are given -- its own `./ros work attach --file PATH[=NAME]` and
+`./ros work show`, because the hub builds and runs exactly those commands.
+Each spoke runs its own pinned ROS version.
 
 ## Web interface
 
 ```bash
-npm run hub
+./ros hub serve                      # or: ./ros-hub serve [--port N] [--host H]
 ```
 
-Serves `http://127.0.0.1:4320` — a register form, a repo list (with
-unregister), a create-work-item form (with tag/priority/description/file
-inputs, same as the per-repo web UI), a filter bar, and the aggregated
-table. **No authentication, localhost by default** — this server can create
-work items and run commands in every registered repository, which is a
-larger blast radius than the single-repo web interface. Do not bind it to
-a non-loopback host without your own authentication in front of it.
+Serves `http://127.0.0.1:4320` -- server-rendered HTML with plain form posts
+and no browser JavaScript: a register form, a repo list (with unregister), a
+create-work-item form (repository, title, tags, priority, description, and
+up to three files with optional display names), a filter bar (repo, tag,
+status), and the aggregated table. Every form post redirects back with a
+notice or the exact error. **No authentication, localhost by default** --
+this server can create work items and run commands in every registered
+repository, which is a larger blast radius than the single-repo web
+interface. Do not bind it to a non-loopback host without your own
+authentication in front of it. `web-hub/styles.css` in the hub repository
+styles the page (a built-in copy is used when it is absent).
+
+The pages and the JSON API below call the same functions as `ros hub`
+(`Ros.Cli.Hub`); uploaded files touch disk only as short-lived temp files
+passed to the spoke's own `work attach`, and are deleted afterwards.
 
 ### API
 
@@ -100,7 +115,9 @@ a non-loopback host without your own authentication in front of it.
 | `POST` | `/api/repos` `{path, name?}` | Register a repository |
 | `DELETE` | `/api/repos/:id` | Unregister (does not touch the repository itself) |
 | `GET` | `/api/work?repo=&tag=&status=` | Aggregated work, one repo or all |
-| `POST` | `/api/repos/:id/work` | Create a work item; JSON body, or `multipart/form-data` with `file` parts for attachments |
+| `POST` | `/api/repos/:id/work` | Create a work item; JSON body `{title, tags, priority?, description?, id?, actor?}`, or `multipart/form-data` with the same fields (`tags` comma-separated) and `file` parts for attachments |
+
+Errors are `4xx` with `{"error": "..."}`.
 
 Aggregation is best-effort per repository: a registered repository whose
 path has moved, or whose ROS installation is too old to support a command,
@@ -116,3 +133,15 @@ the whole view.
   framework" ROS's own architecture asks to be introduced only when a
   concrete need demonstrates it, not preemptively.
 - No cross-machine repository access. Everything here assumes local paths.
+
+## Tests
+
+`tests/Ros.Tests/HubTests.fs` unit-tests the registry model (parsing and
+re-rendering a registry written by the earlier Node hub byte for byte, the
+Markdown projection, duplicate path/id rejection), the spoke command lines,
+and the routes, then drives the real `ros hub` commands and `ros hub serve`
+against temporary spoke repositories whose own `./ros` runs the built CLI:
+registration rules, creation with an attachment landing in the spoke's own
+queue, aggregation isolating a moved repository as one error row,
+unregistration, the JSON API (including a multipart upload and temp-file
+cleanup), and the HTML form flows.

@@ -14,6 +14,13 @@ open Ros.Domain.Work
 /// `description`/`blockedReason`/`attachments` fields (unlike
 /// `FileBacklogQueueRepository.readItems`, which only reads the narrower
 /// `BacklogQueueItemRecord` shape `QueueValidation` needs).
+/// One stored attachment, resolved for download: its display name, recorded
+/// content type, and the on-disk file holding its bytes.
+type StoredAttachment =
+    { Name: string
+      ContentType: string option
+      FilePath: string }
+
 [<RequireQualifiedAccess>]
 module FileWorkListRepository =
     let private contextPath (root: string) = Path.Combine(root, ".ros", "context", "current.json")
@@ -129,3 +136,52 @@ module FileWorkListRepository =
                 let path = detailPath root id
                 let detail = if File.Exists path then Some(File.ReadAllText path) else None
                 Ok(row, detail)
+
+    /// Resolves attachment `attachmentId` of backlog item `id` to its stored
+    /// file (the web interface's download route). The recorded storage name
+    /// must stay inside the item's own attachments directory.
+    let readAttachment (root: string) (id: string) (attachmentId: string) : Result<StoredAttachment, string> =
+        let notFound = Error $"attachment '{attachmentId}' was not found on '{id}'"
+        let path = queuePath root
+
+        let record =
+            if not (File.Exists path) then
+                None
+            else
+                match JsonNode.Parse(File.ReadAllText path) with
+                | :? JsonObject as queue ->
+                    match queue["items"] with
+                    | :? JsonArray as items ->
+                        items
+                        |> Seq.tryPick (fun node ->
+                            match node with
+                            | :? JsonObject as item when stringField item "id" = Some id ->
+                                match item["attachments"] with
+                                | :? JsonArray as attachments ->
+                                    attachments
+                                    |> Seq.tryPick (fun candidate ->
+                                        match candidate with
+                                        | :? JsonObject as entry when stringField entry "id" = Some attachmentId -> Some entry
+                                        | _ -> None)
+                                | _ -> None
+                            | _ -> None)
+                    | _ -> None
+                | _ -> None
+
+        match record with
+        | None -> notFound
+        | Some entry ->
+            match stringField entry "name", stringField entry "file" with
+            | Some name, Some file ->
+                let directory = Path.GetFullPath(Path.Combine(root, ".ros", "work", "attachments", id))
+                let filePath = Path.GetFullPath(Path.Combine(directory, file))
+
+                if filePath.StartsWith(directory + string Path.DirectorySeparatorChar, System.StringComparison.Ordinal)
+                   && File.Exists filePath then
+                    Ok
+                        { Name = name
+                          ContentType = stringField entry "contentType"
+                          FilePath = filePath }
+                else
+                    notFound
+            | _ -> notFound

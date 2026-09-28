@@ -286,7 +286,8 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 ## Interfaces
 
 - Inbound: `./ros add`, `./ros work ...`, `./ros adapter ...`, and HTTP routes
-  in `tools/ros_server.mjs`.
+  of `ros web serve` (`src/Ros.Cli/WebInterface.fs`, which runs these same
+  commands as a child process).
 - Outbound: versioned work/context/event/adapter JSON, queue Markdown,
   attachments, CLI JSON/text, and HTTP JSON/bytes.
 
@@ -415,7 +416,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 
 ## Modification boundaries
 
-- Normal: `tools/ros_cli.mjs`, `tools/ros_server.mjs`, `web/`, work schemas,
+- Normal: `tools/ros_cli.mjs`, `src/Ros.Cli/WebInterface.fs`, `web/styles.css`, work schemas,
   work docs, and their tests.
 - Escalation required: state mappings, legal transitions, evidence obligations,
   or authoritative-store changes because installed repositories depend on them.

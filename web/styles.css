@@ -1,8 +1,13 @@
+/* Styles for the server-rendered work backlog (`ros web serve`). The pages
+   carry no script: every action is a plain form post. */
+
 :root {
   color-scheme: light dark;
   --border: color-mix(in srgb, currentColor 20%, transparent);
   --muted: color-mix(in srgb, currentColor 55%, transparent);
   --accent: #3d6fd6;
+  --danger: #d63d3d;
+  --ok: #2f9e5b;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
@@ -29,6 +34,15 @@ h2 {
   margin: 0 0 0.5rem;
 }
 
+h3 {
+  font-size: 0.95rem;
+  margin: 0 0 0.4rem;
+}
+
+a {
+  color: var(--accent);
+}
+
 .muted {
   color: var(--muted);
   margin: 0;
@@ -39,7 +53,10 @@ section {
 }
 
 #add-form,
-#filters {
+#filters form,
+#actions form,
+#edit form,
+#attach form {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
@@ -60,6 +77,12 @@ button {
 
 #add-title {
   flex: 1 1 16rem;
+}
+
+textarea {
+  width: 100%;
+  min-height: 3.5rem;
+  box-sizing: border-box;
 }
 
 button {
@@ -114,7 +137,13 @@ td {
 .row-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: 0.25rem 0.5rem;
+  align-items: center;
+}
+
+.row-actions form {
+  display: inline;
+  margin: 0;
 }
 
 .row-actions button {
@@ -122,11 +151,19 @@ td {
   font-size: 0.8rem;
 }
 
-#error {
-  color: #d63d3d;
-  border: 1px solid #d63d3d;
+.notice,
+.error {
+  border: 1px solid currentColor;
   border-radius: 0.35rem;
   padding: 0.5rem 0.75rem;
+}
+
+.notice {
+  color: var(--ok);
+}
+
+.error {
+  color: var(--danger);
 }
 
 #detail-body {
@@ -134,29 +171,6 @@ td {
   background: color-mix(in srgb, currentColor 6%, transparent);
   padding: 0.75rem;
   border-radius: 0.35rem;
-}
-
-dialog {
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  padding: 1rem 1.25rem;
-  min-width: 22rem;
-}
-
-dialog textarea,
-dialog input,
-dialog select {
-  width: 100%;
-  box-sizing: border-box;
-  margin-top: 0.25rem;
-}
-
-dialog menu {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  padding: 0;
-  margin: 1rem 0 0;
 }
 
 .evidence-row,
@@ -176,13 +190,6 @@ dialog menu {
   flex: 1 1 12rem;
 }
 
-#add-description,
-#update-dialog-description {
-  width: 100%;
-  min-height: 3.5rem;
-  box-sizing: border-box;
-}
-
 .attachment-list {
   list-style: none;
   padding: 0;
@@ -191,10 +198,6 @@ dialog menu {
 
 .attachment-list li {
   margin-bottom: 0.25rem;
-}
-
-#detail-summary p {
-  margin-top: 0;
 }
 
 details summary {

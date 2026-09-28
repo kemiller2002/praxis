@@ -1,5 +1,7 @@
-#!/usr/bin/env node
+#!/usr/bin/env sh
+# The project-administration hub, from this hub repository's root:
+# `./ros-hub ARGS` is `./ros hub ARGS` (see docs/project-administration-hub.md).
+set -eu
 
-import { main } from "./tools/ros_hub_cli.mjs";
-
-process.exitCode = main(process.argv.slice(2));
+hub_root="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+exec "$hub_root/ros" --root "$hub_root" hub "$@"

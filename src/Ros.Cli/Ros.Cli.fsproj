@@ -18,6 +18,10 @@
     <Compile Include="Foundations.fs" />
     <Compile Include="ProvenanceCommands.fs" />
     <Compile Include="ReconciliationCommands.fs" />
+    <Compile Include="WebHttp.fs" />
+    <Compile Include="CliProcess.fs" />
+    <Compile Include="WebInterface.fs" />
+    <Compile Include="Hub.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>
