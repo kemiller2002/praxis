@@ -1908,10 +1908,10 @@
         "gh-90"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-28T07:45:00.789Z",
-      "updatedAt": "2026-09-28T07:45:01.000Z",
+      "updatedAt": "2026-09-28T08:03:42.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2195,6 +2195,30 @@
       "source": "github-issue",
       "sourceReference": "https://github.com/kemiller2002/praxis/issues/90",
       "blockedReason": "Depends on PRAXIS-REMOTE-11 (DF-ROS-2026-A041 decomposition)"
+    },
+    {
+      "id": "ACTOR-KIND-ANCHOR",
+      "title": "ActorKind extension pattern accepts a trailing newline ($ anchor)",
+      "description": "ActorKind.tryParse (src/Ros.Domain/Provenance/Actor.fs) matches ^x-[a-z0-9][a-z0-9-]*$ with a .NET $ anchor, which also matches before a trailing newline, so 'x-agent\\n' parses as an extension kind. Found while hardening praxis.remote input validation (PRAXIS-REMOTE-01 guards its own path with a control-character check). Fix: anchor with \\z and add a test; audit other Domain patterns for the same anchor.",
+      "tags": [
+        "provenance",
+        "security"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:59:26.521Z",
+      "updatedAt": "2026-09-28T07:59:26.521Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "PRAXIS-REMOTE-01"
     }
   ]
 }

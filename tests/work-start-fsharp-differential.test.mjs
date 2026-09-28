@@ -221,6 +221,8 @@ const GOLDEN ={
         "schemas/hypothesis.schema.json",
         "schemas/journal.schema.json",
         "schemas/mission.schema.json",
+        "schemas/praxis-remote-request.schema.json",
+        "schemas/praxis-remote-response.schema.json",
         "schemas/rep.schema.json",
         "schemas/ros-effect-observation.schema.json",
         "schemas/ros-effective-current.schema.json",

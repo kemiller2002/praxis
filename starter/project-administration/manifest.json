@@ -192,6 +192,16 @@
       "template": false
     },
     {
+      "source": "schemas/praxis-remote-request.schema.json",
+      "destination": "schemas/praxis-remote-request.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/praxis-remote-response.schema.json",
+      "destination": "schemas/praxis-remote-response.schema.json",
+      "template": false
+    },
+    {
       "source": "schemas/ros-resolution-assessment.schema.json",
       "destination": "schemas/ros-resolution-assessment.schema.json",
       "template": false

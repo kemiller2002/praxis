@@ -63,6 +63,7 @@
     <Compile Include="ProvenanceEffectTests.fs" />
     <Compile Include="WorkReconciliationTests.fs" />
     <Compile Include="WorkReconciliationEffectTests.fs" />
+    <Compile Include="RemoteProtocolTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

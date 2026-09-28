@@ -52,4 +52,5 @@ let main _ =
     @ ProvenanceEffectTests.tests
     @ WorkReconciliationTests.tests
     @ WorkReconciliationEffectTests.tests
+    @ RemoteProtocolTests.tests
     |> TestRunner.run

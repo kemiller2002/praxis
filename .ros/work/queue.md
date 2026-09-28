@@ -2,6 +2,7 @@
 
 | ID | Work | Status | Tags | Priority |
 |---|---|---|---|---|
+| ACTOR-KIND-ANCHOR | ActorKind extension pattern accepts a trailing newline ($ anchor) | captured | provenance, security | low |
 | ATTR-COMPLETE-BASE-REF-SWEEP | Stop work complete from sweeping ROS_BASE_REF committed-range paths into its completion event | captured | attribution, reconciliation | medium |
 | ATTR-RECONCILE-SYMLINK-SUBMODULE | Content-match symbolic links and submodules for reconciled attribution | captured | attribution, reconciliation | low |
 | BOOTSTRAP-ADOPTION-FIX | BOOTSTRAP-ADOPTION-FIX | complete |  |  |
@@ -36,7 +37,7 @@
 | PKG-ECHELON-FOUNDRY | PKG-ECHELON-FOUNDRY | complete |  |  |
 | PKG-MIT-LICENSE | PKG-MIT-LICENSE | complete |  |  |
 | PKG-PUBLISH-READINESS | PKG-PUBLISH-READINESS | complete |  |  |
-| PRAXIS-REMOTE-01 | Remote protocol v1 contract: schemas, typed domain model, validation, fingerprint, decision order | ready | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-01 | Remote protocol v1 contract: schemas, typed domain model, validation, fingerprint, decision order | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-02 | Remote provenance roles: asserted request actor, observed executor, transport principal | blocked | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-03 | praxis remote execute boundary with request journal, SHA binding and structured results | blocked | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-04 | Execution steps, step-scoped usage/cost and the evidence-quality projection | ready | remote-execution, gh-90 | medium |
