@@ -323,3 +323,41 @@ test("every persistence refusal still writes a machine-readable adapter result",
   assert.equal(staged.adapter.failure.code, "internal");
   assert.equal(staged.adapter.failure.retry, "never");
 });
+
+test("the enable script validates its inputs and a dry run walks every phase without changing anything", (t) => {
+  const script = path.join(repositoryRoot, "scripts", "praxis-remote-enable.sh");
+  const bad = spawnSync("bash", [script, "--version", "3.5"], { encoding: "utf8" });
+  assert.equal(bad.status, 1);
+  assert.match(bad.stderr, /exact MAJOR\.MINOR\.PATCH/);
+
+  const { runner } = remoteAndCheckout(t);
+  fs.mkdirSync(path.join(runner, ".github", "workflows"), { recursive: true });
+  fs.copyFileSync(path.join(repositoryRoot, ".github", "workflows", "praxis-remote.yml"), path.join(runner, ".github", "workflows", "praxis-remote.yml"));
+  git(runner, "add", "-A");
+  git(runner, "commit", "-qm", "adapter");
+  git(runner, "push", "-q", "origin", "main");
+  const stub = temporary(t, "gh-enable");
+  fs.writeFileSync(path.join(stub, "gh"), [
+    "#!/bin/sh",
+    'case "$1 $2" in',
+    '  "auth status") exit 0 ;;',
+    '  "repo view") echo octo/example ;;',
+    '  "api user") echo octocat ;;',
+    '  *) echo "unexpected gh $*" >&2; exit 9 ;;',
+    "esac"
+  ].join("\n") + "\n", { mode: 0o755 });
+
+  const before = git(runner, "rev-parse", "HEAD");
+  const result = spawnSync("bash", [script, "--version", "9.9.9", "--skip-release", "--dry-run"], {
+    cwd: runner,
+    encoding: "utf8",
+    env: { ...deterministicIdentityEnv(), PATH: `${stub}:${process.env.PATH}`, PRAXIS: `dotnet ${cli}` }
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /actor: human:octocat/);
+  assert.match(result.stdout, /\[dry-run\] praxis_cli work start --id REMOTE-ENABLE-9-9-9 --type mechanical/);
+  assert.match(result.stdout, /remote\.capabilities=\[read,mutate\]/);
+  assert.match(result.stdout, /\[dry-run\] gh workflow run praxis-remote\.yml --repo octo\/example --ref main/);
+  assert.equal(git(runner, "rev-parse", "HEAD"), before);
+  assert.equal(git(runner, "status", "--porcelain"), "", "a dry run changes nothing");
+});

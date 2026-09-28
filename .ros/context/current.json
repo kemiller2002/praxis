@@ -3269,11 +3269,44 @@
         "EXE-20260928T092830624Z-ab391e0d"
       ],
       "completedAt": "2026-09-28T09:39:58.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-11-PREP",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "scripts/praxis-remote-enable.sh"
+        },
+        {
+          "type": "implementation",
+          "path": "ros.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/praxis-remote-adapter.test.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/remote-execute.test.mjs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/remote-execution-operations.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T11:38:45.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T113054279Z-d38395ad"
+      ],
+      "completedAt": "2026-09-28T11:38:45.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-28T10:21:03.000Z",
+  "updatedAt": "2026-09-28T11:38:45.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

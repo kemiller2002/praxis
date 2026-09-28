@@ -15,7 +15,7 @@
 | FEAT-AGENT-PROVENANCE | FEAT-AGENT-PROVENANCE | complete |  |  |
 | GH-80 | Support auditable post-commit work-item attribution reconciliation (#80) | complete | attribution, reconciliation, provenance | high |
 | GH-84 | GH-84 | blocked |  |  |
-| GH-90 | Make remote/cloud-agent Praxis execution a first-class capability (#90) | active | remote-execution, gh-90 | high |
+| GH-90 | Make remote/cloud-agent Praxis execution a first-class capability (#90) | blocked | remote-execution, gh-90 | high |
 | MIG-05-BACKLOG-PERSISTENCE | Add bounded recovery for backlog queue and Markdown projection | complete | fsharp, migration, persistence | high |
 | MIG-05-PERSISTENCE | MIG-05 characterize and shadow transactional persistence recovery | complete | fsharp, migration, persistence | high |
 | MIG-05-TELEMETRY-RECOVERY | Recover telemetry execution backlinks without duplicating execution evidence | complete | fsharp, migration, telemetry, persistence | high |
@@ -49,6 +49,7 @@
 | PRAXIS-REMOTE-09 | Remote reconciliation (#80), fallback records and successor continuation | complete | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-10 | Remote execution operator documentation | complete | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-11 | End-to-end no-.NET cloud-agent proof | blocked | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-11-PREP | Prepare the live remote proof: ignore the request journal for attribution and script release, pin, opt-in and dispatch | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-12 | Conditor installs and configures the Praxis remote surface | blocked | remote-execution, gh-90 | low |
 | PRAXIS-SITE-01 | Establish public-site architecture | complete | gh-84, public-site | high |
 | PRAXIS-SITE-02 | Implement Echelon Foundry design foundation | complete | gh-84, public-site | high |
