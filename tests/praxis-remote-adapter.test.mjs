@@ -87,7 +87,7 @@ function startRequest(root, requestId = "req-adapter-0001") {
 
 test("persists exactly the reported Praxis state as the executor, naming the asserted requester", (t) => {
   const { origin, runner } = remoteAndCheckout(t);
-  const response = execute(runner, startRequest(runner), { GITHUB_ACTIONS: "true", GITHUB_RUN_ID: "77", GITHUB_ACTOR: "octocat" });
+  const response = execute(runner, startRequest(runner), { GITHUB_ACTIONS: "true", GITHUB_RUN_ID: "77", GITHUB_RUN_ATTEMPT: "3", GITHUB_ACTOR: "octocat", GITHUB_TRIGGERING_ACTOR: "octocat" });
   const reported = JSON.parse(fs.readFileSync(response, "utf8")).persistence.paths;
 
   const { status, adapter, stderr } = persistResponse(runner, response);
@@ -102,7 +102,7 @@ test("persists exactly the reported Praxis state as the executor, naming the ass
   const message = git(runner, "show", "-s", "--format=%B", adapter.commit);
   assert.match(message, /^Praxis-Request-Id: req-adapter-0001$/m);
   assert.match(message, /^Praxis-Requester: agent:example\/cloud-agent \(asserted by the request\)$/m);
-  assert.match(message, /^Praxis-Executor: github-actions run 77 attempt -$/m);
+  assert.match(message, /^Praxis-Executor: github-actions run 77 attempt 3$/m);
   assert.equal(git(runner, "status", "--porcelain"), "");
 });
 

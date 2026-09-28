@@ -292,7 +292,7 @@ test("a domain refusal is reported as the command's own refusal and writes nothi
 test("an unidentified requester is recorded as unknown, never as the executor", (t) => {
   const root = fixture(t, "unknown-actor");
   const { actor, ...anonymous } = request(root, "work.start", { workItemIds: ["WI-0100"] });
-  const { response } = remote(root, anonymous, { env: { GITHUB_ACTIONS: "true", GITHUB_RUN_ID: "4242", GITHUB_ACTOR: "octocat" } });
+  const { response } = remote(root, anonymous, { env: { GITHUB_ACTIONS: "true", GITHUB_RUN_ID: "4242", GITHUB_RUN_ATTEMPT: "1", GITHUB_ACTOR: "octocat", GITHUB_TRIGGERING_ACTOR: "octocat" } });
   assert.equal(response.outcome, "succeeded");
   assert.equal(response.executor.kind, "github-actions");
   assert.equal(response.executor.runId, "4242");
