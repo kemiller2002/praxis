@@ -2212,6 +2212,30 @@
       },
       "source": "agent-discovery",
       "sourceReference": "PRAXIS-REMOTE-01"
+    },
+    {
+      "id": "PRAXIS-NPM-BIN",
+      "title": "Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy",
+      "description": "PRX-REMOTE-039: new interfaces should say praxis. The native installer already provides praxis; the npm package still provides only ros, and site/index.html plus tests/site/content.test.mjs deliberately assert that. Adding the npm bin must change the site copy and its test together (GH-84's claim audit), so it was left out of PRAXIS-REMOTE-07.",
+      "tags": [
+        "rename",
+        "gh-90"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-28T09:09:00.360Z",
+      "updatedAt": "2026-09-28T09:09:00.360Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "PRAXIS-REMOTE-07"
     }
   ]
 }

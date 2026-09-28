@@ -37,6 +37,7 @@
 | PKG-ECHELON-FOUNDRY | PKG-ECHELON-FOUNDRY | complete |  |  |
 | PKG-MIT-LICENSE | PKG-MIT-LICENSE | complete |  |  |
 | PKG-PUBLISH-READINESS | PKG-PUBLISH-READINESS | complete |  |  |
+| PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | captured | rename, gh-90 | low |
 | PRAXIS-REMOTE-01 | Remote protocol v1 contract: schemas, typed domain model, validation, fingerprint, decision order | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-02 | Remote provenance roles: asserted request actor, observed executor, transport principal | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-03 | praxis remote execute boundary with request journal, SHA binding and structured results | complete | remote-execution, gh-90 | high |
