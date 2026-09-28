@@ -1,0 +1,119 @@
+{
+  "test1Queue": {
+    "schemaVersion": "1.0.0",
+    "repository": "repository",
+    "nextSeq": 4,
+    "items": [
+      {
+        "id": "WI-0001",
+        "title": "It's a \"quoted\" title",
+        "tags": [
+          "code"
+        ],
+        "priority": "high",
+        "status": "ready"
+      },
+      {
+        "id": "WI-0003",
+        "title": "My new task",
+        "description": "details",
+        "tags": [
+          "alpha",
+          "beta"
+        ],
+        "priority": "high",
+        "status": "captured",
+        "attachments": [],
+        "createdBy": "tester",
+        "createdByActor": {
+          "kind": "unknown",
+          "id": "tester",
+          "provider": "unknown",
+          "model": "unknown",
+          "runtime": "unknown"
+        },
+        "source": "manual",
+        "sourceReference": null
+      }
+    ]
+  },
+  "test1Markdown": "# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| {install} | {install} | complete |  |  |\n| WI-0001 | It's a \"quoted\" title | ready | code | high |\n| WI-0003 | My new task | captured | alpha, beta | high |\n",
+  "test1SecondId": "WI-0003",
+  "test2Queue": {
+    "schemaVersion": "1.0.0",
+    "repository": "work-capture-differential",
+    "nextSeq": 2,
+    "items": [
+      {
+        "id": "WI-0001",
+        "title": "First ever",
+        "description": null,
+        "tags": [],
+        "priority": "medium",
+        "status": "captured",
+        "attachments": [],
+        "createdBy": "unknown",
+        "createdByActor": {
+          "kind": "unknown",
+          "id": "unknown",
+          "provider": "unknown",
+          "model": "unknown",
+          "runtime": "unknown"
+        },
+        "source": "manual",
+        "sourceReference": null
+      }
+    ]
+  },
+  "test2Markdown": "# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| {install} | {install} | complete |  |  |\n| WI-0001 | First ever | captured |  | medium |\n",
+  "test3Queue": {
+    "schemaVersion": "1.0.0",
+    "repository": "repository",
+    "nextSeq": 5,
+    "items": [
+      {
+        "id": "TASK-CUSTOM",
+        "title": "Custom",
+        "description": null,
+        "tags": [],
+        "priority": "medium",
+        "status": "captured",
+        "attachments": [],
+        "createdBy": "unknown",
+        "createdByActor": {
+          "kind": "unknown",
+          "id": "unknown",
+          "provider": "unknown",
+          "model": "unknown",
+          "runtime": "unknown"
+        },
+        "source": "manual",
+        "sourceReference": null
+      }
+    ]
+  },
+  "test3NextSeq": 5,
+  "test4Message": "add requires a non-empty title",
+  "test4Queue": {
+    "schemaVersion": "1.0.0",
+    "repository": "work-capture-differential",
+    "nextSeq": 1,
+    "items": []
+  },
+  "test5Message": "invalid priority 'urgent'; use high, medium, or low",
+  "test6Message": "work item 'WI-9000' already exists",
+  "test6Queue": {
+    "schemaVersion": "1.0.0",
+    "repository": "repository",
+    "nextSeq": 2,
+    "items": [
+      {
+        "id": "WI-9000",
+        "title": "Existing",
+        "tags": [],
+        "priority": null,
+        "status": "ready"
+      }
+    ]
+  }
+}

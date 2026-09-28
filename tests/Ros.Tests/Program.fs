@@ -56,4 +56,13 @@ let main _ =
     @ ImplementationLanguagePolicyTests.tests
     @ WebInterfaceTests.tests
     @ HubTests.tests
+    @ WorkDecisionCliTests.tests
+    @ WorkTelemetryCliTests.tests
+    @ WorkGitPathsCliTests.tests
+    @ WorkValidateCliTests.tests
+    @ WorkBacklogCliTests.tests
+    @ WorkLifecycleCliTests.tests
+    @ WorkViewCliTests.tests
+    @ StatusValidateCliTests.tests
+    @ GitArtifactCliTests.tests
     |> TestRunner.run
