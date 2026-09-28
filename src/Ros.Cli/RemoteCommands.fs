@@ -26,7 +26,7 @@ open Ros.Infrastructure.Remote
 /// adapter.
 
 let usage =
-    "remote execute --request FILE [--grant read|mutate|complete|reconcile]* [--output FILE] [--timeout-seconds N]"
+    "remote execute --request FILE [--grant read|mutate|complete|reconcile]* [--output FILE] [--timeout-seconds N] | remote classify --request FILE"
 
 [<Literal>]
 let private MaxRequestBytes = 262144L
@@ -375,3 +375,45 @@ let run (root: string) (version: string) (arguments: string list) : int =
                 match handle context request with
                 | _, Some replayed -> emit output replayed true
                 | response, None -> respond response
+
+/// `praxis remote classify`: the capability a request needs, decided by the
+/// protocol's own catalog, so an adapter can choose least-privilege
+/// credentials (a read-only job for reads) without re-implementing any of
+/// it. Only the document's shape and operation are examined; nothing is
+/// authorized or executed.
+let classify (version: string) (arguments: string list) : int =
+    match optionValue "--request" arguments with
+    | None ->
+        eprintfn "ERROR usage: remote classify --request FILE"
+        2
+    | Some requestFile ->
+        let text =
+            try
+                let info = FileInfo requestFile
+                if info.Length > MaxRequestBytes then Error $"the request exceeds {MaxRequestBytes} bytes" else Ok(File.ReadAllText requestFile)
+            with error ->
+                Error $"the request file cannot be read: {error.Message}"
+
+        let rejection (response: Response) =
+            printf "%s" (RemoteJson.renderResponse response)
+            1
+
+        match text with
+        | Error message ->
+            Response.rejected ProtocolVersion.current version None None { Ref = None; ExpectedSha = None } None (failure FailureCode.InvalidRequest message [])
+            |> rejection
+        | Ok document ->
+            match RemoteJson.parseRequest ProtocolVersion.current document with
+            | Error parseFailure -> RemoteJson.rejection ProtocolVersion.current version None parseFailure |> rejection
+            | Ok request ->
+                printf
+                    "%s"
+                    (Ros.Contracts.JsonRendering.renderIndented (fun writer ->
+                        writer.WriteStartObject()
+                        writer.WriteString("requestId", request.RequestId)
+                        writer.WriteString("operation", Operation.code request.Operation)
+                        writer.WriteString("capability", Capability.code (Operation.capability request.Operation))
+                        writer.WriteBoolean("mutating", Operation.isMutating request.Operation)
+                        writer.WriteEndObject()))
+
+                0

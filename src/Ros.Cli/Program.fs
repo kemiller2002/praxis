@@ -2692,6 +2692,7 @@ let private repositoryDispatch root packageRoot arguments =
     | "ordo" :: "handoff" :: rest -> runOrdoHandoff root rest
     | "provenance" :: rest -> ProvenanceCommands.run root rest
     | "remote" :: "execute" :: rest -> RemoteCommands.run root Version rest
+    | "remote" :: "classify" :: rest -> RemoteCommands.classify Version rest
     | "adapter" :: "call" :: rest -> runAdapterCall root rest
     | "adapter" :: "publish" :: rest -> runAdapterPublish root rest
     | _ ->

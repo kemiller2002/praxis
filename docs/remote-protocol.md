@@ -14,14 +14,22 @@ explicit Praxis operation.
 
 > **Status.**
 >
-> - **Implemented:** the contract (PRAXIS-REMOTE-01), identity roles
->   (PRAXIS-REMOTE-02), and the transport-independent executor boundary
->   `praxis remote execute` (PRAXIS-REMOTE-03, see [Executing a
->   request](#executing-a-request)).
-> - **Not implemented yet:** the GitHub Actions adapter (PRAXIS-REMOTE-06)
->   and the verified release bootstrap (PRAXIS-REMOTE-05). Both are tracked
->   under `GH-90`. Until they exist, a cloud agent still needs someone else
->   to run the executor for it.
+> - **Implemented:**
+>   - the contract (PRAXIS-REMOTE-01);
+>   - identity roles (PRAXIS-REMOTE-02);
+>   - the executor boundary `praxis remote execute` (PRAXIS-REMOTE-03);
+>   - the verified bootstrap (PRAXIS-REMOTE-05);
+>   - the GitHub Actions adapter (PRAXIS-REMOTE-06), described under
+>     [GitHub Actions adapter](#github-actions-adapter).
+> - **Not yet possible to use live.** A live run needs three things that
+>   only a maintainer can provide:
+>   - a published Praxis release that contains `remote execute` and carries
+>     build-provenance attestations;
+>   - that release pinned in `.echelon/toolchain.json`;
+>   - the workflow present on the default branch, because GitHub only
+>     dispatches workflows that exist there.
+>
+>   The end-to-end proof (PRAXIS-REMOTE-11) waits on those.
 
 ## Principles
 
@@ -353,3 +361,91 @@ ID is recorded, and returns the recorded response when it is. A mutation
 whose result was lost is recovered by retrying it with the same
 `requestId`, or by asking `request.status`. The answer comes from the
 repository, never from guessing.
+
+## GitHub Actions adapter
+
+The adapter is made of three files:
+
+- [`.github/workflows/praxis-remote.yml`](../.github/workflows/praxis-remote.yml)
+- [`.github/actions/praxis-remote`](../.github/actions/praxis-remote/action.yml)
+- [`.github/actions/praxis-setup`](../.github/actions/praxis-setup/action.yml)
+
+Together they form a thin host. They bootstrap the pinned, verified Praxis
+release, let Praxis decide, and persist exactly what Praxis reports. They
+contain no Praxis domain rules.
+
+**Invoking it.** A caller needs GitHub access and nothing else. It
+dispatches the workflow on the branch the request targets, for example with
+the GitHub CLI:
+
+```
+gh workflow run praxis-remote.yml --ref main \
+  -f request_id=req-2026-09-28-work-start-0001 \
+  -f request="$(cat request.json)"
+```
+
+The REST API works too: `POST /repos/{owner}/{repo}/actions/workflows/praxis-remote.yml/dispatches`.
+
+**Getting the result.** There are three ways, in order of durability:
+
+1. **The request journal.** For a mutation, the entry
+   `.ros/remote/requests/<requestId>.json` is committed together with the
+   state it describes. Read it through the contents API, or send a
+   `request.status` request.
+2. **The workflow run.** Its `run-name` is `praxis remote <request_id>`. The
+   step summary holds the response and the adapter result.
+3. **The workflow artifact.** It is named `praxis-remote-response` and is
+   kept for 30 days.
+
+Logs and artifacts are supporting evidence only. The journal is the durable
+record.
+
+**Trust boundary.**
+
+- **Who can start it.** Only `workflow_dispatch`, which requires write
+  access to the repository, and `workflow_call` can start the workflow.
+  There is no `pull_request` trigger, so forks can neither run it nor
+  obtain its credentials.
+- **Credentials per job.** The default is `permissions: {}`.
+  - `praxis remote classify` decides whether a request mutates.
+  - Reads execute in a job with `contents: read`.
+  - Mutations run in a job with `contents: write`. That job is serialized
+    per ref, and the repository's `remote.capabilities` narrows it further.
+  - `pull-requests: write` is granted only when `persistence: pull-request`
+    is chosen.
+- **Request handling and secrets.** The request travels through the
+  environment into a file and is never interpolated into a shell. No
+  secrets are passed.
+- **Pinned actions.** Every third-party action is pinned to a commit SHA.
+
+**Persistence.** `scripts/praxis-remote-persist.sh` handles persistence:
+
+1. It commits exactly `persistence.paths`, after re-checking that each path
+   is Praxis-owned `.ros/` state and refusing anything else that is staged.
+2. It commits as the executor, `github-actions[bot]`, with these trailers:
+
+   ```
+   Praxis-Request-Id: <id>
+   Praxis-Operation: <operation>
+   Praxis-Requester: <kind>:<id> (asserted by the request)
+   Praxis-Executor: <kind> run <run> attempt <attempt>
+   Praxis-Version: <version>
+   ```
+
+   The runner never poses as the agent, and the agent is never recorded as
+   the author of bytes the runner wrote.
+3. It pushes without force.
+   - If the ref moved first, the result is `concurrency-conflict` with
+     `after-refresh`, and nothing was persisted.
+   - In `pull-request` mode, the state is pushed to
+     `praxis/remote/<digest of the request ID>` and a pull request is
+     opened. The result is `persisted: false` with the pull request URL,
+     until the pull request is merged.
+
+The adapter writes its own `praxis.remote-adapter-result` document next to
+the Praxis response. The job succeeds only when the Praxis outcome is
+`succeeded` and persistence did not fail.
+
+**Opting in.** Adding the workflow grants nothing on its own. A repository
+enables remote mutation by listing capabilities in `ros.json`, under
+`remote.capabilities`. Without that setting, remote requests can only read.
