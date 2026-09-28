@@ -235,4 +235,14 @@ module RemoteExecutionTests =
                       (Some [ finding "error" "x.md" "bad" ])
                       (RemoteJson.parseValidationFindings "{\"valid\":false,\"findings\":[{\"severity\":\"error\",\"path\":\"x.md\",\"field\":\"provenance\",\"message\":\"bad\"}]}")
 
-                  Assert.equal None (RemoteJson.parseValidationFindings "validation passed") } ]
+                  Assert.equal None (RemoteJson.parseValidationFindings "validation passed") }
+
+          { Name = "remote execution: a batch stopped by a same-request-retryable failure is not journalled as a whole"
+            Run =
+              fun () ->
+                  Assert.isTrue (BatchJournal.shouldRecord true None) "a successful batch is journalled"
+                  Assert.isTrue (BatchJournal.shouldRecord true (Some FailureCode.DomainRejected)) "a final refusal is journalled"
+                  Assert.isTrue (BatchJournal.shouldRecord true (Some FailureCode.StaleRef)) "an after-refresh failure is journalled"
+                  Assert.isTrue (not (BatchJournal.shouldRecord true (Some FailureCode.Timeout))) "a timeout stays retryable"
+                  Assert.isTrue (not (BatchJournal.shouldRecord true (Some FailureCode.Internal))) "an executor fault stays retryable"
+                  Assert.isTrue (not (BatchJournal.shouldRecord false None)) "nothing kept, nothing journalled" } ]

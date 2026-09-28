@@ -180,3 +180,16 @@ module ValidationRegression =
     let introduced (before: ValidationFinding list) (after: ValidationFinding list) =
         let existing = set before
         after |> List.filter (fun finding -> finding.Severity = "error" && not (existing.Contains finding)) |> List.distinct
+
+/// Whether a batch is journalled as a whole (PRAXIS-REMOTE-08). A batch
+/// that kept nothing leaves no record. One stopped by a failure the same
+/// request may retry is not journalled either: its accepted constituents
+/// are journalled individually, so resending it replays them and re-runs
+/// the stopped constituent rather than replaying the failure forever.
+[<RequireQualifiedAccess>]
+module BatchJournal =
+    let shouldRecord (keptAnything: bool) (stoppedBy: FailureCode option) =
+        keptAnything
+        && (match stoppedBy with
+            | Some code -> FailureCode.retry code <> RetryAdvice.SameRequest
+            | None -> true)

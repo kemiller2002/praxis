@@ -559,8 +559,10 @@ let private executeBatch (context: Context) (batch: Request) (constituents: Requ
                 Outcome = failed.Outcome
                 Result = Some resultDocument }
 
-    if kept.IsEmpty then
-        response
+    let stoppedBy = firstFailure |> Option.bind _.Failure |> Option.map _.Code
+
+    if not (BatchJournal.shouldRecord (not kept.IsEmpty) stoppedBy) then
+        { response with Persistence = kept |> List.distinct |> List.sort }
     else
         // Accepted constituents are durable; the batch's own entry makes a
         // retry of the whole batch replay rather than re-run.

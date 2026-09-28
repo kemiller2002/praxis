@@ -36,6 +36,25 @@ done
 [ -n "$RESPONSE" ] && [ -f "$RESPONSE" ] && [ -n "$OUTPUT" ] || { echo "praxis-remote-persist: --response FILE and --output FILE are required" >&2; exit 2; }
 case "$MODE" in push|pull-request) ;; *) echo "praxis-remote-persist: --mode must be push or pull-request" >&2; exit 2 ;; esac
 
+result() {
+  # $1 persisted (true|false) $2 commit $3 branch $4 pr $5 failure-code $6 retry $7 message
+  python3 - "$OUTPUT" "$MODE" "$@" <<'PY'
+import json, sys
+output, mode, persisted, commit, branch, pr, code, retry, message = sys.argv[1:10]
+none = lambda value: value or None
+json.dump({
+    "schema": "praxis.remote-adapter-result",
+    "schemaVersion": 1,
+    "mode": mode,
+    "persisted": persisted == "true",
+    "commit": none(commit),
+    "branch": none(branch),
+    "pullRequest": none(pr),
+    "failure": {"code": code, "decidedBy": "executor", "retry": retry, "message": message} if code else None,
+}, open(output, "w", encoding="utf-8"), indent=2)
+PY
+}
+
 # Everything this script needs from Praxis's own documents, read as JSON.
 # Values that reach a commit message were validated by Praxis as tokens
 # (no whitespace or control characters); they are re-checked here anyway.
@@ -50,6 +69,10 @@ paths = (response.get("persistence") or {}).get("paths") or []
 # of a batch that stopped part-way. Anything it refused was already undone.
 if not paths:
     print("nothing")
+    sys.exit(0)
+if response.get("replayed") is True:
+    # A replay recovers an outcome whose state is already on the branch.
+    print("replayed")
     sys.exit(0)
 for path in paths:
     if not isinstance(path, str) or not path.startswith(".ros/") or ".." in path.split("/") or "\n" in path:
@@ -71,29 +94,16 @@ print(safe(executor.get("kind")) + " run " + safe(executor.get("runId"), "-") + 
 print(safe(response.get("praxisVersion")))
 print("\t".join(paths))
 PY
-)" || exit 2
+)" || { result false "" "" "" internal never "the response lists state that is not Praxis-owned; nothing was persisted"; exit 2; }
 
-result() {
-  # $1 persisted (true|false) $2 commit $3 branch $4 pr $5 failure-code $6 retry $7 message
-  python3 - "$OUTPUT" "$MODE" "$@" <<'PY'
-import json, sys
-output, mode, persisted, commit, branch, pr, code, retry, message = sys.argv[1:10]
-none = lambda value: value or None
-json.dump({
-    "schema": "praxis.remote-adapter-result",
-    "schemaVersion": 1,
-    "mode": mode,
-    "persisted": persisted == "true",
-    "commit": none(commit),
-    "branch": none(branch),
-    "pullRequest": none(pr),
-    "failure": {"code": code, "decidedBy": "executor", "retry": retry, "message": message} if code else None,
-}, open(output, "w", encoding="utf-8"), indent=2)
-PY
-}
 
 if [ "$(printf '%s\n' "$FACTS" | sed -n 1p)" = "nothing" ]; then
   result false "" "" "" "" "" ""
+  exit 0
+fi
+
+if [ "$(printf '%s\n' "$FACTS" | sed -n 1p)" = "replayed" ]; then
+  result true "$(git rev-parse HEAD)" "$(git symbolic-ref --quiet --short HEAD || true)" "" "" "" ""
   exit 0
 fi
 
@@ -111,7 +121,7 @@ old_ifs="$IFS"; IFS="$(printf '\t')"
 # shellcheck disable=SC2086
 set -- $PATHS
 IFS="$old_ifs"
-git add -A -- "$@"
+git add -A -- "$@" || { result false "" "$TARGET_BRANCH" "" repository-write-failed same-request "staging the reported paths failed; nothing was persisted"; exit 1; }
 
 # ...and refuse if anything else is staged.
 unexpected="$(git diff --cached --name-only | while IFS= read -r staged; do
@@ -119,7 +129,18 @@ unexpected="$(git diff --cached --name-only | while IFS= read -r staged; do
   for reported in "$@"; do [ "$staged" = "$reported" ] && keep=yes; done
   [ "$keep" = yes ] || printf '%s\n' "$staged"
 done)"
-[ -z "$unexpected" ] || { echo "praxis-remote-persist: refusing to commit unreported paths: $unexpected" >&2; exit 2; }
+[ -z "$unexpected" ] || {
+  echo "praxis-remote-persist: refusing to commit unreported paths: $unexpected" >&2
+  result false "" "$TARGET_BRANCH" "" internal never "other changes were staged alongside the reported Praxis state; nothing was persisted"
+  exit 2
+}
+
+# The reported state already matches HEAD (for example, a request whose
+# commit already landed): nothing to commit, and nothing lost.
+if git diff --cached --quiet; then
+  result true "$(git rev-parse HEAD)" "$TARGET_BRANCH" "" "" "" ""
+  exit 0
+fi
 
 git -c user.name="${PRAXIS_COMMIT_NAME:-github-actions[bot]}" \
     -c user.email="${PRAXIS_COMMIT_EMAIL:-41898282+github-actions[bot]@users.noreply.github.com}" \
@@ -127,7 +148,7 @@ git -c user.name="${PRAXIS_COMMIT_NAME:-github-actions[bot]}" \
 Praxis-Operation: $OPERATION
 Praxis-Requester: $REQUESTER (asserted by the request)
 Praxis-Executor: $EXECUTOR
-Praxis-Version: $VERSION"
+Praxis-Version: $VERSION" || { result false "" "$TARGET_BRANCH" "" repository-write-failed same-request "the commit failed; nothing was persisted"; exit 1; }
 COMMIT="$(git rev-parse HEAD)"
 
 push_failure() {

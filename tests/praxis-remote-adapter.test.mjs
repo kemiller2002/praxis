@@ -295,3 +295,31 @@ test("the operator documentation covers every failure code and names only files 
     assert.match(operations, new RegExp(`^## ${heading}$`, "m"), heading);
   }
 });
+
+test("a replayed success persists nothing new and reports the state as already persisted", (t) => {
+  const { origin, runner } = remoteAndCheckout(t);
+  const body = startRequest(runner, "req-adapter-replay-1");
+  const first = persistResponse(runner, execute(runner, body));
+  assert.equal(first.adapter.persisted, true);
+  const head = git(origin, "rev-parse", "main");
+
+  const retried = execute(runner, body);
+  assert.equal(JSON.parse(fs.readFileSync(retried, "utf8")).replayed, true);
+  const second = persistResponse(runner, retried);
+  assert.equal(second.status, 0, second.stderr);
+  assert.equal(second.adapter.persisted, true);
+  assert.equal(second.adapter.failure, null);
+  assert.equal(git(origin, "rev-parse", "main"), head, "no new commit");
+});
+
+test("every persistence refusal still writes a machine-readable adapter result", (t) => {
+  const { runner } = remoteAndCheckout(t);
+  const response = execute(runner, startRequest(runner));
+  fs.writeFileSync(path.join(runner, "README.extra.md"), "not Praxis state\n");
+  git(runner, "add", "README.extra.md");
+  const staged = persistResponse(runner, response);
+  assert.equal(staged.status, 2);
+  assert.equal(staged.adapter.persisted, false);
+  assert.equal(staged.adapter.failure.code, "internal");
+  assert.equal(staged.adapter.failure.retry, "never");
+});

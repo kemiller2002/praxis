@@ -2903,10 +2903,10 @@
     {
       "id": "GH-90",
       "type": "task",
-      "state": "blocked",
-      "semanticState": "blocked",
+      "state": "active",
+      "semanticState": "active",
       "evidence": [],
-      "updatedAt": "2026-09-28T09:41:16.000Z",
+      "updatedAt": "2026-09-28T10:21:01.000Z",
       "telemetryExecutionIds": [
         "EXE-20260928T073932249Z-d48161b9"
       ],
@@ -3273,7 +3273,7 @@
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-28T09:41:16.000Z",
+  "updatedAt": "2026-09-28T10:21:01.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
