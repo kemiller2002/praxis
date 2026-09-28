@@ -18,7 +18,7 @@ Classes used:
 
 - **Implemented**: true of the code today, with a citation.
 - **Demonstrated**: shown on the page from real records, checked by
-  `site-tools/evidence.mjs --check`.
+  `praxis-site evidence --check` (then `site-tools/evidence.mjs --check`).
 - **Direction**: labelled on the page as architectural direction.
 - **Planned**: none; nothing on the page is presented as scheduled.
 - **Illustrative**: labelled "Illustrative execution".
@@ -44,8 +44,15 @@ Classes used:
 | 15 | `registries/` "generated indexes of the above" | It indexes research records only. | "generated indexes of research records". |
 | 16 | Site deployment "isolated from release workflows" | The tooling lived in `scripts/site/` and edited `package.json`, both of which `native-release.yml` watches on `main`. Merging would have re-uploaded v3.4.0 assets. | Tooling moved to `site-tools/` and `package.json` reverted; a mutation-checked test forbids overlap. |
 
-Regression tests for 1-10: `tests/site/claims.test.mjs` and
-`tests/site/content.test.mjs`. For 16: `tests/site/workflow.test.mjs`.
+Regression tests for 1-10: `tests/Site.Tests/ClaimsTests.fs` and
+`tests/Site.Tests/ContentTests.fs` (ported from `tests/site/*.test.mjs` on
+2026-09-28). For 16: `tests/Site.Tests/WorkflowTests.fs`.
+
+Later change (2026-09-28): the repository became F#/.NET only. The page no
+longer mentions an npm package or the repository-local launcher (row 11, and
+the npm bullet under "From ROS to Praxis"); it says the native installers
+install both `praxis` and `ros`, which `ContentTests.fs` pins to the
+installers' source.
 
 ## Register after correction
 
