@@ -5,6 +5,7 @@
 | ATTR-COMPLETE-BASE-REF-SWEEP | Stop work complete from sweeping ROS_BASE_REF committed-range paths into its completion event | captured | attribution, reconciliation | medium |
 | ATTR-RECONCILE-SYMLINK-SUBMODULE | Content-match symbolic links and submodules for reconciled attribution | captured | attribution, reconciliation | low |
 | BOOTSTRAP-ADOPTION-FIX | BOOTSTRAP-ADOPTION-FIX | complete |  |  |
+| BUG-WORK-ID-COLLISION | Reject auto-generated backlog IDs already present in work context | captured | bug, work-protocol | medium |
 | CI-BASE-REF-FIX | CI-BASE-REF-FIX | complete |  |  |
 | CI-LATEST-ON-VERSION-BUMP | CI-LATEST-ON-VERSION-BUMP | blocked |  |  |
 | CI-NPM-PUBLISH | CI-NPM-PUBLISH | complete |  |  |
@@ -33,6 +34,7 @@
 | OIDC-REPO-IDENTITY | OIDC-REPO-IDENTITY | complete |  |  |
 | PKG-BIN-EXECUTABLE | PKG-BIN-EXECUTABLE | complete |  |  |
 | PKG-ECHELON-FOUNDRY | PKG-ECHELON-FOUNDRY | complete |  |  |
+| PKG-FALLBACK-GUIDE | Ship fallback reconciliation guide in distributed package | complete | packaging, documentation | high |
 | PKG-MIT-LICENSE | PKG-MIT-LICENSE | complete |  |  |
 | PKG-PUBLISH-READINESS | PKG-PUBLISH-READINESS | complete |  |  |
 | PRAXIS-SITE-01 | Establish public-site architecture | complete | gh-84, public-site | high |
@@ -129,7 +131,7 @@
 | WI-0058 | Release 3.0.0: version bump plus refreshed README and instructions | complete |  | high |
 | WI-0059 | Classify registries/theories.json as generated in both starter manifests | complete |  | high |
 | WI-0060 | Bump npm package version to 3.0.3 | complete | release, npm | medium |
-| WI-0061 | WI-0061 | complete |  |  |
+| WI-0061 | Ship fallback reconciliation guide in distributed package | complete |  | medium |
 | WI-0062 | Triage SDE 1.3.0 structural review findings | complete | sde, structural-review | high |
 | WI-0063 | Implement ROS next-pass Ordo observation and structured handoff (#63) | complete | ordo,next-pass | high |
 | WI-0064 | Complete dual-entry reconciliation and merge PR #79 | complete | reconciliation, integration | high |

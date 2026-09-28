@@ -38,6 +38,7 @@
     "docs/web-interface.md",
     "docs/project-administration-hub.md",
     "docs/development-telemetry.md",
+    "docs/fallback-reconciliation.md",
     "docs/ordo-observation.md",
     "docs/migrations/",
     "framework/",

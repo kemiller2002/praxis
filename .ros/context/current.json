@@ -2941,11 +2941,36 @@
       ],
       "updatedAt": "2026-08-19T13:25:23.279Z",
       "completedAt": "2026-08-19T13:25:23.279Z"
+    },
+    {
+      "id": "PKG-FALLBACK-GUIDE",
+      "type": "bug",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "package.json"
+        },
+        {
+          "type": "implementation",
+          "path": "starter/greenfield/manifest.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/lifecycle-package.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-28T07:30:17Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T071427744Z-4668f242"
+      ],
+      "completedAt": "2026-09-28T07:30:17Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-28T07:05:38Z",
+  "updatedAt": "2026-09-28T07:30:17Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

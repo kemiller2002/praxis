@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 61,
+  "nextSeq": 62,
   "items": [
     {
       "id": "ATTR-COMPLETE-BASE-REF-SWEEP",
@@ -1920,6 +1920,76 @@
       "createdAt": "2026-09-10T20:34:39.993Z",
       "updatedAt": "2026-09-10T20:34:40.063Z",
       "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0061",
+      "title": "Ship fallback reconciliation guide in distributed package",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "abandoned",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:13:30.037Z",
+      "updatedAt": "2026-09-28T07:14:00Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "manual",
+      "sourceReference": null,
+      "abandonedReason": "Auto-generated ID collided with an existing completed work item after main integration; replaced by explicit PKG-FALLBACK-GUIDE"
+    },
+    {
+      "id": "PKG-FALLBACK-GUIDE",
+      "title": "Ship fallback reconciliation guide in distributed package",
+      "description": null,
+      "tags": [
+        "packaging",
+        "documentation"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:14:10Z",
+      "updatedAt": "2026-09-28T07:30:17Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "BUG-WORK-ID-COLLISION",
+      "title": "Reject auto-generated backlog IDs already present in work context",
+      "description": "After integrating main, ./ros add selected WI-0061 even though current context already contained completed WI-0061. The duplicate backlog entry was immediately abandoned and replaced with an explicit ID. Add cross-store ID allocation regression coverage.",
+      "tags": [
+        "bug",
+        "work-protocol"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:30:38Z",
+      "updatedAt": "2026-09-28T07:30:38Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
       "source": "manual",
       "sourceReference": null
     }
