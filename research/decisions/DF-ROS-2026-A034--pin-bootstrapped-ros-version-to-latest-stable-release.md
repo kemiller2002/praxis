@@ -21,6 +21,18 @@ superseded_by:
   - DF-ROS-2026-A041
 tags: [ros-fs, bootstrap, launcher, npm, release]
 confidence: high
+provenance:
+  contributions:
+    EXE-20260928T090915352Z-fb23943c:
+      operations: [superseded]
+      at: 2026-09-28T10:18:56.865Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Superseded by DF-ROS-2026-A041 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
 ---
 
 # Decision

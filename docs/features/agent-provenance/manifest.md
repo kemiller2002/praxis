@@ -6,7 +6,8 @@ live in the linked decision, requirements, source symbols, and tests.
 > **Current state (2026-09-28, `DF-ROS-2026-A041`).** This feature is
 > implemented only in F# (`src/`). The Node modules (`tools/*.mjs`) and the
 > Node test files this manifest's history cites were removed; their
-> end-to-end coverage now lives in `tests/Ros.Tests`. References to them
+> end-to-end coverage now lives in `tests/Ros.Tests` (mapping in
+> `docs/migrations/fsharp/TRACEABILITY.md`). References to them
 > below are migration lineage, recoverable from Git history.
 
 ## Purpose

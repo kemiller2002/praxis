@@ -8,10 +8,10 @@ be merged. Work item: `PRAXIS-SITE-01` (GH-84).
 |---|---|---|
 | Purpose | Operational work-backlog UI for one repository (or the project-administration hub) | Public explanation of Praxis |
 | Audience | The repository's own operators | Anyone on the internet |
-| Served by | `tools/ros_server.mjs` / `tools/ros_hub_server.mjs`, a privileged localhost HTTP adapter over repository state | Any static host (GitHub Pages) |
+| Served by | `ros web serve` / `ros hub serve` (F#), a privileged localhost HTTP adapter over repository state | Any static host (GitHub Pages) |
 | Backend | Yes: reads and mutates `.ros/` state through the Praxis HTTP adapter | None: static files only |
 | Data | Live repository state | A committed, reviewed, public-safe snapshot (`site/data/`) |
-| Build | `npm run build:web` (TypeScript) | None: plain HTML and CSS, no script |
+| Build | None: rendered by the F# CLI (`./ros web serve`) | None: plain HTML and CSS, no script |
 
 ## Rules
 

@@ -22,6 +22,20 @@
             "created"
           ],
           "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        },
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:57.631Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Verification references moved from removed Node tests to their F# ports (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
         }
       }
     },
@@ -38,7 +52,7 @@
       "provider-neutral"
     ],
     "title": "Actor identity is explicit, structured, and provider-neutral",
-    "updated": "2026-09-25",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -64,6 +78,20 @@
             "created"
           ],
           "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        },
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:58.429Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Verification references moved from removed Node tests to their F# ports (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
         }
       }
     },
@@ -80,7 +108,7 @@
       "telemetry"
     ],
     "title": "Every execution has its own identity, separate from the actor's stable identity",
-    "updated": "2026-09-25",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -106,6 +134,20 @@
             "created"
           ],
           "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        },
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:59.082Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Verification references moved from removed Node tests to their F# ports (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
         }
       }
     },
@@ -122,7 +164,7 @@
       "attribution"
     ],
     "title": "Work events and captured work items record the acting actor",
-    "updated": "2026-09-25",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -588,6 +630,24 @@
     ],
     "path": "research/requirements/RQ-ROS-2026-A021--fsharp-dotnet-only-repository.md",
     "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:53.294Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Captured the F#/.NET-only repository rule from the user's objective (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        }
+      }
+    },
     "related_documents": [
       "DF-ROS-2026-A041",
       "DF-ROS-2026-A033",

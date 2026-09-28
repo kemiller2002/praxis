@@ -285,6 +285,24 @@
       "repository-governance"
     ],
     "path": "research/decisions/DF-ROS-2026-A029--fsharp-npm-binary-distribution.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:54.616Z",
+          "operations": [
+            "superseded"
+          ],
+          "reason": "Superseded by DF-ROS-2026-A041 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        }
+      }
+    },
     "related_documents": [
       "DF-ROS-2026-A027",
       "DF-ROS-2026-A028",
@@ -396,6 +414,24 @@
       "repository-governance"
     ],
     "path": "research/decisions/DF-ROS-2026-A032--fsharp-full-node-replacement.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:55.363Z",
+          "operations": [
+            "superseded"
+          ],
+          "reason": "Superseded by DF-ROS-2026-A041 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        }
+      }
+    },
     "related_documents": [
       "DF-ROS-2026-A028",
       "DF-ROS-2026-A029",
@@ -436,6 +472,24 @@
       "repository-governance"
     ],
     "path": "research/decisions/DF-ROS-2026-A033--node-internal-library-only-golden-master-tests.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:56.141Z",
+          "operations": [
+            "superseded"
+          ],
+          "reason": "Superseded by DF-ROS-2026-A041 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        }
+      }
+    },
     "related_documents": [
       "DF-ROS-2026-A028",
       "DF-ROS-2026-A030",
@@ -474,6 +528,24 @@
       "repository-governance"
     ],
     "path": "research/decisions/DF-ROS-2026-A034--pin-bootstrapped-ros-version-to-latest-stable-release.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:56.865Z",
+          "operations": [
+            "superseded"
+          ],
+          "reason": "Superseded by DF-ROS-2026-A041 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        }
+      }
+    },
     "related_documents": [
       "EV-ROS-2026-A051",
       "DF-ROS-2026-A029",
@@ -667,6 +739,24 @@
       "repository-governance"
     ],
     "path": "research/decisions/DF-ROS-2026-A041--fsharp-dotnet-only-repository.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:53.922Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Architecture decision removing repository-owned Node and enforcing the invariant (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        }
+      }
+    },
     "related_documents": [
       "RQ-ROS-2026-A021",
       "DF-ROS-2026-A009",

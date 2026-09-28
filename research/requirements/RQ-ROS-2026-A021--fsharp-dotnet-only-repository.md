@@ -14,6 +14,18 @@ related_documents:
   - DF-ROS-2026-A033
   - requirements/SHARED-APPLICATION-FOUNDATIONS.md
 tags: [architecture, fsharp, dotnet, tooling, node-removal, invariant]
+provenance:
+  contributions:
+    EXE-20260928T090915352Z-fb23943c:
+      operations: [created]
+      at: 2026-09-28T10:18:53.294Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Captured the F#/.NET-only repository rule from the user's objective (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
 ---
 
 # Requirement

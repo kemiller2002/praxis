@@ -6,7 +6,7 @@ version: 1.0.0
 owners:
   - repository-governance
 created: 2026-09-25
-updated: 2026-09-25
+updated: 2026-09-28
 research_area: repository-operating-system
 priority: high
 related_documents:
@@ -25,6 +25,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+    EXE-20260928T090915352Z-fb23943c:
+      operations: [modified]
+      at: 2026-09-28T10:18:59.082Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Verification references moved from removed Node tests to their F# ports (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
 ---
 
 # Requirement
@@ -38,10 +48,10 @@ Git authorship and free-text actor strings cannot say who performed an action or
 ## Acceptance criteria
 
 - The event `actor` is part of the hashed, published event.
-- The Node internal library writes the identical actor (golden-master parity).
+- The CLI writes the identical actor recorded by the original golden masters (the Node library that shared them was removed by DF-ROS-2026-A041).
 - Legacy events and items without an actor remain valid and are reported only as informational findings.
 
 ## Verification
 
-- tests/work-start-, work-resume-, work-block-, and work-capture-fsharp-differential.test.mjs
+- tests/Ros.Tests/WorkLifecycleCliTests.fs and tests/Ros.Tests/WorkBacklogCliTests.fs (work start, resume, block, capture golden masters)
 - ProvenanceTests: events: legacy events without actors are informational; malformed actors are errors

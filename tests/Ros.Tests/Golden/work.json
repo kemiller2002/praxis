@@ -244,7 +244,9 @@
           "research/packages/.gitkeep",
           "research/theories/.gitkeep",
           "ros",
+          "ros.cmd",
           "ros.json",
+          "ros.ps1",
           "schemas/artifact-metadata.schema.json",
           "schemas/evidence.schema.json",
           "schemas/execution-telemetry.schema.json",
@@ -264,8 +266,7 @@
           "templates/research/HYPOTHESIS-TEMPLATE.md",
           "templates/research/JOURNAL-TEMPLATE.md",
           "templates/research/REP-TEMPLATE.md",
-          "templates/research/THEORY-TEMPLATE.md",
-          "tools/ros_fs_launcher.mjs"
+          "templates/research/THEORY-TEMPLATE.md"
         ],
         "telemetryExecutions": []
       }
@@ -344,7 +345,9 @@
     "research/packages/.gitkeep",
     "research/theories/.gitkeep",
     "ros",
+    "ros.cmd",
     "ros.json",
+    "ros.ps1",
     "schemas/artifact-metadata.schema.json",
     "schemas/evidence.schema.json",
     "schemas/execution-telemetry.schema.json",
@@ -364,8 +367,7 @@
     "templates/research/HYPOTHESIS-TEMPLATE.md",
     "templates/research/JOURNAL-TEMPLATE.md",
     "templates/research/REP-TEMPLATE.md",
-    "templates/research/THEORY-TEMPLATE.md",
-    "tools/ros_fs_launcher.mjs"
+    "templates/research/THEORY-TEMPLATE.md"
   ],
   "test7Production": {
     "context": {
@@ -459,7 +461,9 @@
         "research/packages/.gitkeep",
         "research/theories/.gitkeep",
         "ros",
+        "ros.cmd",
         "ros.json",
+        "ros.ps1",
         "schemas/artifact-metadata.schema.json",
         "schemas/evidence.schema.json",
         "schemas/execution-telemetry.schema.json",
@@ -479,8 +483,7 @@
         "templates/research/HYPOTHESIS-TEMPLATE.md",
         "templates/research/JOURNAL-TEMPLATE.md",
         "templates/research/REP-TEMPLATE.md",
-        "templates/research/THEORY-TEMPLATE.md",
-        "tools/ros_fs_launcher.mjs"
+        "templates/research/THEORY-TEMPLATE.md"
       ]
     },
     "events": [

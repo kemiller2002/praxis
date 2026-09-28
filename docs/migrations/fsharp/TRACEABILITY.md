@@ -4,6 +4,35 @@ This table links current behavior to its authority, planned/new typed owner, and
 verification. A planned owner is not authoritative until its slice and switch
 decision are accepted.
 
+
+**Closed (2026-09-28, `DF-ROS-2026-A041`).** Node is removed from this
+repository; the rows below are the migration's historical ledger. The Node
+test files they cite were ported to F# end-to-end tests in `tests/Ros.Tests`
+(same golden values, real `ros-fs` against disposable repositories):
+
+| Former Node test file(s) | F# test module |
+|---|---|
+| `work-fsharp-differential` | `WorkDecisionCliTests.fs` |
+| `work-telemetry-`, `work-telemetry-lifecycle-`, `work-resume-parent-execution-fsharp-differential` | `WorkTelemetryCliTests.fs` |
+| `work-git-paths-fsharp-differential` | `WorkGitPathsCliTests.fs` |
+| `work-attribution-`, `work-backlog-validate-fsharp-differential` | `WorkValidateCliTests.fs` |
+| `work-backlog-transition-`, `work-capture-`, `work-update-`, `work-attach-fsharp-differential` | `WorkBacklogCliTests.fs` |
+| `work-start-`, `work-resume-`, `work-block-`, `work-complete-fsharp-differential` | `WorkLifecycleCliTests.fs` |
+| `work-context-`, `work-list-fsharp-differential` | `WorkViewCliTests.fs` |
+| `status-`, `validate-unified-fsharp-differential` | `StatusValidateCliTests.fs` |
+| `git-`, `artifact-fsharp-differential` | `GitArtifactCliTests.fs` |
+| `telemetry-{show,summary,finalize,record,ingest,classify,start,validate}-fsharp-differential` | `TelemetryCliTests.fs` |
+| `telemetry-ingest-{openai-codex,hook,claude-statusline,otel}-fsharp-differential` | `TelemetryAdapterCliTests.fs` |
+| `adapter-call-`, `adapter-publish-fsharp-differential` | `AdapterCliTests.fs` |
+| `provenance-actor-fsharp-differential`, `provenance-followups` | `ProvenanceCliTests.fs` |
+| `lifecycle-package` | `LifecycleCliTests.fs` |
+| `npm-bootstrap` (F#-relevant parts) | `InstalledRepositoryTests.fs` |
+| `echelon-doctor` | `EchelonDoctorTests.fs` |
+| `artifact-compatibility` (F#-relevant parts) | `ArtifactTests.fs` |
+| `ros-server`, `ros-hub` | `WebInterfaceTests.fs`, `HubTests.fs` |
+| `tests/site/*` | `tests/Site.Tests/` |
+| `ros-fs-launcher` | removed with the Node launcher |
+
 | Responsibility | Current requirement/authority | SDE constraint | F# authority | Verification/status |
 |---|---|---|---|---|
 | Canonical Markdown and generated registries | `DF-ROS-2026-A001`, A002; Node/Python behavior | boundary preservation; explicit semantic authority | `Ros.Domain.Artifacts`, `Ros.Application.Artifacts`, `Ros.Contracts.Artifacts` | MIG-03/04 complete; Node/F# byte differential and repeatability pass; Node remains authority |

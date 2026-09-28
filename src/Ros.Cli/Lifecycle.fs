@@ -10,8 +10,8 @@ open Ros.Infrastructure.Lifecycle
 
 /// The distributed package version, taken from the assembly's own
 /// informational version. `Directory.Build.props` sets that from
-/// `package.json`, so the CLI and the npm release can never report different
-/// versions.
+/// `release.json`, so the CLI and the native release can never report
+/// different versions.
 let Version =
     let raw =
         typeof<LifecycleRequest>.Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
