@@ -1,0 +1,81 @@
+{
+  "list": {
+    "schemaVersion": "1.0.0",
+    "protocolVersion": "1.0.0",
+    "repository": "work-context-differential",
+    "actor": "ros-bootstrap",
+    "workItems": [
+      {
+        "id": "{install}",
+        "type": "mechanical",
+        "state": "complete",
+        "semanticState": "complete",
+        "evidence": [
+          {
+            "type": "installation",
+            "path": ".ros/installation.json"
+          }
+        ],
+        "allowedActions": [],
+        "requiredEvidenceForCompletion": [],
+        "hasExecIds": false
+      },
+      {
+        "id": "WI-READY",
+        "type": "task",
+        "state": "active",
+        "semanticState": "active",
+        "evidence": [],
+        "allowedActions": [
+          "block",
+          "complete"
+        ],
+        "requiredEvidenceForCompletion": [
+          "implementation",
+          "tests"
+        ],
+        "hasExecIds": true
+      },
+      {
+        "id": "WI-ACTIVE",
+        "type": "task",
+        "state": "blocked",
+        "semanticState": "blocked",
+        "evidence": [],
+        "blockReason": "waiting",
+        "allowedActions": [
+          "resume"
+        ],
+        "requiredEvidenceForCompletion": [
+          "implementation",
+          "tests"
+        ],
+        "hasExecIds": true
+      }
+    ]
+  },
+  "single": {
+    "schemaVersion": "1.0.0",
+    "protocolVersion": "1.0.0",
+    "repository": "work-context-differential",
+    "actor": "ros-bootstrap",
+    "workItems": [
+      {
+        "id": "WI-ACTIVE",
+        "type": "task",
+        "state": "active",
+        "semanticState": "active",
+        "evidence": [],
+        "allowedActions": [
+          "block",
+          "complete"
+        ],
+        "requiredEvidenceForCompletion": [
+          "implementation",
+          "tests"
+        ],
+        "hasExecIds": true
+      }
+    ]
+  }
+}

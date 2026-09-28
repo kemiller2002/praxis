@@ -14,6 +14,7 @@
   <ItemGroup>
     <Compile Include="TestFramework.fs" />
     <Compile Include="CliHarness.fs" />
+    <Compile Include="CliGolden.fs" />
     <Compile Include="ArchitectureTests.fs" />
     <Compile Include="ArtifactTests.fs" />
     <Compile Include="PersistenceTests.fs" />
@@ -64,6 +65,18 @@
     <Compile Include="ProvenanceEffectTests.fs" />
     <Compile Include="WorkReconciliationTests.fs" />
     <Compile Include="WorkReconciliationEffectTests.fs" />
+    <Compile Include="WorkDecisionCliTests.fs" />
+    <Compile Include="WorkTelemetryCliTests.fs" />
+    <Compile Include="WorkGitPathsCliTests.fs" />
+    <Compile Include="WorkValidateCliTests.fs" />
+    <Compile Include="WorkBacklogCliTests.fs" />
+    <Compile Include="WorkLifecycleCliTests.fs" />
+    <Compile Include="WorkViewCliTests.fs" />
+    <Compile Include="StatusValidateCliTests.fs" />
+    <Compile Include="GitArtifactCliTests.fs" />
     <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Golden/*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
