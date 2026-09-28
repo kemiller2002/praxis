@@ -1879,70 +1879,16 @@ module FileTelemetryFinalizationRepository =
           CollectedAt = at
           Source = runtimeSource }
 
-    let private rawRedactedKeyPattern =
-        Regex(
-            @"^(?:authorization|cookie|set-cookie|password|passwd|secret|credential|api[_-]?key|access[_-]?token|refresh[_-]?token|id[_-]?token|prompt|prompts|messages?|content|tool[_-]?input|tool[_-]?response|request|response|stdout|stderr|command|full[_-]?command|transcript[_-]?path|cwd|current[_-]?dir|project[_-]?dir|workspace[_-]?path|file[_-]?path|email|user\.email)$",
-            RegexOptions.IgnoreCase
-        )
-
-    let private rawSensitiveSegmentPattern =
-        Regex(
-            @"(?:^|[._-])(?:authorization|password|passwd|secret|credential|api[_-]?key|access[_-]?token|refresh[_-]?token|id[_-]?token|email)(?:$|[._-])",
-            RegexOptions.IgnoreCase
-        )
-
-    let private maxRawStringLength = 2048
-
-    /// Mirrors production `sanitizeRaw`: redacts any key matching either
-    /// sensitive-key pattern (replacing its value, never recursing into
-    /// it), truncates an over-long string leaf, and otherwise rebuilds the
-    /// tree unchanged -- always via fresh nodes (`DeepClone` for scalars),
-    /// since a `JsonNode` already attached elsewhere cannot be reattached.
-    let rec private sanitizeRawNode (value: JsonNode) (currentPath: string) (redactions: ResizeArray<string>) : JsonNode =
-        match value with
-        | null -> null
-        | :? JsonArray as array ->
-            let result = JsonArray()
-            array |> Seq.iteri (fun index item -> result.Add(sanitizeRawNode item $"{currentPath}[{index}]" redactions))
-            result
-        | :? JsonObject as obj ->
-            let result = JsonObject()
-
-            for entry in obj |> Seq.toList do
-                let childPath = $"{currentPath}.{entry.Key}"
-
-                if rawRedactedKeyPattern.IsMatch(entry.Key) || rawSensitiveSegmentPattern.IsMatch(entry.Key) then
-                    result[entry.Key] <- JsonValue.Create "[REDACTED_BY_ROS]"
-                    redactions.Add childPath
-                else
-                    result[entry.Key] <- sanitizeRawNode entry.Value childPath redactions
-
-            result
-        | :? JsonValue as leaf when leaf.GetValueKind() = JsonValueKind.String ->
-            let text = leaf.GetValue<string>()
-
-            if text.Length > maxRawStringLength then
-                JsonValue.Create $"[TRUNCATED_BY_ROS length={text.Length}]"
-            else
-                JsonValue.Create text
-        | _ -> value.DeepClone()
+    /// Native ingestion and fallback import share one sanitizer so neither
+    /// entry path can retain a provider field the other would redact.
+    let private sanitizeRawNode value currentPath redactions =
+        RawTelemetrySanitizer.sanitizeInto value currentPath redactions
 
     /// Mirrors production `leafPaths`: every leaf value's path (array
     /// indices normalized to `[]`), deduplicated and sorted -- called on
     /// the already-sanitized payload, so a redacted leaf's path is still
     /// recorded (its value is now a plain string, still a leaf).
-    let rec private leafPathsInto (value: JsonNode) (prefix: string) (result: ResizeArray<string>) =
-        match value with
-        | :? JsonArray as array -> array |> Seq.iteri (fun index item -> leafPathsInto item $"{prefix}[{index}]" result)
-        | :? JsonObject as obj ->
-            for entry in obj do
-                leafPathsInto entry.Value $"{prefix}.{entry.Key}" result
-        | _ -> result.Add(Regex.Replace(prefix, @"\[\d+\]", "[]"))
-
-    let private leafPaths (value: JsonNode) : string list =
-        let result = ResizeArray<string>()
-        leafPathsInto value "$" result
-        result |> Seq.distinct |> Seq.sortWith (fun a b -> String.CompareOrdinal(a, b)) |> Seq.toList
+    let private leafPaths value = RawTelemetrySanitizer.leafPaths value
 
     let private alreadyIngested (record: JsonObject) (snapshotId: string) : bool =
         let inRawTelemetry =

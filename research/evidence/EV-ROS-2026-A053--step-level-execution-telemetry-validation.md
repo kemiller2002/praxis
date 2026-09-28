@@ -18,7 +18,7 @@ supports:
   - RQ-ROS-2026-A017
   - RQ-ROS-2026-A018
   - RQ-ROS-2026-A019
-  - RQ-ROS-2026-A020
+  - RQ-ROS-2026-A021
 related_documents:
   - docs/development-telemetry.md
   - docs/cli.md
@@ -39,6 +39,16 @@ provenance:
         model: unknown
         runtime: codex
       reason: "Implementation and validation evidence for first-class step telemetry"
+    EXE-20260927T145842499Z-f1b40c22:
+      operations: [modified]
+      at: 2026-09-28T02:12:55Z
+      actor:
+        kind: agent
+        id: openai/codex
+        provider: openai
+        model: unknown
+        runtime: codex
+      reason: "Migrate step CLI requirement reference after main integration"
 ---
 
 # Evidence summary
@@ -99,13 +109,10 @@ that execution's canonical telemetry record.
 
 Provider adapters were not changed to fabricate measurements that the current
 runtime did not expose. Exact token and cost attribution therefore remains
-unavailable for this execution. The additive fallback envelope and
-reconciliation validator preserve step boundaries, telemetry, raw references,
-evidence, actor identity, and instance identity, but the pre-existing
-fallback request dispatcher still fails closed with
-`request-dispatch-not-configured`; a native canonical-ingestion dispatcher is
-the immediately following reconciliation workload, not a second format hidden
-inside this feature.
+unavailable for this execution. The original fallback-dispatch limitation was
+closed by `DF-ROS-2026-A041` and is validated separately by
+`EV-ROS-2026-A054`; fallback steps now reconcile into the canonical execution
+model through the native planner and a crash-recoverable checkpoint.
 
 No executable rename was started. The resulting CLI and storage model are
 ready to measure the separate `ros` to `praxis` executable migration.

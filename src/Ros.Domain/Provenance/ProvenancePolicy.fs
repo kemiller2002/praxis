@@ -336,6 +336,15 @@ type ActorContributionSummary =
       Reviewed: int
       Executions: int }
 
+/// Cross-artifact collaboration facts: artifact identifiers, sorted.
+type CollaborationSummary =
+    { AgentToAgentRevisions: string list
+      HumanCorrectionsOfAgentWork: string list
+      HumanApprovedAgentWork: string list
+      /// (artifact, distinct contributions), most-contributed first; only
+      /// artifacts with more than one contribution.
+      Hotspots: (string * int) list }
+
 [<RequireQualifiedAccess>]
 module ProvenanceIndex =
     let facts (documents: ArtifactDocument list) : ContributionFact list =
@@ -382,3 +391,34 @@ module ProvenanceIndex =
                     rows
               Executions = rows |> List.choose (fun row -> Contribution.execution row.Contribution) |> List.distinct |> List.length })
         |> List.sortBy (fun summary -> -summary.Artifacts, Actor.describe summary.Actor)
+
+    /// Repository-wide collaboration facts derived from each artifact's
+    /// recorded `Involvement` (never from the last modifier or from style):
+    /// the artifacts where one agent revised another agent's work, where a
+    /// human corrected agent work, where a human approved agent work, and
+    /// the artifacts touched by the most distinct contributions (hotspots).
+    let collaboration (documents: ArtifactDocument list) : CollaborationSummary =
+        let attributed =
+            documents
+            |> List.choose (fun document ->
+                match ArtifactProvenance.parse document.Metadata with
+                | Ok(Some provenance) -> Some(ArtifactDocument.identifier document, provenance)
+                | _ -> None)
+
+        let where predicate =
+            attributed
+            |> List.filter (fun (_, provenance) -> predicate (Involvement.describe provenance))
+            |> List.map fst
+            |> List.sort
+
+        { AgentToAgentRevisions = where _.AgentToAgentRevision
+          HumanCorrectionsOfAgentWork = where _.HumanCorrectionOfAgentWork
+          HumanApprovedAgentWork =
+            where (fun involvement ->
+                involvement.Origin |> Option.exists (fun origin -> origin.Kind = ActorKind.Agent)
+                && involvement.Approvers |> List.exists (fun approver -> approver.Kind = ActorKind.Human))
+          Hotspots =
+            attributed
+            |> List.map (fun (identifier, provenance) -> identifier, provenance.Contributions.Length)
+            |> List.filter (fun (_, count) -> count > 1)
+            |> List.sortBy (fun (identifier, count) -> -count, identifier) }

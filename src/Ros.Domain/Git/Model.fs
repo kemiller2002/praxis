@@ -1,5 +1,40 @@
 namespace Ros.Domain.Git
 
+/// One side of a commit's identity as Git itself records it. Reconciliation
+/// preserves these verbatim: they name who produced the change, which is a
+/// different fact from who later attributed it to a work item.
+type GitPerson =
+    { Name: string
+      Email: string
+      Date: string }
+
+/// How one commit changed one path, as `git diff-tree --raw` reports it
+/// against the commit's single parent (or the empty tree for a root commit).
+[<RequireQualifiedAccess>]
+type GitCommitChangeKind =
+    | Added
+    | Modified
+    | Deleted
+    | Renamed
+    | Copied
+    | TypeChanged
+
+type GitCommitChange =
+    { Kind: GitCommitChangeKind
+      Path: string
+      /// The source path of a rename or copy.
+      OriginalPath: string option
+      /// The post-change blob id; `None` for a deletion.
+      Blob: string option }
+
+type GitCommit =
+    { Sha: string
+      Parents: string list
+      Author: GitPerson
+      Committer: GitPerson
+      Subject: string
+      Changes: GitCommitChange list }
+
 [<RequireQualifiedAccess>]
 type GitDelta =
     | Unmodified
@@ -87,3 +122,44 @@ module GitStatus =
             System.String([| deltaCode index; deltaCode workTree |])
         | GitChangeStatus.Untracked -> "??"
         | GitChangeStatus.Ignored -> "!!"
+
+/// A user-supplied revision resolved against the repository. `Ambiguous`
+/// is distinct from `NotFound` so a caller can fail closed on a short SHA
+/// or ref name Git could read more than one way.
+[<RequireQualifiedAccess>]
+type GitRefResolution =
+    | Resolved of sha: string
+    | NotFound of message: string
+    | Ambiguous of message: string
+    | Unavailable of GitFailure
+
+[<RequireQualifiedAccess>]
+module GitCommitChangeKind =
+    let code kind =
+        match kind with
+        | GitCommitChangeKind.Added -> "added"
+        | GitCommitChangeKind.Modified -> "modified"
+        | GitCommitChangeKind.Deleted -> "deleted"
+        | GitCommitChangeKind.Renamed -> "renamed"
+        | GitCommitChangeKind.Copied -> "copied"
+        | GitCommitChangeKind.TypeChanged -> "type-changed"
+
+    let tryParse code =
+        match code with
+        | "added" -> Some GitCommitChangeKind.Added
+        | "modified" -> Some GitCommitChangeKind.Modified
+        | "deleted" -> Some GitCommitChangeKind.Deleted
+        | "renamed" -> Some GitCommitChangeKind.Renamed
+        | "copied" -> Some GitCommitChangeKind.Copied
+        | "type-changed" -> Some GitCommitChangeKind.TypeChanged
+        | _ -> None
+
+[<RequireQualifiedAccess>]
+module GitCommitChange =
+    /// Every path whose content this change alters: both sides of a rename
+    /// (the source disappears, the destination appears), but only the
+    /// destination of a copy (its source is left untouched).
+    let touchedPaths (change: GitCommitChange) =
+        match change.Kind, change.OriginalPath with
+        | GitCommitChangeKind.Renamed, Some original -> [ change.Path; original ]
+        | _ -> [ change.Path ]

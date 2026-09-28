@@ -241,6 +241,11 @@ const GOLDEN ={
         "templates/research/THEORY-TEMPLATE.md",
         "tools/ros_fs_launcher.mjs"
       ],
+      "actor": {
+        "kind": "automation",
+        "id": "ros-bootstrap",
+        "runtime": "ros-bootstrap"
+      },
       "publication": {
         "status": "pending"
       }

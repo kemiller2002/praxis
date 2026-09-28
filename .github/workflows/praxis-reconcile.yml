@@ -18,6 +18,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Materialize the claimed work-item branch
+        if: github.event_name == 'pull_request'
+        env:
+          PRAXIS_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: git switch -C "$PRAXIS_HEAD_REF"
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'

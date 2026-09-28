@@ -362,6 +362,20 @@
             "created"
           ],
           "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        },
+        "EXE-20260927T084130164Z-78bc9271": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-27T08:48:17.633Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "WI-0072: acceptance criteria for provenance follow-ups"
         }
       }
     },
@@ -446,6 +460,20 @@
             "created"
           ],
           "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        },
+        "EXE-20260927T084130164Z-78bc9271": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-27T08:48:17.164Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "WI-0072: acceptance criteria for provenance follow-ups"
         }
       }
     },
@@ -820,7 +848,57 @@
     "owners": [
       "repository-governance"
     ],
-    "path": "research/requirements/RQ-ROS-2026-A020--step-cli-and-query.md",
+    "path": "research/requirements/RQ-ROS-2026-A020--post-hoc-attribution-reconciliation.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T011826712Z-9911b752": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-27T01:40:40.952Z",
+          "evidence": [
+            "https://github.com/kemiller2002/praxis/issues/80"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "Captured from GitHub issue #80 (work item GH-80): post-hoc Git-evidenced attribution reconciliation"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A040",
+      "docs/work-protocol.md",
+      "https://github.com/kemiller2002/praxis/issues/80"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "attribution",
+      "reconciliation",
+      "work-protocol",
+      "provenance",
+      "git-evidence"
+    ],
+    "title": "Committed changes made without an active work item can be reconciled post hoc from Git evidence",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-27",
+    "derived_from": [
+      "RQ-ROS-2026-A020"
+    ],
+    "id": "RQ-ROS-2026-A021",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A021--step-cli-and-query.md",
     "priority": "high",
     "provenance": {
       "contributions": {
@@ -839,6 +917,20 @@
             "modified"
           ],
           "reason": "First-class step-level execution telemetry requirements and architecture"
+        },
+        "EXE-20260927T145842499Z-f1b40c22": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T01:07:46.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "Resolve requirement identifier collision introduced by main integration"
         }
       }
     },
@@ -856,6 +948,55 @@
       "json"
     ],
     "title": "Step lifecycle and evidence have deterministic CLI inspection",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-27",
+    "id": "RQ-ROS-2026-A022",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A022--runtime-free-reconciliation.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T145842499Z-f1b40c22": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T01:07:43.000Z",
+          "last": "2026-09-28T02:12:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "Runtime-free canonical reconciliation requirement"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A041",
+      "RQ-ROS-2026-A019",
+      "requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md",
+      "protocol/praxis-envelope-v1.schema.json",
+      "docs/fallback-reconciliation.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "fallback",
+      "reconciliation",
+      "offline",
+      "telemetry",
+      "provenance",
+      "instance-identity"
+    ],
+    "title": "Runtime-free envelopes reconcile into canonical work and execution state",
     "updated": "2026-09-27",
     "version": "1.0.0"
   }

@@ -202,14 +202,36 @@ module ReconciliationEnvelopeJson =
                 | None -> Ok (values |> List.choose (function Ok value -> Some value | _ -> None))
         | _ -> Error "missing-timeline"
 
+    let private parseEvidence (element: JsonElement) =
+        match requiredString "type" element, requiredString "path" element with
+        | Ok evidenceType, Ok path -> Ok { WorkEvidence.Type = evidenceType; Path = path }
+        | _ -> Error "invalid-request-evidence"
+
+    let private requestEvidence (item: JsonElement) =
+        match item.TryGetProperty "evidence" with
+        | false, _ -> Ok []
+        | true, values when values.ValueKind = JsonValueKind.Array ->
+            let parsed = values.EnumerateArray() |> Seq.map parseEvidence |> Seq.toList
+            match parsed |> List.tryPick (function Error code -> Some code | _ -> None) with
+            | Some code -> Error code
+            | None -> Ok(parsed |> List.choose (function Ok value -> Some value | _ -> None))
+        | _ -> Error "invalid-request-evidence"
+
     let private parseRequests (root: JsonElement) =
         match root.TryGetProperty "requests" with
         | true, requests when requests.ValueKind = JsonValueKind.Array ->
             requests.EnumerateArray()
             |> Seq.map (fun item ->
-                match requiredString "type" item with
-                | Ok requestType -> Ok { RequestType = requestType }
-                | Error _ -> Error "invalid-request")
+                match requiredString "type" item, optionalTimestamp "occurredAt" item, requestEvidence item with
+                | Ok requestType, Ok occurredAt, Ok evidence ->
+                    Ok
+                        { RequestType = requestType
+                          OccurredAt = occurredAt
+                          WorkType = optionalString "workType" item
+                          Reason = optionalString "reason" item
+                          Conclusion = optionalString "conclusion" item
+                          Evidence = evidence }
+                | _ -> Error "invalid-request")
             |> Seq.toList
             |> fun values ->
                 match values |> List.tryPick (function Error code -> Some code | _ -> None) with
@@ -253,7 +275,7 @@ module ReconciliationEnvelopeJson =
                 | _ -> "invalid-envelope-json"
             Error [ code ]
 
-    let read path : Result<ReconciliationEnvelope, string list> =
+    let read path : Result<EnvelopeReconciliationInput, string list> =
         try
             if not (File.Exists path) then Error [ "envelope-not-found" ]
             else

@@ -34,6 +34,7 @@ lib/stable-ros-version.json
 
 # Generated transient work
 .ros/locks/
+.praxis/processing/reconcile-*.json
 work/staging/*
 work/review/*
 logs/*
@@ -49,3 +50,5 @@ logs/*
 !.env.example
 *.pem
 *.key
+_site/
+dist/

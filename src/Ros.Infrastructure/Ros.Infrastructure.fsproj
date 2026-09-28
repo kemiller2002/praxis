@@ -16,7 +16,9 @@
     <Compile Include="Work/FileTelemetryStateRepository.fs" />
     <Compile Include="Work/FileWorkConfigRepository.fs" />
     <Compile Include="Work/FileEventLogRepository.fs" />
-    <Compile Include="Work/FileReconciliationStore.fs" />
+    <Compile Include="Work/RawTelemetrySanitizer.fs" />
+    <Compile Include="Work/FileEnvelopeReconciliationTransaction.fs" />
+    <Compile Include="Work/FileEnvelopeReconciliationStore.fs" />
     <Compile Include="Work/ReconciliationEnvelopeJson.fs" />
     <Compile Include="Work/FileBacklogQueueRepository.fs" />
     <Compile Include="Work/FileWorkListRepository.fs" />
@@ -27,6 +29,9 @@
     <Compile Include="Json/CanonicalJson.fs" />
     <Compile Include="Work/FileWorkContextRepository.fs" />
     <Compile Include="Work/FileMetricRegistryRepository.fs" />
+    <Compile Include="Work/FileEnvelopeExecutionRepository.fs" />
+    <Compile Include="Work/FileEnvelopeReconciliationDispatcher.fs" />
+    <Compile Include="Work/FileReconciliationRepository.fs" />
     <Compile Include="Work/FileTelemetryExecutionRepository.fs" />
     <Compile Include="Work/FileTelemetryQueryRepository.fs" />
     <Compile Include="Work/FileStepRepository.fs" />

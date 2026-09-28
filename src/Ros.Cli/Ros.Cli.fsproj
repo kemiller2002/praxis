@@ -19,6 +19,7 @@
     <Compile Include="ProvenanceCommands.fs" />
     <Compile Include="StepCommands.fs" />
     <Compile Include="ReconciliationCommands.fs" />
+    <Compile Include="EnvelopeReconciliationCommands.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

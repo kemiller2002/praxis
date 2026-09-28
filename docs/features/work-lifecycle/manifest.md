@@ -262,6 +262,27 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   remains its own future increment, and depends on the `validate` command
   unification this manifest has not yet scoped.
 
+- Post-hoc attribution reconciliation (issue #80, `DF-ROS-2026-A040`,
+  `RQ-ROS-2026-A020`): `ros-fs work reconcile` is an F#-only real effect
+  (the Node library is frozen per `DF-ROS-2026-A033`). The decision and every
+  invariant live in `Ros.Domain.Work.WorkReconciliation` (selector parsing,
+  per-`(commit, path)` assessment, fail-closed rejections, idempotency and
+  conflict claims), `ReconciliationValidation` (checks of recorded events),
+  and `ReconciliationCoverage` (content-bound attribution);
+  `Ros.Application.Work.WorkReconciliationOperations` gathers Git evidence
+  through the read-only `Ros.Application.Git.GitHistory` port, implemented by
+  `Ros.Infrastructure.Git.ProcessGitRepository.createHistory`
+  (`rev-parse --verify`, `merge-base --is-ancestor`, `rev-list`, `show`,
+  `diff-tree --raw -M`, shallow-boundary detection, and `hash-object` for
+  current path content); `Ros.Contracts.Work.ReconciliationEventContract`
+  owns the `work.attribution.reconciled` event shape; and
+  `Ros.Infrastructure.Work.FileReconciliationRepository` decides under the
+  `work-protocol` lock and appends through the `work-state` journal.
+  `Ros.Cli.ReconciliationCommands` only parses and renders. `work validate`
+  and `validate` attribute a reconciled path only while its current content
+  matches recorded evidence, and report invalid reconciliation events as
+  `work_reconciliation` findings.
+
 ## Interfaces
 
 - Inbound: `./ros add`, `./ros work ...`, `./ros adapter ...`, and HTTP routes
@@ -374,6 +395,12 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   active/blocked work items, real linked telemetry executions, a real
   backlog-status finding, and real execution/active-execution counts --
   byte-for-byte identical to production's own `statusView`).
+- Attribution reconciliation tests: `tests/Ros.Tests/WorkReconciliationTests.fs`
+  (pure decision, parser, event contract, record validation, coverage) and
+  `tests/Ros.Tests/WorkReconciliationEffectTests.fs` (the real CLI against
+  real Git repositories: added/modified/deleted/renamed files, ranges,
+  partial attribution, idempotency, conflicts, ambiguous and unavailable
+  evidence, shallow clones, tampering, and validation afterwards).
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
 - Integration/live verification: `./ros status`, `./ros work context ID`,

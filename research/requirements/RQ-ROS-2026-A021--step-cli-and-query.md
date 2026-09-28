@@ -1,5 +1,5 @@
 ---
-id: RQ-ROS-2026-A020
+id: RQ-ROS-2026-A021
 title: Step lifecycle and evidence have deterministic CLI inspection
 status: verified
 version: 1.0.0
@@ -23,6 +23,17 @@ provenance:
         model: unknown
         runtime: codex
       reason: "First-class step-level execution telemetry requirements and architecture"
+    EXE-20260927T145842499Z-f1b40c22:
+      operations: [migrated]
+      at: 2026-09-28T01:07:46.000Z
+      actor:
+        kind: agent
+        id: openai/codex
+        provider: openai
+        model: unknown
+        runtime: codex
+      reason: "Resolve requirement identifier collision introduced by main integration"
+derived_from: [RQ-ROS-2026-A020]
 ---
 
 # Requirement

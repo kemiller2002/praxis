@@ -620,6 +620,23 @@
             "modified"
           ],
           "reason": "First-class step-level execution telemetry requirements and architecture"
+        },
+        "EXE-20260927T145842499Z-f1b40c22": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T01:07:45.000Z",
+          "evidence": [
+            "DF-ROS-2026-A041"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "Record closure of the fallback dispatcher follow-up"
         }
       }
     },
@@ -633,7 +650,8 @@
       "RQ-ROS-2026-A017",
       "RQ-ROS-2026-A018",
       "RQ-ROS-2026-A019",
-      "RQ-ROS-2026-A020",
+      "RQ-ROS-2026-A021",
+      "DF-ROS-2026-A041",
       "requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md"
     ],
     "research_area": "repository-operating-system",
@@ -649,6 +667,121 @@
       "provenance"
     ],
     "title": "Execution-owned step ledger with referenced canonical telemetry",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-27",
+    "decision_type": "architecture",
+    "derived_from": [
+      "RQ-ROS-2026-A020"
+    ],
+    "id": "DF-ROS-2026-A040",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A040--post-hoc-attribution-reconciliation.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T011826712Z-9911b752": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-27T01:40:41.353Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Architecture decision for post-hoc attribution reconciliation (work item GH-80)"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A020",
+      "DF-ROS-2026-A033",
+      "DF-ROS-2026-A035",
+      "DF-ROS-2026-A036",
+      "docs/work-protocol.md",
+      "https://github.com/kemiller2002/praxis/issues/80"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "RQ-ROS-2026-A020"
+    ],
+    "tags": [
+      "attribution",
+      "reconciliation",
+      "work-protocol",
+      "provenance",
+      "git-evidence",
+      "validation"
+    ],
+    "title": "Post-hoc attribution reconciliation as an append-only, Git-evidenced, content-bound event",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-27",
+    "decision_type": "architecture",
+    "derived_from": [
+      "RQ-ROS-2026-A019",
+      "RQ-ROS-2026-A022"
+    ],
+    "id": "DF-ROS-2026-A041",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A041--journaled-fallback-reconciliation.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T145842499Z-f1b40c22": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T01:07:44.000Z",
+          "last": "2026-09-28T02:12:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "Journaled fallback reconciliation architecture"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A037",
+      "requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md",
+      "docs/fallback-reconciliation.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "RQ-ROS-2026-A019",
+      "RQ-ROS-2026-A022"
+    ],
+    "tags": [
+      "architecture",
+      "fallback",
+      "reconciliation",
+      "transaction",
+      "checkpoint",
+      "provenance"
+    ],
+    "title": "Journaled exact-path fallback reconciliation with Git checkpoint",
     "updated": "2026-09-27",
     "version": "1.0.0"
   }

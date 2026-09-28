@@ -261,9 +261,12 @@ commands. These predate the lifecycle interface and are unchanged:
 ros validate [--json]
 ros registry build [--dry-run] | registry check
 ros git status [--json]
-ros work <capture|list|ready|show|start|resume|block|complete|update|attach|context|...>
+ros work <capture|list|ready|show|start|resume|block|complete|reconcile|update|attach|context|...>
 ros add "..."
+ros step <plan|begin|resume|complete|block|abandon|record|availability|checkpoint|link|list|show>
 ros telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
+ros reconcile --envelope FILE
+ros inbox list
 ros adapter <call|publish>
 ros provenance <identity|record|show|audit>
 ```
@@ -274,9 +277,35 @@ Run `ros --help` for the full argument list, and see
 [`work-adapter-contract.md`](work-adapter-contract.md) and
 [`agent-provenance.md`](agent-provenance.md) for what they mean.
 
+### `reconcile --envelope`
+
+Validates one runtime-free envelope, dispatches its ordered work requests through the native work/evidence rules, imports optional execution steps into canonical telemetry, commits only the resulting canonical paths, and creates `praxis-reconcile/<transaction-id>`. Exit `0` means applied or an already-checkpointed replay, `1` means an interrupted transaction remains pending and is safe to retry, and `2` means the envelope was rejected without canonical mutation. `inbox list` inventories pending envelope/document inputs. See [`fallback-reconciliation.md`](fallback-reconciliation.md).
+
+### `work reconcile`
+
+```
+ros work reconcile --id ID --occurred-at TIMESTAMP --reason TEXT
+                   (--commit REV | --range BASE..HEAD) [--commit REV]* [--range BASE..HEAD]*
+                   [--path PATH]* [--dry-run] [--json] [IDENTITY]
+```
+
+Post-hoc, Git-evidenced attribution of committed meaningful changes that were
+made without an active work item. Git establishes the paths (added, modified,
+deleted, both sides of a rename); `--path` can only narrow them. It appends one
+`work.attribution.reconciled` event marked `"attribution":"post-hoc"`, recording
+the reconciliation actor separately from each commit's Git author and
+committer, and never changes existing events or work state. Idempotent per
+`(commit, path)`; a change already reconciled to another work item is a
+conflict. Ambiguous or unverifiable evidence (unknown or ambiguous revision, a
+commit outside `HEAD`'s history, a merge, an empty or unrelated range, a
+shallow boundary, unavailable Git) is rejected with exit `1` and nothing is
+recorded; argument errors exit `2`. `--dry-run` shows the assessment without
+recording. See "Post-hoc attribution reconciliation" in
+[`work-protocol.md`](work-protocol.md) for when to use it and when not to.
+
 ### Identity flags and provenance commands
 
-Every work transition (`work start|begin|resume|block|complete|done`), `add`
+Every work transition (`work start|begin|resume|block|complete|done`), `work reconcile`, `add`
 or `work capture`, and `telemetry start` accepts the same identity
 declaration. Each flag overrides the whitelisted environment:
 

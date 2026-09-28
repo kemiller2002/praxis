@@ -4,6 +4,912 @@
   "nextSeq": 61,
   "items": [
     {
+      "id": "ATTR-COMPLETE-BASE-REF-SWEEP",
+      "title": "Stop work complete from sweeping ROS_BASE_REF committed-range paths into its completion event",
+      "description": "With ROS_BASE_REF set, work complete includes committed-range paths (possibly from before the work item began) in its work.completed paths, recording them as contemporaneous attribution. Post-hoc changes should go through work reconcile instead. Changing this diverges from the frozen Node golden masters (work-complete differential), so it needs a decision. Follow-up from GH-80 / DF-ROS-2026-A040.",
+      "tags": [
+        "attribution",
+        "reconciliation"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-27T02:00:52.000Z",
+      "updatedAt": "2026-09-27T02:00:52.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/80"
+    },
+    {
+      "id": "ATTR-RECONCILE-SYMLINK-SUBMODULE",
+      "title": "Content-match symbolic links and submodules for reconciled attribution",
+      "description": "ReconciliationCoverage hashes working-tree content with git hash-object, which follows symlinks and cannot hash submodules, so a reconciled symlink or submodule path never matches its recorded blob and always fails validation (fail closed). Compare the link target text / gitlink commit instead. Follow-up from GH-80 / DF-ROS-2026-A040.",
+      "tags": [
+        "attribution",
+        "reconciliation"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-27T02:00:52.000Z",
+      "updatedAt": "2026-09-27T02:00:52.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/80"
+    },
+    {
+      "id": "GH-80",
+      "title": "Support auditable post-commit work-item attribution reconciliation (#80)",
+      "description": "Reconcile meaningful committed changes made without an active work item, using Git history as evidence and recording a durable post-hoc attribution event.",
+      "tags": [
+        "attribution",
+        "reconciliation",
+        "provenance"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T01:18:22.000Z",
+      "updatedAt": "2026-09-27T01:45:22.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/80"
+    },
+    {
+      "id": "MIG-05-BACKLOG-PERSISTENCE",
+      "title": "Add bounded recovery for backlog queue and Markdown projection",
+      "description": null,
+      "tags": [
+        "fsharp",
+        "migration",
+        "persistence"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-08T12:25:49.460Z",
+      "updatedAt": "2026-09-08T12:25:49.513Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "MIG-05-PERSISTENCE",
+      "title": "MIG-05 characterize and shadow transactional persistence recovery",
+      "description": "Characterize current filesystem and lock semantics, then implement only a verified F# shadow seam if recovery behavior can be preserved safely.",
+      "tags": [
+        "fsharp",
+        "migration",
+        "persistence"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-08T06:37:55.809Z",
+      "updatedAt": "2026-09-08T06:37:55.908Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "MIG-05-TELEMETRY-RECOVERY",
+      "title": "Recover telemetry execution backlinks without duplicating execution evidence",
+      "description": null,
+      "tags": [
+        "fsharp",
+        "migration",
+        "telemetry",
+        "persistence"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-08T14:00:08.071Z",
+      "updatedAt": "2026-09-08T14:00:08.125Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "MIG-05-WORK-INTEGRATION",
+      "title": "MIG-05 integrate recoverable work event and context persistence",
+      "description": null,
+      "tags": [
+        "fsharp",
+        "migration",
+        "persistence",
+        "work"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-08T12:13:00.686Z",
+      "updatedAt": "2026-09-08T12:13:00.784Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "MIG-05-WORK-PERSISTENCE",
+      "title": "MIG-05 characterize work-state persistence and recovery",
+      "description": null,
+      "tags": [
+        "fsharp",
+        "migration",
+        "persistence",
+        "work"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-08T12:01:18.041Z",
+      "updatedAt": "2026-09-08T12:01:18.153Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "MIG-06-GIT-PROVENANCE",
+      "title": "MIG-06 characterize and shadow typed Git provenance",
+      "description": null,
+      "tags": [
+        "fsharp",
+        "migration",
+        "git"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-08T11:38:35.335Z",
+      "updatedAt": "2026-09-08T11:38:35.432Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "MIG-07-FOUR-TIER-AUDIT",
+      "title": "Four-tier compliance audit and real telemetry-candidate parity for the F# shadow CLI",
+      "description": "Audit all Ros.Domain/Application/Contracts/Infrastructure/Cli source against SDE-DOCTRINE-003 (Four-Tier Architecture) for tier violations beyond the existing project-reference architecture test; none found. Close a real shadow/production parity gap: ros-fs work plan --resolve-telemetry only accepted synthetic --candidate flags, unlike every sibling observation (evidence, Git status) which reads real repository state by default. Add Ros.Infrastructure.Work.FileTelemetryStateRepository reading real .ros/telemetry/executions/*.json records and wire it as the CLI default; rewrite differential tests to read real fixture state instead of synthetic candidates. Document (but do not close in this slice) a second, larger gap: work context-plan's Git-observed-path composition, which needs a config-driven glob matcher and ROS_BASE_REF support that do not exist yet in F#.",
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-09T14:34:34.529Z",
+      "updatedAt": "2026-09-09T14:34:37.549Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "MIG-07-GIT-PATH-COMPOSITION",
+      "title": "Compose real Git observed/meaningful-path defaults into the F# work context-plan",
+      "description": "Add Ros.Domain.Work.PathFilter (production-exact globMatch/meaningfulPaths port), Ros.Infrastructure.Work.FileWorkConfigRepository (reads ros.json workProtocol.meaningfulPaths/ignoredPaths field-by-field with production defaults), Ros.Domain.Git.GitBaseComparisonOutcome and ProcessGitRepository.createBaseComparison (optional ROS_BASE_REF committed-range diff, mirroring production's silent-skip-on-unresolvable/hard-fail-on-diff-error split). Wire ros-fs work context-plan to observe real Git status and configured meaningful/ignored patterns by default when --observed-git-path/--path are omitted, gated on the same action condition production gates gitPaths on. Adds Node differential proof and typed unit tests.",
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-09T15:18:27.683Z",
+      "updatedAt": "2026-09-09T15:18:31.753Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "MIG-07-TELEMETRY-RESOLUTION",
+      "title": "Compose telemetry execution-ID resolution into the F# work plan/context plan",
+      "description": "Add a typed Ros.Domain.Work.TelemetryResolution module that composes a plan's abstract TelemetryIntent list with an observed candidate-execution read model, freezing the final item/event telemetryExecutionIds projection (or reporting that a new execution is required) before any state-changing effect handler renders the write set. Exposes a ros-fs work plan --resolve-telemetry shadow diagnostic and adds Node-vs-F# differential proof.",
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-09T12:32:11.452Z",
+      "updatedAt": "2026-09-09T12:32:14.610Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "MIG-07-WORK-LIFECYCLE",
+      "title": "MIG-07 shadow typed live-work transitions and evidence guards",
+      "description": null,
+      "tags": [
+        "fsharp",
+        "migration",
+        "work"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-08T11:53:22.892Z",
+      "updatedAt": "2026-09-08T11:53:23.002Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-SITE-01",
+      "title": "Establish public-site architecture",
+      "description": "Child of GH-84 (Build the public Praxis website). Create the independent site/ boundary (public static content) and document why it is separate from web/ (privileged localhost operational UI). No privileged Praxis API exposed; local static serving works; relative paths support GitHub Pages project-site deployment.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:56:10.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-02",
+      "title": "Implement Echelon Foundry design foundation",
+      "description": "Child of GH-84 (Build the public Praxis website). Echelon Foundry tokens (parchment #f2efe7, charcoal #202421, forged iron #3a403c, oxide bronze #905831, verdigris #47756b, carbon #171a18, graphite #686d68, stone #e3e0d7); Newsreader / Manrope / IBM Plex Mono with fallbacks; no committed font binaries; square geometry, strong grid, restrained color.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T07:59:28.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-03",
+      "title": "Build the hero",
+      "description": "Child of GH-84 (Build the public Praxis website). PRAXIS. You said it's done. Prove it. Supporting copy and \"Trust is not an engineering control. Evidence is.\" Calm, commanding, skeptical authority; no film quotes, imagery, or imitation.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:02:13.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-04",
+      "title": "Build the \"Done is a claim\" interaction",
+      "description": "Child of GH-84 (Build the public Praxis website). A claim interrogated by Praxis with progressive verification; fully understandable without JavaScript; respects prefers-reduced-motion.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:04:51.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-05",
+      "title": "Explain the execution chain",
+      "description": "Child of GH-84 (Build the public Praxis website). Requirement -> work item -> execution -> steps -> changes -> tests -> evidence -> reconciliation -> verified history. From intent to execution to evidence.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:06:05.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-06",
+      "title": "Build \"Git knows what. Praxis knows why.\"",
+      "description": "Child of GH-84 (Build the public Praxis website). Complementary comparison of what Git establishes and what Praxis adds, without criticizing Git.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:07:38.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-07",
+      "title": "Explain agent accountability",
+      "description": "Child of GH-84 (Build the public Praxis website). Agent identity, provider, runtime, model when reliably known, execution boundaries, telemetry when available; observed / derived / declared / unknown / unavailable are distinguished.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:08:43.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-08",
+      "title": "Show the real GH-84 agent handoff",
+      "description": "Child of GH-84 (Build the public Praxis website). Render the actual GH-84 executions from Praxis records; Praxis did not transfer identity; the next agent required a separate execution. No fabricated values.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:09:52.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-09",
+      "title": "Explain unattributed-change protection",
+      "description": "Child of GH-84 (Build the public Praxis website). Every change has to answer for itself: unattributed changes require reconciliation; manufactured attribution is worse than explicitly unresolved attribution.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:10:40.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-10",
+      "title": "Explain resilient/double-entry execution",
+      "description": "Child of GH-84 (Build the public Praxis website). The process survives the tool: fallback conforming execution records and later CI reconciliation, clearly labelled current versus planned per repository evidence.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:11:08.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-11",
+      "title": "Explain repository-native engineering records",
+      "description": "Child of GH-84 (Build the public Praxis website). Versionable, inspectable, portable, attributable, reviewable, automatable records alongside the repository, including external evidence references.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:11:44.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-12",
+      "title": "Explain independent installation and integrations",
+      "description": "Child of GH-84 (Build the public Praxis website). Praxis is useful independently; Echelon integrations are optional; available capability is separated from architectural direction.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:12:17.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-13",
+      "title": "Create a realistic execution record component",
+      "description": "Child of GH-84 (Build the public Praxis website). Reusable IBM Plex Mono execution artifact; anything not populated from real Praxis records is visibly labelled ILLUSTRATIVE EXECUTION.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:06:52.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-14",
+      "title": "Build the product principles section",
+      "description": "Child of GH-84 (Build the public Praxis website). Done is a claim; Every change has to answer for itself; No anonymous work...; Trust is not an engineering control; The process survives the tool. Each principle supports an explanation.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:13:24.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-15",
+      "title": "Build installation/get-started surface",
+      "description": "Child of GH-84 (Build the public Praxis website). Only commands verified against the current repository/release; the ROS-to-Praxis naming transition handled explicitly.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:15:04.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-16",
+      "title": "Build navigation and footer",
+      "description": "Child of GH-84 (Build the public Praxis website). Restrained single-page navigation (What is Praxis, How it works, Evidence, Agents, Get started, GitHub) and a footer connecting Praxis to Echelon Foundry.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:16:01.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-17",
+      "title": "Accessibility hardening",
+      "description": "Child of GH-84 (Build the public Praxis website). Landmarks, heading hierarchy, keyboard, visible focus, skip link, contrast, non-color status, reduced motion, reflow, touch targets, accessible names, no hover-only interaction; automated checks plus reasoned manual review with recorded evidence.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:21:50.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-18",
+      "title": "Responsive/mobile engineering",
+      "description": "Child of GH-84 (Build the public Praxis website). Intentional layouts for narrow mobile, mobile, tablet, desktop and wide desktop; reflow over horizontal scrolling; navigation usable without a JavaScript menu.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:23:54.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-19",
+      "title": "Performance and resilience",
+      "description": "Child of GH-84 (Build the public Praxis website). Static-first, minimal JavaScript, no dependency bundle, usable without web fonts or JavaScript, no analytics; measured evidence.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:25:34.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-20",
+      "title": "Security/privacy review",
+      "description": "Child of GH-84 (Build the public Praxis website). No secrets, privileged endpoints, sensitive telemetry, raw session IDs, local paths or tokens; safe external links; documented public/private evidence boundary.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:27:02.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-21",
+      "title": "GitHub Actions verification",
+      "description": "Child of GH-84 (Build the public Praxis website). CI for the public site: expected files, structural HTML validity, internal references resolve, no localhost/privileged API references, static artifact assembly, affected repository tests.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:28:37.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-22",
+      "title": "GitHub Pages deployment",
+      "description": "Child of GH-84 (Build the public Praxis website). Isolated Pages deployment workflow for the site/ artifact; unrelated release workflows untouched; human-required Pages configuration documented, never reported as done unless it is.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:29:19.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-23",
+      "title": "Make the site itself a Praxis case study",
+      "description": "Child of GH-84 (Build the public Praxis website). \"This website was built under Praxis\": a safe subset of the real GH-84 evidence chain from requirement to deployment, with no fabricated completion evidence.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:18:17.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-24",
+      "title": "Final communication/polish pass",
+      "description": "Child of GH-84 (Build the public Praxis website). Typography, spacing, rhythm, hierarchy, density, mobile, focus, transitions, link states and copy consistency, without ornamental excess.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:31:27.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-25",
+      "title": "Adversarial claim audit",
+      "description": "Child of GH-84 (Build the public Praxis website). Classify every meaningful claim as implemented, demonstrated, direction, planned, or illustrative, and correct overstatement (telemetry, cost, reconciliation, fallback, integrations, identity, tracing, deployment, CLI naming).",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:38:36.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-26",
+      "title": "Final verification and evidence",
+      "description": "Child of GH-84 (Build the public Praxis website). Run site checks, repository tests, Praxis validation, accessibility checks, static artifact and deployment workflow checks; record actual evidence; GH-84 completes only when acceptance criteria have evidence.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T07:53:32.000Z",
+      "updatedAt": "2026-09-27T08:40:46.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "PRAXIS-SITE-27",
+      "title": "Align Pages deployment workflow with echelon-foundry deploy-pages.yml",
+      "description": "Child of GH-84. Mirror kemiller2002/echelon-foundry .github/workflows/deploy-pages.yml (name, triggers, permissions, concurrency, step names, dist artifact) for the Praxis public site, keeping the site checks as the build and package.json untouched.",
+      "tags": [
+        "gh-84",
+        "public-site"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T09:55:33.000Z",
+      "updatedAt": "2026-09-27T09:56:52.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "ROS-AUTHORITY-SWITCH-DECISION",
+      "title": "Open the ./ros authority-switch decision track (command-parity evidence + phased plan)",
+      "description": "Per the user's request to redirect ./ros to the F# solution, and DF-ROS-2026-A027's requirement that such a redirect needs its own later accepted decision: collect EV-ROS-2026-A043 (full Node-vs-F# command-surface parity inventory; zero state-changing commands have F# parity today) and author DF-ROS-2026-A028 (the decision record opening a three-phase authority-switch track: full effect parity, distribution evidence, then the switch itself). No code changes; ./ros continues to invoke Node exclusively.",
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-09T14:43:25.715Z",
+      "updatedAt": "2026-09-09T14:43:29.339Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
       "id": "WI-0001",
       "title": "This is a test entry.",
       "tags": [
@@ -188,191 +1094,6 @@
       "attachments": [],
       "createdAt": "2026-09-07T20:31:33.115Z",
       "updatedAt": "2026-09-07T20:31:41.490Z",
-      "createdBy": "unknown",
-      "source": "manual",
-      "sourceReference": null
-    },
-    {
-      "id": "MIG-05-PERSISTENCE",
-      "title": "MIG-05 characterize and shadow transactional persistence recovery",
-      "description": "Characterize current filesystem and lock semantics, then implement only a verified F# shadow seam if recovery behavior can be preserved safely.",
-      "tags": [
-        "fsharp",
-        "migration",
-        "persistence"
-      ],
-      "priority": "high",
-      "status": "ready",
-      "attachments": [],
-      "createdAt": "2026-09-08T06:37:55.809Z",
-      "updatedAt": "2026-09-08T06:37:55.908Z",
-      "createdBy": "unknown",
-      "source": "manual",
-      "sourceReference": null
-    },
-    {
-      "id": "MIG-06-GIT-PROVENANCE",
-      "title": "MIG-06 characterize and shadow typed Git provenance",
-      "description": null,
-      "tags": [
-        "fsharp",
-        "migration",
-        "git"
-      ],
-      "priority": "high",
-      "status": "ready",
-      "attachments": [],
-      "createdAt": "2026-09-08T11:38:35.335Z",
-      "updatedAt": "2026-09-08T11:38:35.432Z",
-      "createdBy": "unknown",
-      "source": "manual",
-      "sourceReference": null
-    },
-    {
-      "id": "MIG-07-WORK-LIFECYCLE",
-      "title": "MIG-07 shadow typed live-work transitions and evidence guards",
-      "description": null,
-      "tags": [
-        "fsharp",
-        "migration",
-        "work"
-      ],
-      "priority": "high",
-      "status": "ready",
-      "attachments": [],
-      "createdAt": "2026-09-08T11:53:22.892Z",
-      "updatedAt": "2026-09-08T11:53:23.002Z",
-      "createdBy": "unknown",
-      "source": "manual",
-      "sourceReference": null
-    },
-    {
-      "id": "MIG-05-WORK-PERSISTENCE",
-      "title": "MIG-05 characterize work-state persistence and recovery",
-      "description": null,
-      "tags": [
-        "fsharp",
-        "migration",
-        "persistence",
-        "work"
-      ],
-      "priority": "high",
-      "status": "ready",
-      "attachments": [],
-      "createdAt": "2026-09-08T12:01:18.041Z",
-      "updatedAt": "2026-09-08T12:01:18.153Z",
-      "createdBy": "unknown",
-      "source": "manual",
-      "sourceReference": null
-    },
-    {
-      "id": "MIG-05-WORK-INTEGRATION",
-      "title": "MIG-05 integrate recoverable work event and context persistence",
-      "description": null,
-      "tags": [
-        "fsharp",
-        "migration",
-        "persistence",
-        "work"
-      ],
-      "priority": "high",
-      "status": "ready",
-      "attachments": [],
-      "createdAt": "2026-09-08T12:13:00.686Z",
-      "updatedAt": "2026-09-08T12:13:00.784Z",
-      "createdBy": "unknown",
-      "source": "manual",
-      "sourceReference": null
-    },
-    {
-      "id": "MIG-05-BACKLOG-PERSISTENCE",
-      "title": "Add bounded recovery for backlog queue and Markdown projection",
-      "description": null,
-      "tags": [
-        "fsharp",
-        "migration",
-        "persistence"
-      ],
-      "priority": "high",
-      "status": "ready",
-      "attachments": [],
-      "createdAt": "2026-09-08T12:25:49.460Z",
-      "updatedAt": "2026-09-08T12:25:49.513Z",
-      "createdBy": "unknown",
-      "source": "manual",
-      "sourceReference": null
-    },
-    {
-      "id": "MIG-05-TELEMETRY-RECOVERY",
-      "title": "Recover telemetry execution backlinks without duplicating execution evidence",
-      "description": null,
-      "tags": [
-        "fsharp",
-        "migration",
-        "telemetry",
-        "persistence"
-      ],
-      "priority": "high",
-      "status": "ready",
-      "attachments": [],
-      "createdAt": "2026-09-08T14:00:08.071Z",
-      "updatedAt": "2026-09-08T14:00:08.125Z",
-      "createdBy": "unknown",
-      "source": "manual",
-      "sourceReference": null
-    },
-    {
-      "id": "MIG-07-TELEMETRY-RESOLUTION",
-      "title": "Compose telemetry execution-ID resolution into the F# work plan/context plan",
-      "description": "Add a typed Ros.Domain.Work.TelemetryResolution module that composes a plan's abstract TelemetryIntent list with an observed candidate-execution read model, freezing the final item/event telemetryExecutionIds projection (or reporting that a new execution is required) before any state-changing effect handler renders the write set. Exposes a ros-fs work plan --resolve-telemetry shadow diagnostic and adds Node-vs-F# differential proof.",
-      "tags": [],
-      "priority": "high",
-      "status": "ready",
-      "attachments": [],
-      "createdAt": "2026-09-09T12:32:11.452Z",
-      "updatedAt": "2026-09-09T12:32:14.610Z",
-      "createdBy": "unknown",
-      "source": "manual",
-      "sourceReference": null
-    },
-    {
-      "id": "MIG-07-FOUR-TIER-AUDIT",
-      "title": "Four-tier compliance audit and real telemetry-candidate parity for the F# shadow CLI",
-      "description": "Audit all Ros.Domain/Application/Contracts/Infrastructure/Cli source against SDE-DOCTRINE-003 (Four-Tier Architecture) for tier violations beyond the existing project-reference architecture test; none found. Close a real shadow/production parity gap: ros-fs work plan --resolve-telemetry only accepted synthetic --candidate flags, unlike every sibling observation (evidence, Git status) which reads real repository state by default. Add Ros.Infrastructure.Work.FileTelemetryStateRepository reading real .ros/telemetry/executions/*.json records and wire it as the CLI default; rewrite differential tests to read real fixture state instead of synthetic candidates. Document (but do not close in this slice) a second, larger gap: work context-plan's Git-observed-path composition, which needs a config-driven glob matcher and ROS_BASE_REF support that do not exist yet in F#.",
-      "tags": [],
-      "priority": "high",
-      "status": "ready",
-      "attachments": [],
-      "createdAt": "2026-09-09T14:34:34.529Z",
-      "updatedAt": "2026-09-09T14:34:37.549Z",
-      "createdBy": "unknown",
-      "source": "manual",
-      "sourceReference": null
-    },
-    {
-      "id": "ROS-AUTHORITY-SWITCH-DECISION",
-      "title": "Open the ./ros authority-switch decision track (command-parity evidence + phased plan)",
-      "description": "Per the user's request to redirect ./ros to the F# solution, and DF-ROS-2026-A027's requirement that such a redirect needs its own later accepted decision: collect EV-ROS-2026-A043 (full Node-vs-F# command-surface parity inventory; zero state-changing commands have F# parity today) and author DF-ROS-2026-A028 (the decision record opening a three-phase authority-switch track: full effect parity, distribution evidence, then the switch itself). No code changes; ./ros continues to invoke Node exclusively.",
-      "tags": [],
-      "priority": "high",
-      "status": "ready",
-      "attachments": [],
-      "createdAt": "2026-09-09T14:43:25.715Z",
-      "updatedAt": "2026-09-09T14:43:29.339Z",
-      "createdBy": "unknown",
-      "source": "manual",
-      "sourceReference": null
-    },
-    {
-      "id": "MIG-07-GIT-PATH-COMPOSITION",
-      "title": "Compose real Git observed/meaningful-path defaults into the F# work context-plan",
-      "description": "Add Ros.Domain.Work.PathFilter (production-exact globMatch/meaningfulPaths port), Ros.Infrastructure.Work.FileWorkConfigRepository (reads ros.json workProtocol.meaningfulPaths/ignoredPaths field-by-field with production defaults), Ros.Domain.Git.GitBaseComparisonOutcome and ProcessGitRepository.createBaseComparison (optional ROS_BASE_REF committed-range diff, mirroring production's silent-skip-on-unresolvable/hard-fail-on-diff-error split). Wire ros-fs work context-plan to observe real Git status and configured meaningful/ignored patterns by default when --observed-git-path/--path are omitted, gated on the same action condition production gates gitPaths on. Adds Node differential proof and typed unit tests.",
-      "tags": [],
-      "priority": "high",
-      "status": "ready",
-      "attachments": [],
-      "createdAt": "2026-09-09T15:18:27.683Z",
-      "updatedAt": "2026-09-09T15:18:31.753Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
@@ -770,34 +1491,6 @@
       "sourceReference": null
     },
     {
-      "id": "WI-READY",
-      "title": "Ready item",
-      "description": null,
-      "tags": [],
-      "priority": "medium",
-      "status": "ready",
-      "attachments": [],
-      "createdAt": "2026-09-10T20:34:39.993Z",
-      "updatedAt": "2026-09-10T20:34:40.063Z",
-      "createdBy": "unknown",
-      "source": "manual",
-      "sourceReference": null
-    },
-    {
-      "id": "WI-ACTIVE",
-      "title": "Active item",
-      "description": null,
-      "tags": [],
-      "priority": "medium",
-      "status": "ready",
-      "attachments": [],
-      "createdAt": "2026-09-10T20:34:40.288Z",
-      "updatedAt": "2026-09-10T20:34:40.361Z",
-      "createdBy": "unknown",
-      "source": "manual",
-      "sourceReference": null
-    },
-    {
       "id": "WI-0040",
       "title": "F# work context read-only view: Phase A increment 9 (EV-ROS-2026-A046 follow-on)",
       "description": null,
@@ -1132,6 +1825,30 @@
       "sourceReference": null
     },
     {
+      "id": "WI-0064",
+      "title": "Complete dual-entry reconciliation and merge PR #79",
+      "description": null,
+      "tags": [
+        "reconciliation",
+        "integration"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T14:58:28.449Z",
+      "updatedAt": "2026-09-28T07:05:38Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
       "id": "WI-0065",
       "title": "Implement first-class step-level execution telemetry",
       "description": null,
@@ -1156,26 +1873,53 @@
       "sourceReference": null
     },
     {
-      "id": "WI-0064",
-      "title": "Complete dual-entry reconciliation and merge PR #79",
+      "id": "WI-0072",
+      "title": "Port provenance follow-ups onto the merged model: collaboration aggregates in provenance audit, producedBy on ordo handoffs, installer event actor",
       "description": null,
       "tags": [
-        "reconciliation",
-        "integration"
+        "provenance"
       ],
-      "priority": "high",
-      "status": "ready",
+      "priority": "medium",
+      "status": "complete",
       "attachments": [],
-      "createdAt": "2026-09-27T14:58:28.449Z",
-      "updatedAt": "2026-09-27T14:58:31.811Z",
+      "createdAt": "2026-09-27T08:41:29.325Z",
+      "updatedAt": "2026-09-27T08:50:44.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
-        "id": "openai/codex",
-        "provider": "openai",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
         "model": "unknown",
-        "runtime": "codex"
+        "runtime": "claude-code"
       },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-ACTIVE",
+      "title": "Active item",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-10T20:34:40.288Z",
+      "updatedAt": "2026-09-10T20:34:40.361Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-READY",
+      "title": "Ready item",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-10T20:34:39.993Z",
+      "updatedAt": "2026-09-10T20:34:40.063Z",
+      "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
     }

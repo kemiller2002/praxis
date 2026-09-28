@@ -7,7 +7,7 @@ let main _ =
     @ PersistenceTests.tests
     @ GitTests.tests
     @ WorkTests.tests
-    @ ReconciliationTests.tests
+    @ EnvelopeReconciliationTests.tests
     @ WorkPlanTests.tests
     @ BacklogTests.tests
     @ TelemetryTests.tests
@@ -52,4 +52,6 @@ let main _ =
     @ OrdoObservationTests.tests
     @ ProvenanceTests.tests
     @ ProvenanceEffectTests.tests
+    @ WorkReconciliationTests.tests
+    @ WorkReconciliationEffectTests.tests
     |> TestRunner.run
