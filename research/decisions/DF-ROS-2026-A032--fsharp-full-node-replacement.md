@@ -1,12 +1,12 @@
 ---
 id: DF-ROS-2026-A032
 title: Full Node replacement is the accepted end-state; starter template ./ros becomes F#
-status: accepted
+status: superseded
 version: 1.0.0
 owners:
   - repository-governance
 created: 2026-09-11
-updated: 2026-09-11
+updated: 2026-09-28
 author_agent: claude-sonnet-5
 supporting_evidence:
   - EV-ROS-2026-A047
@@ -20,7 +20,8 @@ related_documents:
   - PACKAGE-USAGE.md
 supersedes:
   - DF-ROS-2026-A031
-superseded_by: []
+superseded_by:
+  - DF-ROS-2026-A041
 tags: [architecture, fsharp, migration, distribution, sde, decision]
 confidence: high
 ---

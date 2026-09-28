@@ -2,11 +2,11 @@
 id: GV-START-001
 title: Agent Startup Guide
 status: canonical
-version: 1.6.0
+version: 1.7.0
 owners:
   - repository-governance
 created: 2026-07-22
-updated: 2026-09-27
+updated: 2026-09-28
 review_cycle: quarterly
 supersedes: []
 superseded_by: []
@@ -110,14 +110,16 @@ self-reported and cross-checked, not cryptographically proven.
 ## Lifecycle commands
 
 Installation, verification, diagnosis and upgrade go through the standard
-lifecycle interface, implemented in F# and distributed through npm:
+lifecycle interface of the F# CLI, distributed as self-contained native
+releases (`scripts/install-native.sh`, `scripts/install-native.ps1`, or
+`echelon install praxis`), which install the `praxis` and `ros` commands:
 
 ```
-npx --package=@echelon-foundry/repository-operating-system ros init
-npx --package=@echelon-foundry/repository-operating-system ros status
-npx --package=@echelon-foundry/repository-operating-system ros verify
-npx --package=@echelon-foundry/repository-operating-system ros upgrade
-npx --package=@echelon-foundry/repository-operating-system ros doctor
+praxis init
+praxis status
+praxis verify
+praxis upgrade
+praxis doctor
 ```
 
 In this source checkout the same commands are available as `./ros init`,
@@ -137,21 +139,18 @@ Before editing a file the tool installed, check its ownership there: a
 
 ## F# CLI
 
-`./ros` in this source checkout, and every project bootstrapped via `npx
-ros-bootstrap init` (both profiles), runs the F# CLI (`DF-ROS-2026-A030`,
-`DF-ROS-2026-A032`). Node is no longer a CLI anywhere in this project or
-what it scaffolds. Node's own implementation (`tools/ros_cli.mjs` and its
-companions) remains in this repository and in the `project-administration`
-starter profile only, as `tools/ros_server.mjs`'s/`ros_hub_cli.mjs`'s
-in-process internal library dependency (`DF-ROS-2026-A033`) — it is no
-longer characterized or scaffolded as a CLI rollback path, and the
-`greenfield` starter profile no longer includes it at all. If `./ros`
-reports it needs building, run `npm run build:fsharp` first; CI always
-builds it before `./ros` runs, so this only affects local/manual use after
-a source change.
+`./ros` in this source checkout, and in every project installed with `init`
+(both profiles), runs the F# CLI (`DF-ROS-2026-A030`, `DF-ROS-2026-A041`).
+Praxis's own repository is F#/.NET only (`RQ-ROS-2026-A021`): it owns no
+JavaScript, TypeScript, npm or Node tooling, and `./ros architecture check`
+(also part of `./ros validate` here) fails on any such file. Do not add one;
+implement the behaviour in F#. In this checkout `./ros` is a shell launcher
+for the built CLI; if it reports it needs building, run
+`dotnet build Ros.slnx --configuration Release` first (CI always builds before
+`./ros` runs). In an installed project `./ros` runs the Praxis version the
+project pins, installing that native release on first use.
 
-F#'s command syntax differs from Node's in ways worth knowing rather than
-guessing from memory:
+The command syntax is worth knowing rather than guessing from memory:
 
 - Every mutating command shown above except `add` requires an explicit
   `--id ID` (repeatable) and `--occurred-at TIMESTAMP`, rather than a
@@ -165,8 +164,7 @@ guessing from memory:
   not a defect to work around.
 - `work start` and `work begin` are both accepted, as are `work complete`
   and `work done`.
-- `work context ID` and `work show ID` keep Node's positional-ID form
-  unchanged.
+- `work context ID` and `work show ID` take a positional ID.
 - `docs/migrations/fsharp/STATUS.md` is the authoritative ledger of any
   remaining command-surface gaps (e.g. `telemetry finalize --input`, a
   deliberately unported adapter-ingestion-at-finalize path).

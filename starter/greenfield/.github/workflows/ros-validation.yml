@@ -14,9 +14,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
+      # ./ros installs and runs the Praxis version this project pins; it
+      # needs only a POSIX shell and curl (no Node.js, npm or .NET).
       - run: ./ros registry check
       - run: ./ros validate
         env:

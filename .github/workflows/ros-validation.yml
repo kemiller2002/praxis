@@ -1,5 +1,8 @@
 name: ROS validation
 
+# Every repository-owned step here runs .NET/F# (DF-ROS-2026-A041): no Node
+# runtime or npm install is part of building, testing or validating Praxis.
+
 on:
   pull_request:
   push:
@@ -11,46 +14,49 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: "10.0.x"
-      - run: npm run test:all
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: dotnet restore Ros.slnx
+      - run: dotnet build Ros.slnx --configuration Release --no-restore
+      - name: F# tests
+        run: dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll
+      - name: Python artifact-validator oracle tests
+        run: python3 -m unittest discover -s tests -v
+      - name: F#/.NET-only repository invariant
+        run: ./ros architecture check
+      - run: ./ros registry check
       - run: ./ros validate
         env:
           ROS_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
 
-  # package.json declares "engines": { "node": ">=20" }. This job is the
-  # evidence for that claim: the lowest supported Node version has to run the
-  # real packed artifact, not just the source tree.
-  packaged-lifecycle:
+  # The lifecycle commands must work on every supported operating system,
+  # straight from the F# CLI with its embedded scaffold payload.
+  lifecycle:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          # The declared minimum, and the versions in normal use.
-          - { os: ubuntu-latest, node-version: "20" }
-          - { os: ubuntu-latest, node-version: "24" }
-          # One run per remaining supported operating system.
-          - { os: windows-latest, node-version: "22" }
-          - { os: macos-latest, node-version: "22" }
+        os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: "10.0.x"
-      - run: npm run build:fsharp
-      # This test packs the artifact itself and asserts its contents, so there
-      # is no separate pack step: `npm pack` would only re-run the whole suite
-      # through prepack.
-      - name: Exercise the packed npm artifact
-        run: node --test tests/lifecycle-package.test.mjs
+      - run: dotnet build src/Ros.Cli/Ros.Cli.fsproj --configuration Release
+      - name: Initialize, verify and validate a fresh project
+        shell: bash
+        run: |
+          set -euo pipefail
+          cli="$GITHUB_WORKSPACE/src/Ros.Cli/bin/Release/net10.0/ros-fs.dll"
+          project="$RUNNER_TEMP/lifecycle-project"
+          rm -rf "$project"
+          mkdir -p "$project"
+          git -C "$project" init -q
+          dotnet "$cli" --root "$project" init
+          dotnet "$cli" --root "$project" init --check
+          dotnet "$cli" --root "$project" verify
+          dotnet "$cli" --root "$project" doctor

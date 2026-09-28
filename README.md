@@ -48,7 +48,8 @@ praxis verify
 
 The native bundle is self-contained. A consuming machine does not need Node.js,
 npm, or a machine-wide .NET runtime. The established `ros` command remains a
-compatibility alias, and npm remains a compatibility distribution channel.
+compatibility alias. The native release is the only distribution channel: the
+npm package was retired (`DF-ROS-2026-A041`).
 
 To install the Echelon engineering toolchain, including Ordo:
 
@@ -132,9 +133,8 @@ Once installed, the repository can also run its own lifecycle through the
 - **Machine-readable output** (`--json`) and a documented exit-code contract for
   CI and agents.
 
-`ros-bootstrap init`/`verify` are unchanged and still published; a repository
-they installed keeps working, and `ros upgrade` adopts it. See
-[Compatibility](#compatibility).
+A repository installed by the retired `ros-bootstrap` keeps working, and
+`ros upgrade` adopts it. See [Compatibility](#compatibility).
 
 ## Commands
 
@@ -188,7 +188,7 @@ go to stderr. Schemas are in [`docs/cli.md`](docs/cli.md#machine-readable-output
 ### CI usage
 
 ```bash
-npx --package=@echelon-foundry/repository-operating-system ros verify --strict
+praxis verify --strict
 ```
 
 Exit `0` means valid, `3` means verification failed. Other nonzero codes mean
@@ -244,11 +244,9 @@ Adding a JSON field, command or option is not a breaking change. Removing a
 field, changing what one means, or changing an exit code is, and requires a
 version bump and a migration step.
 
-**Legacy compatibility.** The older `ros-bootstrap init` and
-`ros-bootstrap verify` executables still ship and behave exactly as before.
-They are supported for existing users, not a second recommended path — use
-`ros init` and `ros verify` for new work. A repository installed by
-`ros-bootstrap` keeps working untouched; `ros status` reports it as
+**Legacy compatibility.** The npm-distributed `ros-bootstrap init` and
+`ros-bootstrap verify` executables are retired (`DF-ROS-2026-A041`). A
+repository they installed keeps working untouched; `ros status` reports it as
 `upgrade-required`, and `ros upgrade` adopts the manifest while leaving the
 legacy snapshot in place.
 
@@ -256,23 +254,19 @@ legacy snapshot in place.
 
 `linux/x64`, `linux/arm64`, `darwin/x64`, `darwin/arm64`, `win32/x64`.
 
-Node.js 20 or newer is needed for the launcher. No .NET installation is
-required: the CLI ships as a self-contained binary, fetched and checksum-verified
-on first use of a given version and platform, then cached under
-`~/.cache/ros-fs/<version>/<platform>/` (override with `ROS_FS_CACHE_DIR`) and
-run offline thereafter.
-
-The package declares no npm `os` or `cpu` restriction on purpose: one package
-serves every platform and the launcher selects the right binary at run time. An
-unsupported platform fails with a message naming the gap.
+The CLI ships as a self-contained single-file binary per platform, installed
+and checksum-verified by `scripts/install-native.sh` or
+`scripts/install-native.ps1` (or `echelon install praxis`). No Node.js, npm or
+.NET installation is required. A project's own `./ros` runs the version the
+project pins, installing that release side by side on first use (under
+`~/.echelon/tools/praxis/<version>/`, or `$ECHELON_HOME`) without changing
+which version your global commands run. An unsupported platform fails with a
+message naming the gap.
 
 ## How it is built
 
 ```
-npm / npx
-    |
-    v
-tiny Node bootstrap (bin/ros.mjs, lib/lifecycle-launcher.mjs)
+native launcher (praxis / ros / ./ros, POSIX shell or .cmd)
     |
     v
 F# CLI (src/Ros.Cli)
@@ -281,10 +275,9 @@ F# CLI (src/Ros.Cli)
 F# domain and application core (src/Ros.Domain, src/Ros.Application)
 ```
 
-The Node launcher only detects the platform, locates the CLI binary, forwards
-arguments and stdio, and returns the exit code. The binary carries the scaffold
-it installs, so it needs nothing else from the package at run time. Every
-lifecycle decision — what to install, what the repository's
+The launchers only locate the pinned binary and forward arguments and the exit
+code. The binary carries the scaffold it installs, so it needs nothing else at
+run time. Every lifecycle decision — what to install, what the repository's
 state means, whether an installation is valid, which migrations apply, what is
 stale — is made in F#. Planning is pure and separate from execution:
 `inspect -> desired state -> transition -> validate -> execute -> verify`.
@@ -292,51 +285,36 @@ stale — is made in F#. Planning is pure and separate from execution:
 ## Development
 
 ```bash
-npm run build:fsharp        # dotnet build Ros.slnx --configuration Release
-npm test                    # node + python suites, including the packed artifact
-npm run test:fsharp         # F# unit tests and the differential suites
-npm run test:all            # everything
+dotnet build Ros.slnx --configuration Release
+dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll    # F# unit and end-to-end CLI tests
+python3 -m unittest discover -s tests                       # Python artifact-validator oracle
 ```
 
-Requires the .NET 10 SDK and Node.js 20+.
+Requires only the .NET 10 SDK (and Python 3 for the oracle tests). This
+repository is F#/.NET only (`RQ-ROS-2026-A021`): it owns no JavaScript,
+TypeScript, npm or Node tooling, and `./ros architecture check` (also part of
+`./ros validate`) fails, naming each path, if any appears.
 
 Inside this source checkout, `./ros` runs the locally built CLI directly:
 
 ```bash
 ./ros validate
+./ros architecture check
 ./ros registry check
 ./ros status
 ```
 
-### Packaging
-
-```bash
-npm run pack:inspect        # npm pack --dry-run: review the file list
-npm pack                    # produce the real tarball
-```
-
-`tests/lifecycle-package.test.mjs` packs the artifact, extracts it the way
-`npx` would, and runs every documented command against throwaway repositories —
-`dotnet test` passing is not treated as evidence that npm distribution works.
-
 ### Release
 
-Publishing is CI-driven ([`.github/workflows/publish.yml`](.github/workflows/publish.yml)),
-never a local developer machine. Every push to `main` publishes a `main`-tagged
-snapshot; a stable release happens only when `package.json`'s committed version
-changes, which also builds the self-contained binaries and creates the matching
-GitHub Release. Before tagging:
+Releases are CI-driven
+([`.github/workflows/native-release.yml`](.github/workflows/native-release.yml)),
+never a local developer machine: a change to `release.json`'s version on
+`main` builds the self-contained binaries for every platform, smoke-tests the
+installer against them, and publishes the GitHub Release.
 
-```bash
-npm run release:check
-```
-
-`package.json`'s version is the single authoritative version source: the F#
+`release.json`'s version is the single authoritative version source: the F#
 build reads it (see [`Directory.Build.props`](Directory.Build.props)) so
-`ros --version` can never drift from the released package version.
-
-See [`PACKAGE-USAGE.md`](PACKAGE-USAGE.md) for publication and trusted-publishing
-setup.
+`ros --version` can never drift from the released version.
 
 ## Troubleshooting
 
@@ -344,8 +322,7 @@ setup.
 |---|---|
 | `ros init` exits `4` naming a tool-owned file | You edited a file the tool owns. Revert it, or move the change into a user-owned file. |
 | `ros verify` exits `3` | Run `ros doctor` — it names each problem and the command that fixes it. |
-| `no prebuilt binary for <platform>/<arch>` | That platform is not supported. Build from source in a checkout with `npm run build:fsharp`. |
-| `version ... is a main-branch snapshot` | A `@main` snapshot has no GitHub Release and therefore no binary. Install a stable version. |
+| `Unsupported operating system` / `Unsupported architecture` from the installer | That platform is not supported. Build from source in a checkout with `dotnet build Ros.slnx --configuration Release`. |
 | `installed configuration version N is newer than this CLI supports` | The repository was installed by a newer release. Upgrade the CLI. |
 
 ## Repository concepts
@@ -373,7 +350,7 @@ work be captured before it has an externally assigned ID, and graduates into
 the same protocol via `work start`.
 
 See [`docs/work-protocol.md`](docs/work-protocol.md) and, for a UI over the same
-backlog, [`docs/web-interface.md`](docs/web-interface.md) (`npm run web`).
+backlog, [`docs/web-interface.md`](docs/web-interface.md) (`./ros web serve`).
 
 External project-management products integrate through the normalized
 [work adapter contract](docs/work-adapter-contract.md); they are not embedded
@@ -401,7 +378,7 @@ The default reporting project is `project-administration`. ROS ships an
 installable profile for it:
 
 ```bash
-npx --package=@echelon-foundry/repository-operating-system ros init \
+praxis init \
   --profile project-administration \
   --project "Project Administration"
 ```

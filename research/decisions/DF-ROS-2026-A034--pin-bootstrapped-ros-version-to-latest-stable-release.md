@@ -1,12 +1,12 @@
 ---
 id: DF-ROS-2026-A034
 title: "ros-bootstrap init pins a scaffolded project's ros.json to the latest stable release, not the installed package's own version"
-status: accepted
+status: superseded
 version: 1.0.0
 owners:
   - repository-governance
 created: 2026-09-11
-updated: 2026-09-11
+updated: 2026-09-28
 research_area: repository-operating-system
 decision_type: architecture
 supports: []
@@ -17,7 +17,8 @@ related_documents:
   - lib/bootstrap.mjs
   - .github/workflows/publish.yml
 supersedes: []
-superseded_by: []
+superseded_by:
+  - DF-ROS-2026-A041
 tags: [ros-fs, bootstrap, launcher, npm, release]
 confidence: high
 ---

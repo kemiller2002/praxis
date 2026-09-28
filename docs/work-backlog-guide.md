@@ -17,7 +17,7 @@ start:
   between the two.
 
 All commands below assume you're at the repository root and `./ros` is
-executable (`chmod +x ros` if not, or run `node ros ...`).
+executable (`chmod +x ros` if not, or run `sh ros ...`).
 
 ---
 
@@ -542,7 +542,7 @@ Final state, at a glance:
 Or just open [`.ros/work/queue.md`](../.ros/work/queue.md) in an editor —
 it's regenerated on every backlog change and reads as a plain table.
 
-Prefer a UI to typing commands? `npm run web` starts a local web interface
+Prefer a UI to typing commands? `./ros web serve` starts a local web interface
 over this same backlog — see [`web-interface.md`](web-interface.md).
 
 ---

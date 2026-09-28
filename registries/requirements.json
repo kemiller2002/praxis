@@ -579,5 +579,32 @@
     "title": "Committed changes made without an active work item can be reconciled post hoc from Git evidence",
     "updated": "2026-09-27",
     "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-28",
+    "id": "RQ-ROS-2026-A021",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A021--fsharp-dotnet-only-repository.md",
+    "priority": "high",
+    "related_documents": [
+      "DF-ROS-2026-A041",
+      "DF-ROS-2026-A033",
+      "requirements/SHARED-APPLICATION-FOUNDATIONS.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "architecture",
+      "fsharp",
+      "dotnet",
+      "tooling",
+      "node-removal",
+      "invariant"
+    ],
+    "title": "Repository-owned implementation and automation are F#/.NET only",
+    "updated": "2026-09-28",
+    "version": "1.0.0"
   }
 ]

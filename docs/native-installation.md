@@ -97,6 +97,8 @@ On macOS and Linux:
 
 Versions are immutable directories. The bin entries point at the active version, so upgrading a tool does not rewrite an older release.
 
+A project's own `./ros` runs the Praxis version that project pins from `tools/praxis/<version>/`. If that version is missing it installs it with `install-native.sh --no-activate` (`install-native.ps1 -NoActivate` on Windows), which adds the version directory without changing the active version or the bin entries.
+
 ## Compatibility
 
-The existing npm package remains supported as a compatibility distribution channel. Existing ros and sde command names and repository installation manifests are not removed by this change.
+The native bundles are the only distribution channel; the npm package is retired (`DF-ROS-2026-A041`). Existing ros and sde command names and repository installation manifests are not removed. Each bundle is the self-contained binary plus its launchers; the binary embeds the scaffold it installs.

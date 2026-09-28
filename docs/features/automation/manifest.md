@@ -2,51 +2,56 @@
 
 ## Purpose
 
-Route changes to GitHub validation and npm publication declarations while
-keeping platform mechanics separate from ROS semantic decisions.
+Route changes to GitHub validation and native release declarations while
+keeping platform mechanics separate from ROS semantic decisions. Workflows
+are execution hosts for the F# CLI and .NET tooling; they own no Node
+execution (`RQ-ROS-2026-A021`). External actions (for example
+`actions/checkout`) running on their own Node runtime are not repository code.
 
 ## Ownership
 
-- State, including presentation state: `.github/workflows/*.yml`, installed
-  workflow template, `package.json`, and `package-lock.json`.
-- Transitions / commands / messages: GitHub push/pull-request triggers, npm
-  package scripts, and workflow `run` blocks.
-- Invariants and guards: validation/test exit status, explicit public license,
-  main-branch/repository gate, version-change check, registry lookup, and unique
-  snapshot version construction.
-- Capabilities / authority: GitHub permissions declare `contents: read` and
-  `id-token: write` only for trusted npm publication.
-- Important effects and effect contracts: checkout/runtime setup, package/test
-  subprocesses, npm registry reads and publication, and transient runner file
-  mutation.
+- State, including presentation state: `.github/workflows/*.yml`, the
+  installed workflow template (`starter/greenfield/.github/workflows/`), and
+  `release.json`.
+- Transitions / commands / messages: GitHub push/pull-request triggers and
+  workflow `run` blocks invoking `dotnet`, `./ros`, the site tool, the
+  installers and `gh`.
+- Invariants and guards: build/test/validation exit status, the F#/.NET-only
+  invariant (`./ros architecture check`), release only from the canonical
+  `main` branch, and bundle checksums.
+- Capabilities / authority: `contents: read` for validation; `contents:
+  write` only for creating the native GitHub Release; Pages permissions only
+  for site deployment.
+- Important effects and effect contracts: checkout/.NET setup, build/test
+  subprocesses, GitHub Release creation/upload, Pages deployment, and
+  transient runner file mutation.
 
 ## Interfaces
 
-- Inbound: GitHub events and npm task invocations.
-- Outbound: CI conclusions/logs, GitHub step outputs, stable npm releases, and
-  `main`-tagged snapshot releases.
+- Inbound: GitHub events.
+- Outbound: CI conclusions/logs, GitHub step outputs, native GitHub Releases,
+  and the Pages deployment.
 
 ## Tests and verification
 
-- Local behavior tests: release-policy text assertions in
-  `tests/npm-bootstrap.test.mjs`; package scripts exercise runtime gates.
-- Boundary/contract tests: `npm pack --dry-run`, `npm test`,
-  `./ros registry check`, and `./ros validate`.
-- Integration/live verification: GitHub-hosted workflow and npm publication;
-  no local workflow execution harness exists.
+- Boundary/contract checks run in CI: the F# test suite, `./ros architecture
+  check`, `./ros registry check`, `./ros validate`, the cross-platform
+  lifecycle job, and the site tool's own workflow assertions.
+- Integration/live verification: GitHub-hosted runs; no local workflow
+  execution harness exists.
 
 ## Dependencies
 
-- Allowed direct dependencies: GitHub Actions, Git, Node/npm, Python for the
-  root legacy oracle, and ROS CLI commands.
-- Required composition context: repository history, package metadata, and npm
-  trusted-publishing configuration.
+- Allowed direct dependencies: GitHub Actions, Git, the .NET SDK, Python for
+  the root legacy artifact-validator oracle, the GitHub CLI, and ROS CLI
+  commands. Not Node/npm.
 
 ## Modification boundaries
 
-- Normal: workflow YAML, package task glue, and textual policy tests.
-- Escalation required: registry publication, permissions, channel/version
-  semantics, credential/trust changes, or removal of a release gate.
+- Normal: workflow YAML.
+- Escalation required: release publication, permissions, channel/version
+  semantics, credential/trust changes, removal of a release gate, or any
+  repository-owned Node execution (requires an accepted `DF-` exception).
 
 ## Local agent instructions
 
@@ -55,7 +60,9 @@ keeping platform mechanics separate from ROS semantic decisions.
 ## Maintenance
 
 - Owner: repository-governance
-- Last checked against implementation: 2026-09-07
-- Known gaps: root validation does not install dependencies; TypeScript builds
-  are outside `npm test`; registry lookup cannot distinguish every remote
-  failure from package absence; package and lockfile versions currently drift.
+- Last checked against implementation: 2026-09-28 (`DF-ROS-2026-A041`: npm
+  publication workflow removed; every workflow step the repository owns runs
+  .NET/F#).
+- Known gaps: a release is created for `release.json`'s version whenever a
+  release input changes on `main`, so an unbumped version is re-uploaded
+  (`--clobber`) rather than refused.

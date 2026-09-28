@@ -13,12 +13,12 @@ on:
       - "starter/**"
       - "templates/**"
       - "tests/**"
-      - "package.json"
-      - "package-lock.json"
+      - "release.json"
+      - "Directory.Build.props"
   push:
     branches: [main]
     paths:
-      - "package.json"
+      - "release.json"
       - ".github/workflows/native-release.yml"
       - "scripts/**"
       - "bin/praxis-native.sh"
@@ -42,37 +42,28 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "24"
-          package-manager-cache: false
-
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.11"
-
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: "10.0.x"
 
       - name: Test and validate
         run: |
-          npm run test:all
+          dotnet build Ros.slnx --configuration Release
+          dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll
+          ./ros architecture check
           ./ros registry check
           ./ros validate
 
-      - name: Build package payload
+      # release.json is the single version source; the F# CLI reports it.
+      - name: Resolve release version
         id: package
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="$(node -p "require('./package.json').version")"
+          VERSION="$(./ros --version | awk '{print $2}')"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          rm -rf dist/native dist/native-stage dist/native-package
-          mkdir -p dist/native dist/native-stage dist/native-package
-          npm pack --ignore-scripts --json > /tmp/praxis-pack.json
-          TARBALL="$(node -e "const x=require('/tmp/praxis-pack.json'); process.stdout.write(x[0].filename)")"
-          tar -xzf "$TARBALL" -C dist/native-package
+          rm -rf dist/native dist/native-stage
+          mkdir -p dist/native dist/native-stage
 
       - name: Build self-contained Praxis binaries
         shell: bash
@@ -104,7 +95,6 @@ jobs:
             name="praxis-${rid}"
             root="dist/native-stage/${name}"
             mkdir -p "$root"
-            cp -R dist/native-package/package "$root/package"
             cp "dist/publish/${rid}/ros-fs" "$root/praxis-bin"
             cp bin/praxis-native.sh "$root/praxis"
             cp bin/echelon.sh "$root/echelon"
@@ -121,7 +111,6 @@ jobs:
 
           root="dist/native-stage/praxis-win-x64"
           mkdir -p "$root"
-          cp -R dist/native-package/package "$root/package"
           cp dist/publish/win-x64/ros-fs.exe "$root/praxis-bin.exe"
           cp bin/praxis-native.cmd "$root/praxis.cmd"
           cp bin/echelon.ps1 "$root/echelon.ps1"
@@ -135,7 +124,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="$(node -p "require('./package.json').version")"
+          VERSION="$(./ros --version | awk '{print $2}')"
           install_root="$(mktemp -d)"
           project_root="$(mktemp -d)"
           trap 'rm -rf "$install_root" "$project_root"' EXIT

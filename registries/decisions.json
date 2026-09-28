@@ -292,8 +292,10 @@
       "docs/migrations/fsharp/STATUS.md",
       "PACKAGE-USAGE.md"
     ],
-    "status": "accepted",
-    "superseded_by": [],
+    "status": "superseded",
+    "superseded_by": [
+      "DF-ROS-2026-A041"
+    ],
     "supersedes": [],
     "supporting_evidence": [
       "EV-ROS-2026-A047",
@@ -309,7 +311,7 @@
       "decision"
     ],
     "title": "Distribute ros-fs via npm as a self-contained single-file binary fetched from GitHub Releases",
-    "updated": "2026-09-10",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -402,8 +404,10 @@
       "AGENTS.md",
       "PACKAGE-USAGE.md"
     ],
-    "status": "accepted",
-    "superseded_by": [],
+    "status": "superseded",
+    "superseded_by": [
+      "DF-ROS-2026-A041"
+    ],
     "supersedes": [
       "DF-ROS-2026-A031"
     ],
@@ -420,7 +424,7 @@
       "decision"
     ],
     "title": "Full Node replacement is the accepted end-state; starter template ./ros becomes F#",
-    "updated": "2026-09-11",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -440,8 +444,10 @@
       "AGENTS.md",
       "PACKAGE-USAGE.md"
     ],
-    "status": "accepted",
-    "superseded_by": [],
+    "status": "superseded",
+    "superseded_by": [
+      "DF-ROS-2026-A041"
+    ],
     "supersedes": [],
     "supporting_evidence": [
       "EV-ROS-2026-A047",
@@ -456,7 +462,7 @@
       "decision"
     ],
     "title": "Node retained as internal-library-only; test suite stops treating it as a live CLI oracle",
-    "updated": "2026-09-11",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -476,8 +482,10 @@
       ".github/workflows/publish.yml"
     ],
     "research_area": "repository-operating-system",
-    "status": "accepted",
-    "superseded_by": [],
+    "status": "superseded",
+    "superseded_by": [
+      "DF-ROS-2026-A041"
+    ],
     "supersedes": [],
     "supports": [],
     "tags": [
@@ -488,7 +496,7 @@
       "release"
     ],
     "title": "ros-bootstrap init pins a scaffolded project's ros.json to the latest stable release, not the installed package's own version",
-    "updated": "2026-09-11",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -645,6 +653,51 @@
     ],
     "title": "Post-hoc attribution reconciliation as an append-only, Git-evidenced, content-bound event",
     "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-28",
+    "decision_type": "architecture",
+    "derived_from": [
+      "RQ-ROS-2026-A021"
+    ],
+    "id": "DF-ROS-2026-A041",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A041--fsharp-dotnet-only-repository.md",
+    "related_documents": [
+      "RQ-ROS-2026-A021",
+      "DF-ROS-2026-A009",
+      "DF-ROS-2026-A030",
+      "AGENTS.md",
+      "docs/cli.md",
+      "docs/native-installation.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [
+      "DF-ROS-2026-A029",
+      "DF-ROS-2026-A032",
+      "DF-ROS-2026-A033",
+      "DF-ROS-2026-A034"
+    ],
+    "supports": [
+      "RQ-ROS-2026-A021"
+    ],
+    "tags": [
+      "architecture",
+      "fsharp",
+      "dotnet",
+      "node-removal",
+      "distribution",
+      "invariant",
+      "decision"
+    ],
+    "title": "The repository is F#/.NET only; repository-owned Node/JavaScript/TypeScript is removed and prohibited by an automated invariant",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   }
 ]

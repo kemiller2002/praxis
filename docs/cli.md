@@ -1,15 +1,17 @@
 # CLI reference
 
-The canonical public interface is the `ros` executable shipped by
-`@echelon-foundry/repository-operating-system`.
+The canonical public interface is the `praxis` command (alias `ros`), a
+self-contained F# binary installed by the native installers (see
+[`native-installation.md`](native-installation.md)).
 
 ```bash
-npx --package=@echelon-foundry/repository-operating-system ros <command>
+praxis <command>
 ```
 
 All five lifecycle commands, and the repository commands below them, are the
-same F# CLI. The npm package contains a small Node launcher whose only job is
-to start that CLI; no lifecycle decision is made in JavaScript.
+same F# CLI. Launchers (`praxis`, `ros`, a project's `./ros`) only start it; no
+decision is made anywhere else, and no Node.js or npm is involved
+(`DF-ROS-2026-A041`).
 
 ## Lifecycle commands
 
@@ -26,7 +28,7 @@ to start that CLI; no lifecycle decision is made in JavaScript.
 | Option | Meaning |
 |---|---|
 | `-h`, `--help` | Show help. `ros <command> --help` shows that command's help. |
-| `-V`, `--version` | Print `ros-fs <version>`, where the version is the npm package version. |
+| `-V`, `--version` | Print `ros-fs <version>`, where the version is the release version (`release.json`). |
 | `--root PATH` | Repository to act on. Defaults to the current directory. |
 | `--package-root PATH` | Install from this scaffold directory instead of the one compiled into the binary. Rarely needed — see [Where the scaffold comes from](installation.md#where-the-scaffold-comes-from). |
 | `--json` | Emit machine-readable JSON on stdout. |
@@ -220,13 +222,13 @@ document either way:
 
 ```bash
 # Fail the build if the repository is not installed and current.
-npx --package=@echelon-foundry/repository-operating-system ros verify --strict
+praxis verify --strict
 
 # Fail the build if init would change anything.
-npx --package=@echelon-foundry/repository-operating-system ros init --check
+praxis init --check
 
 # Machine-readable, for a step that parses the result.
-npx --package=@echelon-foundry/repository-operating-system ros verify --json
+praxis verify --json
 ```
 
 Exit code `0` means the assertion held; `3` means it did not. Any other

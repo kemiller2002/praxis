@@ -8,7 +8,7 @@ These requirements apply to Praxis/ROS runtime and UI surfaces when the named ca
 
 1. Praxis's native .NET/F# CLI, infrastructure, repository, filesystem, process, package, network, Git, and other external operational boundaries MUST use Aegis for unexpected operational failure.
 2. Expected Praxis outcomes such as invalid work transitions, verification failures, stale installation state, user-owned-file conflicts, unsupported commands, and policy refusals MUST remain typed Praxis/Ordo outcomes and MUST NOT be converted into Aegis faults.
-3. The Node compatibility/bootstrap/server layers MUST NOT invent a competing durable fault taxonomy. Until a native Aegis adapter exists for those JavaScript-only edges, they MUST return explicit non-success diagnostics and preserve enough context for the native boundary to classify the fault without exposing secrets.
+3. Praxis has no JavaScript edges (RQ-ROS-2026-A021); every launcher, server and hub boundary is F#/.NET or a thin shell launcher. Launchers MUST NOT invent a competing durable fault taxonomy: they MUST return explicit non-success diagnostics and preserve enough context for the native boundary to classify the fault without exposing secrets.
 4. Retry/recovery MUST respect idempotency and unknown-effect state, especially around repository mutation, package installation, Git operations, and agent/provider invocation.
 5. Aegis context MUST redact credentials, tokens, private repository data, and sensitive work content.
 6. Native Aegis dependencies MUST be pinned to released versions and tested with replaceable sinks.

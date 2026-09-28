@@ -7,15 +7,16 @@ From inside an installed repository, using its own launcher:
 ./ros upgrade                    # apply it
 ```
 
-That works with no npm package on disk and no network, because the CLI carries
+That works with no package on disk and no network, because the CLI carries
 its own scaffold — see
 [Where the scaffold comes from](installation.md#where-the-scaffold-comes-from).
 
-To upgrade to a version newer than the one the repository is pinned to, run
-that version's package instead:
+To upgrade to a version newer than the one the repository is pinned to,
+install that version and run its `upgrade`:
 
 ```bash
-npx --package=@echelon-foundry/repository-operating-system@<version> ros upgrade
+curl -fsSL https://raw.githubusercontent.com/kemiller2002/praxis/main/scripts/install-native.sh | sh -s -- --version <version>
+praxis upgrade
 ```
 
 ## The migration model
@@ -103,18 +104,17 @@ is wrong, then `ros init` or `ros upgrade` to converge.
 - Removing a field, changing what one means, or changing an exit code is a
   breaking change. It requires a new schema or configuration version and a
   migration step.
-- `ros-bootstrap init` and `ros-bootstrap verify` remain published and
-  behave exactly as they did. They are legacy compatibility, not a second
-  recommended path.
+- The npm-distributed `ros-bootstrap init` and `ros-bootstrap verify` are
+  retired (`DF-ROS-2026-A041`); what they installed is still upgradeable.
 - A repository installed by `ros-bootstrap init` keeps working with no action
   from you. `ros status` reports it as `upgrade-required`; adopting the
   manifest with `ros upgrade` is what moves it to `installed`.
 
 ## What is proven
 
-The guarantees above are the ones covered by tests in
-`tests/lifecycle-package.test.mjs`, which runs against the actual packed npm
-artifact rather than the source tree:
+The guarantees above are the ones covered by the end-to-end lifecycle tests in
+`tests/Ros.Tests`, which run the real built CLI against throwaway repositories,
+both from a source checkout and from its embedded payload alone:
 
 - uninstalled → current (`init`)
 - current → current is a byte-identical no-op (idempotency)
@@ -130,7 +130,7 @@ Nothing stronger is claimed than what those tests exercise.
 
 ## Upgrading the CLI itself
 
-A scaffolded project pins its CLI version in `ros.json`, and its `./ros`
-downloads and caches that version's binary. Changing that value is what moves
-the project to a new release; `npx --package=...@<version> ros upgrade` does the
-same thing for a single run without changing the pin.
+A scaffolded project pins its CLI version (`.echelon/ros.json`
+`installedVersion`, else `ros.json` `rosVersion`), and its `./ros` installs
+and runs that version's native release. Running a newer `praxis upgrade`
+moves the pin to that release.
