@@ -3021,11 +3021,48 @@
         "EXE-20260928T081238572Z-5e89d3ec"
       ],
       "completedAt": "2026-09-28T08:25:44.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-05",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "scripts/praxis-bootstrap.sh"
+        },
+        {
+          "type": "implementation",
+          "path": ".github/actions/praxis-setup/action.yml"
+        },
+        {
+          "type": "implementation",
+          "path": ".github/workflows/native-release.yml"
+        },
+        {
+          "type": "implementation",
+          "path": "bin/echelon.sh"
+        },
+        {
+          "type": "tests",
+          "path": "tests/praxis-bootstrap.test.mjs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/native-installation.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T08:33:09.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T082616372Z-37505b14"
+      ],
+      "completedAt": "2026-09-28T08:33:09.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-28T08:25:44.000Z",
+  "updatedAt": "2026-09-28T08:33:09.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

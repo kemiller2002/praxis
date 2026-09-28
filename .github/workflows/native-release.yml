@@ -29,6 +29,11 @@ on:
 
 permissions:
   contents: write
+  # Build-provenance attestations for the published native assets
+  # (PRAXIS-REMOTE-05): consumers such as scripts/praxis-bootstrap.sh verify
+  # them with `gh attestation verify`.
+  id-token: write
+  attestations: write
 
 concurrency:
   group: praxis-native-release-${{ github.ref }}
@@ -154,8 +159,42 @@ jobs:
           sh -n bin/praxis-native.sh
           sh -n bin/echelon.sh
 
-      - name: Create or update GitHub release
+      # A published version's assets are immutable (PRAXIS-REMOTE-05,
+      # EV-ROS-2026-A053 S2): consumers pin a version and verify its digest,
+      # so the same version must never change underneath them. This workflow
+      # also runs for pushes that do not bump the version; those publish
+      # nothing rather than replacing an existing release's assets.
+      - name: Decide whether this version still needs publishing
+        id: release
         if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.package.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          existing="$(mktemp -d)"
+          if gh release download "v${VERSION}" --pattern native-checksums.txt --dir "$existing" >/dev/null 2>&1; then
+            if cmp -s "$existing/native-checksums.txt" dist/native/native-checksums.txt; then
+              echo "v${VERSION} already publishes these exact native assets."
+            else
+              echo "::warning::v${VERSION} already publishes different native assets. Released versions are immutable; bump the version to publish a new build. Nothing was uploaded."
+            fi
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Attest build provenance
+        if: github.event_name != 'pull_request' && steps.release.outputs.publish == 'true'
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
+        with:
+          subject-path: |
+            dist/native/praxis-*
+            dist/native/native-checksums.txt
+
+      - name: Publish GitHub release assets
+        if: github.event_name != 'pull_request' && steps.release.outputs.publish == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.package.outputs.version }}
@@ -164,12 +203,14 @@ jobs:
           set -euo pipefail
           assets=(dist/native/praxis-* dist/native/native-checksums.txt)
 
+          # Uploads never overwrite: an asset that already exists is never replaced.
           if gh release view "v${VERSION}" >/dev/null 2>&1; then
-            gh release upload "v${VERSION}" "${assets[@]}" --clobber
+            gh release upload "v${VERSION}" "${assets[@]}"
           else
-            if ! gh release create "v${VERSION}" "${assets[@]}"               --target "${GITHUB_SHA}"               --title "Praxis v${VERSION}"               --notes "Native Praxis/ROS bundles plus the Echelon bootstrap command. No Node.js or .NET runtime is required on the consuming machine."; then
-              gh release upload "v${VERSION}" "${assets[@]}" --clobber
-            fi
+            gh release create "v${VERSION}" "${assets[@]}" \
+              --target "${GITHUB_SHA}" \
+              --title "Praxis v${VERSION}" \
+              --notes "Native Praxis/ROS bundles plus the Echelon bootstrap command. No Node.js or .NET runtime is required on the consuming machine. Assets carry GitHub build-provenance attestations."
           fi
 
 

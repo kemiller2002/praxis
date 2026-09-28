@@ -2004,10 +2004,10 @@
         "gh-90"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-28T07:45:04.826Z",
-      "updatedAt": "2026-09-28T07:45:05.000Z",
+      "updatedAt": "2026-09-28T08:33:09.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2078,10 +2078,10 @@
         "gh-90"
       ],
       "priority": "low",
-      "status": "blocked",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-09-28T07:45:08.011Z",
-      "updatedAt": "2026-09-28T07:45:08.000Z",
+      "updatedAt": "2026-09-28T08:26:15.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2091,8 +2091,7 @@
         "runtime": "claude-code"
       },
       "source": "github-issue",
-      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90",
-      "blockedReason": "Depends on PRAXIS-REMOTE-03 (DF-ROS-2026-A041 decomposition)"
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
     },
     {
       "id": "PRAXIS-REMOTE-09",
@@ -2103,10 +2102,10 @@
         "gh-90"
       ],
       "priority": "medium",
-      "status": "blocked",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-09-28T07:45:09.369Z",
-      "updatedAt": "2026-09-28T07:45:10.000Z",
+      "updatedAt": "2026-09-28T08:26:15.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2116,8 +2115,7 @@
         "runtime": "claude-code"
       },
       "source": "github-issue",
-      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90",
-      "blockedReason": "Depends on PRAXIS-REMOTE-02, PRAXIS-REMOTE-03 (DF-ROS-2026-A041 decomposition)"
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
     },
     {
       "id": "PRAXIS-REMOTE-10",
