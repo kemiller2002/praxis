@@ -2040,6 +2040,30 @@
       },
       "source": "github-actions",
       "sourceReference": "https://github.com/kemiller2002/praxis/pull/79"
+    },
+    {
+      "id": "PR79-MAIN-INTEGRATION",
+      "title": "Integrate current main into PR 79",
+      "description": "Resolve overlaps between step telemetry and the merged remote-execution work on current main, preserve both designs, rerun validation, and merge PR 79.",
+      "tags": [
+        "fsharp",
+        "integration"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-28T12:28:11Z",
+      "updatedAt": "2026-09-28T12:28:19Z",
+      "createdBy": "ChatGPT",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "ChatGPT",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "github-pull-request",
+      "sourceReference": "https://github.com/kemiller2002/praxis/pull/79"
     }
   ]
 }
