@@ -77,6 +77,14 @@
     <Compile Include="WorkViewCliTests.fs" />
     <Compile Include="StatusValidateCliTests.fs" />
     <Compile Include="GitArtifactCliTests.fs" />
+    <Compile Include="CliPortSupport.fs" />
+    <Compile Include="TelemetryCliTests.fs" />
+    <Compile Include="TelemetryAdapterCliTests.fs" />
+    <Compile Include="AdapterCliTests.fs" />
+    <Compile Include="ProvenanceCliTests.fs" />
+    <Compile Include="LifecycleCliTests.fs" />
+    <Compile Include="EchelonDoctorTests.fs" />
+    <Compile Include="InstalledRepositoryTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

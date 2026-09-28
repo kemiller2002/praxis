@@ -65,4 +65,11 @@ let main _ =
     @ WorkViewCliTests.tests
     @ StatusValidateCliTests.tests
     @ GitArtifactCliTests.tests
+    @ TelemetryCliTests.tests
+    @ TelemetryAdapterCliTests.tests
+    @ AdapterCliTests.tests
+    @ ProvenanceCliTests.tests
+    @ LifecycleCliTests.tests
+    @ EchelonDoctorTests.tests
+    @ InstalledRepositoryTests.tests
     |> TestRunner.run
