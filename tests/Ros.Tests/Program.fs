@@ -54,4 +54,6 @@ let main _ =
     @ WorkReconciliationTests.tests
     @ WorkReconciliationEffectTests.tests
     @ ImplementationLanguagePolicyTests.tests
+    @ WebInterfaceTests.tests
+    @ HubTests.tests
     |> TestRunner.run

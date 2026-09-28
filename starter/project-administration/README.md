@@ -24,9 +24,11 @@ for tracking the hub's own administrative work — see
 
 ## Getting started
 
+The hub is built into this repository's `./ros`; no Node.js or npm is
+required.
+
 ```bash
-npm install
-npm run hub
+./ros hub serve
 ```
 
 Opens `http://127.0.0.1:4320`. Register a repository, then create or browse
@@ -35,10 +37,10 @@ work items across everything you've registered.
 The hub's own local backlog UI runs separately:
 
 ```bash
-npm run web
+./ros web serve
 ```
 
-Or from the command line:
+Or from the command line (`./ros-hub ARGS` is the same as `./ros hub ARGS`):
 
 ```bash
 ./ros-hub register /path/to/some/other/ros-repo --name "Some Repo"

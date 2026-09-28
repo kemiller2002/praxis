@@ -1,35 +1,56 @@
 # Web Interface
 
-A local web UI for the [work backlog](work-backlog-guide.md), backed by a
-thin HTTP service. It adds no new capability over the CLI -- everything it
-does, `./ros` already does -- it's a second, visual way to drive the same
-kernel.
+A local web UI for the [work backlog](work-backlog-guide.md), served by the
+ROS command-line tool itself. It adds no new capability over the CLI --
+everything it does, `./ros` already does -- it's a second, visual way to
+drive the same kernel. No Node.js, npm, or browser JavaScript is involved:
+the pages are HTML rendered by the F# CLI, and every action is a plain
+`<form method="post">`.
 
 ## Running it
 
 ```bash
-npm run web
+./ros web serve
 ```
 
-This builds `web/app.ts` and starts the server on `http://127.0.0.1:4310`,
-serving the repository at the current working directory.
-
-Options:
+This starts the server on `http://127.0.0.1:4310`, serving the repository at
+the current working directory (or `--root PATH`). Options:
 
 ```bash
-node tools/ros_server.mjs --root /path/to/other/repo --port 4321 --host 0.0.0.0
+./ros --root /path/to/other/repo web serve --port 4321 --host 0.0.0.0
 ```
+
+Stop it with Ctrl+C (or SIGTERM).
 
 **The server binds to `127.0.0.1` by default and has no authentication.**
 Anyone who can reach it can capture, block, abandon, start, or complete work
 items, upload files into your repository, and write evidence-bearing
 completions into your repository's history. Uploads are capped at 25 MB per
-request. Only pass `--host 0.0.0.0` (or otherwise expose it beyond your own
-machine) if you've put your own authentication or network boundary in front
-of it.
+request (1 MB for other request bodies). Only pass `--host 0.0.0.0` (or
+otherwise expose it beyond your own machine) if you've put your own
+authentication or network boundary in front of it.
 
-After editing `web/app.ts`, either re-run `npm run web` (which rebuilds
-first) or `npm run build:web` on its own, then reload the page.
+## Using it
+
+- **Queue** (`/`): capture a work item (title, tags, priority, description,
+  and up to three files, each with an optional display name), filter by tag
+  and status, and see every item with the actions the kernel currently
+  allows it (one-click *Mark ready* / *Resume*; the others link to the
+  item's page because they need input).
+- **Item** (`/work/ID`): description, attachments (download links), and a
+  form per allowed action -- block or abandon with a reason, start with a
+  work type, complete with evidence `TYPE`/`PATH` rows and an optional
+  research conclusion -- plus *Edit* (title, description, tags, priority;
+  clearing the tag field removes all tags) and *Attach files*, and the raw
+  `work show` record.
+- **Validate** (`/validate`): the `validate --json` findings as a table. The
+  header shows repository, protocol version, and validation state from
+  `status --json`.
+
+Every form post redirects back (post/redirect/get) with a notice, or with
+the exact error message the CLI reported -- the page never re-implements a
+rule such as "block requires a reason" or "completion requires
+implementation and tests evidence".
 
 ## Architecture
 
@@ -37,90 +58,81 @@ This follows the same layering discipline as the rest of ROS's work
 protocol: one place owns meaning, everything else is a thin adapter over it.
 
 ```
-browser (HTML + TypeScript)
-        | fetch (command)
+browser (server-rendered HTML, plain form posts, no script)
+        | HTTP
         v
-tools/ros_server.mjs (HTTP adapter -- no domain logic)
-        | direct function call
+ros web serve (Ros.Cli.WebInterface: routing + rendering, no domain logic)
+        | runs this same CLI as a child process: ros --root ROOT work ...
         v
-tools/ros_cli.mjs (the kernel -- owns every legality/state rule)
+ros work capture/update/attach/backlog-transition/start/resume/block/complete,
+work list/show, validate --json, status --json  (the kernel)
 ```
 
-- **`tools/ros_cli.mjs`** is unchanged in behavior. The functions the server
-  calls (`captureWork`, `backlogTransition`, `startWork`, `transition`,
-  `blockWork`, `showWork`, `mergedWorkView`, `statusView`, `updateWork`,
-  `attachFile`, `attachmentFilePath`, `validate`) are the exact same
-  functions `ros`'s CLI commands call -- the server does not duplicate any
-  transition, evidence, or validation rule. A request that would fail on
-  the CLI fails the same way over HTTP, with the same message.
-- **`tools/ros_server.mjs`** is a dependency-free `node:http` server. It
-  parses JSON (and, for file uploads, standard browser-generated
-  `multipart/form-data` via a small hand-written parser -- no upload
-  library), matches a small route table, calls one kernel function per
-  route, and serializes the result. It makes no decisions about what's
-  legal. A file's associated name comes from the browser `File`'s name at
-  upload time (or an override the UI sends alongside it); on-disk storage
-  names are generated separately so two attachments can share a display
-  name without colliding.
-- **`web/app.ts`** is a framework-free, purely functional TypeScript client:
-  a single `state` value, one `setState` that re-renders, and pure functions
-  from `state` to DOM. There is no two-way data binding -- typing in a
-  filter box never mutates `state` directly, it triggers a fetch whose
-  result replaces `state` wholesale. Modal interactions (block/abandon
-  reason, start type, completion evidence) use the browser's native
-  `<dialog>` + `<form method="dialog">`, which close themselves and report
-  which button was pressed without any custom modal JavaScript.
-- Client-side "validation" doesn't exist as a separate layer: the UI shows
-  whatever error message the server (i.e. the kernel) returns, rather than
-  re-implementing rules like "block requires a reason" or "completion
-  requires implementation and tests" in JavaScript.
+- **One orchestration path.** Every read and every change is exactly one
+  invocation of the CLI's own command (`Ros.Cli.WebInterface.commandLine`
+  maps each operation to its argument vector; no shell is involved, so no
+  title or description can be interpreted as shell syntax). A request that
+  would fail on the CLI fails the same way over HTTP, with the same message.
+  Mutations answer with the item's `work show` record.
+- **Pure core, effects at the edge.** Routing, form and `multipart/form-data`
+  parsing, the operation-to-command mapping, and HTML rendering (which
+  escapes every repository-provided value) are pure functions with unit
+  tests; the only effects are the HTTP listener (`System.Net.HttpListener`),
+  the child process, short-lived upload temp files (deleted after the CLI's
+  `work attach` copies them), and the attachment download, which reads the
+  stored file through `FileWorkListRepository.readAttachment`.
+- **Attachments.** A file's display name is the optional name typed next to
+  its picker, else the uploaded file's own name; on-disk storage names are
+  generated by `work attach` so two attachments can share a display name.
+  The CLI records no content type for attachments, so downloads are served
+  as `application/octet-stream` with the display name as the filename.
+- **Stylesheet.** `web/styles.css` in the repository is served when present
+  (so a project can restyle the pages); otherwise the copy compiled into the
+  CLI is used, so `web serve` works in any ROS repository.
 
 ## API reference
 
-All endpoints are JSON. Mutating endpoints return the same unified row shape
-as `GET /api/work/:id` (backlog fields plus `liveWorkItem` once an item has
-been started), so the client never has to special-case a response shape by
-action.
+The JSON API remains for scripts and other tools. Mutating endpoints return
+the same unified row shape as `GET /api/work/:id` (backlog fields plus
+`liveWorkItem` once an item has been started). Request bodies are JSON (the
+attachment route takes `multipart/form-data`; the other `POST` routes also
+accept form-encoded fields).
 
 | Method | Path | Equivalent CLI command |
 |---|---|---|
 | `GET` | `/api/work?tag=T&status=S` | `ros work list --tag T --status S` |
 | `GET` | `/api/work/ready?tag=T` | `ros work ready --tag T` |
 | `GET` | `/api/work/:id` | `ros work show ID` |
-| `POST` | `/api/work` `{title, tags, priority, description?, id?, source?, sourceReference?, actor?}` | `ros add` |
-| `POST` | `/api/work/:id/update` `{title?, description?, tags?, priority?}` | `ros work update ID` |
-| `POST` | `/api/work/:id/attachments` `multipart/form-data`, one or more `file` parts | `ros work attach ID --file ...` |
+| `POST` | `/api/work` `{title, tags, priority, description?, id?, source?, sourceReference?, actor?}` | `ros work capture --title ...` |
+| `POST` | `/api/work/:id/update` `{title?, description?, tags?, priority?}` | `ros work update --id ID ...` |
+| `POST` | `/api/work/:id/attachments` `multipart/form-data`, one or more `file` parts | `ros work attach --id ID --file PATH=NAME ...` |
 | `GET` | `/api/work/:id/attachments/:attachmentId` | binary download (not a JSON route) |
-| `POST` | `/api/work/:id/ready` | `ros work ready ID` |
-| `POST` | `/api/work/:id/block` `{reason}` | `ros work block ID --reason ...` |
-| `POST` | `/api/work/:id/abandon` `{reason}` | `ros work abandon ID --reason ...` |
-| `POST` | `/api/work/:id/start` `{type, actor?}` | `ros work start ID --type ...` |
-| `POST` | `/api/work/:id/resume` | `ros work resume ID` |
-| `POST` | `/api/work/:id/complete` `{evidence: [{type, path}], conclusion?}` | `ros work done ID --evidence ...` |
+| `POST` | `/api/work/:id/ready` | `ros work backlog-transition --id ID --action ready` |
+| `POST` | `/api/work/:id/block` `{reason}` | `ros work block --id ID --reason ...` |
+| `POST` | `/api/work/:id/abandon` `{reason}` | `ros work backlog-transition --id ID --action abandon --reason ...` |
+| `POST` | `/api/work/:id/start` `{type, actor?}` | `ros work start --id ID --type ...` |
+| `POST` | `/api/work/:id/resume` `{actor?}` | `ros work resume --id ID` |
+| `POST` | `/api/work/:id/complete` `{evidence: [{type, path}], conclusion?, actor?}` | `ros work complete --id ID --evidence TYPE=PATH ...` |
 | `GET` | `/api/validate` | `ros validate --json` |
-| `GET` | `/api/status` | `ros status` |
+| `GET` | `/api/status` | `ros status --json` |
 
-`POST /api/work/:id/update` and `.../attachments` upsert a minimal backlog
-record if `:id` was only ever `ros work begin`'d directly (never `add`ed) --
-same behavior as the CLI's `update`/`attach`, so descriptive metadata and
-files can be attached to any known work item, not just ones captured
-through the backlog.
+Every event is recorded at the server's current time (`--occurred-at`).
+`update` and `attachments` upsert a minimal backlog record if `:id` was only
+ever started directly (never captured) -- the CLI's own behaviour.
 
-Errors are `4xx` with `{"error": "..."}`; the message is whatever
-`ros_cli.mjs` threw.
+Errors are `4xx` with `{"error": "..."}`, where the message is the CLI's own
+`ERROR` line; an unknown `/api/...` route is `404`, as is an unknown
+attachment.
 
 ## Tests
 
-`tests/ros-server.test.mjs` drives the HTTP API directly (no browser), and
-asserts the same lifecycle rules the CLI tests assert: the `ready` gate
-before `start`, evidence requirements on `complete`, terminal `abandon`, and
-`block` correctly dispatching to the backlog or the in-flight item depending
-on where the ID currently lives. It also drives real multipart uploads
-(Node's native `FormData`/`File`), covering multiple files in one request, a
-custom name overriding the original filename, two attachments sharing a
-display name staying byte-distinct, and byte-for-byte download. There's no
-automated browser test for `web/app.ts` itself; it was verified manually
-end-to-end (capture with a description and an attached file, filter,
-start, block/complete with evidence, editing an item, and attaching further
-files through the dialog -- including the native dialogs) against a scratch
-repository.
+`tests/Ros.Tests/WebInterfaceTests.fs` unit-tests the pure pieces (escaping,
+form and multipart parsing, routing, the operation-to-command mapping, the
+allowed-action projection) and starts the real `ros web serve` on a free
+loopback port against a temporary repository, driving it with `HttpClient`:
+the `ready` gate before `start`, evidence requirements on `complete`,
+terminal `abandon`, `block` dispatching to the backlog or the in-flight item,
+multipart uploads (several files, custom names, duplicate display names,
+byte-for-byte download), the HTML form flows (capture with a file, redirects
+carrying the CLI's own errors, clearing tags, completing with evidence), and
+that no page carries script and hostile titles are escaped.

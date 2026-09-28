@@ -65,6 +65,8 @@
     <Compile Include="WorkReconciliationTests.fs" />
     <Compile Include="WorkReconciliationEffectTests.fs" />
     <Compile Include="ImplementationLanguagePolicyTests.fs" />
+    <Compile Include="WebInterfaceTests.fs" />
+    <Compile Include="HubTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>
