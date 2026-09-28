@@ -2222,10 +2222,10 @@
         "gh-90"
       ],
       "priority": "low",
-      "status": "captured",
+      "status": "abandoned",
       "attachments": [],
       "createdAt": "2026-09-28T09:09:00.360Z",
-      "updatedAt": "2026-09-28T09:09:00.360Z",
+      "updatedAt": "2026-09-28T10:40:40.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2235,7 +2235,8 @@
         "runtime": "claude-code"
       },
       "source": "agent-discovery",
-      "sourceReference": "PRAXIS-REMOTE-07"
+      "sourceReference": "PRAXIS-REMOTE-07",
+      "abandonedReason": "Obsolete: DF-ROS-2026-A042 retires the npm package entirely; the native installers already provide the praxis command, and the site's ROS-to-Praxis copy and its test were updated in FSHARP-ONLY-REPOSITORY"
     },
     {
       "id": "WI-0061",

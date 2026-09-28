@@ -107,6 +107,15 @@ This supersedes `DF-ROS-2026-A029` (npm-distributed `ros-fs` binaries),
 `DF-ROS-2026-A033` (Node retained as the web/hub library) and
 `DF-ROS-2026-A034` (npm snapshot version pinning).
 
+**Remote execution.** The cloud-agent/remote execution path accepted in
+`DF-ROS-2026-A041` already fits this rule: `praxis-remote.yml` and the
+`praxis-setup`/`praxis-remote` composite actions are execution hosts for the
+F# executable (`ros remote execute|classify`), with POSIX-shell bootstrap and
+persistence scripts; no repository-owned step runs Node. Its three Node test
+files were ported to F# with the rest. (This record was first drafted as
+`DF-ROS-2026-A041`/`RQ-ROS-2026-A021` on its branch and renumbered when those
+IDs were taken on `main` by remote execution.)
+
 # Rationale
 
 A fresh environment, including a cloud agent, needs only .NET and Git;
