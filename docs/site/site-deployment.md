@@ -4,27 +4,32 @@ The public site (`site/`) is deployed to GitHub Pages by
 [`.github/workflows/deploy-pages.yml`](../../.github/workflows/deploy-pages.yml)
 ("Deploy Site"). It has the same shape as
 `kemiller2002/echelon-foundry`'s `.github/workflows/deploy-pages.yml`, so the
-Echelon Foundry sites deploy the same way. It is separate from the npm
-(`publish.yml`) and native (`native-release.yml`) release workflows, and it
-cannot publish a package or a release.
+Echelon Foundry sites deploy the same way. It is separate from the release
+workflows (`native-release.yml`), and it cannot publish a package or a
+release.
 
 ## What the workflow does
 
 1. Runs on every push to `main`, or when started by hand
    (`workflow_dispatch`). Concurrent runs share the `pages` group, and a newer
    run cancels one in progress.
-2. **Build site** runs `node site-tools/verify.mjs`: structure, references,
-   accessibility rules, the public/private boundary, the evidence check against
-   `.ros` records, and the site tests. A failure stops the deployment. It then
-   assembles `site/` into `dist/` with `site-tools/assemble.mjs` and checks the
-   copy again.
-3. Uploads `dist/` as the Pages artifact and deploys it with
+2. **Set up .NET** installs the .NET 10 SDK (`actions/setup-dotnet`). The site
+   tooling is the F# console project `site-tools/SiteTools.fsproj`
+   (`praxis-site`), with no package dependencies.
+3. **Build site** runs `dotnet run --project site-tools/SiteTools.fsproj -c
+   Release -- verify`: structure, references, accessibility rules, the
+   public/private boundary, the evidence check against `.ros` records, and the
+   site tests (`tests/Site.Tests`). A failure stops the deployment. It then
+   assembles `site/` into `dist/` with `-- assemble dist` and checks the copy
+   again.
+4. Uploads `dist/` as the Pages artifact and deploys it with
    `actions/deploy-pages` to the `github-pages` environment.
 
 Where it differs from echelon-foundry: Praxis has no `npm run build`. The site
-is static and its tooling stays out of `package.json`, because
-`native-release.yml` re-uploads release assets on pushes to `main` that touch
-`package.json` or `scripts/**`. So "Build site" calls the site tools directly.
+is static, and its tooling lives in `site-tools/` and `tests/Site.Tests/`,
+outside every path `native-release.yml` watches on pushes to `main` (it
+re-uploads release assets when those change). So "Build site" runs the F#
+site tool directly.
 Permissions are set once for the workflow (`contents: read`, `pages: write`,
 `id-token: write`), as in echelon-foundry.
 

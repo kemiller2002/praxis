@@ -5,15 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Praxis — You said it’s done. Prove it.</title>
 <meta name="description" content="Praxis connects requirements, execution, agents, changes, tests, evidence, provenance, and cost into a verifiable engineering record.">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-hashes' 'sha256-MhtPZXr7+LpJUY5qtMutB+qWfQtMaPccfe7QXtCcEYc='; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#f2efe7">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Manrope:wght@400;600;700;800&amp;family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&amp;display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Manrope:wght@400;600;700;800&amp;family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&amp;display=swap">
 <link rel="stylesheet" href="assets/css/site.css">
-<script src="assets/js/claim.js" defer></script>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -93,7 +92,7 @@
         </div>
       </div>
 
-      <figure class="claim" data-claim aria-labelledby="claim-title">
+      <figure class="claim" aria-labelledby="claim-title">
         <div class="claim__statement">
           <p class="claim__source">Real record · <a href="data/gh-84.json">snapshot</a></p>
           <p class="claim__title" id="claim-title"><span class="mono" data-evidence="PRAXIS-SITE-02:id">PRAXIS-SITE-02</span> <span data-evidence="PRAXIS-SITE-02:title">Implement Echelon Foundry design foundation</span></p>
@@ -346,7 +345,7 @@
         <p class="kicker">Integrity</p>
         <div>
           <h2 id="evidence-title">The work continued. <span class="accent">The identity was not assumed.</span></h2>
-          <p class="lede">GH-84 is the issue for this website. Partway through, its first execution was blocked for a handoff and finalized, and the work was then resumed. These are the two executions exactly as Praxis recorded them, as of <span data-evidence="asOf:date">2026-09-27</span>.</p>
+          <p class="lede">GH-84 is the issue for this website. Partway through, its first execution was blocked for a handoff and finalized, and the work was then resumed. These are the two executions exactly as Praxis recorded them, as of <span data-evidence="asOf:date">2026-09-28</span>.</p>
         </div>
       </div>
       <div class="handoff">
@@ -624,9 +623,7 @@ registries/                         <span class="tree__note">generated indexes o
           <h3 id="rename-title">From ROS to Praxis</h3>
           <p>Praxis was previously named ROS, the Repository Operating System. The rename is in progress, and both names are in use today:</p>
           <ul>
-            <li>The native installer provides <code>praxis</code>, and keeps <code>ros</code> as an alias for the same program.</li>
-            <li>The npm package <code>@echelon-foundry/repository-operating-system</code> still provides only <code>ros</code>: <code>npx --package=@echelon-foundry/repository-operating-system ros init</code>.</li>
-            <li><code>init</code> adds a repository-local <code>./ros</code> launcher. It runs on Node.js; the installed <code>praxis</code> command does not need Node.</li>
+            <li>The native installers, <code>install-native.sh</code> and <code>install-native.ps1</code>, install both <code>praxis</code> and <code>ros</code> commands, and both run the same program.</li>
             <li>Help text and some output still say ROS.</li>
           </ul>
           <p>Same tool, same records. Commands on this page use <code>praxis</code>; wherever you have <code>ros</code>, the arguments are identical.</p>
@@ -641,13 +638,13 @@ registries/                         <span class="tree__note">generated indexes o
         <p class="kicker">Case study</p>
         <div>
           <h2 id="case-study-title">This website was built under Praxis.</h2>
-          <p class="lede">The request was <a href="https://github.com/kemiller2002/praxis/issues/84">issue #84</a>. It was broken into <span data-evidence="count:total">26</span> work items, and each one goes through the protocol described above: started, evidenced, then completed. This ledger is generated from those records, and shows where every item stood as of <span data-evidence="asOf:date">2026-09-27</span>.</p>
+          <p class="lede">The request was <a href="https://github.com/kemiller2002/praxis/issues/84">issue #84</a>. It was broken into <span data-evidence="count:total">27</span> work items, and each one goes through the protocol described above: started, evidenced, then completed. This ledger is generated from those records, and shows where every item stood as of <span data-evidence="asOf:date">2026-09-28</span>.</p>
         </div>
       </div>
 
       <dl class="tally">
-        <div><dt>Work items complete</dt><dd><span data-evidence="count:complete">25</span> of <span data-evidence="count:total">26</span></dd></div>
-        <div><dt>Executions recorded</dt><dd data-evidence="count:executions">28</dd></div>
+        <div><dt>Work items complete</dt><dd><span data-evidence="count:complete">27</span> of <span data-evidence="count:total">27</span></dd></div>
+        <div><dt>Executions recorded</dt><dd data-evidence="count:executions">29</dd></div>
         <div><dt>Executions with a reported model</dt><dd data-evidence="count:models">0</dd></div>
         <div><dt>Executions with token telemetry</dt><dd data-evidence="count:tokensRecorded">0</dd></div>
         <div><dt>Executions with cost telemetry</dt><dd data-evidence="count:costRecorded">0</dd></div>
@@ -826,8 +823,14 @@ registries/                         <span class="tree__note">generated indexes o
             <tr>
               <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-26:id">PRAXIS-SITE-26</span></th>
               <td data-evidence="PRAXIS-SITE-26:title">Final verification and evidence</td>
-              <td><span class="status status--pending" data-evidence="PRAXIS-SITE-26:state">active</span></td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-26:state">complete</span></td>
               <td class="mono" data-evidence="PRAXIS-SITE-26:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-27:id">PRAXIS-SITE-27</span></th>
+              <td data-evidence="PRAXIS-SITE-27:title">Align Pages deployment workflow with echelon-foundry deploy-pages.yml</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-27:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-27:executions.length">1</td>
             </tr>
             <!-- ledger:end -->
           </tbody>

@@ -22,6 +22,8 @@ src/**/bin/
 src/**/obj/
 tests/**/bin/
 tests/**/obj/
+site-tools/bin/
+site-tools/obj/
 
 # Compiled web UI (build with `npm run build:web`; source of truth is web/app.ts)
 web/app.js

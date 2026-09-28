@@ -17,7 +17,7 @@
 
   /* Derived tints for text on dark carbon surfaces only. The core bronze,
      verdigris and graphite fall below WCAG AA on carbon (3.0-3.4:1); these
-     tints reach 7.1-8.3:1. tests/site/design.test.mjs holds the ratios. */
+     tints reach 7.1-8.3:1. tests/Site.Tests/DesignTests.fs holds the ratios. */
   --bronze-on-dark: #d09a6c;
   --verdigris-on-dark: #8cbcaf;
   --graphite-on-dark: #a3a8a3;
@@ -75,10 +75,6 @@ body {
   font-size: 1.0625rem;
   line-height: 1.6;
   font-feature-settings: "kern", "liga";
-}
-
-[hidden] {
-  display: none !important;
 }
 
 img,
@@ -531,22 +527,6 @@ ol {
   font-style: italic;
 }
 
-.claim__bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3) var(--space-5);
-  padding: var(--space-4) var(--space-5);
-  border-bottom: var(--rule-soft);
-}
-
-.claim__progress {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
-  color: var(--graphite);
-}
-
 .claim__steps {
   list-style: none;
 }
@@ -604,25 +584,8 @@ ol {
   color: var(--stone);
 }
 
-.claim.is-enhanced .claim__step:not([hidden]),
-.claim.is-enhanced .claim__verdict:not([hidden]) {
-  animation: claim-in 320ms ease-out both;
-}
-
-@keyframes claim-in {
-  from {
-    opacity: 0;
-    transform: translateY(0.35rem);
-  }
-}
-
 .claim__verdict :focus-visible {
   outline-color: var(--bronze-on-dark);
-}
-
-.button:disabled {
-  cursor: progress;
-  opacity: 0.75;
 }
 
 /* ---- execution chain (PRAXIS-SITE-05) ---------------------------------- */
