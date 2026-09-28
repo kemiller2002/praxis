@@ -179,6 +179,7 @@ const GOLDEN ={
         "docs/architecture/README.md",
         "docs/decisions/README.md",
         "docs/development-telemetry.md",
+        "docs/fallback-reconciliation.md",
         "docs/ordo-observation.md",
         "docs/work-adapter-contract.md",
         "docs/work-protocol.md",

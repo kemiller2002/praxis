@@ -2991,11 +2991,32 @@
         "EXE-20260928T075108583Z-722e436a"
       ],
       "completedAt": "2026-09-28T07:56:47Z"
+    },
+    {
+      "id": "PKG-FALLBACK-GOLDEN",
+      "type": "bug",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tests/work-start-fsharp-differential.test.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-start-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-28T08:08:03Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T080326499Z-c10879d6"
+      ],
+      "completedAt": "2026-09-28T08:08:03Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-28T07:56:47Z",
+  "updatedAt": "2026-09-28T08:08:03Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

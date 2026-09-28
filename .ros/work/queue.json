@@ -2016,6 +2016,30 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PKG-FALLBACK-GOLDEN",
+      "title": "Align F# payload differential golden",
+      "description": "Update the F# work-start differential fixture for the fallback guide embedded in the native payload, then revalidate PR 79.",
+      "tags": [
+        "fsharp",
+        "testing"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T08:03:02Z",
+      "updatedAt": "2026-09-28T08:08:03Z",
+      "createdBy": "ChatGPT",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "ChatGPT",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "github-actions",
+      "sourceReference": "https://github.com/kemiller2002/praxis/pull/79"
     }
   ]
 }

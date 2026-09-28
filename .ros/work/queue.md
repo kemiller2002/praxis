@@ -34,6 +34,7 @@
 | OIDC-REPO-IDENTITY | OIDC-REPO-IDENTITY | complete |  |  |
 | PKG-BIN-EXECUTABLE | PKG-BIN-EXECUTABLE | complete |  |  |
 | PKG-ECHELON-FOUNDRY | PKG-ECHELON-FOUNDRY | complete |  |  |
+| PKG-FALLBACK-GOLDEN | Align F# payload differential golden | complete | fsharp, testing | high |
 | PKG-FALLBACK-GUIDE | Ship fallback reconciliation guide in distributed package | complete | packaging, documentation | high |
 | PKG-FALLBACK-PAYLOAD | Embed fallback reconciliation guide in native F# payload | complete | fsharp, packaging | high |
 | PKG-MIT-LICENSE | PKG-MIT-LICENSE | complete |  |  |
