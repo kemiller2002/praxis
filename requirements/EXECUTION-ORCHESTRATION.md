@@ -102,3 +102,36 @@ The target experience is not a generic Kanban board. The operator surface
 should be a projection of Praxis and Ordo state. It should make legal
 transitions obvious while keeping execution, evidence, capability, unknowns,
 and obligations authoritative outside the presentation layer.
+
+
+## Evaluator integrity and repair boundary
+
+- **PRX-VER-004** If the required evaluator, gate, configuration, or evidence
+  tool is missing or cannot be identified, the verification execution MUST
+  stop or block and report the missing authority rather than installing,
+  copying, rewriting, or substituting it inside the candidate execution.
+- **PRX-VER-005** Evaluator repair MUST occur through a separate authorized
+  execution, after which the candidate MUST be verified again against the
+  identified repaired evaluator.
+
+## Host-enforced execution boundaries
+
+- **PRX-SEC-001** Praxis SHOULD support execution policies that bind a role to
+  host-enforced filesystem, process, network, credential, and other runtime
+  restrictions when the selected host can provide them.
+- **PRX-SEC-002** Host-enforced restrictions MUST be recorded separately from
+  Ordo/Praxis semantic capabilities so a prompt, branch, worktree, or current
+  working directory is never misrepresented as a security boundary.
+- **PRX-SEC-003** Evidence about containment MUST identify which restrictions
+  were actually enforced and which were unavailable or unknown.
+
+## Persistent local control plane
+
+- **PRX-UI-008** Praxis MUST be able to expose its operator state surface
+  through a persistent local control-plane host without requiring a
+  third-party project-management system or cloud UI.
+- **PRX-UI-009** The local control plane MUST use the same durable Praxis state,
+  legal transitions, receipts, provenance, and evidence as CLI and remote
+  execution rather than maintaining a second workflow database.
+- **PRX-UI-010** The control plane MAY remain local-only by policy and MUST make
+  its listen/bind scope explicit when it exposes a network endpoint.
