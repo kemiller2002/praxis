@@ -519,3 +519,16 @@ test("an ordered batch runs each constituent with its own identity and outcome, 
   assert.equal(readJson(root, ".ros/context/current.json").workItems.find((item) => item.id === "WI-0100").state, "blocked");
   assert.equal(readEvents(root).filter((event) => event.workItem === "WI-0100" && event.type === "work.started").length, 1, "the replayed start did not run twice");
 });
+
+test("the request journal is Praxis bookkeeping and never an unattributed change", (t) => {
+  const root = fixture(t, "journal-ignored");
+  const config = JSON.parse(fs.readFileSync(path.join(root, "ros.json"), "utf8"));
+  assert.ok(config.workProtocol.ignoredPaths.includes(".ros/remote/**"), "the scaffold ignores the journal for attribution");
+
+  // A journal entry committed by an adapter, with no work item active.
+  fs.mkdirSync(path.join(root, ".ros", "remote", "requests"), { recursive: true });
+  fs.writeFileSync(path.join(root, ".ros", "remote", "requests", "req-landed-0001.json"), "{}\n");
+  const result = praxis(root, ["validate", "--json"]);
+  const findings = JSON.parse(result.stdout).findings.filter((finding) => String(finding.path).startsWith(".ros/remote"));
+  assert.deepEqual(findings, [], JSON.stringify(findings));
+});

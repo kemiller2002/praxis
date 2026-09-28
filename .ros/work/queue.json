@@ -2236,6 +2236,54 @@
       },
       "source": "agent-discovery",
       "sourceReference": "PRAXIS-REMOTE-07"
+    },
+    {
+      "id": "PRAXIS-REMOTE-11-PREP",
+      "title": "Prepare the live remote proof: ignore the request journal for attribution and script release, pin, opt-in and dispatch",
+      "description": "Child of GH-90. (1) .ros/remote/** is Praxis bookkeeping but was missing from ignoredPaths (repo and both starter profiles), so committed journal entries would read as unattributed meaningful changes. (2) A maintainer script that bumps and releases Praxis, verifies the attested release, pins it, opts a repository in, and dispatches a first praxis.describe request.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T11:30:52.055Z",
+      "updatedAt": "2026-09-28T11:38:45.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "PRAXIS-REMOTE-11"
+    },
+    {
+      "id": "PRAXIS-REMOTE-11-PREP-CI",
+      "title": "Fix PR #93 CI: enable-script test commits without a git identity",
+      "description": "Child of GH-90 / follow-up to PRAXIS-REMOTE-11-PREP. The dry-run test for scripts/praxis-remote-enable.sh commits in a fresh clone that has no user.name/user.email; CI runners have no global identity, so the commit fails. Configure a local identity in the test clone.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T11:43:42.000Z",
+      "updatedAt": "2026-09-28T11:43:50.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

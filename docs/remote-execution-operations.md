@@ -26,6 +26,28 @@ required.
 
 ## Installation
 
+**Automated.** Run `scripts/praxis-remote-enable.sh --version X.Y.Z` from
+a clean, up-to-date `main`. It takes three phases:
+
+1. Release. It bumps the version and pushes. It waits for the native
+   release workflow, then verifies the release's checksum, its
+   build-provenance attestation, and that it contains `remote execute`.
+   This phase runs only in the Praxis repository. Pass `--skip-release`
+   elsewhere, and whenever the version has already been published.
+2. Pin and opt in. It pins the release, sets `remote.capabilities`
+   (`--capabilities`, default `read,mutate`), and makes sure the journal
+   is listed in `ignoredPaths`.
+3. Smoke test. It dispatches a `praxis.describe` request and prints the
+   structured result.
+
+Each change is made under its own mechanical Praxis work item, attributed
+to the person running the script. `--via-pr` lands changes through pull
+requests instead of pushing to `main`. `--dry-run` shows every step
+without changing anything.
+
+**Manual.** The steps below do the same by hand.
+
+
 1. **Pin a Praxis release that has remote execution and attestations.** Set
    `praxis` in `.echelon/toolchain.json` to an exact `MAJOR.MINOR.PATCH`.
    The release must contain `praxis remote execute`, and its native assets
@@ -41,7 +63,11 @@ required.
 
    Commit them to the **default branch**. GitHub only dispatches workflows
    that exist there.
-3. **Opt in to what remote requests may do.** Remote reads work as soon as
+3. **Keep the journal out of attribution.** Make sure `ros.json`
+   `workProtocol.ignoredPaths` contains `.ros/remote/**`. The request
+   journal is Praxis bookkeeping. Scaffolds from this version on include
+   it.
+4. **Opt in to what remote requests may do.** Remote reads work as soon as
    the workflow is installed. Mutation is opt-in, and you can grant it by
    class:
 
@@ -53,7 +79,7 @@ required.
    - `complete` covers completing work items.
    - `reconcile` covers post-hoc attribution under #80.
    - Leave out any class you do not want remote callers to use.
-4. **Verify.** Run `praxis remote describe` locally. The output should list
+5. **Verify.** Run `praxis remote describe` locally. The output should list
    the transport, your capabilities, and the operations. Then dispatch a
    `praxis.describe` request, as the agent contract shows.
 
