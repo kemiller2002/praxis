@@ -216,6 +216,14 @@ Identity recorded this way is provenance, not authentication.
 | `internal` | An executor defect. Praxis reported it, and nothing was kept. | Retry with the same request ID. If it persists, report it with the run's artifact. |
 | `timeout`, `cancelled`, `transport-failed`, `rate-limited`, `repository-write-failed` | The outcome is unconfirmed. | Retry with the same request ID, or ask `request.status`. |
 
+`rate-limited` means GitHub throttled the push or the pull-request creation.
+The adapter reports it when Git or `gh` relays HTTP 429 or a primary or
+secondary API rate-limit message. It is a transient condition of the
+transport, not a judgement about the request, so wait before retrying with
+the same request ID. Any other refused push or pull request is
+`repository-write-failed`. A push that lost a race stays
+`concurrency-conflict`.
+
 ## Reconciliation
 
 Some work is committed while no work item was active: the agent could not
@@ -243,4 +251,5 @@ See "Post-hoc attribution reconciliation" in
 | Every mutation is `unauthorized` | `remote.capabilities` is absent from `ros.json`. Only reads are allowed by default. |
 | Every mutation is `stale-ref` | The request's `expectedSha` is not the head of the dispatched ref. Make sure the dispatch `ref` matches `repository.ref`. |
 | The push fails on a protected branch | Use `persistence: pull-request`. |
+| `rate-limited` | GitHub throttled the run's token. Wait, then retry the same request ID; do not mint a new one. |
 | `unknown` or `timeout` outcomes | Ask `request.status` with the same ID before doing anything else. |

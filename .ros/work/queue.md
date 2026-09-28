@@ -52,6 +52,7 @@
 | PRAXIS-REMOTE-11-PREP | Prepare the live remote proof: ignore the request journal for attribution and script release, pin, opt-in and dispatch | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-11-PREP-CI | Fix PR #93 CI: enable-script test commits without a git identity | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-12 | Conditor installs and configures the Praxis remote surface | blocked | remote-execution, gh-90 | low |
+| PRAXIS-REMOTE-13 | Adapter recognizes GitHub rate limiting on push and pull-request creation (PRX-REMOTE-038) | active | remote-execution, gh-90 | medium |
 | PRAXIS-SITE-01 | Establish public-site architecture | complete | gh-84, public-site | high |
 | PRAXIS-SITE-02 | Implement Echelon Foundry design foundation | complete | gh-84, public-site | high |
 | PRAXIS-SITE-03 | Build the hero | complete | gh-84, public-site | high |
@@ -146,7 +147,7 @@
 | WI-0058 | Release 3.0.0: version bump plus refreshed README and instructions | complete |  | high |
 | WI-0059 | Classify registries/theories.json as generated in both starter manifests | complete |  | high |
 | WI-0060 | Bump npm package version to 3.0.3 | complete | release, npm | medium |
-| WI-0061 | WI-0061 | complete |  |  |
+| WI-0061 | Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict | complete | remote-execution, gh-90 | medium |
 | WI-0062 | Triage SDE 1.3.0 structural review findings | complete | sde, structural-review | high |
 | WI-0063 | Implement ROS next-pass Ordo observation and structured handoff (#63) | complete | ordo,next-pass | high |
 | WI-0072 | Port provenance follow-ups onto the merged model: collaboration aggregates in provenance audit, producedBy on ordo handoffs, installer event actor | complete | provenance | medium |

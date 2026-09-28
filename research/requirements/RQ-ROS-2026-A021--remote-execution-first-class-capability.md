@@ -2,7 +2,7 @@
 id: RQ-ROS-2026-A021
 title: Praxis governance is independent of the execution environment; remote/cloud-agent execution is a first-class capability
 status: accepted
-version: 1.1.0
+version: 1.2.0
 owners:
   - repository-governance
 created: 2026-09-28
@@ -35,6 +35,17 @@ provenance:
         runtime: claude-code
       reason: "Captured from GitHub issue #90 (work item GH-90): remote/cloud-agent execution as a first-class capability"
       evidence: [https://github.com/kemiller2002/praxis/issues/90, EV-ROS-2026-A053]
+    EXE-20260928T200030786Z-eca55c92:
+      operations: [modified]
+      at: 2026-09-28T20:02:59.000Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRX-REMOTE-038 delivered by PRAXIS-REMOTE-13: adapter classifies GitHub rate limiting as rate-limited"
+      evidence: [scripts/praxis-remote-persist.sh, tests/praxis-remote-adapter.test.mjs]
 derived_from: [RQ-ROS-2026-A020]
 ---
 
@@ -147,9 +158,11 @@ what the end-to-end proof, PRAXIS-REMOTE-11, will establish.
   - publishing an attested release that contains `remote execute`;
   - pinning that release and opting in to remote capabilities.
 - **030.** Conditor support, PRAXIS-REMOTE-12. It depends on PRAXIS-REMOTE-11.
-- **038.** Retryability is classified, including `rate-limited`. The GitHub
-  adapter does not yet recognize GitHub API rate limiting specifically. It
-  reports any other push failure as `repository-write-failed`.
+- **038.** Delivered by PRAXIS-REMOTE-13. The GitHub adapter reports a push
+  or pull-request creation that GitHub throttled (HTTP 429, or a primary or
+  secondary API rate limit) as `rate-limited`, with `same-request` retry. It
+  reports any other refused push or pull request as
+  `repository-write-failed`, and a lost race as `concurrency-conflict`.
 - **039.** Remote execution is opt-in, and existing state stays readable.
   The npm `praxis` bin is deferred to PRAXIS-NPM-BIN, because the public
   site's audited copy must change with it.

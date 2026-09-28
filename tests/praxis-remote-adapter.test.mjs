@@ -277,6 +277,69 @@ test("pull-request persistence proposes the state on its own branch instead of p
   assert.equal(git(origin, "rev-parse", adapter.branch), adapter.commit);
 });
 
+/** Makes the bare "GitHub" remote refuse every push with `message`, as GitHub does. */
+function refusePushes(origin, message) {
+  fs.writeFileSync(path.join(origin, "hooks", "pre-receive"), `#!/bin/sh\necho ${JSON.stringify(message)} >&2\nexit 1\n`, { mode: 0o755 });
+}
+
+/** A `gh` on PATH whose `pr create` fails with `message` on stderr. */
+function failingGh(t, message) {
+  const stub = temporary(t, "gh");
+  fs.writeFileSync(path.join(stub, "gh"), `#!/bin/sh\necho ${JSON.stringify(message)} >&2\nexit 1\n`, { mode: 0o755 });
+  return { ...process.env, PATH: `${stub}:${process.env.PATH}` };
+}
+
+function persistWith(root, response, mode, env) {
+  const output = `${response}.adapter.json`;
+  const result = spawnSync("sh", [persist, "--response", response, "--output", output, "--mode", mode], { cwd: root, encoding: "utf8", env });
+  return { status: result.status, stderr: result.stderr, adapter: JSON.parse(fs.readFileSync(output, "utf8")) };
+}
+
+// PRX-REMOTE-038: throttling is distinguishable from domain, conflict and
+// other write failures, and its advice is the idempotent same-request retry.
+for (const [label, message, code] of [
+  ["a secondary rate limit", "You have exceeded a secondary rate limit. Please wait a few minutes before you try again.", "rate-limited"],
+  ["HTTP 429", "error: RPC failed; HTTP 429 curl 22 The requested URL returned error: 429", "rate-limited"],
+  ["any other refusal", "pre-receive hook declined: repository is read-only", "repository-write-failed"]
+]) {
+  test(`a push refused with ${label} is ${code} and nothing reaches the remote`, (t) => {
+    const { origin, runner } = remoteAndCheckout(t);
+    const response = execute(runner, startRequest(runner));
+    const before = git(origin, "rev-parse", "main");
+    refusePushes(origin, message);
+
+    const { status, adapter } = persistResponse(runner, response);
+    assert.equal(status, 1);
+    assert.equal(adapter.persisted, false);
+    assert.equal(adapter.commit, null);
+    assert.equal(adapter.failure.code, code);
+    assert.equal(adapter.failure.decidedBy, "executor");
+    assert.equal(adapter.failure.retry, "same-request");
+    assert.equal(git(origin, "rev-parse", "main"), before, "the remote was not changed");
+  });
+}
+
+for (const [label, message, code] of [
+  ["the API rate limit", "HTTP 403: API rate limit exceeded for installation ID 1234. (https://api.github.com/graphql)", "rate-limited"],
+  ["any other error", "HTTP 422: Validation Failed (https://api.github.com/graphql)", "repository-write-failed"]
+]) {
+  test(`a pull request refused with ${label} is ${code}, keeping the pushed state branch`, (t) => {
+    const { origin, runner } = remoteAndCheckout(t);
+    const response = execute(runner, startRequest(runner, "req-adapter-pr-throttle"));
+    const before = git(origin, "rev-parse", "main");
+
+    const { status, adapter, stderr } = persistWith(runner, response, "pull-request", failingGh(t, message));
+    assert.equal(status, 1);
+    assert.equal(adapter.persisted, false);
+    assert.equal(adapter.pullRequest, null);
+    assert.equal(adapter.failure.code, code);
+    assert.equal(adapter.failure.retry, "same-request");
+    assert.equal(git(origin, "rev-parse", adapter.branch), adapter.commit, "the state branch was pushed");
+    assert.equal(git(origin, "rev-parse", "main"), before);
+    assert.ok(stderr.includes(message), "gh's diagnostic is kept for the log");
+  });
+}
+
 test("the operator documentation covers every failure code and names only files that exist", () => {
   const operations = read("docs/remote-execution-operations.md");
   const codes = JSON.parse(read("schemas/praxis-remote-response.schema.json")).properties.failure.oneOf[1].properties.code.enum;

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 61,
+  "nextSeq": 62,
   "items": [
     {
       "id": "WI-0001",
@@ -2274,6 +2274,54 @@
       "attachments": [],
       "createdAt": "2026-09-28T11:43:42.000Z",
       "updatedAt": "2026-09-28T11:43:50.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-REMOTE-13",
+      "title": "Adapter recognizes GitHub rate limiting on push and pull-request creation (PRX-REMOTE-038)",
+      "description": "Child of GH-90. RQ-ROS-2026-A021 1.1.0 records the remaining PRX-REMOTE-038 gap: scripts/praxis-remote-persist.sh reports any non-conflict push failure, and any pull-request creation failure, as repository-write-failed, although the protocol already defines rate-limited. Classify GitHub rate limiting (HTTP 429, primary/secondary API rate limit) as rate-limited with same-request retry, keep concurrency-conflict and other write failures distinct, and test against real Git remotes. Depends on: PRAXIS-REMOTE-06.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-28T20:00:24.000Z",
+      "updatedAt": "2026-09-28T20:00:29.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "RQ-ROS-2026-A021"
+    },
+    {
+      "id": "WI-0061",
+      "title": "Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict",
+      "description": "Found in PRAXIS-REMOTE-13. In persistence: pull-request mode, scripts/praxis-remote-persist.sh pushes praxis/remote/<digest(requestId)> before gh pr create. If PR creation then fails (rate-limited or repository-write-failed, both advising same-request retry), the retry runs on a fresh checkout, produces a different commit, and pushing it to the existing per-request branch is non-fast-forward, so the adapter reports concurrency-conflict/after-refresh, contradicting the same-request advice. Decide how a retry recognizes and reuses its own existing state branch (e.g. open the PR for it) without force-pushing.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-28T20:03:07.959Z",
+      "updatedAt": "2026-09-28T20:03:07.959Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

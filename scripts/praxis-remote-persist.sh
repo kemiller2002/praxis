@@ -151,10 +151,22 @@ Praxis-Executor: $EXECUTOR
 Praxis-Version: $VERSION" || { result false "" "$TARGET_BRANCH" "" repository-write-failed same-request "the commit failed; nothing was persisted"; exit 1; }
 COMMIT="$(git rev-parse HEAD)"
 
+rate_limited() {
+  # GitHub throttling (PRX-REMOTE-038): HTTP 429, or the primary/secondary
+  # API rate-limit messages Git and gh relay. Throttling is transient and
+  # says nothing about the request, so it must not read as a domain or
+  # conflict failure.
+  printf '%s' "$1" | grep -Eiq '(HTTP|error:) ?429|rate[ -]limit'
+}
+
 push_failure() {
-  # A ref that moved is a concurrency conflict (nothing was persisted; form a
-  # new request); anything else is a write failure the same request can retry.
-  if printf '%s' "$1" | grep -Eq 'non-fast-forward|fetch first|\[rejected\]|stale info'; then
+  # Throttling is checked first: a throttled push was never evaluated
+  # against the ref. A ref that moved is a concurrency conflict (nothing was
+  # persisted; form a new request); anything else is a write failure the
+  # same request can retry.
+  if rate_limited "$1"; then
+    result false "" "$2" "" rate-limited same-request "GitHub rate-limited the push; nothing was persisted. Retry the same request later"
+  elif printf '%s' "$1" | grep -Eq 'non-fast-forward|fetch first|\[rejected\]|stale info'; then
     result false "" "$2" "" concurrency-conflict after-refresh "the ref moved before the state could be pushed; nothing was persisted"
   else
     result false "" "$2" "" repository-write-failed same-request "the push failed; nothing was persisted"
@@ -171,9 +183,20 @@ else
   # valid, deterministic ref; the ID itself is in the title and trailers.
   BRANCH="praxis/remote/$(printf '%s' "$REQUEST_ID" | python3 -c 'import hashlib,sys; print(hashlib.sha256(sys.stdin.buffer.read()).hexdigest()[:24])')"
   if ! err="$(git push --porcelain origin "HEAD:refs/heads/$BRANCH" 2>&1)"; then push_failure "$err" "$BRANCH"; fi
-  PR="$(gh pr create --base "$TARGET_BRANCH" --head "$BRANCH" --title "praxis: remote $OPERATION ($REQUEST_ID)" \
-        --body "Praxis state for remote request \`$REQUEST_ID\`. Requester: $REQUESTER (asserted by the request). Merge to persist; the journal entry makes the outcome recoverable.")" ||
-    { result false "$COMMIT" "$BRANCH" "" repository-write-failed same-request "the state branch was pushed but the pull request could not be opened"; exit 1; }
+  # gh's diagnostics go to a file so they cannot mix into the PR URL.
+  PR_ERR="$(mktemp)"
+  if ! PR="$(gh pr create --base "$TARGET_BRANCH" --head "$BRANCH" --title "praxis: remote $OPERATION ($REQUEST_ID)" \
+        --body "Praxis state for remote request \`$REQUEST_ID\`. Requester: $REQUESTER (asserted by the request). Merge to persist; the journal entry makes the outcome recoverable." 2>"$PR_ERR")"; then
+    cat "$PR_ERR" >&2
+    if rate_limited "$(cat "$PR_ERR")"; then
+      result false "$COMMIT" "$BRANCH" "" rate-limited same-request "the state branch was pushed but GitHub rate-limited opening the pull request. Retry the same request later"
+    else
+      result false "$COMMIT" "$BRANCH" "" repository-write-failed same-request "the state branch was pushed but the pull request could not be opened"
+    fi
+    rm -f "$PR_ERR"
+    exit 1
+  fi
+  rm -f "$PR_ERR"
   # Pending merge: persisted to a branch, not yet to the target ref.
   result false "$COMMIT" "$BRANCH" "$PR" "" "" ""
 fi
