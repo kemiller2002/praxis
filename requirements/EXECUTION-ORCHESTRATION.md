@@ -409,3 +409,20 @@ and obligations authoritative outside the presentation layer.
   semantics, receipts, evaluator identity, workspace binding, mutation
   boundaries, legal-action API, local UI/control plane, and stronger host
   enforcement; deviations MUST preserve the dependency constraints above.
+
+
+## Control-plane implementation constraints
+
+- **PRX-CTL-009** The native Praxis control-plane host MUST be implemented in
+  F# and MUST reuse the same typed Praxis domain/application contracts as the
+  CLI rather than introducing a parallel JavaScript/Node workflow core.
+- **PRX-CTL-010** Browser interop MAY use Limen according to the established
+  Echelon boundary pattern, but JavaScript MUST remain limited to browser
+  interop/event plumbing rather than owning Praxis workflow semantics.
+- **PRX-CTL-011** The operator surface MUST be able to present repositories,
+  work items, executions, actors/agents, receipts, evidence, telemetry/cost
+  where available, unknowns, obligations, containment state, and legal
+  transitions through typed control-plane data.
+- **PRX-CTL-012** Provider/session availability in the control plane MUST be
+  presented as execution-host information and MUST NOT make a provider the
+  canonical owner of work state.
