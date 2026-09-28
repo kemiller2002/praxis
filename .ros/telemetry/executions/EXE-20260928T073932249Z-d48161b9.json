@@ -507,8 +507,8 @@
         "name": "ros-work-protocol",
         "mechanism": "blocked-transition"
       },
-      "lastAssessedAt": "2026-09-28T09:41:16.000Z",
-      "recordedAt": "2026-09-28T09:41:16.000Z",
+      "lastAssessedAt": "2026-09-28T10:21:03.000Z",
+      "recordedAt": "2026-09-28T10:21:03.000Z",
       "history": [
         {
           "status": "unknown",
@@ -1420,6 +1420,26 @@
       },
       "collectedAt": "2026-09-28T10:21:01.000Z",
       "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-cf95e09dccd8a8e9c3fef89f",
+      "id": "agent.interruptions",
+      "value": 1,
+      "unit": "count",
+      "currency": null,
+      "quality": "derived",
+      "confidence": null,
+      "scope": "execution",
+      "aggregation": "sum",
+      "dimensions": {},
+      "pricing": null,
+      "source": {
+        "type": "calculated",
+        "name": "ros-work-protocol",
+        "mechanism": "blocked-transition"
+      },
+      "collectedAt": "2026-09-28T10:21:03.000Z",
+      "schemaVersion": "1.0.0"
     }
   ],
   "rawTelemetry": [],
@@ -1454,6 +1474,17 @@
         "mechanism": "work-lifecycle"
       },
       "eventId": "TEVT-e1998271b55182f06ce04e50"
+    },
+    {
+      "type": "work.blocked",
+      "occurredAt": "2026-09-28T10:21:03.000Z",
+      "reason": "Praxis-side work PRAXIS-REMOTE-01..10 complete and merged via PR #91; remaining PRAXIS-REMOTE-11 (live no-.NET proof) needs: an attested release containing 'remote execute', pinned, with remote.capabilities opted in; PRAXIS-REMOTE-12 follows 11.",
+      "source": {
+        "type": "ros-clock",
+        "name": "ros",
+        "mechanism": "work-lifecycle"
+      },
+      "eventId": "TEVT-a000ba511eab852939b4152b"
     }
   ],
   "repository": {

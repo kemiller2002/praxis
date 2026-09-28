@@ -2903,14 +2903,14 @@
     {
       "id": "GH-90",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
+      "state": "blocked",
+      "semanticState": "blocked",
       "evidence": [],
-      "updatedAt": "2026-09-28T10:21:01.000Z",
+      "updatedAt": "2026-09-28T10:21:03.000Z",
       "telemetryExecutionIds": [
         "EXE-20260928T073932249Z-d48161b9"
       ],
-      "blockReason": "Praxis-side work PRAXIS-REMOTE-01..10 complete on PR #91; remaining PRAXIS-REMOTE-11 (live no-.NET proof) needs human action: merge PR #91, publish an attested release containing 'remote execute', pin it and opt in; PRAXIS-REMOTE-12 (Conditor) follows 11."
+      "blockReason": "Praxis-side work PRAXIS-REMOTE-01..10 complete and merged via PR #91; remaining PRAXIS-REMOTE-11 (live no-.NET proof) needs: an attested release containing 'remote execute', pinned, with remote.capabilities opted in; PRAXIS-REMOTE-12 follows 11."
     },
     {
       "id": "PRAXIS-REMOTE-01",
@@ -3273,7 +3273,7 @@
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-28T10:21:01.000Z",
+  "updatedAt": "2026-09-28T10:21:03.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
