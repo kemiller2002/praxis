@@ -1,4 +1,4 @@
-# Praxis remote protocol (`praxis.remote` 1.0)
+# Praxis remote protocol (`praxis.remote` 1.1)
 
 This page specifies the typed request/response contract that lets an agent
 with **no local .NET or Praxis runtime** ask a trusted executor to run an
@@ -105,10 +105,20 @@ not validated, and is excluded from the fingerprint.
 | `telemetry.record` | mutate | `metric`, `value`, and optional `workItemId`, `unit`, `currency`, `quality`, `confidence`, `scope`, `sourceType`, `sourceName`, `mechanism`, `pricingSource`, `pricingVersion`, `collectedAt` | `praxis telemetry record` |
 | `work.complete` | complete | `workItemIds[]`, `evidence[{type, path}]?`, `conclusion?` | `praxis work complete` |
 | `work.reconcile` | reconcile | `workItemId`, `reason`, and at least one of `commits[]` or `ranges[]` (`BASE..HEAD`), plus `paths[]?` | `praxis work reconcile` (#80) |
+| `step.start` (1.1) | mutate | `stepId`, `name?`; requires `execution.id` | `praxis telemetry step start` |
+| `step.complete` (1.1) | mutate | `stepId`, `reason?`; requires `execution.id` | `praxis telemetry step complete` |
+| `step.fail` (1.1) | mutate | `stepId`, `reason?`; requires `execution.id` | `praxis telemetry step fail` |
 
-**Planned additions.** Step operations (`step.start`, `step.complete` and
-`step.fail`) and ordered batches are planned for later minor versions
-(PRAXIS-REMOTE-04 and PRAXIS-REMOTE-08). The `admin` capability is reserved.
+**Version 1.1 additions.** Version 1.1 adds the step operations and the
+optional `step` argument of `telemetry.record` (PRAXIS-REMOTE-04). A 1.0
+request cannot use them.
+
+**Step operations** act on the requester's *own* execution. That execution
+must be named in `execution.id`, and it must be one the requester may
+continue.
+
+**Planned additions.** Ordered batches (PRAXIS-REMOTE-08) are planned for a
+later minor version. The `admin` capability is reserved.
 
 **Capabilities.** The executor grants capabilities from *trusted*
 configuration. A request document never grants its own. `read` never

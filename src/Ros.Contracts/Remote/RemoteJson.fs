@@ -278,7 +278,7 @@ module RemoteJson =
                     (combine2 (parseDecimal (field "value") "value" element) (parseConfidence (field "confidence") "confidence" element))
 
             let descriptive =
-                [ "unit"; "currency"; "quality"; "scope"; "sourceType"; "sourceName"; "mechanism"; "pricingSource"; "pricingVersion"; "collectedAt" ]
+                [ "unit"; "currency"; "quality"; "scope"; "sourceType"; "sourceName"; "mechanism"; "pricingSource"; "pricingVersion"; "collectedAt"; "step" ]
                 |> List.map (fun name -> name, optional name)
 
             match core, descriptive |> List.collect (snd >> snd) with
@@ -301,10 +301,18 @@ module RemoteJson =
                           Mechanism = read "mechanism"
                           PricingSource = read "pricingSource"
                           PricingVersion = read "pricingVersion"
-                          CollectedAt = read "collectedAt" }
+                          CollectedAt = read "collectedAt"
+                          Step = read "step" }
                 ),
                 []
             | (_, coreProblems), descriptiveProblems -> None, coreProblems @ descriptiveProblems
+        | Operation.StepStart ->
+            combine2 (requiredString (field "stepId") "stepId" element) (optionalString (field "name") "name" element)
+            |> map (fun (stepId, name) -> Arguments.Step(stepId, name, None))
+        | Operation.StepComplete
+        | Operation.StepFail ->
+            combine2 (requiredString (field "stepId") "stepId" element) (optionalString (field "reason") "reason" element)
+            |> map (fun (stepId, reason) -> Arguments.Step(stepId, None, reason))
         | Operation.WorkReconcile ->
             combine2
                 (combine2 (requiredString (field "workItemId") "workItemId" element) (requiredString (field "reason") "reason" element))

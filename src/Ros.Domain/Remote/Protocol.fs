@@ -57,6 +57,9 @@ type Operation =
     | TelemetryRecord
     | WorkComplete
     | WorkReconcile
+    | StepStart
+    | StepComplete
+    | StepFail
 
 [<RequireQualifiedAccess>]
 module Operation =
@@ -72,7 +75,10 @@ module Operation =
           Operation.WorkBlock
           Operation.TelemetryRecord
           Operation.WorkComplete
-          Operation.WorkReconcile ]
+          Operation.WorkReconcile
+          Operation.StepStart
+          Operation.StepComplete
+          Operation.StepFail ]
 
     let code operation =
         match operation with
@@ -88,6 +94,9 @@ module Operation =
         | Operation.TelemetryRecord -> "telemetry.record"
         | Operation.WorkComplete -> "work.complete"
         | Operation.WorkReconcile -> "work.reconcile"
+        | Operation.StepStart -> "step.start"
+        | Operation.StepComplete -> "step.complete"
+        | Operation.StepFail -> "step.fail"
 
     let tryParse (value: string) = all |> List.tryFind (fun operation -> code operation = value)
 
@@ -102,7 +111,10 @@ module Operation =
         | Operation.WorkStart
         | Operation.WorkResume
         | Operation.WorkBlock
-        | Operation.TelemetryRecord -> Capability.Mutate
+        | Operation.TelemetryRecord
+        | Operation.StepStart
+        | Operation.StepComplete
+        | Operation.StepFail -> Capability.Mutate
         | Operation.WorkComplete -> Capability.Complete
         | Operation.WorkReconcile -> Capability.Reconcile
 
@@ -127,12 +139,29 @@ module Operation =
         | Operation.WorkComplete -> [ "workItemIds" ], [ "evidence"; "conclusion" ]
         | Operation.TelemetryRecord ->
             [ "metric"; "value" ],
-            [ "workItemId"; "unit"; "currency"; "quality"; "confidence"; "scope"; "sourceType"; "sourceName"; "mechanism"; "pricingSource"; "pricingVersion"; "collectedAt" ]
+            [ "workItemId"; "unit"; "currency"; "quality"; "confidence"; "scope"; "sourceType"; "sourceName"; "mechanism"; "pricingSource"; "pricingVersion"; "collectedAt"; "step" ]
         | Operation.WorkReconcile -> [ "workItemId"; "reason" ], [ "commits"; "ranges"; "paths" ]
+        | Operation.StepStart -> [ "stepId" ], [ "name" ]
+        | Operation.StepComplete
+        | Operation.StepFail -> [ "stepId" ], [ "reason" ]
 
     /// The protocol minor version that introduced the operation. A request
     /// may only use operations its own declared version knows about.
-    let introducedIn (_: Operation) = 0
+    let introducedIn (operation: Operation) =
+        match operation with
+        | Operation.StepStart
+        | Operation.StepComplete
+        | Operation.StepFail -> 1
+        | _ -> 0
+
+    /// Step operations act on the requester's own execution, which the
+    /// request must name.
+    let requiresExecution operation =
+        match operation with
+        | Operation.StepStart
+        | Operation.StepComplete
+        | Operation.StepFail -> true
+        | _ -> false
 
 type ProtocolVersion = { Major: int; Minor: int }
 
@@ -141,7 +170,7 @@ module ProtocolVersion =
     [<Literal>]
     let Protocol = "praxis.remote"
 
-    let current = { Major = 1; Minor = 0 }
+    let current = { Major = 1; Minor = 1 }
 
     let code version = $"{version.Major}.{version.Minor}"
 
@@ -197,7 +226,8 @@ type TelemetryRecordArguments =
       Mechanism: string option
       PricingSource: string option
       PricingVersion: string option
-      CollectedAt: string option }
+      CollectedAt: string option
+      Step: string option }
 
 type WorkReconcileArguments =
     { WorkItemId: string
@@ -220,6 +250,7 @@ type Arguments =
     | WorkComplete of WorkCompleteArguments
     | TelemetryRecord of TelemetryRecordArguments
     | WorkReconcile of WorkReconcileArguments
+    | Step of stepId: string * name: string option * reason: string option
 
 [<RequireQualifiedAccess>]
 module Arguments =
@@ -233,7 +264,8 @@ module Arguments =
         | Operation.WorkBlock, Arguments.WorkBlock _
         | Operation.WorkComplete, Arguments.WorkComplete _
         | Operation.TelemetryRecord, Arguments.TelemetryRecord _
-        | Operation.WorkReconcile, Arguments.WorkReconcile _ -> true
+        | Operation.WorkReconcile, Arguments.WorkReconcile _
+        | (Operation.StepStart | Operation.StepComplete | Operation.StepFail), Arguments.Step _ -> true
         | _ -> false
 
 type Request =
@@ -594,13 +626,16 @@ module RequestValidation =
                     "arguments.mechanism", record.Mechanism
                     "arguments.pricingSource", record.PricingSource
                     "arguments.pricingVersion", record.PricingVersion
-                    "arguments.collectedAt", record.CollectedAt ]
+                    "arguments.collectedAt", record.CollectedAt
+                    "arguments.step", record.Step ]
                   |> List.collect (fun (field, value) -> optional field token value)
               yield! optional "arguments.currency" currency record.Currency
               match record.SourceType with
               | Some sourceType when executorObservedSourceTypes.Contains sourceType ->
                   yield problem "arguments.sourceType" "names a source only the executor can observe; a request can only assert telemetry"
               | _ -> () ]
+        | Arguments.Step(stepId, name, reason) ->
+            token "arguments.stepId" stepId @ optional "arguments.name" text name @ optional "arguments.reason" text reason
         | Arguments.WorkReconcile reconcile ->
             [ yield! workItemId "arguments.workItemId" reconcile.WorkItemId
               yield! text "arguments.reason" reconcile.Reason
@@ -647,7 +682,10 @@ module RequestValidation =
                   "arguments.sourceName", record.SourceName
                   "arguments.mechanism", record.Mechanism
                   "arguments.pricingSource", record.PricingSource
-                  "arguments.pricingVersion", record.PricingVersion ]
+                  "arguments.pricingVersion", record.PricingVersion
+                  "arguments.step", record.Step ]
+            | Arguments.Step(stepId, name, reason) ->
+                [ "arguments.stepId", Some stepId; "arguments.name", name; "arguments.reason", reason ]
             | Arguments.WorkReconcile reconcile ->
                 ("arguments.reason", Some reconcile.Reason)
                 :: (reconcile.Paths |> List.map (fun value -> "arguments.paths", Some value))
@@ -672,6 +710,8 @@ module RequestValidation =
           yield! optional "repository.expectedSha" commitSha request.Repository.ExpectedSha
           yield! optional "execution.id" executionId request.ExecutionId
           yield! request.Actor |> Option.map actor |> Option.defaultValue []
+          if Operation.requiresExecution request.Operation && request.ExecutionId.IsNone then
+              yield problem "execution.id" $"is required by '{Operation.code request.Operation}'"
           if not (Arguments.matches request.Operation request.Arguments) then
               yield problem "arguments" $"do not match operation '{Operation.code request.Operation}'"
           yield! arguments request.Arguments ]
@@ -724,9 +764,12 @@ module RequestFingerprint =
                  "mechanism", record.Mechanism
                  "pricingSource", record.PricingSource
                  "pricingVersion", record.PricingVersion
-                 "collectedAt", record.CollectedAt ]
+                 "collectedAt", record.CollectedAt
+                 "step", record.Step ]
                |> List.map (fun (name, value) -> optionalField name value)
                |> String.concat "")
+        | Arguments.Step(stepId, name, reason) ->
+            field "stepId" stepId + optionalField "name" name + optionalField "reason" reason
         | Arguments.WorkReconcile reconcile ->
             field "workItemId" reconcile.WorkItemId
             + field "reason" reconcile.Reason

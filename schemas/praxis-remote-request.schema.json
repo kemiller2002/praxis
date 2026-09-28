@@ -34,7 +34,10 @@
         "work.block",
         "work.complete",
         "telemetry.record",
-        "work.reconcile"
+        "work.reconcile",
+        "step.start",
+        "step.complete",
+        "step.fail"
       ]
     },
     "repository": {
@@ -513,6 +516,9 @@
               },
               "collectedAt": {
                 "$ref": "#/$defs/token"
+              },
+              "step": {
+                "$ref": "#/$defs/token"
               }
             },
             "required": [
@@ -586,13 +592,109 @@
       "if": {
         "properties": {
           "operation": {
+            "const": "step.start"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "arguments": {
+            "type": "object",
+            "properties": {
+              "stepId": {
+                "$ref": "#/$defs/token"
+              },
+              "name": {
+                "$ref": "#/$defs/text"
+              }
+            },
+            "required": [
+              "stepId"
+            ],
+            "patternProperties": {
+              "^x-": {}
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "step.complete"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "arguments": {
+            "type": "object",
+            "properties": {
+              "stepId": {
+                "$ref": "#/$defs/token"
+              },
+              "reason": {
+                "$ref": "#/$defs/text"
+              }
+            },
+            "required": [
+              "stepId"
+            ],
+            "patternProperties": {
+              "^x-": {}
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "step.fail"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "arguments": {
+            "type": "object",
+            "properties": {
+              "stepId": {
+                "$ref": "#/$defs/token"
+              },
+              "reason": {
+                "$ref": "#/$defs/text"
+              }
+            },
+            "required": [
+              "stepId"
+            ],
+            "patternProperties": {
+              "^x-": {}
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
             "enum": [
               "work.start",
               "work.resume",
               "work.block",
               "telemetry.record",
               "work.complete",
-              "work.reconcile"
+              "work.reconcile",
+              "step.start",
+              "step.complete",
+              "step.fail"
             ]
           }
         }
@@ -609,6 +711,24 @@
             ]
           }
         }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "enum": [
+              "step.start",
+              "step.complete",
+              "step.fail"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "execution"
+        ]
       }
     }
   ],

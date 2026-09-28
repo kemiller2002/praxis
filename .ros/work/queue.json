@@ -1980,10 +1980,10 @@
         "gh-90"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-28T07:45:04.148Z",
-      "updatedAt": "2026-09-28T07:45:04.000Z",
+      "updatedAt": "2026-09-28T09:25:42.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

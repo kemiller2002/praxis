@@ -113,12 +113,12 @@ module RemoteProtocolTests =
               fun () ->
                   let failure = rejected (document (startRequest |> replace "protocol" "\"other.protocol\""))
                   Assert.equal FailureCode.UnsupportedProtocol failure.Failure.Code
-                  Assert.isTrue (failure.Failure.Message.Contains "praxis.remote 1.0") "diagnostics name the supported version" }
+                  Assert.isTrue (failure.Failure.Message.Contains "praxis.remote 1.1") "diagnostics name the supported version" }
 
           { Name = "remote: a newer major or newer minor protocol version fails closed with the supported versions"
             Run =
               fun () ->
-                  [ "\"2.0\""; "\"1.1\""; "\"0.9\"" ]
+                  [ "\"2.0\""; "\"1.2\""; "\"0.9\"" ]
                   |> List.iter (fun version ->
                       let failure = rejected (document (startRequest |> replace "protocolVersion" version))
                       Assert.equal FailureCode.UnsupportedProtocol failure.Failure.Code
@@ -569,7 +569,7 @@ module RemoteProtocolTests =
             Run =
               fun () ->
                   let mutating = Operation.all |> List.filter Operation.isMutating |> List.map Operation.code |> Set.ofList
-                  Assert.equal (set [ "work.start"; "work.resume"; "work.block"; "telemetry.record"; "work.complete"; "work.reconcile" ]) mutating
+                  Assert.equal (set [ "work.start"; "work.resume"; "work.block"; "telemetry.record"; "work.complete"; "work.reconcile"; "step.start"; "step.complete"; "step.fail" ]) mutating
                   Assert.equal Capability.Complete (Operation.capability Operation.WorkComplete)
                   Assert.equal Capability.Reconcile (Operation.capability Operation.WorkReconcile)
                   Assert.isTrue (Operation.all |> List.forall (fun operation -> Operation.capability operation <> Capability.Admin)) "admin is reserved" } ]

@@ -83,6 +83,21 @@ module ExecutionPlan =
                 @ optionalFlag "--pricing-source" record.PricingSource
                 @ optionalFlag "--pricing-version" record.PricingVersion
                 @ optionalFlag "--collected-at" record.CollectedAt
+                @ optionalFlag "--step" record.Step
+            )
+        | Arguments.Step(stepId, name, reason) ->
+            let transition =
+                match request.Operation with
+                | Operation.StepStart -> "start"
+                | Operation.StepFail -> "fail"
+                | _ -> "complete"
+
+            ExecutionPlan.Command(
+                [ "telemetry"; "step"; transition ]
+                @ Option.toList request.ExecutionId
+                @ [ "--step"; stepId; "--occurred-at"; occurredAt ]
+                @ optionalFlag "--name" name
+                @ optionalFlag "--reason" reason
             )
         | Arguments.WorkReconcile reconcile ->
             ExecutionPlan.Command(

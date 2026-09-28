@@ -314,7 +314,7 @@ test("praxis.describe tells an agent what it may do here, from Praxis's own cata
   const described = response.result;
   assert.equal(described.schema, "praxis.describe");
   assert.equal(described.available, true);
-  assert.deepEqual(described.protocolVersions, ["1.0"]);
+  assert.deepEqual(described.protocolVersions, ["1.0", "1.1"]);
   assert.equal(described.contract, "docs/remote-agent-contract.md");
   assert.deepEqual(described.repository.capabilities, ["read", "mutate"]);
   assert.deepEqual(described.grants, ["read", "mutate"], "the transport grant is narrowed by the repository");
@@ -423,4 +423,42 @@ test("remote reconciliation (#80) attributes already-committed work without touc
   }, { requestId: "req-reconcile-again" })).response;
   assert.equal(duplicate.outcome, "succeeded", "a duplicate reconciliation is an idempotent no-op");
   assert.equal(readEvents(root).filter((candidate) => candidate.type === "work.attribution.reconciled").length, 1);
+});
+
+test("an agent records steps and step-scoped usage remotely; usage keeps its evidence quality", (t) => {
+  const root = fixture(t, "steps");
+  const commit = (message) => { git(root, "add", "-A"); git(root, "commit", "-qm", message); };
+  const v11 = (operation, args, extra) => ({ ...request(root, operation, args, extra), protocolVersion: "1.1" });
+  const agent = { ...AGENT, sessionId: "agent-session" };
+
+  const started = remote(root, v11("work.start", { workItemIds: ["WI-0100"] }, { requestId: "req-steps-start-1", actor: agent })).response;
+  assert.equal(started.outcome, "succeeded");
+  commit("start");
+  const executionId = started.result.workItems.find((item) => item.id === "WI-0100").telemetryExecutionIds[0];
+  const own = { actor: agent, execution: { id: executionId } };
+
+  assert.equal(remote(root, v11("step.start", { stepId: "implement", name: "Implement parser" }, { requestId: "req-step-start-1", ...own })).response.outcome, "succeeded");
+  commit("step");
+  const usage = remote(root, v11("telemetry.record", { metric: "tokens.input", value: 1200, unit: "tokens", step: "implement", sourceType: "runtime-api" }, { requestId: "req-step-usage-1", ...own })).response;
+  assert.equal(usage.outcome, "succeeded", JSON.stringify(usage.failure));
+  commit("usage");
+  const unknownStep = remote(root, v11("telemetry.record", { metric: "tokens.input", value: 1, step: "never-started" }, { requestId: "req-step-usage-2", ...own })).response;
+  assert.equal(unknownStep.failure.code, "domain-rejected");
+  assert.equal(remote(root, v11("step.complete", { stepId: "implement" }, { requestId: "req-step-done-01", ...own })).response.outcome, "succeeded");
+  commit("step done");
+
+  const [execution] = executions(root);
+  assert.deepEqual(execution.events.filter((event) => event.type.startsWith("step.")).map((event) => [event.type, event.stepId]), [
+    ["step.started", "implement"],
+    ["step.completed", "implement"]
+  ]);
+
+  const report = JSON.parse(praxis(root, ["telemetry", "usage", "WI-0100", "--by", "step"]).stdout);
+  const group = report.groups.find((candidate) => candidate.key === "implement" && candidate.metric === "tokens.input");
+  assert.equal(group.total, 1200);
+  assert.deepEqual(group.evidenceQuality, { "provider-reported": 1 });
+
+  const intruder = { kind: "agent", id: "other/agent", provider: "other", runtime: "x" };
+  const refused = remote(root, v11("step.start", { stepId: "sneak" }, { requestId: "req-step-sneak-1", actor: intruder, execution: { id: executionId } })).response;
+  assert.equal(refused.failure.code, "domain-rejected");
 });

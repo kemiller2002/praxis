@@ -116,7 +116,8 @@ module RemoteExecutionTests =
                         Mechanism = None
                         PricingSource = None
                         PricingVersion = None
-                        CollectedAt = None }
+                        CollectedAt = None
+                        Step = None }
 
                   let byWorkItem = request Operation.TelemetryRecord (Arguments.TelemetryRecord record) |> ExecutionPlan.forRequest at |> command
                   Assert.equal [ "telemetry"; "record"; "WI-1"; "--metric"; "tokens.input"; "--value"; "1532"; "--unit"; "tokens"; "--source-type"; "agent-report" ] byWorkItem

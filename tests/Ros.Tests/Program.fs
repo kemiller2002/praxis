@@ -55,4 +55,5 @@ let main _ =
     @ RemoteProtocolTests.tests
     @ RemoteIdentityTests.tests
     @ RemoteExecutionTests.tests
+    @ TelemetryStepsUsageTests.tests
     |> TestRunner.run

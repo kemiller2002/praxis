@@ -3169,11 +3169,52 @@
         "EXE-20260928T085516032Z-f48cc840"
       ],
       "completedAt": "2026-09-28T09:08:20.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-04",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Telemetry/Steps.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Telemetry/Usage.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileTelemetryUsageRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Remote/Protocol.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/TelemetryStepsUsageTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/remote-execute.test.mjs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/development-telemetry.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T09:25:42.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T092542114Z-d9bf566a"
+      ],
+      "completedAt": "2026-09-28T09:25:42.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-28T09:08:20.000Z",
+  "updatedAt": "2026-09-28T09:25:42.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
