@@ -14,6 +14,7 @@
 | FEAT-AGENT-PROVENANCE | FEAT-AGENT-PROVENANCE | complete |  |  |
 | GH-80 | Support auditable post-commit work-item attribution reconciliation (#80) | complete | attribution, reconciliation, provenance | high |
 | GH-84 | GH-84 | blocked |  |  |
+| GH-90 | Make remote/cloud-agent Praxis execution a first-class capability (#90) | active | remote-execution, gh-90 | high |
 | MIG-05-BACKLOG-PERSISTENCE | Add bounded recovery for backlog queue and Markdown projection | complete | fsharp, migration, persistence | high |
 | MIG-05-PERSISTENCE | MIG-05 characterize and shadow transactional persistence recovery | complete | fsharp, migration, persistence | high |
 | MIG-05-TELEMETRY-RECOVERY | Recover telemetry execution backlinks without duplicating execution evidence | complete | fsharp, migration, telemetry, persistence | high |
@@ -35,6 +36,18 @@
 | PKG-ECHELON-FOUNDRY | PKG-ECHELON-FOUNDRY | complete |  |  |
 | PKG-MIT-LICENSE | PKG-MIT-LICENSE | complete |  |  |
 | PKG-PUBLISH-READINESS | PKG-PUBLISH-READINESS | complete |  |  |
+| PRAXIS-REMOTE-01 | Remote protocol v1 contract: schemas, typed domain model, validation, fingerprint, decision order | ready | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-02 | Remote provenance roles: asserted request actor, observed executor, transport principal | blocked | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-03 | praxis remote execute boundary with request journal, SHA binding and structured results | blocked | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-04 | Execution steps, step-scoped usage/cost and the evidence-quality projection | ready | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-05 | Deterministic verifiable Praxis bootstrap: immutable release assets, attestation, fail-closed pins | ready | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-06 | GitHub Actions reusable workflow adapter for praxis.remote | blocked | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-07 | Remote discovery (praxis.describe) and concise agent contract | blocked | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-08 | Ordered batch/session remote requests | blocked | remote-execution, gh-90 | low |
+| PRAXIS-REMOTE-09 | Remote reconciliation (#80), fallback records and successor continuation | blocked | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-10 | Remote execution operator documentation | blocked | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-11 | End-to-end no-.NET cloud-agent proof | blocked | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-12 | Conditor installs and configures the Praxis remote surface | blocked | remote-execution, gh-90 | low |
 | PRAXIS-SITE-01 | Establish public-site architecture | complete | gh-84, public-site | high |
 | PRAXIS-SITE-02 | Implement Echelon Foundry design foundation | complete | gh-84, public-site | high |
 | PRAXIS-SITE-03 | Build the hero | complete | gh-84, public-site | high |

@@ -646,5 +646,74 @@
     "title": "Post-hoc attribution reconciliation as an append-only, Git-evidenced, content-bound event",
     "updated": "2026-09-27",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-28",
+    "decision_type": "architecture",
+    "derived_from": [
+      "RQ-ROS-2026-A021"
+    ],
+    "id": "DF-ROS-2026-A041",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A041--remote-execution-protocol-and-adapter-architecture.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T073932249Z-d48161b9": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T07:44:28.575Z",
+          "evidence": [
+            "EV-ROS-2026-A053"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "Architecture decision for the remote execution protocol and GitHub Actions adapter (work item GH-90)"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A021",
+      "EV-ROS-2026-A053",
+      "RQ-ROS-2026-A020",
+      "DF-ROS-2026-A007",
+      "DF-ROS-2026-A027",
+      "DF-ROS-2026-A036",
+      "DF-ROS-2026-A040",
+      "docs/remote-protocol.md",
+      "https://github.com/kemiller2002/praxis/issues/90",
+      "https://github.com/kemiller2002/praxis/issues/80"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A053"
+    ],
+    "supports": [
+      "RQ-ROS-2026-A021"
+    ],
+    "tags": [
+      "remote-execution",
+      "protocol",
+      "idempotency",
+      "concurrency",
+      "provenance",
+      "security",
+      "github-actions",
+      "gh-90"
+    ],
+    "title": "Remote execution is a typed, versioned Praxis request protocol, executed by the same command implementations, with GitHub Actions as a thin first adapter",
+    "updated": "2026-09-28",
+    "version": "1.0.0"
   }
 ]
