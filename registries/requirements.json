@@ -618,6 +618,24 @@
             "modified"
           ],
           "reason": "Captured from GitHub issue #90 (work item GH-90): remote/cloud-agent execution as a first-class capability"
+        },
+        "EXE-20260928T200030786Z-eca55c92": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T20:02:59.000Z",
+          "evidence": [
+            "scripts/praxis-remote-persist.sh",
+            "tests/praxis-remote-adapter.test.mjs"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRX-REMOTE-038 delivered by PRAXIS-REMOTE-13: adapter classifies GitHub rate limiting as rate-limited"
         }
       }
     },
@@ -643,6 +661,6 @@
     ],
     "title": "Praxis governance is independent of the execution environment; remote/cloud-agent execution is a first-class capability",
     "updated": "2026-09-28",
-    "version": "1.1.0"
+    "version": "1.2.0"
   }
 ]
