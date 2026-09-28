@@ -181,3 +181,64 @@ Breaking identity, quality, unit, or aggregation meaning requires a new telemetr
 ROS cannot obtain hidden reasoning cycles, self-corrections, precise active-versus-waiting time, human interruption time, authoritative billed cost, model rerouting identity, or detailed tool activity unless the runtime exposes them. This Codex desktop environment exposes session/thread identity to repository commands but not its in-app token/cost counters. Provider hooks may miss UI-only actions, and exporter formats may change. Git-delta attribution also assumes one execution owns its working tree; concurrent actors in the same checkout require separate worktrees or a richer attribution mechanism. Agent-reported findings remain lower-assurance than runtime or deterministic Git/test output.
 
 Raw values can still contain a secret under a novel innocuous key, so upstream content suppression remains mandatory. Metric and event arrays are not capped because silently discarding normalized evidence would be worse without measured thresholds; very high callback volume will eventually make whole-record rewrites expensive even though raw payload and capability history are bounded. The accepted design is per-execution JSON, not an append-only event store. Reopen segmentation/compaction when real records approach retention limits, lock contention becomes routine, or profiling shows write amplification is material. Local records also remain unsigned, not centrally reconciled, and not globally deduplicated.
+
+## Steps, evidence quality, and usage (PRAXIS-REMOTE-04)
+
+**Steps.** A step is a unit of work inside an execution. It lets work,
+evidence and usage be attributed below the execution level. Steps are
+recorded as events on the execution record, so a step inherits the
+execution's identity and never carries one of its own:
+
+```
+praxis telemetry step start    [TARGET] --step STEP-ID [--name TEXT]
+praxis telemetry step complete [TARGET] --step STEP-ID [--reason TEXT]
+praxis telemetry step fail     [TARGET] --step STEP-ID [--reason TEXT]
+praxis telemetry record [TARGET] --metric ID --value V ... --step STEP-ID
+```
+
+The caller chooses the step ID, so repeating a transition is an idempotent
+no-op. Illegal transitions are refused:
+
+- completing or failing a step that was never started;
+- failing a step that has already completed.
+
+A step-scoped measurement carries the `step` dimension, and it is refused
+if its step was never started in that execution.
+
+**Evidence quality.** Every measurement already records a `quality` and a
+`source.type`. The vocabulary from #90 is projected from those two fields;
+there is no competing field. The projection never upgrades a value.
+
+| Projected quality | Condition |
+|---|---|
+| measured | Source type `ros-git`, `ros-clock` or `environment`. This is Praxis's own observation. |
+| provider-reported | Source type `runtime-api`, `runtime-output`, `runtime-hook` or `external-tool`. |
+| agent-reported | Source type `agent-report`. |
+| human-reported | Source type `human-report`. |
+| calculated | Source type `calculated`, or quality `derived`. |
+| estimated | Quality `estimated`. This wins over every source type. |
+| unavailable | The metric has no measurement. Its capability status records why. |
+
+Remotely supplied telemetry keeps the source type the requester asserted,
+or `agent-report` when it asserted none. A request can never claim a source
+type that only Praxis can observe.
+
+**Usage report.**
+
+```
+praxis telemetry usage [WORKITEM] --by work-item|execution|step|provider|model|day
+```
+
+The report sums the registry's additive (`sum`) metrics for each group and
+says what backs each total:
+
+- the number of measurements;
+- how many have each evidence quality;
+- which executions reported the metric;
+- which executions in the group reported nothing (`unavailableExecutions`).
+
+A group whose executions reported nothing has a `total` of `null`, not `0`.
+A total with any unavailable executions is marked `complete: false`, which
+means it is a lower bound.
+
+The existing `telemetry summary` is unchanged.

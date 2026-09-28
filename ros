@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 # Runs this source checkout's F# CLI (DF-ROS-2026-A030). The only
-# prerequisite is the .NET SDK that builds it; see DF-ROS-2026-A041.
+# prerequisite is the .NET SDK that builds it; see DF-ROS-2026-A042.
 set -eu
 
 repo_root="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"

@@ -105,7 +105,7 @@ is wrong, then `ros init` or `ros upgrade` to converge.
   breaking change. It requires a new schema or configuration version and a
   migration step.
 - The npm-distributed `ros-bootstrap init` and `ros-bootstrap verify` are
-  retired (`DF-ROS-2026-A041`); what they installed is still upgradeable.
+  retired (`DF-ROS-2026-A042`); what they installed is still upgradeable.
 - A repository installed by `ros-bootstrap init` keeps working with no action
   from you. `ros status` reports it as `upgrade-required`; adopting the
   manifest with `ros upgrade` is what moves it to `installed`.

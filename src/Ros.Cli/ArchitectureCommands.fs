@@ -1,6 +1,6 @@
 /// `ros architecture check`: enforces the repository's declared
 /// implementation-language policy (`ros.json` `implementationPolicy`,
-/// DF-ROS-2026-A041). The same findings join the unified `validate`.
+/// DF-ROS-2026-A042). The same findings join the unified `validate`.
 module Ros.Cli.ArchitectureCommands
 
 open System

@@ -72,4 +72,8 @@ let main _ =
     @ LifecycleCliTests.tests
     @ EchelonDoctorTests.tests
     @ InstalledRepositoryTests.tests
+    @ RemoteProtocolTests.tests
+    @ RemoteIdentityTests.tests
+    @ RemoteExecutionTests.tests
+    @ TelemetryStepsUsageTests.tests
     |> TestRunner.run

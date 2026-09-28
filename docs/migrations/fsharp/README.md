@@ -1,6 +1,6 @@
 # ROS F# application migration
 
-> **Closed (2026-09-28, `DF-ROS-2026-A041`).** The repository is now F#/.NET only; the Node files this document names were removed and are recoverable from Git history. See [`TRACEABILITY.md`](TRACEABILITY.md) for where their tests moved.
+> **Closed (2026-09-28, `DF-ROS-2026-A042`).** The repository is now F#/.NET only; the Node files this document names were removed and are recoverable from Git history. See [`TRACEABILITY.md`](TRACEABILITY.md) for where their tests moved.
 
 This directory is the operational handoff for the staged migration authorized
 by `DF-ROS-2026-A027`. The production `./ros` command remains the Node runtime

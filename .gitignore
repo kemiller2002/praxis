@@ -13,7 +13,7 @@ __pycache__/
 .venv/
 venv/
 
-# Node: kept as a guard. This repository owns no Node code (DF-ROS-2026-A041),
+# Node: kept as a guard. This repository owns no Node code (DF-ROS-2026-A042),
 # but a stray install must never be committed.
 node_modules/
 

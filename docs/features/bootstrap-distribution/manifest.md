@@ -8,7 +8,7 @@ point is the F# CLI's lifecycle interface: `init`, `status`, `verify`,
 `upgrade` and `doctor` (`Ros.Domain.Lifecycle`, `Ros.Application.Lifecycle`,
 `Ros.Infrastructure.Lifecycle`), installed as the `praxis`/`ros` commands by
 the native installers. The npm package, its Node launchers and
-`ros-bootstrap` are retired (`DF-ROS-2026-A041`).
+`ros-bootstrap` are retired (`DF-ROS-2026-A042`).
 
 ## Ownership
 
@@ -28,7 +28,7 @@ the native installers. The npm package, its Node launchers and
   installers never activate or run a bundle whose SHA-256 does not match
   `native-checksums.txt`; an unsupported platform fails with a named message.
   The scaffold never contains a Node/JavaScript/TypeScript artifact
-  (`RQ-ROS-2026-A021`, `ImplementationLanguagePolicyTests`).
+  (`RQ-ROS-2026-A022`, `ImplementationLanguagePolicyTests`).
 - Capabilities / authority: caller selects profile/target; the manifest is
   authoritative for declared materialization.
 - Important effects and effect contracts: filesystem creation/copy/render in
@@ -79,7 +79,7 @@ the native installers. The npm package, its Node launchers and
 ## Maintenance
 
 - Owner: repository-governance
-- Last checked against implementation: 2026-09-28 (`DF-ROS-2026-A041`: npm
+- Last checked against implementation: 2026-09-28 (`DF-ROS-2026-A042`: npm
   distribution, `bin/*.mjs`, `lib/*.mjs` and the Node scaffold launcher
   removed; `release.json` replaces `package.json`; native bundles no longer
   carry a `package/` directory because the binary embeds its payload).

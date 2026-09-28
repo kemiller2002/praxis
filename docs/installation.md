@@ -222,6 +222,6 @@ link back to, the source checkout that installed it.
 ## Legacy compatibility
 
 The npm-distributed `ros-bootstrap init` and `ros-bootstrap verify` are
-retired (`DF-ROS-2026-A041`). A repository they installed keeps working; see
+retired (`DF-ROS-2026-A042`). A repository they installed keeps working; see
 [`upgrading.md`](upgrading.md) for how an existing `ros-bootstrap`
 installation moves across.

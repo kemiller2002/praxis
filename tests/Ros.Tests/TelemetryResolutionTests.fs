@@ -17,7 +17,8 @@ module TelemetryResolutionTests =
     let private state linked candidates =
         { LinkedExecutionIds = linked
           Candidates = candidates
-          RequestedExecutionId = None }
+          RequestedExecutionId = None
+          ForeignExecutionIds = Set.empty }
 
     let private item telemetryIds =
         { Id = "TASK-TELEMETRY"
@@ -44,8 +45,72 @@ module TelemetryResolutionTests =
               TelemetryExecutionIds = telemetryIds }
           Telemetry = telemetry }
 
+    let private foreign ids (value: TelemetryItemState) = { value with ForeignExecutionIds = Set.ofList ids }
+
     let tests =
-        [ { Name = "begin recovers the single detached active execution"
+        [ { Name = "continuation: begin never adopts another actor's detached execution"
+            Run =
+              fun () ->
+                  let outcome =
+                      TelemetryResolution.resolve
+                          "TASK-TELEMETRY"
+                          [ TelemetryIntent.EnsureActiveExecution ]
+                          (state [] [ candidate "EXE-theirs" "TASK-TELEMETRY" ExecutionStatus.Active ] |> foreign [ "EXE-theirs" ])
+
+                  match outcome with
+                  | TelemetryResolutionOutcome.PendingNewExecution([], _, [ TelemetryEffect.CreateExecution ]) -> ()
+                  | other -> failwith $"expected a new execution, got {other}" }
+
+          { Name = "continuation: a successor's resume links its own active execution, never a predecessor's"
+            Run =
+              fun () ->
+                  let candidates =
+                      [ candidate "EXE-predecessor" "TASK-TELEMETRY" ExecutionStatus.Active
+                        candidate "EXE-successor" "TASK-TELEMETRY" ExecutionStatus.Active ]
+
+                  let outcome =
+                      TelemetryResolution.resolve
+                          "TASK-TELEMETRY"
+                          [ TelemetryIntent.RecordResumed; TelemetryIntent.EnsureActiveExecution ]
+                          (state [ "EXE-predecessor" ] candidates |> foreign [ "EXE-predecessor" ])
+
+                  match outcome with
+                  | TelemetryResolutionOutcome.Resolved(ids, steps, _) ->
+                      Assert.equal [ "EXE-predecessor"; "EXE-successor" ] ids
+                      Assert.isTrue (steps |> List.contains (TelemetryResolutionStep.LinkedActive [ "EXE-successor" ])) "only the successor's own execution is linked"
+                  | other -> failwith $"unexpected {other}" }
+
+          { Name = "continuation: a successor with no execution of its own gets a new one instead of the predecessor's"
+            Run =
+              fun () ->
+                  let outcome =
+                      TelemetryResolution.resolve
+                          "TASK-TELEMETRY"
+                          [ TelemetryIntent.RecordResumed; TelemetryIntent.EnsureActiveExecution ]
+                          (state [ "EXE-predecessor" ] [ candidate "EXE-predecessor" "TASK-TELEMETRY" ExecutionStatus.Active ] |> foreign [ "EXE-predecessor" ])
+
+                  match outcome with
+                  | TelemetryResolutionOutcome.PendingNewExecution([ "EXE-predecessor" ], _, [ TelemetryEffect.CreateExecution ]) -> ()
+                  | other -> failwith $"expected a new execution, got {other}" }
+
+          { Name = "continuation: completing the item still finalizes every active execution, foreign ones included"
+            Run =
+              fun () ->
+                  let candidates =
+                      [ candidate "EXE-predecessor" "TASK-TELEMETRY" ExecutionStatus.Active
+                        candidate "EXE-successor" "TASK-TELEMETRY" ExecutionStatus.Active ]
+
+                  match
+                      TelemetryResolution.resolve
+                          "TASK-TELEMETRY"
+                          [ TelemetryIntent.FinalizeExecutions ]
+                          (state [ "EXE-predecessor"; "EXE-successor" ] candidates |> foreign [ "EXE-predecessor" ])
+                  with
+                  | TelemetryResolutionOutcome.Resolved(_, _, [ TelemetryEffect.FinalizeExecutions ids ]) ->
+                      Assert.equal [ "EXE-predecessor"; "EXE-successor" ] ids
+                  | other -> failwith $"unexpected {other}" }
+
+          { Name = "begin recovers the single detached active execution"
             Run =
               fun () ->
                   let outcome =

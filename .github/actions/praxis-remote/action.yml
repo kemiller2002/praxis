@@ -1,0 +1,99 @@
+name: Praxis remote execute
+description: >-
+  Run one praxis.remote request with the pinned, verified Praxis release and
+  persist exactly the Praxis-owned state it reports. A thin adapter: every
+  decision about the request is Praxis's (PRAXIS-REMOTE-06, DF-ROS-2026-A041
+  section 10). The request reaches Praxis as a file written from the
+  environment and is never interpolated into a command.
+inputs:
+  request:
+    description: The praxis.remote request document (JSON).
+    required: true
+  grants:
+    description: >-
+      Space-separated capabilities this job's credentials allow (read, mutate,
+      complete, reconcile). The repository's ros.json remote.capabilities
+      narrows them further.
+    required: true
+  persistence:
+    description: push (default) or pull-request, for protected branches.
+    default: push
+  attestation:
+    description: required (default) or skip, passed to praxis-setup.
+    default: required
+outputs:
+  outcome:
+    description: The Praxis response outcome (succeeded, rejected, failed, unknown).
+    value: ${{ steps.report.outputs.outcome }}
+  persisted:
+    description: Whether the reported state reached the target ref.
+    value: ${{ steps.report.outputs.persisted }}
+runs:
+  using: composite
+  steps:
+    - name: Set up the pinned Praxis release
+      id: praxis
+      uses: ./.github/actions/praxis-setup
+      with:
+        attestation: ${{ inputs.attestation }}
+
+    - name: Execute the request
+      id: execute
+      shell: bash
+      env:
+        PRAXIS: ${{ steps.praxis.outputs.praxis }}
+        PRAXIS_REQUEST: ${{ inputs.request }}
+        PRAXIS_GRANTS: ${{ inputs.grants }}
+      run: |
+        set -uo pipefail
+        dir="$RUNNER_TEMP/praxis-remote"
+        mkdir -p "$dir"
+        printf '%s' "$PRAXIS_REQUEST" > "$dir/request.json"
+        grants=()
+        for grant in $PRAXIS_GRANTS; do grants+=(--grant "$grant"); done
+        # Praxis prints its structured response; its exit status is carried
+        # by the response itself, so the adapter reports rather than decides.
+        "$PRAXIS" remote execute --request "$dir/request.json" "${grants[@]}" --output "$dir/response.json" --timeout-seconds 600 > /dev/null || true
+        test -s "$dir/response.json" || { echo "::error::Praxis produced no response"; exit 1; }
+
+    - name: Persist the reported Praxis state
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        PRAXIS_PERSISTENCE: ${{ inputs.persistence }}
+        PRAXIS_PERSIST: ${{ github.action_path }}/../../../scripts/praxis-remote-persist.sh
+      run: |
+        dir="$RUNNER_TEMP/praxis-remote"
+        sh "$PRAXIS_PERSIST" --response "$dir/response.json" --output "$dir/adapter.json" --mode "$PRAXIS_PERSISTENCE" || true
+        test -s "$dir/adapter.json" || { echo "::error::the persistence step produced no result"; exit 1; }
+
+    - name: Report the outcome
+      id: report
+      shell: bash
+      run: |
+        dir="$RUNNER_TEMP/praxis-remote"
+        python3 - "$dir/response.json" "$dir/adapter.json" <<'PY'
+        import json, os, sys
+        response = json.load(open(sys.argv[1]))
+        adapter = json.load(open(sys.argv[2]))
+        outcome = response.get("outcome", "unknown")
+        failure = response.get("failure") or adapter.get("failure")
+        with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+            out.write(f"outcome={outcome}\npersisted={str(adapter.get('persisted')).lower()}\n")
+        with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+            summary.write(f"### praxis.remote `{response.get('requestId')}` `{response.get('operation')}`: **{outcome}**\n\n")
+            summary.write("```json\n" + json.dumps({"response": response, "adapter": adapter}, indent=2) + "\n```\n")
+        ok = outcome == "succeeded" and adapter.get("failure") is None
+        if not ok:
+            print(f"::error::praxis.remote {outcome}: {(failure or {}).get('code')} ({(failure or {}).get('retry')})")
+        sys.exit(0 if ok else 1)
+        PY
+
+    - name: Keep the response as a workflow artifact
+      if: always()
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      with:
+        name: praxis-remote-response
+        path: ${{ runner.temp }}/praxis-remote/
+        retention-days: 30
+        if-no-files-found: warn

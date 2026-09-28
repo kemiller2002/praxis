@@ -624,11 +624,76 @@
   },
   {
     "created": "2026-09-28",
+    "depends_on": [
+      "RQ-ROS-2026-A020"
+    ],
+    "derived_from": [
+      "RQ-ROS-2026-A020"
+    ],
+    "evidence_ids": [
+      "EV-ROS-2026-A053"
+    ],
     "id": "RQ-ROS-2026-A021",
     "owners": [
       "repository-governance"
     ],
-    "path": "research/requirements/RQ-ROS-2026-A021--fsharp-dotnet-only-repository.md",
+    "path": "research/requirements/RQ-ROS-2026-A021--remote-execution-first-class-capability.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T073932249Z-d48161b9": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T07:44:28.080Z",
+          "evidence": [
+            "https://github.com/kemiller2002/praxis/issues/90",
+            "EV-ROS-2026-A053"
+          ],
+          "last": "2026-09-28T09:40:46.882Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "Captured from GitHub issue #90 (work item GH-90): remote/cloud-agent execution as a first-class capability"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A041",
+      "EV-ROS-2026-A053",
+      "RQ-ROS-2026-A020",
+      "DF-ROS-2026-A007",
+      "DF-ROS-2026-A036",
+      "DF-ROS-2026-A040",
+      "https://github.com/kemiller2002/praxis/issues/90",
+      "https://github.com/kemiller2002/praxis/issues/80"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "tags": [
+      "remote-execution",
+      "protocol",
+      "provenance",
+      "idempotency",
+      "security",
+      "gh-90"
+    ],
+    "title": "Praxis governance is independent of the execution environment; remote/cloud-agent execution is a first-class capability",
+    "updated": "2026-09-28",
+    "version": "1.1.0"
+  },
+  {
+    "created": "2026-09-28",
+    "id": "RQ-ROS-2026-A022",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A022--fsharp-dotnet-only-repository.md",
     "priority": "high",
     "provenance": {
       "contributions": {
@@ -649,7 +714,7 @@
       }
     },
     "related_documents": [
-      "DF-ROS-2026-A041",
+      "DF-ROS-2026-A042",
       "DF-ROS-2026-A033",
       "requirements/SHARED-APPLICATION-FOUNDATIONS.md"
     ],

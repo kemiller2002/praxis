@@ -101,4 +101,45 @@ A project's own `./ros` runs the Praxis version that project pins from `tools/pr
 
 ## Compatibility
 
-The native bundles are the only distribution channel; the npm package is retired (`DF-ROS-2026-A041`). Existing ros and sde command names and repository installation manifests are not removed. Each bundle is the self-contained binary plus its launchers; the binary embeds the scaffold it installs.
+The native bundles are the only distribution channel; the npm package is retired (`DF-ROS-2026-A042`). Existing ros and sde command names and repository installation manifests are not removed. Each bundle is the self-contained binary plus its launchers; the binary embeds the scaffold it installs.
+
+## Verified bootstrap for CI and remote execution
+
+A machine that must run the *exact* Praxis version a repository pins can use
+[`scripts/praxis-bootstrap.sh`](../scripts/praxis-bootstrap.sh). Examples are
+a GitHub Actions runner executing a remote request (see
+[remote-protocol.md](remote-protocol.md)) or any other CI job. In GitHub
+Actions, use the composite action `.github/actions/praxis-setup`.
+
+The script works in these steps:
+
+1. It reads the `praxis` version from `.echelon/toolchain.json`. The
+   manifest must be valid JSON with `schemaVersion: 1` and an exact
+   `MAJOR.MINOR.PATCH` version.
+2. It downloads exactly that release's native bundle and
+   `native-checksums.txt`, then verifies the bundle's SHA-256.
+3. It verifies the bundle's GitHub build-provenance attestation with
+   `gh attestation verify`. Releases published before attestations existed
+   need `--attestation skip`. That choice must be made explicitly, and it is
+   reported.
+4. It checks that the unpacked binary reports the pinned version.
+5. It caches the verified bundle by version and digest. Every cache hit is
+   re-verified, and a cache entry that was populated without attestation
+   never satisfies a run that requires attestation.
+
+The script never falls forward to another version and never builds Praxis
+from source. Each failure has its own exit code:
+
+| Exit code | Meaning |
+|---|---|
+| 3 | The manifest is missing, malformed, or does not pin an exact version. |
+| 4 | The release or asset is unavailable. |
+| 5 | Integrity or attestation verification failed. |
+| 6 | Version mismatch. |
+| 7 | Unsupported platform. |
+
+**Immutable releases.** A published version's native assets are never
+replaced. When a release workflow runs again without a version bump, it
+publishes nothing and leaves the existing assets in place. `echelon install
+praxis VERSION` also fails when the pinned version's installer cannot be
+downloaded, instead of silently doing nothing.

@@ -1,4 +1,4 @@
-# Runs this project's pinned Praxis, the F# ROS CLI (DF-ROS-2026-A041), on
+# Runs this project's pinned Praxis, the F# ROS CLI (DF-ROS-2026-A042), on
 # Windows. The self-contained native release for the pinned version is
 # installed side by side under $env:ECHELON_HOME (default ~\.echelon) on
 # first use, without changing which version your global commands run.

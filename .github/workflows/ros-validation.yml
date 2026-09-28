@@ -1,6 +1,6 @@
 name: ROS validation
 
-# Every repository-owned step here runs .NET/F# (DF-ROS-2026-A041): no Node
+# Every repository-owned step here runs .NET/F# (DF-ROS-2026-A042): no Node
 # runtime or npm install is part of building, testing or validating Praxis.
 
 on:

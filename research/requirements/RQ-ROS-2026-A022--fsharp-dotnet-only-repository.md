@@ -1,5 +1,5 @@
 ---
-id: RQ-ROS-2026-A021
+id: RQ-ROS-2026-A022
 title: Repository-owned implementation and automation are F#/.NET only
 status: implemented
 version: 1.0.0
@@ -10,7 +10,7 @@ updated: 2026-09-28
 research_area: repository-operating-system
 priority: high
 related_documents:
-  - DF-ROS-2026-A041
+  - DF-ROS-2026-A042
   - DF-ROS-2026-A033
   - requirements/SHARED-APPLICATION-FOUNDATIONS.md
 tags: [architecture, fsharp, dotnet, tooling, node-removal, invariant]

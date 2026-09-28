@@ -12,7 +12,7 @@ module FindingContract =
         elif finding.Field = "work_reconciliation" then
             "Never edit or hand-write reconciliation events. Restore the event log from version control, then re-run './ros work reconcile' with Git evidence."
         elif finding.Field = "implementation_language" then
-            "Reimplement this behaviour in F#/.NET and delete the file, or record an approved DF- decision and a narrow ros.json implementationPolicy exception (DF-ROS-2026-A041)."
+            "Reimplement this behaviour in F#/.NET and delete the file, or record an approved DF- decision and a narrow ros.json implementationPolicy exception (DF-ROS-2026-A042)."
         elif finding.Field.StartsWith("implementationPolicy", System.StringComparison.Ordinal) then
             "Correct ros.json implementationPolicy: each exception needs an exact path (or directory ending in '/') and the accepted DF- decision approving it."
         elif finding.Field = "work_items" then

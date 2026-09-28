@@ -3,7 +3,7 @@ namespace Ros.Tests
 open System.IO
 open Ros.Domain.Architecture
 
-/// The F#/.NET-only repository invariant (DF-ROS-2026-A041): the pure
+/// The F#/.NET-only repository invariant (DF-ROS-2026-A042): the pure
 /// policy, the `architecture check` command, its place in the unified
 /// `validate`, and this repository's own compliance.
 [<RequireQualifiedAccess>]

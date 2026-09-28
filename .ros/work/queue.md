@@ -2,6 +2,7 @@
 
 | ID | Work | Status | Tags | Priority |
 |---|---|---|---|---|
+| ACTOR-KIND-ANCHOR | ActorKind extension pattern accepts a trailing newline ($ anchor) | captured | provenance, security | low |
 | ATTR-COMPLETE-BASE-REF-SWEEP | Stop work complete from sweeping ROS_BASE_REF committed-range paths into its completion event | captured | attribution, reconciliation | medium |
 | ATTR-RECONCILE-SYMLINK-SUBMODULE | Content-match symbolic links and submodules for reconciled attribution | captured | attribution, reconciliation | low |
 | BOOTSTRAP-ADOPTION-FIX | BOOTSTRAP-ADOPTION-FIX | complete |  |  |
@@ -12,9 +13,11 @@
 | DOC-PROJECT-ADMIN-README | DOC-PROJECT-ADMIN-README | complete |  |  |
 | DOC-WEB-README | DOC-WEB-README | complete |  |  |
 | FEAT-AGENT-PROVENANCE | FEAT-AGENT-PROVENANCE | complete |  |  |
+| FSHARP-ONLY-MAIN-MERGE | After merging main (GH-90 remote execution): port its Node tests to F# and renumber the colliding DF/RQ records | ready | fsharp, node-removal, follow-up | high |
 | FSHARP-ONLY-REPOSITORY | Remove repository-owned Node/JavaScript/TypeScript code and tooling; make Praxis F#/.NET only and enforce it | complete | fsharp, architecture, tooling, node-removal | high |
 | GH-80 | Support auditable post-commit work-item attribution reconciliation (#80) | complete | attribution, reconciliation, provenance | high |
 | GH-84 | GH-84 | blocked |  |  |
+| GH-90 | Make remote/cloud-agent Praxis execution a first-class capability (#90) | blocked | remote-execution, gh-90 | high |
 | MIG-05-BACKLOG-PERSISTENCE | Add bounded recovery for backlog queue and Markdown projection | complete | fsharp, migration, persistence | high |
 | MIG-05-PERSISTENCE | MIG-05 characterize and shadow transactional persistence recovery | complete | fsharp, migration, persistence | high |
 | MIG-05-TELEMETRY-RECOVERY | Recover telemetry execution backlinks without duplicating execution evidence | complete | fsharp, migration, telemetry, persistence | high |
@@ -36,6 +39,19 @@
 | PKG-ECHELON-FOUNDRY | PKG-ECHELON-FOUNDRY | complete |  |  |
 | PKG-MIT-LICENSE | PKG-MIT-LICENSE | complete |  |  |
 | PKG-PUBLISH-READINESS | PKG-PUBLISH-READINESS | complete |  |  |
+| PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | captured | rename, gh-90 | low |
+| PRAXIS-REMOTE-01 | Remote protocol v1 contract: schemas, typed domain model, validation, fingerprint, decision order | complete | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-02 | Remote provenance roles: asserted request actor, observed executor, transport principal | complete | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-03 | praxis remote execute boundary with request journal, SHA binding and structured results | complete | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-04 | Execution steps, step-scoped usage/cost and the evidence-quality projection | complete | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-05 | Deterministic verifiable Praxis bootstrap: immutable release assets, attestation, fail-closed pins | complete | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-06 | GitHub Actions reusable workflow adapter for praxis.remote | complete | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-07 | Remote discovery (praxis.describe) and concise agent contract | complete | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-08 | Ordered batch/session remote requests | complete | remote-execution, gh-90 | low |
+| PRAXIS-REMOTE-09 | Remote reconciliation (#80), fallback records and successor continuation | complete | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-10 | Remote execution operator documentation | complete | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-11 | End-to-end no-.NET cloud-agent proof | blocked | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-12 | Conditor installs and configures the Praxis remote surface | blocked | remote-execution, gh-90 | low |
 | PRAXIS-SITE-01 | Establish public-site architecture | complete | gh-84, public-site | high |
 | PRAXIS-SITE-02 | Implement Echelon Foundry design foundation | complete | gh-84, public-site | high |
 | PRAXIS-SITE-03 | Build the hero | complete | gh-84, public-site | high |

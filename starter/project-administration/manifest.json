@@ -191,6 +191,16 @@
       "template": false
     },
     {
+      "source": "schemas/praxis-remote-request.schema.json",
+      "destination": "schemas/praxis-remote-request.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/praxis-remote-response.schema.json",
+      "destination": "schemas/praxis-remote-response.schema.json",
+      "template": false
+    },
+    {
       "source": "schemas/ros-resolution-assessment.schema.json",
       "destination": "schemas/ros-resolution-assessment.schema.json",
       "template": false
@@ -228,6 +238,16 @@
     {
       "source": "docs/agent-provenance.md",
       "destination": "docs/agent-provenance.md",
+      "template": false
+    },
+    {
+      "source": "docs/remote-protocol.md",
+      "destination": "docs/remote-protocol.md",
+      "template": false
+    },
+    {
+      "source": "docs/remote-agent-contract.md",
+      "destination": "docs/remote-agent-contract.md",
       "template": false
     },
     {

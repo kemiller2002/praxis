@@ -23,6 +23,7 @@
     <Compile Include="CliProcess.fs" />
     <Compile Include="WebInterface.fs" />
     <Compile Include="Hub.fs" />
+    <Compile Include="RemoteCommands.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

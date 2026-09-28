@@ -48,7 +48,7 @@ Git authorship and free-text actor strings cannot say who performed an action or
 ## Acceptance criteria
 
 - The event `actor` is part of the hashed, published event.
-- The CLI writes the identical actor recorded by the original golden masters (the Node library that shared them was removed by DF-ROS-2026-A041).
+- The CLI writes the identical actor recorded by the original golden masters (the Node library that shared them was removed by DF-ROS-2026-A042).
 - Legacy events and items without an actor remain valid and are reported only as informational findings.
 
 ## Verification

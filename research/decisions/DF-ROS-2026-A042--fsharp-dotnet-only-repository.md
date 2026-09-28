@@ -1,5 +1,5 @@
 ---
-id: DF-ROS-2026-A041
+id: DF-ROS-2026-A042
 title: The repository is F#/.NET only; repository-owned Node/JavaScript/TypeScript is removed and prohibited by an automated invariant
 status: accepted
 version: 1.0.0
@@ -9,9 +9,9 @@ created: 2026-09-28
 updated: 2026-09-28
 research_area: repository-operating-system
 decision_type: architecture
-supports: [RQ-ROS-2026-A021]
+supports: [RQ-ROS-2026-A022]
 related_documents:
-  - RQ-ROS-2026-A021
+  - RQ-ROS-2026-A022
   - DF-ROS-2026-A009
   - DF-ROS-2026-A030
   - AGENTS.md
@@ -25,7 +25,7 @@ supersedes:
 superseded_by: []
 tags: [architecture, fsharp, dotnet, node-removal, distribution, invariant, decision]
 confidence: high
-derived_from: [RQ-ROS-2026-A021]
+derived_from: [RQ-ROS-2026-A022]
 provenance:
   contributions:
     EXE-20260928T090915352Z-fb23943c:
@@ -59,7 +59,7 @@ GitHub Actions that run on Node are not repository-owned code.
 
 # Decision
 
-1. **Rule.** `RQ-ROS-2026-A021`: repository-owned JavaScript/TypeScript/Node
+1. **Rule.** `RQ-ROS-2026-A022`: repository-owned JavaScript/TypeScript/Node
    is prohibited unless an accepted `DF-` decision approves a narrow
    exception, recorded in `ros.json` `implementationPolicy.exceptions` as one
    exact path or directory. There are no exceptions today.

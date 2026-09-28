@@ -2901,6 +2901,376 @@
       "completedAt": "2026-09-27T09:56:52.000Z"
     },
     {
+      "id": "GH-90",
+      "type": "task",
+      "state": "blocked",
+      "semanticState": "blocked",
+      "evidence": [],
+      "updatedAt": "2026-09-28T10:21:03.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T073932249Z-d48161b9"
+      ],
+      "blockReason": "Praxis-side work PRAXIS-REMOTE-01..10 complete and merged via PR #91; remaining PRAXIS-REMOTE-11 (live no-.NET proof) needs: an attested release containing 'remote execute', pinned, with remote.capabilities opted in; PRAXIS-REMOTE-12 follows 11."
+    },
+    {
+      "id": "PRAXIS-REMOTE-01",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Remote/Protocol.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Contracts/Remote/RemoteJson.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "schemas/praxis-remote-request.schema.json"
+        },
+        {
+          "type": "implementation",
+          "path": "schemas/praxis-remote-response.schema.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RemoteProtocolTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/remote-protocol.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T08:03:42.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T074530250Z-74614560"
+      ],
+      "completedAt": "2026-09-28T08:03:42.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-02",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Remote/Identity.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Remote/GitHubActionsExecutor.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileTelemetryExecutionRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RemoteIdentityTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/agent-provenance.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T08:12:11.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T080446917Z-eca18ac8"
+      ],
+      "completedAt": "2026-09-28T08:12:11.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-03",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/RemoteCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Remote/Execution.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Remote/FileRemoteRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Contracts/Remote/RemoteJson.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/remote-execute.test.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RemoteExecutionTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/remote-protocol.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T08:25:44.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T081238572Z-5e89d3ec"
+      ],
+      "completedAt": "2026-09-28T08:25:44.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-05",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "scripts/praxis-bootstrap.sh"
+        },
+        {
+          "type": "implementation",
+          "path": ".github/actions/praxis-setup/action.yml"
+        },
+        {
+          "type": "implementation",
+          "path": ".github/workflows/native-release.yml"
+        },
+        {
+          "type": "implementation",
+          "path": "bin/echelon.sh"
+        },
+        {
+          "type": "tests",
+          "path": "tests/praxis-bootstrap.test.mjs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/native-installation.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T08:33:09.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T082616372Z-37505b14"
+      ],
+      "completedAt": "2026-09-28T08:33:09.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-06",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/praxis-remote.yml"
+        },
+        {
+          "type": "implementation",
+          "path": ".github/actions/praxis-remote/action.yml"
+        },
+        {
+          "type": "implementation",
+          "path": "scripts/praxis-remote-persist.sh"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/RemoteCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/praxis-remote-adapter.test.mjs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/remote-protocol.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T08:43:08.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T083411615Z-1bbb720a"
+      ],
+      "completedAt": "2026-09-28T08:43:08.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-07",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/RemoteCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Remote/Protocol.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/remote-agent-contract.md"
+        },
+        {
+          "type": "documentation",
+          "path": "AGENTS.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/remote-execute.test.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RemoteProtocolTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-28T08:54:50.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T084528004Z-c8f60b3c"
+      ],
+      "completedAt": "2026-09-28T08:54:50.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-09",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/TelemetryResolution.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Provenance/Actor.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/RemoteCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/remote-execute.test.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/TelemetryResolutionTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/remote-agent-contract.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T09:08:20.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T085516032Z-f48cc840"
+      ],
+      "completedAt": "2026-09-28T09:08:20.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-04",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Telemetry/Steps.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Telemetry/Usage.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileTelemetryUsageRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Remote/Protocol.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/TelemetryStepsUsageTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/remote-execute.test.mjs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/development-telemetry.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T09:25:42.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T092542114Z-d9bf566a"
+      ],
+      "completedAt": "2026-09-28T09:25:42.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-10",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "docs/remote-execution-operations.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/praxis-remote-adapter.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-28T09:27:52.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T092610074Z-43504edb"
+      ],
+      "completedAt": "2026-09-28T09:27:52.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-08",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/RemoteCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Remote/Protocol.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Contracts/Remote/RemoteJson.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/remote-execute.test.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RemoteProtocolTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/remote-protocol.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T09:39:58.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T092830624Z-ab391e0d"
+      ],
+      "completedAt": "2026-09-28T09:39:58.000Z"
+    },
+    {
       "id": "FSHARP-ONLY-REPOSITORY",
       "type": "maintenance",
       "state": "complete",
@@ -2924,11 +3294,22 @@
         "EXE-20260928T090915352Z-fb23943c"
       ],
       "completedAt": "2026-09-28T10:27:49.000Z"
+    },
+    {
+      "id": "FSHARP-ONLY-MAIN-MERGE",
+      "type": "maintenance",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-28T10:37:57.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T103758056Z-43f11e6e"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-28T10:27:49.000Z",
+  "updatedAt": "2026-09-28T10:37:57.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

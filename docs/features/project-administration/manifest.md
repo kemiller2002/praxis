@@ -10,7 +10,7 @@ of truth.
 
 - State, including presentation state: `.ros/hub/registry.json` and derived
   `.ros/hub/registry.md`; decision `DF-ROS-2026-A009` (implementation language:
-  `DF-ROS-2026-A041`, superseding `DF-ROS-2026-A033`'s Node web/hub exception).
+  `DF-ROS-2026-A042`, superseding `DF-ROS-2026-A033`'s Node web/hub exception).
 - Pure model and decisions: `src/Ros.Cli/Hub.fs` module `HubRegistry` (registry
   parse/render, Markdown projection, `register`/`unregister`/`find`, spoke
   repository-id resolution, spoke command lines, row annotation/merge, `ros hub`
