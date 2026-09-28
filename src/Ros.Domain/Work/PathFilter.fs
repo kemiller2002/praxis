@@ -61,7 +61,7 @@ module PathFilter =
     /// whatever a repository's `ignoredPaths` says. A repository's ros.json
     /// replaces the default ignore list wholesale, so repositories installed
     /// before `.echelon/` existed have no rule for it; without this invariant
-    /// the first `ros init`/`ros upgrade` in such a repository would make its
+    /// the first `praxis init`/`praxis upgrade` in such a repository would make its
     /// next `validate` demand work-item attribution for the tool's own
     /// installation manifest.
     let private alwaysIgnoredPatterns = [ ".echelon/**" ]

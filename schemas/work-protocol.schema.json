@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://repository-operating-system.local/schemas/work-protocol.schema.json",
-  "title": "ROS work protocol configuration",
+  "title": "Praxis work protocol configuration",
   "type": "object",
   "required": ["repository", "workProtocol"],
   "properties": {

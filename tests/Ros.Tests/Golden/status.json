@@ -63,7 +63,7 @@
       "activeExecutionCount": 2
     },
     "nextActions": [
-      "Correct the named file and field, then run './ros validate' again."
+      "Correct the named file and field, then run './praxis validate' again."
     ]
   }
 }

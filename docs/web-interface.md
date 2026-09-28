@@ -1,8 +1,8 @@
 # Web Interface
 
 A local web UI for the [work backlog](work-backlog-guide.md), served by the
-ROS command-line tool itself. It adds no new capability over the CLI --
-everything it does, `./ros` already does -- it's a second, visual way to
+Praxis command-line tool itself. It adds no new capability over the CLI --
+everything it does, `./praxis` already does -- it's a second, visual way to
 drive the same kernel. No Node.js, npm, or browser JavaScript is involved:
 the pages are HTML rendered by the F# CLI, and every action is a plain
 `<form method="post">`.
@@ -10,14 +10,14 @@ the pages are HTML rendered by the F# CLI, and every action is a plain
 ## Running it
 
 ```bash
-./ros web serve
+./praxis web serve
 ```
 
 This starts the server on `http://127.0.0.1:4310`, serving the repository at
 the current working directory (or `--root PATH`). Options:
 
 ```bash
-./ros --root /path/to/other/repo web serve --port 4321 --host 0.0.0.0
+./praxis --root /path/to/other/repo web serve --port 4321 --host 0.0.0.0
 ```
 
 Stop it with Ctrl+C (or SIGTERM).
@@ -54,17 +54,17 @@ implementation and tests evidence".
 
 ## Architecture
 
-This follows the same layering discipline as the rest of ROS's work
+This follows the same layering discipline as the rest of Praxis's work
 protocol: one place owns meaning, everything else is a thin adapter over it.
 
 ```
 browser (server-rendered HTML, plain form posts, no script)
         | HTTP
         v
-ros web serve (Ros.Cli.WebInterface: routing + rendering, no domain logic)
-        | runs this same CLI as a child process: ros --root ROOT work ...
+praxis web serve (Ros.Cli.WebInterface: routing + rendering, no domain logic)
+        | runs this same CLI as a child process: praxis --root ROOT work ...
         v
-ros work capture/update/attach/backlog-transition/start/resume/block/complete,
+praxis work capture/update/attach/backlog-transition/start/resume/block/complete,
 work list/show, validate --json, status --json  (the kernel)
 ```
 
@@ -88,7 +88,7 @@ work list/show, validate --json, status --json  (the kernel)
   as `application/octet-stream` with the display name as the filename.
 - **Stylesheet.** `web/styles.css` in the repository is served when present
   (so a project can restyle the pages); otherwise the copy compiled into the
-  CLI is used, so `web serve` works in any ROS repository.
+  CLI is used, so `web serve` works in any Praxis repository.
 
 ## API reference
 
@@ -100,21 +100,21 @@ accept form-encoded fields).
 
 | Method | Path | Equivalent CLI command |
 |---|---|---|
-| `GET` | `/api/work?tag=T&status=S` | `ros work list --tag T --status S` |
-| `GET` | `/api/work/ready?tag=T` | `ros work ready --tag T` |
-| `GET` | `/api/work/:id` | `ros work show ID` |
-| `POST` | `/api/work` `{title, tags, priority, description?, id?, source?, sourceReference?, actor?}` | `ros work capture --title ...` |
-| `POST` | `/api/work/:id/update` `{title?, description?, tags?, priority?}` | `ros work update --id ID ...` |
-| `POST` | `/api/work/:id/attachments` `multipart/form-data`, one or more `file` parts | `ros work attach --id ID --file PATH=NAME ...` |
+| `GET` | `/api/work?tag=T&status=S` | `praxis work list --tag T --status S` |
+| `GET` | `/api/work/ready?tag=T` | `praxis work ready --tag T` |
+| `GET` | `/api/work/:id` | `praxis work show ID` |
+| `POST` | `/api/work` `{title, tags, priority, description?, id?, source?, sourceReference?, actor?}` | `praxis work capture --title ...` |
+| `POST` | `/api/work/:id/update` `{title?, description?, tags?, priority?}` | `praxis work update --id ID ...` |
+| `POST` | `/api/work/:id/attachments` `multipart/form-data`, one or more `file` parts | `praxis work attach --id ID --file PATH=NAME ...` |
 | `GET` | `/api/work/:id/attachments/:attachmentId` | binary download (not a JSON route) |
-| `POST` | `/api/work/:id/ready` | `ros work backlog-transition --id ID --action ready` |
-| `POST` | `/api/work/:id/block` `{reason}` | `ros work block --id ID --reason ...` |
-| `POST` | `/api/work/:id/abandon` `{reason}` | `ros work backlog-transition --id ID --action abandon --reason ...` |
-| `POST` | `/api/work/:id/start` `{type, actor?}` | `ros work start --id ID --type ...` |
-| `POST` | `/api/work/:id/resume` `{actor?}` | `ros work resume --id ID` |
-| `POST` | `/api/work/:id/complete` `{evidence: [{type, path}], conclusion?, actor?}` | `ros work complete --id ID --evidence TYPE=PATH ...` |
-| `GET` | `/api/validate` | `ros validate --json` |
-| `GET` | `/api/status` | `ros status --json` |
+| `POST` | `/api/work/:id/ready` | `praxis work backlog-transition --id ID --action ready` |
+| `POST` | `/api/work/:id/block` `{reason}` | `praxis work block --id ID --reason ...` |
+| `POST` | `/api/work/:id/abandon` `{reason}` | `praxis work backlog-transition --id ID --action abandon --reason ...` |
+| `POST` | `/api/work/:id/start` `{type, actor?}` | `praxis work start --id ID --type ...` |
+| `POST` | `/api/work/:id/resume` `{actor?}` | `praxis work resume --id ID` |
+| `POST` | `/api/work/:id/complete` `{evidence: [{type, path}], conclusion?, actor?}` | `praxis work complete --id ID --evidence TYPE=PATH ...` |
+| `GET` | `/api/validate` | `praxis validate --json` |
+| `GET` | `/api/status` | `praxis status --json` |
 
 Every event is recorded at the server's current time (`--occurred-at`).
 `update` and `attachments` upsert a minimal backlog record if `:id` was only
@@ -128,7 +128,7 @@ attachment.
 
 `tests/Ros.Tests/WebInterfaceTests.fs` unit-tests the pure pieces (escaping,
 form and multipart parsing, routing, the operation-to-command mapping, the
-allowed-action projection) and starts the real `ros web serve` on a free
+allowed-action projection) and starts the real `praxis web serve` on a free
 loopback port against a temporary repository, driving it with `HttpClient`:
 the `ready` gate before `start`, evidence requirements on `complete`,
 terminal `abandon`, `block` dispatching to the backlog or the in-flight item,

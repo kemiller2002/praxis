@@ -232,8 +232,8 @@ module Installation =
 
     // ---------------------------------------------------------------------
     // Legacy compatibility: `ros-bootstrap init` (lib/bootstrap.mjs) writes
-    // these files, and `ros-bootstrap verify`, `ros validate` and the
-    // scaffolded CI workflow all read them. `ros init` writes exactly the
+    // these files, and `ros-bootstrap verify`, `praxis validate` and the
+    // scaffolded CI workflow all read them. `praxis init` writes exactly the
     // same files on a fresh install so that a repository is indistinguishable
     // whichever entry point installed it.
     // ---------------------------------------------------------------------
@@ -280,7 +280,7 @@ module Installation =
 
     /// The installer is deterministic, non-agent automation: its bookkeeping
     /// event is attributed to the tool itself (no provider or model applies,
-    /// and no ROS execution exists yet). `lib/bootstrap.mjs` writes the
+    /// and no Praxis execution exists yet). `lib/bootstrap.mjs` writes the
     /// identical canonical actor so both installers hash the same event.
     let installerActor: Ros.Domain.Provenance.Actor =
         { Kind = Ros.Domain.Provenance.ActorKind.Automation
@@ -428,7 +428,17 @@ module Installation =
             installation.Plan.Changes
             |> List.choose (function
                 | PlannedChange.CreateFile(path, _, _)
-                | PlannedChange.UpdateManagedFile(path, _, _) -> Map.tryFind path byPath
+                | PlannedChange.UpdateManagedFile(path, _, _)
+                | PlannedChange.MoveManagedFile(_, path, true) -> Map.tryFind path byPath
+                | _ -> None)
+
+        // Renamed files: (earlier path, destination). A rewritten one is
+        // staged above with the current content, so its earlier copy is only
+        // removed; one carrying local edits is moved as it is.
+        let moves =
+            installation.Plan.Changes
+            |> List.choose (function
+                | PlannedChange.MoveManagedFile(fromPath, toPath, rewrite) -> Some(fromPath, toPath, rewrite)
                 | _ -> None)
 
         let staged = ResizeArray<string * string * PayloadFile>()
@@ -470,10 +480,26 @@ module Installation =
             // Commit.
             let applied = ResizeArray<string>()
 
+            for fromPath, toPath, rewrite in moves do
+                match Payload.resolveWithin root fromPath, Payload.resolveWithin root toPath with
+                | Error message, _
+                | _, Error message -> failwith message
+                | Ok source, Ok destination ->
+                    if not rewrite then
+                        Directory.CreateDirectory(Path.GetDirectoryName destination: string) |> ignore
+                        File.Move(source, destination, false)
+                        applied.Add toPath
+
             for destination, stagePath, file in staged do
                 File.Move(stagePath, destination, true)
                 setMode destination file.Entry.Executable
                 applied.Add file.Entry.Path
+
+            for fromPath, _, rewrite in moves do
+                if rewrite then
+                    match Payload.resolveWithin root fromPath with
+                    | Error message -> failwith message
+                    | Ok source -> File.Delete source
 
             Ok(List.ofSeq applied)
         with error ->

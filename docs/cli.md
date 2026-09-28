@@ -1,6 +1,6 @@
 # CLI reference
 
-The canonical public interface is the `praxis` command (alias `ros`), a
+The canonical public interface is the `praxis` command (compatibility alias `ros`), a
 self-contained F# binary installed by the native installers (see
 [`native-installation.md`](native-installation.md)).
 
@@ -9,7 +9,8 @@ praxis <command>
 ```
 
 All five lifecycle commands, and the repository commands below them, are the
-same F# CLI. Launchers (`praxis`, `ros`, a project's `./ros`) only start it; no
+same F# CLI. Launchers (`praxis`, a project's `./praxis`, and the `ros`/`./ros`
+compatibility aliases) only start it; no
 decision is made anywhere else, and no Node.js or npm is involved
 (`DF-ROS-2026-A042`).
 
@@ -27,8 +28,8 @@ decision is made anywhere else, and no Node.js or npm is involved
 
 | Option | Meaning |
 |---|---|
-| `-h`, `--help` | Show help. `ros <command> --help` shows that command's help. |
-| `-V`, `--version` | Print `ros-fs <version>`, where the version is the release version (`release.json`). |
+| `-h`, `--help` | Show help. `praxis <command> --help` shows that command's help. |
+| `-V`, `--version` | Print `praxis <version>`, where the version is the release version (`release.json`). |
 | `--root PATH` | Repository to act on. Defaults to the current directory. |
 | `--package-root PATH` | Install from this scaffold directory instead of the one compiled into the binary. Rarely needed — see [Where the scaffold comes from](installation.md#where-the-scaffold-comes-from). |
 | `--json` | Emit machine-readable JSON on stdout. |
@@ -37,7 +38,7 @@ decision is made anywhere else, and no Node.js or npm is involved
 ## `init`
 
 ```
-ros init [--profile NAME] [--project NAME] [--dry-run] [--check] [--json] [--verbose]
+praxis init [--profile NAME] [--project NAME] [--dry-run] [--check] [--json] [--verbose]
 ```
 
 Inspects the repository, determines the installed state, calculates the
@@ -55,7 +56,7 @@ will not overwrite, and how ownership works.
 ## `status`
 
 ```
-ros status [--json] [--verbose]
+praxis status [--json] [--verbose]
 ```
 
 Read-only. Prints a JSON document covering work items, validation findings,
@@ -69,7 +70,7 @@ adds the full `installation.managedArtifacts` list.
 ## `verify`
 
 ```
-ros verify [--strict] [--json] [--verbose]
+praxis verify [--strict] [--json] [--verbose]
 ```
 
 Read-only. Checks that every tool-owned artifact the installation manifest
@@ -87,7 +88,7 @@ strict pass always implies a non-strict pass.
 ## `upgrade`
 
 ```
-ros upgrade [--dry-run] [--check] [--json] [--verbose]
+praxis upgrade [--dry-run] [--check] [--json] [--verbose]
 ```
 
 Resolves the ordered chain of migrations from the installed configuration
@@ -97,7 +98,7 @@ reconciles tool-owned files. See [`upgrading.md`](upgrading.md).
 ## `doctor`
 
 ```
-ros doctor [--strict] [--json] [--verbose]
+praxis doctor [--strict] [--json] [--verbose]
 ```
 
 Read-only. Reports every problem it can detect, each with the reason and,
@@ -177,7 +178,7 @@ was added:
     { "severity": "error", "code": "managed-artifact-missing",
       "message": "managed artifact is missing",
       "path": "framework/REP-SPECIFICATION.md",
-      "remedy": "Run 'ros init' to restore the missing tool-owned artifact." }
+      "remedy": "Run 'praxis init' to restore the missing tool-owned artifact." }
   ]
 }
 ```
@@ -260,17 +261,17 @@ The same executable carries the repository's artifact, work and telemetry
 commands. These predate the lifecycle interface and are unchanged:
 
 ```
-ros validate [--json]
-ros registry build [--dry-run] | registry check
-ros git status [--json]
-ros work <capture|list|ready|show|start|resume|block|complete|reconcile|update|attach|context|...>
-ros add "..."
-ros telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
-ros adapter <call|publish>
-ros provenance <identity|record|show|audit>
+praxis validate [--json]
+praxis registry build [--dry-run] | registry check
+praxis git status [--json]
+praxis work <capture|list|ready|show|start|resume|block|complete|reconcile|update|attach|context|...>
+praxis add "..."
+praxis telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
+praxis adapter <call|publish>
+praxis provenance <identity|record|show|audit>
 ```
 
-Run `ros --help` for the full argument list, and see
+Run `praxis --help` for the full argument list, and see
 [`work-protocol.md`](work-protocol.md),
 [`development-telemetry.md`](development-telemetry.md),
 [`work-adapter-contract.md`](work-adapter-contract.md) and
@@ -279,7 +280,7 @@ Run `ros --help` for the full argument list, and see
 ### `work reconcile`
 
 ```
-ros work reconcile --id ID --occurred-at TIMESTAMP --reason TEXT
+praxis work reconcile --id ID --occurred-at TIMESTAMP --reason TEXT
                    (--commit REV | --range BASE..HEAD) [--commit REV]* [--range BASE..HEAD]*
                    [--path PATH]* [--dry-run] [--json] [IDENTITY]
 ```
@@ -332,13 +333,14 @@ or `work capture`, and `telemetry start` accepts the same identity
 declaration. Each flag overrides the whitelisted environment:
 
 ```
---actor-kind agent|human|automation|unknown|x-...   (env ROS_ACTOR_KIND)
---agent ID | --actor ID                              (env ROS_ACTOR; stable identity)
+--actor-kind agent|human|automation|unknown|x-...   (env PRAXIS_ACTOR_KIND)
+--agent ID | --actor ID                              (env PRAXIS_ACTOR; stable identity)
 --provider P --model M --model-version V --runtime R --runtime-version V
---session S --conversation C --run R --subagent ID   (env ROS_TELEMETRY_*)
+--session S --conversation C --run R --subagent ID   (env PRAXIS_TELEMETRY_*)
 ```
 
-An invalid `--actor-kind` is an argument error (exit `2`).
+The legacy `ROS_*` names of these variables still work; the `PRAXIS_*` name
+wins when both are set. An invalid `--actor-kind` is an argument error (exit `2`).
 
 | Command | Purpose |
 |---|---|

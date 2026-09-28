@@ -105,6 +105,16 @@ module Payload =
         | true, value when value.ValueKind = JsonValueKind.True -> true
         | _ -> false
 
+    /// `replaces`: one earlier destination, or an array of them.
+    let private stringsProperty (element: JsonElement) name =
+        match element.TryGetProperty(name: string) with
+        | true, value when value.ValueKind = JsonValueKind.String -> [ value.GetString() ]
+        | true, value when value.ValueKind = JsonValueKind.Array ->
+            value.EnumerateArray()
+            |> Seq.choose (fun item -> if item.ValueKind = JsonValueKind.String then Some(item.GetString()) else None)
+            |> List.ofSeq
+        | _ -> []
+
     let sha256Hex (content: byte array) =
         content |> SHA256.HashData |> Convert.ToHexString |> _.ToLowerInvariant()
 
@@ -359,7 +369,8 @@ module Payload =
                                       Ownership = ownership
                                       Sha256 = sha256Hex content
                                       Executable = boolProperty entry "executable"
-                                      Integration = stringProperty entry "integration" }
+                                      Integration = stringProperty entry "integration"
+                                      Replaces = stringsProperty entry "replaces" }
                                   Content = content })
 
                 let entries =

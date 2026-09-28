@@ -16,7 +16,7 @@
 # release phase, that repository must be kemiller2002/praxis itself).
 #
 # Requirements: bash, git, gh (authenticated, with push access), python3,
-# npm (release phase), and a Praxis CLI (`praxis`, or `./ros` in a source
+# npm (release phase), and a Praxis CLI (`praxis`, or `./praxis` in a source
 # checkout; override with PRAXIS=...).
 #
 # Usage:
@@ -85,15 +85,21 @@ TARGET_SLUG="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
 
 if [ -n "${PRAXIS:-}" ]; then read -r -a PRAXIS_CMD <<<"$PRAXIS"
 elif command -v praxis >/dev/null; then PRAXIS_CMD=(praxis)
+elif [ -x ./praxis ]; then PRAXIS_CMD=(./praxis)
+# A checkout from before the rename has only the compatibility launcher.
 elif [ -x ./ros ]; then PRAXIS_CMD=(./ros)
 else die "no Praxis CLI found (install praxis, or set PRAXIS=...)"; fi
 praxis_cli() { "${PRAXIS_CMD[@]}" "$@"; }
 
 # The person running this script is the actor on its work items: declared,
-# never guessed. An explicit ROS_ACTOR/ROS_ACTOR_KIND wins.
-export ROS_ACTOR_KIND="${ROS_ACTOR_KIND:-human}"
-export ROS_ACTOR="${ROS_ACTOR:-$(gh api user -q .login)}"
-echo "repository: $TARGET_SLUG   actor: $ROS_ACTOR_KIND:$ROS_ACTOR   praxis: ${PRAXIS_CMD[*]}   dry-run: $DRY_RUN"
+# never guessed. An explicit PRAXIS_ACTOR/PRAXIS_ACTOR_KIND (or the legacy
+# ROS_ACTOR/ROS_ACTOR_KIND) wins.
+export PRAXIS_ACTOR_KIND="${PRAXIS_ACTOR_KIND:-${ROS_ACTOR_KIND:-human}}"
+export PRAXIS_ACTOR="${PRAXIS_ACTOR:-${ROS_ACTOR:-$(gh api user -q .login)}}"
+# Compatibility: Praxis releases from before the rename read only the legacy
+# names (DF-ROS-2026-A043).
+export ROS_ACTOR_KIND="$PRAXIS_ACTOR_KIND" ROS_ACTOR="$PRAXIS_ACTOR"
+echo "repository: $TARGET_SLUG   actor: $PRAXIS_ACTOR_KIND:$PRAXIS_ACTOR   praxis: ${PRAXIS_CMD[*]}   dry-run: $DRY_RUN"
 
 now() { date -u +%Y-%m-%dT%H:%M:%S.000Z; }
 

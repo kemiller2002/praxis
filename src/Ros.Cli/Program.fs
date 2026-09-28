@@ -29,7 +29,7 @@ open Aegis
 let Version = Lifecycle.Version
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | " + ReconciliationCommands.usage + " | " + RemoteCommands.usage + " | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--step STEP-ID] [--quiet] | telemetry step start|complete|fail [TARGET] --step STEP-ID [--name TEXT] [--reason TEXT] [--occurred-at TIMESTAMP] | telemetry usage [WORKITEM] [--by work-item|execution|step|provider|model|day] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | foundations verify [--json] | adapter publish --target FILE | ordo ingest --input FILE | ordo assess --input FILE | ordo observe-search --input FILE | ordo observe-effect --input FILE | ordo current | ordo handoff --revision REV --source SOURCE [--fact TEXT]* [--assumption TEXT]* [--unknown TEXT]* [--obligation TEXT]* [--next-action TEXT]* | " + ArchitectureCommands.usage + " | provenance identity [--json] [IDENTITY] | provenance record (--path PATH|--id ID) --operation {created|modified|reviewed|approved|superseded|migrated} [--reason TEXT] [--evidence REF]* [--derived-from REF]* [--execution EXE-ID] [--occurred-at TIMESTAMP] [--json] | provenance show ID|PATH [--json] | provenance audit [--json] | web serve [--port N (default 4310)] [--host H (default 127.0.0.1)] | hub register PATH [--name NAME] | hub unregister ID | hub repos | hub create REPO-ID TITLE [--tag T]* [--priority P] [--description D] [--id ID] [--actor NAME] [--file PATH[=NAME]]* | hub work [--repo ID] [--tag T]* [--status S] | hub serve [--port N (default 4320)] [--host H (default 127.0.0.1)]; IDENTITY (work start/resume/block/complete, add, telemetry start): [--actor-kind {agent|human|automation|unknown|x-...}] [--agent ID|--actor ID] [--provider P] [--model M] [--runtime R] ..."
+    "Usage: praxis [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | " + ReconciliationCommands.usage + " | " + RemoteCommands.usage + " | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--step STEP-ID] [--quiet] | telemetry step start|complete|fail [TARGET] --step STEP-ID [--name TEXT] [--reason TEXT] [--occurred-at TIMESTAMP] | telemetry usage [WORKITEM] [--by work-item|execution|step|provider|model|day] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | foundations verify [--json] | adapter publish --target FILE | ordo ingest --input FILE | ordo assess --input FILE | ordo observe-search --input FILE | ordo observe-effect --input FILE | ordo current | ordo handoff --revision REV --source SOURCE [--fact TEXT]* [--assumption TEXT]* [--unknown TEXT]* [--obligation TEXT]* [--next-action TEXT]* | " + ArchitectureCommands.usage + " | provenance identity [--json] [IDENTITY] | provenance record (--path PATH|--id ID) --operation {created|modified|reviewed|approved|superseded|migrated} [--reason TEXT] [--evidence REF]* [--derived-from REF]* [--execution EXE-ID] [--occurred-at TIMESTAMP] [--json] | provenance show ID|PATH [--json] | provenance audit [--json] | web serve [--port N (default 4310)] [--host H (default 127.0.0.1)] | hub register PATH [--name NAME] | hub unregister ID | hub repos | hub create REPO-ID TITLE [--tag T]* [--priority P] [--description D] [--id ID] [--actor NAME] [--file PATH[=NAME]]* | hub work [--repo ID] [--tag T]* [--status S] | hub serve [--port N (default 4320)] [--host H (default 127.0.0.1)]; IDENTITY (work start/resume/block/complete, add, telemetry start): [--actor-kind {agent|human|automation|unknown|x-...}] [--agent ID|--actor ID] [--provider P] [--model M] [--runtime R] ..."
 
 /// Removes one global `--name VALUE` option from the argument list wherever
 /// it appears, so the command parsers below only ever see their own flags.
@@ -583,7 +583,7 @@ let private applyBacklogTransition
             | BacklogTransitionDecision.Rejected(BacklogTransitionRejection.IllegalTransition _) -> illegalTransition ()
             | BacklogTransitionDecision.Rejected BacklogTransitionRejection.BlockReasonRequired -> Error "block requires --reason"
             | BacklogTransitionDecision.Allowed BacklogTransitionEffect.PromoteToLiveWork ->
-                Error "this command does not support 'start'; use production './ros work start'"
+                Error "this command does not support 'start'; use production './praxis work start'"
             | BacklogTransitionDecision.Allowed(BacklogTransitionEffect.ChangeState(newState, blockedChange, abandonedChange)) ->
                 FileBacklogQueueRepository.applyStateChange root id newState blockedChange abandonedChange timestamp contextItems
 
@@ -895,7 +895,7 @@ let private runAdd root (arguments: string list) =
 
         ProvenanceCommands.withResolvedActor rest (runWorkCapture root ("--title" :: title :: "--occurred-at" :: occurredAt :: rest))
     | _ ->
-        eprintfn "ERROR add requires a title, e.g. ros add \"Title\""
+        eprintfn "ERROR add requires a title, e.g. praxis add \"Title\""
         2
 
 /// Mirrors production `updateWorkUnlocked`/`findOrCreateQueueEntry`
@@ -1212,7 +1212,7 @@ let private renderWorkTransitionOutput (writtenItems: JsonArray) (eventIds: stri
     output.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2))
 
 /// Mirrors production `startWork`/`transitionUnlocked` (`tools/ros_cli.mjs`)
-/// for the `begin` action only -- the real effect behind `./ros work
+/// for the `begin` action only -- the real effect behind `./praxis work
 /// start`. Writes `.ros/context/current.json` and appends `.ros/events/
 /// events.jsonl` (`FileWorkContextRepository`) under the shared
 /// `work-protocol` lock and `work-state` recovery journal (MIG-05),
@@ -1327,7 +1327,7 @@ let private runWorkStart root arguments (eventActor: Actor) =
         2
 
 /// Mirrors production `transition(root, "resume", ids, options)`
-/// (`tools/ros_cli.mjs`) -- the effect behind `./ros work resume`. Live-work
+/// (`tools/ros_cli.mjs`) -- the effect behind `./praxis work resume`. Live-work
 /// only: unlike `begin`, `resume` never creates a new context item (an id
 /// absent from context is rejected) and never observes Git. Reuses `work
 /// start`'s effect infrastructure directly (`WorkContextPlanning.plan`,
@@ -1450,7 +1450,7 @@ let private runWorkResume root arguments (eventActor: Actor) =
         2
 
 /// Mirrors production `transition(root, "complete", ids, options)`
-/// (`tools/ros_cli.mjs`) -- the effect behind `./ros work complete`.
+/// (`tools/ros_cli.mjs`) -- the effect behind `./praxis work complete`.
 /// Live-work only, like `resume`: an id absent from context is rejected.
 /// Git is always observed (production's own `observedGitPaths` gate is
 /// `action === "complete" || ...`), and required completion evidence
@@ -2642,7 +2642,7 @@ let private runOrdoEffectObservation root arguments =
 let private runOrdoCurrent root arguments =
     match optionValue "--resolution-id" arguments with
     | None ->
-        eprintfn "ERROR ordo current requires --resolution-id; ROS never infers authority from observation recency"
+        eprintfn "ERROR ordo current requires --resolution-id; Praxis never infers authority from observation recency"
         2
     | Some resolutionId ->
         let repository = FileObservationRepository.create root
@@ -2700,7 +2700,7 @@ let private runOrdoHandoff root arguments =
         eprintfn "ERROR ordo handoff requires --revision and --source"
         2
 
-/// `ros --help` is public documentation, so it carries both the lifecycle
+/// `praxis --help` is public documentation, so it carries both the lifecycle
 /// commands and the repository commands this CLI has always had.
 let private fullHelp topic =
     match topic with
@@ -2715,7 +2715,7 @@ let private repositoryDispatch root packageRoot arguments =
 
     match arguments with
     | [ "version" ] ->
-        printfn "ros-fs %s" Version
+        printfn "praxis %s" Version
         0
     | []
     | [ "help" ]
@@ -2822,6 +2822,10 @@ let private execute arguments =
 
 [<EntryPoint>]
 let main arguments =
+    // Canonical PRAXIS_* variables reach every ROS_* reader (DF-ROS-2026-A043).
+    Ros.Domain.Naming.EnvironmentAliases.legacyAssignments (fun name -> Environment.GetEnvironmentVariable name |> Option.ofObj)
+    |> List.iter (fun (name, value) -> Environment.SetEnvironmentVariable(name, value))
+
     let version =
         System.Reflection.Assembly.GetExecutingAssembly().GetName().Version
         |> Option.ofObj

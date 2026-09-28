@@ -2,11 +2,11 @@
 
 ## Objective
 
-Bootstrap {{PROJECT_NAME}} as a greenfield Repository Operating System pilot.
+Bootstrap {{PROJECT_NAME}} as a greenfield Praxis pilot.
 
 ## Current state
 
-- ROS {{ROS_VERSION}} greenfield profile installed on {{CREATED_DATE}}.
+- Praxis {{ROS_VERSION}} greenfield profile installed on {{CREATED_DATE}}.
 - Project charter is a draft.
 - No first vertical slice, evidence record, hypothesis, or experiment has been
   accepted.
@@ -17,8 +17,8 @@ Bootstrap {{PROJECT_NAME}} as a greenfield Repository Operating System pilot.
 Run:
 
 ```bash
-./ros registry check
-./ros validate
+./praxis registry check
+./praxis validate
 ```
 
 ## Unresolved questions

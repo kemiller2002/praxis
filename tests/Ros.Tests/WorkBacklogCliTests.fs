@@ -14,7 +14,7 @@ open System.Text.Json.Nodes
 module WorkBacklogCliTests =
     /// Every retired backlog fixture: an installed, uncommitted repository
     /// with telemetry disabled. The live context keeps the installation work
-    /// item `ros init` records, which is why it appears in every queue.md.
+    /// item `praxis init` records, which is why it appears in every queue.md.
     let private withRepository prefix project (prepare: string -> unit) test =
         CliGolden.withRepository
             prefix

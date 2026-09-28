@@ -3,7 +3,7 @@
 ## Purpose
 
 Route changes to GitHub validation and native release declarations while
-keeping platform mechanics separate from ROS semantic decisions. Workflows
+keeping platform mechanics separate from Praxis semantic decisions. Workflows
 are execution hosts for the F# CLI and .NET tooling; they own no Node
 execution (`RQ-ROS-2026-A022`). External actions (for example
 `actions/checkout`) running on their own Node runtime are not repository code.
@@ -14,10 +14,10 @@ execution (`RQ-ROS-2026-A022`). External actions (for example
   installed workflow template (`starter/greenfield/.github/workflows/`), and
   `release.json`.
 - Transitions / commands / messages: GitHub push/pull-request triggers and
-  workflow `run` blocks invoking `dotnet`, `./ros`, the site tool, the
+  workflow `run` blocks invoking `dotnet`, `./praxis`, the site tool, the
   installers and `gh`.
 - Invariants and guards: build/test/validation exit status, the F#/.NET-only
-  invariant (`./ros architecture check`), release only from the canonical
+  invariant (`./praxis architecture check`), release only from the canonical
   `main` branch, and bundle checksums.
 - Capabilities / authority: `contents: read` for validation; `contents:
   write` only for creating the native GitHub Release; Pages permissions only
@@ -34,8 +34,8 @@ execution (`RQ-ROS-2026-A022`). External actions (for example
 
 ## Tests and verification
 
-- Boundary/contract checks run in CI: the F# test suite, `./ros architecture
-  check`, `./ros registry check`, `./ros validate`, the cross-platform
+- Boundary/contract checks run in CI: the F# test suite, `./praxis architecture
+  check`, `./praxis registry check`, `./praxis validate`, the cross-platform
   lifecycle job, and the site tool's own workflow assertions.
 - Integration/live verification: GitHub-hosted runs; no local workflow
   execution harness exists.
@@ -43,7 +43,7 @@ execution (`RQ-ROS-2026-A022`). External actions (for example
 ## Dependencies
 
 - Allowed direct dependencies: GitHub Actions, Git, the .NET SDK, Python for
-  the root legacy artifact-validator oracle, the GitHub CLI, and ROS CLI
+  the root legacy artifact-validator oracle, the GitHub CLI, and Praxis CLI
   commands. Not Node/npm.
 
 ## Modification boundaries

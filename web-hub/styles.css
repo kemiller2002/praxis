@@ -1,5 +1,5 @@
 /* Styles for the server-rendered project-administration hub
-   (`ros hub serve`). The page carries no script: every action is a plain
+   (`praxis hub serve`). The page carries no script: every action is a plain
    form post. */
 
 :root {

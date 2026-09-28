@@ -11,7 +11,7 @@ open System.Text.Json.Nodes
 open Ros.Cli
 open Ros.Domain.Work
 
-/// Starts a real `ros-fs ... serve` process on a free loopback port and
+/// Starts a real `praxis ... serve` process on a free loopback port and
 /// drives it over HTTP; `Dispose` always stops the process.
 type ServedProcess(root: string, command: string list) =
     let freePort () =
@@ -354,9 +354,9 @@ module WebInterfaceTests =
           { Name = "web: re-running the CLI uses the dotnet host plus the entry assembly only when hosted"
             Run =
               fun () ->
-                  Assert.equal ("/usr/bin/dotnet", [ "/app/ros-fs.dll" ]) (CliProcess.selfCommand "/usr/bin/dotnet" "/app/ros-fs.dll")
-                  Assert.equal ("C:\\dotnet\\dotnet.exe", [ "ros-fs.dll" ]) (CliProcess.selfCommand "C:\\dotnet\\dotnet.exe" "ros-fs.dll")
-                  Assert.equal ("/opt/ros/ros-fs", []) (CliProcess.selfCommand "/opt/ros/ros-fs" "") }
+                  Assert.equal ("/usr/bin/dotnet", [ "/app/praxis.dll" ]) (CliProcess.selfCommand "/usr/bin/dotnet" "/app/praxis.dll")
+                  Assert.equal ("C:\\dotnet\\dotnet.exe", [ "praxis.dll" ]) (CliProcess.selfCommand "C:\\dotnet\\dotnet.exe" "praxis.dll")
+                  Assert.equal ("/opt/praxis/praxis", []) (CliProcess.selfCommand "/opt/praxis/praxis" "") }
 
           { Name = "web: serve options default to loopback and validate the port"
             Run =

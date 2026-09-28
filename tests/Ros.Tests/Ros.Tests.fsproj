@@ -92,6 +92,7 @@
     <Compile Include="RemotePersistScriptTests.fs" />
     <Compile Include="PraxisBootstrapScriptTests.fs" />
     <Compile Include="TelemetryStepsUsageTests.fs" />
+    <Compile Include="PraxisNamingTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

@@ -21,7 +21,7 @@ module WorkLifecycleCliTests =
         [ "executionId"; "startedAt"; "discoveredAt"; "lastAssessedAt"; "recordedAt"; "collectedAt"; "measurementId"
           "commit"; "branch"; "dirtyPaths"; "dirty"; "commits"; "occurredAt"; "eventId"; "updatedAt"
           "telemetryExecutionIds"; "telemetryExecutions"
-          // The installation work item's own completedAt is set by `ros init`.
+          // The installation work item's own completedAt is set by `praxis init`.
           "completedAt" ]
 
     let private stripped (extra: string list) (node: JsonNode) =

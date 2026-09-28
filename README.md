@@ -1,6 +1,6 @@
 # Praxis
 
-**Repository Operating System (ROS) compatibility name:** `@echelon-foundry/repository-operating-system`
+Praxis is Echelon Foundry's repository operating system. Its package identity, kept for compatibility with existing installations, is `@echelon-foundry/repository-operating-system`.
 
 Repository initialization, verification, diagnostics, and upgrade tooling that
 makes research, engineering, decisions, and handoffs durable without relying on
@@ -12,7 +12,7 @@ The cross-cutting Aegis, Forma, and Folio application requirements are in [`requ
 
 ## What it provides
 
-Installing ROS into a repository gives it a governed operating environment:
+Installing Praxis into a repository gives it a governed operating environment:
 
 - a **work protocol** with legal `begin`/`block`/`resume`/`complete`
   transitions, configurable completion evidence, and durable attribution
@@ -48,7 +48,7 @@ praxis verify
 
 The native bundle is self-contained. A consuming machine does not need Node.js,
 npm, or a machine-wide .NET runtime. The established `ros` command remains a
-compatibility alias. The native release is the only distribution channel: the
+compatibility alias of `praxis`. The native release is the only distribution channel: the
 npm package was retired (`DF-ROS-2026-A042`).
 
 To install the Echelon engineering toolchain, including Ordo:
@@ -58,13 +58,14 @@ echelon setup
 ```
 
 Once installed, the repository can also run its own lifecycle through the
-`./ros` launcher `init` leaves behind:
+`./praxis` launcher `init` leaves behind (older installations may also have
+`./ros`, a compatibility alias of `./praxis`):
 
 ```bash
-./ros verify      # is the installation intact?
-./ros doctor      # if not: what is wrong, and the command that fixes it
-./ros init        # heal: restore anything tool-owned that is missing
-./ros upgrade     # update to this CLI's version
+./praxis verify   # is the installation intact?
+./praxis doctor   # if not: what is wrong, and the command that fixes it
+./praxis init     # heal: restore anything tool-owned that is missing
+./praxis upgrade  # update to this CLI's version
 ```
 
 ## New in 3.4.0
@@ -134,19 +135,19 @@ Once installed, the repository can also run its own lifecycle through the
   CI and agents.
 
 A repository installed by the retired `ros-bootstrap` keeps working, and
-`ros upgrade` adopts it. See [Compatibility](#compatibility).
+`praxis upgrade` adopts it. See [Compatibility](#compatibility).
 
 ## Commands
 
 | Command | Writes? | Purpose |
 |---|---|---|
-| `ros init` | yes | Bring the repository into a valid installed state. Idempotent. |
-| `ros status` | no | Report installation, validation and work state. |
-| `ros verify` | no | Check that the capability is correctly installed. |
-| `ros upgrade` | yes | Migrate an existing installation to this CLI's version. |
-| `ros doctor` | no | Diagnose problems and explain how to fix them. |
+| `praxis init` | yes | Bring the repository into a valid installed state. Idempotent. |
+| `praxis status` | no | Report installation, validation and work state. |
+| `praxis verify` | no | Check that the capability is correctly installed. |
+| `praxis upgrade` | yes | Migrate an existing installation to this CLI's version. |
+| `praxis doctor` | no | Diagnose problems and explain how to fix them. |
 
-Plus `ros --help` (and `ros <command> --help`) and `ros --version`.
+Plus `praxis --help` (and `praxis <command> --help`) and `praxis --version`.
 
 Full reference, including every option, the JSON schemas and the exit-code
 contract: [`docs/cli.md`](docs/cli.md).
@@ -167,19 +168,19 @@ create, what it will not overwrite, and what happens on a conflict.
 ### Dry run and check
 
 ```bash
-ros init --dry-run          # calculate and report the whole plan; change nothing
-ros init --check            # change nothing; exit 3 if any change would be needed
-ros upgrade --dry-run --json
+praxis init --dry-run    # calculate and report the whole plan; change nothing
+praxis init --check      # change nothing; exit 3 if any change would be needed
+praxis upgrade --dry-run --json
 ```
 
 ### Machine-readable mode
 
 ```bash
-ros status --json
-ros verify --json
-ros doctor --json
-ros init --dry-run --json
-ros upgrade --dry-run --json
+praxis status --json
+praxis verify --json
+praxis doctor --json
+praxis init --dry-run --json
+praxis upgrade --dry-run --json
 ```
 
 With `--json`, stdout carries one JSON document and nothing else; diagnostics
@@ -210,7 +211,7 @@ than on human-readable text. See [`docs/cli.md`](docs/cli.md#agent-usage).
 | `ros.json` | The repository's configuration. Yours to edit. |
 | `.echelon/ros.json` | The installation manifest: what is installed, at which version, and which artifacts it manages. |
 | `.ros/` | Work context, events, backlog and telemetry. |
-| `./ros` | The repository's own launcher. Current installs use `.echelon/ros.json.installedVersion`; legacy installs fall back to `ros.json.rosVersion`. |
+| `./praxis` | The repository's own launcher (`./ros` is a compatibility alias). Current installs use `.echelon/ros.json.installedVersion`; legacy installs fall back to `ros.json.rosVersion`. |
 
 `.echelon/` is the shared Echelon Foundry root. Each tool owns its own manifest
 there and they coexist cleanly.
@@ -223,7 +224,7 @@ may do to it:
 | Ownership | Meaning |
 |---|---|
 | **tool-owned** | Controlled by the tool; replaced on upgrade when unmodified, blocks when edited locally. |
-| **generated** | Derived from the repository's own artifacts; seeded once, then owned by `ros registry build`. |
+| **generated** | Derived from the repository's own artifacts; seeded once, then owned by `praxis registry build`. |
 | **user-owned** | Yours. Seeded once if absent, never rewritten. |
 | **shared** | Seeded by the tool, then yours. Only a declared migration changes it. |
 
@@ -246,8 +247,8 @@ version bump and a migration step.
 
 **Legacy compatibility.** The npm-distributed `ros-bootstrap init` and
 `ros-bootstrap verify` executables are retired (`DF-ROS-2026-A042`). A
-repository they installed keeps working untouched; `ros status` reports it as
-`upgrade-required`, and `ros upgrade` adopts the manifest while leaving the
+repository they installed keeps working untouched; `praxis status` reports it as
+`upgrade-required`, and `praxis upgrade` adopts the manifest while leaving the
 legacy snapshot in place.
 
 ## Supported platforms
@@ -257,7 +258,7 @@ legacy snapshot in place.
 The CLI ships as a self-contained single-file binary per platform, installed
 and checksum-verified by `scripts/install-native.sh` or
 `scripts/install-native.ps1` (or `echelon install praxis`). No Node.js, npm or
-.NET installation is required. A project's own `./ros` runs the version the
+.NET installation is required. A project's own `./praxis` runs the version the
 project pins, installing that release side by side on first use (under
 `~/.echelon/tools/praxis/<version>/`, or `$ECHELON_HOME`) without changing
 which version your global commands run. An unsupported platform fails with a
@@ -266,7 +267,7 @@ message naming the gap.
 ## How it is built
 
 ```
-native launcher (praxis / ros / ./ros, POSIX shell or .cmd)
+native launcher (praxis / ./praxis, or the ros / ./ros aliases; POSIX shell or .cmd)
     |
     v
 F# CLI (src/Ros.Cli)
@@ -292,16 +293,16 @@ python3 -m unittest discover -s tests                       # Python artifact-va
 
 Requires only the .NET 10 SDK (and Python 3 for the oracle tests). This
 repository is F#/.NET only (`RQ-ROS-2026-A022`): it owns no JavaScript,
-TypeScript, npm or Node tooling, and `./ros architecture check` (also part of
-`./ros validate`) fails, naming each path, if any appears.
+TypeScript, npm or Node tooling, and `./praxis architecture check` (also part of
+`./praxis validate`) fails, naming each path, if any appears.
 
-Inside this source checkout, `./ros` runs the locally built CLI directly:
+Inside this source checkout, `./praxis` runs the locally built CLI directly:
 
 ```bash
-./ros validate
-./ros architecture check
-./ros registry check
-./ros status
+./praxis validate
+./praxis architecture check
+./praxis registry check
+./praxis status
 ```
 
 ### Release
@@ -314,14 +315,14 @@ installer against them, and publishes the GitHub Release.
 
 `release.json`'s version is the single authoritative version source: the F#
 build reads it (see [`Directory.Build.props`](Directory.Build.props)) so
-`ros --version` can never drift from the released version.
+`praxis --version` can never drift from the released version.
 
 ## Troubleshooting
 
 | Symptom | Cause and fix |
 |---|---|
-| `ros init` exits `4` naming a tool-owned file | You edited a file the tool owns. Revert it, or move the change into a user-owned file. |
-| `ros verify` exits `3` | Run `ros doctor` — it names each problem and the command that fixes it. |
+| `praxis init` exits `4` naming a tool-owned file | You edited a file the tool owns. Revert it, or move the change into a user-owned file. |
+| `praxis verify` exits `3` | Run `praxis doctor` — it names each problem and the command that fixes it. |
 | `Unsupported operating system` / `Unsupported architecture` from the installer | That platform is not supported. Build from source in a checkout with `dotnet build Ros.slnx --configuration Release`. |
 | `installed configuration version N is newer than this CLI supports` | The repository was installed by a newer release. Upgrade the CLI. |
 
@@ -339,22 +340,22 @@ canonical research artifacts. Generated products must not silently replace or
 modify canonical records.
 
 Canonical knowledge is stored in Markdown artifacts; JSON registries are
-generated views, rebuilt with `./ros registry build`.
+generated views, rebuilt with `./praxis registry build`.
 
 ### Work protocol
 
 Provider-neutral work context, legal transitions, configurable completion
 evidence, durable attribution events, and idempotent file-adapter publication.
-A repository-local backlog (`ros add`, `ros work list|ready|show|start`) lets
+A repository-local backlog (`praxis add`, `praxis work list|ready|show|start`) lets
 work be captured before it has an externally assigned ID, and graduates into
 the same protocol via `work start`.
 
 See [`docs/work-protocol.md`](docs/work-protocol.md) and, for a UI over the same
-backlog, [`docs/web-interface.md`](docs/web-interface.md) (`./ros web serve`).
+backlog, [`docs/web-interface.md`](docs/web-interface.md) (`./praxis web serve`).
 
 External project-management products integrate through the normalized
 [work adapter contract](docs/work-adapter-contract.md); they are not embedded
-in ROS.
+in Praxis.
 
 ### Adaptive execution telemetry
 
@@ -365,16 +366,16 @@ agent activity, scope discovery and raw provider fields without changing the
 core model.
 
 ```bash
-./ros telemetry show WORK-ID
-./ros telemetry ingest WORK-ID --adapter openai-codex --input events.jsonl
-./ros telemetry summary WORK-ID
+./praxis telemetry show WORK-ID
+./praxis telemetry ingest WORK-ID --adapter openai-codex --input events.jsonl
+./praxis telemetry summary WORK-ID
 ```
 
 See [`docs/development-telemetry.md`](docs/development-telemetry.md).
 
 ### Central aggregation and reporting
 
-The default reporting project is `project-administration`. ROS ships an
+The default reporting project is `project-administration`. Praxis ships an
 installable profile for it:
 
 ```bash
@@ -383,7 +384,7 @@ praxis init \
   --project "Project Administration"
 ```
 
-That installs a hub with its own registry of other ROS repositories, a CLI and
+That installs a hub with its own registry of other Praxis repositories, a CLI and
 web UI to create work items in any of them, and a read-only aggregated view. It
 does not include ingestion, reconciliation, access control, retention, or
 reporting beyond that view — see
@@ -393,13 +394,13 @@ The ownership boundary is:
 
 | Owner | Responsibility |
 |---|---|
-| ROS | Generic work protocol, legal transitions, validation, installation behavior, and adapter contract |
+| Praxis | Generic work protocol, legal transitions, validation, installation behavior, and adapter contract |
 | Central reporting repository | Project administration, repository registration, portfolio data, ingestion, reconciliation, reporting rules, access control, retention, and operations |
 | Contributing repository | Implementation, evidence, local workflow mapping, and repository-specific instructions |
 
-Do not add central project-administration policy to the reusable ROS package.
-Move a rule into ROS only when it is intended to apply to every ROS-controlled
-repository.
+Do not add central project-administration policy to the reusable Praxis package.
+Move a rule into Praxis only when it is intended to apply to every
+Praxis-controlled repository.
 
 ### Repository principles
 
@@ -418,7 +419,7 @@ repository.
 | [`docs/cli.md`](docs/cli.md) | Every command, option, JSON schema and exit code |
 | [`docs/installation.md`](docs/installation.md) | `init` semantics, ownership model, manifest, profiles |
 | [`docs/upgrading.md`](docs/upgrading.md) | Migration model, supported paths, guarantees |
-| [`AGENTS.md`](AGENTS.md) | The agent contract for working inside a ROS repository |
+| [`AGENTS.md`](AGENTS.md) | The agent contract for working inside a Praxis repository |
 | [`docs/00-governance/`](docs/00-governance/README.md) | Governance, operating manual, engineering standards, REP specification |
 | [`docs/work-protocol.md`](docs/work-protocol.md) | Work transitions, evidence, attribution |
 | [`docs/development-telemetry.md`](docs/development-telemetry.md) | Telemetry schema, privacy boundary, provider integrations |

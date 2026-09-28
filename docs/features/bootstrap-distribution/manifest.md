@@ -6,8 +6,8 @@ Route changes to native acquisition, profile materialization, installation
 attribution and installation-integrity verification. The canonical entry
 point is the F# CLI's lifecycle interface: `init`, `status`, `verify`,
 `upgrade` and `doctor` (`Ros.Domain.Lifecycle`, `Ros.Application.Lifecycle`,
-`Ros.Infrastructure.Lifecycle`), installed as the `praxis`/`ros` commands by
-the native installers. The npm package, its Node launchers and
+`Ros.Infrastructure.Lifecycle`), installed as the `praxis` command (with the `ros`
+compatibility alias) by the native installers. The npm package, its Node launchers and
 `ros-bootstrap` are retired (`DF-ROS-2026-A042`).
 
 ## Ownership
@@ -21,8 +21,9 @@ the native installers. The npm package, its Node launchers and
 - Transitions / commands / messages: the F# lifecycle commands
   (`src/Ros.Cli/Lifecycle.fs`); `scripts/install-native.sh`/`.ps1` (download,
   checksum, install, optionally activate); `bin/praxis-native.sh`/`.cmd` (bundle
-  launchers); the scaffolded `./ros` (`starter/greenfield/ros`, plus
-  `ros.cmd`/`ros.ps1`), which only resolves the pinned version, installs it
+  launchers); the scaffolded `./praxis` (`starter/greenfield/praxis`, plus
+  `praxis.cmd`/`praxis.ps1`, with `ros`/`ros.cmd`/`ros.ps1` as aliases that
+  exec it), which only resolves the pinned version, installs it
   side by side (`--no-activate`) when missing, and execs it.
 - Invariants and guards: every lifecycle decision is made in F#. The
   installers never activate or run a bundle whose SHA-256 does not match
@@ -37,10 +38,10 @@ the native installers. The npm package, its Node launchers and
 
 ## Interfaces
 
-- Inbound: `praxis`/`ros` and the lifecycle commands/options documented in
+- Inbound: `praxis` (alias `ros`) and the lifecycle commands/options documented in
   `docs/cli.md`; `install-native.sh [--version] [--install-base]
   [--no-activate]`, `install-native.ps1 [-Version] [-InstallBase]
-  [-NoActivate]`; a project's `./ros ARGS`.
+  [-NoActivate]`; a project's `./praxis ARGS` (or `./ros ARGS`).
 - Outbound: installed files/directories/modes, installation attribution JSON,
   stdout/stderr and process exit status.
 
@@ -50,7 +51,7 @@ the native installers. The npm package, its Node launchers and
   diagnosis rules, embedded payload equals the manifests' sources) and the
   end-to-end lifecycle tests in `tests/Ros.Tests` (real CLI against throwaway
   repositories, from a checkout and from the embedded payload alone).
-- `.github/workflows/ros-validation.yml` `lifecycle` job: init/verify/doctor
+- `.github/workflows/praxis-validation.yml` `lifecycle` job: init/verify/doctor
   on Linux, Windows and macOS.
 - `.github/workflows/native-release.yml`: builds every bundle and smoke-tests
   the installer and the installed `praxis`/`ros`/`echelon` commands.

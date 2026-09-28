@@ -1,4 +1,4 @@
-name: ROS validation
+name: Praxis validation
 
 # Every repository-owned step here runs .NET/F# (DF-ROS-2026-A042): no Node
 # runtime or npm install is part of building, testing or validating Praxis.
@@ -27,11 +27,15 @@ jobs:
       - name: Python artifact-validator oracle tests
         run: python3 -m unittest discover -s tests -v
       - name: F#/.NET-only repository invariant
-        run: ./ros architecture check
-      - run: ./ros registry check
-      - run: ./ros validate
+        run: ./praxis architecture check
+      - run: ./praxis registry check
+      - run: ./praxis validate
         env:
-          ROS_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+          PRAXIS_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+      # `ros` is a compatibility alias for `praxis` (DF-ROS-2026-A043): the
+      # same program, never a second implementation.
+      - name: Compatibility alias runs the same Praxis CLI
+        run: test "$(./ros --version)" = "$(./praxis --version)"
 
   # The lifecycle commands must work on every supported operating system,
   # straight from the F# CLI with its embedded scaffold payload.
@@ -51,7 +55,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cli="$GITHUB_WORKSPACE/src/Ros.Cli/bin/Release/net10.0/ros-fs.dll"
+          cli="$GITHUB_WORKSPACE/src/Ros.Cli/bin/Release/net10.0/praxis.dll"
           project="$RUNNER_TEMP/lifecycle-project"
           rm -rf "$project"
           mkdir -p "$project"

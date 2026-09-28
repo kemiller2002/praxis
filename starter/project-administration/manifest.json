@@ -56,6 +56,22 @@
       "policy": "preserve-existing"
     },
     {
+      "source": "starter/greenfield/praxis",
+      "destination": "praxis",
+      "template": false,
+      "executable": true
+    },
+    {
+      "source": "starter/greenfield/praxis.ps1",
+      "destination": "praxis.ps1",
+      "template": false
+    },
+    {
+      "source": "starter/greenfield/praxis.cmd",
+      "destination": "praxis.cmd",
+      "template": false
+    },
+    {
       "source": "starter/greenfield/ros",
       "destination": "ros",
       "template": false,
@@ -72,14 +88,21 @@
       "template": false
     },
     {
+      "source": "starter/project-administration/praxis-hub",
+      "destination": "praxis-hub",
+      "template": false,
+      "executable": true
+    },
+    {
       "source": "starter/project-administration/ros-hub",
       "destination": "ros-hub",
       "template": false,
       "executable": true
     },
     {
-      "source": "starter/greenfield/.github/workflows/ros-validation.yml",
-      "destination": ".github/workflows/ros-validation.yml",
+      "source": "starter/greenfield/.github/workflows/praxis-validation.yml",
+      "destination": ".github/workflows/praxis-validation.yml",
+      "replaces": ".github/workflows/ros-validation.yml",
       "template": false,
       "integration": "github-actions",
       "ownership": "shared"

@@ -2,7 +2,7 @@
 id: GV-START-001
 title: Agent Startup Guide
 status: canonical
-version: 1.7.0
+version: 1.8.0
 owners:
   - repository-governance
 created: 2026-07-22
@@ -26,9 +26,11 @@ tags: [governance, agents, startup, provenance]
 
 ## Mission
 
-The Repository Operating System (ROS) makes research, engineering, decisions, and handoffs durable without relying on conversation history or tribal knowledge.
+Praxis, Echelon Foundry's repository operating system, makes research, engineering, decisions, and handoffs durable without relying on conversation history or tribal knowledge.
 
 ## Start Here
+
+Older installations may have `./ros`, a compatibility alias of `./praxis`; new instructions use Praxis (`DF-ROS-2026-A043`).
 
 1. Read [the governance index](docs/00-governance/README.md).
 2. Identify the task's scope and operating mode.
@@ -61,9 +63,9 @@ For substantial work, record: objective; work completed; files changed; decision
 
 ## Work Protocol
 
-Before meaningful mutation, identify the external work item and run `./ros work begin --id ID --occurred-at TIMESTAMP` (see the F# CLI note below for the timestamp — it must be the real current time, not an arbitrary one). That transition starts an execution-telemetry record; inspect `./ros work context ID`, classify the work, and ingest runtime telemetry that the current environment can expose. Preserve unknown provider fields through the sanitized raw layer and record unsupported/unavailable capability explicitly. Perform the bounded work, gather configured evidence, request a legal transition with `./ros work complete --id ID --occurred-at TIMESTAMP --evidence TYPE=PATH` (repeatable; finalizes active telemetry), then run `./ros registry build` and `./ros validate`. Attribute canonical records you create or change with `./ros provenance record` (see Agent Identity and Provenance below). Use `./ros work block --id ID --occurred-at TIMESTAMP --reason TEXT` and `./ros work resume --id ID --occurred-at TIMESTAMP` rather than hand-editing context. Use `./ros status` when resuming unfamiliar work. Meaningful committed changes require machine-readable attribution; see `docs/work-protocol.md` and `docs/development-telemetry.md`. If meaningful changes were committed while no work item was active, reconcile them after the fact with `./ros work reconcile --id ID --reason TEXT --commit REV --occurred-at TIMESTAMP` (Git-evidenced, recorded as post-hoc, never a substitute for beginning work). Never touch, rewrite, or recommit files to manufacture attribution, and never create a work item only to absorb changes.
+Before meaningful mutation, identify the external work item and run `./praxis work begin --id ID --occurred-at TIMESTAMP` (see the F# CLI note below for the timestamp — it must be the real current time, not an arbitrary one). That transition starts an execution-telemetry record; inspect `./praxis work context ID`, classify the work, and ingest runtime telemetry that the current environment can expose. Preserve unknown provider fields through the sanitized raw layer and record unsupported/unavailable capability explicitly. Perform the bounded work, gather configured evidence, request a legal transition with `./praxis work complete --id ID --occurred-at TIMESTAMP --evidence TYPE=PATH` (repeatable; finalizes active telemetry), then run `./praxis registry build` and `./praxis validate`. Attribute canonical records you create or change with `./praxis provenance record` (see Agent Identity and Provenance below). Use `./praxis work block --id ID --occurred-at TIMESTAMP --reason TEXT` and `./praxis work resume --id ID --occurred-at TIMESTAMP` rather than hand-editing context. Use `./praxis status` when resuming unfamiliar work. Meaningful committed changes require machine-readable attribution; see `docs/work-protocol.md` and `docs/development-telemetry.md`. If meaningful changes were committed while no work item was active, reconcile them after the fact with `./praxis work reconcile --id ID --reason TEXT --commit REV --occurred-at TIMESTAMP` (Git-evidenced, recorded as post-hoc, never a substitute for beginning work). Never touch, rewrite, or recommit files to manufacture attribution, and never create a work item only to absorb changes.
 
-No externally-assigned ID yet? Check `./ros work ready` for capturable, unblocked repository work before assuming none exists, and use `./ros add "..."` to record a newly discovered obligation instead of leaving it as an unfiled comment or dropped observation (`add` does not require `--occurred-at`; it defaults to the real current time). `./ros work start --id ID --occurred-at TIMESTAMP` (`begin` is also accepted) promotes a ready backlog item into the protocol above. This local backlog is repository-scoped triage, not a project-management system; see the "Local backlog" section of `docs/work-protocol.md`.
+No externally-assigned ID yet? Check `./praxis work ready` for capturable, unblocked repository work before assuming none exists, and use `./praxis add "..."` to record a newly discovered obligation instead of leaving it as an unfiled comment or dropped observation (`add` does not require `--occurred-at`; it defaults to the real current time). `./praxis work start --id ID --occurred-at TIMESTAMP` (`begin` is also accepted) promotes a ready backlog item into the protocol above. This local backlog is repository-scoped triage, not a project-management system; see the "Local backlog" section of `docs/work-protocol.md`.
 
 ## Agent Identity and Provenance
 
@@ -73,25 +75,26 @@ every provider and runtime, and equally to humans and automation. See
 [`docs/agent-provenance.md`](docs/agent-provenance.md).
 
 1. **Establish identity once, at the start of the execution.**
-   `./ros work begin` records who you are in the execution record, and every
+   `./praxis work begin` records who you are in the execution record, and every
    later command inherits that identity.
    - A known runtime (Codex, Claude Code, Gemini CLI, Copilot, GitHub
      Actions) is detected automatically.
-   - Otherwise declare yourself with `ROS_ACTOR_KIND`
-     (`agent|human|automation`), `ROS_ACTOR` (your stable agent ID),
-     `ROS_TELEMETRY_PROVIDER`, `ROS_TELEMETRY_MODEL`, and
-     `ROS_TELEMETRY_RUNTIME`, or pass the matching flags on `work begin`.
-   - Check the result with `./ros provenance identity`.
+   - Otherwise declare yourself with `PRAXIS_ACTOR_KIND`
+     (`agent|human|automation`), `PRAXIS_ACTOR` (your stable agent ID),
+     `PRAXIS_TELEMETRY_PROVIDER`, `PRAXIS_TELEMETRY_MODEL`, and
+     `PRAXIS_TELEMETRY_RUNTIME`, or pass the matching flags on `work begin`
+     (the legacy `ROS_*` names still work).
+   - Check the result with `./praxis provenance identity`.
 2. **Never impersonate** another agent, human, or execution. Never record work
-   under an execution you did not run. ROS refuses a contribution whose
+   under an execution you did not run. Praxis refuses a contribution whose
    actor contradicts its execution.
 3. **Never fabricate** a provider, model, version, session, or agent name.
-   Leave an unknown value unset: ROS records it as `unknown`, which is correct.
+   Leave an unknown value unset: Praxis records it as `unknown`, which is correct.
 4. **Preserve existing provenance.** Never edit, reorder, or delete another
    contributor's `provenance` entry.
 5. **Add your contribution; do not replace anyone else's.**
 6. **Attribute every requirement you create**:
-   `./ros provenance record --id RQ-... --operation created`.
+   `./praxis provenance record --id RQ-... --operation created`.
 7. **Attribute every meaningful modification you make** to a canonical record
    (requirement, decision, evidence, hypothesis, experiment, theory,
    journal, mission, research package): `--operation modified`. Use
@@ -103,7 +106,7 @@ every provider and runtime, and equally to humans and automation. See
 9. **Make generated evidence, findings, and results traceable** to your
    execution. Record them inside the work execution, and name supporting
    records with `--evidence`.
-10. **Run `./ros validate` before finishing.** Missing or contradictory
+10. **Run `./praxis validate` before finishing.** Missing or contradictory
     provenance on new work is an error.
 
 Identity recorded this way is provenance, not authentication. It is
@@ -131,7 +134,7 @@ repository.
 Installation, verification, diagnosis and upgrade go through the standard
 lifecycle interface of the F# CLI, distributed as self-contained native
 releases (`scripts/install-native.sh`, `scripts/install-native.ps1`, or
-`echelon install praxis`), which install the `praxis` and `ros` commands:
+`echelon install praxis`), which install the `praxis` command (and `ros`, its compatibility alias):
 
 ```
 praxis init
@@ -141,8 +144,8 @@ praxis upgrade
 praxis doctor
 ```
 
-In this source checkout the same commands are available as `./ros init`,
-`./ros verify` and so on. `init` is idempotent, every command is
+In this source checkout the same commands are available as `./praxis init`,
+`./praxis verify` and so on. `init` is idempotent, every command is
 non-interactive, `--dry-run` and `--check` change nothing, and `--json` puts a
 single document on stdout. Exit codes are a documented contract: `0` success,
 `2` invalid arguments, `3` verification failed, `4` incompatible installation,
@@ -158,15 +161,15 @@ Before editing a file the tool installed, check its ownership there: a
 
 ## F# CLI
 
-`./ros` in this source checkout, and in every project installed with `init`
+`./praxis` in this source checkout, and in every project installed with `init`
 (both profiles), runs the F# CLI (`DF-ROS-2026-A030`, `DF-ROS-2026-A042`).
 Praxis's own repository is F#/.NET only (`RQ-ROS-2026-A022`): it owns no
-JavaScript, TypeScript, npm or Node tooling, and `./ros architecture check`
-(also part of `./ros validate` here) fails on any such file. Do not add one;
-implement the behaviour in F#. In this checkout `./ros` is a shell launcher
+JavaScript, TypeScript, npm or Node tooling, and `./praxis architecture check`
+(also part of `./praxis validate` here) fails on any such file. Do not add one;
+implement the behaviour in F#. In this checkout `./praxis` is a shell launcher
 for the built CLI; if it reports it needs building, run
 `dotnet build Ros.slnx --configuration Release` first (CI always builds before
-`./ros` runs). In an installed project `./ros` runs the Praxis version the
+`./praxis` runs). In an installed project `./praxis` runs the Praxis version the
 project pins, installing that native release on first use.
 
 The command syntax is worth knowing rather than guessing from memory:
@@ -177,7 +180,7 @@ The command syntax is worth knowing rather than guessing from memory:
   time** (e.g. `` `date -u +%Y-%m-%dT%H:%M:%S.000Z` ``), not an arbitrary
   or backdated one: a telemetry execution's own `startedAt` always reads
   the real wall clock (matching production), and a later transition whose
-  supplied `--occurred-at` predates it fails `./ros validate` with a
+  supplied `--occurred-at` predates it fails `./praxis validate` with a
   spurious "capability state recording order must be chronological"
   finding — a real trap this decision's own preparation hit and diagnosed,
   not a defect to work around.
@@ -188,6 +191,6 @@ The command syntax is worth knowing rather than guessing from memory:
   remaining command-surface gaps (e.g. `telemetry finalize --input`, a
   deliberately unported adapter-ingestion-at-finalize path).
 
-This section's command-syntax notes apply equally to `./ros` in this
-source checkout and to any project's own bootstrapped `./ros`, since both
+This section's command-syntax notes apply equally to `./praxis` in this
+source checkout and to any project's own bootstrapped `./praxis`, since both
 run the same F# CLI.

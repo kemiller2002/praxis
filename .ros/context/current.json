@@ -3369,18 +3369,32 @@
     {
       "id": "PRAXIS-CLI-RENAME",
       "type": "maintenance",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-28T13:45:20.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "decision",
+          "path": "research/decisions/DF-ROS-2026-A043--praxis-canonical-name-ros-compatibility.md"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Naming/EnvironmentAliases.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PraxisNamingTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-28T14:30:51.000Z",
       "telemetryExecutionIds": [
         "EXE-20260928T134520493Z-befb2bfe"
-      ]
+      ],
+      "completedAt": "2026-09-28T14:30:51.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-28T13:45:20.000Z",
+  "updatedAt": "2026-09-28T14:30:51.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

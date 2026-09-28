@@ -77,7 +77,7 @@
     <EmbeddedResource Include="$(RosRepositoryRoot)schemas/**/*.*" Exclude="$(RosRepositoryRoot)schemas/provenance-actor.schema.json;$(RosRepositoryRoot)schemas/artifact-provenance.schema.json;$(RosRepositoryRoot)schemas/echelon-doctor-v1.schema.json;$(RosRepositoryRoot)schemas/echelon-inventory-v1.schema.json;$(RosRepositoryRoot)schemas/echelon-foundations-v1.schema.json" LogicalName="ros.payload/schemas/%(RecursiveDir)%(Filename)%(Extension)" />
     <EmbeddedResource Include="$(RosRepositoryRoot)templates/**/*.*" Exclude="$(RosRepositoryRoot)templates/application-foundations.json" LogicalName="ros.payload/templates/%(RecursiveDir)%(Filename)%(Extension)" />
     <!-- The web interface and hub pages are rendered by the CLI itself; only
-         their stylesheets ship, and `ros web serve`/`ros hub serve` fall back
+         their stylesheets ship, and `praxis web serve`/`praxis hub serve` fall back
          to these embedded copies when a repository has none on disk. -->
     <EmbeddedResource Include="$(RosRepositoryRoot)web/styles.css" LogicalName="ros.payload/web/styles.css" />
     <EmbeddedResource Include="$(RosRepositoryRoot)web-hub/styles.css" LogicalName="ros.payload/web-hub/styles.css" />

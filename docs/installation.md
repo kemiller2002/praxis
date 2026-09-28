@@ -61,7 +61,8 @@ inspect -> determine desired state -> calculate transition
 ### What it may create
 
 - The tool-owned scaffold for the chosen profile: governance documents, the
-  framework and standards, JSON schemas, templates, the `ros` launcher, and
+  framework and standards, JSON schemas, templates, the `praxis` launcher (with
+  `ros` as a compatibility alias), and
   the CI workflow.
 - `ros.json`, the repository's configuration, seeded from a template.
 - `.echelon/ros.json`, the installation manifest.
@@ -69,7 +70,7 @@ inspect -> determine desired state -> calculate transition
 - On a **first** install only, the legacy `.ros/installation.json` snapshot
   plus the installation's work attribution (`.ros/context/current.json`,
   `.ros/events/events.jsonl`, `.ros/work/queue.json`, `.ros/work/queue.md`), so
-  a repository installed by `ros init` is indistinguishable from one installed
+  a repository installed by `praxis init` is indistinguishable from one installed
   by the retired `ros-bootstrap init`.
 
 ### What it will not overwrite
@@ -83,7 +84,7 @@ inspect -> determine desired state -> calculate transition
   seeded once and then belong to you.
 - A **generated** file that already exists, such as anything under
   `registries/`. Its real content comes from your own artifacts via
-  `ros registry build`; copying the package's empty seed over a populated
+  `praxis registry build`; copying the package's empty seed over a populated
   registry would destroy data.
 - A **tool-owned** file you have edited locally. That stops the command rather
   than silently discarding your change.
@@ -112,7 +113,7 @@ later do to it.
 | Ownership | Definition | `init` / `upgrade` | `verify` |
 |---|---|---|---|
 | **tool-owned** | Controlled by the tool. | Replaced when byte-identical to what the installation recorded; a local edit blocks instead. | Presence **and** content are checked. |
-| **generated** | Derived from authoritative inputs already in the repository. | Seeded once. After that only the generator that owns it (`ros registry build`) rewrites it. | Presence only. |
+| **generated** | Derived from authoritative inputs already in the repository. | Seeded once. After that only the generator that owns it (`praxis registry build`) rewrites it. | Presence only. |
 | **user-owned** | Controlled by the repository. | Seeded once if absent, never rewritten. | Presence only; absence is a warning. |
 | **shared** | Seeded by the tool, then edited by the repository. | Seeded once. Only a declared migration may change it, and only when it is unmodified. | Presence only. |
 
@@ -131,21 +132,22 @@ executable. That is what lets a project run its own lifecycle:
 
 ```bash
 cd /path/to/your/repository
-./ros verify      # is the installation intact?
-./ros init        # heal: restore anything tool-owned that is missing
-./ros upgrade     # update to this CLI's version
+./praxis verify   # is the installation intact?
+./praxis init     # heal: restore anything tool-owned that is missing
+./praxis upgrade  # update to this CLI's version
 ```
 
 No package on disk, no network, and no `--package-root` are needed for any
-of those. A project scaffolded by `init` gets a `./ros` launcher (POSIX shell,
-plus `ros.cmd`/`ros.ps1` on Windows) that runs the Praxis version pinned in
+of those. A project scaffolded by `init` gets a `./praxis` launcher (POSIX shell,
+plus `praxis.cmd`/`praxis.ps1` on Windows; `ros`, `ros.cmd` and `ros.ps1` are
+compatibility aliases of it) that runs the Praxis version pinned in
 `.echelon/ros.json` (or `ros.json`), installing that release side by side on
 first use; that binary is self-sufficient from then on.
 
 The scaffold is resolved in this order:
 
 1. `--package-root PATH`, when given.
-2. `ROS_PACKAGE_ROOT`, when set.
+2. `PRAXIS_PACKAGE_ROOT` (or the legacy `ROS_PACKAGE_ROOT`), when set.
 3. A package directory (one with `release.json` and `starter/`) found by
    walking up from the executable, then from the working directory — this is
    what a source checkout hits.
@@ -193,7 +195,7 @@ changes under `.echelon/` as meaningful repository change for work attribution.
 | Profile | Installs |
 |---|---|
 | `greenfield` | The default. Governance, framework, schemas, templates, empty registries, the CLI launcher and the CI workflow. |
-| `project-administration` | The above plus the hub: a registry of other ROS repositories, a CLI and web UI to create work items in them, and an aggregated read-only view. See [`project-administration-hub.md`](project-administration-hub.md). |
+| `project-administration` | The above plus the hub: a registry of other Praxis repositories, a CLI and web UI to create work items in them, and an aggregated read-only view. See [`project-administration-hub.md`](project-administration-hub.md). |
 
 ```bash
 praxis init \
@@ -207,15 +209,15 @@ target folder.
 ## After installing
 
 ```bash
-./ros registry check
-./ros validate
+./praxis registry check
+./praxis validate
 ```
 
-The scaffolded repository can also run its own lifecycle — `./ros verify`,
-`./ros init` to heal, `./ros upgrade` to update — with nothing else installed; see
+The scaffolded repository can also run its own lifecycle — `./praxis verify`,
+`./praxis init` to heal, `./praxis upgrade` to update — with nothing else installed; see
 [Where the scaffold comes from](#where-the-scaffold-comes-from).
 
-The scaffolded repository gets its own `./ros`, which runs the same F# CLI
+The scaffolded repository gets its own `./praxis`, which runs the same F# CLI
 pinned to the version recorded in its `ros.json`. It does not read from, or
 link back to, the source checkout that installed it.
 

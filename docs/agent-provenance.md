@@ -4,7 +4,7 @@ Praxis records **who or what produced each meaningful piece of work**: an agent,
 a human, or an automated non-agent process. It also records **which run** did it.
 Attribution does not come from Git authorship, prose, or inference.
 
-The records live in three places, all extensions of the existing ROS
+The records live in three places, all extensions of the existing Praxis
 architecture:
 
 | Record | Where | What it answers |
@@ -45,7 +45,7 @@ Praxis records identity at two levels that it keeps separate.
     non-agent process), or `unknown`. A namespaced `x-...` extension is also
     allowed.
   - `id` is the stable identifier:
-    - an explicit `--agent`/`--actor`/`ROS_ACTOR` value always wins;
+    - an explicit `--agent`/`--actor`/`PRAXIS_ACTOR` value always wins;
     - otherwise a non-human actor whose provider and runtime are both known
       is identified as `provider/runtime`;
     - otherwise the id is `unknown`.
@@ -65,7 +65,7 @@ keys. They never merge, and neither is ever mistaken for the other.
 
 ### How an agent establishes identity: once per execution
 
-1. **Start the execution.** Run `./ros work begin --id ID --occurred-at NOW`.
+1. **Start the execution.** Run `./praxis work begin --id ID --occurred-at NOW`.
 
    Identity is discovered from a small whitelist of non-secret environment
    variables, and explicit declarations always win:
@@ -73,14 +73,17 @@ keys. They never merge, and neither is ever mistaken for the other.
    | Source | Examples |
    |---|---|
    | Flags on `work begin`/`resume`/`block`/`complete`, `add`, and `telemetry start` | `--actor-kind`, `--agent`, `--actor`, `--provider`, `--model`, `--runtime` |
-   | Environment variables set once per session | `ROS_ACTOR_KIND`, `ROS_ACTOR`, `ROS_TELEMETRY_PROVIDER`, `ROS_TELEMETRY_MODEL`, … |
+   | Environment variables set once per session | `PRAXIS_ACTOR_KIND`, `PRAXIS_ACTOR`, `PRAXIS_TELEMETRY_PROVIDER`, `PRAXIS_TELEMETRY_MODEL`, … |
    | Known agent runtimes | Codex, Claude Code, Gemini CLI, Copilot |
    | Known CI | GitHub Actions resolves as `automation` |
+
+   The legacy `ROS_*` names of these variables still work; the `PRAXIS_*`
+   name wins when both are set.
 
    Nothing is guessed. A local model server (`OLLAMA_HOST`) proves nothing
    about who is acting, so it implies no actor kind.
 
-2. **Check who you will be recorded as.** Run `./ros provenance identity`. It
+2. **Check who you will be recorded as.** Run `./praxis provenance identity`. It
    prints the resolved actor, the mechanism that determined it, and the active
    executions.
 
@@ -88,22 +91,22 @@ keys. They never merge, and neither is ever mistaken for the other.
    artifact you created or materially changed, run:
 
    ```bash
-   ./ros provenance record --path research/requirements/RQ-...md --operation created \
+   ./praxis provenance record --path research/requirements/RQ-...md --operation created \
      [--reason "why"] [--evidence EV-...] [--derived-from ID]
    ```
 
    The command inherits the actor from the active execution record, so the
    agent does not repeat its identity.
 
-4. **Finish.** `./ros work complete …` then `./ros validate`, which catches
+4. **Finish.** `./praxis work complete …` then `./praxis validate`, which catches
    missing or broken provenance.
 
 A recording inherits the execution's identity only when the recording process
-is plausibly that same run. ROS never attributes a contribution to another
+is plausibly that same run. Praxis never attributes a contribution to another
 actor's execution, or to another run of the same agent. The rules are:
 
 - **The process must have an identity of its own.** The identity can come from
-  a flag, from `ROS_ACTOR`/`ROS_ACTOR_KIND`, or from a detected agent runtime.
+  a flag, from `PRAXIS_ACTOR`/`PRAXIS_ACTOR_KIND`, or from a detected agent runtime.
   A process with no identity at all, such as a plain terminal, never inherits
   an execution implicitly: it must declare itself, or name the execution with
   `--execution`.
@@ -113,14 +116,14 @@ actor's execution, or to another run of the same agent. The rules are:
   session, a second Codex thread, or a second CI run is a different run.
 - **Implicit inheritance needs positive evidence.** A shared run key, or the
   same known stable actor id, must show the process is that run. Declaring
-  only `ROS_ACTOR_KIND=agent` agrees with every agent, so it proves nothing.
+  only `PRAXIS_ACTOR_KIND=agent` agrees with every agent, so it proves nothing.
 - **`--execution` is an explicit assertion.** Naming an execution means "I am
   acting within this run". A declared process must still agree with that
   execution. A process with no identity is taken at its word, so only the
   actor actually running the execution should use it; everyone else should
   declare themselves.
 - **An agent must record inside its own execution.**
-- **Several active executions.** ROS picks the one that matches the recording
+- **Several active executions.** Praxis picks the one that matches the recording
   process, or asks for `--execution`.
 - **Outside any execution.** A declared human or automation acting outside any
   execution (for example, a human approving while an agent is mid-run)
@@ -132,7 +135,7 @@ actor's execution, or to another run of the same agent. The rules are:
 
 Everything described here is **self-reported provenance**. A record saying
 `provider: openai` does not prove that OpenAI produced anything, and
-`kind: human, id: kevin` does not authenticate Kevin. ROS guards against
+`kind: human, id: kevin` does not authenticate Kevin. Praxis guards against
 *accidental* misattribution:
 
 - it resolves identity only from the current process;
@@ -141,7 +144,7 @@ Everything described here is **self-reported provenance**. A record saying
 - it cross-checks every contribution against its execution record;
 - it refuses re-attribution.
 
-ROS does **not** defend against a malicious process that lies about itself.
+Praxis does **not** defend against a malicious process that lies about itself.
 
 The model leaves room for stronger **attestation** later, without redesign:
 
@@ -158,7 +161,7 @@ The model leaves room for stronger **attestation** later, without redesign:
 
 Signed events, verified execution receipts, and key management are deferred.
 They belong behind the adapter boundary or in an attestation service, not in
-ROS core; see `DF-ROS-2026-A036`.
+Praxis core; see `DF-ROS-2026-A036`.
 
 ## Remote execution: requester, executor, and principal
 
@@ -191,7 +194,7 @@ inherited (`RemoteIdentity.childEnvironment`):
 - Every variable that identity discovery reads is removed, so the runner's
   own markers cannot be read as the agent's identity. These include
   `GITHUB_ACTIONS`, `GITHUB_RUN_ID`, an agent session variable, and a stray
-  `ROS_ACTOR`.
+  `PRAXIS_ACTOR`.
 - The requester's actor is set explicitly, with `unknown` for anything it
   did not state.
 - Only an allow-list of operational variables survives, such as `PATH`,
@@ -300,7 +303,7 @@ block, so provenance is queryable without parsing Markdown.
 
 ### Human and agent involvement
 
-`./ros provenance show ID` derives involvement from the recorded contributions,
+`./praxis provenance show ID` derives involvement from the recorded contributions,
 never from "last modifier":
 
 | Label | Meaning |
@@ -331,12 +334,12 @@ integration boundaries.
 
 ## Validation
 
-`./ros validate` includes provenance.
+`./praxis validate` includes provenance.
 
 - **Errors** fail validation.
 - **Warnings** are printed (and emitted with `"severity":"warning"` in
   `--json`) but do not fail validation.
-- **Informational findings** appear only in `./ros provenance audit`.
+- **Informational findings** appear only in `./praxis provenance audit`.
 
 | Situation | Severity |
 |---|---|
@@ -346,7 +349,7 @@ integration boundaries.
 | Enforced policy: artifact created on or after `requiredFrom` with no provenance | error |
 | Enforced policy: requirement (`RQ`, configurable) created on or after `requiredFrom` without a `created` contribution | error |
 | Enforced policy: new artifact whose `updated` date is more than one day after its latest contribution (unattributed modification; the one-day tolerance absorbs local-date versus UTC skew) | error |
-| Enforced policy: new artifact changed since the base revision while its contributions did not change (unattributed modification, detected from Git independently of dates; the base is the working tree against `HEAD`, or everything since `ROS_BASE_REF` in CI) | error |
+| Enforced policy: new artifact changed since the base revision while its contributions did not change (unattributed modification, detected from Git independently of dates; the base is the working tree against `HEAD`, or everything since `PRAXIS_BASE_REF` in CI) | error |
 | Invalid `ros.json` `provenance` block (enforced without a date) | error |
 | Malformed `actor` on an event | error |
 | Contribution names an execution with no local record (imported, pruned, or mistyped) | warning |
@@ -374,9 +377,9 @@ Provenance is enforced per repository in `ros.json`:
     are never required to acquire invented history.
   - Legacy authorship fields such as `author_agent` are free-text,
     self-declared, and unverified. `audit` and `show` report them under that
-    label; ROS never converts them into structured provenance.
+    label; Praxis never converts them into structured provenance.
 
-**Migration** is deliberately a no-op. ROS does not rewrite history and does
+**Migration** is deliberately a no-op. Praxis does not rewrite history and does
 not infer authorship from style, timestamps, filenames, or Git metadata. A
 legacy artifact gains provenance only when a real contributor records a real
 contribution: its first modification after the policy date adds an
@@ -394,7 +397,7 @@ contribution: its first modification after the policy date adds an
 
 Provenance travels with data rather than being stripped at a boundary.
 
-- **Work adapter publication.** `./ros adapter publish` copies events verbatim,
+- **Work adapter publication.** `./praxis adapter publish` copies events verbatim,
   so the external work system receives `actor` on work events and the full
   `artifact.contributed` records.
 - **Registries.** Generated registries include each artifact's `provenance`
@@ -404,8 +407,8 @@ Provenance travels with data rather than being stripped at a boundary.
   repository without the originating execution records reports those
   contributions as a *warning*, not an error, and keeps them intact.
 - **Ordo.** Ordo resolution observations already carry `provider`
-  `{id, model, …}`, and assessments carry a provider-neutral `assessor`. ROS
-  preserves raw Ordo records verbatim. `./ros ordo handoff` adds
+  `{id, model, …}`, and assessments carry a provider-neutral `assessor`. Praxis
+  preserves raw Ordo records verbatim. `./praxis ordo handoff` adds
   `producedBy: {actor, execution}`: the packaging actor in canonical form and
   its execution when exactly one active execution is evidently the same run
   (otherwise `null`, never a guess), so the receiving agent or system keeps
@@ -429,7 +432,7 @@ Provenance travels with data rather than being stripped at a boundary.
 This work adds no analytics subsystem. It records the facts that later
 analysis needs.
 
-`./ros provenance audit --json` emits:
+`./praxis provenance audit --json` emits:
 
 - one row per (artifact, contribution): artifact id, kind, path, contribution
   key, execution, operations, time, actor, and whether it is the origin;
@@ -460,18 +463,18 @@ support the following analyses by agent, model, or provider:
 
 ```bash
 # Claude Code session (identity discovered from CLAUDE_CODE_SESSION_ID)
-./ros work begin --id FEAT-9 --occurred-at "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
-./ros provenance record --id RQ-APP-2026-A007 --operation created --reason "From customer interview" --derived-from EV-APP-2026-A002
-./ros work complete --id FEAT-9 --occurred-at … --evidence implementation=… --evidence tests=…
+./praxis work begin --id FEAT-9 --occurred-at "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
+./praxis provenance record --id RQ-APP-2026-A007 --operation created --reason "From customer interview" --derived-from EV-APP-2026-A002
+./praxis work complete --id FEAT-9 --occurred-at … --evidence implementation=… --evidence tests=…
 
 # Codex session, later (identity discovered from CODEX_SESSION_ID)
-./ros work begin --id FEAT-12 --occurred-at …
-./ros provenance record --id RQ-APP-2026-A007 --operation modified --reason "Tighten acceptance criteria"
+./praxis work begin --id FEAT-12 --occurred-at …
+./praxis provenance record --id RQ-APP-2026-A007 --operation modified --reason "Tighten acceptance criteria"
 
 # A human reviewer, outside any execution
-ROS_ACTOR_KIND=human ROS_ACTOR=kevin ./ros provenance record --id RQ-APP-2026-A007 --operation approved
+PRAXIS_ACTOR_KIND=human PRAXIS_ACTOR=kevin ./praxis provenance record --id RQ-APP-2026-A007 --operation approved
 
-./ros provenance show RQ-APP-2026-A007
+./praxis provenance show RQ-APP-2026-A007
 # involvement: agent-created, agent-modified, human-approved
 ```
 
@@ -479,8 +482,8 @@ ROS_ACTOR_KIND=human ROS_ACTOR=kevin ./ros provenance record --id RQ-APP-2026-A0
 once:
 
 ```bash
-export ROS_ACTOR_KIND=agent ROS_ACTOR=acme-planner ROS_TELEMETRY_PROVIDER=acme ROS_TELEMETRY_RUNTIME=acme-cli
-./ros work begin --id FEAT-3 --occurred-at …    # model left unset: recorded as "unknown", never invented
+export PRAXIS_ACTOR_KIND=agent PRAXIS_ACTOR=acme-planner PRAXIS_TELEMETRY_PROVIDER=acme PRAXIS_TELEMETRY_RUNTIME=acme-cli
+./praxis work begin --id FEAT-3 --occurred-at …    # model left unset: recorded as "unknown", never invented
 ```
 
 **CI automation** needs no declaration. Under GitHub Actions the actor resolves

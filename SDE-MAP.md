@@ -1,6 +1,6 @@
 # Repository Semantic Map
 
-This map routes work to ROS semantic authorities and their local manifests. It
+This map routes work to Praxis semantic authorities and their local manifests. It
 does not define behavior; the linked decisions, contracts, source symbols, and
 tests do.
 
@@ -10,24 +10,24 @@ tests do.
 | Work lifecycle | Capture local obligations and enforce repository work transitions/evidence. | `.ros/work/`, `.ros/context/`, `src/**/Work/` | `docs/features/work-lifecycle/manifest.md` | Canonical live state remains repository-local JSON. |
 | Execution telemetry | Observe execution identity, lifecycle, metrics, provenance, and provider extensions. | `.ros/telemetry/`, `telemetry/`, `src/**/Telemetry/`, `src/Ros.Infrastructure/Work/FileTelemetry*` | `docs/features/execution-telemetry/manifest.md` | Unknown and unavailable are distinct from zero. |
 | Agent identity and provenance | Attribute work, events, and canonical records to explicit agent/human/automation actors and executions. | `src/**/Provenance/`, `research/requirements/`, `.ros/events/`, `docs/agent-provenance.md` | `docs/features/agent-provenance/manifest.md` | Provenance, not authentication; legacy records are never back-filled. |
-| Bootstrap and distribution | Materialize ROS profiles and verify installed package files. | `src/**/Lifecycle/`, `starter/`, `release.json`, `bin/`, `scripts/install-native.*` | `docs/features/bootstrap-distribution/manifest.md` | Native releases are the only acquisition edge (`DF-ROS-2026-A042`). |
-| Project administration | Aggregate repository-local work by invoking each repository's public ROS surface. | `src/Ros.Cli/Hub.fs`, `web-hub/styles.css`, `.ros/hub/` | `docs/features/project-administration/manifest.md` | Separate bounded context; not a work-state authority. |
+| Bootstrap and distribution | Materialize Praxis profiles and verify installed package files. | `src/**/Lifecycle/`, `starter/`, `release.json`, `bin/`, `scripts/install-native.*` | `docs/features/bootstrap-distribution/manifest.md` | Native releases are the only acquisition edge (`DF-ROS-2026-A042`). |
+| Project administration | Aggregate repository-local work by invoking each repository's public Praxis surface. | `src/Ros.Cli/Hub.fs`, `web-hub/styles.css`, `.ros/hub/` | `docs/features/project-administration/manifest.md` | Separate bounded context; not a work-state authority. |
 | Automation and release | Declare CI validation and native release orchestration. | `.github/workflows/`, `release.json` | `docs/features/automation/manifest.md` | Workflows host the F# CLI; external actions' own runtimes are not repository code. |
-| Local repository web interface | Present and invoke one repository's work capabilities. | `src/Ros.Cli/WebInterface.fs` (`ros web serve`), `web/styles.css` | `docs/features/work-lifecycle/manifest.md` | UI is an adapter over work semantics. |
-| Implementation-language policy | Keep repository-owned code F#/.NET only. | `src/**/Architecture/`, `ros.json` `implementationPolicy` | `research/requirements/RQ-ROS-2026-A022--fsharp-dotnet-only-repository.md` | Enforced by `./ros architecture check` and `./ros validate`. |
-| F# migration | Move stable ROS semantic authority into typed vertical slices under comparative verification. | `docs/migrations/fsharp/`, `src/`, `tests/` | `docs/migrations/fsharp/README.md` | Migration status and traceability only; not a second domain authority. |
+| Local repository web interface | Present and invoke one repository's work capabilities. | `src/Ros.Cli/WebInterface.fs` (`praxis web serve`), `web/styles.css` | `docs/features/work-lifecycle/manifest.md` | UI is an adapter over work semantics. |
+| Implementation-language policy | Keep repository-owned code F#/.NET only. | `src/**/Architecture/`, `ros.json` `implementationPolicy` | `research/requirements/RQ-ROS-2026-A022--fsharp-dotnet-only-repository.md` | Enforced by `./praxis architecture check` and `./praxis validate`. |
+| F# migration | Move stable Praxis semantic authority into typed vertical slices under comparative verification. | `docs/migrations/fsharp/`, `src/`, `tests/` | `docs/migrations/fsharp/README.md` | Migration status and traceability only; not a second domain authority. |
 
 ## Repository-wide composition
 
-- Composition/root entry point: `ros` (a shell launcher) runs the F# CLI,
+- Composition/root entry point: `praxis` (a shell launcher; `ros` is its compatibility alias) runs the F# CLI,
   `src/Ros.Cli/Program.fs`.
 - Shared contracts: `ros.json`, `schemas/`, `telemetry/metrics.json`, and
   accepted `research/decisions/` records.
 - Architecture checks: `tests/Ros.Tests/ArchitectureTests.fs` (project
-  references) and `./ros architecture check` (F#/.NET-only repository,
+  references) and `./praxis architecture check` (F#/.NET-only repository,
   `RQ-ROS-2026-A022`).
-- Boundary checks: the F# test suite (`tests/Ros.Tests`), `./ros registry
-  check` and `./ros validate`.
+- Boundary checks: the F# test suite (`tests/Ros.Tests`), `./praxis registry
+  check` and `./praxis validate`.
 
 ## Areas without separate manifests
 

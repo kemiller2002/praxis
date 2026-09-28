@@ -79,4 +79,5 @@ let main _ =
     @ RemotePersistScriptTests.tests
     @ PraxisBootstrapScriptTests.tests
     @ TelemetryStepsUsageTests.tests
+    @ PraxisNamingTests.tests
     |> TestRunner.run

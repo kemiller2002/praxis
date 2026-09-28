@@ -25,7 +25,7 @@ module StatusValidateCliTests =
     /// bootstrap (`ros-bootstrap init`), which recorded its state only in
     /// `.ros/installation.json` and wrote no `.echelon/ros.json`. That is what
     /// an existing consumer repository still looks like, so the fixture is
-    /// reproduced from a real `ros init`: the current manifest is removed and
+    /// reproduced from a real `praxis init`: the current manifest is removed and
     /// the legacy snapshot is written literally in the shape the bootstrap
     /// wrote (`installationManifest` in the retired lib/bootstrap.mjs).
     let private legacyInstallation root =

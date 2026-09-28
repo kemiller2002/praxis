@@ -5,7 +5,7 @@ open System.Text.Json
 open System.Text.Json.Nodes
 open Ros.Domain.Provenance
 
-/// JSON views emitted by `ros provenance ...` commands. Every view embeds
+/// JSON views emitted by `praxis provenance ...` commands. Every view embeds
 /// actors in the canonical `ActorJson` form so a consumer (another Echelon
 /// system, a metrics pipeline, CI) reads one shape everywhere.
 [<RequireQualifiedAccess>]

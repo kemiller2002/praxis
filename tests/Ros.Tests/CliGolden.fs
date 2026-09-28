@@ -8,7 +8,7 @@ open System.Text.Json.Nodes
 
 /// Fixture and golden-master helpers for the end-to-end CLI suites ported
 /// from the retired Node `*-fsharp-differential` tests. Every fixture is a
-/// real repository installed by the real F# `ros-fs init` (the retired suites
+/// real repository installed by the real F# `praxis init` (the retired suites
 /// used the legacy Node bootstrap, which installed the same starter payload);
 /// every golden master is the literal the Node suite had frozen, kept under
 /// `Golden/` with the install work-item id abstracted as `{install}`.
@@ -37,7 +37,7 @@ module CliGolden =
 
     let releasePackage () = release.Value.["name"].GetValue<string>()
 
-    /// The installation work item `ros init` records: ROS-INSTALL-<version>.
+    /// The installation work item `praxis init` records: ROS-INSTALL-<version>.
     let installWorkItemId () = "ROS-INSTALL-" + releaseVersion().Replace(".", "-")
 
     // ---------------------------------------------------------------- JSON
@@ -172,7 +172,7 @@ module CliGolden =
     let disableTelemetry root =
         updateJson root "ros.json" (fun config -> config.["telemetry"].["enabled"] <- JsonValue.Create false)
 
-    /// A fresh repository: `git init`, the real `ros-fs init --project`,
+    /// A fresh repository: `git init`, the real `praxis init --project`,
     /// then `prepare`, then (when `commit`) one baseline commit.
     let repository (prefix: string) (project: string) (prepare: string -> unit) (commit: bool) =
         let root = CliHarness.temporaryDirectory prefix

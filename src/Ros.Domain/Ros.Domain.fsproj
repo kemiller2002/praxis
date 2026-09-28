@@ -47,5 +47,6 @@
     <Compile Include="Lifecycle/Migration.fs" />
     <Compile Include="Lifecycle/Planning.fs" />
     <Compile Include="Architecture/ImplementationLanguagePolicy.fs" />
+    <Compile Include="Naming/EnvironmentAliases.fs" />
   </ItemGroup>
 </Project>

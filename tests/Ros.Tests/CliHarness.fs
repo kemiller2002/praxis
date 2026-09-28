@@ -5,7 +5,7 @@ open System.Diagnostics
 open System.IO
 open System.Text.Json.Nodes
 
-/// Shared end-to-end harness: runs the real built `ros-fs` CLI (and Git)
+/// Shared end-to-end harness: runs the real built `praxis` CLI (and Git)
 /// against disposable repositories, with every ambient identity variable
 /// removed so results never depend on the machine running the tests.
 [<RequireQualifiedAccess>]
@@ -15,7 +15,7 @@ module CliHarness =
           Out: string
           Err: string }
 
-    let cli = Path.Combine(AppContext.BaseDirectory, "ros-fs.dll")
+    let cli = Path.Combine(AppContext.BaseDirectory, "praxis.dll")
 
     let identityVariables =
         [ "CLAUDE_CODE_SESSION_ID"; "CLAUDECODE"; "CLAUDE_CODE_ENTRYPOINT"; "CODEX_SESSION_ID"; "CODEX_THREAD_ID"
@@ -23,6 +23,7 @@ module CliHarness =
           "ROS_ACTOR"; "ROS_ACTOR_KIND"; "ROS_TELEMETRY_PROVIDER"; "ROS_TELEMETRY_RUNTIME"; "ROS_TELEMETRY_MODEL"
           "ROS_TELEMETRY_MODEL_VERSION"; "ROS_TELEMETRY_RUNTIME_VERSION"; "ROS_TELEMETRY_SESSION_ID"
           "ROS_TELEMETRY_CONVERSATION_ID"; "ROS_TELEMETRY_RUN_ID"; "ROS_BASE_REF"; "ROS_PACKAGE_ROOT" ]
+        @ Ros.Domain.Naming.EnvironmentAliases.canonicalNames
 
     /// Runs a process to completion. `environment` entries are applied after
     /// the identity variables are removed, so a test can set any of them back.
@@ -54,18 +55,18 @@ module CliHarness =
 
         result.Out.Trim()
 
-    /// `ros-fs --root ROOT ARGS...` with an explicit environment.
+    /// `praxis --root ROOT ARGS...` with an explicit environment.
     let rosWith (root: string) (environment: (string * string) list) (arguments: string list) =
         run "dotnet" ([ cli; "--root"; root ] @ arguments) environment
 
     let ros (root: string) (arguments: string list) = rosWith root [] arguments
 
-    /// Like `ros`, but fails the test unless the command exits 0.
+    /// Like `ros` (the harness helper that runs praxis), but fails the test unless the command exits 0.
     let rosOk (root: string) (arguments: string list) =
         let result = ros root arguments
 
         if result.Exit <> 0 then
-            failwith $"ros {String.Join(' ', arguments)} exited {result.Exit}: {result.Err}{result.Out}"
+            failwith $"praxis {String.Join(' ', arguments)} exited {result.Exit}: {result.Err}{result.Out}"
 
         result
 

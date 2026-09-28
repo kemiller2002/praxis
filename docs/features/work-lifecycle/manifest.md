@@ -292,8 +292,8 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 
 ## Interfaces
 
-- Inbound: `./ros add`, `./ros work ...`, `./ros adapter ...`, and HTTP routes
-  of `ros web serve` (`src/Ros.Cli/WebInterface.fs`, which runs these same
+- Inbound: `./praxis add`, `./praxis work ...`, `./praxis adapter ...`, and HTTP routes
+  of `praxis web serve` (`src/Ros.Cli/WebInterface.fs`, which runs these same
   commands as a child process).
 - Outbound: versioned work/context/event/adapter JSON, queue Markdown,
   attachments, CLI JSON/text, and HTTP JSON/bytes.
@@ -411,8 +411,8 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   evidence, shallow clones, tampering, and validation afterwards).
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
-- Integration/live verification: `./ros status`, `./ros work context ID`,
-  `./ros work list`, `./ros work show ID`, and `./ros validate`.
+- Integration/live verification: `./praxis status`, `./praxis work context ID`,
+  `./praxis work list`, `./praxis work show ID`, and `./praxis validate`.
 
 ## Dependencies
 
@@ -423,7 +423,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 
 ## Modification boundaries
 
-- Normal: `tools/ros_cli.mjs`, `src/Ros.Cli/WebInterface.fs`, `web/styles.css`, work schemas,
+- Normal: `src/**/Work/`, `src/Ros.Cli/WebInterface.fs`, `web/styles.css`, work schemas,
   work docs, and their tests.
 - Escalation required: state mappings, legal transitions, evidence obligations,
   or authoritative-store changes because installed repositories depend on them.

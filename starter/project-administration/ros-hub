@@ -1,7 +1,4 @@
 #!/usr/bin/env sh
-# The project-administration hub, from this hub repository's root:
-# `./ros-hub ARGS` is `./ros hub ARGS` (see docs/project-administration-hub.md).
-set -eu
-
-hub_root="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
-exec "$hub_root/ros" --root "$hub_root" hub "$@"
+# Compatibility alias: `ros-hub` is the pre-rename name of `praxis-hub`
+# (DF-ROS-2026-A043). New instructions use ./praxis-hub.
+exec "$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)/praxis-hub" "$@"

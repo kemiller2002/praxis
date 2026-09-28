@@ -879,6 +879,19 @@
             "modified"
           ],
           "reason": "Renumbered from DF-ROS-2026-A041 (taken on main by remote execution); records that remote execution fits the rule (work item FSHARP-ONLY-MAIN-MERGE)"
+        },
+        "EXE-20260928T134520493Z-befb2bfe": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T14:30:36.088Z",
+          "operations": [
+            "modified"
+          ]
         }
       }
     },
@@ -912,6 +925,62 @@
       "decision"
     ],
     "title": "The repository is F#/.NET only; repository-owned Node/JavaScript/TypeScript is removed and prohibited by an automated invariant",
+    "updated": "2026-09-28",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-28",
+    "decision_type": "architecture",
+    "derived_from": [
+      "RQ-ROS-2026-A023"
+    ],
+    "id": "DF-ROS-2026-A043",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A043--praxis-canonical-name-ros-compatibility.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T134520493Z-befb2bfe": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T14:30:35.702Z",
+          "operations": [
+            "created"
+          ]
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A023",
+      "DF-ROS-2026-A042",
+      "DF-ROS-2026-A041",
+      "AGENTS.md",
+      "docs/cli.md",
+      "docs/native-installation.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "RQ-ROS-2026-A023"
+    ],
+    "tags": [
+      "naming",
+      "rename",
+      "praxis",
+      "cli",
+      "compatibility",
+      "decision"
+    ],
+    "title": "Praxis is the canonical product and CLI name; ros remains only for compatibility, persisted state and history",
     "updated": "2026-09-28",
     "version": "1.0.0"
   }

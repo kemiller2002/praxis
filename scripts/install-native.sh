@@ -101,7 +101,7 @@ else
 fi
 
 if [ "$ACTIVATE" -eq 0 ]; then
-  # A project's pinned ./ros launcher installs its version side by side
+  # A project's pinned ./praxis launcher installs its version side by side
   # without changing which version the user's global commands run.
   printf '%s\n' "Installed Praxis $VERSION to $target (not activated)"
   exit 0
@@ -114,6 +114,8 @@ fi
 rm -f "$current"
 ln -s "$target" "$current"
 
+# `praxis` is the command; `ros` is its pre-rename compatibility alias
+# (DF-ROS-2026-A043), the same program.
 for command_name in praxis ros; do
   cat > "$bin_dir/$command_name" <<EOF
 #!/usr/bin/env sh
@@ -135,7 +137,7 @@ EOF
 chmod +x "$bin_dir/echelon"
 
 printf '%s\n' "Installed Praxis $VERSION to $target"
-printf '%s\n' "Commands: $bin_dir/praxis, $bin_dir/ros, and $bin_dir/echelon"
+printf '%s\n' "Commands: $bin_dir/praxis (with the legacy $bin_dir/ros compatibility alias) and $bin_dir/echelon"
 case ":$PATH:" in
   *":$bin_dir:"*) ;;
   *) printf '%s\n' "Add $bin_dir to PATH to invoke Echelon tools from any directory." ;;

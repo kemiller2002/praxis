@@ -3,7 +3,7 @@ namespace Ros.Tests
 open System
 open System.Text.Json.Nodes
 
-/// End-to-end `ros-fs telemetry ingest --adapter ...` tests for the runtime
+/// End-to-end `praxis telemetry ingest --adapter ...` tests for the runtime
 /// adapters (openai-codex, the three hook adapters, the Claude statusline and
 /// the OpenTelemetry family), ported from the former
 /// tests/telemetry-ingest-{openai-codex,hook,claude-statusline,otel}-fsharp-differential.test.mjs.

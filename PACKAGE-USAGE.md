@@ -19,9 +19,10 @@ The native installers (`scripts/install-native.sh`,
 | `ros` | Compatibility alias for `praxis`. |
 | `echelon` | Echelon toolchain bootstrap and Doctor. |
 
-A project that `init` installed also has its own `./ros` (POSIX shell, plus
-`ros.cmd`/`ros.ps1` on Windows), which runs the Praxis version the project
-pins and installs that release side by side on first use.
+A project that `init` installed also has its own `./praxis` (POSIX shell, plus
+`praxis.cmd`/`praxis.ps1` on Windows), which runs the Praxis version the project
+pins and installs that release side by side on first use. Its `./ros`,
+`ros.cmd` and `ros.ps1` are compatibility aliases that run the same launcher.
 
 The npm package (`@echelon-foundry/repository-operating-system`, with its
 `ros`, `ros-fs` and `ros-bootstrap` executables) is retired
@@ -31,7 +32,7 @@ the installation identity recorded in `.echelon/ros.json`.
 ## Distribution model
 
 ```
-install-native.sh / install-native.ps1   (or a project's ./ros on first use)
+install-native.sh / install-native.ps1   (or a project's ./praxis on first use)
     |  downloads praxis-<platform> bundle + native-checksums.txt, verifies SHA-256
     v
 ~/.echelon/tools/praxis/<version>/praxis-bin   (self-contained F# binary)
@@ -42,7 +43,7 @@ F# domain and application core
 
 No Node.js, npm or .NET installation is needed on the consuming machine. The
 binary carries the scaffold it installs, compiled in, so a repository's own
-`./ros` can run `init` and `upgrade` with no package on disk and no network.
+`./praxis` can run `init` and `upgrade` with no package on disk and no network.
 See [Where the scaffold comes from](docs/installation.md#where-the-scaffold-comes-from).
 
 Bundles: `linux-x64`, `linux-musl-x64`, `linux-arm64`, `osx-x64`,
@@ -73,9 +74,9 @@ Before bumping `release.json`, run the same gate locally:
 ```bash
 dotnet build Ros.slnx --configuration Release
 dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll
-./ros architecture check
-./ros registry check
-./ros validate
+./praxis architecture check
+./praxis registry check
+./praxis validate
 ```
 
 The project is distributed under the MIT License.

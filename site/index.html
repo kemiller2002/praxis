@@ -621,10 +621,11 @@ registries/                         <span class="tree__note">generated indexes o
         </div>
         <aside class="start__aside" aria-labelledby="rename-title">
           <h3 id="rename-title">From ROS to Praxis</h3>
-          <p>Praxis was previously named ROS, the Repository Operating System. The rename is in progress, and both names are in use today:</p>
+          <p>Praxis was previously named ROS, the Repository Operating System. <code>praxis</code> is the command; <code>ros</code> remains only as a compatibility alias:</p>
           <ul>
             <li>The native installers, <code>install-native.sh</code> and <code>install-native.ps1</code>, install both <code>praxis</code> and <code>ros</code> commands, and both run the same program.</li>
-            <li>Help text and some output still say ROS.</li>
+            <li>Help text in release v3.4.0 and earlier still says ROS; the current source says Praxis.</li>
+            <li>Repositories keep their <code>.ros/</code> records and <code>ros.json</code> configuration; the rename does not move them.</li>
           </ul>
           <p>Same tool, same records. Commands on this page use <code>praxis</code>; wherever you have <code>ros</code>, the arguments are identical.</p>
           <p class="start__verified"><span class="status status--verified">Checked</span> The commands in step 2 were run against release v3.4.0 on Linux x64, after verifying the bundle&rsquo;s checksum. Other platforms were not tested for this page.</p>

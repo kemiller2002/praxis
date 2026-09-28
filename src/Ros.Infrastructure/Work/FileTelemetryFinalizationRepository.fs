@@ -759,7 +759,7 @@ module FileTelemetryFinalizationRepository =
         | TextConfidence of string
 
     /// The CLI-reachable shape of production's `recordTelemetryMetric`
-    /// input: every field `./ros telemetry record` can actually populate.
+    /// input: every field `./praxis telemetry record` can actually populate.
     /// `Unit`/`Currency` are explicit overrides of the registry's own
     /// `unit` (`None` means "use the registry's"); `Value` is passed through
     /// unvalidated (matching production's own `Number(rawValue)`, which

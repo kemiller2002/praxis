@@ -274,7 +274,7 @@
     {
       "metricId": "time.wall_ms",
       "status": "derived",
-      "reason": "ROS can derive this metric when its preconditions hold",
+      "reason": "Praxis can derive this metric when its preconditions hold",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -324,7 +324,7 @@
     {
       "metricId": "time.blocked_ms",
       "status": "derived",
-      "reason": "ROS can derive this metric when its preconditions hold",
+      "reason": "Praxis can derive this metric when its preconditions hold",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -733,7 +733,7 @@
       "history": [
         {
           "status": "derived",
-          "reason": "ROS can derive this metric when its preconditions hold",
+          "reason": "Praxis can derive this metric when its preconditions hold",
           "source": {
             "type": "environment",
             "name": "runtime-identity",
@@ -745,7 +745,7 @@
     {
       "metricId": "git.ending_dirty_files",
       "status": "derived",
-      "reason": "ROS can derive this metric when its preconditions hold",
+      "reason": "Praxis can derive this metric when its preconditions hold",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -755,7 +755,7 @@
     {
       "metricId": "git.commits_created",
       "status": "derived",
-      "reason": "ROS can derive this metric when its preconditions hold",
+      "reason": "Praxis can derive this metric when its preconditions hold",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -765,7 +765,7 @@
     {
       "metricId": "git.files_added",
       "status": "derived",
-      "reason": "ROS can derive this metric when its preconditions hold",
+      "reason": "Praxis can derive this metric when its preconditions hold",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -775,7 +775,7 @@
     {
       "metricId": "git.files_modified",
       "status": "derived",
-      "reason": "ROS can derive this metric when its preconditions hold",
+      "reason": "Praxis can derive this metric when its preconditions hold",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -785,7 +785,7 @@
     {
       "metricId": "git.files_deleted",
       "status": "derived",
-      "reason": "ROS can derive this metric when its preconditions hold",
+      "reason": "Praxis can derive this metric when its preconditions hold",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -795,7 +795,7 @@
     {
       "metricId": "git.files_renamed",
       "status": "derived",
-      "reason": "ROS can derive this metric when its preconditions hold",
+      "reason": "Praxis can derive this metric when its preconditions hold",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -805,7 +805,7 @@
     {
       "metricId": "git.binary_files_changed",
       "status": "derived",
-      "reason": "ROS can derive this metric when its preconditions hold",
+      "reason": "Praxis can derive this metric when its preconditions hold",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -815,7 +815,7 @@
     {
       "metricId": "git.lines_added",
       "status": "derived",
-      "reason": "ROS can derive this metric when its preconditions hold",
+      "reason": "Praxis can derive this metric when its preconditions hold",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -825,7 +825,7 @@
     {
       "metricId": "git.lines_deleted",
       "status": "derived",
-      "reason": "ROS can derive this metric when its preconditions hold",
+      "reason": "Praxis can derive this metric when its preconditions hold",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -835,7 +835,7 @@
     {
       "metricId": "tests.added",
       "status": "derived",
-      "reason": "ROS can derive this metric when its preconditions hold",
+      "reason": "Praxis can derive this metric when its preconditions hold",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -845,7 +845,7 @@
     {
       "metricId": "tests.modified",
       "status": "derived",
-      "reason": "ROS can derive this metric when its preconditions hold",
+      "reason": "Praxis can derive this metric when its preconditions hold",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -855,7 +855,7 @@
     {
       "metricId": "tests.removed",
       "status": "derived",
-      "reason": "ROS can derive this metric when its preconditions hold",
+      "reason": "Praxis can derive this metric when its preconditions hold",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1105,7 +1105,7 @@
     {
       "metricId": "documentation.files_changed",
       "status": "derived",
-      "reason": "ROS can derive this metric when its preconditions hold",
+      "reason": "Praxis can derive this metric when its preconditions hold",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1145,7 +1145,7 @@
     {
       "metricId": "quality.invalid_transitions_prevented",
       "status": "derived",
-      "reason": "ROS can derive this metric when its preconditions hold",
+      "reason": "Praxis can derive this metric when its preconditions hold",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1155,7 +1155,7 @@
     {
       "metricId": "telemetry.redactions",
       "status": "derived",
-      "reason": "ROS can derive this metric when its preconditions hold",
+      "reason": "Praxis can derive this metric when its preconditions hold",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1165,7 +1165,7 @@
     {
       "metricId": "telemetry.unknown_fields",
       "status": "derived",
-      "reason": "ROS can derive this metric when its preconditions hold",
+      "reason": "Praxis can derive this metric when its preconditions hold",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1175,7 +1175,7 @@
     {
       "metricId": "telemetry.raw_snapshots_omitted",
       "status": "derived",
-      "reason": "ROS can derive this metric when its preconditions hold",
+      "reason": "Praxis can derive this metric when its preconditions hold",
       "source": {
         "type": "environment",
         "name": "runtime-identity",

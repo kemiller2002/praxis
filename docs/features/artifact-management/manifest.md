@@ -31,8 +31,8 @@ replaceable projections.
 
 ## Interfaces
 
-- Inbound: artifact front matter, `./ros validate [--json]`, and
-  `./ros registry build|check`.
+- Inbound: artifact front matter, `./praxis validate [--json]`, and
+  `./praxis registry build|check`.
 - Outbound: findings on stdout/stderr, process exit status, eight managed
   registry JSON files, and the optional `registries/requirements.json` for
   requirement records (`RQ-`, `research/requirements/`). That registry is
@@ -47,7 +47,7 @@ replaceable projections.
   `docs/migrations/fsharp/README.md`.
 - Boundary/contract tests: `schemas/*.schema.json`, registry byte comparison,
   and old/new differential fixtures.
-- Integration/live verification: `./ros registry check` and `./ros validate`.
+- Integration/live verification: `./praxis registry check` and `./praxis validate`.
 
 ## Dependencies
 
@@ -59,7 +59,7 @@ replaceable projections.
 
 ## Modification boundaries
 
-- Normal: `research/`, `tools/ros_cli.mjs`, artifact schemas, artifact tests,
+- Normal: `research/`, `src/**/Artifacts/`, artifact schemas, artifact tests,
   and generated registries.
 - Escalation required: accepted decisions and schemas that alter an external
   artifact or registry contract; record the intentional migration.

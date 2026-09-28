@@ -9,7 +9,7 @@ open System.Text.Json.Nodes
 
 /// Helpers for the end-to-end CLI tests ported from the former Node test
 /// suite (telemetry, adapter, provenance, lifecycle and shell-script tests).
-/// Everything runs the real built `ros-fs` through `CliHarness`.
+/// Everything runs the real built `praxis` CLI through `CliHarness`.
 [<RequireQualifiedAccess>]
 module CliPort =
     /// The repository checkout this test binary was built from: the nearest
@@ -98,7 +98,7 @@ module CliPort =
         if result.Exit <> expected then
             failwith $"Expected exit {expected} but received {result.Exit}\nstdout: {result.Out}\nstderr: {result.Err}"
 
-    /// Runs `ros-fs --root ROOT ARGS` with the given text on standard input.
+    /// Runs `praxis --root ROOT ARGS` with the given text on standard input.
     let rosWithInput (root: string) (arguments: string list) (input: string) : CliHarness.Run =
         let startInfo = ProcessStartInfo("dotnet")
         startInfo.UseShellExecute <- false

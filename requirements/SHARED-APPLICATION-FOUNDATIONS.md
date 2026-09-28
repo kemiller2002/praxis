@@ -2,7 +2,7 @@
 
 Status: **Required**
 
-These requirements apply to Praxis/ROS runtime and UI surfaces when the named capability is applicable.
+These requirements apply to Praxis runtime and UI surfaces (including its `ros` compatibility aliases) when the named capability is applicable.
 
 ## Aegis
 

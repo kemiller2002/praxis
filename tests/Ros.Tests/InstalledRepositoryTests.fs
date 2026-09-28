@@ -31,7 +31,7 @@ module InstalledRepositoryTests =
                     CliPort.contains "Communication Engineering" (CliHarness.read root "README.md")
 
                     if not (OperatingSystem.IsWindows()) then
-                        Assert.isTrue (File.GetUnixFileMode(Path.Combine(root, "ros")).HasFlag UnixFileMode.UserExecute) "./ros must be executable"
+                        Assert.isTrue (File.GetUnixFileMode(Path.Combine(root, "praxis")).HasFlag UnixFileMode.UserExecute) "./praxis must be executable"
 
                     Assert.isTrue (File.Exists(Path.Combine(root, ".ros", "installation.json"))) "the installation snapshot must be written"
                     let context = CliPort.readJson root ".ros/context/current.json"
@@ -39,7 +39,7 @@ module InstalledRepositoryTests =
                     Assert.equal "complete" (CliPort.text (installItem["semanticState"]))
                     Assert.isTrue ((CliPort.text (installItem["id"])).StartsWith "ROS-INSTALL-") "the install is recorded as a work item"
                     Assert.isTrue (File.Exists(Path.Combine(root, ".ros", "events", "events.jsonl"))) "the install event must be written"
-                    Assert.isTrue (File.Exists(Path.Combine(root, ".github", "workflows", "ros-validation.yml"))) "the validation workflow must be installed"
+                    Assert.isTrue (File.Exists(Path.Combine(root, ".github", "workflows", "praxis-validation.yml"))) "the validation workflow must be installed"
                     ros root [ "registry"; "check" ] |> passes "registries are current"
                     ros root [ "validate" ] |> passes "validation passed") }
           { Name = "installed repository: the project name is derived from the folder when omitted"
@@ -120,7 +120,7 @@ module InstalledRepositoryTests =
                     init root [ "--profile"; "project-administration"; "--project"; "Org Hub" ]
 
                     if not (OperatingSystem.IsWindows()) then
-                        Assert.isTrue (File.GetUnixFileMode(Path.Combine(root, "ros-hub")).HasFlag UnixFileMode.UserExecute) "./ros-hub must be executable"
+                        Assert.isTrue (File.GetUnixFileMode(Path.Combine(root, "praxis-hub")).HasFlag UnixFileMode.UserExecute) "./praxis-hub must be executable"
 
                     CliPort.deepEqual "[]" ((CliPort.readJson root ".ros/hub/registry.json")["repos"])
                     CliPort.contains "Registered Repositories" (CliHarness.read root ".ros/hub/registry.md")

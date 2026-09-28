@@ -738,6 +738,19 @@
             "modified"
           ],
           "reason": "Renumbered from RQ-ROS-2026-A021 (taken on main by remote execution) (work item FSHARP-ONLY-MAIN-MERGE)"
+        },
+        "EXE-20260928T134520493Z-befb2bfe": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T14:30:36.538Z",
+          "operations": [
+            "modified"
+          ]
         }
       }
     },
@@ -757,6 +770,48 @@
       "invariant"
     ],
     "title": "Repository-owned implementation and automation are F#/.NET only",
+    "updated": "2026-09-28",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-28",
+    "id": "RQ-ROS-2026-A023",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A023--praxis-canonical-name.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T134520493Z-befb2bfe": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T14:30:35.274Z",
+          "operations": [
+            "created"
+          ]
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A043",
+      "AGENTS.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "naming",
+      "rename",
+      "praxis",
+      "cli",
+      "compatibility"
+    ],
+    "title": "Praxis is the canonical product and CLI name; ros is compatibility only",
     "updated": "2026-09-28",
     "version": "1.0.0"
   }

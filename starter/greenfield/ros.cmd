@@ -1,3 +1,4 @@
 @echo off
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0ros.ps1" %*
+rem Compatibility alias for praxis.cmd (DF-ROS-2026-A043).
+call "%~dp0praxis.cmd" %*
 exit /b %ERRORLEVEL%

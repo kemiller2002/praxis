@@ -475,7 +475,7 @@ module WebInterface =
                       "</table>" ]
 
         Html.page
-            "ROS Work Backlog"
+            "Praxis Work Backlog"
             (String.concat
                 "\n"
                 [ header status
@@ -567,7 +567,7 @@ module WebInterface =
             | None -> rawJson
 
         Html.page
-            $"{row.Id} · ROS Work Backlog"
+            $"{row.Id} · Praxis Work Backlog"
             (String.concat
                 "\n"
                 [ header status
@@ -611,7 +611,7 @@ module WebInterface =
 
     let renderMissing (status: StatusSummary option) (message: string) =
         Html.page
-            "Not found · ROS Work Backlog"
+            "Not found · Praxis Work Backlog"
             (String.concat "\n" [ header status; "<main>"; $"<p class=\"error\" role=\"alert\">{e message}</p>"; "<p><a href=\"/\">&larr; Queue</a></p>"; "</main>" ])
 
     /// The `validate --json` result as a findings table.
@@ -650,7 +650,7 @@ module WebInterface =
                 | _ -> $"<pre>{e json}</pre>"
 
         Html.page
-            "Validation · ROS Work Backlog"
+            "Validation · Praxis Work Backlog"
             (String.concat "\n" [ header status; "<main>"; "<section id=\"validation\"><h2>Validation</h2>"; body; "</section>"; "</main>" ])
 
     // ------------------------------------------------------------------
@@ -821,6 +821,6 @@ module WebInterface =
             HttpHost.serve
                 host
                 port
-                [ $"ROS web interface: http://{host}:{port} (repository root: {root})"
+                [ $"Praxis web interface: http://{host}:{port} (repository root: {root})"
                   "Bound to localhost by default; this server has no authentication -- do not expose it beyond your own machine without adding one." ]
                 (handle root)

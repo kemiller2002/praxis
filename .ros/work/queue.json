@@ -2395,10 +2395,34 @@
         "cli"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-28T13:45:19.000Z",
-      "updatedAt": "2026-09-28T13:45:19.000Z",
+      "updatedAt": "2026-09-28T14:30:51.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-INTERNAL-NAMESPACES",
+      "title": "Migrate internal Ros.* projects, namespaces, assemblies and Ros.slnx to Praxis.* (deferred from PRAXIS-CLI-RENAME, DF-ROS-2026-A043)",
+      "description": "Internal implementation names only; no user-facing effect. Separate change because of its blast radius (project files, namespaces, test fixtures, embedded resource names, Python oracle naming).",
+      "tags": [
+        "rename",
+        "follow-up"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-28T13:55:54.000Z",
+      "updatedAt": "2026-09-28T13:55:54.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

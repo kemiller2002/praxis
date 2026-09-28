@@ -15,14 +15,14 @@
           "path": ".ros/work/queue.json",
           "field": "status",
           "message": "invalid status 'not-a-status' for 'WI-BAD'",
-          "repair": "Correct the named file and field, then run './ros validate' again."
+          "repair": "Correct the named file and field, then run './praxis validate' again."
         },
         {
           "severity": "error",
           "path": "ros.json",
           "field": "telemetry.disabledReason",
           "message": "disabled telemetry requires an explicit reason",
-          "repair": "Correct the named file and field, then run './ros validate' again."
+          "repair": "Correct the named file and field, then run './praxis validate' again."
         }
       ]
     }
@@ -35,8 +35,8 @@
           "severity": "error",
           "path": "registries/decisions.json",
           "field": null,
-          "message": "registry is stale; run 'ros registry build'",
-          "repair": "Run './ros registry build'."
+          "message": "registry is stale; run 'praxis registry build'",
+          "repair": "Run './praxis registry build'."
         }
       ]
     }
@@ -50,26 +50,26 @@
           "path": "research/decisions/DF-BROKEN--test.md",
           "field": "id",
           "message": "filename must start with 'not valid!!--'",
-          "repair": "Correct the named file and field, then run './ros validate' again."
+          "repair": "Correct the named file and field, then run './praxis validate' again."
         },
         {
           "severity": "error",
           "path": "research/decisions/DF-BROKEN--test.md",
           "field": "id",
           "message": "invalid identifier 'not valid!!'",
-          "repair": "Correct the named file and field, then run './ros validate' again."
+          "repair": "Correct the named file and field, then run './praxis validate' again."
         },
         {
           "severity": "error",
           "path": "research/decisions/DF-BROKEN--test.md",
           "field": "work_items",
           "message": "meaningful change has no active or completed work-item attribution",
-          "repair": "Run './ros work begin WORK-ID', perform the change, then complete it with configured evidence."
+          "repair": "Run './praxis work begin --id WORK-ID --occurred-at TIMESTAMP', perform the change, then complete it with configured evidence."
         }
       ]
     },
     "textStatus": 1,
     "textStdout": "",
-    "textStderr": "ERROR research/decisions/DF-BROKEN--test.md:id: filename must start with 'not valid!!--'\n  REPAIR Correct the named file and field, then run './ros validate' again.\nERROR research/decisions/DF-BROKEN--test.md:id: invalid identifier 'not valid!!'\n  REPAIR Correct the named file and field, then run './ros validate' again.\nERROR research/decisions/DF-BROKEN--test.md:work_items: meaningful change has no active or completed work-item attribution\n  REPAIR Run './ros work begin WORK-ID', perform the change, then complete it with configured evidence.\nvalidation failed with 3 error(s)\n"
+    "textStderr": "ERROR research/decisions/DF-BROKEN--test.md:id: filename must start with 'not valid!!--'\n  REPAIR Correct the named file and field, then run './praxis validate' again.\nERROR research/decisions/DF-BROKEN--test.md:id: invalid identifier 'not valid!!'\n  REPAIR Correct the named file and field, then run './praxis validate' again.\nERROR research/decisions/DF-BROKEN--test.md:work_items: meaningful change has no active or completed work-item attribution\n  REPAIR Run './praxis work begin --id WORK-ID --occurred-at TIMESTAMP', perform the change, then complete it with configured evidence.\nvalidation failed with 3 error(s)\n"
   }
 }

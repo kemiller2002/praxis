@@ -34,7 +34,7 @@ module FileObservationRepository =
             let raw = File.ReadAllText path
             match parser raw with
             | Ok value -> Some value
-            | Error error -> failwith $"Corrupt ROS observation record '{path}': {error}"
+            | Error error -> failwith $"Corrupt Praxis observation record '{path}': {error}"
 
     let private listParsed root kind parser =
         let folder = directory root kind
@@ -45,7 +45,7 @@ module FileObservationRepository =
             |> Array.map (fun path ->
                 match parser (File.ReadAllText path) with
                 | Ok value -> value
-                | Error error -> failwith $"Corrupt ROS observation record '{path}': {error}")
+                | Error error -> failwith $"Corrupt Praxis observation record '{path}': {error}")
             |> Array.toList
 
     let create (root: string) : ObservationRepository =

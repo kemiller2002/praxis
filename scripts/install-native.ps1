@@ -50,7 +50,7 @@ try {
     }
 
     if ($NoActivate) {
-        # A project's pinned ros launcher installs its version side by side
+        # A project's pinned praxis launcher installs its version side by side
         # without changing which version the user's global commands run.
         Write-Host "Installed Praxis $Version to $target (not activated)"
         return
@@ -70,7 +70,7 @@ try {
     Set-Content -Encoding Ascii -Path (Join-Path $toolRoot "current-version") -Value $Version
 
     Write-Host "Installed Praxis $Version to $target"
-    Write-Host "Commands: praxis, ros, and echelon under $binDir"
+    Write-Host "Commands: praxis (with the legacy ros compatibility alias) and echelon under $binDir"
     Write-Host "Add $binDir to PATH if it is not already present."
 }
 finally {

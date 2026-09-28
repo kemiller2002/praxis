@@ -3,8 +3,8 @@
 From inside an installed repository, using its own launcher:
 
 ```bash
-./ros upgrade --dry-run --json   # see exactly what would change
-./ros upgrade                    # apply it
+./praxis upgrade --dry-run --json  # see exactly what would change
+./praxis upgrade                   # apply it
 ```
 
 That works with no package on disk and no network, because the CLI carries
@@ -49,15 +49,15 @@ that cannot complete does not start.
 | `1` | Current. Records `.echelon/ros.json`. | none; already current |
 | `> 1` | Installed by a newer release than the CLI you are running. | **refused**, exit `4` |
 
-`ros upgrade` on an already-current installation is a no-op that exits `0`.
-`ros upgrade --check` exits `3` when an upgrade is pending and `0` when it is
+`praxis upgrade` on an already-current installation is a no-op that exits `0`.
+`praxis upgrade --check` exits `3` when an upgrade is pending and `0` when it is
 not, without writing anything.
 
 ### The `0 -> 1` migration
 
 Adopts the `.echelon/ros.json` installation manifest. Its precondition is that
 a real installation exists to adopt — either `.ros/installation.json` or an
-existing `.echelon/ros.json`. For a legacy snapshot, ROS reads its recorded
+existing `.echelon/ros.json`. For a legacy snapshot, Praxis reads its recorded
 file hashes as prior ownership evidence and preserves its recorded profile.
 That lets an untouched old tool-owned file advance while still blocking a file
 that was edited after the legacy install. The legacy snapshot is **left in
@@ -92,10 +92,10 @@ to "what will you leave alone", and it is worth reading before a large upgrade.
   failure rather than exiting `0`. Nothing is silently swallowed.
 - The installation manifest is written last, so an interrupted upgrade leaves
   a manifest that under-claims rather than one claiming artifacts it never
-  wrote. Re-running `ros upgrade` then converges.
+  wrote. Re-running `praxis upgrade` then converges.
 
-Recovery from any partial state is the same command: `ros doctor` to see what
-is wrong, then `ros init` or `ros upgrade` to converge.
+Recovery from any partial state is the same command: `praxis doctor` to see what
+is wrong, then `praxis init` or `praxis upgrade` to converge.
 
 ## Compatibility policy
 
@@ -107,8 +107,14 @@ is wrong, then `ros init` or `ros upgrade` to converge.
 - The npm-distributed `ros-bootstrap init` and `ros-bootstrap verify` are
   retired (`DF-ROS-2026-A042`); what they installed is still upgradeable.
 - A repository installed by `ros-bootstrap init` keeps working with no action
-  from you. `ros status` reports it as `upgrade-required`; adopting the
-  manifest with `ros upgrade` is what moves it to `installed`.
+  from you. `praxis status` reports it as `upgrade-required`; adopting the
+  manifest with `praxis upgrade` is what moves it to `installed`.
+- Upgrading an installation made before the Praxis rename
+  (`DF-ROS-2026-A043`) adds the `praxis` launchers, turns the existing `ros`
+  launchers into compatibility aliases, and moves
+  `.github/workflows/ros-validation.yml` to `praxis-validation.yml` (an
+  edited workflow moves with its edits intact). `.ros/`, `ros.json` and
+  `.echelon/ros.json` keep their names.
 
 ## What is proven
 
@@ -131,6 +137,6 @@ Nothing stronger is claimed than what those tests exercise.
 ## Upgrading the CLI itself
 
 A scaffolded project pins its CLI version (`.echelon/ros.json`
-`installedVersion`, else `ros.json` `rosVersion`), and its `./ros` installs
+`installedVersion`, else `ros.json` `rosVersion`), and its `./praxis` installs
 and runs that version's native release. Running a newer `praxis upgrade`
 moves the pin to that release.

@@ -118,6 +118,15 @@ module HubRegistry =
         fromConfig
         |> Option.defaultWith (fun () -> Path.GetFileName(repoPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)))
 
+    /// A spoke's launcher: the canonical `praxis`, or the `ros` compatibility
+    /// launcher of a repository installed before the Praxis rename.
+    let launcherNames = [ "praxis"; "ros" ]
+
+    let resolveLauncher (exists: string -> bool) (repositoryPath: string) : string option =
+        launcherNames
+        |> List.map (fun name -> System.IO.Path.Combine(repositoryPath, name))
+        |> List.tryFind exists
+
     /// Adds a repository unless its path or id is already registered.
     let register
         (registry: HubRegistry)
@@ -154,7 +163,7 @@ module HubRegistry =
 
     let private tagFlags (tags: string list) = tags |> List.collect (fun tag -> [ "--tag"; tag ])
 
-    /// `./ros add` in the spoke. Files are attached with a separate `work
+    /// `./praxis add` in the spoke. Files are attached with a separate `work
     /// attach` (`attachArguments`): `add` itself takes no files.
     let addArguments (input: HubCreateInput) : string list =
         let flag name value =
@@ -214,7 +223,7 @@ module HubRegistry =
         node
 
     // ------------------------------------------------------------------
-    // `ros hub` argument parsing (pure)
+    // `praxis hub` argument parsing (pure)
     // ------------------------------------------------------------------
 
     /// Every `--tag`/`-t` value, comma-split and de-duplicated in order.
@@ -256,13 +265,13 @@ module HubRegistry =
             | _ -> Error $"{name} requires a value"
 
 /// The hub's effects: the registry files under `.ros/hub/`, and each spoke's
-/// own `./ros`, the only way the hub ever touches another repository.
+/// own `./praxis`, the only way the hub ever touches another repository.
 [<RequireQualifiedAccess>]
 module Hub =
     let defaultPort = 4320
 
     let usage =
-        "Usage: ros [--root PATH] hub register PATH [--name NAME] | hub unregister ID | hub repos | hub create REPO-ID \"title\" [--tag T] [--priority P] [--description D] [--id ID] [--actor NAME] [--file PATH[=NAME]] | hub work [--repo ID] [--tag T] [--status S] | hub serve [--port N] [--host H]"
+        "Usage: praxis [--root PATH] hub register PATH [--name NAME] | hub unregister ID | hub repos | hub create REPO-ID \"title\" [--tag T] [--priority P] [--description D] [--id ID] [--actor NAME] [--file PATH[=NAME]] | hub work [--repo ID] [--tag T] [--status S] | hub serve [--port N] [--host H]"
 
     let private registryPath root = Path.Combine(root, ".ros", "hub", "registry.json")
     let private registryMarkdownPath root = Path.Combine(root, ".ros", "hub", "registry.md")
@@ -286,9 +295,9 @@ module Hub =
         if not (Directory.Exists resolved) then
             Error $"not a directory: {resolved}"
         elif not (File.Exists(Path.Combine(resolved, "ros.json"))) then
-            Error $"not a ROS repository (no ros.json found): {resolved}"
-        elif not (File.Exists(Path.Combine(resolved, "ros"))) then
-            Error $"no './ros' executable found in: {resolved}"
+            Error $"not a Praxis repository (no ros.json found): {resolved}"
+        elif (HubRegistry.resolveLauncher File.Exists resolved).IsNone then
+            Error $"no './praxis' (or legacy './ros') launcher found in: {resolved}"
         else
             load root
             |> Result.bind (fun registry ->
@@ -309,30 +318,28 @@ module Hub =
 
     let private findRepo root id = load root |> Result.bind (fun registry -> HubRegistry.find registry id)
 
-    /// Runs the spoke's own `./ros` from its own directory and parses its JSON.
+    /// Runs the spoke's own `./praxis` (or, for a spoke installed before the
+    /// rename, its `./ros`) from its own directory and parses its JSON.
     let runSpoke (repo: HubRepo) (arguments: string list) : Result<JsonNode, string> =
-        let executable = Path.Combine(repo.Path, "ros")
-
-        if not (Directory.Exists repo.Path) then
-            Error $"registered path for '{repo.Id}' no longer exists: {repo.Path}"
-        elif not (File.Exists executable) then
-            Error $"'{repo.Id}' no longer has a './ros' executable at {repo.Path}"
-        else
+        match Directory.Exists repo.Path, HubRegistry.resolveLauncher File.Exists repo.Path with
+        | false, _ -> Error $"registered path for '{repo.Id}' no longer exists: {repo.Path}"
+        | true, None -> Error $"'{repo.Id}' no longer has a './praxis' (or legacy './ros') launcher at {repo.Path}"
+        | true, Some executable ->
             match CliProcess.run repo.Path executable arguments with
             | Error message -> Error $"{repo.Id}: {message}"
             | Ok result when result.Exit <> 0 -> Error $"{repo.Id}: {CliProcess.failureMessage result}"
             | Ok result ->
                 try
                     match JsonNode.Parse result.Out with
-                    | null -> Error $"{repo.Id}: empty output from ./ros"
+                    | null -> Error $"{repo.Id}: empty output from ./praxis"
                     | node -> Ok node
                 with error ->
-                    Error $"{repo.Id}: unreadable output from ./ros: {error.Message}"
+                    Error $"{repo.Id}: unreadable output from ./praxis: {error.Message}"
 
     let private asObject (repo: HubRepo) (node: JsonNode) =
         match node with
         | :? JsonObject as item -> Ok item
-        | _ -> Error $"{repo.Id}: ./ros did not return a work item"
+        | _ -> Error $"{repo.Id}: ./praxis did not return a work item"
 
     let createWork (root: string) (repoId: string) (input: HubCreateInput) : Result<JsonObject, string> =
         if String.IsNullOrWhiteSpace input.Title then
@@ -352,7 +359,7 @@ module Hub =
                         |> Result.bind (fun _ -> runSpoke repo [ "work"; "show"; id ])
                         |> Result.bind (asObject repo)
                         |> Result.map (fun shown -> HubRegistry.mergeCreated repo added (Some shown))
-                    | _ -> Error $"{repo.Id}: ./ros add did not report an id"))
+                    | _ -> Error $"{repo.Id}: ./praxis add did not report an id"))
 
     let private listWorkIn (repo: HubRepo) (tags: string list) (status: string option) : JsonObject list =
         match runSpoke repo (HubRegistry.listArguments tags status) with
@@ -363,7 +370,7 @@ module Hub =
                 | :? JsonObject as item -> Some(HubRegistry.annotate repo item)
                 | _ -> None)
             |> Seq.toList
-        | Ok _ -> [ HubRegistry.errorRow repo $"{repo.Id}: ./ros work list did not return an array" ]
+        | Ok _ -> [ HubRegistry.errorRow repo $"{repo.Id}: ./praxis work list did not return an array" ]
         | Error message -> [ HubRegistry.errorRow repo message ]
 
     /// Best-effort per repository: one unreachable spoke becomes one error
@@ -399,7 +406,7 @@ module Hub =
 
     let private result = ResultBuilder()
 
-    /// `ros hub ...` (except `serve`, which `HubWeb` owns).
+    /// `praxis hub ...` (except `serve`, which `HubWeb` owns).
     let run (root: string) (arguments: string list) : int =
         match arguments with
         | "register" :: path :: rest when not (path.StartsWith "--") ->
@@ -438,7 +445,7 @@ module Hub =
                 }
             )
         | "create" :: _ ->
-            eprintfn "ERROR create requires a repository ID and title, e.g. ros hub create REPO-ID \"Title\""
+            eprintfn "ERROR create requires a repository ID and title, e.g. praxis hub create REPO-ID \"Title\""
             1
         | "work" :: rest ->
             report (
@@ -461,7 +468,7 @@ module Hub =
             2
 
 /// The hub's HTTP adapter: server-rendered pages with plain form posts, plus
-/// the JSON API, both calling the same `Hub` functions as `ros hub`.
+/// the JSON API, both calling the same `Hub` functions as `praxis hub`.
 [<RequireQualifiedAccess>]
 type HubRoute =
     | ListRepos
@@ -641,12 +648,12 @@ module HubWeb =
                 |> sprintf "<table id=\"work-table\"><thead><tr><th>Repo</th><th>ID</th><th>Work</th><th>Status</th><th>Tags</th><th>Priority</th></tr></thead><tbody>\n%s\n</tbody></table>"
 
         Html.page
-            "ROS Project Administration Hub"
+            "Praxis Project Administration Hub"
             (String.concat
                 "\n"
                 [ "<header>"
                   "<h1>Project Administration Hub</h1>"
-                  "<p class=\"muted\">Creates work in other ROS repositories by running their own <code>./ros</code> -- it never edits a repository's files directly.</p>"
+                  "<p class=\"muted\">Creates work in other Praxis repositories by running their own <code>./praxis</code> -- it never edits a repository's files directly.</p>"
                   "</header>"
                   "<main>"
                   Html.flash query
@@ -735,6 +742,6 @@ module HubWeb =
             HttpHost.serve
                 host
                 port
-                [ $"ROS hub: http://{host}:{port} (hub root: {root})"
+                [ $"Praxis hub: http://{host}:{port} (hub root: {root})"
                   "Bound to localhost by default; this server has no authentication and can create work items and run commands in every registered repository -- do not expose it beyond your own machine without adding one." ]
                 (handle root)

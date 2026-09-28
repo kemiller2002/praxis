@@ -5,7 +5,7 @@ open System.Text.Json.Nodes
 
 /// End-to-end golden masters for `work decide`, `work plan`, `work
 /// context-plan`, `work backlog-decide` and `work backlog-promotion-plan`
-/// through the real `ros-fs` CLI (ported from the retired
+/// through the real `praxis` CLI (ported from the retired
 /// tests/work-fsharp-differential.test.mjs; goldens in Golden/work.json were
 /// frozen from the former Node implementation).
 [<RequireQualifiedAccess>]

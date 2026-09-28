@@ -11,7 +11,7 @@ type ProcessResult =
 
 /// Runs command lines as child processes. The web interface executes every
 /// work operation by invoking this same CLI (`selfCommand`), and the hub by
-/// invoking each registered repository's own `./ros`, so neither HTTP
+/// invoking each registered repository's own `./praxis`, so neither HTTP
 /// adapter can drift from what the command line does.
 [<RequireQualifiedAccess>]
 module CliProcess =

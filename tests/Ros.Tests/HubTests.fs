@@ -7,11 +7,11 @@ open Ros.Cli
 
 [<RequireQualifiedAccess>]
 module HubTests =
-    /// A spoke: a real initialized repository whose own `./ros` runs this
+    /// A spoke: a real initialized repository whose own `./praxis` runs this
     /// build of the CLI, exactly as a released spoke's launcher would.
     let private spoke (prefix: string) =
         let root = CliHarness.initializedRepository prefix None
-        let launcher = Path.Combine(root, "ros")
+        let launcher = Path.Combine(root, "praxis")
         File.WriteAllText(launcher, $"#!/bin/sh\nexec dotnet \"{CliHarness.cli}\" \"$@\"\n")
 
         if not (OperatingSystem.IsWindows()) then
@@ -216,21 +216,33 @@ module HubTests =
                       hubOk hubRoot [ "register"; repoA ] |> ignore
                       Http.contains "already registered" (hubError hubRoot [ "register"; repoB ])) }
 
-          { Name = "hub register rejects a non-ROS directory and a directory without ./ros"
+          { Name = "hub create reaches a spoke installed before the rename through its legacy ./ros launcher"
+            Run =
+              fun () ->
+                  withRepositories 1 (fun hubRoot spokes ->
+                      let legacy = spokes[0]
+                      File.Move(Path.Combine(legacy, "praxis"), Path.Combine(legacy, "ros"), true)
+                      let id = spokeId legacy
+                      hubOk hubRoot [ "register"; legacy ] |> ignore
+                      let created = hubOk hubRoot [ "create"; id; "Legacy spoke item" ]
+                      Assert.equal "Legacy spoke item" (Http.text created "title")) }
+
+          { Name = "hub register rejects a non-Praxis directory and a directory without a ./praxis or legacy ./ros launcher"
             Run =
               fun () ->
                   withRepositories 1 (fun hubRoot spokes ->
                       let plain = CliHarness.temporaryDirectory "not-ros"
 
                       try
-                          Http.contains "not a ROS repository" (hubError hubRoot [ "register"; plain ])
+                          Http.contains "not a Praxis repository" (hubError hubRoot [ "register"; plain ])
+                          File.Delete(Path.Combine(spokes[0], "praxis"))
                           File.Delete(Path.Combine(spokes[0], "ros"))
-                          Http.contains "no './ros' executable" (hubError hubRoot [ "register"; spokes[0] ])
+                          Http.contains "no './praxis' (or legacy './ros') launcher" (hubError hubRoot [ "register"; spokes[0] ])
                           Http.contains "not a directory" (hubError hubRoot [ "register"; Path.Combine(plain, "missing") ])
                       finally
                           CliHarness.removeDirectory plain) }
 
-          { Name = "hub create shells out to the spoke's own ./ros and the item lands in its real queue"
+          { Name = "hub create shells out to the spoke's own ./praxis and the item lands in its real queue"
             Run =
               fun () ->
                   withRepositories 1 (fun hubRoot spokes ->
@@ -315,7 +327,7 @@ module HubTests =
                       Http.contains "no longer exists" (Http.text (rows |> List.find (fun row -> Http.text row "repoId" = "alpha")) "error")) } ]
 
     let private scaffoldTests =
-        [ { Name = "hub scaffold: the project-administration profile ships no Node toolchain and ./ros-hub runs ./ros hub"
+        [ { Name = "hub scaffold: the project-administration profile ships no Node toolchain; ./praxis-hub (and the ros-hub alias) run ./praxis hub"
             Run =
               fun () ->
                   withRepositories 0 (fun hubRoot _ ->
@@ -330,14 +342,15 @@ module HubTests =
 
                       Assert.empty nodeArtifacts
                       Assert.isTrue (File.Exists(Path.Combine(hubRoot, "web-hub", "styles.css"))) "the hub stylesheet is scaffolded"
-                      let launcher = Path.Combine(hubRoot, "ros")
+                      let launcher = Path.Combine(hubRoot, "praxis")
                       File.WriteAllText(launcher, $"#!/bin/sh\nexec dotnet \"{CliHarness.cli}\" \"$@\"\n")
 
                       if not (OperatingSystem.IsWindows()) then
                           File.SetUnixFileMode(launcher, UnixFileMode.UserRead ||| UnixFileMode.UserWrite ||| UnixFileMode.UserExecute)
-                          let result = CliHarness.runIn (Some(Path.GetTempPath())) (Path.Combine(hubRoot, "ros-hub")) [ "repos" ] []
-                          Assert.equal 0 result.Exit
-                          Assert.equal "[]" (result.Out.Trim())) } ]
+                          for hubLauncher in [ "praxis-hub"; "ros-hub" ] do
+                              let result = CliHarness.runIn (Some(Path.GetTempPath())) (Path.Combine(hubRoot, hubLauncher)) [ "repos" ] []
+                              Assert.equal 0 result.Exit
+                              Assert.equal "[]" (result.Out.Trim())) } ]
 
     let private serverTests =
         [ { Name = "hub serve: register, create (JSON and multipart with a file), aggregate, unregister"

@@ -217,6 +217,6 @@ module GitArtifactCliTests =
               fun () ->
                   let result = cli [ "not-a-command" ]
                   CliGolden.expectExit 2 result
-                  CliGolden.contains "Usage: ros-fs" result.Err } ]
+                  CliGolden.contains "Usage: praxis" result.Err } ]
 
     let tests = gitTests @ artifactTests

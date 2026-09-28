@@ -4,7 +4,7 @@ open System
 open System.IO
 open System.Text.Json.Nodes
 
-/// End-to-end `ros-fs telemetry ...` tests (show, adapters, summary,
+/// End-to-end `praxis telemetry ...` tests (show, adapters, summary,
 /// finalize, record, ingest, classify, start, validate), ported from the
 /// former tests/telemetry-*-fsharp-differential.test.mjs files. The golden
 /// literals were captured from the retired Node implementation and frozen;
@@ -812,7 +812,7 @@ module TelemetryCliTests =
                            path, "classification.types", "work classifications must be unique"
                            path, "executionId", "execution filename must match executionId"
                            path, "identity.model", "identity value must be a string or null"
-                           path, "metrics[0].quality", "ROS-derived metric cannot be represented as observed or estimated"
+                           path, "metrics[0].quality", "Praxis-derived (ros-derived) metric cannot be represented as observed or estimated"
                            path, "metrics[0].value", "metric value must be a finite non-negative number"
                            path, "status", "invalid execution status 'weird'"
                            path, "workItemId", "work-item linkage is required" ]

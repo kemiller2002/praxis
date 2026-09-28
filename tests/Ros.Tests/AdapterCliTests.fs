@@ -4,7 +4,7 @@ open System
 open System.IO
 open System.Text.Json.Nodes
 
-/// End-to-end `ros-fs adapter call` and `ros-fs adapter publish` tests,
+/// End-to-end `praxis adapter call` and `praxis adapter publish` tests,
 /// ported from the former tests/adapter-{call,publish}-fsharp-differential.test.mjs.
 /// The adapter-call goldens (printed results and the resulting store) were
 /// captured from the retired Node reference adapter and frozen.

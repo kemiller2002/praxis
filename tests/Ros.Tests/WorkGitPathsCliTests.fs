@@ -78,7 +78,7 @@ module WorkGitPathsCliTests =
                       let plan = contextPlan root before "begin" [] []
                       Assert.equal [ "README.md"; "untracked.txt" ] (List.sort (strings plan.["baselineDirtyPaths"]))) }
 
-          { Name = "work git paths: context-plan excludes ROS housekeeping paths from completion paths"
+          { Name = "work git paths: context-plan excludes Praxis housekeeping paths from completion paths"
             Run =
               fun () ->
                   withRepository None None (fun root ->

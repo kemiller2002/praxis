@@ -36,6 +36,15 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Renumbered from RQ-ROS-2026-A021 (taken on main by remote execution) (work item FSHARP-ONLY-MAIN-MERGE)"
+    EXE-20260928T134520493Z-befb2bfe:
+      operations: [modified]
+      at: 2026-09-28T14:30:36.538Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
 ---
 
 # Requirement
@@ -57,11 +66,11 @@ An approved exception MUST name one exact path, or one directory, and cite the a
 ## Acceptance criteria
 
 - No `*.js`, `*.jsx`, `*.mjs`, `*.cjs`, `*.ts`, `*.tsx`, `package.json`, `package-lock.json`, `npm-shrinkwrap.json`, `yarn.lock`, `pnpm-lock.yaml`, `bun.lock`, `bun.lockb` or `tsconfig.json` is repository-owned, unless covered by an approved exception.
-- The check is automated in F#: `./ros architecture check` exits non-zero and prints each offending path; the same findings fail `./ros validate` when `ros.json` enables `implementationPolicy.prohibitNodeArtifacts`.
-- Repository workflows run .NET/F# (and the `./ros` launcher) for every step the repository owns; none installs npm packages or runs Node.
+- The check is automated in F#: `./praxis architecture check` exits non-zero and prints each offending path; the same findings fail `./praxis validate` when `ros.json` enables `implementationPolicy.prohibitNodeArtifacts`.
+- Repository workflows run .NET/F# (and the `./praxis` launcher) for every step the repository owns; none installs npm packages or runs Node.
 - No starter profile scaffolds a Node artifact into a project.
 
 ## Verification
 
 - `tests/Ros.Tests/ImplementationLanguagePolicyTests.fs` (policy classification, exceptions, CLI exit codes and paths, unified `validate`, scaffolded profiles, and this repository's own tree)
-- `.github/workflows/ros-validation.yml` step "F#/.NET-only repository invariant"
+- `.github/workflows/praxis-validation.yml` step "F#/.NET-only repository invariant"

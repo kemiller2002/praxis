@@ -365,7 +365,7 @@ module TelemetryValidation =
 
                 match definition with
                 | Some d when d.Collection = "ros-derived" && quality <> "derived" ->
-                    findings.Add(finding relative $"{field}.quality" "ROS-derived metric cannot be represented as observed or estimated")
+                    findings.Add(finding relative $"{field}.quality" "Praxis-derived (ros-derived) metric cannot be represented as observed or estimated")
                 | _ -> ()
 
                 if (id = "context.utilization" || id = "runtime.cpu_utilization") && (item.Value |> Option.defaultValue 0.0) > 1.0 then

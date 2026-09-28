@@ -1,4 +1,4 @@
-/// `ros architecture check`: enforces the repository's declared
+/// `praxis architecture check`: enforces the repository's declared
 /// implementation-language policy (`ros.json` `implementationPolicy`,
 /// DF-ROS-2026-A042). The same findings join the unified `validate`.
 module Ros.Cli.ArchitectureCommands
@@ -54,5 +54,5 @@ let run (root: string) (arguments: string list) =
     | [ "check" ] -> check root false
     | [ "check"; "--json" ] -> check root true
     | _ ->
-        eprintfn "ERROR usage: ros %s" usage
+        eprintfn "ERROR usage: praxis %s" usage
         2

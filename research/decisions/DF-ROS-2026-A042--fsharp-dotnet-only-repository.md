@@ -48,6 +48,15 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Renumbered from DF-ROS-2026-A041 (taken on main by remote execution); records that remote execution fits the rule (work item FSHARP-ONLY-MAIN-MERGE)"
+    EXE-20260928T134520493Z-befb2bfe:
+      operations: [modified]
+      at: 2026-09-28T14:30:36.088Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
 ---
 
 # Context
@@ -73,18 +82,18 @@ GitHub Actions that run on Node are not repository-owned code.
    is prohibited unless an accepted `DF-` decision approves a narrow
    exception, recorded in `ros.json` `implementationPolicy.exceptions` as one
    exact path or directory. There are no exceptions today.
-2. **Enforcement.** `ros architecture check [--json]` (F#:
+2. **Enforcement.** `praxis architecture check [--json]` (F#:
    `Ros.Domain.Architecture.ImplementationLanguagePolicy`,
    `Ros.Infrastructure.Architecture.FileImplementationPolicyRepository`)
    scans tracked plus untracked, non-ignored files via Git and fails with
-   each offending path. The same findings join `ros validate` whenever
+   each offending path. The same findings join `praxis validate` whenever
    `ros.json` opts in with `implementationPolicy.prohibitNodeArtifacts`, so
    CI, agents and local runs share one path. It is opt-in per repository:
    projects Praxis is installed into may legitimately own JavaScript, and
    are not failed by default. This repository opts in.
 3. **Required behaviour moves to F#; obsolete behaviour is deleted.**
    - The web interface and the project-administration hub become F# commands
-     (`ros web serve`, `ros hub ...`) rendering HTML on the server with no
+     (`praxis web serve`, `praxis hub ...`) rendering HTML on the server with no
      browser JavaScript. `DF-ROS-2026-A009`'s hub decision stands; only its
      implementation language changes. The Node library they depended on is
      deleted.
@@ -98,7 +107,8 @@ GitHub Actions that run on Node are not repository-owned code.
      launchers (the scaffold adds `ros.cmd`/`ros.ps1` for Windows). The
      scaffolded launcher installs the pinned native release side by side
      (`install-native --no-activate`) instead of downloading `ros-fs` assets
-     through Node.
+     through Node. (`DF-ROS-2026-A043` later made these launchers `./praxis`,
+     `praxis.cmd` and `praxis.ps1`, keeping the `ros` names as aliases.)
 4. **Distribution.** The npm package and its publish workflow are retired;
    the native release (`native-release.yml`, `scripts/install-native.*`) is
    the distribution. Native bundles no longer carry an `npm pack`ed
@@ -120,7 +130,7 @@ This supersedes `DF-ROS-2026-A029` (npm-distributed `ros-fs` binaries),
 **Remote execution.** The cloud-agent/remote execution path accepted in
 `DF-ROS-2026-A041` already fits this rule: `praxis-remote.yml` and the
 `praxis-setup`/`praxis-remote` composite actions are execution hosts for the
-F# executable (`ros remote execute|classify`), with POSIX-shell bootstrap and
+F# executable (`praxis remote execute|classify`), with POSIX-shell bootstrap and
 persistence scripts; no repository-owned step runs Node. Its three Node test
 files were ported to F# with the rest. (This record was first drafted as
 `DF-ROS-2026-A041`/`RQ-ROS-2026-A021` on its branch and renumbered when those
@@ -159,5 +169,5 @@ never deletes that file, so the project may remove it.
 Reversible by `git revert`, but re-adding Node requires a new accepted
 decision and an explicit exception. Validated by the full F# test suite
 (including `ImplementationLanguagePolicyTests`, which checks this
-repository's own tree and both starter profiles), `./ros architecture
-check`, `./ros registry check`, `./ros validate`, and the site verification.
+repository's own tree and both starter profiles), `./praxis architecture
+check`, `./praxis registry check`, `./praxis validate`, and the site verification.

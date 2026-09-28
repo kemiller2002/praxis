@@ -90,7 +90,7 @@ module ProvenanceValidation =
         | _ -> None
 
     let private recordHint (document: ArtifactDocument) operation =
-        $"run './ros provenance record --path {document.RelativePath} --operation {operation}' inside the responsible work execution"
+        $"run './praxis provenance record --path {document.RelativePath} --operation {operation}' inside the responsible work execution"
 
     let private crossCheck request (document: ArtifactDocument) (provenance: ArtifactProvenance) =
         provenance.Contributions
@@ -283,7 +283,7 @@ module ProvenanceChanges =
                           Path = path
                           Field = ArtifactProvenance.FieldName
                           Message =
-                            $"changed since the base revision without a recorded contribution; run './ros provenance record --path {path} --operation modified' inside the responsible work execution" })
+                            $"changed since the base revision without a recorded contribution; run './praxis provenance record --path {path} --operation modified' inside the responsible work execution" })
         | _ -> []
 
 /// A read-only view of one work-protocol event's actor attribution.

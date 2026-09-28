@@ -6,7 +6,7 @@ open System.Text.Json.Nodes
 open System.Text.RegularExpressions
 
 /// End-to-end lifecycle tests (init, status, verify, upgrade, doctor) run
-/// directly against the built `ros-fs`, ported from the former
+/// directly against the built `praxis` CLI, ported from the former
 /// tests/lifecycle-package.test.mjs, which packed the npm tarball and drove the
 /// same commands through its Node launcher. The npm packaging, tarball
 /// content and Node launcher assertions went with the npm distribution; every
@@ -54,7 +54,7 @@ module LifecycleCliTests =
                 CliPort.withDirectory "ros-lifecycle-help" (fun root ->
                     let reported = ros root [ "--version" ]
                     CliPort.exitCode 0 reported
-                    Assert.equal $"ros-fs {version ()}" (reported.Out.Trim())
+                    Assert.equal $"praxis {version ()}" (reported.Out.Trim())
 
                     let help = ros root [ "--help" ]
                     CliPort.exitCode 0 help
@@ -63,7 +63,7 @@ module LifecycleCliTests =
                         CliPort.matches $"^\\s+{command}\\s" help.Out
                         let commandHelp = ros root [ command; "--help" ]
                         CliPort.exitCode 0 commandHelp
-                        CliPort.matches $"^ros {command} --" commandHelp.Out
+                        CliPort.matches $"^praxis {command} --" commandHelp.Out
                         CliPort.contains "Usage:" commandHelp.Out) }
           { Name = "lifecycle cli: an unknown option is an argument error that touches nothing"
             Run = fun () ->
@@ -327,7 +327,7 @@ module LifecycleCliTests =
           { Name = "lifecycle cli: legacy upgrade preserves a customized validation workflow as shared integration"
             Run = fun () ->
                 legacy "Shared Workflow" (fun root ->
-                    let workflow = ".github/workflows/ros-validation.yml"
+                    let workflow = ".github/workflows/praxis-validation.yml"
                     let customized = CliHarness.read root workflow + "\n# repository-specific validation wrapper\n"
                     CliHarness.write root workflow customized
                     exit 0 root [ "upgrade" ]
@@ -353,7 +353,7 @@ module LifecycleCliTests =
                     CliPort.writeJson root ".ros/installation.json" snapshot
                     exit 0 root [ "upgrade" ]
                     Assert.equal "project-administration" (CliPort.text ((manifest root)["profile"]))
-                    Assert.isTrue (File.Exists(Path.Combine(root, "ros-hub"))) "the project-administration payload must be selected") }
+                    Assert.isTrue (File.Exists(Path.Combine(root, "praxis-hub"))) "the project-administration payload must be selected") }
           { Name = "lifecycle cli: an unedited legacy installation upgrades and verifies strictly"
             Run = fun () ->
                 legacy "Clean Legacy" (fun root ->
@@ -368,7 +368,7 @@ module LifecycleCliTests =
             for file in Directory.GetFiles(Path.GetDirectoryName CliHarness.cli) do
                 File.Copy(file, Path.Combine(detached, Path.GetFileName file))
 
-            CliPort.withDirectory "ros-lifecycle-standalone" (fun project -> run (Path.Combine(detached, "ros-fs.dll")) project))
+            CliPort.withDirectory "ros-lifecycle-standalone" (fun project -> run (Path.Combine(detached, "praxis.dll")) project))
 
     let private standalone (assembly: string) (project: string) (arguments: string list) =
         let result = CliHarness.runIn (Some(Path.GetDirectoryName assembly)) "dotnet" ([ assembly; "--root"; project ] @ arguments) []
