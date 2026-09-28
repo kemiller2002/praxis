@@ -64,6 +64,7 @@
     <Compile Include="WorkReconciliationTests.fs" />
     <Compile Include="WorkReconciliationEffectTests.fs" />
     <Compile Include="RemoteProtocolTests.fs" />
+    <Compile Include="RemoteIdentityTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

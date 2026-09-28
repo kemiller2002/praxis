@@ -2947,11 +2947,44 @@
         "EXE-20260928T074530250Z-74614560"
       ],
       "completedAt": "2026-09-28T08:03:42.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-02",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Remote/Identity.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Remote/GitHubActionsExecutor.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileTelemetryExecutionRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RemoteIdentityTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/agent-provenance.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T08:12:11.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T080446917Z-eca18ac8"
+      ],
+      "completedAt": "2026-09-28T08:12:11.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-28T08:03:42.000Z",
+  "updatedAt": "2026-09-28T08:12:11.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

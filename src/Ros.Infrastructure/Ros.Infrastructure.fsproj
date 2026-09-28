@@ -35,6 +35,7 @@
     <Compile Include="Ordo/FileObservationRepository.fs" />
     <Compile Include="Lifecycle/Payload.fs" />
     <Compile Include="Lifecycle/Installation.fs" />
+    <Compile Include="Remote/GitHubActionsExecutor.fs" />
   </ItemGroup>
 
   <!-- The scaffold this CLI installs, compiled into the assembly so a released

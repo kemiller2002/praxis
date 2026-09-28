@@ -37,6 +37,7 @@
     <Compile Include="Provenance/ArtifactProvenance.fs" />
     <Compile Include="Provenance/ProvenancePolicy.fs" />
     <Compile Include="Remote/Protocol.fs" />
+    <Compile Include="Remote/Identity.fs" />
     <Compile Include="Work/Reconciliation.fs" />
     <Compile Include="Ordo/Model.fs" />
     <Compile Include="Lifecycle/Model.fs" />
