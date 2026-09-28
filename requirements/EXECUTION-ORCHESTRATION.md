@@ -384,3 +384,28 @@ and obligations authoritative outside the presentation layer.
   establishment by Conditor, semantic authorization by Ordo, execution and
   evidence by Praxis, independent verification, and legal next-action
   projection to humans or agents.
+
+
+## Delivery dependency requirements
+
+- **PRX-SEQ-001** The execution-role/capability model, typed receipt model, and
+  evaluator-identity contract MUST exist as authoritative non-UI contracts
+  before a Praxis operator UI may claim end-to-end enforcement of them.
+- **PRX-SEQ-002** Automatic execution workspaces MUST bind to the durable
+  execution envelope rather than introducing a competing execution identity.
+- **PRX-SEQ-003** Mutation-boundary enforcement MUST consume the authoritative
+  execution capability/boundary contract rather than hard-code UI or
+  provider-specific file lists as policy.
+- **PRX-SEQ-004** The legal-action API MUST exist before board drag/drop or
+  other graphical transition controls are treated as authoritative user
+  actions.
+- **PRX-SEQ-005** The local control-plane UI MUST be implemented as a consumer
+  of the legal-action/state API, not as the first or only implementation of
+  workflow rules.
+- **PRX-SEQ-006** Host sandbox enforcement MAY be added incrementally after
+  semantic execution capabilities exist, but until then Praxis MUST report the
+  weaker containment truthfully.
+- **PRX-SEQ-007** A recommended implementation progression is role/envelope
+  semantics, receipts, evaluator identity, workspace binding, mutation
+  boundaries, legal-action API, local UI/control plane, and stronger host
+  enforcement; deviations MUST preserve the dependency constraints above.
