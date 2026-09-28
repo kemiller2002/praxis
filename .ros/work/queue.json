@@ -2151,7 +2151,7 @@
       "status": "blocked",
       "attachments": [],
       "createdAt": "2026-09-28T07:45:12.033Z",
-      "updatedAt": "2026-09-28T07:45:12.000Z",
+      "updatedAt": "2026-09-28T09:40:22.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2162,7 +2162,7 @@
       },
       "source": "github-issue",
       "sourceReference": "https://github.com/kemiller2002/praxis/issues/90",
-      "blockedReason": "Depends on PRAXIS-REMOTE-04, PRAXIS-REMOTE-06, PRAXIS-REMOTE-07, PRAXIS-REMOTE-09 (DF-ROS-2026-A041 decomposition)"
+      "blockedReason": "Praxis-side dependencies (04, 06, 07, 09) are complete. Blocked on human action: (1) merge PR #91 so praxis-remote.yml exists on the default branch (GitHub only dispatches workflows there); (2) publish a Praxis release containing 'remote execute' with build-provenance attestations (version bump; native-release.yml now attests and never clobbers); (3) pin that release in .echelon/toolchain.json and opt in via ros.json remote.capabilities in the proving repository."
     },
     {
       "id": "PRAXIS-REMOTE-12",

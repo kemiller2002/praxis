@@ -2,7 +2,7 @@
 id: RQ-ROS-2026-A021
 title: Praxis governance is independent of the execution environment; remote/cloud-agent execution is a first-class capability
 status: accepted
-version: 1.0.0
+version: 1.1.0
 owners:
   - repository-governance
 created: 2026-09-28
@@ -24,8 +24,9 @@ tags: [remote-execution, protocol, provenance, idempotency, security, gh-90]
 provenance:
   contributions:
     EXE-20260928T073932249Z-d48161b9:
-      operations: [created]
+      operations: [created, modified]
       at: 2026-09-28T07:44:28.080Z
+      last: 2026-09-28T09:40:46.882Z
       actor:
         kind: agent
         id: anthropic/claude-code
@@ -105,3 +106,50 @@ continue without impersonating the first.
 Tracked per increment by the `PRAXIS-REMOTE-NN` work items under `GH-90`
 (see `DF-ROS-2026-A041`, "Decomposition"). Each increment names its own
 tests.
+
+## Implementation status (2026-09-28, branch `claude/remote-execution-capability-2i5s9u`, PR #91)
+
+This section is a status snapshot. `EV-ROS-2026-A053` remains the baseline
+as of `59b4e03`. Each entry below is backed by the named work item's
+completion evidence and tests.
+
+**Local verification.** Everything below ran locally:
+
+- `npm run test:all`: node 104 passed, python 7 passed, F# 579 passed, and
+  the F#/Node differential and remote suites 237 passed.
+- The site suite: 99 passed.
+- `praxis validate`: passed.
+
+**No live run yet.** No live GitHub dispatch has been run. That is exactly
+what the end-to-end proof, PRAXIS-REMOTE-11, will establish.
+
+**Implemented and tested:**
+
+| PRX-REMOTE | Delivered by | Notes |
+|---|---|---|
+| 002, 003, 025, 031, 032, 040 | PRAXIS-REMOTE-01, 04 and 08 | Typed, versioned protocol 1.2. |
+| 005, 006, 007 | PRAXIS-REMOTE-02 | The requester is recorded as asserted. The executor and principal are recorded as observed. |
+| 004, 034 | PRAXIS-REMOTE-02 and 09 | Includes the core continuation fix (DF-ROS-2026-A041 1.2.0). |
+| 008, 009, 010 | PRAXIS-REMOTE-04 | Steps, step-scoped usage, evidence-quality projection, usage by dimension. |
+| 013, 014, 015, 016, 017, 018, 026, 027, 028 | PRAXIS-REMOTE-03 | `praxis remote execute`, the request journal and the SHA binding. Local/remote parity tests. |
+| 019, 035 | PRAXIS-REMOTE-09 | Remote #80 reconciliation and the fallback path. |
+| 020, 021, 022, 023 | PRAXIS-REMOTE-01, 02, 03 and 06 | Tested statically and against real Git remotes. |
+| 012, 024, 036 (caching) | PRAXIS-REMOTE-05 | The release-side changes take effect at the next release. |
+| 036, 037 | PRAXIS-REMOTE-08 | Batches. |
+| 033, 044 | PRAXIS-REMOTE-07 | `praxis.describe`, the agent contract, and the AGENTS.md pointer. |
+| 043 | PRAXIS-REMOTE-10 | Operator documentation. |
+
+**Remaining work:**
+
+- **001, 011, 029, 041 (live parts), 042.** These are the end-to-end proof,
+  PRAXIS-REMOTE-11. It is blocked on human action:
+  - merging the adapter to the default branch;
+  - publishing an attested release that contains `remote execute`;
+  - pinning that release and opting in to remote capabilities.
+- **030.** Conditor support, PRAXIS-REMOTE-12. It depends on PRAXIS-REMOTE-11.
+- **038.** Retryability is classified, including `rate-limited`. The GitHub
+  adapter does not yet recognize GitHub API rate limiting specifically. It
+  reports any other push failure as `repository-write-failed`.
+- **039.** Remote execution is opt-in, and existing state stays readable.
+  The npm `praxis` bin is deferred to PRAXIS-NPM-BIN, because the public
+  site's audited copy must change with it.

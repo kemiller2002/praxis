@@ -499,14 +499,30 @@
     },
     {
       "metricId": "agent.interruptions",
-      "status": "unknown",
-      "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-09-28T07:39:32.249Z",
+      "status": "derived",
+      "reason": "normalized measurement recorded",
+      "discoveredAt": "2026-09-28T09:41:16.000Z",
       "source": {
-        "type": "environment",
-        "name": "runtime-identity",
-        "mechanism": "whitelisted-claude-environment"
-      }
+        "type": "calculated",
+        "name": "ros-work-protocol",
+        "mechanism": "blocked-transition"
+      },
+      "lastAssessedAt": "2026-09-28T09:41:16.000Z",
+      "recordedAt": "2026-09-28T09:41:16.000Z",
+      "history": [
+        {
+          "status": "unknown",
+          "reason": "runtime capability not reported or mapped",
+          "source": {
+            "type": "environment",
+            "name": "runtime-identity",
+            "mechanism": "whitelisted-claude-environment"
+          },
+          "discoveredAt": "2026-09-28T07:39:32.249Z",
+          "lastAssessedAt": "2026-09-28T07:39:32.249Z",
+          "recordedAt": "2026-09-28T07:39:32.249Z"
+        }
+      ]
     },
     {
       "metricId": "agent.resumes",
@@ -1348,6 +1364,26 @@
       },
       "collectedAt": "2026-09-28T07:39:32.249Z",
       "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-199dbef836086db02dc78e9e",
+      "id": "agent.interruptions",
+      "value": 1,
+      "unit": "count",
+      "currency": null,
+      "quality": "derived",
+      "confidence": null,
+      "scope": "execution",
+      "aggregation": "sum",
+      "dimensions": {},
+      "pricing": null,
+      "source": {
+        "type": "calculated",
+        "name": "ros-work-protocol",
+        "mechanism": "blocked-transition"
+      },
+      "collectedAt": "2026-09-28T09:41:16.000Z",
+      "schemaVersion": "1.0.0"
     }
   ],
   "rawTelemetry": [],
@@ -1360,6 +1396,17 @@
         "name": "ros",
         "mechanism": "work-lifecycle"
       }
+    },
+    {
+      "type": "work.blocked",
+      "occurredAt": "2026-09-28T09:41:16.000Z",
+      "reason": "Praxis-side work PRAXIS-REMOTE-01..10 complete on PR #91; remaining PRAXIS-REMOTE-11 (live no-.NET proof) needs human action: merge PR #91, publish an attested release containing 'remote execute', pin it and opt in; PRAXIS-REMOTE-12 (Conditor) follows 11.",
+      "source": {
+        "type": "ros-clock",
+        "name": "ros",
+        "mechanism": "work-lifecycle"
+      },
+      "eventId": "TEVT-2369588ea10f43b89dc40f40"
     }
   ],
   "repository": {
