@@ -18,16 +18,7 @@ module RemoteProtocolTests =
     let private sha = "59b4e032818a4c765886e48c117595dc58019d43"
     let private movedSha = "8646ade0000000000000000000000000000000aa"
 
-    let rec private repositoryRoot (directory: DirectoryInfo) =
-        if File.Exists(Path.Combine(directory.FullName, "package.json"))
-           && Directory.Exists(Path.Combine(directory.FullName, "schemas")) then
-            directory.FullName
-        elif isNull directory.Parent then
-            failwith "Could not locate repository root"
-        else
-            repositoryRoot directory.Parent
-
-    let private root = lazy (repositoryRoot (DirectoryInfo(Directory.GetCurrentDirectory())))
+    let private root = CliPort.repositoryRoot
 
     let private fixture name =
         File.ReadAllText(Path.Combine(root.Value, "tests", "fixtures", "remote", name))

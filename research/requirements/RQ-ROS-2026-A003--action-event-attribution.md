@@ -35,6 +35,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Verification references moved from removed Node tests to their F# ports (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+    EXE-20260928T103758056Z-43f11e6e:
+      operations: [modified]
+      at: 2026-09-28T11:23:28.208Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Decision reference renumbered to DF-ROS-2026-A042 after merging main (work item FSHARP-ONLY-MAIN-MERGE)"
 ---
 
 # Requirement

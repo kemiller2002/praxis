@@ -14,45 +14,68 @@ open Ros.Domain.Work
 /// Starts a real `ros-fs ... serve` process on a free loopback port and
 /// drives it over HTTP; `Dispose` always stops the process.
 type ServedProcess(root: string, command: string list) =
-    let port =
+    let freePort () =
         let probe = new TcpListener(IPAddress.Loopback, 0)
         probe.Start()
         let chosen = (probe.LocalEndpoint :?> IPEndPoint).Port
         probe.Stop()
         chosen
 
-    let child =
+    let launch (port: int) =
+        let errors = StringBuilder()
         let startInfo = ProcessStartInfo("dotnet")
         startInfo.UseShellExecute <- false
         startInfo.RedirectStandardOutput <- true
         startInfo.RedirectStandardError <- true
         [ CliHarness.cli; "--root"; root ] @ command @ [ "--port"; string port ] |> List.iter startInfo.ArgumentList.Add
         CliHarness.identityVariables |> List.iter (startInfo.Environment.Remove >> ignore)
-        let started = Process.Start startInfo
+        let started = new Process(StartInfo = startInfo)
+        started.ErrorDataReceived.Add(fun line -> if not (isNull line.Data) then lock errors (fun () -> errors.AppendLine line.Data |> ignore))
+        started.Start() |> ignore
         started.BeginOutputReadLine()
         started.BeginErrorReadLine()
-        started
+        started, errors
 
-    let handler = new HttpClientHandler(AllowAutoRedirect = false)
-    let client = new HttpClient(handler, BaseAddress = Uri($"http://127.0.0.1:{port}"), Timeout = TimeSpan.FromMinutes 2.0)
+    let clientFor (port: int) =
+        let handler = new HttpClientHandler(AllowAutoRedirect = false)
+        new HttpClient(handler, BaseAddress = Uri($"http://127.0.0.1:{port}"), Timeout = TimeSpan.FromMinutes 2.0)
 
-    do
+    /// Ready, or exited before listening (with its stderr). A port taken
+    /// between probing and binding is the one early exit worth retrying.
+    let waitUntilListening (child: Process) (errors: StringBuilder) (client: HttpClient) =
         let deadline = DateTime.UtcNow.AddSeconds 60.0
-        let mutable ready = false
 
-        while not ready do
+        let rec poll () =
             if child.HasExited then
-                failwith $"server exited early with status {child.ExitCode}"
-
-            if DateTime.UtcNow > deadline then
+                child.WaitForExit()
+                Error(child.ExitCode, lock errors (fun () -> errors.ToString()))
+            elif DateTime.UtcNow > deadline then
                 child.Kill true
                 failwith "server did not start listening within 60 seconds"
+            else
+                try
+                    use _ = client.GetAsync("/styles.css").Result
+                    Ok()
+                with _ ->
+                    Threading.Thread.Sleep 100
+                    poll ()
 
-            try
-                use response = client.GetAsync("/styles.css").Result
-                ready <- true
-            with _ ->
-                Threading.Thread.Sleep 100
+        poll ()
+
+    let child, client =
+        let rec attempt remaining =
+            let port = freePort ()
+            let started, errors = launch port
+            let candidate = clientFor port
+
+            match waitUntilListening started errors candidate with
+            | Ok() -> started, candidate
+            | Error(_, stderr) when remaining > 1 && stderr.Contains "cannot listen" ->
+                candidate.Dispose()
+                attempt (remaining - 1)
+            | Error(status, stderr) -> failwith $"server exited early with status {status}: {stderr}"
+
+        attempt 5
 
     member _.Client = client
 

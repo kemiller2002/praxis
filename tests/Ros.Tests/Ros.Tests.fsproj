@@ -88,6 +88,9 @@
     <Compile Include="RemoteProtocolTests.fs" />
     <Compile Include="RemoteIdentityTests.fs" />
     <Compile Include="RemoteExecutionTests.fs" />
+    <Compile Include="RemoteExecuteCliTests.fs" />
+    <Compile Include="RemotePersistScriptTests.fs" />
+    <Compile Include="PraxisBootstrapScriptTests.fs" />
     <Compile Include="TelemetryStepsUsageTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>

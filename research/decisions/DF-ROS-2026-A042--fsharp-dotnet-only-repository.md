@@ -38,6 +38,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Architecture decision removing repository-owned Node and enforcing the invariant (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+    EXE-20260928T103758056Z-43f11e6e:
+      operations: [modified]
+      at: 2026-09-28T11:23:28.913Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Renumbered from DF-ROS-2026-A041 (taken on main by remote execution); records that remote execution fits the rule (work item FSHARP-ONLY-MAIN-MERGE)"
 ---
 
 # Context

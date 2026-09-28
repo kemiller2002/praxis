@@ -8,7 +8,7 @@ open Ros.Domain.Remote
 
 /// The pure planning, persistence, and journal rules behind
 /// `praxis remote execute` (PRAXIS-REMOTE-03). The end-to-end behaviour
-/// against real repositories is pinned by `tests/remote-execute.test.mjs`.
+/// against real repositories is pinned by `tests/Ros.Tests/RemoteExecuteCliTests.fs`.
 [<RequireQualifiedAccess>]
 module RemoteExecutionTests =
     let private sha = "59b4e032818a4c765886e48c117595dc58019d43"

@@ -147,6 +147,21 @@ module CliPort =
         finally
             CliHarness.removeDirectory root
 
+    /// Runs `body` with a factory of labelled temporary directories, every
+    /// one of which is removed afterwards, however `body` ends.
+    let withTemporaries (body: (string -> string) -> 'result) : 'result =
+        let created = Collections.Generic.List<string>()
+
+        let temporary (label: string) =
+            let path = CliHarness.temporaryDirectory label
+            created.Add path
+            path
+
+        try
+            body temporary
+        finally
+            created |> Seq.iter CliHarness.removeDirectory
+
     /// A temporary file outside any repository, removed afterwards.
     let withInputFile (content: string) (run: string -> 'result) : 'result =
         let path = Path.Combine(Path.GetTempPath(), $"ros-input-{Guid.NewGuid():N}.json")

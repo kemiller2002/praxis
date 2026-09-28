@@ -59,6 +59,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Amendment 1.2.0: successor continuation never links a foreign execution (PRAXIS-REMOTE-09)"
+    EXE-20260928T103758056Z-43f11e6e:
+      operations: [modified]
+      at: 2026-09-28T11:23:30.270Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Validation references point at the F# port of tests/remote-execute.test.mjs (DF-ROS-2026-A042) (work item FSHARP-ONLY-MAIN-MERGE)"
 derived_from: [RQ-ROS-2026-A021]
 ---
 # Context
@@ -425,7 +435,7 @@ is the environment:
 - Identity discovery reads the process environment. A shared process could
   therefore not keep the requester's identity separate from the runner's.
 
-Validation parity is proven by `tests/remote-execute.test.mjs`: local and
+Validation parity is proven by `tests/Ros.Tests/RemoteExecuteCliTests.fs`: local and
 remote `work.start` produce the same work state, and remote `validate`
 returns the local validation document.
 
@@ -462,7 +472,7 @@ execution is `domain-rejected`.
 - `TelemetryResolutionTests` ("continuation: ...")
 - `ProvenanceTests` ("continuation: only the same actor in the same
   run...")
-- `tests/remote-execute.test.mjs` ("a successor agent continues in its own
+- `tests/Ros.Tests/RemoteExecuteCliTests.fs` ("a successor agent continues in its own
   execution...")
 
 # Consequences

@@ -148,6 +148,20 @@
             "modified"
           ],
           "reason": "Verification references moved from removed Node tests to their F# ports (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        },
+        "EXE-20260928T103758056Z-43f11e6e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T11:23:28.208Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Decision reference renumbered to DF-ROS-2026-A042 after merging main (work item FSHARP-ONLY-MAIN-MERGE)"
         }
       }
     },
@@ -710,6 +724,20 @@
             "created"
           ],
           "reason": "Captured the F#/.NET-only repository rule from the user's objective (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        },
+        "EXE-20260928T103758056Z-43f11e6e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T11:23:29.586Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Renumbered from RQ-ROS-2026-A021 (taken on main by remote execution) (work item FSHARP-ONLY-MAIN-MERGE)"
         }
       }
     },

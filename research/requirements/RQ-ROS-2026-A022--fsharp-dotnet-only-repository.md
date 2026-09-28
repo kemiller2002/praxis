@@ -26,6 +26,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Captured the F#/.NET-only repository rule from the user's objective (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+    EXE-20260928T103758056Z-43f11e6e:
+      operations: [modified]
+      at: 2026-09-28T11:23:29.586Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Renumbered from RQ-ROS-2026-A021 (taken on main by remote execution) (work item FSHARP-ONLY-MAIN-MERGE)"
 ---
 
 # Requirement

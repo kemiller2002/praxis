@@ -785,6 +785,20 @@
             "modified"
           ],
           "reason": "Amendment 1.2.0: successor continuation never links a foreign execution (PRAXIS-REMOTE-09)"
+        },
+        "EXE-20260928T103758056Z-43f11e6e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T11:23:30.270Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Validation references point at the F# port of tests/remote-execute.test.mjs (DF-ROS-2026-A042) (work item FSHARP-ONLY-MAIN-MERGE)"
         }
       }
     },
@@ -851,6 +865,20 @@
             "created"
           ],
           "reason": "Architecture decision removing repository-owned Node and enforcing the invariant (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        },
+        "EXE-20260928T103758056Z-43f11e6e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T11:23:28.913Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Renumbered from DF-ROS-2026-A041 (taken on main by remote execution); records that remote execution fits the rule (work item FSHARP-ONLY-MAIN-MERGE)"
         }
       }
     },
