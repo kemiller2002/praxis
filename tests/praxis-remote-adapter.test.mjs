@@ -333,6 +333,8 @@ test("the enable script validates its inputs and a dry run walks every phase wit
   const { runner } = remoteAndCheckout(t);
   fs.mkdirSync(path.join(runner, ".github", "workflows"), { recursive: true });
   fs.copyFileSync(path.join(repositoryRoot, ".github", "workflows", "praxis-remote.yml"), path.join(runner, ".github", "workflows", "praxis-remote.yml"));
+  git(runner, "config", "user.email", "runner@example.invalid");
+  git(runner, "config", "user.name", "Runner");
   git(runner, "add", "-A");
   git(runner, "commit", "-qm", "adapter");
   git(runner, "push", "-q", "origin", "main");

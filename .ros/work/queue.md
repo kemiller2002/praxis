@@ -50,6 +50,7 @@
 | PRAXIS-REMOTE-10 | Remote execution operator documentation | complete | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-11 | End-to-end no-.NET cloud-agent proof | blocked | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-11-PREP | Prepare the live remote proof: ignore the request journal for attribution and script release, pin, opt-in and dispatch | complete | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-11-PREP-CI | Fix PR #93 CI: enable-script test commits without a git identity | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-12 | Conditor installs and configures the Praxis remote surface | blocked | remote-execution, gh-90 | low |
 | PRAXIS-SITE-01 | Establish public-site architecture | complete | gh-84, public-site | high |
 | PRAXIS-SITE-02 | Implement Echelon Foundry design foundation | complete | gh-84, public-site | high |
