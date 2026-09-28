@@ -46,7 +46,9 @@ token = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/@+~-]{0,200}$")
 def safe(value, fallback="unknown"):
     return value if isinstance(value, str) and token.match(value) else fallback
 paths = (response.get("persistence") or {}).get("paths") or []
-if response.get("outcome") != "succeeded" or not paths:
+# Praxis lists only state it kept: a success's, or the accepted constituents
+# of a batch that stopped part-way. Anything it refused was already undone.
+if not paths:
     print("nothing")
     sys.exit(0)
 for path in paths:

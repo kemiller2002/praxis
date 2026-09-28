@@ -246,7 +246,7 @@ test("Praxis, not YAML, classifies which requests need write credentials", (t) =
   };
   const mutation = classify(startRequest(runner));
   assert.equal(mutation.status, 0);
-  assert.deepEqual(mutation.json, { requestId: "req-adapter-0001", operation: "work.start", capability: "mutate", mutating: true });
+  assert.deepEqual(mutation.json, { requestId: "req-adapter-0001", operation: "work.start", capabilities: ["mutate"], mutating: true });
   const readOnly = classify({ protocol: "praxis.remote", protocolVersion: "1.0", requestId: "req-read-0001", operation: "validate" });
   assert.equal(readOnly.json.mutating, false);
   const invalid = classify("{\"protocol\":\"praxis.remote\",\"protocolVersion\":\"9.0\"}");

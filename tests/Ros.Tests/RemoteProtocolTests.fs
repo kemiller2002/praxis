@@ -113,12 +113,12 @@ module RemoteProtocolTests =
               fun () ->
                   let failure = rejected (document (startRequest |> replace "protocol" "\"other.protocol\""))
                   Assert.equal FailureCode.UnsupportedProtocol failure.Failure.Code
-                  Assert.isTrue (failure.Failure.Message.Contains "praxis.remote 1.1") "diagnostics name the supported version" }
+                  Assert.isTrue (failure.Failure.Message.Contains "praxis.remote 1.2") "diagnostics name the supported version" }
 
           { Name = "remote: a newer major or newer minor protocol version fails closed with the supported versions"
             Run =
               fun () ->
-                  [ "\"2.0\""; "\"1.2\""; "\"0.9\"" ]
+                  [ "\"2.0\""; "\"1.3\""; "\"0.9\"" ]
                   |> List.iter (fun version ->
                       let failure = rejected (document (startRequest |> replace "protocolVersion" version))
                       Assert.equal FailureCode.UnsupportedProtocol failure.Failure.Code
@@ -564,6 +564,38 @@ module RemoteProtocolTests =
                       let arguments = conditional[Operation.code operation]
                       Assert.equal (Set.ofList (required @ optional)) (names (arguments.GetProperty "properties"))
                       Assert.equal (Set.ofList required) (strings (arguments.GetProperty "required"))) }
+
+          { Name = "remote 1.2: a batch is validated constituent by constituent and authorized for all of them"
+            Run =
+              fun () ->
+                  let batch (requests: string) =
+                      document (envelope "batch" $"{{\"requests\":{requests}}}" |> replace "protocolVersion" "\"1.2\"")
+
+                  let request =
+                      parsed (batch """[{"requestId":"req-part-00001","operation":"work.start","arguments":{"workItemIds":["WI-1"]}},{"requestId":"req-part-00002","operation":"work.complete","arguments":{"workItemIds":["WI-1"]}}]""")
+
+                  Assert.empty (RequestValidation.problems request)
+                  Assert.isTrue (RequestShape.isMutating request) "a batch with a mutation mutates"
+                  Assert.equal (set [ Capability.Mutate; Capability.Complete ]) (RequestShape.capabilities request)
+                  Assert.equal (Some FailureCode.Unauthorized) (decide [ Capability.Read; Capability.Mutate ] (Some sha) JournalLookup.NotRecorded request |> rejectionCode)
+                  Assert.equal Decision.Execute (decide allGrants (Some sha) JournalLookup.NotRecorded request)
+
+                  let reads = parsed (batch """[{"requestId":"req-part-00003","operation":"validate"}]""")
+                  Assert.isTrue (not (RequestShape.isMutating reads)) "a read-only batch does not mutate"
+
+                  let duplicateIds = parsed (batch """[{"requestId":"req-test-00000001","operation":"validate"}]""")
+                  Assert.isTrue (RequestValidation.problems duplicateIds |> List.exists (fun problem -> problem.Field = "arguments.requests")) "IDs must differ from the batch's"
+
+                  let hostile = parsed (batch """[{"requestId":"req-part-00004","operation":"work.start","arguments":{"workItemIds":["--root=/"]}}]""")
+                  Assert.isTrue (RequestValidation.problems hostile |> List.exists (fun problem -> problem.Field = "arguments.requests[0].arguments.workItemIds[0]")) "constituent values are validated"
+
+                  Assert.equal FailureCode.InvalidRequest (rejected (batch """[{"requestId":"req-part-00005","operation":"batch","arguments":{"requests":[]}}]""")).Failure.Code
+                  Assert.equal FailureCode.UnsupportedOperation (rejected (document (envelope "batch" "{\"requests\":[]}"))).Failure.Code
+
+                  let reordered =
+                      parsed (batch """[{"requestId":"req-part-00002","operation":"work.complete","arguments":{"workItemIds":["WI-1"]}},{"requestId":"req-part-00001","operation":"work.start","arguments":{"workItemIds":["WI-1"]}}]""")
+
+                  Assert.isTrue (RequestFingerprint.compute reordered <> RequestFingerprint.compute request) "order is part of a batch's intent" }
 
           { Name = "remote: mutating operations and capability classes are exactly as documented"
             Run =

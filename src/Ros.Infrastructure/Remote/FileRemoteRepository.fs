@@ -181,3 +181,24 @@ module FileRemoteRepository =
                 Ok()
             with error ->
                 Error error.Message)
+
+    /// The current bytes of each path that exists, so a later refusal can
+    /// put exactly these back (used when earlier constituents of a batch
+    /// have already changed the working tree).
+    let snapshot (root: string) (paths: string list) : Map<string, byte[]> =
+        paths
+        |> List.choose (fun path ->
+            let file = fullPath root path
+            if File.Exists file then Some(path, File.ReadAllBytes file) else None)
+        |> Map.ofList
+
+    /// Returns every changed path to its state before the refused command:
+    /// its snapshot when it had one, otherwise `HEAD` (or absent).
+    let restoreTo (root: string) (before: Map<string, byte[]>) (changed: string list) : Result<unit, string> =
+        let fromSnapshot, fromHead = changed |> List.partition before.ContainsKey
+
+        try
+            fromSnapshot |> List.iter (fun path -> File.WriteAllBytes(fullPath root path, before[path]))
+            restore root fromHead
+        with error ->
+            Error error.Message

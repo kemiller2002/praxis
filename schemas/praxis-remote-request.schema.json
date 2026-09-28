@@ -37,7 +37,8 @@
         "work.reconcile",
         "step.start",
         "step.complete",
-        "step.fail"
+        "step.fail",
+        "batch"
       ]
     },
     "repository": {
@@ -672,6 +673,90 @@
             },
             "required": [
               "stepId"
+            ],
+            "patternProperties": {
+              "^x-": {}
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "batch"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "arguments": {
+            "type": "object",
+            "properties": {
+              "requests": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 20,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "requestId",
+                    "operation"
+                  ],
+                  "properties": {
+                    "requestId": {
+                      "$ref": "#/$defs/requestId"
+                    },
+                    "operation": {
+                      "enum": [
+                        "praxis.describe",
+                        "status",
+                        "validate",
+                        "provenance.identity",
+                        "work.context",
+                        "request.status",
+                        "work.start",
+                        "work.resume",
+                        "work.block",
+                        "work.complete",
+                        "telemetry.record",
+                        "work.reconcile",
+                        "step.start",
+                        "step.complete",
+                        "step.fail"
+                      ]
+                    },
+                    "execution": {
+                      "type": "object",
+                      "required": [
+                        "id"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "pattern": "^EXE-[A-Za-z0-9._-]{1,120}$"
+                        }
+                      },
+                      "patternProperties": {
+                        "^x-": {}
+                      },
+                      "additionalProperties": false
+                    },
+                    "arguments": {
+                      "type": "object"
+                    }
+                  },
+                  "patternProperties": {
+                    "^x-": {}
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "requests"
             ],
             "patternProperties": {
               "^x-": {}

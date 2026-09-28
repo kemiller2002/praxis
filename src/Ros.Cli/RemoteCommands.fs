@@ -288,8 +288,8 @@ let private executeRead (context: Context) (request: Request) (arguments: string
 
 /// Undoes whatever a refused mutation wrote, then reports the refusal. If
 /// the undo itself fails the outcome is honestly `unknown`.
-let private refuse (context: Context) (request: Request) (written: string list) (value: RemoteFailure) (result: string option) =
-    match FileRemoteRepository.restore context.Root written with
+let private refuse (context: Context) (request: Request) (before: Map<string, byte[]>) (written: string list) (value: RemoteFailure) (result: string option) =
+    match FileRemoteRepository.restoreTo context.Root before written with
     | Ok() -> { rejectedFor context request value with Result = result }
     | Error message ->
         { rejectedFor
@@ -301,13 +301,18 @@ let private refuse (context: Context) (request: Request) (written: string list) 
                   value.Problems) with
             Result = result }
 
-let private executeMutation (context: Context) (request: Request) (arguments: string list) =
+/// Runs one mutation. `baseline` is the Praxis-owned state earlier
+/// constituents of the same batch have already written (empty for a single
+/// request): the tree may differ from the named commit by exactly that and
+/// nothing else, and a refusal restores the tree to how this mutation found
+/// it -- never undoing an earlier constituent's accepted work.
+let private executeMutationWithin (context: Context) (baseline: Set<string>) (request: Request) (arguments: string list) =
     let changed () =
         FileRemoteRepository.changedPaths context.Root |> Result.map RemotePersistence.partition
 
     match changed () with
     | Error message -> rejectedFor context request (failure FailureCode.Internal $"cannot observe the working tree: {diagnostic message}" [])
-    | Ok(owned, other) when not (owned.IsEmpty && other.IsEmpty) ->
+    | Ok(owned, other) when not (other.IsEmpty && Set.isSubset (Set.ofList owned) baseline) ->
         // Uncommitted changes mean the executor's state is not the commit
         // the request was formed against.
         rejectedFor
@@ -317,7 +322,8 @@ let private executeMutation (context: Context) (request: Request) (arguments: st
                 FailureCode.StaleRef
                 "the working tree has uncommitted changes, so it is not the commit the request names"
                 [ { Field = "repository.expectedSha"; Message = "the executor's working tree differs from it" } ])
-    | Ok _ ->
+    | Ok(ownedBefore, _) ->
+        let snapshot = FileRemoteRepository.snapshot context.Root ownedBefore
         let before = validationFindings context request |> Option.defaultValue []
         let outcome = runCommand context request arguments
         let result = Some(RemoteJson.commandResult outcome.Stdout)
@@ -329,14 +335,15 @@ let private executeMutation (context: Context) (request: Request) (arguments: st
             let written = owned @ other
 
             if outcome.TimedOut then
-                refuse context request written (failure FailureCode.Timeout "the command did not finish in time; anything it wrote was undone" []) result
+                refuse context request snapshot written (failure FailureCode.Timeout "the command did not finish in time; anything it wrote was undone" []) result
             else
                 match CommandOutcome.classify request.Operation outcome.ExitCode with
-                | Some code -> refuse context request written (failure code (diagnostic outcome.Stderr) []) result
+                | Some code -> refuse context request snapshot written (failure code (diagnostic outcome.Stderr) []) result
                 | None when not other.IsEmpty ->
                     refuse
                         context
                         request
+                        snapshot
                         written
                         (failure
                             FailureCode.Internal
@@ -351,6 +358,7 @@ let private executeMutation (context: Context) (request: Request) (arguments: st
                         refuse
                             context
                             request
+                            snapshot
                             written
                             (failure
                                 FailureCode.ValidationFailed
@@ -378,6 +386,7 @@ let private executeMutation (context: Context) (request: Request) (arguments: st
                             refuse
                                 context
                                 request
+                                snapshot
                                 owned
                                 (failure FailureCode.RepositoryWriteFailed $"the journal entry could not be written; the mutation was undone: {diagnostic message}" [])
                                 result
@@ -414,6 +423,169 @@ let private executionOwnershipProblem (context: Context) (request: Request) =
             Some $"execution '{executionId}' belongs to another actor or run; continue in your own execution"
         | Some _ -> None
 
+let private ownershipRejection (context: Context) (request: Request) =
+    executionOwnershipProblem context request
+    |> Option.map (fun message ->
+        rejectedFor
+            context
+            request
+            (failure FailureCode.DomainRejected message [ { Field = "execution.id"; Message = "not an execution this requester may continue" } ]))
+
+/// Runs one already-authorized, non-batch request.
+let private executeSingle (context: Context) (baseline: Set<string>) (request: Request) : Response =
+    match ownershipRejection context request with
+    | Some rejection -> rejection
+    | None ->
+        match ExecutionPlan.forRequest (now ()) request with
+        | ExecutionPlan.Describe -> Response.succeeded context.Version request context.ObservedSha (Some(describe context)) |> withExecutor context
+        | ExecutionPlan.RequestStatus requestId ->
+            match requestStatus context requestId with
+            | Ok result -> Response.succeeded context.Version request context.ObservedSha (Some result) |> withExecutor context
+            | Error message -> rejectedFor context request (failure FailureCode.Internal (diagnostic message) [])
+        | ExecutionPlan.Command arguments when Operation.isMutating request.Operation -> executeMutationWithin context baseline request arguments
+        | ExecutionPlan.Command arguments -> executeRead context request arguments
+        | ExecutionPlan.Batch _ -> rejectedFor context request (failure FailureCode.InvalidRequest "a batch cannot contain a batch" [])
+
+/// One constituent's result: its outcome, the paths it kept, and its
+/// rendered response (a replay's is the recorded one, flagged).
+type private ConstituentResult =
+    { RequestId: string
+      Outcome: Outcome
+      Failure: RemoteFailure option
+      Persistence: string list
+      Rendered: string }
+
+/// Runs a batch's constituents in order (PRAXIS-REMOTE-08). Each keeps its
+/// own request ID, journal entry, and outcome; a constituent already
+/// journalled replays instead of running again; the first constituent that
+/// does not succeed stops the batch, and the rest are reported as not run.
+/// Work earlier constituents completed stays completed and is reported for
+/// persistence, so a partial batch is never ambiguous.
+let private executeBatch (context: Context) (batch: Request) (constituents: Request list) : Response =
+    let outcomeOf (rendered: string) =
+        try
+            use document = System.Text.Json.JsonDocument.Parse rendered
+
+            match document.RootElement.GetProperty("outcome").GetString() with
+            | "succeeded" -> Outcome.Succeeded
+            | "rejected" -> Outcome.Rejected
+            | "failed" -> Outcome.Failed
+            | _ -> Outcome.Unknown
+        with _ ->
+            Outcome.Unknown
+
+    let run (baseline: Set<string>) (request: Request) : ConstituentResult =
+        let fresh (response: Response) =
+            { RequestId = request.RequestId
+              Outcome = response.Outcome
+              Failure = response.Failure
+              Persistence = response.Persistence
+              Rendered = RemoteJson.renderResponse response }
+
+        if not (Operation.isMutating request.Operation) then
+            executeSingle context baseline request |> fresh
+        else
+            match FileRemoteRepository.lookup context.Root request.RequestId with
+            | Error message -> rejectedFor context request (failure FailureCode.Internal (diagnostic message) []) |> fresh
+            | Ok(JournalLookup.Recorded fingerprint, Some recorded) when fingerprint = RequestFingerprint.compute request ->
+                let replayed = RemoteJournal.replayedResponse recorded
+
+                { RequestId = request.RequestId
+                  Outcome = outcomeOf replayed
+                  Failure = None
+                  Persistence = []
+                  Rendered = replayed }
+            | Ok(JournalLookup.Recorded _, _) ->
+                rejectedFor
+                    context
+                    request
+                    (failure FailureCode.IdempotencyConflict "this request ID was already used for a different request; use a new request ID for a new intent" [])
+                |> fresh
+            | Ok _ -> executeSingle context baseline request |> fresh
+
+    let results, notRun =
+        constituents
+        |> List.fold
+            (fun (results: ConstituentResult list, notRun: string list) request ->
+                match results |> List.tryLast with
+                | Some last when last.Outcome <> Outcome.Succeeded -> results, notRun @ [ request.RequestId ]
+                | _ ->
+                    let baseline = results |> List.collect _.Persistence |> Set.ofList
+                    results @ [ run baseline request ], notRun)
+            ([], [])
+
+    let firstFailure = results |> List.tryFind (fun result -> result.Outcome <> Outcome.Succeeded)
+    let kept = results |> List.collect _.Persistence |> List.distinct
+
+    let resultDocument =
+        Ros.Contracts.JsonRendering.renderIndented (fun writer ->
+            writer.WriteStartObject()
+            writer.WriteNumber("total", constituents.Length)
+            writer.WriteNumber("completed", results |> List.filter (fun result -> result.Outcome = Outcome.Succeeded) |> List.length)
+
+            match firstFailure with
+            | Some failed -> writer.WriteString("stoppedAt", failed.RequestId)
+            | None -> writer.WriteNull("stoppedAt")
+
+            writer.WriteStartArray("notRun")
+            notRun |> List.iter writer.WriteStringValue
+            writer.WriteEndArray()
+            writer.WriteStartArray("responses")
+
+            results
+            |> List.iter (fun result ->
+                use document = System.Text.Json.JsonDocument.Parse result.Rendered
+                document.RootElement.WriteTo writer)
+
+            writer.WriteEndArray()
+            writer.WriteEndObject())
+
+    let batchJournal = RemotePersistence.journalPath batch.RequestId
+
+    let response =
+        match firstFailure with
+        | None ->
+            { Response.succeeded context.Version batch context.ObservedSha (Some resultDocument) with
+                Executor = Some context.Executor }
+        | Some failed ->
+            let cause =
+                failed.Failure
+                |> Option.defaultValue (failure FailureCode.Internal "a constituent did not succeed" [])
+
+            { rejectedFor
+                  context
+                  batch
+                  { cause with Message = $"constituent '{failed.RequestId}' did not succeed ({FailureCode.code cause.Code}): {cause.Message}" } with
+                Outcome = failed.Outcome
+                Result = Some resultDocument }
+
+    if kept.IsEmpty then
+        response
+    else
+        // Accepted constituents are durable; the batch's own entry makes a
+        // retry of the whole batch replay rather than re-run.
+        let withPersistence = { response with Persistence = kept @ [ batchJournal ] |> List.distinct |> List.sort }
+
+        let entry: RemoteJournal.Entry =
+            { Request = batch
+              Fingerprint = RequestFingerprint.compute batch
+              RecordedAt = now ()
+              Principal = context.Executor.Principal
+              Response = RemoteJson.renderResponse withPersistence }
+
+        match FileRemoteRepository.write context.Root entry with
+        | Ok _ -> withPersistence
+        | Error message ->
+            { withPersistence with
+                Outcome = Outcome.Unknown
+                Failure =
+                    Some(
+                        failure
+                            FailureCode.RepositoryWriteFailed
+                            $"the batch's constituents were recorded but its own journal entry was not: {diagnostic message}; ask request.status for each constituent"
+                            []
+                    ) }
+
 /// Decides and executes one parsed request, returning the rendered response.
 let private handle (context: Context) (request: Request) : Response * string option =
     let decideAndRun lookup recorded =
@@ -429,26 +601,12 @@ let private handle (context: Context) (request: Request) : Response * string opt
             // The recorded response is returned as it was, flagged as a
             // replay; nothing executes again.
             Response.succeeded context.Version request context.ObservedSha None, recorded |> Option.map RemoteJournal.replayedResponse
-        | Decision.Execute when (executionOwnershipProblem context request).IsSome ->
-            rejectedFor
-                context
-                request
-                (failure
-                    FailureCode.DomainRejected
-                    (executionOwnershipProblem context request |> Option.defaultValue "")
-                    [ { Field = "execution.id"; Message = "not an execution this requester may continue" } ]),
-            None
         | Decision.Execute ->
             match ExecutionPlan.forRequest (now ()) request with
-            | ExecutionPlan.Describe -> Response.succeeded context.Version request context.ObservedSha (Some(describe context)) |> withExecutor context, None
-            | ExecutionPlan.RequestStatus requestId ->
-                match requestStatus context requestId with
-                | Ok result -> Response.succeeded context.Version request context.ObservedSha (Some result) |> withExecutor context, None
-                | Error message -> rejectedFor context request (failure FailureCode.Internal (diagnostic message) []), None
-            | ExecutionPlan.Command arguments when Operation.isMutating request.Operation -> executeMutation context request arguments, None
-            | ExecutionPlan.Command arguments -> executeRead context request arguments, None
+            | ExecutionPlan.Batch constituents -> executeBatch context request constituents, None
+            | _ -> executeSingle context Set.empty request, None
 
-    if not (Operation.isMutating request.Operation) then
+    if not (RequestShape.isMutating request) then
         decideAndRun JournalLookup.NotRecorded None
     else
         // One remote mutation at a time per working tree: the journal check,
@@ -537,7 +695,15 @@ let run (root: string) (version: string) (arguments: string list) : int =
             | Error parseFailure -> RemoteJson.rejection ProtocolVersion.current version observedSha parseFailure |> withExecutor context |> respond
             | Ok request ->
                 match handle context request with
-                | _, Some replayed -> emit output replayed true
+                | _, Some replayed ->
+                    let succeeded =
+                        try
+                            use document = System.Text.Json.JsonDocument.Parse replayed
+                            document.RootElement.GetProperty("outcome").GetString() = "succeeded"
+                        with _ ->
+                            false
+
+                    emit output replayed succeeded
                 | response, None -> respond response
 
 /// `praxis remote classify`: the capability a request needs, decided by the
@@ -576,8 +742,10 @@ let classify (version: string) (arguments: string list) : int =
                         writer.WriteStartObject()
                         writer.WriteString("requestId", request.RequestId)
                         writer.WriteString("operation", Operation.code request.Operation)
-                        writer.WriteString("capability", Capability.code (Operation.capability request.Operation))
-                        writer.WriteBoolean("mutating", Operation.isMutating request.Operation)
+                        writer.WriteStartArray("capabilities")
+                        RequestShape.capabilities request |> Set.toList |> List.map Capability.code |> List.iter writer.WriteStringValue
+                        writer.WriteEndArray()
+                        writer.WriteBoolean("mutating", RequestShape.isMutating request)
                         writer.WriteEndObject()))
 
                 0

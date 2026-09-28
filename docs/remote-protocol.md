@@ -1,4 +1,4 @@
-# Praxis remote protocol (`praxis.remote` 1.1)
+# Praxis remote protocol (`praxis.remote` 1.2)
 
 This page specifies the typed request/response contract that lets an agent
 with **no local .NET or Praxis runtime** ask a trusted executor to run an
@@ -110,6 +110,7 @@ not validated, and is excluded from the fingerprint.
 | `step.start` (1.1) | mutate | `stepId`, `name?`; requires `execution.id` | `praxis telemetry step start` |
 | `step.complete` (1.1) | mutate | `stepId`, `reason?`; requires `execution.id` | `praxis telemetry step complete` |
 | `step.fail` (1.1) | mutate | `stepId`, `reason?`; requires `execution.id` | `praxis telemetry step fail` |
+| `batch` (1.2) | each constituent's own | `requests[]` of `{requestId, operation, execution?, arguments?}` | each constituent's command, in order |
 
 **Version 1.1 additions.** Version 1.1 adds the step operations and the
 optional `step` argument of `telemetry.record` (PRAXIS-REMOTE-04). A 1.0
@@ -119,8 +120,38 @@ request cannot use them.
 must be named in `execution.id`, and it must be one the requester may
 continue.
 
-**Planned additions.** Ordered batches (PRAXIS-REMOTE-08) are planned for a
-later minor version. The `admin` capability is reserved.
+**Batches (version 1.2).** The `batch` operation carries ordered
+constituents in `arguments.requests`. Each constituent has the form
+`{requestId, operation, execution?, arguments?}`. Batching saves runner
+start-ups without weakening any guarantee.
+
+- **Shared context.** Constituents share the batch's protocol version,
+  repository binding and actor. Each keeps its own request ID, journal
+  entry, fingerprint and outcome. A batch cannot contain a batch.
+- **Authorization.** The batch is authorized for the union of its
+  constituents' capabilities, and bound to `expectedSha` once, before the
+  first constituent runs. Each later constituent runs on the state that the
+  constituents before it produced.
+- **Replay.**
+  - A constituent that is already journalled with the same fingerprint
+    replays instead of running again.
+  - A constituent whose ID is journalled with a different fingerprint is an
+    `idempotency-conflict`.
+  - A retry of the whole batch with the same batch ID replays the batch's
+    recorded response.
+- **Stopping.** The first constituent that does not succeed stops the batch.
+  It is undone exactly, back to how it found the tree. Constituents that
+  already succeeded stay done.
+- **The response is never ambiguous.**
+  - `outcome` and `failure` are those of the constituent that stopped the
+    batch, and `failure.message` names it.
+  - `result` lists `total`, `completed`, `stoppedAt`, `notRun`, and every
+    constituent response that ran.
+  - `persistence.paths` lists the state that successful constituents kept,
+    so the adapter persists that state even when the batch as a whole did
+    not succeed.
+
+The `admin` capability is reserved.
 
 **Capabilities.** The executor grants capabilities from *trusted*
 configuration. A request document never grants its own. `read` never
@@ -434,6 +465,9 @@ record.
 
 1. It commits exactly `persistence.paths`, after re-checking that each path
    is Praxis-owned `.ros/` state and refusing anything else that is staged.
+   Praxis lists only state it kept. That includes the successful
+   constituents of a batch that stopped part-way, which are persisted even
+   though the job reports the batch's failure.
 2. It commits as the executor, `github-actions[bot]`, with these trailers:
 
    ```

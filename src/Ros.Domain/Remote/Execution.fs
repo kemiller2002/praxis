@@ -19,6 +19,9 @@ type ExecutionPlan =
     /// (`RequestValidation`) and is passed as a discrete argument; no shell
     /// ever sees it.
     | Command of arguments: string list
+    /// Run each constituent in order, stopping at the first that does not
+    /// succeed (PRAXIS-REMOTE-08).
+    | Batch of constituents: Request list
 
 [<RequireQualifiedAccess>]
 module ExecutionPlan =
@@ -85,6 +88,7 @@ module ExecutionPlan =
                 @ optionalFlag "--collected-at" record.CollectedAt
                 @ optionalFlag "--step" record.Step
             )
+        | Arguments.Batch _ -> ExecutionPlan.Batch(Batch.constituents request)
         | Arguments.Step(stepId, name, reason) ->
             let transition =
                 match request.Operation with

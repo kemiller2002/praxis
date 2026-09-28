@@ -50,6 +50,13 @@ You can use the REST API instead:
 `POST /repos/{owner}/{repo}/actions/workflows/praxis-remote.yml/dispatches`,
 with the body `{"ref": "<branch>", "inputs": {"request": "...", "request_id": "..."}}`.
 
+**Several operations in one run.** Use `"operation": "batch"` with
+`"protocolVersion": "1.2"` and
+`"arguments": {"requests": [{"requestId": "...", "operation": "...", "arguments": {...}}, ...]}`.
+Each constituent keeps its own request ID and outcome. The batch stops at
+the first constituent that does not succeed, and `result.stoppedAt` names
+it.
+
 ## 3. Get the result
 
 - **For a mutation, read the journal on the branch.** It is at

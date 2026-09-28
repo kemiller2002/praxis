@@ -237,7 +237,10 @@ module RemoteJson =
         let required, optional = Operation.arguments operation
         Set.ofList (required @ optional)
 
-    let private parseArgumentsOf (operation: Operation) (element: JsonElement) : Parsed<Arguments> =
+    let private prefixed (field: string) (problems: Problem list) =
+        problems |> List.map (fun found -> { found with Field = $"{field}.{found.Field}" })
+
+    let rec private parseArgumentsOf (operation: Operation) (element: JsonElement) : Parsed<Arguments> =
         let field name = $"arguments.{name}"
 
         match operation with
@@ -306,6 +309,57 @@ module RemoteJson =
                 ),
                 []
             | (_, coreProblems), descriptiveProblems -> None, coreProblems @ descriptiveProblems
+        | Operation.Batch ->
+            match tryProperty "requests" element with
+            | None -> None, [ problem (field "requests") "is required" ]
+            | Some value when value.ValueKind = JsonValueKind.Array ->
+                let items =
+                    value.EnumerateArray()
+                    |> Seq.mapi (fun index item ->
+                        let itemField = field $"requests[{index}]"
+
+                        match objectValue itemField item with
+                        | None, problems -> None, problems
+                        | Some entry, _ ->
+                            let requestId, requestIdProblems = requiredString $"{itemField}.requestId" "requestId" entry
+
+                            let constituentOperation, operationProblems =
+                                match requiredString $"{itemField}.operation" "operation" entry with
+                                | Some text, _ ->
+                                    match Operation.tryParse text with
+                                    | Some parsed -> Some parsed, []
+                                    | None -> None, [ problem $"{itemField}.operation" "is not a supported operation" ]
+                                | None, problems -> None, problems
+
+                            let execution, executionProblems =
+                                match parseExecution entry with
+                                | value, problems -> value, prefixed itemField problems
+
+                            let arguments, argumentProblems =
+                                match constituentOperation with
+                                | Some parsed when parsed <> Operation.Batch -> parseArguments parsed entry |> fun (value, problems) -> value, prefixed itemField problems
+                                | Some _ -> None, [ problem $"{itemField}.operation" "a batch cannot contain a batch" ]
+                                | None -> None, []
+
+                            let problems =
+                                requestIdProblems @ operationProblems @ executionProblems @ argumentProblems
+                                @ unknownFields itemField (set [ "requestId"; "operation"; "execution"; "arguments" ]) entry
+
+                            match problems, requestId, constituentOperation, execution, arguments with
+                            | [], Some requestId, Some constituentOperation, Some execution, Some arguments ->
+                                Some
+                                    { RequestId = requestId
+                                      Operation = constituentOperation
+                                      ExecutionId = execution
+                                      Arguments = arguments },
+                                []
+                            | _ -> None, problems)
+                    |> Seq.toList
+
+                match items |> List.collect snd with
+                | [] -> Some(Arguments.Batch(items |> List.choose fst)), []
+                | problems -> None, problems
+            | Some _ -> None, [ problem (field "requests") "must be an array of requests" ]
         | Operation.StepStart ->
             combine2 (requiredString (field "stepId") "stepId" element) (optionalString (field "name") "name" element)
             |> map (fun (stepId, name) -> Arguments.Step(stepId, name, None))
@@ -327,7 +381,7 @@ module RemoteJson =
                       Ranges = ranges
                       Paths = paths })
 
-    let private parseArguments (operation: Operation) (root: JsonElement) : Parsed<Arguments> =
+    and private parseArguments (operation: Operation) (root: JsonElement) : Parsed<Arguments> =
         match optionalObject "arguments" "arguments" root with
         | None, problems -> None, problems
         | Some None, _ ->

@@ -314,7 +314,7 @@ test("praxis.describe tells an agent what it may do here, from Praxis's own cata
   const described = response.result;
   assert.equal(described.schema, "praxis.describe");
   assert.equal(described.available, true);
-  assert.deepEqual(described.protocolVersions, ["1.0", "1.1"]);
+  assert.deepEqual(described.protocolVersions, ["1.0", "1.1", "1.2"]);
   assert.equal(described.contract, "docs/remote-agent-contract.md");
   assert.deepEqual(described.repository.capabilities, ["read", "mutate"]);
   assert.deepEqual(described.grants, ["read", "mutate"], "the transport grant is narrowed by the repository");
@@ -461,4 +461,61 @@ test("an agent records steps and step-scoped usage remotely; usage keeps its evi
   const intruder = { kind: "agent", id: "other/agent", provider: "other", runtime: "x" };
   const refused = remote(root, v11("step.start", { stepId: "sneak" }, { requestId: "req-step-sneak-1", actor: intruder, execution: { id: executionId } })).response;
   assert.equal(refused.failure.code, "domain-rejected");
+});
+
+test("an ordered batch runs each constituent with its own identity and outcome, and a partial batch is unambiguous", (t) => {
+  const root = fixture(t, "batch");
+  assert.equal(praxis(root, ["add", "Second item", "--id", "WI-0200"]).status, 0);
+  git(root, "add", "-A");
+  git(root, "commit", "-qm", "second item captured, not ready");
+
+  const batch = (requestId, requests) => ({ ...request(root, "batch", { requests }, { requestId }), protocolVersion: "1.2" });
+  const partial = remote(root, batch("req-batch-0001", [
+    { requestId: "req-batch-part-1", operation: "work.start", arguments: { workItemIds: ["WI-0100"] } },
+    { requestId: "req-batch-part-2", operation: "work.start", arguments: { workItemIds: ["WI-0200"] } },
+    { requestId: "req-batch-part-3", operation: "work.block", arguments: { workItemIds: ["WI-0100"], reason: "never runs" } }
+  ]));
+  const { response } = partial;
+  assert.equal(partial.status, 1);
+  assert.equal(response.outcome, "rejected");
+  assert.equal(response.failure.code, "domain-rejected");
+  assert.match(response.failure.message, /constituent 'req-batch-part-2'/);
+  assert.equal(response.result.completed, 1);
+  assert.equal(response.result.stoppedAt, "req-batch-part-2");
+  assert.deepEqual(response.result.notRun, ["req-batch-part-3"]);
+  assert.deepEqual(response.result.responses.map((part) => [part.requestId, part.outcome]), [
+    ["req-batch-part-1", "succeeded"],
+    ["req-batch-part-2", "rejected"]
+  ]);
+
+  // The accepted constituent is kept and reported for persistence; the
+  // refused one left nothing behind.
+  assert.ok(response.persistence.paths.includes(".ros/remote/requests/req-batch-part-1.json"));
+  assert.ok(response.persistence.paths.includes(".ros/remote/requests/req-batch-0001.json"));
+  assert.ok(!response.persistence.paths.includes(".ros/remote/requests/req-batch-part-2.json"));
+  const context = readJson(root, ".ros/context/current.json");
+  assert.equal(context.workItems.find((item) => item.id === "WI-0100").state, "active");
+  assert.equal(context.workItems.find((item) => item.id === "WI-0200"), undefined);
+  git(root, "add", "-A");
+  git(root, "commit", "-qm", "praxis: partial batch");
+
+  // Retrying the same batch replays its recorded outcome.
+  const replay = remote(root, batch("req-batch-0001", partial.response.result.responses.length ? [
+    { requestId: "req-batch-part-1", operation: "work.start", arguments: { workItemIds: ["WI-0100"] } },
+    { requestId: "req-batch-part-2", operation: "work.start", arguments: { workItemIds: ["WI-0200"] } },
+    { requestId: "req-batch-part-3", operation: "work.block", arguments: { workItemIds: ["WI-0100"], reason: "never runs" } }
+  ] : [])).response;
+  assert.equal(replay.replayed, true);
+  assert.equal(status(root), "");
+
+  // A new batch may reuse an already-recorded constituent: it replays.
+  const next = remote(root, batch("req-batch-0002", [
+    { requestId: "req-batch-part-1", operation: "work.start", arguments: { workItemIds: ["WI-0100"] } },
+    { requestId: "req-batch-part-4", operation: "work.block", arguments: { workItemIds: ["WI-0100"], reason: "handoff" } }
+  ])).response;
+  assert.equal(next.outcome, "succeeded", JSON.stringify(next.failure));
+  assert.equal(next.result.responses[0].replayed, true);
+  assert.equal(next.result.responses[1].outcome, "succeeded");
+  assert.equal(readJson(root, ".ros/context/current.json").workItems.find((item) => item.id === "WI-0100").state, "blocked");
+  assert.equal(readEvents(root).filter((event) => event.workItem === "WI-0100" && event.type === "work.started").length, 1, "the replayed start did not run twice");
 });

@@ -60,6 +60,7 @@ type Operation =
     | StepStart
     | StepComplete
     | StepFail
+    | Batch
 
 [<RequireQualifiedAccess>]
 module Operation =
@@ -78,7 +79,8 @@ module Operation =
           Operation.WorkReconcile
           Operation.StepStart
           Operation.StepComplete
-          Operation.StepFail ]
+          Operation.StepFail
+          Operation.Batch ]
 
     let code operation =
         match operation with
@@ -97,6 +99,7 @@ module Operation =
         | Operation.StepStart -> "step.start"
         | Operation.StepComplete -> "step.complete"
         | Operation.StepFail -> "step.fail"
+        | Operation.Batch -> "batch"
 
     let tryParse (value: string) = all |> List.tryFind (fun operation -> code operation = value)
 
@@ -107,7 +110,10 @@ module Operation =
         | Operation.Validate
         | Operation.WorkContext
         | Operation.ProvenanceIdentity
-        | Operation.RequestStatus -> Capability.Read
+        | Operation.RequestStatus
+        // A batch needs no authority of its own: each constituent is
+        // authorized for its own operation (`RequestShape.capabilities`).
+        | Operation.Batch -> Capability.Read
         | Operation.WorkStart
         | Operation.WorkResume
         | Operation.WorkBlock
@@ -144,6 +150,7 @@ module Operation =
         | Operation.StepStart -> [ "stepId" ], [ "name" ]
         | Operation.StepComplete
         | Operation.StepFail -> [ "stepId" ], [ "reason" ]
+        | Operation.Batch -> [ "requests" ], []
 
     /// The protocol minor version that introduced the operation. A request
     /// may only use operations its own declared version knows about.
@@ -152,6 +159,7 @@ module Operation =
         | Operation.StepStart
         | Operation.StepComplete
         | Operation.StepFail -> 1
+        | Operation.Batch -> 2
         | _ -> 0
 
     /// Step operations act on the requester's own execution, which the
@@ -170,7 +178,7 @@ module ProtocolVersion =
     [<Literal>]
     let Protocol = "praxis.remote"
 
-    let current = { Major = 1; Minor = 1 }
+    let current = { Major = 1; Minor = 2 }
 
     let code version = $"{version.Major}.{version.Minor}"
 
@@ -251,6 +259,17 @@ type Arguments =
     | TelemetryRecord of TelemetryRecordArguments
     | WorkReconcile of WorkReconcileArguments
     | Step of stepId: string * name: string option * reason: string option
+    /// An ordered batch (protocol 1.2, PRAXIS-REMOTE-08): each constituent
+    /// keeps its own request ID, operation, arguments, journal entry, and
+    /// outcome, and shares the batch's repository binding and actor.
+    | Batch of BatchConstituent list
+
+/// One operation inside a batch.
+and BatchConstituent =
+    { RequestId: string
+      Operation: Operation
+      ExecutionId: string option
+      Arguments: Arguments }
 
 [<RequireQualifiedAccess>]
 module Arguments =
@@ -265,7 +284,8 @@ module Arguments =
         | Operation.WorkComplete, Arguments.WorkComplete _
         | Operation.TelemetryRecord, Arguments.TelemetryRecord _
         | Operation.WorkReconcile, Arguments.WorkReconcile _
-        | (Operation.StepStart | Operation.StepComplete | Operation.StepFail), Arguments.Step _ -> true
+        | (Operation.StepStart | Operation.StepComplete | Operation.StepFail), Arguments.Step _
+        | Operation.Batch, Arguments.Batch _ -> true
         | _ -> false
 
 type Request =
@@ -277,6 +297,39 @@ type Request =
       ExecutionId: string option
       Arguments: Arguments
       RequestedAt: DateTimeOffset option }
+
+/// Constituents of a batch become ordinary requests that share the batch's
+/// protocol version, repository binding, and actor; each keeps its own
+/// request ID (and so its own journal entry and replay).
+[<RequireQualifiedAccess>]
+module Batch =
+    [<Literal>]
+    let MaxConstituents = 20
+
+    let constituent (parent: Request) (item: BatchConstituent) : Request =
+        { parent with
+            RequestId = item.RequestId
+            Operation = item.Operation
+            ExecutionId = item.ExecutionId |> Option.orElse parent.ExecutionId
+            Arguments = item.Arguments }
+
+    let constituents (request: Request) =
+        match request.Arguments with
+        | Arguments.Batch items -> items |> List.map (constituent request)
+        | _ -> []
+
+/// What a request needs, whether it is one operation or a batch.
+[<RequireQualifiedAccess>]
+module RequestShape =
+    let isMutating (request: Request) =
+        match request.Arguments with
+        | Arguments.Batch _ -> Batch.constituents request |> List.exists (fun item -> Operation.isMutating item.Operation)
+        | _ -> Operation.isMutating request.Operation
+
+    let capabilities (request: Request) : Set<Capability> =
+        match request.Arguments with
+        | Arguments.Batch _ -> Batch.constituents request |> List.map (fun item -> Operation.capability item.Operation) |> Set.ofList
+        | _ -> Set.singleton (Operation.capability request.Operation)
 
 /// A field-level problem. Messages never echo a rejected value, so a
 /// refused secret cannot leak through diagnostics.
@@ -594,6 +647,8 @@ module RequestValidation =
     let arguments (value: Arguments) =
         match value with
         | Arguments.NoArguments -> []
+        // Constituents are validated as requests of their own (`problems`).
+        | Arguments.Batch _ -> []
         | Arguments.WorkContext id -> workItemId "arguments.workItemId" id
         | Arguments.RequestStatus id -> requestId "arguments.requestId" id
         | Arguments.WorkStart start ->
@@ -650,7 +705,7 @@ module RequestValidation =
 
     /// Every string the request carries, with the field it came from, for
     /// the secret-material scan.
-    let private strings (request: Request) : (string * string) list =
+    let rec private strings (request: Request) : (string * string) list =
         let fromActor =
             request.Actor
             |> Option.map (fun requestActor ->
@@ -686,6 +741,10 @@ module RequestValidation =
                   "arguments.step", record.Step ]
             | Arguments.Step(stepId, name, reason) ->
                 [ "arguments.stepId", Some stepId; "arguments.name", name; "arguments.reason", reason ]
+            | Arguments.Batch _ ->
+                Batch.constituents request
+                |> List.mapi (fun index item -> strings item |> List.map (fun (field, value) -> $"arguments.requests[{index}].{field}", Some value))
+                |> List.concat
             | Arguments.WorkReconcile reconcile ->
                 ("arguments.reason", Some reconcile.Reason)
                 :: (reconcile.Paths |> List.map (fun value -> "arguments.paths", Some value))
@@ -704,7 +763,7 @@ module RequestValidation =
         |> List.distinct
 
     /// Every value problem in the request, in field order.
-    let problems (request: Request) : Problem list =
+    let rec problems (request: Request) : Problem list =
         [ yield! requestId "requestId" request.RequestId
           yield! optional "repository.ref" gitRef request.Repository.Ref
           yield! optional "repository.expectedSha" commitSha request.Repository.ExpectedSha
@@ -714,7 +773,30 @@ module RequestValidation =
               yield problem "execution.id" $"is required by '{Operation.code request.Operation}'"
           if not (Arguments.matches request.Operation request.Arguments) then
               yield problem "arguments" $"do not match operation '{Operation.code request.Operation}'"
-          yield! arguments request.Arguments ]
+          yield! arguments request.Arguments
+          match request.Arguments with
+          | Arguments.Batch items ->
+              if items.IsEmpty || items.Length > Batch.MaxConstituents then
+                  yield problem "arguments.requests" $"must contain 1-{Batch.MaxConstituents} requests"
+
+              let ids = request.RequestId :: (items |> List.map _.RequestId)
+
+              if (ids |> List.distinct |> List.length) <> ids.Length then
+                  yield problem "arguments.requests" "request IDs must be unique within a batch and differ from the batch's own"
+
+              for index, item in List.indexed items do
+                  let field = $"arguments.requests[{index}]"
+
+                  if item.Operation = Operation.Batch then
+                      yield problem $"{field}.operation" "a batch cannot contain a batch"
+                  elif Operation.introducedIn item.Operation > request.ProtocolVersion.Minor then
+                      yield problem $"{field}.operation" "is not available in this request's protocol version"
+                  else
+                      yield!
+                          problems (Batch.constituent request item)
+                          |> List.filter (fun found -> not (found.Field.StartsWith "repository" || found.Field.StartsWith "actor"))
+                          |> List.map (fun found -> { found with Field = $"{field}.{found.Field}" })
+          | _ -> () ]
 
 /// The semantic identity of a request. A retry must reproduce it exactly;
 /// the same request ID with a different fingerprint is a different intent
@@ -735,7 +817,7 @@ module RequestFingerprint =
     let private listField name (values: string list) =
         field $"{name}#" (string values.Length) + (values |> List.mapi (fun index value -> field $"{name}[{index}]" value) |> String.concat "")
 
-    let private argumentsEncoding (arguments: Arguments) =
+    let rec private argumentsEncoding (arguments: Arguments) =
         match arguments with
         | Arguments.NoArguments -> field "arguments" "none"
         | Arguments.WorkContext id -> field "workItemId" id
@@ -770,6 +852,15 @@ module RequestFingerprint =
                |> String.concat "")
         | Arguments.Step(stepId, name, reason) ->
             field "stepId" stepId + optionalField "name" name + optionalField "reason" reason
+        | Arguments.Batch items ->
+            listField
+                "requests"
+                (items
+                 |> List.map (fun item ->
+                     field "requestId" item.RequestId
+                     + field "operation" (Operation.code item.Operation)
+                     + optionalField "execution" item.ExecutionId
+                     + argumentsEncoding item.Arguments))
         | Arguments.WorkReconcile reconcile ->
             field "workItemId" reconcile.WorkItemId
             + field "reason" reconcile.Reason
@@ -842,8 +933,8 @@ module RequestDecision =
         Decision.Reject(RemoteFailure.create code message problems)
 
     let decide (context: TrustedContext) (journal: JournalLookup) (request: Request) : Decision =
-        let mutating = Operation.isMutating request.Operation
-        let capability = Operation.capability request.Operation
+        let mutating = RequestShape.isMutating request
+        let required = RequestShape.capabilities request
 
         match RequestValidation.secretFields request, RequestValidation.problems request with
         | (_ :: _) as fields, _ ->
@@ -860,10 +951,12 @@ module RequestDecision =
                     FailureCode.InvalidRequest
                     "a mutating request must name repository.ref and repository.expectedSha"
                     [ { Field = "repository"; Message = "ref and expectedSha are required for a mutating operation" } ]
-            | _ when not (context.Grants.Contains capability) ->
+            | _ when not (Set.isSubset required context.Grants) ->
+                let missing = Set.difference required context.Grants |> Set.toList |> List.map Capability.code |> String.concat ", "
+
                 reject
                     FailureCode.Unauthorized
-                    $"the caller is not granted the '{Capability.code capability}' capability required by '{Operation.code request.Operation}'"
+                    $"the caller is not granted the capability required by '{Operation.code request.Operation}' ({missing})"
                     []
             | _ ->
                 match mutating, journal with

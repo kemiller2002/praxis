@@ -3231,11 +3231,48 @@
         "EXE-20260928T092610074Z-43504edb"
       ],
       "completedAt": "2026-09-28T09:27:52.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-08",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/RemoteCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Remote/Protocol.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Contracts/Remote/RemoteJson.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/remote-execute.test.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RemoteProtocolTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/remote-protocol.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T09:39:58.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T092830624Z-ab391e0d"
+      ],
+      "completedAt": "2026-09-28T09:39:58.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-28T09:27:52.000Z",
+  "updatedAt": "2026-09-28T09:39:58.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
