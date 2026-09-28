@@ -41,5 +41,6 @@
     <Compile Include="Lifecycle/Model.fs" />
     <Compile Include="Lifecycle/Migration.fs" />
     <Compile Include="Lifecycle/Planning.fs" />
+    <Compile Include="Architecture/ImplementationLanguagePolicy.fs" />
   </ItemGroup>
 </Project>

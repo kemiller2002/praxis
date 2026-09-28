@@ -11,7 +11,7 @@ open Ros.Infrastructure.Artifacts
 [<RequireQualifiedAccess>]
 module ArtifactTests =
     let rec private repositoryRoot (directory: DirectoryInfo) =
-        if File.Exists(Path.Combine(directory.FullName, "package.json"))
+        if File.Exists(Path.Combine(directory.FullName, "release.json"))
            && Directory.Exists(Path.Combine(directory.FullName, "tests", "fixtures", "artifacts")) then
             directory.FullName
         elif isNull directory.Parent then

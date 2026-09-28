@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 61,
+  "nextSeq": 65,
   "items": [
     {
       "id": "WI-0001",
@@ -1874,6 +1874,80 @@
       },
       "source": "github-issue",
       "sourceReference": "https://github.com/kemiller2002/praxis/issues/84"
+    },
+    {
+      "id": "WI-0061",
+      "title": "Remove repository-owned Node/JavaScript/TypeScript code and tooling; make Praxis F#/.NET only and enforce it",
+      "description": null,
+      "tags": [
+        "fsharp,architecture,tooling,node-removal"
+      ],
+      "priority": "high",
+      "status": "abandoned",
+      "attachments": [],
+      "createdAt": "2026-09-28T09:08:45.104Z",
+      "updatedAt": "2026-09-28T09:09:12.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null,
+      "abandonedReason": "ID collision: 'add' allocated WI-0061, which already names a completed in-flight work item in .ros/context/current.json; re-captured as FSHARP-ONLY-REPOSITORY"
+    },
+    {
+      "id": "FSHARP-ONLY-REPOSITORY",
+      "title": "Remove repository-owned Node/JavaScript/TypeScript code and tooling; make Praxis F#/.NET only and enforce it",
+      "description": null,
+      "tags": [
+        "fsharp",
+        "architecture",
+        "tooling",
+        "node-removal"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-28T09:09:13.000Z",
+      "updatedAt": "2026-09-28T09:09:14.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0064",
+      "title": "Backlog 'add' allocates WI-NNNN IDs that collide with existing in-flight work items in .ros/context/current.json (WI-0061 collided)",
+      "description": null,
+      "tags": [
+        "backlog",
+        "bug"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-28T09:09:14.029Z",
+      "updatedAt": "2026-09-28T09:09:14.029Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

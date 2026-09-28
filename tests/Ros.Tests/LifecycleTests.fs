@@ -397,8 +397,8 @@ module LifecycleTests =
                               |> Seq.map (fun entry -> entry.GetProperty("source").GetString())
                               |> List.ofSeq
                               |> fun sources -> manifest :: sources)
-                      // package.json is read for the installed name and version.
-                      |> fun sources -> "package.json" :: sources
+                      // release.json is read for the installed name and version.
+                      |> fun sources -> "release.json" :: sources
                       |> Set.ofList
 
                   let missing = Set.difference declared embedded |> Set.toList
