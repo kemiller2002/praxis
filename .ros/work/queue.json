@@ -2239,6 +2239,54 @@
       "abandonedReason": "Obsolete: DF-ROS-2026-A042 retires the npm package entirely; the native installers already provide the praxis command, and the site's ROS-to-Praxis copy and its test were updated in FSHARP-ONLY-REPOSITORY"
     },
     {
+      "id": "PRAXIS-REMOTE-11-PREP",
+      "title": "Prepare the live remote proof: ignore the request journal for attribution and script release, pin, opt-in and dispatch",
+      "description": "Child of GH-90. (1) .ros/remote/** is Praxis bookkeeping but was missing from ignoredPaths (repo and both starter profiles), so committed journal entries would read as unattributed meaningful changes. (2) A maintainer script that bumps and releases Praxis, verifies the attested release, pins it, opts a repository in, and dispatches a first praxis.describe request.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T11:30:52.055Z",
+      "updatedAt": "2026-09-28T11:38:45.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "PRAXIS-REMOTE-11"
+    },
+    {
+      "id": "PRAXIS-REMOTE-11-PREP-CI",
+      "title": "Fix PR #93 CI: enable-script test commits without a git identity",
+      "description": "Child of GH-90 / follow-up to PRAXIS-REMOTE-11-PREP. The dry-run test for scripts/praxis-remote-enable.sh commits in a fresh clone that has no user.name/user.email; CI runners have no global identity, so the commit fails. Configure a local identity in the test clone.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T11:43:42.000Z",
+      "updatedAt": "2026-09-28T11:43:50.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
       "id": "WI-0061",
       "title": "Remove repository-owned Node/JavaScript/TypeScript code and tooling; make Praxis F#/.NET only and enforce it",
       "description": null,
@@ -2326,6 +2374,31 @@
       "attachments": [],
       "createdAt": "2026-09-28T10:37:56.000Z",
       "updatedAt": "2026-09-28T11:23:44.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-CLI-RENAME",
+      "title": "Finish the ROS to Praxis product/CLI rename: praxis canonical, ros only as compatibility alias, persisted state or history",
+      "description": "Bootstrapped with the ./ros compatibility launcher because ./praxis did not exist yet in the source checkout. Also merges main (PRAXIS-REMOTE-11-PREP) and ports its two new Node test cases to F#.",
+      "tags": [
+        "rename",
+        "praxis",
+        "cli"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-28T13:45:19.000Z",
+      "updatedAt": "2026-09-28T13:45:19.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

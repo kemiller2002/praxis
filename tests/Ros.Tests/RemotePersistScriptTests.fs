@@ -418,4 +418,60 @@ module RemotePersistScriptTests =
                       exited 2 staged
                       Assert.equal false (CliPort.boolean (staged.Adapter["persisted"]))
                       Assert.equal "internal" (text (staged.Adapter["failure"]["code"]))
-                      Assert.equal "never" (text (staged.Adapter["failure"]["retry"]))) } ]
+                      Assert.equal "never" (text (staged.Adapter["failure"]["retry"]))) }
+
+          { Name = "praxis remote adapter: the enable script validates its inputs and a dry run walks every phase without changing anything"
+            Run =
+              fun () ->
+                  withCheckout (fun temporary checkout ->
+                      let script = repositoryFile "scripts/praxis-remote-enable.sh"
+                      let matches (pattern: string) (text: string) =
+                          Assert.isTrue (Regex.IsMatch(text, pattern, RegexOptions.Multiline)) $"expected /{pattern}/ in:\n{text}"
+
+                      let bad = CliHarness.run "bash" [ script; "--version"; "3.5" ] []
+                      Assert.equal 1 bad.Exit
+                      matches @"exact MAJOR\.MINOR\.PATCH" bad.Err
+
+                      let runner = checkout.Runner
+                      Directory.CreateDirectory(Path.Combine(runner, ".github", "workflows")) |> ignore
+                      File.Copy(repositoryFile ".github/workflows/praxis-remote.yml", Path.Combine(runner, ".github", "workflows", "praxis-remote.yml"))
+                      configure runner "Runner" "runner@example.invalid"
+                      CliHarness.git runner [ "add"; "-A" ] |> ignore
+                      CliHarness.git runner [ "commit"; "-qm"; "adapter" ] |> ignore
+                      CliHarness.git runner [ "push"; "-q"; "origin"; "main" ] |> ignore
+
+                      let stub = temporary "gh-enable"
+                      let gh = Path.Combine(stub, "gh")
+
+                      File.WriteAllText(
+                          gh,
+                          String.concat
+                              "\n"
+                              [ "#!/bin/sh"
+                                "case \"$1 $2\" in"
+                                "  \"auth status\") exit 0 ;;"
+                                "  \"repo view\") echo octo/example ;;"
+                                "  \"api user\") echo octocat ;;"
+                                "  *) echo \"unexpected gh $*\" >&2; exit 9 ;;"
+                                "esac"
+                                "" ]
+                      )
+
+                      File.SetUnixFileMode(gh, UnixFileMode.UserRead ||| UnixFileMode.UserWrite ||| UnixFileMode.UserExecute)
+                      let before = CliHarness.git runner [ "rev-parse"; "HEAD" ]
+                      let path = $"{stub}:" + Environment.GetEnvironmentVariable "PATH"
+
+                      let result =
+                          CliHarness.runIn
+                              (Some runner)
+                              "bash"
+                              [ script; "--version"; "9.9.9"; "--skip-release"; "--dry-run" ]
+                              [ "PATH", path; "PRAXIS", $"dotnet {CliHarness.cli}" ]
+
+                      Assert.isTrue (result.Exit = 0) result.Err
+                      matches "actor: human:octocat" result.Out
+                      matches @"\[dry-run\] praxis_cli work start --id REMOTE-ENABLE-9-9-9 --type mechanical" result.Out
+                      matches @"remote\.capabilities=\[read,mutate\]" result.Out
+                      matches @"\[dry-run\] gh workflow run praxis-remote\.yml --repo octo/example --ref main" result.Out
+                      Assert.equal before (CliHarness.git runner [ "rev-parse"; "HEAD" ])
+                      Assert.equal "" (CliHarness.git runner [ "status"; "--porcelain" ])) } ]

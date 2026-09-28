@@ -3271,6 +3271,56 @@
       "completedAt": "2026-09-28T09:39:58.000Z"
     },
     {
+      "id": "PRAXIS-REMOTE-11-PREP",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "scripts/praxis-remote-enable.sh"
+        },
+        {
+          "type": "implementation",
+          "path": "ros.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/praxis-remote-adapter.test.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/remote-execute.test.mjs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/remote-execution-operations.md"
+        }
+      ],
+      "updatedAt": "2026-09-28T11:38:45.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T113054279Z-d38395ad"
+      ],
+      "completedAt": "2026-09-28T11:38:45.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-11-PREP-CI",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "tests",
+          "path": "tests/praxis-remote-adapter.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-28T11:43:50.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T114343533Z-ea7d5dcb"
+      ],
+      "completedAt": "2026-09-28T11:43:50.000Z"
+    },
+    {
       "id": "FSHARP-ONLY-REPOSITORY",
       "type": "maintenance",
       "state": "complete",
@@ -3315,11 +3365,22 @@
         "EXE-20260928T103758056Z-43f11e6e"
       ],
       "completedAt": "2026-09-28T11:23:44.000Z"
+    },
+    {
+      "id": "PRAXIS-CLI-RENAME",
+      "type": "maintenance",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-28T13:45:20.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T134520493Z-befb2bfe"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-28T11:23:44.000Z",
+  "updatedAt": "2026-09-28T13:45:20.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

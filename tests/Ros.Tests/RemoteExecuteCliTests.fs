@@ -792,4 +792,23 @@ module RemoteExecuteCliTests =
                           1
                           (readEvents root
                            |> List.filter (fun event -> CliPort.stringOf event "workItem" = Some "WI-0100" && text (event["type"]) = "work.started")
-                           |> List.length)) } ]
+                           |> List.length)) }
+
+          { Name = "remote execute: the request journal is Praxis bookkeeping and never an unattributed change"
+            Run =
+              fun () ->
+                  withTemporaries (fun temporary ->
+                      let root = fixture temporary "journal-ignored" None
+                      let config = CliPort.readJson root "ros.json"
+                      let ignored = strings (config["workProtocol"]["ignoredPaths"])
+                      Assert.isTrue (ignored |> List.contains ".ros/remote/**") "the scaffold ignores the journal for attribution"
+
+                      // A journal entry committed by an adapter, with no work item active.
+                      CliHarness.write root ".ros/remote/requests/req-landed-0001.json" "{}\n"
+                      let result = praxis root [ "validate"; "--json" ] []
+
+                      let findings =
+                          items ((JsonNode.Parse result.Out)["findings"])
+                          |> List.filter (fun finding -> text (finding["path"]) |> fun path -> path.StartsWith ".ros/remote")
+
+                      Assert.isTrue findings.IsEmpty (findings |> List.map CliPort.compact |> String.concat ", ")) } ]
