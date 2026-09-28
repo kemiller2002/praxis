@@ -180,6 +180,8 @@ const GOLDEN ={
         "docs/decisions/README.md",
         "docs/development-telemetry.md",
         "docs/ordo-observation.md",
+        "docs/remote-agent-contract.md",
+        "docs/remote-protocol.md",
         "docs/work-adapter-contract.md",
         "docs/work-protocol.md",
         "framework/REP-SPECIFICATION.md",

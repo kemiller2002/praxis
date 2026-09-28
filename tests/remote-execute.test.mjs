@@ -306,3 +306,46 @@ test("an unidentified requester is recorded as unknown, never as the executor", 
   const started = readEvents(root).at(-1);
   assert.equal(started.actor.kind, "unknown");
 });
+
+test("praxis.describe tells an agent what it may do here, from Praxis's own catalog and state", (t) => {
+  const root = fixture(t, "describe", { remoteCapabilities: ["read", "mutate"] });
+  const { response } = remote(root, request(root, "praxis.describe", {}), { grants: ["read", "mutate", "complete"] });
+  assert.equal(response.outcome, "succeeded");
+  const described = response.result;
+  assert.equal(described.schema, "praxis.describe");
+  assert.equal(described.available, true);
+  assert.deepEqual(described.protocolVersions, ["1.0"]);
+  assert.equal(described.contract, "docs/remote-agent-contract.md");
+  assert.deepEqual(described.repository.capabilities, ["read", "mutate"]);
+  assert.deepEqual(described.grants, ["read", "mutate"], "the transport grant is narrowed by the repository");
+  assert.equal(described.repository.sha, git(root, "rev-parse", "HEAD"));
+
+  const start = described.operations.find((operation) => operation.operation === "work.start");
+  assert.deepEqual(start, {
+    operation: "work.start",
+    capability: "mutate",
+    mutating: true,
+    requiresExpectedSha: true,
+    requiredArguments: ["workItemIds"],
+    optionalArguments: ["type", "classifications"]
+  });
+  assert.ok(described.readyWork.some((item) => item.id === "WI-0100"), "ready work is discoverable");
+  assert.deepEqual(described.transports, [], "a repository without the adapter says so");
+
+  const local = praxis(root, ["remote", "describe"]);
+  assert.equal(local.status, 0);
+  assert.deepEqual(JSON.parse(local.stdout).operations, described.operations, "local and remote discovery agree");
+});
+
+test("AGENTS.md routes agents without a runtime to the contract without embedding scripts", () => {
+  const agents = fs.readFileSync(path.join(repositoryRoot, "AGENTS.md"), "utf8");
+  const section = agents.split("## No local runtime? Use remote execution")[1]?.split("\n## ")[0];
+  assert.ok(section, "AGENTS.md has the remote-execution routing section");
+  assert.match(section, /docs\/remote-agent-contract\.md/);
+  assert.doesNotMatch(section, /```|gh workflow run|curl /, "no scripts in AGENTS.md");
+  for (const document of ["docs/remote-agent-contract.md", "docs/remote-protocol.md"]) {
+    assert.ok(fs.existsSync(path.join(repositoryRoot, document)), document);
+    const manifest = JSON.parse(fs.readFileSync(path.join(repositoryRoot, "starter", "greenfield", "manifest.json"), "utf8"));
+    assert.ok(JSON.stringify(manifest).includes(`"${document}"`), `${document} ships with the scaffold`);
+  }
+});

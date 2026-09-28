@@ -2052,10 +2052,10 @@
         "gh-90"
       ],
       "priority": "medium",
-      "status": "blocked",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-28T07:45:06.777Z",
-      "updatedAt": "2026-09-28T07:45:07.000Z",
+      "updatedAt": "2026-09-28T08:54:50.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2065,8 +2065,7 @@
         "runtime": "claude-code"
       },
       "source": "github-issue",
-      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90",
-      "blockedReason": "Depends on PRAXIS-REMOTE-03, PRAXIS-REMOTE-06 (DF-ROS-2026-A041 decomposition)"
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
     },
     {
       "id": "PRAXIS-REMOTE-08",

@@ -13,6 +13,7 @@
   },
   "type": "module",
   "bin": {
+    "praxis": "./bin/ros.mjs",
     "ros": "./bin/ros.mjs",
     "ros-bootstrap": "./bin/ros-bootstrap.mjs",
     "ros-fs": "./bin/ros-fs.mjs"
@@ -30,6 +31,8 @@
     "docs/00-governance/",
     "docs/work-protocol.md",
     "docs/agent-provenance.md",
+    "docs/remote-protocol.md",
+    "docs/remote-agent-contract.md",
     "docs/work-adapter-contract.md",
     "docs/work-backlog-guide.md",
     "docs/cli.md",

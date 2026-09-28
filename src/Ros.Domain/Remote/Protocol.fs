@@ -110,6 +110,26 @@ module Operation =
     /// to an expected commit and journalled for idempotent replay.
     let isMutating operation = capability operation <> Capability.Read
 
+    /// The argument fields each operation accepts, as (required, optional).
+    /// The JSON contract rejects any other field, and discovery publishes
+    /// exactly this catalog, so the two can never disagree.
+    let arguments operation : string list * string list =
+        match operation with
+        | Operation.Describe
+        | Operation.Status
+        | Operation.Validate
+        | Operation.ProvenanceIdentity -> [], []
+        | Operation.WorkContext -> [ "workItemId" ], []
+        | Operation.RequestStatus -> [ "requestId" ], []
+        | Operation.WorkStart -> [ "workItemIds" ], [ "type"; "classifications" ]
+        | Operation.WorkResume -> [ "workItemIds" ], []
+        | Operation.WorkBlock -> [ "workItemIds"; "reason" ], []
+        | Operation.WorkComplete -> [ "workItemIds" ], [ "evidence"; "conclusion" ]
+        | Operation.TelemetryRecord ->
+            [ "metric"; "value" ],
+            [ "workItemId"; "unit"; "currency"; "quality"; "confidence"; "scope"; "sourceType"; "sourceName"; "mechanism"; "pricingSource"; "pricingVersion"; "collectedAt" ]
+        | Operation.WorkReconcile -> [ "workItemId"; "reason" ], [ "commits"; "ranges"; "paths" ]
+
     /// The protocol minor version that introduced the operation. A request
     /// may only use operations its own declared version knows about.
     let introducedIn (_: Operation) = 0

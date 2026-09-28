@@ -43,7 +43,7 @@
 | PRAXIS-REMOTE-04 | Execution steps, step-scoped usage/cost and the evidence-quality projection | ready | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-05 | Deterministic verifiable Praxis bootstrap: immutable release assets, attestation, fail-closed pins | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-06 | GitHub Actions reusable workflow adapter for praxis.remote | complete | remote-execution, gh-90 | high |
-| PRAXIS-REMOTE-07 | Remote discovery (praxis.describe) and concise agent contract | blocked | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-07 | Remote discovery (praxis.describe) and concise agent contract | complete | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-08 | Ordered batch/session remote requests | ready | remote-execution, gh-90 | low |
 | PRAXIS-REMOTE-09 | Remote reconciliation (#80), fallback records and successor continuation | ready | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-10 | Remote execution operator documentation | blocked | remote-execution, gh-90 | medium |

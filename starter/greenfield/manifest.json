@@ -426,6 +426,16 @@
       "template": false
     },
     {
+      "source": "docs/remote-protocol.md",
+      "destination": "docs/remote-protocol.md",
+      "template": false
+    },
+    {
+      "source": "docs/remote-agent-contract.md",
+      "destination": "docs/remote-agent-contract.md",
+      "template": false
+    },
+    {
       "source": "docs/development-telemetry.md",
       "destination": "docs/development-telemetry.md",
       "template": false

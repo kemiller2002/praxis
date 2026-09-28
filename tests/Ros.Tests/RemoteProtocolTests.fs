@@ -539,6 +539,32 @@ module RemoteProtocolTests =
                   Assert.equal (FailureCode.all |> List.map FailureCode.code |> Set.ofList) failureCodes
                   Assert.equal "praxis.remote" (request.RootElement.GetProperty("properties").GetProperty("protocol").GetProperty("const").GetString()) }
 
+          { Name = "remote: the request schema's per-operation arguments are exactly the typed catalog"
+            Run =
+              fun () ->
+                  use request = JsonDocument.Parse(File.ReadAllText(Path.Combine(root.Value, "schemas", "praxis-remote-request.schema.json")))
+
+                  let names (element: JsonElement) =
+                      element.EnumerateObject() |> Seq.map (fun property -> property.Name) |> Set.ofSeq
+
+                  let strings (element: JsonElement) =
+                      element.EnumerateArray() |> Seq.map (fun item -> item.GetString()) |> Set.ofSeq
+
+                  let conditional =
+                      request.RootElement.GetProperty("allOf").EnumerateArray()
+                      |> Seq.choose (fun entry ->
+                          match entry.GetProperty("if").GetProperty("properties").GetProperty("operation").TryGetProperty "const" with
+                          | true, operation -> Some(operation.GetString(), entry.GetProperty("then").GetProperty("properties").GetProperty("arguments"))
+                          | _ -> None)
+                      |> Map.ofSeq
+
+                  Operation.all
+                  |> List.iter (fun operation ->
+                      let required, optional = Operation.arguments operation
+                      let arguments = conditional[Operation.code operation]
+                      Assert.equal (Set.ofList (required @ optional)) (names (arguments.GetProperty "properties"))
+                      Assert.equal (Set.ofList required) (strings (arguments.GetProperty "required"))) }
+
           { Name = "remote: mutating operations and capability classes are exactly as documented"
             Run =
               fun () ->

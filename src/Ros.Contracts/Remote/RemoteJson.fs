@@ -234,22 +234,8 @@ module RemoteJson =
         | Some _ -> None, [ problem "arguments.evidence" "must be an array of {type, path} objects" ]
 
     let private argumentFields operation =
-        match operation with
-        | Operation.Describe
-        | Operation.Status
-        | Operation.Validate
-        | Operation.ProvenanceIdentity -> Set.empty
-        | Operation.WorkContext -> set [ "workItemId" ]
-        | Operation.RequestStatus -> set [ "requestId" ]
-        | Operation.WorkStart -> set [ "workItemIds"; "type"; "classifications" ]
-        | Operation.WorkResume -> set [ "workItemIds" ]
-        | Operation.WorkBlock -> set [ "workItemIds"; "reason" ]
-        | Operation.WorkComplete -> set [ "workItemIds"; "evidence"; "conclusion" ]
-        | Operation.TelemetryRecord ->
-            set
-                [ "workItemId"; "metric"; "value"; "unit"; "currency"; "quality"; "confidence"; "scope"
-                  "sourceType"; "sourceName"; "mechanism"; "pricingSource"; "pricingVersion"; "collectedAt" ]
-        | Operation.WorkReconcile -> set [ "workItemId"; "reason"; "commits"; "ranges"; "paths" ]
+        let required, optional = Operation.arguments operation
+        Set.ofList (required @ optional)
 
     let private parseArgumentsOf (operation: Operation) (element: JsonElement) : Parsed<Arguments> =
         let field name = $"arguments.{name}"

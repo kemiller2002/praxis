@@ -26,7 +26,7 @@ open Ros.Infrastructure.Remote
 /// adapter.
 
 let usage =
-    "remote execute --request FILE [--grant read|mutate|complete|reconcile]* [--output FILE] [--timeout-seconds N] | remote classify --request FILE"
+    "remote execute --request FILE [--grant read|mutate|complete|reconcile]* [--output FILE] [--timeout-seconds N] | remote classify --request FILE | remote describe"
 
 [<Literal>]
 let private MaxRequestBytes = 262144L
@@ -82,10 +82,13 @@ type private Context =
       Grants: Set<Capability>
       Timeout: TimeSpan }
 
-let private runCommand (context: Context) (request: Request) (arguments: string list) =
+let private runAs (context: Context) (actor: RequestActor option) (arguments: string list) =
     let program, prefix = self ()
-    let environment = RemoteIdentity.childEnvironment (parentEnvironment ()) request.Actor context.Executor
+    let environment = RemoteIdentity.childEnvironment (parentEnvironment ()) actor context.Executor
     FileRemoteRepository.run context.Root program (prefix @ [ "--root"; context.Root ] @ arguments) environment context.Timeout
+
+let private runCommand (context: Context) (request: Request) (arguments: string list) =
+    runAs context request.Actor arguments
 
 let private validationFindings (context: Context) (request: Request) =
     let outcome = runCommand context request [ "validate"; "--json" ]
@@ -107,15 +110,87 @@ let private rejectedFor (context: Context) (request: Request) (value: RemoteFail
         value
     |> withExecutor context
 
+[<Literal>]
+let private GitHubWorkflow = ".github/workflows/praxis-remote.yml"
+
+[<Literal>]
+let private AgentContract = "docs/remote-agent-contract.md"
+
+/// The `praxis.describe` discovery document (PRAXIS-REMOTE-07,
+/// `PRX-REMOTE-033`): everything an agent without a local runtime needs to
+/// decide what it can do -- versions, operations and their arguments, the
+/// authority available, the repository's current work, and where results
+/// are kept. Work state comes from the same `status` command the local CLI
+/// runs; nothing here re-derives it.
 let private describe (context: Context) =
+    let status = runAs context None [ "status"; "--json" ]
+
+    let openWork =
+        try
+            use document = System.Text.Json.JsonDocument.Parse status.Stdout
+
+            match document.RootElement.TryGetProperty "workItems" with
+            | true, items when items.ValueKind = System.Text.Json.JsonValueKind.Array ->
+                items.EnumerateArray()
+                |> Seq.filter (fun item ->
+                    match item.TryGetProperty "semanticState" with
+                    | true, state -> state.GetString() <> "complete"
+                    | _ -> true)
+                |> Seq.map (fun item -> item.GetRawText())
+                |> Seq.toList
+                |> Some
+            | _ -> None
+        with _ ->
+            None
+
+    let readyWork =
+        let ready = runAs context None [ "work"; "ready" ]
+
+        try
+            use document = System.Text.Json.JsonDocument.Parse ready.Stdout
+
+            if document.RootElement.ValueKind = System.Text.Json.JsonValueKind.Array then
+                document.RootElement.EnumerateArray()
+                |> Seq.map (fun item ->
+                    let text (name: string) =
+                        match item.TryGetProperty name with
+                        | true, value when value.ValueKind = System.Text.Json.JsonValueKind.String -> Some(value.GetString())
+                        | _ -> None
+
+                    text "id", text "title", text "priority")
+                |> Seq.toList
+                |> Some
+            else
+                None
+        with _ ->
+            None
+
     Ros.Contracts.JsonRendering.renderIndented (fun writer ->
         writer.WriteStartObject()
+        writer.WriteString("schema", "praxis.describe")
+        writer.WriteNumber("schemaVersion", 1)
+        writer.WriteBoolean("available", true)
         writer.WriteString("protocol", ProtocolVersion.Protocol)
         writer.WriteStartArray("protocolVersions")
         [ 0 .. ProtocolVersion.current.Minor ]
         |> List.iter (fun minor -> writer.WriteStringValue(ProtocolVersion.code { ProtocolVersion.current with Minor = minor }))
         writer.WriteEndArray()
         writer.WriteString("praxisVersion", context.Version)
+        writer.WriteString("contract", AgentContract)
+        writer.WriteStartObject("repository")
+
+        match context.ObservedRef with
+        | Some reference -> writer.WriteString("ref", reference)
+        | None -> writer.WriteNull("ref")
+
+        match context.ObservedSha with
+        | Some sha -> writer.WriteString("sha", sha)
+        | None -> writer.WriteNull("sha")
+
+        writer.WriteStartArray("capabilities")
+        FileRemoteRepository.readRepositoryCapabilities context.Root |> Set.toList |> List.map Capability.code |> List.iter writer.WriteStringValue
+        writer.WriteEndArray()
+        writer.WriteEndObject()
         writer.WriteStartArray("grants")
         context.Grants |> Set.toList |> List.map Capability.code |> List.iter writer.WriteStringValue
         writer.WriteEndArray()
@@ -123,13 +198,61 @@ let private describe (context: Context) =
 
         Operation.all
         |> List.iter (fun operation ->
+            let required, optional = Operation.arguments operation
             writer.WriteStartObject()
             writer.WriteString("operation", Operation.code operation)
             writer.WriteString("capability", Capability.code (Operation.capability operation))
             writer.WriteBoolean("mutating", Operation.isMutating operation)
+            writer.WriteBoolean("requiresExpectedSha", Operation.isMutating operation)
+            writer.WriteStartArray("requiredArguments")
+            required |> List.iter writer.WriteStringValue
+            writer.WriteEndArray()
+            writer.WriteStartArray("optionalArguments")
+            optional |> List.iter writer.WriteStringValue
+            writer.WriteEndArray()
             writer.WriteEndObject())
 
         writer.WriteEndArray()
+
+        match openWork with
+        | Some items ->
+            writer.WriteStartArray("openWork")
+            items |> List.iter (fun raw -> writer.WriteRawValue raw)
+            writer.WriteEndArray()
+        | None -> writer.WriteNull("openWork")
+
+        match readyWork with
+        | Some items ->
+            writer.WriteStartArray("readyWork")
+
+            items
+            |> List.iter (fun (id, title, priority) ->
+                writer.WriteStartObject()
+                [ "id", id; "title", title; "priority", priority ]
+                |> List.iter (fun (name, value) ->
+                    match value with
+                    | Some text -> writer.WriteString(name, text)
+                    | None -> writer.WriteNull(name))
+                writer.WriteEndObject())
+
+            writer.WriteEndArray()
+        | None -> writer.WriteNull("readyWork")
+
+        writer.WriteStartArray("transports")
+
+        if File.Exists(Path.Combine(context.Root, GitHubWorkflow)) then
+            writer.WriteStartObject()
+            writer.WriteString("kind", "github-actions")
+            writer.WriteString("workflow", GitHubWorkflow)
+            writer.WriteString("dispatch", "workflow_dispatch with inputs request (JSON) and request_id, on the branch the request targets")
+            writer.WriteEndObject()
+
+        writer.WriteEndArray()
+        writer.WriteStartObject("results")
+        writer.WriteString("journal", $"{RemotePersistence.JournalDirectory}/<requestId>.json")
+        writer.WriteString("statusOperation", Operation.code Operation.RequestStatus)
+        writer.WriteString("retry", "reuse the same requestId; a recorded mutation replays instead of running again")
+        writer.WriteEndObject()
         writer.WriteEndObject())
 
 let private requestStatus (context: Context) (requestId: string) =
@@ -417,3 +540,30 @@ let classify (version: string) (arguments: string list) : int =
                         writer.WriteEndObject()))
 
                 0
+
+/// `praxis remote describe`: the same discovery document, produced locally
+/// (for documentation, diagnosis, or an agent that does have a runtime).
+/// Grants are the repository's own opt-in; nothing is executed remotely.
+let describeLocal (root: string) (version: string) : int =
+    let fullRoot = Path.GetFullPath root
+    let observedRef, observedSha = FileRemoteRepository.observeHead fullRoot
+
+    let context =
+        { Root = fullRoot
+          Version = version
+          Executor =
+            { Kind = "local"
+              RunId = None
+              RunAttempt = None
+              WorkflowRef = None
+              Repository = None
+              Host = None
+              Principal = None
+              PraxisVersion = version }
+          ObservedRef = observedRef
+          ObservedSha = observedSha
+          Grants = FileRemoteRepository.readRepositoryCapabilities fullRoot
+          Timeout = TimeSpan.FromMinutes 2.0 }
+
+    printf "%s" (describe context)
+    0
