@@ -349,3 +349,78 @@ test("AGENTS.md routes agents without a runtime to the contract without embeddin
     assert.ok(JSON.stringify(manifest).includes(`"${document}"`), `${document} ships with the scaffold`);
   }
 });
+
+test("a successor agent continues in its own execution, linked to its predecessor, never impersonating it", (t) => {
+  const root = fixture(t, "successor");
+  const commit = (message) => { git(root, "add", "-A"); git(root, "commit", "-qm", message); };
+  const agentA = { kind: "agent", id: "example/agent-a", provider: "example", runtime: "cloud-a", sessionId: "session-a" };
+  const agentB = { kind: "agent", id: "other/agent-b", provider: "other", runtime: "cloud-b", sessionId: "session-b" };
+
+  assert.equal(remote(root, request(root, "work.start", { workItemIds: ["WI-0100"] }, { requestId: "req-a-start-001", actor: agentA })).response.outcome, "succeeded");
+  commit("praxis: A starts");
+  assert.equal(remote(root, request(root, "work.block", { workItemIds: ["WI-0100"], reason: "handoff to another agent" }, { requestId: "req-a-block-001", actor: agentA })).response.outcome, "succeeded");
+  commit("praxis: A blocks");
+  const [predecessor] = executions(root);
+
+  const resumed = remote(root, request(root, "work.resume", { workItemIds: ["WI-0100"] }, { requestId: "req-b-resume-01", actor: agentB })).response;
+  assert.equal(resumed.outcome, "succeeded");
+  commit("praxis: B resumes");
+
+  const all = executions(root);
+  assert.equal(all.length, 2, "the successor has its own execution");
+  const successor = all.find((execution) => execution.executionId !== predecessor.executionId);
+  assert.equal(successor.identity.agentId, "other/agent-b");
+  assert.equal(successor.identity.parentExecutionId, predecessor.executionId, "continuation names its predecessor");
+  const predecessorNow = all.find((execution) => execution.executionId === predecessor.executionId);
+  assert.equal(predecessorNow.identity.agentId, "example/agent-a", "the predecessor's identity is untouched");
+  assert.equal(readEvents(root).at(-1).actor.id, "other/agent-b");
+
+  // B may not record into A's execution, remotely or by naming it.
+  const intrusion = remote(root, request(root, "telemetry.record", { metric: "tokens.input", value: 10 }, {
+    requestId: "req-b-telemetry-1", actor: agentB, execution: { id: predecessor.executionId }
+  })).response;
+  assert.equal(intrusion.failure.code, "domain-rejected");
+  assert.match(intrusion.failure.message, /belongs to another actor or run/);
+  assert.equal(status(root), "");
+
+  const own = remote(root, request(root, "telemetry.record", { metric: "tokens.input", value: 10, unit: "tokens" }, {
+    requestId: "req-b-telemetry-2", actor: agentB, execution: { id: successor.executionId }
+  })).response;
+  assert.equal(own.outcome, "succeeded", JSON.stringify(own.failure));
+  const recorded = executions(root).find((execution) => execution.executionId === successor.executionId);
+  const measurement = recorded.metrics.find((metric) => metric.id === "tokens.input");
+  assert.equal(measurement.value, 10);
+  assert.equal(measurement.source.type, "agent-report", "remotely supplied telemetry is labelled as reported, not observed");
+});
+
+test("remote reconciliation (#80) attributes already-committed work without touching it and keeps three identities apart", (t) => {
+  const root = fixture(t, "reconcile");
+  fs.mkdirSync(path.join(root, "src"), { recursive: true });
+  fs.writeFileSync(path.join(root, "src", "feature.txt"), "committed before any work item was active\n");
+  git(root, "add", "src/feature.txt");
+  execFileSync("git", ["-c", "user.name=Original Author", "-c", "user.email=author@example.invalid", "commit", "-qm", "feature"], { cwd: root });
+  const featureCommit = git(root, "rev-parse", "HEAD");
+  const before = fs.readFileSync(path.join(root, "src", "feature.txt"), "utf8");
+
+  const { response } = remote(root, request(root, "work.reconcile", {
+    workItemId: "WI-0100", reason: "committed before the work item was begun", commits: [featureCommit]
+  }));
+  assert.equal(response.outcome, "succeeded", JSON.stringify(response.failure));
+  assert.equal(fs.readFileSync(path.join(root, "src", "feature.txt"), "utf8"), before, "the reconciled file is not touched");
+  assert.ok(response.persistence.paths.every((relative) => relative.startsWith(".ros/")));
+
+  const event = readEvents(root).find((candidate) => candidate.type === "work.attribution.reconciled");
+  assert.equal(event.workItem, "WI-0100");
+  assert.equal(event.attribution, "post-hoc");
+  assert.equal(event.actor.id, AGENT.id, "the reconciliation actor is the requester");
+  assert.equal(event.gitEvidence.commits[0].author.name, "Original Author", "the change author is preserved");
+  assert.ok(event.paths.includes("src/feature.txt"));
+
+  git(root, "add", "-A");
+  git(root, "commit", "-qm", "praxis: reconcile");
+  const duplicate = remote(root, request(root, "work.reconcile", {
+    workItemId: "WI-0100", reason: "committed before the work item was begun", commits: [featureCommit]
+  }, { requestId: "req-reconcile-again" })).response;
+  assert.equal(duplicate.outcome, "succeeded", "a duplicate reconciliation is an idempotent no-op");
+  assert.equal(readEvents(root).filter((candidate) => candidate.type === "work.attribution.reconciled").length, 1);
+});

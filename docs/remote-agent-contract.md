@@ -83,7 +83,23 @@ with the body `{"ref": "<branch>", "inputs": {"request": "...", "request_id": ".
   you actually have, and omit the rest. A missing value stays unknown; it
   is never zero.
 
-## 5. Read the outcome
+## 5. Continue someone else's work, and what to do when you cannot reach Praxis
+
+- **Taking over from another agent.** Resume the work item as yourself. You
+  get your own execution, and Praxis records its `parentExecutionId` as the
+  predecessor's execution. You never continue, or record telemetry into, an
+  execution that is not yours. Praxis refuses that, and it applies equally
+  to another run of your own agent.
+- **You could not invoke Praxis at all.** Commit your legitimate work
+  normally. When Praxis is reachable again, attribute that work with
+  `work.reconcile`, naming the commits. The attribution is recorded as
+  `post-hoc`. The original Git author and committer are preserved, and you
+  are recorded separately as the reconciliation actor. Never touch or
+  recommit files to make them look attributed. Reconciliation is
+  idempotent, and a change already reconciled to another work item is a
+  conflict. It is never overwritten.
+
+## 6. Read the outcome
 
 | `failure.retry` | What to do |
 |---|---|

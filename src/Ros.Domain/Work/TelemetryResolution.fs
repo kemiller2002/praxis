@@ -7,7 +7,13 @@ open Ros.Domain.Telemetry
 type TelemetryItemState =
     { LinkedExecutionIds: string list
       Candidates: ExecutionLinkCandidate list
-      RequestedExecutionId: string option }
+      RequestedExecutionId: string option
+      /// Executions that belong to a different actor or run than the one
+      /// performing this transition. They are never linked or recovered for
+      /// it -- a successor continues in its own execution rather than
+      /// accruing its work to a predecessor's (`PRX-REMOTE-004/005/034`) --
+      /// but a completion still finalizes them with the item.
+      ForeignExecutionIds: Set<string> }
 
 [<RequireQualifiedAccess>]
 type TelemetryResolutionStep =
@@ -47,6 +53,11 @@ type TelemetryResolutionOutcome =
 /// before any state-changing effect handler renders the write set.
 [<RequireQualifiedAccess>]
 module TelemetryResolution =
+    /// The candidates this actor may link or recover: everything that is not
+    /// someone else's execution.
+    let private own (state: TelemetryItemState) =
+        { state with Candidates = state.Candidates |> List.filter (fun candidate -> not (state.ForeignExecutionIds.Contains candidate.ExecutionId)) }
+
     let private activeCandidateIds (state: TelemetryItemState) =
         state.Candidates
         |> List.filter (fun candidate -> candidate.Status = ExecutionStatus.Active)
@@ -67,7 +78,7 @@ module TelemetryResolution =
               LinkedExecutionIds = linked |> Set.ofList
               RecoverableStatuses = statuses
               RequestedExecutionId = state.RequestedExecutionId
-              Candidates = state.Candidates }
+              Candidates = (own state).Candidates }
 
         match ExecutionLinkRecovery.decide request with
         | ExecutionLinkDecision.Recover executionId -> Ok(linked @ [ executionId ], TelemetryResolutionStep.Recovered executionId)
@@ -79,7 +90,7 @@ module TelemetryResolution =
     /// the work item regardless of prior link state, or require a new record
     /// when none is active. Never rejects on multiple candidates.
     let private linkAllActive workItemId (state: TelemetryItemState) linked =
-        match activeCandidateIds state with
+        match activeCandidateIds (own state) with
         | [] -> recoverOrStart workItemId (Set.singleton ExecutionStatus.Active) state linked
         | activeIds -> Ok(appendNew activeIds linked, TelemetryResolutionStep.LinkedActive activeIds)
 

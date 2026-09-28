@@ -2,7 +2,7 @@
 id: DF-ROS-2026-A041
 title: Remote execution is a typed, versioned Praxis request protocol, executed by the same command implementations, with GitHub Actions as a thin first adapter
 status: accepted
-version: 1.1.0
+version: 1.2.0
 owners:
   - repository-governance
 created: 2026-09-28
@@ -49,6 +49,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Amendment 1.1.0: child-process execution with derived environment; repository opt-in; dirty tree is stale-ref (PRAXIS-REMOTE-03)"
+    EXE-20260928T085516032Z-f48cc840:
+      operations: [modified]
+      at: 2026-09-28T09:08:19.677Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Amendment 1.2.0: successor continuation never links a foreign execution (PRAXIS-REMOTE-09)"
 derived_from: [RQ-ROS-2026-A021]
 ---
 # Context
@@ -425,6 +435,35 @@ Two rules added during implementation:
   `remote.capabilities`. Without it, the effective grant is `read`.
 - **A dirty working tree is `stale-ref`.** It is not the commit the request
   names.
+
+# Amendment 1.2.0 (2026-09-28, PRAXIS-REMOTE-09)
+
+**Evidence.** `PRAXIS-REMOTE-09` reproduced a defect in core behaviour,
+local and remote alike. When agent B resumed a work item that agent A had
+blocked, B's `work.resumed` event was linked into A's still-active
+execution. B's work would therefore have accrued to A's execution, which
+`PRX-REMOTE-004`, `PRX-REMOTE-005` and `PRX-REMOTE-034` forbid.
+
+**Rule.** A transition now links or recovers only executions that the
+acting process may continue, as decided by `ActorResolution.mayContinue`:
+the recorded actor agrees with the current one, and nothing known about the
+run differs. Every other execution is *foreign*
+(`TelemetryItemState.ForeignExecutionIds`). A successor, or a new session
+of the same agent, therefore gets its own execution whose
+`parentExecutionId` names its predecessor.
+
+**Exception.** Completing a work item still finalizes every active
+execution for that item.
+
+**Remote requests.** A remote request whose `execution.id` names a foreign
+execution is `domain-rejected`.
+
+**Tests:**
+- `TelemetryResolutionTests` ("continuation: ...")
+- `ProvenanceTests` ("continuation: only the same actor in the same
+  run...")
+- `tests/remote-execute.test.mjs` ("a successor agent continues in its own
+  execution...")
 
 # Consequences
 

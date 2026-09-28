@@ -691,6 +691,20 @@
             "modified"
           ],
           "reason": "Amendment 1.1.0: child-process execution with derived environment; repository opt-in; dirty tree is stale-ref (PRAXIS-REMOTE-03)"
+        },
+        "EXE-20260928T085516032Z-f48cc840": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T09:08:19.677Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Amendment 1.2.0: successor continuation never links a foreign execution (PRAXIS-REMOTE-09)"
         }
       }
     },
@@ -728,6 +742,6 @@
     ],
     "title": "Remote execution is a typed, versioned Praxis request protocol, executed by the same command implementations, with GitHub Actions as a thin first adapter",
     "updated": "2026-09-28",
-    "version": "1.1.0"
+    "version": "1.2.0"
   }
 ]

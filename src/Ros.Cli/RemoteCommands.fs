@@ -382,6 +382,38 @@ let private executeMutation (context: Context) (request: Request) (arguments: st
                                 (failure FailureCode.RepositoryWriteFailed $"the journal entry could not be written; the mutation was undone: {diagnostic message}" [])
                                 result
 
+/// A request may only name an execution its requester may continue
+/// (`ActorResolution.mayContinue`): the same actor in the same run. Naming
+/// another agent's execution -- or one from another session -- would record
+/// the requester's work under someone else's identity, so it is refused.
+let private executionOwnershipProblem (context: Context) (request: Request) =
+    match request.ExecutionId with
+    | None -> None
+    | Some executionId ->
+        let requester = request.Actor |> Option.map _.Actor |> Option.defaultValue Ros.Domain.Provenance.Actor.unknown
+
+        let requesterIdentity: Ros.Domain.Telemetry.Identity =
+            { Provider = requester.Provider |> Option.defaultValue "unknown"
+              Model = requester.Model
+              ModelVersion = None
+              Runtime = requester.Runtime |> Option.defaultValue "unknown"
+              RuntimeVersion = None
+              SessionId = request.Actor |> Option.bind _.SessionId
+              ConversationId = None
+              RunId = None
+              AgentId = Some requester.Id
+              SubagentId = None
+              ParentExecutionId = None }
+
+        match
+            Ros.Infrastructure.Provenance.FileProvenanceRepository.readExecutions context.Root
+            |> List.tryFind (fun view -> view.ExecutionId = executionId)
+        with
+        | None -> Some $"execution '{executionId}' does not exist"
+        | Some view when not (Ros.Domain.Provenance.ActorResolution.mayContinue requester requesterIdentity view.Actor view.Identity) ->
+            Some $"execution '{executionId}' belongs to another actor or run; continue in your own execution"
+        | Some _ -> None
+
 /// Decides and executes one parsed request, returning the rendered response.
 let private handle (context: Context) (request: Request) : Response * string option =
     let decideAndRun lookup recorded =
@@ -397,6 +429,15 @@ let private handle (context: Context) (request: Request) : Response * string opt
             // The recorded response is returned as it was, flagged as a
             // replay; nothing executes again.
             Response.succeeded context.Version request context.ObservedSha None, recorded |> Option.map RemoteJournal.replayedResponse
+        | Decision.Execute when (executionOwnershipProblem context request).IsSome ->
+            rejectedFor
+                context
+                request
+                (failure
+                    FailureCode.DomainRejected
+                    (executionOwnershipProblem context request |> Option.defaultValue "")
+                    [ { Field = "execution.id"; Message = "not an execution this requester may continue" } ]),
+            None
         | Decision.Execute ->
             match ExecutionPlan.forRequest (now ()) request with
             | ExecutionPlan.Describe -> Response.succeeded context.Version request context.ObservedSha (Some(describe context)) |> withExecutor context, None

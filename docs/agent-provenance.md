@@ -201,6 +201,29 @@ inherited (`RemoteIdentity.childEnvironment`):
 A local execution has no `executor` block and no `assurance` field. Its
 identity is self-reported by the local process, exactly as before.
 
+## Continuing another actor's work
+
+A work transition links only executions that the acting process may
+continue (`ActorResolution.mayContinue`). That means the same actor, and
+nothing known about the run (session, conversation, or CI run) differing.
+Two cases follow:
+
+- When a different agent resumes a work item, it gets a new execution whose
+  `identity.parentExecutionId` names the predecessor.
+- When the same agent resumes in a new session, the same happens.
+
+A predecessor's still-active execution is never linked to the successor's
+events or recovered for it. The one exception is completing the work item,
+which still finalizes every active execution for that item.
+
+The item's timeline events (`work.blocked`, `work.resumed`) are still
+recorded on every active execution as clock facts about the item. Such an
+event records when the item changed state. It does not attribute the
+successor's work to the predecessor.
+
+Remote requests follow the same rule. A request whose `execution.id` names
+an execution the requester may not continue is refused as `domain-rejected`.
+
 ## Artifact provenance
 
 ### Canonical serialization

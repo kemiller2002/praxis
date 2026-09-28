@@ -45,8 +45,8 @@
 | PRAXIS-REMOTE-06 | GitHub Actions reusable workflow adapter for praxis.remote | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-07 | Remote discovery (praxis.describe) and concise agent contract | complete | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-08 | Ordered batch/session remote requests | ready | remote-execution, gh-90 | low |
-| PRAXIS-REMOTE-09 | Remote reconciliation (#80), fallback records and successor continuation | ready | remote-execution, gh-90 | medium |
-| PRAXIS-REMOTE-10 | Remote execution operator documentation | blocked | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-09 | Remote reconciliation (#80), fallback records and successor continuation | complete | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-10 | Remote execution operator documentation | ready | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-11 | End-to-end no-.NET cloud-agent proof | blocked | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-12 | Conditor installs and configures the Praxis remote surface | blocked | remote-execution, gh-90 | low |
 | PRAXIS-SITE-01 | Establish public-site architecture | complete | gh-84, public-site | high |

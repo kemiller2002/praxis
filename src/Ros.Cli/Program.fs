@@ -307,7 +307,8 @@ let private runWorkPlan root arguments =
                                         FileTelemetryStateRepository.readCandidates root observedWorkItemId
                                     else
                                         explicitCandidates |> List.choose id
-                                  RequestedExecutionId = optionValue "--requested-execution-id" arguments } }
+                                  RequestedExecutionId = optionValue "--requested-execution-id" arguments
+                                  ForeignExecutionIds = Set.empty } }
 
                     let outcome = WorkOperations.resolveTelemetry repository plan
                     printf "%s" (WorkPlanContract.renderResolvedTelemetryJson outcome)
@@ -1148,6 +1149,19 @@ let private resolveContextTelemetryWithCreation
     attemptsLeft
     (candidatePlan: WorkContextPlan)
     =
+    // Who is performing this transition, resolved exactly as a new
+    // execution's identity would be. Executions it may not continue are
+    // foreign: never linked or recovered for it (PRX-REMOTE-004/005/034).
+    let foreignExecutionIds (workItemId: string) =
+        match FileTelemetryExecutionRepository.resolveIdentity identityOverrides with
+        | Error _ -> Set.empty
+        | Ok(actor, identity, _) ->
+            Ros.Infrastructure.Provenance.FileProvenanceRepository.readExecutions root
+            |> List.filter (fun view -> view.WorkItemId = workItemId)
+            |> List.filter (fun view -> not (ActorResolution.mayContinue actor identity view.Actor view.Identity))
+            |> List.map _.ExecutionId
+            |> Set.ofList
+
     let rec resolve attemptsLeft (candidatePlan: WorkContextPlan) =
         let telemetryRepository: TelemetryStateRepository =
             { Observe =
@@ -1158,7 +1172,8 @@ let private resolveContextTelemetryWithCreation
                         |> Option.map _.TelemetryExecutionIds
                         |> Option.defaultValue []
                       Candidates = FileTelemetryStateRepository.readCandidates root observedWorkItemId
-                      RequestedExecutionId = None } }
+                      RequestedExecutionId = None
+                      ForeignExecutionIds = foreignExecutionIds observedWorkItemId } }
 
         match WorkOperations.resolveContextTelemetry telemetryRepository candidatePlan with
         | ResolvedTelemetryContextOutcome.Resolved resolvedPlan -> Ok resolvedPlan

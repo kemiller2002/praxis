@@ -216,6 +216,15 @@ module ActorResolution =
             || bothKnownAndEqual current.RunId execution.RunId
             || (currentActor.Id <> Actor.UnknownValue && currentActor.Id = executionActor.Id))
 
+    /// Whether a process may continue (link or recover) an existing
+    /// execution: the recorded actor must agree with the current one and
+    /// nothing known about the run (session, conversation, CI run) may
+    /// differ. Anything else is someone else's execution, or another run of
+    /// the same agent, and is continued in a new execution that names it as
+    /// its parent instead.
+    let mayContinue (currentActor: Actor) (current: Identity) (executionActor: Actor) (execution: Identity) =
+        Actor.agrees currentActor executionActor && sameRun current execution
+
     /// Whether this process has any identity of its own. A process with none
     /// (a plain terminal with no identity environment) must not silently
     /// inherit someone else's execution.
