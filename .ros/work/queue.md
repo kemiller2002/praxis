@@ -35,6 +35,7 @@
 | PKG-BIN-EXECUTABLE | PKG-BIN-EXECUTABLE | complete |  |  |
 | PKG-ECHELON-FOUNDRY | PKG-ECHELON-FOUNDRY | complete |  |  |
 | PKG-FALLBACK-GUIDE | Ship fallback reconciliation guide in distributed package | complete | packaging, documentation | high |
+| PKG-FALLBACK-PAYLOAD | Embed fallback reconciliation guide in native F# payload | complete | fsharp, packaging | high |
 | PKG-MIT-LICENSE | PKG-MIT-LICENSE | complete |  |  |
 | PKG-PUBLISH-READINESS | PKG-PUBLISH-READINESS | complete |  |  |
 | PRAXIS-SITE-01 | Establish public-site architecture | complete | gh-84, public-site | high |

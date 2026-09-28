@@ -2966,11 +2966,36 @@
         "EXE-20260928T071427744Z-4668f242"
       ],
       "completedAt": "2026-09-28T07:30:17Z"
+    },
+    {
+      "id": "PKG-FALLBACK-PAYLOAD",
+      "type": "bug",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Ros.Infrastructure.fsproj"
+        },
+        {
+          "type": "tests",
+          "path": "tests/lifecycle-package.test.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/Program.fs"
+        }
+      ],
+      "updatedAt": "2026-09-28T07:56:47Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T075108583Z-722e436a"
+      ],
+      "completedAt": "2026-09-28T07:56:47Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-28T07:30:17Z",
+  "updatedAt": "2026-09-28T07:56:47Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

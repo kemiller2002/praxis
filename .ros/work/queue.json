@@ -1992,6 +1992,30 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PKG-FALLBACK-PAYLOAD",
+      "title": "Embed fallback reconciliation guide in native F# payload",
+      "description": "The native standalone F# binary embeds the starter manifest but omitted the new manifest source document, causing offline init to fail.",
+      "tags": [
+        "fsharp",
+        "packaging"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:50:51Z",
+      "updatedAt": "2026-09-28T07:56:47Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

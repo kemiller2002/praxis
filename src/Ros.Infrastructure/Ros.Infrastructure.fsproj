@@ -65,6 +65,7 @@
     <EmbeddedResource Include="$(RosRepositoryRoot)telemetry/metrics.json" LogicalName="ros.payload/telemetry/metrics.json" />
 
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/development-telemetry.md" LogicalName="ros.payload/docs/development-telemetry.md" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)docs/fallback-reconciliation.md" LogicalName="ros.payload/docs/fallback-reconciliation.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/ordo-observation.md" LogicalName="ros.payload/docs/ordo-observation.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/project-administration-hub.md" LogicalName="ros.payload/docs/project-administration-hub.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/web-interface.md" LogicalName="ros.payload/docs/web-interface.md" />
