@@ -4,6 +4,7 @@ set -eu
 REPO="kemiller2002/praxis"
 VERSION=""
 INSTALL_BASE="${ECHELON_HOME:-$HOME/.echelon}"
+ACTIVATE=1
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -15,8 +16,12 @@ while [ "$#" -gt 0 ]; do
       INSTALL_BASE="${2:-}"
       shift 2
       ;;
+    --no-activate)
+      ACTIVATE=0
+      shift
+      ;;
     -h|--help)
-      echo "Usage: install-native.sh [--version X.Y.Z] [--install-base PATH]"
+      echo "Usage: install-native.sh [--version X.Y.Z] [--install-base PATH] [--no-activate]"
       exit 0
       ;;
     *)
@@ -93,6 +98,13 @@ if [ -d "$target" ]; then
 else
   cp -R "$source_root" "$target"
   chmod +x "$target/praxis" "$target/praxis-bin" "$target/echelon"
+fi
+
+if [ "$ACTIVATE" -eq 0 ]; then
+  # A project's pinned ./ros launcher installs its version side by side
+  # without changing which version the user's global commands run.
+  printf '%s\n' "Installed Praxis $VERSION to $target (not activated)"
+  exit 0
 fi
 
 if [ -e "$current" ] && [ ! -L "$current" ]; then

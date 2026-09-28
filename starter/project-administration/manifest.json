@@ -62,8 +62,13 @@
       "executable": true
     },
     {
-      "source": "starter/greenfield/tools/ros_fs_launcher.mjs",
-      "destination": "tools/ros_fs_launcher.mjs",
+      "source": "starter/greenfield/ros.ps1",
+      "destination": "ros.ps1",
+      "template": false
+    },
+    {
+      "source": "starter/greenfield/ros.cmd",
+      "destination": "ros.cmd",
       "template": false
     },
     {

@@ -53,4 +53,5 @@ let main _ =
     @ ProvenanceEffectTests.tests
     @ WorkReconciliationTests.tests
     @ WorkReconciliationEffectTests.tests
+    @ ImplementationLanguagePolicyTests.tests
     |> TestRunner.run

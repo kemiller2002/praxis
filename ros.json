@@ -33,6 +33,11 @@
     "meaningfulPaths": ["**"],
     "ignoredPaths": [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", ".ros/telemetry/**", ".ros/locks/**", "registries/**", ".echelon/**"]
   },
+  "implementationPolicy": {
+    "version": "1.0.0",
+    "prohibitNodeArtifacts": true,
+    "exceptions": []
+  },
   "provenance": {
     "version": "1.0.0",
     "enforce": true,

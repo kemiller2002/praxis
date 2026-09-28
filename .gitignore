@@ -13,11 +13,12 @@ __pycache__/
 .venv/
 venv/
 
-# Node
+# Node: kept as a guard. This repository owns no Node code (DF-ROS-2026-A041),
+# but a stray install must never be committed.
 node_modules/
 
 # .NET / F# build output (src/tests trees only -- the repo-root bin/ holds
-# tracked npm CLI entrypoints, e.g. bin/ros-bootstrap.mjs and bin/ros-fs.mjs)
+# tracked native launcher scripts, e.g. bin/praxis-native.sh and bin/echelon.sh)
 src/**/bin/
 src/**/obj/
 tests/**/bin/
@@ -28,9 +29,6 @@ web/app.js
 web/app.js.map
 web-hub/app.js
 web-hub/app.js.map
-
-# Written by publish.yml into the npm tarball only; never committed to source
-lib/stable-ros-version.json
 
 # Generated transient work
 .ros/locks/
