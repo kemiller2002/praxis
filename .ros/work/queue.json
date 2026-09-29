@@ -2935,6 +2935,27 @@
       },
       "source": "github",
       "sourceReference": "https://github.com/kemiller2002/praxis/issues/109"
+    },
+    {
+      "id": "EXEC-INSTALL-109-NPM-BIN",
+      "title": "Keep npm bin as ros only; praxis stays canonical via native release and ./praxis",
+      "description": "Site consistency test (tests/site/content.test.mjs) states npm exposes ros, not praxis. Adding an npm praxis bin contradicted it; changing that evaluator from the judged execution is not allowed, and npm publication is disabled. Revert the npm bin addition.",
+      "tags": [],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T12:50:16.000Z",
+      "updatedAt": "2026-09-29T12:50:34.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github",
+      "sourceReference": "https://github.com/kemiller2002/praxis/pull/110"
     }
   ]
 }

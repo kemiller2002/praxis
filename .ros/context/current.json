@@ -4218,11 +4218,56 @@
         }
       },
       "completedAt": "2026-09-29T12:38:51.000Z"
+    },
+    {
+      "id": "EXEC-INSTALL-109-NPM-BIN",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "package.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/content.test.mjs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/cli.md"
+        }
+      ],
+      "updatedAt": "2026-09-29T12:50:34.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T125017832Z-d2f1f2e0"
+      ],
+      "latestCheckpoint": {
+        "id": "0bd541f58dd9c727c608959a",
+        "recordedAt": "2026-09-29T12:50:32.000Z",
+        "executionId": "EXE-20260929T125017832Z-d2f1f2e0",
+        "repository": "repository-operating-system",
+        "branch": "work/exec-install-109",
+        "commit": "384c1e27d15e2cd8771e5f36941d1c1ad2ac6d08",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "work/exec-install-109",
+        "remoteCommit": "384c1e27d15e2cd8771e5f36941d1c1ad2ac6d08",
+        "summary": "npm bin reverted to ros only; site tests pass",
+        "nextAction": "complete",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T12:50:34.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T12:08:18.000Z",
+  "updatedAt": "2026-09-29T12:50:34.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
