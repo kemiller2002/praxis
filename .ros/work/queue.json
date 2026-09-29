@@ -3051,6 +3051,30 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-02",
+      "title": "Accept planner decision DF-ROS-2026-A046 on the owner's approval",
+      "description": "The repository owner approved the advisory-planner design after PR #120 merged; move DF-ROS-2026-A046 from review to accepted.",
+      "tags": [
+        "planning",
+        "governance"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-29T22:29:33.000Z",
+      "updatedAt": "2026-09-29T22:29:34.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
