@@ -2343,10 +2343,10 @@
         "gh-90"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-29T01:12:52.000Z",
-      "updatedAt": "2026-09-29T01:12:52.000Z",
+      "updatedAt": "2026-09-29T01:27:58.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

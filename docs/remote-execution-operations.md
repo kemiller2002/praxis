@@ -108,6 +108,14 @@ a branch named `praxis/remote/<digest>`, and the result reports the pull
 request. Nothing is persisted to the target branch until the pull request
 is merged.
 
+A retry with the same request ID, for example after the pull request could
+not be opened, finds that branch already pushed. When the branch's tip
+carries this request's `Praxis-Request-Id` trailer, the adapter keeps it:
+the earlier attempt's state is the request's state. It reports the open pull
+request, or opens one, with `reused: true` in the adapter result, and never
+pushes a second state for the same request. A branch whose tip names another
+request, or none, is `concurrency-conflict` and is left untouched.
+
 ## Version pinning and upgrades
 
 **What the bootstrap does.** The bootstrap installs exactly the pinned
