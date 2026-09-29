@@ -2767,10 +2767,33 @@
         "durable-checkpoints"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-29T10:11:23.945Z",
-      "updatedAt": "2026-09-29T10:11:41.000Z",
+      "updatedAt": "2026-09-29T10:22:06.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-TELEMETRY-CLASSIFY-VOCAB",
+      "title": "telemetry classify accepts classifications that validate rejects",
+      "description": "Found during PRAXIS-CONT-11-SEGMENTATION: './ros telemetry classify ID --classification production-engineering' succeeded and wrote the value into the execution record, and './ros validate' then failed with 'invalid work classification'. classify should refuse values outside the work-classification vocabulary (or x- extensions) that validate enforces, at write time.",
+      "tags": [
+        "telemetry"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-29T10:22:02.822Z",
+      "updatedAt": "2026-09-29T10:22:02.822Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

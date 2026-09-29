@@ -3912,18 +3912,49 @@
     {
       "id": "PRAXIS-CONT-11-SEGMENTATION",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-29T10:11:41.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Telemetry/Steps.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/TelemetrySegmentationTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T10:22:06.000Z",
       "telemetryExecutionIds": [
         "EXE-20260929T101141946Z-cddc93be"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "08342602dd36c47d90ce2947",
+        "recordedAt": "2026-09-29T10:21:55.000Z",
+        "executionId": "EXE-20260929T101141946Z-cddc93be",
+        "stepId": "segmentation-model",
+        "repository": "repository-operating-system",
+        "branch": "claude/checkpoint-telemetry-segmentation",
+        "commit": "c9c38547913eb961f2076b335d5392a2b0b2348c",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/checkpoint-telemetry-segmentation",
+        "remoteCommit": "c9c38547913eb961f2076b335d5392a2b0b2348c",
+        "summary": "Effective-current step telemetry segmentation: derived boundary, context/status/continue exposure, usage unavailable-not-zero, step-reference validation, CONT-080..086, tests for items 33-40 and strengthened two-clone proof",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T10:22:06.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T10:11:41.000Z",
+  "updatedAt": "2026-09-29T10:22:06.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
