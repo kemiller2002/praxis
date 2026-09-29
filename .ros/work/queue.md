@@ -80,6 +80,7 @@
 | PRAXIS-SITE-26 | Final verification and evidence | complete | gh-84, public-site | high |
 | PRAXIS-SITE-27 | Align Pages deployment workflow with echelon-foundry deploy-pages.yml | complete | gh-84, public-site | medium |
 | PROJECT-ADMIN-HUB | PROJECT-ADMIN-HUB | complete |  |  |
+| RELEASE-3-5-0 | Release Praxis 3.5.0 with remote execution (GH-90) | complete |  | high |
 | ROADMAP-PHASE-2 | ROADMAP-PHASE-2 | complete |  |  |
 | ROADMAP-PHASE-3 | ROADMAP-PHASE-3 | complete |  |  |
 | ROADMAP-PHASE-4 | ROADMAP-PHASE-4 | complete |  |  |
