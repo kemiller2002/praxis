@@ -325,7 +325,15 @@ Publishing is CI-driven ([`.github/workflows/publish.yml`](.github/workflows/pub
 never a local developer machine. Every push to `main` publishes a `main`-tagged
 snapshot; a stable release happens only when `package.json`'s committed version
 changes, which also builds the self-contained binaries and creates the matching
-GitHub Release. Before tagging:
+GitHub Release.
+
+To cut a release, run the **Release** workflow
+([`.github/workflows/release.yml`](.github/workflows/release.yml)) from the
+Actions tab on `main` with `patch`, `minor`, `major` or an exact `X.Y.Z`. It
+bumps the version as an attributed Praxis work item (`RELEASE-X-Y-Z`, via
+[`scripts/praxis-release-bump.sh`](scripts/praxis-release-bump.sh)), pushes it
+with a durable checkpoint, then dispatches `publish.yml` and
+`native-release.yml`. Before releasing:
 
 ```bash
 npm run release:check

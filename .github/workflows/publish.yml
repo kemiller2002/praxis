@@ -3,6 +3,15 @@ name: Publish to npm
 on:
   push:
     branches: [main]
+  # release.yml pushes its version bump with GITHUB_TOKEN, which does not
+  # trigger push workflows, so it dispatches this one with the commit the
+  # bump started from. `base` stands in for the push event's `before`.
+  workflow_dispatch:
+    inputs:
+      base:
+        description: "Commit to compare against (the release's pre-bump main head)"
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -50,7 +59,7 @@ jobs:
           ./ros registry check
           ./ros validate
         env:
-          ROS_BASE_REF: ${{ github.event.before }}
+          ROS_BASE_REF: ${{ github.event.before || inputs.base }}
 
       # npm run test:all already packs the artifact and runs every documented
       # lifecycle command against it (tests/lifecycle-package.test.mjs). This
@@ -67,12 +76,14 @@ jobs:
       # working copy (not the repository) for its own, unrelated publish.
       - name: Determine whether package.json's version changed
         id: version-check
+        env:
+          BEFORE: ${{ github.event.before || inputs.base }}
         run: |
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           echo "current=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
           CHANGED=false
-          if git cat-file -e "${{ github.event.before }}^{commit}" 2>/dev/null; then
-            if git show "${{ github.event.before }}:package.json" > /tmp/previous-package.json 2>/dev/null; then
+          if git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+            if git show "${BEFORE}:package.json" > /tmp/previous-package.json 2>/dev/null; then
               PREVIOUS_VERSION=$(node -p "require('/tmp/previous-package.json').version" 2>/dev/null || echo "")
               if [ -n "$PREVIOUS_VERSION" ] && [ "$PREVIOUS_VERSION" != "$CURRENT_VERSION" ]; then
                 CHANGED=true

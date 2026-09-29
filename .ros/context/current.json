@@ -3950,11 +3950,22 @@
         }
       },
       "completedAt": "2026-09-29T10:22:06.000Z"
+    },
+    {
+      "id": "PRAXIS-RELEASE-BUMP-WORKFLOW",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-29T10:40:03.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T104004193Z-090e4cd9"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T10:22:06.000Z",
+  "updatedAt": "2026-09-29T10:40:03.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

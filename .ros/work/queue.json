@@ -2804,6 +2804,29 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-RELEASE-BUMP-WORKFLOW",
+      "title": "Release workflow: one-click version bump that publishes",
+      "description": "A workflow_dispatch workflow bumps package.json/package-lock.json (patch|minor|major|exact) as an attributed Praxis work item under the GitHub Actions identity (start, commit, push, durable checkpoint, complete), then dispatches publish.yml and native-release.yml, since GITHUB_TOKEN pushes do not trigger push workflows. publish.yml accepts a dispatched base ref for its version-change detection and attribution range.",
+      "tags": [
+        "release"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-29T10:40:02.207Z",
+      "updatedAt": "2026-09-29T10:40:03.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
