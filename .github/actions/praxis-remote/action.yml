@@ -74,15 +74,22 @@ runs:
         dir="$RUNNER_TEMP/praxis-remote"
         python3 - "$dir/response.json" "$dir/adapter.json" <<'PY'
         import json, os, sys
+        from secrets import token_hex
         response = json.load(open(sys.argv[1]))
         adapter = json.load(open(sys.argv[2]))
         outcome = response.get("outcome", "unknown")
         failure = response.get("failure") or adapter.get("failure")
+        document = json.dumps({"response": response, "adapter": adapter}, indent=2)
         with open(os.environ["GITHUB_OUTPUT"], "a") as out:
             out.write(f"outcome={outcome}\npersisted={str(adapter.get('persisted')).lower()}\n")
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
             summary.write(f"### praxis.remote `{response.get('requestId')}` `{response.get('operation')}`: **{outcome}**\n\n")
-            summary.write("```json\n" + json.dumps({"response": response, "adapter": adapter}, indent=2) + "\n```\n")
+            summary.write("```json\n" + document + "\n```\n")
+        # The same response in the job log, for callers that can read logs
+        # but not artifacts or summaries. It carries request-derived text, so
+        # workflow commands stay suspended while it prints.
+        token = token_hex(16)
+        print(f"::group::praxis.remote response\n::stop-commands::{token}\n{document}\n::{token}::\n::endgroup::", flush=True)
         ok = outcome == "succeeded" and adapter.get("failure") is None
         if not ok:
             print(f"::error::praxis.remote {outcome}: {(failure or {}).get('code')} ({(failure or {}).get('retry')})")

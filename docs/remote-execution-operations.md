@@ -147,7 +147,10 @@ See the [agent contract](remote-agent-contract.md). In short, dispatch
   `.ros/remote/requests/<requestId>.json` into the same commit as the
   state it describes.
 - **The run.** It is named `praxis remote <request_id>`. Its summary holds
-  the response and the adapter result.
+  the response and the adapter result. The executing job's log prints the
+  same document in a `praxis.remote response` group, with workflow
+  commands suspended while it prints, so request-derived text cannot act
+  as a workflow command.
 - **The artifact.** It is named `praxis-remote-response`, is kept for 30
   days, and serves as supporting evidence only.
 
