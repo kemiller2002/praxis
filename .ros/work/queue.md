@@ -66,6 +66,7 @@
 | PRAXIS-REMOTE-11-PREP-CI | Fix PR #93 CI: enable-script test commits without a git identity | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-11-PROOF | Live proof: a cloud agent without .NET is governed through remote Praxis | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-12 | Conditor installs and configures the Praxis remote surface | ready | remote-execution, gh-90 | low |
+| PRAXIS-REMOTE-12-CONTINUE-PROOF | PRAXIS-REMOTE-12-CONTINUE-PROOF | complete |  |  |
 | PRAXIS-REMOTE-13 | Adapter recognizes GitHub rate limiting on push and pull-request creation (PRX-REMOTE-038) | complete | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-14 | Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict | complete | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-15 | Agent contract: a handoff needs a block before the successor resumes | complete | remote-execution, gh-90 | high |
@@ -98,6 +99,7 @@
 | PRAXIS-SITE-26 | Final verification and evidence | complete | gh-84, public-site | high |
 | PRAXIS-SITE-27 | Align Pages deployment workflow with echelon-foundry deploy-pages.yml | complete | gh-84, public-site | medium |
 | PRAXIS-TELEMETRY-CLASSIFY-VOCAB | telemetry classify accepts classifications that validate rejects | captured | telemetry | medium |
+| PRAXIS-XPROVIDER-PROOF-01 | Cross-provider continuation proof: Claude starts, ChatGPT finishes | ready | continuity, proof | medium |
 | PROJECT-ADMIN-HUB | PROJECT-ADMIN-HUB | complete |  |  |
 | RELEASE-3-5-0 | Release Praxis 3.5.0 with remote execution (GH-90) | complete |  | high |
 | RELEASE-3-6-0 | Release Praxis 3.6.0 | complete |  | medium |

@@ -2869,6 +2869,30 @@
       },
       "source": "manual",
       "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+    },
+    {
+      "id": "PRAXIS-XPROVIDER-PROOF-01",
+      "title": "Cross-provider continuation proof: Claude starts, ChatGPT finishes",
+      "description": "Live test of RQ-ROS-2026-A022 cross-provider continuation. Executor A (Claude Code) writes part 1 of docs/proofs/cross-provider-continuation.md, commits, pushes, records a durable checkpoint and stops. Executor B (ChatGPT/OpenAI) must recover from repository and Praxis state alone, take over with work continue under its own identity, write part 2, checkpoint and complete.",
+      "tags": [
+        "continuity",
+        "proof"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-29T12:17:53.950Z",
+      "updatedAt": "2026-09-29T12:17:54.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
