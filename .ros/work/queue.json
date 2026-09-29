@@ -2599,10 +2599,10 @@
         "durable-checkpoints"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-29T06:32:14.000Z",
-      "updatedAt": "2026-09-29T06:32:37.000Z",
+      "updatedAt": "2026-09-29T07:08:53.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

@@ -41,7 +41,7 @@
 | PRAXIS-CONT-01-DOMAIN | Durable checkpoint domain model and invariants | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-02-GIT | Git remote/upstream/durability observations | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-03-PERSIST | Checkpoint events, projection, persistence, schema compatibility | complete | continuity, durable-checkpoints | high |
-| PRAXIS-CONT-04-CLI | work checkpoint, context/status presentation, JSON contract | ready | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-04-CLI | work checkpoint, context/status presentation, JSON contract | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-05-GUARDS | Completion/block lifecycle continuity guards | ready | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-06-CONTINUE | Cross-executor work continue / takeover semantics | ready | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-07-REMOTE | Remote-agent / GitHub Actions checkpoint capability | ready | continuity, durable-checkpoints | high |

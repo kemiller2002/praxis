@@ -3563,38 +3563,52 @@
     {
       "id": "PRAXIS-CONT-04-CLI",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-29T06:59:35.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/CheckpointCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/Program.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/CheckpointCliTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T07:08:53.000Z",
       "telemetryExecutionIds": [
         "EXE-20260929T065936299Z-2e1a598f"
       ],
       "latestCheckpoint": {
-        "id": "ae29e8dee93e04908dba4070",
-        "recordedAt": "2026-09-29T07:03:50.000Z",
+        "id": "b84b11ef733c113be245e31c",
+        "recordedAt": "2026-09-29T07:08:51.000Z",
         "executionId": "EXE-20260929T065936299Z-2e1a598f",
         "repository": "repository-operating-system",
         "branch": "claude/durable-checkpoints-continuity-ywqs3w",
-        "commit": "79c7e9f6762bf29903ef0837ce856c22ff0f92b4",
+        "commit": "23e973bd762cee980dda087e280f47f93fc9899f",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
         "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
-        "remoteCommit": "79c7e9f6762bf29903ef0837ce856c22ff0f92b4",
-        "summary": "Domain, Git observations, persistence and the work checkpoint/show CLI are implemented and pushed; 640 F# tests pass",
-        "nextAction": "Add CLI integration tests for work checkpoint, context and status continuity; then implement completion/block guards (PRAXIS-CONT-05)",
+        "remoteCommit": "23e973bd762cee980dda087e280f47f93fc9899f",
+        "summary": "work checkpoint/show, context and status continuity, --text and --offline implemented with 9 CLI integration tests; 649 F# tests and the status/context goldens pass",
+        "nextAction": "Run final completion transition",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-09-29T07:08:53.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T06:59:35.000Z",
+  "updatedAt": "2026-09-29T07:08:53.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
