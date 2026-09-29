@@ -1205,5 +1205,67 @@
     "title": "Durable checkpoints and agent continuity: two-clone agent-loss recovery and verification results",
     "updated": "2026-09-29",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-29",
+    "derived_from": [
+      "RQ-ROS-2026-A022"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A056",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A056--live-remote-continuation-proof.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T120718709Z-8c483346": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T12:08:01.000Z",
+          "evidence": [
+            "https://github.com/kemiller2002/praxis/issues/90"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "Live proof of praxis.remote 1.3 executor continuation (PRAXIS-REMOTE-12-CONTINUE-PROOF), verified against main and the GitHub Actions API"
+        }
+      }
+    },
+    "related_documents": [
+      "https://github.com/kemiller2002/praxis/issues/90",
+      "RQ-ROS-2026-A022",
+      "RQ-ROS-2026-A021",
+      "DF-ROS-2026-A042",
+      "DF-ROS-2026-A041",
+      "EV-ROS-2026-A054",
+      "docs/remote-agent-contract.md",
+      "docs/remote-protocol.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A022",
+      "RQ-ROS-2026-A021"
+    ],
+    "tags": [
+      "remote-execution",
+      "e2e",
+      "continuity",
+      "checkpoint",
+      "provenance",
+      "telemetry",
+      "gh-90"
+    ],
+    "title": "Live proof: a runtime-less successor continues active work with praxis.remote 1.3 work.continue on Praxis 3.6.0",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
   }
 ]
