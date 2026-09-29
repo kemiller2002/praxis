@@ -61,4 +61,5 @@ let main _ =
     @ CheckpointPersistenceTests.tests
     @ CheckpointCliTests.tests
     @ CheckpointGuardTests.tests
+    @ ContinuationCliTests.tests
     |> TestRunner.run

@@ -579,3 +579,245 @@ module CheckpointCommands =
                         | _ -> None)
                     |> Map.ofList
                     |> Ok
+
+    // ---- work continue (PRAXIS-CONT-06) ----
+
+    let continueUsage = "work continue --id ID --occurred-at TIMESTAMP [--json] [IDENTITY]"
+
+    let private numberText (node: JsonNode) =
+        match node with
+        | :? JsonValue as value -> value.ToJsonString()
+        | _ -> "null"
+
+    /// Test and validation measurements every execution of the work item
+    /// recorded, with their evidence quality and source, so a successor sees
+    /// what actually ran instead of trusting a summary.
+    let private validationEvidence root (workItemId: string) =
+        let array = JsonArray()
+
+        for record in FileTelemetryQueryRepository.readByWorkItemId root workItemId do
+            let executionId =
+                match record["executionId"] with
+                | :? JsonValue as value -> value.GetValue<string>()
+                | _ -> ""
+
+            match record["metrics"] with
+            | :? JsonArray as metrics ->
+                for metric in metrics do
+                    match metric with
+                    | :? JsonObject as measurement ->
+                        match measurement["id"] with
+                        | :? JsonValue as id when id.GetValue<string>().StartsWith "tests." ->
+                            let node = JsonObject()
+                            node["executionId"] <- JsonValue.Create executionId
+                            node["metric"] <- id.DeepClone()
+                            node["value"] <- (match measurement["value"] with null -> null | value -> value.DeepClone())
+                            node["quality"] <- (match measurement["quality"] with null -> null | value -> value.DeepClone())
+                            node["source"] <- (match measurement["source"] with null -> null | value -> value.DeepClone())
+                            array.Add(node: JsonNode)
+                        | _ -> ()
+                    | _ -> ()
+            | _ -> ()
+
+        array
+
+    let private stepsOf root (executionId: string) =
+        let array = JsonArray()
+
+        match FileTelemetryQueryRepository.readByExecutionId root executionId with
+        | Ok record ->
+            for step in FileTelemetryFinalizationRepository.stepEvents record |> Ros.Domain.Telemetry.Steps.project do
+                let node = JsonObject()
+                node["stepId"] <- JsonValue.Create step.StepId
+                step.Name |> Option.iter (fun name -> node["name"] <- JsonValue.Create name)
+
+                node["status"] <-
+                    JsonValue.Create(
+                        match step.Status with
+                        | Ros.Domain.Telemetry.StepStatus.Running -> "running"
+                        | Ros.Domain.Telemetry.StepStatus.Completed -> "completed"
+                        | Ros.Domain.Telemetry.StepStatus.Failed -> "failed"
+                    )
+
+                array.Add(node: JsonNode)
+        | Error _ -> ()
+
+        array
+
+    let private strings (values: string list) =
+        let array = JsonArray()
+        values |> List.iter (fun value -> array.Add(JsonValue.Create value: JsonNode))
+        array
+
+    type private ContinueOutcome =
+        | Continued of plan: ContinuationPlan * successor: string option * eventId: string * item: ContinuityItem * assessment: CheckpointAssessment
+        | Refused of rejection: ContinuationRejection * item: ContinuityItem option * assessment: CheckpointAssessment option
+
+    let private continueUnderLock root (arguments: string list) (workItemId: string) (occurredAt: string) =
+        match RegistryLock.acquire root "work-protocol" RegistryLock.defaultSettings with
+        | Error failure -> Error failure.Message
+        | Ok lease ->
+            let result =
+                try
+                    match WorkStateTransaction.recover root with
+                    | Error failure -> Error failure.Message
+                    | Ok() ->
+                        let overrides = ProvenanceCommands.identityOverridesFrom arguments
+
+                        match FileCheckpointRepository.readItem root workItemId, FileCheckpointRepository.executionsForContinuation root workItemId overrides with
+                        | Error message, _
+                        | _, Error message -> Error message
+                        | Ok None, _ -> Ok(Refused(ContinuationRejection.WorkItemNotFound, None, None))
+                        | Ok(Some item), Ok(actor, mine, others, latest) ->
+                            match item.LatestCheckpoint with
+                            | Error problems -> Error $"""the recorded latestCheckpoint is invalid: {String.concat "; " problems}"""
+                            | Ok latestCheckpoint ->
+                                let git = ProcessGitDurability.create root
+                                let policy = FileCheckpointRepository.readPolicy root
+                                let assessment = CheckpointOperations.assess git policy workItemId item.State latestCheckpoint
+
+                                let input =
+                                    { WorkItemId = workItemId
+                                      ItemState = Some item.State
+                                      Assessment = assessment
+                                      CallerExecutions = mine
+                                      OtherActiveExecutions = others
+                                      LatestExecution = latest }
+
+                                match Continuation.decide input with
+                                | Error rejection -> Ok(Refused(rejection, Some item, Some assessment))
+                                | Ok plan ->
+                                    let request: FileTelemetryExecutionRepository.CreateExecutionRequest =
+                                        { WorkItemId = workItemId
+                                          WorkType = item.WorkType
+                                          Classifications = []
+                                          ClassificationRationale = None
+                                          ExecutionId = None
+                                          IdentityOverrides = { overrides with ParentExecutionId = plan.Predecessor |> Option.map fst } }
+
+                                    match FileTelemetryExecutionRepository.createExecution root request with
+                                    | Error message -> Error message
+                                    | Ok successor ->
+                                        FileCheckpointRepository.recordContinuation root actor occurredAt plan successor
+                                        |> Result.map (fun eventId -> Continued(plan, successor, eventId, item, assessment))
+                with error ->
+                    Error error.Message
+
+            match lease.Release(), result with
+            | Error failure, Ok _ -> Error failure.Message
+            | _, value -> value
+
+    let runContinue root (arguments: string list) (_: Actor) =
+        let ids = optionValues "--id" arguments
+        let occurredAt = optionValues "--occurred-at" arguments
+        let asJson = List.contains "--json" arguments
+
+        match ids, occurredAt with
+        | [ id ], [ at ] when WorkItemId.isValid id && isTimestamp at ->
+            let document = JsonObject()
+            document["command"] <- JsonValue.Create "work continue"
+            document["schemaVersion"] <- JsonValue.Create 1
+            document["workItemId"] <- JsonValue.Create id
+
+            match continueUnderLock root arguments id at with
+            | Error message ->
+                if asJson then
+                    document["status"] <- JsonValue.Create "failed"
+                    document["message"] <- JsonValue.Create message
+                    printf "%s" (document.ToJsonString jsonOptions)
+                else
+                    eprintfn "ERROR %s" message
+
+                1
+            | Ok(Refused(rejection, item, assessment)) ->
+                let recovery = assessment |> Option.map RecoveryInstructions.derive |> Option.defaultValue []
+
+                if asJson then
+                    document["status"] <- JsonValue.Create "refused"
+                    let refusal = JsonObject()
+                    refusal["code"] <- JsonValue.Create(ContinuationRejection.code rejection)
+                    refusal["message"] <- JsonValue.Create(ContinuationRejection.message id rejection)
+                    document["refusal"] <- refusal
+                    let steps = JsonArray()
+                    recovery |> List.iter (fun step -> steps.Add(CheckpointJson.recoveryNode step: JsonNode))
+                    document["recovery"] <- steps
+                    printf "%s" (document.ToJsonString jsonOptions)
+                else
+                    eprintfn "ERROR [%s] %s" (ContinuationRejection.code rejection) (ContinuationRejection.message id rejection)
+                    recovery |> List.iter (fun step -> eprintfn "  %s" (RecoveryStep.render step))
+                    eprintfn "nothing was recorded; no execution was created"
+
+                ignore item
+                1
+            | Ok(Continued(plan, successor, eventId, item, assessment)) ->
+                let defaultEvidence, byType = FileWorkConfigRepository.readCompletionEvidence root
+                let required = byType |> Map.tryFind item.WorkType |> Option.defaultValue defaultEvidence |> Set.toList
+                let evidence = validationEvidence root id
+
+                let predecessorSteps =
+                    plan.Predecessor |> Option.map (fst >> stepsOf root) |> Option.defaultValue (JsonArray())
+
+                if asJson then
+                    document["status"] <- JsonValue.Create "continued"
+
+                    document["executionId"] <-
+                        match successor with
+                        | Some value -> JsonValue.Create value :> JsonNode
+                        | None -> null
+
+                    document["event"] <- JsonValue.Create eventId
+
+                    document["predecessor"] <-
+                        match plan.Predecessor with
+                        | Some(predecessorId, disposition) ->
+                            let node = JsonObject()
+                            node["executionId"] <- JsonValue.Create predecessorId
+                            node["disposition"] <- JsonValue.Create(PredecessorDisposition.code disposition)
+                            node["steps"] <- predecessorSteps
+                            node :> JsonNode
+                        | None -> null
+
+                    document["otherActiveExecutions"] <- strings plan.OtherActiveExecutions
+
+                    document["continuity"] <-
+                        CheckpointJson.continuity id (FileCheckpointRepository.stateCode item.State) assessment (RecoveryInstructions.derive assessment)
+
+                    let obligations = JsonObject()
+                    obligations["requiredEvidenceForCompletion"] <- strings required
+                    obligations["validationEvidence"] <- evidence
+                    document["obligations"] <- obligations
+                    printf "%s" (document.ToJsonString jsonOptions)
+                else
+                    let parent =
+                        match plan.Predecessor with
+                        | Some(predecessorId, disposition) -> $"parent {predecessorId}, recorded as {PredecessorDisposition.code disposition}"
+                        | None -> "no predecessor execution"
+
+                    printfn "continuing %s in new execution %s (%s)" id (successor |> Option.defaultValue "(telemetry disabled)") parent
+                    printfn ""
+                    renderText root item assessment |> List.iter (printfn "%s")
+                    printfn ""
+                    printfn "OBLIGATIONS"
+                    printfn "  completion evidence required: %s" (if required.IsEmpty then "none" else String.concat ", " required)
+                    printfn "  validation evidence recorded (what actually ran, with its source):"
+
+                    if evidence.Count = 0 then
+                        printfn "    none recorded; a summary is not proof that tests passed"
+                    else
+                        for node in evidence do
+                            printfn "    %s: %s = %s (%s)" (node["executionId"].GetValue<string>()) (node["metric"].GetValue<string>()) (numberText node["value"]) (numberText node["quality"])
+
+                    if predecessorSteps.Count > 0 then
+                        printfn "  predecessor steps:"
+
+                        for node in predecessorSteps do
+                            printfn "    %s: %s" (node["stepId"].GetValue<string>()) (node["status"].GetValue<string>())
+
+                    printfn ""
+                    printfn "Praxis state changed under .ros/; commit and push it so the handoff itself is durable."
+
+                0
+        | _ ->
+            eprintfn "ERROR work continue requires exactly one valid --id and one --occurred-at TIMESTAMP (the real current time)"
+            eprintfn "Usage: ros %s" continueUsage
+            2

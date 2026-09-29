@@ -25,9 +25,21 @@ type ProjectionFacts =
     { WorkItemId: string
       Projection: Result<RecordedCheckpoint option, string list> }
 
+/// A stored `work.continued` event as validation sees it.
+type ContinuationFacts =
+    { EventId: string
+      IdMatchesContent: bool
+      WorkItemId: string
+      SuccessorExecutionId: string option
+      PredecessorExecutionId: string option
+      CheckpointId: string option }
+
 type CheckpointValidationInput =
     { Events: CheckpointEventFacts list
+      Continuations: ContinuationFacts list
       Executions: ExecutionFacts list
+      /// Each execution's recorded `parentExecutionId`.
+      Parents: Map<string, string>
       WorkItemIds: string list
       Projections: ProjectionFacts list }
 
@@ -142,8 +154,43 @@ module CheckpointValidation =
                 | Ok _ -> [ finding $"latestCheckpoint '{recorded.CheckpointId}' differs from the event that recorded it" ]
                 | Error _ -> [])
 
+    let private continuationFindings (input: CheckpointValidationInput) (event: ContinuationFacts) =
+        let finding field message =
+            { Path = eventPath event.EventId
+              Field = field
+              Message = message }
+
+        let execution id = input.Executions |> List.tryFind (fun candidate -> candidate.ExecutionId = id)
+
+        [ if not event.IdMatchesContent then
+              finding "eventId" "continuation event content does not match its eventId; continuation events must never be edited"
+          if not (List.contains event.WorkItemId input.WorkItemIds) then
+              finding "workItem" $"continuation names work item '{event.WorkItemId}', which is not in repository context"
+          match event.SuccessorExecutionId with
+          | Some id ->
+              match execution id with
+              | None -> finding "execution" $"successor execution '{id}' has no record under .ros/telemetry/executions"
+              | Some record when record.WorkItemId <> event.WorkItemId ->
+                  finding "execution" $"successor execution '{id}' belongs to '{record.WorkItemId}', not '{event.WorkItemId}'"
+              | Some _ ->
+                  match event.PredecessorExecutionId, input.Parents |> Map.tryFind id with
+                  | Some predecessor, Some parent when parent <> predecessor ->
+                      finding "predecessor" $"successor '{id}' records parent '{parent}', not the predecessor '{predecessor}'"
+                  | Some predecessor, None -> finding "predecessor" $"successor '{id}' records no parent, but the event names '{predecessor}'"
+                  | _ -> ()
+          | None -> ()
+          match event.PredecessorExecutionId with
+          | Some id when (execution id).IsNone -> finding "predecessor" $"predecessor execution '{id}' has no record under .ros/telemetry/executions"
+          | Some id when event.SuccessorExecutionId = Some id -> finding "predecessor" "a successor cannot be its own predecessor"
+          | _ -> ()
+          match event.CheckpointId with
+          | Some id when not (input.Events |> List.exists (fun checkpoint -> checkpoint.EventId = id && checkpoint.WorkItemId = event.WorkItemId)) ->
+              finding "checkpoint" $"continuation names checkpoint '{id}', which is not a checkpoint of '{event.WorkItemId}'"
+          | _ -> () ]
+
     let findings (input: CheckpointValidationInput) : CheckpointFinding list =
         (input.Events |> List.collect (eventFindings input))
         @ chronologyFindings input.Events
         @ duplicateFindings input.Events
         @ projectionFindings input.Events input.Projections
+        @ (input.Continuations |> List.collect (continuationFindings input))

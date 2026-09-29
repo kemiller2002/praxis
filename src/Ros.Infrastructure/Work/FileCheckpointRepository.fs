@@ -300,15 +300,39 @@ module FileCheckpointRepository =
                   StepId = text node "step"
                   Checkpoint = read.Checkpoint })
 
-        match events, readItems root with
-        | [], Ok items when items |> List.forall (fun item -> item.LatestCheckpoint = Ok None) -> []
-        | _, Error message ->
+        let continuations =
+            eventNodes root
+            |> List.filter (fun node -> text node "type" = Some "work.continued")
+            |> List.map (fun node ->
+                { EventId = text node "eventId" |> Option.defaultValue ""
+                  IdMatchesContent = eventIdMatches node
+                  WorkItemId = text node "workItem" |> Option.defaultValue ""
+                  SuccessorExecutionId = text node "execution"
+                  PredecessorExecutionId =
+                    match node["predecessor"] with
+                    | :? JsonObject as predecessor -> text predecessor "executionId"
+                    | _ -> None
+                  CheckpointId = text node "checkpoint" })
+
+        match events, continuations, readItems root with
+        | [], [], Ok items when items |> List.forall (fun item -> item.LatestCheckpoint = Ok None) -> []
+        | _, _, Error message ->
             [ { Path = contextRelativePath
                 Field = "workItems"
                 Message = message } ]
-        | _, Ok items ->
+        | _, _, Ok items ->
+            let records = FileTelemetryQueryRepository.readAll root
+
+            let parents =
+                records
+                |> List.choose (fun record ->
+                    match text record "executionId", record["identity"] with
+                    | Some id, (:? JsonObject as identity) -> text identity "parentExecutionId" |> Option.map (fun parent -> id, parent)
+                    | _ -> None)
+                |> Map.ofList
+
             let executions =
-                FileTelemetryQueryRepository.readAll root
+                records
                 |> List.choose (fun record ->
                     match text record "executionId", text record "workItemId" with
                     | Some executionId, Some workItemId ->
@@ -321,6 +345,8 @@ module FileCheckpointRepository =
 
             CheckpointValidation.findings
                 { Events = events
+                  Continuations = continuations
+                  Parents = parents
                   Executions = executions
                   WorkItemIds = items |> List.map _.WorkItemId
                   Projections =
@@ -356,3 +382,126 @@ module FileCheckpointRepository =
             | actor -> notice["actor"] <- actor.DeepClone()
 
             notice)
+
+    let continuedEventType = "work.continued"
+
+    /// Links the successor execution to the work item and appends one
+    /// `work.continued` event naming the predecessor, the successor and the
+    /// checkpoint the successor continued from, atomically through the
+    /// `work-state` journal. The predecessor's execution record is never
+    /// touched. The caller holds the `work-protocol` lock.
+    let recordContinuation
+        (root: string)
+        (actor: Actor)
+        (occurredAt: string)
+        (plan: ContinuationPlan)
+        (successorExecution: string option)
+        : Result<string, string> =
+        try
+            match readContextNode root with
+            | Error message -> Error message
+            | Ok None -> Error "there is no work context to continue"
+            | Ok(Some context) ->
+                match itemNodes context |> List.tryFind (fun item -> text item "id" = Some plan.WorkItemId) with
+                | None -> Error $"work item '{plan.WorkItemId}' is not in repository context"
+                | Some item ->
+                    successorExecution
+                    |> Option.iter (fun executionId ->
+                        let links =
+                            match item["telemetryExecutionIds"] with
+                            | :? JsonArray as array -> array
+                            | _ ->
+                                let created = JsonArray()
+                                item["telemetryExecutionIds"] <- created
+                                created
+
+                        let known =
+                            links |> Seq.exists (fun node -> node <> null && node.GetValueKind() = JsonValueKind.String && node.GetValue<string>() = executionId)
+
+                        if not known then
+                            links.Add(JsonValue.Create executionId: JsonNode))
+
+                    let node = JsonObject()
+                    node["schemaVersion"] <- JsonValue.Create "1.0.0"
+                    node["type"] <- JsonValue.Create continuedEventType
+                    node["workItem"] <- JsonValue.Create plan.WorkItemId
+                    node["repository"] <- JsonValue.Create(FileWorkConfigRepository.readRepositoryId root)
+                    node["protocolVersion"] <- JsonValue.Create(FileWorkConfigRepository.readProtocolVersion root)
+                    node["occurredAt"] <- JsonValue.Create occurredAt
+
+                    node["execution"] <-
+                        match successorExecution with
+                        | Some id -> JsonValue.Create id :> JsonNode
+                        | None -> null
+
+                    node["predecessor"] <-
+                        match plan.Predecessor with
+                        | Some(id, disposition) ->
+                            let predecessor = JsonObject()
+                            predecessor["executionId"] <- JsonValue.Create id
+                            predecessor["disposition"] <- JsonValue.Create(PredecessorDisposition.code disposition)
+                            predecessor["dispositionSource"] <- JsonValue.Create "observed-by-successor"
+                            predecessor :> JsonNode
+                        | None -> null
+
+                    node["checkpoint"] <-
+                        match plan.Checkpoint with
+                        | Some recorded -> JsonValue.Create recorded.CheckpointId :> JsonNode
+                        | None -> null
+
+                    let others = JsonArray()
+                    plan.OtherActiveExecutions |> List.iter (fun id -> others.Add(JsonValue.Create id: JsonNode))
+                    node["otherActiveExecutions"] <- others
+                    let executions = JsonArray()
+                    successorExecution |> Option.iter (fun id -> executions.Add(JsonValue.Create id: JsonNode))
+                    node["telemetryExecutions"] <- executions
+                    node["actor"] <- ActorJson.node actor
+                    let publication = JsonObject()
+                    publication["status"] <- JsonValue.Create "pending"
+                    node["publication"] <- publication
+                    let eventId = CanonicalJson.sha256HexPrefix 24 (CanonicalJson.serializeCompact node)
+                    node["eventId"] <- JsonValue.Create eventId
+
+                    let eventsPath = Path.Combine(root, eventsRelativePath)
+                    let current = if File.Exists eventsPath then File.ReadAllText eventsPath else ""
+                    let separator = if current.Length > 0 && not (current.EndsWith "\n") then "\n" else ""
+
+                    let writes: WorkStateWrite list =
+                        [ { Path = eventsRelativePath
+                            Content = $"{current}{separator}{node.ToJsonString compact}\n" }
+                          { Path = contextRelativePath
+                            Content = context.ToJsonString indented + "\n" } ]
+
+                    match WorkStateTransaction.prepare root writes with
+                    | Error failure -> Error $"state persistence failed: {failure.Message}"
+                    | Ok() ->
+                        match WorkStateTransaction.recover root with
+                        | Error failure -> Error $"state persistence failed: {failure.Message}"
+                        | Ok() -> Ok eventId
+        with error ->
+            Error $"state persistence failed: {error.Message}"
+
+    /// The executions of a work item, split by whether this process may
+    /// continue them itself: (callerActive, othersActive oldest first,
+    /// latest of any status). A process with no identity is refused.
+    let executionsForContinuation (root: string) (workItemId: string) (overrides: IdentityInputs) : Result<Actor * string list * string list * string option, string> =
+        match FileTelemetryExecutionRepository.resolveIdentity overrides with
+        | Error message -> Error message
+        | Ok(actor, _, _) when not (ActorResolution.isDeclared actor) ->
+            Error
+                "continuation needs the successor's own identity; declare yourself (ROS_ACTOR_KIND and ROS_ACTOR, or --actor-kind and --actor). Never continue as another executor"
+        | Ok(actor, identity, _) ->
+            let executions =
+                FileProvenanceRepository.readExecutions root
+                |> List.filter (fun view -> view.WorkItemId = workItemId)
+                |> List.sortBy _.StartedAt
+
+            let active = executions |> List.filter (fun view -> view.Status = "active")
+            let mine, others = active |> List.partition (fun view -> ActorResolution.mayContinue actor identity view.Actor view.Identity)
+
+            Ok(
+                actor,
+                mine |> List.map _.ExecutionId,
+                others |> List.map _.ExecutionId,
+                executions |> List.tryLast |> Option.map _.ExecutionId
+            )
