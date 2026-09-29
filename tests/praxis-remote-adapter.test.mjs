@@ -226,6 +226,31 @@ test("every third-party action is pinned to a commit SHA", () => {
   }
 });
 
+test("the response reaches the job log with workflow commands suspended", (t) => {
+  const report = remoteAction.match(/<<'PY'\n([\s\S]*?)\n\s*PY\n/)[1].replace(/^ {8}/gm, "");
+  const dir = temporary(t, "report");
+  const file = (name, content) => {
+    const target = path.join(dir, name);
+    fs.writeFileSync(target, content);
+    return target;
+  };
+  const response = {
+    requestId: "req-log-1",
+    operation: "work.block",
+    outcome: "rejected",
+    failure: { code: "domain-rejected", retry: "never", message: "::error::injected\n::add-mask::x" },
+  };
+  const result = spawnSync("python3", ["-", file("response.json", JSON.stringify(response)), file("adapter.json", JSON.stringify({ persisted: false, failure: null }))], {
+    input: report,
+    encoding: "utf8",
+    env: { ...process.env, GITHUB_OUTPUT: file("output", ""), GITHUB_STEP_SUMMARY: file("summary", "") },
+  });
+  assert.equal(result.status, 1, result.stderr);
+  const [, , body] = result.stdout.match(/::stop-commands::([0-9a-f]{32})\n([\s\S]*?)\n::\1::\n/);
+  assert.deepEqual(JSON.parse(body).response, response);
+  assert.match(result.stdout, /^::error::praxis\.remote rejected: domain-rejected \(never\)$/m, "the adapter's own error is emitted after commands resume");
+});
+
 test("the adapter holds no Praxis domain logic: it only classifies, executes, and persists", () => {
   const commands = [workflow, remoteAction]
     .flatMap(runBodies)

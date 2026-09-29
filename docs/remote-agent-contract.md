@@ -65,6 +65,10 @@ it.
   `{"requestId": "..."}`.
 - **Or open the run.** It is named `praxis remote <requestId>`. Its summary
   and its `praxis-remote-response` artifact hold the same response.
+- **Or read the job log.** The job that executed the request prints the
+  same response in a `praxis.remote response` group. This is the way to
+  read a read-only result, or a rejection, when you can read job logs but
+  cannot download artifacts.
 
 ## 4. Rules that keep you governed
 
