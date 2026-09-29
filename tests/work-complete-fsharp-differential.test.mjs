@@ -316,6 +316,33 @@ test("F# work complete writes a research item's conclusion, defaulting to 'incon
   assert.equal(fsharpExplicit.conclusion, "confirmed: caching reduces latency");
 });
 
+// PRAXIS-REMOTE-16: a conclusion supplied for a non-research item used to be
+// accepted and silently dropped. It is now kept exactly when supplied, and a
+// non-research item completed without one still records none.
+test("F# work complete keeps an explicit --conclusion for a non-research item and records none when omitted", (t) => {
+  const fsharpRoot = fixture(t, "conclusion-mechanical");
+
+  runFsharp(fsharpRoot, "start", ["--id", "WI-MECH-EXPLICIT", "--occurred-at", "2026-09-09T18:00:00.000Z", "--type", "mechanical"]);
+  runFsharp(fsharpRoot, "start", ["--id", "WI-MECH-NONE", "--occurred-at", "2026-09-09T18:00:01.000Z", "--type", "mechanical"]);
+
+  const explicitResult = runFsharp(fsharpRoot, "complete", [
+    "--id", "WI-MECH-EXPLICIT", "--occurred-at", "2026-09-09T18:05:00.000Z",
+    "--conclusion", "handed over and completed by a successor"
+  ]);
+  assert.equal(explicitResult.status, 0, explicitResult.stderr);
+  const noneResult = runFsharp(fsharpRoot, "complete", ["--id", "WI-MECH-NONE", "--occurred-at", "2026-09-09T18:06:00.000Z"]);
+  assert.equal(noneResult.status, 0, noneResult.stderr);
+
+  const fsharpContext = readContext(fsharpRoot);
+  const explicit = fsharpContext.workItems.find((item) => item.id === "WI-MECH-EXPLICIT");
+  const none = fsharpContext.workItems.find((item) => item.id === "WI-MECH-NONE");
+
+  assert.equal(explicit.state, "complete");
+  assert.equal(explicit.conclusion, "handed over and completed by a successor");
+  assert.equal(none.state, "complete");
+  assert.equal(Object.hasOwn(none, "conclusion"), false);
+});
+
 // The backlog triage lifecycle itself has no "complete" transition (only
 // ready/block/abandon), so an id promoted out of the backlog and completed
 // in the live work protocol would otherwise stay frozen in queue.json's own

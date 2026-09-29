@@ -1508,7 +1508,8 @@ let private runWorkResume root arguments (eventActor: Actor) =
 /// pipeline discards the `FinalizeExecutions` intent signal, so this is
 /// called directly rather than threaded through it. A research-type
 /// item's `--conclusion` (defaulting to `"inconclusive"`, matching
-/// production) is written via `FileWorkContextRepository.
+/// production) and any other item's explicitly supplied `--conclusion`
+/// (PRAXIS-REMOTE-16) are written via `FileWorkContextRepository.
 /// applyContextPlanWithConclusions`. Deliberately excludes
 /// `options.input`/adapter-ingestion (unreachable from any CLI path) and
 /// explicit `--identity-*`/`--execution-id` overrides, matching every
@@ -1601,13 +1602,20 @@ let private runWorkComplete root arguments (eventActor: Actor) =
                                             match finalizeResult with
                                             | Error message -> Error message
                                             | Ok() ->
-                                                let conclusion =
-                                                    optionValue "--conclusion" arguments |> Option.defaultValue "inconclusive"
+                                                // A research item always records a conclusion
+                                                // (defaulting to "inconclusive"); any other item
+                                                // records one exactly when it was supplied, so a
+                                                // conclusion is never accepted and then dropped
+                                                // (PRAXIS-REMOTE-16).
+                                                let explicitConclusion = optionValue "--conclusion" arguments
 
                                                 let conclusions =
                                                     resolvedPlan.ItemPlans
-                                                    |> List.filter (fun itemPlan -> itemPlan.Item.WorkType = "research")
-                                                    |> List.map (fun itemPlan -> itemPlan.Item.Id, conclusion)
+                                                    |> List.choose (fun itemPlan ->
+                                                        match itemPlan.Item.WorkType, explicitConclusion with
+                                                        | "research", conclusion -> Some(itemPlan.Item.Id, conclusion |> Option.defaultValue "inconclusive")
+                                                        | _, Some conclusion -> Some(itemPlan.Item.Id, conclusion)
+                                                        | _, None -> None)
                                                     |> Map.ofList
 
                                                 match

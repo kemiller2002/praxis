@@ -764,6 +764,7 @@ function transitionUnlocked(root, action, ids, options = {}) {
       item.state = options.localState ?? "complete";
       item.completedAt = now;
       if (item.type === "research") item.conclusion = options.conclusion ?? "inconclusive";
+      else if (options.conclusion != null) item.conclusion = options.conclusion;
     }
     item.semanticState = config.stateMapping[item.state] ?? (action === "begin" || action === "resume" ? "active" : action === "block" ? "blocked" : "complete");
     if (!SEMANTIC_STATES.has(item.semanticState)) throw new Error(`invalid semantic state '${item.semanticState}'`);
