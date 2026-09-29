@@ -2876,10 +2876,10 @@
       "description": "Evidence record for PRAXIS-REMOTE-12-CONTINUE-PROOF: two runtime-less agents, work.checkpoint then work.continue on Praxis 3.6.0, verified against main and the Actions API.",
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-29T12:07:17.561Z",
-      "updatedAt": "2026-09-29T12:07:17.000Z",
+      "updatedAt": "2026-09-29T12:08:18.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
