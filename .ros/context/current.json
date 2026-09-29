@@ -3530,11 +3530,40 @@
         "EXE-20260929T064606132Z-c9a63ae5"
       ],
       "completedAt": "2026-09-29T06:50:34.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-03-PERSIST",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileCheckpointRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Contracts/Work/CheckpointJson.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/CheckpointValidation.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/CheckpointPersistenceTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T06:59:07.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T065051655Z-10f872a2"
+      ],
+      "completedAt": "2026-09-29T06:59:07.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T06:50:34.000Z",
+  "updatedAt": "2026-09-29T06:59:07.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

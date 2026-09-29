@@ -58,6 +58,22 @@ module FileWorkConfigRepository =
             | true, value when value.ValueKind = JsonValueKind.True -> true
             | _ -> false
 
+    /// `workProtocol.continuity.requireDurableCheckpoint` (DF-ROS-2026-A042):
+    /// whether completion and blocking enforce durable checkpoints. Absent
+    /// means `false`, so an existing installation keeps its completion
+    /// semantics until it opts in; observed continuity warnings are reported
+    /// either way.
+    let readRequireDurableCheckpoint (root: string) : bool =
+        match readWorkProtocol root with
+        | None -> false
+        | Some element ->
+            match element.TryGetProperty "continuity" with
+            | true, continuity when continuity.ValueKind = JsonValueKind.Object ->
+                match continuity.TryGetProperty "requireDurableCheckpoint" with
+                | true, value when value.ValueKind = JsonValueKind.True -> true
+                | _ -> false
+            | _ -> false
+
     let private readTelemetry (root: string) : JsonElement option =
         let path = Path.Combine(root, "ros.json")
 
