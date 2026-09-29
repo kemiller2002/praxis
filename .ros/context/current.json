@@ -4363,18 +4363,48 @@
     {
       "id": "GH-113",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-29T14:20:27.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/RemoteCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/remote-checkpoint.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-29T14:49:24.000Z",
       "telemetryExecutionIds": [
         "EXE-20260929T142027710Z-41b45227"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "8c04f53c3437f14d14b3783d",
+        "recordedAt": "2026-09-29T14:49:23.000Z",
+        "executionId": "EXE-20260929T142027710Z-41b45227",
+        "repository": "repository-operating-system",
+        "branch": "claude/remote-complete-execution-ownership",
+        "commit": "7b19e1f93349e8caa4f844801710c0f6d3d4615c",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/remote-complete-execution-ownership",
+        "remoteCommit": "7b19e1f93349e8caa4f844801710c0f6d3d4615c",
+        "summary": "Remote work.complete refuses to finalize another actor's or run's active execution, named or not; tests and docs updated",
+        "nextAction": "Complete GH-113 and open the PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T14:49:24.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T14:20:27.000Z",
+  "updatedAt": "2026-09-29T14:49:24.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
