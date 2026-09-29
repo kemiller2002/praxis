@@ -679,5 +679,61 @@
     "title": "Praxis governance is independent of the execution environment; remote/cloud-agent execution is a first-class capability",
     "updated": "2026-09-29",
     "version": "1.3.0"
+  },
+  {
+    "created": "2026-09-29",
+    "depends_on": [
+      "RQ-ROS-2026-A021",
+      "RQ-ROS-2026-A020"
+    ],
+    "derived_from": [
+      "RQ-ROS-2026-A021"
+    ],
+    "evidence_ids": [],
+    "id": "RQ-ROS-2026-A022",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A022--durable-work-checkpoints-and-agent-continuity.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T063242003Z-c2cc74a2": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T06:34:39.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Canonical requirements for durable work checkpoints and agent continuity (PRAXIS-CONT-00)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A042",
+      "RQ-ROS-2026-A021",
+      "DF-ROS-2026-A041",
+      "DF-ROS-2026-A036",
+      "docs/work-protocol.md",
+      "docs/remote-protocol.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "tags": [
+      "continuity",
+      "checkpoints",
+      "durability",
+      "handoff",
+      "git",
+      "remote-execution"
+    ],
+    "title": "Durable work checkpoints and agent continuity — an executor session is disposable; repository state plus Praxis state is durable",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
   }
 ]

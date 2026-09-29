@@ -743,5 +743,64 @@
     "title": "Remote execution is a typed, versioned Praxis request protocol, executed by the same command implementations, with GitHub Actions as a thin first adapter",
     "updated": "2026-09-28",
     "version": "1.2.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-29",
+    "decision_type": "architecture",
+    "derived_from": [
+      "RQ-ROS-2026-A022"
+    ],
+    "id": "DF-ROS-2026-A042",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A042--durable-work-checkpoints-and-executor-continuation.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T063242003Z-c2cc74a2": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T06:34:39.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Architecture decision for durable checkpoints and executor continuation (PRAXIS-CONT-00)"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A022",
+      "RQ-ROS-2026-A021",
+      "DF-ROS-2026-A041",
+      "DF-ROS-2026-A036",
+      "DF-ROS-2026-A040",
+      "docs/work-protocol.md",
+      "docs/remote-protocol.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [],
+    "supports": [
+      "RQ-ROS-2026-A022"
+    ],
+    "tags": [
+      "continuity",
+      "checkpoints",
+      "durability",
+      "git",
+      "remote-execution",
+      "handoff"
+    ],
+    "title": "Durable work checkpoints are verified Git-remote evidence recorded as work.checkpointed events, with executor continuation as a new execution rather than a lifecycle transition",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
   }
 ]

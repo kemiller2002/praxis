@@ -37,6 +37,17 @@
 | PKG-ECHELON-FOUNDRY | PKG-ECHELON-FOUNDRY | complete |  |  |
 | PKG-MIT-LICENSE | PKG-MIT-LICENSE | complete |  |  |
 | PKG-PUBLISH-READINESS | PKG-PUBLISH-READINESS | complete |  |  |
+| PRAXIS-CONT-00 | Durable work checkpoints and agent continuity (umbrella) | ready | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-01-DOMAIN | Durable checkpoint domain model and invariants | ready | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-02-GIT | Git remote/upstream/durability observations | ready | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-03-PERSIST | Checkpoint events, projection, persistence, schema compatibility | ready | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-04-CLI | work checkpoint, context/status presentation, JSON contract | ready | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-05-GUARDS | Completion/block lifecycle continuity guards | ready | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-06-CONTINUE | Cross-executor work continue / takeover semantics | ready | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-07-REMOTE | Remote-agent / GitHub Actions checkpoint capability | ready | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-08-RECOVERY | Two-clone recovery and agent-loss integration proof | ready | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-09-GOVERNANCE | AGENTS/governance/docs/starter propagation | ready | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-10-HARDEN | Compatibility, edge cases, validation, final end-to-end review | ready | continuity, durable-checkpoints | high |
 | PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | captured | rename, gh-90 | low |
 | PRAXIS-REMOTE-01 | Remote protocol v1 contract: schemas, typed domain model, validation, fingerprint, decision order | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-02 | Remote provenance roles: asserted request actor, observed executor, transport principal | complete | remote-execution, gh-90 | high |
