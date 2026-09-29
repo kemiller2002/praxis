@@ -995,25 +995,69 @@
     },
     {
       "metricId": "tests.passed",
-      "status": "unknown",
-      "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-09-29T11:18:55.354Z",
+      "status": "supported-observed",
+      "reason": "normalized measurement recorded",
+      "discoveredAt": "2026-09-29T11:35:14.425Z",
       "source": {
-        "type": "environment",
-        "name": "runtime-identity",
-        "mechanism": "whitelisted-claude-environment"
-      }
+        "type": "external-tool",
+        "name": "node-test",
+        "mechanism": "summary"
+      },
+      "lastAssessedAt": "2026-09-29T11:35:14.425Z",
+      "recordedAt": "2026-09-29T11:35:14.430Z",
+      "history": [
+        {
+          "status": "unknown",
+          "reason": "runtime capability not reported or mapped",
+          "source": {
+            "type": "environment",
+            "name": "runtime-identity",
+            "mechanism": "whitelisted-claude-environment"
+          },
+          "discoveredAt": "2026-09-29T11:18:55.354Z",
+          "lastAssessedAt": "2026-09-29T11:18:55.354Z",
+          "recordedAt": "2026-09-29T11:18:55.354Z"
+        },
+        {
+          "status": "supported-observed",
+          "reason": "normalized measurement recorded",
+          "source": {
+            "type": "external-tool",
+            "name": "ros-tests-fsharp",
+            "mechanism": "summary"
+          },
+          "discoveredAt": "2026-09-29T11:35:13.938Z",
+          "lastAssessedAt": "2026-09-29T11:35:13.938Z",
+          "recordedAt": "2026-09-29T11:35:13.942Z"
+        }
+      ]
     },
     {
       "metricId": "tests.failed",
-      "status": "unknown",
-      "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-09-29T11:18:55.354Z",
+      "status": "supported-observed",
+      "reason": "normalized measurement recorded",
+      "discoveredAt": "2026-09-29T11:35:14.934Z",
       "source": {
-        "type": "environment",
-        "name": "runtime-identity",
-        "mechanism": "whitelisted-claude-environment"
-      }
+        "type": "external-tool",
+        "name": "node-test",
+        "mechanism": "summary"
+      },
+      "lastAssessedAt": "2026-09-29T11:35:14.934Z",
+      "recordedAt": "2026-09-29T11:35:14.942Z",
+      "history": [
+        {
+          "status": "unknown",
+          "reason": "runtime capability not reported or mapped",
+          "source": {
+            "type": "environment",
+            "name": "runtime-identity",
+            "mechanism": "whitelisted-claude-environment"
+          },
+          "discoveredAt": "2026-09-29T11:18:55.354Z",
+          "lastAssessedAt": "2026-09-29T11:18:55.354Z",
+          "recordedAt": "2026-09-29T11:18:55.354Z"
+        }
+      ]
     },
     {
       "metricId": "tests.skipped",
@@ -1355,6 +1399,72 @@
       },
       "collectedAt": "2026-09-29T11:18:55.354Z",
       "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-61bee0e007d36de697fb7739",
+      "id": "tests.passed",
+      "value": 675,
+      "unit": "count",
+      "currency": null,
+      "quality": "observed",
+      "confidence": null,
+      "scope": "execution",
+      "aggregation": "sum",
+      "dimensions": {
+        "step": "dotnet-tool"
+      },
+      "pricing": null,
+      "source": {
+        "type": "external-tool",
+        "name": "ros-tests-fsharp",
+        "mechanism": "summary"
+      },
+      "collectedAt": "2026-09-29T11:35:13.938Z",
+      "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-87a592470d8c1bcb8642ba11",
+      "id": "tests.passed",
+      "value": 457,
+      "unit": "count",
+      "currency": null,
+      "quality": "observed",
+      "confidence": null,
+      "scope": "execution",
+      "aggregation": "sum",
+      "dimensions": {
+        "step": "dotnet-tool"
+      },
+      "pricing": null,
+      "source": {
+        "type": "external-tool",
+        "name": "node-test",
+        "mechanism": "summary"
+      },
+      "collectedAt": "2026-09-29T11:35:14.425Z",
+      "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-917b8a326a5633f40e6f606e",
+      "id": "tests.failed",
+      "value": 0,
+      "unit": "count",
+      "currency": null,
+      "quality": "observed",
+      "confidence": null,
+      "scope": "execution",
+      "aggregation": "sum",
+      "dimensions": {
+        "step": "dotnet-tool"
+      },
+      "pricing": null,
+      "source": {
+        "type": "external-tool",
+        "name": "node-test",
+        "mechanism": "summary"
+      },
+      "collectedAt": "2026-09-29T11:35:14.934Z",
+      "schemaVersion": "1.0.0"
     }
   ],
   "rawTelemetry": [
@@ -1406,6 +1516,37 @@
       "stepId": "inventory",
       "name": "Inventory the npm distribution surface",
       "occurredAt": "2026-09-29T11:18:56.000Z",
+      "source": {
+        "type": "ros-clock",
+        "name": "ros",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.completed",
+      "stepId": "inventory",
+      "occurredAt": "2026-09-29T11:23:19.000Z",
+      "source": {
+        "type": "ros-clock",
+        "name": "ros",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.started",
+      "stepId": "dotnet-tool",
+      "name": ".NET global tool package and smoke test",
+      "occurredAt": "2026-09-29T11:23:19.000Z",
+      "source": {
+        "type": "ros-clock",
+        "name": "ros",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.completed",
+      "stepId": "dotnet-tool",
+      "occurredAt": "2026-09-29T11:35:14.000Z",
       "source": {
         "type": "ros-clock",
         "name": "ros",

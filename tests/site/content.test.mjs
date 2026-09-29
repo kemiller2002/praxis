@@ -183,10 +183,13 @@ test("get started uses only commands and installers that exist, and names the RO
   const installer = readFileSync(new URL("../../scripts/install-native.sh", import.meta.url), "utf8");
   assert.match(installer, /for command_name in praxis ros; do/, "installer provides praxis and ros");
   const manifest = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"));
-  assert.ok(start.includes(manifest.name), "npm package name is current");
-  assert.ok(manifest.bin.ros && !manifest.bin.praxis, "npm still exposes ros, not praxis; the page says so");
+  assert.equal(manifest.private, true, "npm publishing is retired (DF-ROS-2026-A044); the page says so");
+  assert.ok(start.includes(manifest.name) && /is no longer published/.test(start), "the page names the retired npm package");
+  const tool = readFileSync(new URL("../../src/Ros.Cli/Ros.Cli.fsproj", import.meta.url), "utf8");
+  const packageId = tool.match(/<PackageId>([^<]+)<\/PackageId>/)[1];
+  assert.match(tool, /<ToolCommandName>praxis<\/ToolCommandName>/);
+  assert.ok(start.includes(`dotnet tool install -g ${packageId}`), "the page installs the real .NET tool");
   assert.match(start, /From ROS to Praxis/);
-  assert.match(start, /still provides only <code>ros<\/code>/);
 });
 
 test("primary navigation is the six specified destinations and needs no script", () => {
