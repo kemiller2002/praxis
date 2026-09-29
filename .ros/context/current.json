@@ -4484,11 +4484,61 @@
         }
       },
       "completedAt": "2026-09-29T16:43:08.000Z"
+    },
+    {
+      "id": "PRAXIS-PLAN-01",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/Planner.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PlanningTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/planning.md"
+        },
+        {
+          "type": "evidence",
+          "path": "research/evidence/EV-ROS-2026-A058--planner-shadow-experiment-on-praxis.md"
+        }
+      ],
+      "updatedAt": "2026-09-29T18:15:08.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T172554288Z-0f639674"
+      ],
+      "latestCheckpoint": {
+        "id": "06e9e9033b86d8a58a7e3153",
+        "recordedAt": "2026-09-29T18:15:01.000Z",
+        "executionId": "EXE-20260929T172554288Z-0f639674",
+        "repository": "repository-operating-system",
+        "branch": "claude/praxis-planning-optimization-v6dacf",
+        "commit": "f85ab5c8c1d4a4c813625929de9a59b49e9f2c91",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/praxis-planning-optimization-v6dacf",
+        "remoteCommit": "f85ab5c8c1d4a4c813625929de9a59b49e9f2c91",
+        "summary": "Advisory planner implemented across Domain/Contracts/Application/Infrastructure/CLI with 50 tests; requirements, docs, DF-ROS-2026-A046 and shadow-experiment evidence EV-ROS-2026-A058 recorded",
+        "nextAction": "Complete with implementation, tests and evidence; open PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T18:15:08.000Z",
+      "conclusion": "Shadow planner delivered; on Praxis it found 3 evidence-backed stale-state candidates, reported cost optimization unavailable (0 of 155 executions), and replay showed weak duration prediction (62.6% within range)."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T16:43:08.000Z",
+  "updatedAt": "2026-09-29T18:15:08.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
