@@ -122,6 +122,17 @@ request cannot use them.
 must be named in `execution.id`, and it must be one the requester may
 continue.
 
+**Completion finalizes only the requester's own executions (GH-113).**
+`work.complete` finalizes every active execution of each item it completes,
+so every one of them must be an execution the requester may continue,
+whether or not the request names one in `execution.id`. If any belongs to
+another actor or run -- including another session of the same agent -- the
+request is refused as `domain-rejected` on `arguments.workItemIds`, and
+nothing is persisted. The successor takes the work over with `work.continue`
+first (which records the predecessor as interrupted), then completes it in
+its own execution. The owner of the only active execution may still omit
+`execution.id`.
+
 **Batches (version 1.2).** The `batch` operation carries ordered
 constituents in `arguments.requests`. Each constituent has the form
 `{requestId, operation, execution?, arguments?}`. Batching saves runner
