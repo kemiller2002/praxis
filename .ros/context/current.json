@@ -4267,10 +4267,10 @@
     {
       "id": "PRAXIS-REMOTE-PROBE-COMPLETE-NOEXEC",
       "type": "mechanical",
-      "state": "active",
-      "semanticState": "active",
+      "state": "complete",
+      "semanticState": "complete",
       "evidence": [],
-      "updatedAt": "2026-09-29T13:37:45.124Z",
+      "updatedAt": "2026-09-29T13:41:06.733Z",
       "telemetryExecutionIds": [
         "EXE-20260929T133747603Z-1a0e3a22"
       ],
@@ -4293,7 +4293,8 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-09-29T13:41:06.733Z"
     },
     {
       "id": "PRAXIS-REMOTE-PROBE-COMPLETE-WITHEXEC",
@@ -4329,7 +4330,7 @@
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T13:37:49.401Z",
+  "updatedAt": "2026-09-29T13:41:06.733Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
