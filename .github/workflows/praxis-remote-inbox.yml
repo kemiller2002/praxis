@@ -1,0 +1,46 @@
+# Praxis remote request inbox (DF-ROS-2026-A045, RQ-ROS-2026-A023).
+#
+# For agents whose GitHub integration can commit to this repository but
+# cannot dispatch workflows. Commit a praxis.remote request as
+# `.praxis-inbox/<requestId>.json` on a branch named `praxis-inbox/...`
+# (never on the branch the request targets), and this relay dispatches
+# praxis-remote.yml on the request's repository.ref with the file's exact
+# bytes. Praxis alone validates, authorizes, binds and executes it; results
+# are journaled on the target branch as for any dispatch.
+#
+# Trust boundary: the same as workflow_dispatch. Only someone with write
+# access can push a branch here; pushes to forks run in the fork; there is no
+# pull_request trigger. No secrets are used, and no request content reaches a
+# shell except as a file argument.
+name: Praxis remote inbox
+
+on:
+  push:
+    branches: ["praxis-inbox/**"]
+    paths: [".praxis-inbox/*.json"]
+
+permissions: {}
+
+concurrency:
+  group: praxis-remote-inbox-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  relay:
+    if: github.repository == 'kemiller2002/praxis'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Relay inbox requests to praxis-remote.yml
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEFAULT_REF: refs/heads/${{ github.event.repository.default_branch }}
+        run: scripts/praxis-remote-inbox.sh --event "$GITHUB_EVENT_PATH" --workspace "$GITHUB_WORKSPACE" --default-ref "$DEFAULT_REF"

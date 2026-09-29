@@ -2914,6 +2914,30 @@
       },
       "source": "agent-discovery",
       "sourceReference": "https://github.com/kemiller2002/praxis/pull/107"
+    },
+    {
+      "id": "PRAXIS-REMOTE-INBOX-01",
+      "title": "Remote request inbox: a contents-write path to praxis.remote for agents that cannot dispatch Actions",
+      "description": "An OpenAI/ChatGPT successor for PRAXIS-XPROVIDER-PROOF-01 reconstructed the handoff from repository state but could not continue: its shell had no network and its GitHub connector had repository write access but no workflow_dispatch operation. praxis-remote.yml accepts requests only via workflow_dispatch/workflow_call, so agents whose GitHub integration can commit but not dispatch have no path. Add a relay: a request committed under .praxis-inbox/ on a praxis-inbox/** branch is dispatched unchanged to praxis-remote.yml on the ref it names. No change to Praxis's protocol, validation, authorization or identity rules; same write-access trust boundary as dispatch.",
+      "tags": [
+        "remote-execution",
+        "continuity"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-29T12:38:15.984Z",
+      "updatedAt": "2026-09-29T12:38:16.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

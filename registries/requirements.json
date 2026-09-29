@@ -769,5 +769,60 @@
     "title": "Durable work checkpoints and agent continuity — an executor session is disposable; repository state plus Praxis state is durable",
     "updated": "2026-09-29",
     "version": "1.2.0"
+  },
+  {
+    "created": "2026-09-29",
+    "depends_on": [
+      "RQ-ROS-2026-A022",
+      "RQ-ROS-2026-A021"
+    ],
+    "derived_from": [
+      "RQ-ROS-2026-A022"
+    ],
+    "evidence_ids": [
+      "EV-ROS-2026-A057"
+    ],
+    "id": "RQ-ROS-2026-A023",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A023--remote-requests-without-actions-dispatch.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T123817046Z-0e142401": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T12:41:41.571Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-REMOTE-INBOX-01: capture the cross-provider continuation gap and its remedy"
+        }
+      }
+    },
+    "related_documents": [
+      "EV-ROS-2026-A057",
+      "DF-ROS-2026-A041",
+      "DF-ROS-2026-A045",
+      "docs/remote-agent-contract.md",
+      "docs/remote-protocol.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "tags": [
+      "remote-execution",
+      "continuity",
+      "cross-provider",
+      "github-actions"
+    ],
+    "title": "A remote agent that can write to the repository but cannot dispatch GitHub Actions can still send praxis.remote requests, with no change to trust, validation or identity",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
   }
 ]
