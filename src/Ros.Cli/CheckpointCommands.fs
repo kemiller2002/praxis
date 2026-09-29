@@ -57,9 +57,106 @@ module CheckpointCommands =
         node["invalidCheckpoint"] <- array
         node
 
+    // ---- telemetry segmentation (effective-current observability) ----
+
+    let private count predicate (execution: FileTelemetryUsageRepository.ExecutionSegmentation) =
+        execution.Scopes |> List.filter predicate |> List.length
+
+    let private beforeSteps scope = scope = Ros.Domain.Telemetry.MeasurementScope.ExecutionBeforeSteps
+    let private outsideSteps scope = scope = Ros.Domain.Telemetry.MeasurementScope.ExecutionOutsideSteps
+
+    let private inStep scope =
+        match scope with
+        | Ros.Domain.Telemetry.MeasurementScope.Step _ -> true
+        | _ -> false
+
+    let private executionSegmentationNode (execution: FileTelemetryUsageRepository.ExecutionSegmentation) =
+        let optional (value: string option) =
+            match value with
+            | Some text -> JsonValue.Create text :> JsonNode
+            | None -> null
+
+        let node = JsonObject()
+        node["executionId"] <- JsonValue.Create execution.ExecutionId
+        node["status"] <- optional execution.Status
+        node["startedAt"] <- optional execution.StartedAt
+        node["segmentation"] <- JsonValue.Create(Ros.Domain.Telemetry.TelemetrySegmentation.code execution.Segmentation)
+        node["stepTrackingStartedAt"] <- optional (Ros.Domain.Telemetry.TelemetrySegmentation.stepTrackingStartedAt execution.Segmentation)
+
+        node["executionScopedBefore"] <-
+            match execution.Segmentation with
+            | Ros.Domain.Telemetry.TelemetrySegmentation.ExecutionLevel -> null
+            | Ros.Domain.Telemetry.TelemetrySegmentation.StepLevel(adoptedAt, before) ->
+                match before with
+                | Ros.Domain.Telemetry.PreStepPeriod.Absent -> null
+                | Ros.Domain.Telemetry.PreStepPeriod.ExecutionScopedFrom startedAt ->
+                    let period = JsonObject()
+                    period["from"] <- JsonValue.Create startedAt
+                    period["until"] <- JsonValue.Create adoptedAt
+                    period :> JsonNode
+                | Ros.Domain.Telemetry.PreStepPeriod.Unknown ->
+                    let period = JsonObject()
+                    period["from"] <- null
+                    period["until"] <- JsonValue.Create adoptedAt
+                    period :> JsonNode
+
+        // Unavailable is not zero: the execution-scoped period's usage is
+        // never split among steps.
+        node["historicalStepAttribution"] <-
+            JsonValue.Create(
+                if Ros.Domain.Telemetry.TelemetrySegmentation.hasExecutionScopedPeriod execution.Segmentation then
+                    "unavailable"
+                else
+                    "not-applicable"
+            )
+
+        let measurements = JsonObject()
+        measurements["executionScopedBeforeSteps"] <- JsonValue.Create(count beforeSteps execution)
+        measurements["executionScopedOutsideSteps"] <- JsonValue.Create(count outsideSteps execution)
+        measurements["stepScoped"] <- JsonValue.Create(count inStep execution)
+        node["measurements"] <- measurements
+        node
+
+    /// The additive `telemetry` block of a continuity view: how each of the
+    /// item's executions is segmented, derived from its own events.
+    let telemetryNode (root: string) (workItemId: string) : JsonObject =
+        let executions = JsonArray()
+
+        FileTelemetryUsageRepository.segmentations root workItemId
+        |> List.iter (fun execution -> executions.Add(executionSegmentationNode execution: JsonNode))
+
+        let node = JsonObject()
+        node["executions"] <- executions
+        node
+
+    let private telemetryLines (root: string) (workItemId: string) =
+        let describe (execution: FileTelemetryUsageRepository.ExecutionSegmentation) =
+            let status = execution.Status |> Option.defaultValue "unknown"
+
+            let segmentation =
+                match execution.Segmentation with
+                | Ros.Domain.Telemetry.TelemetrySegmentation.ExecutionLevel ->
+                    "execution-level throughout; step attribution not captured (not zero)"
+                | Ros.Domain.Telemetry.TelemetrySegmentation.StepLevel(adoptedAt, Ros.Domain.Telemetry.PreStepPeriod.Absent) ->
+                    $"step-level from its start ({adoptedAt})"
+                | Ros.Domain.Telemetry.TelemetrySegmentation.StepLevel(adoptedAt, Ros.Domain.Telemetry.PreStepPeriod.ExecutionScopedFrom startedAt) ->
+                    $"execution-level before: {startedAt} .. {adoptedAt} (step attribution unavailable); step-level from: {adoptedAt}"
+                | Ros.Domain.Telemetry.TelemetrySegmentation.StepLevel(adoptedAt, Ros.Domain.Telemetry.PreStepPeriod.Unknown) ->
+                    $"step-level from: {adoptedAt}; whether earlier activity was unsegmented is unknown"
+
+            [ $"  {execution.ExecutionId} ({status}): {segmentation}"
+              $"    measurements: {count beforeSteps execution} execution-scoped before steps, {count inStep execution} step-scoped, {count outsideSteps execution} outside any step" ]
+
+        match FileTelemetryUsageRepository.segmentations root workItemId with
+        | [] -> []
+        | executions -> "" :: "TELEMETRY SEGMENTATION" :: (executions |> List.collect describe)
+
     let continuityNode (root: string) (git: GitDurability) (policy: ContinuityPolicy) (item: ContinuityItem) : JsonObject * ContinuityWarning list =
         match assessItem git policy item with
-        | Error problems -> invalidNode item problems, [ ContinuityWarning.StateUnknown(item.WorkItemId, "the recorded latestCheckpoint is invalid") ]
+        | Error problems ->
+            let node = invalidNode item problems
+            node["telemetry"] <- telemetryNode root item.WorkItemId
+            node, [ ContinuityWarning.StateUnknown(item.WorkItemId, "the recorded latestCheckpoint is invalid") ]
         | Ok assessment ->
             let node =
                 CheckpointJson.continuity item.WorkItemId (FileCheckpointRepository.stateCode item.State) assessment (RecoveryInstructions.derive assessment)
@@ -69,6 +166,7 @@ module CheckpointCommands =
                 | Some notice -> notice :> JsonNode
                 | None -> null
 
+            node["telemetry"] <- telemetryNode root item.WorkItemId
             node, assessment.Warnings
 
     /// The continuity blocks of the named item, or of every active and
@@ -202,6 +300,7 @@ module CheckpointCommands =
         [ $"WORK ITEM {item.WorkItemId} ({FileCheckpointRepository.stateCode item.State})"; "" ]
         @ checkpoint
         @ stateLines assessment
+        @ telemetryLines root item.WorkItemId
         @ warnings
         @ notice
         @ recovery
@@ -779,8 +878,11 @@ module CheckpointCommands =
 
                     document["otherActiveExecutions"] <- strings plan.OtherActiveExecutions
 
-                    document["continuity"] <-
+                    let continuity =
                         CheckpointJson.continuity id (FileCheckpointRepository.stateCode item.State) assessment (RecoveryInstructions.derive assessment)
+
+                    continuity["telemetry"] <- telemetryNode root id
+                    document["continuity"] <- continuity
 
                     let obligations = JsonObject()
                     obligations["requiredEvidenceForCompletion"] <- strings required

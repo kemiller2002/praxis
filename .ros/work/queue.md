@@ -48,6 +48,7 @@
 | PRAXIS-CONT-08-RECOVERY | Two-clone recovery and agent-loss integration proof | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-09-GOVERNANCE | AGENTS/governance/docs/starter propagation | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-10-HARDEN | Compatibility, edge cases, validation, final end-to-end review | complete | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-11-SEGMENTATION | Effective-current telemetry segmentation and continuity proof gaps | ready | continuity, durable-checkpoints | high |
 | PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | captured | rename, gh-90 | low |
 | PRAXIS-REMOTE-01 | Remote protocol v1 contract: schemas, typed domain model, validation, fingerprint, decision order | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-02 | Remote provenance roles: asserted request actor, observed executor, transport principal | complete | remote-execution, gh-90 | high |

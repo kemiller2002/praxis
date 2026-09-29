@@ -2,7 +2,7 @@
 id: RQ-ROS-2026-A022
 title: Durable work checkpoints and agent continuity — an executor session is disposable; repository state plus Praxis state is durable
 status: accepted
-version: 1.1.0
+version: 1.2.0
 owners:
   - repository-governance
 created: 2026-09-29
@@ -13,6 +13,7 @@ depends_on: [RQ-ROS-2026-A021, RQ-ROS-2026-A020]
 evidence_ids: [EV-ROS-2026-A055]
 related_documents:
   - DF-ROS-2026-A042
+  - DF-ROS-2026-A043
   - RQ-ROS-2026-A021
   - DF-ROS-2026-A041
   - DF-ROS-2026-A036
@@ -43,6 +44,16 @@ provenance:
         runtime: claude-code
       reason: "Implementation status and evidence EV-ROS-2026-A055 (PRAXIS-CONT-10-HARDEN)"
       evidence: [EV-ROS-2026-A055]
+    EXE-20260929T101141946Z-cddc93be:
+      operations: [modified]
+      at: 2026-09-29T10:20:45.774Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Add CONT-080..086 effective-current telemetry requirements dropped from 1.1.0 (PRAXIS-CONT-11-SEGMENTATION)"
 ---
 
 # Requirement
@@ -220,6 +231,42 @@ Each requirement has a stable ID. "MUST" is normative.
   checkpoint, a historical checkpoint, and a currently recoverable
   checkpoint, respecting `.echelon` ownership on install and upgrade.
 
+### Telemetry segmentation (effective-current)
+
+New observability requirements apply effective-current unless reliable
+historical evidence already exists. Historical absence of step data is not
+an invalid execution; unknown historical step attribution is not zero step
+usage. Praxis prefers truthful incompleteness over reconstructed precision.
+
+- **CONT-080** Execution telemetry MUST be legitimate at two granularities:
+  execution-level (unsegmented) and step-level (segmented). An execution
+  that began before step tracking was available, required or adopted MUST
+  remain valid, and so MUST its work item's completion.
+- **CONT-081** Step tracking MUST be adoptable partway through an execution
+  without restarting the execution or the work item. Earlier telemetry MUST
+  be preserved exactly as recorded, and step attribution MUST apply only
+  prospectively from the adoption boundary.
+- **CONT-082** Praxis MUST NOT create synthetic historical steps, and MUST
+  NOT redistribute or estimate earlier execution-level usage (tokens, cost,
+  or any metric) among steps by percentage, duration, change size, or any
+  other guess. Where historical step attribution cannot be known, it MUST be
+  represented as unavailable, never as zero.
+- **CONT-083** `work context` MUST NOT imply that execution activity before
+  adoption belongs to the first recorded step. Its human and JSON output
+  MUST expose each execution's segmentation and step-tracking boundary.
+- **CONT-084** A successor execution MUST start its own telemetry and steps.
+  Nothing MUST be appended to its predecessor, and predecessor and successor
+  usage MUST remain separately attributable.
+- **CONT-085** `validate` MUST accept execution-scoped measurements without
+  a step whatever the execution's segmentation, and MUST report a
+  step-scoped measurement whose step its own execution never started. No
+  validation rule may infer zero usage from missing historical step data.
+- **CONT-086** Governance MUST state: "New observability is
+  effective-current. Praxis preserves truthful historical gaps rather than
+  restarting work or fabricating telemetry," and explain execution-level
+  telemetry, step-level telemetry, and unavailable historical step
+  attribution.
+
 ## Acceptance criteria
 
 The capability is complete only when the **two-clone agent-loss proof**
@@ -231,7 +278,10 @@ exact checkpoint commit from Praxis state, verifies it against the remote,
 continues under a new execution of its own, commits, pushes, checkpoints,
 and completes. B's recovered commit MUST equal A's recorded checkpoint
 commit; each executor keeps its own attribution; both checkpoints remain in
-history; the final checkpoint equals the final remote branch head.
+history; the final checkpoint equals the final remote branch head. At least one
+scenario MUST show truthful continuation from a predecessor whose telemetry
+is not step-segmented, with the successor's step telemetry belonging only
+to the successor.
 
 An equivalent contract-level scenario MUST pass for the remote protocol.
 
@@ -254,7 +304,8 @@ recorded in `EV-ROS-2026-A055`.
 | CONT-050..053 | PRAXIS-CONT-06 | `ContinuationCliTests`, `RecoveryProofTests` |
 | CONT-060, 061 | PRAXIS-CONT-07 | `tests/remote-checkpoint.test.mjs`, `RemoteProtocolTests` |
 | CONT-072 | PRAXIS-CONT-09 | `CheckpointGuardTests` (starter and upgrade) |
-| Acceptance | PRAXIS-CONT-08 | `RecoveryProofTests` |
+| Acceptance | PRAXIS-CONT-08, PRAXIS-CONT-11 | `RecoveryProofTests` |
+| CONT-080..086 | PRAXIS-CONT-11 | `TelemetrySegmentationTests`, `CheckpointPersistenceTests`, `RecoveryProofTests` |
 
 **Remaining.** Protocol 1.3 has not run live through GitHub Actions. That
 needs a release containing it, pinned in `.echelon/toolchain.json`.

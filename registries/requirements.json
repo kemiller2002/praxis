@@ -730,11 +730,26 @@
             "modified"
           ],
           "reason": "Implementation status and evidence EV-ROS-2026-A055 (PRAXIS-CONT-10-HARDEN)"
+        },
+        "EXE-20260929T101141946Z-cddc93be": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T10:20:45.774Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Add CONT-080..086 effective-current telemetry requirements dropped from 1.1.0 (PRAXIS-CONT-11-SEGMENTATION)"
         }
       }
     },
     "related_documents": [
       "DF-ROS-2026-A042",
+      "DF-ROS-2026-A043",
       "RQ-ROS-2026-A021",
       "DF-ROS-2026-A041",
       "DF-ROS-2026-A036",
@@ -753,6 +768,6 @@
     ],
     "title": "Durable work checkpoints and agent continuity — an executor session is disposable; repository state plus Praxis state is durable",
     "updated": "2026-09-29",
-    "version": "1.1.0"
+    "version": "1.2.0"
   }
 ]

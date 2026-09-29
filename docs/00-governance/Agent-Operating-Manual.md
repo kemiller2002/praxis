@@ -2,7 +2,7 @@
 id: GV-AGENT-001
 title: Agent Operating Manual
 status: canonical
-version: 1.3.0
+version: 1.4.0
 owners:
   - repository-governance
 created: 2026-07-22
@@ -132,6 +132,7 @@ An executor session is disposable; repository state and Praxis state are the con
 - A checkpoint's summary is not evidence that tests passed. Record test results as telemetry or evidence.
 - Blocking after work no checkpoint covers requires a checkpoint first, or a truthful `--unrecoverable-reason` stating why the latest local state cannot be made remotely recoverable.
 - A successor takes over with `./ros work continue` under its own identity, in a clean checkout that contains the checkpoint. The successor gets a new execution and the predecessor is recorded as interrupted. Never reuse, edit, or claim a predecessor's execution. Never discard someone's uncommitted work to make recovery work.
+- New observability is effective-current: Praxis preserves truthful historical gaps rather than restarting work or fabricating telemetry (`DF-ROS-2026-A043`). Adopt step telemetry at your next material slice without restarting the execution or work item. Usage recorded before adoption stays **execution-level**; only later usage is **step-level**; the earlier period's step attribution is **unavailable**, not zero. Never invent earlier steps or split earlier usage among steps.
 
 ## Artifact Thresholds
 

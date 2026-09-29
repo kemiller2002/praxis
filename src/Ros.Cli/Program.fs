@@ -1908,6 +1908,9 @@ let private computeUnifiedFindings root : Result<ArtifactFinding list, string> =
                 let checkpointFindings =
                     FileCheckpointRepository.validationFindings root |> List.map (fun f -> convert f.Path f.Field f.Message)
 
+                let stepReferenceFindings =
+                    FileTelemetryUsageRepository.stepReferenceFindings root |> List.map (fun (path, field, message) -> convert path field message)
+
                 match ProvenanceCommands.findingsOf FindingSeverity.Error root with
                 | Error message -> Error message
                 | Ok provenanceErrors ->
@@ -1917,6 +1920,7 @@ let private computeUnifiedFindings root : Result<ArtifactFinding list, string> =
                     @ queueFindings
                     @ telemetryFindingsConverted
                     @ checkpointFindings
+                    @ stepReferenceFindings
                     @ (provenanceErrors |> List.map ProvenanceCommands.toArtifactFinding)
                     |> List.sortWith (fun a b -> System.String.CompareOrdinal($"{a.Path}\000{a.Field}\000{a.Message}", $"{b.Path}\000{b.Field}\000{b.Message}"))
                     |> Ok

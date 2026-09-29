@@ -47,6 +47,15 @@ executor's local environment. Requirement `RQ-ROS-2026-A022`; design
 | historical checkpoint | that record, as a `work.checkpointed` event | an immutable fact about time T; never rewritten |
 | currently recoverable checkpoint | a historical checkpoint the remote still carries *now* | observed at read time (`work context`, `status`) |
 
+Telemetry has its own distinction. **Execution-level** telemetry is
+attributed to an execution as a whole. **Step-level** telemetry is
+attributed to a step of that execution. **Unavailable historical step
+attribution** is the truthful state of usage recorded before step tracking
+was adopted. New observability is effective-current: adopting steps midway
+never restarts work, and earlier usage is never guessed into steps. See
+"Effective-current step telemetry" in
+[`development-telemetry.md`](development-telemetry.md).
+
 Staging, stashes, local commits, editor state, transcripts and local
 telemetry are never checkpoints. A checkpoint is evidence about
 recoverability, never a lifecycle state: `ready`, `active`, `blocked` and

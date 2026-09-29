@@ -24,6 +24,20 @@ module RecoveryProofTests =
     let private executionRecord (clone: string) (id: string) =
         JsonNode.Parse(File.ReadAllText(Path.Combine(clone, ".ros", "telemetry", "executions", $"{id}.json"))) :?> JsonObject
 
+    let private remoteHead (clone: string) =
+        (GitFixture.git clone [ "ls-remote"; "origin"; "refs/heads/feature/x" ]).Split('\t')[0]
+
+    let private tokens (clone: string) who (extra: string list) =
+        run clone (Some who) ([ "telemetry"; "record"; "FEAT-42"; "--metric"; "tokens.input"; "--unit"; "tokens"; "--source-type"; "runtime-api"; "--quiet" ] @ extra)
+        |> ok
+        |> ignore
+
+    let private usageGroups (clone: string) (dimension: string) =
+        (run clone None [ "telemetry"; "usage"; "FEAT-42"; "--by"; dimension ] |> ok).Json["groups"] :?> JsonArray
+        |> Seq.filter (fun node -> text node["metric"] = "tokens.input")
+        |> Seq.map (fun node -> text node["key"], node)
+        |> Map.ofSeq
+
     let tests =
         [ { Name = "recovery proof: B recovers A's exact checkpoint from an independent clone after A is lost, continues and completes"
             Run =
@@ -41,6 +55,8 @@ module RecoveryProofTests =
 
                       // ---- Executor A, in clone A only ----
                       run cloneA (Some executorA) [ "work"; "start"; "--id"; "FEAT-42"; "--type"; "feature"; "--occurred-at"; now () ] |> ok |> ignore
+                      // A predates step tracking: its usage is execution-scoped only.
+                      tokens cloneA executorA [ "--value"; "900" ]
                       GitFixture.write cloneA "src/capability.txt" "capability boundary\n"
                       let checkpointCommitA = pushAll cloneA "Implement capability boundary"
 
@@ -67,6 +83,9 @@ module RecoveryProofTests =
                       Assert.equal checkpointCommitA (text checkpointA["remoteCommit"])
                       Assert.equal "feature/x" (text checkpointA["remoteBranch"])
                       let executionA = text checkpointA["executionId"]
+                      // Strictly: local HEAD == checkpoint commit == remote branch head.
+                      Assert.equal checkpointCommitA (GitFixture.git cloneA [ "rev-parse"; "HEAD" ])
+                      Assert.equal checkpointCommitA (remoteHead cloneA)
                       // A makes its Praxis state durable too, then is lost.
                       pushAll cloneA "praxis: checkpoint FEAT-42" |> ignore
                       Directory.Delete(cloneA, true)
@@ -113,7 +132,10 @@ module RecoveryProofTests =
                       Assert.equal "external-tool" (text ran.Head["source"].["type"])
                       pushAll cloneB "praxis: FEAT-42 continued by B" |> ignore
 
-                      // B implements the next action, commits, pushes, checkpoints C2.
+                      // B implements the next action under step telemetry of its own,
+                      // from its own start; A is never given steps retroactively.
+                      run cloneB (Some executorB) [ "telemetry"; "step"; "start"; "FEAT-42"; "--step"; "rust-consumer"; "--occurred-at"; now () ] |> ok |> ignore
+                      tokens cloneB executorB [ "--value"; "400"; "--step"; "rust-consumer" ]
                       GitFixture.write cloneB "src/rust-consumer.txt" "rust consumer fixture\n"
                       let checkpointCommitB = pushAll cloneB "Implement Rust consumer fixture"
 
@@ -123,10 +145,15 @@ module RecoveryProofTests =
                               (Some executorB)
                               [ "work"; "checkpoint"; "--id"; "FEAT-42"; "--occurred-at"; now ()
                                 "--summary"; "Implemented Rust consumer fixture"
-                                "--next-action"; "Run final completion transition"; "--json" ]
+                                "--next-action"; "Run final completion transition"; "--step"; "rust-consumer"; "--json" ]
                           |> ok
 
                       Assert.equal checkpointCommitB (text recordedB.Json["checkpoint"].["commit"])
+                      Assert.equal "rust-consumer" (text recordedB.Json["checkpoint"].["stepId"])
+                      // The final checkpoint is exactly the remote branch head when recorded.
+                      Assert.equal checkpointCommitB (GitFixture.git cloneB [ "rev-parse"; "HEAD" ])
+                      Assert.equal checkpointCommitB (remoteHead cloneB)
+                      run cloneB (Some executorB) [ "telemetry"; "step"; "complete"; "FEAT-42"; "--step"; "rust-consumer"; "--occurred-at"; now () ] |> ok |> ignore
                       Assert.equal executionB (text recordedB.Json["checkpoint"].["executionId"])
                       pushAll cloneB "praxis: checkpoint 2" |> ignore
 
@@ -154,6 +181,33 @@ module RecoveryProofTests =
                       Assert.equal "openai" (text recordB["identity"].["provider"])
                       Assert.equal "codex-thread-B" (text recordB["identity"].["sessionId"])
                       Assert.equal executionA (text recordB["identity"].["parentExecutionId"])
+
+                      // Telemetry: A stays execution-level (truthfully unsegmented), B's
+                      // step belongs to B only, and usage is attributed per executor.
+                      let stepsOf (record: JsonObject) =
+                          record["events"] :?> JsonArray
+                          |> Seq.filter (fun node -> text node["type"] = "step.started")
+                          |> Seq.map (fun node -> text node["stepId"])
+                          |> Seq.toList
+
+                      Assert.empty (stepsOf recordA)
+                      Assert.equal [ "rust-consumer" ] (stepsOf recordB)
+                      let view = run cloneB None [ "work"; "context"; "FEAT-42" ] |> ok
+                      let segmentation = view.Json["continuity"].[0].["telemetry"].["executions"] :?> JsonArray
+                      let segmentationOf id = segmentation |> Seq.find (fun node -> text node["executionId"] = id)
+                      Assert.equal "execution-level" (text (segmentationOf executionA).["segmentation"])
+                      Assert.equal "unavailable" (text (segmentationOf executionA).["historicalStepAttribution"])
+                      Assert.isTrue ((text (segmentationOf executionB).["segmentation"]).StartsWith "step-level") "B's steps were not recognized"
+                      Assert.isTrue ((segmentationOf executionB).["stepTrackingStartedAt"] <> null) "B has no step-tracking boundary"
+                      let byExecution = usageGroups cloneB "execution"
+                      Assert.equal 900.0 (byExecution[executionA].["total"].GetValue<float>())
+                      Assert.equal 400.0 (byExecution[executionB].["total"].GetValue<float>())
+                      let byStep = usageGroups cloneB "step"
+                      Assert.equal 400.0 (byStep["rust-consumer"].["total"].GetValue<float>())
+                      Assert.equal [ executionB ] (byStep["rust-consumer"].["reportingExecutions"] :?> JsonArray |> Seq.map text |> Seq.toList)
+                      // A's 900 is never redistributed into B's (or any) step.
+                      Assert.equal 900.0 (byStep["(outside any step)"].["total"].GetValue<float>())
+                      Assert.equal [ executionA ] (byStep["(outside any step)"].["reportingExecutions"] :?> JsonArray |> Seq.map text |> Seq.toList)
 
                       let log = events cloneB
                       let checkpoints = log |> List.filter (fun node -> text node["type"] = "work.checkpointed")

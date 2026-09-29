@@ -330,7 +330,12 @@ predecessor, and a `work.continued` event is recorded. The command refuses
 dirty checkouts, the caller's own run, and non-active work.
 
 **Additive output.** `work context` and `status` gain an additive
-`continuity` block. `--offline` never contacts a remote.
+`continuity` block. `--offline` never contacts a remote. Each block carries
+`telemetry.executions[]`, the item's executions with their telemetry
+segmentation (`execution-level`, `step-level` or `step-level-adopted`),
+`stepTrackingStartedAt` and any execution-scoped period before it; `--text`
+prints them under `TELEMETRY SEGMENTATION`. See "Effective-current step
+telemetry" in [`development-telemetry.md`](development-telemetry.md).
 
 **Guards.** Where `workProtocol.continuity.requireDurableCheckpoint` is set:
 

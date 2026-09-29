@@ -2757,6 +2757,30 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-CONT-11-SEGMENTATION",
+      "title": "Effective-current telemetry segmentation and continuity proof gaps",
+      "description": "Audit of PRAXIS-CONT-00..10 against the durable-checkpoint specification found gaps: work context/status/continue expose no telemetry segmentation boundary (execution-level before / step-level from); telemetry usage --by step omits unsegmented executions that reported nothing (unavailable, not zero); requirements 33-40 (mid-execution step adoption, successor step telemetry, separate attribution) lack tests; the recovery proof lacks a pre-step predecessor and step-tracked successor and does not assert checkpoint == remote head strictly; several checkpoint validation rules are untested.",
+      "tags": [
+        "continuity",
+        "durable-checkpoints"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-29T10:11:23.945Z",
+      "updatedAt": "2026-09-29T10:11:41.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
