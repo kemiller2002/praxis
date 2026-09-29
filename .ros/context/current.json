@@ -4534,11 +4534,22 @@
       },
       "completedAt": "2026-09-29T18:15:08.000Z",
       "conclusion": "Shadow planner delivered; on Praxis it found 3 evidence-backed stale-state candidates, reported cost optimization unavailable (0 of 155 executions), and replay showed weak duration prediction (62.6% within range)."
+    },
+    {
+      "id": "GH-121",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-29T23:14:20.843Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T231423338Z-6b548480"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
-  "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T18:15:08.000Z",
+  "actor": "chatgpt",
+  "updatedAt": "2026-09-29T23:14:20.843Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
