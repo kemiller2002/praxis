@@ -56,7 +56,7 @@
 | PRAXIS-DIST-NATIVE-DOTNET-TOOL | Retire npm distribution; ship native bundles and a .NET global tool | complete | distribution | high |
 | PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | captured | rename, gh-90 | low |
 | PRAXIS-PLAN-01 | Deterministic shadow planner: praxis plan analyze/simulate/compare/explain (PRX-PLAN-001..182) | complete | planning, architecture, cli | high |
-| PRAXIS-PLAN-02 | Accept planner decision DF-ROS-2026-A046 on the owner's approval | ready | planning, governance | medium |
+| PRAXIS-PLAN-02 | Accept planner decision DF-ROS-2026-A046 on the owner's approval | complete | planning, governance | medium |
 | PRAXIS-RELEASE-BUMP-WORKFLOW | Release workflow: one-click version bump that publishes | complete | release | high |
 | PRAXIS-REMOTE-01 | Remote protocol v1 contract: schemas, typed domain model, validation, fingerprint, decision order | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-02 | Remote provenance roles: asserted request actor, observed executor, transport principal | complete | remote-execution, gh-90 | high |

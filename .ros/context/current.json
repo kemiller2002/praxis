@@ -4538,10 +4538,19 @@
     {
       "id": "PRAXIS-PLAN-02",
       "type": "maintenance",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-29T22:29:34.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/decisions/DF-ROS-2026-A046--deterministic-advisory-planner.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ArtifactTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T22:31:41.000Z",
       "telemetryExecutionIds": [
         "EXE-20260929T222935210Z-1813973a"
       ],
@@ -4564,12 +4573,14 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-09-29T22:31:41.000Z",
+      "conclusion": "Status-only change (review -> accepted) on the owner's approval. No new test: validity of the DF status is checked by artifact validation (ArtifactTests.fs covers that policy); ./ros validate passed."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T22:29:34.000Z",
+  "updatedAt": "2026-09-29T22:31:41.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

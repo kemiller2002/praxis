@@ -3061,10 +3061,10 @@
         "governance"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-29T22:29:33.000Z",
-      "updatedAt": "2026-09-29T22:29:34.000Z",
+      "updatedAt": "2026-09-29T22:31:41.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
