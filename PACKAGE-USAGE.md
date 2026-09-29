@@ -142,6 +142,26 @@ exercises the artifact, and publishes a `main` snapshot. When the committed
 The binaries are fetched automatically by the launcher; they are not intended
 for manual download.
 
+### One-click release
+
+The **Release** workflow ([`.github/workflows/release.yml`](.github/workflows/release.yml))
+is the normal way to change the version. Run it from the Actions tab on `main`
+with `patch`, `minor`, `major` or an exact `X.Y.Z`. It:
+
+1. runs [`scripts/praxis-release-bump.sh`](scripts/praxis-release-bump.sh),
+   which begins work item `RELEASE-X-Y-Z` under the GitHub Actions identity,
+   bumps `package.json` and `package-lock.json`, commits and pushes, records a
+   durable checkpoint, completes the work item, and pushes the Praxis state;
+2. dispatches `publish.yml` (with the pre-bump commit as its `base`) and
+   `native-release.yml`.
+
+The dispatch is needed because a push made with `GITHUB_TOKEN` does not start
+push-triggered workflows. `publish.yml` treats a dispatched `base` exactly
+like a push's `before` commit: for detecting the version change and as
+`ROS_BASE_REF` for attribution. The script refuses a dirty tree, a branch
+that is not at its upstream head, and a version that is not newer, before
+anything is mutated.
+
 ## Configure trusted publishing
 
 The workflow uses npm trusted publishing and does not require a long-lived
