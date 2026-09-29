@@ -4094,18 +4094,49 @@
     {
       "id": "PRAXIS-DIST-NATIVE-DOTNET-TOOL",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-29T12:11:09.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/ros-fs-assets.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-29T12:16:41.000Z",
       "telemetryExecutionIds": [
         "EXE-20260929T121110353Z-4a1ea4e3"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "b1fe098139489b5969a3e0fb",
+        "recordedAt": "2026-09-29T12:16:39.000Z",
+        "executionId": "EXE-20260929T121110353Z-4a1ea4e3",
+        "stepId": "reland",
+        "repository": "repository-operating-system",
+        "branch": "claude/retire-npm-dotnet-tool-v2",
+        "commit": "e09f2edde53b926b2e89fe4a3b66a79c27650ae3",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/retire-npm-dotnet-tool-v2",
+        "remoteCommit": "e09f2edde53b926b2e89fe4a3b66a79c27650ae3",
+        "summary": "npm distribution retired (DF-ROS-2026-A044) re-landed on current main: publish.yml removed, package.json private; .NET global tool EchelonFoundry.Praxis in native-release.yml; ros-fs assets via ros-fs-assets.yml; docs rewritten",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T12:16:41.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T12:11:09.000Z",
+  "updatedAt": "2026-09-29T12:16:41.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

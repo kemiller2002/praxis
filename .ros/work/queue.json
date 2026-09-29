@@ -2878,10 +2878,10 @@
         "distribution"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-29T12:11:09.265Z",
-      "updatedAt": "2026-09-29T12:11:09.000Z",
+      "updatedAt": "2026-09-29T12:16:41.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
