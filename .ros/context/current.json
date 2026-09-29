@@ -4052,6 +4052,56 @@
         "repository": "repository-operating-system",
         "branch": "claude/retire-npm-dotnet-tool",
         "commit": "944029bbf101eaabb9f17c59dac29677100baede",
+      "id": "REMOTE-ENABLE-3-6-0",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-09-29T11:06:03.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T110521674Z-a10a5c57"
+      ],
+      "latestCheckpoint": {
+        "id": "13fe418eab93db82fc0f3213",
+        "recordedAt": "2026-09-29T11:06:01.000Z",
+        "executionId": "EXE-20260929T110521674Z-a10a5c57",
+        "repository": "repository-operating-system",
+        "branch": "claude/pin-praxis-3-6-0",
+        "commit": "a11a7c652bf5fe7f7a6dc29b16e947e05e643f07",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/pin-praxis-3-6-0",
+        "remoteCommit": "a11a7c652bf5fe7f7a6dc29b16e947e05e643f07",
+        "summary": "Pinned .echelon/toolchain.json praxis to 3.6.0 after verifying the release bundle",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T11:06:03.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-12-CONTINUE-PROOF",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-09-29T11:47:34.802Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T113043360Z-32d06972",
+        "EXE-20260929T114329995Z-cebed9a0"
+      ],
+      "latestCheckpoint": {
+        "id": "c18e54e9104edeb12da69080",
+        "recordedAt": "2026-09-29T11:46:14.874Z",
+        "executionId": "EXE-20260929T114329995Z-cebed9a0",
+        "stepId": "continue-proof-b",
+        "repository": "repository-operating-system",
+        "branch": "main",
+        "commit": "f2e36f5914e6f5a00faaafd551053075d1f93223",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
@@ -4060,17 +4110,21 @@
         "remoteCommit": "944029bbf101eaabb9f17c59dac29677100baede",
         "summary": "npm distribution retired (DF-ROS-2026-A044): publish.yml removed, package.json private; .NET global tool EchelonFoundry.Praxis packed/smoke-tested/NuGet-published by native-release.yml; ros-fs assets moved to ros-fs-assets.yml; docs rewritten",
         "nextAction": "Run final completion transition",
+        "remoteBranch": "main",
+        "remoteCommit": "f2e36f5914e6f5a00faaafd551053075d1f93223",
+        "summary": "Successor continued from agent A's checkpoint and completed step continue-proof-b; no repository code was changed",
+        "nextAction": "Complete the work item",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
       },
-      "completedAt": "2026-09-29T11:35:27.000Z"
+      "completedAt": "2026-09-29T11:47:34.802Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T11:35:27.000Z",
+  "updatedAt": "2026-09-29T11:47:34.802Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
