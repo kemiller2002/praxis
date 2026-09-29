@@ -149,8 +149,8 @@ export function nonStableVersionMessage(version) {
   return (
     `./ros: version ${version} is a main-branch snapshot, not a stable release -- ` +
     "no GitHub Release (and therefore no ros-fs binary) is ever published for a snapshot " +
-    "version. Bootstrap with a stable published version instead (see PACKAGE-USAGE.md's " +
-    '"Install from npm" section), or wait for the next stable release.'
+    "version. Pin a stable released version instead (see PACKAGE-USAGE.md's " +
+    '"Versions" section), or wait for the next stable release.'
   );
 }
 

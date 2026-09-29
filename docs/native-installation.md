@@ -99,7 +99,7 @@ Versions are immutable directories. The bin entries point at the active version,
 
 ## Compatibility
 
-The existing npm package remains supported as a compatibility distribution channel. Existing ros and sde command names and repository installation manifests are not removed by this change.
+npm is no longer a distribution channel (`DF-ROS-2026-A044`); versions already published there stay installable but receive no updates. With .NET 10 installed, `dotnet tool install -g EchelonFoundry.Praxis` provides the same `praxis` command from NuGet. Existing ros and sde command names and repository installation manifests are not removed.
 
 ## Verified bootstrap for CI and remote execution
 

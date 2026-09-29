@@ -20,11 +20,11 @@ test("no site file can trigger a release workflow on main", () => {
   // its paths, so the site must live entirely outside them.
   const sitePaths = ["site/index.html", "site-tools/check.mjs", "tests/site/site.test.mjs", "docs/site/site-deployment.md", "docs/public-site.md", ".github/workflows/site.yml", ".github/workflows/deploy-pages.yml"];
   const glob = (pattern) => new RegExp(`^${pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*\*/g, "\u0000").replace(/\*/g, "[^/]*").replace(/\u0000/g, ".*")}$`);
-  ["native-release.yml", "publish.yml"].forEach((file) => {
+  ["native-release.yml", "ros-fs-assets.yml", "release.yml"].forEach((file) => {
     const workflow = read(`.github/workflows/${file}`);
     const push = workflow.split(/\n  push:\n/)[1] ?? "";
     const pushPaths = (push.split(/\n  [a-z_]+:/)[0].match(/^\s+- "([^"]+)"$/gm) ?? []).map((line) => line.trim().slice(3, -1));
-    if (pushPaths.length === 0) return; // no path filter: runs on every push regardless of the site (publish.yml)
+    if (pushPaths.length === 0) return; // no push path filter (dispatch- or call-only workflows)
     sitePaths.forEach((file_) => assert.ok(!pushPaths.some((pattern) => glob(pattern).test(file_)), `${file_} matches ${file} push path`));
   });
   assert.ok(!existsSync(new URL("../../scripts/site", import.meta.url)), "site tooling must not live under scripts/");
@@ -33,7 +33,7 @@ test("no site file can trigger a release workflow on main", () => {
 });
 
 test("release workflows do not know about the site", () => {
-  ["publish.yml", "native-release.yml"].forEach((file) => {
+  ["release.yml", "native-release.yml", "ros-fs-assets.yml"].forEach((file) => {
     const workflow = read(`.github/workflows/${file}`);
     assert.ok(!/site\/|site-pages|pages/i.test(workflow), file);
   });

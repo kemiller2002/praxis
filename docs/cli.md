@@ -1,15 +1,16 @@
 # CLI reference
 
-The canonical public interface is the `ros` executable shipped by
-`@echelon-foundry/repository-operating-system`.
+The canonical public interface is the `praxis` command (`ros` is kept as an
+alias and as a scaffolded project's `./ros`). Install it from the native
+bundle or as the .NET global tool `EchelonFoundry.Praxis`; see
+[`installation.md`](installation.md).
 
 ```bash
-npx --package=@echelon-foundry/repository-operating-system ros <command>
+praxis <command>
 ```
 
 All five lifecycle commands, and the repository commands below them, are the
-same F# CLI. The npm package contains a small Node launcher whose only job is
-to start that CLI; no lifecycle decision is made in JavaScript.
+same F# CLI. No lifecycle decision is made in a launcher.
 
 ## Lifecycle commands
 
@@ -26,7 +27,7 @@ to start that CLI; no lifecycle decision is made in JavaScript.
 | Option | Meaning |
 |---|---|
 | `-h`, `--help` | Show help. `ros <command> --help` shows that command's help. |
-| `-V`, `--version` | Print `ros-fs <version>`, where the version is the npm package version. |
+| `-V`, `--version` | Print `ros-fs <version>`, the Praxis release version (from `package.json`, the single version source). |
 | `--root PATH` | Repository to act on. Defaults to the current directory. |
 | `--package-root PATH` | Install from this scaffold directory instead of the one compiled into the binary. Rarely needed — see [Where the scaffold comes from](installation.md#where-the-scaffold-comes-from). |
 | `--json` | Emit machine-readable JSON on stdout. |
@@ -220,13 +221,13 @@ document either way:
 
 ```bash
 # Fail the build if the repository is not installed and current.
-npx --package=@echelon-foundry/repository-operating-system ros verify --strict
+praxis verify --strict
 
 # Fail the build if init would change anything.
-npx --package=@echelon-foundry/repository-operating-system ros init --check
+praxis init --check
 
 # Machine-readable, for a step that parses the result.
-npx --package=@echelon-foundry/repository-operating-system ros verify --json
+praxis verify --json
 ```
 
 Exit code `0` means the assertion held; `3` means it did not. Any other
@@ -410,5 +411,6 @@ registers installations with Project Administration's inventory. See
 [`installation-registration.md`](installation-registration.md).
 
 `praxis` is the canonical command. The native release installs `praxis` and
-`ros`, and `./praxis` runs this checkout. The npm package still exposes only
-`ros` (plus `ros-fs` and `ros-bootstrap`). Every name runs the same F# CLI.
+`ros`, the .NET global tool installs `praxis`, and `./praxis` runs this
+checkout. The npm package is no longer published (`DF-ROS-2026-A044`). Every
+name runs the same F# CLI.
