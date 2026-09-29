@@ -3569,7 +3569,27 @@
       "updatedAt": "2026-09-29T06:59:35.000Z",
       "telemetryExecutionIds": [
         "EXE-20260929T065936299Z-2e1a598f"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "ae29e8dee93e04908dba4070",
+        "recordedAt": "2026-09-29T07:03:50.000Z",
+        "executionId": "EXE-20260929T065936299Z-2e1a598f",
+        "repository": "repository-operating-system",
+        "branch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "commit": "79c7e9f6762bf29903ef0837ce856c22ff0f92b4",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "remoteCommit": "79c7e9f6762bf29903ef0837ce856c22ff0f92b4",
+        "summary": "Domain, Git observations, persistence and the work checkpoint/show CLI are implemented and pushed; 640 F# tests pass",
+        "nextAction": "Add CLI integration tests for work checkpoint, context and status continuity; then implement completion/block guards (PRAXIS-CONT-05)",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     }
   ],
   "protocolVersion": "1.0.0",
