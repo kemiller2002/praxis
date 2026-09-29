@@ -2848,6 +2848,29 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-DIST-NATIVE-DOTNET-TOOL",
+      "title": "Retire npm distribution; ship native bundles and a .NET global tool",
+      "description": "Owner decision (2026-09-29): stop publishing to npm. Keep self-contained native bundles (GitHub Releases via native-release.yml, scripts/praxis-bootstrap.sh) for machines and cloud agents without .NET, and add a .NET global tool on NuGet for developers with .NET 10. Remove the npm publish path from the release flow, make the npm package unpublishable, rewrite install/lifecycle docs and starter-propagated governance away from npx, and record the decision superseding the npm distribution decisions.",
+      "tags": [
+        "distribution"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-29T11:18:53.949Z",
+      "updatedAt": "2026-09-29T11:18:54.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
