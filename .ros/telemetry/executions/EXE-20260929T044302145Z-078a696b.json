@@ -1372,6 +1372,17 @@
         "name": "ros",
         "mechanism": "work-lifecycle"
       }
+    },
+    {
+      "type": "step.started",
+      "stepId": "remote-proof-a",
+      "name": "Agent A records a governed step without a local runtime",
+      "occurredAt": "2026-09-29T04:45:21.318Z",
+      "source": {
+        "type": "ros-clock",
+        "name": "ros",
+        "mechanism": "step-lifecycle"
+      }
     }
   ],
   "repository": {
