@@ -1,0 +1,70 @@
+{
+  "schema": "praxis.remote-journal",
+  "schemaVersion": 1,
+  "requestId": "req-proof-b2-block-1",
+  "fingerprint": "sha256:f94c8112b97173e4b4266b4eab935bd7812f30188c6f93bd5fa46fbbdf1aad68",
+  "protocolVersion": "1.2",
+  "operation": "work.block",
+  "recordedAt": "2026-09-29T05:24:47.617Z",
+  "requestedAt": null,
+  "repository": {
+    "ref": "refs/heads/main",
+    "expectedSha": "6bce4068b3bd7509e1305985549eeede30e782e6"
+  },
+  "requester": {
+    "assurance": "asserted-by-request",
+    "actor": {"kind":"agent","id":"anthropic/claude-code","provider":"anthropic","model":"unknown","runtime":"claude-code"},
+    "sessionId": "session_01CAmxnZ9DDShGNE5UXuMAzD",
+    "execution": null
+  },
+  "principal": "github:kemiller2002",
+  "response": {
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.2",
+  "requestId": "req-proof-b2-block-1",
+  "operation": "work.block",
+  "outcome": "succeeded",
+  "replayed": false,
+  "repository": {
+    "ref": "refs/heads/main",
+    "expectedSha": "6bce4068b3bd7509e1305985549eeede30e782e6",
+    "observedSha": "6bce4068b3bd7509e1305985549eeede30e782e6"
+  },
+  "praxisVersion": "3.5.0",
+  "executor": {
+    "kind": "github-actions",
+    "runId": "36526011882",
+    "runAttempt": "1",
+    "workflowRef": "kemiller2002/praxis/.github/workflows/praxis-remote.yml@refs/heads/main",
+    "repository": "kemiller2002/praxis",
+    "host": "github-hosted",
+    "principal": "github:kemiller2002",
+    "praxisVersion": "3.5.0",
+    "assurance": "observed-by-executor"
+  },
+  "persistence": {
+    "paths": [
+      ".ros/context/current.json",
+      ".ros/events/events.jsonl",
+      ".ros/remote/requests/req-proof-b2-block-1.json",
+      ".ros/telemetry/executions/EXE-20260929T044302145Z-078a696b.json"
+    ]
+  },
+  "failure": null,
+  "result": [
+    {
+      "id": "PRAXIS-REMOTE-11-PROOF",
+      "type": "mechanical",
+      "state": "blocked",
+      "semanticState": "blocked",
+      "evidence": [],
+      "updatedAt": "2026-09-29T05:24:45.512Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T044302145Z-078a696b"
+      ],
+      "blockReason": "predecessor execution EXE-20260929T044302145Z-078a696b (session session_01CXyA4Kr1MMmmhMjeNmgCFM) ended without a handoff; taking over as the successor"
+    }
+  ]
+}
+
+}

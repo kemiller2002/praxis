@@ -511,14 +511,30 @@
     },
     {
       "metricId": "agent.interruptions",
-      "status": "unknown",
-      "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-09-29T04:43:02.145Z",
+      "status": "derived",
+      "reason": "normalized measurement recorded",
+      "discoveredAt": "2026-09-29T05:24:45.512Z",
       "source": {
-        "type": "environment",
-        "name": "runtime-identity",
-        "mechanism": "explicit-or-unmapped-environment"
-      }
+        "type": "calculated",
+        "name": "ros-work-protocol",
+        "mechanism": "blocked-transition"
+      },
+      "lastAssessedAt": "2026-09-29T05:24:45.512Z",
+      "recordedAt": "2026-09-29T05:24:45.512Z",
+      "history": [
+        {
+          "status": "unknown",
+          "reason": "runtime capability not reported or mapped",
+          "source": {
+            "type": "environment",
+            "name": "runtime-identity",
+            "mechanism": "explicit-or-unmapped-environment"
+          },
+          "discoveredAt": "2026-09-29T04:43:02.145Z",
+          "lastAssessedAt": "2026-09-29T04:43:02.145Z",
+          "recordedAt": "2026-09-29T04:43:02.145Z"
+        }
+      ]
     },
     {
       "metricId": "agent.resumes",
@@ -1398,6 +1414,26 @@
       },
       "collectedAt": "2026-09-29T04:46:55.810Z",
       "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-dbcaebbfad9b1cad48b70a0a",
+      "id": "agent.interruptions",
+      "value": 1,
+      "unit": "count",
+      "currency": null,
+      "quality": "derived",
+      "confidence": null,
+      "scope": "execution",
+      "aggregation": "sum",
+      "dimensions": {},
+      "pricing": null,
+      "source": {
+        "type": "calculated",
+        "name": "ros-work-protocol",
+        "mechanism": "blocked-transition"
+      },
+      "collectedAt": "2026-09-29T05:24:45.512Z",
+      "schemaVersion": "1.0.0"
     }
   ],
   "rawTelemetry": [],
@@ -1432,6 +1468,17 @@
         "name": "ros",
         "mechanism": "step-lifecycle"
       }
+    },
+    {
+      "type": "work.blocked",
+      "occurredAt": "2026-09-29T05:24:45.512Z",
+      "reason": "predecessor execution EXE-20260929T044302145Z-078a696b (session session_01CXyA4Kr1MMmmhMjeNmgCFM) ended without a handoff; taking over as the successor",
+      "source": {
+        "type": "ros-clock",
+        "name": "ros",
+        "mechanism": "work-lifecycle"
+      },
+      "eventId": "TEVT-13b5c4cae0966b77d771c04d"
     }
   ],
   "repository": {

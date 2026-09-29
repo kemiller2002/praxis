@@ -3347,18 +3347,19 @@
     {
       "id": "PRAXIS-REMOTE-11-PROOF",
       "type": "mechanical",
-      "state": "active",
-      "semanticState": "active",
+      "state": "blocked",
+      "semanticState": "blocked",
       "evidence": [],
-      "updatedAt": "2026-09-29T04:43:00.400Z",
+      "updatedAt": "2026-09-29T05:24:45.512Z",
       "telemetryExecutionIds": [
         "EXE-20260929T044302145Z-078a696b"
-      ]
+      ],
+      "blockReason": "predecessor execution EXE-20260929T044302145Z-078a696b (session session_01CXyA4Kr1MMmmhMjeNmgCFM) ended without a handoff; taking over as the successor"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T04:43:00.400Z",
+  "updatedAt": "2026-09-29T05:24:45.512Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
