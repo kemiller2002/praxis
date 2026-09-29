@@ -1,6 +1,6 @@
 # Praxis planning and optimization requirements
 
-Status: **Proposed** (first implementation: `PRAXIS-PLAN-01`, shadow mode)
+Status: **Accepted** (first implementation: `PRAXIS-PLAN-01`, shadow mode; merged in PR #120)
 
 Implementation, design decisions and the first shadow-experiment results are
 described in [`docs/planning.md`](../docs/planning.md),
