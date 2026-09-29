@@ -52,5 +52,14 @@
     <Compile Include="Lifecycle/Planning.fs" />
     <Compile Include="Execution/Governance.fs" />
     <Compile Include="Installation/Registration.fs" />
+    <Compile Include="Planning/Model.fs" />
+    <Compile Include="Planning/History.fs" />
+    <Compile Include="Planning/Inventory.fs" />
+    <Compile Include="Planning/Graph.fs" />
+    <Compile Include="Planning/Snapshot.fs" />
+    <Compile Include="Planning/Scheduling.fs" />
+    <Compile Include="Planning/Comparison.fs" />
+    <Compile Include="Planning/Replay.fs" />
+    <Compile Include="Planning/Planner.fs" />
   </ItemGroup>
 </Project>
