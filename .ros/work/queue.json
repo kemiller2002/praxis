@@ -2447,6 +2447,30 @@
       },
       "source": "manual",
       "sourceReference": "PRAXIS-REMOTE-11"
+    },
+    {
+      "id": "PRAXIS-REMOTE-15",
+      "title": "Agent contract: a handoff needs a block before the successor resumes",
+      "description": "Found by the live proof (run 36524551943, req-proof-b-resume-1): docs/remote-agent-contract.md section 5 tells a successor to 'Resume the work item as yourself', but work.resume is legal only from blocked, so resuming an item the predecessor left active is domain-rejected. Document the handoff: the predecessor blocks with a handoff reason when it stops; if the predecessor is gone, the successor blocks with a reason naming it, then resumes. Add a regression test for the abandoned-predecessor takeover. Depends on: PRAXIS-REMOTE-09.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T05:21:56.000Z",
+      "updatedAt": "2026-09-29T05:23:13.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "PRAXIS-REMOTE-11-PROOF"
     }
   ]
 }

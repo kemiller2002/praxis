@@ -3393,11 +3393,36 @@
         "EXE-20260929T042755722Z-1cefa7ca"
       ],
       "completedAt": "2026-09-29T04:28:28.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-15",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "docs/remote-agent-contract.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/remote-execute.test.mjs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/remote-agent-contract.md"
+        }
+      ],
+      "updatedAt": "2026-09-29T05:23:13.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T052157677Z-f9abf2b7"
+      ],
+      "completedAt": "2026-09-29T05:23:13.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-29T04:28:28.000Z",
+  "updatedAt": "2026-09-29T05:23:13.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

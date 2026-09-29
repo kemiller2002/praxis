@@ -393,6 +393,38 @@ test("a successor agent continues in its own execution, linked to its predecesso
   assert.equal(measurement.source.type, "agent-report", "remotely supplied telemetry is labelled as reported, not observed");
 });
 
+test("a successor takes over from a predecessor that left without blocking: resume is refused until the successor blocks for the handoff", (t) => {
+  const root = fixture(t, "takeover");
+  const commit = (message) => { git(root, "add", "-A"); git(root, "commit", "-qm", message); };
+  const agentA = { kind: "agent", id: "example/agent-a", provider: "example", runtime: "cloud-a", sessionId: "session-a" };
+  const agentB = { kind: "agent", id: "example/agent-a", provider: "example", runtime: "cloud-a", sessionId: "session-b" };
+
+  assert.equal(remote(root, request(root, "work.start", { workItemIds: ["WI-0100"] }, { requestId: "req-a-start-001", actor: agentA })).response.outcome, "succeeded");
+  commit("praxis: A starts, then its session ends");
+  const [predecessor] = executions(root);
+
+  const refused = remote(root, request(root, "work.resume", { workItemIds: ["WI-0100"] }, { requestId: "req-b-resume-01", actor: agentB })).response;
+  assert.equal(refused.failure.code, "domain-rejected", "resume is legal only from blocked");
+  assert.equal(status(root), "", "a refused transition persists nothing");
+
+  const blocked = remote(root, request(root, "work.block", { workItemIds: ["WI-0100"], reason: "predecessor session-a ended without a handoff; taking over" }, { requestId: "req-b-block-01", actor: agentB })).response;
+  assert.equal(blocked.outcome, "succeeded", JSON.stringify(blocked.failure));
+  commit("praxis: B blocks for the handoff");
+  assert.equal(readEvents(root).at(-1).actor.id, agentB.id);
+  assert.equal(readEvents(root).at(-1).type, "work.blocked");
+
+  const resumed = remote(root, request(root, "work.resume", { workItemIds: ["WI-0100"] }, { requestId: "req-b-resume-02", actor: agentB })).response;
+  assert.equal(resumed.outcome, "succeeded", JSON.stringify(resumed.failure));
+  commit("praxis: B resumes");
+
+  // Same agent ID in another session is still another run: its own execution, linked, never the predecessor's.
+  const successor = executions(root).find((execution) => execution.executionId !== predecessor.executionId);
+  assert.ok(successor, "the successor has its own execution");
+  assert.equal(successor.identity.sessionId, "session-b");
+  assert.equal(successor.identity.parentExecutionId, predecessor.executionId);
+  assert.equal(executions(root).find((execution) => execution.executionId === predecessor.executionId).identity.sessionId, "session-a");
+});
+
 test("remote reconciliation (#80) attributes already-committed work without touching it and keeps three identities apart", (t) => {
   const root = fixture(t, "reconcile");
   fs.mkdirSync(path.join(root, "src"), { recursive: true });

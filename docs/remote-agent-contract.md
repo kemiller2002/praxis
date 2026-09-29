@@ -92,11 +92,19 @@ it.
 
 ## 5. Continue someone else's work, and what to do when you cannot reach Praxis
 
+- **Handing off.** When you stop before the work is done, send `work.block`
+  with a reason that says it is a handoff. `work.resume` is legal only from
+  `blocked`, so an item left active cannot be resumed.
 - **Taking over from another agent.** Resume the work item as yourself. You
   get your own execution, and Praxis records its `parentExecutionId` as the
   predecessor's execution. You never continue, or record telemetry into, an
   execution that is not yours. Praxis refuses that, and it applies equally
   to another run of your own agent.
+- **If the predecessor left the item active.** `work.resume` is refused as
+  `domain-rejected`. Send `work.block` yourself, with a reason that names
+  the predecessor's session or execution and says you are taking over, then
+  `work.resume`. The block is recorded as your action, not the
+  predecessor's.
 - **You could not invoke Praxis at all.** Commit your legitimate work
   normally. When Praxis is reachable again, attribute that work with
   `work.reconcile`, naming the commits. The attribution is recorded as
