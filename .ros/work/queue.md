@@ -37,8 +37,8 @@
 | PKG-ECHELON-FOUNDRY | PKG-ECHELON-FOUNDRY | complete |  |  |
 | PKG-MIT-LICENSE | PKG-MIT-LICENSE | complete |  |  |
 | PKG-PUBLISH-READINESS | PKG-PUBLISH-READINESS | complete |  |  |
-| PRAXIS-CONT-00 | Durable work checkpoints and agent continuity (umbrella) | ready | continuity, durable-checkpoints | high |
-| PRAXIS-CONT-01-DOMAIN | Durable checkpoint domain model and invariants | ready | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-00 | Durable work checkpoints and agent continuity (umbrella) | active | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-01-DOMAIN | Durable checkpoint domain model and invariants | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-02-GIT | Git remote/upstream/durability observations | ready | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-03-PERSIST | Checkpoint events, projection, persistence, schema compatibility | ready | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-04-CLI | work checkpoint, context/status presentation, JSON contract | ready | continuity, durable-checkpoints | high |

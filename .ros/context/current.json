@@ -3472,11 +3472,40 @@
       "telemetryExecutionIds": [
         "EXE-20260929T063242003Z-c2cc74a2"
       ]
+    },
+    {
+      "id": "PRAXIS-CONT-01-DOMAIN",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Checkpoint.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Continuity.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Git/Durability.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/CheckpointDomainTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T06:45:40.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T063457588Z-2a2ea24b"
+      ],
+      "completedAt": "2026-09-29T06:45:40.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T06:32:41.000Z",
+  "updatedAt": "2026-09-29T06:45:40.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
