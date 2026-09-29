@@ -73,6 +73,7 @@
     <Compile Include="CheckpointCliTests.fs" />
     <Compile Include="CheckpointGuardTests.fs" />
     <Compile Include="ContinuationCliTests.fs" />
+    <Compile Include="TelemetrySegmentationTests.fs" />
     <Compile Include="RecoveryProofTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>

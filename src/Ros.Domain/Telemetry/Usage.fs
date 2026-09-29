@@ -102,11 +102,15 @@ type UsageGroup =
 /// quality, and which executions reported nothing.
 [<RequireQualifiedAccess>]
 module Usage =
+    /// The step-dimension key of execution-scoped usage: recorded before
+    /// step tracking was adopted, or outside any step. Never split among steps.
+    let outsideAnyStep = "(outside any step)"
+
     let private keyOf dimension (measurement: UsageMeasurement) =
         match dimension with
         | UsageDimension.WorkItem -> measurement.WorkItemId
         | UsageDimension.Execution -> measurement.ExecutionId
-        | UsageDimension.Step -> measurement.Step |> Option.defaultValue "(outside any step)"
+        | UsageDimension.Step -> measurement.Step |> Option.defaultValue outsideAnyStep
         | UsageDimension.Provider -> measurement.Provider
         | UsageDimension.Model -> measurement.Model |> Option.defaultValue "unknown"
         | UsageDimension.Day -> if measurement.CollectedAt.Length >= 10 then measurement.CollectedAt.Substring(0, 10) else "unknown"

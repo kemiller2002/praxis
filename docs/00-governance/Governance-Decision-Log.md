@@ -2,7 +2,7 @@
 id: GV-DEC-001
 title: Governance Decision Log
 status: canonical
-version: 1.3.0
+version: 1.4.0
 owners:
   - repository-governance
 created: 2026-07-22
@@ -244,4 +244,9 @@ On 2026-07-22, repository discovery found the Phase 1 execution prompt as the on
 - **Revisit trigger:**
   - Agents routinely need `--unrecoverable-reason`.
   - The meaningful-mutation heuristic blocks legitimate work.
+- **Amendment (2026-09-29, `DF-ROS-2026-A043`):** New observability is
+  effective-current. Governance states that step telemetry is adopted
+  prospectively, never by restarting work, and that historical step
+  attribution that was never captured stays unavailable rather than being
+  reconstructed or read as zero.
 

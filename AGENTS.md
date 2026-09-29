@@ -2,7 +2,7 @@
 id: GV-START-001
 title: Agent Startup Guide
 status: canonical
-version: 1.8.0
+version: 1.9.0
 owners:
   - repository-governance
 created: 2026-07-22
@@ -95,6 +95,12 @@ to your filesystem, process, or conversation, must be able to continue. See
   refuses anything else, and blocking after un-checkpointed work needs a
   checkpoint or `--unrecoverable-reason TEXT` stated truthfully. Work that
   changed nothing completes as before.
+- **New observability is effective-current.** Praxis preserves truthful
+  historical gaps rather than restarting work or fabricating telemetry.
+  Adopt step telemetry (`./ros telemetry step start|complete|fail`) at the
+  next material slice; never restart an execution or work item to gain it,
+  never invent earlier steps, and never split earlier usage among steps.
+  Missing historical step data is unavailable, not zero and not invalid.
 - **Taking over** active work whose executor disappeared: fetch, switch to
   the checkpoint's branch in a clean checkout, then `./ros work continue
   --id ID --occurred-at NOW` under your own identity. You get a new

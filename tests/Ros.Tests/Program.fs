@@ -62,5 +62,6 @@ let main _ =
     @ CheckpointCliTests.tests
     @ CheckpointGuardTests.tests
     @ ContinuationCliTests.tests
+    @ TelemetrySegmentationTests.tests
     @ RecoveryProofTests.tests
     |> TestRunner.run

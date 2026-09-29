@@ -81,6 +81,17 @@ module CheckpointPersistenceTests =
     let private findingFields root =
         FileCheckpointRepository.validationFindings root |> List.map (fun finding -> finding.Field)
 
+    /// Rewrites the first event and re-hashes it, so only the edited fact is wrong.
+    let private rehash root (edit: JsonObject -> unit) =
+        let node = JsonNode.Parse(File.ReadAllLines(eventsPath root)[0]) :?> JsonObject
+        node.Remove "eventId" |> ignore
+        edit node
+        node["eventId"] <- JsonValue.Create(Ros.Infrastructure.Json.CanonicalJson.sha256HexPrefix 24 (Ros.Infrastructure.Json.CanonicalJson.serializeCompact node))
+        File.WriteAllText(eventsPath root, node.ToJsonString() + "\n")
+
+    let private findingMessages root =
+        FileCheckpointRepository.validationFindings root |> List.map (fun finding -> finding.Field, finding.Message)
+
     let tests =
         [ { Name = "checkpoint persistence: recording appends one work.checkpointed event and sets the latestCheckpoint projection"
             Run =
@@ -209,4 +220,72 @@ module CheckpointPersistenceTests =
                       rehash (fun node -> node["execution"] <- JsonValue.Create "EXE-GHOST")
                       Assert.isTrue (findingFields root |> List.contains "execution") "missing execution not reported"
                       rehash (fun node -> node["workItem"] <- JsonValue.Create "W-GHOST")
-                      Assert.isTrue (findingFields root |> List.contains "workItem") "missing work item not reported") } ]
+                      Assert.isTrue (findingFields root |> List.contains "workItem") "missing work item not reported") }
+          { Name = "validation: an execution of another work item, a checkpoint before its execution and an unparseable time are findings"
+            Run =
+              fun () ->
+                  withFixture (fun root ->
+                      File.WriteAllText(
+                          Path.Combine(root, ".ros", "telemetry", "executions", "EXE-B.json"),
+                          executionJson "EXE-B" "W-2" "2026-09-29T09:00:00.000Z"
+                      )
+
+                      FileCheckpointRepository.record root actor [] (checkpointAt 'a' "2026-09-29T10:00:00.000Z" None) |> Result.defaultWith failwith |> ignore
+                      rehash root (fun node -> node["execution"] <- JsonValue.Create "EXE-B")
+                      let messages = findingMessages root
+                      Assert.isTrue (messages |> List.exists (fun (field, message) -> field = "execution" && message.Contains "belongs to 'W-2'")) $"{messages}")
+
+                  withFixture (fun root ->
+                      FileCheckpointRepository.record root actor [] (checkpointAt 'a' "2026-09-29T08:00:00.000Z" None) |> Result.defaultWith failwith |> ignore
+                      let messages = findingMessages root
+                      Assert.isTrue (messages |> List.exists (fun (field, message) -> field = "occurredAt" && message.Contains "before its execution started")) $"{messages}")
+
+                  withFixture (fun root ->
+                      FileCheckpointRepository.record root actor [] (checkpointAt 'a' "2026-09-29T10:00:00.000Z" None) |> Result.defaultWith failwith |> ignore
+                      rehash root (fun node -> node["occurredAt"] <- JsonValue.Create "not-a-time")
+                      let messages = findingMessages root
+                      Assert.isTrue (messages |> List.exists (fun (field, message) -> field = "occurredAt" && message.Contains "is not a timestamp")) $"{messages}") }
+          { Name = "validation: a missing schemaVersion and a projection whose content differs from its event are findings"
+            Run =
+              fun () ->
+                  withFixture (fun root ->
+                      FileCheckpointRepository.record root actor [] (checkpointAt 'a' "2026-09-29T10:00:00.000Z" None) |> Result.defaultWith failwith |> ignore
+                      rehash root (fun node -> node.Remove "schemaVersion" |> ignore)
+                      let messages = findingMessages root
+                      Assert.isTrue (messages |> List.exists (fun (field, message) -> field = "schemaVersion" && message.Contains "no schemaVersion")) $"{messages}")
+
+                  withFixture (fun root ->
+                      FileCheckpointRepository.record root actor [] (checkpointAt 'a' "2026-09-29T10:00:00.000Z" None) |> Result.defaultWith failwith |> ignore
+                      // Edit only the projection; the event (and its identity) stay intact.
+                      File.WriteAllText(contextPath root, File.ReadAllText(contextPath root).Replace("work up to a", "work up to z"))
+                      let messages = findingMessages root
+                      Assert.equal [ "latestCheckpoint" ] (messages |> List.map fst)
+                      Assert.isTrue ((snd messages.Head).Contains "differs from the event") $"{messages}") }
+          { Name = "validation: a metric attributed to a step its execution never started is a finding; unsegmented metrics never are"
+            Run =
+              fun () ->
+                  withFixture (fun root ->
+                      let path = Path.Combine(root, ".ros", "telemetry", "executions", "EXE-A.json")
+                      let record = JsonNode.Parse(File.ReadAllText path) :?> JsonObject
+
+                      let metric (step: string option) =
+                          let node = JsonObject()
+                          node["id"] <- JsonValue.Create "tokens.input"
+                          node["value"] <- JsonValue.Create 1
+                          let dimensions = JsonObject()
+                          step |> Option.iter (fun value -> dimensions["step"] <- JsonValue.Create value)
+                          node["dimensions"] <- dimensions
+                          node :> JsonNode
+
+                      record["metrics"] <- JsonArray(metric None, metric (Some "step-1"))
+                      File.WriteAllText(path, record.ToJsonString())
+                      Assert.empty (FileTelemetryUsageRepository.stepReferenceFindings root)
+                      record["metrics"] <- JsonArray(metric None, metric (Some "step-1"), metric (Some "ghost"))
+                      File.WriteAllText(path, record.ToJsonString())
+
+                      match FileTelemetryUsageRepository.stepReferenceFindings root with
+                      | [ (findingPath, field, message) ] ->
+                          Assert.equal ".ros/telemetry/executions/EXE-A.json" findingPath
+                          Assert.equal "metrics[2].dimensions.step" field
+                          Assert.isTrue (message.Contains "'ghost'") message
+                      | other -> failwith $"{other}") } ]
