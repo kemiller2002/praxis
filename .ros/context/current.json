@@ -4067,11 +4067,76 @@
       "telemetryExecutionIds": [
         "EXE-20260929T113043360Z-32d06972"
       ]
+    },
+    {
+      "id": "EXEC-INSTALL-109",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Execution/Governance.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Installation/Registration.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/ExecutionCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/InstallationCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ExecutionGovernanceTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/InstallationRegistrationTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/execution-runtime.md"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/installation-registration.md"
+        }
+      ],
+      "updatedAt": "2026-09-29T12:38:51.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T122436975Z-a72cd6d3"
+      ],
+      "latestCheckpoint": {
+        "id": "32e3a8b3195cb6a8fe8df13d",
+        "recordedAt": "2026-09-29T12:38:43.000Z",
+        "executionId": "EXE-20260929T122436975Z-a72cd6d3",
+        "repository": "repository-operating-system",
+        "branch": "work/exec-install-109",
+        "commit": "469a1f73bfbfd7fcf3fed084a05d28c11a56eb7d",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "work/exec-install-109",
+        "remoteCommit": "469a1f73bfbfd7fcf3fed084a05d28c11a56eb7d",
+        "summary": "Execution runtime (envelopes, worktrees, ledger, receipts, boundary, evaluator, legal actions), installation registration client, praxis entry point, docs and release manifest implemented; 700/700 F# tests and npm run test:all green",
+        "nextAction": "Open PR; after merge, run the cross-repo clean-room rehearsal with Project Administration",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T12:38:51.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T11:30:41.228Z",
+  "updatedAt": "2026-09-29T12:38:51.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
