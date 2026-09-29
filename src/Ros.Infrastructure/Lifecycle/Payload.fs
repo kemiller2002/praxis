@@ -247,7 +247,7 @@ module Payload =
         && File.Exists(Path.Combine(candidate, "starter", "greenfield", "manifest.json"))
 
     /// Where this package's own scaffold lives. An explicit `--package-root`
-    /// wins; otherwise the environment variable the npm launcher sets; then a
+    /// wins; otherwise the `ROS_PACKAGE_ROOT` environment variable; then a
     /// walk up from the executable (a source checkout, or a cached binary
     /// sitting inside the package); then a walk up from the working
     /// directory.
@@ -304,10 +304,11 @@ module Payload =
                 stringProperty root "version" |> Option.defaultValue "0.0.0"
             )
 
-    /// `publish.yml` bundles `lib/stable-ros-version.json` into every
-    /// published tarball, naming the newest stable release. A snapshot
-    /// install must scaffold that version rather than its own, since a
-    /// snapshot has no GitHub Release and therefore no runnable binary.
+    /// The retired npm publish workflow bundled `lib/stable-ros-version.json`
+    /// into every published tarball, naming the newest stable release, so a
+    /// snapshot install scaffolded that version rather than its own (a
+    /// snapshot has no GitHub Release and therefore no runnable binary).
+    /// Installs of those already-published snapshots still carry the file.
     ///
     /// Only a directory payload can carry that file. An embedded payload is
     /// only ever reached from a binary that a real release published, so its

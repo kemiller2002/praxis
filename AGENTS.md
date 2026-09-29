@@ -2,7 +2,7 @@
 id: GV-START-001
 title: Agent Startup Guide
 status: canonical
-version: 1.9.0
+version: 1.10.0
 owners:
   - repository-governance
 created: 2026-07-22
@@ -177,14 +177,20 @@ repository.
 ## Lifecycle commands
 
 Installation, verification, diagnosis and upgrade go through the standard
-lifecycle interface, implemented in F# and distributed through npm:
+lifecycle interface, implemented in F#. Install the `praxis` command one of
+two ways (`DF-ROS-2026-A044`; npm is no longer a distribution channel):
+
+- **No runtime needed:** the self-contained native bundle from GitHub
+  Releases (`scripts/install-native.sh`, or `install-native.ps1` on
+  Windows); see [`docs/native-installation.md`](docs/native-installation.md).
+- **With .NET 10:** `dotnet tool install -g EchelonFoundry.Praxis`.
 
 ```
-npx --package=@echelon-foundry/repository-operating-system ros init
-npx --package=@echelon-foundry/repository-operating-system ros status
-npx --package=@echelon-foundry/repository-operating-system ros verify
-npx --package=@echelon-foundry/repository-operating-system ros upgrade
-npx --package=@echelon-foundry/repository-operating-system ros doctor
+praxis init
+praxis status
+praxis verify
+praxis upgrade
+praxis doctor
 ```
 
 In this source checkout the same commands are available as `./ros init`,
@@ -204,8 +210,8 @@ Before editing a file the tool installed, check its ownership there: a
 
 ## F# CLI
 
-`./ros` in this source checkout, and every project bootstrapped via `npx
-ros-bootstrap init` (both profiles), runs the F# CLI (`DF-ROS-2026-A030`,
+`./ros` in this source checkout, and every project scaffolded by `praxis
+init` (both profiles), runs the F# CLI (`DF-ROS-2026-A030`,
 `DF-ROS-2026-A032`). Node is no longer a CLI anywhere in this project or
 what it scaffolds. Node's own implementation (`tools/ros_cli.mjs` and its
 companions) remains in this repository and in the `project-administration`

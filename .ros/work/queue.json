@@ -3003,6 +3003,29 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-DIST-NATIVE-DOTNET-TOOL",
+      "title": "Retire npm distribution; ship native bundles and a .NET global tool",
+      "description": "Owner decision (2026-09-29): stop publishing to npm; keep self-contained native bundles; add a .NET global tool (EchelonFoundry.Praxis). Re-landed on current main a second time (from claude/retire-npm-dotnet-tool-v2, PR #108; before that PR #106) because main's Praxis state moved (PRAXIS-STATE-MERGE-01). Code, docs and workflows only, three-way merged with main's EXEC-INSTALL-109 changes; Praxis state recorded through the CLI.",
+      "tags": [
+        "distribution"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-29T16:37:18.954Z",
+      "updatedAt": "2026-09-29T16:37:19.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
