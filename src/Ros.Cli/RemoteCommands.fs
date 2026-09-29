@@ -393,45 +393,98 @@ let private executeMutationWithin (context: Context) (baseline: Set<string>) (re
                                 (failure FailureCode.RepositoryWriteFailed $"the journal entry could not be written; the mutation was undone: {diagnostic message}" [])
                                 result
 
-/// A request may only name an execution its requester may continue
+/// Why a request may not act on an execution: the refusal's message, and the
+/// request field it concerns.
+type private OwnershipProblem = { Message: string; Field: string; FieldMessage: string }
+
+/// The actor and run identity a request asserts for its requester.
+let private requesterOf (request: Request) =
+    let requester = request.Actor |> Option.map _.Actor |> Option.defaultValue Ros.Domain.Provenance.Actor.unknown
+
+    let identity: Ros.Domain.Telemetry.Identity =
+        { Provider = requester.Provider |> Option.defaultValue "unknown"
+          Model = requester.Model
+          ModelVersion = None
+          Runtime = requester.Runtime |> Option.defaultValue "unknown"
+          RuntimeVersion = None
+          SessionId = request.Actor |> Option.bind _.SessionId
+          ConversationId = None
+          RunId = None
+          AgentId = Some requester.Id
+          SubagentId = None
+          ParentExecutionId = None }
+
+    requester, identity
+
+/// The work items whose active executions a request finalizes: `work
+/// complete` finalizes every active execution of each item it completes
+/// (`FileTelemetryFinalizationRepository.finalizeWorkExecutions`).
+let private finalizedWorkItems (request: Request) =
+    match request.Arguments with
+    | Arguments.WorkComplete complete -> complete.WorkItemIds
+    | _ -> []
+
+/// A request may only act on executions its requester may continue
 /// (`ActorResolution.mayContinue`): the same actor in the same run. Naming
 /// another agent's execution -- or one from another session -- would record
 /// the requester's work under someone else's identity, so it is refused.
+/// Completion is held to the same rule whether or not the request names an
+/// execution (GH-113): it may not finalize an active execution that belongs
+/// to another actor or run. The successor takes the work over with
+/// `work.continue` first, which records the predecessor as interrupted.
 let private executionOwnershipProblem (context: Context) (request: Request) =
-    match request.ExecutionId with
-    | None -> None
-    | Some executionId ->
-        let requester = request.Actor |> Option.map _.Actor |> Option.defaultValue Ros.Domain.Provenance.Actor.unknown
+    let requester, identity = requesterOf request
+    let executions = lazy (Ros.Infrastructure.Provenance.FileProvenanceRepository.readExecutions context.Root)
 
-        let requesterIdentity: Ros.Domain.Telemetry.Identity =
-            { Provider = requester.Provider |> Option.defaultValue "unknown"
-              Model = requester.Model
-              ModelVersion = None
-              Runtime = requester.Runtime |> Option.defaultValue "unknown"
-              RuntimeVersion = None
-              SessionId = request.Actor |> Option.bind _.SessionId
-              ConversationId = None
-              RunId = None
-              AgentId = Some requester.Id
-              SubagentId = None
-              ParentExecutionId = None }
+    let continuable (view: Ros.Infrastructure.Provenance.ExecutionRecordView) =
+        Ros.Domain.Provenance.ActorResolution.mayContinue requester identity view.Actor view.Identity
 
-        match
-            Ros.Infrastructure.Provenance.FileProvenanceRepository.readExecutions context.Root
-            |> List.tryFind (fun view -> view.ExecutionId = executionId)
-        with
-        | None -> Some $"execution '{executionId}' does not exist"
-        | Some view when not (Ros.Domain.Provenance.ActorResolution.mayContinue requester requesterIdentity view.Actor view.Identity) ->
-            Some $"execution '{executionId}' belongs to another actor or run; continue in your own execution"
-        | Some _ -> None
+    let named () =
+        request.ExecutionId
+        |> Option.bind (fun executionId ->
+            let problem message =
+                Some
+                    { Message = message
+                      Field = "execution.id"
+                      FieldMessage = "not an execution this requester may continue" }
+
+            match executions.Value |> List.tryFind (fun view -> view.ExecutionId = executionId) with
+            | None -> problem $"execution '{executionId}' does not exist"
+            | Some view when not (continuable view) -> problem $"execution '{executionId}' belongs to another actor or run; continue in your own execution"
+            | Some _ -> None)
+
+    let finalized () =
+        match finalizedWorkItems request |> Set.ofList with
+        | workItems when workItems.IsEmpty -> None
+        | workItems ->
+            // An execution a successor already took over (`work.continue`, or
+            // `work.resume` after a block) names it as its parent; the handoff
+            // is recorded, so it is no longer anyone's live work.
+            let handedOver = executions.Value |> List.choose _.Identity.ParentExecutionId |> Set.ofList
+
+            executions.Value
+            |> List.filter (fun view ->
+                view.Status = "active"
+                && workItems.Contains view.WorkItemId
+                && not (handedOver.Contains view.ExecutionId)
+                && not (continuable view))
+            |> List.sortBy _.StartedAt
+            |> List.tryHead
+            |> Option.map (fun view ->
+                { Message =
+                    $"work item '{view.WorkItemId}' has active execution '{view.ExecutionId}', which belongs to another actor or run; take the work over with work.continue, then complete it in your own execution"
+                  Field = "arguments.workItemIds"
+                  FieldMessage = "completing would finalize an execution this requester may not continue" })
+
+    named () |> Option.orElseWith finalized
 
 let private ownershipRejection (context: Context) (request: Request) =
     executionOwnershipProblem context request
-    |> Option.map (fun message ->
+    |> Option.map (fun problem ->
         rejectedFor
             context
             request
-            (failure FailureCode.DomainRejected message [ { Field = "execution.id"; Message = "not an execution this requester may continue" } ]))
+            (failure FailureCode.DomainRejected problem.Message [ { Field = problem.Field; Message = problem.FieldMessage } ]))
 
 /// Runs one already-authorized, non-batch request.
 let private executeSingle (context: Context) (baseline: Set<string>) (request: Request) : Response =

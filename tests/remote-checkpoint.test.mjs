@@ -220,3 +220,79 @@ test("cloud agents without a runtime checkpoint, hand off, continue and complete
   git(bare, "merge-base", "--is-ancestor", finalSha, "main");
   assert.equal(praxis(executor, ["validate"]).status, 0);
 });
+
+test("completion may not finalize another agent's active execution, named or not; the successor continues first (GH-113)", (t) => {
+  const { executor, agentClone } = fixture(t);
+  const started = succeeded(remote(executor, request(executor, "work.start", { workItemIds: ["WI-0100"], type: "feature" }, { requestId: "req-start-0001", actor: AGENT_ONE })));
+  persist(executor, started);
+  const context = JSON.parse(fs.readFileSync(path.join(executor, ".ros", "context", "current.json"), "utf8"));
+  const [executionOne] = context.workItems.find((item) => item.id === "WI-0100").telemetryExecutionIds;
+  agentPushes(agentClone, executor, "src/feature.txt", "done\n");
+  persist(
+    executor,
+    succeeded(remote(executor, request(executor, "work.checkpoint", { workItemId: "WI-0100", summary: "Done", nextAction: "Complete" }, { requestId: "req-checkpoint-0001", actor: AGENT_ONE, execution: executionOne })))
+  );
+  const evidence = [{ type: "implementation", path: "src/feature.txt" }, { type: "tests", path: "README.md" }];
+
+  // Leaving the execution out does not let agent two finalize agent one's execution.
+  const unnamed = remote(executor, request(executor, "work.complete", { workItemIds: ["WI-0100"], evidence }, { requestId: "req-complete-unnamed-1", actor: AGENT_TWO })).response;
+  assert.equal(unnamed.outcome, "rejected");
+  assert.equal(unnamed.failure.code, "domain-rejected");
+  assert.equal(unnamed.failure.retry, "never");
+  assert.match(unnamed.failure.message, new RegExp(`active execution '${executionOne}', which belongs to another actor or run; take the work over with work.continue`));
+  assert.deepEqual(unnamed.failure.problems.map((problem) => problem.field), ["arguments.workItemIds"]);
+  // Naming it is refused as before.
+  const named = remote(executor, request(executor, "work.complete", { workItemIds: ["WI-0100"], evidence }, { requestId: "req-complete-named-1", actor: AGENT_TWO, execution: executionOne })).response;
+  assert.equal(named.failure.code, "domain-rejected");
+  assert.match(named.failure.message, /belongs to another actor or run; continue in your own execution/);
+  assert.equal(git(executor, "status", "--porcelain"), "", "a refused completion persists nothing");
+  const unchanged = JSON.parse(fs.readFileSync(path.join(executor, ".ros", "context", "current.json"), "utf8"));
+  assert.equal(unchanged.workItems.find((item) => item.id === "WI-0100").semanticState, "active");
+
+  // The same agent in another session is another run, and is refused too.
+  const otherRun = remote(
+    executor,
+    request(executor, "work.complete", { workItemIds: ["WI-0100"], evidence }, { requestId: "req-complete-rerun-1", actor: { ...AGENT_ONE, sessionId: "cloud-session-9" } })
+  ).response;
+  assert.equal(otherRun.failure.code, "domain-rejected");
+
+  // Taking the work over first makes the completion agent two's own.
+  const continued = succeeded(remote(executor, request(executor, "work.continue", { workItemId: "WI-0100" }, { requestId: "req-continue-0001", actor: AGENT_TWO })));
+  const executionTwo = continued.result.executionId;
+  assert.equal(continued.result.predecessor.executionId, executionOne);
+  persist(executor, continued);
+  persist(
+    executor,
+    succeeded(remote(executor, request(executor, "work.checkpoint", { workItemId: "WI-0100", summary: "Taken over", nextAction: "Complete" }, { requestId: "req-checkpoint-0002", actor: AGENT_TWO, execution: executionTwo })))
+  );
+  // The handed-over predecessor no longer blocks completion, but the successor's live execution does, for anyone else.
+  const agentThree = { kind: "agent", id: "third/cloud-agent-three", provider: "third", runtime: "cloud-agent", sessionId: "cloud-session-3" };
+  const intruder = remote(executor, request(executor, "work.complete", { workItemIds: ["WI-0100"], evidence }, { requestId: "req-complete-third-1", actor: agentThree })).response;
+  assert.equal(intruder.failure.code, "domain-rejected");
+  assert.match(intruder.failure.message, new RegExp(`active execution '${executionTwo}'`));
+  assert.equal(git(executor, "status", "--porcelain"), "");
+  const completed = succeeded(remote(executor, request(executor, "work.complete", { workItemIds: ["WI-0100"], evidence }, { requestId: "req-complete-0001", actor: AGENT_TWO })));
+  persist(executor, completed);
+  const item = JSON.parse(fs.readFileSync(path.join(executor, ".ros", "context", "current.json"), "utf8")).workItems.find((candidate) => candidate.id === "WI-0100");
+  assert.equal(item.semanticState, "complete");
+  assert.equal(praxis(executor, ["validate"]).status, 0);
+});
+
+test("the owner of the only active execution still completes without naming it", (t) => {
+  const { executor, agentClone } = fixture(t);
+  const started = succeeded(remote(executor, request(executor, "work.start", { workItemIds: ["WI-0100"], type: "feature" }, { requestId: "req-start-0001", actor: AGENT_ONE })));
+  persist(executor, started);
+  const context = JSON.parse(fs.readFileSync(path.join(executor, ".ros", "context", "current.json"), "utf8"));
+  const [executionOne] = context.workItems.find((item) => item.id === "WI-0100").telemetryExecutionIds;
+  agentPushes(agentClone, executor, "src/feature.txt", "done\n");
+  persist(
+    executor,
+    succeeded(remote(executor, request(executor, "work.checkpoint", { workItemId: "WI-0100", summary: "Done", nextAction: "Complete" }, { requestId: "req-checkpoint-0001", actor: AGENT_ONE, execution: executionOne })))
+  );
+  const completed = succeeded(
+    remote(executor, request(executor, "work.complete", { workItemIds: ["WI-0100"], evidence: [{ type: "implementation", path: "src/feature.txt" }, { type: "tests", path: "README.md" }] }, { requestId: "req-complete-0001", actor: AGENT_ONE }))
+  );
+  persist(executor, completed);
+  const record = JSON.parse(fs.readFileSync(path.join(executor, ".ros", "telemetry", "executions", `${executionOne}.json`), "utf8"));
+  assert.equal(record.status, "finalized");
+});
