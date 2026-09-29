@@ -3343,11 +3343,22 @@
         "EXE-20260929T042755722Z-1cefa7ca"
       ],
       "completedAt": "2026-09-29T04:28:28.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-11-PROOF",
+      "type": "mechanical",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-29T04:43:00.400Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T044302145Z-078a696b"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
-  "actor": "ChatGPT",
-  "updatedAt": "2026-09-29T04:28:28.000Z",
+  "actor": "anthropic/claude-code",
+  "updatedAt": "2026-09-29T04:43:00.400Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
