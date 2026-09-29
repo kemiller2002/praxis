@@ -18,7 +18,7 @@ ROS owns the versioned protocol, legal transitions, repository validation, and a
 ./ros status
 ```
 
-The legal semantic core is `ready -> active -> blocked -> active` and `active -> complete`. Local states may be supplied with `--local-state`; `ros.json` maps repository states to the shared semantic vocabulary. Research completion accepts an independent `--conclusion`, including `inconclusive`.
+The legal semantic core is `ready -> active -> blocked -> active` and `active -> complete`. Durable checkpoints and `work continue` (below) add evidence and a new execution; they are not lifecycle states. Local states may be supplied with `--local-state`; `ros.json` maps repository states to the shared semantic vocabulary. Research completion accepts an independent `--conclusion`, including `inconclusive`.
 
 Beginning work automatically starts a segmented execution record under `.ros/telemetry/executions/`; completing work automatically finalizes all active records. Block/resume transitions preserve interruption intervals. Runtime adapters can ingest token, cost, context, agent, tool, and provider-specific observations without changing the work-state protocol. `./ros validate` checks telemetry structure and finalization alongside work attribution. See [`development-telemetry.md`](development-telemetry.md).
 
@@ -29,6 +29,176 @@ Beginning work automatically starts a segmented execution record under `.ros/tel
 Completion validates configured evidence types and paths before changing state. `./ros validate` rejects meaningful dirty paths when enforcement is enabled and neither active context nor a completed event attributes them. Committed changes that were made without an active work item are repaired with `./ros work reconcile` (see "Post-hoc attribution reconciliation" below), never by touching files. CI is the authoritative enforcement boundary; hooks are optional convenience.
 
 Deterministic housekeeping may use the configured `mechanical` work type. It still requires an explicit work-item identity and event, but the default profile does not require implementation/test evidence for that type.
+
+## Durable checkpoints and continuity
+
+**An executor session is disposable. Repository state and Praxis state are
+the continuity boundary.** No meaningful completed work may exist only in an
+executor's local environment. Requirement `RQ-ROS-2026-A022`; design
+`DF-ROS-2026-A042`.
+
+### Five different things
+
+| Term | What it is | Durable? |
+|---|---|---|
+| commit | a Git object in one checkout | no: it dies with the checkout |
+| pushed commit | a commit a remote holds | yes, but nobody verified it or recorded what it means |
+| verified durable checkpoint | `work checkpoint`'s record that HEAD == the checkpoint commit == the upstream remote branch head, with no meaningful uncommitted work, plus what was completed and what comes next | yes, and Praxis verified it itself |
+| historical checkpoint | that record, as a `work.checkpointed` event | an immutable fact about time T; never rewritten |
+| currently recoverable checkpoint | a historical checkpoint the remote still carries *now* | observed at read time (`work context`, `status`) |
+
+Staging, stashes, local commits, editor state, transcripts and local
+telemetry are never checkpoints. A checkpoint is evidence about
+recoverability, never a lifecycle state: `ready`, `active`, `blocked` and
+`complete` are unchanged.
+
+### Recording a checkpoint
+
+```bash
+git commit -am "Implement capability boundary"   # you decide what is coherent
+git push                                           # Praxis never pushes for you
+./ros work checkpoint --id FEAT-142 --occurred-at "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)" \
+  --summary "Implemented capability boundary" \
+  --next-action "Implement Rust consumer fixture" [--step STEP-ID] [--json]
+git add .ros && git commit -m "praxis: checkpoint FEAT-142" && git push
+```
+
+Praxis locates the active work item and resolves **your own** execution
+(`--execution EXE-...` when several could be yours). It then reads the
+branch, HEAD and upstream, and reads the remote branch head from the remote
+itself (`git ls-remote`, with prompts disabled and a bounded timeout). It
+accepts the checkpoint only when all three are the same commit and no
+meaningful uncommitted change exists. It never commits, stages, pushes,
+fetches, merges, rebases, resets, stashes, force-pushes, discards or
+switches branches.
+
+Each refusal has a stable code and a non-destructive remedy:
+
+- `blank-summary`, `blank-next-action` (exit 2)
+- `work-item-not-found`, `work-item-not-active`
+- `missing-execution`, `ambiguous-execution`, `execution-refused`, `invalid-step`
+- `not-git-repository`, `git-unavailable`, `malformed-git-response`, `unknown-git-state`
+- `no-head`, `detached-head`, `no-upstream`
+- `remote-missing`, `remote-unreachable`, `remote-branch-missing`
+- `local-ahead`, `remote-ahead`, `diverged`, `not-remotely-visible`
+- `uncommitted-changes`
+- `persistence-failed`
+
+An unreachable or unknown remote is never success.
+
+Paths excluded by `meaningfulPaths`/`ignoredPaths` (Praxis state, registries,
+installation bookkeeping) never block a checkpoint. Paths in the context's
+`baselineDirtyPaths` are neither claimed nor a false refusal. Committing the
+Praxis state after a checkpoint does not "move past" it: freshness compares
+meaningful paths only.
+
+The event records the actor, the execution, the optional step, the full
+checkpoint, and the meaningful `paths` that changed since the item's previous
+checkpoint (or its start commit). Those paths keep contemporaneous path
+attribution intact when work is committed before `work complete`. On a
+branch shared by several concurrently active work items they are
+branch-level, as completion paths always were. Use a branch per work item,
+or `work reconcile`, when that matters. The context keeps only
+`latestCheckpoint`; history lives in the event log and is never rewritten.
+
+### Reading continuity
+
+`./ros work context ID` adds a `continuity` block, and `--text` renders it for
+people. `./ros work checkpoint show ID` adds the full history. `./ros status`
+adds `continuity.warnings`. `--offline` never contacts a remote and reports
+its state as unknown. The block reports:
+
+- the historical checkpoint (`checkpoint.status` is always `verified`, with
+  its commit, branch, remote, remote branch, time, execution, step, summary
+  and next action);
+- `checkpoint.currentRecoverability`, observed now: `at-remote-head`,
+  `contained-without-meaningful-change`, `remote-advanced`,
+  `remote-moved-ancestry-unknown`, `not-contained`,
+  `remote-branch-missing`, `remote-unreachable` or `unknown`;
+- `freshness`: `none`, `current`, `commits-after-checkpoint`,
+  `uncommitted-changes-after-checkpoint`, `remote-unavailable`,
+  `remote-moved`, `checkpoint-no-longer-currently-verifiable`,
+  `head-diverged-from-checkpoint` or `unknown`;
+- warnings stated as observed facts;
+- recovery steps derived from the checkpoint. For a dirty checkout they
+  stop; they never reset.
+
+### Recovery boundaries (when to checkpoint)
+
+Checkpoint at coherent recovery boundaries:
+
+- after a meaningful implementation slice, or a material implementation
+  step;
+- before a risky or disruptive change;
+- before switching work items or repositories;
+- before an intentional handoff;
+- when context exhaustion or process termination looks possible;
+- before blocking after new work;
+- before completing Git-backed work.
+
+Never on a timer, never per file edit, and never with a meaningless commit.
+Research and analysis steps that change nothing need no checkpoint. A
+checkpoint summary is not evidence that tests passed; record results as
+telemetry or completion evidence.
+
+### Guards
+
+With `"workProtocol": {"continuity": {"requireDurableCheckpoint": true}}`
+(the default for new installations):
+
+- **`work complete`** of an item that changed the repository meaningfully
+  (since its first execution's start commit, or with dirty meaningful paths)
+  or that has any checkpoint requires all of the following:
+  - the latest checkpoint is HEAD, or differs from it only by commits of
+    Praxis state;
+  - the remote re-verifies it at completion time;
+  - no meaningful uncommitted change remains.
+
+  Work that changed nothing completes as before, and no commit is ever
+  required. Outside a Git repository the guard does not apply.
+- **`work block`** after work that no checkpoint covers requires a checkpoint
+  first, or `--unrecoverable-reason TEXT`. Recorded truthfully, that reason
+  becomes `continuity: {status: "not-remotely-recoverable", reason, ...}` on
+  the `work.blocked` event and is shown to successors. A reason given when
+  there is no new work is not recorded.
+
+Repositories without the setting keep their completion semantics and still
+see continuity warnings.
+
+### Taking over: `work continue`
+
+When the executor of **active** work is gone, a successor continues it
+without the blocked/resume cycle:
+
+```bash
+git fetch origin && git switch --track origin/<branch>   # a clean checkout
+./ros work context FEAT-142 --text                        # checkpoint, next action, freshness
+./ros work continue --id FEAT-142 --occurred-at "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
+```
+
+Continuation is refused in these cases:
+
+- for blocked, ready or complete work;
+- for the caller's own run;
+- for a process with no declared identity;
+- for a checkout with meaningful uncommitted changes, which are never
+  overwritten;
+- for a checkout that does not contain the checkpoint (the recovery steps
+  are printed).
+
+Otherwise the successor gets a **new execution**, whose `parentExecutionId`
+is the predecessor, and a `work.continued` event records the predecessor as
+`interrupted` (`dispositionSource: observed-by-successor`). The predecessor's
+execution record is never edited or re-identified. When the work later
+completes, finalization closes every active execution; "finalized" means
+closed, not successful, and the `work.continued` event remains the record of
+the interruption.
+
+The output also includes the checkpoint, the completed work, the next
+action, the completion evidence still required, the test measurements every
+execution recorded (with their evidence quality), and the predecessor's
+steps. Every executor, whether an agent from any provider, a human or
+automation, keeps its own identity.
 
 ## Post-hoc attribution reconciliation
 

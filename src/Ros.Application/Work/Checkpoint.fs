@@ -129,6 +129,8 @@ module CheckpointObservation =
     let mutation (git: GitDurability) (policy: ContinuityPolicy) (startCommit: CommitId option) (tree: WorkingTreeState) =
         let startToHead =
             match startCommit, git.Head() with
+            // No commit exists at all, so nothing can have been committed.
+            | None, GitRead.Observed(HeadState.Unborn _) -> Some(GitRead.Observed [])
             | None, _ -> None
             | Some _, GitRead.Unavailable failure -> Some(GitRead.Unavailable failure)
             | Some start, head ->

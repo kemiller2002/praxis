@@ -19,7 +19,7 @@ work begin
   -> telemetry validation with normal ROS validation
 ```
 
-`work block` and `work resume` add interruption events and allow ROS to derive blocked duration. A resumed item whose prior execution was already finalized receives a new child execution. An agent handoff or a parallel/subagent run can be represented explicitly with `telemetry start --parent-execution`, `--agent`, and `--subagent`.
+`work block` and `work resume` add interruption events and allow ROS to derive blocked duration. A resumed item whose prior execution was already finalized receives a new child execution. `work continue` (a successor taking over active work whose executor disappeared) also creates a new execution whose `identity.parentExecutionId` names the predecessor, and records the predecessor as interrupted in a `work.continued` event, never in the predecessor's own record. See "Durable checkpoints and continuity" in `work-protocol.md`. An agent handoff or a parallel/subagent run can be represented explicitly with `telemetry start --parent-execution`, `--agent`, and `--subagent`.
 
 Historical work records created before telemetry existed remain valid. The compatibility boundary is explicit: once a work item has `telemetryExecutionIds`, completed work requires those records to be finalized. ROS does not invent telemetry for older history.
 
@@ -242,3 +242,23 @@ A total with any unavailable executions is marked `complete: false`, which
 means it is a lower bound.
 
 The existing `telemetry summary` is unchanged.
+
+## Steps and durable checkpoints (PRAXIS-CONT)
+
+A durable checkpoint (`work checkpoint`, see `work-protocol.md`) may name a
+step with `--step STEP-ID`. Praxis refuses the link unless the step was
+started in the checkpointing process's own execution, and that execution
+belongs to the work item. `validate` re-checks the link offline.
+
+Steps and checkpoints are not coupled otherwise:
+
+- A material implementation step that ends after repository changes should
+  normally be followed by a checkpoint.
+- Research and analysis steps that change nothing need none.
+- Praxis never checkpoints automatically and never requires a synthetic
+  step.
+
+A checkpoint's summary is agent-reported prose. Test results remain
+telemetry measurements (such as `tests.passed`) with their source and
+quality. `work continue` shows a successor exactly those measurements, so a
+summary is never mistaken for evidence.

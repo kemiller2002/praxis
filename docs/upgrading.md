@@ -128,6 +128,20 @@ artifact rather than the source tree:
 
 Nothing stronger is claimed than what those tests exercise.
 
+## Opting in to durable checkpoints
+
+`ros upgrade` never changes `ros.json`'s policy. An existing installation
+without `workProtocol.continuity` keeps its completion semantics, and
+`status` still reports continuity warnings. To opt in, add
+`"continuity": {"requireDurableCheckpoint": true}` under `workProtocol`.
+
+Before opting in, look at every active work item in `ros status`. An item
+whose meaningful work is not committed and pushed will need a checkpoint
+before it can complete.
+
+Checkpoint history is additive: contexts and events without checkpoint
+fields remain valid, and no migration is required.
+
 ## Upgrading the CLI itself
 
 A scaffolded project pins its CLI version in `ros.json`, and its `./ros`

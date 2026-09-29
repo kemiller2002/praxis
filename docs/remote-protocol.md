@@ -1,4 +1,4 @@
-# Praxis remote protocol (`praxis.remote` 1.2)
+# Praxis remote protocol (`praxis.remote` 1.3)
 
 This page specifies the typed request/response contract that lets an agent
 with **no local .NET or Praxis runtime** ask a trusted executor to run an
@@ -103,7 +103,7 @@ not validated, and is excluded from the fingerprint.
 | `request.status` | read | `requestId` | request-journal lookup |
 | `work.start` | mutate | `workItemIds[]`, `type?`, `classifications[]?` | `praxis work start` |
 | `work.resume` | mutate | `workItemIds[]` | `praxis work resume` |
-| `work.block` | mutate | `workItemIds[]`, `reason` | `praxis work block` |
+| `work.block` | mutate | `workItemIds[]`, `reason`, `unrecoverableReason?` (1.3) | `praxis work block` |
 | `telemetry.record` | mutate | `metric`, `value`, and optional `workItemId`, `unit`, `currency`, `quality`, `confidence`, `scope`, `sourceType`, `sourceName`, `mechanism`, `pricingSource`, `pricingVersion`, `collectedAt` | `praxis telemetry record` |
 | `work.complete` | complete | `workItemIds[]`, `evidence[{type, path}]?`, `conclusion?` | `praxis work complete` |
 | `work.reconcile` | reconcile | `workItemId`, `reason`, and at least one of `commits[]` or `ranges[]` (`BASE..HEAD`), plus `paths[]?` | `praxis work reconcile` (#80) |
@@ -111,6 +111,8 @@ not validated, and is excluded from the fingerprint.
 | `step.complete` (1.1) | mutate | `stepId`, `reason?`; requires `execution.id` | `praxis telemetry step complete` |
 | `step.fail` (1.1) | mutate | `stepId`, `reason?`; requires `execution.id` | `praxis telemetry step fail` |
 | `batch` (1.2) | each constituent's own | `requests[]` of `{requestId, operation, execution?, arguments?}` | each constituent's command, in order |
+| `work.checkpoint` (1.3) | mutate | `workItemId`, `summary`, `nextAction`, `stepId?`; requires `execution.id` | `praxis work checkpoint --json` |
+| `work.continue` (1.3) | mutate | `workItemId` | `praxis work continue --json` |
 
 **Version 1.1 additions.** Version 1.1 adds the step operations and the
 optional `step` argument of `telemetry.record` (PRAXIS-REMOTE-04). A 1.0
@@ -150,6 +152,26 @@ start-ups without weakening any guarantee.
   - `persistence.paths` lists the state that successful constituents kept,
     so the adapter persists that state even when the batch as a whole did
     not succeed.
+
+**Durable checkpoints (version 1.3,
+[`DF-ROS-2026-A042`](../research/decisions/DF-ROS-2026-A042--durable-work-checkpoints-and-executor-continuation.md)).**
+
+- **`work.checkpoint`** is recorded in the requester's own execution. The
+  request never asserts a commit: the executor is checked out at
+  `expectedSha`, and the command verifies that commit against the remote
+  branch head itself.
+- **Persisted state.** The adapter's commit of the resulting Praxis state
+  changes only non-meaningful paths, so the checkpoint stays current.
+- **`work.continue`** creates the successor's execution, whose parent is the
+  predecessor.
+- **`unrecoverableReason`** on `work.block` is added in 1.3. Without it, the
+  block fingerprint is byte-for-byte the 1.0-1.2 encoding, so journalled
+  requests still replay.
+- **Discovery.** `praxis.describe` publishes `requiresExecution` and
+  `introducedIn` for every operation.
+- **Reading state.** `work.context` returns the `continuity` block. A remote
+  reader sees the historical checkpoint and its current recoverability
+  separately.
 
 The `admin` capability is reserved.
 

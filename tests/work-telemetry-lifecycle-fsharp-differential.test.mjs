@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
+import { optOutOfDurableCheckpoints } from "./legacy-completion.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fsharpCli = path.join(repositoryRoot, "src", "Ros.Cli", "bin", "Release", "net10.0", "ros-fs.dll");
@@ -21,6 +22,7 @@ function fixture(t, label) {
     }
   });
   initializeProject({ target: root, project: "Work Telemetry Lifecycle Differential" });
+  optOutOfDurableCheckpoints(root);
   execFileSync("git", ["init", "-q"], { cwd: root });
   execFileSync("git", ["config", "user.email", "test@example.invalid"], { cwd: root });
   execFileSync("git", ["config", "user.name", "ROS Test"], { cwd: root });

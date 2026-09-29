@@ -3784,11 +3784,22 @@
         }
       },
       "completedAt": "2026-09-29T07:37:58.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-09-GOVERNANCE",
+      "type": "feature",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-29T07:38:16.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T073817314Z-91f98864"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T07:37:58.000Z",
+  "updatedAt": "2026-09-29T07:38:16.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

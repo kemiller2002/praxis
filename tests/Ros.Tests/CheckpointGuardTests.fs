@@ -163,4 +163,31 @@ module CheckpointGuardTests =
                       run clone (Some agentA) [ "work"; "block"; "--id"; "FEAT-1"; "--reason"; "handoff"; "--unrecoverable-reason"; "x"; "--occurred-at"; now () ] |> ok |> ignore
                       let events = File.ReadAllText(Path.Combine(clone, ".ros", "events", "events.jsonl"))
                       Assert.isTrue (not (events.Contains "not-remotely-recoverable")) "an untrue continuity notice was recorded"
-                      Assert.equal "blocked" (state clone "FEAT-1")) } ]
+                      Assert.equal "blocked" (state clone "FEAT-1")) }
+          { Name = "starter: a new installation enforces durable checkpoints; an upgrade never imposes it on existing configuration"
+            Run =
+              fun () ->
+                  let parent = GitFixture.temporaryDirectory "continuity-starter"
+
+                  try
+                      let fresh = Path.Combine(parent, "fresh")
+                      Directory.CreateDirectory fresh |> ignore
+                      GitFixture.git fresh [ "init"; "-q"; "-b"; "main" ] |> ignore
+                      run fresh None [ "init"; "--project"; "Fresh" ] |> ok |> ignore
+                      let config = JsonNode.Parse(File.ReadAllText(Path.Combine(fresh, "ros.json")))
+                      Assert.equal true (config["workProtocol"].["continuity"].["requireDurableCheckpoint"].GetValue<bool>())
+                      let agents = File.ReadAllText(Path.Combine(fresh, "AGENTS.md"))
+                      Assert.isTrue (agents.Contains "work checkpoint") "AGENTS.md does not carry the continuity rule"
+
+                      // An existing installation whose configuration predates continuity.
+                      let rosJson = Path.Combine(fresh, "ros.json")
+                      let existing = JsonNode.Parse(File.ReadAllText rosJson) :?> JsonObject
+                      (existing["workProtocol"] :?> JsonObject).Remove "continuity" |> ignore
+                      File.WriteAllText(rosJson, existing.ToJsonString())
+                      let before = File.ReadAllText rosJson
+                      run fresh None [ "upgrade" ] |> ignore
+                      Assert.equal before (File.ReadAllText rosJson)
+                      let status = run fresh None [ "status" ] |> ok
+                      Assert.equal false (status.Json["continuity"].["enforced"].GetValue<bool>())
+                  finally
+                      GitFixture.cleanup parent } ]
