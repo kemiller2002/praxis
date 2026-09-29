@@ -277,6 +277,150 @@ test("pull-request persistence proposes the state on its own branch instead of p
   assert.equal(git(origin, "rev-parse", adapter.branch), adapter.commit);
 });
 
+/** Makes the bare "GitHub" remote refuse every push with `message`, as GitHub does. */
+function refusePushes(origin, message) {
+  fs.writeFileSync(path.join(origin, "hooks", "pre-receive"), `#!/bin/sh\necho ${JSON.stringify(message)} >&2\nexit 1\n`, { mode: 0o755 });
+}
+
+/** A `gh` on PATH whose `pr create` fails with `message` on stderr. */
+function failingGh(t, message) {
+  const stub = temporary(t, "gh");
+  fs.writeFileSync(path.join(stub, "gh"), `#!/bin/sh\necho ${JSON.stringify(message)} >&2\nexit 1\n`, { mode: 0o755 });
+  return { ...process.env, PATH: `${stub}:${process.env.PATH}` };
+}
+
+function persistWith(root, response, mode, env) {
+  const output = `${response}.adapter.json`;
+  const result = spawnSync("sh", [persist, "--response", response, "--output", output, "--mode", mode], { cwd: root, encoding: "utf8", env });
+  return { status: result.status, stderr: result.stderr, adapter: JSON.parse(fs.readFileSync(output, "utf8")) };
+}
+
+// PRX-REMOTE-038: throttling is distinguishable from domain, conflict and
+// other write failures, and its advice is the idempotent same-request retry.
+for (const [label, message, code] of [
+  ["a secondary rate limit", "You have exceeded a secondary rate limit. Please wait a few minutes before you try again.", "rate-limited"],
+  ["HTTP 429", "error: RPC failed; HTTP 429 curl 22 The requested URL returned error: 429", "rate-limited"],
+  ["any other refusal", "pre-receive hook declined: repository is read-only", "repository-write-failed"]
+]) {
+  test(`a push refused with ${label} is ${code} and nothing reaches the remote`, (t) => {
+    const { origin, runner } = remoteAndCheckout(t);
+    const response = execute(runner, startRequest(runner));
+    const before = git(origin, "rev-parse", "main");
+    refusePushes(origin, message);
+
+    const { status, adapter } = persistResponse(runner, response);
+    assert.equal(status, 1);
+    assert.equal(adapter.persisted, false);
+    assert.equal(adapter.commit, null);
+    assert.equal(adapter.failure.code, code);
+    assert.equal(adapter.failure.decidedBy, "executor");
+    assert.equal(adapter.failure.retry, "same-request");
+    assert.equal(git(origin, "rev-parse", "main"), before, "the remote was not changed");
+  });
+}
+
+for (const [label, message, code] of [
+  ["the API rate limit", "HTTP 403: API rate limit exceeded for installation ID 1234. (https://api.github.com/graphql)", "rate-limited"],
+  ["any other error", "HTTP 422: Validation Failed (https://api.github.com/graphql)", "repository-write-failed"]
+]) {
+  test(`a pull request refused with ${label} is ${code}, keeping the pushed state branch`, (t) => {
+    const { origin, runner } = remoteAndCheckout(t);
+    const response = execute(runner, startRequest(runner, "req-adapter-pr-throttle"));
+    const before = git(origin, "rev-parse", "main");
+
+    const { status, adapter, stderr } = persistWith(runner, response, "pull-request", failingGh(t, message));
+    assert.equal(status, 1);
+    assert.equal(adapter.persisted, false);
+    assert.equal(adapter.pullRequest, null);
+    assert.equal(adapter.failure.code, code);
+    assert.equal(adapter.failure.retry, "same-request");
+    assert.equal(git(origin, "rev-parse", adapter.branch), adapter.commit, "the state branch was pushed");
+    assert.equal(git(origin, "rev-parse", "main"), before);
+    assert.ok(stderr.includes(message), "gh's diagnostic is kept for the log");
+  });
+}
+
+/**
+ * A `gh` on PATH: `pr list` prints `list` (an open PR's URL, or nothing);
+ * `pr create` prints `created`, or fails with `createError` on stderr.
+ */
+function ghStub(t, { list = "", created = "https://github.example/octo/repo/pull/8", createError = null }) {
+  const stub = temporary(t, "gh");
+  const create = createError ? `echo ${JSON.stringify(createError)} >&2; exit 1` : `echo ${JSON.stringify(created)}`;
+  fs.writeFileSync(path.join(stub, "gh"), [
+    "#!/bin/sh",
+    `case "$1 $2" in`,
+    `  "pr list") printf '%s' ${JSON.stringify(list)} ;;`,
+    `  "pr create") ${create} ;;`,
+    "  *) exit 64 ;;",
+    "esac",
+    ""
+  ].join("\n"), { mode: 0o755 });
+  return { ...process.env, PATH: `${stub}:${process.env.PATH}` };
+}
+
+/** Another runner's fresh checkout of main: the pending state branch is not merged. */
+function freshRunner(t, origin) {
+  const runner = path.join(temporary(t, "retry"), "runner");
+  git(path.dirname(runner), "clone", "-q", origin, runner);
+  return runner;
+}
+
+const stateBranch = (requestId) => `praxis/remote/${crypto.createHash("sha256").update(requestId).digest("hex").slice(0, 24)}`;
+
+// PRAXIS-REMOTE-14: a same-request retry keeps the request's one pending
+// state instead of reading its own earlier push as a lost race.
+test("a same-request retry after the pull request could not be opened reuses the pushed state branch", (t) => {
+  const { origin, runner } = remoteAndCheckout(t);
+  const requestId = "req-adapter-pr-retry";
+  const first = persistWith(runner, execute(runner, startRequest(runner, requestId)), "pull-request",
+    ghStub(t, { createError: "HTTP 403: API rate limit exceeded for installation ID 1234." }));
+  assert.equal(first.adapter.failure.code, "rate-limited");
+  const pushed = git(origin, "rev-parse", stateBranch(requestId));
+
+  const retry = freshRunner(t, origin);
+  const second = persistWith(retry, execute(retry, startRequest(retry, requestId)), "pull-request", ghStub(t, {}));
+  assert.equal(second.status, 0, second.stderr);
+  assert.equal(second.adapter.failure, null);
+  assert.equal(second.adapter.reused, true);
+  assert.equal(second.adapter.commit, pushed, "the earlier attempt's state is the request's state");
+  assert.equal(second.adapter.pullRequest, "https://github.example/octo/repo/pull/8");
+  assert.equal(git(origin, "rev-parse", stateBranch(requestId)), pushed, "the state branch was not rewritten");
+});
+
+test("a same-request retry reports the pull request an earlier attempt already opened", (t) => {
+  const { origin, runner } = remoteAndCheckout(t);
+  const requestId = "req-adapter-pr-open";
+  const first = persistWith(runner, execute(runner, startRequest(runner, requestId)), "pull-request", ghStub(t, { created: "https://github.example/octo/repo/pull/9" }));
+  assert.equal(first.adapter.reused, false);
+
+  const retry = freshRunner(t, origin);
+  const second = persistWith(retry, execute(retry, startRequest(retry, requestId)), "pull-request",
+    ghStub(t, { list: "https://github.example/octo/repo/pull/9", createError: "a pull request already exists" }));
+  assert.equal(second.status, 0, second.stderr);
+  assert.equal(second.adapter.reused, true);
+  assert.equal(second.adapter.pullRequest, "https://github.example/octo/repo/pull/9", "no second pull request");
+  assert.equal(second.adapter.commit, first.adapter.commit);
+});
+
+test("a request's state branch that holds other changes is a conflict and is left untouched", (t) => {
+  const { origin, seed, runner } = remoteAndCheckout(t);
+  const requestId = "req-adapter-pr-occupied";
+  fs.writeFileSync(path.join(seed, "notes.md"), "not this request's state\n");
+  git(seed, "add", "-A");
+  git(seed, "commit", "-qm", "unrelated");
+  git(seed, "push", "-q", "origin", `HEAD:refs/heads/${stateBranch(requestId)}`);
+  const occupied = git(origin, "rev-parse", stateBranch(requestId));
+
+  const { status, adapter } = persistWith(runner, execute(runner, startRequest(runner, requestId)), "pull-request", ghStub(t, {}));
+  assert.equal(status, 1);
+  assert.equal(adapter.persisted, false);
+  assert.equal(adapter.reused, false);
+  assert.equal(adapter.failure.code, "concurrency-conflict");
+  assert.equal(adapter.failure.retry, "after-refresh");
+  assert.equal(git(origin, "rev-parse", stateBranch(requestId)), occupied);
+});
+
 test("the operator documentation covers every failure code and names only files that exist", () => {
   const operations = read("docs/remote-execution-operations.md");
   const codes = JSON.parse(read("schemas/praxis-remote-response.schema.json")).properties.failure.oneOf[1].properties.code.enum;

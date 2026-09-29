@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 61,
+  "nextSeq": 62,
   "items": [
     {
       "id": "WI-0001",
@@ -2148,10 +2148,10 @@
         "gh-90"
       ],
       "priority": "high",
-      "status": "blocked",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-28T07:45:12.033Z",
-      "updatedAt": "2026-09-28T09:40:22.000Z",
+      "updatedAt": "2026-09-29T05:44:27.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2161,8 +2161,7 @@
         "runtime": "claude-code"
       },
       "source": "github-issue",
-      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90",
-      "blockedReason": "Praxis-side dependencies (04, 06, 07, 09) are complete. Blocked on human action: (1) merge PR #91 so praxis-remote.yml exists on the default branch (GitHub only dispatches workflows there); (2) publish a Praxis release containing 'remote execute' with build-provenance attestations (version bump; native-release.yml now attests and never clobbers); (3) pin that release in .echelon/toolchain.json and opt in via ros.json remote.capabilities in the proving repository."
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
     },
     {
       "id": "PRAXIS-REMOTE-12",
@@ -2173,10 +2172,10 @@
         "gh-90"
       ],
       "priority": "low",
-      "status": "blocked",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-09-28T07:45:13.354Z",
-      "updatedAt": "2026-09-28T07:45:14.000Z",
+      "updatedAt": "2026-09-29T05:44:43.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2186,8 +2185,7 @@
         "runtime": "claude-code"
       },
       "source": "github-issue",
-      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90",
-      "blockedReason": "Depends on PRAXIS-REMOTE-11 (DF-ROS-2026-A041 decomposition)"
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
     },
     {
       "id": "ACTOR-KIND-ANCHOR",
@@ -2286,6 +2284,103 @@
       "sourceReference": null
     },
     {
+      "id": "PRAXIS-REMOTE-13",
+      "title": "Adapter recognizes GitHub rate limiting on push and pull-request creation (PRX-REMOTE-038)",
+      "description": "Child of GH-90. RQ-ROS-2026-A021 1.1.0 records the remaining PRX-REMOTE-038 gap: scripts/praxis-remote-persist.sh reports any non-conflict push failure, and any pull-request creation failure, as repository-write-failed, although the protocol already defines rate-limited. Classify GitHub rate limiting (HTTP 429, primary/secondary API rate limit) as rate-limited with same-request retry, keep concurrency-conflict and other write failures distinct, and test against real Git remotes. Depends on: PRAXIS-REMOTE-06.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T20:00:24.000Z",
+      "updatedAt": "2026-09-29T01:13:00.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "RQ-ROS-2026-A021"
+    },
+    {
+      "id": "WI-0061",
+      "title": "Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict",
+      "description": "Found in PRAXIS-REMOTE-13. In persistence: pull-request mode, scripts/praxis-remote-persist.sh pushes praxis/remote/<digest(requestId)> before gh pr create. If PR creation then fails (rate-limited or repository-write-failed, both advising same-request retry), the retry runs on a fresh checkout, produces a different commit, and pushing it to the existing per-request branch is non-fast-forward, so the adapter reports concurrency-conflict/after-refresh, contradicting the same-request advice. Decide how a retry recognizes and reuses its own existing state branch (e.g. open the PR for it) without force-pushing.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "medium",
+      "status": "abandoned",
+      "attachments": [],
+      "createdAt": "2026-09-28T20:03:07.959Z",
+      "updatedAt": "2026-09-29T01:12:39.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null,
+      "abandonedReason": "Allocated by 'ros add' with an ID that collides with the completed work item WI-0061 in the live context (generated IDs are checked against the queue only). The obligation is re-captured as PRAXIS-REMOTE-14; the allocator defect as WORK-CAPTURE-ID-COLLISION."
+    },
+    {
+      "id": "PRAXIS-REMOTE-14",
+      "title": "Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict",
+      "description": "Child of GH-90, found in PRAXIS-REMOTE-13 (supersedes the abandoned, ID-colliding WI-0061 backlog entry). In persistence: pull-request mode, scripts/praxis-remote-persist.sh pushes praxis/remote/<digest(requestId)> before gh pr create. If PR creation then fails (rate-limited or repository-write-failed, both advising same-request retry), the retry runs on a fresh checkout, produces a different commit, and pushing it to the existing per-request branch is non-fast-forward, so the adapter reports concurrency-conflict/after-refresh, contradicting the same-request advice. Decide how a retry recognizes and reuses its own existing state branch without force-pushing. Depends on: PRAXIS-REMOTE-06.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T01:12:52.000Z",
+      "updatedAt": "2026-09-29T01:27:58.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "PRAXIS-REMOTE-13"
+    },
+    {
+      "id": "WORK-CAPTURE-ID-COLLISION",
+      "title": "ros add can auto-allocate a WI-NNNN ID that already belongs to a live-context work item",
+      "description": "src/Ros.Domain/Work/Capture.fs generates WI-NNNN IDs by skipping only IDs in the backlog queue, never the live context (explicit --id is checked against both). On 2026-09-28 it allocated WI-0061, already a completed work item, so the new obligation's merged view read 'complete' (abandoned; see PRAXIS-REMOTE-14). praxis validate and CI did not flag the duplicate. Skip context IDs during generation and have validation report a backlog item whose ID collides with a context item in a different state; reconcile with the Node parity differential (tests/work-capture-fsharp-differential.test.mjs).",
+      "tags": [
+        "work-protocol",
+        "backlog"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-29T01:12:52.000Z",
+      "updatedAt": "2026-09-29T01:12:52.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "PRAXIS-REMOTE-13"
+    },
+    {
       "id": "RELEASE-3-5-0",
       "title": "Release Praxis 3.5.0 with remote execution (GH-90)",
       "description": null,
@@ -2350,6 +2445,54 @@
       },
       "source": "manual",
       "sourceReference": "PRAXIS-REMOTE-11"
+    },
+    {
+      "id": "PRAXIS-REMOTE-15",
+      "title": "Agent contract: a handoff needs a block before the successor resumes",
+      "description": "Found by the live proof (run 36524551943, req-proof-b-resume-1): docs/remote-agent-contract.md section 5 tells a successor to 'Resume the work item as yourself', but work.resume is legal only from blocked, so resuming an item the predecessor left active is domain-rejected. Document the handoff: the predecessor blocks with a handoff reason when it stops; if the predecessor is gone, the successor blocks with a reason naming it, then resumes. Add a regression test for the abandoned-predecessor takeover. Depends on: PRAXIS-REMOTE-09.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T05:21:56.000Z",
+      "updatedAt": "2026-09-29T05:23:13.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "PRAXIS-REMOTE-11-PROOF"
+    },
+    {
+      "id": "PRAXIS-REMOTE-16",
+      "title": "work complete silently drops the conclusion for non-research work items",
+      "description": "Found by the live proof (req-proof-b2-complete-1): work.complete accepts a conclusion (remote argument and local --conclusion), but FileWorkContextRepository persists it only for research-type items (ported Node behaviour), so a mechanical/feature completion's conclusion is discarded without any diagnostic, locally and remotely. Either persist the conclusion for every item type or refuse it where it cannot be kept; never accept and drop it. Depends on: PRAXIS-REMOTE-03.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-29T05:44:04.000Z",
+      "updatedAt": "2026-09-29T05:44:04.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "EV-ROS-2026-A054"
     }
   ]
 }

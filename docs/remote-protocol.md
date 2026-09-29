@@ -486,7 +486,9 @@ record.
    - In `pull-request` mode, the state is pushed to
      `praxis/remote/<digest of the request ID>` and a pull request is
      opened. The result is `persisted: false` with the pull request URL,
-     until the pull request is merged.
+     until the pull request is merged. A same-request retry reuses that
+     branch when its tip carries the request's `Praxis-Request-Id`, and
+     reports `reused: true`; it never pushes a second state for the request.
 
 The adapter writes its own `praxis.remote-adapter-result` document next to
 the Praxis response. The job succeeds only when the Praxis outcome is
