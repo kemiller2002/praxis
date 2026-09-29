@@ -44,7 +44,7 @@
 | PRAXIS-CONT-04-CLI | work checkpoint, context/status presentation, JSON contract | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-05-GUARDS | Completion/block lifecycle continuity guards | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-06-CONTINUE | Cross-executor work continue / takeover semantics | complete | continuity, durable-checkpoints | high |
-| PRAXIS-CONT-07-REMOTE | Remote-agent / GitHub Actions checkpoint capability | ready | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-07-REMOTE | Remote-agent / GitHub Actions checkpoint capability | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-08-RECOVERY | Two-clone recovery and agent-loss integration proof | ready | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-09-GOVERNANCE | AGENTS/governance/docs/starter propagation | ready | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-10-HARDEN | Compatibility, edge cases, validation, final end-to-end review | ready | continuity, durable-checkpoints | high |
