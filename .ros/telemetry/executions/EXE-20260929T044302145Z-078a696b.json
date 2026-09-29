@@ -621,14 +621,30 @@
     },
     {
       "metricId": "tool.calls",
-      "status": "supported-unavailable",
-      "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
-      "discoveredAt": "2026-09-29T04:43:02.145Z",
+      "status": "supported-observed",
+      "reason": "normalized measurement recorded",
+      "discoveredAt": "2026-09-29T04:46:55.810Z",
       "source": {
-        "type": "environment",
-        "name": "runtime-identity",
-        "mechanism": "explicit-or-unmapped-environment"
-      }
+        "type": "agent-report",
+        "name": "agent-a-self-count",
+        "mechanism": "explicit-metric-record"
+      },
+      "lastAssessedAt": "2026-09-29T04:46:55.810Z",
+      "recordedAt": "2026-09-29T04:46:55.815Z",
+      "history": [
+        {
+          "status": "supported-unavailable",
+          "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+          "source": {
+            "type": "environment",
+            "name": "runtime-identity",
+            "mechanism": "explicit-or-unmapped-environment"
+          },
+          "discoveredAt": "2026-09-29T04:43:02.145Z",
+          "lastAssessedAt": "2026-09-29T04:43:02.145Z",
+          "recordedAt": "2026-09-29T04:43:02.145Z"
+        }
+      ]
     },
     {
       "metricId": "tool.failures",
@@ -1360,6 +1376,28 @@
       },
       "collectedAt": "2026-09-29T04:43:02.145Z",
       "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-eadb92be22b432635b4bb4a1",
+      "id": "tool.calls",
+      "value": 17,
+      "unit": "count",
+      "currency": null,
+      "quality": "observed",
+      "confidence": null,
+      "scope": "execution",
+      "aggregation": "sum",
+      "dimensions": {
+        "step": "remote-proof-a"
+      },
+      "pricing": null,
+      "source": {
+        "type": "agent-report",
+        "name": "agent-a-self-count",
+        "mechanism": "explicit-metric-record"
+      },
+      "collectedAt": "2026-09-29T04:46:55.810Z",
+      "schemaVersion": "1.0.0"
     }
   ],
   "rawTelemetry": [],
@@ -1378,6 +1416,17 @@
       "stepId": "remote-proof-a",
       "name": "Agent A records a governed step without a local runtime",
       "occurredAt": "2026-09-29T04:45:21.318Z",
+      "source": {
+        "type": "ros-clock",
+        "name": "ros",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.completed",
+      "stepId": "remote-proof-a",
+      "reason": "discovery, start and replay verified",
+      "occurredAt": "2026-09-29T04:46:57.114Z",
       "source": {
         "type": "ros-clock",
         "name": "ros",
