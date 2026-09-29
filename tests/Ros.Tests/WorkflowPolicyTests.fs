@@ -76,7 +76,7 @@ module WorkflowPolicyTests =
                     ".github/workflows/ros-fs-assets.yml"
                     ".github/workflows/foundations-verify.yml" ]
                   |> List.iter (fun path ->
-                      notContains "sleep 600" (read path) $\"{path} must not inherit commit debounce\") }
+                      notContains "sleep 600" (read path) $"{path} must not inherit commit debounce") }
 
           { Name = "agent guidance keeps incremental commits but defers remote CI observation"
             Run =
