@@ -30,10 +30,16 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: public-site-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+      - name: Wait for commit batch
+        run: sleep 600
       - uses: actions/checkout@v4
         with:
           # The case-study tests compare the page's claims with Git history.

@@ -2,7 +2,7 @@
 id: GV-START-001
 title: Agent Startup Guide
 status: canonical
-version: 1.10.0
+version: 1.11.0
 owners:
   - repository-governance
 created: 2026-07-22
@@ -107,6 +107,18 @@ to your filesystem, process, or conversation, must be able to continue. See
   execution whose parent is the predecessor's; the predecessor is recorded
   as interrupted, never as you and never as successful. `blocked -> resume`
   remains for intentionally blocked work.
+
+## CI observation discipline
+
+Keep incremental commits, pushes, and durable checkpoints at coherent recovery
+boundaries, but do not wait for remote CI after every push. Continue the next
+independent in-scope slice while debounced CI batches or runs. Run local checks
+when they inform implementation; inspect remote build/CI status at the final
+implementation boundary by default. Inspect it earlier only when its result
+gates the next action, protects a high-risk boundary, or is required for
+merge/release/publication. Never treat queued, cancelled, unavailable, or
+unobserved CI as passing. See [CI batching and agent
+execution](docs/ci-batching.md).
 
 ## Agent Identity and Provenance
 

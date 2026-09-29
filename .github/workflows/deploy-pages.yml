@@ -26,6 +26,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Wait for commit batch
+        if: github.event_name == 'push'
+        run: sleep 600
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
