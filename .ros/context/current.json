@@ -4363,18 +4363,49 @@
     {
       "id": "PRAXIS-REMOTE-INBOX-01",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-29T16:12:45.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/praxis-remote-inbox.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/praxis-remote-inbox.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-29T16:15:44.000Z",
       "telemetryExecutionIds": [
         "EXE-20260929T161246994Z-10477f29"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "0c64e2d8b6e7bf95c8aac9c3",
+        "recordedAt": "2026-09-29T16:15:42.000Z",
+        "executionId": "EXE-20260929T161246994Z-10477f29",
+        "stepId": "reland",
+        "repository": "repository-operating-system",
+        "branch": "claude/remote-inbox-relay-v3",
+        "commit": "73dd1a86c95bbe6305386fe86a2097a63020b0d9",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/remote-inbox-relay-v3",
+        "remoteCommit": "73dd1a86c95bbe6305386fe86a2097a63020b0d9",
+        "summary": "Inbox relay re-landed on current main (second re-land) with tests, records and docs",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T16:15:44.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T16:12:45.000Z",
+  "updatedAt": "2026-09-29T16:15:44.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
