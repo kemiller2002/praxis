@@ -27,5 +27,7 @@
     <Compile Include="Provenance/ProvenanceFrontMatter.fs" />
     <Compile Include="Provenance/ProvenanceReportJson.fs" />
     <Compile Include="Remote/RemoteJson.fs" />
+    <Compile Include="Execution/ExecutionJson.fs" />
+    <Compile Include="Installation/InstallationJson.fs" />
   </ItemGroup>
 </Project>

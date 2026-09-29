@@ -75,6 +75,8 @@
     <Compile Include="ContinuationCliTests.fs" />
     <Compile Include="TelemetrySegmentationTests.fs" />
     <Compile Include="RecoveryProofTests.fs" />
+    <Compile Include="ExecutionGovernanceTests.fs" />
+    <Compile Include="InstallationRegistrationTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

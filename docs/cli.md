@@ -398,3 +398,17 @@ An invalid `--actor-kind` is an argument error (exit `2`).
 `validate` reports provenance errors (which fail validation) and provenance
 warnings (which do not). In `--json`, warnings carry `"severity":"warning"`,
 and `valid` reflects errors only.
+
+## Execution and installation commands
+
+`praxis execution ...` runs Ordo's execution contract: envelopes, worktree
+per execution, the step ledger and receipts, mutation boundaries, evaluator
+identity and legal actions. See [`execution-runtime.md`](execution-runtime.md).
+
+`praxis installation register|remove|verify|reconcile|list|status|history`
+registers installations with Project Administration's inventory. See
+[`installation-registration.md`](installation-registration.md).
+
+`praxis` is the canonical command. The native release installs `praxis` and
+`ros`, and `./praxis` runs this checkout. The npm package still exposes only
+`ros` (plus `ros-fs` and `ros-bootstrap`). Every name runs the same F# CLI.

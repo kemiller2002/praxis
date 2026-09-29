@@ -4153,11 +4153,121 @@
         }
       },
       "completedAt": "2026-09-29T12:08:18.000Z"
+    },
+    {
+      "id": "EXEC-INSTALL-109",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Execution/Governance.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Installation/Registration.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/ExecutionCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/InstallationCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ExecutionGovernanceTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/InstallationRegistrationTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/execution-runtime.md"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/installation-registration.md"
+        }
+      ],
+      "updatedAt": "2026-09-29T12:38:51.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T122436975Z-a72cd6d3"
+      ],
+      "latestCheckpoint": {
+        "id": "32e3a8b3195cb6a8fe8df13d",
+        "recordedAt": "2026-09-29T12:38:43.000Z",
+        "executionId": "EXE-20260929T122436975Z-a72cd6d3",
+        "repository": "repository-operating-system",
+        "branch": "work/exec-install-109",
+        "commit": "469a1f73bfbfd7fcf3fed084a05d28c11a56eb7d",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "work/exec-install-109",
+        "remoteCommit": "469a1f73bfbfd7fcf3fed084a05d28c11a56eb7d",
+        "summary": "Execution runtime (envelopes, worktrees, ledger, receipts, boundary, evaluator, legal actions), installation registration client, praxis entry point, docs and release manifest implemented; 700/700 F# tests and npm run test:all green",
+        "nextAction": "Open PR; after merge, run the cross-repo clean-room rehearsal with Project Administration",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T12:38:51.000Z"
+    },
+    {
+      "id": "EXEC-INSTALL-109-NPM-BIN",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "package.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/content.test.mjs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/cli.md"
+        }
+      ],
+      "updatedAt": "2026-09-29T12:50:34.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T125017832Z-d2f1f2e0"
+      ],
+      "latestCheckpoint": {
+        "id": "0bd541f58dd9c727c608959a",
+        "recordedAt": "2026-09-29T12:50:32.000Z",
+        "executionId": "EXE-20260929T125017832Z-d2f1f2e0",
+        "repository": "repository-operating-system",
+        "branch": "work/exec-install-109",
+        "commit": "384c1e27d15e2cd8771e5f36941d1c1ad2ac6d08",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "work/exec-install-109",
+        "remoteCommit": "384c1e27d15e2cd8771e5f36941d1c1ad2ac6d08",
+        "summary": "npm bin reverted to ros only; site tests pass",
+        "nextAction": "complete",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T12:50:34.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T12:08:18.000Z",
+  "updatedAt": "2026-09-29T12:50:34.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

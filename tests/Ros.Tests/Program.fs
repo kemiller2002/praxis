@@ -64,4 +64,6 @@ let main _ =
     @ ContinuationCliTests.tests
     @ TelemetrySegmentationTests.tests
     @ RecoveryProofTests.tests
+    @ ExecutionGovernanceTests.tests
+    @ InstallationRegistrationTests.tests
     |> TestRunner.run

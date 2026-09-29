@@ -20,6 +20,8 @@
     <Compile Include="ReconciliationCommands.fs" />
     <Compile Include="CheckpointCommands.fs" />
     <Compile Include="RemoteCommands.fs" />
+    <Compile Include="ExecutionCommands.fs" />
+    <Compile Include="InstallationCommands.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>
