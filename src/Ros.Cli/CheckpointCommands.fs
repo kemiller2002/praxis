@@ -57,12 +57,19 @@ module CheckpointCommands =
         node["invalidCheckpoint"] <- array
         node
 
-    let continuityNode (git: GitDurability) (policy: ContinuityPolicy) (item: ContinuityItem) : JsonObject * ContinuityWarning list =
+    let continuityNode (root: string) (git: GitDurability) (policy: ContinuityPolicy) (item: ContinuityItem) : JsonObject * ContinuityWarning list =
         match assessItem git policy item with
         | Error problems -> invalidNode item problems, [ ContinuityWarning.StateUnknown(item.WorkItemId, "the recorded latestCheckpoint is invalid") ]
         | Ok assessment ->
-            CheckpointJson.continuity item.WorkItemId (FileCheckpointRepository.stateCode item.State) assessment (RecoveryInstructions.derive assessment),
-            assessment.Warnings
+            let node =
+                CheckpointJson.continuity item.WorkItemId (FileCheckpointRepository.stateCode item.State) assessment (RecoveryInstructions.derive assessment)
+
+            node["unrecoverableLocalState"] <-
+                match FileCheckpointRepository.readUnrecoverableNotice root item.WorkItemId with
+                | Some notice -> notice :> JsonNode
+                | None -> null
+
+            node, assessment.Warnings
 
     /// The continuity blocks of the named item, or of every active and
     /// blocked item.
@@ -77,7 +84,7 @@ module CheckpointCommands =
 
             let git = ProcessGitDurability.createFor root offline
             let policy = FileCheckpointRepository.readPolicy root
-            let results = selected |> List.map (continuityNode git policy)
+            let results = selected |> List.map (continuityNode root git policy)
             let array = JsonArray()
             results |> List.iter (fun (node, _) -> array.Add(node: JsonNode))
             Ok(array, results |> List.collect snd)
@@ -160,7 +167,7 @@ module CheckpointCommands =
           $"Local HEAD:             {local}"
           $"Working tree:           {tree}" ]
 
-    let renderText (item: ContinuityItem) (assessment: CheckpointAssessment) =
+    let renderText (root: string) (item: ContinuityItem) (assessment: CheckpointAssessment) =
         let checkpoint =
             match assessment.Checkpoint with
             | Some recorded -> checkpointLines recorded
@@ -171,6 +178,24 @@ module CheckpointCommands =
             | [] -> []
             | warnings -> "" :: "WARNINGS" :: (warnings |> List.map (fun warning -> $"  WARNING: {ContinuityWarning.message warning}"))
 
+        let notice =
+            match FileCheckpointRepository.readUnrecoverableNotice root item.WorkItemId with
+            | Some node ->
+                let field (name: string) =
+                    match node[name] with
+                    | :? JsonValue as value -> value.ToString()
+                    | _ -> ""
+
+                let recordedAt = field "recordedAt"
+                let reason = field "reason"
+                let unrecovered = field "unrecoveredWork"
+
+                [ ""
+                  "UNRECOVERABLE LOCAL STATE (recorded when the work was blocked)"
+                  $"  {recordedAt}: {reason}"
+                  $"  work not made durable: {unrecovered}" ]
+            | None -> []
+
         let recovery =
             "" :: "RECOVERY" :: (RecoveryInstructions.derive assessment |> List.map (fun step -> $"  {RecoveryStep.render step}"))
 
@@ -178,6 +203,7 @@ module CheckpointCommands =
         @ checkpoint
         @ stateLines assessment
         @ warnings
+        @ notice
         @ recovery
 
     // ---- work checkpoint ----
@@ -439,7 +465,7 @@ module CheckpointCommands =
                         document["history"] <- array
                         printf "%s" (document.ToJsonString jsonOptions)
                     else
-                        renderText item assessment |> List.iter (printfn "%s")
+                        renderText root item assessment |> List.iter (printfn "%s")
                         printfn ""
                         printfn "CHECKPOINT HISTORY (%d, oldest first; never rewritten)" history.Length
 
@@ -450,3 +476,106 @@ module CheckpointCommands =
                             | Error problems -> printfn "  %s  %s  INVALID: %s" event.OccurredAt event.EventId (String.concat "; " problems)
 
                     0
+
+    // ---- lifecycle guards (PRAXIS-CONT-05) ----
+
+    let private activeItems root (ids: string list) =
+        FileCheckpointRepository.readItems root
+        |> Result.map (fun items ->
+            ids
+            |> List.choose (fun id -> items |> List.tryFind (fun item -> item.WorkItemId = id && item.State = LiveWorkState.Active)))
+
+    /// Meaningful Git-backed work completes only when its final state is the
+    /// latest checkpoint, re-verified at the remote now (CONT-040/041). A
+    /// repository that has not opted in is unaffected.
+    let completionGuard root (ids: string list) : Result<unit, string> =
+        if not (FileWorkConfigRepository.readRequireDurableCheckpoint root) then
+            Ok()
+        else
+            match activeItems root ids with
+            | Error message -> Error message
+            | Ok items ->
+                // Never cached: completion re-reads the remote now.
+                let git = ProcessGitDurability.create root
+                let policy = FileCheckpointRepository.readPolicy root
+
+                let failures =
+                    items
+                    |> List.collect (fun item ->
+                        match item.LatestCheckpoint with
+                        | Error problems -> [ $"""'{item.WorkItemId}' has an invalid latestCheckpoint ({String.concat "; " problems})""" ]
+                        | Ok latest ->
+                            let start = FileCheckpointRepository.readStartCommit root item.WorkItemId
+
+                            match fst (CheckpointOperations.decideCompletion git policy item.WorkItemId latest start) with
+                            | CompletionGuardOutcome.NotApplicable _
+                            | CompletionGuardOutcome.Satisfied _ -> []
+                            | CompletionGuardOutcome.Rejected rejections ->
+                                rejections |> List.map (CompletionGuardRejection.message item.WorkItemId))
+
+                match failures with
+                | [] -> Ok()
+                | failures ->
+                    Error(
+                        "completion requires a durable final state: "
+                        + String.concat "; " failures
+                        + " (no meaningless commit is ever required: work that changed nothing completes as before)"
+                    )
+
+    /// Blocking after meaningful work since the latest checkpoint needs a
+    /// checkpoint first or a truthful `--unrecoverable-reason` (CONT-042).
+    /// Returns the `continuity` extension to record on each block event.
+    let blockGuard root (ids: string list) (unrecoverableReason: string option) : Result<Map<string, JsonObject>, string> =
+        let enforced = FileWorkConfigRepository.readRequireDurableCheckpoint root
+
+        if not enforced && unrecoverableReason.IsNone then
+            Ok Map.empty
+        else
+            match activeItems root ids with
+            | Error message -> Error message
+            | Ok items ->
+                let git = ProcessGitDurability.createFor root false
+                let policy = FileCheckpointRepository.readPolicy root
+
+                let decisions =
+                    items
+                    |> List.map (fun item ->
+                        match item.LatestCheckpoint with
+                        | Error problems -> item, Error(String.concat "; " problems)
+                        | Ok latest ->
+                            let start = FileCheckpointRepository.readStartCommit root item.WorkItemId
+                            item, Ok(latest, fst (CheckpointOperations.decideBlock git policy item.WorkItemId latest start unrecoverableReason)))
+
+                let failures =
+                    decisions
+                    |> List.choose (fun (item, decision) ->
+                        match decision with
+                        | Error problems -> Some $"'{item.WorkItemId}' has an invalid latestCheckpoint ({problems})"
+                        | Ok(_, BlockGuardOutcome.Rejected newWork) when enforced ->
+                            Some
+                                $"cannot block '{item.WorkItemId}': meaningful work exists that no durable checkpoint covers ({newWork}). Record a checkpoint first (commit, push, 'work checkpoint'), or pass --unrecoverable-reason TEXT stating truthfully why the latest local state cannot be made remotely recoverable"
+                        | _ -> None)
+
+                match failures with
+                | _ :: _ -> Error(String.concat "; " failures)
+                | [] ->
+                    decisions
+                    |> List.choose (fun (item, decision) ->
+                        match decision with
+                        | Ok(latest, BlockGuardOutcome.RecordedUnrecoverable(reason, newWork)) ->
+                            let continuity = JsonObject()
+                            continuity["status"] <- JsonValue.Create "not-remotely-recoverable"
+                            continuity["reason"] <- JsonValue.Create reason.Value
+                            continuity["unrecoveredWork"] <- JsonValue.Create newWork
+
+                            continuity["latestCheckpoint"] <-
+                                match latest with
+                                | Some recorded -> JsonValue.Create recorded.CheckpointId :> JsonNode
+                                | None -> null
+
+                            let extension = JsonObject()
+                            extension["continuity"] <- continuity
+                            Some(item.WorkItemId, extension)
+                        | _ -> None)
+                    |> Map.ofList
+                    |> Ok

@@ -71,6 +71,7 @@
     <Compile Include="GitDurabilityTests.fs" />
     <Compile Include="CheckpointPersistenceTests.fs" />
     <Compile Include="CheckpointCliTests.fs" />
+    <Compile Include="CheckpointGuardTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

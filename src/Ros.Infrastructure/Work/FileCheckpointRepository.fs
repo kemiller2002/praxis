@@ -328,3 +328,31 @@ module FileCheckpointRepository =
                     |> List.map (fun item ->
                         { WorkItemId = item.WorkItemId
                           Projection = item.LatestCheckpoint }) }
+
+    /// The latest `work.blocked` event that truthfully recorded the local
+    /// state as not remotely recoverable, when no checkpoint followed it.
+    let readUnrecoverableNotice (root: string) (workItemId: string) : JsonObject option =
+        let events = eventNodes root |> List.filter (fun node -> text node "workItem" = Some workItemId)
+
+        let lastCheckpointIndex =
+            events |> List.tryFindIndexBack CheckpointJson.isCheckpointEvent |> Option.defaultValue -1
+
+        events
+        |> List.indexed
+        |> List.filter (fun (index, node) ->
+            index > lastCheckpointIndex
+            && text node "type" = Some "work.blocked"
+            && (match node["continuity"] with
+                | :? JsonObject -> true
+                | _ -> false))
+        |> List.tryLast
+        |> Option.map (fun (_, node) ->
+            let notice = (node["continuity"] :?> JsonObject).DeepClone() :?> JsonObject
+            notice["eventId"] <- JsonValue.Create(text node "eventId" |> Option.defaultValue "")
+            notice["recordedAt"] <- JsonValue.Create(text node "occurredAt" |> Option.defaultValue "")
+
+            match node["actor"] with
+            | null -> ()
+            | actor -> notice["actor"] <- actor.DeepClone()
+
+            notice)

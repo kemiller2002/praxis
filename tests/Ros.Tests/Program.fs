@@ -60,4 +60,5 @@ let main _ =
     @ GitDurabilityTests.tests
     @ CheckpointPersistenceTests.tests
     @ CheckpointCliTests.tests
+    @ CheckpointGuardTests.tests
     |> TestRunner.run
