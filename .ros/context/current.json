@@ -4263,11 +4263,33 @@
         }
       },
       "completedAt": "2026-09-29T12:50:34.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-PROBE-COMPLETE-NOEXEC",
+      "type": "mechanical",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-29T13:37:45.124Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T133747603Z-1a0e3a22"
+      ]
+    },
+    {
+      "id": "PRAXIS-REMOTE-PROBE-COMPLETE-WITHEXEC",
+      "type": "mechanical",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-29T13:37:49.401Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T133751794Z-6a8e2948"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T12:50:34.000Z",
+  "updatedAt": "2026-09-29T13:37:49.401Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
