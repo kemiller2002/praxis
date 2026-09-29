@@ -3788,18 +3788,56 @@
     {
       "id": "PRAXIS-CONT-09-GOVERNANCE",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-29T07:38:16.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "AGENTS.md"
+        },
+        {
+          "type": "implementation",
+          "path": "docs/work-protocol.md"
+        },
+        {
+          "type": "implementation",
+          "path": "starter/greenfield/ros.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/CheckpointGuardTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T07:53:38.000Z",
       "telemetryExecutionIds": [
         "EXE-20260929T073817314Z-91f98864"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "597b30de245e5038749d4867",
+        "recordedAt": "2026-09-29T07:53:37.000Z",
+        "executionId": "EXE-20260929T073817314Z-91f98864",
+        "repository": "repository-operating-system",
+        "branch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "commit": "e8b973c48d8c588a97d06f249b359d43afc25484",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "remoteCommit": "e8b973c48d8c588a97d06f249b359d43afc25484",
+        "summary": "Governance, docs and starter propagation for durable continuity; 666 F#, 253 differential/remote and 104+7 npm tests pass",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T07:53:38.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T07:38:16.000Z",
+  "updatedAt": "2026-09-29T07:53:38.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
