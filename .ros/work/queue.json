@@ -2148,10 +2148,10 @@
         "gh-90"
       ],
       "priority": "high",
-      "status": "blocked",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-28T07:45:12.033Z",
-      "updatedAt": "2026-09-28T09:40:22.000Z",
+      "updatedAt": "2026-09-29T05:44:27.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2161,8 +2161,7 @@
         "runtime": "claude-code"
       },
       "source": "github-issue",
-      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90",
-      "blockedReason": "Praxis-side dependencies (04, 06, 07, 09) are complete. Blocked on human action: (1) merge PR #91 so praxis-remote.yml exists on the default branch (GitHub only dispatches workflows there); (2) publish a Praxis release containing 'remote execute' with build-provenance attestations (version bump; native-release.yml now attests and never clobbers); (3) pin that release in .echelon/toolchain.json and opt in via ros.json remote.capabilities in the proving repository."
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
     },
     {
       "id": "PRAXIS-REMOTE-12",
@@ -2173,10 +2172,10 @@
         "gh-90"
       ],
       "priority": "low",
-      "status": "blocked",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-09-28T07:45:13.354Z",
-      "updatedAt": "2026-09-28T07:45:14.000Z",
+      "updatedAt": "2026-09-29T05:44:43.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2186,8 +2185,7 @@
         "runtime": "claude-code"
       },
       "source": "github-issue",
-      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90",
-      "blockedReason": "Depends on PRAXIS-REMOTE-11 (DF-ROS-2026-A041 decomposition)"
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
     },
     {
       "id": "ACTOR-KIND-ANCHOR",
@@ -2471,6 +2469,30 @@
       },
       "source": "agent-discovery",
       "sourceReference": "PRAXIS-REMOTE-11-PROOF"
+    },
+    {
+      "id": "PRAXIS-REMOTE-16",
+      "title": "work complete silently drops the conclusion for non-research work items",
+      "description": "Found by the live proof (req-proof-b2-complete-1): work.complete accepts a conclusion (remote argument and local --conclusion), but FileWorkContextRepository persists it only for research-type items (ported Node behaviour), so a mechanical/feature completion's conclusion is discarded without any diagnostic, locally and remotely. Either persist the conclusion for every item type or refuse it where it cannot be kept; never accept and drop it. Depends on: PRAXIS-REMOTE-03.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-29T05:44:04.000Z",
+      "updatedAt": "2026-09-29T05:44:04.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "EV-ROS-2026-A054"
     }
   ]
 }

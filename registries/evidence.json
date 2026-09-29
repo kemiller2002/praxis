@@ -1095,5 +1095,64 @@
     "title": "Issue #90 (PRX-REMOTE-001..044) reconciled against the current Praxis implementation",
     "updated": "2026-09-28",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-29",
+    "derived_from": [
+      "RQ-ROS-2026-A021"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A054",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A054--live-remote-execution-proof.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T054321231Z-0f9f1e9a": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T05:44:04.000Z",
+          "evidence": [
+            "https://github.com/kemiller2002/praxis/issues/90"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "Live end-to-end proof of remote Praxis execution (PRAXIS-REMOTE-11, PRX-REMOTE-042), verified against main and the GitHub Actions API"
+        }
+      }
+    },
+    "related_documents": [
+      "https://github.com/kemiller2002/praxis/issues/90",
+      "RQ-ROS-2026-A021",
+      "EV-ROS-2026-A053",
+      "DF-ROS-2026-A041",
+      "docs/remote-agent-contract.md",
+      "docs/remote-protocol.md",
+      "docs/remote-execution-operations.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A021"
+    ],
+    "tags": [
+      "remote-execution",
+      "e2e",
+      "provenance",
+      "telemetry",
+      "idempotency",
+      "gh-90"
+    ],
+    "title": "Live end-to-end proof: cloud agents with only GitHub access governed through remote Praxis 3.5.0",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
   }
 ]
