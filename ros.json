@@ -50,5 +50,8 @@
     "maxRawSnapshotsPerExecution": 256,
     "maxRawBytesPerExecution": 8388608,
     "maxCapabilityHistoryEntries": 64
+  },
+  "remote": {
+    "capabilities": ["read", "mutate", "complete"]
   }
 }
