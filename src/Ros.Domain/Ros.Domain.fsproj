@@ -50,5 +50,7 @@
     <Compile Include="Lifecycle/Model.fs" />
     <Compile Include="Lifecycle/Migration.fs" />
     <Compile Include="Lifecycle/Planning.fs" />
+    <Compile Include="Execution/Governance.fs" />
+    <Compile Include="Installation/Registration.fs" />
   </ItemGroup>
 </Project>
