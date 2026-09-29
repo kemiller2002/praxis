@@ -45,6 +45,10 @@ jobs:
     outputs:
       version: ${{ steps.package.outputs.version }}
     steps:
+      - name: Wait for commit batch
+        if: github.event_name == 'pull_request'
+        run: sleep 600
+
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
