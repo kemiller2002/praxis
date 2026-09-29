@@ -2294,10 +2294,10 @@
         "gh-90"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-28T20:00:24.000Z",
-      "updatedAt": "2026-09-28T20:00:29.000Z",
+      "updatedAt": "2026-09-29T01:13:00.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2318,10 +2318,10 @@
         "gh-90"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "abandoned",
       "attachments": [],
       "createdAt": "2026-09-28T20:03:07.959Z",
-      "updatedAt": "2026-09-28T20:03:07.959Z",
+      "updatedAt": "2026-09-29T01:12:39.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2331,7 +2331,56 @@
         "runtime": "claude-code"
       },
       "source": "manual",
-      "sourceReference": null
+      "sourceReference": null,
+      "abandonedReason": "Allocated by 'ros add' with an ID that collides with the completed work item WI-0061 in the live context (generated IDs are checked against the queue only). The obligation is re-captured as PRAXIS-REMOTE-14; the allocator defect as WORK-CAPTURE-ID-COLLISION."
+    },
+    {
+      "id": "PRAXIS-REMOTE-14",
+      "title": "Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict",
+      "description": "Child of GH-90, found in PRAXIS-REMOTE-13 (supersedes the abandoned, ID-colliding WI-0061 backlog entry). In persistence: pull-request mode, scripts/praxis-remote-persist.sh pushes praxis/remote/<digest(requestId)> before gh pr create. If PR creation then fails (rate-limited or repository-write-failed, both advising same-request retry), the retry runs on a fresh checkout, produces a different commit, and pushing it to the existing per-request branch is non-fast-forward, so the adapter reports concurrency-conflict/after-refresh, contradicting the same-request advice. Decide how a retry recognizes and reuses its own existing state branch without force-pushing. Depends on: PRAXIS-REMOTE-06.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-29T01:12:52.000Z",
+      "updatedAt": "2026-09-29T01:12:52.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "PRAXIS-REMOTE-13"
+    },
+    {
+      "id": "WORK-CAPTURE-ID-COLLISION",
+      "title": "ros add can auto-allocate a WI-NNNN ID that already belongs to a live-context work item",
+      "description": "src/Ros.Domain/Work/Capture.fs generates WI-NNNN IDs by skipping only IDs in the backlog queue, never the live context (explicit --id is checked against both). On 2026-09-28 it allocated WI-0061, already a completed work item, so the new obligation's merged view read 'complete' (abandoned; see PRAXIS-REMOTE-14). praxis validate and CI did not flag the duplicate. Skip context IDs during generation and have validation report a backlog item whose ID collides with a context item in a different state; reconcile with the Node parity differential (tests/work-capture-fsharp-differential.test.mjs).",
+      "tags": [
+        "work-protocol",
+        "backlog"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-29T01:12:52.000Z",
+      "updatedAt": "2026-09-29T01:12:52.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "PRAXIS-REMOTE-13"
     }
   ]
 }
