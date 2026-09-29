@@ -3954,18 +3954,49 @@
     {
       "id": "PRAXIS-RELEASE-BUMP-WORKFLOW",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-29T10:40:03.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "scripts/praxis-release-bump.sh"
+        },
+        {
+          "type": "tests",
+          "path": ".github/workflows/release.yml"
+        }
+      ],
+      "updatedAt": "2026-09-29T10:44:33.000Z",
       "telemetryExecutionIds": [
         "EXE-20260929T104004193Z-090e4cd9"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "e80b18f9f40b0a464cce6311",
+        "recordedAt": "2026-09-29T10:44:32.000Z",
+        "executionId": "EXE-20260929T104004193Z-090e4cd9",
+        "stepId": "release-script",
+        "repository": "repository-operating-system",
+        "branch": "claude/release-bump-workflow",
+        "commit": "8c0aa185fc63caf9fde0a7c55bbb19c2522157a4",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/release-bump-workflow",
+        "remoteCommit": "8c0aa185fc63caf9fde0a7c55bbb19c2522157a4",
+        "summary": "Release workflow: release.yml + scripts/praxis-release-bump.sh bump the version as an attributed work item and dispatch publish.yml/native-release.yml; publish.yml accepts a dispatched base",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T10:44:33.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T10:40:03.000Z",
+  "updatedAt": "2026-09-29T10:44:33.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

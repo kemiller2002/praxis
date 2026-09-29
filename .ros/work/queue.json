@@ -2813,10 +2813,10 @@
         "release"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-29T10:40:02.207Z",
-      "updatedAt": "2026-09-29T10:40:03.000Z",
+      "updatedAt": "2026-09-29T10:44:33.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
