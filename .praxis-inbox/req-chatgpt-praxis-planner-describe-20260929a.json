@@ -1,0 +1,14 @@
+{
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.0",
+  "requestId": "req-chatgpt-praxis-planner-describe-20260929a",
+  "operation": "praxis.describe",
+  "actor": {
+    "kind": "agent",
+    "id": "chatgpt",
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "runtime": "chatgpt"
+  },
+  "arguments": {}
+}
