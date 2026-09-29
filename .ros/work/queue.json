@@ -2834,10 +2834,10 @@
       "description": "Bump package.json and package-lock.json from 3.5.0 to 3.6.0 so publish.yml releases it.",
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-29T10:58:08.214Z",
-      "updatedAt": "2026-09-29T10:58:08.000Z",
+      "updatedAt": "2026-09-29T10:58:12.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "automation",

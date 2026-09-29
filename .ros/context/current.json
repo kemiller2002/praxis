@@ -3996,18 +3996,39 @@
     {
       "id": "RELEASE-3-6-0",
       "type": "mechanical",
-      "state": "active",
-      "semanticState": "active",
+      "state": "complete",
+      "semanticState": "complete",
       "evidence": [],
-      "updatedAt": "2026-09-29T10:58:08.000Z",
+      "updatedAt": "2026-09-29T10:58:12.000Z",
       "telemetryExecutionIds": [
         "EXE-20260929T105809226Z-d6626510"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "1d523e8f460347fa145b5107",
+        "recordedAt": "2026-09-29T10:58:11.000Z",
+        "executionId": "EXE-20260929T105809226Z-d6626510",
+        "repository": "repository-operating-system",
+        "branch": "main",
+        "commit": "b0dbb62def933a9246922e1507c7d8c118b03146",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "main",
+        "remoteCommit": "b0dbb62def933a9246922e1507c7d8c118b03146",
+        "summary": "Bumped the package version from 3.5.0 to 3.6.0",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T10:58:12.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T10:58:08.000Z",
+  "updatedAt": "2026-09-29T10:58:12.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
