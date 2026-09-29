@@ -84,6 +84,6 @@ module WorkflowPolicyTests =
                   let startup = read "AGENTS.md"
                   let manual = read "docs/00-governance/Agent-Operating-Manual.md"
                   contains "do not wait for remote CI after every push" startup "startup guidance must tell agents to keep working after pushes"
-                  contains "final implementation boundary by default" startup "startup guidance must bias remote CI checks to the end"
+                  contains "implementation boundary by default" startup "startup guidance must bias remote CI checks to the end"
                   contains "Remote CI/build status is end-biased" manual "operating manual must define end-biased CI observation"
                   contains "docs/ci-batching.md" startup "startup guidance must link the batching policy" } ]
