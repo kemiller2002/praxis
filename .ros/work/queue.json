@@ -2305,6 +2305,51 @@
       },
       "source": "manual",
       "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+    },
+    {
+      "id": "REMOTE-ENABLE-3-5-0",
+      "title": "Pin Praxis 3.5.0 and enable remote execution (read,mutate,complete) (GH-90)",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T04:27:54.789Z",
+      "updatedAt": "2026-09-29T04:28:28.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+    },
+    {
+      "id": "PRAXIS-REMOTE-11-PROOF",
+      "title": "Live proof: a cloud agent without .NET is governed through remote Praxis",
+      "description": "Child of GH-90 / PRAXIS-REMOTE-11 (PRX-REMOTE-042). The work item the end-to-end proof operates on. An agent with only GitHub access (no .NET, F# or Praxis) discovers remote Praxis with praxis.describe, starts this item under its own execution, records a step and its self-reported token usage through typed requests to .github/workflows/praxis-remote.yml, validates, and reads the structured result. A second, independent agent then resumes and completes it under its own execution, linked to the first by parentExecutionId, without impersonation. Captured ready so remote agents can start it (there is no remote capture operation).",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-29T04:28:27.000Z",
+      "updatedAt": "2026-09-29T04:28:27.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": "PRAXIS-REMOTE-11"
     }
   ]
 }
