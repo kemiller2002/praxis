@@ -160,3 +160,22 @@ module CheckpointOperations =
         let assessment = assess git policy workItemId LiveWorkState.Active checkpoint
         let mutation = CheckpointObservation.mutation git policy startCommit assessment.WorkingTree
         BlockGuard.decide mutation assessment reason, assessment
+
+    /// The meaningful paths a checkpoint makes durable: what changed from
+    /// the item's previous checkpoint (or, for the first, its start commit)
+    /// to the checkpoint commit. Recorded on the event so path attribution
+    /// survives completing work after committing it. Baseline paths are
+    /// never claimed. An unknown start or an unreadable difference claims
+    /// nothing.
+    let attributablePaths (git: GitDurability) (policy: ContinuityPolicy) (since: CommitId option) (checkpoint: Checkpoint) =
+        match since with
+        | None -> []
+        | Some start when start = checkpoint.Commit -> []
+        | Some start ->
+            match git.ChangedPaths start checkpoint.Commit with
+            | GitRead.Observed paths ->
+                PathFilter.meaningfulPaths policy.PathFilter paths
+                |> List.filter (fun path -> not (List.contains path policy.BaselineDirtyPaths))
+                |> List.distinct
+                |> List.sortWith (fun left right -> System.String.CompareOrdinal(left, right))
+            | GitRead.Unavailable _ -> []

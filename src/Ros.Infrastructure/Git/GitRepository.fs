@@ -782,3 +782,47 @@ module ProcessGitDurability =
           Status = status.ObserveStatus }
 
     let create root = createWithExecutable "git" root
+
+    /// The same port with each answer computed once per process: a status or
+    /// context report that assesses several work items reads HEAD, the tree,
+    /// and each remote branch once. With `offline`, the remote is never
+    /// contacted and its state is reported as not observed (unknown), never
+    /// as current.
+    let createFor (root: string) (offline: bool) : GitDurability =
+        let port = create root
+
+        let memo (compute: 'key -> 'value) =
+            let cache = Collections.Concurrent.ConcurrentDictionary<'key, 'value>()
+            fun key -> cache.GetOrAdd(key, compute)
+
+        // `unit` is null at runtime, so the zero-argument reads are lazy
+        // values rather than dictionary entries.
+        let head =
+            let value = lazy (port.Head())
+            fun () -> value.Value
+
+        let status =
+            let value = lazy (port.Status())
+            fun () -> value.Value
+
+        let remoteBranch =
+            if offline then
+                fun (_: RemoteIdentity) (_: string) ->
+                    RemoteBranchObservation.Unavailable
+                        { Operation = "git ls-remote"
+                          Reason = GitUnavailableReason.CommandFailed
+                          Message = "the remote was not observed (--offline)"
+                          ExitCode = None }
+            else
+                let cached = memo (fun (remote: RemoteIdentity, branch: string) -> port.RemoteBranch remote branch)
+                fun remote branch -> cached (remote, branch)
+
+        let relation = memo (fun (left: CommitId, right: CommitId) -> port.Relation left right)
+        let changed = memo (fun (left: CommitId, right: CommitId) -> port.ChangedPaths left right)
+
+        { port with
+            Head = head
+            Status = status
+            RemoteBranch = remoteBranch
+            Relation = fun left right -> relation (left, right)
+            ChangedPaths = fun left right -> changed (left, right) }
