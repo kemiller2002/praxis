@@ -90,8 +90,8 @@ module FileWorkContextRepository =
     /// it); `completedAt`/`blockReason` only when set (production sets
     /// `blockReason` on `block` and `completedAt` on `complete`, and neither
     /// is ever cleared by a later transition -- both persist as stale fields
-    /// for the rest of the item's life); `conclusion` only for a research
-    /// item's `complete` (via the caller-supplied `conclusions` map, since
+    /// for the rest of the item's life); `conclusion` only on `complete`,
+    /// for a research item or any item given one (via the caller-supplied `conclusions` map, since
     /// the typed `LiveWorkItem` does not model it at all); and
     /// `telemetryExecutionIds` only when non-empty (production itself never
     /// sets the field at all when telemetry is disabled). Every other field
@@ -398,8 +398,8 @@ module FileWorkContextRepository =
         : Result<JsonArray * string list, string> =
         applyContextPlanWithExtensions root repositoryId conclusions Map.empty eventActor plan
 
-    /// `applyContextPlanWithConclusions` with no research-conclusion writes
-    /// -- every action but `complete` (on a research item) needs this.
+    /// `applyContextPlanWithConclusions` with no conclusion writes -- every
+    /// action but `complete` needs this.
     let applyContextPlan
         (root: string)
         (repositoryId: string)

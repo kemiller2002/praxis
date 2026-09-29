@@ -18,7 +18,7 @@ ROS owns the versioned protocol, legal transitions, repository validation, and a
 ./ros status
 ```
 
-The legal semantic core is `ready -> active -> blocked -> active` and `active -> complete`. Durable checkpoints and `work continue` (below) add evidence and a new execution; they are not lifecycle states. Local states may be supplied with `--local-state`; `ros.json` maps repository states to the shared semantic vocabulary. Research completion accepts an independent `--conclusion`, including `inconclusive`.
+The legal semantic core is `ready -> active -> blocked -> active` and `active -> complete`. Durable checkpoints and `work continue` (below) add evidence and a new execution; they are not lifecycle states. Local states may be supplied with `--local-state`; `ros.json` maps repository states to the shared semantic vocabulary. Research completion accepts an independent `--conclusion`, including `inconclusive` (the default). Any other work type records a `--conclusion` only when one is supplied; it is never accepted and then dropped.
 
 Beginning work automatically starts a segmented execution record under `.ros/telemetry/executions/`; completing work automatically finalizes all active records. Block/resume transitions preserve interruption intervals. Runtime adapters can ingest token, cost, context, agent, tool, and provider-specific observations without changing the work-state protocol. `./ros validate` checks telemetry structure and finalization alongside work attribution. See [`development-telemetry.md`](development-telemetry.md).
 
