@@ -170,6 +170,9 @@ repository.
 - Do not work around a missing runtime by hand-editing `.ros/` state.
 - Checkpoint and take over remotely with `work.checkpoint` (naming your own
   `execution.id`) and `work.continue` (protocol 1.3).
+- Can commit but cannot dispatch Actions? Commit the request as
+  `.praxis-inbox/<requestId>.json` on a `praxis-inbox/...` branch. The inbox
+  relays it unchanged (`DF-ROS-2026-A045`).
 
 ## Lifecycle commands
 
