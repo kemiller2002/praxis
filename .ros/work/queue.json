@@ -2647,10 +2647,10 @@
         "durable-checkpoints"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-29T06:32:15.000Z",
-      "updatedAt": "2026-09-29T06:32:38.000Z",
+      "updatedAt": "2026-09-29T07:22:25.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

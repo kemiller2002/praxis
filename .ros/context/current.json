@@ -3653,18 +3653,52 @@
     {
       "id": "PRAXIS-CONT-06-CONTINUE",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-29T07:16:07.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/CheckpointCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileCheckpointRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ContinuationCliTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T07:22:25.000Z",
       "telemetryExecutionIds": [
         "EXE-20260929T071608188Z-abdf647c"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "1219cf4caf651cd7a643a49c",
+        "recordedAt": "2026-09-29T07:22:24.000Z",
+        "executionId": "EXE-20260929T071608188Z-abdf647c",
+        "repository": "repository-operating-system",
+        "branch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "commit": "ddc029765ddc117ba15e01fffcb16ec873a2e18e",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "remoteCommit": "ddc029765ddc117ba15e01fffcb16ec873a2e18e",
+        "summary": "work continue implemented with lineage, refusals, obligations and validation; 662 F# tests pass",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T07:22:25.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T07:16:07.000Z",
+  "updatedAt": "2026-09-29T07:22:25.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
