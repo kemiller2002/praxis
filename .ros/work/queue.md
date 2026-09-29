@@ -76,7 +76,7 @@
 | PRAXIS-REMOTE-15 | Agent contract: a handoff needs a block before the successor resumes | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-16 | work complete silently drops the conclusion for non-research work items | active | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-17 | Record the live praxis.remote 1.3 continuation proof as evidence | complete |  | medium |
-| PRAXIS-REMOTE-INBOX-01 | Remote request inbox: a contents-write path to praxis.remote for agents that cannot dispatch Actions | active | remote-execution, continuity | high |
+| PRAXIS-REMOTE-INBOX-01 | Remote request inbox: a contents-write path to praxis.remote for agents that cannot dispatch Actions | complete | remote-execution, continuity | high |
 | PRAXIS-REMOTE-PROBE-COMPLETE-CROSS | PRAXIS-REMOTE-PROBE-COMPLETE-CROSS | complete |  |  |
 | PRAXIS-REMOTE-PROBE-COMPLETE-NOEXEC | PRAXIS-REMOTE-PROBE-COMPLETE-NOEXEC | complete |  |  |
 | PRAXIS-REMOTE-PROBE-COMPLETE-WITHEXEC | PRAXIS-REMOTE-PROBE-COMPLETE-WITHEXEC | complete |  |  |
