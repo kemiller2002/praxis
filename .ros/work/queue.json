@@ -2966,10 +2966,10 @@
         "continuity"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-29T13:05:47.045Z",
-      "updatedAt": "2026-09-29T13:05:47.000Z",
+      "updatedAt": "2026-09-29T13:10:15.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
