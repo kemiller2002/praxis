@@ -16,5 +16,6 @@
     <Compile Include="Artifacts/Operations.fs" />
     <Compile Include="Ordo/Operations.fs" />
     <Compile Include="Lifecycle/Operations.fs" />
+    <Compile Include="Planning/Operations.fs" />
   </ItemGroup>
 </Project>

@@ -3026,6 +3026,31 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-01",
+      "title": "Deterministic shadow planner: praxis plan analyze/simulate/compare/explain (PRX-PLAN-001..182)",
+      "description": "Advisory, read-only F# planning capability over the unified queue/context inventory: typed planning states, dependency graph with cycles/critical path/unlock value, checkpoint-aware remaining work, evidence-backed stale-state findings, historical duration ranges, explicit unknown cost, collision graph, FIFO/speed/balanced/cost/max-parallel strategies, Pareto comparison, explanations, versioned JSON, historical replay. Requirements: requirements/PLANNING-OPTIMIZATION.md.",
+      "tags": [
+        "planning",
+        "architecture",
+        "cli"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T17:25:49.000Z",
+      "updatedAt": "2026-09-29T18:15:08.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

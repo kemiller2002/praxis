@@ -29,5 +29,6 @@
     <Compile Include="Remote/RemoteJson.fs" />
     <Compile Include="Execution/ExecutionJson.fs" />
     <Compile Include="Installation/InstallationJson.fs" />
+    <Compile Include="Planning/PlanningJson.fs" />
   </ItemGroup>
 </Project>

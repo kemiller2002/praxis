@@ -267,6 +267,7 @@ ros add "..."
 ros telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
 ros adapter <call|publish>
 ros provenance <identity|record|show|audit>
+ros plan <analyze|simulate|compare|explain|replay|freshness>
 ```
 
 Run `ros --help` for the full argument list, and see
@@ -274,6 +275,28 @@ Run `ros --help` for the full argument list, and see
 [`development-telemetry.md`](development-telemetry.md),
 [`work-adapter-contract.md`](work-adapter-contract.md) and
 [`agent-provenance.md`](agent-provenance.md) for what they mean.
+
+### `plan`
+
+```
+ros plan analyze   [--json]
+ros plan simulate  [--for baseline|speed|balanced|cost|max-parallel] [--max-concurrency N]
+                   [--budget AMOUNT [--currency CODE]] [--deadline 4h|90m] [--details] [--json]
+ros plan compare   [--max-concurrency N] [--json]
+ros plan explain   ID [--json]
+ros plan replay    [--details] [--json]
+ros plan freshness --plan FILE [--json]
+     common: [--observations FILE] [--config FILE] [--as-of TIMESTAMP]
+```
+
+The advisory planner: read-only, deterministic, and never changes work state
+(`DF-ROS-2026-A046`). It classifies every queue and live-context item, finds
+stale state from Git and supplied evidence, and recommends execution waves
+under an explicit strategy and risk policy, with a reason for every entry.
+Unknown durations and costs stay unknown; without cost telemetry the `cost`
+strategy is unavailable and `--budget` cannot be evaluated. `--json` documents
+use the versioned `praxis.plan/1.0.0` schema. `freshness` exits `3` when the
+saved plan is stale. See [`planning.md`](planning.md).
 
 ### `work reconcile`
 

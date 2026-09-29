@@ -994,5 +994,54 @@
     "title": "A push-triggered inbox relay routes praxis.remote requests committed to praxis-inbox/** branches to praxis-remote.yml, unchanged",
     "updated": "2026-09-29",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-29",
+    "decision_type": "architecture",
+    "id": "DF-ROS-2026-A046",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A046--deterministic-advisory-planner.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T172554288Z-0f639674": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T18:08:50.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-PLAN-01: advisory planner and its first shadow experiment"
+        }
+      }
+    },
+    "related_documents": [
+      "EV-ROS-2026-A058",
+      "requirements/PLANNING-OPTIMIZATION.md",
+      "docs/planning.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A058"
+    ],
+    "tags": [
+      "planning",
+      "scheduling",
+      "telemetry",
+      "determinism"
+    ],
+    "title": "A deterministic, read-only F# planner recommends evidence-backed execution waves; unknown stays unknown and parallelism is conservative",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
   }
 ]

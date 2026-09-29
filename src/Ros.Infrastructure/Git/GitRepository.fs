@@ -319,6 +319,21 @@ module ProcessGitRepository =
 
     let readBranchAndCommit root = readBranchAndCommitWithExecutable "git" root
 
+    /// A read-only Git query's non-empty output lines, or why it failed. Used
+    /// by the advisory planner, which only ever observes the repository.
+    let readLinesWithExecutable executable root (arguments: string list) : Result<string list, GitFailure> =
+        match runGit executable (IO.Path.GetFullPath root) "git" arguments with
+        | Error failure -> Error failure
+        | Ok result when result.ExitCode <> 0 ->
+            Error
+                { Operation = "git " + String.Join(" ", arguments)
+                  Reason = GitUnavailableReason.CommandFailed
+                  Message = result.Error
+                  ExitCode = Some result.ExitCode }
+        | Ok result -> Ok(result.Output.Split([| '\r'; '\n' |], StringSplitOptions.RemoveEmptyEntries) |> Array.toList)
+
+    let readLines root arguments = readLinesWithExecutable "git" root arguments
+
     /// Mirrors production `runGitText`'s default (trimmed) success/failure
     /// shape for the git-diff-derived change-summary reads
     /// `cleanBaselineChanges` performs: `git diff --name-status`, `git diff

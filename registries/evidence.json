@@ -1320,5 +1320,52 @@
     "title": "Cross-provider continuation attempt 1: an OpenAI successor reconstructed the handoff from repository state but could not invoke Praxis",
     "updated": "2026-09-29",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-29",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A058",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A058--planner-shadow-experiment-on-praxis.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T172554288Z-0f639674": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T18:08:50.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-PLAN-01: advisory planner and its first shadow experiment"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A046",
+      "requirements/PLANNING-OPTIMIZATION.md",
+      "docs/planning.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "DF-ROS-2026-A046"
+    ],
+    "tags": [
+      "planning",
+      "telemetry",
+      "shadow-experiment",
+      "replay"
+    ],
+    "title": "Advisory planner shadow experiment 1: Praxis's own nonterminal work and a no-hindsight replay of 155 executions",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
   }
 ]
