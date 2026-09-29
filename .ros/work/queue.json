@@ -3012,10 +3012,10 @@
         "distribution"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-29T16:37:18.954Z",
-      "updatedAt": "2026-09-29T16:37:19.000Z",
+      "updatedAt": "2026-09-29T16:43:08.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

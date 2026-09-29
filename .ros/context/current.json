@@ -4446,18 +4446,49 @@
     {
       "id": "PRAXIS-DIST-NATIVE-DOTNET-TOOL",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-29T16:37:19.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/ros-fs-assets.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-29T16:43:08.000Z",
       "telemetryExecutionIds": [
         "EXE-20260929T163720115Z-f381906c"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "1f76f8517788d75b6215a984",
+        "recordedAt": "2026-09-29T16:43:07.000Z",
+        "executionId": "EXE-20260929T163720115Z-f381906c",
+        "stepId": "reland",
+        "repository": "repository-operating-system",
+        "branch": "claude/retire-npm-dotnet-tool-v3",
+        "commit": "069c54bc97d442e5c4356b24a61471a04dc6ca4a",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/retire-npm-dotnet-tool-v3",
+        "remoteCommit": "069c54bc97d442e5c4356b24a61471a04dc6ca4a",
+        "summary": "npm distribution retired (DF-ROS-2026-A044) re-landed on current main (second re-land, after PR #117): publish.yml removed, package.json private; .NET global tool; ros-fs-assets.yml; docs rewritten",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T16:43:08.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T16:37:19.000Z",
+  "updatedAt": "2026-09-29T16:43:08.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
