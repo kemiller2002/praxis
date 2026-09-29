@@ -409,5 +409,6 @@ identity and legal actions. See [`execution-runtime.md`](execution-runtime.md).
 registers installations with Project Administration's inventory. See
 [`installation-registration.md`](installation-registration.md).
 
-`praxis` is the canonical command. `ros` remains a compatibility alias for
-the same F# CLI.
+`praxis` is the canonical command. The native release installs `praxis` and
+`ros`, and `./praxis` runs this checkout. The npm package still exposes only
+`ros` (plus `ros-fs` and `ros-bootstrap`). Every name runs the same F# CLI.

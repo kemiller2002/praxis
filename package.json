@@ -13,7 +13,6 @@
   },
   "type": "module",
   "bin": {
-    "praxis": "./bin/ros.mjs",
     "ros": "./bin/ros.mjs",
     "ros-bootstrap": "./bin/ros-bootstrap.mjs",
     "ros-fs": "./bin/ros-fs.mjs"
