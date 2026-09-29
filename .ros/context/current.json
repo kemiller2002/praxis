@@ -3608,18 +3608,52 @@
     {
       "id": "PRAXIS-CONT-05-GUARDS",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-29T07:09:28.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/CheckpointCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Continuity.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/CheckpointGuardTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T07:15:47.000Z",
       "telemetryExecutionIds": [
         "EXE-20260929T070929017Z-38b9565c"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "3df9a933fd9b9b48c34f3a81",
+        "recordedAt": "2026-09-29T07:15:46.000Z",
+        "executionId": "EXE-20260929T070929017Z-38b9565c",
+        "repository": "repository-operating-system",
+        "branch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "commit": "09b8efb106f504baea116d376d13fca7707d1dfb",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "remoteCommit": "09b8efb106f504baea116d376d13fca7707d1dfb",
+        "summary": "Completion and block continuity guards implemented, enforced in this repository, 658 F# tests pass",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T07:15:47.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T07:09:28.000Z",
+  "updatedAt": "2026-09-29T07:15:47.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
