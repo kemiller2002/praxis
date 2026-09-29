@@ -4400,11 +4400,53 @@
         }
       },
       "completedAt": "2026-09-29T14:49:24.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-INBOX-01",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/praxis-remote-inbox.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/praxis-remote-inbox.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-29T16:25:50.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T162324008Z-39bbe593"
+      ],
+      "latestCheckpoint": {
+        "id": "260dd5cad33298cf6a8059d9",
+        "recordedAt": "2026-09-29T16:25:48.000Z",
+        "executionId": "EXE-20260929T162324008Z-39bbe593",
+        "stepId": "reland",
+        "repository": "repository-operating-system",
+        "branch": "claude/remote-inbox-relay-v4",
+        "commit": "a5d09cfb3dd1b835e6a37f543df746ce0e959495",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/remote-inbox-relay-v4",
+        "remoteCommit": "a5d09cfb3dd1b835e6a37f543df746ce0e959495",
+        "summary": "Inbox relay re-landed on current main (third re-land, after PR #115) with tests, records and docs",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T16:25:50.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T14:49:24.000Z",
+  "updatedAt": "2026-09-29T16:25:50.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

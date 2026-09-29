@@ -482,6 +482,17 @@ record.
   access to the repository, and `workflow_call` can start the workflow.
   There is no `pull_request` trigger, so forks can neither run it nor
   obtain its credentials.
+- **The inbox relay** (`praxis-remote-inbox.yml`, `DF-ROS-2026-A045`) is for
+  a writer that cannot dispatch. It runs on a push to a `praxis-inbox/**`
+  branch that adds or changes `.praxis-inbox/*.json`, and dispatches this
+  workflow with each file's exact bytes on the ref the request names.
+  - It needs only `contents: read` and `actions: write`.
+  - It checks only what routing needs: the document is JSON, the
+    `protocol`, the `requestId`, and a `refs/heads/` ref that is not an
+    inbox branch.
+  - Everything else is decided here, by Praxis.
+  - Pushing a branch requires write access, so its trust boundary is the
+    same as dispatch's.
 - **Credentials per job.** The default is `permissions: {}`.
   - `praxis remote classify` decides whether a request mutates.
   - Reads execute in a job with `contents: read`.

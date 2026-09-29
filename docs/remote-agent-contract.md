@@ -50,6 +50,28 @@ You can use the REST API instead:
 `POST /repos/{owner}/{repo}/actions/workflows/praxis-remote.yml/dispatches`,
 with the body `{"ref": "<branch>", "inputs": {"request": "...", "request_id": "..."}}`.
 
+**If you can commit to the repository but cannot dispatch a workflow.**
+Some agent integrations can create branches and commit files but have no
+Actions dispatch operation, and some run with no network in their sandbox.
+Use the inbox instead (`DF-ROS-2026-A045`):
+
+1. Create a branch named `praxis-inbox/<anything>` from the default branch,
+   or reuse one. Never use the branch your request targets.
+2. Commit the request document, unchanged, as
+   `.praxis-inbox/<requestId>.json` on that branch.
+3. The **Praxis remote inbox** workflow sees the push and dispatches
+   `praxis-remote.yml` on the request's `repository.ref` with the file's
+   exact bytes. A request with no ref, which is a read, runs on the default
+   branch.
+
+Everything else is the same. Praxis validates, authorizes and binds the
+request, and your identity is what the request says. Because the target
+branch does not move, your `expectedSha` stays valid. Read the result from
+the journal on the target branch (section 3). A file the inbox cannot route
+is not dispatched: the inbox run fails with an error that names the file.
+To retry, commit the identical document again, since same `requestId` means
+same intent. For your next request, commit a new file.
+
 **Several operations in one run.** Use `"operation": "batch"` with
 `"protocolVersion": "1.2"` and
 `"arguments": {"requests": [{"requestId": "...", "operation": "...", "arguments": {...}}, ...]}`.
@@ -128,6 +150,12 @@ it.
   or execution and says you are taking over, then `work.resume`. The block
   is recorded as your action, not the predecessor's. With 1.3, use
   `work.continue`.
+- **You cannot run Praxis, cannot dispatch, and cannot commit.** Stop.
+  Report what you recovered (the checkpoint, what was completed, the next
+  action) and why you cannot continue. Hand off to an executor that can.
+  Do not edit the work or `.ros/` state by hand, and do not ask anyone to
+  send requests under your name. A request must come from the agent it
+  names.
 - **You could not invoke Praxis at all.** Commit your legitimate work
   normally. When Praxis is reachable again, attribute that work with
   `work.reconcile`, naming the commits. The attribution is recorded as
