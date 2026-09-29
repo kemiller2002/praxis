@@ -689,7 +689,9 @@
     "derived_from": [
       "RQ-ROS-2026-A021"
     ],
-    "evidence_ids": [],
+    "evidence_ids": [
+      "EV-ROS-2026-A055"
+    ],
     "id": "RQ-ROS-2026-A022",
     "owners": [
       "repository-governance"
@@ -711,6 +713,23 @@
             "created"
           ],
           "reason": "Canonical requirements for durable work checkpoints and agent continuity (PRAXIS-CONT-00)"
+        },
+        "EXE-20260929T075409917Z-4a1d9b5a": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T08:02:40.000Z",
+          "evidence": [
+            "EV-ROS-2026-A055"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "Implementation status and evidence EV-ROS-2026-A055 (PRAXIS-CONT-10-HARDEN)"
         }
       }
     },
@@ -734,6 +753,6 @@
     ],
     "title": "Durable work checkpoints and agent continuity — an executor session is disposable; repository state plus Praxis state is durable",
     "updated": "2026-09-29",
-    "version": "1.0.0"
+    "version": "1.1.0"
   }
 ]

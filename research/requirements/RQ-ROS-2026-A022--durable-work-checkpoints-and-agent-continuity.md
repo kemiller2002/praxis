@@ -2,7 +2,7 @@
 id: RQ-ROS-2026-A022
 title: Durable work checkpoints and agent continuity — an executor session is disposable; repository state plus Praxis state is durable
 status: accepted
-version: 1.0.0
+version: 1.1.0
 owners:
   - repository-governance
 created: 2026-09-29
@@ -10,7 +10,7 @@ updated: 2026-09-29
 research_area: repository-operating-system
 priority: high
 depends_on: [RQ-ROS-2026-A021, RQ-ROS-2026-A020]
-evidence_ids: []
+evidence_ids: [EV-ROS-2026-A055]
 related_documents:
   - DF-ROS-2026-A042
   - RQ-ROS-2026-A021
@@ -32,6 +32,17 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Canonical requirements for durable work checkpoints and agent continuity (PRAXIS-CONT-00)"
+    EXE-20260929T075409917Z-4a1d9b5a:
+      operations: [modified]
+      at: 2026-09-29T08:02:40.000Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Implementation status and evidence EV-ROS-2026-A055 (PRAXIS-CONT-10-HARDEN)"
+      evidence: [EV-ROS-2026-A055]
 ---
 
 # Requirement
@@ -228,3 +239,23 @@ An equivalent contract-level scenario MUST pass for the remote protocol.
 
 Per work item, by the tests named in each item's completion evidence; the
 two-clone proof is `PRAXIS-CONT-08-RECOVERY`.
+
+## Implementation status (2026-09-29, branch `claude/durable-checkpoints-continuity-ywqs3w`)
+
+The requirements are implemented and tested. The two-clone proof passed, as
+recorded in `EV-ROS-2026-A055`.
+
+| Requirements | Delivered by | Tests |
+|---|---|---|
+| CONT-001..006, 010..013 | PRAXIS-CONT-01, 02 | `CheckpointDomainTests`, `GitDurabilityTests` |
+| CONT-020..026 | PRAXIS-CONT-02, 04 | `GitDurabilityTests`, `CheckpointCliTests` |
+| CONT-030..035, 070, 071 | PRAXIS-CONT-03, 04 | `CheckpointPersistenceTests`, `CheckpointCliTests` |
+| CONT-040..043 | PRAXIS-CONT-05 | `CheckpointGuardTests`, `CheckpointDomainTests` |
+| CONT-050..053 | PRAXIS-CONT-06 | `ContinuationCliTests`, `RecoveryProofTests` |
+| CONT-060, 061 | PRAXIS-CONT-07 | `tests/remote-checkpoint.test.mjs`, `RemoteProtocolTests` |
+| CONT-072 | PRAXIS-CONT-09 | `CheckpointGuardTests` (starter and upgrade) |
+| Acceptance | PRAXIS-CONT-08 | `RecoveryProofTests` |
+
+**Remaining.** Protocol 1.3 has not run live through GitHub Actions. That
+needs a release containing it, pinned in `.echelon/toolchain.json`.
+

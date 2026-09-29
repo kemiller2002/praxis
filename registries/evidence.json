@@ -1154,5 +1154,56 @@
     "title": "Live end-to-end proof: cloud agents with only GitHub access governed through remote Praxis 3.5.0",
     "updated": "2026-09-29",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-29",
+    "derived_from": [
+      "RQ-ROS-2026-A022"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A055",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A055--durable-checkpoint-recovery-verification.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T075409917Z-4a1d9b5a": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T08:02:39.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Verification and two-clone recovery evidence for durable checkpoints (PRAXIS-CONT-10-HARDEN)"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A022",
+      "DF-ROS-2026-A042",
+      "tests/Ros.Tests/RecoveryProofTests.fs",
+      "tests/remote-checkpoint.test.mjs"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A022"
+    ],
+    "tags": [
+      "continuity",
+      "checkpoints",
+      "recovery",
+      "verification"
+    ],
+    "title": "Durable checkpoints and agent continuity: two-clone agent-loss recovery and verification results",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
   }
 ]
