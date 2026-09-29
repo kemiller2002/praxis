@@ -2,7 +2,7 @@
 id: GV-AGENT-001
 title: Agent Operating Manual
 status: canonical
-version: 1.4.0
+version: 1.5.0
 owners:
   - repository-governance
 created: 2026-07-22
@@ -82,6 +82,24 @@ For each material hypothesis record: statement; evidence for; evidence against; 
 8. Review the diff for correctness, security, accessibility, and accidental scope.
 9. Update public behavior, decisions, migrations, and limitations.
 10. Hand off actual results and open risks.
+
+## Commit cadence and CI observation
+
+Durable incremental work and remote CI are separate concerns. Commit, push,
+and checkpoint cohesive implementation slices often enough that another
+executor can recover them, then continue useful independent work rather than
+waiting for a remote build after every push.
+
+Run narrow local checks during iteration when they provide decision-relevant
+feedback. Remote CI/build status is end-biased: inspect it after the final
+implementation push/checkpoint by default. Inspect it earlier only when the
+result gates the next action, protects a high-risk boundary before more work is
+layered on top, or is required by a merge, release, or publication step.
+
+When the repository uses a quiet-period debounce, let superseded runs cancel
+and let the newest run own the quiet period. A queued, cancelled, unavailable,
+or unobserved run is not a passing run. See [CI batching and agent
+execution](../ci-batching.md).
 
 ## Tool Honesty
 
