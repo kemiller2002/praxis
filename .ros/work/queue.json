@@ -2848,6 +2848,27 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "REMOTE-ENABLE-3-6-0",
+      "title": "Pin Praxis 3.6.0 for remote execution (praxis.remote 1.3)",
+      "description": "Bump .echelon/toolchain.json praxis from 3.5.0 to 3.6.0 so the remote runner supports work.checkpoint and work.continue (GH-90 successor proof).",
+      "tags": [],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T11:05:20.369Z",
+      "updatedAt": "2026-09-29T11:06:03.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
     }
   ]
 }

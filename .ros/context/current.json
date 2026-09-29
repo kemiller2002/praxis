@@ -4024,11 +4024,43 @@
         }
       },
       "completedAt": "2026-09-29T10:58:12.000Z"
+    },
+    {
+      "id": "REMOTE-ENABLE-3-6-0",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-09-29T11:06:03.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T110521674Z-a10a5c57"
+      ],
+      "latestCheckpoint": {
+        "id": "13fe418eab93db82fc0f3213",
+        "recordedAt": "2026-09-29T11:06:01.000Z",
+        "executionId": "EXE-20260929T110521674Z-a10a5c57",
+        "repository": "repository-operating-system",
+        "branch": "claude/pin-praxis-3-6-0",
+        "commit": "a11a7c652bf5fe7f7a6dc29b16e947e05e643f07",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/pin-praxis-3-6-0",
+        "remoteCommit": "a11a7c652bf5fe7f7a6dc29b16e947e05e643f07",
+        "summary": "Pinned .echelon/toolchain.json praxis to 3.6.0 after verifying the release bundle",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T11:06:03.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T10:58:12.000Z",
+  "updatedAt": "2026-09-29T11:06:03.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
