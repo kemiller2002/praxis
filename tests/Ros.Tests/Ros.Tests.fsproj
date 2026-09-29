@@ -68,6 +68,7 @@
     <Compile Include="RemoteExecutionTests.fs" />
     <Compile Include="TelemetryStepsUsageTests.fs" />
     <Compile Include="CheckpointDomainTests.fs" />
+    <Compile Include="GitDurabilityTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

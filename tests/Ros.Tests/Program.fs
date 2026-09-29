@@ -57,4 +57,5 @@ let main _ =
     @ RemoteExecutionTests.tests
     @ TelemetryStepsUsageTests.tests
     @ CheckpointDomainTests.tests
+    @ GitDurabilityTests.tests
     |> TestRunner.run

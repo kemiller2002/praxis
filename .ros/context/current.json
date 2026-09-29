@@ -3501,11 +3501,40 @@
         "EXE-20260929T063457588Z-2a2ea24b"
       ],
       "completedAt": "2026-09-29T06:45:40.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-02-GIT",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Git/GitRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Application/Work/Checkpoint.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Application/Git/Operations.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/GitDurabilityTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T06:50:34.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T064606132Z-c9a63ae5"
+      ],
+      "completedAt": "2026-09-29T06:50:34.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T06:45:40.000Z",
+  "updatedAt": "2026-09-29T06:50:34.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
