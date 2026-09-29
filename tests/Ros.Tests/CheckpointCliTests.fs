@@ -56,7 +56,11 @@ module PraxisCli =
 
     let now () = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
 
-    let run (root: string) (executor: Executor option) (arguments: string list) : Result =
+    let rec run (root: string) (executor: Executor option) (arguments: string list) : Result =
+        runWith root executor [] arguments
+
+    /// `run` with extra environment variables (for example CI's `ROS_BASE_REF`).
+    and runWith (root: string) (executor: Executor option) (environment: (string * string) list) (arguments: string list) : Result =
         let startInfo = ProcessStartInfo("dotnet")
         startInfo.UseShellExecute <- false
         startInfo.RedirectStandardOutput <- true
@@ -76,6 +80,7 @@ module PraxisCli =
             startInfo.Environment["ROS_TELEMETRY_SESSION_ID"] <- who.Session
         | None -> ()
 
+        environment |> List.iter (fun (key, value) -> startInfo.Environment[key] <- value)
         startInfo.ArgumentList.Add cli
         startInfo.ArgumentList.Add "--root"
         startInfo.ArgumentList.Add root

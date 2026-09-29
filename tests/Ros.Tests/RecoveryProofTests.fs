@@ -32,6 +32,7 @@ module RecoveryProofTests =
 
                   try
                       let bare, cloneA = installedRepository parent "clone-a"
+                      let installCommit = GitFixture.git cloneA [ "rev-parse"; "HEAD" ]
                       // B's clone exists independently from the start; it only ever
                       // talks to the shared remote.
                       let cloneB = Path.Combine(parent, "clone-b")
@@ -51,6 +52,15 @@ module RecoveryProofTests =
                                 "--summary"; "Implemented capability boundary"
                                 "--next-action"; "Implement Rust consumer fixture"; "--json" ]
                           |> ok
+
+                      // A records which tests actually ran, as telemetry with its source.
+                      run
+                          cloneA
+                          (Some executorA)
+                          [ "telemetry"; "record"; "FEAT-42"; "--metric"; "tests.passed"; "--value"; "12"
+                            "--source-type"; "external-tool"; "--source-name"; "dotnet-test"; "--mechanism"; "summary" ]
+                      |> ok
+                      |> ignore
 
                       let checkpointA = recordedA.Json["checkpoint"]
                       Assert.equal checkpointCommitA (text checkpointA["commit"])
@@ -96,6 +106,11 @@ module RecoveryProofTests =
                       Assert.isTrue (executionB <> executionA) "B reused A's execution"
                       Assert.equal executionA (text continued.Json["predecessor"].["executionId"])
                       Assert.equal "Implement Rust consumer fixture" (text continued.Json["continuity"].["checkpoint"].["nextAction"])
+                      // B sees which tests actually ran, from recorded evidence, not from A's prose.
+                      let ran = continued.Json["obligations"].["validationEvidence"] :?> JsonArray |> Seq.toList
+                      Assert.equal [ "tests.passed" ] (ran |> List.map (fun node -> text node["metric"]))
+                      Assert.equal executionA (text ran.Head["executionId"])
+                      Assert.equal "external-tool" (text ran.Head["source"].["type"])
                       pushAll cloneB "praxis: FEAT-42 continued by B" |> ignore
 
                       // B implements the next action, commits, pushes, checkpoints C2.
@@ -158,6 +173,10 @@ module RecoveryProofTests =
                       let meaningfulAfter = GitFixture.git cloneB [ "diff"; "--name-only"; finalCheckpoint; remoteHead; "--"; "."; ":(exclude).ros" ]
                       Assert.equal "" meaningfulAfter
                       GitFixture.git cloneB [ "merge-base"; "--is-ancestor"; finalCheckpoint; remoteHead ] |> ignore
+                      // CI attribution: every meaningful change since installation is
+                      // attributed although the work was committed before completion
+                      // (checkpoint events carry Git-evidenced paths).
+                      runWith cloneB None [ "ROS_BASE_REF", installCommit ] [ "validate" ] |> ok |> ignore
                       // No clone-A-only data was used: clone A no longer exists.
                       Assert.isTrue (not (Directory.Exists cloneA)) "clone A reappeared"
                   finally
