@@ -2827,6 +2827,27 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "RELEASE-3-6-0",
+      "title": "Release Praxis 3.6.0",
+      "description": "Bump package.json and package-lock.json from 3.5.0 to 3.6.0 so publish.yml releases it.",
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-29T10:58:08.214Z",
+      "updatedAt": "2026-09-29T10:58:08.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "automation",
+        "id": "github/github-actions",
+        "provider": "github",
+        "model": "unknown",
+        "runtime": "github-actions"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
