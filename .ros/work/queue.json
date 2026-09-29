@@ -2381,6 +2381,27 @@
       },
       "source": "agent-discovery",
       "sourceReference": "PRAXIS-REMOTE-13"
+    },
+    {
+      "id": "RELEASE-3-5-0",
+      "title": "Release Praxis 3.5.0 with remote execution (GH-90)",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T01:18:39.766Z",
+      "updatedAt": "2026-09-29T01:21:51.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
     }
   ]
 }

@@ -3369,6 +3369,18 @@
         "EXE-20260929T012447943Z-ec40f205"
       ],
       "completedAt": "2026-09-29T01:27:58.000Z"
+    },
+    {
+      "id": "RELEASE-3-5-0",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-09-29T01:21:51.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T011840973Z-732416b2"
+      ],
+      "completedAt": "2026-09-29T01:21:51.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
