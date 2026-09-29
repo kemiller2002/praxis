@@ -2956,6 +2956,53 @@
       },
       "source": "github",
       "sourceReference": "https://github.com/kemiller2002/praxis/pull/110"
+    },
+    {
+      "id": "PRAXIS-REMOTE-INBOX-01",
+      "title": "Remote request inbox: a contents-write path to praxis.remote for agents that cannot dispatch Actions",
+      "description": "Re-landed on current main from branch claude/remote-inbox-relay (original execution EXE-20260929T123817046Z-0e142401, PR #111), whose Praxis state conflicted with main; this execution re-applies the code, docs and records only, with Praxis state written by the CLI. Scope: praxis-remote-inbox.yml relays .praxis-inbox/*.json committed to praxis-inbox/** branches to praxis-remote.yml unchanged, for agents that can commit but cannot dispatch Actions (RQ-ROS-2026-A023, DF-ROS-2026-A045, EV-ROS-2026-A057).",
+      "tags": [
+        "remote-execution",
+        "continuity"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T13:05:47.045Z",
+      "updatedAt": "2026-09-29T13:10:15.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-STATE-MERGE-01",
+      "title": "Parallel work items conflict in single-document Praxis state files",
+      "description": "Found repeatedly on 2026-09-29: PR #106, PR #111 and PR #110 each conflicted with main only in .ros/context/current.json, .ros/work/queue.json and .ros/events/events.jsonl, because two branches that each start or complete a work item both edit the same JSON documents. Resolution has required hand-editing Praxis state (PR #106's resolution corrupted current.json and dropped a queue item) or re-landing the branch with state re-recorded through the CLI (PR #108, the PR #111 re-land). Praxis needs a supported merge path, for example a praxis state merge command or git merge driver that unions events and three-way-merges id-keyed items, or a per-item state layout that cannot conflict. It must be CLI-owned and never require hand edits.",
+      "tags": [
+        "work-protocol"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-29T13:06:09.148Z",
+      "updatedAt": "2026-09-29T13:06:09.148Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
