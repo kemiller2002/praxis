@@ -2433,10 +2433,10 @@
         "gh-90"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-29T04:28:27.000Z",
-      "updatedAt": "2026-09-29T04:28:27.000Z",
+      "updatedAt": "2026-09-29T05:27:44.389Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
