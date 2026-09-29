@@ -67,6 +67,13 @@
     <Compile Include="RemoteIdentityTests.fs" />
     <Compile Include="RemoteExecutionTests.fs" />
     <Compile Include="TelemetryStepsUsageTests.fs" />
+    <Compile Include="CheckpointDomainTests.fs" />
+    <Compile Include="GitDurabilityTests.fs" />
+    <Compile Include="CheckpointPersistenceTests.fs" />
+    <Compile Include="CheckpointCliTests.fs" />
+    <Compile Include="CheckpointGuardTests.fs" />
+    <Compile Include="ContinuationCliTests.fs" />
+    <Compile Include="RecoveryProofTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

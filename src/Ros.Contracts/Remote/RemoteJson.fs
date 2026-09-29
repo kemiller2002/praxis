@@ -261,8 +261,21 @@ module RemoteJson =
                       Classifications = classifications })
         | Operation.WorkResume -> requiredStringList (field "workItemIds") "workItemIds" element |> map Arguments.WorkResume
         | Operation.WorkBlock ->
-            combine2 (requiredStringList (field "workItemIds") "workItemIds" element) (requiredString (field "reason") "reason" element)
-            |> map Arguments.WorkBlock
+            combine2
+                (requiredStringList (field "workItemIds") "workItemIds" element)
+                (combine2 (requiredString (field "reason") "reason" element) (optionalString (field "unrecoverableReason") "unrecoverableReason" element))
+            |> map (fun (ids, (reason, unrecoverable)) -> Arguments.WorkBlock(ids, reason, unrecoverable))
+        | Operation.WorkCheckpoint ->
+            combine2
+                (combine2 (requiredString (field "workItemId") "workItemId" element) (requiredString (field "summary") "summary" element))
+                (combine2 (requiredString (field "nextAction") "nextAction" element) (optionalString (field "stepId") "stepId" element))
+            |> map (fun ((workItemId, summary), (nextAction, stepId)) ->
+                Arguments.WorkCheckpoint
+                    { WorkItemId = workItemId
+                      Summary = summary
+                      NextAction = nextAction
+                      StepId = stepId })
+        | Operation.WorkContinue -> requiredString (field "workItemId") "workItemId" element |> map Arguments.WorkContinue
         | Operation.WorkComplete ->
             combine2
                 (requiredStringList (field "workItemIds") "workItemIds" element)

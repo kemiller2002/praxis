@@ -29,3 +29,21 @@ type GitHistory =
       ListRange: string -> string -> Result<string list, GitFailure>
       /// A commit's identity and its changes against its single parent.
       ReadCommit: string -> Result<GitCommit, GitFailure> }
+
+/// Typed reads of everything durability depends on: where HEAD is, what the
+/// branch tracks, what the remote itself holds, and how commits relate.
+/// Every read reports failure explicitly; none fetches, commits, pushes, or
+/// otherwise changes the repository.
+type GitDurability =
+    { Head: unit -> GitRead<HeadState>
+      /// The upstream of a local branch.
+      Upstream: string -> GitRead<UpstreamState>
+      /// A configured remote by name, `None` when it is not configured.
+      Remote: string -> GitRead<RemoteIdentity option>
+      /// The head of a branch on a remote, read from the remote itself.
+      RemoteBranch: RemoteIdentity -> string -> RemoteBranchObservation
+      /// The first commit (left) against the second (right).
+      Relation: CommitId -> CommitId -> CommitRelationObservation
+      /// Raw paths whose content differs between two commits (both sides of a rename).
+      ChangedPaths: CommitId -> CommitId -> GitRead<string list>
+      Status: unit -> GitStatusObservation }

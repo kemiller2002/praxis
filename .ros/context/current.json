@@ -3461,11 +3461,458 @@
         "EXE-20260929T054321231Z-0f9f1e9a"
       ],
       "completedAt": "2026-09-29T05:44:27.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-00",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Checkpoint.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "research/decisions/DF-ROS-2026-A042--durable-work-checkpoints-and-executor-continuation.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RecoveryProofTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T08:03:01.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T063242003Z-c2cc74a2"
+      ],
+      "latestCheckpoint": {
+        "id": "ee3390bb5aae91055f8c5ff8",
+        "recordedAt": "2026-09-29T08:02:58.000Z",
+        "executionId": "EXE-20260929T063242003Z-c2cc74a2",
+        "repository": "repository-operating-system",
+        "branch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "commit": "762e10daeb3d084f73e47e5ba9e65cc957d16abd",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "remoteCommit": "762e10daeb3d084f73e47e5ba9e65cc957d16abd",
+        "summary": "Durable checkpoints and agent continuity complete: all requirements implemented, all suites green, two-clone recovery proof passing",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T08:03:01.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-01-DOMAIN",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Checkpoint.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Continuity.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Git/Durability.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/CheckpointDomainTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T06:45:40.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T063457588Z-2a2ea24b"
+      ],
+      "completedAt": "2026-09-29T06:45:40.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-02-GIT",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Git/GitRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Application/Work/Checkpoint.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Application/Git/Operations.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/GitDurabilityTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T06:50:34.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T064606132Z-c9a63ae5"
+      ],
+      "completedAt": "2026-09-29T06:50:34.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-03-PERSIST",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileCheckpointRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Contracts/Work/CheckpointJson.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/CheckpointValidation.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/CheckpointPersistenceTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T06:59:07.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T065051655Z-10f872a2"
+      ],
+      "completedAt": "2026-09-29T06:59:07.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-04-CLI",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/CheckpointCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/Program.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/CheckpointCliTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T07:08:53.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T065936299Z-2e1a598f"
+      ],
+      "latestCheckpoint": {
+        "id": "b84b11ef733c113be245e31c",
+        "recordedAt": "2026-09-29T07:08:51.000Z",
+        "executionId": "EXE-20260929T065936299Z-2e1a598f",
+        "repository": "repository-operating-system",
+        "branch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "commit": "23e973bd762cee980dda087e280f47f93fc9899f",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "remoteCommit": "23e973bd762cee980dda087e280f47f93fc9899f",
+        "summary": "work checkpoint/show, context and status continuity, --text and --offline implemented with 9 CLI integration tests; 649 F# tests and the status/context goldens pass",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T07:08:53.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-05-GUARDS",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/CheckpointCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Continuity.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/CheckpointGuardTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T07:15:47.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T070929017Z-38b9565c"
+      ],
+      "latestCheckpoint": {
+        "id": "3df9a933fd9b9b48c34f3a81",
+        "recordedAt": "2026-09-29T07:15:46.000Z",
+        "executionId": "EXE-20260929T070929017Z-38b9565c",
+        "repository": "repository-operating-system",
+        "branch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "commit": "09b8efb106f504baea116d376d13fca7707d1dfb",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "remoteCommit": "09b8efb106f504baea116d376d13fca7707d1dfb",
+        "summary": "Completion and block continuity guards implemented, enforced in this repository, 658 F# tests pass",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T07:15:47.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-06-CONTINUE",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/CheckpointCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileCheckpointRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ContinuationCliTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T07:22:25.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T071608188Z-abdf647c"
+      ],
+      "latestCheckpoint": {
+        "id": "1219cf4caf651cd7a643a49c",
+        "recordedAt": "2026-09-29T07:22:24.000Z",
+        "executionId": "EXE-20260929T071608188Z-abdf647c",
+        "repository": "repository-operating-system",
+        "branch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "commit": "ddc029765ddc117ba15e01fffcb16ec873a2e18e",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "remoteCommit": "ddc029765ddc117ba15e01fffcb16ec873a2e18e",
+        "summary": "work continue implemented with lineage, refusals, obligations and validation; 662 F# tests pass",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T07:22:25.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-07-REMOTE",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Remote/Protocol.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "schemas/praxis-remote-request.schema.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/remote-checkpoint.test.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RemoteProtocolTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T07:34:16.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T072237260Z-c6e8b45c"
+      ],
+      "latestCheckpoint": {
+        "id": "8261feeac0d8ce858934fe88",
+        "recordedAt": "2026-09-29T07:34:15.000Z",
+        "executionId": "EXE-20260929T072237260Z-c6e8b45c",
+        "repository": "repository-operating-system",
+        "branch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "commit": "42c0bdc6633874bb68930abb0fe6c9314c0f16fe",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "remoteCommit": "42c0bdc6633874bb68930abb0fe6c9314c0f16fe",
+        "summary": "praxis.remote 1.3 work.checkpoint/work.continue/unrecoverableReason with contract tests; 664 F# and remote suites pass",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T07:34:16.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-08-RECOVERY",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tests/Ros.Tests/RecoveryProofTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RecoveryProofTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T07:37:58.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T073522566Z-c250875d"
+      ],
+      "latestCheckpoint": {
+        "id": "17bb1af5b06dedf379bc7858",
+        "recordedAt": "2026-09-29T07:37:57.000Z",
+        "executionId": "EXE-20260929T073522566Z-c250875d",
+        "repository": "repository-operating-system",
+        "branch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "commit": "17c6a14026d05de91aa65559f1ea11ad0f9404ca",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "remoteCommit": "17c6a14026d05de91aa65559f1ea11ad0f9404ca",
+        "summary": "Two-clone agent-loss recovery proof implemented and passing (665 F# tests)",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T07:37:58.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-09-GOVERNANCE",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "AGENTS.md"
+        },
+        {
+          "type": "implementation",
+          "path": "docs/work-protocol.md"
+        },
+        {
+          "type": "implementation",
+          "path": "starter/greenfield/ros.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/CheckpointGuardTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T07:53:38.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T073817314Z-91f98864"
+      ],
+      "latestCheckpoint": {
+        "id": "597b30de245e5038749d4867",
+        "recordedAt": "2026-09-29T07:53:37.000Z",
+        "executionId": "EXE-20260929T073817314Z-91f98864",
+        "repository": "repository-operating-system",
+        "branch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "commit": "e8b973c48d8c588a97d06f249b359d43afc25484",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "remoteCommit": "e8b973c48d8c588a97d06f249b359d43afc25484",
+        "summary": "Governance, docs and starter propagation for durable continuity; 666 F#, 253 differential/remote and 104+7 npm tests pass",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T07:53:38.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-10-HARDEN",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/evidence/EV-ROS-2026-A055--durable-checkpoint-recovery-verification.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RecoveryProofTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T08:02:59.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T075409917Z-4a1d9b5a"
+      ],
+      "latestCheckpoint": {
+        "id": "8ef4e1bf0ca1676833af00e8",
+        "recordedAt": "2026-09-29T08:02:57.000Z",
+        "executionId": "EXE-20260929T075409917Z-4a1d9b5a",
+        "repository": "repository-operating-system",
+        "branch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "commit": "762e10daeb3d084f73e47e5ba9e65cc957d16abd",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "remoteCommit": "762e10daeb3d084f73e47e5ba9e65cc957d16abd",
+        "summary": "Durable checkpoints and agent continuity complete: all requirements implemented, all suites green, two-clone recovery proof passing",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T08:02:59.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T05:44:27.000Z",
+  "updatedAt": "2026-09-29T08:03:01.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

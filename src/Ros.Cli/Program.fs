@@ -29,7 +29,7 @@ open Aegis
 let Version = Lifecycle.Version
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | " + ReconciliationCommands.usage + " | " + RemoteCommands.usage + " | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--step STEP-ID] [--quiet] | telemetry step start|complete|fail [TARGET] --step STEP-ID [--name TEXT] [--reason TEXT] [--occurred-at TIMESTAMP] | telemetry usage [WORKITEM] [--by work-item|execution|step|provider|model|day] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | foundations verify [--json] | adapter publish --target FILE | ordo ingest --input FILE | ordo assess --input FILE | ordo observe-search --input FILE | ordo observe-effect --input FILE | ordo current | ordo handoff --revision REV --source SOURCE [--fact TEXT]* [--assumption TEXT]* [--unknown TEXT]* [--obligation TEXT]* [--next-action TEXT]* | provenance identity [--json] [IDENTITY] | provenance record (--path PATH|--id ID) --operation {created|modified|reviewed|approved|superseded|migrated} [--reason TEXT] [--evidence REF]* [--derived-from REF]* [--execution EXE-ID] [--occurred-at TIMESTAMP] [--json] | provenance show ID|PATH [--json] | provenance audit [--json]; IDENTITY (work start/resume/block/complete, add, telemetry start): [--actor-kind {agent|human|automation|unknown|x-...}] [--agent ID|--actor ID] [--provider P] [--model M] [--runtime R] ..."
+    "Usage: ros-fs [--root PATH] version | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--unrecoverable-reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | " + ReconciliationCommands.usage + " | " + CheckpointCommands.usage + " | " + CheckpointCommands.continueUsage + " | work context [ID] [--text] [--offline] | status [--json] [--verbose] [--offline] | " + RemoteCommands.usage + " | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--step STEP-ID] [--quiet] | telemetry step start|complete|fail [TARGET] --step STEP-ID [--name TEXT] [--reason TEXT] [--occurred-at TIMESTAMP] | telemetry usage [WORKITEM] [--by work-item|execution|step|provider|model|day] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | foundations verify [--json] | adapter publish --target FILE | ordo ingest --input FILE | ordo assess --input FILE | ordo observe-search --input FILE | ordo observe-effect --input FILE | ordo current | ordo handoff --revision REV --source SOURCE [--fact TEXT]* [--assumption TEXT]* [--unknown TEXT]* [--obligation TEXT]* [--next-action TEXT]* | provenance identity [--json] [IDENTITY] | provenance record (--path PATH|--id ID) --operation {created|modified|reviewed|approved|superseded|migrated} [--reason TEXT] [--evidence REF]* [--derived-from REF]* [--execution EXE-ID] [--occurred-at TIMESTAMP] [--json] | provenance show ID|PATH [--json] | provenance audit [--json]; IDENTITY (work start/resume/block/complete, add, telemetry start): [--actor-kind {agent|human|automation|unknown|x-...}] [--agent ID|--actor ID] [--provider P] [--model M] [--runtime R] ..."
 
 /// Removes one global `--name VALUE` option from the argument list wherever
 /// it appears, so the command parsers below only ever see their own flags.
@@ -644,16 +644,56 @@ let private runBacklogTransitionEffect root arguments =
 /// `telemetry show`'s own `TARGET`; a supplied ID that matches no context
 /// item rejects with production's exact message rather than returning an
 /// empty view.
+/// `--text` renders the continuity view for people; `--offline` never
+/// contacts a remote. The JSON document gains an additive top-level
+/// `continuity` array (DF-ROS-2026-A042): the named item's continuity, or
+/// that of every active and blocked item.
 let private runWorkContext root (arguments: string list) =
     let requestedId = arguments |> List.tryHead |> Option.filter (fun value -> not (value.StartsWith("--", StringComparison.Ordinal)))
+    let offline = List.contains "--offline" arguments
 
     match FileWorkContextRepository.readContextView root requestedId with
     | Error message ->
         eprintfn "ERROR %s" message
         1
+    | Ok view when List.contains "--text" arguments ->
+        match FileCheckpointRepository.readItems root with
+        | Error message ->
+            eprintfn "ERROR %s" message
+            1
+        | Ok items ->
+            let git = ProcessGitDurability.createFor root offline
+            let policy = FileCheckpointRepository.readPolicy root
+
+            let selected =
+                match requestedId with
+                | Some id -> items |> List.filter (fun item -> item.WorkItemId = id)
+                | None -> items |> List.filter (fun item -> item.State = LiveWorkState.Active || item.State = LiveWorkState.Blocked)
+
+            let blocks =
+                selected
+                |> List.map (fun item ->
+                    match CheckpointCommands.assessItem git policy item with
+                    | Ok assessment -> Ok(CheckpointCommands.renderText root item assessment)
+                    | Error problems -> Error(item.WorkItemId, problems))
+
+            for block in blocks do
+                match block with
+                | Ok lines ->
+                    lines |> List.iter (printfn "%s")
+                    printfn ""
+                | Error(id, problems) -> eprintfn "ERROR %s latestCheckpoint: %s" id (String.concat "; " problems)
+
+            if blocks |> List.forall Result.isOk then 0 else 1
     | Ok view ->
-        printf "%s" (view.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
-        0
+        match CheckpointCommands.continuityFor root offline requestedId with
+        | Error message ->
+            eprintfn "ERROR %s" message
+            1
+        | Ok(continuity, _) ->
+            view["continuity"] <- continuity
+            printf "%s" (view.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
+            0
 
 let private attachmentSummaryNode (attachment: WorkAttachmentSummary) : JsonObject =
     let node = JsonObject()
@@ -1493,9 +1533,12 @@ let private runWorkComplete root arguments (eventActor: Actor) =
                         match BacklogStateTransaction.recover root with
                         | Error failure -> Error failure.Message
                         | Ok() ->
-                            match readWorkContext root with
-                            | Error message -> Error message
-                            | Ok context ->
+                            // Durable-completion guard (DF-ROS-2026-A042), before any
+                            // state changes; a no-op unless the repository opted in.
+                            match readWorkContext root, CheckpointCommands.completionGuard root ids with
+                            | Error message, _
+                            | _, Error message -> Error message
+                            | Ok context, Ok() ->
                                 let repositoryId = FileWorkConfigRepository.readRepositoryId root
 
                                 match realObservedGitPaths root with
@@ -1678,9 +1721,13 @@ let private runWorkBlock root arguments (eventActor: Actor) =
                         match BacklogStateTransaction.recover root with
                         | Error failure -> Error failure.Message
                         | Ok() ->
-                            match readWorkContext root with
-                            | Error message -> Error message
-                            | Ok context ->
+                            // Block continuity guard (DF-ROS-2026-A042), before any
+                            // state changes: new work since the latest checkpoint needs
+                            // a checkpoint or a recorded --unrecoverable-reason.
+                            match readWorkContext root, CheckpointCommands.blockGuard root ids (optionValue "--unrecoverable-reason" arguments) with
+                            | Error message, _
+                            | _, Error message -> Error message
+                            | Ok context, Ok continuityExtensions ->
                                 let queueItems = FileBacklogQueueRepository.readItems root
                                 let contextIdSet = context.WorkItems |> List.map (fun item -> item.Id) |> Set.ofList
 
@@ -1755,7 +1802,7 @@ let private runWorkBlock root arguments (eventActor: Actor) =
                                                 match resolveContextTelemetryWithCreation root (ProvenanceCommands.identityOverridesFrom arguments) [] (fun _ -> None) (contextIds.Length + 1) plan with
                                                 | Error message -> Error message
                                                 | Ok resolvedPlan ->
-                                                    match FileWorkContextRepository.applyContextPlan root repositoryId eventActor resolvedPlan with
+                                                    match FileWorkContextRepository.applyContextPlanWithExtensions root repositoryId Map.empty continuityExtensions eventActor resolvedPlan with
                                                     | Error message -> Error message
                                                     | Ok(writtenItems, _) ->
                                                         let contextIdSet = Set.ofList contextIds
@@ -1858,6 +1905,9 @@ let private computeUnifiedFindings root : Result<ArtifactFinding list, string> =
 
                 let workFindingsConverted = workFindings |> List.map (fun f -> convert f.Path f.Field f.Message)
 
+                let checkpointFindings =
+                    FileCheckpointRepository.validationFindings root |> List.map (fun f -> convert f.Path f.Field f.Message)
+
                 match ProvenanceCommands.findingsOf FindingSeverity.Error root with
                 | Error message -> Error message
                 | Ok provenanceErrors ->
@@ -1866,6 +1916,7 @@ let private computeUnifiedFindings root : Result<ArtifactFinding list, string> =
                     @ workFindingsConverted
                     @ queueFindings
                     @ telemetryFindingsConverted
+                    @ checkpointFindings
                     @ (provenanceErrors |> List.map ProvenanceCommands.toArtifactFinding)
                     |> List.sortWith (fun a b -> System.String.CompareOrdinal($"{a.Path}\000{a.Field}\000{a.Message}", $"{b.Path}\000{b.Field}\000{b.Message}"))
                     |> Ok
@@ -1909,7 +1960,7 @@ let private runValidateUnified root arguments =
 /// item, plus the unified `validate` findings' count/pass-fail summary
 /// and deduplicated repair hints, plus real execution/active-execution
 /// counts from `telemetry show`'s own read.
-let private runStatus root packageRoot verbose =
+let private runStatus root packageRoot verbose offline =
     match computeUnifiedFindings root with
     | Error message ->
         eprintfn "ERROR %s" message
@@ -1980,6 +2031,10 @@ let private runStatus root packageRoot verbose =
             output["workItems"] <- workItemsNode
             output["telemetry"] <- telemetryNode
             output["nextActions"] <- nextActionsNode
+
+            // Additive (DF-ROS-2026-A042): continuity risk from observed
+            // facts. Every key above is unchanged.
+            output["continuity"] <- CheckpointCommands.statusNode root offline
 
             // Additive: every key above predates the lifecycle interface and
             // is unchanged. `installation` is new, so an existing consumer
@@ -2724,8 +2779,8 @@ let private repositoryDispatch root packageRoot arguments =
     | "validate" :: rest -> runValidateUnified root rest
     | "foundations" :: "verify" :: rest when rest |> List.forall ((=) "--json") ->
         Foundations.run root (rest |> List.contains "--json")
-    | "status" :: rest when rest |> List.forall (fun value -> value = "--json" || value = "--verbose") ->
-        runStatus root packageRoot (rest |> List.contains "--verbose")
+    | "status" :: rest when rest |> List.forall (fun value -> value = "--json" || value = "--verbose" || value = "--offline") ->
+        runStatus root packageRoot (rest |> List.contains "--verbose") (rest |> List.contains "--offline")
     | "artifacts" :: "validate" :: rest when rest |> List.forall ((=) "--json") ->
         runValidation (rest |> List.contains "--json") repository
     | "registry" :: "build" :: rest when rest |> List.forall ((=) "--dry-run") ->
@@ -2764,6 +2819,9 @@ let private repositoryDispatch root packageRoot arguments =
     | "work" :: "block" :: rest -> ProvenanceCommands.withResolvedActor rest (runWorkBlock root rest)
     | "work" :: ("complete" | "done") :: rest -> ProvenanceCommands.withResolvedActor rest (runWorkComplete root rest)
     | "work" :: "reconcile" :: rest -> ProvenanceCommands.withResolvedActor rest (ReconciliationCommands.run root rest)
+    | "work" :: "checkpoint" :: "show" :: rest -> CheckpointCommands.show root rest
+    | "work" :: "continue" :: rest -> ProvenanceCommands.withResolvedActor rest (CheckpointCommands.runContinue root rest)
+    | "work" :: "checkpoint" :: rest -> ProvenanceCommands.withResolvedActor rest (CheckpointCommands.run root rest)
     | [ "telemetry"; "adapters" ] -> runTelemetryAdapters ()
     | "telemetry" :: "show" :: rest -> runTelemetryShow root rest
     | "telemetry" :: ("summary" | "summarize") :: rest -> runTelemetrySummary root rest

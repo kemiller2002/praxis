@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { initializeProject } from "../lib/bootstrap.mjs";
+import { optOutOfDurableCheckpoints } from "./legacy-completion.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const installWorkItemId = `ROS-INSTALL-${JSON.parse(fs.readFileSync(path.join(repositoryRoot, "package.json"), "utf8")).version.replaceAll(".", "-")}`;
@@ -82,6 +83,7 @@ function fixture(t, label) {
     }
   });
   initializeProject({ target: root, project: "Status Differential" });
+  optOutOfDurableCheckpoints(root);
   execFileSync("git", ["-C", root, "init", "-q"]);
   return root;
 }
@@ -103,7 +105,9 @@ function fsharpWork(root, args) {
 // assertions below cover the new block. Any change to a pre-existing key
 // still fails these tests.
 function normalize(record) {
-  const { installation, ...rest } = record;
+  // `continuity` (DF-ROS-2026-A042) is additive in the same way; its own
+  // behaviour is pinned by tests/Ros.Tests/CheckpointCliTests.fs.
+  const { installation, continuity, ...rest } = record;
   return {
     ...rest,
     workItems: record.workItems.map(({ telemetryExecutionIds, ...itemRest }) => ({ ...itemRest, hasExecIds: telemetryExecutionIds.length > 0 }))

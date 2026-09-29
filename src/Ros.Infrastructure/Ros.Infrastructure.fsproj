@@ -33,6 +33,7 @@
     <Compile Include="Work/FileTelemetryValidationRepository.fs" />
     <Compile Include="Work/FileAdapterRepository.fs" />
     <Compile Include="Provenance/FileProvenanceRepository.fs" />
+    <Compile Include="Work/FileCheckpointRepository.fs" />
     <Compile Include="Ordo/FileObservationRepository.fs" />
     <Compile Include="Lifecycle/Payload.fs" />
     <Compile Include="Lifecycle/Installation.fs" />

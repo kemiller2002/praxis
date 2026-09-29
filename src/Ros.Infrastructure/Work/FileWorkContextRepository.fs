@@ -264,7 +264,7 @@ module FileWorkContextRepository =
     /// (the resolved identity of the process performing the transition,
     /// never inherited from stored context) precedes `publication`, so it
     /// is part of the hashed, published event.
-    let private eventNode (actor: Actor) (event: WorkEventPlan) : JsonObject =
+    let private eventNodeWith (extensions: Map<string, JsonObject>) (actor: Actor) (event: WorkEventPlan) : JsonObject =
         let hashInput = JsonObject()
         hashInput["schemaVersion"] <- JsonValue.Create "1.0.0"
         hashInput["type"] <- JsonValue.Create event.EventType
@@ -276,6 +276,16 @@ module FileWorkContextRepository =
         hashInput["evidence"] <- evidenceArrayNode event.Evidence
         hashInput["paths"] <- stringArrayNode event.Paths
         hashInput["telemetryExecutions"] <- stringArrayNode event.TelemetryExecutionIds
+
+        // An additive, per-item extension (DF-ROS-2026-A042: a block's
+        // `continuity` record). Absent for every other event, so their bytes
+        // and ids are unchanged.
+        extensions
+        |> Map.tryFind event.WorkItemId
+        |> Option.iter (fun extension ->
+            for property in extension do
+                hashInput[property.Key] <- property.Value.DeepClone())
+
         hashInput["actor"] <- ActorJson.node actor
         let publication = JsonObject()
         publication["status"] <- JsonValue.Create "pending"
@@ -330,10 +340,11 @@ module FileWorkContextRepository =
     /// matching production's own returned `events` list, this includes an
     /// id even when the event line itself turned out to already be present
     /// in the log (recorded once, reported every time it is produced).
-    let applyContextPlanWithConclusions
+    let applyContextPlanWithExtensions
         (root: string)
         (repositoryId: string)
         (conclusions: Map<string, string>)
+        (extensions: Map<string, JsonObject>)
         (eventActor: Actor)
         (plan: WorkContextPlan)
         : Result<JsonArray * string list, string> =
@@ -356,7 +367,7 @@ module FileWorkContextRepository =
                         contextNode["baselineDirtyPaths"] <- stringArrayNode plan.BaselineDirtyPaths
                     | None -> ()
 
-                    let eventNodes = plan.ItemPlans |> List.map (fun itemPlan -> eventNode eventActor itemPlan.Event)
+                    let eventNodes = plan.ItemPlans |> List.map (fun itemPlan -> eventNodeWith extensions eventActor itemPlan.Event)
                     let eventIds = eventNodes |> List.choose (fun node -> stringField node "eventId")
                     let eventsContent = appendEvents root eventNodes
                     let contextContent = contextNode.ToJsonString serializerOptions + "\n"
@@ -377,6 +388,15 @@ module FileWorkContextRepository =
                 | _ -> Error "context/current.json 'workItems' must be an array"
         with error ->
             Error error.Message
+
+    let applyContextPlanWithConclusions
+        (root: string)
+        (repositoryId: string)
+        (conclusions: Map<string, string>)
+        (eventActor: Actor)
+        (plan: WorkContextPlan)
+        : Result<JsonArray * string list, string> =
+        applyContextPlanWithExtensions root repositoryId conclusions Map.empty eventActor plan
 
     /// `applyContextPlanWithConclusions` with no research-conclusion writes
     /// -- every action but `complete` (on a research item) needs this.

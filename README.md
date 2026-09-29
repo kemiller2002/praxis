@@ -372,6 +372,19 @@ A repository-local backlog (`ros add`, `ros work list|ready|show|start`) lets
 work be captured before it has an externally assigned ID, and graduates into
 the same protocol via `work start`.
 
+**Durable checkpoints and continuity.** An executor session is disposable;
+repository and Praxis state are durable. `ros work checkpoint` records a
+verified checkpoint: the exact pushed commit, what was completed, and the
+next action, verified against the remote itself. A successor on another
+machine continues from it with `ros work continue`, under its own identity.
+
+```bash
+git commit -am "Implement capability boundary" && git push
+./ros work checkpoint --id WORK-ID --occurred-at "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)" \
+  --summary "Implemented capability boundary" --next-action "Implement consumer fixture"
+./ros work context WORK-ID --text      # latest recoverable checkpoint and current state
+```
+
 See [`docs/work-protocol.md`](docs/work-protocol.md) and, for a UI over the same
 backlog, [`docs/web-interface.md`](docs/web-interface.md) (`npm run web`).
 

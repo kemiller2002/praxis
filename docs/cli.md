@@ -261,7 +261,7 @@ commands. These predate the lifecycle interface and are unchanged:
 ros validate [--json]
 ros registry build [--dry-run] | registry check
 ros git status [--json]
-ros work <capture|list|ready|show|start|resume|block|complete|reconcile|update|attach|context|...>
+ros work <capture|list|ready|show|start|resume|block|complete|reconcile|checkpoint|continue|update|attach|context|...>
 ros add "..."
 ros telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
 ros adapter <call|publish>
@@ -295,6 +295,51 @@ shallow boundary, unavailable Git) is rejected with exit `1` and nothing is
 recorded; argument errors exit `2`. `--dry-run` shows the assessment without
 recording. See "Post-hoc attribution reconciliation" in
 [`work-protocol.md`](work-protocol.md) for when to use it and when not to.
+
+### `work checkpoint`, `work checkpoint show`, `work continue`
+
+```
+ros work checkpoint --id ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT
+                    [--step STEP-ID] [--execution EXE-ID] [--json] [IDENTITY]
+ros work checkpoint show ID [--json] [--offline]
+ros work continue --id ID --occurred-at TIMESTAMP [--json] [IDENTITY]
+ros work context [ID] [--text] [--offline]
+ros work block ... [--unrecoverable-reason TEXT]
+ros status [--json] [--verbose] [--offline]
+```
+
+**`work checkpoint`** records a verified durable checkpoint. The remote itself
+must show that local HEAD, the checkpoint commit, and the upstream branch head
+are the same commit, with no meaningful uncommitted work. It never commits,
+pushes or stashes.
+
+- `--json` prints `status` (`recorded`, `rejected` or `failed`), `checkpoint`
+  (the recorded fact), the attributed `paths`, and `rejections[{code,
+  message, remedy}]`.
+- Exit codes: `0` recorded; `1` refused or not persisted; `2` argument
+  errors, including a blank summary or next action.
+
+**`work checkpoint show`** prints the latest checkpoint, the separately
+observed current state (freshness, current recoverability, local HEAD,
+working tree), warnings, non-destructive recovery steps, and the full
+history.
+
+**`work continue`** lets a successor take over active work whose executor
+disappeared. The successor gets a new execution whose parent is the
+predecessor, and a `work.continued` event is recorded. The command refuses
+dirty checkouts, the caller's own run, and non-active work.
+
+**Additive output.** `work context` and `status` gain an additive
+`continuity` block. `--offline` never contacts a remote.
+
+**Guards.** Where `workProtocol.continuity.requireDurableCheckpoint` is set:
+
+- `work complete` requires a current, re-verified checkpoint for meaningful
+  Git-backed work;
+- `work block` after un-checkpointed work needs a checkpoint or
+  `--unrecoverable-reason`.
+
+See "Durable checkpoints and continuity" in [`work-protocol.md`](work-protocol.md).
 
 ### `remote execute`
 

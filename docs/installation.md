@@ -215,6 +215,19 @@ The scaffolded repository gets its own `./ros`, which runs the same F# CLI
 pinned to the version recorded in its `ros.json`. It does not read from, or
 link back to, the source checkout that installed it.
 
+## Durable checkpoints
+
+A new installation's `ros.json` sets
+`"workProtocol": {"continuity": {"requireDurableCheckpoint": true}}`. With
+that set, meaningful Git-backed work completes only from a verified durable
+checkpoint: the work is committed, pushed, and recorded with
+`ros work checkpoint`. See "Durable checkpoints and continuity" in
+[`work-protocol.md`](work-protocol.md).
+
+A repository with no remote cannot hold a durable checkpoint. Add a remote,
+or deliberately set the flag to `false`, and understand that work there then
+exists in one place only.
+
 ## Legacy compatibility
 
 `ros-bootstrap init` and `ros-bootstrap verify` still work exactly as before

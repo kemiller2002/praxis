@@ -21,6 +21,13 @@ Run:
 ./ros validate
 ```
 
+## Continuity
+
+An executor session is disposable. Before handing off, commit and push the
+work, record `./ros work checkpoint --id ID --occurred-at NOW --summary ...
+--next-action ...`, and push the `.ros/` state. A successor reads
+`./ros work context ID --text` and takes over with `./ros work continue`.
+
 ## Unresolved questions
 
 1. What concrete communication problem and user should the first slice serve?
