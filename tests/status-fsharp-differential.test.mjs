@@ -103,7 +103,9 @@ function fsharpWork(root, args) {
 // assertions below cover the new block. Any change to a pre-existing key
 // still fails these tests.
 function normalize(record) {
-  const { installation, ...rest } = record;
+  // `continuity` (DF-ROS-2026-A042) is additive in the same way; its own
+  // behaviour is pinned by tests/Ros.Tests/CheckpointCliTests.fs.
+  const { installation, continuity, ...rest } = record;
   return {
     ...rest,
     workItems: record.workItems.map(({ telemetryExecutionIds, ...itemRest }) => ({ ...itemRest, hasExecIds: telemetryExecutionIds.length > 0 }))
