@@ -3319,11 +3319,23 @@
         "EXE-20260928T114343533Z-ea7d5dcb"
       ],
       "completedAt": "2026-09-28T11:43:50.000Z"
+    },
+    {
+      "id": "RELEASE-3-5-0",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-09-29T01:21:51.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T011840973Z-732416b2"
+      ],
+      "completedAt": "2026-09-29T01:21:51.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-28T11:43:50.000Z",
+  "updatedAt": "2026-09-29T01:21:51.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
