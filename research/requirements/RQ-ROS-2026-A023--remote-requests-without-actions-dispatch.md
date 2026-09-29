@@ -22,8 +22,9 @@ derived_from: [RQ-ROS-2026-A022]
 provenance:
   contributions:
     EXE-20260929T123817046Z-0e142401:
-      operations: [created]
+      operations: [created, modified]
       at: 2026-09-29T12:41:41.571Z
+      last: 2026-09-29T13:00:35.217Z
       actor:
         kind: agent
         id: anthropic/claude-code
@@ -86,3 +87,11 @@ but it cannot continue it (`EV-ROS-2026-A057`).
 - **No bypass:** the relay's tests show that it passes the document through
   byte for byte, refuses a malformed submission without dispatching, and
   has no pull-request or fork trigger.
+
+## Status (2026-09-29)
+
+| Criterion | Status |
+|---|---|
+| Live channel test | Met. See the verification in `DF-ROS-2026-A045`: relay run `36571870365` dispatched the Praxis remote run `36571886619`. |
+| Continuation completes | Open. It needs an actual OpenAI or ChatGPT execution to continue `PRAXIS-XPROVIDER-PROOF-01` through the inbox. It cannot be met on that executor's behalf. |
+| No bypass | Met, by `tests/praxis-remote-inbox.test.mjs`. |

@@ -26,8 +26,9 @@ derived_from: [RQ-ROS-2026-A023, RQ-ROS-2026-A022]
 provenance:
   contributions:
     EXE-20260929T123817046Z-0e142401:
-      operations: [created]
+      operations: [created, modified]
       at: 2026-09-29T12:41:42.134Z
+      last: 2026-09-29T13:00:34.697Z
       actor:
         kind: agent
         id: anthropic/claude-code
@@ -96,6 +97,29 @@ the Actions API.
 - An agent with neither dispatch nor contents write still cannot take part.
   The contract says so, and that agent must hand off to one that can,
   rather than improvise.
+
+# Verification (2026-09-29)
+
+- **First live test, which found a defect.** Branch
+  `praxis-inbox/claude-live-describe` at `e742e4f`, relay run `36570413074`:
+  - the relay found no request, because the push event's commit list
+    omitted the file for the push that created the branch;
+  - the relay now diffs with Git: `before..HEAD`, or the merge base with the
+    default branch for a new branch;
+  - a regression test covers it.
+- **Second live test, which passed.** Branch
+  `praxis-inbox/claude-live-describe-2` at `53aeea4`:
+  - a read-only `praxis.describe` under the submitter's own identity
+    (`anthropic/claude-code`);
+  - relay run `36571870365` succeeded and dispatched
+    `praxis remote req-inbox-live-describe-02` (run `36571886619`,
+    `workflow_dispatch` on `main`);
+  - that run succeeded and printed Praxis's full operation catalog,
+    including `work.continue` (protocol 1.3).
+- **Not yet shown:** a mutation through the inbox by a successor from
+  another provider. That is `RQ-ROS-2026-A023`'s second acceptance
+  criterion, and only an actual OpenAI execution can meet it
+  (`PRAXIS-XPROVIDER-PROOF-01`).
 
 # Alternatives considered
 

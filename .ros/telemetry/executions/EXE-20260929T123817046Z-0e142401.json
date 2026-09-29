@@ -996,14 +996,14 @@
       "metricId": "tests.passed",
       "status": "supported-observed",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-09-29T12:46:16.742Z",
+      "discoveredAt": "2026-09-29T13:02:11.050Z",
       "source": {
         "type": "external-tool",
-        "name": "ros-tests-fsharp",
+        "name": "node-test",
         "mechanism": "summary"
       },
-      "lastAssessedAt": "2026-09-29T12:46:16.742Z",
-      "recordedAt": "2026-09-29T12:46:16.749Z",
+      "lastAssessedAt": "2026-09-29T13:02:11.050Z",
+      "recordedAt": "2026-09-29T13:02:11.057Z",
       "history": [
         {
           "status": "unknown",
@@ -1028,6 +1028,18 @@
           "discoveredAt": "2026-09-29T12:46:15.671Z",
           "lastAssessedAt": "2026-09-29T12:46:15.671Z",
           "recordedAt": "2026-09-29T12:46:15.678Z"
+        },
+        {
+          "status": "supported-observed",
+          "reason": "normalized measurement recorded",
+          "source": {
+            "type": "external-tool",
+            "name": "ros-tests-fsharp",
+            "mechanism": "summary"
+          },
+          "discoveredAt": "2026-09-29T12:46:16.742Z",
+          "lastAssessedAt": "2026-09-29T12:46:16.742Z",
+          "recordedAt": "2026-09-29T12:46:16.749Z"
         }
       ]
     },
@@ -1041,8 +1053,8 @@
         "name": "node-test",
         "mechanism": "summary"
       },
-      "lastAssessedAt": "2026-09-29T12:46:16.188Z",
-      "recordedAt": "2026-09-29T12:46:16.193Z",
+      "lastAssessedAt": "2026-09-29T13:02:11.524Z",
+      "recordedAt": "2026-09-29T13:02:11.528Z",
       "history": [
         {
           "status": "unknown",
@@ -1464,6 +1476,50 @@
       },
       "collectedAt": "2026-09-29T12:46:16.742Z",
       "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-35c2fda54295f2deb7917790",
+      "id": "tests.passed",
+      "value": 179,
+      "unit": "count",
+      "currency": null,
+      "quality": "observed",
+      "confidence": null,
+      "scope": "execution",
+      "aggregation": "sum",
+      "dimensions": {
+        "step": "live-verify"
+      },
+      "pricing": null,
+      "source": {
+        "type": "external-tool",
+        "name": "node-test",
+        "mechanism": "summary"
+      },
+      "collectedAt": "2026-09-29T13:02:11.050Z",
+      "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-41b244b180393ac866d62d45",
+      "id": "tests.failed",
+      "value": 0,
+      "unit": "count",
+      "currency": null,
+      "quality": "observed",
+      "confidence": null,
+      "scope": "execution",
+      "aggregation": "sum",
+      "dimensions": {
+        "step": "live-verify"
+      },
+      "pricing": null,
+      "source": {
+        "type": "external-tool",
+        "name": "node-test",
+        "mechanism": "summary"
+      },
+      "collectedAt": "2026-09-29T13:02:11.524Z",
+      "schemaVersion": "1.0.0"
     }
   ],
   "rawTelemetry": [
@@ -1525,6 +1581,27 @@
       "type": "step.completed",
       "stepId": "capture",
       "occurredAt": "2026-09-29T12:46:16.000Z",
+      "source": {
+        "type": "ros-clock",
+        "name": "ros",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.started",
+      "stepId": "live-verify",
+      "name": "Live channel test and fix",
+      "occurredAt": "2026-09-29T13:02:10.000Z",
+      "source": {
+        "type": "ros-clock",
+        "name": "ros",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.completed",
+      "stepId": "live-verify",
+      "occurredAt": "2026-09-29T13:02:11.000Z",
       "source": {
         "type": "ros-clock",
         "name": "ros",
