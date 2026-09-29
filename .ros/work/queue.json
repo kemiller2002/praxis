@@ -2855,10 +2855,10 @@
       "description": "Bump .echelon/toolchain.json praxis from 3.5.0 to 3.6.0 so the remote runner supports work.checkpoint and work.continue (GH-90 successor proof).",
       "tags": [],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-29T11:05:20.369Z",
-      "updatedAt": "2026-09-29T11:05:20.000Z",
+      "updatedAt": "2026-09-29T11:06:03.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
