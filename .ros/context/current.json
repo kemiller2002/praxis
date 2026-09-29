@@ -3747,18 +3747,48 @@
     {
       "id": "PRAXIS-CONT-08-RECOVERY",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-29T07:35:21.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tests/Ros.Tests/RecoveryProofTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RecoveryProofTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T07:37:58.000Z",
       "telemetryExecutionIds": [
         "EXE-20260929T073522566Z-c250875d"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "17bb1af5b06dedf379bc7858",
+        "recordedAt": "2026-09-29T07:37:57.000Z",
+        "executionId": "EXE-20260929T073522566Z-c250875d",
+        "repository": "repository-operating-system",
+        "branch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "commit": "17c6a14026d05de91aa65559f1ea11ad0f9404ca",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "remoteCommit": "17c6a14026d05de91aa65559f1ea11ad0f9404ca",
+        "summary": "Two-clone agent-loss recovery proof implemented and passing (665 F# tests)",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T07:37:58.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T07:35:21.000Z",
+  "updatedAt": "2026-09-29T07:37:58.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
