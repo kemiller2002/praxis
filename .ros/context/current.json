@@ -4026,6 +4026,32 @@
       "completedAt": "2026-09-29T10:58:12.000Z"
     },
     {
+      "id": "PRAXIS-DIST-NATIVE-DOTNET-TOOL",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/ros-fs-assets.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-29T11:35:27.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T111855354Z-c5a53453"
+      ],
+      "latestCheckpoint": {
+        "id": "8e765d4e2f5a6cbbc82a2fa2",
+        "recordedAt": "2026-09-29T11:35:26.000Z",
+        "executionId": "EXE-20260929T111855354Z-c5a53453",
+        "stepId": "dotnet-tool",
+        "repository": "repository-operating-system",
+        "branch": "claude/retire-npm-dotnet-tool",
+        "commit": "944029bbf101eaabb9f17c59dac29677100baede",
       "id": "REMOTE-ENABLE-3-6-0",
       "type": "mechanical",
       "state": "complete",
@@ -4080,6 +4106,10 @@
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
+        "remoteBranch": "claude/retire-npm-dotnet-tool",
+        "remoteCommit": "944029bbf101eaabb9f17c59dac29677100baede",
+        "summary": "npm distribution retired (DF-ROS-2026-A044): publish.yml removed, package.json private; .NET global tool EchelonFoundry.Praxis packed/smoke-tested/NuGet-published by native-release.yml; ros-fs assets moved to ros-fs-assets.yml; docs rewritten",
+        "nextAction": "Run final completion transition",
         "remoteBranch": "main",
         "remoteCommit": "f2e36f5914e6f5a00faaafd551053075d1f93223",
         "summary": "Successor continued from agent A's checkpoint and completed step continue-proof-b; no repository code was changed",

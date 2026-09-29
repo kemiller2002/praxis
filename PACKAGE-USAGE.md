@@ -1,223 +1,121 @@
-# Package distribution and release
+# Distribution and release
 
-How this package is distributed, which entry points it exposes, and how a
-release is published.
+Praxis (the Echelon Foundry Repository Operating System) is distributed two
+ways (`DF-ROS-2026-A044`). **npm is no longer a distribution channel:**
+`package.json` is private and never published. Versions of
+`@echelon-foundry/repository-operating-system` already on npm stay
+installable but receive no updates.
 
-**Installing ROS into a repository is documented elsewhere.** Start at
-[`docs/installation.md`](docs/installation.md) for the canonical interface, and
-[`docs/cli.md`](docs/cli.md) for the command reference. This file covers the
-package itself.
+## Channels
 
-## Entry points
+| Channel | For | Install | Built by |
+|---|---|---|---|
+| Native bundle (GitHub Releases) | any machine, CI, cloud agents; no Node.js or .NET needed | `scripts/install-native.sh` / `install-native.ps1`, or `scripts/praxis-bootstrap.sh` (attestation-verified, used by `praxis-remote.yml`) | `native-release.yml` |
+| .NET global tool (NuGet) | developers with .NET 10 | `dotnet tool install -g EchelonFoundry.Praxis` | `native-release.yml` |
+| `ros-fs-<platform>` binaries (GitHub Releases) | a scaffolded project's `./ros` launcher, which downloads the one for its pinned version | automatic, on first use | `ros-fs-assets.yml`, called by `native-release.yml` |
 
-| Executable | Status | Purpose |
-|---|---|---|
-| `ros` | **Recommended** | The canonical lifecycle interface: `init`, `status`, `verify`, `upgrade`, `doctor`. |
-| `ros-fs` | Supported | Runs the F# CLI directly for a project that depends on this package without installing a scaffold. |
-| `ros-bootstrap` | Legacy compatibility | The original `init`/`verify` installer. Still published and unchanged; superseded by `ros`. |
+All three run the same F# CLI (`src/Ros.Cli`). The native bundle's `praxis`
+wrapper passes the payload it carries with `--package-root`; the .NET tool and
+the `ros-fs` binaries use the scaffold compiled into the assembly. None of
+them needs anything else at run time.
 
-```bash
-npx --package=@echelon-foundry/repository-operating-system ros init
-npx --package=@echelon-foundry/repository-operating-system@<version> ros status
-```
+Why several native builds when the code is .NET: the IL in `ros-fs.dll` is
+portable, but a build that needs no installed runtime embeds the .NET runtime,
+which is native code for one operating system and CPU. Each release therefore
+carries one self-contained build per platform (`linux-x64`, `linux-musl-x64`
+for the bundle, `linux-arm64`, `osx-x64`, `osx-arm64`, `win-x64`). The .NET
+tool is the single portable package for machines that already have .NET 10.
 
-## Distribution model
+## Versions
 
-```
-npm / npx
-    |
-    v
-tiny Node bootstrap (bin/ros.mjs -> lib/lifecycle-launcher.mjs)
-    |
-    v
-self-contained F# binary, fetched from the version's GitHub Release
-    |
-    v
-F# domain and application core
-```
+`package.json`'s `version` is the single authoritative version source: the F#
+build reads it (see [`Directory.Build.props`](Directory.Build.props)), so
+`praxis --version` can never drift from the released version.
 
-The launcher detects the platform, resolves the right binary, downloads it once
-per version and platform, verifies its SHA-256 against the release's
-`checksums.txt`, caches it under `~/.cache/ros-fs/<version>/<platform>/`
-(override with `ROS_FS_CACHE_DIR`), and executes it. Later runs of the same
-version work entirely offline. A corrupt or tampered download is never
-executed.
+Only stable `X.Y.Z` versions are released. There are no snapshot releases:
+the former npm `main` dist-tag snapshots are retired with npm. A scaffolded
+project pins its version in `ros.json`, and its `./ros` refuses a non-stable
+pin before making any network request, because no release (and no binary)
+exists for it. Pin a released version, or build from source in a checkout to
+try unreleased behaviour.
 
-Inside a source checkout, or in CI after `npm run build:fsharp`, the launcher
-runs the freshly built assembly instead of downloading anything;
-`ROS_FS_DLL_PATH_OVERRIDE` points it at a specific build.
+Released assets are immutable. A workflow never replaces an asset a release
+already has; publishing a different build requires a new version.
 
-The binary carries the scaffold it installs, compiled in, so it needs nothing
-else from the package at run time: a repository's own `./ros` can run `init` and
-`upgrade` with no npm package on disk and no network. See
-[Where the scaffold comes from](docs/installation.md#where-the-scaffold-comes-from).
+## Cutting a release
 
-Supported platforms: `linux/x64`, `linux/arm64`, `darwin/x64`, `darwin/arm64`,
-`win32/x64`. An unsupported platform gets a clear error naming the gap rather
-than a silent failure.
-
-### Snapshot versions
-
-Every push to the canonical `main` branch publishes a unique prerelease such as
-`3.0.0-main.42.1` and moves the npm `main` dist-tag. Stable releases and the
-`latest` tag remain deliberate release actions.
-
-A snapshot version never has its own GitHub Release, so it never has a matching
-binary. Two things follow:
-
-- `ros`/`ros-fs` invoked from a snapshot install checks the version's shape
-  before making any network request and fails immediately with a specific
-  error, rather than attempting a download that cannot succeed.
-- `ros init` and `ros-bootstrap init` pin a scaffolded project's `ros.json` to
-  the newest **stable** release rather than the exact snapshot installed
-  (`DF-ROS-2026-A034`, via `lib/stable-ros-version.json`, which `publish.yml`
-  bundles into each tarball).
-
-Installing via `@main` gets you the newest scaffolding and bootstrap fixes; it
-does not give you a preview of unreleased CLI behaviour. Building from source
-is still the way to do that.
-
-## Package contents
-
-`package.json`'s `files` field is an explicit allow-list; there is no
-`.npmignore`, so publish behaviour has exactly one definition. The tarball
-carries the Node launchers, the scaffold for every profile, the governance
-documents, schemas, templates, the web and hub assets, the README and the
-licence. It does not carry `src/`, `tests/`, build output, or local
-configuration.
-
-Review it before releasing:
-
-```bash
-npm run pack:inspect      # npm pack --dry-run
-npm pack                  # then inspect the real archive
-tar -tzf echelon-foundry-repository-operating-system-*.tgz
-```
-
-`tests/lifecycle-package.test.mjs` asserts the contents of the real tarball and
-then exercises every documented command against it, so a packaging mistake
-fails the test suite rather than reaching the registry.
-
-## Version source
-
-`package.json`'s `version` is the single authoritative version.
-[`Directory.Build.props`](Directory.Build.props) reads it at build time and
-sets the CLI assembly's informational version from it, and the CLI reports that
-back. The CLI version and the npm release version therefore cannot drift.
-
-## Publication gate
-
-```bash
-npm run release:check
-npm publish --dry-run --access public
-```
-
-`release:check` runs the full test suite (including the packed-artifact tests),
-`npm pack --dry-run`, `./ros registry check` and `./ros validate`.
-
-Then inspect the tarball file list, confirm the version, create an immutable Git
-tag, and publish with an npm account authorized for the `@echelon-foundry`
-organization scope. The package is distributed under the MIT License; the
-tarball must contain `LICENSE`.
-
-Package metadata fixes the publication registry to
-`https://registry.npmjs.org/`, declares public access, and links releases to the
-current GitHub source repository. Before the first publish, `npm whoami` must
-succeed and the authenticated user must have write permission in the
-`echelon-foundry` npm organization.
-
-## Automated release
-
-[`.github/workflows/publish.yml`](.github/workflows/publish.yml) is the
-authoritative release path; a local developer machine is not. On every push to
-`main` it builds F#, runs the full suite, validates the repository, packs and
-exercises the artifact, and publishes a `main` snapshot. When the committed
-`package.json` version has changed it additionally:
-
-1. builds self-contained binaries for all five supported platforms,
-2. writes `checksums.txt`,
-3. publishes the stable npm release,
-4. creates the matching `vX.Y.Z` GitHub Release carrying those binaries.
-
-The binaries are fetched automatically by the launcher; they are not intended
-for manual download.
-
-### One-click release
-
-The **Release** workflow ([`.github/workflows/release.yml`](.github/workflows/release.yml))
-is the normal way to change the version. Run it from the Actions tab on `main`
-with `patch`, `minor`, `major` or an exact `X.Y.Z`. It:
+Run the **Release** workflow
+([`.github/workflows/release.yml`](.github/workflows/release.yml)) from the
+Actions tab on `main` with `patch`, `minor`, `major` or an exact `X.Y.Z`. It:
 
 1. runs [`scripts/praxis-release-bump.sh`](scripts/praxis-release-bump.sh),
    which begins work item `RELEASE-X-Y-Z` under the GitHub Actions identity,
    bumps `package.json` and `package-lock.json`, commits and pushes, records a
    durable checkpoint, completes the work item, and pushes the Praxis state;
-2. dispatches `publish.yml` (with the pre-bump commit as its `base`) and
-   `native-release.yml`.
+2. dispatches `native-release.yml`, since a push made with `GITHUB_TOKEN`
+   does not start push-triggered workflows.
 
-The dispatch is needed because a push made with `GITHUB_TOKEN` does not start
-push-triggered workflows. `publish.yml` treats a dispatched `base` exactly
-like a push's `before` commit: for detecting the version change and as
-`ROS_BASE_REF` for attribution. The script refuses a dirty tree, a branch
-that is not at its upstream head, and a version that is not newer, before
-anything is mutated.
+`native-release.yml` then runs the full test suite and validation, and for a
+version that is not yet released:
 
-## Configure trusted publishing
+1. builds, smoke-tests, attests and uploads the native bundles and
+   `native-checksums.txt`;
+2. packs and smoke-tests the .NET tool (this also runs on every pull request),
+   and pushes it to NuGet when NuGet publishing is configured (below);
+3. calls `ros-fs-assets.yml`, which builds, attests and uploads the five
+   `ros-fs-<platform>` binaries and `checksums.txt`.
 
-The workflow uses npm trusted publishing and does not require a long-lived
-`NPM_TOKEN`. After the first manual publication, configure the package on
-npmjs.com with this trusted publisher:
+The script refuses, before changing anything, a dirty tree, a branch that is
+not at its upstream head, and a version that is malformed or not newer.
 
-- Provider: GitHub Actions
-- GitHub organization or user: `kemiller2002`
-- Repository: `praxis`
-- Workflow filename: `publish.yml`
-- Allowed action: `npm publish`
+Before releasing, locally:
 
-The workflow requires GitHub-hosted runners and `id-token: write`, and verifies
-that an explicit public license is configured before publishing. If the GitHub
-repository is transferred, update the package repository metadata, the workflow
-repository guard, and the npm trusted-publisher configuration together.
+```bash
+npm run release:check
+```
+
+### Backfilling a release's `ros-fs` binaries
+
+v3.3.0 through v3.6.0 were released while npm publishing (which used to build
+the `ros-fs` binaries) was switched off, so projects pinned to them could not
+download their CLI. To add the binaries to such a release, run the **ros-fs
+release assets** workflow (`ros-fs-assets.yml`) with its tag, for example
+`v3.6.0`. It builds from that tag, checks the tag's `package.json` version
+matches, and does nothing if the release already has `checksums.txt`.
+
+## Configure NuGet trusted publishing
+
+The .NET tool is pushed with NuGet trusted publishing: `NuGet/login`
+exchanges the workflow run's OIDC token for a short-lived API key, so no
+long-lived key is stored. To turn it on:
+
+1. On nuget.org, sign in as the account that owns the `EchelonFoundry.*`
+   packages and add a trusted-publishing policy for repository
+   `kemiller2002/praxis`, workflow file `native-release.yml`.
+2. In the repository's Actions variables, set `NUGET_USER` to that nuget.org
+   account name and `NUGET_PUBLISH_ENABLED` to `true`.
+
+Until both are set, releases still build and smoke-test the tool but do not
+push it. A version already on NuGet is skipped.
+
+## Payload contents
+
+`package.json`'s `files` list still defines the payload the native bundle
+carries: `native-release.yml` assembles it with `npm pack --ignore-scripts`
+and extracts it into each bundle. It includes the starter scaffold, templates,
+schemas, telemetry configuration and the agent documents. `npm run
+pack:inspect` prints it. `tests/lifecycle-package.test.mjs` packs and extracts
+that payload and runs every documented lifecycle command against throwaway
+repositories.
 
 ## Legacy compatibility
 
-`ros-bootstrap` is retained unchanged for existing users:
-
-```bash
-npx --package=@echelon-foundry/repository-operating-system ros-bootstrap init --target .
-npx --package=@echelon-foundry/repository-operating-system ros-bootstrap verify --target .
-```
-
-Differences from `ros`, all of them reasons to prefer `ros`:
-
-- `ros-bootstrap init` is not idempotent: it aborts when
-  `.ros/installation.json` already exists.
-- It has no ownership model beyond `preserve-existing`, no installation-state
-  model, no migrations, no `doctor`, no `--json`, and no `--check`.
-- `ros-bootstrap verify` compares every managed file against the installed
-  snapshot, so it reports drift in files a project is expected to edit. It is a
-  diagnostic, not a rule forbidding project evolution; `ros verify` classifies
-  by ownership instead and does not report those.
-
-`ros upgrade` migrates a `ros-bootstrap` installation to the current model and
-leaves `.ros/installation.json` in place, so both executables keep working
-against the same repository. See [`docs/upgrading.md`](docs/upgrading.md).
-
-Installing from GitHub rather than npm also still works, for a commit that has
-no published release:
-
-```bash
-npx --yes --prefer-online \
-  --package=github:kemiller2002/praxis#<commit> \
-  ros-bootstrap init --target .
-```
-
-A branch name is convenient but not reproducible; prefer a tag or an exact
-commit SHA.
-
-
-## Repository rename and npm publishing
-
-The source repository is now `kemiller2002/praxis`. npm trusted publishing validates the repository identity in GitHub's OIDC claim, so the npm package's Trusted Publisher configuration must name `kemiller2002/praxis` and `.github/workflows/publish.yml`.
-
-Until that external npm setting is updated, the npm publish job is intentionally gated by the GitHub repository variable `NPM_PUBLISH_ENABLED`. Leave it unset or false while native GitHub Release distribution is being adopted. After the npm Trusted Publisher entry is updated, set `NPM_PUBLISH_ENABLED=true` to resume compatibility snapshot and stable npm publication.
+- A repository installed by the legacy npm `ros-bootstrap init` keeps
+  working untouched. `praxis status` reports it as `upgrade-required`, and
+  `praxis upgrade` adopts it.
+- A scaffolded project's installation manifest (`.echelon/ros.json`) still
+  records `@echelon-foundry/repository-operating-system` as its package
+  identity. That is the product's installation identity, kept for
+  compatibility; it does not mean the project uses npm.
+- Existing projects keep their `./ros` launcher, which downloads `ros-fs`
+  binaries from GitHub Releases, not from npm.

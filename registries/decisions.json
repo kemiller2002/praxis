@@ -468,6 +468,24 @@
       "repository-governance"
     ],
     "path": "research/decisions/DF-ROS-2026-A034--pin-bootstrapped-ros-version-to-latest-stable-release.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T111855354Z-c5a53453": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T11:31:07.843Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Superseded by DF-ROS-2026-A044: npm snapshot releases retired (PRAXIS-DIST-NATIVE-DOTNET-TOOL)"
+        }
+      }
+    },
     "related_documents": [
       "EV-ROS-2026-A051",
       "DF-ROS-2026-A029",
@@ -476,8 +494,10 @@
       ".github/workflows/publish.yml"
     ],
     "research_area": "repository-operating-system",
-    "status": "accepted",
-    "superseded_by": [],
+    "status": "superseded",
+    "superseded_by": [
+      "DF-ROS-2026-A044"
+    ],
     "supersedes": [],
     "supports": [],
     "tags": [
@@ -488,7 +508,7 @@
       "release"
     ],
     "title": "ros-bootstrap init pins a scaffolded project's ros.json to the latest stable release, not the installed package's own version",
-    "updated": "2026-09-11",
+    "updated": "2026-09-29",
     "version": "1.0.0"
   },
   {
@@ -855,6 +875,64 @@
       "schema-evolution"
     ],
     "title": "Step telemetry is effective-current; an execution's segmentation boundary is derived from its own first step, never stored or backfilled",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-29",
+    "decision_type": "architecture",
+    "id": "DF-ROS-2026-A044",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A044--retire-npm-distribute-native-bundles-and-dotnet-tool.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T111855354Z-c5a53453": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T11:31:07.382Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Owner decision to retire npm distribution; native bundles plus .NET global tool (PRAXIS-DIST-NATIVE-DOTNET-TOOL)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A029",
+      "DF-ROS-2026-A034",
+      "DF-ROS-2026-A041",
+      "PACKAGE-USAGE.md",
+      "docs/installation.md",
+      "docs/native-installation.md",
+      ".github/workflows/native-release.yml",
+      ".github/workflows/ros-fs-assets.yml",
+      ".github/workflows/release.yml"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [
+      "DF-ROS-2026-A034"
+    ],
+    "supporting_evidence": [],
+    "supports": [],
+    "tags": [
+      "distribution",
+      "release",
+      "npm",
+      "nuget",
+      "dotnet-tool",
+      "native"
+    ],
+    "title": "Retire npm distribution; distribute Praxis as self-contained native bundles and a .NET global tool",
     "updated": "2026-09-29",
     "version": "1.0.0"
   }

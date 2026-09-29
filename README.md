@@ -47,8 +47,10 @@ praxis verify
 ```
 
 The native bundle is self-contained. A consuming machine does not need Node.js,
-npm, or a machine-wide .NET runtime. The established `ros` command remains a
-compatibility alias, and npm remains a compatibility distribution channel.
+npm, or a machine-wide .NET runtime. With .NET 10 installed, the same CLI is
+also a global tool: `dotnet tool install -g EchelonFoundry.Praxis`. The
+established `ros` command remains a compatibility alias. npm is no longer a
+distribution channel (`DF-ROS-2026-A044`).
 
 To install the Echelon engineering toolchain, including Ordo:
 
@@ -132,9 +134,8 @@ Once installed, the repository can also run its own lifecycle through the
 - **Machine-readable output** (`--json`) and a documented exit-code contract for
   CI and agents.
 
-`ros-bootstrap init`/`verify` are unchanged and still published; a repository
-they installed keeps working, and `ros upgrade` adopts it. See
-[Compatibility](#compatibility).
+A repository installed by the legacy `ros-bootstrap` keeps working, and
+`ros upgrade` adopts it. See [Compatibility](#compatibility).
 
 ## Commands
 
@@ -188,10 +189,12 @@ go to stderr. Schemas are in [`docs/cli.md`](docs/cli.md#machine-readable-output
 ### CI usage
 
 ```bash
-npx --package=@echelon-foundry/repository-operating-system ros verify --strict
+praxis verify --strict
 ```
 
-Exit `0` means valid, `3` means verification failed. Other nonzero codes mean
+Install `praxis` in the job first (the native bundle needs no runtime, see
+[`docs/installation.md`](docs/installation.md)), or run the repository's own
+`./ros verify --strict`. Exit `0` means valid, `3` means verification failed. Other nonzero codes mean
 something else — see the [exit-code contract](docs/cli.md#exit-codes) — and
 should not be read as "verification failed".
 
@@ -245,9 +248,9 @@ field, changing what one means, or changing an exit code is, and requires a
 version bump and a migration step.
 
 **Legacy compatibility.** The older `ros-bootstrap init` and
-`ros-bootstrap verify` executables still ship and behave exactly as before.
-They are supported for existing users, not a second recommended path — use
-`ros init` and `ros verify` for new work. A repository installed by
+`ros-bootstrap verify` executables were npm-only and are no longer
+distributed; versions already on npm stay installable but receive no
+updates. Use `praxis init` and `praxis verify` for new work. A repository installed by
 `ros-bootstrap` keeps working untouched; `ros status` reports it as
 `upgrade-required`, and `ros upgrade` adopts the manifest while leaving the
 legacy snapshot in place.
@@ -256,23 +259,20 @@ legacy snapshot in place.
 
 `linux/x64`, `linux/arm64`, `darwin/x64`, `darwin/arm64`, `win32/x64`.
 
-Node.js 20 or newer is needed for the launcher. No .NET installation is
-required: the CLI ships as a self-contained binary, fetched and checksum-verified
-on first use of a given version and platform, then cached under
-`~/.cache/ros-fs/<version>/<platform>/` (override with `ROS_FS_CACHE_DIR`) and
-run offline thereafter.
+The native bundle is additionally built for `linux-musl/x64` (Alpine). The
+.NET global tool runs wherever .NET 10 does.
 
-The package declares no npm `os` or `cpu` restriction on purpose: one package
-serves every platform and the launcher selects the right binary at run time. An
-unsupported platform fails with a message naming the gap.
+A scaffolded project's `./ros` is a small Node.js 20+ launcher. It needs no
+.NET: it fetches the self-contained `ros-fs-<platform>` binary for its pinned
+version from that GitHub Release, verifies its checksum on first use, caches it
+under `~/.cache/ros-fs/<version>/<platform>/` (override with
+`ROS_FS_CACHE_DIR`) and runs offline thereafter. An unsupported platform fails
+with a message naming the gap.
 
 ## How it is built
 
 ```
-npm / npx
-    |
-    v
-tiny Node bootstrap (bin/ros.mjs, lib/lifecycle-launcher.mjs)
+native bundle (praxis wrapper)  |  .NET global tool  |  project ./ros launcher
     |
     v
 F# CLI (src/Ros.Cli)
@@ -281,9 +281,9 @@ F# CLI (src/Ros.Cli)
 F# domain and application core (src/Ros.Domain, src/Ros.Application)
 ```
 
-The Node launcher only detects the platform, locates the CLI binary, forwards
-arguments and stdio, and returns the exit code. The binary carries the scaffold
-it installs, so it needs nothing else from the package at run time. Every
+Each entry point only locates the CLI, forwards arguments and stdio, and
+returns the exit code. The binary carries the scaffold it installs, so it
+needs nothing else at run time. Every
 lifecycle decision — what to install, what the repository's
 state means, whether an installation is valid, which migrations apply, what is
 stale — is made in F#. Planning is pure and separate from execution:
@@ -293,7 +293,7 @@ stale — is made in F#. Planning is pure and separate from execution:
 
 ```bash
 npm run build:fsharp        # dotnet build Ros.slnx --configuration Release
-npm test                    # node + python suites, including the packed artifact
+npm test                    # node + python suites, including the packed payload
 npm run test:fsharp         # F# unit tests and the differential suites
 npm run test:all            # everything
 ```
@@ -311,29 +311,33 @@ Inside this source checkout, `./ros` runs the locally built CLI directly:
 ### Packaging
 
 ```bash
-npm run pack:inspect        # npm pack --dry-run: review the file list
-npm pack                    # produce the real tarball
+npm run pack:inspect        # npm pack --dry-run: review the payload file list
+dotnet pack src/Ros.Cli/Ros.Cli.fsproj -c Release -o dist/nuget   # the .NET global tool
 ```
 
-`tests/lifecycle-package.test.mjs` packs the artifact, extracts it the way
-`npx` would, and runs every documented command against throwaway repositories —
-`dotnet test` passing is not treated as evidence that npm distribution works.
+`package.json` is private and never published; `npm pack` only assembles the
+payload the native bundle carries (its `files` list). `tests/lifecycle-package.test.mjs`
+packs and extracts that payload and runs every documented command against
+throwaway repositories, and `native-release.yml` smoke-tests both the native
+bundle and the installed .NET tool — `dotnet test` passing is not treated as
+evidence that distribution works.
 
 ### Release
 
-Publishing is CI-driven ([`.github/workflows/publish.yml`](.github/workflows/publish.yml)),
-never a local developer machine. Every push to `main` publishes a `main`-tagged
-snapshot; a stable release happens only when `package.json`'s committed version
-changes, which also builds the self-contained binaries and creates the matching
-GitHub Release.
+Publishing is CI-driven ([`.github/workflows/native-release.yml`](.github/workflows/native-release.yml)),
+never a local developer machine. A release happens only for a new
+`package.json` version: the GitHub Release gets the native bundles and the
+`ros-fs-<platform>` binaries scaffolded projects download, and the .NET global
+tool is pushed to NuGet. Released assets are immutable. See
+[`PACKAGE-USAGE.md`](PACKAGE-USAGE.md).
 
 To cut a release, run the **Release** workflow
 ([`.github/workflows/release.yml`](.github/workflows/release.yml)) from the
 Actions tab on `main` with `patch`, `minor`, `major` or an exact `X.Y.Z`. It
 bumps the version as an attributed Praxis work item (`RELEASE-X-Y-Z`, via
 [`scripts/praxis-release-bump.sh`](scripts/praxis-release-bump.sh)), pushes it
-with a durable checkpoint, then dispatches `publish.yml` and
-`native-release.yml`. Before releasing:
+with a durable checkpoint, then dispatches `native-release.yml`. Before
+releasing:
 
 ```bash
 npm run release:check
@@ -341,7 +345,7 @@ npm run release:check
 
 `package.json`'s version is the single authoritative version source: the F#
 build reads it (see [`Directory.Build.props`](Directory.Build.props)) so
-`ros --version` can never drift from the released package version.
+`praxis --version` can never drift from the released version.
 
 See [`PACKAGE-USAGE.md`](PACKAGE-USAGE.md) for publication and trusted-publishing
 setup.
@@ -422,7 +426,7 @@ The default reporting project is `project-administration`. ROS ships an
 installable profile for it:
 
 ```bash
-npx --package=@echelon-foundry/repository-operating-system ros init \
+praxis init \
   --profile project-administration \
   --project "Project Administration"
 ```

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Bumps the package version as an attributed Praxis work item and pushes it,
-# so publish.yml can release it (see .github/workflows/release.yml).
+# so native-release.yml can release it (see .github/workflows/release.yml).
 #
 #   scripts/praxis-release-bump.sh patch|minor|major|X.Y.Z
 #
@@ -59,7 +59,7 @@ echo "releasing ${current} -> ${version} as ${id}" >&2
 
 # Begin the work item before mutating anything.
 ./ros add "Release Praxis ${version}" --id "$id" --type mechanical \
-  --description "Bump package.json and package-lock.json from ${current} to ${version} so publish.yml releases it." >/dev/null
+  --description "Bump package.json and package-lock.json from ${current} to ${version} so native-release.yml releases it." >/dev/null
 ./ros work backlog-transition --action ready --id "$id" --occurred-at "$(now)" >/dev/null
 ./ros work start --id "$id" --type mechanical --occurred-at "$(now)" >/dev/null
 

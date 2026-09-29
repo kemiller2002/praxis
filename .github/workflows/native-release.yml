@@ -42,6 +42,8 @@ concurrency:
 jobs:
   release:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.package.outputs.version }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -96,6 +98,31 @@ jobs:
           publish_one osx-x64
           publish_one osx-arm64
           publish_one win-x64
+
+      # The .NET global tool (DF-ROS-2026-A044). Packed and exercised on every
+      # run, including pull requests, so a packaging regression is caught
+      # before release; pushed to NuGet below only for a new version.
+      - name: Pack and smoke test the .NET global tool
+        env:
+          VERSION: ${{ steps.package.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist/nuget
+          dotnet pack src/Ros.Cli/Ros.Cli.fsproj -c Release -o dist/nuget
+          ls dist/nuget
+          tool_root="$(mktemp -d)"
+          project_root="$(mktemp -d)"
+          trap 'rm -rf "$tool_root" "$project_root"' EXIT
+          dotnet tool install EchelonFoundry.Praxis --version "$VERSION" \
+            --add-source dist/nuget --tool-path "$tool_root"
+          [ "$("$tool_root/praxis" --version)" = "ros-fs ${VERSION}" ]
+          (
+            cd "$project_root"
+            git init -q
+            "$tool_root/praxis" init
+            "$tool_root/praxis" verify
+          )
 
       - name: Assemble native bundles
         env:
@@ -210,8 +237,55 @@ jobs:
             gh release create "v${VERSION}" "${assets[@]}" \
               --target "${GITHUB_SHA}" \
               --title "Praxis v${VERSION}" \
-              --notes "Native Praxis/ROS bundles plus the Echelon bootstrap command. No Node.js or .NET runtime is required on the consuming machine. Assets carry GitHub build-provenance attestations."
+              --notes "Native Praxis/ROS bundles plus the Echelon bootstrap command. No Node.js or .NET runtime is required on the consuming machine. Assets carry GitHub build-provenance attestations. With .NET 10 installed, the same version is also available as a global tool: dotnet tool install -g EchelonFoundry.Praxis."
           fi
+
+      # NuGet trusted publishing: NuGet/login exchanges this run's OIDC token
+      # for a short-lived API key, so no long-lived key is stored. It needs a
+      # trusted-publishing policy for this repository and workflow on
+      # nuget.org, the account name in vars.NUGET_USER, and
+      # vars.NUGET_PUBLISH_ENABLED set to 'true'.
+      - name: Check whether this version is already on NuGet
+        id: nuget
+        if: github.event_name != 'pull_request' && vars.NUGET_PUBLISH_ENABLED == 'true'
+        env:
+          VERSION: ${{ steps.package.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if curl -fsS https://api.nuget.org/v3-flatcontainer/echelonfoundry.praxis/index.json 2>/dev/null \
+              | node -e 'const v=JSON.parse(require("fs").readFileSync(0,"utf8")).versions; process.exit(v.includes(process.argv[1]) ? 0 : 1)' "$VERSION"; then
+            echo "EchelonFoundry.Praxis ${VERSION} is already on NuGet."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Log in to NuGet
+        id: nuget-login
+        if: steps.nuget.outputs.publish == 'true'
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER }}
+
+      - name: Publish the .NET global tool to NuGet
+        if: steps.nuget.outputs.publish == 'true'
+        env:
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet nuget push dist/nuget/EchelonFoundry.Praxis.*.nupkg \
+            --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+  # The `ros-fs-<rid>` binaries scaffolded projects' ./ros downloads
+  # (formerly built by the retired npm publish workflow).
+  ros-fs-assets:
+    needs: release
+    if: github.event_name != 'pull_request'
+    uses: ./.github/workflows/ros-fs-assets.yml
+    with:
+      tag: v${{ needs.release.outputs.version }}
 
 
   windows-powershell-syntax:
