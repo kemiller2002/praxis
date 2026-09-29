@@ -4100,12 +4100,43 @@
       "updatedAt": "2026-09-29T12:04:28.000Z",
       "telemetryExecutionIds": [
         "EXE-20260929T120428920Z-6c1b46ab"
+      ],
+      "latestCheckpoint": {
+        "id": "4c32d79a4f90b55a82b6b096",
+        "recordedAt": "2026-09-29T12:06:37.000Z",
+        "executionId": "EXE-20260929T120428920Z-6c1b46ab",
+        "repository": "repository-operating-system",
+        "branch": "claude/gh90-followups",
+        "commit": "ca4c561799b978227e39aa92546b5d8a2c3f70e9",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/gh90-followups",
+        "remoteCommit": "ca4c561799b978227e39aa92546b5d8a2c3f70e9",
+        "summary": "Conclusion persisted for every work type when supplied; F# test added and shown to fail on v3.6.0; Node parity",
+        "nextAction": "Confirm CI runs the new F# test green, then complete with implementation and tests evidence",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
+    },
+    {
+      "id": "PRAXIS-REMOTE-17",
+      "type": "mechanical",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-29T12:07:18.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T120718709Z-8c483346"
       ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T12:04:28.000Z",
+  "updatedAt": "2026-09-29T12:07:18.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

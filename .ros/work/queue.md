@@ -70,7 +70,8 @@
 | PRAXIS-REMOTE-13 | Adapter recognizes GitHub rate limiting on push and pull-request creation (PRX-REMOTE-038) | complete | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-14 | Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict | complete | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-15 | Agent contract: a handoff needs a block before the successor resumes | complete | remote-execution, gh-90 | high |
-| PRAXIS-REMOTE-16 | work complete silently drops the conclusion for non-research work items | ready | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-16 | work complete silently drops the conclusion for non-research work items | active | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-17 | Record the live praxis.remote 1.3 continuation proof as evidence | ready |  | medium |
 | PRAXIS-SITE-01 | Establish public-site architecture | complete | gh-84, public-site | high |
 | PRAXIS-SITE-02 | Implement Echelon Foundry design foundation | complete | gh-84, public-site | high |
 | PRAXIS-SITE-03 | Build the hero | complete | gh-84, public-site | high |

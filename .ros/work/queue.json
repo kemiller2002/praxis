@@ -2869,6 +2869,27 @@
       },
       "source": "manual",
       "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+    },
+    {
+      "id": "PRAXIS-REMOTE-17",
+      "title": "Record the live praxis.remote 1.3 continuation proof as evidence",
+      "description": "Evidence record for PRAXIS-REMOTE-12-CONTINUE-PROOF: two runtime-less agents, work.checkpoint then work.continue on Praxis 3.6.0, verified against main and the Actions API.",
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-29T12:07:17.561Z",
+      "updatedAt": "2026-09-29T12:07:17.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
     }
   ]
 }
