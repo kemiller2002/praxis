@@ -61,6 +61,8 @@ type Operation =
     | StepComplete
     | StepFail
     | Batch
+    | WorkCheckpoint
+    | WorkContinue
 
 [<RequireQualifiedAccess>]
 module Operation =
@@ -80,7 +82,9 @@ module Operation =
           Operation.StepStart
           Operation.StepComplete
           Operation.StepFail
-          Operation.Batch ]
+          Operation.Batch
+          Operation.WorkCheckpoint
+          Operation.WorkContinue ]
 
     let code operation =
         match operation with
@@ -100,6 +104,8 @@ module Operation =
         | Operation.StepComplete -> "step.complete"
         | Operation.StepFail -> "step.fail"
         | Operation.Batch -> "batch"
+        | Operation.WorkCheckpoint -> "work.checkpoint"
+        | Operation.WorkContinue -> "work.continue"
 
     let tryParse (value: string) = all |> List.tryFind (fun operation -> code operation = value)
 
@@ -120,7 +126,9 @@ module Operation =
         | Operation.TelemetryRecord
         | Operation.StepStart
         | Operation.StepComplete
-        | Operation.StepFail -> Capability.Mutate
+        | Operation.StepFail
+        | Operation.WorkCheckpoint
+        | Operation.WorkContinue -> Capability.Mutate
         | Operation.WorkComplete -> Capability.Complete
         | Operation.WorkReconcile -> Capability.Reconcile
 
@@ -141,7 +149,7 @@ module Operation =
         | Operation.RequestStatus -> [ "requestId" ], []
         | Operation.WorkStart -> [ "workItemIds" ], [ "type"; "classifications" ]
         | Operation.WorkResume -> [ "workItemIds" ], []
-        | Operation.WorkBlock -> [ "workItemIds"; "reason" ], []
+        | Operation.WorkBlock -> [ "workItemIds"; "reason" ], [ "unrecoverableReason" ]
         | Operation.WorkComplete -> [ "workItemIds" ], [ "evidence"; "conclusion" ]
         | Operation.TelemetryRecord ->
             [ "metric"; "value" ],
@@ -151,6 +159,8 @@ module Operation =
         | Operation.StepComplete
         | Operation.StepFail -> [ "stepId" ], [ "reason" ]
         | Operation.Batch -> [ "requests" ], []
+        | Operation.WorkCheckpoint -> [ "workItemId"; "summary"; "nextAction" ], [ "stepId" ]
+        | Operation.WorkContinue -> [ "workItemId" ], []
 
     /// The protocol minor version that introduced the operation. A request
     /// may only use operations its own declared version knows about.
@@ -160,15 +170,19 @@ module Operation =
         | Operation.StepComplete
         | Operation.StepFail -> 1
         | Operation.Batch -> 2
+        | Operation.WorkCheckpoint
+        | Operation.WorkContinue -> 3
         | _ -> 0
 
-    /// Step operations act on the requester's own execution, which the
-    /// request must name.
+    /// Step operations and checkpoints act on the requester's own
+    /// execution, which the request must name. A continuation creates the
+    /// successor's execution, so it names none.
     let requiresExecution operation =
         match operation with
         | Operation.StepStart
         | Operation.StepComplete
-        | Operation.StepFail -> true
+        | Operation.StepFail
+        | Operation.WorkCheckpoint -> true
         | _ -> false
 
 type ProtocolVersion = { Major: int; Minor: int }
@@ -178,7 +192,7 @@ module ProtocolVersion =
     [<Literal>]
     let Protocol = "praxis.remote"
 
-    let current = { Major = 1; Minor = 2 }
+    let current = { Major = 1; Minor = 3 }
 
     let code version = $"{version.Major}.{version.Minor}"
 
@@ -237,6 +251,15 @@ type TelemetryRecordArguments =
       CollectedAt: string option
       Step: string option }
 
+/// A durable checkpoint (protocol 1.3, DF-ROS-2026-A042). The executor
+/// verifies the commit it is checked out at against the remote; the request
+/// never asserts a commit.
+type WorkCheckpointArguments =
+    { WorkItemId: string
+      Summary: string
+      NextAction: string
+      StepId: string option }
+
 type WorkReconcileArguments =
     { WorkItemId: string
       Reason: string
@@ -254,7 +277,9 @@ type Arguments =
     | RequestStatus of requestId: string
     | WorkStart of WorkStartArguments
     | WorkResume of workItemIds: string list
-    | WorkBlock of workItemIds: string list * reason: string
+    /// `unrecoverableReason` (protocol 1.3) is the truthful statement a
+    /// block after un-checkpointed work needs.
+    | WorkBlock of workItemIds: string list * reason: string * unrecoverableReason: string option
     | WorkComplete of WorkCompleteArguments
     | TelemetryRecord of TelemetryRecordArguments
     | WorkReconcile of WorkReconcileArguments
@@ -263,6 +288,8 @@ type Arguments =
     /// keeps its own request ID, operation, arguments, journal entry, and
     /// outcome, and shares the batch's repository binding and actor.
     | Batch of BatchConstituent list
+    | WorkCheckpoint of WorkCheckpointArguments
+    | WorkContinue of workItemId: string
 
 /// One operation inside a batch.
 and BatchConstituent =
@@ -285,7 +312,9 @@ module Arguments =
         | Operation.TelemetryRecord, Arguments.TelemetryRecord _
         | Operation.WorkReconcile, Arguments.WorkReconcile _
         | (Operation.StepStart | Operation.StepComplete | Operation.StepFail), Arguments.Step _
-        | Operation.Batch, Arguments.Batch _ -> true
+        | Operation.Batch, Arguments.Batch _
+        | Operation.WorkCheckpoint, Arguments.WorkCheckpoint _
+        | Operation.WorkContinue, Arguments.WorkContinue _ -> true
         | _ -> false
 
 type Request =
@@ -657,7 +686,16 @@ module RequestValidation =
             @ boundedList "arguments.classifications" MaxListLength start.Classifications
             @ each "arguments.classifications" token start.Classifications
         | Arguments.WorkResume ids -> workItemIds "arguments.workItemIds" ids
-        | Arguments.WorkBlock(ids, reason) -> workItemIds "arguments.workItemIds" ids @ text "arguments.reason" reason
+        | Arguments.WorkBlock(ids, reason, unrecoverable) ->
+            workItemIds "arguments.workItemIds" ids
+            @ text "arguments.reason" reason
+            @ optional "arguments.unrecoverableReason" text unrecoverable
+        | Arguments.WorkCheckpoint checkpoint ->
+            workItemId "arguments.workItemId" checkpoint.WorkItemId
+            @ text "arguments.summary" checkpoint.Summary
+            @ text "arguments.nextAction" checkpoint.NextAction
+            @ optional "arguments.stepId" token checkpoint.StepId
+        | Arguments.WorkContinue id -> workItemId "arguments.workItemId" id
         | Arguments.WorkComplete complete ->
             workItemIds "arguments.workItemIds" complete.WorkItemIds
             @ boundedList "arguments.evidence" MaxListLength complete.Evidence
@@ -725,8 +763,16 @@ module RequestValidation =
                 ("arguments.type", start.Type)
                 :: (start.WorkItemIds @ start.Classifications |> List.map (fun value -> "arguments", Some value))
             | Arguments.WorkResume ids -> ids |> List.map (fun value -> "arguments.workItemIds", Some value)
-            | Arguments.WorkBlock(ids, reason) ->
-                ("arguments.reason", Some reason) :: (ids |> List.map (fun value -> "arguments.workItemIds", Some value))
+            | Arguments.WorkBlock(ids, reason, unrecoverable) ->
+                ("arguments.reason", Some reason)
+                :: ("arguments.unrecoverableReason", unrecoverable)
+                :: (ids |> List.map (fun value -> "arguments.workItemIds", Some value))
+            | Arguments.WorkCheckpoint checkpoint ->
+                [ "arguments.workItemId", Some checkpoint.WorkItemId
+                  "arguments.summary", Some checkpoint.Summary
+                  "arguments.nextAction", Some checkpoint.NextAction
+                  "arguments.stepId", checkpoint.StepId ]
+            | Arguments.WorkContinue id -> [ "arguments.workItemId", Some id ]
             | Arguments.WorkComplete complete ->
                 ("arguments.conclusion", complete.Conclusion)
                 :: (complete.Evidence
@@ -827,7 +873,18 @@ module RequestFingerprint =
             + optionalField "type" start.Type
             + listField "classifications" start.Classifications
         | Arguments.WorkResume ids -> listField "workItemIds" ids
-        | Arguments.WorkBlock(ids, reason) -> listField "workItemIds" ids + field "reason" reason
+        // Without `unrecoverableReason` the encoding is exactly the 1.0-1.2
+        // one, so every journalled block request still replays.
+        | Arguments.WorkBlock(ids, reason, unrecoverable) ->
+            listField "workItemIds" ids
+            + field "reason" reason
+            + (unrecoverable |> Option.map (field "unrecoverableReason") |> Option.defaultValue "")
+        | Arguments.WorkCheckpoint checkpoint ->
+            field "workItemId" checkpoint.WorkItemId
+            + field "summary" checkpoint.Summary
+            + field "nextAction" checkpoint.NextAction
+            + optionalField "stepId" checkpoint.StepId
+        | Arguments.WorkContinue id -> field "continueWorkItemId" id
         | Arguments.WorkComplete complete ->
             listField "workItemIds" complete.WorkItemIds
             + listField "evidence" (complete.Evidence |> List.map (fun evidence -> field "type" evidence.Type + field "path" evidence.Path))

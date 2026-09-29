@@ -204,6 +204,8 @@ let private describe (context: Context) =
             writer.WriteString("capability", Capability.code (Operation.capability operation))
             writer.WriteBoolean("mutating", Operation.isMutating operation)
             writer.WriteBoolean("requiresExpectedSha", Operation.isMutating operation)
+            writer.WriteBoolean("requiresExecution", Operation.requiresExecution operation)
+            writer.WriteString("introducedIn", ProtocolVersion.code { ProtocolVersion.current with Minor = Operation.introducedIn operation })
             writer.WriteStartArray("requiredArguments")
             required |> List.iter writer.WriteStringValue
             writer.WriteEndArray()

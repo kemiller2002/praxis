@@ -57,7 +57,7 @@ module RemoteExecutionTests =
                       start
 
                   let block =
-                      request Operation.WorkBlock (Arguments.WorkBlock([ "WI-1" ], "waiting on review")) |> ExecutionPlan.forRequest at |> command
+                      request Operation.WorkBlock (Arguments.WorkBlock([ "WI-1" ], "waiting on review", None)) |> ExecutionPlan.forRequest at |> command
 
                   Assert.equal [ "work"; "block"; "--id"; "WI-1"; "--occurred-at"; at; "--reason"; "waiting on review" ] block
 

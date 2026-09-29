@@ -314,7 +314,7 @@ test("praxis.describe tells an agent what it may do here, from Praxis's own cata
   const described = response.result;
   assert.equal(described.schema, "praxis.describe");
   assert.equal(described.available, true);
-  assert.deepEqual(described.protocolVersions, ["1.0", "1.1", "1.2"]);
+  assert.deepEqual(described.protocolVersions, ["1.0", "1.1", "1.2", "1.3"]);
   assert.equal(described.contract, "docs/remote-agent-contract.md");
   assert.deepEqual(described.repository.capabilities, ["read", "mutate"]);
   assert.deepEqual(described.grants, ["read", "mutate"], "the transport grant is narrowed by the repository");
@@ -326,6 +326,8 @@ test("praxis.describe tells an agent what it may do here, from Praxis's own cata
     capability: "mutate",
     mutating: true,
     requiresExpectedSha: true,
+    requiresExecution: false,
+    introducedIn: "1.0",
     requiredArguments: ["workItemIds"],
     optionalArguments: ["type", "classifications"]
   });
