@@ -2,7 +2,12 @@
 # Relays praxis.remote requests committed to an inbox branch to
 # praxis-remote.yml (DF-ROS-2026-A045, RQ-ROS-2026-A023).
 #
-#   scripts/praxis-remote-inbox.sh --event EVENT.json --workspace DIR --default-ref REF
+#   scripts/praxis-remote-inbox.sh --before SHA --workspace DIR --default-ref REF
+#
+# The changed files come from Git itself, not from the push event's commit
+# list, which omits files when a push creates the branch: `before..HEAD`, or
+# when the branch is new (a zero or unknown `before`), the files changed since
+# its merge base with the default branch.
 #
 # For every `.praxis-inbox/*.json` a push added or modified, this checks only
 # what routing needs:
@@ -20,16 +25,29 @@
 # if any file was refused; valid files are still dispatched.
 set -euo pipefail
 
-event="" workspace="" default_ref=""
+usage="usage: $0 --before SHA --workspace DIR --default-ref refs/heads/NAME"
+before="" workspace="" default_ref=""
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    --event) event="${2:-}"; shift 2 ;;
+    --before) before="${2:-}"; shift 2 ;;
     --workspace) workspace="${2:-}"; shift 2 ;;
     --default-ref) default_ref="${2:-}"; shift 2 ;;
-    *) echo "usage: $0 --event FILE --workspace DIR --default-ref refs/heads/NAME" >&2; exit 2 ;;
+    *) echo "$usage" >&2; exit 2 ;;
   esac
 done
-[ -f "$event" ] && [ -d "$workspace" ] && [ -n "$default_ref" ] || { echo "usage: $0 --event FILE --workspace DIR --default-ref refs/heads/NAME" >&2; exit 2; }
+[ -d "$workspace" ] && [ -n "$default_ref" ] || { echo "$usage" >&2; exit 2; }
+
+# The inbox files this push added or modified, one per line.
+changed_inbox_files() {
+  local base=""
+  if [ -n "$before" ] && ! [[ "$before" =~ ^0+$ ]] && git -C "$workspace" cat-file -e "${before}^{commit}" 2>/dev/null; then
+    base="$before"
+  else
+    base="$(git -C "$workspace" merge-base HEAD "origin/${default_ref#refs/heads/}" 2>/dev/null || true)"
+  fi
+  [ -n "$base" ] || { echo "::error::cannot determine what this push changed (no usable before commit or merge base)" >&2; return 1; }
+  git -C "$workspace" diff --name-only --diff-filter=AM "$base" HEAD -- .praxis-inbox/
+}
 
 summary="${GITHUB_STEP_SUMMARY:-/dev/null}"
 
@@ -37,17 +55,16 @@ summary="${GITHUB_STEP_SUMMARY:-/dev/null}"
 # (0x1f; tab would collapse empty fields): status, path, requestId, branch, reason.
 # Pure with respect to its inputs: reads the event and the files, writes stdout.
 decide() {
-  python3 - "$event" "$workspace" "$default_ref" <<'PY'
+  changed_inbox_files | python3 -c '
 import json, os, re, sys
 
-event_path, workspace, default_ref = sys.argv[1:4]
-event = json.load(open(event_path, encoding="utf-8"))
+workspace, default_ref = sys.argv[1:3]
 # A safe filename alphabet: paths reach workflow-command annotations.
 inbox = re.compile(r"^\.praxis-inbox/[A-Za-z0-9._:-]+\.json$")
 request_id = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$")
 branch_ref = re.compile(r"^refs/heads/(?!praxis-inbox/)([A-Za-z0-9._/-]+)$")
 
-paths = sorted({p for c in event.get("commits") or [] for p in (c.get("added") or []) + (c.get("modified") or []) if inbox.match(p)})
+paths = sorted({line for line in sys.stdin.read().splitlines() if inbox.match(line)})
 
 def decide(path):
     full = os.path.join(workspace, path)
@@ -72,7 +89,7 @@ def decide(path):
 
 for row in map(decide, paths):
     print("\x1f".join(row))
-PY
+' "$workspace" "$default_ref"
 }
 
 dispatch() {
@@ -84,7 +101,7 @@ dispatch() {
   fi
 }
 
-decisions="$(decide)"
+decisions="$(set -o pipefail; decide)"
 refused=0
 
 {

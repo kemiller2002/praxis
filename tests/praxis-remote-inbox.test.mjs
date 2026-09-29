@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -21,17 +21,44 @@ function temporary(t) {
   return dir;
 }
 
-/** Runs the relay over a workspace holding `files`, for a push that touched `touched`. */
-function relayPush(t, files, touched = Object.keys(files), commits = null) {
+function git(cwd, ...args) {
+  return execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
+}
+
+/**
+ * A real "GitHub" remote with main, and a runner workspace checked out at an
+ * inbox branch. `earlier` files are committed in an earlier push; `files` in
+ * the push under test. `newBranch` makes the push under test the one that
+ * creates the branch (GitHub sends an all-zero `before`).
+ */
+function relayPush(t, files, { earlier = null, newBranch = true, deletions = [] } = {}) {
   const root = temporary(t);
+  const origin = path.join(root, "origin.git");
   const workspace = path.join(root, "workspace");
-  Object.entries(files).forEach(([relative, content]) => {
-    fs.mkdirSync(path.dirname(path.join(workspace, relative)), { recursive: true });
-    fs.writeFileSync(path.join(workspace, relative), content);
-  });
-  fs.mkdirSync(workspace, { recursive: true });
-  const event = path.join(root, "event.json");
-  fs.writeFileSync(event, JSON.stringify({ commits: commits ?? [{ added: touched, modified: [] }] }));
+  git(root, "init", "-q", "--bare", "-b", "main", origin);
+  git(root, "clone", "-q", origin, workspace);
+  git(workspace, "config", "user.email", "t@example.invalid");
+  git(workspace, "config", "user.name", "T");
+  fs.writeFileSync(path.join(workspace, "README.md"), "main\n");
+  git(workspace, "add", "-A");
+  git(workspace, "commit", "-qm", "main");
+  git(workspace, "push", "-q", "origin", "main");
+  git(workspace, "switch", "-q", "-c", "praxis-inbox/test");
+  const write = (entries) =>
+    Object.entries(entries).forEach(([relative, content]) => {
+      fs.mkdirSync(path.dirname(path.join(workspace, relative)), { recursive: true });
+      fs.writeFileSync(path.join(workspace, relative), content);
+    });
+  if (earlier) {
+    write(earlier);
+    git(workspace, "add", "-A");
+    git(workspace, "commit", "-qm", "earlier inbox push");
+  }
+  const before = newBranch ? "0".repeat(40) : git(workspace, "rev-parse", "HEAD");
+  write(files);
+  deletions.forEach((relative) => fs.rmSync(path.join(workspace, relative)));
+  git(workspace, "add", "-A");
+  git(workspace, "commit", "-qm", "inbox push", "--allow-empty");
   // The stand-in dispatcher records its arguments and the exact bytes of the @file it was given.
   const log = path.join(root, "dispatches.jsonl");
   const stub = path.join(root, "dispatch.mjs");
@@ -47,7 +74,7 @@ fs.appendFileSync(${JSON.stringify(log)}, JSON.stringify({ args, bytes }) + "\\n
   );
   fs.chmodSync(stub, 0o755);
   const summary = path.join(root, "summary.md");
-  const result = spawnSync("bash", [relay, "--event", event, "--workspace", workspace, "--default-ref", "refs/heads/main"], {
+  const result = spawnSync("bash", [relay, "--before", before, "--workspace", workspace, "--default-ref", "refs/heads/main"], {
     encoding: "utf8",
     env: { ...process.env, PRAXIS_INBOX_DISPATCH: stub, GITHUB_STEP_SUMMARY: summary, GITHUB_REF_NAME: "praxis-inbox/test", GITHUB_SHA: "abc123", GITHUB_ACTOR: "someone" }
   });
@@ -114,20 +141,30 @@ test("unroutable files are refused without dispatching, visibly, while valid one
   assert.match(run.summary, /Nothing was dispatched/);
 });
 
-test("only inbox files touched by the push are relayed; others and deleted files are not", (t) => {
+test("a later push relays only the inbox files it added or modified, never earlier or deleted ones", (t) => {
   const run = relayPush(
     t,
-    { ".praxis-inbox/new.json": JSON.stringify(request()), ".praxis-inbox/old.json": JSON.stringify(request({ requestId: "req-old-00001" })), "README.md": "x", ".praxis-inbox/sub/nested.json": "{}" },
-    null,
-    [{ added: [".praxis-inbox/new.json", "README.md", ".praxis-inbox/sub/nested.json", ".praxis-inbox/gone.json", ".praxis-inbox/bad name.json"], modified: [] }]
+    { ".praxis-inbox/new.json": JSON.stringify(request()), "README.md": "changed\n", ".praxis-inbox/sub/nested.json": "{}", ".praxis-inbox/bad name.json": "{}" },
+    {
+      newBranch: false,
+      earlier: { ".praxis-inbox/old.json": JSON.stringify(request({ requestId: "req-old-00001" })), ".praxis-inbox/gone.json": JSON.stringify(request({ requestId: "req-gone-0001" })) },
+      deletions: [".praxis-inbox/gone.json"]
+    }
   );
   assert.equal(run.status, 0, run.stderr || run.stdout);
   assert.deepEqual(run.dispatches.map((dispatch) => dispatch.args[6]), ["request_id=req-inbox-test-0001"]);
-  assert.match(run.stdout, /skipped \.praxis-inbox\/gone\.json/);
+});
+
+test("the push that creates an inbox branch relays its request (the live-test regression)", (t) => {
+  // GitHub's push event omitted the file for a branch-creating push; the relay
+  // must find it from Git, comparing with the default branch's merge base.
+  const run = relayPush(t, { ".praxis-inbox/first.json": JSON.stringify(request()) }, { newBranch: true });
+  assert.equal(run.status, 0, run.stderr || run.stdout);
+  assert.equal(run.dispatches.length, 1);
 });
 
 test("a push with no inbox request dispatches nothing and succeeds", (t) => {
-  const run = relayPush(t, { "README.md": "x" }, ["README.md"]);
+  const run = relayPush(t, { "README.md": "x" });
   assert.equal(run.status, 0);
   assert.equal(run.dispatches.length, 0);
 });

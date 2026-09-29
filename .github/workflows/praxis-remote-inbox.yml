@@ -36,6 +36,9 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
+          # Full history, so a new inbox branch can be compared with its merge
+          # base on the default branch.
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Relay inbox requests to praxis-remote.yml
@@ -43,4 +46,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           DEFAULT_REF: refs/heads/${{ github.event.repository.default_branch }}
-        run: scripts/praxis-remote-inbox.sh --event "$GITHUB_EVENT_PATH" --workspace "$GITHUB_WORKSPACE" --default-ref "$DEFAULT_REF"
+          BEFORE: ${{ github.event.before }}
+        run: scripts/praxis-remote-inbox.sh --before "$BEFORE" --workspace "$GITHUB_WORKSPACE" --default-ref "$DEFAULT_REF"
