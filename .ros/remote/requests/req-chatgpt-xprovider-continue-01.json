@@ -1,0 +1,174 @@
+{
+  "schema": "praxis.remote-journal",
+  "schemaVersion": 1,
+  "requestId": "req-chatgpt-xprovider-continue-01",
+  "fingerprint": "sha256:21d59b79f4af587de94137d765f58d08f01d0183995b55e9e4f7c87c8b9107fa",
+  "protocolVersion": "1.3",
+  "operation": "work.continue",
+  "recordedAt": "2026-09-29T17:35:45.097Z",
+  "requestedAt": null,
+  "repository": {
+    "ref": "refs/heads/proof/chatgpt-continuation",
+    "expectedSha": "36020735d9cd5e4f258994f2bec6bbe605d496cd"
+  },
+  "requester": {
+    "assurance": "asserted-by-request",
+    "actor": {"kind":"agent","id":"openai/chatgpt","provider":"openai","model":"gpt-5.6-sol","runtime":"chatgpt"},
+    "sessionId": null,
+    "execution": null
+  },
+  "principal": "github:github-actions[bot]",
+  "response": {
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.3",
+  "requestId": "req-chatgpt-xprovider-continue-01",
+  "operation": "work.continue",
+  "outcome": "succeeded",
+  "replayed": false,
+  "repository": {
+    "ref": "refs/heads/proof/chatgpt-continuation",
+    "expectedSha": "36020735d9cd5e4f258994f2bec6bbe605d496cd",
+    "observedSha": "36020735d9cd5e4f258994f2bec6bbe605d496cd"
+  },
+  "praxisVersion": "3.6.0",
+  "executor": {
+    "kind": "github-actions",
+    "runId": "36605336068",
+    "runAttempt": "1",
+    "workflowRef": "kemiller2002/praxis/.github/workflows/praxis-remote.yml@refs/heads/proof/chatgpt-continuation",
+    "repository": "kemiller2002/praxis",
+    "host": "github-hosted",
+    "principal": "github:github-actions[bot]",
+    "praxisVersion": "3.6.0",
+    "assurance": "observed-by-executor"
+  },
+  "persistence": {
+    "paths": [
+      ".ros/context/current.json",
+      ".ros/events/events.jsonl",
+      ".ros/remote/requests/req-chatgpt-xprovider-continue-01.json",
+      ".ros/telemetry/executions/EXE-20260929T173543602Z-75ccd1b9.json"
+    ]
+  },
+  "failure": null,
+  "result": {
+    "command": "work continue",
+    "schemaVersion": 1,
+    "workItemId": "PRAXIS-XPROVIDER-PROOF-01",
+    "status": "continued",
+    "executionId": "EXE-20260929T173543602Z-75ccd1b9",
+    "event": "0cd7b5a2e56f3de5169ac605",
+    "predecessor": {
+      "executionId": "EXE-20260929T121754955Z-09207ab8",
+      "disposition": "interrupted",
+      "steps": [
+        {
+          "stepId": "part-1",
+          "name": "Predecessor writes part 1",
+          "status": "completed"
+        }
+      ]
+    },
+    "otherActiveExecutions": [],
+    "continuity": {
+      "workItemId": "PRAXIS-XPROVIDER-PROOF-01",
+      "state": "active",
+      "freshness": "current",
+      "checkpoint": {
+        "id": "6ee7e361d7e244e2be1c690e",
+        "recordedAt": "2026-09-29T12:18:12.000Z",
+        "executionId": "EXE-20260929T121754955Z-09207ab8",
+        "stepId": "part-1",
+        "repository": "repository-operating-system",
+        "branch": "proof/chatgpt-continuation",
+        "commit": "b64303a5f19d8b1b825adefaabd5e7521aab464b",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "proof/chatgpt-continuation",
+        "remoteCommit": "b64303a5f19d8b1b825adefaabd5e7521aab464b",
+        "summary": "Part 1 of docs/proofs/cross-provider-continuation.md written by the predecessor (Claude Code)",
+        "nextAction": "Replace the Part 2 placeholder in docs/proofs/cross-provider-continuation.md with the successor's section: your own Praxis identity (from praxis provenance identity), the checkpoint commit you recovered and how you verified it against the remote, and the predecessor execution ID. Then commit, push, checkpoint and complete.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        },
+        "status": "verified",
+        "freshness": "current",
+        "currentRecoverability": {
+          "status": "contained-without-meaningful-change",
+          "recoverable": true,
+          "verifiesCheckpoint": true,
+          "remoteHead": "36020735d9cd5e4f258994f2bec6bbe605d496cd",
+          "commitsAfter": 1
+        }
+      },
+      "local": {
+        "position": "only-non-meaningful-commits-after",
+        "commitsAfter": 1
+      },
+      "workingTree": {
+        "state": "clean",
+        "meaningfulPaths": [],
+        "excludedBaselinePaths": []
+      },
+      "warnings": [],
+      "recovery": [
+        {
+          "kind": "note",
+          "text": "this checkout already holds checkpoint b64303a5f19d of branch proof/chatgpt-continuation"
+        },
+        {
+          "kind": "verify",
+          "command": "git merge-base --is-ancestor b64303a5f19d8b1b825adefaabd5e7521aab464b HEAD",
+          "text": "HEAD contains checkpoint b64303a5f19d"
+        }
+      ],
+      "telemetry": {
+        "executions": [
+          {
+            "executionId": "EXE-20260929T121754955Z-09207ab8",
+            "status": "active",
+            "startedAt": "2026-09-29T12:17:54.955Z",
+            "segmentation": "step-level-adopted",
+            "stepTrackingStartedAt": "2026-09-29T12:17:55.000Z",
+            "executionScopedBefore": {
+              "from": "2026-09-29T12:17:54.955Z",
+              "until": "2026-09-29T12:17:55.000Z"
+            },
+            "historicalStepAttribution": "unavailable",
+            "measurements": {
+              "executionScopedBeforeSteps": 1,
+              "executionScopedOutsideSteps": 0,
+              "stepScoped": 0
+            }
+          },
+          {
+            "executionId": "EXE-20260929T173543602Z-75ccd1b9",
+            "status": "active",
+            "startedAt": "2026-09-29T17:35:43.602Z",
+            "segmentation": "execution-level",
+            "stepTrackingStartedAt": null,
+            "executionScopedBefore": null,
+            "historicalStepAttribution": "unavailable",
+            "measurements": {
+              "executionScopedBeforeSteps": 1,
+              "executionScopedOutsideSteps": 0,
+              "stepScoped": 0
+            }
+          }
+        ]
+      }
+    },
+    "obligations": {
+      "requiredEvidenceForCompletion": [
+        "implementation",
+        "tests"
+      ],
+      "validationEvidence": []
+    }
+  }
+}
+
+}
