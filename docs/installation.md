@@ -1,38 +1,50 @@
 # Installation
 
+## Install the `praxis` command
+
+Praxis is distributed two ways (`DF-ROS-2026-A044`). npm is no longer a
+distribution channel.
+
+| You have | Install | Notes |
+|---|---|---|
+| nothing (any machine, CI, a cloud agent) | the native bundle: `curl -fsSL https://raw.githubusercontent.com/kemiller2002/praxis/main/scripts/install-native.sh \| sh` (Windows: `install-native.ps1`) | self-contained; no Node.js or .NET needed. See [`native-installation.md`](native-installation.md). |
+| .NET 10 | `dotnet tool install -g EchelonFoundry.Praxis` | one cross-platform package from NuGet; update with `dotnet tool update -g EchelonFoundry.Praxis` |
+
+Both give you the same F# CLI as `praxis` (the native installer also adds a
+`ros` alias). Installing never touches a repository; initialization only
+happens when you run `init`.
+
 ## Quick start
 
 ```bash
 cd /path/to/your/repository
 
 # Install, or bring an existing installation up to date.
-npx --package=@echelon-foundry/repository-operating-system ros init
+praxis init
 
 # Confirm what is installed.
-npx --package=@echelon-foundry/repository-operating-system ros status
+praxis status
 
 # Check it is correct.
-npx --package=@echelon-foundry/repository-operating-system ros verify
+praxis verify
 ```
 
-Nothing is installed by `npm install` itself. The package has no `preinstall`,
-`install` or `postinstall` script and never mutates a repository as a side
-effect of being downloaded; initialization only happens when you run `init`.
+## Prerequisites for a scaffolded project's `./ros`
 
-## Prerequisites
+`init` gives the repository its own `./ros`, pinned to the version in its
+`ros.json`. That launcher is a small Node.js script:
 
-- Node.js 20 or newer, for the launcher.
+- Node.js 20 or newer.
 - Network access on first use of a given version and platform, so the launcher
-  can fetch and cache the CLI binary. Later runs of the same version work
-  offline from `~/.cache/ros-fs/<version>/<platform>/` (override the location
-  with `ROS_FS_CACHE_DIR`).
-- No .NET installation is required: the published binary is self-contained.
+  can fetch and cache the self-contained CLI binary (`ros-fs-<platform>`) from
+  that version's GitHub Release. Later runs of the same version work offline
+  from `~/.cache/ros-fs/<version>/<platform>/` (override the location with
+  `ROS_FS_CACHE_DIR`).
+- No .NET installation is required: the binary is self-contained.
 
 Supported platforms: `linux/x64`, `linux/arm64`, `darwin/x64`, `darwin/arm64`,
-`win32/x64`. The package deliberately declares no npm `os` or `cpu`
-restriction, because one package serves every platform and the launcher picks
-the right binary at run time. An unsupported platform fails with a message
-naming the gap rather than failing obscurely.
+`win32/x64`. An unsupported platform fails with a message naming the gap
+rather than failing obscurely.
 
 ## What `init` means
 
@@ -44,8 +56,8 @@ unchanged repository writes nothing at all — not "writes the same bytes
 again", but plans zero changes. You can prove that yourself:
 
 ```bash
-npx --package=@echelon-foundry/repository-operating-system ros init
-npx --package=@echelon-foundry/repository-operating-system ros init   # "no changes needed"
+praxis init
+praxis init   # "no changes needed"
 ```
 
 The sequence is always the same, whatever state the repository starts in:
@@ -133,22 +145,23 @@ cd /path/to/your/repository
 ./ros upgrade     # update to this CLI's version
 ```
 
-No npm package on disk, no network, and no `--package-root` are needed for any
+No package on disk, no network, and no `--package-root` are needed for any
 of those. A project scaffolded by `init` gets a `./ros` launcher that downloads
 the binary for the version pinned in its `ros.json`; that binary is
 self-sufficient from then on.
 
 The scaffold is resolved in this order:
 
-1. `--package-root PATH`, when given.
+1. `--package-root PATH`, when given (the native bundle's `praxis` wrapper
+   passes its bundled payload this way).
 2. `ROS_PACKAGE_ROOT`, when set.
 3. A package directory found by walking up from the executable, then from the
-   working directory — this is what a source checkout and an `npx` invocation
-   both hit.
+   working directory — this is what a source checkout hits.
 4. The copy compiled into the binary.
 
 A real directory wins so that a source checkout installs the files you are
-editing rather than the ones compiled in. Everywhere else, step 4 applies.
+editing rather than the ones compiled in. Everywhere else, including the .NET
+global tool, step 4 applies.
 
 The compiled-in copy is exactly the set of files the profile manifests
 reference — no more, no less; a test asserts that equality in both directions,
@@ -192,7 +205,7 @@ changes under `.echelon/` as meaningful repository change for work attribution.
 | `project-administration` | The above plus the hub: a registry of other ROS repositories, a CLI and web UI to create work items in them, and an aggregated read-only view. See [`project-administration-hub.md`](project-administration-hub.md). |
 
 ```bash
-npx --package=@echelon-foundry/repository-operating-system ros init \
+praxis init \
   --profile project-administration \
   --project "Project Administration"
 ```
@@ -208,7 +221,7 @@ target folder.
 ```
 
 The scaffolded repository can also run its own lifecycle — `./ros verify`,
-`./ros init` to heal, `./ros upgrade` to update — without reaching for npx; see
+`./ros init` to heal, `./ros upgrade` to update — without a separate install; see
 [Where the scaffold comes from](#where-the-scaffold-comes-from).
 
 The scaffolded repository gets its own `./ros`, which runs the same F# CLI

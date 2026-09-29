@@ -2869,6 +2869,29 @@
       },
       "source": "manual",
       "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+    },
+    {
+      "id": "PRAXIS-DIST-NATIVE-DOTNET-TOOL",
+      "title": "Retire npm distribution; ship native bundles and a .NET global tool",
+      "description": "Owner decision (2026-09-29): stop publishing to npm; keep self-contained native bundles; add a .NET global tool (EchelonFoundry.Praxis). Landed on current main from branch claude/retire-npm-dotnet-tool (original execution EXE-20260929T111855354Z-c5a53453, PR #106), whose merge with main corrupted Praxis state; this execution re-applies the code and documentation changes only and records Praxis state through the CLI.",
+      "tags": [
+        "distribution"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-29T12:11:09.265Z",
+      "updatedAt": "2026-09-29T12:11:09.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

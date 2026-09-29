@@ -49,6 +49,7 @@
 | PRAXIS-CONT-09-GOVERNANCE | AGENTS/governance/docs/starter propagation | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-10-HARDEN | Compatibility, edge cases, validation, final end-to-end review | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-11-SEGMENTATION | Effective-current telemetry segmentation and continuity proof gaps | complete | continuity, durable-checkpoints | high |
+| PRAXIS-DIST-NATIVE-DOTNET-TOOL | Retire npm distribution; ship native bundles and a .NET global tool | ready | distribution | high |
 | PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | captured | rename, gh-90 | low |
 | PRAXIS-RELEASE-BUMP-WORKFLOW | Release workflow: one-click version bump that publishes | complete | release | high |
 | PRAXIS-REMOTE-01 | Remote protocol v1 contract: schemas, typed domain model, validation, fingerprint, decision order | complete | remote-execution, gh-90 | high |
@@ -66,6 +67,7 @@
 | PRAXIS-REMOTE-11-PREP-CI | Fix PR #93 CI: enable-script test commits without a git identity | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-11-PROOF | Live proof: a cloud agent without .NET is governed through remote Praxis | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-12 | Conditor installs and configures the Praxis remote surface | ready | remote-execution, gh-90 | low |
+| PRAXIS-REMOTE-12-CONTINUE-PROOF | PRAXIS-REMOTE-12-CONTINUE-PROOF | complete |  |  |
 | PRAXIS-REMOTE-13 | Adapter recognizes GitHub rate limiting on push and pull-request creation (PRX-REMOTE-038) | complete | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-14 | Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict | complete | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-15 | Agent contract: a handoff needs a block before the successor resumes | complete | remote-execution, gh-90 | high |

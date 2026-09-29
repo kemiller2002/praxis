@@ -518,25 +518,36 @@ test("native Praxis release keeps bundle checksums separate from legacy ros-fs c
   assert.match(workflow, /praxis-win-x64/);
 });
 
-test("main publishing workflow uses an OIDC-compatible npm CLI", () => {
-  const workflow = fs.readFileSync(
-    path.join(repository, ".github", "workflows", "publish.yml"),
-    "utf8"
-  );
-  assert.match(workflow, /id-token: write/);
-  assert.match(workflow, /npm install --global npm@11/);
-  assert.match(workflow, /npm publish --access public --tag main/);
-  assert.match(workflow, /kemiller2002\/praxis/);
-  // A pre-existing release for the tag must not short-circuit asset upload:
-  // v3.0.1 shipped to npm with an empty release that way, so bin/ros-fs.mjs
-  // 404ed on checksums.txt for every user of that version.
-  assert.match(workflow, /gh release upload "v\$\{VERSION\}"/);
-  assert.doesNotMatch(workflow, /already exists; skipping/);
+test("npm publishing is retired; every release still carries the ros-fs assets scaffolded projects download", () => {
+  // DF-ROS-2026-A044: the package is never published to npm again.
+  const workflows = path.join(repository, ".github", "workflows");
+  assert.ok(!fs.existsSync(path.join(workflows, "publish.yml")), "publish.yml must stay retired");
   const manifest = JSON.parse(fs.readFileSync(path.join(repository, "package.json"), "utf8"));
-  assert.equal(
-    manifest.repository.url,
-    "git+https://github.com/kemiller2002/praxis.git"
-  );
+  assert.equal(manifest.private, true);
+  assert.equal(manifest.publishConfig, undefined);
+  assert.equal(manifest.repository.url, "git+https://github.com/kemiller2002/praxis.git");
+
+  // starter/greenfield/tools/ros_fs_launcher.mjs downloads ros-fs-<rid> and
+  // checksums.txt for its pinned version; native-release.yml must produce
+  // them for every release through ros-fs-assets.yml.
+  const native = fs.readFileSync(path.join(workflows, "native-release.yml"), "utf8");
+  assert.match(native, /uses: \.\/\.github\/workflows\/ros-fs-assets\.yml/);
+  const assets = fs.readFileSync(path.join(workflows, "ros-fs-assets.yml"), "utf8");
+  for (const rid of ["linux-x64", "linux-arm64", "osx-x64", "osx-arm64", "win-x64"]) {
+    assert.match(assets, new RegExp(rid));
+  }
+  assert.match(assets, /ros-fs-\$rid/);
+  assert.match(assets, /sha256sum ros-fs-\* > checksums\.txt/);
+  // A pre-existing release must not short-circuit the upload: v3.0.1 and
+  // v3.3.0..v3.6.0 shipped releases without these assets that way, so the
+  // launcher 404ed on checksums.txt. Only checksums.txt itself counts as done,
+  // and existing assets are never replaced.
+  assert.match(assets, /"checksums\.txt"/);
+  assert.doesNotMatch(assets, /--clobber/);
+
+  const release = fs.readFileSync(path.join(workflows, "release.yml"), "utf8");
+  assert.match(release, /gh workflow run native-release\.yml/);
+  assert.doesNotMatch(release, /publish\.yml/);
 });
 
 test("project-administration profile installs a working hub, self-contained and immediately valid", async (t) => {
