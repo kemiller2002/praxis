@@ -1,0 +1,8 @@
+{
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.3",
+  "requestId": "req-inbox-live-describe-02",
+  "operation": "praxis.describe",
+  "actor": { "kind": "agent", "id": "anthropic/claude-code", "provider": "anthropic", "runtime": "claude-code" },
+  "arguments": {}
+}
