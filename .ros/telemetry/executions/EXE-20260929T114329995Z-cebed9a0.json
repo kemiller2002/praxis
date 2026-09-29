@@ -621,14 +621,30 @@
     },
     {
       "metricId": "tool.calls",
-      "status": "supported-unavailable",
-      "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
-      "discoveredAt": "2026-09-29T11:43:29.995Z",
+      "status": "supported-observed",
+      "reason": "normalized measurement recorded",
+      "discoveredAt": "2026-09-29T11:45:07.381Z",
       "source": {
-        "type": "environment",
-        "name": "runtime-identity",
-        "mechanism": "explicit-or-unmapped-environment"
-      }
+        "type": "agent-report",
+        "name": "agent-b-self-count",
+        "mechanism": "explicit-metric-record"
+      },
+      "lastAssessedAt": "2026-09-29T11:45:07.381Z",
+      "recordedAt": "2026-09-29T11:45:07.385Z",
+      "history": [
+        {
+          "status": "supported-unavailable",
+          "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+          "source": {
+            "type": "environment",
+            "name": "runtime-identity",
+            "mechanism": "explicit-or-unmapped-environment"
+          },
+          "discoveredAt": "2026-09-29T11:43:29.995Z",
+          "lastAssessedAt": "2026-09-29T11:43:29.995Z",
+          "recordedAt": "2026-09-29T11:43:29.995Z"
+        }
+      ]
     },
     {
       "metricId": "tool.failures",
@@ -1360,6 +1376,28 @@
       },
       "collectedAt": "2026-09-29T11:43:29.995Z",
       "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-4414a8611066061eb447b813",
+      "id": "tool.calls",
+      "value": 18,
+      "unit": "count",
+      "currency": null,
+      "quality": "observed",
+      "confidence": null,
+      "scope": "execution",
+      "aggregation": "sum",
+      "dimensions": {
+        "step": "continue-proof-b"
+      },
+      "pricing": null,
+      "source": {
+        "type": "agent-report",
+        "name": "agent-b-self-count",
+        "mechanism": "explicit-metric-record"
+      },
+      "collectedAt": "2026-09-29T11:45:07.381Z",
+      "schemaVersion": "1.0.0"
     }
   ],
   "rawTelemetry": [],
@@ -1371,6 +1409,28 @@
         "type": "ros-clock",
         "name": "ros",
         "mechanism": "work-lifecycle"
+      }
+    },
+    {
+      "type": "step.started",
+      "stepId": "continue-proof-b",
+      "name": "Successor continues from the durable checkpoint",
+      "occurredAt": "2026-09-29T11:45:01.183Z",
+      "source": {
+        "type": "ros-clock",
+        "name": "ros",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.completed",
+      "stepId": "continue-proof-b",
+      "reason": "continued from checkpoint without impersonation",
+      "occurredAt": "2026-09-29T11:45:09.315Z",
+      "source": {
+        "type": "ros-clock",
+        "name": "ros",
+        "mechanism": "step-lifecycle"
       }
     }
   ],
