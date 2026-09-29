@@ -75,6 +75,10 @@
 | PRAXIS-REMOTE-15 | Agent contract: a handoff needs a block before the successor resumes | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-16 | work complete silently drops the conclusion for non-research work items | active | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-17 | Record the live praxis.remote 1.3 continuation proof as evidence | complete |  | medium |
+| PRAXIS-REMOTE-INBOX-01 | Remote request inbox: a contents-write path to praxis.remote for agents that cannot dispatch Actions | active | remote-execution, continuity | high |
+| PRAXIS-REMOTE-PROBE-COMPLETE-CROSS | PRAXIS-REMOTE-PROBE-COMPLETE-CROSS | complete |  |  |
+| PRAXIS-REMOTE-PROBE-COMPLETE-NOEXEC | PRAXIS-REMOTE-PROBE-COMPLETE-NOEXEC | complete |  |  |
+| PRAXIS-REMOTE-PROBE-COMPLETE-WITHEXEC | PRAXIS-REMOTE-PROBE-COMPLETE-WITHEXEC | complete |  |  |
 | PRAXIS-SITE-01 | Establish public-site architecture | complete | gh-84, public-site | high |
 | PRAXIS-SITE-02 | Implement Echelon Foundry design foundation | complete | gh-84, public-site | high |
 | PRAXIS-SITE-03 | Build the hero | complete | gh-84, public-site | high |
@@ -102,6 +106,7 @@
 | PRAXIS-SITE-25 | Adversarial claim audit | complete | gh-84, public-site | high |
 | PRAXIS-SITE-26 | Final verification and evidence | complete | gh-84, public-site | high |
 | PRAXIS-SITE-27 | Align Pages deployment workflow with echelon-foundry deploy-pages.yml | complete | gh-84, public-site | medium |
+| PRAXIS-STATE-MERGE-01 | Parallel work items conflict in single-document Praxis state files | captured | work-protocol | high |
 | PRAXIS-TELEMETRY-CLASSIFY-VOCAB | telemetry classify accepts classifications that validate rejects | captured | telemetry | medium |
 | PROJECT-ADMIN-HUB | PROJECT-ADMIN-HUB | complete |  |  |
 | RELEASE-3-5-0 | Release Praxis 3.5.0 with remote execution (GH-90) | complete |  | high |

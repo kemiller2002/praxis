@@ -1267,5 +1267,58 @@
     "title": "Live proof: a runtime-less successor continues active work with praxis.remote 1.3 work.continue on Praxis 3.6.0",
     "updated": "2026-09-29",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-29",
+    "derived_from": [
+      "RQ-ROS-2026-A022"
+    ],
+    "evidence_type": "secondary",
+    "id": "EV-ROS-2026-A057",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A057--openai-successor-attempt-could-not-invoke-praxis.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T161246994Z-10477f29": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T16:13:02.304Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-REMOTE-INBOX-01: capture the cross-provider continuation gap and its remedy (re-landed from claude/remote-inbox-relay-v2)"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A022",
+      "RQ-ROS-2026-A023",
+      "DF-ROS-2026-A041",
+      "DF-ROS-2026-A045",
+      "docs/remote-agent-contract.md",
+      ".github/workflows/praxis-remote.yml"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A023"
+    ],
+    "tags": [
+      "continuity",
+      "cross-provider",
+      "remote-execution",
+      "openai"
+    ],
+    "title": "Cross-provider continuation attempt 1: an OpenAI successor reconstructed the handoff from repository state but could not invoke Praxis",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
   }
 ]
