@@ -4028,18 +4028,49 @@
     {
       "id": "PRAXIS-DIST-NATIVE-DOTNET-TOOL",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-29T11:18:54.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/ros-fs-assets.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-29T11:35:27.000Z",
       "telemetryExecutionIds": [
         "EXE-20260929T111855354Z-c5a53453"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "8e765d4e2f5a6cbbc82a2fa2",
+        "recordedAt": "2026-09-29T11:35:26.000Z",
+        "executionId": "EXE-20260929T111855354Z-c5a53453",
+        "stepId": "dotnet-tool",
+        "repository": "repository-operating-system",
+        "branch": "claude/retire-npm-dotnet-tool",
+        "commit": "944029bbf101eaabb9f17c59dac29677100baede",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/retire-npm-dotnet-tool",
+        "remoteCommit": "944029bbf101eaabb9f17c59dac29677100baede",
+        "summary": "npm distribution retired (DF-ROS-2026-A044): publish.yml removed, package.json private; .NET global tool EchelonFoundry.Praxis packed/smoke-tested/NuGet-published by native-release.yml; ros-fs assets moved to ros-fs-assets.yml; docs rewritten",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T11:35:27.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T11:18:54.000Z",
+  "updatedAt": "2026-09-29T11:35:27.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

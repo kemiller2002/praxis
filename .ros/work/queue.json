@@ -2857,10 +2857,10 @@
         "distribution"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-29T11:18:53.949Z",
-      "updatedAt": "2026-09-29T11:18:54.000Z",
+      "updatedAt": "2026-09-29T11:35:27.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
