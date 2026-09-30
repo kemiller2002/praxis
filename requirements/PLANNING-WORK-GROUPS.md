@@ -88,6 +88,14 @@ improves outcomes before grouped execution becomes default Praxis behavior.
   design, and the risks of solving each item independently. Order: understand
   group, identify shared architecture, resolve conflicts, choose a common
   design, sequence, then execute items.
+  The plan MUST include a **reuse inventory**: the existing parsers, domain
+  rules, types, stores, command pipelines and tests in the repository that
+  the members touch, found by searching the codebase rather than assumed; for
+  every new abstraction the plan proposes, it names the existing one it
+  considered and why that one is not reused. (`EV-ROS-2026-A064`: the grouped
+  arm designed one consistent model but re-implemented the `grouping.groups`
+  parser and the planner's execution-location rule.) The template is
+  [`docs/group-analysis-template.md`](../docs/group-analysis-template.md).
 - **PRX-GRP-041** Grouped execution MUST preserve each member's acceptance
   criteria, evidence, changed paths where identifiable, completion,
   provenance, telemetry where possible and checkpoints. It MUST NOT create one
@@ -104,6 +112,17 @@ improves outcomes before grouped execution becomes default Praxis behavior.
   members, shared decisions, branch and commit, next action; members keep
   their own checkpoint history. Durable group-level architecture notes
   SHOULD be available to later member executions.
+- **PRX-GRP-045** Before completing any member of a grouped execution, the
+  agent MUST run a **per-member, per-criterion verification pass**: for each
+  member, each acceptance criterion from that member's own description is
+  recorded as met, partially met, not met or unknown, with evidence (a test
+  name, a command run and its result, or a file and line). A criterion is
+  verified by exercising it, not inferred from the shared design; a
+  criterion the group design satisfies only for some members is recorded per
+  member. A member with a criterion not met is not completed; it stays
+  active, is blocked, or has the gap captured as its own work item.
+  (`EV-ROS-2026-A064`: independent executions were more faithful to
+  individual criteria than the grouped one.)
 
 ## Dependencies and repositories
 

@@ -89,6 +89,7 @@
     <Compile Include="PremergeRemoteTests.fs" />
     <Compile Include="PremergeRemoteScriptTests.fs" />
     <Compile Include="PremergeReleaseTests.fs" />
+    <Compile Include="WorkGroupTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

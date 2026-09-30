@@ -77,4 +77,5 @@ let main _ =
     @ PremergeRemoteTests.tests
     @ PremergeRemoteScriptTests.tests
     @ PremergeReleaseTests.tests
+    @ WorkGroupTests.tests
     |> TestRunner.run
