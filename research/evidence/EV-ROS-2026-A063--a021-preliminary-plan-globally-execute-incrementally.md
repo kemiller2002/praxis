@@ -17,6 +17,19 @@ related_documents:
   - requirements/PLANNING-WORK-GROUPS.md
 tags: [planning, grouping, context, ai-execution, preliminary]
 confidence: low
+provenance:
+  contributions:
+    EXE-20260930T175751373Z-7eb9c757:
+      operations: [migrated]
+      at: 2026-09-30T17:57:56.000Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PLAN-07: authored by the repository owner in commit 3aef2bd without a provenance entry; this agent records the migration only and did not create or change the content"
+derived_from: [3aef2bd]
 ---
 
 # Preliminary A021 observation: Plan Globally, Execute Incrementally

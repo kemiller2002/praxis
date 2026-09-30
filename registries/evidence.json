@@ -1485,12 +1485,33 @@
   {
     "confidence": "low",
     "created": "2026-09-30",
+    "derived_from": [
+      "3aef2bd"
+    ],
     "evidence_type": "primary",
     "id": "EV-ROS-2026-A063",
     "owners": [
       "repository-governance"
     ],
     "path": "research/evidence/EV-ROS-2026-A063--a021-preliminary-plan-globally-execute-incrementally.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T175751373Z-7eb9c757": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:57:56.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PLAN-07: authored by the repository owner in commit 3aef2bd without a provenance entry; this agent records the migration only and did not create or change the content"
+        }
+      }
+    },
     "related_documents": [
       "EX-ROS-2026-A021",
       "EV-ROS-2026-A059",

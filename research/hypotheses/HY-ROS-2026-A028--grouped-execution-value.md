@@ -49,6 +49,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "PRAXIS-PLAN-06: renumber the A021 results record to EV-ROS-2026-A064 and relate it to the parallel evaluation kit and EV-ROS-2026-A063"
+    EXE-20260930T175751373Z-7eb9c757:
+      operations: [modified]
+      at: 2026-09-30T17:57:56.000Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PLAN-07: merge-conflict resolution combining the completed A021 result (EV-ROS-2026-A064) with the owner's PGEI mechanism (EV-ROS-2026-A063)"
 ---
 
 # Hypothesis

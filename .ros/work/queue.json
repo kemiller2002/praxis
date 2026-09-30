@@ -3461,6 +3461,30 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-07",
+      "title": "Reconcile PR #130 (PGEI) with main after the A021 results",
+      "description": "Merge main into research/a021-plan-globally-execute-incrementally, resolve HY-ROS-2026-A028 (completed result plus PGEI mechanism), and restore missing provenance for EV-ROS-2026-A063 so validation passes. Acceptance: ./ros validate passes; no history rewrite.",
+      "tags": [
+        "planning",
+        "grouping"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:57:50.357Z",
+      "updatedAt": "2026-09-30T17:57:50.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
