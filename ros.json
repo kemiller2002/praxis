@@ -31,7 +31,10 @@
       "mechanical": []
     },
     "meaningfulPaths": ["**"],
-    "ignoredPaths": [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", ".ros/telemetry/**", ".ros/locks/**", ".ros/remote/**", "registries/**", ".echelon/**"]
+    "ignoredPaths": [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", ".ros/telemetry/**", ".ros/executions/**", ".ros/locks/**", ".ros/remote/**", ".praxis-inbox/**", "registries/**", ".echelon/**"],
+    "continuity": {
+      "requireDurableCheckpoint": true
+    }
   },
   "implementationPolicy": {
     "version": "1.0.0",
@@ -55,5 +58,8 @@
     "maxRawSnapshotsPerExecution": 256,
     "maxRawBytesPerExecution": 8388608,
     "maxCapabilityHistoryEntries": 64
+  },
+  "remote": {
+    "capabilities": ["read", "mutate", "complete"]
   }
 }

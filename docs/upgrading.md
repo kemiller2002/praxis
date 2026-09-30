@@ -12,10 +12,14 @@ its own scaffold — see
 [Where the scaffold comes from](installation.md#where-the-scaffold-comes-from).
 
 To upgrade to a version newer than the one the repository is pinned to,
-install that version and run its `upgrade`:
+install that version of `praxis` and run its `upgrade`:
 
 ```bash
+# Native bundle (no runtime needed):
 curl -fsSL https://raw.githubusercontent.com/kemiller2002/praxis/main/scripts/install-native.sh | sh -s -- --version <version>
+# or, with .NET 10:
+dotnet tool update -g EchelonFoundry.Praxis --version <version>
+
 praxis upgrade
 ```
 
@@ -104,8 +108,11 @@ is wrong, then `praxis init` or `praxis upgrade` to converge.
 - Removing a field, changing what one means, or changing an exit code is a
   breaking change. It requires a new schema or configuration version and a
   migration step.
-- The npm-distributed `ros-bootstrap init` and `ros-bootstrap verify` are
-  retired (`DF-ROS-2026-A049`); what they installed is still upgradeable.
+- The npm-distributed `ros-bootstrap init` and `ros-bootstrap verify` (the
+  legacy npm scaffolder) are retired and no longer distributed
+  (`DF-ROS-2026-A044`, `DF-ROS-2026-A049`); versions already on npm stay
+  installable but receive no updates, and what they installed is still
+  upgradeable.
 - A repository installed by `ros-bootstrap init` keeps working with no action
   from you. `praxis status` reports it as `upgrade-required`; adopting the
   manifest with `praxis upgrade` is what moves it to `installed`.
@@ -134,9 +141,26 @@ both from a source checkout and from its embedded payload alone:
 
 Nothing stronger is claimed than what those tests exercise.
 
+## Opting in to durable checkpoints
+
+`praxis upgrade` never changes `ros.json`'s policy. An existing installation
+without `workProtocol.continuity` keeps its completion semantics, and
+`status` still reports continuity warnings. To opt in, add
+`"continuity": {"requireDurableCheckpoint": true}` under `workProtocol`.
+
+Before opting in, look at every active work item in `praxis status`. An item
+whose meaningful work is not committed and pushed will need a checkpoint
+before it can complete.
+
+Checkpoint history is additive: contexts and events without checkpoint
+fields remain valid, and no migration is required.
+
 ## Upgrading the CLI itself
 
 A scaffolded project pins its CLI version (`.echelon/ros.json`
 `installedVersion`, else `ros.json` `rosVersion`), and its `./praxis` installs
-and runs that version's native release. Running a newer `praxis upgrade`
-moves the pin to that release.
+and runs that version's native release (a legacy `./ros` from before the
+Praxis rename downloads and caches that version's `ros-fs` binary instead).
+Changing that value is what moves the project to a new release; running
+`praxis upgrade` from an installed `praxis` of a newer version moves the pin
+to that release and updates the installation to it.

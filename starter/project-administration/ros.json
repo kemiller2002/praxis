@@ -21,7 +21,8 @@
     "semanticMapping": {"ready": "ready", "active": "active", "blocked": "blocked", "complete": "complete"},
     "completionEvidence": {"default": ["implementation", "tests"], "mechanical": []},
     "meaningfulPaths": ["**"],
-    "ignoredPaths": [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", ".ros/telemetry/**", ".ros/locks/**", ".ros/remote/**", ".ros/hub/**", "registries/**", ".echelon/**"]
+    "ignoredPaths": [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", ".ros/telemetry/**", ".ros/locks/**", ".ros/remote/**", ".ros/hub/**", "registries/**", ".echelon/**"],
+    "continuity": {"requireDurableCheckpoint": true}
   },
   "provenance": {"version": "1.0.0", "enforce": true, "requiredFrom": "2026-09-25", "requireOriginator": ["RQ"]},
   "telemetry": {

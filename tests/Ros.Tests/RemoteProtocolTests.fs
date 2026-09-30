@@ -104,12 +104,12 @@ module RemoteProtocolTests =
               fun () ->
                   let failure = rejected (document (startRequest |> replace "protocol" "\"other.protocol\""))
                   Assert.equal FailureCode.UnsupportedProtocol failure.Failure.Code
-                  Assert.isTrue (failure.Failure.Message.Contains "praxis.remote 1.2") "diagnostics name the supported version" }
+                  Assert.isTrue (failure.Failure.Message.Contains "praxis.remote 1.3") "diagnostics name the supported version" }
 
           { Name = "remote: a newer major or newer minor protocol version fails closed with the supported versions"
             Run =
               fun () ->
-                  [ "\"2.0\""; "\"1.3\""; "\"0.9\"" ]
+                  [ "\"2.0\""; "\"1.4\""; "\"0.9\"" ]
                   |> List.iter (fun version ->
                       let failure = rejected (document (startRequest |> replace "protocolVersion" version))
                       Assert.equal FailureCode.UnsupportedProtocol failure.Failure.Code
@@ -592,7 +592,84 @@ module RemoteProtocolTests =
             Run =
               fun () ->
                   let mutating = Operation.all |> List.filter Operation.isMutating |> List.map Operation.code |> Set.ofList
-                  Assert.equal (set [ "work.start"; "work.resume"; "work.block"; "telemetry.record"; "work.complete"; "work.reconcile"; "step.start"; "step.complete"; "step.fail" ]) mutating
+                  Assert.equal (set [ "work.start"; "work.resume"; "work.block"; "telemetry.record"; "work.complete"; "work.reconcile"; "step.start"; "step.complete"; "step.fail"; "work.checkpoint"; "work.continue" ]) mutating
                   Assert.equal Capability.Complete (Operation.capability Operation.WorkComplete)
                   Assert.equal Capability.Reconcile (Operation.capability Operation.WorkReconcile)
-                  Assert.isTrue (Operation.all |> List.forall (fun operation -> Operation.capability operation <> Capability.Admin)) "admin is reserved" } ]
+                  Assert.isTrue (Operation.all |> List.forall (fun operation -> Operation.capability operation <> Capability.Admin)) "admin is reserved" }
+
+          { Name = "remote 1.3: work.block keeps its 1.0-1.2 fingerprint unless unrecoverableReason is supplied"
+            Run =
+              fun () ->
+                  let block unrecoverable =
+                      let arguments =
+                          match unrecoverable with
+                          | Some reason -> $"{{\"workItemIds\":[\"WI-0100\"],\"reason\":\"handoff\",\"unrecoverableReason\":\"{reason}\"}}"
+                          | None -> "{\"workItemIds\":[\"WI-0100\"],\"reason\":\"handoff\"}"
+
+                      parsed (document (envelope "work.block" arguments))
+
+                  let plain = block None
+                  let canonical = RequestFingerprint.canonical plain
+                  // The pre-1.3 encoding of this block, verbatim.
+                  Assert.isTrue (canonical.EndsWith "12:workItemIds#=1:1;14:workItemIds[0]=7:WI-0100;6:reason=7:handoff;") canonical
+                  Assert.isTrue (not (canonical.Contains "unrecoverableReason")) canonical
+                  let withReason = block (Some "cannot push")
+                  Assert.isTrue (RequestFingerprint.compute withReason <> RequestFingerprint.compute plain) "a different intent shares a fingerprint"
+
+                  match ExecutionPlan.forRequest "2026-09-29T10:00:00.000Z" withReason with
+                  | ExecutionPlan.Command arguments -> Assert.isTrue (List.contains "--unrecoverable-reason" arguments) $"{arguments}"
+                  | other -> failwith $"{other}" }
+
+          { Name = "remote 1.3: work.checkpoint maps to the local command in the requester's own execution; work.continue creates one"
+            Run =
+              fun () ->
+                  let checkpoint =
+                      document (
+                          envelope "work.checkpoint" "{\"workItemId\":\"WI-0100\",\"summary\":\"Part one\",\"nextAction\":\"Part two\",\"stepId\":\"impl-1\"}"
+                          |> replace "protocolVersion" "\"1.3\""
+                      )
+
+                  let missingExecution = parsed checkpoint
+                  Assert.isTrue (RequestValidation.problems missingExecution |> List.exists (fun problem -> problem.Field = "execution.id")) "execution not required"
+
+                  let named =
+                      parsed (
+                          document (
+                              envelope "work.checkpoint" "{\"workItemId\":\"WI-0100\",\"summary\":\"Part one\",\"nextAction\":\"Part two\",\"stepId\":\"impl-1\"}"
+                              |> replace "protocolVersion" "\"1.3\""
+                              |> fun members -> members @ [ "execution", "{\"id\":\"EXE-20260929T100000000Z-0a1b2c3d\"}" ]
+                          )
+                      )
+
+                  Assert.empty (RequestValidation.problems named)
+                  Assert.equal Capability.Mutate (Operation.capability named.Operation)
+
+                  match ExecutionPlan.forRequest "2026-09-29T10:00:00.000Z" named with
+                  | ExecutionPlan.Command arguments ->
+                      Assert.equal
+                          [ "work"; "checkpoint"; "--id"; "WI-0100"; "--occurred-at"; "2026-09-29T10:00:00.000Z"; "--summary"; "Part one"; "--next-action"; "Part two"; "--step"; "impl-1"; "--execution"; "EXE-20260929T100000000Z-0a1b2c3d"; "--json" ]
+                          arguments
+                  | other -> failwith $"{other}"
+
+                  let continued =
+                      parsed (document (envelope "work.continue" "{\"workItemId\":\"WI-0100\"}" |> replace "protocolVersion" "\"1.3\""))
+
+                  match ExecutionPlan.forRequest "2026-09-29T10:00:00.000Z" continued with
+                  | ExecutionPlan.Command arguments ->
+                      Assert.equal [ "work"; "continue"; "--id"; "WI-0100"; "--occurred-at"; "2026-09-29T10:00:00.000Z"; "--json" ] arguments
+                  | other -> failwith $"{other}"
+
+                  let older = rejected (document (envelope "work.continue" "{\"workItemId\":\"WI-0100\"}" |> replace "protocolVersion" "\"1.2\""))
+                  Assert.equal FailureCode.UnsupportedOperation older.Failure.Code
+
+                  let secret = "ghp_" + String.replicate 36 "Q"
+
+                  let leaking =
+                      parsed (
+                          document (
+                              envelope "work.checkpoint" $"{{\"workItemId\":\"WI-0100\",\"summary\":\"{secret}\",\"nextAction\":\"n\"}}"
+                              |> replace "protocolVersion" "\"1.3\""
+                          )
+                      )
+
+                  Assert.equal [ "arguments.summary" ] (RequestValidation.secretFields leaking) } ]

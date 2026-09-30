@@ -80,4 +80,23 @@ let main _ =
     @ PraxisBootstrapScriptTests.tests
     @ TelemetryStepsUsageTests.tests
     @ PraxisNamingTests.tests
+    @ CheckpointDomainTests.tests
+    @ GitDurabilityTests.tests
+    @ CheckpointPersistenceTests.tests
+    @ CheckpointCliTests.tests
+    @ CheckpointGuardTests.tests
+    @ ContinuationCliTests.tests
+    @ TelemetrySegmentationTests.tests
+    @ RecoveryProofTests.tests
+    @ ExecutionGovernanceTests.tests
+    @ InstallationRegistrationTests.tests
+    @ CommitOwnershipTests.tests
+    @ WorkAbandonTests.tests
+    @ PlanningTests.tests
+    @ PlanningCliTests.tests
+    @ GroupingTests.tests
+    @ PremergeCommandSurfaceTests.tests
+    @ PremergeRemoteTests.tests
+    @ PremergeRemoteScriptTests.tests
+    @ PremergeReleaseTests.tests
     |> TestRunner.run

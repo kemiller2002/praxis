@@ -489,3 +489,35 @@ export PRAXIS_ACTOR_KIND=agent PRAXIS_ACTOR=acme-planner PRAXIS_TELEMETRY_PROVID
 **CI automation** needs no declaration. Under GitHub Actions the actor resolves
 as `{"kind":"automation","id":"github/github-actions",…}`, and a CI job that
 records provenance is attributed to automation, not to an agent.
+
+## Continuation and handoff between executors
+
+Continuity never depends on a provider's chat history (`DF-ROS-2026-A042`).
+When an executor disappears, the successor inherits nothing but the
+repository and Praxis state:
+
+- **Recovery.** The successor reads the latest durable checkpoint: the exact
+  commit, branch, completed work, and next action. Praxis re-verifies it
+  against the remote.
+- **Its own execution.** The successor runs `work continue` under its own
+  identity. The new execution records `parentExecutionId` as the
+  predecessor's execution: lineage, not authorship.
+- **The predecessor stays as it was.** The predecessor's execution record is
+  never edited. A `work.continued` event, attributed to the successor,
+  records the predecessor's disposition as `interrupted`, observed by the
+  successor. The predecessor is never marked successful, and the successor
+  never claims its work.
+- **Checkpoints are attributed.** Each checkpoint carries the actor and the
+  execution that recorded it. In a handoff from A to B, A's checkpoints stay
+  A's and B's stay B's.
+
+Any pair of executors works the same way, because each keeps its own
+identity:
+
+- agent to agent, across providers (for example Claude to Codex, or Codex to
+  Gemini);
+- agent to human, and human to agent;
+- automation to either.
+
+A process with no declared identity cannot continue work. A successor can
+never continue as another executor.

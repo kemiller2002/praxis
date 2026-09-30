@@ -5,12 +5,17 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Git/Model.fs" />
+    <Compile Include="Git/Durability.fs" />
     <Compile Include="Work/Identity.fs" />
     <Compile Include="Work/PathFilter.fs" />
     <Compile Include="Work/Attribution.fs" />
     <Compile Include="Work/Model.fs" />
     <Compile Include="Work/Plan.fs" />
     <Compile Include="Work/ContextPlan.fs" />
+    <Compile Include="Work/Checkpoint.fs" />
+    <Compile Include="Work/Continuity.fs" />
+    <Compile Include="Work/CheckpointValidation.fs" />
+    <Compile Include="Work/Ownership.fs" />
     <Compile Include="Work/Backlog.fs" />
     <Compile Include="Telemetry/ExecutionLink.fs" />
     <Compile Include="Work/TelemetryResolution.fs" />
@@ -48,5 +53,17 @@
     <Compile Include="Lifecycle/Planning.fs" />
     <Compile Include="Architecture/ImplementationLanguagePolicy.fs" />
     <Compile Include="Naming/EnvironmentAliases.fs" />
+    <Compile Include="Execution/Governance.fs" />
+    <Compile Include="Installation/Registration.fs" />
+    <Compile Include="Planning/Model.fs" />
+    <Compile Include="Planning/History.fs" />
+    <Compile Include="Planning/Inventory.fs" />
+    <Compile Include="Planning/Graph.fs" />
+    <Compile Include="Planning/Snapshot.fs" />
+    <Compile Include="Planning/Scheduling.fs" />
+    <Compile Include="Planning/Comparison.fs" />
+    <Compile Include="Planning/Replay.fs" />
+    <Compile Include="Planning/Planner.fs" />
+    <Compile Include="Planning/Grouping.fs" />
   </ItemGroup>
 </Project>

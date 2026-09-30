@@ -101,7 +101,7 @@ A project's own `./praxis` (or its compatibility alias `./ros`) runs the Praxis 
 
 ## Compatibility
 
-The native bundles are the only distribution channel; the npm package is retired (`DF-ROS-2026-A049`). Existing ros and sde command names and repository installation manifests are not removed. Each bundle is the self-contained binary plus its launchers; the binary embeds the scaffold it installs.
+The native bundles need no runtime; npm is no longer a distribution channel and the npm package is retired (`DF-ROS-2026-A044`, `DF-ROS-2026-A049`); versions already published there stay installable but receive no updates. With .NET 10 installed, `dotnet tool install -g EchelonFoundry.Praxis` provides the same `praxis` command from NuGet. Existing ros and sde command names and repository installation manifests are not removed. Each bundle is the self-contained binary plus its launchers; the binary embeds the scaffold it installs.
 
 ## Verified bootstrap for CI and remote execution
 

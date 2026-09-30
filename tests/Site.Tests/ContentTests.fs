@@ -257,11 +257,21 @@ let tests =
               start
               "the page says the installers provide both commands"
 
-          // release.json, not an npm manifest, is the name and version source;
-          // there is no npm distribution for the page to point at.
+          // release.json, not an npm manifest, is the name and version source.
+          // npm publishing is retired (DF-ROS-2026-A044): the page may name the
+          // retired package only to say so, and never offers an npm install.
           let release = Json.parse (read "release.json")
           Assert.isTrue (Json.truthy (Json.get "version" release)) "release.json has a version"
-          Assert.notMatches @"\bnpx\b|npm package|repository-operating-system" start "no npm install path"
+          Assert.notMatches @"\bnpx\b|\bnpm (install|i)\b" start "no npm install path"
+
+          if start.Contains "repository-operating-system" then
+              Assert.matches "is no longer published" start "the retired npm package is named only as retired"
+
+          // With .NET 10, the same release installs as a global tool.
+          let tool = read "src/Ros.Cli/Ros.Cli.fsproj"
+          let packageId = Regex.Match(tool, "<PackageId>([^<]+)</PackageId>").Groups[1].Value
+          Assert.matches "<ToolCommandName>praxis</ToolCommandName>" tool "the tool's command is praxis"
+          Assert.isTrue (start.Contains $"dotnet tool install -g {packageId}") "the page installs the real .NET tool"
           Assert.matches "From ROS to Praxis" start "rename"
           Assert.notMatches "still provides only <code>ros</code>" start "no stale npm fact")
 

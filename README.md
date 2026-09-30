@@ -47,9 +47,11 @@ praxis verify
 ```
 
 The native bundle is self-contained. A consuming machine does not need Node.js,
-npm, or a machine-wide .NET runtime. The established `ros` command remains a
-compatibility alias of `praxis`. The native release is the only distribution channel: the
-npm package was retired (`DF-ROS-2026-A049`).
+npm, or a machine-wide .NET runtime. With .NET 10 installed, the same CLI is
+also a global tool: `dotnet tool install -g EchelonFoundry.Praxis`. The
+established `ros` command remains a compatibility alias of `praxis`. npm is no
+longer a distribution channel: the npm package was retired (`DF-ROS-2026-A044`,
+`DF-ROS-2026-A049`).
 
 To install the Echelon engineering toolchain, including Ordo:
 
@@ -192,7 +194,9 @@ go to stderr. Schemas are in [`docs/cli.md`](docs/cli.md#machine-readable-output
 praxis verify --strict
 ```
 
-Exit `0` means valid, `3` means verification failed. Other nonzero codes mean
+Install `praxis` in the job first (the native bundle needs no runtime, see
+[`docs/installation.md`](docs/installation.md)), or run the repository's own
+`./praxis verify --strict`. Exit `0` means valid, `3` means verification failed. Other nonzero codes mean
 something else — see the [exit-code contract](docs/cli.md#exit-codes) — and
 should not be read as "verification failed".
 
@@ -245,10 +249,12 @@ Adding a JSON field, command or option is not a breaking change. Removing a
 field, changing what one means, or changing an exit code is, and requires a
 version bump and a migration step.
 
-**Legacy compatibility.** The npm-distributed `ros-bootstrap init` and
-`ros-bootstrap verify` executables are retired (`DF-ROS-2026-A049`). A
-repository they installed keeps working untouched; `praxis status` reports it as
-`upgrade-required`, and `praxis upgrade` adopts the manifest while leaving the
+**Legacy compatibility.** The older `ros-bootstrap init` and
+`ros-bootstrap verify` executables were npm-only and are retired
+(`DF-ROS-2026-A044`, `DF-ROS-2026-A049`); versions already on npm stay
+installable but receive no updates. Use `praxis init` and `praxis verify` for new work. A repository
+installed by `ros-bootstrap` keeps working untouched; `praxis status` reports it
+as `upgrade-required`, and `praxis upgrade` adopts the manifest while leaving the
 legacy snapshot in place.
 
 ## Supported platforms
@@ -258,16 +264,24 @@ legacy snapshot in place.
 The CLI ships as a self-contained single-file binary per platform, installed
 and checksum-verified by `scripts/install-native.sh` or
 `scripts/install-native.ps1` (or `echelon install praxis`). No Node.js, npm or
-.NET installation is required. A project's own `./praxis` runs the version the
-project pins, installing that release side by side on first use (under
-`~/.echelon/tools/praxis/<version>/`, or `$ECHELON_HOME`) without changing
-which version your global commands run. An unsupported platform fails with a
-message naming the gap.
+.NET installation is required. The native bundle is additionally built for
+`linux-musl/x64` (Alpine). The .NET global tool runs wherever .NET 10 does.
+
+A project's own `./praxis` runs the version the project pins, installing that
+release side by side on first use (under `~/.echelon/tools/praxis/<version>/`,
+or `$ECHELON_HOME`) without changing which version your global commands run.
+A project scaffolded before the Praxis rename keeps its legacy `./ros`, a small
+Node.js 20+ launcher that needs no .NET: it fetches the self-contained
+`ros-fs-<platform>` binary for its pinned version from that GitHub Release
+(these legacy assets continue to ship with every release), verifies its
+checksum on first use, caches it under `~/.cache/ros-fs/<version>/<platform>/`
+(override with `ROS_FS_CACHE_DIR`) and runs offline thereafter. An unsupported
+platform fails with a message naming the gap.
 
 ## How it is built
 
 ```
-native launcher (praxis / ./praxis, or the ros / ./ros aliases; POSIX shell or .cmd)
+native bundle (praxis wrapper) | .NET global tool | project ./praxis launcher (or the ros / ./ros aliases)
     |
     v
 F# CLI (src/Ros.Cli)
@@ -276,9 +290,10 @@ F# CLI (src/Ros.Cli)
 F# domain and application core (src/Ros.Domain, src/Ros.Application)
 ```
 
-The launchers only locate the pinned binary and forward arguments and the exit
-code. The binary carries the scaffold it installs, so it needs nothing else at
-run time. Every lifecycle decision — what to install, what the repository's
+Each entry point only locates the CLI, forwards arguments and stdio, and
+returns the exit code. The binary carries the scaffold it installs, so it
+needs nothing else at run time. Every lifecycle decision — what to install,
+what the repository's
 state means, whether an installation is valid, which migrations apply, what is
 stale — is made in F#. Planning is pure and separate from execution:
 `inspect -> desired state -> transition -> validate -> execute -> verify`.
@@ -305,17 +320,43 @@ Inside this source checkout, `./praxis` runs the locally built CLI directly:
 ./praxis status
 ```
 
+### Packaging
+
+```bash
+dotnet pack src/Ros.Cli/Ros.Cli.fsproj -c Release -o dist/nuget   # the .NET global tool
+```
+
+There is no `package.json` and no npm payload: the scaffold is compiled into
+the CLI assembly. `native-release.yml` smoke-tests both the native bundle and
+the installed .NET tool — `dotnet test` passing is not treated as evidence that
+distribution works.
+
 ### Release
 
-Releases are CI-driven
-([`.github/workflows/native-release.yml`](.github/workflows/native-release.yml)),
-never a local developer machine: a change to `release.json`'s version on
-`main` builds the self-contained binaries for every platform, smoke-tests the
-installer against them, and publishes the GitHub Release.
+Publishing is CI-driven ([`.github/workflows/native-release.yml`](.github/workflows/native-release.yml)),
+never a local developer machine. A release happens only for a new
+`release.json` version: `native-release.yml` builds the self-contained binaries
+for every platform, smoke-tests the installer against them, and publishes the
+GitHub Release with the native bundles and the legacy `ros-fs-<platform>`
+binaries projects scaffolded before the rename download, and the .NET global
+tool is pushed to NuGet. Released assets are immutable. See
+[`PACKAGE-USAGE.md`](PACKAGE-USAGE.md).
+
+To cut a release, run the **Release** workflow
+([`.github/workflows/release.yml`](.github/workflows/release.yml)) from the
+Actions tab on `main` with `patch`, `minor`, `major` or an exact `X.Y.Z`. It
+bumps the version as an attributed Praxis work item (`RELEASE-X-Y-Z`, via
+[`scripts/praxis-release-bump.sh`](scripts/praxis-release-bump.sh)), pushes it
+with a durable checkpoint, then dispatches `native-release.yml`. Before
+releasing, run the build, tests, `./praxis architecture check` and
+`./praxis validate` shown above.
 
 `release.json`'s version is the single authoritative version source: the F#
 build reads it (see [`Directory.Build.props`](Directory.Build.props)) so
 `praxis --version` can never drift from the released version.
+
+See [`PACKAGE-USAGE.md`](PACKAGE-USAGE.md) for publication and trusted-publishing
+setup.
 
 ## Troubleshooting
 
@@ -349,6 +390,19 @@ evidence, durable attribution events, and idempotent file-adapter publication.
 A repository-local backlog (`praxis add`, `praxis work list|ready|show|start`) lets
 work be captured before it has an externally assigned ID, and graduates into
 the same protocol via `work start`.
+
+**Durable checkpoints and continuity.** An executor session is disposable;
+repository and Praxis state are durable. `praxis work checkpoint` records a
+verified checkpoint: the exact pushed commit, what was completed, and the
+next action, verified against the remote itself. A successor on another
+machine continues from it with `praxis work continue`, under its own identity.
+
+```bash
+git commit -am "Implement capability boundary" && git push
+./praxis work checkpoint --id WORK-ID --occurred-at "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)" \
+  --summary "Implemented capability boundary" --next-action "Implement consumer fixture"
+./praxis work context WORK-ID --text      # latest recoverable checkpoint and current state
+```
 
 See [`docs/work-protocol.md`](docs/work-protocol.md) and, for a UI over the same
 backlog, [`docs/web-interface.md`](docs/web-interface.md) (`./praxis web serve`).

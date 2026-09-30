@@ -1,5 +1,19 @@
 # Installation
 
+## Install the `praxis` command
+
+Praxis is distributed two ways (`DF-ROS-2026-A044`). npm is no longer a
+distribution channel.
+
+| You have | Install | Notes |
+|---|---|---|
+| nothing (any machine, CI, a cloud agent) | the native bundle: `curl -fsSL https://raw.githubusercontent.com/kemiller2002/praxis/main/scripts/install-native.sh \| sh` (Windows: `install-native.ps1`) | self-contained; no Node.js or .NET needed. See [`native-installation.md`](native-installation.md). |
+| .NET 10 | `dotnet tool install -g EchelonFoundry.Praxis` | one cross-platform package from NuGet; update with `dotnet tool update -g EchelonFoundry.Praxis` |
+
+Both give you the same F# CLI as `praxis` (the native installer also adds a
+`ros` alias). Installing never touches a repository; initialization only
+happens when you run `init`.
+
 ## Quick start
 
 Install the `praxis` command once per machine (see
@@ -24,10 +38,10 @@ praxis status
 praxis verify
 ```
 
-Installing the command never mutates a repository; initialization only happens
-when you run `init`.
-
 ## Prerequisites
+
+`init` gives the repository its own `./praxis`, pinned to the version in its
+`ros.json`. The `praxis` command and that launcher need:
 
 - A supported platform: `linux-x64`, `linux-musl-x64`, `linux-arm64`,
   `osx-x64`, `osx-arm64`, `win-x64`. An unsupported platform fails with a
@@ -36,6 +50,14 @@ when you run `init`.
   SHA-256). Installed versions run offline.
 - No Node.js, npm or .NET installation is required: the binary is
   self-contained.
+
+A project scaffolded before the Praxis rename keeps its legacy `./ros`, a
+small Node.js 20+ script. It needs network access on first use of a given
+version and platform, to fetch and cache the self-contained CLI binary
+(`ros-fs-<platform>`, still published with every release) from that
+version's GitHub Release; later runs of the same version work offline from
+`~/.cache/ros-fs/<version>/<platform>/` (override the location with
+`ROS_FS_CACHE_DIR`). It needs no .NET.
 
 ## What `init` means
 
@@ -154,7 +176,8 @@ The scaffold is resolved in this order:
 4. The copy compiled into the binary.
 
 A real directory wins so that a source checkout installs the files you are
-editing rather than the ones compiled in. Everywhere else, step 4 applies.
+editing rather than the ones compiled in. Everywhere else, including the .NET
+global tool, step 4 applies.
 
 The compiled-in copy is exactly the set of files the profile manifests
 reference — no more, no less; a test asserts that equality in both directions,
@@ -221,9 +244,23 @@ The scaffolded repository gets its own `./praxis`, which runs the same F# CLI
 pinned to the version recorded in its `ros.json`. It does not read from, or
 link back to, the source checkout that installed it.
 
+## Durable checkpoints
+
+A new installation's `ros.json` sets
+`"workProtocol": {"continuity": {"requireDurableCheckpoint": true}}`. With
+that set, meaningful Git-backed work completes only from a verified durable
+checkpoint: the work is committed, pushed, and recorded with
+`praxis work checkpoint`. See "Durable checkpoints and continuity" in
+[`work-protocol.md`](work-protocol.md).
+
+A repository with no remote cannot hold a durable checkpoint. Add a remote,
+or deliberately set the flag to `false`, and understand that work there then
+exists in one place only.
+
 ## Legacy compatibility
 
 The npm-distributed `ros-bootstrap init` and `ros-bootstrap verify` are
-retired (`DF-ROS-2026-A049`). A repository they installed keeps working; see
+retired (`DF-ROS-2026-A044`, `DF-ROS-2026-A049`). A repository they installed
+keeps working; see
 [`upgrading.md`](upgrading.md) for how an existing `ros-bootstrap`
 installation moves across.

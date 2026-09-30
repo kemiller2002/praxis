@@ -41,6 +41,7 @@ module FileWorkContextRepository =
         | LiveWorkState.Active -> "active"
         | LiveWorkState.Blocked -> "blocked"
         | LiveWorkState.Complete -> "complete"
+        | LiveWorkState.Abandoned -> "abandoned"
 
     let private parseSemanticState (value: string) : LiveWorkState option =
         match value with
@@ -48,6 +49,7 @@ module FileWorkContextRepository =
         | "active" -> Some LiveWorkState.Active
         | "blocked" -> Some LiveWorkState.Blocked
         | "complete" -> Some LiveWorkState.Complete
+        | "abandoned" -> Some LiveWorkState.Abandoned
         | _ -> None
 
     let private actionCode (action: WorkAction) =
@@ -56,6 +58,7 @@ module FileWorkContextRepository =
         | WorkAction.Block -> "block"
         | WorkAction.Resume -> "resume"
         | WorkAction.Complete -> "complete"
+        | WorkAction.Abandon -> "abandon"
 
     let private stringField (item: JsonObject) (name: string) =
         match item[name] with
@@ -90,13 +93,13 @@ module FileWorkContextRepository =
     /// it); `completedAt`/`blockReason` only when set (production sets
     /// `blockReason` on `block` and `completedAt` on `complete`, and neither
     /// is ever cleared by a later transition -- both persist as stale fields
-    /// for the rest of the item's life); `conclusion` only for a research
-    /// item's `complete` (via the caller-supplied `conclusions` map, since
+    /// for the rest of the item's life); `conclusion` only on `complete`,
+    /// for a research item or any item given one (via the caller-supplied `conclusions` map, since
     /// the typed `LiveWorkItem` does not model it at all); and
     /// `telemetryExecutionIds` only when non-empty (production itself never
     /// sets the field at all when telemetry is disabled). Every other field
     /// already on an existing item is left untouched.
-    let private applyItem (conclusions: Map<string, string>) (items: JsonArray) (item: LiveWorkItem) : unit =
+    let private applyItem (conclusions: Map<string, string>) (items: JsonArray) (item: LiveWorkItem) (reason: string option) : unit =
         let existing =
             items
             |> Seq.choose (fun node ->
@@ -133,6 +136,11 @@ module FileWorkContextRepository =
         item.BlockReason |> Option.iter (fun reason -> node["blockReason"] <- JsonValue.Create reason)
         item.CompletedAt |> Option.iter (fun completedAt -> node["completedAt"] <- JsonValue.Create completedAt)
         conclusions |> Map.tryFind item.Id |> Option.iter (fun conclusion -> node["conclusion"] <- JsonValue.Create conclusion)
+
+        // An abandoned item says when and why on itself, not only on its event.
+        if item.SemanticState = LiveWorkState.Abandoned then
+            item.UpdatedAt |> Option.iter (fun abandonedAt -> node["abandonedAt"] <- JsonValue.Create abandonedAt)
+            reason |> Option.iter (fun text -> node["abandonedReason"] <- JsonValue.Create text)
 
         if not item.TelemetryExecutionIds.IsEmpty then
             node["telemetryExecutionIds"] <- stringArrayNode item.TelemetryExecutionIds
@@ -264,7 +272,7 @@ module FileWorkContextRepository =
     /// (the resolved identity of the process performing the transition,
     /// never inherited from stored context) precedes `publication`, so it
     /// is part of the hashed, published event.
-    let private eventNode (actor: Actor) (event: WorkEventPlan) : JsonObject =
+    let private eventNodeWith (extensions: Map<string, JsonObject>) (actor: Actor) (event: WorkEventPlan) : JsonObject =
         let hashInput = JsonObject()
         hashInput["schemaVersion"] <- JsonValue.Create "1.0.0"
         hashInput["type"] <- JsonValue.Create event.EventType
@@ -276,6 +284,16 @@ module FileWorkContextRepository =
         hashInput["evidence"] <- evidenceArrayNode event.Evidence
         hashInput["paths"] <- stringArrayNode event.Paths
         hashInput["telemetryExecutions"] <- stringArrayNode event.TelemetryExecutionIds
+
+        // An additive, per-item extension (DF-ROS-2026-A042: a block's
+        // `continuity` record). Absent for every other event, so their bytes
+        // and ids are unchanged.
+        extensions
+        |> Map.tryFind event.WorkItemId
+        |> Option.iter (fun extension ->
+            for property in extension do
+                hashInput[property.Key] <- property.Value.DeepClone())
+
         hashInput["actor"] <- ActorJson.node actor
         let publication = JsonObject()
         publication["status"] <- JsonValue.Create "pending"
@@ -330,10 +348,11 @@ module FileWorkContextRepository =
     /// matching production's own returned `events` list, this includes an
     /// id even when the event line itself turned out to already be present
     /// in the log (recorded once, reported every time it is produced).
-    let applyContextPlanWithConclusions
+    let applyContextPlanWithExtensions
         (root: string)
         (repositoryId: string)
         (conclusions: Map<string, string>)
+        (extensions: Map<string, JsonObject>)
         (eventActor: Actor)
         (plan: WorkContextPlan)
         : Result<JsonArray * string list, string> =
@@ -343,7 +362,7 @@ module FileWorkContextRepository =
             | Ok contextNode ->
                 match contextNode["workItems"] with
                 | :? JsonArray as items ->
-                    plan.ItemPlans |> List.iter (fun itemPlan -> applyItem conclusions items itemPlan.Item)
+                    plan.ItemPlans |> List.iter (fun itemPlan -> applyItem conclusions items itemPlan.Item itemPlan.Event.Reason)
 
                     contextNode["protocolVersion"] <- JsonValue.Create plan.ProtocolVersion
                     contextNode["repository"] <- JsonValue.Create plan.Repository
@@ -356,7 +375,7 @@ module FileWorkContextRepository =
                         contextNode["baselineDirtyPaths"] <- stringArrayNode plan.BaselineDirtyPaths
                     | None -> ()
 
-                    let eventNodes = plan.ItemPlans |> List.map (fun itemPlan -> eventNode eventActor itemPlan.Event)
+                    let eventNodes = plan.ItemPlans |> List.map (fun itemPlan -> eventNodeWith extensions eventActor itemPlan.Event)
                     let eventIds = eventNodes |> List.choose (fun node -> stringField node "eventId")
                     let eventsContent = appendEvents root eventNodes
                     let contextContent = contextNode.ToJsonString serializerOptions + "\n"
@@ -378,8 +397,17 @@ module FileWorkContextRepository =
         with error ->
             Error error.Message
 
-    /// `applyContextPlanWithConclusions` with no research-conclusion writes
-    /// -- every action but `complete` (on a research item) needs this.
+    let applyContextPlanWithConclusions
+        (root: string)
+        (repositoryId: string)
+        (conclusions: Map<string, string>)
+        (eventActor: Actor)
+        (plan: WorkContextPlan)
+        : Result<JsonArray * string list, string> =
+        applyContextPlanWithExtensions root repositoryId conclusions Map.empty eventActor plan
+
+    /// `applyContextPlanWithConclusions` with no conclusion writes -- every
+    /// action but `complete` needs this.
     let applyContextPlan
         (root: string)
         (repositoryId: string)

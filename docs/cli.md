@@ -1,18 +1,19 @@
 # CLI reference
 
-The canonical public interface is the `praxis` command (compatibility alias `ros`), a
-self-contained F# binary installed by the native installers (see
-[`native-installation.md`](native-installation.md)).
+The canonical public interface is the `praxis` command (compatibility alias
+`ros`, also kept as a scaffolded project's `./ros`), a self-contained F#
+binary. Install it from the native bundle (see
+[`native-installation.md`](native-installation.md)) or as the .NET global tool
+`EchelonFoundry.Praxis`; see [`installation.md`](installation.md).
 
 ```bash
 praxis <command>
 ```
 
 All five lifecycle commands, and the repository commands below them, are the
-same F# CLI. Launchers (`praxis`, a project's `./praxis`, and the `ros`/`./ros`
-compatibility aliases) only start it; no
-decision is made anywhere else, and no Node.js or npm is involved
-(`DF-ROS-2026-A049`).
+same F# CLI. No lifecycle decision is made in a launcher: launchers
+(`praxis`, a project's `./praxis`, and the `ros`/`./ros` compatibility aliases)
+only start it, and no Node.js or npm is involved (`DF-ROS-2026-A049`).
 
 ## Lifecycle commands
 
@@ -264,11 +265,12 @@ commands. These predate the lifecycle interface and are unchanged:
 praxis validate [--json]
 praxis registry build [--dry-run] | registry check
 praxis git status [--json]
-praxis work <capture|list|ready|show|start|resume|block|complete|reconcile|update|attach|context|...>
+praxis work <capture|list|ready|show|start|resume|block|complete|reconcile|checkpoint|continue|update|attach|context|...>
 praxis add "..."
 praxis telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
 praxis adapter <call|publish>
 praxis provenance <identity|record|show|audit>
+praxis plan <analyze|simulate|compare|explain|replay|freshness|groups|explain-group>
 ```
 
 Run `praxis --help` for the full argument list, and see
@@ -276,6 +278,36 @@ Run `praxis --help` for the full argument list, and see
 [`development-telemetry.md`](development-telemetry.md),
 [`work-adapter-contract.md`](work-adapter-contract.md) and
 [`agent-provenance.md`](agent-provenance.md) for what they mean.
+
+### `plan`
+
+```
+praxis plan analyze   [--json]
+praxis plan simulate  [--for baseline|speed|balanced|cost|max-parallel] [--max-concurrency N]
+                      [--budget AMOUNT [--currency CODE]] [--deadline 4h|90m] [--details] [--json]
+praxis plan compare   [--max-concurrency N] [--json]
+praxis plan explain   ID [--json]
+praxis plan replay    [--details] [--json]
+praxis plan freshness --plan FILE [--json]
+praxis plan groups    [--json]
+praxis plan explain-group GROUP-ID [--json]
+praxis plan simulate --groups [--max-concurrency N] [--json]
+praxis plan compare  --groups [--max-concurrency N] [--json]
+     common: [--observations FILE] [--config FILE] [--as-of TIMESTAMP]
+```
+
+The advisory planner: read-only, deterministic, and never changes work state
+(`DF-ROS-2026-A046`). It classifies every queue and live-context item, finds
+stale state from Git and supplied evidence, and recommends execution waves
+under an explicit strategy and risk policy, with a reason for every entry.
+Unknown durations and costs stay unknown; without cost telemetry the `cost`
+strategy is unavailable and `--budget` cannot be evaluated. `--json` documents
+use the versioned `praxis.plan/1.0.0` schema. `freshness` exits `3` when the
+saved plan is stale. `groups` recommends evidence-based work groups (items to
+reason about together, with the evidence, collision risk and recommended
+execution for each) without changing any item; `explain-group` answers why a
+group exists and what would change it (`DF-ROS-2026-A047`). See
+[`planning.md`](planning.md).
 
 ### `work reconcile`
 
@@ -298,6 +330,57 @@ shallow boundary, unavailable Git) is rejected with exit `1` and nothing is
 recorded; argument errors exit `2`. `--dry-run` shows the assessment without
 recording. See "Post-hoc attribution reconciliation" in
 [`work-protocol.md`](work-protocol.md) for when to use it and when not to.
+
+### `work checkpoint`, `work checkpoint show`, `work continue`
+
+```
+praxis work checkpoint --id ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT
+                       [--step STEP-ID] [--execution EXE-ID] [--json] [IDENTITY]
+praxis work checkpoint show ID [--json] [--offline]
+praxis work continue --id ID --occurred-at TIMESTAMP [--json] [IDENTITY]
+praxis work context [ID] [--text] [--offline]
+praxis work block ... [--unrecoverable-reason TEXT]
+praxis work abandon --id ID [--id ID]* --occurred-at TIMESTAMP --reason TEXT [IDENTITY]
+praxis status [--json] [--verbose] [--offline]
+```
+
+**`work checkpoint`** records a verified durable checkpoint. The remote itself
+must show that local HEAD, the checkpoint commit, and the upstream branch head
+are the same commit, with no meaningful uncommitted work. It never commits,
+pushes or stashes.
+
+- `--json` prints `status` (`recorded`, `rejected` or `failed`), `checkpoint`
+  (the recorded fact), the attributed `paths`, and `rejections[{code,
+  message, remedy}]`.
+- Exit codes: `0` recorded; `1` refused or not persisted; `2` argument
+  errors, including a blank summary or next action.
+
+**`work checkpoint show`** prints the latest checkpoint, the separately
+observed current state (freshness, current recoverability, local HEAD,
+working tree), warnings, non-destructive recovery steps, and the full
+history.
+
+**`work continue`** lets a successor take over active work whose executor
+disappeared. The successor gets a new execution whose parent is the
+predecessor, and a `work.continued` event is recorded. The command refuses
+dirty checkouts, the caller's own run, and non-active work.
+
+**Additive output.** `work context` and `status` gain an additive
+`continuity` block. `--offline` never contacts a remote. Each block carries
+`telemetry.executions[]`, the item's executions with their telemetry
+segmentation (`execution-level`, `step-level` or `step-level-adopted`),
+`stepTrackingStartedAt` and any execution-scoped period before it; `--text`
+prints them under `TELEMETRY SEGMENTATION`. See "Effective-current step
+telemetry" in [`development-telemetry.md`](development-telemetry.md).
+
+**Guards.** Where `workProtocol.continuity.requireDurableCheckpoint` is set:
+
+- `work complete` requires a current, re-verified checkpoint for meaningful
+  Git-backed work;
+- `work block` after un-checkpointed work needs a checkpoint or
+  `--unrecoverable-reason`.
+
+See "Durable checkpoints and continuity" in [`work-protocol.md`](work-protocol.md).
 
 ### `remote execute`
 
@@ -352,3 +435,18 @@ wins when both are set. An invalid `--actor-kind` is an argument error (exit `2`
 `validate` reports provenance errors (which fail validation) and provenance
 warnings (which do not). In `--json`, warnings carry `"severity":"warning"`,
 and `valid` reflects errors only.
+
+## Execution and installation commands
+
+`praxis execution ...` runs Ordo's execution contract: envelopes, worktree
+per execution, the step ledger and receipts, mutation boundaries, evaluator
+identity and legal actions. See [`execution-runtime.md`](execution-runtime.md).
+
+`praxis installation register|remove|verify|reconcile|list|status|history`
+registers installations with Project Administration's inventory. See
+[`installation-registration.md`](installation-registration.md).
+
+`praxis` is the canonical command. The native release installs `praxis` and
+`ros`, the .NET global tool installs `praxis`, and `./praxis` runs this
+checkout. The npm package is no longer published (`DF-ROS-2026-A044`). Every
+name runs the same F# CLI.

@@ -319,7 +319,7 @@ module PraxisNamingTests =
           { Name = "praxis naming: every documented ROS_* variable has a PRAXIS_* alias; unrelated prefixes are untouched"
             Run =
               fun () ->
-                  for suffix in [ "ACTOR"; "ACTOR_KIND"; "TELEMETRY_PROVIDER"; "TELEMETRY_RUNTIME"; "TELEMETRY_MODEL"; "TELEMETRY_SESSION_ID"; "TELEMETRY_RUN_ID"; "BASE_REF" ] do
+                  for suffix in [ "ACTOR"; "ACTOR_KIND"; "TELEMETRY_PROVIDER"; "TELEMETRY_RUNTIME"; "TELEMETRY_MODEL"; "TELEMETRY_SESSION_ID"; "TELEMETRY_RUN_ID"; "BASE_REF"; "GIT_REMOTE_TIMEOUT_SECONDS" ] do
                       Assert.isTrue (List.contains ("PRAXIS_" + suffix) EnvironmentAliases.canonicalNames) $"PRAXIS_{suffix} is not aliased"
 
                   let lookup name = if name = "PRAXIS_BASE_REF" then Some "abc" else None

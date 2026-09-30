@@ -1,0 +1,62 @@
+{
+  "schema": "praxis.remote-journal",
+  "schemaVersion": 1,
+  "requestId": "req-cont-b-step-complete-1",
+  "fingerprint": "sha256:3664a7ec4db341c345eb99f95b8d7b6463aa7763cc7b7ad68071af7c310d47e1",
+  "protocolVersion": "1.3",
+  "operation": "step.complete",
+  "recordedAt": "2026-09-29T11:45:13.018Z",
+  "requestedAt": null,
+  "repository": {
+    "ref": "refs/heads/main",
+    "expectedSha": "9097a22c5020e60231b52274fae97bbb5c20d71c"
+  },
+  "requester": {
+    "assurance": "asserted-by-request",
+    "actor": {"kind":"agent","id":"anthropic/claude-code","provider":"anthropic","model":"unknown","runtime":"claude-code"},
+    "sessionId": "session_01LsPufZwWFo14HtzgjM3UB3",
+    "execution": "EXE-20260929T114329995Z-cebed9a0"
+  },
+  "principal": "github:kemiller2002",
+  "response": {
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.3",
+  "requestId": "req-cont-b-step-complete-1",
+  "operation": "step.complete",
+  "outcome": "succeeded",
+  "replayed": false,
+  "repository": {
+    "ref": "refs/heads/main",
+    "expectedSha": "9097a22c5020e60231b52274fae97bbb5c20d71c",
+    "observedSha": "9097a22c5020e60231b52274fae97bbb5c20d71c"
+  },
+  "praxisVersion": "3.6.0",
+  "executor": {
+    "kind": "github-actions",
+    "runId": "36563637526",
+    "runAttempt": "1",
+    "workflowRef": "kemiller2002/praxis/.github/workflows/praxis-remote.yml@refs/heads/main",
+    "repository": "kemiller2002/praxis",
+    "host": "github-hosted",
+    "principal": "github:kemiller2002",
+    "praxisVersion": "3.6.0",
+    "assurance": "observed-by-executor"
+  },
+  "persistence": {
+    "paths": [
+      ".ros/remote/requests/req-cont-b-step-complete-1.json",
+      ".ros/remote/requests/req-cont-b-step-start-1.json",
+      ".ros/remote/requests/req-cont-b-telemetry-1.json",
+      ".ros/telemetry/executions/EXE-20260929T114329995Z-cebed9a0.json"
+    ]
+  },
+  "failure": null,
+  "result": {
+    "executionId": "EXE-20260929T114329995Z-cebed9a0",
+    "stepId": "continue-proof-b",
+    "event": "step.completed",
+    "recorded": true
+  }
+}
+
+}

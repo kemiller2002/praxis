@@ -2,11 +2,11 @@
 id: GV-START-001
 title: Agent Startup Guide
 status: canonical
-version: 1.8.0
+version: 1.10.0
 owners:
   - repository-governance
 created: 2026-07-22
-updated: 2026-09-28
+updated: 2026-09-29
 review_cycle: quarterly
 supersedes: []
 superseded_by: []
@@ -63,9 +63,52 @@ For substantial work, record: objective; work completed; files changed; decision
 
 ## Work Protocol
 
-Before meaningful mutation, identify the external work item and run `./praxis work begin --id ID --occurred-at TIMESTAMP` (see the F# CLI note below for the timestamp — it must be the real current time, not an arbitrary one). That transition starts an execution-telemetry record; inspect `./praxis work context ID`, classify the work, and ingest runtime telemetry that the current environment can expose. Preserve unknown provider fields through the sanitized raw layer and record unsupported/unavailable capability explicitly. Perform the bounded work, gather configured evidence, request a legal transition with `./praxis work complete --id ID --occurred-at TIMESTAMP --evidence TYPE=PATH` (repeatable; finalizes active telemetry), then run `./praxis registry build` and `./praxis validate`. Attribute canonical records you create or change with `./praxis provenance record` (see Agent Identity and Provenance below). Use `./praxis work block --id ID --occurred-at TIMESTAMP --reason TEXT` and `./praxis work resume --id ID --occurred-at TIMESTAMP` rather than hand-editing context. Use `./praxis status` when resuming unfamiliar work. Meaningful committed changes require machine-readable attribution; see `docs/work-protocol.md` and `docs/development-telemetry.md`. If meaningful changes were committed while no work item was active, reconcile them after the fact with `./praxis work reconcile --id ID --reason TEXT --commit REV --occurred-at TIMESTAMP` (Git-evidenced, recorded as post-hoc, never a substitute for beginning work). Never touch, rewrite, or recommit files to manufacture attribution, and never create a work item only to absorb changes.
+Before meaningful mutation, identify the external work item and run `./praxis work begin --id ID --occurred-at TIMESTAMP` (see the F# CLI note below for the timestamp — it must be the real current time, not an arbitrary one). That transition starts an execution-telemetry record; inspect `./praxis work context ID`, classify the work, and ingest runtime telemetry that the current environment can expose. Preserve unknown provider fields through the sanitized raw layer and record unsupported/unavailable capability explicitly. Perform the bounded work, gather configured evidence, commit and push it, record a durable checkpoint (see "Durable checkpoints and continuity" below), request a legal transition with `./praxis work complete --id ID --occurred-at TIMESTAMP --evidence TYPE=PATH` (repeatable; finalizes active telemetry), then run `./praxis registry build` and `./praxis validate`, and commit and push the resulting Praxis state. Attribute canonical records you create or change with `./praxis provenance record` (see Agent Identity and Provenance below). Use `./praxis work block --id ID --occurred-at TIMESTAMP --reason TEXT` and `./praxis work resume --id ID --occurred-at TIMESTAMP` rather than hand-editing context. Use `./praxis status` when resuming unfamiliar work. Meaningful committed changes require machine-readable attribution; see `docs/work-protocol.md` and `docs/development-telemetry.md`. If meaningful changes were committed while no work item was active, reconcile them after the fact with `./praxis work reconcile --id ID --reason TEXT --commit REV --occurred-at TIMESTAMP` (Git-evidenced, recorded as post-hoc, never a substitute for beginning work). Never touch, rewrite, or recommit files to manufacture attribution, and never create a work item only to absorb changes.
 
 No externally-assigned ID yet? Check `./praxis work ready` for capturable, unblocked repository work before assuming none exists, and use `./praxis add "..."` to record a newly discovered obligation instead of leaving it as an unfiled comment or dropped observation (`add` does not require `--occurred-at`; it defaults to the real current time). `./praxis work start --id ID --occurred-at TIMESTAMP` (`begin` is also accepted) promotes a ready backlog item into the protocol above. This local backlog is repository-scoped triage, not a project-management system; see the "Local backlog" section of `docs/work-protocol.md`.
+
+## Durable checkpoints and continuity
+
+**An executor session is disposable. Repository state and Praxis state are
+the continuity boundary.** No meaningful completed work may exist only in an
+executor's local environment: a successor on another machine, with no access
+to your filesystem, process, or conversation, must be able to continue. See
+`docs/work-protocol.md` ("Durable checkpoints and continuity") and
+`DF-ROS-2026-A042`.
+
+- A **commit** is local. A **pushed commit** is on a remote. A **verified
+  durable checkpoint** is Praxis's own record that your HEAD, the checkpoint
+  commit, and the head of your upstream remote branch were the same commit,
+  with no meaningful uncommitted work: `./praxis work checkpoint --id ID
+  --occurred-at NOW --summary "what is done" --next-action "what is next"
+  [--step STEP-ID]`. Praxis never commits, pushes, or stashes for you.
+- A **historical checkpoint** is that record; it is never rewritten. A
+  **currently recoverable checkpoint** is one the remote still carries now;
+  `./praxis work context ID --text` and `./praxis status` report both, separately.
+- Checkpoint at coherent recovery boundaries, not on a timer and not per
+  edit: after a meaningful implementation slice or material telemetry step;
+  before a risky change; before switching work items or repositories; before
+  an intentional handoff; when context exhaustion or termination looks
+  possible; before blocking after new work; before completing Git-backed
+  work. Never create a meaningless commit to satisfy Praxis.
+- For Git-backed work the order is: commit, push, `work checkpoint`,
+  `work complete`, then commit and push the Praxis state (`.ros/`). Where
+  `workProtocol.continuity.requireDurableCheckpoint` is set, completion
+  refuses anything else, and blocking after un-checkpointed work needs a
+  checkpoint or `--unrecoverable-reason TEXT` stated truthfully. Work that
+  changed nothing completes as before.
+- **New observability is effective-current.** Praxis preserves truthful
+  historical gaps rather than restarting work or fabricating telemetry.
+  Adopt step telemetry (`./praxis telemetry step start|complete|fail`) at the
+  next material slice; never restart an execution or work item to gain it,
+  never invent earlier steps, and never split earlier usage among steps.
+  Missing historical step data is unavailable, not zero and not invalid.
+- **Taking over** active work whose executor disappeared: fetch, switch to
+  the checkpoint's branch in a clean checkout, then `./praxis work continue
+  --id ID --occurred-at NOW` under your own identity. You get a new
+  execution whose parent is the predecessor's; the predecessor is recorded
+  as interrupted, never as you and never as successful. `blocked -> resume`
+  remains for intentionally blocked work.
 
 ## Agent Identity and Provenance
 
@@ -128,13 +171,24 @@ repository.
 - The rules above still apply: never impersonate, never fabricate identity,
   and never touch files to manufacture attribution.
 - Do not work around a missing runtime by hand-editing `.ros/` state.
+- Checkpoint and take over remotely with `work.checkpoint` (naming your own
+  `execution.id`) and `work.continue` (protocol 1.3).
+- Can commit but cannot dispatch Actions? Commit the request as
+  `.praxis-inbox/<requestId>.json` on a `praxis-inbox/...` branch. The inbox
+  relays it unchanged (`DF-ROS-2026-A045`).
 
 ## Lifecycle commands
 
 Installation, verification, diagnosis and upgrade go through the standard
-lifecycle interface of the F# CLI, distributed as self-contained native
-releases (`scripts/install-native.sh`, `scripts/install-native.ps1`, or
-`echelon install praxis`), which install the `praxis` command (and `ros`, its compatibility alias):
+lifecycle interface, implemented in F#. Install the `praxis` command (with
+`ros` as its compatibility alias) one of two ways (`DF-ROS-2026-A044`; npm is
+no longer a distribution channel):
+
+- **No runtime needed:** the self-contained native bundle from GitHub
+  Releases (`scripts/install-native.sh`, `install-native.ps1` on Windows, or
+  `echelon install praxis`); see
+  [`docs/native-installation.md`](docs/native-installation.md).
+- **With .NET 10:** `dotnet tool install -g EchelonFoundry.Praxis`.
 
 ```
 praxis init
@@ -161,8 +215,9 @@ Before editing a file the tool installed, check its ownership there: a
 
 ## F# CLI
 
-`./praxis` in this source checkout, and in every project installed with `init`
-(both profiles), runs the F# CLI (`DF-ROS-2026-A030`, `DF-ROS-2026-A049`).
+`./praxis` in this source checkout, and in every project scaffolded by
+`praxis init` (both profiles), runs the F# CLI (`DF-ROS-2026-A030`,
+`DF-ROS-2026-A049`).
 Praxis's own repository is F#/.NET only (`RQ-ROS-2026-A024`): it owns no
 JavaScript, TypeScript, npm or Node tooling, and `./praxis architecture check`
 (also part of `./praxis validate` here) fails on any such file. Do not add one;

@@ -54,8 +54,27 @@ module ExecutionPlan =
             )
         | Arguments.WorkResume ids ->
             ExecutionPlan.Command([ "work"; "resume" ] @ repeated "--id" ids @ [ "--occurred-at"; occurredAt ])
-        | Arguments.WorkBlock(ids, reason) ->
-            ExecutionPlan.Command([ "work"; "block" ] @ repeated "--id" ids @ [ "--occurred-at"; occurredAt; "--reason"; reason ])
+        | Arguments.WorkBlock(ids, reason, unrecoverable) ->
+            ExecutionPlan.Command(
+                [ "work"; "block" ]
+                @ repeated "--id" ids
+                @ [ "--occurred-at"; occurredAt; "--reason"; reason ]
+                @ optionalFlag "--unrecoverable-reason" unrecoverable
+            )
+        | Arguments.WorkCheckpoint checkpoint ->
+            // The checkpoint belongs to the requester's own execution, which
+            // the request must name; the commit is whatever the executor is
+            // checked out at (bound by `expectedSha`), verified against the
+            // remote by the command itself.
+            ExecutionPlan.Command(
+                [ "work"; "checkpoint"; "--id"; checkpoint.WorkItemId; "--occurred-at"; occurredAt ]
+                @ [ "--summary"; checkpoint.Summary; "--next-action"; checkpoint.NextAction ]
+                @ optionalFlag "--step" checkpoint.StepId
+                @ optionalFlag "--execution" request.ExecutionId
+                @ [ "--json" ]
+            )
+        | Arguments.WorkContinue id ->
+            ExecutionPlan.Command [ "work"; "continue"; "--id"; id; "--occurred-at"; occurredAt; "--json" ]
         | Arguments.WorkComplete complete ->
             ExecutionPlan.Command(
                 [ "work"; "complete" ]

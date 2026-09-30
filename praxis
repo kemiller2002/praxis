@@ -4,7 +4,7 @@
 set -eu
 
 repo_root="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
-dll="${PRAXIS_DLL_PATH_OVERRIDE:-${ROS_FS_DLL_PATH_OVERRIDE:-$repo_root/src/Ros.Cli/bin/Release/net10.0/praxis.dll}}"
+dll="${PRAXIS_DLL_PATH_OVERRIDE:-${PRAXIS_FS_DLL_PATH_OVERRIDE:-${ROS_FS_DLL_PATH_OVERRIDE:-$repo_root/src/Ros.Cli/bin/Release/net10.0/praxis.dll}}}"
 
 if [ ! -f "$dll" ]; then
   printf '%s\n' "./praxis needs the CLI built first. Run 'dotnet build Ros.slnx --configuration Release', then retry." "Missing: $dll" >&2

@@ -2,11 +2,11 @@
 id: RQ-ROS-2026-A021
 title: Praxis governance is independent of the execution environment; remote/cloud-agent execution is a first-class capability
 status: accepted
-version: 1.1.0
+version: 1.3.0
 owners:
   - repository-governance
 created: 2026-09-28
-updated: 2026-09-28
+updated: 2026-09-29
 research_area: repository-operating-system
 priority: high
 depends_on: [RQ-ROS-2026-A020]
@@ -35,6 +35,28 @@ provenance:
         runtime: claude-code
       reason: "Captured from GitHub issue #90 (work item GH-90): remote/cloud-agent execution as a first-class capability"
       evidence: [https://github.com/kemiller2002/praxis/issues/90, EV-ROS-2026-A053]
+    EXE-20260928T200030786Z-eca55c92:
+      operations: [modified]
+      at: 2026-09-28T20:02:59.000Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRX-REMOTE-038 delivered by PRAXIS-REMOTE-13: adapter classifies GitHub rate limiting as rate-limited"
+      evidence: [scripts/praxis-remote-persist.sh, tests/praxis-remote-adapter.test.mjs]
+    EXE-20260929T054321231Z-0f9f1e9a:
+      operations: [modified]
+      at: 2026-09-29T05:44:18.000Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRX-REMOTE-001/011/029/042 demonstrated live (PRAXIS-REMOTE-11); gaps recorded as PRAXIS-REMOTE-15 and PRAXIS-REMOTE-16"
+      evidence: [EV-ROS-2026-A054]
 derived_from: [RQ-ROS-2026-A020]
 ---
 
@@ -120,8 +142,9 @@ completion evidence and tests.
 - The site suite: 99 passed.
 - `praxis validate`: passed.
 
-**No live run yet.** No live GitHub dispatch has been run. That is exactly
-what the end-to-end proof, PRAXIS-REMOTE-11, will establish.
+**Live run.** The first live GitHub dispatches ran on 2026-09-29, for the
+end-to-end proof PRAXIS-REMOTE-11 (`EV-ROS-2026-A054`). See "Remaining
+work" below.
 
 **Implemented and tested:**
 
@@ -141,15 +164,40 @@ what the end-to-end proof, PRAXIS-REMOTE-11, will establish.
 
 **Remaining work:**
 
-- **001, 011, 029, 041 (live parts), 042.** These are the end-to-end proof,
-  PRAXIS-REMOTE-11. It is blocked on human action:
-  - merging the adapter to the default branch;
-  - publishing an attested release that contains `remote execute`;
-  - pinning that release and opting in to remote capabilities.
+- **001, 011, 029, 042: demonstrated live on 2026-09-29.** See
+  `EV-ROS-2026-A054`. The attested `v3.5.0` release was published, pinned
+  and opted in (PRs #99 and #100). Two cloud-agent sessions with only GitHub
+  access started, continued and completed `PRAXIS-REMOTE-11-PROOF` through
+  `praxis-remote.yml`. The run showed:
+  - replay of an identical request;
+  - an atomic, partially undone batch;
+  - SHA binding on every mutation;
+  - step-scoped `agent-report` telemetry, with tokens left unavailable;
+  - a successor execution linked by `parentExecutionId`;
+  - a refused impersonation attempt;
+  - remote validation.
+
+  The proof also found two gaps:
+  - the handoff contract, fixed by PRAXIS-REMOTE-15;
+  - `work.complete` silently dropping a non-research conclusion, tracked
+    by PRAXIS-REMOTE-16.
+- **041 (live parts).** The live run covered these parts of 041:
+  - the no-runtime caller;
+  - actor and executor separation;
+  - duplicate replay;
+  - stale-SHA binding;
+  - the takeover refusal and the impersonation refusal;
+  - missing telemetry;
+  - validation parity.
+
+  Rate limiting, timeout-after-commit, cancellation and concurrent requests
+  remain covered by tests only.
 - **030.** Conditor support, PRAXIS-REMOTE-12. It depends on PRAXIS-REMOTE-11.
-- **038.** Retryability is classified, including `rate-limited`. The GitHub
-  adapter does not yet recognize GitHub API rate limiting specifically. It
-  reports any other push failure as `repository-write-failed`.
+- **038.** Delivered by PRAXIS-REMOTE-13. The GitHub adapter reports a push
+  or pull-request creation that GitHub throttled (HTTP 429, or a primary or
+  secondary API rate limit) as `rate-limited`, with `same-request` retry. It
+  reports any other refused push or pull request as
+  `repository-write-failed`, and a lost race as `concurrency-conflict`.
 - **039.** Remote execution is opt-in, and existing state stays readable.
   The npm `praxis` bin is deferred to PRAXIS-NPM-BIN, because the public
   site's audited copy must change with it.

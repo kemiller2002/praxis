@@ -1095,5 +1095,459 @@
     "title": "Issue #90 (PRX-REMOTE-001..044) reconciled against the current Praxis implementation",
     "updated": "2026-09-28",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-29",
+    "derived_from": [
+      "RQ-ROS-2026-A021"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A054",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A054--live-remote-execution-proof.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T054321231Z-0f9f1e9a": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T05:44:04.000Z",
+          "evidence": [
+            "https://github.com/kemiller2002/praxis/issues/90"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "Live end-to-end proof of remote Praxis execution (PRAXIS-REMOTE-11, PRX-REMOTE-042), verified against main and the GitHub Actions API"
+        }
+      }
+    },
+    "related_documents": [
+      "https://github.com/kemiller2002/praxis/issues/90",
+      "RQ-ROS-2026-A021",
+      "EV-ROS-2026-A053",
+      "DF-ROS-2026-A041",
+      "docs/remote-agent-contract.md",
+      "docs/remote-protocol.md",
+      "docs/remote-execution-operations.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A021"
+    ],
+    "tags": [
+      "remote-execution",
+      "e2e",
+      "provenance",
+      "telemetry",
+      "idempotency",
+      "gh-90"
+    ],
+    "title": "Live end-to-end proof: cloud agents with only GitHub access governed through remote Praxis 3.5.0",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-29",
+    "derived_from": [
+      "RQ-ROS-2026-A022"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A055",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A055--durable-checkpoint-recovery-verification.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T075409917Z-4a1d9b5a": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T08:02:39.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Verification and two-clone recovery evidence for durable checkpoints (PRAXIS-CONT-10-HARDEN)"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A022",
+      "DF-ROS-2026-A042",
+      "tests/Ros.Tests/RecoveryProofTests.fs",
+      "tests/remote-checkpoint.test.mjs"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A022"
+    ],
+    "tags": [
+      "continuity",
+      "checkpoints",
+      "recovery",
+      "verification"
+    ],
+    "title": "Durable checkpoints and agent continuity: two-clone agent-loss recovery and verification results",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-29",
+    "derived_from": [
+      "RQ-ROS-2026-A022"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A056",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A056--live-remote-continuation-proof.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T120718709Z-8c483346": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T12:08:01.000Z",
+          "evidence": [
+            "https://github.com/kemiller2002/praxis/issues/90"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "Live proof of praxis.remote 1.3 executor continuation (PRAXIS-REMOTE-12-CONTINUE-PROOF), verified against main and the GitHub Actions API"
+        }
+      }
+    },
+    "related_documents": [
+      "https://github.com/kemiller2002/praxis/issues/90",
+      "RQ-ROS-2026-A022",
+      "RQ-ROS-2026-A021",
+      "DF-ROS-2026-A042",
+      "DF-ROS-2026-A041",
+      "EV-ROS-2026-A054",
+      "docs/remote-agent-contract.md",
+      "docs/remote-protocol.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A022",
+      "RQ-ROS-2026-A021"
+    ],
+    "tags": [
+      "remote-execution",
+      "e2e",
+      "continuity",
+      "checkpoint",
+      "provenance",
+      "telemetry",
+      "gh-90"
+    ],
+    "title": "Live proof: a runtime-less successor continues active work with praxis.remote 1.3 work.continue on Praxis 3.6.0",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-29",
+    "derived_from": [
+      "RQ-ROS-2026-A022"
+    ],
+    "evidence_type": "secondary",
+    "id": "EV-ROS-2026-A057",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A057--openai-successor-attempt-could-not-invoke-praxis.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T162324008Z-39bbe593": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T16:23:37.680Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-REMOTE-INBOX-01: capture the cross-provider continuation gap and its remedy (re-landed from claude/remote-inbox-relay-v3)"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A022",
+      "RQ-ROS-2026-A023",
+      "DF-ROS-2026-A041",
+      "DF-ROS-2026-A045",
+      "docs/remote-agent-contract.md",
+      ".github/workflows/praxis-remote.yml"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A023"
+    ],
+    "tags": [
+      "continuity",
+      "cross-provider",
+      "remote-execution",
+      "openai"
+    ],
+    "title": "Cross-provider continuation attempt 1: an OpenAI successor reconstructed the handoff from repository state but could not invoke Praxis",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-29",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A058",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A058--planner-shadow-experiment-on-praxis.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T172554288Z-0f639674": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T18:08:50.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-PLAN-01: advisory planner and its first shadow experiment"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A046",
+      "requirements/PLANNING-OPTIMIZATION.md",
+      "docs/planning.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "DF-ROS-2026-A046"
+    ],
+    "tags": [
+      "planning",
+      "telemetry",
+      "shadow-experiment",
+      "replay"
+    ],
+    "title": "Advisory planner shadow experiment 1: Praxis's own nonterminal work and a no-hindsight replay of 155 executions",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-30",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A059",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A059--grouping-planner-baseline-and-cohort.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T102847967Z-f42c2262": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T11:17:11.207Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "WI-0064: evidence-based work groups and the frozen grouping experiment"
+        },
+        "EXE-20260930T112849252Z-4c58aae8": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T11:34:15.195Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-PLAN-03: status review -> accepted on the repository owner's explicit approval of all PR #126 recommendations (the owner approved; this agent only recorded it)"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "DF-ROS-2026-A047",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "docs/planning.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "DF-ROS-2026-A047",
+      "HY-ROS-2026-A027"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "shadow-experiment",
+      "baseline"
+    ],
+    "title": "Work-group planner baseline on Praxis: no pre-existing cohort, a captured phase-two cohort, and frozen predictions for EX-ROS-2026-A021",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-30",
+    "evidence_type": "test-result",
+    "id": "EV-ROS-2026-A060",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A060--pr92-premerge-semantic-conflict-matrix-and-reconciliation-manifest.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T162437557Z-40b62e08": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:08:11.000Z",
+          "evidence": [
+            "tests/Ros.Tests/PremergeFence.fs"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-PR92-PREMERGE-REGRESSION-FENCE: semantic conflict matrix, baselines and reconciliation manifest for PR #92"
+        }
+      }
+    },
+    "related_documents": [
+      "docs/work-protocol.md",
+      "docs/remote-agent-contract.md",
+      "DF-ROS-2026-A042",
+      "DF-ROS-2026-A044",
+      "DF-ROS-2026-A045"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "supports": [],
+    "tags": [
+      "pr92",
+      "reconciliation",
+      "regression",
+      "characterization",
+      "praxis-rename"
+    ],
+    "title": "PR #92 pre-merge regression fence: semantic conflict matrix, baselines, and the reconciliation manifest",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "low",
+    "created": "2026-09-30",
+    "derived_from": [
+      "EX-ROS-2026-A021"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A064",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A064--grouping-experiment-results.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T114749635Z-ba7301df": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:18:10.317Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-PLAN-EXP-01: results of the grouping experiment EX-ROS-2026-A021"
+        },
+        "EXE-20260930T172030686Z-71d403ef": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:20:31.714Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-PLAN-06: renumber the A021 results record to EV-ROS-2026-A064 and relate it to the parallel evaluation kit and EV-ROS-2026-A063"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "EV-ROS-2026-A059",
+      "HY-ROS-2026-A027",
+      "HY-ROS-2026-A028",
+      "DF-ROS-2026-A047",
+      "requirements/PLANNING-WORK-GROUPS.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "supports": [
+      "HY-ROS-2026-A028"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "experiment",
+      "context",
+      "evaluation"
+    ],
+    "title": "Grouping experiment EX-ROS-2026-A021: one grouped execution versus five independent executions of the work-group commands",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
   }
 ]

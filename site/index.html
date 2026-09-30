@@ -624,6 +624,8 @@ registries/                         <span class="tree__note">generated indexes o
           <p>Praxis was previously named ROS, the Repository Operating System. <code>praxis</code> is the command; <code>ros</code> remains only as a compatibility alias:</p>
           <ul>
             <li>The native installers, <code>install-native.sh</code> and <code>install-native.ps1</code>, install both <code>praxis</code> and <code>ros</code> commands, and both run the same program.</li>
+            <li>With .NET 10 installed, <code>dotnet tool install -g EchelonFoundry.Praxis</code> provides the same <code>praxis</code> command. The npm package <code>@echelon-foundry/repository-operating-system</code> is no longer published.</li>
+            <li><code>init</code> adds a repository-local <code>./praxis</code> launcher, with <code>./ros</code> as its alias. Neither needs Node.js.</li>
             <li>Help text in release v3.4.0 and earlier still says ROS; the current source says Praxis.</li>
             <li>Repositories keep their <code>.ros/</code> records and <code>ros.json</code> configuration; the rename does not move them.</li>
           </ul>

@@ -19,7 +19,7 @@ work begin
   -> telemetry validation with normal Praxis validation
 ```
 
-`work block` and `work resume` add interruption events and allow Praxis to derive blocked duration. A resumed item whose prior execution was already finalized receives a new child execution. An agent handoff or a parallel/subagent run can be represented explicitly with `telemetry start --parent-execution`, `--agent`, and `--subagent`.
+`work block` and `work resume` add interruption events and allow Praxis to derive blocked duration. A resumed item whose prior execution was already finalized receives a new child execution. `work continue` (a successor taking over active work whose executor disappeared) also creates a new execution whose `identity.parentExecutionId` names the predecessor, and records the predecessor as interrupted in a `work.continued` event, never in the predecessor's own record. See "Durable checkpoints and continuity" in `work-protocol.md`. An agent handoff or a parallel/subagent run can be represented explicitly with `telemetry start --parent-execution`, `--agent`, and `--subagent`.
 
 Historical work records created before telemetry existed remain valid. The compatibility boundary is explicit: once a work item has `telemetryExecutionIds`, completed work requires those records to be finalized. Praxis does not invent telemetry for older history.
 
@@ -242,3 +242,79 @@ A total with any unavailable executions is marked `complete: false`, which
 means it is a lower bound.
 
 The existing `telemetry summary` is unchanged.
+
+## Effective-current step telemetry (PRAXIS-CONT-11)
+
+**New observability is effective-current. Praxis preserves truthful
+historical gaps rather than restarting work or fabricating telemetry.**
+Historical absence of step data is not an invalid execution, and unknown
+historical step attribution is not zero step usage.
+
+An execution's telemetry has one of two legitimate granularities:
+
+| Term | Meaning |
+|---|---|
+| execution-level telemetry | measurements with no `step` dimension; attributed to the execution as a whole |
+| step-level telemetry | measurements recorded against a started step of the same execution |
+| unavailable historical step attribution | usage recorded before step tracking was adopted: known per execution, unknown per step |
+
+Step tracking can be adopted at any point of an execution by starting a
+step. Nothing restarts. The boundary is derived from the execution's own
+first `step.started` event, so no field is backfilled and no history is
+rewritten:
+
+- measurements recorded before adoption stay execution-scoped exactly as
+  recorded;
+- Praxis never creates synthetic historical steps, and never splits
+  earlier usage among later steps by any proportion, duration or guess;
+- an execution that never adopts steps stays valid, and so does its work
+  item's completion;
+- a successor (`work continue`) starts its own execution and its own steps;
+  nothing is appended to its predecessor.
+
+`work context`, `status` and `work continue` report this per execution in
+the continuity block's `telemetry.executions[]`:
+
+| Field | Meaning |
+|---|---|
+| `segmentation` | `execution-level` (no step ever recorded), `step-level` (steps from the execution's start) or `step-level-adopted` (steps adopted partway) |
+| `stepTrackingStartedAt` | the first step's start, or `null` |
+| `executionScopedBefore` | `{from, until}` of the execution-scoped period before adoption; `from` is `null` when the execution's start is unknown |
+| `historicalStepAttribution` | `unavailable` when some activity has no step attribution, else `not-applicable` |
+| `measurements` | counts of `executionScopedBeforeSteps`, `executionScopedOutsideSteps` and `stepScoped` measurements |
+
+`--text` renders it as, for example:
+
+```
+TELEMETRY SEGMENTATION
+  EXE-... (active): execution-level before: 2026-09-29T10:11:41.946Z .. 2026-09-29T10:11:55.000Z (step attribution unavailable); step-level from: 2026-09-29T10:11:55.000Z
+```
+
+In `telemetry usage --by step`, execution-scoped usage is the
+`(outside any step)` group. Every execution with an execution-scoped period
+belongs to that group, so one that reported nothing there is listed in
+`unavailableExecutions` (unknown, `complete: false`), never counted as zero.
+
+`validate` accepts measurements without a step whatever the execution's
+segmentation, and reports a measurement whose `step` names a step its own
+execution never started.
+
+## Steps and durable checkpoints (PRAXIS-CONT)
+
+A durable checkpoint (`work checkpoint`, see `work-protocol.md`) may name a
+step with `--step STEP-ID`. Praxis refuses the link unless the step was
+started in the checkpointing process's own execution, and that execution
+belongs to the work item. `validate` re-checks the link offline.
+
+Steps and checkpoints are not coupled otherwise:
+
+- A material implementation step that ends after repository changes should
+  normally be followed by a checkpoint.
+- Research and analysis steps that change nothing need none.
+- Praxis never checkpoints automatically and never requires a synthetic
+  step.
+
+A checkpoint's summary is agent-reported prose. Test results remain
+telemetry measurements (such as `tests.passed`) with their source and
+quality. `work continue` shows a successor exactly those measurements, so a
+summary is never mistaken for evidence.

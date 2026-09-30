@@ -10,7 +10,7 @@ open Ros.Infrastructure.Lifecycle
 
 /// The distributed package version, taken from the assembly's own
 /// informational version. `Directory.Build.props` sets that from
-/// `release.json`, so the CLI and the native release can never report
+/// `release.json`, so the CLI and the release it ships in can never report
 /// different versions.
 let Version =
     let raw =
@@ -150,11 +150,14 @@ let private statusHelp =
     """praxis status -- report installation, validation and work state
 
 Usage:
-  praxis status [--json] [--verbose]
+  praxis status [--json] [--verbose] [--offline]
 
 What it does:
   Reads the repository and prints a JSON document describing the work items,
-  validation findings, telemetry counts and the installation. Never writes.
+  validation findings, telemetry counts, the installation, and continuity:
+  the durable checkpoint of each active or blocked work item, observed
+  against its remote now, with warnings stated as observed facts. Never
+  writes.
 
   Output is JSON with or without --json: this command emitted JSON before the
   lifecycle interface existed and consumers depend on that. --json is accepted
@@ -163,6 +166,7 @@ What it does:
 Options:
   --json      Accepted for symmetry; the output is JSON either way.
   --verbose   Include every managed artifact in the installation block.
+  --offline   Never contact a remote; remote state is reported as unknown.
 
 Example:
   praxis status --json"""
@@ -366,7 +370,7 @@ let parse (packageRoot: string option) (arguments: string list) : Result<Command
             // `status` is also a pre-existing repository command; the
             // lifecycle parser only claims it to validate its flags.
             rest
-            |> check baseFlags (fun () -> Command.Status { Common = commonOptions rest })
+            |> check (baseFlags + Set.singleton "--offline") (fun () -> Command.Status { Common = commonOptions rest })
         | _ -> None
 
 // ---------------------------------------------------------------------------

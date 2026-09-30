@@ -26,7 +26,7 @@ let private pushPaths (workflow: string) =
     |> List.ofSeq
 
 let private releaseWorkflows =
-    [ "native-release.yml"; "publish.yml" ]
+    [ "native-release.yml"; "ros-fs-assets.yml"; "release.yml" ]
     |> List.map (fun file -> $".github/workflows/{file}")
     |> List.filter exists
 
@@ -74,7 +74,7 @@ let tests =
                 ".github/workflows/deploy-pages.yml" ]
 
           for file in releaseWorkflows do
-              // No path filter: runs on every push regardless of the site (publish.yml).
+              // No push path filter: dispatch- or call-only workflows.
               for pattern in pushPaths (read file) do
                   for sitePath in sitePaths do
                       Assert.isFalse ((glob pattern).IsMatch sitePath) $"{sitePath} matches {file} push path {pattern}"

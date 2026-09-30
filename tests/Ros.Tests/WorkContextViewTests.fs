@@ -70,11 +70,11 @@ module WorkContextViewTests =
                           Assert.equal (Some "actor") (stringField view "actor")
 
                           let itemA = itemAt view 0
-                          Assert.equal [ "block"; "complete" ] (stringArrayField itemA "allowedActions")
+                          Assert.equal [ "abandon"; "block"; "complete" ] (stringArrayField itemA "allowedActions")
                           Assert.equal [ "implementation"; "tests" ] (stringArrayField itemA "requiredEvidenceForCompletion")
 
                           let itemB = itemAt view 1
-                          Assert.equal [ "resume" ] (stringArrayField itemB "allowedActions")
+                          Assert.equal [ "abandon"; "resume" ] (stringArrayField itemB "allowedActions")
                           Assert.equal (Some "waiting") (stringField itemB "blockReason")) }
 
           { Name = "readContextView filters to the requested ID, preserving unmodeled fields verbatim"

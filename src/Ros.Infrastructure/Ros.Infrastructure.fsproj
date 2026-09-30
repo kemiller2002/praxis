@@ -34,11 +34,15 @@
     <Compile Include="Work/FileTelemetryValidationRepository.fs" />
     <Compile Include="Work/FileAdapterRepository.fs" />
     <Compile Include="Provenance/FileProvenanceRepository.fs" />
+    <Compile Include="Work/FileCheckpointRepository.fs" />
     <Compile Include="Ordo/FileObservationRepository.fs" />
     <Compile Include="Lifecycle/Payload.fs" />
     <Compile Include="Lifecycle/Installation.fs" />
     <Compile Include="Remote/GitHubActionsExecutor.fs" />
     <Compile Include="Remote/FileRemoteRepository.fs" />
+    <Compile Include="Execution/ExecutionStore.fs" />
+    <Compile Include="Installation/AdministrationClient.fs" />
+    <Compile Include="Planning/FilePlanningRepository.fs" />
   </ItemGroup>
 
   <!-- The scaffold this CLI installs, compiled into the assembly so a released

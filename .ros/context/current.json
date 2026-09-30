@@ -2254,15 +2254,17 @@
     {
       "id": "GH-84",
       "type": "task",
-      "state": "blocked",
-      "semanticState": "blocked",
+      "state": "abandoned",
+      "semanticState": "abandoned",
       "evidence": [],
-      "updatedAt": "2026-09-27T08:39:01.000Z",
+      "updatedAt": "2026-09-30T09:40:16.000Z",
       "telemetryExecutionIds": [
         "EXE-20260927T074026833Z-d1d7ea06",
         "EXE-20260927T075155507Z-fcdf36ca"
       ],
-      "blockReason": "Site built and verified (PRAXIS-SITE-01..25); awaiting human review and merge of PR #85 and the one-time Pages setting (docs/site/site-deployment.md). Deployment is not yet captured, so GH-84 is not complete."
+      "blockReason": "Site built and verified (PRAXIS-SITE-01..25); awaiting human review and merge of PR #85 and the one-time Pages setting (docs/site/site-deployment.md). Deployment is not yet captured, so GH-84 is not complete.",
+      "abandonedAt": "2026-09-30T09:40:16.000Z",
+      "abandonedReason": "Cancelled by the repository owner on 2026-09-30. Blocked since before durable checkpoints (27-28 Sep); remaining steps (GH-84: one-time Pages setting; GH-90: PRAXIS-REMOTE-12 in Conditor) will not be pursued under this item."
     },
     {
       "id": "PRAXIS-SITE-01",
@@ -2903,14 +2905,16 @@
     {
       "id": "GH-90",
       "type": "task",
-      "state": "blocked",
-      "semanticState": "blocked",
+      "state": "abandoned",
+      "semanticState": "abandoned",
       "evidence": [],
-      "updatedAt": "2026-09-28T10:21:03.000Z",
+      "updatedAt": "2026-09-30T09:40:16.000Z",
       "telemetryExecutionIds": [
         "EXE-20260928T073932249Z-d48161b9"
       ],
-      "blockReason": "Praxis-side work PRAXIS-REMOTE-01..10 complete and merged via PR #91; remaining PRAXIS-REMOTE-11 (live no-.NET proof) needs: an attested release containing 'remote execute', pinned, with remote.capabilities opted in; PRAXIS-REMOTE-12 follows 11."
+      "blockReason": "Praxis-side work PRAXIS-REMOTE-01..10 complete and merged via PR #91; remaining PRAXIS-REMOTE-11 (live no-.NET proof) needs: an attested release containing 'remote execute', pinned, with remote.capabilities opted in; PRAXIS-REMOTE-12 follows 11.",
+      "abandonedAt": "2026-09-30T09:40:16.000Z",
+      "abandonedReason": "Cancelled by the repository owner on 2026-09-30. Blocked since before durable checkpoints (27-28 Sep); remaining steps (GH-84: one-time Pages setting; GH-90: PRAXIS-REMOTE-12 in Conditor) will not be pursued under this item."
     },
     {
       "id": "PRAXIS-REMOTE-01",
@@ -3321,6 +3325,1593 @@
       "completedAt": "2026-09-28T11:43:50.000Z"
     },
     {
+      "id": "PRAXIS-REMOTE-13",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "scripts/praxis-remote-persist.sh"
+        },
+        {
+          "type": "tests",
+          "path": "tests/praxis-remote-adapter.test.mjs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/remote-execution-operations.md"
+        }
+      ],
+      "updatedAt": "2026-09-29T01:13:00.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T200030786Z-eca55c92"
+      ],
+      "completedAt": "2026-09-29T01:13:00.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-14",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "scripts/praxis-remote-persist.sh"
+        },
+        {
+          "type": "tests",
+          "path": "tests/praxis-remote-adapter.test.mjs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/remote-execution-operations.md"
+        }
+      ],
+      "updatedAt": "2026-09-29T01:27:58.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T012447943Z-ec40f205"
+      ],
+      "completedAt": "2026-09-29T01:27:58.000Z"
+    },
+    {
+      "id": "RELEASE-3-5-0",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-09-29T01:21:51.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T011840973Z-732416b2"
+      ],
+      "completedAt": "2026-09-29T01:21:51.000Z"
+    },
+    {
+      "id": "REMOTE-ENABLE-3-5-0",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-09-29T04:28:28.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T042755722Z-1cefa7ca"
+      ],
+      "completedAt": "2026-09-29T04:28:28.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-15",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "docs/remote-agent-contract.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/remote-execute.test.mjs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/remote-agent-contract.md"
+        }
+      ],
+      "updatedAt": "2026-09-29T05:23:13.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T052157677Z-f9abf2b7"
+      ],
+      "completedAt": "2026-09-29T05:23:13.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-11-PROOF",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-09-29T05:27:44.389Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T044302145Z-078a696b",
+        "EXE-20260929T052538586Z-95bd6089"
+      ],
+      "blockReason": "predecessor execution EXE-20260929T044302145Z-078a696b (session session_01CXyA4Kr1MMmmhMjeNmgCFM) ended without a handoff; taking over as the successor",
+      "completedAt": "2026-09-29T05:27:44.389Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-11",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".echelon/toolchain.json"
+        },
+        {
+          "type": "implementation",
+          "path": "ros.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/remote-execute.test.mjs"
+        },
+        {
+          "type": "research-record",
+          "path": "research/evidence/EV-ROS-2026-A054--live-remote-execution-proof.md"
+        }
+      ],
+      "updatedAt": "2026-09-29T05:44:27.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T054321231Z-0f9f1e9a"
+      ],
+      "completedAt": "2026-09-29T05:44:27.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-00",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Checkpoint.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "research/decisions/DF-ROS-2026-A042--durable-work-checkpoints-and-executor-continuation.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RecoveryProofTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T08:03:01.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T063242003Z-c2cc74a2"
+      ],
+      "latestCheckpoint": {
+        "id": "ee3390bb5aae91055f8c5ff8",
+        "recordedAt": "2026-09-29T08:02:58.000Z",
+        "executionId": "EXE-20260929T063242003Z-c2cc74a2",
+        "repository": "repository-operating-system",
+        "branch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "commit": "762e10daeb3d084f73e47e5ba9e65cc957d16abd",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "remoteCommit": "762e10daeb3d084f73e47e5ba9e65cc957d16abd",
+        "summary": "Durable checkpoints and agent continuity complete: all requirements implemented, all suites green, two-clone recovery proof passing",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T08:03:01.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-01-DOMAIN",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Checkpoint.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Continuity.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Git/Durability.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/CheckpointDomainTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T06:45:40.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T063457588Z-2a2ea24b"
+      ],
+      "completedAt": "2026-09-29T06:45:40.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-02-GIT",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Git/GitRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Application/Work/Checkpoint.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Application/Git/Operations.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/GitDurabilityTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T06:50:34.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T064606132Z-c9a63ae5"
+      ],
+      "completedAt": "2026-09-29T06:50:34.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-03-PERSIST",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileCheckpointRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Contracts/Work/CheckpointJson.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/CheckpointValidation.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/CheckpointPersistenceTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T06:59:07.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T065051655Z-10f872a2"
+      ],
+      "completedAt": "2026-09-29T06:59:07.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-04-CLI",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/CheckpointCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/Program.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/CheckpointCliTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T07:08:53.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T065936299Z-2e1a598f"
+      ],
+      "latestCheckpoint": {
+        "id": "b84b11ef733c113be245e31c",
+        "recordedAt": "2026-09-29T07:08:51.000Z",
+        "executionId": "EXE-20260929T065936299Z-2e1a598f",
+        "repository": "repository-operating-system",
+        "branch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "commit": "23e973bd762cee980dda087e280f47f93fc9899f",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "remoteCommit": "23e973bd762cee980dda087e280f47f93fc9899f",
+        "summary": "work checkpoint/show, context and status continuity, --text and --offline implemented with 9 CLI integration tests; 649 F# tests and the status/context goldens pass",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T07:08:53.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-05-GUARDS",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/CheckpointCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Continuity.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/CheckpointGuardTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T07:15:47.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T070929017Z-38b9565c"
+      ],
+      "latestCheckpoint": {
+        "id": "3df9a933fd9b9b48c34f3a81",
+        "recordedAt": "2026-09-29T07:15:46.000Z",
+        "executionId": "EXE-20260929T070929017Z-38b9565c",
+        "repository": "repository-operating-system",
+        "branch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "commit": "09b8efb106f504baea116d376d13fca7707d1dfb",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "remoteCommit": "09b8efb106f504baea116d376d13fca7707d1dfb",
+        "summary": "Completion and block continuity guards implemented, enforced in this repository, 658 F# tests pass",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T07:15:47.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-06-CONTINUE",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/CheckpointCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileCheckpointRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ContinuationCliTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T07:22:25.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T071608188Z-abdf647c"
+      ],
+      "latestCheckpoint": {
+        "id": "1219cf4caf651cd7a643a49c",
+        "recordedAt": "2026-09-29T07:22:24.000Z",
+        "executionId": "EXE-20260929T071608188Z-abdf647c",
+        "repository": "repository-operating-system",
+        "branch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "commit": "ddc029765ddc117ba15e01fffcb16ec873a2e18e",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "remoteCommit": "ddc029765ddc117ba15e01fffcb16ec873a2e18e",
+        "summary": "work continue implemented with lineage, refusals, obligations and validation; 662 F# tests pass",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T07:22:25.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-07-REMOTE",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Remote/Protocol.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "schemas/praxis-remote-request.schema.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/remote-checkpoint.test.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RemoteProtocolTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T07:34:16.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T072237260Z-c6e8b45c"
+      ],
+      "latestCheckpoint": {
+        "id": "8261feeac0d8ce858934fe88",
+        "recordedAt": "2026-09-29T07:34:15.000Z",
+        "executionId": "EXE-20260929T072237260Z-c6e8b45c",
+        "repository": "repository-operating-system",
+        "branch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "commit": "42c0bdc6633874bb68930abb0fe6c9314c0f16fe",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "remoteCommit": "42c0bdc6633874bb68930abb0fe6c9314c0f16fe",
+        "summary": "praxis.remote 1.3 work.checkpoint/work.continue/unrecoverableReason with contract tests; 664 F# and remote suites pass",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T07:34:16.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-08-RECOVERY",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tests/Ros.Tests/RecoveryProofTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RecoveryProofTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T07:37:58.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T073522566Z-c250875d"
+      ],
+      "latestCheckpoint": {
+        "id": "17bb1af5b06dedf379bc7858",
+        "recordedAt": "2026-09-29T07:37:57.000Z",
+        "executionId": "EXE-20260929T073522566Z-c250875d",
+        "repository": "repository-operating-system",
+        "branch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "commit": "17c6a14026d05de91aa65559f1ea11ad0f9404ca",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "remoteCommit": "17c6a14026d05de91aa65559f1ea11ad0f9404ca",
+        "summary": "Two-clone agent-loss recovery proof implemented and passing (665 F# tests)",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T07:37:58.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-09-GOVERNANCE",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "AGENTS.md"
+        },
+        {
+          "type": "implementation",
+          "path": "docs/work-protocol.md"
+        },
+        {
+          "type": "implementation",
+          "path": "starter/greenfield/ros.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/CheckpointGuardTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T07:53:38.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T073817314Z-91f98864"
+      ],
+      "latestCheckpoint": {
+        "id": "597b30de245e5038749d4867",
+        "recordedAt": "2026-09-29T07:53:37.000Z",
+        "executionId": "EXE-20260929T073817314Z-91f98864",
+        "repository": "repository-operating-system",
+        "branch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "commit": "e8b973c48d8c588a97d06f249b359d43afc25484",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "remoteCommit": "e8b973c48d8c588a97d06f249b359d43afc25484",
+        "summary": "Governance, docs and starter propagation for durable continuity; 666 F#, 253 differential/remote and 104+7 npm tests pass",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T07:53:38.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-10-HARDEN",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/evidence/EV-ROS-2026-A055--durable-checkpoint-recovery-verification.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RecoveryProofTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T08:02:59.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T075409917Z-4a1d9b5a"
+      ],
+      "latestCheckpoint": {
+        "id": "8ef4e1bf0ca1676833af00e8",
+        "recordedAt": "2026-09-29T08:02:57.000Z",
+        "executionId": "EXE-20260929T075409917Z-4a1d9b5a",
+        "repository": "repository-operating-system",
+        "branch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "commit": "762e10daeb3d084f73e47e5ba9e65cc957d16abd",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/durable-checkpoints-continuity-ywqs3w",
+        "remoteCommit": "762e10daeb3d084f73e47e5ba9e65cc957d16abd",
+        "summary": "Durable checkpoints and agent continuity complete: all requirements implemented, all suites green, two-clone recovery proof passing",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T08:02:59.000Z"
+    },
+    {
+      "id": "PRAXIS-CONT-11-SEGMENTATION",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Telemetry/Steps.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/TelemetrySegmentationTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T10:22:06.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T101141946Z-cddc93be"
+      ],
+      "latestCheckpoint": {
+        "id": "08342602dd36c47d90ce2947",
+        "recordedAt": "2026-09-29T10:21:55.000Z",
+        "executionId": "EXE-20260929T101141946Z-cddc93be",
+        "stepId": "segmentation-model",
+        "repository": "repository-operating-system",
+        "branch": "claude/checkpoint-telemetry-segmentation",
+        "commit": "c9c38547913eb961f2076b335d5392a2b0b2348c",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/checkpoint-telemetry-segmentation",
+        "remoteCommit": "c9c38547913eb961f2076b335d5392a2b0b2348c",
+        "summary": "Effective-current step telemetry segmentation: derived boundary, context/status/continue exposure, usage unavailable-not-zero, step-reference validation, CONT-080..086, tests for items 33-40 and strengthened two-clone proof",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T10:22:06.000Z"
+    },
+    {
+      "id": "PRAXIS-RELEASE-BUMP-WORKFLOW",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "scripts/praxis-release-bump.sh"
+        },
+        {
+          "type": "tests",
+          "path": ".github/workflows/release.yml"
+        }
+      ],
+      "updatedAt": "2026-09-29T10:44:33.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T104004193Z-090e4cd9"
+      ],
+      "latestCheckpoint": {
+        "id": "e80b18f9f40b0a464cce6311",
+        "recordedAt": "2026-09-29T10:44:32.000Z",
+        "executionId": "EXE-20260929T104004193Z-090e4cd9",
+        "stepId": "release-script",
+        "repository": "repository-operating-system",
+        "branch": "claude/release-bump-workflow",
+        "commit": "8c0aa185fc63caf9fde0a7c55bbb19c2522157a4",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/release-bump-workflow",
+        "remoteCommit": "8c0aa185fc63caf9fde0a7c55bbb19c2522157a4",
+        "summary": "Release workflow: release.yml + scripts/praxis-release-bump.sh bump the version as an attributed work item and dispatch publish.yml/native-release.yml; publish.yml accepts a dispatched base",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T10:44:33.000Z"
+    },
+    {
+      "id": "RELEASE-3-6-0",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-09-29T10:58:12.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T105809226Z-d6626510"
+      ],
+      "latestCheckpoint": {
+        "id": "1d523e8f460347fa145b5107",
+        "recordedAt": "2026-09-29T10:58:11.000Z",
+        "executionId": "EXE-20260929T105809226Z-d6626510",
+        "repository": "repository-operating-system",
+        "branch": "main",
+        "commit": "b0dbb62def933a9246922e1507c7d8c118b03146",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "main",
+        "remoteCommit": "b0dbb62def933a9246922e1507c7d8c118b03146",
+        "summary": "Bumped the package version from 3.5.0 to 3.6.0",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T10:58:12.000Z"
+    },
+    {
+      "id": "REMOTE-ENABLE-3-6-0",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-09-29T11:06:03.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T110521674Z-a10a5c57"
+      ],
+      "latestCheckpoint": {
+        "id": "13fe418eab93db82fc0f3213",
+        "recordedAt": "2026-09-29T11:06:01.000Z",
+        "executionId": "EXE-20260929T110521674Z-a10a5c57",
+        "repository": "repository-operating-system",
+        "branch": "claude/pin-praxis-3-6-0",
+        "commit": "a11a7c652bf5fe7f7a6dc29b16e947e05e643f07",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/pin-praxis-3-6-0",
+        "remoteCommit": "a11a7c652bf5fe7f7a6dc29b16e947e05e643f07",
+        "summary": "Pinned .echelon/toolchain.json praxis to 3.6.0 after verifying the release bundle",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T11:06:03.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-12-CONTINUE-PROOF",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-09-29T11:47:34.802Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T113043360Z-32d06972",
+        "EXE-20260929T114329995Z-cebed9a0"
+      ],
+      "latestCheckpoint": {
+        "id": "c18e54e9104edeb12da69080",
+        "recordedAt": "2026-09-29T11:46:14.874Z",
+        "executionId": "EXE-20260929T114329995Z-cebed9a0",
+        "stepId": "continue-proof-b",
+        "repository": "repository-operating-system",
+        "branch": "main",
+        "commit": "f2e36f5914e6f5a00faaafd551053075d1f93223",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "main",
+        "remoteCommit": "f2e36f5914e6f5a00faaafd551053075d1f93223",
+        "summary": "Successor continued from agent A's checkpoint and completed step continue-proof-b; no repository code was changed",
+        "nextAction": "Complete the work item",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T11:47:34.802Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-16",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileWorkContextRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-complete-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-30T06:22:14.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T120428920Z-6c1b46ab",
+        "EXE-20260930T062214306Z-bce53517"
+      ],
+      "latestCheckpoint": {
+        "id": "4c32d79a4f90b55a82b6b096",
+        "recordedAt": "2026-09-29T12:06:37.000Z",
+        "executionId": "EXE-20260929T120428920Z-6c1b46ab",
+        "repository": "repository-operating-system",
+        "branch": "claude/gh90-followups",
+        "commit": "ca4c561799b978227e39aa92546b5d8a2c3f70e9",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/gh90-followups",
+        "remoteCommit": "ca4c561799b978227e39aa92546b5d8a2c3f70e9",
+        "summary": "Conclusion persisted for every work type when supplied; F# test added and shown to fail on v3.6.0; Node parity",
+        "nextAction": "Confirm CI runs the new F# test green, then complete with implementation and tests evidence",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T06:22:14.000Z",
+      "conclusion": "Reconciled: the fix (ca4c561) merged to main via PR #107; tests/work-complete-fsharp-differential.test.mjs passes 8/8 on main. Stale active state surfaced by praxis plan analyze (EV-ROS-2026-A058); completable once PRAXIS-CONT-12 stopped later, other-item commits counting against its checkpoint."
+    },
+    {
+      "id": "PRAXIS-REMOTE-17",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-09-29T12:08:18.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T120718709Z-8c483346"
+      ],
+      "latestCheckpoint": {
+        "id": "a635c2a5afe7f4cf833ccb96",
+        "recordedAt": "2026-09-29T12:08:16.000Z",
+        "executionId": "EXE-20260929T120718709Z-8c483346",
+        "repository": "repository-operating-system",
+        "branch": "claude/gh90-followups",
+        "commit": "64252b9f0ffc628c275a1f4a40c21d9ff56b6657",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/gh90-followups",
+        "remoteCommit": "64252b9f0ffc628c275a1f4a40c21d9ff56b6657",
+        "summary": "EV-ROS-2026-A056 written, attributed and validated",
+        "nextAction": "Complete the work item",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T12:08:18.000Z"
+    },
+    {
+      "id": "EXEC-INSTALL-109",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Execution/Governance.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Installation/Registration.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/ExecutionCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/InstallationCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ExecutionGovernanceTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/InstallationRegistrationTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/execution-runtime.md"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/installation-registration.md"
+        }
+      ],
+      "updatedAt": "2026-09-29T12:38:51.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T122436975Z-a72cd6d3"
+      ],
+      "latestCheckpoint": {
+        "id": "32e3a8b3195cb6a8fe8df13d",
+        "recordedAt": "2026-09-29T12:38:43.000Z",
+        "executionId": "EXE-20260929T122436975Z-a72cd6d3",
+        "repository": "repository-operating-system",
+        "branch": "work/exec-install-109",
+        "commit": "469a1f73bfbfd7fcf3fed084a05d28c11a56eb7d",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "work/exec-install-109",
+        "remoteCommit": "469a1f73bfbfd7fcf3fed084a05d28c11a56eb7d",
+        "summary": "Execution runtime (envelopes, worktrees, ledger, receipts, boundary, evaluator, legal actions), installation registration client, praxis entry point, docs and release manifest implemented; 700/700 F# tests and npm run test:all green",
+        "nextAction": "Open PR; after merge, run the cross-repo clean-room rehearsal with Project Administration",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T12:38:51.000Z"
+    },
+    {
+      "id": "EXEC-INSTALL-109-NPM-BIN",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "package.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/site/content.test.mjs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/cli.md"
+        }
+      ],
+      "updatedAt": "2026-09-29T12:50:34.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T125017832Z-d2f1f2e0"
+      ],
+      "latestCheckpoint": {
+        "id": "0bd541f58dd9c727c608959a",
+        "recordedAt": "2026-09-29T12:50:32.000Z",
+        "executionId": "EXE-20260929T125017832Z-d2f1f2e0",
+        "repository": "repository-operating-system",
+        "branch": "work/exec-install-109",
+        "commit": "384c1e27d15e2cd8771e5f36941d1c1ad2ac6d08",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "work/exec-install-109",
+        "remoteCommit": "384c1e27d15e2cd8771e5f36941d1c1ad2ac6d08",
+        "summary": "npm bin reverted to ros only; site tests pass",
+        "nextAction": "complete",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T12:50:34.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-PROBE-COMPLETE-NOEXEC",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-09-29T13:41:06.733Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T133747603Z-1a0e3a22"
+      ],
+      "latestCheckpoint": {
+        "id": "998cc970af87a66fafebcb4e",
+        "recordedAt": "2026-09-29T13:39:38.776Z",
+        "executionId": "EXE-20260929T133747603Z-1a0e3a22",
+        "repository": "repository-operating-system",
+        "branch": "main",
+        "commit": "5c71762e02c77866a0106de4cdb659eb76d34053",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "main",
+        "remoteCommit": "5c71762e02c77866a0106de4cdb659eb76d34053",
+        "summary": "Probe item started remotely; no repository code was changed",
+        "nextAction": "Complete the item without an execution block",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T13:41:06.733Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-PROBE-COMPLETE-WITHEXEC",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-09-29T13:42:35.847Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T133751794Z-6a8e2948"
+      ],
+      "latestCheckpoint": {
+        "id": "ce9a03588509da1c5cd80146",
+        "recordedAt": "2026-09-29T13:39:43.622Z",
+        "executionId": "EXE-20260929T133751794Z-6a8e2948",
+        "repository": "repository-operating-system",
+        "branch": "main",
+        "commit": "5c71762e02c77866a0106de4cdb659eb76d34053",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "main",
+        "remoteCommit": "5c71762e02c77866a0106de4cdb659eb76d34053",
+        "summary": "Probe item started remotely; no repository code was changed",
+        "nextAction": "Complete the item with its own execution",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T13:42:35.847Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-PROBE-COMPLETE-CROSS",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-09-29T13:55:02.317Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T134836029Z-030c8659"
+      ],
+      "latestCheckpoint": {
+        "id": "71edb9aaea2d7f27d08b3f4b",
+        "recordedAt": "2026-09-29T13:50:14.154Z",
+        "executionId": "EXE-20260929T134836029Z-030c8659",
+        "repository": "repository-operating-system",
+        "branch": "main",
+        "commit": "2350d044520561a77e8a0c9c9ad092e4e0457e88",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "main",
+        "remoteCommit": "2350d044520561a77e8a0c9c9ad092e4e0457e88",
+        "summary": "Helper C started the probe item remotely; no repository code was changed",
+        "nextAction": "Left active for a cross-session completion probe",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T13:55:02.317Z"
+    },
+    {
+      "id": "GH-113",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/RemoteCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/remote-checkpoint.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-29T14:49:24.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T142027710Z-41b45227"
+      ],
+      "latestCheckpoint": {
+        "id": "8c04f53c3437f14d14b3783d",
+        "recordedAt": "2026-09-29T14:49:23.000Z",
+        "executionId": "EXE-20260929T142027710Z-41b45227",
+        "repository": "repository-operating-system",
+        "branch": "claude/remote-complete-execution-ownership",
+        "commit": "7b19e1f93349e8caa4f844801710c0f6d3d4615c",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/remote-complete-execution-ownership",
+        "remoteCommit": "7b19e1f93349e8caa4f844801710c0f6d3d4615c",
+        "summary": "Remote work.complete refuses to finalize another actor's or run's active execution, named or not; tests and docs updated",
+        "nextAction": "Complete GH-113 and open the PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T14:49:24.000Z"
+    },
+    {
+      "id": "PRAXIS-REMOTE-INBOX-01",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/praxis-remote-inbox.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/praxis-remote-inbox.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-29T16:25:50.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T162324008Z-39bbe593"
+      ],
+      "latestCheckpoint": {
+        "id": "260dd5cad33298cf6a8059d9",
+        "recordedAt": "2026-09-29T16:25:48.000Z",
+        "executionId": "EXE-20260929T162324008Z-39bbe593",
+        "stepId": "reland",
+        "repository": "repository-operating-system",
+        "branch": "claude/remote-inbox-relay-v4",
+        "commit": "a5d09cfb3dd1b835e6a37f543df746ce0e959495",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/remote-inbox-relay-v4",
+        "remoteCommit": "a5d09cfb3dd1b835e6a37f543df746ce0e959495",
+        "summary": "Inbox relay re-landed on current main (third re-land, after PR #115) with tests, records and docs",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T16:25:50.000Z"
+    },
+    {
+      "id": "PRAXIS-DIST-NATIVE-DOTNET-TOOL",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/ros-fs-assets.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/npm-bootstrap.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-29T16:43:08.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T163720115Z-f381906c"
+      ],
+      "latestCheckpoint": {
+        "id": "1f76f8517788d75b6215a984",
+        "recordedAt": "2026-09-29T16:43:07.000Z",
+        "executionId": "EXE-20260929T163720115Z-f381906c",
+        "stepId": "reland",
+        "repository": "repository-operating-system",
+        "branch": "claude/retire-npm-dotnet-tool-v3",
+        "commit": "069c54bc97d442e5c4356b24a61471a04dc6ca4a",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/retire-npm-dotnet-tool-v3",
+        "remoteCommit": "069c54bc97d442e5c4356b24a61471a04dc6ca4a",
+        "summary": "npm distribution retired (DF-ROS-2026-A044) re-landed on current main (second re-land, after PR #117): publish.yml removed, package.json private; .NET global tool; ros-fs-assets.yml; docs rewritten",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T16:43:08.000Z"
+    },
+    {
+      "id": "PRAXIS-PLAN-01",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/Planner.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PlanningTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/planning.md"
+        },
+        {
+          "type": "evidence",
+          "path": "research/evidence/EV-ROS-2026-A058--planner-shadow-experiment-on-praxis.md"
+        }
+      ],
+      "updatedAt": "2026-09-29T18:15:08.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T172554288Z-0f639674"
+      ],
+      "latestCheckpoint": {
+        "id": "06e9e9033b86d8a58a7e3153",
+        "recordedAt": "2026-09-29T18:15:01.000Z",
+        "executionId": "EXE-20260929T172554288Z-0f639674",
+        "repository": "repository-operating-system",
+        "branch": "claude/praxis-planning-optimization-v6dacf",
+        "commit": "f85ab5c8c1d4a4c813625929de9a59b49e9f2c91",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/praxis-planning-optimization-v6dacf",
+        "remoteCommit": "f85ab5c8c1d4a4c813625929de9a59b49e9f2c91",
+        "summary": "Advisory planner implemented across Domain/Contracts/Application/Infrastructure/CLI with 50 tests; requirements, docs, DF-ROS-2026-A046 and shadow-experiment evidence EV-ROS-2026-A058 recorded",
+        "nextAction": "Complete with implementation, tests and evidence; open PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T18:15:08.000Z",
+      "conclusion": "Shadow planner delivered; on Praxis it found 3 evidence-backed stale-state candidates, reported cost optimization unavailable (0 of 155 executions), and replay showed weak duration prediction (62.6% within range)."
+    },
+    {
+      "id": "PRAXIS-PLAN-02",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/decisions/DF-ROS-2026-A046--deterministic-advisory-planner.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ArtifactTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-29T22:31:41.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260929T222935210Z-1813973a"
+      ],
+      "latestCheckpoint": {
+        "id": "c76a247aedab4dca95974ada",
+        "recordedAt": "2026-09-29T22:31:10.000Z",
+        "executionId": "EXE-20260929T222935210Z-1813973a",
+        "repository": "repository-operating-system",
+        "branch": "claude/praxis-planning-optimization-v6dacf",
+        "commit": "b48a32f69187f4cbc13f6bf31bc2e8b7a95b67d6",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/praxis-planning-optimization-v6dacf",
+        "remoteCommit": "b48a32f69187f4cbc13f6bf31bc2e8b7a95b67d6",
+        "summary": "DF-ROS-2026-A046 and the planning requirements marked accepted on the owner's approval",
+        "nextAction": "Complete and open PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-29T22:31:41.000Z",
+      "conclusion": "Status-only change (review -> accepted) on the owner's approval. No new test: validity of the DF status is checked by artifact validation (ArtifactTests.fs covers that policy); ./ros validate passed."
+    },
+    {
+      "id": "PRAXIS-CONT-12",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Ownership.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/CommitOwnershipTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T06:21:56.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T060608026Z-ad89a4f1"
+      ],
+      "latestCheckpoint": {
+        "id": "697a35ea38902bd740b00d73",
+        "recordedAt": "2026-09-30T06:21:54.000Z",
+        "executionId": "EXE-20260930T060608026Z-ad89a4f1",
+        "repository": "repository-operating-system",
+        "branch": "claude/praxis-planning-optimization-v6dacf",
+        "commit": "18a200653488766891c3faaa3cbf3363946e6220",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/praxis-planning-optimization-v6dacf",
+        "remoteCommit": "18a200653488766891c3faaa3cbf3363946e6220",
+        "summary": "Commit ownership from recorded checkpoints and reconciliations; attribution and completion/block guards use each item's own changes; 12 tests; docs",
+        "nextAction": "Complete, then reconcile PRAXIS-REMOTE-16, GH-84 and GH-90",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T06:21:56.000Z",
+      "conclusion": "Checkpoints no longer claim, and completion/blocking are no longer held back by, commits other items' recorded checkpoints or reconciliations own."
+    },
+    {
+      "id": "WI-0064",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/Grouping.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/GroupingTests.fs"
+        },
+        {
+          "type": "requirements",
+          "path": "requirements/PLANNING-WORK-GROUPS.md"
+        },
+        {
+          "type": "decision",
+          "path": "research/decisions/DF-ROS-2026-A047--advisory-evidence-based-work-groups.md"
+        },
+        {
+          "type": "evidence",
+          "path": "research/evidence/EV-ROS-2026-A059--grouping-planner-baseline-and-cohort.md"
+        },
+        {
+          "type": "experiment",
+          "path": "research/experiments/EX-ROS-2026-A021--grouped-versus-independent-execution.md"
+        }
+      ],
+      "updatedAt": "2026-09-30T11:18:32.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T102847967Z-f42c2262"
+      ],
+      "latestCheckpoint": {
+        "id": "b2ee1c1bdba0ab4b01378d5a",
+        "recordedAt": "2026-09-30T11:18:30.000Z",
+        "executionId": "EXE-20260930T102847967Z-f42c2262",
+        "repository": "repository-operating-system",
+        "branch": "claude/plan-work-groups",
+        "commit": "370e0a4d8d8558ba8853531bcb18c4a4663bf2d1",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/plan-work-groups",
+        "remoteCommit": "370e0a4d8d8558ba8853531bcb18c4a4663bf2d1",
+        "summary": "Phase one done: read-only group model, CLI, 25 tests (786 F#, 257 differential, 104+122 Node, 7 Python pass); baseline recorded (EV-ROS-2026-A059); protocol, cohort and predictions frozen (EX-ROS-2026-A021); DF-ROS-2026-A047 in review",
+        "nextAction": "Owner reviews DF-ROS-2026-A047 and the proposed cohort; the arms run under PRAXIS-PLAN-EXP-01 once gated conditions hold",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T11:18:32.000Z"
+    },
+    {
+      "id": "PRAXIS-PLAN-03",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/decisions/DF-ROS-2026-A047--advisory-evidence-based-work-groups.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ArtifactTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T11:34:55.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T112849252Z-4c58aae8"
+      ],
+      "latestCheckpoint": {
+        "id": "7728b91d817f008fcf6bf056",
+        "recordedAt": "2026-09-30T11:34:37.000Z",
+        "executionId": "EXE-20260930T112849252Z-4c58aae8",
+        "repository": "repository-operating-system",
+        "branch": "claude/plan-work-groups",
+        "commit": "5c828fd6e444d5800e51d73ebd44662fbd032b8b",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/plan-work-groups",
+        "remoteCommit": "5c828fd6e444d5800e51d73ebd44662fbd032b8b",
+        "summary": "Owner approval recorded: DF-ROS-2026-A047 and EV-ROS-2026-A059 accepted, cohort triaged, main merged in",
+        "nextAction": "Complete, then merge PR #126",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T11:34:55.000Z"
+    },
+    {
+      "id": "PRAXIS-WORK-ABANDON-01",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Model.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkAbandonTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T09:40:03.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T091732622Z-b35f550c"
+      ],
+      "latestCheckpoint": {
+        "id": "f1977b2c0d3772281244821b",
+        "recordedAt": "2026-09-30T09:40:01.000Z",
+        "executionId": "EXE-20260930T091732622Z-b35f550c",
+        "repository": "repository-operating-system",
+        "branch": "claude/praxis-planning-optimization-v6dacf",
+        "commit": "7ee173278a43c28144538ca391b7a11646d63094",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/praxis-planning-optimization-v6dacf",
+        "remoteCommit": "7ee173278a43c28144538ca391b7a11646d63094",
+        "summary": "work abandon implemented (F# + Node), validation, docs, 6 tests",
+        "nextAction": "Complete, then abandon GH-84 and GH-90",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T09:40:03.000Z",
+      "conclusion": "Live work can now be cancelled truthfully with work abandon."
+    },
+    {
+      "id": "PRAXIS-PLAN-EXP-01",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/evidence/EV-ROS-2026-A060--grouping-experiment-results.md"
+        },
+        {
+          "type": "tests",
+          "path": "research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt"
+        }
+      ],
+      "updatedAt": "2026-09-30T17:18:43.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T114749635Z-ba7301df"
+      ],
+      "latestCheckpoint": {
+        "id": "d8d6a32e5376296833d1aad6",
+        "recordedAt": "2026-09-30T17:18:41.000Z",
+        "executionId": "EXE-20260930T114749635Z-ba7301df",
+        "repository": "repository-operating-system",
+        "branch": "claude/grouping-experiment-a021",
+        "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/grouping-experiment-a021",
+        "remoteCommit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+        "summary": "EX-ROS-2026-A021 complete: both arms run, blind evaluation done, results in EV-ROS-2026-A060, hypotheses updated, follow-ups captured",
+        "nextAction": "Owner review of EV-ROS-2026-A060 and the phase-two decision PRAXIS-GROUP-06",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T17:18:43.000Z"
+    },
+    {
+      "id": "PRAXIS-PLAN-06",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/evidence/EV-ROS-2026-A064--grouping-experiment-results.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ArtifactTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T17:20:49.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T172030686Z-71d403ef"
+      ],
+      "latestCheckpoint": {
+        "id": "851a16e0bfae363dbb8133f1",
+        "recordedAt": "2026-09-30T17:20:48.000Z",
+        "executionId": "EXE-20260930T172030686Z-71d403ef",
+        "repository": "repository-operating-system",
+        "branch": "claude/grouping-experiment-a021",
+        "commit": "da9dd15990ee19409a5966fcf91887f9494822e3",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/grouping-experiment-a021",
+        "remoteCommit": "da9dd15990ee19409a5966fcf91887f9494822e3",
+        "summary": "Results record renumbered to EV-ROS-2026-A064 and related to the parallel kit",
+        "nextAction": "Complete; open the results PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T17:20:49.000Z"
+    },
+    {
+      "id": "PRAXIS-PR92-PREMERGE-REGRESSION-FENCE",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tests/Ros.Tests/PremergeFence.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PremergeCommandSurfaceTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PremergeRemoteTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PremergeRemoteScriptTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PremergeReleaseTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T17:09:15.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T162437557Z-40b62e08"
+      ],
+      "latestCheckpoint": {
+        "id": "bc4a2e6d6a5acc8b9842e72a",
+        "recordedAt": "2026-09-30T17:09:07.000Z",
+        "executionId": "EXE-20260930T162437557Z-40b62e08",
+        "repository": "repository-operating-system",
+        "branch": "test/pr92-premerge-main-characterization",
+        "commit": "f0ec0a64969b1f82fd3d0ef10a27225986317885",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "test/pr92-premerge-main-characterization",
+        "remoteCommit": "f0ec0a64969b1f82fd3d0ef10a27225986317885",
+        "summary": "Fence complete: 37 main tests (829/829), 7 PR #92 tests (956/956), EV-ROS-2026-A060 matrix and manifest, draft PR #131",
+        "nextAction": "Owner: decide PRAXIS-PR92-ID-RENUMBER, merge PR #131, then reconcile PR #92 and do PRAXIS-PR92-POSTMERGE-FENCE",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T17:09:15.000Z",
+      "conclusion": "Regression fence in place; reconciliation not started. Remaining: PRAXIS-PR92-ID-RENUMBER (owner decision), merge PR #131, PRAXIS-PR92-POSTMERGE-FENCE"
+    },
+    {
       "id": "FSHARP-ONLY-REPOSITORY",
       "type": "maintenance",
       "state": "complete",
@@ -3446,7 +5037,7 @@
     }
   ],
   "protocolVersion": "1.0.0",
-  "actor": "ChatGPT",
+  "actor": "anthropic/claude-code",
   "updatedAt": "2026-09-30T18:14:02.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [

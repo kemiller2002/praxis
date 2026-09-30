@@ -26,7 +26,8 @@ module EnvironmentAliases =
           "TELEMETRY_CONVERSATION_ID"
           "TELEMETRY_RUN_ID"
           "BASE_REF"
-          "PACKAGE_ROOT" ]
+          "PACKAGE_ROOT"
+          "GIT_REMOTE_TIMEOUT_SECONDS" ]
 
     let canonicalNames = suffixes |> List.map (fun suffix -> CanonicalPrefix + suffix)
 
