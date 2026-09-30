@@ -2443,10 +2443,10 @@
         "pr92"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T17:04:57.000Z",
-      "updatedAt": "2026-09-30T17:04:58.000Z",
+      "updatedAt": "2026-09-30T17:05:26.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
