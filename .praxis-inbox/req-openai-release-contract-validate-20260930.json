@@ -1,0 +1,18 @@
+{
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.0",
+  "requestId": "req-openai-release-contract-validate-20260930",
+  "operation": "validate",
+  "repository": {
+    "ref": "refs/heads/implementation/shared-release-contract",
+    "expectedSha": "bde37409db2e69975460f867d92a87284ae912c8"
+  },
+  "actor": {
+    "kind": "agent",
+    "id": "openai-chatgpt",
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "runtime": "chatgpt"
+  },
+  "arguments": {}
+}
