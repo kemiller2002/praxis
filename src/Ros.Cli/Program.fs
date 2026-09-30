@@ -2609,7 +2609,7 @@ let private runTelemetryIngest root (arguments: string list) =
     | Some inputPath ->
         try
             let raw = if inputPath = "-" then Console.In.ReadToEnd() else File.ReadAllText(Path.Combine(root, inputPath))
-            let maxBytes = FileWorkConfigRepository.readTelemetryMaxRawPayloadBytes root
+            let maxBytes = FileWorkConfigRepository.readTelemetryMaxRawPayloadBytes root |> SessionTranscript.inputLimit adapter
 
             if Text.Encoding.UTF8.GetByteCount raw > maxBytes then
                 eprintfn "ERROR telemetry input exceeds %d bytes" maxBytes

@@ -33,6 +33,7 @@
     <Compile Include="Telemetry/Capability.fs" />
     <Compile Include="Telemetry/ChangeSummary.fs" />
     <Compile Include="Telemetry/TelemetryAdapters.fs" />
+    <Compile Include="Telemetry/SessionTranscript.fs" />
     <Compile Include="Telemetry/Summary.fs" />
     <Compile Include="Telemetry/Tutela.fs" />
     <Compile Include="Telemetry/TutelaTrend.fs" />

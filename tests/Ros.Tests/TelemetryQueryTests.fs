@@ -87,10 +87,13 @@ module TelemetryQueryTests =
                     writeExecution root "EXE-1" "WI-OTHER" "2026-01-01T00:00:00.000Z"
                     Assert.equal None (FileTelemetryQueryRepository.readLatestExecutionId root "WI-GHOST")) }
 
-          { Name = "telemetry adapters is production's exact static catalog, in production's exact order"
+          { Name = "telemetry adapters is production's exact static catalog, in production's exact order, followed by the F#-only adapters"
             Run = fun () ->
                 Assert.equal
                     [ "generic"; "openai-codex"; "anthropic-claude-statusline"; "anthropic-claude-hook"
                       "anthropic-claude-otel"; "google-gemini-hook"; "google-gemini-otel"; "github-copilot-hook"
                       "github-copilot-otel"; "otel-json" ]
-                    TelemetryAdapters.all } ]
+                    TelemetryAdapters.production
+
+                Assert.equal [ "anthropic-claude-session" ] TelemetryAdapters.fsharpOnly
+                Assert.equal (TelemetryAdapters.production @ TelemetryAdapters.fsharpOnly) TelemetryAdapters.all } ]

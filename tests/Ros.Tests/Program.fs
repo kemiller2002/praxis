@@ -40,6 +40,7 @@ let main _ =
     @ TelemetryIngestHookTests.tests
     @ TelemetryIngestClaudeStatuslineTests.tests
     @ TelemetryIngestOtelTests.tests
+    @ TelemetryIngestClaudeSessionTests.tests
     @ TelemetryClassifyTests.tests
     @ TelemetryStartTests.tests
     @ AdapterContractTests.tests
@@ -70,6 +71,7 @@ let main _ =
     @ WorkAbandonTests.tests
     @ PlanningTests.tests
     @ PlanningCliTests.tests
+    @ PlanningSessionEvidenceTests.tests
     @ GroupingTests.tests
     @ PremergeCommandSurfaceTests.tests
     @ PremergeRemoteTests.tests

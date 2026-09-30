@@ -16,12 +16,14 @@ module History =
           StartedAt: DateTimeOffset
           FinalizedAt: DateTimeOffset
           ProductiveMs: int64
+          /// Productive time came from runtime-measured session time.
+          SessionMeasured: bool
           Provider: string
           Runtime: string
           Model: string option }
 
-    /// Productive time is wall time minus recorded blocked time.
-    let productiveMs (execution: HistoricalExecution) : int64 option =
+    /// ROS wall time minus recorded blocked time.
+    let private wallProductiveMs (execution: HistoricalExecution) : int64 option =
         match execution.Status with
         | ExecutionStatus.Active -> None
         | ExecutionStatus.Finalized ->
@@ -37,11 +39,26 @@ module History =
 
             wall |> Option.map (fun wall -> max 0L (wall - blocked))
 
+    /// Productive time: ROS wall time minus blocked time, or the
+    /// runtime-measured active session time when that is longer. ROS wall
+    /// time starts at `work begin`, which executors often run just before
+    /// completion (EV-ROS-2026-A058), so it under-measures the work; a
+    /// session transcript measures the session itself (PRAXIS-PLAN-05).
+    /// Returns the time and whether session time supplied it.
+    let productive (execution: HistoricalExecution) : (int64 * bool) option =
+        match wallProductiveMs execution, execution.Session.ActiveMs with
+        | Some wall, Some active when active > wall -> Some(active, true)
+        | Some wall, _ -> Some(wall, false)
+        | None, _ -> None
+
+    let productiveMs (execution: HistoricalExecution) : int64 option =
+        productive execution |> Option.map fst
+
     let samples (executions: HistoricalExecution list) : DurationSample list =
         executions
         |> List.choose (fun execution ->
-            match productiveMs execution, Text.tryTimestamp execution.StartedAt, execution.FinalizedAt |> Option.bind Text.tryTimestamp with
-            | Some productive, Some started, Some finalized ->
+            match productive execution, Text.tryTimestamp execution.StartedAt, execution.FinalizedAt |> Option.bind Text.tryTimestamp with
+            | Some(productive, sessionMeasured), Some started, Some finalized ->
                 Some
                     { ExecutionId = execution.ExecutionId
                       WorkItemId = execution.WorkItemId
@@ -49,6 +66,7 @@ module History =
                       StartedAt = started
                       FinalizedAt = finalized
                       ProductiveMs = productive
+                      SessionMeasured = sessionMeasured
                       Provider = execution.Provider
                       Runtime = execution.Runtime
                       Model = execution.Model }
@@ -87,14 +105,15 @@ module History =
         // A very wide interquartile spread is weaker evidence than its size suggests.
         if lower > 0L && upper / lower > 4L then EvidenceConfidence.downgrade bySize else bySize
 
-    let distribution (taskClass: string) (values: int64 list) : DurationDistribution option =
-        let sorted = List.sort values
+    let distribution (taskClass: string) (samples: DurationSample list) : DurationDistribution option =
+        let sorted = samples |> List.map (fun sample -> sample.ProductiveMs) |> List.sort
 
         match percentile 0.25m sorted, percentile 0.50m sorted, percentile 0.75m sorted with
         | Some lower, Some median, Some upper ->
             Some
                 { TaskClass = taskClass
                   SampleCount = sorted.Length
+                  SessionMeasured = samples |> List.filter (fun sample -> sample.SessionMeasured) |> List.length
                   Lower = roundDuration lower
                   Median = roundDuration median
                   Upper = roundDuration upper
@@ -102,11 +121,11 @@ module History =
         | _ -> None
 
     let distributions (samples: DurationSample list) : DurationDistribution list =
-        let pooled = samples |> List.map (fun sample -> sample.ProductiveMs) |> distribution pooledClass |> Option.toList
+        let pooled = samples |> distribution pooledClass |> Option.toList
 
         let byClass =
             samples
-            |> List.collect (fun sample -> sample.Classes |> List.map (fun taskClass -> taskClass, sample.ProductiveMs))
+            |> List.collect (fun sample -> sample.Classes |> List.map (fun taskClass -> taskClass, sample))
             |> List.groupBy fst
             |> List.sortWith (fun (left, _) (right, _) -> Text.ordinal left right)
             |> List.choose (fun (taskClass, values) -> values |> List.map snd |> distribution taskClass)
@@ -122,6 +141,24 @@ module History =
               Upper = Some distribution.Upper
               Confidence = distribution.Confidence }
 
+    /// Task classes that are implementation work, plus the pooled class,
+    /// which implementation executions dominate in recorded history.
+    let implementationClasses =
+        set [ pooledClass; "development"; "maintenance"; "refactoring"; "defect-bug-fix"; "infrastructure-devops"; "testing-verification"; "prototype-proof-of-concept" ]
+
+    /// PRAXIS-PLAN-05: the history-based duration model missed implementation
+    /// work badly in EX-ROS-2026-A021: 61 and 112 min observed against a
+    /// 45 min upper bound (EV-ROS-2026-A064, HY-ROS-2026-A027), because ROS
+    /// execution wall time starts at `work begin`. Until most samples carry
+    /// runtime-measured session time, an implementation estimate loses one
+    /// confidence level and its basis says why.
+    let private downWeighted (taskClass: string) (distribution: DurationDistribution) (estimate: Estimate<int64>, basis: string) =
+        if implementationClasses.Contains taskClass && distribution.SessionMeasured * 2 < distribution.SampleCount then
+            { estimate with Confidence = EvidenceConfidence.downgrade estimate.Confidence },
+            $"{basis}; confidence lowered one level for implementation work: {distribution.SessionMeasured} of {distribution.SampleCount} samples carry runtime-measured session time, and ROS wall time alone underestimated implementation work 1.4 to 2.5 times beyond the upper bound (EV-ROS-2026-A064)"
+        else
+            estimate, basis
+
     /// The full-effort duration estimate for a task class, with the basis it
     /// used. A class without usable history falls back to the pooled
     /// distribution one confidence level lower; no history at all is unknown.
@@ -132,7 +169,8 @@ module History =
 
         match find taskClass, find pooledClass with
         | Some own, _ when taskClass <> pooledClass ->
-            toEstimate own, $"{own.SampleCount} finalized '{taskClass}' executions (interquartile range)"
+            (toEstimate own, $"{own.SampleCount} finalized '{taskClass}' executions (interquartile range)")
+            |> downWeighted taskClass own
         | _, Some pooled ->
             let estimate = toEstimate pooled
 
@@ -140,7 +178,8 @@ module History =
                 if taskClass = pooledClass then estimate
                 else { estimate with Confidence = EvidenceConfidence.downgrade estimate.Confidence }
 
-            estimate, $"{pooled.SampleCount} finalized executions of all classes (interquartile range)"
+            (estimate, $"{pooled.SampleCount} finalized executions of all classes (interquartile range)")
+            |> downWeighted taskClass pooled
         | _ -> Estimate.unknown, "no finalized execution history"
 
     // ---- cost evidence (PRX-PLAN-050..053, 092) --------------------------
@@ -148,17 +187,49 @@ module History =
     let private usable (observation: CostObservation) =
         observation.Kind <> CostEvidenceKind.Unavailable
 
-    /// One execution's monetary total: `cost.execution_total` when recorded,
-    /// otherwise the sum of its recorded cost components; unknown when none.
-    let executionCost (execution: HistoricalExecution) : (decimal * string option) option =
-        let costs = execution.Costs |> List.filter usable
+    let executionTotal = "cost.execution_total"
+    let sessionCumulative = "cost.session_cumulative"
 
-        match costs |> List.tryFind (fun cost -> cost.MetricId = "cost.execution_total") with
-        | Some total -> Some(total.Amount, total.Currency)
-        | None when costs.IsEmpty -> None
-        | None ->
+    let private total (costs: CostObservation list) =
+        match costs with
+        | [] -> None
+        | _ ->
             let currency = costs |> List.choose (fun cost -> cost.Currency) |> List.distinct |> List.tryExactlyOne
             Some(costs |> List.sumBy (fun cost -> cost.Amount), currency)
+
+    /// The cost observations an execution's monetary total is built from, in
+    /// precedence order: every `cost.execution_total` (aggregation `sum`);
+    /// else the cost components; else the latest cumulative session cost,
+    /// which is a session gauge and never added to components.
+    let private costBasis (execution: HistoricalExecution) : CostObservation list =
+        let costs = execution.Costs |> List.filter usable
+        let totals = costs |> List.filter (fun cost -> cost.MetricId = executionTotal)
+        let components = costs |> List.filter (fun cost -> cost.MetricId <> executionTotal && cost.MetricId <> sessionCumulative)
+        let session = costs |> List.filter (fun cost -> cost.MetricId = sessionCumulative) |> List.tryLast |> Option.toList
+
+        [ totals; components; session ] |> List.tryFind (List.isEmpty >> not) |> Option.defaultValue []
+
+    /// One execution's monetary total (see `costBasis`); unknown when none.
+    let executionCost (execution: HistoricalExecution) : (decimal * string option) option =
+        costBasis execution |> total
+
+    /// Evidence strength: observed and provider-reported costs outrank
+    /// calculated, which outranks estimated.
+    let costKindRank (kind: CostEvidenceKind) =
+        match kind with
+        | CostEvidenceKind.Observed -> 4
+        | CostEvidenceKind.ProviderReported -> 3
+        | CostEvidenceKind.Calculated -> 2
+        | CostEvidenceKind.Estimated -> 1
+        | CostEvidenceKind.Unavailable -> 0
+
+    /// The strongest kind of evidence behind an execution's monetary total.
+    let executionCostKind (execution: HistoricalExecution) : CostEvidenceKind =
+        costBasis execution
+        |> List.map (fun cost -> cost.Kind)
+        |> List.sortByDescending costKindRank
+        |> List.tryHead
+        |> Option.defaultValue CostEvidenceKind.Unavailable
 
     let costSummary (configuration: PlannerConfiguration) (executions: HistoricalExecution list) : CostEvidenceSummary =
         let sampled = executions |> List.filter (fun execution -> execution.Status = ExecutionStatus.Finalized)
@@ -207,6 +278,53 @@ module History =
               Upper = at 0.75m
               Confidence = confidenceFor values.Length 1L 1L }
         | _ -> Estimate.unknown
+
+    // ---- context overhead (PRAXIS-PLAN-05, PRX-GRP-061) -------------------
+
+    /// Sessions needed before a cold start is reported as measured.
+    let minimumContextSessions = 3
+
+    let private medianInt (values: int list) =
+        values |> List.map int64 |> List.sort |> percentile 0.50m |> Option.map int
+
+    /// Per-session context overhead from the session metrics finalized
+    /// executions carry: time to first code change (the cold start),
+    /// governance-document reads and repeated reads.
+    let contextOverhead (executions: HistoricalExecution list) : ContextOverheadSummary =
+        let sessions =
+            executions
+            |> List.filter (fun execution -> execution.Status = ExecutionStatus.Finalized)
+            |> List.map (fun execution -> execution.Session)
+
+        let coldStarts = sessions |> List.choose (fun session -> session.FirstCodeChangeMs) |> List.sort
+        let governance = sessions |> List.choose (fun session -> session.GovernanceReads) |> medianInt
+        let repeated = sessions |> List.choose (fun session -> session.RepeatedReads) |> medianInt
+        let sufficient = coldStarts.Length >= minimumContextSessions
+        let minutes (value: int64) = Math.Round(decimal value / 60_000m, 1).ToString(Globalization.CultureInfo.InvariantCulture)
+        let count (value: int option) = value |> Option.map string |> Option.defaultValue "unknown"
+
+        let coldStart =
+            match sufficient, percentile 0.25m coldStarts, percentile 0.50m coldStarts, percentile 0.75m coldStarts with
+            | true, Some lower, Some median, Some upper ->
+                { Lower = Some lower
+                  Expected = Some median
+                  Upper = Some upper
+                  Confidence = confidenceFor coldStarts.Length lower upper }
+            | _ -> Estimate.unknown
+
+        let statement =
+            match coldStart.Expected with
+            | Some median ->
+                $"context overhead measured in {coldStarts.Length} sessions: a cold start takes a median {minutes median} min to the first code change (interquartile {minutes coldStart.Lower.Value}-{minutes coldStart.Upper.Value} min), with a median {count governance} governance-document reads and {count repeated} repeated reads per session"
+            | None ->
+                $"context reuse is unmeasured: {coldStarts.Length} finalized executions record session metrics (time.first_code_change_ms), at least {minimumContextSessions} are needed; ingest session transcripts with the anthropic-claude-session adapter (PRX-GRP-061)"
+
+        { SampledSessions = coldStarts.Length
+          ColdStart = coldStart
+          MedianGovernanceReads = governance
+          MedianRepeatedReads = repeated
+          Sufficient = sufficient
+          Statement = statement }
 
     // ---- segmentation and drift (PRX-PLAN-172, 173) ----------------------
 
@@ -268,5 +386,6 @@ module History =
           DurationSamples = measured.Length
           Distributions = distributions measured
           Cost = costSummary configuration executions
+          ContextOverhead = contextOverhead executions
           Segments = segments measured
           Drift = drift measured }

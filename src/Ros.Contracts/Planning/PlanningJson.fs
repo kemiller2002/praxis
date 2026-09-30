@@ -172,6 +172,7 @@ module PlanningJson =
         record
             [ "taskClass", text value.TaskClass
               "samples", integer value.SampleCount
+              "sessionMeasured", integer value.SessionMeasured
               "lowerMs", long value.Lower
               "medianMs", long value.Median
               "upperMs", long value.Upper
@@ -194,6 +195,14 @@ module PlanningJson =
               "durationSamples", integer value.DurationSamples
               "durations", value.Distributions |> List.map distribution |> array
               "cost", costSummary value.Cost
+              "contextOverhead",
+              record
+                  [ "sampledSessions", integer value.ContextOverhead.SampledSessions
+                    "coldStart", duration value.ContextOverhead.ColdStart
+                    "medianGovernanceReads", value.ContextOverhead.MedianGovernanceReads |> Option.map integer |> Option.toObj
+                    "medianRepeatedReads", value.ContextOverhead.MedianRepeatedReads |> Option.map integer |> Option.toObj
+                    "sufficient", boolean value.ContextOverhead.Sufficient
+                    "statement", text value.ContextOverhead.Statement ]
               "segments",
               value.Segments
               |> List.map (fun segment ->
