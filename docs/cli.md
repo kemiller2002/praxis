@@ -262,7 +262,7 @@ commands. These predate the lifecycle interface and are unchanged:
 ros validate [--json]
 ros registry build [--dry-run] | registry check
 ros git status [--json]
-ros work <capture|list|ready|show|start|resume|block|complete|reconcile|checkpoint|continue|update|attach|context|...>
+ros work <capture|list|ready|show|group show|start|resume|block|complete|reconcile|checkpoint|continue|update|attach|context|...>
 ros add "..."
 ros telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
 ros adapter <call|publish>
@@ -305,6 +305,45 @@ reason about together, with the evidence, collision risk and recommended
 execution for each) without changing any item; `explain-group` answers why a
 group exists and what would change it (`DF-ROS-2026-A047`). See
 [`planning.md`](planning.md).
+
+### `work group create`
+
+```
+ros work group create --id GROUP-ID --member ID --member ID [--member ID]* --occurred-at TIMESTAMP
+                      [--kind KIND] [--execution-repository NAME] [--cross-repository]
+                      [--shared-context TEXT]* [--dry-run] [--json] [IDENTITY]
+```
+
+Records a durable human-declared execution group in `.ros/work/groups.json`
+(PRX-GRP-073, phase two of `requirements/PLANNING-WORK-GROUPS.md`): its ID
+(`GROUP-<REPOSITORY-OR-AREA>-<SEQUENCE>`), at least two members, optional kind
+(the `GroupKind` codes, or `custom:NAME`), execution repository,
+cross-repository flag and shared context, with the declaring actor and time.
+It refuses, with exit `1` and nothing recorded, a malformed or already stored
+group ID and any member that is unknown (in neither the backlog queue nor the
+live context), terminal (`complete` or `abandoned`) or repeated; argument
+errors exit `2`. It never changes a member's lifecycle state, queue entry,
+live context, evidence or telemetry. `--dry-run` reports the group without
+recording it; `--json` emits a `praxis.work-groups/1.0.0` document (`kind`
+`work-group-created`, `work-group-planned` or `work-group-rejected`). The
+planner reads every stored group exactly as it reads a `grouping.groups`
+entry of `--config`, and `validate` checks stored groups. See "Work groups" in
+[`planning.md`](planning.md).
+
+### `work group show`
+
+```
+ros work group show GROUP-ID [--config FILE] [--observations FILE] [--as-of TIMESTAMP] [--json]
+```
+
+A read-only view of one **declared** group (PRX-GRP-073): each member with its
+own recorded and planning state, partial-completion progress, blocked members
+and the members each one gates, execution repository, shared context and
+architecture notes. Declarations, from `--config` or stored by `work group
+create`, are read exactly as the planner reads `grouping.groups`. A planner recommendation is not a declaration (use `plan
+explain-group`). Exit codes: `0` shown, `1` unknown group or unreadable input,
+`2` invalid arguments. `--json` emits a `declared-group` document in the
+`praxis.plan/1.0.0` schema. It never writes.
 
 ### `work reconcile`
 

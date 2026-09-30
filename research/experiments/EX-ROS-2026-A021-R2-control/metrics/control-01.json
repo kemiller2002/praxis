@@ -1,0 +1,128 @@
+{
+  "schema": "ex-ros-2026-a021.session-metrics/1",
+  "label": "control-01",
+  "arm": "control",
+  "workItem": "PRAXIS-GROUP-01",
+  "branch": "experiment/a021-r2-control",
+  "baseCommit": "8b4ffa3",
+  "sessionId": {
+    "ccr": "session_01TBSowZ5EdWBAfJky3MEpP2",
+    "transcript": "ad84e627-57ce-582c-bb6c-33f15722b48d"
+  },
+  "praxisExecution": "EXE-20260930T152646524Z-a5e839f4",
+  "model": {
+    "configured": "claude-opus-5-5",
+    "sessionContext": "claude-opus-5-5",
+    "lastServed": "claude-opus-5-5",
+    "transcriptModels": [
+      "claude-opus-5-5"
+    ]
+  },
+  "runtime": {
+    "name": "claude-code",
+    "version": "2.1.285"
+  },
+  "startedAt": "2026-09-30T15:23:34.915000+00:00",
+  "endedAt": "2026-09-30T15:40:16.273000+00:00",
+  "endedAtNote": "capture time, before work complete / registry build / validate / final Praxis-state commit; those final steps are not included",
+  "wallMs": 1001358,
+  "msToFirstCodeMutation": 340941,
+  "modelRequests": 71,
+  "tokens": {
+    "input": 142,
+    "output": 43167,
+    "cacheRead": 9048793,
+    "cacheCreation": 159217
+  },
+  "costUsd": null,
+  "costNote": "unknown: the transcript carries no cost-state record",
+  "toolCalls": {
+    "Bash": 70,
+    "Write": 3,
+    "mcp__bf7c680d-5fdc-5ef4-b4a0-abadb619bf0a__get_session": 1
+  },
+  "toolCallsTotal": 74,
+  "toolErrors": 3,
+  "fileReads": 34,
+  "distinctFilesRead": 24,
+  "repeatedReads": {
+    "AGENTS.md": 2,
+    "docs/planning.md": 2,
+    "research/experiments/EX-ROS-2026-A021-harness/session_metrics.py": 2,
+    "src/Ros.Contracts/Planning/PlanningJson.fs": 4,
+    "src/Ros.Domain/Planning/Model.fs": 3,
+    "src/Ros.Infrastructure/Planning/FilePlanningRepository.fs": 3
+  },
+  "governanceReads": {
+    "AGENTS.md": 2,
+    "docs/cli.md": 1,
+    "docs/planning.md": 2,
+    "requirements/PLANNING-WORK-GROUPS.md": 1
+  },
+  "searches": 50,
+  "fileWrites": 13,
+  "distinctFilesEdited": 3,
+  "distinctFilesEditedNote": "script counts only Edit/Write tool paths; git shows 17 source/test/doc files changed in the implementation commit (6 new, 11 modified), most edited via Bash",
+  "builds": 7,
+  "testRuns": 3,
+  "compactions": 0,
+  "contextResets": 0,
+  "sessionObserved": {
+    "note": "counted by the executing session from its own command history; the script's pattern counts above are approximate (they count any command mentioning a build or test runner)",
+    "buildInvocations": 6,
+    "buildFailures": {
+      "environment": 2,
+      "compile": 1
+    },
+    "testRuns": {
+      "fsharp": {
+        "runs": 1,
+        "tests": 805,
+        "passed": 805,
+        "failed": 0
+      },
+      "nodeBootstrap": {
+        "runs": 1,
+        "tests": 104,
+        "passed": 104,
+        "failed": 0
+      },
+      "nodeFsharpDifferential": {
+        "runs": 1,
+        "tests": 257,
+        "passed": 257,
+        "failed": 0
+      },
+      "python": {
+        "runs": 1,
+        "tests": 7,
+        "passed": 7,
+        "failed": 0
+      },
+      "siteVerify": {
+        "runs": 2,
+        "tests": 99,
+        "passed": 99,
+        "failed": 0
+      }
+    },
+    "failedTests": 0,
+    "retries": {
+      "toolchainInstall": 3,
+      "build": 1,
+      "note": "install-toolchain.sh (Ordo download 403), dotnet-install.sh (403 builds.dotnet.microsoft.com), apt install (404 before apt-get update); one rebuild after a test compile error"
+    },
+    "validationFailures": 0,
+    "commitsAtCapture": 1,
+    "commitsNote": "implementation commit 7e01fb9; this metrics commit and the final Praxis-state commit follow and are reported in the handoff"
+  },
+  "infrastructure": {
+    "dotnet": "not preinstalled; dot.net installer blocked (403); installed Ubuntu dotnet-sdk-10.0 10.0.112 via apt",
+    "fsharpCore": "distro SDK bundles FSharp.Core 10.0.112 but EchelonFoundry.Aegis.Core requires >= 10.1.400 (NU1605); built with -p:FSharpCoreImplicitPackageVersion=10.1.400, so `npm run build:fsharp` and `npm test`'s build step were run as the equivalent dotnet build plus the override; the repository was not changed for this",
+    "ordo": "install-toolchain.sh installed Praxis 3.6.0 native but failed to install Ordo (403)"
+  },
+  "harness": {
+    "script": "research/experiments/EX-ROS-2026-A021-harness/session_metrics.py",
+    "notes": "reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate"
+  }
+}

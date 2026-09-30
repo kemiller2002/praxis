@@ -420,4 +420,60 @@ module GroupingTests =
               let json = PlanningJson.render (PlanningJson.groups analysis.Snapshot grouping)
               let parsed = JsonNode.Parse json
               let groupsArray = parsed["groups"].AsArray()
-              Assert.equal "unknown" (groupsArray.[0].["contextCost"].["estimatedReuse"].GetValue<string>())) ]
+              Assert.equal "unknown" (groupsArray.[0].["contextCost"].["estimatedReuse"].GetValue<string>()))
+
+          t "work group show: a declared group with member states, progress and whom blocked members gate" (fun () ->
+              let configuration =
+                  withGrouping stateSafe (fun grouping ->
+                      { grouping with
+                          Groups =
+                            [ { Id = "GROUP-SUMMA-DATABASE-004"
+                                Members = [ "DB-21"; "DB-22"; "DB-23"; "DB-24"; "DB-25"; "DB-99" ]
+                                Kind = Some GroupKind.SharedMigration
+                                Origin = GroupOrigin.HumanDeclared
+                                SharedContext = [ "one typed migration model" ]
+                                ExecutionRepository = Some "summa"
+                                CrossRepository = false
+                                ArchitectureNotes = [ "no direct SQL outside Strata" ] } ] })
+
+              let queue =
+                  [ tagged "DB-21" [ "database" ]
+                    tagged "DB-22" [ "database" ]
+                    tagged "DB-23" [ "database" ]
+                    { tagged "DB-24" [ "database" ] with DependsOn = [ "DB-23" ] }
+                    { tagged "DB-25" [ "database" ] with DependsOn = [ "DB-24" ] } ]
+
+              let liveItems = [ live "DB-21" LiveWorkState.Complete; live "DB-22" LiveWorkState.Active; { live "DB-23" LiveWorkState.Blocked with BlockReason = Some "needs a DBA" } ]
+              let planningInput, analysis, grouping = report queue liveItems [] configuration
+              let view = Grouping.show analysis planningInput.Configuration grouping "GROUP-SUMMA-DATABASE-004" |> Result.defaultWith failwith
+              Assert.equal "summa" view.Group.ExecutionRepository
+              Assert.equal [ "no direct SQL outside Strata" ] view.Group.ArchitectureNotes
+              Assert.equal [ "DB-99" ] view.UnknownMembers
+              let entry id = view.Group.Members |> List.find (fun entry -> entry.WorkItemId = id)
+              Assert.equal "complete" (entry "DB-21").LifecycleState
+              Assert.equal PlanningWorkState.Active (entry "DB-22").PlanningState
+              Assert.equal MemberStatus.Runnable (entry "DB-24").Status
+              Assert.equal (1, 1, 1, 2) (view.Group.Progress.Complete, view.Group.Progress.InProgress, view.Group.Progress.Blocked, view.Group.Progress.Runnable)
+              let blocked = Assert.single view.Blocked
+              Assert.equal "DB-23" blocked.WorkItemId
+              Assert.equal (Some "needs a DBA") blocked.BlockReason
+              Assert.equal [ "DB-24"; "DB-25" ] blocked.Gates
+
+              let document = PlanningJson.render (PlanningJson.declaredGroupView analysis.Snapshot view) |> JsonNode.Parse
+              Assert.equal "declared-group" (document["kind"].GetValue<string>())
+              Assert.equal "shared-migration" (document["declaration"].["kind"].GetValue<string>())
+              Assert.equal "DB-23" (document["blocked"].[0].["workItem"].GetValue<string>())
+              Assert.equal 2 (document["blocked"].[0].["gates"].AsArray().Count)
+              Assert.equal 1 (document["group"].["progress"].["complete"].GetValue<int>()))
+
+          t "work group show refuses unknown IDs and planner recommendations" (fun () ->
+              let planningInput, analysis, grouping = report persistence [] [] persistenceConfiguration
+              let recommended = grouping.Groups |> Assert.single |> fun group -> WorkGroupId.value group.Id
+
+              match Grouping.show analysis planningInput.Configuration grouping recommended with
+              | Error message -> Assert.isTrue (message.Contains "explain-group") "a recommendation points to explain-group"
+              | Ok _ -> failwith "a planner recommendation is not a declared group"
+
+              match Grouping.show analysis planningInput.Configuration grouping "GROUP-NOPE-001" with
+              | Error message -> Assert.isTrue (message.Contains "no groups are declared") "the refusal says nothing is declared"
+              | Ok _ -> failwith "an unknown group must be refused") ]

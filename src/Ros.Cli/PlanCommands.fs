@@ -477,6 +477,52 @@ module PlanCommands =
           yield ""
           yield comparison.Statement ]
 
+    let private declaredGroupText (snapshot: PlanSnapshot) (view: DeclaredGroupView) =
+        let group = view.Group
+        let progress = group.Progress
+        let listed (values: string list) = match values with [] -> "none" | _ -> String.concat ", " values
+        let bullets (values: string list) = match values with [] -> [ "  none" ] | _ -> values |> List.map (fun value -> $"  - {value}")
+        let cross = if group.CrossRepository then " (declared cross-repository)" else ""
+
+        [ yield! snapshotLines snapshot
+          yield ""
+          yield $"{WorkGroupId.value group.Id}: declared group ({GroupOrigin.code group.Origin}, {GroupKind.code group.Kind})"
+          yield $"Area: {group.Area}"
+          yield $"Execution repository: {group.ExecutionRepository}{cross}"
+          yield $"Progress: {progress.Statement}"
+          yield $"  complete {progress.Complete}, in progress {progress.InProgress}, runnable {progress.Runnable}, blocked {progress.Blocked}, not runnable {progress.NotRunnable} of {progress.Total}"
+          yield ""
+          yield "Members (own recorded state; planning state; status):"
+          match group.Members with
+          | [] -> yield "  none in the planning inventory"
+          | members ->
+              for entry in members do
+                  let gated = if entry.GatedBy.IsEmpty then "" else $"; waits on blocked {listed entry.GatedBy}"
+                  yield $"  {entry.WorkItemId}: recorded {entry.LifecycleState}; planning {PlanningWorkState.code entry.PlanningState}; {MemberStatus.code entry.Status}{gated}"
+          if not view.UnknownMembers.IsEmpty then
+              yield $"  declared but not in the planning inventory: {listed view.UnknownMembers}"
+          yield ""
+          yield "Blocked members:"
+          match view.Blocked with
+          | [] -> yield "  none"
+          | blocked ->
+              for entry in blocked do
+                  let reason = entry.BlockReason |> Option.map (fun reason -> $": {reason}") |> Option.defaultValue ""
+                  let gates = if entry.Gates.IsEmpty then "gates no other member" else $"gates {listed entry.Gates}"
+                  yield $"  {entry.WorkItemId} [{PlanningWorkState.code entry.PlanningState}]{reason}; {gates}"
+          yield ""
+          yield "Shared context:"
+          yield! bullets group.SharedContext
+          yield ""
+          yield "Architecture notes:"
+          yield! bullets group.ArchitectureNotes
+          if not group.Notes.IsEmpty then
+              yield ""
+              yield "Notes:"
+              yield! group.Notes |> List.map (fun entry -> $"  {FindingSeverity.code entry.Severity} {GroupNoteCode.code entry.Code}: {entry.Message}")
+          yield ""
+          yield view.Statement ]
+
     let private emit (options: Options) (json: unit -> Text.Json.Nodes.JsonNode) (lines: unit -> string list) =
         if options.Json then printf "%s" (PlanningJson.render (json ()))
         else lines () |> List.iter (printfn "%s")
@@ -580,3 +626,22 @@ module PlanCommands =
                             emit options (fun () -> PlanningJson.review analysis.Snapshot review) (fun () -> reviewText review) |> ignore
                             if review.Freshness.Stale then 3 else 0)
         | _ -> fail 2 $"usage: {usage}"
+
+    let workGroupUsage =
+        "work group show GROUP-ID [--config FILE] [--observations FILE] [--as-of TIMESTAMP] [--json]"
+
+    /// `praxis work group show GROUP-ID`: one declared group, read-only
+    /// (PRX-GRP-073). Declarations, configured or stored by `work group
+    /// create`, are read exactly as the planner reads them; nothing is written.
+    let showDeclaredGroup (root: string) (version: string) (arguments: string list) : int =
+        let options = parse empty arguments
+
+        match options.Positional with
+        | [ id ] ->
+            withAnalysis root version { options with Positional = [] } (fun input analysis ->
+                let report = Grouping.recommend input analysis
+
+                match Grouping.show analysis input.Configuration report id with
+                | Error message -> fail 1 message
+                | Ok view -> emit options (fun () -> PlanningJson.declaredGroupView analysis.Snapshot view) (fun () -> declaredGroupText analysis.Snapshot view))
+        | _ -> fail 2 $"work group show requires exactly one declared group ID; usage: {workGroupUsage}"
