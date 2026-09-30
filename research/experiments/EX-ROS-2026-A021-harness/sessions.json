@@ -17,7 +17,21 @@
       "session": "session_01Am6kL4FMXPviX7x1UJhbx9",
       "configuredModel": "claude-opus-5-5",
       "createdAt": "2026-09-30T11:50:34Z",
-      "prompt": "prompts/grouped.txt"
+      "prompt": "prompts/grouped.txt",
+      "finishedAt": "2026-09-30T12:51:45Z",
+      "status": "completed",
+      "headAfter": "5face88",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 9.476795,
+        "input_tokens": 234,
+        "output_tokens": 112377,
+        "cache_read_tokens": 24507715,
+        "cache_write_tokens": 290847,
+        "context_used_tokens": 318828,
+        "last_served_model": "claude-opus-5-5",
+        "worker_epoch": 2
+      }
     },
     {
       "label": "control-01",
