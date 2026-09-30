@@ -1,0 +1,115 @@
+{
+  "schema": "ex-ros-2026-a021.session-metrics/1",
+  "experiment": "EX-ROS-2026-A021-R2",
+  "arm": "control",
+  "label": "control-02",
+  "workItem": "PRAXIS-GROUP-02",
+  "sessionId": "session_01T6C9t1bNaqfAXEckAxu7Zz",
+  "transcriptSessionId": "ffb6c420-61c6-5d2b-bb9c-45cb15cbfcde",
+  "praxisExecution": "EXE-20260930T155726122Z-f8ad6210",
+  "model": {
+    "configured": "claude-opus-5-5",
+    "sessionContextModel": "claude-opus-5-5",
+    "lastServedModel": "claude-opus-5-5",
+    "transcriptModels": [
+      "claude-opus-5-5"
+    ],
+    "source": "get_session (session_context.model, external_metadata.last_served_model) and transcript"
+  },
+  "sessionCreatedAt": "2026-09-30T15:54:08.778106Z",
+  "startedAt": "2026-09-30T15:54:15.932000+00:00",
+  "endedAt": "2026-09-30T16:17:59.444000+00:00",
+  "wallMs": 1423512,
+  "timingScope": "transcript start to the moment this summary was generated; the metrics commit, work complete, registry build, validate and the final Praxis-state commit happen after and are not included",
+  "msToFirstProductionCodeMutation": 299395,
+  "modelRequests": 95,
+  "tokens": {
+    "input": 190,
+    "output": 38194,
+    "cacheRead": 14308283,
+    "cacheCreation": 182647
+  },
+  "costUsd": "unknown",
+  "toolCalls": {
+    "Bash": 90,
+    "Edit": 4,
+    "Read": 1,
+    "mcp__bf7c680d-5fdc-5ef4-b4a0-abadb619bf0a__get_session": 1
+  },
+  "toolCallsTotal": 96,
+  "toolErrors": 3,
+  "fileReads": 46,
+  "distinctFilesRead": 25,
+  "repeatedReads": {
+    "/tmp/claude-0/-home-user-praxis/ffb6c420-61c6-5d2b-bb9c-45cb15cbfcde/tasks/bb5ftfk53.output": 2,
+    "/tmp/claude-0/apt.log": 2,
+    "docs/cli.md": 3,
+    "docs/planning.md": 3,
+    "research/experiments/EX-ROS-2026-A021-harness/session_metrics.py": 2,
+    "src/Ros.Cli/WorkGroupCommands.fs": 2,
+    "src/Ros.Contracts/Planning/PlanningJson.fs": 2,
+    "src/Ros.Domain/Planning/Grouping.fs": 11,
+    "tests/Ros.Tests/GroupingTests.fs": 2,
+    "tests/Ros.Tests/PlanningCliTests.fs": 2
+  },
+  "governanceReads": {
+    "AGENTS.md": 1,
+    "docs/cli.md": 3,
+    "docs/planning.md": 3,
+    "requirements/PLANNING-WORK-GROUPS.md": 1
+  },
+  "searches": 48,
+  "fileWrites": 18,
+  "distinctFilesEdited": {
+    "summarizer": 3,
+    "fromGit": 8,
+    "note": "the summarizer counts only Edit/Write tool paths; most edits were python scripts via Bash. fromGit counts non-.ros files in 962b1f4 (src 4, tests 2, docs 2); the merge additionally hand-resolved .ros/context/current.json and .ros/events/events.jsonl"
+  },
+  "builds": 7,
+  "testRuns": 7,
+  "failedTests": {
+    "value": 1,
+    "detail": "first full F# run: 794/795, the new CLI test assumed GH-84 was blocked but the planner correctly classifies it as a stale-state candidate; test corrected. Every later run passed."
+  },
+  "retries": {
+    "value": 4,
+    "detail": [
+      ".NET SDK: dotnet-install.sh blocked by the egress proxy (403); apt install 404 until apt-get update; then apt dotnet-sdk-10.0 10.0.112 installed",
+      "build: first npm run build:fsharp failed with NU1605 (Ubuntu SDK bundles FSharp.Core 10.0.112, a dependency needs >= 10.1.400); every build passed -p:FSharpCoreImplicitPackageVersion=10.1.400 on the command line (no repository change)",
+      "push: first push rejected (non-fast-forward) because PRAXIS-GROUP-01 landed on the branch concurrently; merged and re-pushed",
+      "test fix: one failing test corrected and re-run"
+    ]
+  },
+  "validationFailures": {
+    "value": 0,
+    "detail": "./ros validate passed before the first commit and after the merge"
+  },
+  "contextCompactions": 0,
+  "contextResets": 0,
+  "commits": {
+    "value": 2,
+    "shas": [
+      "962b1f4",
+      "fa821cc"
+    ],
+    "scope": "before this file was written; this file's commit and the final Praxis-state commit follow"
+  },
+  "mergeConflicts": {
+    "value": 4,
+    "files": [
+      ".ros/context/current.json",
+      ".ros/events/events.jsonl",
+      "docs/cli.md",
+      "src/Ros.Cli/Program.fs"
+    ],
+    "plus": "not a textual conflict: both items added a PlanningJson.declaredGroup; mine was renamed declaredGroupView before building"
+  },
+  "tests": {
+    "fsharp": "809/809",
+    "node": "104/104",
+    "differential": "257/257",
+    "python": "7/7"
+  },
+  "infrastructure": "no .NET in the container; repository scripts/install-toolchain.sh installs Praxis/Echelon binaries, not the .NET SDK, so the SDK came from Ubuntu apt (10.0.112) instead of the CI's actions/setup-dotnet 10.0.x",
+  "summarizer": "research/experiments/EX-ROS-2026-A021-harness/session_metrics.py (raw output merged here); notes: reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate"
+}
