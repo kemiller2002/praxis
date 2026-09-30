@@ -29,7 +29,7 @@ open Aegis
 let Version = Lifecycle.Version
 
 let private usage =
-    "Usage: ros-fs [--root PATH] version | " + ExecutionCommands.usage + " | " + InstallationCommands.usage + " | " + PlanCommands.usage + " | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--unrecoverable-reason TEXT] [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | " + ReconciliationCommands.usage + " | " + CheckpointCommands.usage + " | " + CheckpointCommands.continueUsage + " | work context [ID] [--text] [--offline] | status [--json] [--verbose] [--offline] | " + RemoteCommands.usage + " | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--step STEP-ID] [--quiet] | telemetry step start|complete|fail [TARGET] --step STEP-ID [--name TEXT] [--reason TEXT] [--occurred-at TIMESTAMP] | telemetry usage [WORKITEM] [--by work-item|execution|step|provider|model|day] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | foundations verify [--json] | adapter publish --target FILE | ordo ingest --input FILE | ordo assess --input FILE | ordo observe-search --input FILE | ordo observe-effect --input FILE | ordo current | ordo handoff --revision REV --source SOURCE [--fact TEXT]* [--assumption TEXT]* [--unknown TEXT]* [--obligation TEXT]* [--next-action TEXT]* | provenance identity [--json] [IDENTITY] | provenance record (--path PATH|--id ID) --operation {created|modified|reviewed|approved|superseded|migrated} [--reason TEXT] [--evidence REF]* [--derived-from REF]* [--execution EXE-ID] [--occurred-at TIMESTAMP] [--json] | provenance show ID|PATH [--json] | provenance audit [--json]; IDENTITY (work start/resume/block/complete, add, telemetry start): [--actor-kind {agent|human|automation|unknown|x-...}] [--agent ID|--actor ID] [--provider P] [--model M] [--runtime R] ..."
+    "Usage: ros-fs [--root PATH] version | " + ExecutionCommands.usage + " | " + InstallationCommands.usage + " | " + PlanCommands.usage + " | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--unrecoverable-reason TEXT] [--actor NAME] | work abandon --id ID [--id ID]* --occurred-at TIMESTAMP --reason TEXT [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | " + ReconciliationCommands.usage + " | " + CheckpointCommands.usage + " | " + CheckpointCommands.continueUsage + " | work context [ID] [--text] [--offline] | status [--json] [--verbose] [--offline] | " + RemoteCommands.usage + " | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--step STEP-ID] [--quiet] | telemetry step start|complete|fail [TARGET] --step STEP-ID [--name TEXT] [--reason TEXT] [--occurred-at TIMESTAMP] | telemetry usage [WORKITEM] [--by work-item|execution|step|provider|model|day] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | foundations verify [--json] | adapter publish --target FILE | ordo ingest --input FILE | ordo assess --input FILE | ordo observe-search --input FILE | ordo observe-effect --input FILE | ordo current | ordo handoff --revision REV --source SOURCE [--fact TEXT]* [--assumption TEXT]* [--unknown TEXT]* [--obligation TEXT]* [--next-action TEXT]* | provenance identity [--json] [IDENTITY] | provenance record (--path PATH|--id ID) --operation {created|modified|reviewed|approved|superseded|migrated} [--reason TEXT] [--evidence REF]* [--derived-from REF]* [--execution EXE-ID] [--occurred-at TIMESTAMP] [--json] | provenance show ID|PATH [--json] | provenance audit [--json]; IDENTITY (work start/resume/block/complete, add, telemetry start): [--actor-kind {agent|human|automation|unknown|x-...}] [--agent ID|--actor ID] [--provider P] [--model M] [--runtime R] ..."
 
 /// Removes one global `--name VALUE` option from the argument list wherever
 /// it appears, so the command parsers below only ever see their own flags.
@@ -176,6 +176,7 @@ let private parseWorkState value =
     | "active" -> Some LiveWorkState.Active
     | "blocked" -> Some LiveWorkState.Blocked
     | "complete" -> Some LiveWorkState.Complete
+    | "abandoned" -> Some LiveWorkState.Abandoned
     | _ -> None
 
 let private parseWorkAction value =
@@ -184,6 +185,7 @@ let private parseWorkAction value =
     | "block" -> Some WorkAction.Block
     | "resume" -> Some WorkAction.Resume
     | "complete" -> Some WorkAction.Complete
+    | "abandon" -> Some WorkAction.Abandon
     | _ -> None
 
 let private parseBacklogState value =
@@ -253,6 +255,7 @@ let private defaultLocalState (action: WorkAction) =
     | WorkAction.Resume -> "active"
     | WorkAction.Block -> "blocked"
     | WorkAction.Complete -> "complete"
+    | WorkAction.Abandon -> "abandoned"
 
 let private runWorkPlan root arguments =
     let state = optionValue "--state" arguments |> Option.bind parseWorkState
@@ -1131,6 +1134,7 @@ let private workActionCode (action: WorkAction) =
     | WorkAction.Block -> "block"
     | WorkAction.Resume -> "resume"
     | WorkAction.Complete -> "complete"
+    | WorkAction.Abandon -> "abandon"
 
 let private workStateCode (state: LiveWorkState) =
     match state with
@@ -1138,6 +1142,7 @@ let private workStateCode (state: LiveWorkState) =
     | LiveWorkState.Active -> "active"
     | LiveWorkState.Blocked -> "blocked"
     | LiveWorkState.Complete -> "complete"
+    | LiveWorkState.Abandoned -> "abandoned"
 
 let private workContextRejectionMessage (rejection: WorkContextRejection) =
     match rejection with
@@ -1149,6 +1154,7 @@ let private workContextRejectionMessage (rejection: WorkContextRejection) =
         | TransitionRejection.IllegalTransition(state, action) ->
             $"cannot {workActionCode action} '{id}' from '{workStateCode state}'"
         | TransitionRejection.BlockReasonRequired -> "block requires --reason"
+        | TransitionRejection.AbandonReasonRequired -> "abandon requires --reason stating why the work is cancelled"
         | TransitionRejection.MissingEvidence missing -> $"""completion evidence missing for '{id}': {String.Join(", ", missing)}"""
 
 let private telemetryRejectionMessage (workItemId: string) (rejection: TelemetryResolutionRejection) =
@@ -1855,6 +1861,164 @@ let private runWorkBlock root arguments (eventActor: Actor) =
     | _, None ->
         eprintfn "ERROR work block requires valid --id and --occurred-at"
         2
+
+/// `work abandon`: the owner cancels work that will not be delivered. A live
+/// item (ready, active or blocked) moves to the terminal `abandoned` state
+/// with a `work.abandoned` event carrying the reason and the actor; its
+/// executions are finalized; its backlog row, if it has one, is abandoned
+/// too, so the two never disagree. A backlog-only item is abandoned in the
+/// backlog. Abandoning claims no paths and needs no checkpoint: it asserts
+/// nothing was delivered.
+let private runWorkAbandon root arguments (eventActor: Actor) =
+    let ids = optionValues "--id" arguments
+    let reason = optionValue "--reason" arguments |> Option.filter (String.IsNullOrWhiteSpace >> not)
+    let occurredAt = optionValue "--occurred-at" arguments
+
+    match ids, occurredAt, reason with
+    | [], _, _ ->
+        eprintfn "ERROR abandon requires at least one work-item ID"
+        2
+    | _, None, _ ->
+        eprintfn "ERROR work abandon requires valid --id and --occurred-at"
+        2
+    | _, _, None ->
+        eprintfn "ERROR abandon requires --reason stating why the work is cancelled"
+        2
+    | _, Some timestamp, Some _ ->
+        match RegistryLock.acquire root "work-protocol" RegistryLock.defaultSettings with
+        | Error failure ->
+            eprintfn "ERROR %s" failure.Message
+            1
+        | Ok lease ->
+            let result =
+                try
+                    match WorkStateTransaction.recover root, BacklogStateTransaction.recover root with
+                    | Error failure, _
+                    | _, Error failure -> Error failure.Message
+                    | Ok(), Ok() ->
+                        match readWorkContext root with
+                        | Error message -> Error message
+                        | Ok context ->
+                            let queueItems = FileBacklogQueueRepository.readItems root
+                            let inContext id = context.WorkItems |> List.exists (fun item -> item.Id = id)
+                            let inQueue id = queueItems |> List.exists (fun item -> item.Id = id)
+
+                            match ids |> List.filter (fun id -> not (inContext id) && not (inQueue id)) with
+                            | unknown :: _ -> Error $"work item '{unknown}' is not in the backlog or the live context"
+                            | [] ->
+                                let contextIds = ids |> List.filter inContext
+
+                                let liveResult =
+                                    if contextIds.IsEmpty then
+                                        Ok(JsonArray())
+                                    else
+                                        let repositoryId = FileWorkConfigRepository.readRepositoryId root
+
+                                        let actor =
+                                            optionValue "--actor" arguments
+                                            |> Option.orElse (Environment.GetEnvironmentVariable "ROS_ACTOR" |> Option.ofObj)
+                                            |> Option.orElse (FileWorkContextRepository.readExistingActor root)
+                                            |> Option.defaultValue "unknown"
+
+                                        let request: WorkContextPlanRequest =
+                                            { Context = context
+                                              Action = WorkAction.Abandon
+                                              WorkItemIds = contextIds
+                                              NewItemType = "task"
+                                              TargetLocalState = defaultLocalState WorkAction.Abandon
+                                              BlockReason = reason
+                                              DefaultRequiredEvidence = Set.empty
+                                              RequiredEvidenceByType = Map.empty
+                                              ProvidedEvidence = []
+                                              Repository = repositoryId
+                                              ProtocolVersion = FileWorkConfigRepository.readProtocolVersion root
+                                              Actor = actor
+                                              OccurredAt = timestamp
+                                              MeaningfulChangedPaths = []
+                                              ObservedGitPaths = []
+                                              TelemetryEnabled = FileWorkConfigRepository.readTelemetryEnabled root }
+
+                                        match WorkContextPlanning.plan request with
+                                        | WorkContextPlanOutcome.Rejected rejection -> Error(workContextRejectionMessage rejection)
+                                        | WorkContextPlanOutcome.Planned plan ->
+                                            // Record the lifecycle event on each active execution, then
+                                            // finalize them: abandoned work leaves nothing running.
+                                            let telemetryResult =
+                                                if request.TelemetryEnabled then
+                                                    contextIds
+                                                    |> List.fold
+                                                        (fun acc id ->
+                                                            acc
+                                                            |> Result.bind (fun () -> FileTelemetryFinalizationRepository.recordLifecycle root id "abandoned" timestamp reason)
+                                                            |> Result.bind (fun () -> FileTelemetryFinalizationRepository.finalizeWorkExecutions root id))
+                                                        (Ok())
+                                                else
+                                                    Ok()
+
+                                            telemetryResult
+                                            |> Result.bind (fun () ->
+                                                FileWorkContextRepository.applyContextPlanWithExtensions root repositoryId Map.empty Map.empty eventActor plan)
+                                            |> Result.map (fun (writtenItems, _) ->
+                                                let wanted = Set.ofList contextIds
+                                                let matching = JsonArray()
+
+                                                for node in writtenItems do
+                                                    match node with
+                                                    | :? JsonObject as item ->
+                                                        match item["id"] with
+                                                        | :? JsonValue as value when
+                                                            value.GetValueKind() = JsonValueKind.String && wanted.Contains(value.GetValue<string>())
+                                                            ->
+                                                            matching.Add(item.DeepClone(): JsonNode)
+                                                        | _ -> ()
+                                                    | _ -> ()
+
+                                                matching)
+
+                                liveResult
+                                |> Result.bind (fun contextItems ->
+                                    // Every backlog row among the ids is abandoned too, against
+                                    // the live context as it now stands.
+                                    match readWorkContext root with
+                                    | Error message -> Error message
+                                    | Ok current ->
+                                        let rows =
+                                            ids
+                                            |> List.filter (fun id ->
+                                                FileBacklogQueueRepository.readItems root
+                                                |> List.exists (fun item -> item.Id = id && item.Status <> "abandoned" && item.Status <> "complete"))
+
+                                        let rec applyBacklog remaining acc =
+                                            match remaining with
+                                            | [] -> Ok(List.rev acc)
+                                            | id :: rest ->
+                                                applyBacklogTransition root id BacklogAction.Abandon "abandon" reason timestamp current.WorkItems
+                                                |> Result.bind (fun _ ->
+                                                    match readRawQueueItem root id with
+                                                    | None -> Error $"'{id}' vanished during abandon"
+                                                    | Some rawItem -> applyBacklog rest (rawItem :: acc))
+
+                                        applyBacklog rows [] |> Result.map (fun backlogRows -> backlogRows, contextItems))
+                with error ->
+                    lease.Release() |> ignore
+                    reraise ()
+
+            match lease.Release(), result with
+            | Error releaseFailure, Ok _ ->
+                eprintfn "ERROR %s" releaseFailure.Message
+                1
+            | _, Error message ->
+                eprintfn "ERROR %s" message
+                1
+            | Ok(), Ok(backlogRows, contextItems) ->
+                let combined = JsonArray()
+                backlogRows |> List.iter (fun item -> combined.Add(item.DeepClone(): JsonNode))
+
+                for item in contextItems do
+                    combined.Add(item.DeepClone(): JsonNode)
+
+                printf "%s" (combined.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2)))
+                0
 
 /// Mirrors production `queueFindings` (`tools/ros_cli.mjs`): duplicate ids,
 /// invalid ids, invalid status, and invalid priority over the raw backlog
@@ -2829,6 +2993,7 @@ let private repositoryDispatch root packageRoot arguments =
     | "work" :: ("begin" | "start") :: rest -> ProvenanceCommands.withResolvedActor rest (runWorkStart root rest)
     | "work" :: "resume" :: rest -> ProvenanceCommands.withResolvedActor rest (runWorkResume root rest)
     | "work" :: "block" :: rest -> ProvenanceCommands.withResolvedActor rest (runWorkBlock root rest)
+    | "work" :: "abandon" :: rest -> ProvenanceCommands.withResolvedActor rest (runWorkAbandon root rest)
     | "work" :: ("complete" | "done") :: rest -> ProvenanceCommands.withResolvedActor rest (runWorkComplete root rest)
     | "work" :: "reconcile" :: rest -> ProvenanceCommands.withResolvedActor rest (ReconciliationCommands.run root rest)
     | "work" :: "checkpoint" :: "show" :: rest -> CheckpointCommands.show root rest

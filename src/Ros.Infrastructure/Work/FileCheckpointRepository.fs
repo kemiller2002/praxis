@@ -49,6 +49,7 @@ module FileCheckpointRepository =
         | "active" -> Some LiveWorkState.Active
         | "blocked" -> Some LiveWorkState.Blocked
         | "complete" -> Some LiveWorkState.Complete
+        | "abandoned" -> Some LiveWorkState.Abandoned
         | _ -> None
 
     let stateCode state =
@@ -57,6 +58,7 @@ module FileCheckpointRepository =
         | LiveWorkState.Active -> "active"
         | LiveWorkState.Blocked -> "blocked"
         | LiveWorkState.Complete -> "complete"
+        | LiveWorkState.Abandoned -> "abandoned"
 
     let private readContextNode (root: string) : Result<JsonObject option, string> =
         let path = Path.Combine(root, contextRelativePath)

@@ -18,6 +18,7 @@ module QueuePresentation =
         | LiveWorkState.Active -> "active"
         | LiveWorkState.Blocked -> "blocked"
         | LiveWorkState.Complete -> "complete"
+        | LiveWorkState.Abandoned -> "abandoned"
 
     /// An active/blocked/complete live item always wins; otherwise the
     /// backlog's own status; otherwise a "ready" live item alone.

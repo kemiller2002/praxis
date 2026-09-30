@@ -29,7 +29,8 @@ module WorkPlanTests =
             | WorkAction.Resume -> "active"
             | WorkAction.Block -> "blocked"
             | WorkAction.Complete -> "complete"
-          BlockReason = if action = WorkAction.Block then Some "blocked now" else None
+            | WorkAction.Abandon -> "abandoned"
+          BlockReason = if action = WorkAction.Block || action = WorkAction.Abandon then Some "blocked now" else None
           RequiredEvidence = Set.empty
           ProvidedEvidence = []
           Repository = "repo"
@@ -54,7 +55,8 @@ module WorkPlanTests =
             | WorkAction.Resume -> "active"
             | WorkAction.Block -> "blocked"
             | WorkAction.Complete -> "complete"
-          BlockReason = if action = WorkAction.Block then Some "blocked now" else None
+            | WorkAction.Abandon -> "abandoned"
+          BlockReason = if action = WorkAction.Block || action = WorkAction.Abandon then Some "blocked now" else None
           DefaultRequiredEvidence = Set.empty
           RequiredEvidenceByType = Map.empty
           ProvidedEvidence = []

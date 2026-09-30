@@ -10,6 +10,7 @@ ROS owns the versioned protocol, legal transitions, repository validation, and a
 ./ros telemetry show FEAT-142
 ./ros work block FEAT-142 --reason "waiting for fixture"
 ./ros work resume FEAT-142
+./ros work abandon --id FEAT-143 --reason "superseded by FEAT-142" --occurred-at "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
 ./ros work complete FEAT-142 \
   --evidence implementation=src/feature.js \
   --evidence tests=tests/feature.test.js
@@ -18,7 +19,7 @@ ROS owns the versioned protocol, legal transitions, repository validation, and a
 ./ros status
 ```
 
-The legal semantic core is `ready -> active -> blocked -> active` and `active -> complete`. Durable checkpoints and `work continue` (below) add evidence and a new execution; they are not lifecycle states. Local states may be supplied with `--local-state`; `ros.json` maps repository states to the shared semantic vocabulary. Research completion accepts an independent `--conclusion`, including `inconclusive` (the default). Any other work type records a `--conclusion` only when one is supplied; it is never accepted and then dropped.
+The legal semantic core is `ready -> active -> blocked -> active` and `active -> complete`; any of `ready`, `active` or `blocked` may also move to the terminal `abandoned` (see "Abandoning work" below). Durable checkpoints and `work continue` (below) add evidence and a new execution; they are not lifecycle states. Local states may be supplied with `--local-state`; `ros.json` maps repository states to the shared semantic vocabulary. Research completion accepts an independent `--conclusion`, including `inconclusive` (the default). Any other work type records a `--conclusion` only when one is supplied; it is never accepted and then dropped.
 
 Beginning work automatically starts a segmented execution record under `.ros/telemetry/executions/`; completing work automatically finalizes all active records. Block/resume transitions preserve interruption intervals. Runtime adapters can ingest token, cost, context, agent, tool, and provider-specific observations without changing the work-state protocol. `./ros validate` checks telemetry structure and finalization alongside work attribution. See [`development-telemetry.md`](development-telemetry.md).
 
@@ -29,6 +30,29 @@ Beginning work automatically starts a segmented execution record under `.ros/tel
 Completion validates configured evidence types and paths before changing state. `./ros validate` rejects meaningful dirty paths when enforcement is enabled and neither active context nor a completed event attributes them. Committed changes that were made without an active work item are repaired with `./ros work reconcile` (see "Post-hoc attribution reconciliation" below), never by touching files. CI is the authoritative enforcement boundary; hooks are optional convenience.
 
 Deterministic housekeeping may use the configured `mechanical` work type. It still requires an explicit work-item identity and event, but the default profile does not require implementation/test evidence for that type.
+
+### Abandoning work
+
+`work abandon --id ID --occurred-at TIMESTAMP --reason TEXT` records that the
+owner cancelled work that will not be delivered. It is the truthful end for
+work that was started or captured and then dropped; completing it would claim
+delivery that never happened.
+
+- A live item (`ready`, `active` or `blocked`) moves to the terminal state
+  `abandoned`: no action is legal afterwards. The item records `abandonedAt`
+  and `abandonedReason`, and a `work.abandoned` event records the reason and
+  the actor.
+- Its active executions receive a `work.abandoned` lifecycle event and are
+  finalized, so abandoned work leaves nothing running. An open block interval
+  counts as blocked time, not productive time.
+- A backlog row for the same ID is abandoned too (with `abandonedReason`), so
+  the backlog and the live record never disagree. An ID that exists only in
+  the backlog is abandoned there.
+- Abandoning claims no paths and needs no checkpoint: it asserts nothing was
+  delivered. Committed work stays in Git history; anything else is left
+  exactly where it is.
+- `--reason` is required, and completed or already abandoned work cannot be
+  abandoned.
 
 ## Durable checkpoints and continuity
 
@@ -404,7 +428,7 @@ with its own small lifecycle: `captured -> ready -> {blocked, abandoned}`.
 ./ros work start WI-0001         # requires ready; delegates to `begin`
 ./ros work block WI-0001 --reason "waiting on benchmark"
 ./ros work done WI-0001 --evidence implementation=... --evidence tests=...
-./ros work abandon WI-0002 --reason "no longer relevant"
+./ros work abandon --id WI-0002 --reason "no longer relevant" --occurred-at TIMESTAMP
 ```
 
 Canonical storage is `.ros/work/queue.json`; `.ros/work/queue.md` is a

@@ -11,6 +11,7 @@ module WorkDecisionContract =
         | LiveWorkState.Active -> "active"
         | LiveWorkState.Blocked -> "blocked"
         | LiveWorkState.Complete -> "complete"
+        | LiveWorkState.Abandoned -> "abandoned"
 
     let actionName action =
         match action with
@@ -18,6 +19,7 @@ module WorkDecisionContract =
         | WorkAction.Block -> "block"
         | WorkAction.Resume -> "resume"
         | WorkAction.Complete -> "complete"
+        | WorkAction.Abandon -> "abandon"
 
     let writeRejection (writer: System.Text.Json.Utf8JsonWriter) rejection =
         match rejection with
@@ -29,6 +31,10 @@ module WorkDecisionContract =
             writer.WriteEndArray()
         | TransitionRejection.BlockReasonRequired ->
             writer.WriteString("reason", "block-reason-required")
+            writer.WriteStartArray("missingEvidence")
+            writer.WriteEndArray()
+        | TransitionRejection.AbandonReasonRequired ->
+            writer.WriteString("reason", "abandon-reason-required")
             writer.WriteStartArray("missingEvidence")
             writer.WriteEndArray()
         | TransitionRejection.MissingEvidence missing ->

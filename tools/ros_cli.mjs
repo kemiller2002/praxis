@@ -80,12 +80,13 @@ const BACKLOG_STATE_RESOURCE = "backlog-state";
 const BACKLOG_STATE_TRANSACTION_VERSION = "1.0.0";
 const BACKLOG_STATE_PATHS = [".ros/work/queue.json", ".ros/work/queue.md"];
 
-const SEMANTIC_STATES = new Set(["backlog", "ready", "active", "review", "blocked", "complete"]);
+const SEMANTIC_STATES = new Set(["backlog", "ready", "active", "review", "blocked", "complete", "abandoned"]);
 const TRANSITIONS = {
-  ready: new Set(["begin", "block"]),
-  active: new Set(["complete", "block"]),
-  blocked: new Set(["resume"]),
-  complete: new Set()
+  ready: new Set(["begin", "block", "abandon"]),
+  active: new Set(["complete", "block", "abandon"]),
+  blocked: new Set(["resume", "abandon"]),
+  complete: new Set(),
+  abandoned: new Set()
 };
 
 const WORK_ID_RE = /^[A-Z][A-Z0-9_-]*-[A-Z0-9][A-Z0-9_-]*$/;
@@ -766,7 +767,14 @@ function transitionUnlocked(root, action, ids, options = {}) {
       if (item.type === "research") item.conclusion = options.conclusion ?? "inconclusive";
       else if (options.conclusion != null) item.conclusion = options.conclusion;
     }
-    item.semanticState = config.stateMapping[item.state] ?? (action === "begin" || action === "resume" ? "active" : action === "block" ? "blocked" : "complete");
+    if (action === "abandon") {
+      // Terminal: the owner cancelled the work; nothing was delivered, so nothing is claimed.
+      if (!options.reason || !String(options.reason).trim()) throw new Error("abandon requires --reason stating why the work is cancelled");
+      item.state = "abandoned";
+      item.abandonedAt = now;
+      item.abandonedReason = options.reason;
+    }
+    item.semanticState = config.stateMapping[item.state] ?? (action === "begin" || action === "resume" ? "active" : action === "block" ? "blocked" : action === "abandon" ? "abandoned" : "complete");
     if (!SEMANTIC_STATES.has(item.semanticState)) throw new Error(`invalid semantic state '${item.semanticState}'`);
     item.updatedAt = now;
     if (configuredTelemetry(root).enabled) {
@@ -796,6 +804,10 @@ function transitionUnlocked(root, action, ids, options = {}) {
         } else for (const execution of active) if (!item.telemetryExecutionIds.includes(execution.executionId)) item.telemetryExecutionIds.push(execution.executionId);
       }
       if (action === "block") recordTelemetryLifecycle(root, id, "blocked", { occurredAt: now, reason: options.reason });
+      if (action === "abandon") {
+        recordTelemetryLifecycle(root, id, "abandoned", { occurredAt: now, reason: options.reason });
+        finalizeWorkExecutions(root, id, { finalizedAt: now });
+      }
       if (action === "complete") {
         if (!(item.telemetryExecutionIds ?? []).length) {
           const execution = recoverOrStartExecution(root, item, ["active", "finalized"], {
@@ -811,7 +823,7 @@ function transitionUnlocked(root, action, ids, options = {}) {
       }
     }
     const event = eventPayload({
-      type: `work.${action === "begin" ? "started" : action === "complete" ? "completed" : action === "block" ? "blocked" : "resumed"}`,
+      type: `work.${action === "begin" ? "started" : action === "complete" ? "completed" : action === "block" ? "blocked" : action === "abandon" ? "abandoned" : "resumed"}`,
       workItem: id, repository: config.repository, protocolVersion: config.protocolVersion,
       occurredAt: now, reason: options.reason, evidence: item.evidence,
       paths: action === "complete" ? meaningfulPaths(root, observedGitPaths).filter((p) => !(context.baselineDirtyPaths ?? []).includes(p)) : [],
