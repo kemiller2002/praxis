@@ -1,0 +1,38 @@
+{
+  "schema": "ex-ros-2026-a021.session-metrics/1",
+  "label": "control-04",
+  "sessionId": "78e0626f-90c9-53ea-9ea6-2cacafc00a50",
+  "transcript": "78e0626f-90c9-53ea-9ea6-2cacafc00a50.jsonl",
+  "models": [
+    "claude-opus-5-5"
+  ],
+  "startedAt": "2026-09-30T15:54:13.741000+00:00",
+  "endedAt": "2026-09-30T16:00:57.563000+00:00",
+  "wallMs": 403822,
+  "msToFirstCodeMutation": null,
+  "modelRequests": 12,
+  "tokens": {
+    "input": 24,
+    "output": 3377,
+    "cacheRead": 801840,
+    "cacheCreation": 55155
+  },
+  "costUsd": null,
+  "toolCalls": {
+    "Bash": 13
+  },
+  "toolErrors": 1,
+  "fileReads": 3,
+  "distinctFilesRead": 3,
+  "repeatedReads": {},
+  "governanceReads": {
+    "AGENTS.md": 1
+  },
+  "searches": 2,
+  "fileWrites": 0,
+  "distinctFilesEdited": 0,
+  "builds": 2,
+  "testRuns": 3,
+  "compactions": 0,
+  "notes": "reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate"
+}
