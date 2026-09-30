@@ -1528,5 +1528,33 @@
     "title": "EX-ROS-2026-A021 control arm, PRAXIS-GROUP-02: session record and stale-clone deviation (names an arm; read only after unblinding)",
     "updated": "2026-09-30",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-30",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A062",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A062--a021-blind-evaluation-report.md",
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "EV-ROS-2026-A060"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "EX-ROS-2026-A021"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "experiment",
+      "evaluation"
+    ],
+    "title": "EX-ROS-2026-A021 blind evaluation report (arm-X / arm-Y)",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
   }
 ]
