@@ -102,13 +102,28 @@ Praxis state after a checkpoint does not "move past" it: freshness compares
 meaningful paths only.
 
 The event records the actor, the execution, the optional step, the full
-checkpoint, and the meaningful `paths` that changed since the item's previous
-checkpoint (or its start commit). Those paths keep contemporaneous path
-attribution intact when work is committed before `work complete`. On a
-branch shared by several concurrently active work items they are
-branch-level, as completion paths always were. Use a branch per work item,
-or `work reconcile`, when that matters. The context keeps only
-`latestCheckpoint`; history lives in the event log and is never rewritten.
+checkpoint, and the meaningful `paths` this item's own commits changed since
+its previous checkpoint (or its start commit). Those paths keep
+contemporaneous path attribution intact when work is committed before `work
+complete`. The context keeps only `latestCheckpoint`; history lives in the
+event log and is never rewritten.
+
+**Other items' work is never claimed (PRAXIS-CONT-12).** On a branch that
+several work items share, or after merging the default branch, the commits
+after a checkpoint include other items' work. A commit belongs to *other*
+items when every meaningful path it changed is already claimed by an item
+whose recorded evidence contains it: a `work.checkpointed` event whose commit
+descends from it, or a Git-evidenced `work.attribution.reconciled` event that
+names it. Merge commits carry no change of their own. Such commits are not
+attributed to the checkpointing item, do not make its checkpoint stale, and
+do not stop it from completing or blocking. The evidence is recorded Praxis
+claims and Git ancestry only, never authors, messages or timing. Anything no
+other item has claimed still counts as the item's own work, as does a commit
+that mixes claimed and unclaimed paths, so un-checkpointed work is never
+excused. When no other item's evidence covers any commit in the range, or the
+commit history cannot be read, the result is the plain difference, as
+before. Work done before Praxis recorded checkpoints has no such evidence;
+record it with `work reconcile` so later checkpoints stop claiming it.
 
 ### Reading continuity
 

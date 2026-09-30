@@ -5,6 +5,7 @@ open System.ComponentModel
 open System.Diagnostics
 open Ros.Application.Git
 open Ros.Domain.Git
+open Ros.Application.Work
 open Ros.Domain.Work
 
 [<RequireQualifiedAccess>]
@@ -783,6 +784,57 @@ module ProcessGitDurability =
         | Error failure -> GitRead.Unavailable failure
         | Ok result when result.ExitCode <> 0 -> GitRead.Unavailable(failureOf "git diff" result)
         | Ok result -> GitRead.Observed(GitDurabilityParser.parseNameList result.Output)
+
+    /// Each commit in `left..right` with its own changes: a non-merge commit
+    /// against its parent, a merge with none (its changes belong to the
+    /// lines of history it joins). Read-only.
+    let private commitChanges executable root (left: CommitId) (right: CommitId) : GitRead<CommitChange list> =
+        match run executable root "git rev-list" None [ "rev-list"; "--parents"; "--reverse"; $"{left.Value}..{right.Value}" ] with
+        | Error failure -> GitRead.Unavailable failure
+        | Ok result when result.ExitCode <> 0 -> GitRead.Unavailable(failureOf "git rev-list" result)
+        | Ok result ->
+            let lines = result.Output.Split([| '\r'; '\n' |], StringSplitOptions.RemoveEmptyEntries) |> Array.toList
+
+            lines
+            |> List.fold
+                (fun (acc: GitRead<CommitChange list>) line ->
+                    match acc with
+                    | GitRead.Unavailable _ -> acc
+                    | GitRead.Observed changes ->
+                        match line.Split(' ', StringSplitOptions.RemoveEmptyEntries) |> Array.toList with
+                        | [] -> acc
+                        | commit :: parents when parents.Length > 1 ->
+                            GitRead.Observed(changes @ [ { Commit = commit; IsMerge = true; Paths = [] } ])
+                        | commit :: _ ->
+                            match run executable root "git diff-tree" None [ "diff-tree"; "--no-commit-id"; "--name-only"; "-r"; "-z"; "--no-renames"; "--root"; commit ] with
+                            | Error failure -> GitRead.Unavailable failure
+                            | Ok tree when tree.ExitCode <> 0 -> GitRead.Unavailable(failureOf "git diff-tree" tree)
+                            | Ok tree ->
+                                GitRead.Observed(changes @ [ { Commit = commit; IsMerge = false; Paths = GitDurabilityParser.parseNameList tree.Output } ]))
+                (GitRead.Observed [])
+
+    let private reachable executable root (left: CommitId) (right: CommitId) : GitRead<string list> =
+        match run executable root "git rev-list" None [ "rev-list"; $"{left.Value}..{right.Value}" ] with
+        | Error failure -> GitRead.Unavailable failure
+        | Ok result when result.ExitCode <> 0 -> GitRead.Unavailable(failureOf "git rev-list" result)
+        | Ok result -> GitRead.Observed(result.Output.Split([| '\r'; '\n' |], StringSplitOptions.RemoveEmptyEntries) |> Array.toList)
+
+    /// The commit-level reads the ownership rule needs (PRAXIS-CONT-12),
+    /// each answer computed once per process.
+    let createCommitHistoryWithExecutable executable (root: string) : GitCommitHistory =
+        let fullRoot = IO.Path.GetFullPath root
+
+        let memo (compute: 'key -> 'value) =
+            let cache = Collections.Concurrent.ConcurrentDictionary<'key, 'value>()
+            fun key -> cache.GetOrAdd(key, compute)
+
+        let changes = memo (fun (left: CommitId, right: CommitId) -> commitChanges executable fullRoot left right)
+        let reach = memo (fun (left: CommitId, right: CommitId) -> reachable executable fullRoot left right)
+
+        { Changes = fun left right -> changes (left, right)
+          Reachable = fun left right -> reach (left, right) }
+
+    let createCommitHistory root = createCommitHistoryWithExecutable "git" root
 
     let createWithExecutable executable (root: string) : GitDurability =
         let fullRoot = IO.Path.GetFullPath root

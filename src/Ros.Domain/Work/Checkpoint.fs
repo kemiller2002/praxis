@@ -561,7 +561,9 @@ module Checkpoint =
 type LocalCheckpointPosition =
     | AtCheckpoint
     /// HEAD descends from the checkpoint, and nothing meaningful differs:
-    /// the commits after it carry only Praxis-owned or ignored state.
+    /// the commits after it carry no meaningful change of the item's own: only
+    /// Praxis-owned or ignored state, or commits other items' recorded
+    /// checkpoints or reconciliations already own (PRAXIS-CONT-12).
     | OnlyNonMeaningfulCommitsAfter of commits: int
     | CommitsAfter of commits: int * meaningfulPaths: string list
     /// HEAD does not contain the checkpoint (another branch, or history the
