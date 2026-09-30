@@ -306,6 +306,30 @@ execution for each) without changing any item; `explain-group` answers why a
 group exists and what would change it (`DF-ROS-2026-A047`). See
 [`planning.md`](planning.md).
 
+### `work group create`
+
+```
+ros work group create --id GROUP-ID --member ID --member ID [--member ID]* --occurred-at TIMESTAMP
+                      [--kind KIND] [--execution-repository NAME] [--cross-repository]
+                      [--shared-context TEXT]* [--dry-run] [--json] [IDENTITY]
+```
+
+Records a durable human-declared execution group in `.ros/work/groups.json`
+(PRX-GRP-073, phase two of `requirements/PLANNING-WORK-GROUPS.md`): its ID
+(`GROUP-<REPOSITORY-OR-AREA>-<SEQUENCE>`), at least two members, optional kind
+(the `GroupKind` codes, or `custom:NAME`), execution repository,
+cross-repository flag and shared context, with the declaring actor and time.
+It refuses, with exit `1` and nothing recorded, a malformed or already stored
+group ID and any member that is unknown (in neither the backlog queue nor the
+live context), terminal (`complete` or `abandoned`) or repeated; argument
+errors exit `2`. It never changes a member's lifecycle state, queue entry,
+live context, evidence or telemetry. `--dry-run` reports the group without
+recording it; `--json` emits a `praxis.work-groups/1.0.0` document (`kind`
+`work-group-created`, `work-group-planned` or `work-group-rejected`). The
+planner reads every stored group exactly as it reads a `grouping.groups`
+entry of `--config`, and `validate` checks stored groups. See "Work groups" in
+[`planning.md`](planning.md).
+
 ### `work reconcile`
 
 ```

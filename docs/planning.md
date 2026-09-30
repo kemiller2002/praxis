@@ -45,6 +45,7 @@ balanced --json > plan.json` to keep a plan; later `praxis plan freshness
 | Merged PRs, tags, merged checkpoint commits | read-only Git on the integration branch (`origin/HEAD`, `origin/main`, `main`, ...) | `git` |
 | CI results, GitHub state | `--observations FILE`, supplied by a caller that can see them | `ci`, `github`, `external-observation` |
 | Weights, declared dependencies/areas/conflicts | `--config FILE` | `planner-configuration` |
+| Human-declared groups | `.ros/work/groups.json` (`work group create`), read as `grouping.groups` | `planner-configuration` |
 
 The inventory is the union of queue and live context (PRX-PLAN-010); the
 effective lifecycle state uses the same authority as `work list`
@@ -271,6 +272,20 @@ concurrently under the `accept-elevated` policy.
     "architecture": [ { "decision": "DF-...", "members": ["A", "B"], "statement": "..." } ],
     "executionRepositories": { "PRAXIS-REMOTE-12": "conditor" } } }
 ```
+
+**Stored declarations** (PRX-GRP-073, phase two). `praxis work group create`
+records a human-declared group durably in `.ros/work/groups.json`
+(`praxis.work-groups/1.0.0`: each entry is a `grouping.groups` declaration
+plus `createdAt` and `createdBy`). The planner reads every stored group with
+the same reader and in the same way as a configured `grouping.groups` entry,
+stored groups first; an ID declared both there and in `--config` is refused
+(exit `1`) rather than silently resolved. Creation refuses unknown, terminal
+and repeated members and duplicate IDs, and never changes a member's
+lifecycle state. `praxis validate` reports stored groups that are malformed,
+stored twice, have fewer than two distinct members, repeat a member, name a
+work item that no longer exists, or lack their origin, time or actor; a member
+that completed after the group was declared is valid (partial completion,
+PRX-GRP-042). Reading them keeps every `plan` command read-only.
 
 An item whose description says "External repository" and that has no
 `executionRepositories` entry is never grouped into this checkout.

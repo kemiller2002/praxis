@@ -697,6 +697,21 @@ module PlanningJson =
 
     /// The optional planner configuration file. Every field is optional and
     /// defaults to `PlannerConfiguration.defaults`.
+    /// One `grouping.groups` entry. Stored groups (`.ros/work/groups.json`)
+    /// are read by this same function, so the planner reads a stored
+    /// declaration exactly as it reads a configured one (PRX-GRP-073).
+    let private readDeclaredGroup (group: JsonObject) : DeclaredGroup =
+        let optionalTexts name = if isNull (field group name) then [] else readTexts group name
+
+        { Id = readText group "id"
+          Members = readTexts group "members"
+          Kind = readOptionalText group "kind" |> Option.map (parsed "group kind" GroupKind.tryParse)
+          Origin = readOptionalText group "origin" |> Option.map (parsed "group origin" GroupOrigin.tryParse) |> Option.defaultValue GroupOrigin.HumanDeclared
+          SharedContext = optionalTexts "sharedContext"
+          ExecutionRepository = readOptionalText group "executionRepository"
+          CrossRepository = if isNull (field group "crossRepository") then false else readBool group "crossRepository"
+          ArchitectureNotes = optionalTexts "architectureNotes" }
+
     let parseConfiguration (json: string) : Result<PlannerConfiguration, string> =
         try
             let root = JsonNode.Parse json |> asObject "configuration"
@@ -749,18 +764,7 @@ module PlanningJson =
                         readOptionalText node "minimumAffinity"
                         |> Option.map (parsed "affinity" ContextAffinity.tryParse)
                         |> Option.defaultValue fallback.MinimumAffinity
-                      Groups =
-                        optionalList "groups" (fun group ->
-                            let optionalTexts name = if isNull (field group name) then [] else readTexts group name
-
-                            { Id = readText group "id"
-                              Members = readTexts group "members"
-                              Kind = readOptionalText group "kind" |> Option.map (parsed "group kind" GroupKind.tryParse)
-                              Origin = readOptionalText group "origin" |> Option.map (parsed "group origin" GroupOrigin.tryParse) |> Option.defaultValue GroupOrigin.HumanDeclared
-                              SharedContext = optionalTexts "sharedContext"
-                              ExecutionRepository = readOptionalText group "executionRepository"
-                              CrossRepository = if isNull (field group "crossRepository") then false else readBool group "crossRepository"
-                              ArchitectureNotes = optionalTexts "architectureNotes" })
+                      Groups = optionalList "groups" readDeclaredGroup
                       Architecture =
                         optionalList "architecture" (fun decision ->
                             { Decision = readText decision "decision"
@@ -1222,3 +1226,60 @@ module PlanningJson =
         | Malformed message -> Error $"malformed groups document: {message}"
         | :? JsonException as error -> Error $"malformed groups document: {error.Message}"
         | :? InvalidOperationException as error -> Error $"malformed groups document: {error.Message}"
+
+    // ---- stored human-declared groups (`work group create`, PRX-GRP-073) --------
+
+    /// The versioned contract of `.ros/work/groups.json` and of `work group`
+    /// command output.
+    let workGroupsSchema = "praxis.work-groups/1.0.0"
+
+    let private declaredGroup (value: DeclaredGroup) =
+        [ "id", text value.Id
+          "members", texts value.Members
+          "kind", optionalText (value.Kind |> Option.map GroupKind.code)
+          "origin", text (GroupOrigin.code value.Origin)
+          "sharedContext", texts value.SharedContext
+          "executionRepository", optionalText value.ExecutionRepository
+          "crossRepository", boolean value.CrossRepository
+          "architectureNotes", texts value.ArchitectureNotes ]
+
+    let private storedGroup (value: StoredGroup) =
+        record (declaredGroup value.Declaration @ [ "createdAt", text value.CreatedAt; "createdBy", text value.CreatedBy ])
+
+    /// `.ros/work/groups.json`, groups in ordinal ID order.
+    let renderStoredGroups (groups: StoredGroup list) =
+        record [ "schema", text workGroupsSchema; "groups", groups |> List.map storedGroup |> array ] |> render
+
+    /// Reads `.ros/work/groups.json`; each entry is a `grouping.groups`
+    /// declaration plus `createdAt`/`createdBy`.
+    let parseStoredGroups (json: string) : Result<StoredGroup list, string> =
+        try
+            let root = JsonNode.Parse json |> asObject "work groups"
+
+            match readText root "schema" with
+            | version when version = workGroupsSchema ->
+                objects root "groups"
+                |> List.map (fun group ->
+                    { Declaration = readDeclaredGroup group
+                      CreatedAt = readText group "createdAt"
+                      CreatedBy = readText group "createdBy" })
+                |> Ok
+            | other -> Error $"malformed work groups: unsupported schema '{other}' (expected {workGroupsSchema})"
+        with
+        | Malformed message -> Error $"malformed work groups: {message}"
+        | :? JsonException as error -> Error $"malformed work groups: {error.Message}"
+        | :? InvalidOperationException as error -> Error $"malformed work groups: {error.Message}"
+
+    /// `work group create --json`: the recorded (or, with `--dry-run`,
+    /// the would-be) group.
+    let renderGroupCreated (dryRun: bool) (path: string) (group: StoredGroup) =
+        record
+            [ "schema", text workGroupsSchema
+              "kind", text (if dryRun then "work-group-planned" else "work-group-created")
+              "dryRun", boolean dryRun
+              "path", text path
+              "group", storedGroup group ]
+        |> render
+
+    let renderGroupRejected (errors: string list) =
+        record [ "schema", text workGroupsSchema; "kind", text "work-group-rejected"; "errors", texts errors ] |> render
