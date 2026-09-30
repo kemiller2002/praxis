@@ -82,6 +82,11 @@
     <Compile Include="PlanningTests.fs" />
     <Compile Include="PlanningCliTests.fs" />
     <Compile Include="GroupingTests.fs" />
+    <Compile Include="PremergeFence.fs" />
+    <Compile Include="PremergeCommandSurfaceTests.fs" />
+    <Compile Include="PremergeRemoteTests.fs" />
+    <Compile Include="PremergeRemoteScriptTests.fs" />
+    <Compile Include="PremergeReleaseTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

@@ -2,7 +2,7 @@
 id: EX-ROS-2026-A021
 title: Grouped versus independent execution of one high-affinity cohort (frozen protocol)
 research_area: repository-operating-system
-status: proposed
+status: completed
 created: 2026-09-30
 tests_hypotheses:
   - HY-ROS-2026-A027
@@ -10,7 +10,8 @@ tests_hypotheses:
 inputs:
   - EV-ROS-2026-A059
   - EV-ROS-2026-A058
-outputs: []
+outputs:
+  - EV-ROS-2026-A064
 related_theories: []
 related_documents:
   - requirements/PLANNING-WORK-GROUPS.md
@@ -39,6 +40,26 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "PRAXIS-PLAN-03: record the owner's approval and cohort triage against the experiment gate"
+    EXE-20260930T114749635Z-ba7301df:
+      operations: [modified]
+      at: 2026-09-30T17:18:11.797Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PLAN-EXP-01: results of the grouping experiment EX-ROS-2026-A021"
+    EXE-20260930T172030686Z-71d403ef:
+      operations: [modified]
+      at: 2026-09-30T17:20:32.258Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PLAN-06: renumber the A021 results record to EV-ROS-2026-A064 and relate it to the parallel evaluation kit and EV-ROS-2026-A063"
 ---
 
 # Experiment
@@ -59,7 +80,7 @@ did the read-only planner predict the scheduling facts correctly?
 
 ## Status and gate
 
-**Protocol frozen; arms not run.** Running the arms needs, in order:
+**Completed on 2026-09-30** (see Results). The gate required, in order:
 
 1. the phase-one grouping model (`WI-0064`) merged to `main`;
 2. the repository owner's approval of this cohort and of the cost (about
@@ -240,7 +261,38 @@ validation. Session event logs are retained for the context metrics.
 
 ## Results
 
-Not run. See "Status and gate".
+Run on 2026-09-30 from arm start `8b4ffa3` (main `fb6a0f9` plus one
+identical harness commit); full results, metrics and threats are in
+`EV-ROS-2026-A064`, the blind evaluation in
+`EX-ROS-2026-A021-evaluation/evaluation.txt`, and every session, prompt and
+deviation in `EX-ROS-2026-A021-harness/`.
+
+- Grouped arm: 1 session, 61 min, $9.48 (platform), 811 tests pass.
+- Control arm: 7 sessions (item 04 needed three), 112 min of session time,
+  $21.51, 829 tests pass.
+- Repeated context: AGENTS.md read 1 versus 5 times, governance documents 6
+  versus 15, one cold start versus four or more; no compaction in either arm.
+- Blind evaluation (arm X = grouped, unsealed afterwards): the grouped arm
+  has one model of a declared group (one store, one join rule, one
+  classification, one error style); the control arm has several (three
+  stores, two join rules with a confirmed inconsistency, two ID grammars,
+  four rejection types). The control arm met individual criteria more
+  faithfully (reuse of the planner's parser and repository rule, fuller
+  checkpoint verification) and added 37 tests against 19.
+- Predictions: order, critical path, conflict rating and safe concurrency
+  held; durations were underestimated (61 and 112 min against an upper
+  bound of 45); context-reuse value, unknown beforehand, was measured.
+
+A parallel evaluation kit (`experiment/a021-evaluation-kit`, `EV-ROS-2026-A060`
+there) remains available as a second, independent evaluation; see
+`EV-ROS-2026-A064`, "Relation to other A021 records".
+
+Deviations (recorded in `sessions.json`): an identical harness note in every
+prompt (environment setup, metrics script, no pull requests); item 04's two
+failed attempts and the owner's `./ros work` approval carried into attempt 3
+and item 05; control-05 began from the arm start instead of the branch head
+(cause unknown) and merged later; `get_session` platform usage supplements
+the transcript metrics.
 
 ## Threats to validity
 
@@ -262,7 +314,13 @@ deliberately loosely related cohort, to test the cohesion-threshold classes.
 
 ## Conclusion
 
-Pending.
+Classified per PRX-GRP-087 as evidence for "grouping clearly beneficial for
+high-affinity work", qualified: grouping removed repeated context, cost less
+than half, and produced a markedly more consistent architecture, while
+independent executions were more faithful to individual criteria and tested
+more broadly; no context pressure at five members. One cohort and one run per
+arm: no causal or general claim. See `EV-ROS-2026-A064` for the
+recommendation to the next planning iteration.
 
 ## Registry updates required
 

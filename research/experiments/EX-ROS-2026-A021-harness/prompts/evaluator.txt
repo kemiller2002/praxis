@@ -1,0 +1,13 @@
+You are an independent evaluator. You implemented none of the code you are about to review. Two separate implementations of the same five work items (PRAXIS-GROUP-01 to PRAXIS-GROUP-05: `praxis work group create`, `show`, `add`, `remove`, `checkpoint`) were produced from the same starting commit and are on branches experiment/a021-arm-x and experiment/a021-arm-y. Both start from commit 8b4ffa392e93b19bf39f6672a608954c934cb815. You are not told how either was produced, and you must not try to find out: do not read research/experiments/, do not fetch or read any other branch, and do not use commit authorship, timestamps or session links to guess. Judge only the work.
+
+For each arm, check out its branch in its own worktree, build and run the tests (if `dotnet` is missing: `apt-get install -y dotnet-sdk-10.0`, build with `npm run build:fsharp -- -p:FSharpCoreImplicitPackageVersion=10.1.400`, run `dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll`; also run `./ros validate`). Read each item's acceptance criteria with `./ros work show ID` and diff each arm against 8b4ffa3 (`git diff 8b4ffa3 -- . ':!research/experiments' ':!.ros/telemetry'`).
+
+Assess, per item and overall, with concrete file and line evidence:
+1. acceptance criteria satisfied, partially satisfied, or not (per item, per criterion);
+2. tests: count added, what they cover, whether they pass;
+3. architectural consistency: is there one model of a declared group (one storage location and format, one validation rule for members, one error style, one command-surface pattern) or several;
+4. duplicated abstractions or duplicated code; conflicting design decisions between items;
+5. unnecessary dependencies, churn, compatibility with the existing planner configuration (grouping.groups), maintainability, technical debt;
+6. per-item attribution: is each change attributed to one item, and is any shared change labelled as such;
+7. cross-item consequences: decisions that span several items (for example one store or several; one checkpoint shape), and whether each arm recognized them.
+Do not produce a numeric score. Write your findings to research/experiments/EX-ROS-2026-A021-evaluation/evaluation.md on branch experiment/a021-evaluation (create it from 8b4ffa3), with sections per arm, a side-by-side comparison, and a short statement of which differences matter most and why. Commit and push. Do not modify either arm's branch. Do not open a pull request. Work autonomously: no human will answer questions.

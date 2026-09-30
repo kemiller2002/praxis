@@ -1430,5 +1430,155 @@
     "title": "Work-group planner baseline on Praxis: no pre-existing cohort, a captured phase-two cohort, and frozen predictions for EX-ROS-2026-A021",
     "updated": "2026-09-30",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-30",
+    "evidence_type": "test-result",
+    "id": "EV-ROS-2026-A060",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A060--pr92-premerge-semantic-conflict-matrix-and-reconciliation-manifest.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T162437557Z-40b62e08": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:08:11.000Z",
+          "evidence": [
+            "tests/Ros.Tests/PremergeFence.fs"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-PR92-PREMERGE-REGRESSION-FENCE: semantic conflict matrix, baselines and reconciliation manifest for PR #92"
+        }
+      }
+    },
+    "related_documents": [
+      "docs/work-protocol.md",
+      "docs/remote-agent-contract.md",
+      "DF-ROS-2026-A042",
+      "DF-ROS-2026-A044",
+      "DF-ROS-2026-A045"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "supports": [],
+    "tags": [
+      "pr92",
+      "reconciliation",
+      "regression",
+      "characterization",
+      "praxis-rename"
+    ],
+    "title": "PR #92 pre-merge regression fence: semantic conflict matrix, baselines, and the reconciliation manifest",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "low",
+    "created": "2026-09-30",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A063",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A063--a021-preliminary-plan-globally-execute-incrementally.md",
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "EV-ROS-2026-A059",
+      "DF-ROS-2026-A047",
+      "requirements/PLANNING-WORK-GROUPS.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "HY-ROS-2026-A028"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "context",
+      "ai-execution",
+      "preliminary"
+    ],
+    "title": "Preliminary A021 observation: plan globally, execute incrementally may reduce AI context reacquisition",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "low",
+    "created": "2026-09-30",
+    "derived_from": [
+      "EX-ROS-2026-A021"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A064",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A064--grouping-experiment-results.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T114749635Z-ba7301df": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:18:10.317Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-PLAN-EXP-01: results of the grouping experiment EX-ROS-2026-A021"
+        },
+        "EXE-20260930T172030686Z-71d403ef": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:20:31.714Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-PLAN-06: renumber the A021 results record to EV-ROS-2026-A064 and relate it to the parallel evaluation kit and EV-ROS-2026-A063"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "EV-ROS-2026-A059",
+      "HY-ROS-2026-A027",
+      "HY-ROS-2026-A028",
+      "DF-ROS-2026-A047",
+      "requirements/PLANNING-WORK-GROUPS.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "supports": [
+      "HY-ROS-2026-A028"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "experiment",
+      "context",
+      "evaluation"
+    ],
+    "title": "Grouping experiment EX-ROS-2026-A021: one grouped execution versus five independent executions of the work-group commands",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
   }
 ]

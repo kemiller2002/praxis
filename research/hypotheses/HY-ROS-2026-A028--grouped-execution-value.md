@@ -2,10 +2,10 @@
 id: HY-ROS-2026-A028
 title: One shared reasoning context for strongly related work reduces repeated work or improves architectural consistency
 research_area: repository-operating-system
-status: proposed
+status: supported
 confidence: low
 created: 2026-09-30
-supporting_evidence: [EV-ROS-2026-A063]
+supporting_evidence: [EV-ROS-2026-A063, EV-ROS-2026-A064]
 contradicting_evidence: []
 related_theories: []
 related_documents:
@@ -13,6 +13,7 @@ related_documents:
   - EX-ROS-2026-A021
   - EV-ROS-2026-A059
   - EV-ROS-2026-A063
+  - EV-ROS-2026-A064
 supersedes: []
 superseded_by: []
 tags: [planning, grouping, context, experiment]
@@ -28,6 +29,26 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "WI-0064: evidence-based work groups and the frozen grouping experiment"
+    EXE-20260930T114749635Z-ba7301df:
+      operations: [modified]
+      at: 2026-09-30T17:18:12.991Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PLAN-EXP-01: results of the grouping experiment EX-ROS-2026-A021"
+    EXE-20260930T172030686Z-71d403ef:
+      operations: [modified]
+      at: 2026-09-30T17:20:33.432Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PLAN-06: renumber the A021 results record to EV-ROS-2026-A064 and relate it to the parallel evaluation kit and EV-ROS-2026-A063"
 ---
 
 # Hypothesis
@@ -109,14 +130,21 @@ claim that grouping sometimes helps.
 
 ## Current assessment
 
-Preliminary support, not a completed result. `EV-ROS-2026-A063` records that
-after only three of five control sessions, the independent arm had already
-used more model requests, searches, file reads, builds, cache creation and
-tool-error recovery than the single grouped session used for all five items.
-The grouped arm also exhibited a more unified implementation shape, but that
-architectural difference has not yet been classified by the blind evaluator.
+Supported at low confidence by one run (`EV-ROS-2026-A064`): the grouped
+execution repeated less context (AGENTS.md 1 versus 5 reads, governance
+documents 6 versus 15, one cold start), cost $9.48 against $21.51, and
+produced one consistent model where independent executions produced several;
+independent executions were more faithful to individual criteria and tested
+more broadly. No context pressure at five members. Replication with a
+loosely related cohort and another repository is needed before any default.
 
-The control arm, blind evaluation and replication are incomplete, monetary
-cost is unavailable, and one high-affinity cohort cannot establish a universal
-execution rule. PGEI must therefore remain a hypothesis until the frozen
-evaluation and replication evidence are durable.
+Before the experiment: The planner can count context acquisitions (five
+independent against one grouped for the proposed cohort) but has no
+measurement of what an acquisition costs, so every saving is unknown until
+the experiment runs.
+
+`EV-ROS-2026-A063` was an interim reading taken after three of five control
+sessions; the completed run in `EV-ROS-2026-A064` is consistent with it. The
+PGEI mechanism above remains a proposed explanation: the run shows reduced
+reacquisition, not yet the cohesion/size threshold or the low-affinity
+predictions, which need the replication cohorts.

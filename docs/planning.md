@@ -355,7 +355,7 @@ No external dependency was added (PRX-PLAN-004).
 | GRP-073 | Declarations from configuration; mutation commands captured as `PRAXIS-GROUP-01..05`, deferred. |
 | GRP-074 | Size and context-pressure splits and architecture merges met (tests 18, 19, merge test); splitting by independent chain or external blockage is not implemented. |
 | GRP-075 | Met (test 15). |
-| GRP-080..088 | Baseline, cohort, protocol and predictions frozen (`EV-ROS-2026-A059`, `EX-ROS-2026-A021`); the arms have not run. |
+| GRP-080..088 | Met for one cohort: baseline and predictions frozen (`EV-ROS-2026-A059`), both arms run and blindly evaluated (`EX-ROS-2026-A021`), results and classification in `EV-ROS-2026-A064`. One run; replication pending. |
 | GRP-090 | All 20 cases in `tests/Ros.Tests/GroupingTests.fs`; case 20 in `PlanningCliTests`. |
 
 ## Known limitations and next steps
@@ -369,7 +369,13 @@ No external dependency was added (PRX-PLAN-004).
   `elevated` (shared Praxis state) or `unknown`.
 - Decide from the shadow evidence whether autonomous execution should ever
   become a separate later phase (non-goal of this release).
-- Work groups: run `EX-ROS-2026-A021`; instrument context overhead (repeated
-  reads, time to first edit) so reuse can be measured; consider requiring an
-  admitted member to reach the group's typical affinity, since one broad tag
-  can attach a looser item (`EV-ROS-2026-A059`).
+- Work groups (`EV-ROS-2026-A064`): one grouped execution of five
+  high-affinity items cost less than half as much as five independent ones,
+  repeated far less context and produced one consistent model; independent
+  executions met individual criteria more faithfully. Next: add a
+  reuse-inventory and per-criterion verification step to grouped-execution
+  guidance; turn the experiment's session-metrics script into a telemetry
+  adapter and record platform cost as `cost.execution_total`; replace the
+  history-based duration model for implementation work (it missed both
+  arms); replicate with a loosely related cohort; consider requiring an
+  admitted member to reach the group's typical affinity (`EV-ROS-2026-A059`).
