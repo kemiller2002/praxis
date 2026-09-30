@@ -1005,6 +1005,37 @@ module PlanningJson =
               "executionRationale", texts value.ExecutionRationale
               "wouldChange", texts value.WouldChange ]
 
+    /// PRX-GRP-073: the `declared-group` document (`work group show`).
+    let declaredGroup (snapshotValue: PlanSnapshot) (value: DeclaredGroupView) : JsonNode =
+        let declaration = value.Declaration
+
+        record
+            [ "schema", text schema
+              "kind", text "declared-group"
+              "snapshot", snapshot snapshotValue
+              "statement", text value.Statement
+              "declaration",
+              record
+                  [ "id", text declaration.Id
+                    "members", texts declaration.Members
+                    "kind", optionalText (declaration.Kind |> Option.map GroupKind.code)
+                    "origin", text (GroupOrigin.code declaration.Origin)
+                    "sharedContext", texts declaration.SharedContext
+                    "executionRepository", optionalText declaration.ExecutionRepository
+                    "crossRepository", boolean declaration.CrossRepository
+                    "architectureNotes", texts declaration.ArchitectureNotes ]
+              "group", workGroup value.Group
+              "blocked",
+              value.Blocked
+              |> List.map (fun entry ->
+                  record
+                      [ "workItem", text entry.WorkItemId
+                        "planningState", text (PlanningWorkState.code entry.PlanningState)
+                        "blockReason", optionalText entry.BlockReason
+                        "gates", texts entry.Gates ])
+              |> array
+              "unknownMembers", texts value.UnknownMembers ]
+
     let private groupSchedule (value: GroupSchedule) =
         record
             [ "maxConcurrency", integer value.MaxConcurrency

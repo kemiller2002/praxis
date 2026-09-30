@@ -445,6 +445,23 @@ type GroupExplanation =
       ExecutionRationale: string list
       WouldChange: string list }
 
+/// A blocked member of a declared group and the members it holds back:
+/// those whose unsatisfied hard-dependency chain inside the group reaches it.
+type BlockedGroupMember =
+    { WorkItemId: string
+      PlanningState: PlanningWorkState
+      BlockReason: string option
+      Gates: string list }
+
+/// PRX-GRP-073 (`work group show`): one declared group with each member's
+/// own recorded and planning state. A read-only view; it never writes.
+type DeclaredGroupView =
+    { Declaration: DeclaredGroup
+      Group: WorkGroup
+      Blocked: BlockedGroupMember list
+      UnknownMembers: string list
+      Statement: string }
+
 /// A unit of the group-level schedule: a group or an ungrouped item.
 type ScheduledUnit =
     { Unit: string
@@ -1593,6 +1610,51 @@ module Grouping =
                   CollisionRisk = collisionLines
                   ExecutionRationale = [ $"recommended execution: {GroupExecution.code group.Execution}" ] @ group.ExecutionReasons
                   WouldChange = wouldChange }
+
+    // ---- declared groups ------------------------------------------------------------
+
+    let declaredStatement =
+        "Read-only view of a declared group: each member keeps its own lifecycle, evidence, attribution and completion; progress never implies that every member succeeded (PRX-GRP-042), and nothing was written."
+
+    /// PRX-GRP-073 (`work group show`): one declared group as the planner
+    /// reads it, with partial-completion progress and, for each blocked
+    /// member, the members it gates. Planner recommendations are not
+    /// declarations and are refused here (see `explain`).
+    let show (analysis: PlanningAnalysis) (configuration: PlannerConfiguration) (report: GroupingReport) (id: string) : Result<DeclaredGroupView, string> =
+        let declared = configuration.Grouping.Groups
+        let recommended = report.Groups |> List.tryFind (fun group -> WorkGroupId.value group.Id = id)
+
+        match declared |> List.tryFind (fun declaration -> declaration.Id = id), recommended with
+        | Some declaration, Some group ->
+            let blockReason (member': string) =
+                analysis.Items |> List.tryFind (fun item -> item.Id = member') |> Option.bind (fun item -> item.BlockReason)
+
+            let blocked =
+                group.Members
+                |> List.filter (fun entry -> entry.Status = MemberStatus.Blocked)
+                |> List.map (fun entry ->
+                    { WorkItemId = entry.WorkItemId
+                      PlanningState = entry.PlanningState
+                      BlockReason = blockReason entry.WorkItemId
+                      Gates =
+                        group.Members
+                        |> List.filter (fun other -> List.contains entry.WorkItemId other.GatedBy)
+                        |> List.map (fun other -> other.WorkItemId)
+                        |> Text.sortOrdinal })
+
+            let known = group.Members |> List.map (fun entry -> entry.WorkItemId) |> Set.ofList
+
+            Ok
+                { Declaration = declaration
+                  Group = group
+                  Blocked = blocked
+                  UnknownMembers = declaration.Members |> List.filter (known.Contains >> not) |> Text.distinctOrdinal
+                  Statement = declaredStatement }
+        | None, Some _ -> Error $"'{id}' is a planner recommendation, not a declared group; see 'plan explain-group {id}'"
+        | _ ->
+            match declared |> List.map (fun declaration -> declaration.Id) |> Text.distinctOrdinal with
+            | [] -> Error $"no declared group '{id}': no groups are declared (planner configuration 'grouping.groups')"
+            | ids -> Error $"""no declared group '{id}' (declared: {String.concat ", " ids})"""
 
     // ---- group-level scheduling and comparison ------------------------------------
 

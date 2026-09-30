@@ -22,6 +22,7 @@ praxis plan groups    [--json]                         evidence-based work group
 praxis plan explain-group GROUP-ID [--json]            why a group exists, what it excludes, what would change it
 praxis plan simulate --groups [--max-concurrency N]    waves of groups and ungrouped items
 praxis plan compare  --groups [--max-concurrency N]    grouped versus independent execution, per group
+praxis work group show GROUP-ID [--json]               one declared group: member states, progress, blocked members
 ```
 
 Common options: `--observations FILE` (external CI/GitHub evidence, below),
@@ -286,6 +287,15 @@ An item whose description says "External repository" and that has no
 Any positive indicator limits groups sharing a member to one fewer member
 than the observed execution (at least two).
 
+**Declared groups** are shown with `praxis work group show GROUP-ID
+[--json]` (read-only, PRX-GRP-073): each member's own recorded and planning
+state and status, progress (`k of n complete`, never implying every member
+succeeded), each blocked member with its recorded reason and the members it
+gates (those whose unsatisfied hard-dependency chain inside the group reaches
+it), declared members missing from the inventory, execution repository,
+shared context, architecture notes and group notes. An unknown ID, or a
+planner recommendation's ID, exits `1`.
+
 **IDs.** Recommendations are named `GROUP-<REPOSITORY>-<AREA>-<NNN>` and are
 stable for identical inputs only; durable IDs come from declarations.
 
@@ -293,7 +303,7 @@ stable for identical inputs only; durable IDs come from declarations.
 
 Every document has `"schema": "praxis.plan/1.0.0"` and a `kind`: `analysis`,
 `plan`, `comparison`, `explanation`, `replay`, `freshness`, `groups`,
-`group-explanation`, `group-plan` or `group-comparison`. `groups` documents
+`group-explanation`, `group-plan`, `group-comparison` or `declared-group`. `groups` documents
 round-trip through `PlanningJson.parseGroups`. Every estimate
 is `{lowerMs, expectedMs, upperMs, confidence, display}` (or `{lower,
 expected, upper, confidence}` with `{amount, currency}` for money) and an
@@ -352,7 +362,7 @@ No external dependency was added (PRX-PLAN-004).
 | GRP-050..052 | Met for dependencies and cycles (dependency test) and repositories (tests 5, 5b); cross-repository orchestration is future work. |
 | GRP-060..063 | Met; context cost is counted, not priced (unmeasured). |
 | GRP-070..072 | Met. |
-| GRP-073 | Declarations from configuration; mutation commands captured as `PRAXIS-GROUP-01..05`, deferred. |
+| GRP-073 | Declarations from configuration; `work group show` (`PRAXIS-GROUP-02`) shows one declared group read-only. The remaining commands are captured as `PRAXIS-GROUP-01`, `-03..05`, deferred. |
 | GRP-074 | Size and context-pressure splits and architecture merges met (tests 18, 19, merge test); splitting by independent chain or external blockage is not implemented. |
 | GRP-075 | Met (test 15). |
 | GRP-080..088 | Baseline, cohort, protocol and predictions frozen (`EV-ROS-2026-A059`, `EX-ROS-2026-A021`); the arms have not run. |

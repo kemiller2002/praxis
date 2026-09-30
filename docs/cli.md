@@ -262,7 +262,7 @@ commands. These predate the lifecycle interface and are unchanged:
 ros validate [--json]
 ros registry build [--dry-run] | registry check
 ros git status [--json]
-ros work <capture|list|ready|show|start|resume|block|complete|reconcile|checkpoint|continue|update|attach|context|...>
+ros work <capture|list|ready|show|group show|start|resume|block|complete|reconcile|checkpoint|continue|update|attach|context|...>
 ros add "..."
 ros telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
 ros adapter <call|publish>
@@ -305,6 +305,21 @@ reason about together, with the evidence, collision risk and recommended
 execution for each) without changing any item; `explain-group` answers why a
 group exists and what would change it (`DF-ROS-2026-A047`). See
 [`planning.md`](planning.md).
+
+### `work group show`
+
+```
+ros work group show GROUP-ID [--config FILE] [--observations FILE] [--as-of TIMESTAMP] [--json]
+```
+
+A read-only view of one **declared** group (PRX-GRP-073): each member with its
+own recorded and planning state, partial-completion progress, blocked members
+and the members each one gates, execution repository, shared context and
+architecture notes. Declarations are read exactly as the planner reads
+`grouping.groups`. A planner recommendation is not a declaration (use `plan
+explain-group`). Exit codes: `0` shown, `1` unknown group or unreadable input,
+`2` invalid arguments. `--json` emits a `declared-group` document in the
+`praxis.plan/1.0.0` schema. It never writes.
 
 ### `work reconcile`
 
