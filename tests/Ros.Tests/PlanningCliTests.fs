@@ -105,6 +105,10 @@ module PlanningCliTests =
 
     let private t name run = { Name = $"planning cli: {name}"; Run = run }
 
+    let private groupId (root: string) =
+        let groups = PraxisCli.run root None [ "plan"; "groups"; "--json" ] |> json
+        text (groups.["groups"].AsArray().[0].["id"])
+
     let tests =
         [ t "every command emits the versioned JSON contract" (fun () ->
               let root = fixture ()
@@ -114,7 +118,10 @@ module PlanningCliTests =
                     [ "plan"; "simulate"; "--for"; "speed"; "--json" ], "plan"
                     [ "plan"; "compare"; "--json" ], "comparison"
                     [ "plan"; "explain"; "TASK-B"; "--json" ], "explanation"
-                    [ "plan"; "replay"; "--json" ], "replay" ] do
+                    [ "plan"; "replay"; "--json" ], "replay"
+                    [ "plan"; "groups"; "--json" ], "groups"
+                    [ "plan"; "simulate"; "--groups"; "--json" ], "group-plan"
+                    [ "plan"; "compare"; "--groups"; "--json" ], "group-comparison" ] do
                   let document = PraxisCli.run root None arguments |> json
                   Assert.equal "praxis.plan/1.0.0" (text (document.["schema"]))
                   Assert.equal kind (text (document.["kind"])))
@@ -154,6 +161,23 @@ module PlanningCliTests =
               Assert.equal 2 (PraxisCli.run root None [ "plan"; "analyze"; "stray" ]).ExitCode
               Assert.equal 1 (PraxisCli.run root None [ "plan"; "explain"; "NOPE" ]).ExitCode)
 
+          t "groups: a dependency pair forms a group that explain-group explains" (fun () ->
+              let root = fixture ()
+              let groups = PraxisCli.run root None [ "plan"; "groups"; "--json" ] |> json
+              let group = groups["groups"].AsArray() |> Seq.exactlyOne
+              let members = group["members"].AsArray() |> Seq.map (fun entry -> text (entry["workItem"])) |> Seq.toList
+              Assert.equal [ "TASK-A"; "TASK-B" ] members
+              Assert.equal "plan-fixture" (text (group["executionRepository"]))
+              Assert.equal "one-sequential-agent" (text (group["recommendedExecution"]))
+              let id = text (group["id"])
+              let explanation = PraxisCli.run root None [ "plan"; "explain-group"; id; "--json" ] |> json
+              Assert.equal "group-explanation" (text (explanation["kind"]))
+              Assert.isTrue (explanation["evidence"].AsArray().Count > 0) "the explanation names its evidence"
+              let output = (PraxisCli.run root None [ "plan"; "explain-group"; id ]).Output
+              Assert.isTrue (output.Contains "Why one agent versus several?") "the text explanation answers each question"
+              Assert.equal 1 (PraxisCli.run root None [ "plan"; "explain-group"; "GROUP-NOPE-001" ]).ExitCode
+              Assert.equal 2 (PraxisCli.run root None [ "plan"; "explain-group" ]).ExitCode)
+
           t "30 no plan command mutates repository state" (fun () ->
               let root = fixture ()
               let before = fingerprint root
@@ -173,7 +197,13 @@ module PlanningCliTests =
                     [ "plan"; "compare" ]
                     [ "plan"; "explain"; "PRAXIS-REMOTE-16" ]
                     [ "plan"; "replay"; "--details" ]
-                    [ "plan"; "freshness"; "--plan"; saved ] ] do
+                    [ "plan"; "freshness"; "--plan"; saved ]
+                    [ "plan"; "groups" ]
+                    [ "plan"; "groups"; "--json" ]
+                    [ "plan"; "explain-group"; groupId root ]
+                    [ "plan"; "explain-group"; groupId root; "--json" ]
+                    [ "plan"; "simulate"; "--groups" ]
+                    [ "plan"; "compare"; "--groups"; "--json" ] ] do
                   let result = PraxisCli.run root None arguments
                   Assert.isTrue (result.ExitCode = 0 || result.ExitCode = 3) $"{String.Join(' ', arguments)} failed: {result.Error}"
 

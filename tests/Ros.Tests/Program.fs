@@ -69,4 +69,5 @@ let main _ =
     @ CommitOwnershipTests.tests
     @ PlanningTests.tests
     @ PlanningCliTests.tests
+    @ GroupingTests.tests
     |> TestRunner.run

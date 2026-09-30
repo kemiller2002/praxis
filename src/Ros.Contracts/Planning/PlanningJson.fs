@@ -727,6 +727,54 @@ module PlanningJson =
 
             let listOf name read = if isNull (field root name) then [] else objects root name |> List.map read
 
+            let grouping =
+                let fallback = GroupingConfiguration.defaults
+
+                match optionalObj root "grouping" with
+                | None -> fallback
+                | Some node ->
+                    let preferredMinimum, preferredMaximum =
+                        match field node "preferredSize" with
+                        | null -> fallback.PreferredMinimumSize, fallback.PreferredMaximumSize
+                        | _ ->
+                            let low, high = readPair node "preferredSize" (decimal fallback.PreferredMinimumSize, decimal fallback.PreferredMaximumSize)
+                            int low, int high
+
+                    let optionalList name read = if isNull (field node name) then [] else objects node name |> List.map read
+
+                    { PreferredMinimumSize = preferredMinimum
+                      PreferredMaximumSize = preferredMaximum
+                      MaximumAutomaticSize = readNumber<int> node "maximumAutomaticSize" |> Option.defaultValue fallback.MaximumAutomaticSize
+                      MinimumAffinity =
+                        readOptionalText node "minimumAffinity"
+                        |> Option.map (parsed "affinity" ContextAffinity.tryParse)
+                        |> Option.defaultValue fallback.MinimumAffinity
+                      Groups =
+                        optionalList "groups" (fun group ->
+                            let optionalTexts name = if isNull (field group name) then [] else readTexts group name
+
+                            { Id = readText group "id"
+                              Members = readTexts group "members"
+                              Kind = readOptionalText group "kind" |> Option.map (parsed "group kind" GroupKind.tryParse)
+                              Origin = readOptionalText group "origin" |> Option.map (parsed "group origin" GroupOrigin.tryParse) |> Option.defaultValue GroupOrigin.HumanDeclared
+                              SharedContext = optionalTexts "sharedContext"
+                              ExecutionRepository = readOptionalText group "executionRepository"
+                              CrossRepository = if isNull (field group "crossRepository") then false else readBool group "crossRepository"
+                              ArchitectureNotes = optionalTexts "architectureNotes" })
+                      Architecture =
+                        optionalList "architecture" (fun decision ->
+                            { Decision = readText decision "decision"
+                              Members = readTexts decision "members"
+                              Statement = readOptionalText decision "statement" |> Option.defaultValue "" })
+                      ExecutionRepositories =
+                        match optionalObj node "executionRepositories" with
+                        | None -> []
+                        | Some repositories ->
+                            repositories
+                            |> Seq.map (fun property -> property.Key, readText repositories property.Key)
+                            |> Seq.toList
+                            |> List.sortWith (fun (left, _) (right, _) -> String.CompareOrdinal(left, right)) }
+
             Ok
                 { MaxConcurrency = orDefault (fun () -> readNumber<int> root "maxConcurrency") defaults.MaxConcurrency
                   MinimumCostSamples = orDefault (fun () -> readNumber<int> root "minimumCostSamples") defaults.MinimumCostSamples
@@ -747,7 +795,8 @@ module PlanningJson =
                         areas
                         |> Seq.map (fun property -> property.Key, readTexts areas property.Key)
                         |> Seq.toList
-                        |> List.sortWith (fun (left, _) (right, _) -> String.CompareOrdinal(left, right)) }
+                        |> List.sortWith (fun (left, _) (right, _) -> String.CompareOrdinal(left, right))
+                  Grouping = grouping }
         with
         | Malformed message -> Error $"malformed planner configuration: {message}"
         | :? JsonException as error -> Error $"malformed planner configuration: {error.Message}"
@@ -765,6 +814,7 @@ module PlanningJson =
                     | Some "github" -> EvidenceSource.GitHub
                     | Some "ci" -> EvidenceSource.ContinuousIntegration
                     | Some "git" -> EvidenceSource.Git
+                    | Some "telemetry" -> EvidenceSource.Telemetry
                     | _ -> EvidenceSource.ExternalObservation
 
                 let reference = readOptionalText node "reference" |> Option.defaultValue $"{origin}#observations[{index}]"
@@ -776,6 +826,17 @@ module PlanningJson =
                     | "ci-passed" -> ObservationKind.ContinuousIntegrationPassed(readText node "subject")
                     | "ci-failed" -> ObservationKind.ContinuousIntegrationFailed(readText node "subject")
                     | "release-exists" -> ObservationKind.ReleaseExists(readText node "tag")
+                    | "context-pressure" ->
+                        let indicators =
+                            obj node "indicators"
+                            |> Seq.map (fun property ->
+                                match property.Value with
+                                | :? JsonValue as value when value.GetValueKind() = JsonValueKind.Number -> property.Key, value.GetValue<int>()
+                                | _ -> fail "indicators must be counts")
+                            |> Seq.toList
+                            |> List.sortWith (fun (left, _) (right, _) -> String.CompareOrdinal(left, right))
+
+                        ObservationKind.ContextPressure(readTexts node "members", indicators)
                     | other -> fail $"unknown observation kind '{other}'"
 
                 { Kind = kind; Provenance = Provenance.create source reference })
@@ -783,3 +844,380 @@ module PlanningJson =
         with
         | Malformed message -> Error $"malformed observations: {message}"
         | :? JsonException as error -> Error $"malformed observations: {error.Message}"
+
+    // ---- work groups (requirements/PLANNING-WORK-GROUPS.md) ----------------------
+
+    let private signal (value: AffinitySignal) =
+        record
+            [ "code", text (AffinitySignal.code value)
+              "detail", text (AffinitySignal.detail value)
+              "basis", text (SignalBasis.code (AffinitySignal.basis value))
+              "level", text (ContextAffinity.code (AffinitySignal.level value))
+              "confidence", text (EvidenceConfidence.code (AffinitySignal.confidence value))
+              "description", text (AffinitySignal.describe value) ]
+
+    let private pairAffinity (value: PairAffinity) =
+        record
+            [ "left", text value.Left
+              "right", text value.Right
+              "affinity", text (ContextAffinity.code value.Level)
+              "confidence", text (EvidenceConfidence.code value.Confidence)
+              "signals", value.Signals |> List.map signal |> array
+              "statement", text value.Statement ]
+
+    let private groupNote (value: GroupNote) =
+        record
+            [ "code", text (GroupNoteCode.code value.Code)
+              "severity", text (FindingSeverity.code value.Severity)
+              "message", text value.Message ]
+
+    let private workGroup (value: WorkGroup) =
+        record
+            [ "id", text (WorkGroupId.value value.Id)
+              "kind", text (GroupKind.code value.Kind)
+              "origin", text (GroupOrigin.code value.Origin)
+              "area", text value.Area
+              "executionRepository", text value.ExecutionRepository
+              "crossRepository", boolean value.CrossRepository
+              "affinity", text (ContextAffinity.code value.Affinity)
+              "confidence", text (EvidenceConfidence.code value.Confidence)
+              "members",
+              value.Members
+              |> List.map (fun entry ->
+                  record
+                      [ "workItem", text entry.WorkItemId
+                        "reason", text entry.Reason
+                        "confidence", text (EvidenceConfidence.code entry.Confidence)
+                        "recordedState", text entry.LifecycleState
+                        "planningState", text (PlanningWorkState.code entry.PlanningState)
+                        "status", text (MemberStatus.code entry.Status)
+                        "gatedBy", texts entry.GatedBy ])
+              |> array
+              "cohesion",
+              value.Cohesion
+              |> List.map (fun line ->
+                  record
+                      [ "signal", signal line.Signal
+                        "members", texts line.Members
+                        "covered", integer line.Covered
+                        "total", integer line.Total
+                        "statement", text line.Statement ])
+              |> array
+              "sharedContext", texts value.SharedContext
+              "requiredSequence", texts value.RequiredSequence
+              "collisionRisk", text (CollisionRisk.code value.Collision)
+              "collisions", value.CollisionPairs |> List.map collision |> array
+              "parallelSafe", boolean value.ParallelSafe
+              "recommendedExecution", text (GroupExecution.code value.Execution)
+              "executionReasons", texts value.ExecutionReasons
+              "contextCost",
+              record
+                  [ "independentAcquisitions", integer value.ContextCost.IndependentAcquisitions
+                    "groupedAcquisitions", integer value.ContextCost.GroupedAcquisitions
+                    "coldStart", duration value.ContextCost.ColdStart
+                    "sharedContext", duration value.ContextCost.SharedContext
+                    "memberIncremental", duration value.ContextCost.MemberIncremental
+                    "estimatedReuse", text "unknown"
+                    "statement", text value.ContextCost.Statement ]
+              "progress",
+              record
+                  [ "total", integer value.Progress.Total
+                    "complete", integer value.Progress.Complete
+                    "inProgress", integer value.Progress.InProgress
+                    "runnable", integer value.Progress.Runnable
+                    "blocked", integer value.Progress.Blocked
+                    "notRunnable", integer value.Progress.NotRunnable
+                    "statement", text value.Progress.Statement ]
+              "architectureNotes", texts value.ArchitectureNotes
+              "notes", value.Notes |> List.map groupNote |> array ]
+
+    let private endpoint (value: GroupEndpoint) =
+        record [ "kind", text (GroupEndpoint.kindCode value); "value", text (GroupEndpoint.value value) ]
+
+    let private groupingBody (value: GroupingReport) : (string * JsonNode) list =
+        [ "statement", text value.Statement
+          "settings",
+          record
+              [ "preferredSize", array [ integer value.Settings.PreferredMinimumSize; integer value.Settings.PreferredMaximumSize ]
+                "maximumAutomaticSize", integer value.Settings.MaximumAutomaticSize
+                "minimumAffinity", text (ContextAffinity.code value.Settings.MinimumAffinity)
+                "riskPolicy", text value.Settings.RiskPolicy ]
+          "groups", value.Groups |> List.map workGroup |> array
+          "ungrouped",
+          value.Ungrouped
+          |> List.map (fun entry ->
+              record
+                  [ "workItem", text entry.WorkItem
+                    "planningState", text (PlanningWorkState.code entry.PlanningState)
+                    "affinity", text (ContextAffinity.code entry.Affinity)
+                    "reason", text entry.Reason ])
+          |> array
+          "dependencies",
+          value.Dependencies
+          |> List.map (fun edge -> record [ "from", endpoint edge.From; "to", endpoint edge.To; "gating", boolean edge.Gating; "via", texts edge.Via ])
+          |> array
+          "cycles", value.Cycles |> List.map texts |> array
+          "relations",
+          value.Relations
+          |> List.map (fun relation ->
+              record
+                  [ "left", text relation.Left
+                    "right", text relation.Right
+                    "collisionRisk", text (CollisionRisk.code relation.Collision)
+                    "dependent", boolean relation.Dependent
+                    "mayRunConcurrently", boolean relation.MayRunConcurrently
+                    "reason", text relation.Reason ])
+          |> array
+          "affinities", value.Affinities |> List.map pairAffinity |> array
+          "unknownEvidence", texts value.UnknownEvidence ]
+
+    /// PRX-GRP-070: the `groups` document.
+    let groups (snapshotValue: PlanSnapshot) (value: GroupingReport) : JsonNode =
+        record ([ "schema", text schema; "kind", text "groups"; "snapshot", snapshot snapshotValue ] @ groupingBody value)
+
+    /// The groups document without its timestamped snapshot, for determinism checks.
+    let logicalGroups (snapshotValue: PlanSnapshot) (value: GroupingReport) : JsonNode =
+        record
+            ([ "schema", text schema
+               "kind", text "groups"
+               "workStateFingerprint", text snapshotValue.WorkStateFingerprint
+               "inputFingerprint", text snapshotValue.InputFingerprint ]
+             @ groupingBody value)
+
+    /// PRX-GRP-071: the `group-explanation` document.
+    let groupExplanation (snapshotValue: PlanSnapshot) (value: GroupExplanation) : JsonNode =
+        record
+            [ "schema", text schema
+              "kind", text "group-explanation"
+              "snapshot", snapshot snapshotValue
+              "group", workGroup value.Group
+              "whyTogether", texts value.WhyTogether
+              "excluded",
+              value.Excluded
+              |> List.map (fun entry -> record [ "workItem", text entry.WorkItem; "affinity", text (ContextAffinity.code entry.Affinity); "reason", text entry.Reason ])
+              |> array
+              "evidence", value.Evidence |> List.map (fun (basis, statement) -> record [ "basis", text (SignalBasis.code basis); "statement", text statement ]) |> array
+              "inferred", texts value.Inferred
+              "unknown", texts value.Unknown
+              "sharedArchitecture", texts value.SharedArchitecture
+              "dependencyOrder", texts value.DependencyOrder
+              "collisionRisk", texts value.CollisionRisk
+              "executionRationale", texts value.ExecutionRationale
+              "wouldChange", texts value.WouldChange ]
+
+    let private groupSchedule (value: GroupSchedule) =
+        record
+            [ "maxConcurrency", integer value.MaxConcurrency
+              "riskPolicy", text value.RiskPolicy
+              "expectedDuration", duration value.ExpectedDuration
+              "contextAcquisitions", integer value.ContextAcquisitions
+              "independentContextAcquisitions", integer value.IndependentContextAcquisitions
+              "waves",
+              value.Waves
+              |> List.map (fun wave ->
+                  record
+                      [ "number", integer wave.Number
+                        "expectedDuration", duration wave.ExpectedDuration
+                        "units",
+                        wave.Units
+                        |> List.map (fun entry ->
+                            record
+                                [ "unit", text entry.Unit
+                                  "isGroup", boolean entry.IsGroup
+                                  "members", texts entry.Members
+                                  "remaining", duration entry.Remaining
+                                  "reasons", texts entry.Reasons ])
+                        |> array ])
+              |> array
+              "notScheduled", value.NotScheduled |> List.map (fun (unit, why) -> record [ "unit", text unit; "reason", text why ]) |> array
+              "statement", text value.Statement ]
+
+    /// PRX-GRP-072: `simulate --groups`.
+    let groupSimulation (snapshotValue: PlanSnapshot) (value: GroupSchedule) : JsonNode =
+        record [ "schema", text schema; "kind", text "group-plan"; "snapshot", snapshot snapshotValue; "statement", text Grouping.advisoryStatement; "plan", groupSchedule value ]
+
+    let private arm (value: ArmEstimate) =
+        record
+            [ "executions", integer value.Executions
+              "contextAcquisitions", integer value.ContextAcquisitions
+              "expectedDuration", duration value.ExpectedDuration
+              "peakConcurrency", integer value.PeakConcurrency
+              "designOwners", integer value.DesignOwners ]
+
+    /// PRX-GRP-072: `compare --groups`.
+    let groupComparison (snapshotValue: PlanSnapshot) (value: GroupComparison) : JsonNode =
+        record
+            [ "schema", text schema
+              "kind", text "group-comparison"
+              "snapshot", snapshot snapshotValue
+              "tradeoffs",
+              value.Tradeoffs
+              |> List.map (fun tradeoff ->
+                  record
+                      [ "group", text tradeoff.Group
+                        "members", texts tradeoff.Members
+                        "independent", arm tradeoff.Independent
+                        "grouped", arm tradeoff.Grouped
+                        "contextSaving", text tradeoff.ContextSaving
+                        "architectureConsideration", text tradeoff.ArchitectureConsideration
+                        "contextPressureRisk", text tradeoff.ContextPressureRisk ])
+              |> array
+              "portfolio", groupSchedule value.Portfolio
+              "itemPlan", record [ "strategy", text "speed"; "expectedDuration", duration value.ItemPlanDuration; "contextAcquisitions", integer value.ItemPlanContextAcquisitions ]
+              "statement", text value.Statement ]
+
+    // ---- parsing the groups document (round trip, PRX-GRP-090 case 16) ------------
+
+    let private readSignal (node: JsonObject) : AffinitySignal =
+        let basis = readText node "basis" |> parsed "signal basis" SignalBasis.tryParse
+        let code = readText node "code"
+        AffinitySignal.tryParse code (readText node "detail") basis |> Option.defaultWith (fun () -> fail $"unknown affinity signal '{code}'")
+
+    let private readAffinity node name = readText node name |> parsed "affinity" ContextAffinity.tryParse
+
+    let private readCollision (node: JsonObject) : Collision =
+        { Left = readText node "left"
+          Right = readText node "right"
+          Risk = readText node "risk" |> parsed "collision risk" CollisionRisk.tryParse
+          Signals =
+            objects node "signals"
+            |> List.map (fun entry ->
+                let code = readText entry "code"
+                CollisionSignal.tryParse code (readText entry "detail") |> Option.defaultWith (fun () -> fail $"unknown collision signal '{code}'")) }
+
+    let private readEndpoint (node: JsonObject) =
+        let kind = readText node "kind"
+        GroupEndpoint.tryParse kind (readText node "value") |> Option.defaultWith (fun () -> fail $"unknown endpoint kind '{kind}'")
+
+    let private readWorkGroup (node: JsonObject) : WorkGroup =
+        let cost = obj node "contextCost"
+        let progress = obj node "progress"
+
+        { Id = WorkGroupId(readText node "id")
+          Kind = readText node "kind" |> parsed "group kind" GroupKind.tryParse
+          Origin = readText node "origin" |> parsed "group origin" GroupOrigin.tryParse
+          Area = readText node "area"
+          ExecutionRepository = readText node "executionRepository"
+          CrossRepository = readBool node "crossRepository"
+          Affinity = readAffinity node "affinity"
+          Confidence = readConfidence node "confidence"
+          Members =
+            objects node "members"
+            |> List.map (fun entry ->
+                { WorkItemId = readText entry "workItem"
+                  Reason = readText entry "reason"
+                  Confidence = readConfidence entry "confidence"
+                  LifecycleState = readText entry "recordedState"
+                  PlanningState = readText entry "planningState" |> parsed "planning state" PlanningWorkState.tryParse
+                  Status = readText entry "status" |> parsed "member status" MemberStatus.tryParse
+                  GatedBy = readTexts entry "gatedBy" })
+          Cohesion =
+            objects node "cohesion"
+            |> List.map (fun line ->
+                { Signal = obj line "signal" |> readSignal
+                  Members = readTexts line "members"
+                  Covered = readRequired<int> line "covered"
+                  Total = readRequired<int> line "total"
+                  Statement = readText line "statement" })
+          SharedContext = readTexts node "sharedContext"
+          RequiredSequence = readTexts node "requiredSequence"
+          Collision = readText node "collisionRisk" |> parsed "collision risk" CollisionRisk.tryParse
+          CollisionPairs = objects node "collisions" |> List.map readCollision
+          ParallelSafe = readBool node "parallelSafe"
+          Execution = readText node "recommendedExecution" |> parsed "group execution" GroupExecution.tryParse
+          ExecutionReasons = readTexts node "executionReasons"
+          ContextCost =
+            { IndependentAcquisitions = readRequired<int> cost "independentAcquisitions"
+              GroupedAcquisitions = readRequired<int> cost "groupedAcquisitions"
+              ColdStart = obj cost "coldStart" |> readDuration
+              SharedContext = obj cost "sharedContext" |> readDuration
+              MemberIncremental = obj cost "memberIncremental" |> readDuration
+              Statement = readText cost "statement" }
+          Progress =
+            { Total = readRequired<int> progress "total"
+              Complete = readRequired<int> progress "complete"
+              InProgress = readRequired<int> progress "inProgress"
+              Runnable = readRequired<int> progress "runnable"
+              Blocked = readRequired<int> progress "blocked"
+              NotRunnable = readRequired<int> progress "notRunnable"
+              Statement = readText progress "statement" }
+          ArchitectureNotes = readTexts node "architectureNotes"
+          Notes =
+            objects node "notes"
+            |> List.map (fun entry ->
+                { Code = readText entry "code" |> parsed "group note" GroupNoteCode.tryParse
+                  Severity = readText entry "severity" |> parsed "severity" FindingSeverity.tryParse
+                  Message = readText entry "message" }) }
+
+    /// Reads a document written by `groups`; refuses another schema or kind.
+    let parseGroups (json: string) : Result<PlanSnapshot * GroupingReport, string> =
+        try
+            let root = JsonNode.Parse json |> asObject "document"
+
+            match readText root "schema", readText root "kind" with
+            | version, _ when version <> schema -> Error $"unsupported plan schema '{version}' (expected '{schema}')"
+            | _, kind when kind <> "groups" -> Error $"expected a groups document, found '{kind}'"
+            | _ ->
+                let settings = obj root "settings"
+
+                let minimum, maximum =
+                    match field settings "preferredSize" with
+                    | :? JsonArray as values when values.Count = 2 -> values[0].GetValue<int>(), values[1].GetValue<int>()
+                    | _ -> fail "preferredSize must be [minimum, maximum]"
+
+                Ok(
+                    obj root "snapshot" |> readSnapshot,
+                    { Statement = readText root "statement"
+                      Settings =
+                        { PreferredMinimumSize = minimum
+                          PreferredMaximumSize = maximum
+                          MaximumAutomaticSize = readRequired<int> settings "maximumAutomaticSize"
+                          MinimumAffinity = readAffinity settings "minimumAffinity"
+                          RiskPolicy = readText settings "riskPolicy" }
+                      Groups = objects root "groups" |> List.map readWorkGroup
+                      Ungrouped =
+                        objects root "ungrouped"
+                        |> List.map (fun entry ->
+                            ({ WorkItem = readText entry "workItem"
+                               PlanningState = readText entry "planningState" |> parsed "planning state" PlanningWorkState.tryParse
+                               Affinity = readAffinity entry "affinity"
+                               Reason = readText entry "reason" }
+                            : UngroupedItem))
+                      Dependencies =
+                        objects root "dependencies"
+                        |> List.map (fun edge ->
+                            { From = obj edge "from" |> readEndpoint
+                              To = obj edge "to" |> readEndpoint
+                              Gating = readBool edge "gating"
+                              Via = readTexts edge "via" })
+                      Cycles =
+                        items root "cycles"
+                        |> List.map (function
+                            | :? JsonArray as cycle -> cycle |> Seq.map (fun value -> value.GetValue<string>()) |> Seq.toList
+                            | _ -> fail "cycles must contain arrays")
+                      Relations =
+                        objects root "relations"
+                        |> List.map (fun relation ->
+                            ({ Left = readText relation "left"
+                               Right = readText relation "right"
+                               Collision = readText relation "collisionRisk" |> parsed "collision risk" CollisionRisk.tryParse
+                               Dependent = readBool relation "dependent"
+                               MayRunConcurrently = readBool relation "mayRunConcurrently"
+                               Reason = readText relation "reason" }
+                            : GroupRelation))
+                      Affinities =
+                        objects root "affinities"
+                        |> List.map (fun pair ->
+                            ({ Left = readText pair "left"
+                               Right = readText pair "right"
+                               Level = readAffinity pair "affinity"
+                               Confidence = readConfidence pair "confidence"
+                               Signals = objects pair "signals" |> List.map readSignal
+                               Statement = readText pair "statement" }
+                            : PairAffinity))
+                      UnknownEvidence = readTexts root "unknownEvidence" }
+                )
+        with
+        | Malformed message -> Error $"malformed groups document: {message}"
+        | :? JsonException as error -> Error $"malformed groups document: {error.Message}"
+        | :? InvalidOperationException as error -> Error $"malformed groups document: {error.Message}"
