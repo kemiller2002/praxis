@@ -1,0 +1,26 @@
+{
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.3",
+  "requestId": "req-chatgpt-gh127-start-20260930a",
+  "operation": "work.start",
+  "repository": {
+    "ref": "refs/heads/feature/gh-127-merge-readiness",
+    "expectedSha": "fb6a0f9d6c8e25e979be436346fd803184e306a0"
+  },
+  "actor": {
+    "kind": "agent",
+    "id": "openai/chatgpt",
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "runtime": "chatgpt"
+  },
+  "arguments": {
+    "workItemIds": [
+      "GH-127"
+    ],
+    "type": "task",
+    "classifications": [
+      "development"
+    ]
+  }
+}
