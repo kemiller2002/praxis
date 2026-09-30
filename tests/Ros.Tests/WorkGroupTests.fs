@@ -355,4 +355,109 @@ module WorkGroupTests =
 
                       Assert.isTrue (not (File.Exists(groupsPath clone))) "show wrote groups.json") } ]
 
-    let tests = createTests @ showTests
+    // ---- PRAXIS-GROUP-03: add ----
+
+    let private change groupId workItemId =
+        { GroupId = groupId
+          WorkItemId = workItemId
+          OccurredAt = "2026-09-30T13:00:00.000Z"
+          Actor = { actor with Id = "example/agent-b" }
+          Reason = Some "belongs here" }
+
+    let private add clone (groupId: string) (member': string) (extra: string list) =
+        cli clone ([ "work"; "group"; "add"; "--id"; groupId; "--member"; member'; "--occurred-at"; now (); "--json" ] @ extra)
+
+    let private addTests =
+        [ { Name = "work group (domain): add appends the member and a 'member-added' history entry naming who added it"
+            Run =
+              fun () ->
+                  let stored, _ = createdGroup [ "FEAT-1" ]
+
+                  match WorkGroups.addMember stored facts (change "GROUP-HERE-001" "FEAT-2") with
+                  | Error rejections -> failwith $"%A{rejections}"
+                  | Ok(next, group) ->
+                      Assert.equal [ "FEAT-1"; "FEAT-2" ] group.Members
+                      let entry = List.last group.History
+                      Assert.equal GroupHistoryOperation.MemberAdded entry.Operation
+                      Assert.equal [ "FEAT-2" ] entry.WorkItemIds
+                      Assert.equal "example/agent-b" entry.Actor.Id
+                      Assert.equal (Some "belongs here") entry.Reason
+                      Assert.equal [ group ] next.Groups
+                      Assert.equal group.Members (WorkGroups.membersFromHistory group.History)
+                      Assert.empty (WorkGroups.validate (Set.ofList [ "FEAT-1"; "FEAT-2" ]) next) }
+          { Name = "work group (domain): add refuses unknown, terminal, present and foreign-repository items and unknown groups"
+            Run =
+              fun () ->
+                  let stored, _ = createdGroup [ "FEAT-1" ]
+                  let addCodes id = codes (WorkGroups.addMember stored facts (change "GROUP-HERE-001" id))
+                  Assert.equal [ "unknown-work-item" ] (addCodes "NOPE-1")
+                  Assert.equal [ "terminal-work-item" ] (addCodes "FEAT-3")
+                  Assert.equal [ "already-member" ] (addCodes "FEAT-1")
+                  Assert.equal [ "repository-mismatch" ] (addCodes "EXT-1")
+                  Assert.equal [ "unknown-group" ] (codes (WorkGroups.addMember stored facts (change "GROUP-HERE-404" "FEAT-2")))
+                  Assert.equal [ "invalid-group-id" ] (codes (WorkGroups.addMember stored facts (change "nope" "FEAT-2")))
+                  let cross = { stored with Groups = stored.Groups |> List.map (fun group -> { group with CrossRepository = true }) }
+                  Assert.equal [] (codes (WorkGroups.addMember cross facts (change "GROUP-HERE-001" "EXT-1"))) }
+          { Name = "work group (domain): validate reports members that the membership history does not explain"
+            Run =
+              fun () ->
+                  let stored, group = createdGroup [ "FEAT-1" ]
+                  let unexplained = { stored with Groups = [ { group with Members = [ "FEAT-1"; "FEAT-2" ] } ] }
+                  let messages = WorkGroups.validate (Set.ofList [ "FEAT-1"; "FEAT-2" ]) unexplained |> List.map _.Message
+                  Assert.isTrue (messages |> List.exists (fun m -> m.Contains "do not match the membership history")) $"%A{messages}" }
+          { Name = "work group add (cli): adds the member with provenance, leaves the item untouched, and show and the planner see it"
+            Run =
+              fun () ->
+                  withRepository (fun clone ->
+                      capture clone "FEAT-1"
+                      capture clone "FEAT-2"
+                      create clone "GROUP-FIXTURE-001" [ "FEAT-1" ] [] |> ok |> ignore
+                      let result = leavesMembersUntouched clone (fun () -> add clone "GROUP-FIXTURE-001" "FEAT-2" [ "--reason"; "shares the store" ] |> ok)
+                      Assert.equal "added" (text result.Json["status"])
+                      Assert.equal "FEAT-2" (text result.Json["workItemId"])
+                      let group = storedGroup clone "GROUP-FIXTURE-001"
+                      Assert.equal [ "FEAT-1"; "FEAT-2" ] (texts group["members"])
+                      let entry = group["history"].AsArray() |> Seq.last
+                      Assert.equal "member-added" (text entry["operation"])
+                      Assert.equal [ "FEAT-2" ] (texts entry["workItemIds"])
+                      Assert.equal "example/agent-a" (text entry["actor"].["id"])
+                      Assert.equal "agent" (text entry["actor"].["kind"])
+                      Assert.equal "shares the store" (text entry["reason"])
+                      let shown = (run clone None [ "work"; "group"; "show"; "GROUP-FIXTURE-001"; "--json" ] |> ok).Json
+                      Assert.equal [ "FEAT-1"; "FEAT-2" ] (shown["members"].AsArray() |> Seq.map (fun node -> text node["workItemId"]) |> Seq.toList)
+                      let explained = run clone None [ "plan"; "explain-group"; "GROUP-FIXTURE-001" ] |> ok
+                      Assert.isTrue (explained.Output.Contains "FEAT-2 [") explained.Output
+                      run clone None [ "validate" ] |> ok |> ignore) }
+          { Name = "work group add (cli): refusals exit 1, argument errors exit 2, --dry-run writes nothing, cross-repository admits a mapped item"
+            Run =
+              fun () ->
+                  withRepository (fun clone ->
+                      for id in [ "FEAT-1"; "FEAT-2"; "FEAT-3"; "EXT-1" ] do
+                          capture clone id
+
+                      create clone "GROUP-FIXTURE-001" [ "FEAT-1" ] [] |> ok |> ignore
+                      cli clone [ "work"; "abandon"; "--id"; "FEAT-3"; "--reason"; "not needed"; "--occurred-at"; now () ] |> ok |> ignore
+                      let config = Path.Combine(clone, "planner.json")
+                      File.WriteAllText(config, """{ "grouping": { "executionRepositories": { "EXT-1": "other-repository" } } }""")
+                      let before = File.ReadAllText(groupsPath clone)
+
+                      leavesMembersUntouched clone (fun () ->
+                          let refusal id extra = add clone "GROUP-FIXTURE-001" id extra
+                          Assert.equal [ "unknown-work-item" ] (rejectionCodes (refusal "NOPE-1" []))
+                          Assert.equal [ "terminal-work-item" ] (rejectionCodes (refusal "FEAT-3" []))
+                          Assert.equal [ "already-member" ] (rejectionCodes (refusal "FEAT-1" []))
+                          let mismatch = refusal "EXT-1" [ "--config"; config ]
+                          Assert.equal 1 mismatch.ExitCode
+                          Assert.equal [ "repository-mismatch" ] (rejectionCodes mismatch)
+                          Assert.equal [ "unknown-group" ] (rejectionCodes (add clone "GROUP-FIXTURE-404" "FEAT-2" []))
+                          Assert.equal 1 (add clone "GROUP-FIXTURE-404" "FEAT-2" []).ExitCode
+                          Assert.equal 2 (add clone "nope" "FEAT-2" []).ExitCode
+                          Assert.equal 2 (cli clone [ "work"; "group"; "add"; "--id"; "GROUP-FIXTURE-001"; "--occurred-at"; now () ]).ExitCode
+                          Assert.equal "dry-run" (text (refusal "FEAT-2" [ "--dry-run" ] |> ok).Json["status"]))
+
+                      Assert.equal before (File.ReadAllText(groupsPath clone))
+                      create clone "GROUP-FIXTURE-002" [ "FEAT-1" ] [ "--cross-repository" ] |> ok |> ignore
+                      add clone "GROUP-FIXTURE-002" "EXT-1" [ "--config"; config ] |> ok |> ignore
+                      Assert.equal [ "FEAT-1"; "EXT-1" ] (texts (storedGroup clone "GROUP-FIXTURE-002").["members"])) } ]
+
+    let tests = createTests @ showTests @ addTests

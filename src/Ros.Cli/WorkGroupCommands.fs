@@ -20,7 +20,7 @@ open Ros.Infrastructure.Work
 [<RequireQualifiedAccess>]
 module WorkGroupCommands =
     let usage =
-        "work group show GROUP-ID [--config FILE] [--json] | work group create --id GROUP-ID --member ID [--member ID ...] --occurred-at TIMESTAMP [--kind KIND] [--execution-repository NAME] [--cross-repository] [--shared-context TEXT ...] [--architecture-note TEXT ...] [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY]"
+        "work group show GROUP-ID [--config FILE] [--json] | work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT] [--config FILE] [--dry-run] [--json] | work group create --id GROUP-ID --member ID [--member ID ...] --occurred-at TIMESTAMP [--kind KIND] [--execution-repository NAME] [--cross-repository] [--shared-context TEXT ...] [--architecture-note TEXT ...] [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY]"
 
     // ---- arguments ----
 
@@ -224,6 +224,71 @@ module WorkGroupCommands =
 
                 0
 
+    // ---- membership changes: work group add (and remove) ----
+
+    let private changeValued = set [ "--id"; "--member"; "--occurred-at"; "--reason"; "--config" ]
+    let private changeSwitches = set [ "--dry-run"; "--json" ]
+
+    /// One pipeline for every single-member change: parse, read facts once,
+    /// decide under the lock, render. `decide` is the pure domain decision.
+    let private membershipChange
+        (verb: string)
+        (usageText: string)
+        (done': string)
+        (decide: StoredGroups -> Map<string, GroupMemberFacts> -> GroupMembershipChange -> Result<StoredGroups * StoredGroup, GroupRejection list>)
+        (root: string)
+        (arguments: string list)
+        (actor: Actor)
+        =
+        let parsed = split changeValued changeSwitches arguments
+
+        let errors =
+            commonErrors verb [ "--member"; "--reason"; "--config" ] parsed
+            @ [ if (values "--member" parsed).IsEmpty then
+                    yield $"work group {verb} requires --member ID" ]
+
+        match errors with
+        | _ :: _ -> usageFailure errors usageText
+        | [] ->
+            let groupId = (single "--id" parsed).Value
+            let asJson = has "--json" parsed
+            let dryRun = has "--dry-run" parsed
+
+            let change =
+                { GroupId = groupId
+                  WorkItemId = (single "--member" parsed).Value
+                  OccurredAt = (single "--occurred-at" parsed).Value
+                  Actor = actor
+                  Reason = single "--reason" parsed }
+
+            let decided =
+                configuration root parsed
+                |> Result.bind (facts root)
+                |> Result.bind (fun known -> FileWorkGroupRepository.mutate root dryRun (fun stored -> decide stored known change))
+
+            match decided with
+            | Error message -> failed asJson verb groupId message
+            | Ok(Error rejections) -> rejected asJson verb groupId rejections
+            | Ok(Ok group) ->
+                if asJson then
+                    let document = WorkGroupJson.envelope verb groupId (if dryRun then "dry-run" else done')
+                    document["dryRun"] <- JsonValue.Create dryRun
+                    document["workItemId"] <- JsonValue.Create change.WorkItemId
+                    document["group"] <- WorkGroupJson.groupNode group
+                    print document
+                else
+                    printfn "%s%s %s: %s" (if dryRun then "would be " else "") done' change.WorkItemId group.Id
+                    groupLines group |> List.iter (printfn "%s")
+                    printfn "  recorded by:          %s:%s" (ActorKind.code actor.Kind) actor.Id
+                    printfn "%s" (statePersisted dryRun)
+
+                0
+
+    let addUsage =
+        "work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY]"
+
+    let private add = membershipChange "add" addUsage "added" WorkGroups.addMember
+
     // ---- work group show ----
 
     let showUsage = "work group show GROUP-ID [--config FILE] [--json]"
@@ -295,6 +360,7 @@ module WorkGroupCommands =
         match arguments with
         | "create" :: rest -> ProvenanceCommands.withResolvedActor rest (create root rest)
         | "show" :: rest -> show root version rest
+        | "add" :: rest -> ProvenanceCommands.withResolvedActor rest (add root rest)
         | _ ->
             eprintfn "ERROR unknown work group command"
             eprintfn "Usage: ros %s" usage

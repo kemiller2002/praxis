@@ -24,17 +24,21 @@ type GroupMemberFacts =
       ExecutionRepository: string }
 
 [<RequireQualifiedAccess>]
-type GroupHistoryOperation = | Created
+type GroupHistoryOperation =
+    | Created
+    | MemberAdded
 
 [<RequireQualifiedAccess>]
 module GroupHistoryOperation =
     let code operation =
         match operation with
         | GroupHistoryOperation.Created -> "created"
+        | GroupHistoryOperation.MemberAdded -> "member-added"
 
     let tryParse value =
         match value with
         | "created" -> Some GroupHistoryOperation.Created
+        | "member-added" -> Some GroupHistoryOperation.MemberAdded
         | _ -> None
 
 /// One append-only membership fact, with who caused it (provenance).
@@ -73,6 +77,15 @@ type GroupDeclaration =
       SharedContext: string list
       ArchitectureNotes: string list
       Members: string list
+      OccurredAt: string
+      Actor: Actor
+      Reason: string option }
+
+/// What `work group add` (and later `remove`) asks for: one work item, one
+/// group, with who asked and why. Nothing here is trusted.
+type GroupMembershipChange =
+    { GroupId: string
+      WorkItemId: string
       OccurredAt: string
       Actor: Actor
       Reason: string option }
@@ -116,6 +129,7 @@ type GroupRejection =
     | TerminalWorkItem of workItemId: string * state: string
     | RepositoryMismatch of workItemId: string * itemRepository: string * groupRepository: string
     | UnknownGroup of groupId: string
+    | AlreadyMember of groupId: string * workItemId: string
 
 [<RequireQualifiedAccess>]
 module GroupRejection =
@@ -131,6 +145,7 @@ module GroupRejection =
         | GroupRejection.TerminalWorkItem _ -> "terminal-work-item"
         | GroupRejection.RepositoryMismatch _ -> "repository-mismatch"
         | GroupRejection.UnknownGroup _ -> "unknown-group"
+        | GroupRejection.AlreadyMember _ -> "already-member"
 
     let message rejection =
         match rejection with
@@ -144,6 +159,7 @@ module GroupRejection =
         | GroupRejection.RepositoryMismatch(id, item, group) ->
             $"{id} executes in {item}, but the group executes in {group} and is not cross-repository (PRX-GRP-051)"
         | GroupRejection.UnknownGroup id -> $"no declared group {id} is stored in .ros/work/groups.json"
+        | GroupRejection.AlreadyMember(group, id) -> $"{id} is already a member of {group}"
 
     let remedy rejection =
         match rejection with
@@ -156,6 +172,7 @@ module GroupRejection =
         | GroupRejection.TerminalWorkItem _ -> "leave the item out; its own record keeps its completion"
         | GroupRejection.RepositoryMismatch _ -> "declare the group with --cross-repository, or group the item with work in its own repository"
         | GroupRejection.UnknownGroup _ -> "check the ID in .ros/work/groups.json, or declare the group with 'work group create'"
+        | GroupRejection.AlreadyMember _ -> "nothing to do; 'work group show' lists the members"
 
     /// Rejections the caller can fix by correcting the command line (exit 2).
     let isArgumentError rejection =
@@ -276,6 +293,48 @@ module WorkGroups =
             Ok({ stored with Groups = stored.Groups @ [ group ] }, group)
         | problems -> Error problems
 
+    /// Finds the group a membership change names, and replaces it after a
+    /// decision; shared by `add` and `remove`.
+    let private changeGroup
+        (stored: StoredGroups)
+        (change: GroupMembershipChange)
+        (decide: StoredGroup -> Result<StoredGroup, GroupRejection list>)
+        : Result<StoredGroups * StoredGroup, GroupRejection list> =
+        let argumentProblems =
+            [ if not (isValidGroupId change.GroupId) then
+                  GroupRejection.InvalidGroupId change.GroupId
+              if not (WorkItemId.isValid change.WorkItemId) then
+                  GroupRejection.InvalidWorkItemId change.WorkItemId ]
+
+        match argumentProblems, tryFind change.GroupId stored with
+        | _ :: _, _ -> Error argumentProblems
+        | [], None -> Error [ GroupRejection.UnknownGroup change.GroupId ]
+        | [], Some group ->
+            decide group
+            |> Result.map (fun changed ->
+                { stored with Groups = stored.Groups |> List.map (fun candidate -> if candidate.Id = changed.Id then changed else candidate) }, changed)
+
+    let private historyOf (operation: GroupHistoryOperation) (change: GroupMembershipChange) =
+        { Operation = operation
+          WorkItemIds = [ change.WorkItemId ]
+          At = change.OccurredAt
+          Actor = change.Actor
+          Reason = change.Reason }
+
+    /// Decides `work group add` (PRAXIS-GROUP-03): the same admission rule
+    /// as `create`, plus "not already a member". Records who added it; the
+    /// item itself is untouched.
+    let addMember (stored: StoredGroups) (facts: Map<string, GroupMemberFacts>) (change: GroupMembershipChange) =
+        changeGroup stored change (fun group ->
+            match List.contains change.WorkItemId group.Members, admit group.ExecutionRepository group.CrossRepository facts change.WorkItemId with
+            | true, _ -> Error [ GroupRejection.AlreadyMember(group.Id, change.WorkItemId) ]
+            | false, (_ :: _ as problems) -> Error problems
+            | false, [] ->
+                Ok
+                    { group with
+                        Members = group.Members @ [ change.WorkItemId ]
+                        History = group.History @ [ historyOf GroupHistoryOperation.MemberAdded change ] })
+
     /// The only projection of a stored group into the planner (analysis D6):
     /// the planner reads it exactly as it reads `grouping.groups`.
     let toDeclared (group: StoredGroup) : DeclaredGroup =
@@ -299,6 +358,16 @@ module WorkGroups =
 
     let private isTimestamp (value: string) =
         DateTimeOffset.TryParse(value, Globalization.CultureInfo.InvariantCulture, Globalization.DateTimeStyles.RoundtripKind) |> fst
+
+    /// The members the append-only history implies, in joining order.
+    let membersFromHistory (history: GroupHistoryEntry list) =
+        history
+        |> List.fold
+            (fun members entry ->
+                match entry.Operation with
+                | GroupHistoryOperation.Created -> entry.WorkItemIds
+                | GroupHistoryOperation.MemberAdded -> members @ (entry.WorkItemIds |> List.filter (fun id -> not (List.contains id members))))
+            []
 
     /// Offline checks of the stored groups (analysis §10, D13). A member that
     /// became terminal after it joined is partial completion, not a finding.
@@ -325,6 +394,8 @@ module WorkGroups =
                   { Field = field "executionRepository"; Message = "the execution repository is required (PRX-GRP-051)" }
               if group.History |> List.forall (fun entry -> entry.Operation <> GroupHistoryOperation.Created) then
                   { Field = field "history"; Message = "the group has no 'created' history entry" }
+              if membersFromHistory group.History <> group.Members then
+                  { Field = field "members"; Message = "the members do not match the membership history (every membership change must be recorded with its actor)" }
               for entry in group.History do
                   if not (isTimestamp entry.At) then
                       { Field = field "history"; Message = $"'{entry.At}' is not a timestamp" } ]
