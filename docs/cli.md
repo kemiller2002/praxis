@@ -262,7 +262,7 @@ commands. These predate the lifecycle interface and are unchanged:
 ros validate [--json]
 ros registry build [--dry-run] | registry check
 ros git status [--json]
-ros work <capture|list|ready|show|start|resume|block|complete|reconcile|checkpoint|continue|update|attach|context|...>
+ros work <capture|list|ready|show|group show|start|resume|block|complete|reconcile|checkpoint|continue|update|attach|context|...>
 ros add "..."
 ros telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
 ros adapter <call|publish>
@@ -305,6 +305,134 @@ reason about together, with the evidence, collision risk and recommended
 execution for each) without changing any item; `explain-group` answers why a
 group exists and what would change it (`DF-ROS-2026-A047`). See
 [`planning.md`](planning.md).
+
+### `work group create`
+
+```
+ros work group create --id GROUP-ID --member ID --member ID [--member ID]* --occurred-at TIMESTAMP
+                      [--kind KIND] [--execution-repository NAME] [--cross-repository]
+                      [--shared-context TEXT]* [--dry-run] [--json] [IDENTITY]
+```
+
+Records a durable human-declared execution group in `.ros/work/groups.json`
+(PRX-GRP-073, phase two of `requirements/PLANNING-WORK-GROUPS.md`): its ID
+(`GROUP-<REPOSITORY-OR-AREA>-<SEQUENCE>`), at least two members, optional kind
+(the `GroupKind` codes, or `custom:NAME`), execution repository,
+cross-repository flag and shared context, with the declaring actor and time.
+It refuses, with exit `1` and nothing recorded, a malformed or already stored
+group ID and any member that is unknown (in neither the backlog queue nor the
+live context), terminal (`complete` or `abandoned`) or repeated; argument
+errors exit `2`. It never changes a member's lifecycle state, queue entry,
+live context, evidence or telemetry. `--dry-run` reports the group without
+recording it; `--json` emits a `praxis.work-groups/1.0.0` document (`kind`
+`work-group-created`, `work-group-planned` or `work-group-rejected`). The
+planner reads every stored group exactly as it reads a `grouping.groups`
+entry of `--config`, and `validate` checks stored groups. See "Work groups" in
+[`planning.md`](planning.md).
+
+### `work group add`
+
+```
+ros work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--config FILE]
+                   [--dry-run] [--json] [IDENTITY]
+```
+
+Adds one work item to a group stored by `work group create` (PRX-GRP-073,
+phase two), recording who added it and when in the group's `additions`
+(`member`, `addedAt`, `addedBy`). It refuses, with exit `1` and nothing
+recorded, a group that is not stored (a group only in planner configuration
+is changed there), an item already a member, an item that is unknown or
+terminal (`complete` or `abandoned`), and, unless the group is
+cross-repository, an item whose execution repository differs from the
+group's. An item's execution repository is decided as the planner decides it:
+`grouping.executionRepositories` of `--config`, else an unknown external
+repository when its description says "external repository", else this
+repository; a group without a declared execution repository executes in this
+repository. Argument errors (including `create`-only options) exit `2`. The
+only write is `.ros/work/groups.json`: it never changes the member's
+lifecycle state, queue entry, live context, evidence or telemetry.
+`--dry-run` reports the addition without recording it; `--json` emits a
+`praxis.work-groups/1.0.0` document (`kind` `work-group-member-added`,
+`work-group-member-planned` or `work-group-rejected`).
+
+### `work group remove`
+
+```
+ros work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP [--dry-run] [--json] [IDENTITY]
+```
+
+Removes one member from a group stored by `work group create` (PRX-GRP-073,
+phase two), recording who removed it and when in the group's `removals`
+(`member`, `removedAt`, `removedBy`); earlier `additions` are kept. It
+refuses, with exit `1` and nothing recorded, a group that is not stored (a
+group only in planner configuration is changed there), an item that is not a
+member, a removal that would leave the group with fewer than two members (a
+group's last members cannot be removed), and an `--occurred-at` before the
+group's latest recorded change. The member's lifecycle state is neither
+consulted nor changed, so a completed, abandoned or no longer known member
+may leave, and a removed member may be added again with `work group add`.
+Argument errors (including `create`-only options and `--config`) exit `2`.
+The only write is `.ros/work/groups.json`: it never changes the member's
+lifecycle state, queue entry, live context, evidence, attribution or
+telemetry. `--dry-run` reports the removal without recording it; `--json`
+emits a `praxis.work-groups/1.0.0` document (`kind`
+`work-group-member-removed`, `work-group-member-removal-planned` or
+`work-group-rejected`).
+
+### `work group checkpoint`
+
+```
+ros work group checkpoint --id GROUP-ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT [--decision TEXT]* [--dry-run] [--json] [IDENTITY]
+```
+
+Records a durable **group-level** checkpoint of a group stored by `work group
+create` (PRX-GRP-044, phase two) in `.ros/work/group-checkpoints.json`: the
+group ID, its active, completed, abandoned and remaining members (each by its
+own lifecycle state; abandoned members are never counted as completed), the
+shared architectural decisions (`--decision`, repeatable), the branch and
+commit, the milestone (`--summary`) and the next action. Checkpoint IDs are
+`GROUP-ID/GCP-NNN`, sequential per group.
+
+It requires the same durable-checkpoint verification as `work checkpoint`
+(the same decision over the same Git port): HEAD on a named branch with an
+upstream, the remote branch head read from the remote itself equal to local
+HEAD, and no meaningful uncommitted changes, so it refuses with `work
+checkpoint`'s own codes (`local-ahead`, `uncommitted-changes`, and so on).
+Like `work checkpoint`, it also requires active work: at least one member
+must be active and this process must hold its own active execution of one
+(`no-active-member`, `missing-execution`). Blank text and a malformed
+`--occurred-at` exit `2`; every other refusal exits `1`; nothing is recorded
+either way.
+
+It **references** each member's own latest checkpoint (`memberCheckpoints`:
+member, checkpoint ID, execution, commit) and lists the members with none;
+it never records, copies or replaces a member's checkpoint, changes no
+member's lifecycle state, events, context, evidence or telemetry, and claims
+no changed paths for any member (PRX-GRP-043): each member still
+checkpoints and completes on its own. `praxis validate` reports a group
+checkpoint whose group is not stored, whose ID is out of sequence, or whose
+reference names a checkpoint that is not that member's own. `--dry-run`
+verifies without recording; `--json` emits a
+`praxis.work-group-checkpoints/1.0.0` document (`kind`
+`work-group-checkpoint-recorded`, `work-group-checkpoint-planned` or
+`work-group-checkpoint-rejected`, with each rejection's `code`, `message`
+and `remedy`). Commit and push the new Praxis state afterwards, as after
+`work checkpoint`.
+
+### `work group show`
+
+```
+ros work group show GROUP-ID [--config FILE] [--observations FILE] [--as-of TIMESTAMP] [--json]
+```
+
+A read-only view of one **declared** group (PRX-GRP-073): each member with its
+own recorded and planning state, partial-completion progress, blocked members
+and the members each one gates, execution repository, shared context and
+architecture notes. Declarations, from `--config` or stored by `work group
+create`, are read exactly as the planner reads `grouping.groups`. A planner recommendation is not a declaration (use `plan
+explain-group`). Exit codes: `0` shown, `1` unknown group or unreadable input,
+`2` invalid arguments. `--json` emits a `declared-group` document in the
+`praxis.plan/1.0.0` schema. It never writes.
 
 ### `work reconcile`
 

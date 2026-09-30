@@ -109,6 +109,19 @@ module PlanningCliTests =
         let groups = PraxisCli.run root None [ "plan"; "groups"; "--json" ] |> json
         text (groups.["groups"].AsArray().[0].["id"])
 
+    /// A planner configuration declaring one group, kept outside the fixture.
+    let private declaredConfiguration () =
+        let path = Path.Combine(Path.GetTempPath(), $"praxis-plan-config-{Guid.NewGuid():N}.json")
+
+        File.WriteAllText(
+            path,
+            """{ "grouping": { "groups": [ { "id": "GROUP-FIXTURE-DECLARED-001", "members": ["TASK-A", "TASK-B", "GH-84"],
+                 "kind": "shared-area", "sharedContext": ["fixture tasks"], "executionRepository": "plan-fixture",
+                 "architectureNotes": ["one parser for every task"] } ] } }"""
+        )
+
+        path
+
     let tests =
         [ t "every command emits the versioned JSON contract" (fun () ->
               let root = fixture ()
@@ -178,7 +191,48 @@ module PlanningCliTests =
               Assert.equal 1 (PraxisCli.run root None [ "plan"; "explain-group"; "GROUP-NOPE-001" ]).ExitCode
               Assert.equal 2 (PraxisCli.run root None [ "plan"; "explain-group" ]).ExitCode)
 
-          t "30 no plan command mutates repository state" (fun () ->
+          t "work group show: a declared group with recorded and planning states in text and --json; unknown groups exit 1" (fun () ->
+              let root = fixture ()
+              let configuration = declaredConfiguration ()
+              let show extra = PraxisCli.run root None ([ "work"; "group"; "show" ] @ extra @ [ "--config"; configuration ])
+              let document = show [ "GROUP-FIXTURE-DECLARED-001"; "--json" ] |> json
+              Assert.equal "declared-group" (text (document["kind"]))
+              let members = document["group"].["members"].AsArray() |> Seq.map (fun entry -> text (entry["workItem"]), text (entry["recordedState"])) |> Seq.toList
+              Assert.equal [ "GH-84", "blocked"; "TASK-A", "ready"; "TASK-B", "ready" ] (members |> List.sort)
+              let planning = document["group"].["members"].AsArray() |> Seq.find (fun entry -> text (entry["workItem"]) = "GH-84")
+              Assert.equal "stale-state-candidate" (text (planning["planningState"]))
+              Assert.equal 0 (document["blocked"].AsArray().Count)
+              Assert.equal "plan-fixture" (text (document["group"].["executionRepository"]))
+              Assert.equal "one parser for every task" (text (document["group"].["architectureNotes"].[0]))
+              let output = (show [ "GROUP-FIXTURE-DECLARED-001" ]).Output
+              Assert.isTrue (output.Contains "GH-84: recorded blocked; planning stale-state-candidate") "the text shows a member's own recorded and planning states"
+              Assert.isTrue (output.Contains "Progress: 0 of 3 complete") "the text reports progress"
+              Assert.equal 1 (show [ "GROUP-NOPE-001" ]).ExitCode
+              Assert.equal 1 (PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-DECLARED-001" ]).ExitCode
+              Assert.equal 1 (PraxisCli.run root None [ "work"; "group"; "show"; groupId root ]).ExitCode
+              Assert.equal 2 (show []).ExitCode
+              Assert.equal 2 (PraxisCli.run root None [ "work"; "group"; "list" ]).ExitCode)
+
+          t "work group show reads a group stored by work group create exactly as a configured one" (fun () ->
+              let root = fixture ()
+
+              let created =
+                  PraxisCli.run
+                      root
+                      (Some(PraxisCli.agent "agent:fixture" "provider-a" "runtime-a" "session-1"))
+                      [ "work"; "group"; "create"; "--id"; "GROUP-FIXTURE-STORED-001"; "--member"; "TASK-A"; "--member"; "TASK-B"
+                        "--shared-context"; "stored tasks"; "--occurred-at"; PraxisCli.now () ]
+
+              Assert.equal 0 created.ExitCode
+              let before = fingerprint root
+              let document = PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-STORED-001"; "--json" ] |> json
+              Assert.equal "GROUP-FIXTURE-STORED-001" (text (document["declaration"].["id"]))
+              Assert.equal "human-declared" (text (document["group"].["origin"]))
+              Assert.equal "stored tasks" (text (document["group"].["sharedContext"].[0]))
+              Assert.equal 2 (document["group"].["progress"].["total"].GetValue<int>())
+              Assert.equal before (fingerprint root))
+
+          t "30 no plan or work group command mutates repository state" (fun () ->
               let root = fixture ()
               let before = fingerprint root
               let saved = Path.Combine(Path.GetTempPath(), $"praxis-plan-{Guid.NewGuid():N}.json")
@@ -203,7 +257,9 @@ module PlanningCliTests =
                     [ "plan"; "explain-group"; groupId root ]
                     [ "plan"; "explain-group"; groupId root; "--json" ]
                     [ "plan"; "simulate"; "--groups" ]
-                    [ "plan"; "compare"; "--groups"; "--json" ] ] do
+                    [ "plan"; "compare"; "--groups"; "--json" ]
+                    [ "work"; "group"; "show"; "GROUP-FIXTURE-DECLARED-001"; "--config"; declaredConfiguration () ]
+                    [ "work"; "group"; "show"; "GROUP-FIXTURE-DECLARED-001"; "--config"; declaredConfiguration (); "--json" ] ] do
                   let result = PraxisCli.run root None arguments
                   Assert.isTrue (result.ExitCode = 0 || result.ExitCode = 3) $"{String.Join(' ', arguments)} failed: {result.Error}"
 

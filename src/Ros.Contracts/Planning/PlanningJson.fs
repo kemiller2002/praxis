@@ -697,6 +697,21 @@ module PlanningJson =
 
     /// The optional planner configuration file. Every field is optional and
     /// defaults to `PlannerConfiguration.defaults`.
+    /// One `grouping.groups` entry. Stored groups (`.ros/work/groups.json`)
+    /// are read by this same function, so the planner reads a stored
+    /// declaration exactly as it reads a configured one (PRX-GRP-073).
+    let private readDeclaredGroup (group: JsonObject) : DeclaredGroup =
+        let optionalTexts name = if isNull (field group name) then [] else readTexts group name
+
+        { Id = readText group "id"
+          Members = readTexts group "members"
+          Kind = readOptionalText group "kind" |> Option.map (parsed "group kind" GroupKind.tryParse)
+          Origin = readOptionalText group "origin" |> Option.map (parsed "group origin" GroupOrigin.tryParse) |> Option.defaultValue GroupOrigin.HumanDeclared
+          SharedContext = optionalTexts "sharedContext"
+          ExecutionRepository = readOptionalText group "executionRepository"
+          CrossRepository = if isNull (field group "crossRepository") then false else readBool group "crossRepository"
+          ArchitectureNotes = optionalTexts "architectureNotes" }
+
     let parseConfiguration (json: string) : Result<PlannerConfiguration, string> =
         try
             let root = JsonNode.Parse json |> asObject "configuration"
@@ -749,18 +764,7 @@ module PlanningJson =
                         readOptionalText node "minimumAffinity"
                         |> Option.map (parsed "affinity" ContextAffinity.tryParse)
                         |> Option.defaultValue fallback.MinimumAffinity
-                      Groups =
-                        optionalList "groups" (fun group ->
-                            let optionalTexts name = if isNull (field group name) then [] else readTexts group name
-
-                            { Id = readText group "id"
-                              Members = readTexts group "members"
-                              Kind = readOptionalText group "kind" |> Option.map (parsed "group kind" GroupKind.tryParse)
-                              Origin = readOptionalText group "origin" |> Option.map (parsed "group origin" GroupOrigin.tryParse) |> Option.defaultValue GroupOrigin.HumanDeclared
-                              SharedContext = optionalTexts "sharedContext"
-                              ExecutionRepository = readOptionalText group "executionRepository"
-                              CrossRepository = if isNull (field group "crossRepository") then false else readBool group "crossRepository"
-                              ArchitectureNotes = optionalTexts "architectureNotes" })
+                      Groups = optionalList "groups" readDeclaredGroup
                       Architecture =
                         optionalList "architecture" (fun decision ->
                             { Decision = readText decision "decision"
@@ -1222,3 +1226,268 @@ module PlanningJson =
         | Malformed message -> Error $"malformed groups document: {message}"
         | :? JsonException as error -> Error $"malformed groups document: {error.Message}"
         | :? InvalidOperationException as error -> Error $"malformed groups document: {error.Message}"
+
+    // ---- stored human-declared groups (`work group create`, PRX-GRP-073) --------
+
+    /// The versioned contract of `.ros/work/groups.json` and of `work group`
+    /// command output.
+    let workGroupsSchema = "praxis.work-groups/1.0.0"
+
+    let private declaredGroup (value: DeclaredGroup) =
+        [ "id", text value.Id
+          "members", texts value.Members
+          "kind", optionalText (value.Kind |> Option.map GroupKind.code)
+          "origin", text (GroupOrigin.code value.Origin)
+          "sharedContext", texts value.SharedContext
+          "executionRepository", optionalText value.ExecutionRepository
+          "crossRepository", boolean value.CrossRepository
+          "architectureNotes", texts value.ArchitectureNotes ]
+
+    let private memberAddition (value: MemberAddition) =
+        record [ "member", text value.Member; "addedAt", text value.AddedAt; "addedBy", text value.AddedBy ]
+
+    let private memberRemoval (value: MemberRemoval) =
+        record [ "member", text value.Member; "removedAt", text value.RemovedAt; "removedBy", text value.RemovedBy ]
+
+    let private storedGroup (value: StoredGroup) =
+        record (
+            declaredGroup value.Declaration
+            @ [ "createdAt", text value.CreatedAt
+                "createdBy", text value.CreatedBy
+                "additions", value.Additions |> List.map memberAddition |> array
+                "removals", value.Removals |> List.map memberRemoval |> array ]
+        )
+
+    /// PRX-GRP-073: the `declared-group` document (`work group show`).
+    let declaredGroupView (snapshotValue: PlanSnapshot) (value: DeclaredGroupView) : JsonNode =
+
+        record
+            [ "schema", text schema
+              "kind", text "declared-group"
+              "snapshot", snapshot snapshotValue
+              "statement", text value.Statement
+              "declaration", record (declaredGroup value.Declaration)
+              "group", workGroup value.Group
+              "blocked",
+              value.Blocked
+              |> List.map (fun entry ->
+                  record
+                      [ "workItem", text entry.WorkItemId
+                        "planningState", text (PlanningWorkState.code entry.PlanningState)
+                        "blockReason", optionalText entry.BlockReason
+                        "gates", texts entry.Gates ])
+              |> array
+              "unknownMembers", texts value.UnknownMembers ]
+
+    /// `.ros/work/groups.json`, groups in ordinal ID order.
+    let renderStoredGroups (groups: StoredGroup list) =
+        record [ "schema", text workGroupsSchema; "groups", groups |> List.map storedGroup |> array ] |> render
+
+    /// Reads `.ros/work/groups.json`; each entry is a `grouping.groups`
+    /// declaration plus `createdAt`/`createdBy` and the optional `additions`
+    /// (`work group add`) and `removals` (`work group remove`); absent means
+    /// none.
+    let parseStoredGroups (json: string) : Result<StoredGroup list, string> =
+        try
+            let root = JsonNode.Parse json |> asObject "work groups"
+
+            match readText root "schema" with
+            | version when version = workGroupsSchema ->
+                objects root "groups"
+                |> List.map (fun group ->
+                    { Declaration = readDeclaredGroup group
+                      CreatedAt = readText group "createdAt"
+                      CreatedBy = readText group "createdBy"
+                      Additions =
+                        if isNull (field group "additions") then
+                            []
+                        else
+                            objects group "additions"
+                            |> List.map (fun addition ->
+                                { Member = readText addition "member"
+                                  AddedAt = readText addition "addedAt"
+                                  AddedBy = readText addition "addedBy" })
+                      Removals =
+                        if isNull (field group "removals") then
+                            []
+                        else
+                            objects group "removals"
+                            |> List.map (fun removal ->
+                                ({ Member = readText removal "member"
+                                   RemovedAt = readText removal "removedAt"
+                                   RemovedBy = readText removal "removedBy" }
+                                : MemberRemoval)) })
+                |> Ok
+            | other -> Error $"malformed work groups: unsupported schema '{other}' (expected {workGroupsSchema})"
+        with
+        | Malformed message -> Error $"malformed work groups: {message}"
+        | :? JsonException as error -> Error $"malformed work groups: {error.Message}"
+        | :? InvalidOperationException as error -> Error $"malformed work groups: {error.Message}"
+
+    /// `work group create --json`: the recorded (or, with `--dry-run`,
+    /// the would-be) group.
+    let renderGroupCreated (dryRun: bool) (path: string) (group: StoredGroup) =
+        record
+            [ "schema", text workGroupsSchema
+              "kind", text (if dryRun then "work-group-planned" else "work-group-created")
+              "dryRun", boolean dryRun
+              "path", text path
+              "group", storedGroup group ]
+        |> render
+
+    /// `work group add --json`: the group with its new member (or, with
+    /// `--dry-run`, as it would be).
+    let renderMemberAdded (dryRun: bool) (path: string) (addition: MemberAddition) (group: StoredGroup) =
+        record
+            [ "schema", text workGroupsSchema
+              "kind", text (if dryRun then "work-group-member-planned" else "work-group-member-added")
+              "dryRun", boolean dryRun
+              "path", text path
+              "addition", memberAddition addition
+              "group", storedGroup group ]
+        |> render
+
+    /// `work group remove --json`: the group without the removed member (or,
+    /// with `--dry-run`, as it would be).
+    let renderMemberRemoved (dryRun: bool) (path: string) (removal: MemberRemoval) (group: StoredGroup) =
+        record
+            [ "schema", text workGroupsSchema
+              "kind", text (if dryRun then "work-group-member-removal-planned" else "work-group-member-removed")
+              "dryRun", boolean dryRun
+              "path", text path
+              "removal", memberRemoval removal
+              "group", storedGroup group ]
+        |> render
+
+    let renderGroupRejected (errors: string list) =
+        record [ "schema", text workGroupsSchema; "kind", text "work-group-rejected"; "errors", texts errors ] |> render
+
+    // ---- group checkpoints (PRX-GRP-044, `work group checkpoint`) --------------
+
+    let groupCheckpointsSchema = "praxis.work-group-checkpoints/1.0.0"
+
+    let private memberCheckpointReference (value: MemberCheckpointReference) =
+        record
+            [ "member", text value.Member
+              "checkpointId", text value.CheckpointId
+              "executionId", text value.ExecutionId
+              "commit", text value.Commit
+              "recordedAt", text value.RecordedAt ]
+
+    let private durableLocation (value: Ros.Domain.Work.GitDurableLocation) =
+        record
+            [ "repository", text value.Repository
+              "branch", text value.Branch
+              "localCommit", text value.LocalCommit.Value
+              "remote", record [ "name", text value.Remote.Name; "url", optionalText value.Remote.Url ]
+              "remoteBranch", text value.RemoteBranch
+              "remoteCommit", text value.RemoteCommit.Value
+              "mechanism", text "git-remote-observation" ]
+
+    let private groupCheckpoint (value: GroupCheckpoint) =
+        record
+            [ "id", text value.Id
+              "groupId", text value.GroupId
+              "summary", text value.Summary
+              "nextAction", text value.NextAction
+              "sharedDecisions", texts value.SharedDecisions
+              "members",
+              record
+                  [ "active", texts value.Progress.Active
+                    "completed", texts value.Progress.Completed
+                    "abandoned", texts value.Progress.Abandoned
+                    "remaining", texts value.Progress.Remaining ]
+              "memberCheckpoints", value.MemberCheckpoints |> List.map memberCheckpointReference |> array
+              "uncheckpointedMembers", texts value.UncheckpointedMembers
+              "executions",
+              value.Executions
+              |> List.map (fun execution -> record [ "member", text execution.Member; "executionId", text execution.ExecutionId ])
+              |> array
+              "location", durableLocation value.Location
+              "recordedAt", text value.RecordedAt
+              "recordedBy", text value.RecordedBy ]
+
+    /// `.ros/work/group-checkpoints.json`, append order.
+    let renderGroupCheckpoints (checkpoints: GroupCheckpoint list) =
+        record [ "schema", text groupCheckpointsSchema; "checkpoints", checkpoints |> List.map groupCheckpoint |> array ] |> render
+
+    let private readCommit (node: JsonObject) name =
+        readText node name |> parsed "commit" Ros.Domain.Git.CommitId.tryParse
+
+    let private readGroupCheckpoint (node: JsonObject) : GroupCheckpoint =
+        let members = obj node "members"
+        let location = obj node "location"
+        let remote = obj location "remote"
+
+        { Id = readText node "id"
+          GroupId = readText node "groupId"
+          Summary = readText node "summary"
+          NextAction = readText node "nextAction"
+          SharedDecisions = readTexts node "sharedDecisions"
+          Progress =
+            { Active = readTexts members "active"
+              Completed = readTexts members "completed"
+              Abandoned = readTexts members "abandoned"
+              Remaining = readTexts members "remaining" }
+          MemberCheckpoints =
+            objects node "memberCheckpoints"
+            |> List.map (fun reference ->
+                ({ Member = readText reference "member"
+                   CheckpointId = readText reference "checkpointId"
+                   ExecutionId = readText reference "executionId"
+                   Commit = readText reference "commit"
+                   RecordedAt = readText reference "recordedAt" }
+                : MemberCheckpointReference))
+          UncheckpointedMembers = readTexts node "uncheckpointedMembers"
+          Executions =
+            objects node "executions"
+            |> List.map (fun execution ->
+                ({ Member = readText execution "member"
+                   ExecutionId = readText execution "executionId" }
+                : GroupMemberExecution))
+          Location =
+            ({ Repository = readText location "repository"
+               Branch = readText location "branch"
+               LocalCommit = readCommit location "localCommit"
+               Remote = ({ Name = readText remote "name"; Url = readOptionalText remote "url" }: Ros.Domain.Git.RemoteIdentity)
+               RemoteBranch = readText location "remoteBranch"
+               RemoteCommit = readCommit location "remoteCommit" }
+            : Ros.Domain.Work.GitDurableLocation)
+          RecordedAt = readText node "recordedAt"
+          RecordedBy = readText node "recordedBy" }
+
+    /// Reads `.ros/work/group-checkpoints.json`.
+    let parseGroupCheckpoints (json: string) : Result<GroupCheckpoint list, string> =
+        try
+            let root = JsonNode.Parse json |> asObject "group checkpoints"
+
+            match readText root "schema" with
+            | version when version = groupCheckpointsSchema -> objects root "checkpoints" |> List.map readGroupCheckpoint |> Ok
+            | other -> Error $"malformed group checkpoints: unsupported schema '{other}' (expected {groupCheckpointsSchema})"
+        with
+        | Malformed message -> Error $"malformed group checkpoints: {message}"
+        | :? JsonException as error -> Error $"malformed group checkpoints: {error.Message}"
+        | :? InvalidOperationException as error -> Error $"malformed group checkpoints: {error.Message}"
+
+    /// `work group checkpoint --json`: the recorded (or, with `--dry-run`,
+    /// the would-be) group checkpoint.
+    let renderGroupCheckpointRecorded (dryRun: bool) (path: string) (checkpoint: GroupCheckpoint) =
+        record
+            [ "schema", text groupCheckpointsSchema
+              "kind", text (if dryRun then "work-group-checkpoint-planned" else "work-group-checkpoint-recorded")
+              "dryRun", boolean dryRun
+              "path", text path
+              "checkpoint", groupCheckpoint checkpoint ]
+        |> render
+
+    /// `work group checkpoint --json` when refused: each rejection's stable
+    /// code, message and remedy.
+    let renderGroupCheckpointRejected (rejections: (string * string * string) list) =
+        record
+            [ "schema", text groupCheckpointsSchema
+              "kind", text "work-group-checkpoint-rejected"
+              "rejections",
+              rejections
+              |> List.map (fun (code, message, remedy) -> record [ "code", text code; "message", text message; "remedy", text remedy ])
+              |> array ]
+        |> render

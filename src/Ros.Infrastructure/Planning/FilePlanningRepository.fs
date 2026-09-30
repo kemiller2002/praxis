@@ -14,7 +14,8 @@ open Ros.Infrastructure.Git
 open Ros.Infrastructure.Work
 
 /// The planner's read-only view of a repository: `.ros/work/queue.json`,
-/// `.ros/context/current.json`, telemetry execution records and Git. It
+/// `.ros/context/current.json`, stored work groups (`.ros/work/groups.json`,
+/// read as `grouping.groups` declarations), telemetry execution records and Git. It
 /// opens files for reading and runs only read-only Git queries.
 [<RequireQualifiedAccess>]
 module FilePlanningRepository =
@@ -178,7 +179,9 @@ module FilePlanningRepository =
         |> List.choose execution
         |> List.sortWith (fun left right -> String.CompareOrdinal(left.ExecutionId, right.ExecutionId))
 
-    let private repositoryName (root: string) =
+    /// The repository planned: the queue's or context's `repository`, else
+    /// the root directory's name.
+    let repositoryName (root: string) =
         [ readObject (queuePath root); readObject (contextPath root) ]
         |> List.tryPick (Option.bind (fun document -> text document "repository"))
         |> Option.defaultValue (Path.GetFileName(Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar)))
@@ -269,4 +272,7 @@ module FilePlanningRepository =
           Executions = fun () -> readExecutions root
           RepositoryObservations = readRepositoryObservations root
           SuppliedObservations = fun () -> readOptionalFile observationsFile PlanningJson.parseObservations []
-          Configuration = fun () -> readOptionalFile configurationFile (fun _ content -> PlanningJson.parseConfiguration content) PlannerConfiguration.defaults }
+          Configuration =
+            fun () ->
+                readOptionalFile configurationFile (fun _ content -> PlanningJson.parseConfiguration content) PlannerConfiguration.defaults
+                |> Result.bind (fun configuration -> FileWorkGroupStore.read root |> Result.bind (GroupDeclaration.mergeInto configuration)) }

@@ -210,6 +210,13 @@ module CheckpointOperations =
         CheckpointObservation.candidate git policy itemState execution
         |> CheckpointVerification.verify candidate
 
+    /// Whether HEAD is durably checkpointable now, by `verify`'s own Git and
+    /// working-tree rules, without a work item or execution (a group
+    /// checkpoint, PRX-GRP-044).
+    let verifyLocation (git: GitDurability) (policy: ContinuityPolicy) (repository: string) =
+        CheckpointObservation.candidate git policy None ExecutionObservation.NoneActive
+        |> CheckpointVerification.verifyLocation repository
+
     let assess (git: GitDurability) (policy: ContinuityPolicy) (workItemId: string) (itemState: LiveWorkState) (checkpoint: RecordedCheckpoint option) =
         CheckpointObservation.recoverability (CheckpointOwnership.scope git policy workItemId) policy checkpoint
         |> CheckpointAssessment.assess workItemId itemState checkpoint
