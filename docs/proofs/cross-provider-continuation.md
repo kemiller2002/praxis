@@ -16,4 +16,18 @@ to the first executor's machine or conversation.
 
 ## Part 2 — successor
 
-_Not yet written. The successor adds this section._
+- Executor: ChatGPT (OpenAI), recorded by Praxis as `agent:openai/chatgpt`,
+  provider `openai`, model `gpt-5.6-sol`, runtime `chatgpt`, in successor
+  execution `EXE-20260929T173543602Z-75ccd1b9`.
+- Recovered predecessor execution `EXE-20260929T121754955Z-09207ab8` and
+  durable checkpoint commit `b64303a5f19d8b1b825adefaabd5e7521aab464b`
+  from repository and Praxis state alone.
+- Verified the checkpoint against the remote before takeover. GitHub showed
+  the checkpoint commit as the branch merge base/ancestor, with one later
+  Praxis-state-only commit, and `work.continue` reported the checkpoint
+  recoverable and verified with status `contained-without-meaningful-change`.
+- Took over with `work.continue` under the successor's own OpenAI/ChatGPT
+  identity. Praxis created the successor execution and marked the predecessor
+  execution interrupted.
+- Wrote this section from the durable repository handoff without access to
+  the predecessor's machine or conversation.
