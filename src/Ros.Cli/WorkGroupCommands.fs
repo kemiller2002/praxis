@@ -2,19 +2,23 @@ namespace Ros.Cli
 
 open System
 open System.Globalization
+open Ros.Application.Planning
 open Ros.Contracts.Planning
 open Ros.Domain.Planning
 open Ros.Domain.Provenance
 open Ros.Infrastructure.Planning
 
-/// `work group create`: records a durable human-declared execution group
-/// (PRX-GRP-073 phase two). This module parses, delegates to
-/// `FileWorkGroupRepository` and renders; the declaration policy lives in
-/// `GroupDeclaration`. It never changes a member's lifecycle state.
+/// `work group create`: records a durable human-declared execution group;
+/// `work group show`: a read-only view of one (PRX-GRP-073 phase two). This
+/// module parses, delegates to `FileWorkGroupRepository` or the planner's
+/// read-only port, and renders; the policy lives in `GroupDeclaration` and
+/// `GroupView`. It never changes a member's lifecycle state.
 [<RequireQualifiedAccess>]
 module WorkGroupCommands =
     let usage =
         "work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP [--kind KIND] [--execution-repository REPOSITORY] [--cross-repository] [--shared-context TEXT]* [--architecture-note TEXT]* [--dry-run] [--json] [IDENTITY]"
+
+    let showUsage = "work group show GROUP-ID [--as-of TIMESTAMP] [--json]"
 
     let private identityFlags =
         set
@@ -175,5 +179,114 @@ module WorkGroupCommands =
                     1
                 | Ok outcome -> render (parsed.Switches.Contains "--json") outcome
         | _ ->
-            eprintfn "Usage: ros %s" usage
+            eprintfn "Usage: ros %s | %s" usage showUsage
             2
+
+    // ---- show -------------------------------------------------------------------
+
+    let private showLines (snapshot: PlanSnapshot) (view: GroupView) =
+        let entry = view.Declaration
+        let group = entry.Group
+        let kind = group.Kind |> Option.map GroupKind.code |> Option.defaultValue "unspecified"
+        let commit = snapshot.Commit |> Option.map (fun value -> value.Substring(0, min 12 value.Length)) |> Option.defaultValue "unknown"
+        let state (value: string option) = value |> Option.defaultValue "untracked"
+        let planning (value: PlanningWorkState option) = value |> Option.map PlanningWorkState.code |> Option.defaultValue "unknown"
+        let width = view.Members |> List.map (fun item -> item.WorkItem.Length) |> List.fold max 0
+        let names (values: string list) = String.Join(", ", values)
+
+        let memberLine (item: GroupMemberView) =
+            let waits = if item.WaitsOn.IsEmpty then "" else $"; waits on {names item.WaitsOn}"
+            let title = item.Title |> Option.map (fun value -> $"  {value}") |> Option.defaultValue ""
+            $"  {item.WorkItem.PadRight width}  recorded {state item.RecordedState}; planning {planning item.PlanningState}{waits}{title}"
+
+        let blockedLines (blocked: BlockedMember) =
+            let gates =
+                match blocked.GatesMembers, blocked.GatesOthers with
+                | [], [] -> "gates no pending work"
+                | members, [] -> $"gates members {names members}"
+                | [], others -> $"gates non-members {names others}"
+                | members, others -> $"gates members {names members}; non-members {names others}"
+
+            [ yield $"  {blocked.WorkItem} [{planning blocked.PlanningState}]: {gates}"
+              yield! blocked.Reasons |> List.map (fun reason -> $"    - {reason}") ]
+
+        let repository = group.ExecutionRepository |> Option.defaultValue "this repository"
+        let scope = if group.CrossRepository then "cross-repository" else "repository-local"
+
+        [ yield $"group {group.Id} ({GroupOrigin.code group.Origin}, {kind}); declared {entry.DeclaredAt} by {entry.DeclaredBy.Id}"
+          yield $"  executes:   {repository} ({scope})"
+          yield! group.SharedContext |> List.map (fun line -> $"  context:    {line}")
+          yield! group.ArchitectureNotes |> List.map (fun line -> $"  note:       {line}")
+          yield $"  planning:   {snapshot.Repository} at {commit}, as of {snapshot.PlannedAt}"
+          yield ""
+          yield $"Progress: {GroupView.progressStatement view.Progress}"
+          yield ""
+          yield "Members (own recorded state; planner classification):"
+          yield! view.Members |> List.map memberLine
+          yield ""
+          match view.Blocked with
+          | [] -> yield "Blocked: none"
+          | blocked ->
+              yield "Blocked:"
+              yield! blocked |> List.collect blockedLines
+          yield ""
+          yield "Read-only: nothing was written and no member's lifecycle state changed." ]
+
+    type private ShowOptions =
+        { Json: bool
+          AsOf: string option
+          Positional: string list
+          Unexpected: string list }
+
+    let rec private parseShow (options: ShowOptions) (arguments: string list) =
+        match arguments with
+        | [] -> options
+        | "--json" :: rest -> parseShow { options with Json = true } rest
+        | "--as-of" :: value :: rest when not (value.StartsWith "--") && options.AsOf.IsNone -> parseShow { options with AsOf = Some value } rest
+        | token :: rest when token.StartsWith "--" -> parseShow { options with Unexpected = options.Unexpected @ [ token ] } rest
+        | token :: rest -> parseShow { options with Positional = options.Positional @ [ token ] } rest
+
+    let private plannedAt (options: ShowOptions) : Result<string, string> =
+        match options.AsOf with
+        | None -> Ok(DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture))
+        | Some value when isTimestamp value -> Ok value
+        | Some value -> Error $"--as-of '{value}' is not a timestamp"
+
+    /// `work group show`: reads the store and the planner's read-only port;
+    /// writes nothing. Exit 1 for a group that is not declared.
+    let show (root: string) (version: string) (arguments: string list) : int =
+        let options = parseShow { Json = false; AsOf = None; Positional = []; Unexpected = [] } arguments
+
+        let usageError (message: string) =
+            eprintfn "ERROR %s" message
+            eprintfn "Usage: ros %s" showUsage
+            2
+
+        match options.Unexpected, options.Positional, plannedAt options with
+        | unexpected, _, _ when not unexpected.IsEmpty -> usageError $"unexpected argument(s): {String.Join(' ', unexpected)}"
+        | _, positional, _ when positional.Length <> 1 -> usageError "work group show requires exactly one group ID"
+        | _, _, Error message -> usageError message
+        | _, [ id ], Ok timestamp ->
+            let found =
+                WorkGroupStore.read root
+                |> Result.bind (fun stored ->
+                    match GroupView.find stored id with
+                    | None -> Ok None
+                    | Some entry ->
+                        PlanningOperations.analyze (FilePlanningRepository.create root None None) timestamp version
+                        |> Result.map (fun (input, analysis) ->
+                            Some(analysis.Snapshot, GroupView.project (GroupDeclaration.standing input.Queue input.Live) analysis entry)))
+
+            match found with
+            | Error message ->
+                eprintfn "ERROR %s" message
+                1
+            | Ok None ->
+                if options.Json then printf "%s" (WorkGroupJson.renderNotFound id WorkGroupStore.RelativePath)
+                eprintfn "ERROR group %s is not declared in %s (see 'work group create')" id WorkGroupStore.RelativePath
+                1
+            | Ok(Some(snapshot, view)) ->
+                if options.Json then printf "%s" (WorkGroupJson.renderView snapshot view)
+                else showLines snapshot view |> List.iter (printfn "%s")
+                0
+        | _ -> usageError "work group show requires exactly one group ID"

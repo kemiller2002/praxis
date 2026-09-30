@@ -1,0 +1,49 @@
+{
+  "schema": "ex-ros-2026-a021.session-metrics/1",
+  "label": "control-02",
+  "sessionId": "2ae4d92e-60c5-55aa-b916-2485d9d725de",
+  "transcript": "2ae4d92e-60c5-55aa-b916-2485d9d725de.jsonl",
+  "models": [
+    "claude-opus-5-5"
+  ],
+  "startedAt": "2026-09-30T12:16:05.056000+00:00",
+  "endedAt": "2026-09-30T12:36:51.095000+00:00",
+  "wallMs": 1246039,
+  "msToFirstCodeMutation": 338482,
+  "modelRequests": 55,
+  "tokens": {
+    "input": 110,
+    "output": 31094,
+    "cacheRead": 6981869,
+    "cacheCreation": 143622
+  },
+  "costUsd": null,
+  "toolCalls": {
+    "Bash": 54,
+    "Read": 1,
+    "Write": 1
+  },
+  "toolErrors": 3,
+  "fileReads": 37,
+  "distinctFilesRead": 22,
+  "repeatedReads": {
+    "src/Ros.Cli/PlanCommands.fs": 3,
+    "src/Ros.Domain/Planning/Graph.fs": 2,
+    "src/Ros.Domain/Planning/Grouping.fs": 3,
+    "src/Ros.Domain/Planning/Inventory.fs": 2,
+    "src/Ros.Domain/Planning/Model.fs": 3,
+    "tests/Ros.Tests/CheckpointCliTests.fs": 2,
+    "tests/Ros.Tests/WorkGroupTests.fs": 7
+  },
+  "governanceReads": {
+    "AGENTS.md": 1,
+    "requirements/PLANNING-WORK-GROUPS.md": 1
+  },
+  "searches": 30,
+  "fileWrites": 16,
+  "distinctFilesEdited": 1,
+  "builds": 10,
+  "testRuns": 4,
+  "compactions": 0,
+  "notes": "reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate"
+}

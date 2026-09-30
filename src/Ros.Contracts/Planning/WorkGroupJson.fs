@@ -101,3 +101,74 @@ module WorkGroupJson =
               "rejections", rejections |> List.map (GroupDeclarationRejection.message >> text) |> array
               "lifecycleChanged", JsonValue.Create false :> JsonNode ]
         |> render
+
+    let private optionalText (value: string option) : JsonNode =
+        value |> Option.map text |> Option.defaultValue null
+
+    let private texts (values: string list) = values |> List.map text |> array
+
+    let private planningStateNode (state: PlanningWorkState option) =
+        state |> Option.map PlanningWorkState.code |> optionalText
+
+    let private memberNode (view: GroupMemberView) : JsonNode =
+        record
+            [ "workItem", text view.WorkItem
+              "title", optionalText view.Title
+              "recordedState", optionalText view.RecordedState
+              "planningState", planningStateNode view.PlanningState
+              "blocked", JsonValue.Create(GroupView.isBlocked view) :> JsonNode
+              "blockReason", optionalText view.BlockReason
+              "waitsOn", texts view.WaitsOn ]
+
+    let private progressNode (progress: DeclaredGroupProgress) : JsonNode =
+        let count (value: int) = JsonValue.Create value :> JsonNode
+
+        record
+            [ "total", count progress.Total
+              "complete", count progress.Complete
+              "abandoned", count progress.Abandoned
+              "open", count progress.Open
+              "blocked", count progress.Blocked
+              "unknown", count progress.Unknown
+              "allComplete", JsonValue.Create(progress.Total > 0 && progress.Complete = progress.Total) :> JsonNode
+              "statement", text (GroupView.progressStatement progress) ]
+
+    let private blockedNode (blocked: BlockedMember) : JsonNode =
+        record
+            [ "workItem", text blocked.WorkItem
+              "planningState", planningStateNode blocked.PlanningState
+              "reasons", texts blocked.Reasons
+              "gatesMembers", texts blocked.GatesMembers
+              "gatesOthers", texts blocked.GatesOthers ]
+
+    /// The `work group show` result. Read-only: `lifecycleChanged` is always
+    /// false and nothing is written.
+    let renderView (snapshot: PlanSnapshot) (view: GroupView) : string =
+        record
+            [ "schema", text OutcomeSchema
+              "kind", text "work-group-show"
+              "status", text "found"
+              "planning",
+              record
+                  [ "repository", text snapshot.Repository
+                    "commit", optionalText snapshot.Commit
+                    "branch", optionalText snapshot.Branch
+                    "plannedAt", text snapshot.PlannedAt
+                    "plannerVersion", text snapshot.PlannerVersion ]
+              "group", entryNode view.Declaration
+              "members", view.Members |> List.map memberNode |> array
+              "progress", progressNode view.Progress
+              "blocked", view.Blocked |> List.map blockedNode |> array
+              "lifecycleChanged", JsonValue.Create false :> JsonNode ]
+        |> render
+
+    /// `work group show` for an ID that is not declared.
+    let renderNotFound (id: string) (path: string) : string =
+        record
+            [ "schema", text OutcomeSchema
+              "kind", text "work-group-show"
+              "status", text "not-found"
+              "path", text path
+              "groupId", text id
+              "lifecycleChanged", JsonValue.Create false :> JsonNode ]
+        |> render

@@ -335,6 +335,30 @@ or live work; a member that is complete or abandoned. It writes only
 unknown members); a member that completes after the group was declared is
 partial completion, not a finding.
 
+### `work group show`
+
+```
+ros work group show GROUP-ID [--as-of TIMESTAMP] [--json]
+```
+
+A read-only view of one group declared in `.ros/work/groups.json`
+(PRX-GRP-073 phase two, `PRAXIS-GROUP-02`): its kind, origin, who declared it
+and when, execution repository (and whether it is cross-repository), shared
+context and architecture notes; every member in declared order with its own
+recorded lifecycle state (live work first, then the backlog; `untracked` if
+Praxis cannot find it) beside the planner's own classification, and the open
+hard prerequisites it waits on; partial-completion progress, counting
+complete, abandoned, open, blocked and untracked members separately so the
+group never implies that every member succeeded (PRX-GRP-042); and each
+blocked member (recorded `blocked`, or planned `blocked`, `awaiting-human` or
+`awaiting-evidence`) with its reasons and the pending work it holds back,
+split into fellow members and other items. Planning state is computed through
+the planner's read-only port with the default configuration (`--as-of` sets
+the planning time). `--json` emits a `praxis.work-group/1.0.0` document with
+`kind` `work-group-show` and `status` `found`. A group that is not declared
+exits `1` (`status` `not-found` with `--json`); bad arguments exit `2`. The
+command never writes: no file, no event and no lifecycle state changes.
+
 ### `work reconcile`
 
 ```

@@ -10,9 +10,9 @@ open Ros.Domain.Provenance
 open Ros.Domain.Work
 open PlanningFixtures
 
-/// `work group create`: durable human-declared execution groups
-/// (PRAXIS-GROUP-01; requirements/PLANNING-WORK-GROUPS.md PRX-GRP-073 phase
-/// two).
+/// `work group create` and `work group show`: durable human-declared
+/// execution groups (PRAXIS-GROUP-01, PRAXIS-GROUP-02;
+/// requirements/PLANNING-WORK-GROUPS.md PRX-GRP-073 phase two).
 module WorkGroupTests =
     let private t name run = { Name = $"work group: {name}"; Run = run }
 
@@ -88,6 +88,9 @@ module WorkGroupTests =
 
     let private create (root: string) (extra: string list) =
         PraxisCli.run root (Some executor) ([ "work"; "group"; "create"; "--occurred-at"; PraxisCli.now () ] @ extra)
+
+    let private number (node: JsonNode) = node.GetValue<int>()
+    let private flag (node: JsonNode) = node.GetValue<bool>()
 
     let private groupsPath (root: string) = Path.Combine(root, ".ros", "work", "groups.json")
 
@@ -215,4 +218,116 @@ module WorkGroupTests =
               write root ".ros/work/groups.json" ((File.ReadAllText(groupsPath root)).Replace("\"TASK-A\"", "\"GONE-1\""))
               let broken = PraxisCli.run root None [ "validate"; "--json" ]
               Assert.equal 1 broken.ExitCode
-              Assert.isTrue (broken.Output.Contains "GONE-1") "an unknown stored member is a finding") ]
+              Assert.isTrue (broken.Output.Contains "GONE-1") "an unknown stored member is a finding")
+
+          // ---- work group show (PRAXIS-GROUP-02) -------------------------------
+
+          t "show: members keep their own recorded and planning states; progress is partial" (fun () ->
+              let showQueue =
+                  [ queued "TASK-A" "ready" "2026-09-01T00:00:00Z"
+                    { queued "TASK-B" "ready" "2026-09-02T00:00:00Z" with DependsOn = [ "TASK-X" ] }
+                    queued "TASK-C" "abandoned" "2026-09-03T00:00:00Z"
+                    queued "TASK-X" "ready" "2026-09-04T00:00:00Z"
+                    { queued "OUT-1" "ready" "2026-09-05T00:00:00Z" with DependsOn = [ "TASK-X" ] } ]
+
+              let showLive =
+                  [ live "TASK-D" LiveWorkState.Complete
+                    { live "TASK-X" LiveWorkState.Blocked with BlockReason = Some "the store format is undecided" } ]
+
+              let analysis = analyze showQueue showLive [] [] PlannerConfiguration.defaults
+              let entry = stored (declared "GROUP-CLI-001" [ "TASK-X"; "TASK-B"; "TASK-A"; "TASK-D"; "TASK-C"; "GONE-1" ])
+              let view = GroupView.project (GroupDeclaration.standing showQueue showLive) analysis entry
+              let byId id = view.Members |> List.find (fun item -> item.WorkItem = id)
+
+              Assert.equal [ "TASK-X"; "TASK-B"; "TASK-A"; "TASK-D"; "TASK-C"; "GONE-1" ] (view.Members |> List.map (fun item -> item.WorkItem))
+              Assert.equal (Some "blocked") (byId "TASK-X").RecordedState
+              Assert.equal (Some "ready") (byId "TASK-B").RecordedState
+              Assert.equal (Some PlanningWorkState.Ready) (byId "TASK-B").PlanningState
+              Assert.equal [ "TASK-X" ] (byId "TASK-B").WaitsOn
+              Assert.equal (Some "complete") (byId "TASK-D").RecordedState
+              Assert.equal (Some PlanningWorkState.Complete) (byId "TASK-D").PlanningState
+              Assert.equal None (byId "GONE-1").RecordedState
+              Assert.equal None (byId "GONE-1").PlanningState
+
+              Assert.equal
+                  { Total = 6; Complete = 1; Abandoned = 1; Open = 3; Blocked = 1; Unknown = 1 }
+                  view.Progress
+
+              Assert.isTrue ((GroupView.progressStatement view.Progress).StartsWith "1 of 6 complete, 1 abandoned") "abandoned is not counted as complete")
+
+          t "show: a blocked member names its reasons and the members and other items it gates" (fun () ->
+              let showQueue =
+                  [ { queued "TASK-B" "ready" "2026-09-02T00:00:00Z" with DependsOn = [ "TASK-X" ] }
+                    { queued "TASK-E" "ready" "2026-09-03T00:00:00Z" with DependsOn = [ "TASK-B" ] }
+                    queued "TASK-X" "ready" "2026-09-04T00:00:00Z"
+                    { queued "OUT-1" "ready" "2026-09-05T00:00:00Z" with DependsOn = [ "TASK-X" ] } ]
+
+              let showLive = [ { live "TASK-X" LiveWorkState.Blocked with BlockReason = Some "the store format is undecided" } ]
+              let analysis = analyze showQueue showLive [] [] PlannerConfiguration.defaults
+              let view = GroupView.project (GroupDeclaration.standing showQueue showLive) analysis (stored (declared "GROUP-CLI-001" [ "TASK-B"; "TASK-E"; "TASK-X" ]))
+
+              match view.Blocked with
+              | [ blocked ] ->
+                  Assert.equal "TASK-X" blocked.WorkItem
+                  Assert.equal [ "TASK-B"; "TASK-E" ] blocked.GatesMembers
+                  Assert.equal [ "OUT-1" ] blocked.GatesOthers
+                  Assert.isTrue (blocked.Reasons |> List.contains "the store format is undecided") "the recorded block reason is shown"
+              | other -> failwith $"expected exactly TASK-X blocked, found %A{other}")
+
+          t "show: the view JSON carries states, progress and blocked members, and never a lifecycle change" (fun () ->
+              let showQueue = [ queued "TASK-A" "ready" "2026-09-01T00:00:00Z" ]
+              let analysis = analyze showQueue [ live "TASK-D" LiveWorkState.Complete ] [] [] PlannerConfiguration.defaults
+              let view = GroupView.project (GroupDeclaration.standing showQueue [ live "TASK-D" LiveWorkState.Complete ]) analysis (stored (declared "GROUP-CLI-001" [ "TASK-A"; "TASK-D" ]))
+              let document = JsonNode.Parse(WorkGroupJson.renderView analysis.Snapshot view)
+              Assert.equal "work-group-show" (PraxisCli.text (document["kind"]))
+              Assert.equal "GROUP-CLI-001" (PraxisCli.text (document["group"]["id"]))
+              let members = document["members"].AsArray()
+              Assert.equal "ready" (PraxisCli.text (members.[0].["recordedState"]))
+              Assert.equal "complete" (PraxisCli.text (members.[1].["planningState"]))
+              Assert.equal 1 (number (document["progress"]["complete"]))
+              Assert.isTrue (not (flag (document["progress"]["allComplete"]))) "partial completion is not all complete"
+              Assert.isTrue (not (flag (document["lifecycleChanged"]))) "show changes no lifecycle state")
+
+          t "cli: show renders text and JSON, reflects a member completed later, and writes nothing" (fun () ->
+              let root = fixture ()
+
+              create root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--member"; "TASK-B"; "--execution-repository"; "fixture/repo"; "--architecture-note"; "one store"; "--shared-context"; "one CLI" ]
+              |> PraxisCli.ok
+              |> ignore
+
+              // TASK-B completes after the group was declared: partial completion.
+              write root ".ros/context/current.json" (contextJson.Replace("\"TASK-D\"", "\"TASK-B\""))
+              GitFixture.commitAll root "declare and complete" |> ignore
+              let tracked = [ ".ros/work/queue.json"; ".ros/context/current.json"; ".ros/work/groups.json" ]
+              let before = tracked |> List.map (hash root)
+
+              let shown = PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-001"; "--json" ] |> PraxisCli.ok
+              Assert.equal "found" (PraxisCli.text (shown.Json["status"]))
+              Assert.equal "fixture/repo" (PraxisCli.text (shown.Json["group"]["executionRepository"]))
+              let notes = (shown.Json["group"]["architectureNotes"]).AsArray()
+              Assert.equal "one store" (PraxisCli.text notes.[0])
+              let states = shown.Json["members"].AsArray() |> Seq.map (fun item -> PraxisCli.text (item["workItem"]), PraxisCli.text (item["recordedState"])) |> Seq.toList
+              Assert.equal [ "TASK-A", "ready"; "TASK-B", "complete" ] states
+              Assert.equal 1 (number (shown.Json["progress"]["complete"]))
+              Assert.equal 1 (number (shown.Json["progress"]["open"]))
+
+              let text = PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-001" ] |> PraxisCli.ok
+              Assert.isTrue (text.Output.Contains "1 of 2 complete") "text shows partial progress"
+              Assert.isTrue (text.Output.Contains "fixture/repo (repository-local)") "text names the execution repository"
+              Assert.isTrue (text.Output.Contains "note:       one store") "text shows architecture notes"
+
+              Assert.equal before (tracked |> List.map (hash root))
+              Assert.equal "" (GitFixture.git root [ "status"; "--porcelain" ]))
+
+          t "cli: show exits 1 for an undeclared group and 2 for bad arguments, writing nothing" (fun () ->
+              let root = fixture ()
+              let missing = PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-404"; "--json" ]
+              Assert.equal 1 missing.ExitCode
+              Assert.equal "not-found" (PraxisCli.text (missing.Json["status"]))
+              Assert.isTrue (missing.Error.Contains "GROUP-FIXTURE-404 is not declared") "the error names the group"
+              Assert.equal 1 (PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-404" ]).ExitCode
+              Assert.equal 2 (PraxisCli.run root None [ "work"; "group"; "show" ]).ExitCode
+              Assert.equal 2 (PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-001"; "--bogus" ]).ExitCode
+              Assert.equal 2 (PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-001"; "--as-of"; "yesterday" ]).ExitCode
+              Assert.isTrue (not (File.Exists(groupsPath root))) "show never creates the store"
+              Assert.equal "" (GitFixture.git root [ "status"; "--porcelain" ])) ]
