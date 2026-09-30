@@ -1,0 +1,385 @@
+# Group analysis: GROUP-PRAXIS-WORK-GROUP-001 (EX-ROS-2026-A021-R2, grouped arm)
+
+Written before any production-code mutation, as PRX-GRP-040 requires.
+Shared group infrastructure (PRX-GRP-043): this document is a group-level
+artifact; it is attributed to `PRAXIS-GROUP-01`, the member whose execution
+(`EXE-20260930T152919551Z-adec0f3f`) produced it, and claimed by no other
+member.
+
+- Replication: `EX-ROS-2026-A021-R2`, grouped arm; branch
+  `experiment/a021-r2-grouped`; baseline `8b4ffa392e93b19bf39f6672a608954c934cb815`.
+- Cohort: `PRAXIS-GROUP-01` (create), `-02` (show), `-03` (add), `-04`
+  (remove), `-05` (checkpoint). Phase two of
+  `requirements/PLANNING-WORK-GROUPS.md` (PRX-GRP-073).
+- Planner input read before writing:
+  `plan-explain-group-at-start.txt` (this directory; affinity high,
+  confidence high, required sequence 01 -> 02 -> 03 -> 04 -> 05, every pair
+  `conflict`, one sequential agent).
+
+## 1. Acceptance criteria, restated per member
+
+| Member | Acceptance criteria (verbatim intent) |
+| --- | --- |
+| 01 create | Record a declared group (ID, members, kind, execution repository, cross-repository flag, shared context) in Praxis state. A1 refuses unknown or terminal members; A2 refuses duplicate IDs; A3 never changes a member's lifecycle state; A4 the planner reads the stored declaration exactly as it reads `grouping.groups`; A5 `--dry-run` and `--json`; A6 `validate` checks stored groups. |
+| 02 show | Read-only view of one declared group: B1 members with their own recorded and planning states; B2 partial-completion progress; B3 blocked members and who they gate; B4 execution repository; B5 architecture notes; B6 text and `--json`; B7 unknown group exits 1; B8 never writes. |
+| 03 add | Add one work item: C1 refuses unknown/terminal items; C2 refuses items already present; C3 refuses an item whose execution repository differs unless the group is cross-repository; C4 records who added it (provenance); C5 member lifecycle untouched. |
+| 04 remove | Remove one member: E1 refuses non-members; E2 never changes the item's lifecycle state, evidence or attribution; E3 removing the last member is refused or explicit; E4 provenance recorded. |
+| 05 checkpoint | Record a group checkpoint (PRX-GRP-044): group ID, active/completed/remaining members, shared architectural decisions, branch and commit, next action. F1 the same durable-checkpoint verification as `work checkpoint`; F2 references members' own checkpoints and never replaces them; F3 no member claims another's changes (PRX-GRP-043). |
+
+## 2. Existing architecture that every member touches
+
+- **Planner model** (`src/Ros.Domain/Planning/Model.fs`): `DeclaredGroup`
+  (`Id`, `Members`, `Kind: GroupKind option`, `Origin: GroupOrigin`,
+  `SharedContext`, `ExecutionRepository`, `CrossRepository`,
+  `ArchitectureNotes`), `GroupKind`, `GroupOrigin`, and
+  `GroupingConfiguration.Groups`. Phase one reads declarations only from a
+  `--config` file (`PlanningJson.parseConfiguration`).
+- **Planner read port** (`Ros.Application.Planning.PlanningReadPort`,
+  `Ros.Infrastructure.Planning.FilePlanningRepository.create`): the only
+  way the planner sees repository state; it has no write operation.
+- **Grouping** (`src/Ros.Domain/Planning/Grouping.fs`): `Grouping.recommend`
+  turns declared groups into `WorkGroup`s whose members already carry
+  `LifecycleState`, `PlanningState`, `MemberStatus`, `GatedBy`, and whose
+  `Progress`, `ExecutionRepository` and `ArchitectureNotes` are computed.
+  Declared members are kept even when complete (partial completion).
+- **Praxis state**: `.ros/work/queue.json` (backlog: captured, ready,
+  blocked, abandoned, complete), `.ros/context/current.json` (live items:
+  ready, active, blocked, complete, abandoned; `latestCheckpoint`),
+  `.ros/events/events.jsonl` (content-addressed events). `.ros/work/**` is
+  excluded from meaningful paths by the default path filter.
+- **Durable checkpoint** (`src/Ros.Domain/Work/Checkpoint.fs`,
+  `src/Ros.Application/Work/Checkpoint.fs`, `src/Ros.Cli/CheckpointCommands.fs`):
+  `CheckpointObservation.candidate` gathers Git observations;
+  `CheckpointVerification.verify` checks text, work-item state and
+  execution, the Git invariant `local HEAD == remote branch head`, and a
+  clean meaningful working tree. The Git and tree checks are private helpers
+  inside `verify`.
+- **Provenance**: `Actor` (`Ros.Domain.Provenance`), serialised by
+  `ActorJson.node`; `ProvenanceCommands.withResolvedActor` resolves the
+  caller's identity for every mutating work command.
+- **Locking/persistence**: `RegistryLock.acquire root "work-protocol"`
+  serialises work-state mutations; `RegistryTransaction.writeAtomic` is a
+  temp-file-then-rename single-file write.
+- **Unified validation**: `computeUnifiedFindings` in
+  `src/Ros.Cli/Program.fs` concatenates contributors as `ArtifactFinding`s.
+- **CLI conventions**: mutating work commands take `--id` and a real
+  `--occurred-at`; `--json` prints one document with `command`,
+  `schemaVersion`, `status`; exit `2` for argument errors, `1` for refusals
+  and failures (`work checkpoint`); `work show ID` is positional.
+
+## 3. Common architecture
+
+One vertical slice, built once, extended by each member:
+
+```
+Ros.Domain.Work.WorkGroups        (pure)  stored-group model, admission rule,
+                                          membership changes, checkpoint shape,
+                                          validation, projection to DeclaredGroup
+Ros.Contracts.Work.WorkGroupJson  (pure)  parse/render groups.json and CLI JSON
+Ros.Infrastructure.Work.FileWorkGroupRepository
+                                          read/write .ros/work/groups.json,
+                                          read member facts (queue + context)
+Ros.Infrastructure.Planning.FilePlanningRepository
+                                          merges stored groups into
+                                          Configuration.Grouping.Groups
+Ros.Cli.WorkGroupCommands                 parse, compose, render
+                                          work group create|show|add|remove|checkpoint
+```
+
+The domain module is compiled after `Planning/Grouping.fs` (it needs
+`GroupKind`, `GroupOrigin`, `DeclaredGroup`), in namespace
+`Ros.Domain.Work`, file `src/Ros.Domain/Work/WorkGroups.fs`.
+
+## 4. Shared state model
+
+A single document, `.ros/work/groups.json`:
+
+```json
+{
+  "schemaVersion": "1.0.0",
+  "repository": "<ros.json repository id>",
+  "groups": [
+    {
+      "id": "GROUP-...",
+      "kind": "shared-api-surface",            // optional
+      "origin": "human-declared",
+      "executionRepository": "repository-operating-system",
+      "crossRepository": false,
+      "sharedContext": ["..."],
+      "architectureNotes": ["..."],
+      "members": ["PRAXIS-GROUP-01", "..."],   // current members, insertion order
+      "createdAt": "<occurred-at>",
+      "createdBy": { actor },
+      "history": [                             // append-only membership provenance
+        { "operation": "created", "at": "...", "actor": {..}, "members": [..], "reason": "..." },
+        { "operation": "member-added", "workItemId": "...", "at": "...", "actor": {..}, "reason": "..." },
+        { "operation": "member-removed", "workItemId": "...", "at": "...", "actor": {..}, "reason": "..." }
+      ],
+      "checkpoints": [                         // append-only group checkpoints (05)
+        { "checkpointId": "GCP-<sha256/24>", "recordedAt": "...", "actor": {..},
+          "summary": "...", "nextAction": "...", "decisions": ["..."],
+          "branch": "...", "commit": "<sha>", "remote": "origin", "remoteBranch": "...",
+          "activeMembers": [..], "completedMembers": [..], "remainingMembers": [..],
+          "memberCheckpoints": [ { "workItemId": "...", "checkpointId": "...|null", "commit": "...|null", "executionId": "...|null" } ] }
+      ]
+    }
+  ]
+}
+```
+
+Membership is a set of work-item IDs; a group never stores a member's
+state, evidence, paths or attribution (those stay with the member,
+PRX-GRP-041/043). The file lives under `.ros/work/`, so writing it is Praxis
+state, not a meaningful repository change.
+
+## 5. Shared invariants
+
+- I1 A group ID is unique in `groups.json` and matches
+  `^GROUP-[A-Z0-9]+(-[A-Z0-9]+)*$` (PRX-GRP-010).
+- I2 Every current member is a known work item (in the backlog queue or the
+  live context); members are distinct.
+- I3 Admission (create, add): a member must be known, not terminal
+  (`complete`/`abandoned` in either the queue or the live context), not
+  already a member, and execute in the group's execution repository unless
+  the group is cross-repository.
+- I4 A group has at least one member.
+- I5 No group command writes anything but `.ros/work/groups.json`; in
+  particular it never writes `queue.json`, `queue.md`, `current.json`,
+  `events.jsonl` or telemetry. Membership never changes lifecycle, evidence
+  or attribution (PRX-GRP-002/041/043).
+- I6 `history` and `checkpoints` are append-only; each entry names the actor
+  that caused it.
+- I7 A group checkpoint claims no paths and no member's work; it references
+  member checkpoints by ID only.
+- I8 Admission is checked once at the moment of admission. A member that
+  later completes stays a member (partial completion, PRX-GRP-042);
+  `validate` therefore checks I1, I2, I4 and record shape, never
+  "terminal member".
+
+## 6. Conflicting requirements and their resolution
+
+- R1 "Refuses terminal members" (01, 03) versus partial completion
+  (PRX-GRP-042) and 02's "partial-completion progress": admission-time rule
+  only (I8).
+- R2 03 needs "an item's execution repository", but Praxis state records no
+  per-item repository; the planner derives it from
+  `grouping.executionRepositories` in planner configuration. Resolution:
+  create and add accept the planner's own `--config FILE` and apply the same
+  mapping; an unmapped item executes in this repository (the planner's
+  `Derived` basis). The planner's text heuristic for "external" descriptions
+  is not used for refusal (it is inferred, low confidence; refusal needs
+  explicit evidence).
+- R3 04 "removing the last member is refused or explicit": refused (I4). A
+  zero-member group would be an empty planner declaration and an empty
+  checkpoint; dissolving a group is not in this cohort.
+- R4 05 "same durable-checkpoint verification as work checkpoint", but that
+  verification is keyed to one work item's state and execution. Resolution:
+  expose the Git-location and working-tree parts of
+  `CheckpointVerification` as one public function reused unchanged by
+  `verify` and by the group checkpoint; the work-item/execution part is
+  replaced by the group's own precondition (at least one non-terminal
+  member).
+- R5 01 "the planner reads the stored declaration exactly as it reads
+  grouping.groups" versus a `--config` file that declares the same group ID:
+  the explicit `--config` declaration wins for that invocation (it is the
+  caller's per-run input); stored groups with other IDs are appended. Order:
+  config groups, then stored groups in stored order (deterministic,
+  PRX-GRP-075).
+
+## 7. Dependency and order decisions
+
+Order: 01 -> 02 -> 03 -> 04 -> 05 (planner's required sequence, and the
+declared "Depends on"). 01 builds the store, model, admission rule, planner
+merge and validation; 02 reads through the planner; 03 and 04 reuse the
+admission rule and history model; 05 depends on 01 (store) and 02 (the same
+member-status projection names active/completed/remaining).
+
+## 8. Reusable abstractions (built once)
+
+- `StoredGroup` record and `WorkGroups.toDeclared : StoredGroup -> DeclaredGroup`
+  (the only planner projection; A4).
+- `MemberFacts` (known, recorded state, terminal, execution repository) read
+  once per command from queue + context (+ optional planner config).
+- `WorkGroups.admit` (I3) used by create and add.
+- `WorkGroups.create/addMember/removeMember/checkpoint`: pure functions
+  `... -> Result<StoredGroup, GroupRejection list>`.
+- `GroupRejection` union with stable `code`, `message`, `remedy` and
+  `isArgumentError` (mirrors `CheckpointRejection`).
+- `WorkGroups.validate : StoredGroupsDocument -> MemberFacts -> finding list`.
+- `WorkGroupJson`: one codec for the file, one command-envelope renderer.
+- `FileWorkGroupRepository.mutate`: lock `work-protocol`, read, apply a pure
+  transition, write atomically (or not at all for `--dry-run`).
+- Member status for show and checkpoint: `Grouping.recommend` over the
+  merged configuration (no second status model).
+
+## 9. Persistence strategy
+
+One file, one atomic rename per mutation (`RegistryTransaction.writeAtomic`),
+under the existing `work-protocol` lock so admission cannot race a
+lifecycle transition. `--dry-run` runs the same pipeline and skips only the
+write. A missing file means "no groups". Nothing is appended to
+`events.jsonl`: existing event readers, event-ID validation and the
+Node/F# differential tests stay untouched.
+
+## 10. Validation strategy
+
+`WorkGroups.validate` feeds `computeUnifiedFindings` with findings on path
+`.ros/work/groups.json`: malformed document, unsupported schema version,
+invalid or duplicate group ID, unknown kind/origin, empty group, duplicate
+member, unknown member, history/checkpoint entries missing actor or
+timestamp, checkpoint ID not matching its content, checkpoint commit not a
+full SHA. Each member extends the validator only for the record part it
+introduces (01: group and created history; 03/04: membership history; 05:
+checkpoints).
+
+## 11. JSON and output contracts
+
+Every command with `--json` prints exactly one document:
+
+```json
+{ "command": "work group <verb>", "schemaVersion": 1,
+  "status": "created|added|removed|recorded|dry-run|rejected|failed|shown",
+  "groupId": "GROUP-...", "group": { stored group }, "rejections": [ {"code","message","remedy"} ],
+  "failure": {"code","message"} }
+```
+
+`show --json` adds `members` (per member `workItemId`, `recordedState`,
+`planningState`, `status`, `gatedBy`), `progress`, `blocked` (member ->
+members it gates), `executionRepository`, `crossRepository`,
+`architectureNotes`, `sharedContext`, `latestCheckpoint`. Text output is
+line-oriented and states what was (not) written.
+
+## 12. Failure and exit-code conventions
+
+- `0` success (including `--dry-run` success and `show`).
+- `2` argument errors: missing/duplicate flags, invalid group ID or
+  work-item ID syntax, blank summary/next action, unknown kind, invalid
+  timestamp, unexpected arguments.
+- `1` refusals and failures: unknown/terminal/duplicate member, duplicate
+  group, unknown group (including `show`), non-member, last member,
+  repository mismatch, checkpoint durability rejections, persistence
+  failure.
+Rejection codes are stable kebab-case strings; durability rejections reuse
+`CheckpointRejection.code`.
+
+## 13. Compatibility
+
+- No existing file format changes; `groups.json` is new and optional.
+- Planner output is unchanged when no groups are stored (fingerprint
+  unchanged). With stored groups, the snapshot's grouping canonical form
+  includes them, as it already does for config declarations.
+- `CheckpointVerification.verify` keeps its behaviour; only a private helper
+  becomes public.
+- The Node library (`tools/ros_cli.mjs`) is not a CLI and is not extended;
+  differential tests do not cover `work group`.
+
+## 14. Planner integration
+
+`FilePlanningRepository.create` reads `groups.json` and returns
+`Configuration` with `Grouping.Groups = configGroups @ storedNotShadowed`
+via a pure `WorkGroups.mergeInto`. All plan commands (`groups`,
+`explain-group`, `simulate --groups`, `compare --groups`) and `work group
+show` therefore see stored groups exactly as `grouping.groups`. The planner
+port stays read-only.
+
+## 15. Checkpoint architecture
+
+`work group checkpoint --id GROUP --occurred-at T --summary S --next-action N
+[--decision D]...`: under the `work-protocol` lock, observe Git through the
+same `CheckpointObservation.candidate` and verify with the shared
+`CheckpointVerification.durableLocation` (HEAD == upstream remote head,
+clean meaningful tree, non-blank text). Member lists come from
+`Grouping.recommend` statuses: completed = `complete`, active =
+`in-progress`, remaining = everything not complete. `memberCheckpoints`
+copies each member's `latestCheckpoint` ID/commit/execution from the live
+context (or null) — references, never copies of their paths. The group
+checkpoint is appended to the group's `checkpoints`; no member's
+`latestCheckpoint`, event or telemetry is written.
+
+## 16. Attribution and provenance implications
+
+- Each member is started, checkpointed and completed under its own `work`
+  lifecycle; each commit is prefixed with the member that owns it.
+- Shared group infrastructure (the domain module, codec, repository, planner
+  merge, CLI dispatcher, validator hook and this analysis) is attributed to
+  `PRAXIS-GROUP-01`, whose acceptance criteria require it; commits say
+  "shared group infrastructure". Later members extend it in their own
+  commits.
+- Group records carry the resolved `Actor` on every history entry and
+  checkpoint (C4, E4); they never carry paths.
+- The group checkpoint (05) references member checkpoints, never claims
+  their commits (F2, F3); `attributablePaths` is not called for groups.
+
+## 17. Common tests
+
+One fixture set in `tests/Ros.Tests/WorkGroupTests.fs`: pure-domain tests
+(admission, transitions, projection, validation, checkpoint content ID) and
+CLI tests using `PraxisCli.installedRepository` (bare remote, pushed
+branch). A shared helper asserts that `queue.json`, `current.json` and
+`events.jsonl` are byte-identical before and after each group command (A3,
+C5, E2, B8). Each member adds its own cases to the same file.
+
+## 18. Anticipated duplication if implemented separately
+
+- Five parsers of the group record (or five different stores: config file
+  edits, events, per-group files).
+- Two admission rules (create and add) drifting on "terminal" and
+  "repository".
+- A second member-status model in show and checkpoint beside the planner's
+  `MemberStatus`.
+- Two checkpoint verifiers (copying the Git invariant for groups).
+- Several JSON envelopes and exit-code conventions across five commands.
+- Repeated provenance shapes for created/added/removed entries.
+
+## 19. Risks created by grouping
+
+- Premature completion: shared infrastructure written for 01 makes 02..05
+  look nearly done; each member is completed only after its own command,
+  tests and acceptance criteria pass (no pre-completion).
+- Attribution laundering: 01's commits carry shared code that later members
+  use; mitigated by labelling and by each member committing its own
+  extension.
+- Context pressure: one long execution; mitigated by this document and
+  checkpoints after each milestone.
+- Over-design: building abstractions for hypothetical needs; kept to what
+  the five acceptance lists require.
+- A defect in the shared model propagates to all five commands; mitigated by
+  domain tests before CLI tests.
+
+## 20. Decisions later implementation must obey
+
+- **D1** One store: `.ros/work/groups.json` (§4), written only by
+  `FileWorkGroupRepository` under the `work-protocol` lock with one atomic
+  write; missing file = no groups.
+- **D2** One domain module `Ros.Domain.Work.WorkGroups` of pure functions;
+  CLI and infrastructure make no membership decisions.
+- **D3** One admission rule (I3) shared by create and add; terminal means
+  `complete` or `abandoned` in the queue or the live context.
+- **D4** An item's execution repository is its
+  `grouping.executionRepositories` entry from an optional `--config FILE`
+  (planner configuration format), else this repository's ID. A group's
+  execution repository defaults to this repository's ID.
+- **D5** Group IDs match `^GROUP-[A-Z0-9]+(-[A-Z0-9]+)*$` and are unique.
+- **D6** `WorkGroups.toDeclared` is the only projection to the planner;
+  `origin` is always `human-declared` for commands in this cohort. Merge
+  order: config groups first; a stored group whose ID a config group already
+  declares is shadowed for that invocation.
+- **D7** Group state never duplicates member state; show and checkpoint
+  derive member status from `Grouping.recommend` over the merged
+  configuration.
+- **D8** Removing the last member is refused (`last-member`); membership
+  history is append-only with actor, timestamp and optional reason.
+- **D9** Group checkpoint verification reuses the extracted
+  `CheckpointVerification.durableLocation`; it records references to member
+  checkpoints only and claims no paths.
+- **D10** CLI contract: `work group create|add|remove|checkpoint --id GROUP
+  ... --occurred-at T [--json]`; `work group show GROUP [--json]`;
+  `create/add/remove` also take `--dry-run`; create/add/show take
+  `--config FILE`. Exit codes per §12; JSON envelope per §11.
+- **D11** Group commands never write queue, context, events or telemetry;
+  every CLI test asserts it.
+- **D12** Shared group infrastructure is attributed to `PRAXIS-GROUP-01`
+  and labelled so in commit messages; every other change is committed under
+  the member that needs it.
+- **D13** Validation findings for groups use path `.ros/work/groups.json`
+  and never flag a member only for having become terminal after admission.

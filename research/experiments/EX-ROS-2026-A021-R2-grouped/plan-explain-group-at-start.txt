@@ -1,0 +1,119 @@
+Repository repository-operating-system at 8b4ffa392e93 (experiment/a021-r2-grouped); planned 2026-09-30T15:26:13.087Z by planner 3.6.0
+Work-state fingerprint aad6d72c6fbc43f3
+Advisory shadow plan: nothing was started, completed, reprioritized or otherwise changed. No single schedule is optimal across cost, duration and collision risk. The frontier lists the non-dominated alternatives; choose the tradeoff that matters.
+
+GROUP-PRAXIS-WORK-GROUP-001
+Area: one declared-group record in Praxis state, read by the planner as grouping.groups (shared-api-surface, human-declared); executes in repository-operating-system
+Members: 5 (0 of 5 complete; each member completes on its own evidence and the group never implies that every member succeeded (PRX-GRP-042))
+  PRAXIS-GROUP-01 [runnable, ready] high: declared a member of GROUP-PRAXIS-WORK-GROUP-001 (human-declared)
+  PRAXIS-GROUP-02 [runnable, ready] high: declared a member of GROUP-PRAXIS-WORK-GROUP-001 (human-declared)
+  PRAXIS-GROUP-03 [runnable, ready] high: declared a member of GROUP-PRAXIS-WORK-GROUP-001 (human-declared)
+  PRAXIS-GROUP-04 [runnable, ready] high: declared a member of GROUP-PRAXIS-WORK-GROUP-001 (human-declared)
+  PRAXIS-GROUP-05 [runnable, ready] high: declared a member of GROUP-PRAXIS-WORK-GROUP-001 (human-declared)
+Affinity: high; confidence high
+Why grouped:
+  - 5/5 declared together in GROUP-PRAXIS-WORK-GROUP-001 [explicit]
+  - 5/5 same area 'cli' [explicit]
+  - 5/5 same area 'work-group' [explicit]
+  - 5/5 both cite requirement PRX-GRP-073 [derived]
+  - 5/5 both declare path src/Ros.Cli [explicit]
+  - 5/5 both declare path src/Ros.Contracts/Work [explicit]
+Required sequence: PRAXIS-GROUP-01 -> PRAXIS-GROUP-02 -> PRAXIS-GROUP-03 -> PRAXIS-GROUP-04 -> PRAXIS-GROUP-05
+Estimated context reuse: unknown (5 independent context acquisitions -> 1)
+Collision risk: conflict; parallel-safe: False
+Recommended execution: one sequential agent
+  - one reasoning owner by default (PRX-GRP-063); high affinity usually means shared files, so one warmed agent keeps one design
+  - members depend on each other, so their order is fixed
+  - intra-group collision risk is conflict: parallel subtasks are not proven independent
+
+Why are these items together?
+  - 5/5 declared together in GROUP-PRAXIS-WORK-GROUP-001 [explicit]
+  - 5/5 same area 'cli' [explicit]
+  - 5/5 same area 'work-group' [explicit]
+  - 5/5 both cite requirement PRX-GRP-073 [derived]
+  - 5/5 both declare path src/Ros.Cli [explicit]
+  - 5/5 both declare path src/Ros.Contracts/Work [explicit]
+  - 5/5 both declare path src/Ros.Domain/Work [explicit]
+  - 5/5 same ID family PRAXIS-GROUP [inferred]
+  - 4/5 similar titles (declared, group) [inferred]
+  - 3/5 similar titles (declared, group, member) [inferred]
+  - 2/5 PRAXIS-GROUP-02 depends on PRAXIS-GROUP-01 (inferred) [inferred]
+  - 2/5 PRAXIS-GROUP-03 depends on PRAXIS-GROUP-01 (inferred) [inferred]
+  - 2/5 PRAXIS-GROUP-04 depends on PRAXIS-GROUP-01 (inferred) [inferred]
+  - 2/5 PRAXIS-GROUP-05 depends on PRAXIS-GROUP-01 (inferred) [inferred]
+  - 2/5 PRAXIS-GROUP-05 depends on PRAXIS-GROUP-02 (inferred) [inferred]
+
+Why were other related items excluded?
+  - PRAXIS-PLAN-01 (medium): complete: nothing remains to execute; strongest link: medium: same area 'cli'
+  - PRAXIS-WORK-ABANDON-01 (medium): complete: nothing remains to execute; strongest link: medium: same area 'cli'
+  - WI-0064 (medium): complete: nothing remains to execute; strongest link: medium: same area 'cli'
+  - PRAXIS-SITE-13 (low): complete: nothing remains to execute; strongest link: low: similar titles (create, execution)
+
+What evidence supports the group?
+  - [explicit] 5/5 declared together in GROUP-PRAXIS-WORK-GROUP-001 [explicit]
+  - [explicit] 5/5 same area 'cli' [explicit]
+  - [explicit] 5/5 same area 'work-group' [explicit]
+  - [derived] 5/5 both cite requirement PRX-GRP-073 [derived]
+  - [explicit] 5/5 both declare path src/Ros.Cli [explicit]
+  - [explicit] 5/5 both declare path src/Ros.Contracts/Work [explicit]
+  - [explicit] 5/5 both declare path src/Ros.Domain/Work [explicit]
+  - [inferred] 5/5 same ID family PRAXIS-GROUP [inferred]
+  - [inferred] 4/5 similar titles (declared, group) [inferred]
+  - [inferred] 3/5 similar titles (declared, group, member) [inferred]
+  - [inferred] 2/5 PRAXIS-GROUP-02 depends on PRAXIS-GROUP-01 (inferred) [inferred]
+  - [inferred] 2/5 PRAXIS-GROUP-03 depends on PRAXIS-GROUP-01 (inferred) [inferred]
+  - [inferred] 2/5 PRAXIS-GROUP-04 depends on PRAXIS-GROUP-01 (inferred) [inferred]
+  - [inferred] 2/5 PRAXIS-GROUP-05 depends on PRAXIS-GROUP-01 (inferred) [inferred]
+  - [inferred] 2/5 PRAXIS-GROUP-05 depends on PRAXIS-GROUP-02 (inferred) [inferred]
+
+What is inferred?
+  - 5/5 same ID family PRAXIS-GROUP [inferred] (confidence low)
+  - 4/5 similar titles (declared, group) [inferred] (confidence low)
+  - 3/5 similar titles (declared, group, member) [inferred] (confidence low)
+  - 2/5 PRAXIS-GROUP-02 depends on PRAXIS-GROUP-01 (inferred) [inferred] (confidence low)
+  - 2/5 PRAXIS-GROUP-03 depends on PRAXIS-GROUP-01 (inferred) [inferred] (confidence low)
+  - 2/5 PRAXIS-GROUP-04 depends on PRAXIS-GROUP-01 (inferred) [inferred] (confidence low)
+  - 2/5 PRAXIS-GROUP-05 depends on PRAXIS-GROUP-01 (inferred) [inferred] (confidence low)
+  - 2/5 PRAXIS-GROUP-05 depends on PRAXIS-GROUP-02 (inferred) [inferred] (confidence low)
+
+What is unknown?
+  - grouped: coldStart + sharedContext + sum(memberIncremental) = 1 context acquisition; independent: 5 x (coldStart + itemCost) = 5 acquisitions; context reuse is unmeasured: no telemetry yet records repeated reads, repeated searches or time to first productive change, so savings in tokens or time are unknown (PRX-GRP-061)
+  - historical co-change is not observable: telemetry does not yet link executions to the files they changed per work item
+  - monetary cost is unknown
+
+What architecture is shared?
+  - one declared-group record in Praxis state, read by the planner as grouping.groups
+  - one CLI command family: praxis work group create|show|add|remove|checkpoint
+  - PRX-GRP-041..044: per-member identity, attribution, partial completion and checkpoints
+
+What dependency order exists?
+  - required sequence: PRAXIS-GROUP-01 -> PRAXIS-GROUP-02 -> PRAXIS-GROUP-03 -> PRAXIS-GROUP-04 -> PRAXIS-GROUP-05
+
+What collision risk exists?
+  - intra-group collision risk: conflict; parallel-safe: False
+  - PRAXIS-GROUP-01 x PRAXIS-GROUP-02: conflict (both declare path src/Ros.Cli; both declare path src/Ros.Contracts/Work; both declare path src/Ros.Domain/Work; both touch area 'cli'; both touch area 'work-group'; both mutate shared Praxis state files (PRAXIS-STATE-MERGE-01))
+  - PRAXIS-GROUP-01 x PRAXIS-GROUP-03: conflict (both declare path src/Ros.Cli; both declare path src/Ros.Contracts/Work; both declare path src/Ros.Domain/Work; both touch area 'cli'; both touch area 'work-group'; both mutate shared Praxis state files (PRAXIS-STATE-MERGE-01))
+  - PRAXIS-GROUP-01 x PRAXIS-GROUP-04: conflict (both declare path src/Ros.Cli; both declare path src/Ros.Contracts/Work; both declare path src/Ros.Domain/Work; both touch area 'cli'; both touch area 'work-group'; both mutate shared Praxis state files (PRAXIS-STATE-MERGE-01))
+  - PRAXIS-GROUP-01 x PRAXIS-GROUP-05: conflict (both declare path src/Ros.Cli; both declare path src/Ros.Contracts/Work; both declare path src/Ros.Domain/Work; both touch area 'cli'; both touch area 'work-group'; both mutate shared Praxis state files (PRAXIS-STATE-MERGE-01))
+  - PRAXIS-GROUP-02 x PRAXIS-GROUP-03: conflict (both declare path src/Ros.Cli; both declare path src/Ros.Contracts/Work; both declare path src/Ros.Domain/Work; both touch area 'cli'; both touch area 'work-group'; both mutate shared Praxis state files (PRAXIS-STATE-MERGE-01))
+  - PRAXIS-GROUP-02 x PRAXIS-GROUP-04: conflict (both declare path src/Ros.Cli; both declare path src/Ros.Contracts/Work; both declare path src/Ros.Domain/Work; both touch area 'cli'; both touch area 'work-group'; both mutate shared Praxis state files (PRAXIS-STATE-MERGE-01))
+  - PRAXIS-GROUP-02 x PRAXIS-GROUP-05: conflict (both declare path src/Ros.Cli; both declare path src/Ros.Contracts/Work; both declare path src/Ros.Domain/Work; both touch area 'cli'; both touch area 'work-group'; both mutate shared Praxis state files (PRAXIS-STATE-MERGE-01))
+  - PRAXIS-GROUP-03 x PRAXIS-GROUP-04: conflict (both declare path src/Ros.Cli; both declare path src/Ros.Contracts/Work; both declare path src/Ros.Domain/Work; both touch area 'cli'; both touch area 'work-group'; both mutate shared Praxis state files (PRAXIS-STATE-MERGE-01))
+  - PRAXIS-GROUP-03 x PRAXIS-GROUP-05: conflict (both declare path src/Ros.Cli; both declare path src/Ros.Contracts/Work; both declare path src/Ros.Domain/Work; both touch area 'cli'; both touch area 'work-group'; both mutate shared Praxis state files (PRAXIS-STATE-MERGE-01))
+  - PRAXIS-GROUP-04 x PRAXIS-GROUP-05: conflict (both declare path src/Ros.Cli; both declare path src/Ros.Contracts/Work; both declare path src/Ros.Domain/Work; both touch area 'cli'; both touch area 'work-group'; both mutate shared Praxis state files (PRAXIS-STATE-MERGE-01))
+  - no dependency and cross-group collision risk elevated is admitted by the accept-elevated policy; they may run concurrently
+  - no dependency and cross-group collision risk elevated is admitted by the accept-elevated policy; they may run concurrently
+
+Why one agent versus several?
+  - recommended execution: one-sequential-agent
+  - one reasoning owner by default (PRX-GRP-063); high affinity usually means shared files, so one warmed agent keeps one design
+  - members depend on each other, so their order is fixed
+  - intra-group collision risk is conflict: parallel subtasks are not proven independent
+
+What evidence would change the recommendation?
+  - a human declaration (grouping.groups) naming these or other items would replace this recommendation
+  - declared paths (planner configuration 'areas') would turn tag-level evidence into file-level evidence and change both affinity and collision risk
+  - context-pressure evidence from a grouped execution of these members would split the group
+  - a member losing its shared evidence (tag, requirement, dependency) would drop it below the medium cohesion threshold
+  - proving member boundaries independent (collision-safe) would allow parallel subtasks under one owner
+  - measured context reuse (repeated reads, time to first productive change) would replace 'unknown' savings with evidence
