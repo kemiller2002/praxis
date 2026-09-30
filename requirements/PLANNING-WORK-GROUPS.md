@@ -1,6 +1,6 @@
 # Praxis work grouping and planner experiment requirements
 
-Status: **Proposed** (phase one, read-only: `WI-0064`). Extends
+Status: **Accepted** (phase one, read-only: `WI-0064`; accepted by the repository owner, `PRAXIS-PLAN-03`). Extends
 [`PLANNING-OPTIMIZATION.md`](PLANNING-OPTIMIZATION.md) and `DF-ROS-2026-A046`.
 Design and requirement status: [`docs/planning.md`](../docs/planning.md)
 ("Work groups"). Experiment protocol: `EX-ROS-2026-A021`; baseline: `EV-ROS-2026-A059`; decision: `DF-ROS-2026-A047`.

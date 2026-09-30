@@ -1,7 +1,7 @@
 ---
 id: DF-ROS-2026-A047
 title: Work groups are advisory, evidence-based recommendations over unchanged work items; grouped execution waits for experimental evidence
-status: review
+status: accepted
 version: 1.0.0
 owners:
   - repository-governance
@@ -32,6 +32,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "WI-0064: evidence-based work groups and the frozen grouping experiment"
+    EXE-20260930T112849252Z-4c58aae8:
+      operations: [modified]
+      at: 2026-09-30T11:34:14.614Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PLAN-03: status review -> accepted on the repository owner's explicit approval of all PR #126 recommendations (the owner approved; this agent only recorded it)"
 ---
 
 # Context

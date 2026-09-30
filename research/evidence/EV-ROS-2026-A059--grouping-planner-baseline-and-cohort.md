@@ -1,7 +1,7 @@
 ---
 id: EV-ROS-2026-A059
 title: "Work-group planner baseline on Praxis: no pre-existing cohort, a captured phase-two cohort, and frozen predictions for EX-ROS-2026-A021"
-status: review
+status: accepted
 version: 1.0.0
 owners:
   - repository-governance
@@ -29,6 +29,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "WI-0064: evidence-based work groups and the frozen grouping experiment"
+    EXE-20260930T112849252Z-4c58aae8:
+      operations: [modified]
+      at: 2026-09-30T11:34:15.195Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PLAN-03: status review -> accepted on the repository owner's explicit approval of all PR #126 recommendations (the owner approved; this agent only recorded it)"
 ---
 
 # Work-group planner baseline

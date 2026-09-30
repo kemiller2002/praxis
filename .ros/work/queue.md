@@ -54,15 +54,15 @@
 | PRAXIS-CONT-11-SEGMENTATION | Effective-current telemetry segmentation and continuity proof gaps | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-12 | work checkpoint attributes every meaningful path since the previous checkpoint to the checkpointing item, regardless of which work item produced it | complete | continuity, gh-90 | medium |
 | PRAXIS-DIST-NATIVE-DOTNET-TOOL | Retire npm distribution; ship native bundles and a .NET global tool | complete | distribution | high |
-| PRAXIS-GROUP-01 | praxis work group create: durable human-declared execution group | captured | work-group, cli | low |
-| PRAXIS-GROUP-02 | praxis work group show: a declared group with member states and progress | captured | work-group, cli | low |
-| PRAXIS-GROUP-03 | praxis work group add: add a member to a declared group | captured | work-group, cli | low |
-| PRAXIS-GROUP-04 | praxis work group remove: remove a member from a declared group | captured | work-group, cli | low |
-| PRAXIS-GROUP-05 | praxis work group checkpoint: a group checkpoint over members' own checkpoints | captured | work-group, cli | low |
+| PRAXIS-GROUP-01 | praxis work group create: durable human-declared execution group | ready | work-group, cli | low |
+| PRAXIS-GROUP-02 | praxis work group show: a declared group with member states and progress | ready | work-group, cli | low |
+| PRAXIS-GROUP-03 | praxis work group add: add a member to a declared group | ready | work-group, cli | low |
+| PRAXIS-GROUP-04 | praxis work group remove: remove a member from a declared group | ready | work-group, cli | low |
+| PRAXIS-GROUP-05 | praxis work group checkpoint: a group checkpoint over members' own checkpoints | ready | work-group, cli | low |
 | PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | captured | rename, gh-90 | low |
 | PRAXIS-PLAN-01 | Deterministic shadow planner: praxis plan analyze/simulate/compare/explain (PRX-PLAN-001..182) | complete | planning, architecture, cli | high |
 | PRAXIS-PLAN-02 | Accept planner decision DF-ROS-2026-A046 on the owner's approval | complete | planning, governance | medium |
-| PRAXIS-PLAN-03 | Accept DF-ROS-2026-A047 and triage the EX-ROS-2026-A021 cohort on the owner's approval | ready | planning, governance | medium |
+| PRAXIS-PLAN-03 | Accept DF-ROS-2026-A047 and triage the EX-ROS-2026-A021 cohort on the owner's approval | active | planning, governance | medium |
 | PRAXIS-PLAN-EXP-01 | Run grouping experiment EX-ROS-2026-A021: control arm, grouped arm, blind evaluation, telemetry comparison | captured | planning, experiment | medium |
 | PRAXIS-RELEASE-BUMP-WORKFLOW | Release workflow: one-click version bump that publishes | complete | release | high |
 | PRAXIS-REMOTE-01 | Remote protocol v1 contract: schemas, typed domain model, validation, fingerprint, decision order | complete | remote-execution, gh-90 | high |

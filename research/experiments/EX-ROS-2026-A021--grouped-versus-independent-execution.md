@@ -29,6 +29,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "WI-0064: evidence-based work groups and the frozen grouping experiment"
+    EXE-20260930T112849252Z-4c58aae8:
+      operations: [modified]
+      at: 2026-09-30T11:34:32.422Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PLAN-03: record the owner's approval and cohort triage against the experiment gate"
 ---
 
 # Experiment
@@ -56,6 +66,11 @@ did the read-only planner predict the scheduling facts correctly?
    seven agent sessions: five control, one grouped, one evaluator);
 3. the owner triaging `PRAXIS-GROUP-01..05` from `captured` to `ready`
    (their acceptance criteria are already in their descriptions).
+
+Gate record: on 2026-09-30 the repository owner approved all recommendations
+of PR #126, including this cohort and the cost of the arms (condition 2), and
+`PRAXIS-GROUP-01..05` were triaged to `ready` (condition 3), both recorded
+under `PRAXIS-PLAN-03`. Condition 1 is met when PR #126 merges.
 
 Nothing in this protocol may change after an arm starts except to record
 what happened. Deviations are recorded, never silently corrected.
