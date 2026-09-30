@@ -279,6 +279,17 @@ Run `praxis --help` for the full argument list, and see
 [`work-adapter-contract.md`](work-adapter-contract.md) and
 [`agent-provenance.md`](agent-provenance.md) for what they mean.
 
+`praxis telemetry adapters` lists the ingest adapters. Besides production's
+catalog it includes the F#-only `anthropic-claude-session`, which derives
+session metrics (repeated and governance reads, time to first code change,
+active time, requests, tool calls, compactions, tokens) from a Claude Code
+transcript: `praxis telemetry ingest ID --adapter anthropic-claude-session
+--input SESSION.jsonl`. Platform-reported cost is recorded with `praxis telemetry
+record ID --metric cost.execution_total --value N --currency USD --quality
+observed`; `praxis plan` reads both (see
+[`development-telemetry.md`](development-telemetry.md) and
+[`planning.md`](planning.md)).
+
 ### `plan`
 
 ```
@@ -381,6 +392,86 @@ telemetry" in [`development-telemetry.md`](development-telemetry.md).
   `--unrecoverable-reason`.
 
 See "Durable checkpoints and continuity" in [`work-protocol.md`](work-protocol.md).
+
+### `work group`
+
+```
+ros work group show GROUP-ID [--config FILE] [--json]
+ros work group add    --group GROUP-ID --member ID --occurred-at TIMESTAMP [--config FILE]
+                      [--reason TEXT] [--dry-run] [--json] [IDENTITY]
+ros work group remove --group GROUP-ID --member ID --occurred-at TIMESTAMP [--allow-empty]
+                      [--reason TEXT] [--dry-run] [--json] [IDENTITY]
+ros work group checkpoint --group GROUP-ID --occurred-at TIMESTAMP --summary TEXT
+                      --next-action TEXT [--decision TEXT]* [--dry-run] [--json] [IDENTITY]
+ros work group create --group GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP
+                      [--kind KIND] [--origin ORIGIN] [--shared-context TEXT]*
+                      [--architecture-note TEXT]* [--execution-repository NAME]
+                      [--cross-repository] [--config FILE] [--reason TEXT]
+                      [--dry-run] [--json] [IDENTITY]
+```
+
+Durable execution groups (PRX-GRP-073, phase two; `PRAXIS-GROUP-01..05`),
+recorded in `.ros/work/groups.json`. Group commands write that file and
+nothing else: membership never changes a member's lifecycle state, evidence,
+attribution, telemetry or checkpoints. `plan` merges stored groups into
+`grouping.groups`, so a stored group is read exactly as the same declaration
+in planner configuration; a group that `--config` also declares keeps its
+configured form. `validate` checks stored groups (readable records, unique
+IDs, recorded members, no repeated member, a history that begins with the
+creation, and no empty group without an explicit empty removal) and
+re-validates every stored group checkpoint (local commit equals the recorded
+remote commit, summary and next action present, each member under one
+standing, and every referenced member checkpoint is one that member itself
+recorded).
+
+**`work group create`** declares a group. Group IDs are
+`GROUP-<AREA>-<SEQUENCE>` in upper case. Every member must be a recorded work
+item (queue or live context) that is not `complete` or `abandoned`, named
+once, and must execute in the group's repository (`--execution-repository`,
+default this repository) unless `--cross-repository` is given; an item's
+repository comes from the planner's own rule (`Grouping.executionLocation`):
+its `grouping.executionRepositories` entry in `--config`, else an unknown
+external repository when its description names one, else this repository. `--kind` and `--origin` take the planner's codes (default
+origin `human-declared`). The creation is recorded with the resolved actor,
+`--occurred-at` and `--reason`. Every problem is reported together and nothing
+is written: invalid arguments exit `2`, refusals (unknown, terminal or
+foreign-repository member, duplicate group) exit `1`. `--dry-run` shows the
+group without writing it.
+
+**`work group add`** adds one member by the same join rule as `create`
+(recorded, non-terminal, same execution repository unless the group is
+cross-repository) and refuses an item that is already a member or a group
+that is not recorded. The history entry records who added it (resolved
+actor), when and why. The member's own record is untouched.
+
+**`work group remove`** removes one member, whatever its state, and refuses
+an item that is not a member. Removing the last member is refused unless
+`--allow-empty` is given; the removal is then recorded as `explicitEmpty` and
+`validate` accepts the empty group. The history entry records who removed it.
+The item's lifecycle state, evidence and attribution are untouched.
+
+**`work group checkpoint`** records a group checkpoint (PRX-GRP-044) after an
+architectural or implementation milestone: the completed, active, blocked,
+remaining and abandoned members, shared decisions (`--decision`, repeatable),
+summary and next action, and the branch and commit. It requires the same
+durable-checkpoint verification as `work checkpoint` (local HEAD equals its
+upstream remote head, read from the remote itself, and no meaningful
+uncommitted change; the same rejection codes) and the same ownership rule: at
+least one member must be active (`no-active-member`) and at least one active
+member's execution must resolve to the caller, as `work checkpoint` resolves
+it (`no-own-execution`). It is refused otherwise, with exit `1`. It
+references each member's own latest durable checkpoint by ID and commit and
+never writes, replaces or supersedes one; it records no paths and no
+execution, so no member claims another's changes (PRX-GRP-043). `work group
+show` prints the latest group checkpoint for later member executions.
+
+**`work group show`** is read-only (no lock, no write): the group's
+declaration, each member's own recorded state and planning state (from the
+planner's analysis; `--config` is passed through), partial-completion
+progress (`k of n complete`; `progress.complete` is true only when every
+member completed on its own evidence), the work items each member still waits
+on, blocked members and the open members they gate, shared context,
+architecture notes and history. An unknown group exits `1`.
 
 ### `remote execute`
 

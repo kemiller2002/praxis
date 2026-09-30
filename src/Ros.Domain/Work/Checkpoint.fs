@@ -263,7 +263,7 @@ module CheckpointRejection =
         | CheckpointRejection.BlankSummary -> "Pass --summary \"what this checkpoint completed\"."
         | CheckpointRejection.BlankNextAction ->
             "Pass --next-action \"the next intended step\" (for a final checkpoint: \"Run final completion transition\")."
-        | CheckpointRejection.WorkItemNotFound _ -> "Check the ID with './ros work list'; begin the work item first."
+        | CheckpointRejection.WorkItemNotFound _ -> "Check the ID with './praxis work list'; begin the work item first."
         | CheckpointRejection.WorkItemNotActive _ ->
             "Resume blocked work with 'work resume', or begin ready work with 'work start', then checkpoint."
         | CheckpointRejection.NoActiveExecution _ ->
@@ -376,7 +376,7 @@ module CheckpointVerification =
     /// The Git side of the invariant `local HEAD == candidate == remote
     /// branch head`. Returns the verified location or the first reason the
     /// candidate is not remotely recoverable.
-    let private gitLocation (candidate: CheckpointCandidate) (observations: CheckpointObservations) =
+    let private gitLocation (repository: string) (observations: CheckpointObservations) =
         match observations.Head with
         | GitRead.Unavailable failure -> Error(gitFailureRejection failure)
         | GitRead.Observed(HeadState.Unborn branch) -> Error(CheckpointRejection.NoHead branch)
@@ -390,7 +390,7 @@ module CheckpointVerification =
                 Error(CheckpointRejection.RemoteMissing(name, remoteBranch))
             | Some(GitRead.Observed(UpstreamState.Tracking(remote, remoteBranch))) ->
                 let located remoteCommit =
-                    { Repository = candidate.Repository
+                    { Repository = repository
                       Branch = branch
                       LocalCommit = head
                       Remote = remote
@@ -428,13 +428,26 @@ module CheckpointVerification =
         | WorkingTreeState.NotRepository
         | WorkingTreeState.Clean _ -> []
 
+    /// The Git half of `verify` alone: the observed repository is durably
+    /// recoverable at one commit (local HEAD == its upstream remote head, no
+    /// meaningful uncommitted change). A group checkpoint (PRX-GRP-044) uses
+    /// exactly this rule; it has no work-item state or execution of its own.
+    let verifyLocation (repository: string) (observations: CheckpointObservations) : Result<GitDurableLocation, CheckpointRejection list> =
+        match gitLocation repository observations with
+        | Error CheckpointRejection.NotGitRepository -> Error [ CheckpointRejection.NotGitRepository ]
+        | location ->
+            match location, treeRejections observations with
+            | Ok git, [] -> Ok git
+            | Ok _, tree -> Error tree
+            | Error rejection, tree -> Error(rejection :: tree |> List.distinct)
+
     /// Decides whether a candidate is a durable checkpoint. Every problem
     /// that can be known independently is reported, so the caller can fix
     /// them together; nothing unknown is ever accepted.
     let verify (candidate: CheckpointCandidate) (observations: CheckpointObservations) : Result<Checkpoint, CheckpointRejection list> =
         let text = textRejections candidate
         let work = workRejections candidate observations
-        let location = gitLocation candidate observations
+        let location = gitLocation candidate.Repository observations
 
         let tree =
             match location with

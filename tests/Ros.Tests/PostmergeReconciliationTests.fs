@@ -85,6 +85,21 @@ module PostmergeReconciliationTests =
                   contains "Compatibility alias" alias "the scaffolded ros launcher"
                   contains "/praxis\" \"$@\"" alias "ros execs the praxis launcher" }
 
+          { Name = "P1 postmerge: no user-facing string in the CLI source teaches a ./ros command"
+            Run =
+              fun () ->
+                  // Guidance merged from main (repair hints, planner advice) must
+                  // name the canonical command; ./ros stays only an alias.
+                  let offenders =
+                      Directory.GetFiles(repositoryFile "src", "*.fs", SearchOption.AllDirectories)
+                      |> Array.collect (fun path ->
+                          File.ReadAllLines path
+                          |> Array.mapi (fun index line -> $"{Path.GetRelativePath(repositoryRoot.Force(), path)}:{index + 1}", line))
+                      |> Array.filter (fun (_, line) -> legacyInstruction.IsMatch line)
+                      |> Array.map fst
+
+                  Assert.equal [||] offenders }
+
           { Name = "P2 postmerge: work checkpointed under ROS_* identity in a pre-continuity installation is continued under PRAXIS_* identity"
             Run =
               fun () ->

@@ -170,7 +170,12 @@ module FilePlanningRepository =
                                   Currency = text metric "currency"
                                   Kind = costKind metric }
                         | _ -> None)
-                  TokenMetrics = metrics |> List.filter (fun metric -> text metric "id" |> Option.exists (fun id -> id.StartsWith("tokens.", StringComparison.Ordinal))) |> List.length }
+                  TokenMetrics = metrics |> List.filter (fun metric -> text metric "id" |> Option.exists (fun id -> id.StartsWith("tokens.", StringComparison.Ordinal))) |> List.length
+                  Session =
+                    { ActiveMs = latest "time.active_ms" |> Option.map int64
+                      FirstCodeChangeMs = latest "time.first_code_change_ms" |> Option.map int64
+                      GovernanceReads = latest "context.governance_reads" |> Option.map int
+                      RepeatedReads = latest "context.repeated_file_reads" |> Option.map int } }
         | _ -> None
 
     let readExecutions (root: string) : HistoricalExecution list =
@@ -262,6 +267,20 @@ module FilePlanningRepository =
         | Some path when not (File.Exists path) -> Error $"{path} does not exist"
         | Some path -> parse path (File.ReadAllText path)
 
+    /// Planner configuration with the groups recorded in Praxis state
+    /// (`work group create`) merged into `grouping.groups`, so a stored
+    /// declaration is read exactly as a configured one (PRX-GRP-073). A group
+    /// the supplied configuration also declares keeps the configured form.
+    let readConfiguration (root: string) (configurationFile: string option) : Result<PlannerConfiguration, string> =
+        readOptionalFile configurationFile (fun _ content -> PlanningJson.parseConfiguration content) PlannerConfiguration.defaults
+        |> Result.bind (fun configuration ->
+            FileWorkGroupRepository.read root
+            |> Result.map (fun stored ->
+                { configuration with
+                    Grouping =
+                        { configuration.Grouping with
+                            Groups = WorkGroups.declarations configuration.Grouping.Groups stored } }))
+
     let create (root: string) (observationsFile: string option) (configurationFile: string option) : PlanningReadPort =
         { Repository = fun () -> readRepository root
           Queue = fun () -> readQueue root
@@ -269,4 +288,4 @@ module FilePlanningRepository =
           Executions = fun () -> readExecutions root
           RepositoryObservations = readRepositoryObservations root
           SuppliedObservations = fun () -> readOptionalFile observationsFile PlanningJson.parseObservations []
-          Configuration = fun () -> readOptionalFile configurationFile (fun _ content -> PlanningJson.parseConfiguration content) PlannerConfiguration.defaults }
+          Configuration = fun () -> readConfiguration root configurationFile }

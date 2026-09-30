@@ -101,12 +101,14 @@ module TelemetryCliTests =
     let private showProject = "Telemetry Show Differential"
 
     let private showTests =
-        [ { Name = "telemetry cli: adapters lists the static adapter catalog exactly"
+        // PRAXIS-PLAN-05: `anthropic-claude-session` (session-transcript metrics)
+        // follows the production catalog, as main's catalog test expects.
+        [ { Name = "telemetry cli: adapters lists the static adapter catalog exactly, then anthropic-claude-session"
             Run = fun () ->
                 CliPort.withDirectory "ros-telemetry-adapters" (fun root ->
                     let result = telemetry root [ "adapters" ] |> ok
                     CliPort.deepEqual
-                        """["generic","openai-codex","anthropic-claude-statusline","anthropic-claude-hook","anthropic-claude-otel","google-gemini-hook","google-gemini-otel","github-copilot-hook","github-copilot-otel","otel-json"]"""
+                        """["generic","openai-codex","anthropic-claude-statusline","anthropic-claude-hook","anthropic-claude-otel","google-gemini-hook","google-gemini-otel","github-copilot-hook","github-copilot-otel","otel-json","anthropic-claude-session"]"""
                         (stdoutJson result)) }
           { Name = "telemetry cli: show with no target lists every execution record"
             Run = fun () ->

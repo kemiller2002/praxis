@@ -65,12 +65,18 @@ The automatic lifecycle is enough for deterministic baseline/final metrics. Runt
 # Ingest provider output, hook JSON, a status-line snapshot, or a generic envelope.
 ./praxis telemetry ingest FEAT-142 --adapter openai-codex --input codex-events.jsonl
 ./praxis telemetry ingest FEAT-142 --adapter anthropic-claude-statusline --input status.json
+./praxis telemetry ingest FEAT-142 --adapter anthropic-claude-session --input ~/.claude/projects/PROJECT/SESSION.jsonl
 ./praxis telemetry ingest FEAT-142 --adapter google-gemini-otel --input otel.jsonl
 ./praxis telemetry ingest FEAT-142 --adapter github-copilot-hook --input - --quiet
 
 # Record an explicitly sourced metric. Estimates require --confidence.
 ./praxis telemetry record FEAT-142 --metric tests.passed --value 84 \
   --source-type external-tool --source-name node-test --mechanism tap-summary
+
+# Record the cost the execution platform reports for the session.
+./praxis telemetry record FEAT-142 --metric cost.execution_total --value 9.48 \
+  --currency USD --quality observed \
+  --source-type platform --source-name claude-code-remote --mechanism session-record
 
 # Apply a multi-valued classification and factual R&D context.
 ./praxis telemetry classify FEAT-142 \
@@ -118,12 +124,54 @@ Generic input can also update `classification`, `scope`, `links`, and `qualitySi
 Provider capabilities evolve; treat these as adapter guidance, not permanent assumptions.
 
 - **OpenAI Codex:** `codex exec --json` emits JSON Lines with per-turn usage that the `openai-codex` adapter maps to input, output, cached-input, cache-write, reasoning, and total token metrics when present. Interactive Codex environments may expose session and thread IDs to the repository process without exposing token or cost totals; in that case Praxis records identity and `supported-unavailable`, never zero. [Codex JSON event source](https://github.com/openai/codex/blob/main/codex-rs/exec/src/exec_events.rs)
+- **Anthropic Claude Code session transcript:** see "Session transcript metrics" below (`anthropic-claude-session`).
 - **Anthropic Claude Code:** the status-line JSON supplies session/runtime/model identity, an estimated cumulative session cost, and current-context/cache gauges. Hooks supply lifecycle, tool, compaction, permission, and subagent events. Claude Code OpenTelemetry adds request tokens, costs, retries, active/API time, tool outcomes, and request IDs; ingest transformed JSON with `anthropic-claude-otel`. [Status-line fields](https://code.claude.com/docs/en/statusline), [hooks](https://code.claude.com/docs/en/hooks), [monitoring](https://code.claude.com/docs/en/monitoring-usage)
 - **Google Gemini CLI:** hooks expose session and tool lifecycle JSON. Its OpenTelemetry stream exposes input/output/thought/cache/tool tokens, file and line operations, tool latency/outcome, chat compression, model routing, agent turns/duration, memory, and CPU. Keep prompt logging disabled and transform the exporter JSON to the documented attributes before ingestion. [Gemini hooks](https://github.com/google-gemini/gemini-cli/blob/main/docs/hooks/reference.md), [Gemini telemetry](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/telemetry.md)
 - **GitHub Copilot CLI/cloud agent:** repository hooks expose session, tool, error, main-agent, and subagent lifecycle events. Copilot OpenTelemetry follows GenAI semantic conventions and can emit model/tool traces and token metrics. Content capture is not required by Praxis and should remain disabled. [Copilot hooks](https://docs.github.com/en/copilot/reference/hooks-reference), [Copilot OpenTelemetry](https://docs.github.com/en/copilot/concepts/agents/opentelemetry)
 - **Local/self-hosted and future runtimes:** set the `PRAXIS_TELEMETRY_*` identity environment variables (the legacy `ROS_TELEMETRY_*` names still work) and ingest the generic envelope. Provider-specific extensions belong at this edge. New unmapped fields are retained without changing the core execution model.
 
 Praxis does not install vendor hooks automatically: repository-level hook files can execute with developer privileges and may collide with existing project policy. The provider router files (`CLAUDE.md`, `GEMINI.md`, and `.github/copilot-instructions.md`) only point to the canonical `AGENTS.md`; hook enablement remains an explicit, reviewable repository decision.
+
+## Session transcript metrics (PRAXIS-PLAN-05)
+
+`--adapter anthropic-claude-session` promotes the `EX-ROS-2026-A021` harness
+script (`research/experiments/EX-ROS-2026-A021-harness/session_metrics.py`)
+into Praxis, so context overhead and cold-start cost become measurable
+(`EV-ROS-2026-A064`). The input is a Claude Code session transcript (JSON
+Lines, `~/.claude/projects/*/SESSION.jsonl`). Derivation is deterministic
+(`Ros.Domain.Telemetry.SessionTranscript`); nothing is inferred by a model.
+
+| Metric | Quality | How it is derived |
+| --- | --- | --- |
+| `model.requests` | observed | distinct requests (message ID) carrying usage; usage repeated per content block counts once |
+| `tokens.input`, `tokens.output`, `tokens.cache_read`, `tokens.cache_write` | observed | summed over those requests |
+| `tool.calls`, `tool.failures`, `tool.shell_commands` | observed | tool-use blocks, error tool results, `Bash` calls |
+| `tool.file_reads`, `tool.searches`, `tool.file_writes`, `tool.build_executions`, `tool.test_executions` | derived | `Read`/`Grep`/`Glob`/`Edit`/`Write` calls plus `cat`/`head`/`tail`/`sed -n`, `grep`/`rg`/`find`, redirections and build/test commands pattern-matched at the start of shell commands |
+| `context.compactions` | observed | compaction system entries and compact summaries |
+| `context.repeated_file_reads` (new) | derived | reads beyond the first of each file: context re-acquired in the session |
+| `context.governance_reads` (new) | derived | reads of `AGENTS.md`, `CLAUDE.md`, `docs/00-governance/`, the work-protocol, planning, CLI, telemetry and provenance guides and `requirements/PLANNING-WORK-GROUPS.md` |
+| `time.first_code_change_ms` (new) | derived | first transcript entry to the first change under `src/` or `tests/`: the session's cold start |
+| `time.active_ms` | derived | sum of gaps between consecutive entries, leaving out gaps over 15 minutes (idle: waiting on a person, a permission prompt or an orchestrator) |
+| `cost.session_cumulative` | estimated | the runtime's own `cost-state` estimate, USD, confidence `medium` |
+
+A metric the transcript does not carry is `supported-unavailable`, never
+zero. The raw snapshot is a content-free summary (session ID, models, span,
+per-file repeated and governance read counts, per-tool call counts), never
+the transcript: prompts, messages, tool input and output, commands and the
+working directory are not stored. Because a transcript is far larger than a
+status-line snapshot, this adapter's input may be up to 64 MiB; every other
+adapter keeps the configured raw-payload budget.
+
+The snapshot ID is `claude-session-SESSION_ID`, so a session is ingested into
+an execution once and its sums are never counted twice: ingest it when the
+session's work on the item is done, before `work complete`. A session that
+worked on several items should be ingested into one of their executions, not
+all of them. Platform-reported cost is not in the transcript: record it with
+`telemetry record --metric cost.execution_total --quality observed` (above).
+`./praxis plan` reads these metrics: `time.active_ms` corrects productive time,
+`time.first_code_change_ms` and the read counts price the cold starts
+grouping avoids, and `cost.execution_total` is observed monetary evidence
+(see `docs/planning.md`).
 
 ## Work and R&D classification
 
