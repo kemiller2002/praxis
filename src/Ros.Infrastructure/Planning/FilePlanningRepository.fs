@@ -269,4 +269,11 @@ module FilePlanningRepository =
           Executions = fun () -> readExecutions root
           RepositoryObservations = readRepositoryObservations root
           SuppliedObservations = fun () -> readOptionalFile observationsFile PlanningJson.parseObservations []
-          Configuration = fun () -> readOptionalFile configurationFile (fun _ content -> PlanningJson.parseConfiguration content) PlannerConfiguration.defaults }
+          // Groups declared with `work group create` are read exactly as
+          // planner configuration's `grouping.groups` (PRX-GRP-073).
+          Configuration =
+            fun () ->
+                readOptionalFile configurationFile (fun _ content -> PlanningJson.parseConfiguration content) PlannerConfiguration.defaults
+                |> Result.bind (fun configuration ->
+                    FileWorkGroupRepository.readForPlanning root
+                    |> Result.map (fun stored -> { configuration with Grouping = WorkGroups.mergeInto stored configuration.Grouping })) }

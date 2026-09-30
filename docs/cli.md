@@ -379,6 +379,81 @@ telemetry" in [`development-telemetry.md`](development-telemetry.md).
 
 See "Durable checkpoints and continuity" in [`work-protocol.md`](work-protocol.md).
 
+### `work group`
+
+```
+ros work group show GROUP-ID [--config FILE] [--json]
+ros work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP
+                      [--kind KIND] [--execution-repository NAME] [--cross-repository]
+                      [--shared-context TEXT]* [--architecture-note TEXT]* [--reason TEXT]
+                      [--config FILE] [--dry-run] [--json] [IDENTITY]
+ros work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT]
+                   [--config FILE] [--dry-run] [--json] [IDENTITY]
+ros work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT]
+                      [--dry-run] [--json] [IDENTITY]
+ros work group checkpoint --id GROUP-ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT
+                          [--decision TEXT]* [--config FILE] [--json] [IDENTITY]
+```
+
+Durable, human-declared execution groups (PRX-GRP-073, phase two), stored in
+`.ros/work/groups.json` and read by every `plan` command exactly as planner
+configuration's `grouping.groups` (a `--config` file declaring the same group
+ID shadows the stored one for that run). A group records membership only:
+no command in this family changes a member's lifecycle state, evidence,
+attribution or telemetry, or writes any file but `groups.json`.
+
+**`work group create`** declares a group. IDs look like
+`GROUP-<AREA>-<SEQUENCE>`. It refuses an existing group ID, unknown work items,
+terminal (`complete` or `abandoned`) items, and an item that executes in
+another repository (its `grouping.executionRepositories` entry in `--config`)
+unless `--cross-repository` is given. The group's execution repository
+defaults to this repository. The creator's identity is recorded with a
+`created` history entry. `--dry-run` decides and reports without writing.
+`validate` checks stored groups (unknown or repeated members, duplicate IDs,
+malformed records); a member that completes after joining is partial
+completion, not a finding.
+
+**`work group add`** adds one member under the same admission rule as
+`create` (known, not terminal, same execution repository unless the group is
+cross-repository) and refuses an item that is already a member or a group that
+does not exist. It appends a `member-added` history entry with the actor and
+optional reason; the item itself is untouched. `validate` reports members that
+the membership history does not explain.
+
+**`work group remove`** removes one member. It refuses a non-member and the
+last member (a group always has at least one member; add the replacement
+first). Removal changes membership only: the item's lifecycle state, evidence
+and attribution stay exactly as recorded. It appends a `member-removed`
+history entry with the actor and optional reason.
+
+**`work group checkpoint`** records a group checkpoint (PRX-GRP-044): the
+durable location, the completed, active and remaining members, the shared
+decisions (`--decision`, repeatable), the summary and the next action. It
+applies exactly the durability verification of `work checkpoint` (local HEAD
+equals the upstream remote head read from the remote, no meaningful
+uncommitted work, non-blank text) with the same rejection codes, and refuses a
+group whose members are all complete or abandoned. It references each
+member's own latest checkpoint by ID and never records, replaces or changes a
+member checkpoint; it claims no paths (`claimedPaths` is always empty), so no
+member claims another's changes (PRX-GRP-043). Group checkpoints are
+append-only and content-addressed (`GCP-...`); `validate` reports an edited
+one. `show` prints the latest.
+
+**`work group show`** is read-only. It prints the stored declaration and, for
+each member, its own recorded state (live context, else backlog) and the
+planner's reading of it (`planningState`, `status`), with partial-completion
+progress (`1 of 3 complete; blocked: ...`), which blocked members gate which
+others (`gatedBy`/`gates`, from hard dependencies, including those in
+`--config`), the execution repository and the architecture notes. A member
+the planner cannot see is reported `unknown`. An unknown group exits `1`.
+
+Exit codes: `0` success; `2` argument errors (missing flags, invalid IDs,
+unknown kind, no members); `1` refusals and persistence failures. With
+`--json` every command prints one document
+`{ "command", "schemaVersion": 1, "groupId", "status", ... }` where `status` is
+`created`, `added`, `removed`, `recorded`, `shown`, `dry-run`, `rejected` (with `rejections[]` of `code`, `message`,
+`remedy`) or `failed` (with `failure`).
+
 ### `remote execute`
 
 ```
