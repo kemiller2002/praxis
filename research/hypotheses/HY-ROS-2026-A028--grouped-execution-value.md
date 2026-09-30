@@ -5,7 +5,7 @@ research_area: repository-operating-system
 status: supported
 confidence: low
 created: 2026-09-30
-supporting_evidence: [EV-ROS-2026-A060]
+supporting_evidence: [EV-ROS-2026-A064]
 contradicting_evidence: []
 related_theories: []
 related_documents:
@@ -37,6 +37,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "PRAXIS-PLAN-EXP-01: results of the grouping experiment EX-ROS-2026-A021"
+    EXE-20260930T172030686Z-71d403ef:
+      operations: [modified]
+      at: 2026-09-30T17:20:33.432Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PLAN-06: renumber the A021 results record to EV-ROS-2026-A064 and relate it to the parallel evaluation kit and EV-ROS-2026-A063"
 ---
 
 # Hypothesis
@@ -70,7 +80,7 @@ outweighs the reuse. One experiment cannot establish causation
 
 ## Current assessment
 
-Supported at low confidence by one run (`EV-ROS-2026-A060`): the grouped
+Supported at low confidence by one run (`EV-ROS-2026-A064`): the grouped
 execution repeated less context (AGENTS.md 1 versus 5 reads, governance
 documents 6 versus 15, one cold start), cost $9.48 against $21.51, and
 produced one consistent model where independent executions produced several;

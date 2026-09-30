@@ -5,7 +5,7 @@ research_area: repository-operating-system
 status: active
 confidence: low
 created: 2026-09-30
-supporting_evidence: [EV-ROS-2026-A058, EV-ROS-2026-A059, EV-ROS-2026-A060]
+supporting_evidence: [EV-ROS-2026-A058, EV-ROS-2026-A059, EV-ROS-2026-A064]
 contradicting_evidence: []
 related_theories: []
 related_documents:
@@ -38,6 +38,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "PRAXIS-PLAN-EXP-01: results of the grouping experiment EX-ROS-2026-A021"
+    EXE-20260930T172030686Z-71d403ef:
+      operations: [modified]
+      at: 2026-09-30T17:20:32.799Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PLAN-06: renumber the A021 results record to EV-ROS-2026-A064 and relate it to the parallel evaluation kit and EV-ROS-2026-A063"
 ---
 
 # Hypothesis
@@ -69,7 +79,7 @@ planner command changes repository or Praxis state.
 
 ## Current assessment
 
-Active, partly supported (`EV-ROS-2026-A060`). The stale-state findings on
+Active, partly supported (`EV-ROS-2026-A064`). The stale-state findings on
 `GH-84` and `GH-90` were acted on (the owner abandoned both); the predicted
 dependency order, critical path, `conflict` rating and safe concurrency of one
 held in `EX-ROS-2026-A021`; every planner command was read-only. The

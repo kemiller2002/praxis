@@ -11,7 +11,7 @@ inputs:
   - EV-ROS-2026-A059
   - EV-ROS-2026-A058
 outputs:
-  - EV-ROS-2026-A060
+  - EV-ROS-2026-A064
 related_theories: []
 related_documents:
   - requirements/PLANNING-WORK-GROUPS.md
@@ -50,6 +50,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "PRAXIS-PLAN-EXP-01: results of the grouping experiment EX-ROS-2026-A021"
+    EXE-20260930T172030686Z-71d403ef:
+      operations: [modified]
+      at: 2026-09-30T17:20:32.258Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PLAN-06: renumber the A021 results record to EV-ROS-2026-A064 and relate it to the parallel evaluation kit and EV-ROS-2026-A063"
 ---
 
 # Experiment
@@ -253,7 +263,7 @@ validation. Session event logs are retained for the context metrics.
 
 Run on 2026-09-30 from arm start `8b4ffa3` (main `fb6a0f9` plus one
 identical harness commit); full results, metrics and threats are in
-`EV-ROS-2026-A060`, the blind evaluation in
+`EV-ROS-2026-A064`, the blind evaluation in
 `EX-ROS-2026-A021-evaluation/evaluation.txt`, and every session, prompt and
 deviation in `EX-ROS-2026-A021-harness/`.
 
@@ -272,6 +282,10 @@ deviation in `EX-ROS-2026-A021-harness/`.
 - Predictions: order, critical path, conflict rating and safe concurrency
   held; durations were underestimated (61 and 112 min against an upper
   bound of 45); context-reuse value, unknown beforehand, was measured.
+
+A parallel evaluation kit (`experiment/a021-evaluation-kit`, `EV-ROS-2026-A060`
+there) remains available as a second, independent evaluation; see
+`EV-ROS-2026-A064`, "Relation to other A021 records".
 
 Deviations (recorded in `sessions.json`): an identical harness note in every
 prompt (environment setup, metrics script, no pull requests); item 04's two
@@ -305,7 +319,7 @@ high-affinity work", qualified: grouping removed repeated context, cost less
 than half, and produced a markedly more consistent architecture, while
 independent executions were more faithful to individual criteria and tested
 more broadly; no context pressure at five members. One cohort and one run per
-arm: no causal or general claim. See `EV-ROS-2026-A060` for the
+arm: no causal or general claim. See `EV-ROS-2026-A064` for the
 recommendation to the next planning iteration.
 
 ## Registry updates required

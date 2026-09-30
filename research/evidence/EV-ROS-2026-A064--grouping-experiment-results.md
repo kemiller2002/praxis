@@ -1,5 +1,5 @@
 ---
-id: EV-ROS-2026-A060
+id: EV-ROS-2026-A064
 title: "Grouping experiment EX-ROS-2026-A021: one grouped execution versus five independent executions of the work-group commands"
 status: review
 version: 1.0.0
@@ -31,6 +31,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "PRAXIS-PLAN-EXP-01: results of the grouping experiment EX-ROS-2026-A021"
+    EXE-20260930T172030686Z-71d403ef:
+      operations: [modified]
+      at: 2026-09-30T17:20:31.714Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PLAN-06: renumber the A021 results record to EV-ROS-2026-A064 and relate it to the parallel evaluation kit and EV-ROS-2026-A063"
 derived_from: [EX-ROS-2026-A021]
 ---
 
@@ -159,6 +169,23 @@ one run per arm, so no causal or general claim follows (PRX-GRP-087). It is
 evidence for "grouping clearly beneficial for high-affinity work", qualified
 by the individual-criterion finding.
 
+## Relation to other A021 records
+
+- A separate blind evaluation kit was prepared in parallel on
+  `experiment/a021-evaluation-kit` (`EV-ROS-2026-A060` there, with its own
+  evaluator prompt, a blinding script and a shared acceptance-criteria
+  fixture). It reserves `EV-ROS-2026-A061` for session notes and
+  `EV-ROS-2026-A062` for its report. That evaluation has not run.
+- The evaluation summarized here used this protocol's own brief
+  (`EX-ROS-2026-A021-harness/prompts/evaluator.txt`) and is one independent
+  evaluation, not the kit's.
+- Running the kit's evaluator as a second, independent evaluation would test
+  whether these quality findings replicate across evaluators. This record
+  would then be read alongside `EV-ROS-2026-A062`.
+- `EV-ROS-2026-A063` (preliminary, draft) recorded the early
+  context-reacquisition signal from the grouped arm and control items 01-03.
+  The final figures here supersede its numbers, not its interpretation.
+
 ## Threats to validity
 
 - **One cohort, one run per arm.** The cohort was authored by the agent that
@@ -178,6 +205,8 @@ by the individual-criterion finding.
 - **Metrics are partial.** Transcript metrics are self-computed by a
   deterministic script and miss two control attempts. Costs are
   platform-reported estimates.
+- **One evaluator.** A single evaluator produced the quality findings, and
+  it used this protocol's brief rather than the parallel kit's.
 - **Blinding was partial.** Commit messages and committed Praxis state name
   experiment labels, and the evaluator reports reading them without using
   them.
