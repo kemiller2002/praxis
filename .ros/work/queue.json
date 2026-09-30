@@ -3666,10 +3666,10 @@
         "grouping"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T23:05:47.814Z",
-      "updatedAt": "2026-09-30T23:05:47.000Z",
+      "updatedAt": "2026-09-30T23:06:59.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
