@@ -412,12 +412,12 @@ module TelemetryCliTests =
                     writeMinimalExecution root "EXE-1" "WI-A" "active" "2026-01-01T00:00:00.000Z"
 
                     let cost =
-                        telemetry root [ "record"; "EXE-1"; "--metric"; "cost.input"; "--value"; "0.05"; "--unit"; "usd-cents"; "--currency"; "USD"
+                        telemetry root [ "record"; "EXE-1"; "--metric"; "cost.input"; "--value"; "0.05"; "--unit"; "currency"; "--currency"; "EUR"
                                          "--quality"; "estimated"; "--confidence"; "0.9"; "--collected-at"; "2026-01-01T00:00:00.000Z" ]
                         |> ok |> stdoutJson
 
                     CliPort.deepEqual
-                        (CliPort.fill [ "cliSource", cliSource ] """{"measurementId":"MEAS-041a30e3db0284e7b85a0f96","id":"cost.input","value":0.05,"unit":"usd-cents","currency":"USD","quality":"estimated",
+                        (CliPort.fill [ "cliSource", cliSource ] """{"measurementId":"MEAS-e26645bdcdcdb5e3e4687de3","id":"cost.input","value":0.05,"unit":"currency","currency":"EUR","quality":"estimated",
                              "confidence":0.9,"scope":"execution","aggregation":"sum","dimensions":{},"pricing":null,"source":{{cliSource}},
                              "collectedAt":"2026-01-01T00:00:00.000Z","schemaVersion":"1.0.0"}""")
                         cost

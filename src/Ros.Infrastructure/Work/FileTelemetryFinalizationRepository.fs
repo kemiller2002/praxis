@@ -928,6 +928,11 @@ module FileTelemetryFinalizationRepository =
                             | None -> Error $"unknown normalized metric '{request.MetricId}'; preserve it in raw telemetry until it is registered"
                             | Some definition when not (Double.IsFinite request.Value) ->
                                 Error $"metric '{request.MetricId}' requires a finite numeric value"
+                            | Some definition when
+                                TelemetryValidation.violatesCostUnit definition.Unit (request.Unit |> Option.orElse (Some definition.Unit)) request.Currency
+                                ->
+                                // Refuse at write time what `validate` would reject later.
+                                Error $"metric '{request.MetricId}': {TelemetryValidation.costUnitMessage}; record it with --unit currency --currency XXX (e.g. USD)"
                             | Some definition ->
                                 let file = executionFile root executionId
 

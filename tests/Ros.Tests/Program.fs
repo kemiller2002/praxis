@@ -103,4 +103,5 @@ let main _ =
     @ PremergeReleaseTests.tests
     @ PostmergeReconciliationTests.tests
     @ WorkGroupTests.tests
+    @ TelemetryCostUnitTests.tests
     |> TestRunner.run

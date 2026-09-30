@@ -239,14 +239,14 @@ module TelemetryRecordMetricTests =
                     writeMetricRegistry root
                     writeExecution root "EXE-1" "WI-A" "active" "2026-01-01T00:00:00.000Z" "[]"
 
-                    let overridden = { request "cost.input" 0.05 with Unit = Some "usd-cents"; Currency = Some "USD" }
+                    let overridden = { request "cost.input" 0.05 with Unit = Some "currency"; Currency = Some "EUR" }
 
                     match FileTelemetryFinalizationRepository.recordMetric root (Some "EXE-1") overridden with
                     | Error message -> failwith message
                     | Ok record ->
                         let metrics = metricsOf record
-                        Assert.equal (Some "usd-cents") (stringField metrics[0] "unit")
-                        Assert.equal (Some "USD") (stringField metrics[0] "currency")) }
+                        Assert.equal (Some "currency") (stringField metrics[0] "unit")
+                        Assert.equal (Some "EUR") (stringField metrics[0] "currency")) }
 
           { Name = "recordMetric stores a numeric --confidence as a number and a non-numeric one as text, matching production's permissive parsing"
             Run = fun () ->
