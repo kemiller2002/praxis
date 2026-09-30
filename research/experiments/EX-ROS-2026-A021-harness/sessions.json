@@ -227,6 +227,20 @@
         "worker_epoch": 2
       },
       "note": "merged origin/experiment/a021-control at 16:30 (1aa11fb) and reworked member resolution against earlier items' stored declarations; metrics file written before its last two commits"
+    },
+    {
+      "label": "evaluator",
+      "arm": null,
+      "session": "session_01FjbtwyN1sUhmDHcgyBNNnn",
+      "configuredModel": "claude-opus-5-5",
+      "createdAt": "2026-09-30T16:52:15Z",
+      "startCommit": "8b4ffa3",
+      "prompt": "prompts/evaluator.txt",
+      "blindBranches": {
+        "arm-x": "9c978cd",
+        "arm-y": "5d100ed"
+      },
+      "note": "mapping drawn with secrets.randbelow(2), sealed in the orchestrator scratchpad, committed after the evaluation"
     }
   ],
   "deviations": [
