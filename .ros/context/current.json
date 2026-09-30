@@ -4576,11 +4576,53 @@
       },
       "completedAt": "2026-09-29T22:31:41.000Z",
       "conclusion": "Status-only change (review -> accepted) on the owner's approval. No new test: validity of the DF status is checked by artifact validation (ArtifactTests.fs covers that policy); ./ros validate passed."
+    },
+    {
+      "id": "PRAXIS-CONT-12",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Ownership.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/CommitOwnershipTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T06:21:56.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T060608026Z-ad89a4f1"
+      ],
+      "latestCheckpoint": {
+        "id": "697a35ea38902bd740b00d73",
+        "recordedAt": "2026-09-30T06:21:54.000Z",
+        "executionId": "EXE-20260930T060608026Z-ad89a4f1",
+        "repository": "repository-operating-system",
+        "branch": "claude/praxis-planning-optimization-v6dacf",
+        "commit": "18a200653488766891c3faaa3cbf3363946e6220",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/praxis-planning-optimization-v6dacf",
+        "remoteCommit": "18a200653488766891c3faaa3cbf3363946e6220",
+        "summary": "Commit ownership from recorded checkpoints and reconciliations; attribution and completion/block guards use each item's own changes; 12 tests; docs",
+        "nextAction": "Complete, then reconcile PRAXIS-REMOTE-16, GH-84 and GH-90",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T06:21:56.000Z",
+      "conclusion": "Checkpoints no longer claim, and completion/blocking are no longer held back by, commits other items' recorded checkpoints or reconciliations own."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-29T22:31:41.000Z",
+  "updatedAt": "2026-09-30T06:21:56.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
