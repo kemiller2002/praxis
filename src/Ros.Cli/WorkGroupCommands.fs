@@ -4,6 +4,7 @@ open System
 open System.Globalization
 open System.IO
 open System.Text.Json.Nodes
+open Ros.Application.Planning
 open Ros.Contracts.Planning
 open Ros.Contracts.Work
 open Ros.Domain.Planning
@@ -19,7 +20,7 @@ open Ros.Infrastructure.Work
 [<RequireQualifiedAccess>]
 module WorkGroupCommands =
     let usage =
-        "work group create --id GROUP-ID --member ID [--member ID ...] --occurred-at TIMESTAMP [--kind KIND] [--execution-repository NAME] [--cross-repository] [--shared-context TEXT ...] [--architecture-note TEXT ...] [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY]"
+        "work group show GROUP-ID [--config FILE] [--json] | work group create --id GROUP-ID --member ID [--member ID ...] --occurred-at TIMESTAMP [--kind KIND] [--execution-repository NAME] [--cross-repository] [--shared-context TEXT ...] [--architecture-note TEXT ...] [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY]"
 
     // ---- arguments ----
 
@@ -223,11 +224,77 @@ module WorkGroupCommands =
 
                 0
 
+    // ---- work group show ----
+
+    let showUsage = "work group show GROUP-ID [--config FILE] [--json]"
+
+    /// Read-only (B8): the store is read, the planner's read-only port is
+    /// queried, and nothing is written.
+    let private show (root: string) (version: string) (arguments: string list) =
+        let parsed = split (set [ "--config" ]) (set [ "--json" ]) arguments
+
+        let errors =
+            [ match parsed.Positional with
+              | [ _ ] -> ()
+              | [] -> yield "work group show requires one GROUP-ID"
+              | _ -> yield "work group show names exactly one group"
+              if (values "--config" parsed).Length > 1 then
+                  yield "--config may be given only once"
+              for token in parsed.Unexpected do
+                  yield $"unexpected argument '{token}'" ]
+
+        match errors with
+        | _ :: _ -> usageFailure errors showUsage
+        | [] ->
+            let groupId = List.head parsed.Positional
+            let asJson = has "--json" parsed
+            let plannedAt = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture)
+            let port = FilePlanningRepository.create root None (single "--config" parsed |> Option.map (resolve root))
+
+            let outcome =
+                FileWorkGroupRepository.read root
+                |> Result.bind (fun stored ->
+                    match WorkGroups.tryFind groupId stored with
+                    | None -> Ok(Error [ GroupRejection.UnknownGroup groupId ])
+                    | Some group ->
+                        configuration root parsed
+                        |> Result.bind (facts root)
+                        |> Result.bind (fun known ->
+                            PlanningOperations.analyze port plannedAt version
+                            |> Result.map (fun (input, analysis) ->
+                                let planned = (Grouping.recommend input analysis).Groups |> List.tryFind (fun candidate -> WorkGroupId.value candidate.Id = groupId)
+                                Ok(WorkGroups.view known planned group))))
+
+            match outcome with
+            | Error message -> failed asJson "show" groupId message
+            | Ok(Error rejections) -> rejected asJson "show" groupId rejections
+            | Ok(Ok view) ->
+                if asJson then
+                    print (WorkGroupJson.viewInto (WorkGroupJson.envelope "show" groupId "shown") view)
+                else
+                    let group = view.Group
+                    let origin = GroupOrigin.code group.Origin
+                    printfn "GROUP %s (%s)" group.Id origin
+                    groupLines group |> List.skip 1 |> List.iter (printfn "%s")
+                    printfn "  created:              %s by %s:%s" group.CreatedAt (ActorKind.code group.CreatedBy.Kind) group.CreatedBy.Id
+                    printfn "Progress: %s" view.Progress.Statement
+                    printfn "Members:"
+
+                    for row in view.Members do
+                        let gatedBy = if row.GatedBy.IsEmpty then "" else $"""; gated by {String.concat ", " row.GatedBy}"""
+                        let gates = if row.Gates.IsEmpty then "" else $"""; gates {String.concat ", " row.Gates}"""
+                        printfn "  %s  recorded: %s; planning: %s; status: %s%s%s" row.WorkItemId row.RecordedState row.PlanningState row.Status gatedBy gates
+
+                    printfn "Read-only: nothing was written."
+
+                0
+
     // ---- dispatch ----
 
-    let run (root: string) (arguments: string list) =
+    let run (root: string) (version: string) (arguments: string list) =
         match arguments with
         | "create" :: rest -> ProvenanceCommands.withResolvedActor rest (create root rest)
+        | "show" :: rest -> show root version rest
         | _ ->
             eprintfn "ERROR unknown work group command"
             eprintfn "Usage: ros %s" usage

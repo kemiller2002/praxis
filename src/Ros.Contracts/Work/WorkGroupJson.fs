@@ -171,3 +171,47 @@ module WorkGroupJson =
         node["code"] <- JsonValue.Create "persistence-failed"
         node["message"] <- JsonValue.Create message
         node
+
+    // ---- work group show ----
+
+    let private memberViewNode (row: GroupMemberView) =
+        let node = JsonObject()
+        node["workItemId"] <- JsonValue.Create row.WorkItemId
+        node["recordedState"] <- JsonValue.Create row.RecordedState
+        node["planningState"] <- JsonValue.Create row.PlanningState
+        node["status"] <- JsonValue.Create row.Status
+        node["gatedBy"] <- textArray row.GatedBy
+        node["gates"] <- textArray row.Gates
+        node
+
+    /// The `show` document's body: the stored record plus the members' own
+    /// states (PRAXIS-GROUP-02).
+    let viewInto (document: JsonObject) (value: GroupView) =
+        let progress = JsonObject()
+        progress["total"] <- JsonValue.Create value.Progress.Total
+        progress["complete"] <- JsonValue.Create value.Progress.Complete
+        progress["inProgress"] <- JsonValue.Create value.Progress.InProgress
+        progress["runnable"] <- JsonValue.Create value.Progress.Runnable
+        progress["blocked"] <- JsonValue.Create value.Progress.Blocked
+        progress["notRunnable"] <- JsonValue.Create value.Progress.NotRunnable
+        progress["unknown"] <- JsonValue.Create value.Progress.Unknown
+        progress["statement"] <- JsonValue.Create value.Progress.Statement
+
+        let blocked =
+            value.Blocked
+            |> Seq.map (fun (id, gates) ->
+                let node = JsonObject()
+                node["workItemId"] <- JsonValue.Create id
+                node["gates"] <- textArray gates
+                node :> JsonNode)
+            |> array
+
+        document["group"] <- groupNode value.Group
+        document["executionRepository"] <- JsonValue.Create value.Group.ExecutionRepository
+        document["crossRepository"] <- JsonValue.Create value.Group.CrossRepository
+        document["sharedContext"] <- textArray value.Group.SharedContext
+        document["architectureNotes"] <- textArray value.Group.ArchitectureNotes
+        document["members"] <- value.Members |> Seq.map (fun row -> memberViewNode row :> JsonNode) |> array
+        document["progress"] <- progress
+        document["blocked"] <- blocked
+        document

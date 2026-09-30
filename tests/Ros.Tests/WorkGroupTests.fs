@@ -114,7 +114,7 @@ module WorkGroupTests =
 
     let private texts (node: JsonNode) = node.AsArray() |> Seq.map text |> Seq.toList
 
-    let tests =
+    let private createTests =
         [ // ---- PRAXIS-GROUP-01: create ----
           { Name = "work group (domain): create records members, kind, repository and a 'created' history entry with its actor"
             Run =
@@ -281,3 +281,78 @@ module WorkGroupTests =
                       Assert.isTrue (invalid.Error.Contains "GONE-1 is not a work item") invalid.Error
                       File.WriteAllText(groupsPath clone, "{ not json")
                       Assert.equal 1 (run clone None [ "validate" ]).ExitCode) } ]
+
+    // ---- PRAXIS-GROUP-02: show ----
+
+    let private startMechanical clone (id: string) =
+        cli clone [ "work"; "start"; "--id"; id; "--type"; "mechanical"; "--occurred-at"; now () ] |> ok |> ignore
+
+    let private show clone (id: string) (extra: string list) = run clone None ([ "work"; "group"; "show"; id ] @ extra)
+
+    let private showTests =
+        [ { Name = "work group (domain): the view keeps each member's own state, counts partial progress and inverts gating"
+            Run =
+              fun () ->
+                  let _, group = createdGroup [ "FEAT-1"; "FEAT-2" ]
+                  let view = WorkGroups.view facts None group
+                  Assert.equal [ "unknown"; "unknown" ] (view.Members |> List.map _.Status)
+                  Assert.equal [ "ready"; "active" ] (view.Members |> List.map _.RecordedState)
+                  Assert.equal 2 view.Progress.Unknown
+                  Assert.equal 0 view.Progress.Complete
+                  Assert.isTrue (view.Progress.Statement.Contains "never implies that every member succeeded") view.Progress.Statement }
+          { Name = "work group show (cli): members keep their own recorded and planning states; progress is partial; blocked members name who they gate"
+            Run =
+              fun () ->
+                  withRepository (fun clone ->
+                      for id in [ "FEAT-1"; "FEAT-2"; "FEAT-3" ] do
+                          capture clone id
+
+                      create clone "GROUP-FIXTURE-001" [ "FEAT-1"; "FEAT-2"; "FEAT-3" ] [ "--architecture-note"; "one design"; "--shared-context"; "one store" ] |> ok |> ignore
+                      startMechanical clone "FEAT-3"
+                      cli clone [ "work"; "complete"; "--id"; "FEAT-3"; "--occurred-at"; now () ] |> ok |> ignore
+                      startMechanical clone "FEAT-1"
+                      cli clone [ "work"; "block"; "--id"; "FEAT-1"; "--reason"; "waiting on a decision"; "--occurred-at"; now () ] |> ok |> ignore
+                      let config = Path.Combine(clone, "planner.json")
+                      File.WriteAllText(config, """{ "dependencies": [ { "from": "FEAT-2", "to": "FEAT-1", "kind": "hard" } ] }""")
+                      let groups = File.ReadAllText(groupsPath clone)
+
+                      let document =
+                          leavesMembersUntouched clone (fun () -> (show clone "GROUP-FIXTURE-001" [ "--json"; "--config"; config ] |> ok).Json)
+
+                      Assert.equal groups (File.ReadAllText(groupsPath clone))
+                      Assert.equal "work group show" (text document["command"])
+                      Assert.equal "shown" (text document["status"])
+                      let members = document["members"].AsArray() |> Seq.map (fun node -> text node["workItemId"], node.AsObject()) |> Map.ofSeq
+                      Assert.equal ("blocked", "blocked") (text members["FEAT-1"].["recordedState"], text members["FEAT-1"].["status"])
+                      Assert.equal ("complete", "complete") (text members["FEAT-3"].["recordedState"], text members["FEAT-3"].["status"])
+                      Assert.equal "ready" (text members["FEAT-2"].["recordedState"])
+                      Assert.equal [ "FEAT-1" ] (texts members["FEAT-2"].["gatedBy"])
+                      Assert.equal [ "FEAT-2" ] (texts members["FEAT-1"].["gates"])
+                      Assert.equal 3 (document["progress"].["total"].GetValue<int>())
+                      Assert.equal 1 (document["progress"].["complete"].GetValue<int>())
+                      Assert.equal 1 (document["progress"].["blocked"].GetValue<int>())
+                      Assert.equal "FEAT-1" (text document["blocked"].[0].["workItemId"])
+                      Assert.equal [ "FEAT-2" ] (texts document["blocked"].[0].["gates"])
+                      Assert.equal [ "one design" ] (texts document["architectureNotes"])
+                      Assert.isTrue ((text document["executionRepository"]).Length > 0) "execution repository"
+                      let textView = show clone "GROUP-FIXTURE-001" [ "--config"; config ] |> ok
+                      Assert.isTrue (textView.Output.Contains "1 of 3 complete; blocked: FEAT-1") textView.Output
+                      Assert.isTrue (textView.Output.Contains "gates FEAT-2") textView.Output
+                      Assert.isTrue (textView.Output.Contains "architecture note:    one design") textView.Output
+                      Assert.isTrue (textView.Output.Contains "execution repository:") textView.Output) }
+          { Name = "work group show (cli): an unknown group exits 1; a missing ID exits 2; nothing is written"
+            Run =
+              fun () ->
+                  withRepository (fun clone ->
+                      capture clone "FEAT-1"
+
+                      leavesMembersUntouched clone (fun () ->
+                          let unknown = show clone "GROUP-NOPE-001" [ "--json" ]
+                          Assert.equal 1 unknown.ExitCode
+                          Assert.equal [ "unknown-group" ] (rejectionCodes unknown)
+                          Assert.equal 1 (show clone "GROUP-NOPE-001" []).ExitCode
+                          Assert.equal 2 (run clone None [ "work"; "group"; "show" ]).ExitCode)
+
+                      Assert.isTrue (not (File.Exists(groupsPath clone))) "show wrote groups.json") } ]
+
+    let tests = createTests @ showTests

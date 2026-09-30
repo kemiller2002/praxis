@@ -3010,7 +3010,7 @@ let private repositoryDispatch root packageRoot arguments =
     | "work" :: "abandon" :: rest -> ProvenanceCommands.withResolvedActor rest (runWorkAbandon root rest)
     | "work" :: ("complete" | "done") :: rest -> ProvenanceCommands.withResolvedActor rest (runWorkComplete root rest)
     | "work" :: "reconcile" :: rest -> ProvenanceCommands.withResolvedActor rest (ReconciliationCommands.run root rest)
-    | "work" :: "group" :: rest -> WorkGroupCommands.run root rest
+    | "work" :: "group" :: rest -> WorkGroupCommands.run root Version rest
     | "work" :: "checkpoint" :: "show" :: rest -> CheckpointCommands.show root rest
     | "work" :: "continue" :: rest -> ProvenanceCommands.withResolvedActor rest (CheckpointCommands.runContinue root rest)
     | "work" :: "checkpoint" :: rest -> ProvenanceCommands.withResolvedActor rest (CheckpointCommands.run root rest)

@@ -77,6 +77,34 @@ type GroupDeclaration =
       Actor: Actor
       Reason: string option }
 
+/// One member as `work group show` presents it (PRAXIS-GROUP-02): its own
+/// recorded state, the planner's reading of it, and the blocked members
+/// that gate it or that it gates. Nothing here is the group's state.
+type GroupMemberView =
+    { WorkItemId: string
+      RecordedState: string
+      PlanningState: string
+      Status: string
+      GatedBy: string list
+      Gates: string list }
+
+type GroupProgressView =
+    { Total: int
+      Complete: int
+      InProgress: int
+      Runnable: int
+      Blocked: int
+      NotRunnable: int
+      Unknown: int
+      Statement: string }
+
+type GroupView =
+    { Group: StoredGroup
+      Members: GroupMemberView list
+      Progress: GroupProgressView
+      /// Blocked members with the members each one gates.
+      Blocked: (string * string list) list }
+
 [<RequireQualifiedAccess>]
 type GroupRejection =
     | InvalidGroupId of groupId: string
@@ -87,6 +115,7 @@ type GroupRejection =
     | UnknownWorkItem of workItemId: string
     | TerminalWorkItem of workItemId: string * state: string
     | RepositoryMismatch of workItemId: string * itemRepository: string * groupRepository: string
+    | UnknownGroup of groupId: string
 
 [<RequireQualifiedAccess>]
 module GroupRejection =
@@ -101,6 +130,7 @@ module GroupRejection =
         | GroupRejection.UnknownWorkItem _ -> "unknown-work-item"
         | GroupRejection.TerminalWorkItem _ -> "terminal-work-item"
         | GroupRejection.RepositoryMismatch _ -> "repository-mismatch"
+        | GroupRejection.UnknownGroup _ -> "unknown-group"
 
     let message rejection =
         match rejection with
@@ -113,6 +143,7 @@ module GroupRejection =
         | GroupRejection.TerminalWorkItem(id, state) -> $"{id} is {state}; a terminal item has nothing left to execute and cannot join a group"
         | GroupRejection.RepositoryMismatch(id, item, group) ->
             $"{id} executes in {item}, but the group executes in {group} and is not cross-repository (PRX-GRP-051)"
+        | GroupRejection.UnknownGroup id -> $"no declared group {id} is stored in .ros/work/groups.json"
 
     let remedy rejection =
         match rejection with
@@ -124,6 +155,7 @@ module GroupRejection =
         | GroupRejection.UnknownWorkItem _ -> "capture the item first ('ros add'), or check the ID with 'work list'"
         | GroupRejection.TerminalWorkItem _ -> "leave the item out; its own record keeps its completion"
         | GroupRejection.RepositoryMismatch _ -> "declare the group with --cross-repository, or group the item with work in its own repository"
+        | GroupRejection.UnknownGroup _ -> "check the ID in .ros/work/groups.json, or declare the group with 'work group create'"
 
     /// Rejections the caller can fix by correcting the command line (exit 2).
     let isArgumentError rejection =
@@ -296,3 +328,61 @@ module WorkGroups =
               for entry in group.History do
                   if not (isTimestamp entry.At) then
                       { Field = field "history"; Message = $"'{entry.At}' is not a timestamp" } ]
+
+    /// The read-only view of one stored group (PRAXIS-GROUP-02). Member
+    /// states come from the member records and from the planner's own group
+    /// for the same ID (`Grouping.recommend` over the merged configuration,
+    /// analysis D7); a member the planner cannot see is reported `unknown`,
+    /// never guessed. Progress is partial by design: it never implies that
+    /// every member succeeded (PRX-GRP-042).
+    let view (facts: Map<string, GroupMemberFacts>) (planned: WorkGroup option) (group: StoredGroup) : GroupView =
+        let plannedMembers =
+            planned |> Option.map (fun value -> value.Members |> List.map (fun entry -> entry.WorkItemId, entry) |> Map.ofList) |> Option.defaultValue Map.empty
+
+        let rows =
+            group.Members
+            |> List.map (fun id ->
+                let recorded = facts.TryFind id |> Option.map (fun item -> item.RecordedState) |> Option.defaultValue "unknown"
+
+                match plannedMembers.TryFind id with
+                | Some entry ->
+                    { WorkItemId = id
+                      RecordedState = recorded
+                      PlanningState = PlanningWorkState.code entry.PlanningState
+                      Status = MemberStatus.code entry.Status
+                      GatedBy = entry.GatedBy |> List.filter (fun other -> List.contains other group.Members)
+                      Gates = [] }
+                | None ->
+                    { WorkItemId = id
+                      RecordedState = recorded
+                      PlanningState = "unknown"
+                      Status = "unknown"
+                      GatedBy = []
+                      Gates = [] })
+
+        let gates id = rows |> List.filter (fun row -> List.contains id row.GatedBy) |> List.map (fun row -> row.WorkItemId)
+        let members = rows |> List.map (fun row -> { row with Gates = gates row.WorkItemId })
+        let count status = members |> List.filter (fun row -> row.Status = status) |> List.length
+        let blocked = members |> List.filter (fun row -> row.Status = MemberStatus.code MemberStatus.Blocked)
+        let complete = count (MemberStatus.code MemberStatus.Complete)
+
+        let blockedText =
+            match blocked with
+            | [] -> ""
+            | _ ->
+                let names = blocked |> List.map (fun row -> row.WorkItemId) |> String.concat ", "
+                $"; blocked: {names}"
+
+        { Group = group
+          Members = members
+          Progress =
+            { Total = members.Length
+              Complete = complete
+              InProgress = count (MemberStatus.code MemberStatus.InProgress)
+              Runnable = count (MemberStatus.code MemberStatus.Runnable)
+              Blocked = blocked.Length
+              NotRunnable = count (MemberStatus.code MemberStatus.NotRunnable)
+              Unknown = count "unknown"
+              Statement =
+                $"{complete} of {members.Length} complete{blockedText}; each member completes on its own evidence and the group never implies that every member succeeded (PRX-GRP-042)" }
+          Blocked = blocked |> List.map (fun row -> row.WorkItemId, row.Gates) }

@@ -382,6 +382,7 @@ See "Durable checkpoints and continuity" in [`work-protocol.md`](work-protocol.m
 ### `work group`
 
 ```
+ros work group show GROUP-ID [--config FILE] [--json]
 ros work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP
                       [--kind KIND] [--execution-repository NAME] [--cross-repository]
                       [--shared-context TEXT]* [--architecture-note TEXT]* [--reason TEXT]
@@ -406,11 +407,19 @@ defaults to this repository. The creator's identity is recorded with a
 malformed records); a member that completes after joining is partial
 completion, not a finding.
 
+**`work group show`** is read-only. It prints the stored declaration and, for
+each member, its own recorded state (live context, else backlog) and the
+planner's reading of it (`planningState`, `status`), with partial-completion
+progress (`1 of 3 complete; blocked: ...`), which blocked members gate which
+others (`gatedBy`/`gates`, from hard dependencies, including those in
+`--config`), the execution repository and the architecture notes. A member
+the planner cannot see is reported `unknown`. An unknown group exits `1`.
+
 Exit codes: `0` success; `2` argument errors (missing flags, invalid IDs,
 unknown kind, no members); `1` refusals and persistence failures. With
 `--json` every command prints one document
 `{ "command", "schemaVersion": 1, "groupId", "status", ... }` where `status` is
-`created`, `dry-run`, `rejected` (with `rejections[]` of `code`, `message`,
+`created`, `shown`, `dry-run`, `rejected` (with `rejections[]` of `code`, `message`,
 `remedy`) or `failed` (with `failure`).
 
 ### `remote execute`
