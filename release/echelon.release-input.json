@@ -1,0 +1,68 @@
+{
+  "schema": "echelon.release-input/v1",
+  "systemId": "praxis",
+  "distributionClass": "self-contained-native-cli",
+  "executable": "praxis",
+  "compatibilityAliases": [
+    "ros"
+  ],
+  "provides": [
+    {
+      "id": "agent.identity",
+      "contractVersion": 1
+    },
+    {
+      "id": "engineering.metrics",
+      "contractVersion": 1
+    }
+  ],
+  "distribution": {
+    "mechanism": "github-release",
+    "package": null,
+    "url": null
+  },
+  "artifacts": [
+    {
+      "name": "praxis-linux-x64.tar.gz",
+      "purpose": "executable",
+      "platform": "linux-x64",
+      "mediaType": "application/gzip"
+    },
+    {
+      "name": "praxis-linux-musl-x64.tar.gz",
+      "purpose": "executable",
+      "platform": "linux-musl-x64",
+      "mediaType": "application/gzip"
+    },
+    {
+      "name": "praxis-linux-arm64.tar.gz",
+      "purpose": "executable",
+      "platform": "linux-arm64",
+      "mediaType": "application/gzip"
+    },
+    {
+      "name": "praxis-osx-x64.tar.gz",
+      "purpose": "executable",
+      "platform": "osx-x64",
+      "mediaType": "application/gzip"
+    },
+    {
+      "name": "praxis-osx-arm64.tar.gz",
+      "purpose": "executable",
+      "platform": "osx-arm64",
+      "mediaType": "application/gzip"
+    },
+    {
+      "name": "praxis-win-x64.zip",
+      "purpose": "executable",
+      "platform": "win-x64",
+      "mediaType": "application/zip"
+    },
+    {
+      "name": "native-checksums.txt",
+      "purpose": "checksums",
+      "platform": null,
+      "mediaType": "text/plain"
+    }
+  ]
+}
