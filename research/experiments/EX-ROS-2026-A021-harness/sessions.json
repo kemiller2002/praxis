@@ -134,7 +134,7 @@
       }
     },
     {
-      "label": "control-04",
+      "label": "control-04-attempt-2",
       "arm": "control",
       "items": [
         "PRAXIS-GROUP-04"
@@ -145,14 +145,46 @@
       "startCommit": "9c17936",
       "prompt": "prompts/control-04.txt",
       "note": "retry of control-04-attempt-1 with the identical prompt in a fresh session",
-      "status": "blocked",
+      "status": "blocked-abandoned",
       "blockedAt": "2026-09-30T13:46:53Z",
       "blockNote": "pushed 881a34d, then stopped for a permission prompt on `./ros work *` commands (auto mode); needs the owner to approve in the session UI. Attempt 1 most likely stopped at the same prompt (it ended idle without a summary).",
       "platformUsageAtBlock": {
         "cost_usd": 1.9885424,
         "output_tokens": 26866,
         "cache_read_tokens": 3017392
-      }
+      },
+      "abandonedAt": "2026-09-30T15:54:00Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 1.9885424,
+        "input_tokens": 62,
+        "output_tokens": 26866,
+        "cache_read_tokens": 3017392,
+        "cache_write_tokens": 105937,
+        "context_used_tokens": 143277,
+        "last_served_model": "claude-opus-5-5"
+      },
+      "abandonNote": "never unblocked in its own UI; its pushed commit 881a34d stays on the branch and is carried into attempt 3"
+    },
+    {
+      "label": "control-04",
+      "arm": "control",
+      "items": [
+        "PRAXIS-GROUP-04"
+      ],
+      "session": "session_01NprWNWjMYoEj4NpDRf9Ui6",
+      "configuredModel": "claude-opus-5-5",
+      "createdAt": "2026-09-30T15:54:07Z",
+      "startCommit": "881a34d",
+      "prompt": "prompts/control-04.txt plus harness line 5 (fact about 881a34d and the owner's approval)",
+      "extraAllowedTools": [
+        "Bash(./ros work:*)",
+        "Bash(./ros:*)"
+      ],
+      "deviation": "the owner approved `./ros work` commands in the orchestrator session at ~15:53Z; approval carried into attempt 3 via extra_allowed_tools and one factual harness line. Control-01..03 and the grouped arm did not need this."
     }
+  ],
+  "deviations": [
+    "control-04 took three sessions: attempt 1 ended idle without pushing, attempt 2 pushed 881a34d then blocked on a `./ros work` permission prompt, attempt 3 started with the owner's approval pre-granted. All three sessions' costs count toward the control arm."
   ]
 }
