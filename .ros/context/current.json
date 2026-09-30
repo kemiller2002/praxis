@@ -4778,18 +4778,57 @@
     {
       "id": "PRAXIS-GROUP-01",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T15:29:19.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        },
+        {
+          "type": "analysis",
+          "path": "research/experiments/EX-ROS-2026-A021-R2-grouped/group-analysis.txt"
+        }
+      ],
+      "updatedAt": "2026-09-30T15:42:20.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T152919551Z-adec0f3f"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "4170f47a769dbf259bf10998",
+        "recordedAt": "2026-09-30T15:42:18.000Z",
+        "executionId": "EXE-20260930T152919551Z-adec0f3f",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-r2-grouped",
+        "commit": "b09aaecd24c5d519046047155b155537ee4194e4",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-r2-grouped",
+        "remoteCommit": "b09aaecd24c5d519046047155b155537ee4194e4",
+        "summary": "Milestone: shared group infrastructure + work group create (b09aaec). Completed members: none yet (01 about to complete). Remaining: 01 (completion), 02, 03, 04, 05. Shared decisions in force: D1 store .ros/work/groups.json; D2 pure WorkGroups; D3 one admission rule; D4 --config executionRepositories; D6 toDeclared/mergeInto; D11 no member-state writes. 803/803 F# tests pass; validate passes. Branch experiment/a021-r2-grouped.",
+        "nextAction": "Complete PRAXIS-GROUP-01, then start PRAXIS-GROUP-02 (work group show via Grouping.recommend)",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T15:42:20.000Z",
+      "conclusion": "work group create records a declared group in .ros/work/groups.json; the planner reads it as grouping.groups; validate checks stored groups."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T15:29:19.000Z",
+  "updatedAt": "2026-09-30T15:42:20.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
