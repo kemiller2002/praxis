@@ -235,6 +235,16 @@ module GroupProgress =
 
         $"{count progress.Completed} of {progress.Members.Length} complete ({count progress.Active} active, {count progress.Blocked} blocked, {count progress.Remaining} remaining, {count progress.Abandoned} abandoned, {count progress.Unknown} unknown)"
 
+/// One membership change (`work group add`, `work group remove`).
+type GroupMemberRequest =
+    { GroupId: string
+      WorkItemId: string
+      OccurredAt: string
+      Actor: Actor
+      Reason: string option
+      /// Removal only: deliberately allow leaving the group empty.
+      AllowEmpty: bool }
+
 [<RequireQualifiedAccess>]
 module WorkGroups =
     let private groupIdPattern = Regex("^GROUP-[A-Z0-9]+(-[A-Z0-9]+)*$", RegexOptions.CultureInvariant)
@@ -309,6 +319,31 @@ module WorkGroups =
                   CreatedBy = request.Actor
                   History = [ entry GroupOperation.Created None request.OccurredAt request.Actor request.Reason false ] }
         | rejections -> Error rejections
+
+    /// The group a membership change names, or why it cannot be found.
+    let private existing (context: GroupContext) (groupId: string) : Result<StoredWorkGroup, GroupRejection list> =
+        if not (isValidGroupId groupId) then Error [ GroupRejection.InvalidGroupId groupId ]
+        else tryFind context.Groups groupId |> Option.map Ok |> Option.defaultValue (Error [ GroupRejection.UnknownGroup groupId ])
+
+    /// `work group add`: one more member, joining by the same rule as at
+    /// creation, recorded with who added it. The member's own record is
+    /// not touched.
+    let add (context: GroupContext) (request: GroupMemberRequest) : Result<StoredWorkGroup, GroupRejection list> =
+        existing context request.GroupId
+        |> Result.bind (fun group ->
+            let declaration = group.Declaration
+
+            let rejections =
+                if declaration.Members |> List.contains request.WorkItemId then [ GroupRejection.AlreadyMember(request.WorkItemId, declaration.Id) ]
+                else eligibility context declaration request.WorkItemId
+
+            match rejections with
+            | [] ->
+                Ok
+                    { group with
+                        Declaration = { declaration with Members = declaration.Members @ [ request.WorkItemId ] }
+                        History = group.History @ [ entry GroupOperation.MemberAdded (Some request.WorkItemId) request.OccurredAt request.Actor request.Reason false ] }
+            | rejections -> Error rejections)
 
     /// The declarations the planner reads: every configured group, then every
     /// stored group whose ID the configuration does not already declare (an

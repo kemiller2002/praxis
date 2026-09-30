@@ -383,6 +383,8 @@ See "Durable checkpoints and continuity" in [`work-protocol.md`](work-protocol.m
 
 ```
 ros work group show GROUP-ID [--config FILE] [--json]
+ros work group add    --group GROUP-ID --member ID --occurred-at TIMESTAMP [--config FILE]
+                      [--reason TEXT] [--dry-run] [--json] [IDENTITY]
 ros work group create --group GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP
                       [--kind KIND] [--origin ORIGIN] [--shared-context TEXT]*
                       [--architecture-note TEXT]* [--execution-repository NAME]
@@ -412,6 +414,12 @@ origin `human-declared`). The creation is recorded with the resolved actor,
 is written: invalid arguments exit `2`, refusals (unknown, terminal or
 foreign-repository member, duplicate group) exit `1`. `--dry-run` shows the
 group without writing it.
+
+**`work group add`** adds one member by the same join rule as `create`
+(recorded, non-terminal, same execution repository unless the group is
+cross-repository) and refuses an item that is already a member or a group
+that is not recorded. The history entry records who added it (resolved
+actor), when and why. The member's own record is untouched.
 
 **`work group show`** is read-only (no lock, no write): the group's
 declaration, each member's own recorded state and planning state (from the

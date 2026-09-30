@@ -277,6 +277,79 @@ module WorkGroupTests =
                   Assert.equal 2 (run clone None [ "work"; "group"; "show" ]).ExitCode
                   Assert.isTrue (not (File.Exists(groupsFile clone))) "show created groups.json"))
 
+          t "add joins by the creation rule, refuses current members and unknown groups, and records who added the member" (fun () ->
+              let group = created "GROUP-AREA-001" [ "ITEM-1" ]
+
+              let change (id: string) (groupId: string) : GroupMemberRequest =
+                  { GroupId = groupId
+                    WorkItemId = id
+                    OccurredAt = "2026-09-30T13:00:00.000Z"
+                    Actor = human
+                    Reason = Some "same module"
+                    AllowEmpty = false }
+
+              let add groups id groupId = WorkGroups.add (context groups) (change id groupId)
+              Assert.equal [ "unknown-group" ] (codes (add [ group ] "ITEM-2" "GROUP-AREA-404"))
+              Assert.equal [ "invalid-group-id" ] (codes (add [ group ] "ITEM-2" "nope"))
+              Assert.equal [ "already-member" ] (codes (add [ group ] "ITEM-1" "GROUP-AREA-001"))
+              Assert.equal [ "unknown-member" ] (codes (add [ group ] "NOPE-1" "GROUP-AREA-001"))
+              Assert.equal [ "terminal-member" ] (codes (add [ group ] "DONE-1" "GROUP-AREA-001"))
+              Assert.equal [ "repository-mismatch" ] (codes (add [ group ] "ELSE-1" "GROUP-AREA-001"))
+              let crossRepository = { group with Declaration = { group.Declaration with CrossRepository = true } }
+              Assert.equal [] (codes (add [ crossRepository ] "ELSE-1" "GROUP-AREA-001"))
+
+              match add [ group ] "ITEM-2" "GROUP-AREA-001" with
+              | Error rejections -> failwith $"{rejections}"
+              | Ok updated ->
+                  Assert.equal [ "ITEM-1"; "ITEM-2" ] updated.Declaration.Members
+                  let entry = List.last updated.History
+                  Assert.equal GroupOperation.MemberAdded entry.Operation
+                  Assert.equal (Some "ITEM-2") entry.Member
+                  Assert.equal human entry.Actor
+                  Assert.equal group.History (updated.History |> List.truncate 1))
+
+          t "cli add records the member and who added it, leaves lifecycle files untouched, and the planner sees the new member" (fun () ->
+              withRepository (fun clone ->
+                  createGroup clone "GROUP-FIXTURE-001" [ "ITEM-1" ] [] |> ok |> ignore
+                  let before = lifecycle clone
+                  let add extra = cli clone ([ "work"; "group"; "add"; "--group"; "GROUP-FIXTURE-001"; "--occurred-at"; now (); "--json" ] @ extra)
+
+                  let dryRun = add [ "--member"; "ITEM-2"; "--dry-run" ] |> ok
+                  Assert.equal "dry-run" (text dryRun.Json["status"])
+                  Assert.isTrue (not ((File.ReadAllText(groupsFile clone)).Contains "ITEM-2")) "a dry run wrote the member"
+
+                  let added = add [ "--member"; "ITEM-2"; "--reason"; "same module" ] |> ok
+                  let history = added.Json["group"].["history"].AsArray()
+                  Assert.equal "member-added" (text history[1].["operation"])
+                  Assert.equal "ITEM-2" (text history[1].["member"])
+                  Assert.equal "example/agent-a" (text history[1].["actor"].["id"])
+                  Assert.equal "same module" (text history[1].["reason"])
+                  Assert.equal before (lifecycle clone)
+
+                  let explained = run clone None [ "plan"; "explain-group"; "GROUP-FIXTURE-001"; "--json" ] |> ok
+                  Assert.isTrue (explained.Output.Contains "\"ITEM-2\"") "the planner does not see the added member"
+
+                  for id, code in [ "ITEM-2", "already-member"; "DONE-1", "terminal-member"; "GONE-1", "terminal-member"; "NOPE-1", "unknown-member" ] do
+                      let refused = add [ "--member"; id ]
+                      Assert.equal 1 refused.ExitCode
+                      Assert.equal [ code ] (rejectionCodes refused)
+
+                  Assert.equal 2 (add [ "--member"; "ITEM-3"; "--member"; "ITEM-4" ]).ExitCode
+                  Assert.equal 1 (cli clone [ "work"; "group"; "add"; "--group"; "GROUP-FIXTURE-404"; "--member"; "ITEM-3"; "--occurred-at"; now () ]).ExitCode
+                  run clone None [ "validate" ] |> ok |> ignore))
+
+          t "cli add refuses an item that executes in another repository unless the group is cross-repository" (fun () ->
+              withRepository (fun clone ->
+                  let configuration = Path.Combine(clone, "..", "planner.json")
+                  File.WriteAllText(configuration, """{"grouping":{"executionRepositories":{"ITEM-3":"conditor"}}}""")
+                  createGroup clone "GROUP-FIXTURE-001" [ "ITEM-1" ] [] |> ok |> ignore
+                  createGroup clone "GROUP-FIXTURE-002" [ "ITEM-2" ] [ "--cross-repository" ] |> ok |> ignore
+                  let add groupId = cli clone [ "work"; "group"; "add"; "--group"; groupId; "--member"; "ITEM-3"; "--config"; configuration; "--occurred-at"; now (); "--json" ]
+                  let refused = add "GROUP-FIXTURE-001"
+                  Assert.equal 1 refused.ExitCode
+                  Assert.equal [ "repository-mismatch" ] (rejectionCodes refused)
+                  add "GROUP-FIXTURE-002" |> ok |> ignore))
+
           t "cli validate reports a stored group whose member is not a recorded work item" (fun () ->
               withRepository (fun clone ->
                   createGroup clone "GROUP-FIXTURE-001" [ "ITEM-1" ] [] |> ok |> ignore

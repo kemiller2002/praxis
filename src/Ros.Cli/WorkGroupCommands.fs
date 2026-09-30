@@ -21,8 +21,13 @@ open Ros.Infrastructure.Work
 module WorkGroupCommands =
     let showUsage = "work group show GROUP-ID [--config FILE] [--json]"
 
+    let addUsage =
+        "work group add --group GROUP-ID --member ID --occurred-at TIMESTAMP [--config FILE] [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
+
     let usage =
         showUsage
+        + " | "
+        + addUsage
         + " | work group create --group GROUP-ID --member ID [--member ID ...] --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--shared-context TEXT ...] [--architecture-note TEXT ...] [--execution-repository NAME] [--cross-repository] [--config FILE] [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
 
     // ---- argument parsing (shared by the family) ----
@@ -249,6 +254,44 @@ module WorkGroupCommands =
                   $"  recorded by {ActorKind.code group.CreatedBy.Kind}:{group.CreatedBy.Id} at {group.CreatedAt}" ]
 
             mutate root command arguments groupId decide describe
+
+    // ---- membership changes (add, remove) ----
+
+    let private memberValues = [ "--group"; "--member"; "--occurred-at"; "--config"; "--reason" ]
+
+    let private memberErrors (command: string) (arguments: Arguments) =
+        [ yield! commonErrors command arguments [ "--config"; "--reason" ]
+          yield! arguments.Positional |> List.map (fun token -> $"unexpected argument '{token}'")
+          yield! groupErrors command arguments
+          yield! occurredAtErrors command arguments
+          match all arguments "--member" with
+          | [ _ ] -> ()
+          | [] -> yield $"{command} requires --member ID"
+          | _ -> yield $"{command} changes exactly one member; pass --member once" ]
+
+    let private memberRequest (arguments: Arguments) (actor: Actor) : GroupMemberRequest =
+        { GroupId = (single arguments "--group").Value
+          WorkItemId = (single arguments "--member").Value
+          OccurredAt = (single arguments "--occurred-at").Value
+          Actor = actor
+          Reason = single arguments "--reason"
+          AllowEmpty = arguments.Switches.Contains "--allow-empty" }
+
+    let private changeLines (verb: string) (request: GroupMemberRequest) (group: StoredWorkGroup) =
+        let members = match group.Declaration.Members with [] -> "(none)" | ids -> String.concat ", " ids
+
+        [ $"{request.WorkItemId} {verb} {group.Declaration.Id} by {ActorKind.code request.Actor.Kind}:{request.Actor.Id} at {request.OccurredAt}"
+          $"  members now: {members}" ]
+
+    let add (root: string) (rawArguments: string list) (actor: Actor) =
+        let command = "work group add"
+        let arguments = parse memberValues [ "--dry-run" ] rawArguments
+
+        match memberErrors command arguments with
+        | _ :: _ as errors -> reportArgumentErrors command addUsage errors
+        | [] ->
+            let request = memberRequest arguments actor
+            mutate root command arguments request.GroupId (fun context -> WorkGroups.add context request) (changeLines "added to" request)
 
     // ---- work group show ----
 
