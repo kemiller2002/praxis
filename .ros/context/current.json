@@ -4695,10 +4695,19 @@
     {
       "id": "PRAXIS-PLAN-03",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T11:28:48.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/decisions/DF-ROS-2026-A047--advisory-evidence-based-work-groups.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ArtifactTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T11:34:55.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T112849252Z-4c58aae8"
       ],
@@ -4721,7 +4730,8 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-09-30T11:34:55.000Z"
     },
     {
       "id": "PRAXIS-WORK-ABANDON-01",
@@ -4768,7 +4778,7 @@
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T11:28:48.000Z",
+  "updatedAt": "2026-09-30T11:34:55.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
