@@ -10,10 +10,10 @@ module MergeReadinessJson =
     [<Literal>]
     let Schema = "praxis.merge-readiness/1"
 
-    let private text value : JsonNode = JsonValue.Create value
-    let private boolean value : JsonNode = JsonValue.Create value
+    let private text (value: string) : JsonNode = JsonValue.Create value
+    let private boolean (value: bool) : JsonNode = JsonValue.Create value
 
-    let private objectNode fields =
+    let private objectNode (fields: (string * JsonNode) list) =
         let node = JsonObject()
         fields |> List.iter (fun (key, value: JsonNode) -> node[key] <- value)
         node
