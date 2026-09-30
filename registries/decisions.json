@@ -299,7 +299,7 @@
           "operations": [
             "superseded"
           ],
-          "reason": "Superseded by DF-ROS-2026-A042 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+          "reason": "Superseded by DF-ROS-2026-A049 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
         }
       }
     },
@@ -312,7 +312,7 @@
     ],
     "status": "superseded",
     "superseded_by": [
-      "DF-ROS-2026-A042"
+      "DF-ROS-2026-A049"
     ],
     "supersedes": [],
     "supporting_evidence": [
@@ -428,7 +428,7 @@
           "operations": [
             "superseded"
           ],
-          "reason": "Superseded by DF-ROS-2026-A042 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+          "reason": "Superseded by DF-ROS-2026-A049 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
         }
       }
     },
@@ -442,7 +442,7 @@
     ],
     "status": "superseded",
     "superseded_by": [
-      "DF-ROS-2026-A042"
+      "DF-ROS-2026-A049"
     ],
     "supersedes": [
       "DF-ROS-2026-A031"
@@ -486,7 +486,7 @@
           "operations": [
             "superseded"
           ],
-          "reason": "Superseded by DF-ROS-2026-A042 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+          "reason": "Superseded by DF-ROS-2026-A049 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
         }
       }
     },
@@ -500,7 +500,7 @@
     ],
     "status": "superseded",
     "superseded_by": [
-      "DF-ROS-2026-A042"
+      "DF-ROS-2026-A049"
     ],
     "supersedes": [],
     "supporting_evidence": [
@@ -542,7 +542,7 @@
           "operations": [
             "superseded"
           ],
-          "reason": "Superseded by DF-ROS-2026-A042 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+          "reason": "Superseded by DF-ROS-2026-A049 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
         }
       }
     },
@@ -556,7 +556,7 @@
     "research_area": "repository-operating-system",
     "status": "superseded",
     "superseded_by": [
-      "DF-ROS-2026-A042"
+      "DF-ROS-2026-A049"
     ],
     "supersedes": [],
     "supports": [],
@@ -798,7 +798,7 @@
           "operations": [
             "modified"
           ],
-          "reason": "Validation references point at the F# port of tests/remote-execute.test.mjs (DF-ROS-2026-A042) (work item FSHARP-ONLY-MAIN-MERGE)"
+          "reason": "Validation references point at the F# port of tests/remote-execute.test.mjs (DF-ROS-2026-A049) (work item FSHARP-ONLY-MAIN-MERGE)"
         }
       }
     },
@@ -843,13 +843,13 @@
     "created": "2026-09-28",
     "decision_type": "architecture",
     "derived_from": [
-      "RQ-ROS-2026-A022"
+      "RQ-ROS-2026-A024"
     ],
-    "id": "DF-ROS-2026-A042",
+    "id": "DF-ROS-2026-A049",
     "owners": [
       "repository-governance"
     ],
-    "path": "research/decisions/DF-ROS-2026-A042--fsharp-dotnet-only-repository.md",
+    "path": "research/decisions/DF-ROS-2026-A049--fsharp-dotnet-only-repository.md",
     "provenance": {
       "contributions": {
         "EXE-20260928T090915352Z-fb23943c": {
@@ -892,11 +892,25 @@
           "operations": [
             "modified"
           ]
+        },
+        "EXE-20260930T175640720Z-98771e24": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:57:07.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PR92-ID-RENUMBER: renumbered from A042 on this branch to resolve a collision with a different main record; content unchanged"
         }
       }
     },
     "related_documents": [
-      "RQ-ROS-2026-A022",
+      "RQ-ROS-2026-A024",
       "DF-ROS-2026-A009",
       "DF-ROS-2026-A030",
       "AGENTS.md",
@@ -913,7 +927,7 @@
       "DF-ROS-2026-A034"
     ],
     "supports": [
-      "RQ-ROS-2026-A022"
+      "RQ-ROS-2026-A024"
     ],
     "tags": [
       "architecture",
@@ -925,21 +939,21 @@
       "decision"
     ],
     "title": "The repository is F#/.NET only; repository-owned Node/JavaScript/TypeScript is removed and prohibited by an automated invariant",
-    "updated": "2026-09-28",
-    "version": "1.0.0"
+    "updated": "2026-09-30",
+    "version": "1.0.1"
   },
   {
     "confidence": "high",
     "created": "2026-09-28",
     "decision_type": "architecture",
     "derived_from": [
-      "RQ-ROS-2026-A023"
+      "RQ-ROS-2026-A025"
     ],
-    "id": "DF-ROS-2026-A043",
+    "id": "DF-ROS-2026-A050",
     "owners": [
       "repository-governance"
     ],
-    "path": "research/decisions/DF-ROS-2026-A043--praxis-canonical-name-ros-compatibility.md",
+    "path": "research/decisions/DF-ROS-2026-A050--praxis-canonical-name-ros-compatibility.md",
     "provenance": {
       "contributions": {
         "EXE-20260928T134520493Z-befb2bfe": {
@@ -954,12 +968,26 @@
           "operations": [
             "created"
           ]
+        },
+        "EXE-20260930T175640720Z-98771e24": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:57:07.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PR92-ID-RENUMBER: renumbered from A043 on this branch to resolve a collision with a different main record; content unchanged"
         }
       }
     },
     "related_documents": [
-      "RQ-ROS-2026-A023",
-      "DF-ROS-2026-A042",
+      "RQ-ROS-2026-A025",
+      "DF-ROS-2026-A049",
       "DF-ROS-2026-A041",
       "AGENTS.md",
       "docs/cli.md",
@@ -970,7 +998,7 @@
     "superseded_by": [],
     "supersedes": [],
     "supports": [
-      "RQ-ROS-2026-A023"
+      "RQ-ROS-2026-A025"
     ],
     "tags": [
       "naming",
@@ -981,7 +1009,7 @@
       "decision"
     ],
     "title": "Praxis is the canonical product and CLI name; ros remains only for compatibility, persisted state and history",
-    "updated": "2026-09-28",
-    "version": "1.0.0"
+    "updated": "2026-09-30",
+    "version": "1.0.1"
   }
 ]

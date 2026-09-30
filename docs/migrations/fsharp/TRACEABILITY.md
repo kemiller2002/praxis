@@ -5,7 +5,7 @@ verification. A planned owner is not authoritative until its slice and switch
 decision are accepted.
 
 
-**Closed (2026-09-28, `DF-ROS-2026-A042`).** Node is removed from this
+**Closed (2026-09-28, `DF-ROS-2026-A049`).** Node is removed from this
 repository; the rows below are the migration's historical ledger. The Node
 test files they cite were ported to F# end-to-end tests in `tests/Ros.Tests`
 (same golden values, real `ros-fs` against disposable repositories):

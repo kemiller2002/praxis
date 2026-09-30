@@ -1,18 +1,18 @@
 ---
-id: DF-ROS-2026-A043
+id: DF-ROS-2026-A050
 title: Praxis is the canonical product and CLI name; ros remains only for compatibility, persisted state and history
 status: accepted
-version: 1.0.0
+version: 1.0.1
 owners:
   - repository-governance
 created: 2026-09-28
-updated: 2026-09-28
+updated: 2026-09-30
 research_area: repository-operating-system
 decision_type: architecture
-supports: [RQ-ROS-2026-A023]
+supports: [RQ-ROS-2026-A025]
 related_documents:
-  - RQ-ROS-2026-A023
-  - DF-ROS-2026-A042
+  - RQ-ROS-2026-A025
+  - DF-ROS-2026-A049
   - DF-ROS-2026-A041
   - AGENTS.md
   - docs/cli.md
@@ -21,7 +21,7 @@ supersedes: []
 superseded_by: []
 tags: [naming, rename, praxis, cli, compatibility, decision]
 confidence: high
-derived_from: [RQ-ROS-2026-A023]
+derived_from: [RQ-ROS-2026-A025]
 provenance:
   contributions:
     EXE-20260928T134520493Z-befb2bfe:
@@ -33,7 +33,19 @@ provenance:
         provider: anthropic
         model: unknown
         runtime: claude-code
+    EXE-20260930T175640720Z-98771e24:
+      operations: [migrated]
+      at: 2026-09-30T17:57:07.000Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PR92-ID-RENUMBER: renumbered from A043 on this branch to resolve a collision with a different main record; content unchanged"
 ---
+
+> **Renumbered 2026-09-30** (`PRAXIS-PR92-ID-RENUMBER`, owner-approved): this record was numbered A043 on PR #92's branch. Main had already given A043 to a different record, so this one took the next free number before the branches were reconciled. Its content is unchanged.
 
 # Context
 

@@ -47,7 +47,7 @@ module EchelonDoctorTests =
 
         for name, version in [ "ordo", "1.4.0"; "sde", "1.4.0"; "praxis", "3.4.0"; "ros", "3.4.0" ] do
             // Releases up to v3.4.0 print the pre-rename `ros-fs X.Y.Z`; doctor
-            // must keep reading that format (DF-ROS-2026-A043).
+            // must keep reading that format (DF-ROS-2026-A050).
             let reported = if name = "praxis" || name = "ros" then $"ros-fs {version}" else version
             writeScript (Path.Combine(bin, name)) (reports reported)
 

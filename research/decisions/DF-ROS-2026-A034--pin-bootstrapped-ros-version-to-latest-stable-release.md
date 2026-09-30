@@ -18,7 +18,7 @@ related_documents:
   - .github/workflows/publish.yml
 supersedes: []
 superseded_by:
-  - DF-ROS-2026-A042
+  - DF-ROS-2026-A049
 tags: [ros-fs, bootstrap, launcher, npm, release]
 confidence: high
 provenance:
@@ -32,7 +32,7 @@ provenance:
         provider: anthropic
         model: unknown
         runtime: claude-code
-      reason: "Superseded by DF-ROS-2026-A042 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+      reason: "Superseded by DF-ROS-2026-A049 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
 ---
 
 # Decision

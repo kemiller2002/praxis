@@ -2822,7 +2822,7 @@ let private execute arguments =
 
 [<EntryPoint>]
 let main arguments =
-    // Canonical PRAXIS_* variables reach every ROS_* reader (DF-ROS-2026-A043).
+    // Canonical PRAXIS_* variables reach every ROS_* reader (DF-ROS-2026-A050).
     Ros.Domain.Naming.EnvironmentAliases.legacyAssignments (fun name -> Environment.GetEnvironmentVariable name |> Option.ofObj)
     |> List.iter (fun (name, value) -> Environment.SetEnvironmentVariable(name, value))
 

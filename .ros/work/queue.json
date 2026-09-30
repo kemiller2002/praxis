@@ -2457,6 +2457,30 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PR92-ID-RENUMBER",
+      "title": "Renumber PR #92's DF/RQ records that collide with main's (A042/A043, RQ A022/A023)",
+      "description": "Owner-approved. Main already uses DF-ROS-2026-A042/A043 and RQ-ROS-2026-A022/A023 for different records. Keep main's numbering; renumber this branch's F#/.NET-only and Praxis-canonical-name records to DF-ROS-2026-A049/A050 and RQ-ROS-2026-A024/A025 (DF-ROS-2026-A048 is claimed by feature/gh-127-merge-readiness), and rewrite every citation outside .ros/ history. Same ID as the backlog row captured on main via EV-ROS-2026-A060.",
+      "tags": [
+        "pr92",
+        "decision"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:56:38.000Z",
+      "updatedAt": "2026-09-30T17:56:39.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

@@ -30,7 +30,7 @@ Praxis, Echelon Foundry's repository operating system, makes research, engineeri
 
 ## Start Here
 
-Older installations may have `./ros`, a compatibility alias of `./praxis`; new instructions use Praxis (`DF-ROS-2026-A043`).
+Older installations may have `./ros`, a compatibility alias of `./praxis`; new instructions use Praxis (`DF-ROS-2026-A050`).
 
 1. Read [the governance index](docs/00-governance/README.md).
 2. Identify the task's scope and operating mode.
@@ -162,8 +162,8 @@ Before editing a file the tool installed, check its ownership there: a
 ## F# CLI
 
 `./praxis` in this source checkout, and in every project installed with `init`
-(both profiles), runs the F# CLI (`DF-ROS-2026-A030`, `DF-ROS-2026-A042`).
-Praxis's own repository is F#/.NET only (`RQ-ROS-2026-A022`): it owns no
+(both profiles), runs the F# CLI (`DF-ROS-2026-A030`, `DF-ROS-2026-A049`).
+Praxis's own repository is F#/.NET only (`RQ-ROS-2026-A024`): it owns no
 JavaScript, TypeScript, npm or Node tooling, and `./praxis architecture check`
 (also part of `./praxis validate` here) fails on any such file. Do not add one;
 implement the behaviour in F#. In this checkout `./praxis` is a shell launcher

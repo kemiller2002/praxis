@@ -1,6 +1,6 @@
 # Native Praxis installation
 
-Praxis is Echelon Foundry's repository operating system; it was previously exposed as ROS (`DF-ROS-2026-A043`). Native installation does not require npm, Node.js, or a machine-wide .NET runtime.
+Praxis is Echelon Foundry's repository operating system; it was previously exposed as ROS (`DF-ROS-2026-A050`). Native installation does not require npm, Node.js, or a machine-wide .NET runtime.
 
 Each stable release contains a self-contained F# executable plus the exact versioned package payload needed by lifecycle commands such as init, verify, doctor, and upgrade. The native wrapper supplies that payload to the executable explicitly. Existing repository-local installations made under the ROS name remain compatible.
 
@@ -101,7 +101,7 @@ A project's own `./praxis` (or its compatibility alias `./ros`) runs the Praxis 
 
 ## Compatibility
 
-The native bundles are the only distribution channel; the npm package is retired (`DF-ROS-2026-A042`). Existing ros and sde command names and repository installation manifests are not removed. Each bundle is the self-contained binary plus its launchers; the binary embeds the scaffold it installs.
+The native bundles are the only distribution channel; the npm package is retired (`DF-ROS-2026-A049`). Existing ros and sde command names and repository installation manifests are not removed. Each bundle is the self-contained binary plus its launchers; the binary embeds the scaffold it installs.
 
 ## Verified bootstrap for CI and remote execution
 

@@ -161,7 +161,7 @@
           "operations": [
             "modified"
           ],
-          "reason": "Decision reference renumbered to DF-ROS-2026-A042 after merging main (work item FSHARP-ONLY-MAIN-MERGE)"
+          "reason": "Decision reference renumbered to DF-ROS-2026-A049 after merging main (work item FSHARP-ONLY-MAIN-MERGE)"
         }
       }
     },
@@ -703,11 +703,11 @@
   },
   {
     "created": "2026-09-28",
-    "id": "RQ-ROS-2026-A022",
+    "id": "RQ-ROS-2026-A024",
     "owners": [
       "repository-governance"
     ],
-    "path": "research/requirements/RQ-ROS-2026-A022--fsharp-dotnet-only-repository.md",
+    "path": "research/requirements/RQ-ROS-2026-A024--fsharp-dotnet-only-repository.md",
     "priority": "high",
     "provenance": {
       "contributions": {
@@ -751,11 +751,25 @@
           "operations": [
             "modified"
           ]
+        },
+        "EXE-20260930T175640720Z-98771e24": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:57:08.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PR92-ID-RENUMBER: renumbered from A022 on this branch to resolve a collision with a different main record; content unchanged"
         }
       }
     },
     "related_documents": [
-      "DF-ROS-2026-A042",
+      "DF-ROS-2026-A049",
       "DF-ROS-2026-A033",
       "requirements/SHARED-APPLICATION-FOUNDATIONS.md"
     ],
@@ -770,16 +784,16 @@
       "invariant"
     ],
     "title": "Repository-owned implementation and automation are F#/.NET only",
-    "updated": "2026-09-28",
-    "version": "1.0.0"
+    "updated": "2026-09-30",
+    "version": "1.0.1"
   },
   {
     "created": "2026-09-28",
-    "id": "RQ-ROS-2026-A023",
+    "id": "RQ-ROS-2026-A025",
     "owners": [
       "repository-governance"
     ],
-    "path": "research/requirements/RQ-ROS-2026-A023--praxis-canonical-name.md",
+    "path": "research/requirements/RQ-ROS-2026-A025--praxis-canonical-name.md",
     "priority": "high",
     "provenance": {
       "contributions": {
@@ -795,11 +809,25 @@
           "operations": [
             "created"
           ]
+        },
+        "EXE-20260930T175640720Z-98771e24": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:57:08.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PR92-ID-RENUMBER: renumbered from A023 on this branch to resolve a collision with a different main record; content unchanged"
         }
       }
     },
     "related_documents": [
-      "DF-ROS-2026-A043",
+      "DF-ROS-2026-A050",
       "AGENTS.md"
     ],
     "research_area": "repository-operating-system",
@@ -812,7 +840,7 @@
       "compatibility"
     ],
     "title": "Praxis is the canonical product and CLI name; ros is compatibility only",
-    "updated": "2026-09-28",
-    "version": "1.0.0"
+    "updated": "2026-09-30",
+    "version": "1.0.1"
   }
 ]

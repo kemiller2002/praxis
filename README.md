@@ -49,7 +49,7 @@ praxis verify
 The native bundle is self-contained. A consuming machine does not need Node.js,
 npm, or a machine-wide .NET runtime. The established `ros` command remains a
 compatibility alias of `praxis`. The native release is the only distribution channel: the
-npm package was retired (`DF-ROS-2026-A042`).
+npm package was retired (`DF-ROS-2026-A049`).
 
 To install the Echelon engineering toolchain, including Ordo:
 
@@ -246,7 +246,7 @@ field, changing what one means, or changing an exit code is, and requires a
 version bump and a migration step.
 
 **Legacy compatibility.** The npm-distributed `ros-bootstrap init` and
-`ros-bootstrap verify` executables are retired (`DF-ROS-2026-A042`). A
+`ros-bootstrap verify` executables are retired (`DF-ROS-2026-A049`). A
 repository they installed keeps working untouched; `praxis status` reports it as
 `upgrade-required`, and `praxis upgrade` adopts the manifest while leaving the
 legacy snapshot in place.
@@ -292,7 +292,7 @@ python3 -m unittest discover -s tests                       # Python artifact-va
 ```
 
 Requires only the .NET 10 SDK (and Python 3 for the oracle tests). This
-repository is F#/.NET only (`RQ-ROS-2026-A022`): it owns no JavaScript,
+repository is F#/.NET only (`RQ-ROS-2026-A024`): it owns no JavaScript,
 TypeScript, npm or Node tooling, and `./praxis architecture check` (also part of
 `./praxis validate`) fails, naming each path, if any appears.
 

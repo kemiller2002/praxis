@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Runs this project's pinned Praxis CLI (DF-ROS-2026-A042, DF-ROS-2026-A043).
+# Runs this project's pinned Praxis CLI (DF-ROS-2026-A049, DF-ROS-2026-A050).
 # Nothing but a POSIX shell is required: the self-contained native release
 # for the version this project pins is installed side by side under
 # $ECHELON_HOME (default ~/.echelon) on first use, checksum-verified by the

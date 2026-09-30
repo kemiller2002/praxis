@@ -7,7 +7,7 @@ open System.Text.Json.Nodes
 open Ros.Cli
 open Ros.Domain.Naming
 
-/// The Praxis naming contract (DF-ROS-2026-A043, RQ-ROS-2026-A023): `praxis`
+/// The Praxis naming contract (DF-ROS-2026-A050, RQ-ROS-2026-A025): `praxis`
 /// is the canonical CLI, every `ros` launcher is an alias of the same
 /// implementation, PRAXIS_* variables are canonical, new installations use
 /// Praxis launchers and workflow, and a ROS-era installation upgrades without
@@ -331,7 +331,7 @@ module PraxisNamingTests =
                   let root = CliHarness.initializedRepository "praxis-naming-retained" None
 
                   try
-                      // DF-ROS-2026-A043 renames the product, not persisted state: these
+                      // DF-ROS-2026-A050 renames the product, not persisted state: these
                       // names are read by every earlier release and must not move.
                       Assert.isTrue (Directory.Exists(Path.Combine(root, ".ros"))) ".ros/ is the state directory"
                       Assert.isTrue (exists root "ros.json") "ros.json is the configuration file"

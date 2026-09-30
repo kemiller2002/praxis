@@ -12,7 +12,7 @@ All five lifecycle commands, and the repository commands below them, are the
 same F# CLI. Launchers (`praxis`, a project's `./praxis`, and the `ros`/`./ros`
 compatibility aliases) only start it; no
 decision is made anywhere else, and no Node.js or npm is involved
-(`DF-ROS-2026-A042`).
+(`DF-ROS-2026-A049`).
 
 ## Lifecycle commands
 

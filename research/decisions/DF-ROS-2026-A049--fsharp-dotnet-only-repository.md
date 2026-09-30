@@ -1,17 +1,17 @@
 ---
-id: DF-ROS-2026-A042
+id: DF-ROS-2026-A049
 title: The repository is F#/.NET only; repository-owned Node/JavaScript/TypeScript is removed and prohibited by an automated invariant
 status: accepted
-version: 1.0.0
+version: 1.0.1
 owners:
   - repository-governance
 created: 2026-09-28
-updated: 2026-09-28
+updated: 2026-09-30
 research_area: repository-operating-system
 decision_type: architecture
-supports: [RQ-ROS-2026-A022]
+supports: [RQ-ROS-2026-A024]
 related_documents:
-  - RQ-ROS-2026-A022
+  - RQ-ROS-2026-A024
   - DF-ROS-2026-A009
   - DF-ROS-2026-A030
   - AGENTS.md
@@ -25,7 +25,7 @@ supersedes:
 superseded_by: []
 tags: [architecture, fsharp, dotnet, node-removal, distribution, invariant, decision]
 confidence: high
-derived_from: [RQ-ROS-2026-A022]
+derived_from: [RQ-ROS-2026-A024]
 provenance:
   contributions:
     EXE-20260928T090915352Z-fb23943c:
@@ -57,7 +57,19 @@ provenance:
         provider: anthropic
         model: unknown
         runtime: claude-code
+    EXE-20260930T175640720Z-98771e24:
+      operations: [migrated]
+      at: 2026-09-30T17:57:07.000Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PR92-ID-RENUMBER: renumbered from A042 on this branch to resolve a collision with a different main record; content unchanged"
 ---
+
+> **Renumbered 2026-09-30** (`PRAXIS-PR92-ID-RENUMBER`, owner-approved): this record was numbered A042 on PR #92's branch. Main had already given A042 to a different record, so this one took the next free number before the branches were reconciled. Its content is unchanged.
 
 # Context
 
@@ -78,7 +90,7 @@ GitHub Actions that run on Node are not repository-owned code.
 
 # Decision
 
-1. **Rule.** `RQ-ROS-2026-A022`: repository-owned JavaScript/TypeScript/Node
+1. **Rule.** `RQ-ROS-2026-A024`: repository-owned JavaScript/TypeScript/Node
    is prohibited unless an accepted `DF-` decision approves a narrow
    exception, recorded in `ros.json` `implementationPolicy.exceptions` as one
    exact path or directory. There are no exceptions today.
@@ -107,7 +119,7 @@ GitHub Actions that run on Node are not repository-owned code.
      launchers (the scaffold adds `ros.cmd`/`ros.ps1` for Windows). The
      scaffolded launcher installs the pinned native release side by side
      (`install-native --no-activate`) instead of downloading `ros-fs` assets
-     through Node. (`DF-ROS-2026-A043` later made these launchers `./praxis`,
+     through Node. (`DF-ROS-2026-A050` later made these launchers `./praxis`,
      `praxis.cmd` and `praxis.ps1`, keeping the `ros` names as aliases.)
 4. **Distribution.** The npm package and its publish workflow are retired;
    the native release (`native-release.yml`, `scripts/install-native.*`) is

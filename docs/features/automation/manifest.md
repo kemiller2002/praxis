@@ -5,7 +5,7 @@
 Route changes to GitHub validation and native release declarations while
 keeping platform mechanics separate from Praxis semantic decisions. Workflows
 are execution hosts for the F# CLI and .NET tooling; they own no Node
-execution (`RQ-ROS-2026-A022`). External actions (for example
+execution (`RQ-ROS-2026-A024`). External actions (for example
 `actions/checkout`) running on their own Node runtime are not repository code.
 
 ## Ownership
@@ -60,7 +60,7 @@ execution (`RQ-ROS-2026-A022`). External actions (for example
 ## Maintenance
 
 - Owner: repository-governance
-- Last checked against implementation: 2026-09-28 (`DF-ROS-2026-A042`: npm
+- Last checked against implementation: 2026-09-28 (`DF-ROS-2026-A049`: npm
   publication workflow removed; every workflow step the repository owns runs
   .NET/F#).
 - Known gaps: a release is created for `release.json`'s version whenever a

@@ -20,7 +20,7 @@ related_documents:
   - PACKAGE-USAGE.md
 supersedes: []
 superseded_by:
-  - DF-ROS-2026-A042
+  - DF-ROS-2026-A049
 tags: [architecture, fsharp, migration, testing, sde, decision]
 confidence: high
 provenance:
@@ -34,7 +34,7 @@ provenance:
         provider: anthropic
         model: unknown
         runtime: claude-code
-      reason: "Superseded by DF-ROS-2026-A042 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+      reason: "Superseded by DF-ROS-2026-A049 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
 ---
 
 # Context

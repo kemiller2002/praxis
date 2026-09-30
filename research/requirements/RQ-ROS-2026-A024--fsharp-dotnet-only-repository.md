@@ -1,16 +1,16 @@
 ---
-id: RQ-ROS-2026-A022
+id: RQ-ROS-2026-A024
 title: Repository-owned implementation and automation are F#/.NET only
 status: implemented
-version: 1.0.0
+version: 1.0.1
 owners:
   - repository-governance
 created: 2026-09-28
-updated: 2026-09-28
+updated: 2026-09-30
 research_area: repository-operating-system
 priority: high
 related_documents:
-  - DF-ROS-2026-A042
+  - DF-ROS-2026-A049
   - DF-ROS-2026-A033
   - requirements/SHARED-APPLICATION-FOUNDATIONS.md
 tags: [architecture, fsharp, dotnet, tooling, node-removal, invariant]
@@ -45,7 +45,19 @@ provenance:
         provider: anthropic
         model: unknown
         runtime: claude-code
+    EXE-20260930T175640720Z-98771e24:
+      operations: [migrated]
+      at: 2026-09-30T17:57:08.000Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PR92-ID-RENUMBER: renumbered from A022 on this branch to resolve a collision with a different main record; content unchanged"
 ---
+
+> **Renumbered 2026-09-30** (`PRAXIS-PR92-ID-RENUMBER`, owner-approved): this record was numbered A022 on PR #92's branch. Main had already given A022 to a different record, so this one took the next free number before the branches were reconciled. Its content is unchanged.
 
 # Requirement
 

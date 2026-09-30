@@ -1,7 +1,7 @@
 namespace Ros.Domain.Naming
 
 /// Environment variables are documented under the canonical `PRAXIS_`
-/// prefix; the historical `ROS_` names keep working (DF-ROS-2026-A043).
+/// prefix; the historical `ROS_` names keep working (DF-ROS-2026-A050).
 /// Every reader in this CLI reads the `ROS_` name, so the composition root
 /// applies these assignments once at start-up instead of teaching every
 /// reader two names.

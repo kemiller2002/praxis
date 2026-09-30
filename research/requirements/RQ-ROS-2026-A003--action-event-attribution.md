@@ -44,7 +44,7 @@ provenance:
         provider: anthropic
         model: unknown
         runtime: claude-code
-      reason: "Decision reference renumbered to DF-ROS-2026-A042 after merging main (work item FSHARP-ONLY-MAIN-MERGE)"
+      reason: "Decision reference renumbered to DF-ROS-2026-A049 after merging main (work item FSHARP-ONLY-MAIN-MERGE)"
 ---
 
 # Requirement
@@ -58,7 +58,7 @@ Git authorship and free-text actor strings cannot say who performed an action or
 ## Acceptance criteria
 
 - The event `actor` is part of the hashed, published event.
-- The CLI writes the identical actor recorded by the original golden masters (the Node library that shared them was removed by DF-ROS-2026-A042).
+- The CLI writes the identical actor recorded by the original golden masters (the Node library that shared them was removed by DF-ROS-2026-A049).
 - Legacy events and items without an actor remain valid and are reported only as informational findings.
 
 ## Verification

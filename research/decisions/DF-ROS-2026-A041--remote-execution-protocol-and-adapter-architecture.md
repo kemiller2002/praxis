@@ -68,7 +68,7 @@ provenance:
         provider: anthropic
         model: unknown
         runtime: claude-code
-      reason: "Validation references point at the F# port of tests/remote-execute.test.mjs (DF-ROS-2026-A042) (work item FSHARP-ONLY-MAIN-MERGE)"
+      reason: "Validation references point at the F# port of tests/remote-execute.test.mjs (DF-ROS-2026-A049) (work item FSHARP-ONLY-MAIN-MERGE)"
 derived_from: [RQ-ROS-2026-A021]
 ---
 # Context

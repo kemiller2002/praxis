@@ -115,7 +115,7 @@ rm -f "$current"
 ln -s "$target" "$current"
 
 # `praxis` is the command; `ros` is its pre-rename compatibility alias
-# (DF-ROS-2026-A043), the same program.
+# (DF-ROS-2026-A050), the same program.
 for command_name in praxis ros; do
   cat > "$bin_dir/$command_name" <<EOF
 #!/usr/bin/env sh

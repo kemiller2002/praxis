@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Runs this source checkout's Praxis CLI (F#; DF-ROS-2026-A030, A043). The
+# Runs this source checkout's Praxis CLI (F#; DF-ROS-2026-A030, A050). The
 # only prerequisite is the .NET SDK that builds it.
 set -eu
 

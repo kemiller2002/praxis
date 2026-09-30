@@ -105,12 +105,12 @@ is wrong, then `praxis init` or `praxis upgrade` to converge.
   breaking change. It requires a new schema or configuration version and a
   migration step.
 - The npm-distributed `ros-bootstrap init` and `ros-bootstrap verify` are
-  retired (`DF-ROS-2026-A042`); what they installed is still upgradeable.
+  retired (`DF-ROS-2026-A049`); what they installed is still upgradeable.
 - A repository installed by `ros-bootstrap init` keeps working with no action
   from you. `praxis status` reports it as `upgrade-required`; adopting the
   manifest with `praxis upgrade` is what moves it to `installed`.
 - Upgrading an installation made before the Praxis rename
-  (`DF-ROS-2026-A043`) adds the `praxis` launchers, turns the existing `ros`
+  (`DF-ROS-2026-A050`) adds the `praxis` launchers, turns the existing `ros`
   launchers into compatibility aliases, and moves
   `.github/workflows/ros-validation.yml` to `praxis-validation.yml` (an
   edited workflow moves with its edits intact). `.ros/`, `ros.json` and

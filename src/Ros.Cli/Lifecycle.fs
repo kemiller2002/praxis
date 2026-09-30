@@ -612,7 +612,7 @@ let run (renderHelp: string option -> string) (root: string) (command: Command) 
     | Command.Version ->
         // "<program> <version>". Consumers (echelon doctor, the verified
         // bootstrap) read only the version token, so the program name could
-        // move from the historical `ros-fs` to `praxis` (DF-ROS-2026-A043).
+        // move from the historical `ros-fs` to `praxis` (DF-ROS-2026-A050).
         printfn "praxis %s" Version
         Some ExitCode.Success
     | Command.Init options -> Some(runInit root options)

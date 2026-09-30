@@ -26,7 +26,7 @@ pins and installs that release side by side on first use. Its `./ros`,
 
 The npm package (`@echelon-foundry/repository-operating-system`, with its
 `ros`, `ros-fs` and `ros-bootstrap` executables) is retired
-(`DF-ROS-2026-A042`); no new versions are published. The package name remains
+(`DF-ROS-2026-A049`); no new versions are published. The package name remains
 the installation identity recorded in `.echelon/ros.json`.
 
 ## Distribution model

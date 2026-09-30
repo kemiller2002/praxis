@@ -97,7 +97,7 @@ praxis_cli() { "${PRAXIS_CMD[@]}" "$@"; }
 export PRAXIS_ACTOR_KIND="${PRAXIS_ACTOR_KIND:-${ROS_ACTOR_KIND:-human}}"
 export PRAXIS_ACTOR="${PRAXIS_ACTOR:-${ROS_ACTOR:-$(gh api user -q .login)}}"
 # Compatibility: Praxis releases from before the rename read only the legacy
-# names (DF-ROS-2026-A043).
+# names (DF-ROS-2026-A050).
 export ROS_ACTOR_KIND="$PRAXIS_ACTOR_KIND" ROS_ACTOR="$PRAXIS_ACTOR"
 echo "repository: $TARGET_SLUG   actor: $PRAXIS_ACTOR_KIND:$PRAXIS_ACTOR   praxis: ${PRAXIS_CMD[*]}   dry-run: $DRY_RUN"
 
