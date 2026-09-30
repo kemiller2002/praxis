@@ -50,7 +50,7 @@ Establish a baseline before modification when practical. Select tests according 
 - performance tests for measured budgets or suspected regressions;
 - security-focused tests and review for trust boundaries and sensitive changes.
 
-Run the narrowest useful checks during iteration and the affected broader suite before completion. Never infer coverage from unrelated tests. Record skipped, unavailable, flaky, or failing checks and their implications.
+Run the narrowest useful checks during iteration and the affected broader suite before completion. Intermediate development branches may remain red while an implementation slice is incomplete; failures stay visible and are recorded rather than suppressed. Never infer coverage from unrelated tests. Record skipped, unavailable, flaky, or failing checks and their implications. Before a branch is represented as merge-ready, every configured required check must succeed against the exact integration candidate; any later meaningful commit invalidates the prior readiness evidence.
 
 ## Accessibility
 
@@ -66,4 +66,17 @@ Document public behavior, architectural intent, non-obvious constraints, migrati
 
 ## Definition of Done
 
-A change is done when its acceptance criteria are met; relevant checks pass; failures and skipped checks are explained; affected documentation and traceability are updated; no known high-severity regression remains; unrelated user work is preserved; the final implementation state is durably recoverable (committed, pushed, and recorded as a verified durable checkpoint) rather than existing only in one executor's environment; and a capable successor can understand the resulting state and remaining risk.
+"Work item complete", "durably recoverable", and "merge-ready" are separate
+claims.
+
+A work item is done when its acceptance criteria are met; its relevant checks
+have been run in proportion to risk; failures and skipped checks are explained;
+affected documentation and traceability are updated; no known high-severity
+regression remains; unrelated user work is preserved; its final implementation
+state is durably recoverable rather than existing only in one executor's
+environment; and a capable successor can understand the resulting state and
+remaining risk.
+
+A branch or commit is **merge-ready** only when the repository's configured
+merge-readiness policy succeeds for that exact candidate commit. A completed
+work item or verified checkpoint cannot substitute for that integration gate.
