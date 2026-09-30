@@ -21,3 +21,53 @@ jobs:
       - run: ./ros validate
         env:
           ROS_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+
+  # Intermediate branch failures remain visible. Only this exact candidate may
+  # be represented as merge-ready, and only when every required check passed.
+  merge-gate:
+    name: merge-gate
+    if: ${{ always() }}
+    needs:
+      - validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Normalize required-check evidence
+        shell: bash
+        env:
+          CANDIDATE_SHA: ${{ github.sha }}
+          VALIDATE_RESULT: ${{ needs.validate.result }}
+        run: |
+          python - <<'PY'
+          import json, os
+
+          state = {
+              "success": "succeeded",
+              "failure": "failed",
+              "cancelled": "cancelled",
+              "skipped": "skipped",
+          }.get(os.environ["VALIDATE_RESULT"], f"unknown:{os.environ['VALIDATE_RESULT']}")
+
+          sha = os.environ["CANDIDATE_SHA"].lower()
+          evidence = {
+              "schema": "praxis.merge-readiness/1",
+              "candidateCommit": sha,
+              "remoteCandidateCurrent": True,
+              "checks": [{
+                  "id": "repository-validation",
+                  "state": state,
+                  "commit": sha,
+              }],
+          }
+          path = os.path.join(os.environ["RUNNER_TEMP"], "merge-readiness.json")
+          with open(path, "w", encoding="utf-8") as handle:
+              json.dump(evidence, handle, indent=2)
+              handle.write("\n")
+          PY
+      - name: Require exact-candidate merge readiness
+        run: ./ros merge readiness --evidence "$RUNNER_TEMP/merge-readiness.json" --json
