@@ -4778,38 +4778,48 @@
     {
       "id": "PRAXIS-PLAN-EXP-01",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T11:47:48.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/evidence/EV-ROS-2026-A060--grouping-experiment-results.md"
+        },
+        {
+          "type": "tests",
+          "path": "research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt"
+        }
+      ],
+      "updatedAt": "2026-09-30T17:18:43.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T114749635Z-ba7301df"
       ],
       "latestCheckpoint": {
-        "id": "92ec2015219f6bcd49e11371",
-        "recordedAt": "2026-09-30T11:50:52.000Z",
+        "id": "d8d6a32e5376296833d1aad6",
+        "recordedAt": "2026-09-30T17:18:41.000Z",
         "executionId": "EXE-20260930T114749635Z-ba7301df",
         "repository": "repository-operating-system",
         "branch": "claude/grouping-experiment-a021",
-        "commit": "4a44ce01c23ff9de1ea11bd736c4943c41769e47",
+        "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
         "remoteBranch": "claude/grouping-experiment-a021",
-        "remoteCommit": "4a44ce01c23ff9de1ea11bd736c4943c41769e47",
-        "summary": "Arms started from 8b4ffa3 (B fb6a0f9 + harness): grouped session_01Am6kL4FMXPviX7x1UJhbx9, control-01 session_01M75ZaHmVcX1YYzxg2UP4gD",
-        "nextAction": "When control-01 finishes, start control-02..05 serially; when both arms finish, run the blind evaluator",
+        "remoteCommit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+        "summary": "EX-ROS-2026-A021 complete: both arms run, blind evaluation done, results in EV-ROS-2026-A060, hypotheses updated, follow-ups captured",
+        "nextAction": "Owner review of EV-ROS-2026-A060 and the phase-two decision PRAXIS-GROUP-06",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-09-30T17:18:43.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T11:47:48.000Z",
+  "updatedAt": "2026-09-30T17:18:43.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
