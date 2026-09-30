@@ -1,0 +1,73 @@
+{
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.3",
+  "requestId": "req-chatgpt-xprovider-finish-01",
+  "operation": "batch",
+  "repository": {
+    "ref": "refs/heads/proof/chatgpt-continuation",
+    "expectedSha": "599eb663ab6d4ab96be198e8b32b90c7bb5c138b"
+  },
+  "actor": {
+    "kind": "agent",
+    "id": "openai/chatgpt",
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "runtime": "chatgpt"
+  },
+  "arguments": {
+    "requests": [
+      {
+        "requestId": "req-chatgpt-xprovider-part2-step-complete-01",
+        "operation": "step.complete",
+        "execution": {
+          "id": "EXE-20260929T173543602Z-75ccd1b9"
+        },
+        "arguments": {
+          "stepId": "part-2",
+          "reason": "Successor proof section written and committed."
+        }
+      },
+      {
+        "requestId": "req-chatgpt-xprovider-checkpoint-01",
+        "operation": "work.checkpoint",
+        "execution": {
+          "id": "EXE-20260929T173543602Z-75ccd1b9"
+        },
+        "arguments": {
+          "workItemId": "PRAXIS-XPROVIDER-PROOF-01",
+          "summary": "OpenAI/ChatGPT successor recovered the Claude checkpoint and completed Part 2 of the cross-provider continuation proof.",
+          "nextAction": "Complete PRAXIS-XPROVIDER-PROOF-01 after recording evidence and validating the completed state.",
+          "stepId": "part-2"
+        }
+      },
+      {
+        "requestId": "req-chatgpt-xprovider-complete-01",
+        "operation": "work.complete",
+        "execution": {
+          "id": "EXE-20260929T173543602Z-75ccd1b9"
+        },
+        "arguments": {
+          "workItemIds": [
+            "PRAXIS-XPROVIDER-PROOF-01"
+          ],
+          "evidence": [
+            {
+              "type": "implementation",
+              "path": "docs/proofs/cross-provider-continuation.md"
+            },
+            {
+              "type": "tests",
+              "path": "tests/Ros.Tests/RecoveryProofTests.fs"
+            }
+          ],
+          "conclusion": "supported"
+        }
+      },
+      {
+        "requestId": "req-chatgpt-xprovider-validate-01",
+        "operation": "validate",
+        "arguments": {}
+      }
+    ]
+  }
+}
