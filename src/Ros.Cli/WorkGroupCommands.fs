@@ -5,11 +5,13 @@ open System.Globalization
 open System.IO
 open System.Text.Json.Nodes
 open Ros.Application.Planning
+open Ros.Application.Work
 open Ros.Contracts.Planning
 open Ros.Contracts.Work
 open Ros.Domain.Planning
 open Ros.Domain.Provenance
 open Ros.Domain.Work
+open Ros.Infrastructure.Git
 open Ros.Infrastructure.Planning
 open Ros.Infrastructure.Work
 
@@ -20,7 +22,7 @@ open Ros.Infrastructure.Work
 [<RequireQualifiedAccess>]
 module WorkGroupCommands =
     let usage =
-        "work group show GROUP-ID [--config FILE] [--json] | work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT] [--config FILE] [--dry-run] [--json] | work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT] [--dry-run] [--json] | work group create --id GROUP-ID --member ID [--member ID ...] --occurred-at TIMESTAMP [--kind KIND] [--execution-repository NAME] [--cross-repository] [--shared-context TEXT ...] [--architecture-note TEXT ...] [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY]"
+        "work group show GROUP-ID [--config FILE] [--json] | work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT] [--config FILE] [--dry-run] [--json] | work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT] [--dry-run] [--json] | work group checkpoint --id GROUP-ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT [--decision TEXT]* [--config FILE] [--json] | work group create --id GROUP-ID --member ID [--member ID ...] --occurred-at TIMESTAMP [--kind KIND] [--execution-repository NAME] [--cross-repository] [--shared-context TEXT ...] [--architecture-note TEXT ...] [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY]"
 
     // ---- arguments ----
 
@@ -355,7 +357,116 @@ module WorkGroupCommands =
                         let gates = if row.Gates.IsEmpty then "" else $"""; gates {String.concat ", " row.Gates}"""
                         printfn "  %s  recorded: %s; planning: %s; status: %s%s%s" row.WorkItemId row.RecordedState row.PlanningState row.Status gatedBy gates
 
+                    match List.tryLast group.Checkpoints with
+                    | Some latest ->
+                        printfn "Latest group checkpoint: %s at %s (%s on %s)" latest.CheckpointId latest.RecordedAt latest.Commit latest.Branch
+                        printfn "  next action: %s" latest.NextAction
+                        latest.Decisions |> List.iter (printfn "  shared decision: %s")
+                    | None -> printfn "Latest group checkpoint: none recorded"
+
                     printfn "Read-only: nothing was written."
+
+                0
+
+    // ---- work group checkpoint ----
+
+    let checkpointUsage =
+        "work group checkpoint --id GROUP-ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT [--decision TEXT]* [--config FILE] [--json] [IDENTITY]"
+
+    /// The planner's own group for this ID, for the member statuses a group
+    /// checkpoint records (analysis D7). Read-only.
+    let private plannedGroup (root: string) (version: string) (parsed: Arguments) (groupId: string) =
+        let plannedAt = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture)
+        let port = FilePlanningRepository.create root None (single "--config" parsed |> Option.map (resolve root))
+
+        PlanningOperations.analyze port plannedAt version
+        |> Result.map (fun (input, analysis) ->
+            (Grouping.recommend input analysis).Groups |> List.tryFind (fun candidate -> WorkGroupId.value candidate.Id = groupId))
+
+    let private groupCheckpoint (root: string) (version: string) (arguments: string list) (actor: Actor) =
+        let parsed = split (set [ "--id"; "--occurred-at"; "--summary"; "--next-action"; "--decision"; "--config" ]) (set [ "--json" ]) arguments
+
+        let errors =
+            commonErrors "checkpoint" [ "--summary"; "--next-action"; "--config" ] parsed
+            @ [ if (values "--summary" parsed).IsEmpty then
+                    yield "work group checkpoint requires one --summary TEXT describing the completed work"
+                if (values "--next-action" parsed).IsEmpty then
+                    yield "work group checkpoint requires one --next-action TEXT naming the next intended step" ]
+
+        match errors with
+        | _ :: _ -> usageFailure errors checkpointUsage
+        | [] ->
+            let groupId = (single "--id" parsed).Value
+            let asJson = has "--json" parsed
+
+            let request =
+                { GroupId = groupId
+                  Summary = (single "--summary" parsed).Value
+                  NextAction = (single "--next-action" parsed).Value
+                  Decisions = values "--decision" parsed
+                  OccurredAt = (single "--occurred-at" parsed).Value
+                  Actor = actor }
+
+            let outcome =
+                configuration root parsed
+                |> Result.bind (facts root)
+                |> Result.bind (fun known ->
+                    plannedGroup root version parsed groupId
+                    |> Result.bind (fun planned ->
+                        FilePlanningRepository.readLive root
+                        |> Result.bind (fun live ->
+                            let memberCheckpoints =
+                                live |> List.choose (fun item -> item.Checkpoint |> Option.map (fun summary -> item.Id, summary)) |> Map.ofList
+
+                            // Observed under the lock, exactly as `work checkpoint` observes.
+                            FileWorkGroupRepository.mutate root false (fun stored ->
+                                match WorkGroups.tryFind groupId stored with
+                                | None -> Error [ GroupRejection.UnknownGroup groupId ]
+                                | Some group ->
+                                    let git = ProcessGitDurability.create root
+                                    let policy = FileCheckpointRepository.readPolicy root
+
+                                    let candidate =
+                                        { WorkItemId = groupId
+                                          Repository = FileWorkConfigRepository.readRepositoryId root
+                                          Summary = request.Summary
+                                          NextAction = request.NextAction
+                                          StepId = None
+                                          OccurredAt = request.OccurredAt }
+
+                                    let location =
+                                        CheckpointObservation.candidate git policy None ExecutionObservation.NoneActive
+                                        |> CheckpointVerification.durableLocation candidate
+
+                                    WorkGroups.checkpoint stored (WorkGroups.view known planned group) location memberCheckpoints request))))
+
+            match outcome with
+            | Error message -> failed asJson "checkpoint" groupId message
+            | Ok(Error rejections) -> rejected asJson "checkpoint" groupId rejections
+            | Ok(Ok recorded) ->
+                if asJson then
+                    let document = WorkGroupJson.envelope "checkpoint" groupId "recorded"
+                    document["checkpoint"] <- WorkGroupJson.checkpointNode recorded
+                    document["claimedPaths"] <- WorkGroupJson.textArray []
+                    print document
+                else
+                    let list (values: string list) = if values.IsEmpty then "none" else String.concat ", " values
+                    printfn "group checkpoint recorded for %s (checkpoint %s)" groupId recorded.CheckpointId
+                    printfn "  commit:            %s on %s" recorded.Commit recorded.Branch
+                    printfn "  verified at:       %s/%s == local HEAD (read from the remote itself)" recorded.Remote recorded.RemoteBranch
+                    printfn "  completed members: %s" (list recorded.CompletedMembers)
+                    printfn "  active members:    %s" (list recorded.ActiveMembers)
+                    printfn "  remaining members: %s" (list recorded.RemainingMembers)
+
+                    for reference in recorded.MemberCheckpoints do
+                        printfn "  member checkpoint: %s -> %s" reference.WorkItemId (reference.CheckpointId |> Option.defaultValue "none recorded")
+
+                    for decision in recorded.Decisions do
+                        printfn "  shared decision:   %s" decision
+
+                    printfn "  summary:           %s" recorded.Summary
+                    printfn "  next action:       %s" recorded.NextAction
+                    printfn "The group checkpoint references members' own checkpoints and claims no paths. Praxis state changed in .ros/work/groups.json; commit and push it."
 
                 0
 
@@ -367,6 +478,7 @@ module WorkGroupCommands =
         | "show" :: rest -> show root version rest
         | "add" :: rest -> ProvenanceCommands.withResolvedActor rest (add root rest)
         | "remove" :: rest -> ProvenanceCommands.withResolvedActor rest (remove root rest)
+        | "checkpoint" :: rest -> ProvenanceCommands.withResolvedActor rest (groupCheckpoint root version rest)
         | _ ->
             eprintfn "ERROR unknown work group command"
             eprintfn "Usage: ros %s" usage

@@ -74,6 +74,29 @@ module WorkGroupJson =
           Actor = actor node "actor" path
           Reason = optionalText node "reason" path }
 
+    let private memberCheckpoint (node: JsonObject, path: string) : GroupMemberCheckpoint =
+        { WorkItemId = requiredText node "workItemId" path
+          CheckpointId = optionalText node "checkpointId" path
+          Commit = optionalText node "commit" path
+          ExecutionId = optionalText node "executionId" path }
+
+    let private groupCheckpoint (node: JsonObject, path: string) : GroupCheckpoint =
+        { CheckpointId = requiredText node "checkpointId" path
+          RecordedAt = requiredText node "recordedAt" path
+          Actor = actor node "actor" path
+          Summary = requiredText node "summary" path
+          NextAction = requiredText node "nextAction" path
+          Decisions = texts node "decisions" path
+          Repository = requiredText node "repository" path
+          Branch = requiredText node "branch" path
+          Commit = requiredText node "commit" path
+          Remote = requiredText node "remote" path
+          RemoteBranch = requiredText node "remoteBranch" path
+          ActiveMembers = texts node "activeMembers" path
+          CompletedMembers = texts node "completedMembers" path
+          RemainingMembers = texts node "remainingMembers" path
+          MemberCheckpoints = objects node "memberCheckpoints" path |> List.map memberCheckpoint }
+
     let private group (node: JsonObject, path: string) : StoredGroup =
         { Id = requiredText node "id" path
           Kind = optionalText node "kind" path |> Option.map (parsedWith "group kind" GroupKind.tryParse $"{path}.kind")
@@ -88,7 +111,8 @@ module WorkGroupJson =
           Members = texts node "members" path
           CreatedAt = requiredText node "createdAt" path
           CreatedBy = actor node "createdBy" path
-          History = objects node "history" path |> List.map historyEntry }
+          History = objects node "history" path |> List.map historyEntry
+          Checkpoints = objects node "checkpoints" path |> List.map groupCheckpoint }
 
     /// Parses the stored document; a malformed document is an error, never
     /// silently "no groups".
@@ -124,6 +148,41 @@ module WorkGroupJson =
         entry.Reason |> Option.iter (fun reason -> node["reason"] <- JsonValue.Create reason)
         node
 
+    let private optionalNode (value: string option) : JsonNode =
+        match value with
+        | Some text -> JsonValue.Create text
+        | None -> null
+
+    let checkpointNode (value: GroupCheckpoint) : JsonObject =
+        let node = JsonObject()
+        node["checkpointId"] <- JsonValue.Create value.CheckpointId
+        node["recordedAt"] <- JsonValue.Create value.RecordedAt
+        node["actor"] <- ActorJson.node value.Actor
+        node["summary"] <- JsonValue.Create value.Summary
+        node["nextAction"] <- JsonValue.Create value.NextAction
+        node["decisions"] <- textArray value.Decisions
+        node["repository"] <- JsonValue.Create value.Repository
+        node["branch"] <- JsonValue.Create value.Branch
+        node["commit"] <- JsonValue.Create value.Commit
+        node["remote"] <- JsonValue.Create value.Remote
+        node["remoteBranch"] <- JsonValue.Create value.RemoteBranch
+        node["activeMembers"] <- textArray value.ActiveMembers
+        node["completedMembers"] <- textArray value.CompletedMembers
+        node["remainingMembers"] <- textArray value.RemainingMembers
+
+        node["memberCheckpoints"] <-
+            value.MemberCheckpoints
+            |> Seq.map (fun reference ->
+                let item = JsonObject()
+                item["workItemId"] <- JsonValue.Create reference.WorkItemId
+                item["checkpointId"] <- optionalNode reference.CheckpointId
+                item["commit"] <- optionalNode reference.Commit
+                item["executionId"] <- optionalNode reference.ExecutionId
+                item :> JsonNode)
+            |> array
+
+        node
+
     let groupNode (value: StoredGroup) : JsonObject =
         let node = JsonObject()
         node["id"] <- JsonValue.Create value.Id
@@ -137,6 +196,7 @@ module WorkGroupJson =
         node["createdAt"] <- JsonValue.Create value.CreatedAt
         node["createdBy"] <- ActorJson.node value.CreatedBy
         node["history"] <- value.History |> Seq.map (fun entry -> historyNode entry :> JsonNode) |> array
+        node["checkpoints"] <- value.Checkpoints |> Seq.map (fun entry -> checkpointNode entry :> JsonNode) |> array
         node
 
     let render (stored: StoredGroups) : string =
@@ -214,4 +274,10 @@ module WorkGroupJson =
         document["members"] <- value.Members |> Seq.map (fun row -> memberViewNode row :> JsonNode) |> array
         document["progress"] <- progress
         document["blocked"] <- blocked
+
+        document["latestCheckpoint"] <-
+            match List.tryLast value.Group.Checkpoints with
+            | Some latest -> checkpointNode latest :> JsonNode
+            | None -> null
+
         document

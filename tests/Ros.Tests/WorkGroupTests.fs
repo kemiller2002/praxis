@@ -542,4 +542,143 @@ module WorkGroupTests =
                       Assert.equal "dry-run" (text (remove clone "GROUP-FIXTURE-001" "FEAT-1" [ "--dry-run" ] |> ok).Json["status"])
                       Assert.equal afterAdd (File.ReadAllText(groupsPath clone))) } ]
 
-    let tests = createTests @ showTests @ addTests @ removeTests
+    // ---- PRAXIS-GROUP-05: checkpoint ----
+
+    let private sha = String.replicate 40 "a"
+
+    let private location: Ros.Domain.Work.GitDurableLocation =
+        { Repository = "here"
+          Branch = "feature/x"
+          LocalCommit = (Ros.Domain.Git.CommitId.tryParse sha).Value
+          Remote = { Name = "origin"; Url = None }
+          RemoteBranch = "feature/x"
+          RemoteCommit = (Ros.Domain.Git.CommitId.tryParse sha).Value }
+
+    let private request groupId =
+        { GroupId = groupId
+          Summary = "Milestone reached"
+          NextAction = "Implement the next member"
+          Decisions = [ "D1 one store" ]
+          OccurredAt = "2026-09-30T14:00:00.000Z"
+          Actor = actor }
+
+    let private memberSummary id : CheckpointSummary =
+        { CheckpointId = $"cp-{id}"
+          ExecutionId = $"EXE-{id}"
+          RecordedAt = "2026-09-30T13:30:00.000Z"
+          Branch = "feature/x"
+          Commit = sha
+          Summary = "member work"
+          NextAction = "more"
+          Verified = true }
+
+    let private groupCheckpoint clone (groupId: string) (extra: string list) =
+        cli clone ([ "work"; "group"; "checkpoint"; "--id"; groupId; "--occurred-at"; now (); "--summary"; "Milestone reached"; "--next-action"; "Implement the next member"; "--json" ] @ extra)
+
+    let private checkpointTests =
+        [ { Name = "work group (domain): a group checkpoint records the durable location, member progress, decisions and references to members' own checkpoints"
+            Run =
+              fun () ->
+                  let stored, group = createdGroup [ "FEAT-1"; "FEAT-2" ]
+                  let view = WorkGroups.view facts None group
+                  let references = Map.ofList [ "FEAT-2", memberSummary "FEAT-2" ]
+
+                  match WorkGroups.checkpoint stored view (Ok location) references (request "GROUP-HERE-001") with
+                  | Error rejections -> failwith $"%A{rejections}"
+                  | Ok(next, recorded) ->
+                      Assert.equal sha recorded.Commit
+                      Assert.equal ("feature/x", "origin", "feature/x") (recorded.Branch, recorded.Remote, recorded.RemoteBranch)
+                      Assert.equal [ "FEAT-2" ] recorded.ActiveMembers
+                      Assert.equal [ "FEAT-1"; "FEAT-2" ] recorded.RemainingMembers
+                      Assert.equal [ "D1 one store" ] recorded.Decisions
+                      Assert.equal [ None; Some "cp-FEAT-2" ] (recorded.MemberCheckpoints |> List.map _.CheckpointId)
+                      Assert.equal (WorkGroups.checkpointId recorded) recorded.CheckpointId
+                      Assert.isTrue (recorded.CheckpointId.StartsWith "GCP-") recorded.CheckpointId
+                      let saved = (WorkGroups.tryFind "GROUP-HERE-001" next).Value
+                      Assert.equal [ recorded ] saved.Checkpoints
+                      Assert.equal group.Members saved.Members
+                      Assert.empty (WorkGroups.validate (Set.ofList [ "FEAT-1"; "FEAT-2" ]) next)
+                      let edited = { next with Groups = [ { saved with Checkpoints = [ { recorded with Summary = "rewritten" } ] } ] }
+                      let messages = WorkGroups.validate (Set.ofList [ "FEAT-1"; "FEAT-2" ]) edited |> List.map _.Message
+                      Assert.isTrue (messages |> List.exists (fun m -> m.Contains "does not match its content")) $"%A{messages}" }
+          { Name = "work group (domain): durability rejections are the work checkpoint's own; a group with nothing remaining is refused"
+            Run =
+              fun () ->
+                  let stored, group = createdGroup [ "FEAT-1" ]
+                  let view = WorkGroups.view facts None group
+                  let remote: Ros.Domain.Git.RemoteIdentity = { Name = "origin"; Url = None }
+                  let notDurable = WorkGroups.checkpoint stored view (Error [ CheckpointRejection.LocalAhead(1, remote, "feature/x") ]) Map.empty (request "GROUP-HERE-001")
+                  Assert.equal [ "local-ahead" ] (codes notDurable)
+                  let blank = WorkGroups.checkpoint stored view (Error [ CheckpointRejection.BlankSummary ]) Map.empty (request "GROUP-HERE-001")
+                  Assert.isTrue (match blank with Error rejections -> rejections |> List.forall GroupRejection.isArgumentError | Ok _ -> false) "blank text is an argument error"
+                  let finished = { view with Members = view.Members |> List.map (fun row -> { row with Status = "complete"; RecordedState = "complete" }) }
+                  Assert.equal [ "nothing-remaining" ] (codes (WorkGroups.checkpoint stored finished (Ok location) Map.empty (request "GROUP-HERE-001")))
+                  Assert.equal [ "unknown-group" ] (codes (WorkGroups.checkpoint stored view (Ok location) Map.empty (request "GROUP-HERE-404"))) }
+          { Name = "work group checkpoint (cli): verified like work checkpoint; references the member's own checkpoint without replacing it; claims no paths"
+            Run =
+              fun () ->
+                  withRepository (fun clone ->
+                      capture clone "FEAT-1"
+                      capture clone "FEAT-2"
+                      create clone "GROUP-FIXTURE-001" [ "FEAT-1"; "FEAT-2" ] [] |> ok |> ignore
+                      cli clone [ "work"; "start"; "--id"; "FEAT-1"; "--type"; "feature"; "--occurred-at"; now () ] |> ok |> ignore
+                      GitFixture.write clone "src/feature.txt" "feature\n"
+                      let head = pushAll clone "feature work"
+                      let own = (cli clone [ "work"; "checkpoint"; "--id"; "FEAT-1"; "--occurred-at"; now (); "--summary"; "slice"; "--next-action"; "next"; "--json" ] |> ok).Json
+                      let ownId = text own["checkpoint"].["id"]
+                      let pushed = pushAll clone "praxis state"
+
+                      let result =
+                          leavesMembersUntouched clone (fun () -> groupCheckpoint clone "GROUP-FIXTURE-001" [ "--decision"; "D1 one store" ] |> ok)
+
+                      Assert.isTrue (head <> pushed) "fixture"
+                      let document = result.Json
+                      Assert.equal "recorded" (text document["status"])
+                      Assert.equal 0 (document["claimedPaths"].AsArray().Count)
+                      let recorded = document["checkpoint"]
+                      Assert.equal pushed (text recorded["commit"])
+                      Assert.equal "feature/x" (text recorded["branch"])
+                      Assert.equal [ "FEAT-1" ] (texts recorded["activeMembers"])
+                      Assert.equal [ "FEAT-1"; "FEAT-2" ] (texts recorded["remainingMembers"])
+                      Assert.equal [ "D1 one store" ] (texts recorded["decisions"])
+                      Assert.equal "example/agent-a" (text recorded["actor"].["id"])
+                      let references = recorded["memberCheckpoints"].AsArray()
+                      Assert.equal ownId (text references[0].["checkpointId"])
+                      Assert.isTrue (isNull references[1].["checkpointId"]) "FEAT-2 has no checkpoint of its own"
+                      let context = (run clone None [ "work"; "context"; "FEAT-1" ] |> ok).Json
+                      Assert.equal ownId (text context["workItems"].[0].["latestCheckpoint"].["id"])
+                      let shown = (run clone None [ "work"; "group"; "show"; "GROUP-FIXTURE-001"; "--json" ] |> ok).Json
+                      Assert.equal (text recorded["checkpointId"]) (text shown["latestCheckpoint"].["checkpointId"])
+                      let textShown = run clone None [ "work"; "group"; "show"; "GROUP-FIXTURE-001" ] |> ok
+                      Assert.isTrue (textShown.Output.Contains "shared decision: D1 one store") textShown.Output
+                      pushAll clone "group checkpoint" |> ignore
+                      run clone None [ "validate" ] |> ok |> ignore) }
+          { Name = "work group checkpoint (cli): unpushed and uncommitted work are refused like work checkpoint; blank text exits 2; unknown group exits 1; nothing is recorded"
+            Run =
+              fun () ->
+                  withRepository (fun clone ->
+                      capture clone "FEAT-1"
+                      create clone "GROUP-FIXTURE-001" [ "FEAT-1" ] [] |> ok |> ignore
+                      pushAll clone "praxis state" |> ignore
+                      let before = File.ReadAllText(groupsPath clone)
+
+                      let blank =
+                          cli clone [ "work"; "group"; "checkpoint"; "--id"; "GROUP-FIXTURE-001"; "--occurred-at"; now (); "--summary"; "  "; "--next-action"; "x"; "--json" ]
+
+                      Assert.equal 2 blank.ExitCode
+                      Assert.equal [ "blank-summary" ] (rejectionCodes blank)
+                      GitFixture.write clone "src/feature.txt" "one\n"
+                      GitFixture.commitAll clone "not pushed" |> ignore
+                      let ahead = groupCheckpoint clone "GROUP-FIXTURE-001" []
+                      Assert.equal 1 ahead.ExitCode
+                      Assert.equal [ "local-ahead" ] (rejectionCodes ahead)
+                      GitFixture.git clone [ "push"; "-q" ] |> ignore
+                      GitFixture.write clone "src/feature.txt" "two\n"
+                      Assert.equal [ "uncommitted-changes" ] (rejectionCodes (groupCheckpoint clone "GROUP-FIXTURE-001" []))
+                      Assert.equal 2 (cli clone [ "work"; "group"; "checkpoint"; "--id"; "GROUP-FIXTURE-001"; "--occurred-at"; now (); "--summary"; "x" ]).ExitCode
+                      let unknown = groupCheckpoint clone "GROUP-NOPE-001" []
+                      Assert.equal 1 unknown.ExitCode
+                      Assert.equal [ "unknown-group" ] (rejectionCodes unknown)
+                      Assert.equal before (File.ReadAllText(groupsPath clone))) } ]
+
+    let tests = createTests @ showTests @ addTests @ removeTests @ checkpointTests

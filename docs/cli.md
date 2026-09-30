@@ -391,6 +391,8 @@ ros work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason T
                    [--config FILE] [--dry-run] [--json] [IDENTITY]
 ros work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT]
                       [--dry-run] [--json] [IDENTITY]
+ros work group checkpoint --id GROUP-ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT
+                          [--decision TEXT]* [--config FILE] [--json] [IDENTITY]
 ```
 
 Durable, human-declared execution groups (PRX-GRP-073, phase two), stored in
@@ -424,6 +426,19 @@ first). Removal changes membership only: the item's lifecycle state, evidence
 and attribution stay exactly as recorded. It appends a `member-removed`
 history entry with the actor and optional reason.
 
+**`work group checkpoint`** records a group checkpoint (PRX-GRP-044): the
+durable location, the completed, active and remaining members, the shared
+decisions (`--decision`, repeatable), the summary and the next action. It
+applies exactly the durability verification of `work checkpoint` (local HEAD
+equals the upstream remote head read from the remote, no meaningful
+uncommitted work, non-blank text) with the same rejection codes, and refuses a
+group whose members are all complete or abandoned. It references each
+member's own latest checkpoint by ID and never records, replaces or changes a
+member checkpoint; it claims no paths (`claimedPaths` is always empty), so no
+member claims another's changes (PRX-GRP-043). Group checkpoints are
+append-only and content-addressed (`GCP-...`); `validate` reports an edited
+one. `show` prints the latest.
+
 **`work group show`** is read-only. It prints the stored declaration and, for
 each member, its own recorded state (live context, else backlog) and the
 planner's reading of it (`planningState`, `status`), with partial-completion
@@ -436,7 +451,7 @@ Exit codes: `0` success; `2` argument errors (missing flags, invalid IDs,
 unknown kind, no members); `1` refusals and persistence failures. With
 `--json` every command prints one document
 `{ "command", "schemaVersion": 1, "groupId", "status", ... }` where `status` is
-`created`, `added`, `removed`, `shown`, `dry-run`, `rejected` (with `rejections[]` of `code`, `message`,
+`created`, `added`, `removed`, `recorded`, `shown`, `dry-run`, `rejected` (with `rejections[]` of `code`, `message`,
 `remedy`) or `failed` (with `failure`).
 
 ### `remote execute`
