@@ -96,6 +96,16 @@ module MergeReadinessTests =
 
         path
 
+
+    let rec private repositoryRoot (directory: DirectoryInfo) =
+        if File.Exists(Path.Combine(directory.FullName, "package.json"))
+           && Directory.Exists(Path.Combine(directory.FullName, "src", "Ros.Domain")) then
+            directory.FullName
+        elif isNull directory.Parent then
+            failwith "Could not locate repository root"
+        else
+            repositoryRoot directory.Parent
+
     let private fingerprint root =
         let files =
             Directory.GetFiles(root, "*", SearchOption.AllDirectories)
@@ -194,6 +204,37 @@ module MergeReadinessTests =
                   match MergeReadiness.decide policy { observation shaA with Evidence = evidence } with
                   | MergeReadinessDecision.Ready _ -> ()
                   | other -> failwith $"{other}" }
+
+
+          { Name = "merge readiness: normalized evidence parses exact commit and provider-neutral states"
+            Run =
+              fun () ->
+                  let raw =
+                      $"""{{"schema":"praxis.merge-readiness/1","candidateCommit":"{shaA.Value}","remoteCandidateCurrent":true,"checks":[{{"id":"repository-validation","state":"success","commit":"{shaA.Value}"}},{{"id":"packaged-lifecycle","state":"cancelled","commit":"{shaA.Value}"}}]}}"""
+
+                  match MergeReadinessJson.parseEvidence raw with
+                  | Error message -> failwith message
+                  | Ok evidence ->
+                      Assert.equal (Some shaA) evidence.CandidateCommit
+                      Assert.equal (Some true) evidence.RemoteCandidateCurrent
+                      Assert.equal [ CheckState.Succeeded; CheckState.Cancelled ] (evidence.Checks |> List.map _.State) }
+
+          { Name = "merge readiness: aggregate workflows run a final gate even after prerequisite failure"
+            Run =
+              fun () ->
+                  let root = repositoryRoot (DirectoryInfo(Directory.GetCurrentDirectory()))
+                  let workflow = File.ReadAllText(Path.Combine(root, ".github", "workflows", "ros-validation.yml"))
+                  Assert.isTrue (workflow.Contains "merge-gate:") "repository workflow has no merge-gate job"
+                  Assert.isTrue (workflow.Contains "if: ${{ always() }}") "merge-gate can be skipped when a prerequisite fails"
+                  Assert.isTrue (workflow.Contains "- validate") "merge-gate does not depend on validation"
+                  Assert.isTrue (workflow.Contains "- packaged-lifecycle") "merge-gate does not depend on packaged lifecycle"
+                  Assert.isTrue (workflow.Contains "repository-validation") "workflow does not normalize repository-validation"
+                  Assert.isTrue (workflow.Contains "packaged-lifecycle") "workflow does not normalize packaged-lifecycle"
+                  Assert.isTrue (workflow.Contains "merge readiness --evidence") "workflow does not ask Praxis for the exact-candidate decision"
+
+                  let starter = File.ReadAllText(Path.Combine(root, "starter", "greenfield", ".github", "workflows", "ros-validation.yml"))
+                  Assert.isTrue (starter.Contains "merge-gate:") "greenfield starter has no merge gate"
+                  Assert.isTrue (starter.Contains "if: ${{ always() }}") "greenfield merge gate can be skipped" }
 
           { Name = "merge readiness cli: exact green evidence succeeds, dirty or stale candidates do not"
             Run =
