@@ -4094,12 +4094,22 @@
     {
       "id": "PRAXIS-REMOTE-16",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-29T12:04:28.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileWorkContextRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-complete-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-30T06:22:14.000Z",
       "telemetryExecutionIds": [
-        "EXE-20260929T120428920Z-6c1b46ab"
+        "EXE-20260929T120428920Z-6c1b46ab",
+        "EXE-20260930T062214306Z-bce53517"
       ],
       "latestCheckpoint": {
         "id": "4c32d79a4f90b55a82b6b096",
@@ -4120,7 +4130,9 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-09-30T06:22:14.000Z",
+      "conclusion": "Reconciled: the fix (ca4c561) merged to main via PR #107; tests/work-complete-fsharp-differential.test.mjs passes 8/8 on main. Stale active state surfaced by praxis plan analyze (EV-ROS-2026-A058); completable once PRAXIS-CONT-12 stopped later, other-item commits counting against its checkpoint."
     },
     {
       "id": "PRAXIS-REMOTE-17",
@@ -4622,7 +4634,7 @@
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T06:21:56.000Z",
+  "updatedAt": "2026-09-30T06:22:14.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
