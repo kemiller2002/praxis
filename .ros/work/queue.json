@@ -3244,6 +3244,30 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-03",
+      "title": "Accept DF-ROS-2026-A047 and triage the EX-ROS-2026-A021 cohort on the owner's approval",
+      "description": "The repository owner approved all recommendations of PR #126: accept DF-ROS-2026-A047, approve cohort GROUP-PRAXIS-WORK-GROUP-001 and the cost of the EX-ROS-2026-A021 arms, and triage PRAXIS-GROUP-01..05 to ready.",
+      "tags": [
+        "planning",
+        "governance"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-30T11:28:47.243Z",
+      "updatedAt": "2026-09-30T11:28:47.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
