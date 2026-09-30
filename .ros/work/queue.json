@@ -1884,10 +1884,10 @@
         "gh-90"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "abandoned",
       "attachments": [],
       "createdAt": "2026-09-28T07:39:24.585Z",
-      "updatedAt": "2026-09-28T07:39:31.000Z",
+      "updatedAt": "2026-09-30T09:40:16.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -1897,7 +1897,8 @@
         "runtime": "claude-code"
       },
       "source": "github-issue",
-      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90",
+      "abandonedReason": "Cancelled by the repository owner on 2026-09-30. Blocked since before durable checkpoints (27-28 Sep); remaining steps (GH-84: one-time Pages setting; GH-90: PRAXIS-REMOTE-12 in Conditor) will not be pursued under this item."
     },
     {
       "id": "PRAXIS-REMOTE-01",
