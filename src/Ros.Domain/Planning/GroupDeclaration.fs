@@ -10,7 +10,32 @@ open System.Text.RegularExpressions
 type StoredGroup =
     { Declaration: DeclaredGroup
       CreatedAt: string
-      CreatedBy: string }
+      CreatedBy: string
+      /// Members added after creation by `work group add`, oldest first:
+      /// who added each, and when.
+      Additions: MemberAddition list }
+
+/// The provenance of one member added to a stored group.
+and MemberAddition =
+    { Member: string
+      AddedAt: string
+      AddedBy: string }
+
+/// What `work group add` was asked to record.
+type MemberAdditionRequest =
+    { GroupId: string
+      Member: string
+      OccurredAt: string
+      AddedBy: string }
+
+[<RequireQualifiedAccess>]
+type MemberAdditionRejection =
+    | UnknownGroup of id: string
+    | AlreadyMember of groupId: string * id: string
+    | UnknownMember of id: string
+    | TerminalMember of id: string * state: string
+    | RepositoryMismatch of id: string * item: string * group: string
+    | InvalidTimestamp of value: string
 
 /// What `work group create` was asked to record.
 type GroupCreationRequest =
@@ -109,8 +134,78 @@ module GroupDeclaration =
                       CrossRepository = request.CrossRepository
                       ArchitectureNotes = [] }
                   CreatedAt = request.OccurredAt
-                  CreatedBy = request.CreatedBy }
+                  CreatedBy = request.CreatedBy
+                  Additions = [] }
         | _ -> Error rejections
+
+    let additionMessage rejection =
+        match rejection with
+        | MemberAdditionRejection.UnknownGroup id -> $"group {id} is not a stored group; declare it with work group create (a group only in planner configuration is changed there)"
+        | MemberAdditionRejection.AlreadyMember(groupId, id) -> $"{id} is already a member of {groupId}"
+        | MemberAdditionRejection.UnknownMember id -> $"{id} is not a known work item (backlog queue or live context)"
+        | MemberAdditionRejection.TerminalMember(id, state) -> $"{id} is {state}; a terminal work item cannot join a group"
+        | MemberAdditionRejection.RepositoryMismatch(id, item, group) ->
+            $"{id} executes in {item} but the group executes in {group}; only a cross-repository group may span repositories"
+        | MemberAdditionRejection.InvalidTimestamp value -> $"--occurred-at '{value}' is not a timestamp"
+
+    /// Decides whether `request.Member` may join the stored group
+    /// `request.GroupId`. `lifecycle` is each known work item's effective
+    /// lifecycle state; `locate` is where a work item executes; `repository`
+    /// is where a group without a declared execution repository executes.
+    /// A group that is not cross-repository admits only a member that
+    /// provably executes in its repository, so an item inferred to execute
+    /// in an unknown external repository is refused. Every rejection is
+    /// reported, not only the first; the member's lifecycle is never touched.
+    let decideAddition
+        (stored: StoredGroup list)
+        (lifecycle: Map<string, string>)
+        (locate: string -> ExecutionLocation)
+        (repository: string)
+        (request: MemberAdditionRequest)
+        : Result<StoredGroup, MemberAdditionRejection list> =
+        let group = stored |> List.tryFind (fun candidate -> candidate.Declaration.Id = request.GroupId)
+        let id = request.Member
+
+        let membership =
+            match group with
+            | None -> [ MemberAdditionRejection.UnknownGroup request.GroupId ]
+            | Some group when group.Declaration.Members |> List.contains id -> [ MemberAdditionRejection.AlreadyMember(request.GroupId, id) ]
+            | Some _ -> []
+
+        let state =
+            match lifecycle.TryFind id with
+            | None -> [ MemberAdditionRejection.UnknownMember id ]
+            | Some state when isTerminal state -> [ MemberAdditionRejection.TerminalMember(id, state) ]
+            | Some _ -> []
+
+        let location =
+            match group with
+            | Some group when not group.Declaration.CrossRepository && lifecycle.ContainsKey id ->
+                let groupRepository = group.Declaration.ExecutionRepository |> Option.defaultValue repository
+
+                match locate id with
+                | ExecutionLocation.Repository name when name = groupRepository -> []
+                | other -> [ MemberAdditionRejection.RepositoryMismatch(id, ExecutionLocation.describe other, groupRepository) ]
+            | _ -> []
+
+        let timestamp =
+            if isTimestamp request.OccurredAt then [] else [ MemberAdditionRejection.InvalidTimestamp request.OccurredAt ]
+
+        match group, membership @ state @ location @ timestamp with
+        | Some group, [] ->
+            Ok
+                { group with
+                    Declaration = { group.Declaration with Members = group.Declaration.Members @ [ id ] }
+                    Additions =
+                        group.Additions
+                        @ [ { Member = id
+                              AddedAt = request.OccurredAt
+                              AddedBy = request.AddedBy } ] }
+        | _, rejections -> Error rejections
+
+    /// `stored` with `group` in place of the stored group of the same ID.
+    let replace (stored: StoredGroup list) (group: StoredGroup) =
+        stored |> List.map (fun candidate -> if candidate.Declaration.Id = group.Declaration.Id then group else candidate)
 
     /// Stored groups in their canonical (ordinal ID) order.
     let add (stored: StoredGroup list) (group: StoredGroup) =
@@ -144,7 +239,14 @@ module GroupDeclaration =
               if not (isTimestamp group.CreatedAt) then
                   yield finding "createdAt" $"'{group.CreatedAt}' is not a timestamp"
               if String.IsNullOrWhiteSpace group.CreatedBy then
-                  yield finding "createdBy" "the declaring actor is missing" ])
+                  yield finding "createdBy" "the declaring actor is missing"
+              for addition in group.Additions do
+                  if not (declaration.Members |> List.contains addition.Member) then
+                      yield finding "additions" $"added member {addition.Member} is not a member"
+                  if not (isTimestamp addition.AddedAt) then
+                      yield finding "additions" $"'{addition.AddedAt}' (addition of {addition.Member}) is not a timestamp"
+                  if String.IsNullOrWhiteSpace addition.AddedBy then
+                      yield finding "additions" $"the actor who added {addition.Member} is missing" ])
 
     /// The declarations the planner reads: stored groups, then those of the
     /// supplied configuration. An ID declared in both is ambiguous and is

@@ -7,14 +7,20 @@ open Ros.Domain.Planning
 open Ros.Domain.Provenance
 open Ros.Infrastructure.Planning
 
-/// `work group create`: records a human-declared execution group in Praxis
-/// state (PRX-GRP-073, phase two). This module parses, delegates to
+/// `work group create` records a human-declared execution group in Praxis
+/// state; `work group add` adds one member to it (PRX-GRP-073, phase two).
+/// This module parses, delegates to
 /// `FileWorkGroupRepository` (Application operation over the Domain
 /// decision) and renders; it holds no grouping policy.
 [<RequireQualifiedAccess>]
 module WorkGroupCommands =
-    let usage =
+    let private createUsage =
         "work group create --id GROUP-ID --member ID --member ID [--member ID]* --occurred-at TIMESTAMP [--kind KIND] [--execution-repository NAME] [--cross-repository] [--shared-context TEXT]* [--dry-run] [--json] [IDENTITY]"
+
+    let private addUsage =
+        "work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--config FILE] [--dry-run] [--json] [IDENTITY]"
+
+    let usage = createUsage + " | " + addUsage
 
     let private flagsWithValues =
         set
@@ -24,6 +30,7 @@ module WorkGroupCommands =
               "--execution-repository"
               "--shared-context"
               "--occurred-at"
+              "--config"
               "--actor-kind"
               "--agent"
               "--actor"
@@ -60,7 +67,7 @@ module WorkGroupCommands =
         | [] -> Ok None
         | _ -> Error $"{flag} may be given once"
 
-    let private argumentErrors (parsed: Parsed) =
+    let private createArgumentErrors (parsed: Parsed) =
         [ match values parsed "--id" with
           | [ _ ] -> ()
           | [] -> yield "work group create requires --id GROUP-ID"
@@ -78,6 +85,31 @@ module WorkGroupCommands =
           | [ kind ] when (GroupKind.tryParse kind).IsNone ->
               yield $"--kind '{kind}' is not a group kind (shared-area, shared-architecture, dependency-chain, shared-files, shared-data-model, shared-api-surface, shared-migration, shared-test-surface, context-affinity, custom:NAME)"
           | _ -> ()
+          if not (values parsed "--config").IsEmpty then
+              yield "--config applies to work group add, not work group create"
+          for token in parsed.Unexpected do
+              yield $"unexpected argument '{token}'" ]
+
+    let private addArgumentErrors (parsed: Parsed) (arguments: string list) =
+        [ match values parsed "--id" with
+          | [ _ ] -> ()
+          | [] -> yield "work group add requires --id GROUP-ID"
+          | _ -> yield "work group add changes one group; pass --id once"
+          match values parsed "--member" with
+          | [ _ ] -> ()
+          | [] -> yield "work group add requires --member ID"
+          | _ -> yield "work group add adds one member; pass --member once"
+          match values parsed "--occurred-at" with
+          | [ _ ] -> ()
+          | _ -> yield "work group add requires exactly one --occurred-at TIMESTAMP (the real current time)"
+          match single parsed "--config" with
+          | Error message -> yield message
+          | Ok _ -> ()
+          for flag in [ "--kind"; "--execution-repository"; "--shared-context" ] do
+              if not (values parsed flag).IsEmpty then
+                  yield $"{flag} is a work group create option; work group add changes only membership"
+          if List.contains "--cross-repository" arguments then
+              yield "--cross-repository is a work group create option; work group add changes only membership"
           for token in parsed.Unexpected do
               yield $"unexpected argument '{token}'" ]
 
@@ -103,6 +135,10 @@ module WorkGroupCommands =
             printfn "  shared context: %s" context
 
         printfn "  declared by %s at %s" group.CreatedBy group.CreatedAt
+
+        for addition in group.Additions do
+            printfn "  %s added by %s at %s" addition.Member addition.AddedBy addition.AddedAt
+
         printfn "member lifecycle states are unchanged; each member is still started, checkpointed and completed on its own"
 
     let private render asJson (outcome: GroupCreationOutcome) =
@@ -135,24 +171,75 @@ module WorkGroupCommands =
 
             0
 
+    let private additionRequest (parsed: Parsed) (actor: Actor) : MemberAdditionRequest =
+        { GroupId = values parsed "--id" |> List.head
+          Member = values parsed "--member" |> List.head
+          OccurredAt = values parsed "--occurred-at" |> List.head
+          AddedBy = actor.Id }
+
+    let private renderAddition asJson (outcome: MemberAdditionOutcome) =
+        let added (group: StoredGroup) = List.last group.Additions
+
+        match outcome with
+        | MemberAdditionOutcome.Rejected rejections ->
+            let messages = rejections |> List.map GroupDeclaration.additionMessage
+
+            if asJson then
+                printf "%s" (PlanningJson.renderGroupRejected messages)
+
+            for message in messages do
+                eprintfn "ERROR %s" message
+
+            eprintfn "work group add rejected; nothing was recorded"
+            1
+        | MemberAdditionOutcome.Planned group ->
+            if asJson then
+                printf "%s" (PlanningJson.renderMemberAdded true FileWorkGroupStore.relativePath (added group) group)
+            else
+                printfn "dry run: would add %s to %s in %s; nothing was recorded" (added group).Member group.Declaration.Id FileWorkGroupStore.relativePath
+                describe group
+
+            0
+        | MemberAdditionOutcome.Recorded group ->
+            let addition = added group
+
+            if asJson then
+                printf "%s" (PlanningJson.renderMemberAdded false FileWorkGroupStore.relativePath addition group)
+            else
+                printfn "added %s to %s in %s" addition.Member group.Declaration.Id FileWorkGroupStore.relativePath
+                describe group
+
+            0
+
+    let private withArguments (errors: Parsed -> string list) (rest: string list) (continuation: Parsed -> int) =
+        let parsed = parse { Values = Map.empty; Unexpected = [] } rest
+
+        match errors parsed with
+        | _ :: _ as found ->
+            for error in found do
+                eprintfn "ERROR %s" error
+
+            eprintfn "Usage: ros %s" usage
+            2
+        | [] -> continuation parsed
+
+    let private reported (render: 'outcome -> int) (result: Result<'outcome, string>) =
+        match result with
+        | Error message ->
+            eprintfn "ERROR %s" message
+            1
+        | Ok outcome -> render outcome
+
     let run root (arguments: string list) (actor: Actor) =
         match arguments with
         | "create" :: rest ->
-            let parsed = parse { Values = Map.empty; Unexpected = [] } rest
-
-            match argumentErrors parsed with
-            | _ :: _ as errors ->
-                for error in errors do
-                    eprintfn "ERROR %s" error
-
-                eprintfn "Usage: ros %s" usage
-                2
-            | [] ->
-                match FileWorkGroupRepository.create root (List.contains "--dry-run" rest) (request parsed rest actor) with
-                | Error message ->
-                    eprintfn "ERROR %s" message
-                    1
-                | Ok outcome -> render (List.contains "--json" rest) outcome
+            withArguments createArgumentErrors rest (fun parsed ->
+                FileWorkGroupRepository.create root (List.contains "--dry-run" rest) (request parsed rest actor)
+                |> reported (render (List.contains "--json" rest)))
+        | "add" :: rest ->
+            withArguments (fun parsed -> addArgumentErrors parsed rest) rest (fun parsed ->
+                FileWorkGroupRepository.add root (values parsed "--config" |> List.tryHead) (List.contains "--dry-run" rest) (additionRequest parsed actor)
+                |> reported (renderAddition (List.contains "--json" rest)))
         | _ ->
             eprintfn "Usage: ros %s" usage
             2

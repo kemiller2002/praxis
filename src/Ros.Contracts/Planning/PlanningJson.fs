@@ -1243,8 +1243,16 @@ module PlanningJson =
           "crossRepository", boolean value.CrossRepository
           "architectureNotes", texts value.ArchitectureNotes ]
 
+    let private memberAddition (value: MemberAddition) =
+        record [ "member", text value.Member; "addedAt", text value.AddedAt; "addedBy", text value.AddedBy ]
+
     let private storedGroup (value: StoredGroup) =
-        record (declaredGroup value.Declaration @ [ "createdAt", text value.CreatedAt; "createdBy", text value.CreatedBy ])
+        record (
+            declaredGroup value.Declaration
+            @ [ "createdAt", text value.CreatedAt
+                "createdBy", text value.CreatedBy
+                "additions", value.Additions |> List.map memberAddition |> array ]
+        )
 
     /// PRX-GRP-073: the `declared-group` document (`work group show`).
     let declaredGroupView (snapshotValue: PlanSnapshot) (value: DeclaredGroupView) : JsonNode =
@@ -1272,7 +1280,8 @@ module PlanningJson =
         record [ "schema", text workGroupsSchema; "groups", groups |> List.map storedGroup |> array ] |> render
 
     /// Reads `.ros/work/groups.json`; each entry is a `grouping.groups`
-    /// declaration plus `createdAt`/`createdBy`.
+    /// declaration plus `createdAt`/`createdBy` and the optional `additions`
+    /// (`work group add`; absent means none).
     let parseStoredGroups (json: string) : Result<StoredGroup list, string> =
         try
             let root = JsonNode.Parse json |> asObject "work groups"
@@ -1283,7 +1292,16 @@ module PlanningJson =
                 |> List.map (fun group ->
                     { Declaration = readDeclaredGroup group
                       CreatedAt = readText group "createdAt"
-                      CreatedBy = readText group "createdBy" })
+                      CreatedBy = readText group "createdBy"
+                      Additions =
+                        if isNull (field group "additions") then
+                            []
+                        else
+                            objects group "additions"
+                            |> List.map (fun addition ->
+                                { Member = readText addition "member"
+                                  AddedAt = readText addition "addedAt"
+                                  AddedBy = readText addition "addedBy" }) })
                 |> Ok
             | other -> Error $"malformed work groups: unsupported schema '{other}' (expected {workGroupsSchema})"
         with
@@ -1299,6 +1317,18 @@ module PlanningJson =
               "kind", text (if dryRun then "work-group-planned" else "work-group-created")
               "dryRun", boolean dryRun
               "path", text path
+              "group", storedGroup group ]
+        |> render
+
+    /// `work group add --json`: the group with its new member (or, with
+    /// `--dry-run`, as it would be).
+    let renderMemberAdded (dryRun: bool) (path: string) (addition: MemberAddition) (group: StoredGroup) =
+        record
+            [ "schema", text workGroupsSchema
+              "kind", text (if dryRun then "work-group-member-planned" else "work-group-member-added")
+              "dryRun", boolean dryRun
+              "path", text path
+              "addition", memberAddition addition
               "group", storedGroup group ]
         |> render
 

@@ -548,17 +548,22 @@ module Grouping =
         let generic = configuration.GenericTags |> List.map (fun tag -> tag.ToLowerInvariant()) |> Set.ofList
         item.Tags |> List.map (fun tag -> tag.ToLowerInvariant()) |> List.filter (generic.Contains >> not) |> Text.distinctOrdinal
 
+    /// Where a work item executes: explicitly, as `grouping.executionRepositories`
+    /// maps it; inferred external when its description names an external
+    /// repository; otherwise derived as `repository`, the one planned.
+    let executionLocation (grouping: GroupingConfiguration) (repository: string) (id: string) (description: string) : ExecutionLocation * SignalBasis =
+        match grouping.ExecutionRepositories |> List.tryFind (fun (item, _) -> item = id) with
+        | Some(_, name) -> ExecutionLocation.Repository name, SignalBasis.Explicit
+        | None when externalPattern.IsMatch description -> ExecutionLocation.UnknownExternal, SignalBasis.Inferred
+        | None -> ExecutionLocation.Repository repository, SignalBasis.Derived
+
     let private evidenceFor (input: PlanningInput) (item: ItemAnalysis) : Evidence =
         let configuration = input.Configuration
         let grouping = configuration.Grouping
         let queued = input.Queue |> List.tryFind (fun entry -> entry.Id = item.Id)
         let description = queued |> Option.bind (fun entry -> entry.Description) |> Option.defaultValue ""
 
-        let location, basis =
-            match grouping.ExecutionRepositories |> List.tryFind (fun (id, _) -> id = item.Id) with
-            | Some(_, repository) -> ExecutionLocation.Repository repository, SignalBasis.Explicit
-            | None when externalPattern.IsMatch description -> ExecutionLocation.UnknownExternal, SignalBasis.Inferred
-            | None -> ExecutionLocation.Repository input.Repository, SignalBasis.Derived
+        let location, basis = executionLocation grouping input.Repository item.Id description
 
         { Item = item
           Areas = areaTags configuration item

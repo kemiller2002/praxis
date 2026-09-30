@@ -179,7 +179,9 @@ module FilePlanningRepository =
         |> List.choose execution
         |> List.sortWith (fun left right -> String.CompareOrdinal(left.ExecutionId, right.ExecutionId))
 
-    let private repositoryName (root: string) =
+    /// The repository planned: the queue's or context's `repository`, else
+    /// the root directory's name.
+    let repositoryName (root: string) =
         [ readObject (queuePath root); readObject (contextPath root) ]
         |> List.tryPick (Option.bind (fun document -> text document "repository"))
         |> Option.defaultValue (Path.GetFileName(Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar)))

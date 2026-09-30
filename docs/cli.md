@@ -330,6 +330,31 @@ planner reads every stored group exactly as it reads a `grouping.groups`
 entry of `--config`, and `validate` checks stored groups. See "Work groups" in
 [`planning.md`](planning.md).
 
+### `work group add`
+
+```
+ros work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--config FILE]
+                   [--dry-run] [--json] [IDENTITY]
+```
+
+Adds one work item to a group stored by `work group create` (PRX-GRP-073,
+phase two), recording who added it and when in the group's `additions`
+(`member`, `addedAt`, `addedBy`). It refuses, with exit `1` and nothing
+recorded, a group that is not stored (a group only in planner configuration
+is changed there), an item already a member, an item that is unknown or
+terminal (`complete` or `abandoned`), and, unless the group is
+cross-repository, an item whose execution repository differs from the
+group's. An item's execution repository is decided as the planner decides it:
+`grouping.executionRepositories` of `--config`, else an unknown external
+repository when its description says "external repository", else this
+repository; a group without a declared execution repository executes in this
+repository. Argument errors (including `create`-only options) exit `2`. The
+only write is `.ros/work/groups.json`: it never changes the member's
+lifecycle state, queue entry, live context, evidence or telemetry.
+`--dry-run` reports the addition without recording it; `--json` emits a
+`praxis.work-groups/1.0.0` document (`kind` `work-group-member-added`,
+`work-group-member-planned` or `work-group-rejected`).
+
 ### `work group show`
 
 ```
