@@ -40,14 +40,27 @@ module GroupMemberStanding =
         | Some LiveWorkState.Blocked
         | None -> GroupMemberStanding.Remaining
 
-/// Where the group's membership came from. Phase one declares groups in
-/// planner configuration (PRX-GRP-073); a checkpoint may also name its
-/// members explicitly. Either way the membership is recorded with the
-/// checkpoint, so it survives a later change to the declaration.
+/// Where the group's membership came from: a durable declaration
+/// (`work group create`, `.ros/work/groups.json`) or planner configuration
+/// (`grouping.groups`), read exactly as the planner reads them (PRX-GRP-073).
+/// The membership is recorded with the checkpoint, so it survives a later
+/// `work group add` or `remove`.
 [<RequireQualifiedAccess>]
 type GroupDeclarationSource =
+    | StoredDeclaration of path: string
     | PlannerConfiguration of path: string
-    | ExplicitMembers
+
+[<RequireQualifiedAccess>]
+module GroupDeclarationSource =
+    let code source =
+        match source with
+        | GroupDeclarationSource.StoredDeclaration _ -> "stored-declaration"
+        | GroupDeclarationSource.PlannerConfiguration _ -> "planner-configuration"
+
+    let path source =
+        match source with
+        | GroupDeclarationSource.StoredDeclaration path
+        | GroupDeclarationSource.PlannerConfiguration path -> path
 
 /// A reference to a member's own latest checkpoint: its identity and commit,
 /// never a copy of it. The member's checkpoint history is untouched.
@@ -176,8 +189,8 @@ module GroupCheckpointRejection =
         match rejection with
         | GroupCheckpointRejection.InvalidGroupId _ -> "Use the declared group ID (letters, digits, '.', '_' or '-')."
         | GroupCheckpointRejection.GroupNotDeclared _ ->
-            "Declare the group under grouping.groups in the planner configuration you pass with --config, or name its members with --member ID."
-        | GroupCheckpointRejection.NoMembers -> "Name the members with --member ID, or declare the group in planner configuration and pass --config FILE."
+            "Declare the group first ('work group create'), or pass --config FILE naming planner configuration that declares it under grouping.groups."
+        | GroupCheckpointRejection.NoMembers -> "Add the members to the group ('work group add'), then checkpoint it."
         | GroupCheckpointRejection.DuplicateMember _ -> "Name each member once."
         | GroupCheckpointRejection.UnknownMember _ -> "Check the ID with './ros work show ID'; capture new work with './ros add'."
         | GroupCheckpointRejection.BlankDecision -> "Pass --decision \"the shared architectural decision\", or omit it."
@@ -400,7 +413,7 @@ module StoredGroupCheckpoint =
 
         [ if not (GroupCheckpoint.isValidGroupId stored.GroupId) then
               $"group '{stored.GroupId}' is not a valid group ID"
-          if stored.DeclarationSource <> "planner-configuration" && stored.DeclarationSource <> "explicit-members" then
+          if stored.DeclarationSource <> "stored-declaration" && stored.DeclarationSource <> "planner-configuration" then
               $"declaration source '{stored.DeclarationSource}' is not supported"
           if stored.Members.IsEmpty then "members is empty"
           if (RequiredText.tryCreate stored.Summary).IsNone then "summary is blank"

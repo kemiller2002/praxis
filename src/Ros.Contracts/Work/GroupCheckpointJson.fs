@@ -51,13 +51,8 @@ module GroupCheckpointJson =
 
     let private declarationNode (declaration: GroupDeclarationSource) =
         let node = JsonObject()
-
-        match declaration with
-        | GroupDeclarationSource.PlannerConfiguration path ->
-            node["source"] <- JsonValue.Create "planner-configuration"
-            node["path"] <- JsonValue.Create path
-        | GroupDeclarationSource.ExplicitMembers -> node["source"] <- JsonValue.Create "explicit-members"
-
+        node["source"] <- JsonValue.Create(GroupDeclarationSource.code declaration)
+        node["path"] <- JsonValue.Create(GroupDeclarationSource.path declaration)
         node
 
     let private referenceNode (reference: MemberCheckpointReference) =

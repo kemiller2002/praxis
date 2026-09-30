@@ -34,7 +34,6 @@
     <Compile Include="Work/FileAdapterRepository.fs" />
     <Compile Include="Provenance/FileProvenanceRepository.fs" />
     <Compile Include="Work/FileCheckpointRepository.fs" />
-    <Compile Include="Work/FileGroupCheckpointRepository.fs" />
     <Compile Include="Ordo/FileObservationRepository.fs" />
     <Compile Include="Lifecycle/Payload.fs" />
     <Compile Include="Lifecycle/Installation.fs" />
@@ -46,6 +45,7 @@
     <Compile Include="Planning/GroupMembershipStore.fs" />
     <Compile Include="Planning/FilePlanningRepository.fs" />
     <Compile Include="Planning/FileWorkGroupRepository.fs" />
+    <Compile Include="Work/FileGroupCheckpointRepository.fs" />
   </ItemGroup>
 
   <!-- The scaffold this CLI installs, compiled into the assembly so a released

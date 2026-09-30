@@ -5,7 +5,7 @@ open System.Text.Encodings.Web
 open System.Text.Json
 open System.Text.Json.Nodes
 open Ros.Application.Work
-open Ros.Contracts.Planning
+open Ros.Infrastructure.Planning
 open Ros.Contracts.Provenance
 open Ros.Contracts.Work
 open Ros.Domain.Planning
@@ -36,18 +36,31 @@ module FileGroupCheckpointRepository =
         | :? JsonValue as value when value.GetValueKind() = JsonValueKind.String -> Some(value.GetValue<string>())
         | _ -> None
 
-    /// The members of a group declared in planner configuration
-    /// (`grouping.groups`), exactly as the planner reads them.
-    let readDeclaredMembers (configurationPath: string) (groupId: string) : Result<string list, string> =
-        if not (File.Exists configurationPath) then
-            Error $"{configurationPath} does not exist"
-        else
-            PlanningJson.parseConfiguration (File.ReadAllText configurationPath)
-            |> Result.mapError (fun message -> $"{configurationPath}: {message}")
-            |> Result.bind (fun configuration ->
-                match configuration.Grouping.Groups |> List.tryFind (fun group -> group.Id = groupId) with
-                | Some group -> Ok group.Members
-                | None -> Error $"group '{groupId}' is not declared in {configurationPath} (grouping.groups)")
+    /// A declared group's current members and where they are declared:
+    /// stored declarations (`work group create|add|remove`) merged with any
+    /// planner configuration, exactly as the planner reads `grouping.groups`.
+    let readDeclaredGroup (root: string) (configuration: (string * string) option) (groupId: string) : Result<string list * GroupDeclarationSource, string> =
+        let port = FilePlanningRepository.create root None (configuration |> Option.map snd)
+
+        match port.Configuration(), WorkGroupStore.read root with
+        | Error message, _
+        | _, Error message -> Error message
+        | Ok merged, Ok stored ->
+            let source =
+                if stored |> List.exists (fun entry -> entry.Group.Id = groupId) then
+                    GroupDeclarationSource.StoredDeclaration WorkGroupStore.RelativePath
+                else
+                    GroupDeclarationSource.PlannerConfiguration(configuration |> Option.map fst |> Option.defaultValue "")
+
+            match merged.Grouping.Groups |> List.tryFind (fun group -> group.Id = groupId) with
+            | Some group -> Ok(group.Members, source)
+            | None ->
+                let places =
+                    match configuration with
+                    | Some(path, _) -> $"{WorkGroupStore.RelativePath} or {path}"
+                    | None -> WorkGroupStore.RelativePath
+
+                Error $"group '{groupId}' is not declared in {places}"
 
     /// Observes each requested member: whether it exists, its own state and
     /// latest checkpoint, and (for active members) the caller's execution.

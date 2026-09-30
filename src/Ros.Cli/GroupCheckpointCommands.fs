@@ -23,7 +23,7 @@ open Ros.Infrastructure.Work
 [<RequireQualifiedAccess>]
 module GroupCheckpointCommands =
     let usage =
-        "work group checkpoint --group GROUP-ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT (--member ID [--member ID]* | --config FILE) [--decision TEXT]* [--json] [IDENTITY] | work group checkpoint show GROUP-ID [--json]"
+        "work group checkpoint --id GROUP-ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT [--decision TEXT]* [--config FILE] [--json] [IDENTITY] | work group checkpoint show GROUP-ID [--json]"
 
     let private jsonOptions =
         JsonSerializerOptions(WriteIndented = true, IndentSize = 2, Encoder = Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping)
@@ -40,11 +40,10 @@ module GroupCheckpointCommands =
 
     let private valueFlags =
         set
-            [ "--group"
+            [ "--id"
               "--occurred-at"
               "--summary"
               "--next-action"
-              "--member"
               "--config"
               "--decision"
               "--actor-kind"
@@ -68,10 +67,10 @@ module GroupCheckpointCommands =
         | token :: rest -> token :: unexpected rest
 
     let private argumentErrors (arguments: string list) =
-        [ match optionValues "--group" arguments with
+        [ match optionValues "--id" arguments with
           | [ _ ] -> ()
-          | [] -> yield "work group checkpoint requires --group GROUP-ID"
-          | _ -> yield "work group checkpoint names exactly one group; pass --group once"
+          | [] -> yield "work group checkpoint requires --id GROUP-ID"
+          | _ -> yield "work group checkpoint names exactly one group; pass --id once"
           match optionValues "--occurred-at" arguments with
           | [ value ] when isTimestamp value -> ()
           | [ value ] -> yield $"--occurred-at '{value}' is not a timestamp"
@@ -80,26 +79,17 @@ module GroupCheckpointCommands =
               yield "work group checkpoint requires one --summary TEXT describing the group milestone"
           if (optionValues "--next-action" arguments).Length <> 1 then
               yield "work group checkpoint requires one --next-action TEXT naming the group's next intended step"
-          match optionValues "--member" arguments, optionValues "--config" arguments with
-          | [], [] -> yield "work group checkpoint requires the members: --member ID (repeatable) or --config FILE declaring the group"
-          | _ :: _, _ :: _ -> yield "pass either --member or --config, not both; a declared group's members come from its declaration"
-          | _, _ :: _ :: _ -> yield "pass --config once"
-          | _ -> ()
-          for memberId in optionValues "--member" arguments |> List.filter (WorkItemId.isValid >> not) do
-              yield $"'{memberId}' is not a valid work-item ID"
+          if (optionValues "--config" arguments).Length > 1 then
+              yield "pass --config once"
           for token in unexpected arguments do
               yield $"unexpected argument '{token}'" ]
 
     let private resolve (root: string) (path: string) =
         if Path.IsPathRooted path then path else Path.GetFullPath(Path.Combine(root, path))
 
-    /// The requested membership and where it came from.
+    /// The declared group's current members and where they are declared.
     let private membership root (arguments: string list) (groupId: string) : Result<string list * GroupDeclarationSource, string> =
-        match optionValue "--config" arguments with
-        | Some path ->
-            FileGroupCheckpointRepository.readDeclaredMembers (resolve root path) groupId
-            |> Result.map (fun members -> members, GroupDeclarationSource.PlannerConfiguration path)
-        | None -> Ok(optionValues "--member" arguments, GroupDeclarationSource.ExplicitMembers)
+        FileGroupCheckpointRepository.readDeclaredGroup root (optionValue "--config" arguments |> Option.map (fun path -> path, resolve root path)) groupId
 
     let private memberNode (memberItem: GroupMember) =
         let node = JsonObject()
@@ -259,7 +249,7 @@ module GroupCheckpointCommands =
             eprintfn "Usage: ros %s" usage
             2
         | [] ->
-            let groupId = (optionValue "--group" arguments).Value
+            let groupId = (optionValue "--id" arguments).Value
             let asJson = List.contains "--json" arguments
 
             match checkpoint root arguments actor groupId with

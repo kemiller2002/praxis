@@ -33,13 +33,31 @@ module GroupCheckpointTests =
         run clone (Some agentA) [ "work"; "checkpoint"; "--id"; id; "--occurred-at"; now (); "--summary"; $"{id} slice"; "--next-action"; "Run final completion transition"; "--json" ]
         |> ok
 
-    let private groupCheckpoint clone who (members: string list) (extra: string list) =
+    /// Declares GROUP-FEAT durably, as `work group create` does.
+    let private declare clone (members: string list) =
+        run clone (Some agentA) ([ "work"; "group"; "create"; "--id"; "GROUP-FEAT"; "--occurred-at"; now () ] @ (members |> List.collect (fun id -> [ "--member"; id ])))
+        |> ok
+        |> ignore
+
+    /// Declares groups in planner configuration instead (`grouping.groups`).
+    let private configure clone (groups: (string * string list) list) =
+        let entries =
+            groups
+            |> List.map (fun (id, members) ->
+                let quoted = members |> List.map (fun memberId -> $"\"{memberId}\"") |> String.concat ", "
+                $"{{ \"id\": \"{id}\", \"members\": [{quoted}], \"origin\": \"human-declared\" }}")
+            |> String.concat ", "
+
+        File.WriteAllText(Path.Combine(clone, "planner.json"), $"{{ \"grouping\": {{ \"groups\": [{entries}] }} }}")
+
+    let private groupCheckpointOf clone who (groupId: string) (extra: string list) =
         run
             clone
             (Some who)
-            ([ "work"; "group"; "checkpoint"; "--group"; "GROUP-FEAT"; "--occurred-at"; now (); "--summary"; "Shared store landed"; "--next-action"; "Implement FEAT-3"; "--json" ]
-             @ (members |> List.collect (fun id -> [ "--member"; id ]))
+            ([ "work"; "group"; "checkpoint"; "--id"; groupId; "--occurred-at"; now (); "--summary"; "Shared store landed"; "--next-action"; "Implement FEAT-3"; "--json" ]
              @ extra)
+
+    let private groupCheckpoint clone who (extra: string list) = groupCheckpointOf clone who "GROUP-FEAT" extra
 
     let private strings (node: JsonNode) =
         node :?> JsonArray |> Seq.map text |> Seq.toList
@@ -67,6 +85,7 @@ module GroupCheckpointTests =
                       start clone "FEAT-1"
                       start clone "FEAT-2"
                       capture clone "FEAT-3"
+                      declare clone [ "FEAT-1"; "FEAT-2"; "FEAT-3" ]
                       GitFixture.write clone "src/feature.txt" "one\n"
                       let sha = pushAll clone "FEAT-1: shared store"
                       let own = memberCheckpoint clone "FEAT-1"
@@ -74,7 +93,7 @@ module GroupCheckpointTests =
                       let before = events clone |> List.filter (fun event -> text event["type"] = "work.checkpointed")
 
                       let result =
-                          groupCheckpoint clone agentA [ "FEAT-1"; "FEAT-2"; "FEAT-3" ] [ "--decision"; "one store model for every member" ] |> ok
+                          groupCheckpoint clone agentA [ "--decision"; "one store model for every member" ] |> ok
 
                       let recorded = result.Json["checkpoint"]
                       Assert.equal "recorded" (text result.Json["status"])
@@ -86,6 +105,7 @@ module GroupCheckpointTests =
                       Assert.equal [] (strings recorded["completed"])
                       Assert.equal [ "one store model for every member" ] (strings recorded["decisions"])
                       Assert.equal "Implement FEAT-3" (text recorded["nextAction"])
+                      Assert.equal "stored-declaration" (text recorded["declaration"].["source"])
                       Assert.equal ownId (text recorded["members"].[0].["checkpoint"].["id"])
                       Assert.isTrue (isNull recorded["members"].[1].["checkpoint"]) "FEAT-2 has no checkpoint of its own"
                       Assert.equal 0 (result.Json["paths"] :?> JsonArray).Count
@@ -113,6 +133,7 @@ module GroupCheckpointTests =
                       start clone "FEAT-1"
                       start clone "FEAT-2"
                       start clone "FEAT-4"
+                      declare clone [ "FEAT-1"; "FEAT-2"; "FEAT-4" ]
                       GitFixture.write clone "src/feature.txt" "one\n"
                       pushAll clone "FEAT-2: slice" |> ignore
                       memberCheckpoint clone "FEAT-2" |> ignore
@@ -123,7 +144,7 @@ module GroupCheckpointTests =
 
                       run clone (Some agentA) [ "work"; "abandon"; "--id"; "FEAT-4"; "--occurred-at"; now (); "--reason"; "superseded" ] |> ok |> ignore
                       pushAll clone "praxis state" |> ignore
-                      let result = groupCheckpoint clone agentA [ "FEAT-1"; "FEAT-2"; "FEAT-4" ] [] |> ok
+                      let result = groupCheckpoint clone agentA [] |> ok
                       let recorded = result.Json["checkpoint"]
                       Assert.equal [ "FEAT-1" ] (strings recorded["active"])
                       Assert.equal [ "FEAT-2" ] (strings recorded["completed"])
@@ -134,70 +155,96 @@ module GroupCheckpointTests =
               fun () ->
                   withRepository (fun clone ->
                       start clone "FEAT-1"
+                      declare clone [ "FEAT-1" ]
                       GitFixture.write clone "src/feature.txt" "one\n"
                       GitFixture.commitAll clone "not pushed" |> ignore
-                      Assert.equal [ "local-ahead" ] (rejectionCodes (groupCheckpoint clone agentA [ "FEAT-1" ] []))
+                      Assert.equal [ "local-ahead" ] (rejectionCodes (groupCheckpoint clone agentA []))
                       GitFixture.git clone [ "push"; "-q" ] |> ignore
                       GitFixture.write clone "src/feature.txt" "two\n"
-                      let dirty = groupCheckpoint clone agentA [ "FEAT-1" ] []
+                      let dirty = groupCheckpoint clone agentA []
                       Assert.equal 1 dirty.ExitCode
                       Assert.equal [ "uncommitted-changes" ] (rejectionCodes dirty)
                       Assert.isTrue (events clone |> List.forall (fun event -> text event["type"] <> "work.group.checkpointed")) "a refused group checkpoint was recorded") }
-          { Name = "group checkpoint: unknown members, no active member and another executor's work are refused"
+          { Name = "group checkpoint: no active member and another executor's work are refused"
             Run =
               fun () ->
                   withRepository (fun clone ->
                       capture clone "FEAT-3"
-                      Assert.equal [ "unknown-member" ] (rejectionCodes (groupCheckpoint clone agentA [ "FEAT-3"; "FEAT-404" ] []))
-                      Assert.equal [ "no-active-member" ] (rejectionCodes (groupCheckpoint clone agentA [ "FEAT-3" ] []))
-                      start clone "FEAT-1"
+                      declare clone [ "FEAT-3" ]
+                      Assert.equal [ "no-active-member" ] (rejectionCodes (groupCheckpoint clone agentA []))
+                      run clone (Some agentA) [ "work"; "backlog-transition"; "--id"; "FEAT-3"; "--action"; "ready"; "--occurred-at"; now () ] |> ok |> ignore
+                      start clone "FEAT-3"
                       // agent B has no execution of any member: it cannot record under agent A's.
-                      Assert.equal [ "missing-execution" ] (rejectionCodes (groupCheckpoint clone agentB [ "FEAT-1"; "FEAT-3" ] []))) }
-          { Name = "group checkpoint: duplicate members, blank text and conflicting membership flags are argument errors (exit 2)"
-            Run =
-              fun () ->
-                  withRepository (fun clone ->
-                      start clone "FEAT-1"
-                      let duplicate = groupCheckpoint clone agentA [ "FEAT-1"; "FEAT-1" ] []
-                      Assert.equal 2 duplicate.ExitCode
-                      Assert.equal [ "duplicate-member" ] (rejectionCodes duplicate)
-                      let blank = groupCheckpoint clone agentA [ "FEAT-1" ] [ "--decision"; "  " ]
-                      Assert.equal 2 blank.ExitCode
-                      Assert.equal [ "blank-decision" ] (rejectionCodes blank)
-                      let both = groupCheckpoint clone agentA [ "FEAT-1" ] [ "--config"; "planner.json" ]
-                      Assert.equal 2 both.ExitCode
-                      Assert.isTrue (both.Error.Contains "either --member or --config") both.Error) }
-          { Name = "group checkpoint: a group declared in planner configuration supplies its members; an undeclared group is refused"
+                      Assert.equal [ "missing-execution" ] (rejectionCodes (groupCheckpoint clone agentB []))) }
+          { Name = "group checkpoint: planner configuration declares groups the planner reads; unknown and duplicate members are refused"
             Run =
               fun () ->
                   withRepository (fun clone ->
                       start clone "FEAT-1"
                       capture clone "FEAT-3"
 
-                      File.WriteAllText(
-                          Path.Combine(clone, "planner.json"),
-                          """{ "grouping": { "groups": [ { "id": "GROUP-FEAT", "members": ["FEAT-1", "FEAT-3"], "origin": "human-declared" } ] } }"""
-                      )
+                      configure
+                          clone
+                          [ "GROUP-CONFIGURED", [ "FEAT-1"; "FEAT-3" ]
+                            "GROUP-UNKNOWN", [ "FEAT-1"; "FEAT-404" ]
+                            "GROUP-TWICE", [ "FEAT-1"; "FEAT-1" ] ]
 
                       pushAll clone "planner configuration" |> ignore
-                      let declared = groupCheckpoint clone agentA [] [ "--config"; "planner.json" ] |> ok
+                      let declared = groupCheckpointOf clone agentA "GROUP-CONFIGURED" [ "--config"; "planner.json" ] |> ok
                       let recorded = declared.Json["checkpoint"]
                       Assert.equal [ "FEAT-1" ] (strings recorded["active"])
                       Assert.equal [ "FEAT-3" ] (strings recorded["remaining"])
                       Assert.equal "planner-configuration" (text recorded["declaration"].["source"])
-
-                      let undeclared =
-                          run clone (Some agentA) [ "work"; "group"; "checkpoint"; "--group"; "GROUP-OTHER"; "--config"; "planner.json"; "--occurred-at"; now (); "--summary"; "s"; "--next-action"; "n"; "--json" ]
-
+                      Assert.equal "planner.json" (text recorded["declaration"].["path"])
+                      Assert.equal [ "unknown-member" ] (rejectionCodes (groupCheckpointOf clone agentA "GROUP-UNKNOWN" [ "--config"; "planner.json" ]))
+                      let twice = groupCheckpointOf clone agentA "GROUP-TWICE" [ "--config"; "planner.json" ]
+                      Assert.equal 2 twice.ExitCode
+                      Assert.equal [ "duplicate-member" ] (rejectionCodes twice)) }
+          { Name = "group checkpoint: an undeclared group, blank decisions and ad-hoc members are argument errors (exit 2)"
+            Run =
+              fun () ->
+                  withRepository (fun clone ->
+                      start clone "FEAT-1"
+                      let undeclared = groupCheckpoint clone agentA []
                       Assert.equal 2 undeclared.ExitCode
-                      Assert.equal [ "group-not-declared" ] (rejectionCodes undeclared)) }
+                      Assert.equal [ "group-not-declared" ] (rejectionCodes undeclared)
+                      declare clone [ "FEAT-1" ]
+                      let blank = groupCheckpoint clone agentA [ "--decision"; "  " ]
+                      Assert.equal 2 blank.ExitCode
+                      Assert.equal [ "blank-decision" ] (rejectionCodes blank)
+                      // Membership comes only from the declaration.
+                      let adHoc = groupCheckpoint clone agentA [ "--member"; "FEAT-1" ]
+                      Assert.equal 2 adHoc.ExitCode
+                      Assert.isTrue (adHoc.Error.Contains "unexpected argument '--member'") adHoc.Error) }
+          { Name = "group checkpoint: membership is recorded as declared at the time, so a later removal never rewrites it"
+            Run =
+              fun () ->
+                  withRepository (fun clone ->
+                      start clone "FEAT-1"
+                      capture clone "FEAT-3"
+                      declare clone [ "FEAT-1"; "FEAT-3" ]
+                      let first = groupCheckpoint clone agentA [] |> ok
+                      Assert.equal [ "FEAT-3" ] (strings first.Json["checkpoint"].["remaining"])
+
+                      run clone (Some agentA) [ "work"; "group"; "remove"; "--id"; "GROUP-FEAT"; "--member"; "FEAT-3"; "--occurred-at"; now (); "--reason"; "split out" ]
+                      |> ok
+                      |> ignore
+
+                      let second = groupCheckpoint clone agentA [] |> ok
+                      Assert.equal [] (strings second.Json["checkpoint"].["remaining"])
+                      let shown = run clone None [ "work"; "group"; "checkpoint"; "show"; "GROUP-FEAT"; "--json" ] |> ok
+                      let history = shown.Json["history"] :?> JsonArray
+                      Assert.equal 2 history.Count
+                      Assert.equal [ "FEAT-3" ] (strings history[0].["remaining"])
+                      run clone None [ "validate" ] |> ok |> ignore) }
           { Name = "group checkpoint: validate reports a group checkpoint that references a checkpoint the member never recorded"
             Run =
               fun () ->
                   withRepository (fun clone ->
                       start clone "FEAT-1"
+                      declare clone [ "FEAT-1" ]
                       memberCheckpoint clone "FEAT-1" |> ignore
-                      groupCheckpoint clone agentA [ "FEAT-1" ] [] |> ok |> ignore
+                      groupCheckpoint clone agentA [] |> ok |> ignore
                       run clone None [ "validate" ] |> ok |> ignore
                       let path = Path.Combine(clone, ".ros", "events", "events.jsonl")
                       let lines = File.ReadAllLines path
