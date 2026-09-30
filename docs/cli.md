@@ -268,6 +268,7 @@ ros telemetry <show|summary|finalize|record|ingest|classify|start|adapters|valid
 ros adapter <call|publish>
 ros provenance <identity|record|show|audit>
 ros plan <analyze|simulate|compare|explain|replay|freshness|groups|explain-group>
+ros merge readiness [--evidence FILE] [--json]
 ```
 
 Run `ros --help` for the full argument list, and see
@@ -305,6 +306,30 @@ reason about together, with the evidence, collision risk and recommended
 execution for each) without changing any item; `explain-group` answers why a
 group exists and what would change it (`DF-ROS-2026-A047`). See
 [`planning.md`](planning.md).
+
+### `merge readiness`
+
+```
+ros merge readiness [--evidence FILE] [--json]
+```
+
+Read-only. Evaluates the repository's configured `mergeReadiness` policy for
+one exact integration candidate. The optional evidence file uses the
+provider-neutral `praxis.merge-readiness/1` schema and names the candidate
+commit, whether the provider observed it as the current remote candidate, and
+normalized required-check results.
+
+Exit `0` means the exact candidate is ready, or the repository has not
+enabled merge-readiness policy. Exit `1` means it is not ready or the
+evidence could not be read. Exit `2` means the arguments are invalid.
+Failed, pending, cancelled, skipped, missing, unknown, duplicated, stale or
+commit-unbound required checks all fail closed. A later commit invalidates
+earlier readiness evidence.
+
+This command does not alter work state, checkpoints or CI. In-progress
+branches may remain red; the command exists for the final integration
+boundary. See `DF-ROS-2026-A048` and
+[`MERGE-READINESS.md`](../requirements/MERGE-READINESS.md).
 
 ### `work reconcile`
 
