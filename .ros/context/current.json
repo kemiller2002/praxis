@@ -4776,6 +4776,56 @@
       "conclusion": "Live work can now be cancelled truthfully with work abandon."
     },
     {
+      "id": "PRAXIS-GROUP-01",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/GroupDeclaration.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/cli.md"
+        }
+      ],
+      "updatedAt": "2026-09-30T15:40:57.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T152646524Z-a5e839f4"
+      ],
+      "latestCheckpoint": {
+        "id": "5e3dd1b0aa37ce408be9c2f8",
+        "recordedAt": "2026-09-30T15:40:51.000Z",
+        "executionId": "EXE-20260930T152646524Z-a5e839f4",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-r2-control",
+        "commit": "d2a0d507f977da669e6eba8c0a44fb761978f62a",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-r2-control",
+        "remoteCommit": "d2a0d507f977da669e6eba8c0a44fb761978f62a",
+        "summary": "implementation and session metrics committed and pushed",
+        "nextAction": "Complete PRAXIS-GROUP-01, build registry, validate, commit and push Praxis state",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T15:40:57.000Z",
+      "conclusion": "work group create records durable human-declared groups; refuses unknown/terminal/repeated members and duplicate IDs; never changes member lifecycle; planner reads stored groups as grouping.groups; --dry-run/--json; validate checks stored groups"
+      },
+      {
       "id": "PRAXIS-GROUP-02",
       "type": "task",
       "state": "active",

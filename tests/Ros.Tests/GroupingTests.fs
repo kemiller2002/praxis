@@ -459,7 +459,7 @@ module GroupingTests =
               Assert.equal (Some "needs a DBA") blocked.BlockReason
               Assert.equal [ "DB-24"; "DB-25" ] blocked.Gates
 
-              let document = PlanningJson.render (PlanningJson.declaredGroup analysis.Snapshot view) |> JsonNode.Parse
+              let document = PlanningJson.render (PlanningJson.declaredGroupView analysis.Snapshot view) |> JsonNode.Parse
               Assert.equal "declared-group" (document["kind"].GetValue<string>())
               Assert.equal "shared-migration" (document["declaration"].["kind"].GetValue<string>())
               Assert.equal "DB-23" (document["blocked"].[0].["workItem"].GetValue<string>())

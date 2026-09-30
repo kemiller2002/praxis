@@ -213,6 +213,25 @@ module PlanningCliTests =
               Assert.equal 2 (show []).ExitCode
               Assert.equal 2 (PraxisCli.run root None [ "work"; "group"; "list" ]).ExitCode)
 
+          t "work group show reads a group stored by work group create exactly as a configured one" (fun () ->
+              let root = fixture ()
+
+              let created =
+                  PraxisCli.run
+                      root
+                      (Some(PraxisCli.agent "agent:fixture" "provider-a" "runtime-a" "session-1"))
+                      [ "work"; "group"; "create"; "--id"; "GROUP-FIXTURE-STORED-001"; "--member"; "TASK-A"; "--member"; "TASK-B"
+                        "--shared-context"; "stored tasks"; "--occurred-at"; PraxisCli.now () ]
+
+              Assert.equal 0 created.ExitCode
+              let before = fingerprint root
+              let document = PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-STORED-001"; "--json" ] |> json
+              Assert.equal "GROUP-FIXTURE-STORED-001" (text (document["declaration"].["id"]))
+              Assert.equal "human-declared" (text (document["group"].["origin"]))
+              Assert.equal "stored tasks" (text (document["group"].["sharedContext"].[0]))
+              Assert.equal 2 (document["group"].["progress"].["total"].GetValue<int>())
+              Assert.equal before (fingerprint root))
+
           t "30 no plan or work group command mutates repository state" (fun () ->
               let root = fixture ()
               let before = fingerprint root

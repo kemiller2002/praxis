@@ -46,6 +46,7 @@ balanced --json > plan.json` to keep a plan; later `praxis plan freshness
 | Merged PRs, tags, merged checkpoint commits | read-only Git on the integration branch (`origin/HEAD`, `origin/main`, `main`, ...) | `git` |
 | CI results, GitHub state | `--observations FILE`, supplied by a caller that can see them | `ci`, `github`, `external-observation` |
 | Weights, declared dependencies/areas/conflicts | `--config FILE` | `planner-configuration` |
+| Human-declared groups | `.ros/work/groups.json` (`work group create`), read as `grouping.groups` | `planner-configuration` |
 
 The inventory is the union of queue and live context (PRX-PLAN-010); the
 effective lifecycle state uses the same authority as `work list`
@@ -273,6 +274,20 @@ concurrently under the `accept-elevated` policy.
     "executionRepositories": { "PRAXIS-REMOTE-12": "conditor" } } }
 ```
 
+**Stored declarations** (PRX-GRP-073, phase two). `praxis work group create`
+records a human-declared group durably in `.ros/work/groups.json`
+(`praxis.work-groups/1.0.0`: each entry is a `grouping.groups` declaration
+plus `createdAt` and `createdBy`). The planner reads every stored group with
+the same reader and in the same way as a configured `grouping.groups` entry,
+stored groups first; an ID declared both there and in `--config` is refused
+(exit `1`) rather than silently resolved. Creation refuses unknown, terminal
+and repeated members and duplicate IDs, and never changes a member's
+lifecycle state. `praxis validate` reports stored groups that are malformed,
+stored twice, have fewer than two distinct members, repeat a member, name a
+work item that no longer exists, or lack their origin, time or actor; a member
+that completed after the group was declared is valid (partial completion,
+PRX-GRP-042). Reading them keeps every `plan` command read-only.
+
 An item whose description says "External repository" and that has no
 `executionRepositories` entry is never grouped into this checkout.
 
@@ -287,8 +302,8 @@ An item whose description says "External repository" and that has no
 Any positive indicator limits groups sharing a member to one fewer member
 than the observed execution (at least two).
 
-**Declared groups** are shown with `praxis work group show GROUP-ID
-[--json]` (read-only, PRX-GRP-073): each member's own recorded and planning
+**Declared groups**, configured or stored, are shown with `praxis work group
+show GROUP-ID [--json]` (read-only, PRX-GRP-073): each member's own recorded and planning
 state and status, progress (`k of n complete`, never implying every member
 succeeded), each blocked member with its recorded reason and the members it
 gates (those whose unsatisfied hard-dependency chain inside the group reaches
@@ -362,7 +377,7 @@ No external dependency was added (PRX-PLAN-004).
 | GRP-050..052 | Met for dependencies and cycles (dependency test) and repositories (tests 5, 5b); cross-repository orchestration is future work. |
 | GRP-060..063 | Met; context cost is counted, not priced (unmeasured). |
 | GRP-070..072 | Met. |
-| GRP-073 | Declarations from configuration; `work group show` (`PRAXIS-GROUP-02`) shows one declared group read-only. The remaining commands are captured as `PRAXIS-GROUP-01`, `-03..05`, deferred. |
+| GRP-073 | Declarations from configuration and stored by `work group create` (`PRAXIS-GROUP-01`); `work group show` (`PRAXIS-GROUP-02`) shows one declared group read-only. The remaining commands are captured as `PRAXIS-GROUP-03..05`, deferred. |
 | GRP-074 | Size and context-pressure splits and architecture merges met (tests 18, 19, merge test); splitting by independent chain or external blockage is not implemented. |
 | GRP-075 | Met (test 15). |
 | GRP-080..088 | Baseline, cohort, protocol and predictions frozen (`EV-ROS-2026-A059`, `EX-ROS-2026-A021`); the arms have not run. |

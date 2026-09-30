@@ -631,20 +631,17 @@ module PlanCommands =
         "work group show GROUP-ID [--config FILE] [--observations FILE] [--as-of TIMESTAMP] [--json]"
 
     /// `praxis work group show GROUP-ID`: one declared group, read-only
-    /// (PRX-GRP-073). Declarations are read exactly as the planner reads
-    /// them; nothing is written.
-    let runWorkGroup (root: string) (version: string) (arguments: string list) : int =
-        match arguments with
-        | "show" :: rest ->
-            let options = parse empty rest
+    /// (PRX-GRP-073). Declarations, configured or stored by `work group
+    /// create`, are read exactly as the planner reads them; nothing is written.
+    let showDeclaredGroup (root: string) (version: string) (arguments: string list) : int =
+        let options = parse empty arguments
 
-            match options.Positional with
-            | [ id ] ->
-                withAnalysis root version { options with Positional = [] } (fun input analysis ->
-                    let report = Grouping.recommend input analysis
+        match options.Positional with
+        | [ id ] ->
+            withAnalysis root version { options with Positional = [] } (fun input analysis ->
+                let report = Grouping.recommend input analysis
 
-                    match Grouping.show analysis input.Configuration report id with
-                    | Error message -> fail 1 message
-                    | Ok view -> emit options (fun () -> PlanningJson.declaredGroup analysis.Snapshot view) (fun () -> declaredGroupText analysis.Snapshot view))
-            | _ -> fail 2 "work group show requires exactly one declared group ID"
-        | _ -> fail 2 $"usage: {workGroupUsage}"
+                match Grouping.show analysis input.Configuration report id with
+                | Error message -> fail 1 message
+                | Ok view -> emit options (fun () -> PlanningJson.declaredGroupView analysis.Snapshot view) (fun () -> declaredGroupText analysis.Snapshot view))
+        | _ -> fail 2 $"work group show requires exactly one declared group ID; usage: {workGroupUsage}"
