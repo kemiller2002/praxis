@@ -3471,10 +3471,10 @@
         "grouping"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T17:57:50.357Z",
-      "updatedAt": "2026-09-30T17:57:50.000Z",
+      "updatedAt": "2026-09-30T17:58:33.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
