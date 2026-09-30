@@ -144,7 +144,15 @@
       "createdAt": "2026-09-30T13:34:04Z",
       "startCommit": "9c17936",
       "prompt": "prompts/control-04.txt",
-      "note": "retry of control-04-attempt-1 with the identical prompt in a fresh session"
+      "note": "retry of control-04-attempt-1 with the identical prompt in a fresh session",
+      "status": "blocked",
+      "blockedAt": "2026-09-30T13:46:53Z",
+      "blockNote": "pushed 881a34d, then stopped for a permission prompt on `./ros work *` commands (auto mode); needs the owner to approve in the session UI. Attempt 1 most likely stopped at the same prompt (it ended idle without a summary).",
+      "platformUsageAtBlock": {
+        "cost_usd": 1.9885424,
+        "output_tokens": 26866,
+        "cache_read_tokens": 3017392
+      }
     }
   ]
 }
