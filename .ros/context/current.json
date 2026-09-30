@@ -4962,11 +4962,61 @@
       },
       "completedAt": "2026-09-30T15:59:23.000Z",
       "conclusion": "work group remove removes one member, refuses non-members and the last member, records provenance, and never touches the item's lifecycle, evidence or attribution."
+    },
+    {
+      "id": "PRAXIS-GROUP-05",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Checkpoint.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T16:18:16.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T160008970Z-a66434dd"
+      ],
+      "latestCheckpoint": {
+        "id": "40b4e9573bb9301bb692e167",
+        "recordedAt": "2026-09-30T16:18:14.000Z",
+        "executionId": "EXE-20260930T160008970Z-a66434dd",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-r2-grouped",
+        "commit": "cf2f1df8fd8a7b1e3c2fedddd3f72a748bb3b9bb",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-r2-grouped",
+        "remoteCommit": "cf2f1df8fd8a7b1e3c2fedddd3f72a748bb3b9bb",
+        "summary": "Milestone: work group checkpoint (cc65ee1) and metrics snapshot (cf2f1df). Completed members: PRAXIS-GROUP-01, -02, -03, -04. Remaining: 05 (completion). Shared decisions: D9 group checkpoint reuses extracted CheckpointVerification.durableLocation, references member checkpoints, claims no paths. Final suites: F# 819/819, Node differential 257/257, npm test 104/104 + python 7/7; validate passes. Branch experiment/a021-r2-grouped.",
+        "nextAction": "Complete PRAXIS-GROUP-05, registry build, validate, commit and push Praxis state",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T16:18:16.000Z",
+      "conclusion": "work group checkpoint records a durable group checkpoint with completed/active/remaining members, shared decisions, branch/commit and next action, verified exactly like work checkpoint, referencing members' own checkpoints and claiming no paths."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T15:59:23.000Z",
+  "updatedAt": "2026-09-30T16:18:16.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
