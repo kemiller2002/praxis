@@ -4819,18 +4819,52 @@
     {
       "id": "PRAXIS-GROUP-02",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T12:18:13.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/GroupView.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T12:37:04.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T121813963Z-b4690a18"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "fa12081808e91074696c9714",
+        "recordedAt": "2026-09-30T12:37:03.000Z",
+        "executionId": "EXE-20260930T121813963Z-b4690a18",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-control",
+        "commit": "60e3f03157f85637753860192097c1b42d4f3433",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-control",
+        "remoteCommit": "60e3f03157f85637753860192097c1b42d4f3433",
+        "summary": "work group show implemented (GroupView domain projection, work-group-show JSON, read-only CLI with text/--json, exit 1 for undeclared groups), tests 808/808 pass, docs updated",
+        "nextAction": "Complete PRAXIS-GROUP-02; do not merge until EX-ROS-2026-A021 is evaluated and phase two accepted",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T12:37:04.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T12:18:13.000Z",
+  "updatedAt": "2026-09-30T12:37:04.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
