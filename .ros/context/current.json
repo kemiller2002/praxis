@@ -4942,18 +4942,48 @@
     {
       "id": "PRAXIS-GROUP-05",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T12:33:54.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T12:51:18.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T123355214Z-833e4942"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "dedb6481c6af343b366dbca3",
+        "recordedAt": "2026-09-30T12:51:07.000Z",
+        "executionId": "EXE-20260930T123355214Z-833e4942",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-grouped",
+        "commit": "99592467f7e8f8be37538a1ae8b7c07b7439c434",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-grouped",
+        "remoteCommit": "99592467f7e8f8be37538a1ae8b7c07b7439c434",
+        "summary": "Milestone: work group checkpoint implemented and tested; group checkpoint recorded. Completed members: PRAXIS-GROUP-01..04; PRAXIS-GROUP-05 completing now. Remaining: none",
+        "nextAction": "Complete PRAXIS-GROUP-05; evaluate EX-ROS-2026-A021 before any merge",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T12:51:18.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T12:33:54.000Z",
+  "updatedAt": "2026-09-30T12:51:18.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
