@@ -4985,18 +4985,60 @@
     {
       "id": "PRAXIS-GROUP-05",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T17:20:01.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/GroupCheckpoint.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/GroupCheckpointTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/cli.md"
+        },
+        {
+          "type": "metrics",
+          "path": "research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-05.json"
+        }
+      ],
+      "updatedAt": "2026-09-30T17:36:17.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T172001795Z-4f4f37ea"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "4f3e8503dc19ed11b41bd946",
+        "recordedAt": "2026-09-30T17:36:05.000Z",
+        "executionId": "EXE-20260930T172001795Z-4f4f37ea",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-r2-control",
+        "commit": "6f824aeedefcb30849b4e71baf7332c669f1b29f",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-r2-control",
+        "remoteCommit": "6f824aeedefcb30849b4e71baf7332c669f1b29f",
+        "summary": "work group checkpoint implemented, tested (839/0 F#), docs and session metrics pushed",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T17:36:17.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T17:20:01.000Z",
+  "updatedAt": "2026-09-30T17:36:17.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
