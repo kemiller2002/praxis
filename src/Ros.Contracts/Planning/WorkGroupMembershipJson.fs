@@ -4,10 +4,12 @@ open System.Text.Json
 open System.Text.Json.Nodes
 open Ros.Contracts.Provenance
 open Ros.Domain.Planning
+open Ros.Domain.Provenance
 
 /// `.ros/work/group-membership.json`, the durable ledger of members added to
-/// declared groups (who, when, why), and the `work group add` outcome
-/// document (`praxis.work-group/1.0.0`, `kind` `work-group-add`).
+/// and removed from declared groups (who, when, why), and the `work group
+/// add` and `work group remove` outcome documents (`praxis.work-group/1.0.0`,
+/// `kind` `work-group-add` or `work-group-remove`).
 [<RequireQualifiedAccess>]
 module WorkGroupMembershipJson =
     [<Literal>]
@@ -34,10 +36,25 @@ module WorkGroupMembershipJson =
         node["reason"] <- optionalText addition.Reason
         node
 
-    let renderLedger (additions: MemberAddition list) : string =
+    let removalNode (removal: MemberRemoval) : JsonObject =
+        let node = JsonObject()
+        node["change"] <- JsonValue.Create "removed"
+        node["group"] <- JsonValue.Create removal.GroupId
+        node["workItem"] <- JsonValue.Create removal.WorkItem
+        node["removedAt"] <- JsonValue.Create removal.RemovedAt
+        node["removedBy"] <- ActorJson.node removal.RemovedBy
+        node["reason"] <- optionalText removal.Reason
+        node
+
+    let changeNode (change: MembershipChange) : JsonObject =
+        match change with
+        | MembershipChange.Added addition -> additionNode addition
+        | MembershipChange.Removed removal -> removalNode removal
+
+    let renderLedger (changes: MembershipChange list) : string =
         let document = JsonObject()
         document["schemaVersion"] <- JsonValue.Create LedgerSchemaVersion
-        document["changes"] <- JsonArray(additions |> List.map (fun addition -> additionNode addition :> JsonNode) |> List.toArray)
+        document["changes"] <- JsonArray(changes |> List.map (fun change -> changeNode change :> JsonNode) |> List.toArray)
         document.ToJsonString options + "\n"
 
     let private text (node: JsonObject) (name: string) : Result<string, string> =
@@ -53,38 +70,53 @@ module WorkGroupMembershipJson =
         | null -> Ok None
         | _ -> text node name |> Result.map Some
 
-    let private parseAddition (index: int) (value: JsonNode) : Result<MemberAddition, string> =
+    let private actorField (node: JsonObject) (name: string) : Result<Actor, string> =
+        ActorJson.tryParse node[name]
+        |> Result.bind (function
+            | Some actor -> Ok actor
+            | None -> Error $"{name} is required")
+
+    /// The fields every change shares: group, work item, when, who and why.
+    let private changeFields (node: JsonObject) (atField: string) (byField: string) =
+        text node "group"
+        |> Result.bind (fun group ->
+            text node "workItem"
+            |> Result.bind (fun workItem ->
+                text node atField
+                |> Result.bind (fun at ->
+                    actorField node byField
+                    |> Result.bind (fun actor -> optional node "reason" |> Result.map (fun reason -> group, workItem, at, actor, reason)))))
+
+    let private parseChange (index: int) (value: JsonNode) : Result<MembershipChange, string> =
         let at message = $"changes[{index}]: {message}"
 
         match value with
         | :? JsonObject as node ->
             text node "change"
             |> Result.bind (function
-                | "added" -> Ok()
+                | "added" ->
+                    changeFields node "addedAt" "addedBy"
+                    |> Result.map (fun (group, workItem, addedAt, actor, reason) ->
+                        MembershipChange.Added
+                            { GroupId = group
+                              WorkItem = workItem
+                              AddedAt = addedAt
+                              AddedBy = actor
+                              Reason = reason })
+                | "removed" ->
+                    changeFields node "removedAt" "removedBy"
+                    |> Result.map (fun (group, workItem, removedAt, actor, reason) ->
+                        MembershipChange.Removed
+                            { GroupId = group
+                              WorkItem = workItem
+                              RemovedAt = removedAt
+                              RemovedBy = actor
+                              Reason = reason })
                 | other -> Error $"unknown change '{other}'")
-            |> Result.bind (fun () -> text node "group")
-            |> Result.bind (fun group ->
-                text node "workItem"
-                |> Result.bind (fun workItem ->
-                    text node "addedAt"
-                    |> Result.bind (fun addedAt ->
-                        ActorJson.tryParse node["addedBy"]
-                        |> Result.bind (function
-                            | Some actor -> Ok actor
-                            | None -> Error "addedBy is required")
-                        |> Result.bind (fun actor ->
-                            optional node "reason"
-                            |> Result.map (fun reason ->
-                                ({ GroupId = group
-                                   WorkItem = workItem
-                                   AddedAt = addedAt
-                                   AddedBy = actor
-                                   Reason = reason }
-                                : MemberAddition))))))
             |> Result.mapError at
         | _ -> Error(at "must be an object")
 
-    let parseLedger (content: string) : Result<MemberAddition list, string> =
+    let parseLedger (content: string) : Result<MembershipChange list, string> =
         try
             match JsonNode.Parse content with
             | :? JsonObject as document ->
@@ -92,11 +124,11 @@ module WorkGroupMembershipJson =
                 | Ok LedgerSchemaVersion, (:? JsonArray as changes) ->
                     changes
                     |> Seq.toList
-                    |> List.mapi parseAddition
+                    |> List.mapi parseChange
                     |> List.fold
                         (fun state parsed ->
                             match state, parsed with
-                            | Ok found, Ok addition -> Ok(found @ [ addition ])
+                            | Ok found, Ok change -> Ok(found @ [ change ])
                             | Error message, _ -> Error message
                             | _, Error message -> Error message)
                         (Ok [])
@@ -133,6 +165,39 @@ module WorkGroupMembershipJson =
                     let node = JsonObject()
                     node["code"] <- JsonValue.Create(GroupAdditionRejection.code rejection)
                     node["message"] <- JsonValue.Create(GroupAdditionRejection.message rejection)
+                    node :> JsonNode)
+                |> List.toArray
+            )
+
+        document.ToJsonString options + "\n"
+
+    /// The `work group remove` outcome: `status` `removed`, `planned` or
+    /// `rejected`.
+    let renderRemovalOutcome
+        (status: string)
+        (paths: string list)
+        (removal: MemberRemoval)
+        (members: string list)
+        (rejections: GroupRemovalRejection list)
+        : string =
+        let document = JsonObject()
+        document["schema"] <- JsonValue.Create OutcomeSchema
+        document["kind"] <- JsonValue.Create "work-group-remove"
+        document["status"] <- JsonValue.Create status
+        document["group"] <- JsonValue.Create removal.GroupId
+        document["workItem"] <- JsonValue.Create removal.WorkItem
+        document["members"] <- texts members
+        document["removal"] <- removalNode removal
+        document["paths"] <- texts paths
+        document["lifecycleChanged"] <- JsonValue.Create false
+
+        document["rejections"] <-
+            JsonArray(
+                rejections
+                |> List.map (fun rejection ->
+                    let node = JsonObject()
+                    node["code"] <- JsonValue.Create(GroupRemovalRejection.code rejection)
+                    node["message"] <- JsonValue.Create(GroupRemovalRejection.message rejection)
                     node :> JsonNode)
                 |> List.toArray
             )

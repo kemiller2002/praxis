@@ -369,6 +369,37 @@ members, the addition record and coded `rejections`. A refusal exits `1`,
 bad arguments `2`. `ros validate` reports a malformed ledger and a recorded
 addition whose group is not declared or no longer lists the member.
 
+### `work group remove`
+
+```
+ros work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP
+                      [--reason TEXT] [--dry-run] [--json] [IDENTITY]
+```
+
+Removes one member from a group declared in `.ros/work/groups.json`
+(PRX-GRP-073 phase two, `PRAXIS-GROUP-04`); the remaining members keep their
+declared order. Who removed it, when and why is appended to the same ledger
+as additions, `.ros/work/group-membership.json`, as `{change: removed, group,
+workItem, removedAt, removedBy, reason}`; the group's own `declaredAt` and
+`declaredBy` are unchanged, and the ledger is written first and restored if
+the group cannot be written.
+
+The command refuses, listing every reason at once and recording nothing: a
+group that is not declared; an item that is not a member of it; and the
+group's last member, since a declared group always has at least one member
+(add another member first; group IDs are never reused). Removal never
+consults or changes the item itself, so a member that completed or was
+abandoned may leave too, and its lifecycle state, evidence and attribution
+stay exactly as recorded: only `.ros/work/groups.json` and
+`.ros/work/group-membership.json` are written. `--dry-run` decides without
+writing; `--json` emits a `praxis.work-group/1.0.0` document with `kind`
+`work-group-remove`, `status` `removed`, `planned` or `rejected`, the
+resulting members, the removal record and coded `rejections`
+(`undeclared-group`, `not-member`, `last-member`, `blank-reason`). A refusal
+exits `1`, bad arguments `2`. `ros validate` checks each group's and item's
+latest ledger change against the group: a member last added must still be
+listed, and a member last removed must not be.
+
 ### `work group show`
 
 ```

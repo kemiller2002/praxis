@@ -9,12 +9,12 @@ open Ros.Domain.Provenance
 open Ros.Infrastructure.Planning
 
 /// `work group create`: records a durable human-declared execution group;
-/// `work group add`: adds one member to a declared group and records who
-/// added it; `work group show`: a read-only view of one (PRX-GRP-073 phase
-/// two). This module parses, delegates to `FileWorkGroupRepository` or the
-/// planner's read-only port, and renders; the policy lives in
-/// `GroupDeclaration`, `GroupMembership` and `GroupView`. It never changes a
-/// member's lifecycle state.
+/// `work group add` / `work group remove`: adds or removes one member of a
+/// declared group and records who did it; `work group show`: a read-only
+/// view of one (PRX-GRP-073 phase two). This module parses, delegates to
+/// `FileWorkGroupRepository` or the planner's read-only port, and renders;
+/// the policy lives in `GroupDeclaration`, `GroupMembership` and
+/// `GroupView`. It never changes a member's lifecycle state.
 [<RequireQualifiedAccess>]
 module WorkGroupCommands =
     let usage =
@@ -24,6 +24,9 @@ module WorkGroupCommands =
 
     let addUsage =
         "work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY]"
+
+    let removeUsage =
+        "work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
 
     let private identityFlags =
         set
@@ -216,11 +219,11 @@ module WorkGroupCommands =
                   ConfigurationFile = configurationFile }
         | errors, _, _, _, _, _ -> Error errors
 
-    let private additionPaths = [ WorkGroupStore.RelativePath; GroupMembershipStore.RelativePath ]
+    let private membershipPaths = [ WorkGroupStore.RelativePath; GroupMembershipStore.RelativePath ]
 
     let private renderAddition asJson outcome =
         let json status (addition: MemberAddition) members rejections =
-            if asJson then printf "%s" (WorkGroupMembershipJson.renderOutcome status additionPaths addition members rejections)
+            if asJson then printf "%s" (WorkGroupMembershipJson.renderOutcome status membershipPaths addition members rejections)
 
         let by (addition: MemberAddition) =
             let why = addition.Reason |> Option.map (fun reason -> $" ({reason})") |> Option.defaultValue ""
@@ -250,8 +253,93 @@ module WorkGroupCommands =
                 printfn "recorded in %s; no member's lifecycle state changed" GroupMembershipStore.RelativePath
             0
 
+    // ---- remove ----------------------------------------------------------------
+
+    type private RemovalArguments =
+        { Removal: MemberRemovalRequest
+          OccurredAt: string }
+
+    /// Every argument problem at once, or the requested removal.
+    let private removalRequest (parsed: Parsed) : Result<RemovalArguments, string list> =
+        let id = singleFor "remove" parsed "--id" true
+        let workItem = singleFor "remove" parsed "--member" true
+        let occurredAt = occurredAtFor "remove" parsed
+        let reason = singleFor "remove" parsed "--reason" false
+
+        let errors =
+            [ id |> Result.map ignore
+              workItem |> Result.map ignore
+              occurredAt |> Result.map ignore
+              reason |> Result.map ignore ]
+            |> List.choose (function
+                | Error message -> Some message
+                | Ok() -> None)
+            |> fun found ->
+                found
+                @ foreign "remove" (createOnly.Add "--config") parsed
+                @ (parsed.Unexpected |> List.map (fun token -> $"unexpected argument '{token}'"))
+
+        match errors, id, workItem, occurredAt, reason with
+        | [], Ok(Some groupId), Ok(Some item), Ok timestamp, Ok why ->
+            Ok
+                { Removal = { GroupId = groupId; WorkItem = item; Reason = why }
+                  OccurredAt = timestamp }
+        | errors, _, _, _, _ -> Error errors
+
+    let private renderRemoval asJson outcome =
+        let json status (removal: MemberRemoval) members rejections =
+            if asJson then printf "%s" (WorkGroupMembershipJson.renderRemovalOutcome status membershipPaths removal members rejections)
+
+        let by (removal: MemberRemoval) =
+            let why = removal.Reason |> Option.map (fun reason -> $" ({reason})") |> Option.defaultValue ""
+            $"  removed by: {removal.RemovedBy.Id} at {removal.RemovedAt}{why}"
+
+        match outcome with
+        | WorkGroupRemovalOutcome.Rejected(removal, members, rejections) ->
+            json "rejected" removal members rejections
+            rejections |> List.iter (GroupRemovalRejection.message >> eprintfn "ERROR %s")
+            eprintfn "%s was not removed from %s; nothing was recorded" removal.WorkItem removal.GroupId
+            1
+        | WorkGroupRemovalOutcome.Planned(removal, updated) ->
+            json "planned" removal updated.Group.Members []
+
+            if not asJson then
+                printfn "dry run: would remove %s from group %s; nothing was recorded" removal.WorkItem removal.GroupId
+                printfn "  members:    %s" (String.Join(' ', updated.Group.Members))
+                printfn "%s" (by removal)
+            0
+        | WorkGroupRemovalOutcome.Removed(removal, updated) ->
+            json "removed" removal updated.Group.Members []
+
+            if not asJson then
+                printfn "removed %s from group %s in %s" removal.WorkItem removal.GroupId WorkGroupStore.RelativePath
+                printfn "  members:    %s" (String.Join(' ', updated.Group.Members))
+                printfn "%s" (by removal)
+                printfn "recorded in %s; %s keeps its lifecycle state, evidence and attribution" GroupMembershipStore.RelativePath removal.WorkItem
+            0
+
     let run root (arguments: string list) (actor: Actor) =
         match arguments with
+        | "remove" :: rest ->
+            let parsed = parse { Values = Map.empty; Switches = Set.empty; Unexpected = [] } rest
+
+            match removalRequest parsed with
+            | Error errors ->
+                errors |> List.iter (eprintfn "ERROR %s")
+                eprintfn "Usage: ros %s" removeUsage
+                2
+            | Ok arguments ->
+                let request =
+                    { Removal = arguments.Removal
+                      OccurredAt = arguments.OccurredAt
+                      Actor = actor
+                      DryRun = parsed.Switches.Contains "--dry-run" }
+
+                match FileWorkGroupRepository.remove root request with
+                | Error message ->
+                    eprintfn "ERROR %s" message
+                    1
+                | Ok outcome -> renderRemoval (parsed.Switches.Contains "--json") outcome
         | "add" :: rest ->
             let parsed = parse { Values = Map.empty; Switches = Set.empty; Unexpected = [] } rest
 
@@ -294,7 +382,7 @@ module WorkGroupCommands =
                     1
                 | Ok outcome -> render (parsed.Switches.Contains "--json") outcome
         | _ ->
-            eprintfn "Usage: ros %s | %s | %s" usage addUsage showUsage
+            eprintfn "Usage: ros %s | %s | %s | %s" usage addUsage removeUsage showUsage
             2
 
     // ---- show -------------------------------------------------------------------

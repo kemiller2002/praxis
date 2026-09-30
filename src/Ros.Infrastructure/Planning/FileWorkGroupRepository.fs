@@ -31,7 +31,21 @@ type WorkGroupAdditionOutcome =
     | Planned of MemberAddition * StoredGroupDeclaration
     | Rejected of MemberAddition * string list * GroupAdditionRejection list
 
-/// `work group create`, `work group add` and the `validate` check over stored groups. Member
+type WorkGroupRemovalRequest =
+    { Removal: MemberRemovalRequest
+      OccurredAt: string
+      Actor: Actor
+      DryRun: bool }
+
+/// Each case carries the attempted removal; `Removed` and `Planned` also the
+/// updated declaration, `Rejected` the group's unchanged members.
+[<RequireQualifiedAccess>]
+type WorkGroupRemovalOutcome =
+    | Removed of MemberRemoval * StoredGroupDeclaration
+    | Planned of MemberRemoval * StoredGroupDeclaration
+    | Rejected of MemberRemoval * string list * GroupRemovalRejection list
+
+/// `work group create`, `work group add`, `work group remove` and the `validate` check over stored groups. Member
 /// standing is read from the backlog and live work through the planner's own
 /// read-only queries; only `.ros/work/groups.json` is ever written.
 [<RequireQualifiedAccess>]
@@ -71,12 +85,18 @@ module FileWorkGroupRepository =
                       Location = Grouping.executionLocation configuration.Grouping name queue >> fst
                       Repository = name })))
 
+    let private membersOf (stored: StoredGroupDeclaration list) (groupId: string) =
+        stored
+        |> List.tryFind (fun entry -> entry.Group.Id = groupId)
+        |> Option.map (fun entry -> entry.Group.Members)
+        |> Option.defaultValue []
+
     /// Writes the ledger, then the group; if the group cannot be written the
-    /// ledger is put back, so neither file claims an addition the other lacks.
-    let private record root stored ledger (updated: StoredGroupDeclaration) (addition: MemberAddition) =
+    /// ledger is put back, so neither file claims a change the other lacks.
+    let private record root stored ledger (updated: StoredGroupDeclaration) (change: MembershipChange) =
         let previous = GroupMembershipStore.snapshot root
 
-        GroupMembershipStore.write root (ledger @ [ addition ])
+        GroupMembershipStore.write root (ledger @ [ change ])
         |> Result.bind (fun () ->
             match WorkGroupStore.write root (GroupMembership.replace updated stored) with
             | Ok() -> Ok()
@@ -103,16 +123,35 @@ module FileWorkGroupRepository =
                 additionContext root request.ConfigurationFile stored
                 |> Result.bind (fun context ->
                     match GroupMembership.decide context request.Addition with
-                    | Error rejections ->
-                        let members =
-                            stored
-                            |> List.tryFind (fun entry -> entry.Group.Id = request.Addition.GroupId)
-                            |> Option.map (fun entry -> entry.Group.Members)
-                            |> Option.defaultValue []
-
-                        Ok(WorkGroupAdditionOutcome.Rejected(addition, members, rejections))
+                    | Error rejections -> Ok(WorkGroupAdditionOutcome.Rejected(addition, membersOf stored request.Addition.GroupId, rejections))
                     | Ok updated when request.DryRun -> Ok(WorkGroupAdditionOutcome.Planned(addition, updated))
-                    | Ok updated -> record root stored ledger updated addition |> Result.map (fun () -> WorkGroupAdditionOutcome.Added(addition, updated)))))
+                    | Ok updated ->
+                        record root stored ledger updated (MembershipChange.Added addition)
+                        |> Result.map (fun () -> WorkGroupAdditionOutcome.Added(addition, updated)))))
+
+    /// `work group remove`: removes one member from a declared group and
+    /// records who removed it. Writes only `.ros/work/groups.json` and
+    /// `.ros/work/group-membership.json`; the member's lifecycle state,
+    /// evidence and attribution are untouched, and so are the group's own
+    /// `declaredAt` and `declaredBy`.
+    let remove (root: string) (request: WorkGroupRemovalRequest) : Result<WorkGroupRemovalOutcome, string> =
+        let removal: MemberRemoval =
+            { GroupId = request.Removal.GroupId
+              WorkItem = request.Removal.WorkItem
+              RemovedAt = request.OccurredAt
+              RemovedBy = request.Actor
+              Reason = request.Removal.Reason }
+
+        WorkGroupStore.read root
+        |> Result.bind (fun stored ->
+            GroupMembershipStore.read root
+            |> Result.bind (fun ledger ->
+                match GroupMembership.decideRemoval stored request.Removal with
+                | Error rejections -> Ok(WorkGroupRemovalOutcome.Rejected(removal, membersOf stored request.Removal.GroupId, rejections))
+                | Ok updated when request.DryRun -> Ok(WorkGroupRemovalOutcome.Planned(removal, updated))
+                | Ok updated ->
+                    record root stored ledger updated (MembershipChange.Removed removal)
+                    |> Result.map (fun () -> WorkGroupRemovalOutcome.Removed(removal, updated))))
 
     /// `(path, field, message)` findings for `validate`.
     let validationFindings (root: string) : (string * string * string) list =

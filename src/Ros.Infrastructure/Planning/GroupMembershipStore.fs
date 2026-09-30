@@ -6,7 +6,8 @@ open Ros.Contracts.Planning
 open Ros.Domain.Planning
 
 /// Reads and writes `.ros/work/group-membership.json`, the ledger of members
-/// added to declared groups after declaration: who added each, when and why.
+/// added to or removed from declared groups after declaration: who changed
+/// each, when and why.
 /// It touches no other file and no member's lifecycle state (PRX-GRP-002).
 [<RequireQualifiedAccess>]
 module GroupMembershipStore =
@@ -16,7 +17,7 @@ module GroupMembershipStore =
     let path (root: string) = Path.Combine(root, ".ros", "work", "group-membership.json")
 
     /// No ledger yet is an empty ledger, not an error.
-    let read (root: string) : Result<MemberAddition list, string> =
+    let read (root: string) : Result<MembershipChange list, string> =
         let file = path root
 
         if not (File.Exists file) then
@@ -44,8 +45,8 @@ module GroupMembershipStore =
             if File.Exists temporary then File.Delete temporary
             Error $"cannot write {RelativePath}: {error.Message}"
 
-    let write (root: string) (additions: MemberAddition list) : Result<unit, string> =
-        replaceWith root (WorkGroupMembershipJson.renderLedger additions)
+    let write (root: string) (changes: MembershipChange list) : Result<unit, string> =
+        replaceWith root (WorkGroupMembershipJson.renderLedger changes)
 
     let restore (root: string) (previous: string option) : Result<unit, string> =
         match previous with

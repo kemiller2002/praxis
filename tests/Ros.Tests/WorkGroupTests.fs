@@ -10,8 +10,8 @@ open Ros.Domain.Provenance
 open Ros.Domain.Work
 open PlanningFixtures
 
-/// `work group create`, `work group show` and `work group add`: durable
-/// human-declared execution groups (PRAXIS-GROUP-01..03;
+/// `work group create`, `work group show`, `work group add` and `work group
+/// remove`: durable human-declared execution groups (PRAXIS-GROUP-01..04;
 /// requirements/PLANNING-WORK-GROUPS.md PRX-GRP-073 phase two).
 module WorkGroupTests =
     let private t name run = { Name = $"work group: {name}"; Run = run }
@@ -114,6 +114,27 @@ module WorkGroupTests =
 
     let private add (root: string) (extra: string list) =
         PraxisCli.run root (Some executor) ([ "work"; "group"; "add"; "--occurred-at"; PraxisCli.now () ] @ extra)
+
+    // ---- work group remove (PRAXIS-GROUP-04) ----------------------------------
+
+    let private removal group workItem : MemberRemovalRequest =
+        { GroupId = group; WorkItem = workItem; Reason = None }
+
+    let private remove (root: string) (extra: string list) =
+        PraxisCli.run root (Some executor) ([ "work"; "group"; "remove"; "--occurred-at"; PraxisCli.now () ] @ extra)
+
+    /// Every file outside `.git` except the two group files, with its hash:
+    /// what a removal must leave untouched (lifecycle, evidence, attribution).
+    let private untouched (root: string) =
+        let excluded = set [ groupsPath root; ledgerPath root ]
+
+        Directory.GetFiles(root, "*", SearchOption.AllDirectories)
+        |> Array.filter (fun file -> not (file.Contains $"{Path.DirectorySeparatorChar}.git{Path.DirectorySeparatorChar}") && not (excluded.Contains file))
+        |> Array.sort
+        |> Array.map (fun file -> Path.GetRelativePath(root, file), hash root (Path.GetRelativePath(root, file)))
+        |> Array.toList
+
+    let private members (node: JsonNode) = node.AsArray() |> Seq.map PraxisCli.text |> Seq.toList
 
     let tests =
         [ t "standing prefers live state and classifies terminal states" (fun () ->
@@ -407,12 +428,17 @@ module WorkGroupTests =
                     Reason = Some "same parser" }
 
               let unattributed = { recorded with Reason = None }
-              Assert.equal (Ok [ recorded; unattributed ]) (WorkGroupMembershipJson.parseLedger (WorkGroupMembershipJson.renderLedger [ recorded; unattributed ]))
+              let changes = [ MembershipChange.Added recorded; MembershipChange.Added unattributed ]
+              Assert.equal (Ok changes) (WorkGroupMembershipJson.parseLedger (WorkGroupMembershipJson.renderLedger changes))
               Assert.isTrue (WorkGroupMembershipJson.parseLedger """{"schemaVersion":"1.0.0","changes":[{"change":"merged"}]}""" |> Result.isError) "unknown changes are malformed"
 
               let entries = [ stored (declared "GROUP-CLI-001" [ "TASK-B"; "TASK-A" ]) ]
-              Assert.empty (GroupMembership.findings entries [ recorded ])
-              let found = GroupMembership.findings entries [ { recorded with WorkItem = "TASK-E" }; { recorded with GroupId = "GROUP-CLI-404" } ] |> List.map snd
+              Assert.empty (GroupMembership.findings entries [ MembershipChange.Added recorded ])
+
+              let found =
+                  GroupMembership.findings entries [ MembershipChange.Added { recorded with WorkItem = "TASK-E" }; MembershipChange.Added { recorded with GroupId = "GROUP-CLI-404" } ]
+                  |> List.map snd
+
               Assert.equal 2 found.Length
               Assert.isTrue (found.[0].Contains "does not list it") "an addition the group lacks"
               Assert.isTrue (found.[1].Contains "not declared") "an addition to an undeclared group")
@@ -433,7 +459,7 @@ module WorkGroupTests =
               Assert.equal contextBefore (hash root ".ros/context/current.json")
 
               match WorkGroupMembershipJson.parseLedger (File.ReadAllText(ledgerPath root)) with
-              | Ok [ recorded ] ->
+              | Ok [ MembershipChange.Added recorded ] ->
                   Assert.equal "GROUP-FIXTURE-001" recorded.GroupId
                   Assert.equal "TASK-B" recorded.WorkItem
                   Assert.equal "example/agent" recorded.AddedBy.Id
@@ -502,4 +528,139 @@ module WorkGroupTests =
               | Error message -> failwith message
               let broken = PraxisCli.run root None [ "validate"; "--json" ]
               Assert.equal 1 broken.ExitCode
-              Assert.isTrue (broken.Output.Contains "does not list it") "a ledger/group mismatch is a finding") ]
+              Assert.isTrue (broken.Output.Contains "does not list it") "a ledger/group mismatch is a finding") 
+          t "remove: a member leaves in declared order; non-members, the last member and blank reasons are refused" (fun () ->
+              let entries = [ stored (declared "GROUP-CLI-001" [ "TASK-A"; "TASK-B"; "TASK-D" ]); stored (declared "GROUP-CLI-002" [ "TASK-A" ]) ]
+
+              match GroupMembership.decideRemoval entries (removal "GROUP-CLI-001" "TASK-B") with
+              | Ok updated ->
+                  Assert.equal [ "TASK-A"; "TASK-D" ] updated.Group.Members
+                  Assert.equal entries.[0].DeclaredAt updated.DeclaredAt
+                  Assert.equal entries.[0].DeclaredBy updated.DeclaredBy
+              | Error found -> failwith $"expected the removal to be accepted, found %A{found}"
+
+              // A member that completed after declaration may leave; its state is never consulted.
+              Assert.isTrue (GroupMembership.decideRemoval entries (removal "GROUP-CLI-001" "TASK-D") |> Result.isOk) "a terminal member may leave"
+
+              let refused group workItem = GroupMembership.decideRemoval entries (removal group workItem) |> rejections
+              Assert.equal [ GroupRemovalRejection.NotMember("TASK-C", "GROUP-CLI-001") ] (refused "GROUP-CLI-001" "TASK-C")
+              Assert.equal [ GroupRemovalRejection.NotMember("NOPE-1", "GROUP-CLI-001") ] (refused "GROUP-CLI-001" "NOPE-1")
+              Assert.equal [ GroupRemovalRejection.LastMember("TASK-A", "GROUP-CLI-002") ] (refused "GROUP-CLI-002" "TASK-A")
+
+              Assert.equal
+                  [ GroupRemovalRejection.UndeclaredGroup "GROUP-CLI-404"; GroupRemovalRejection.BlankReason ]
+                  (GroupMembership.decideRemoval entries { removal "GROUP-CLI-404" "TASK-A" with Reason = Some " " } |> rejections)
+
+              Assert.equal
+                  [ GroupRemovalRejection.NotMember("TASK-C", "GROUP-CLI-001"); GroupRemovalRejection.BlankReason ]
+                  (GroupMembership.decideRemoval entries { removal "GROUP-CLI-001" "TASK-C" with Reason = Some "" } |> rejections))
+
+          t "remove: removals round-trip in the ledger and findings follow each member's latest change" (fun () ->
+              let added: MemberAddition =
+                  { GroupId = "GROUP-CLI-001"
+                    WorkItem = "TASK-B"
+                    AddedAt = "2026-09-30T01:00:00.000Z"
+                    AddedBy = actor
+                    Reason = None }
+
+              let removed: MemberRemoval =
+                  { GroupId = "GROUP-CLI-001"
+                    WorkItem = "TASK-B"
+                    RemovedAt = "2026-09-30T02:00:00.000Z"
+                    RemovedBy = actor
+                    Reason = Some "belongs to the docs group" }
+
+              let ledger = [ MembershipChange.Added added; MembershipChange.Removed removed ]
+              Assert.equal (Ok ledger) (WorkGroupMembershipJson.parseLedger (WorkGroupMembershipJson.renderLedger ledger))
+
+              let without = [ stored (declared "GROUP-CLI-001" [ "TASK-A" ]) ]
+              let listing = [ stored (declared "GROUP-CLI-001" [ "TASK-A"; "TASK-B" ]) ]
+
+              // An addition later undone is history, not a finding.
+              Assert.empty (GroupMembership.findings without ledger)
+              Assert.empty (GroupMembership.findings listing (ledger @ [ MembershipChange.Added { added with AddedAt = "2026-09-30T03:00:00.000Z" } ]))
+
+              let stillListed = GroupMembership.findings listing ledger
+              Assert.equal [ "changes[1]", "records TASK-B removed from GROUP-CLI-001, but the group still lists it" ] stillListed
+
+              let unattributed = GroupMembership.findings without [ MembershipChange.Removed { removed with RemovedAt = ""; RemovedBy = { actor with Id = "" } } ] |> List.map snd
+              Assert.equal [ "removedAt is required"; "removedBy.id is required" ] unattributed)
+
+          t "cli: remove drops the member, records who removed it, and changes nothing else" (fun () ->
+              let root = fixture ()
+              create root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--member"; "TASK-B" ] |> PraxisCli.ok |> ignore
+              let before = untouched root
+
+              let declaredBefore =
+                  match WorkGroupJson.parseStore (File.ReadAllText(groupsPath root)) with
+                  | Ok [ entry ] -> entry
+                  | other -> failwith $"expected one stored group, found %A{other}"
+
+              let removed = remove root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--reason"; "belongs elsewhere"; "--json" ] |> PraxisCli.ok
+              Assert.equal "work-group-remove" (PraxisCli.text (removed.Json["kind"]))
+              Assert.equal "removed" (PraxisCli.text (removed.Json["status"]))
+              Assert.equal [ "TASK-B" ] (members (removed.Json["members"]))
+              Assert.equal "example/agent" (PraxisCli.text ((removed.Json["removal"]).["removedBy"].["id"]))
+              Assert.isTrue (not (flag (removed.Json["lifecycleChanged"]))) "remove changes no lifecycle state"
+              Assert.equal before (untouched root)
+
+              match WorkGroupJson.parseStore (File.ReadAllText(groupsPath root)) with
+              | Ok [ entry ] ->
+                  Assert.equal [ "TASK-B" ] entry.Group.Members
+                  Assert.equal declaredBefore.DeclaredAt entry.DeclaredAt
+                  Assert.equal declaredBefore.DeclaredBy entry.DeclaredBy
+              | other -> failwith $"expected one stored group, found %A{other}"
+
+              match WorkGroupMembershipJson.parseLedger (File.ReadAllText(ledgerPath root)) with
+              | Ok [ MembershipChange.Removed recorded ] ->
+                  Assert.equal "TASK-A" recorded.WorkItem
+                  Assert.equal "example/agent" recorded.RemovedBy.Id
+                  Assert.equal (Some "belongs elsewhere") recorded.Reason
+              | other -> failwith $"expected one recorded removal, found %A{other}"
+
+              let groups = PraxisCli.run root None [ "plan"; "groups"; "--json" ] |> PraxisCli.ok
+              let group = groups.Json["groups"].AsArray() |> Seq.find (fun entry -> PraxisCli.text (entry["id"]) = "GROUP-FIXTURE-001")
+              Assert.equal [ "TASK-B" ] (group["members"].AsArray() |> Seq.map (fun entry -> PraxisCli.text (entry["workItem"])) |> Seq.toList)
+
+              // Removed then re-added: the ledger stays consistent.
+              add root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A" ] |> PraxisCli.ok |> ignore
+              let validated = PraxisCli.run root None [ "validate"; "--json" ]
+              Assert.isTrue (not (validated.Output.Contains "group-membership.json")) "a consistent ledger has no findings")
+
+          t "cli: remove dry run and refusals write nothing; the last member stays; bad arguments exit 2" (fun () ->
+              let root = fixture ()
+              create root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--member"; "TASK-B" ] |> PraxisCli.ok |> ignore
+              create root [ "--id"; "GROUP-FIXTURE-002"; "--member"; "TASK-A" ] |> PraxisCli.ok |> ignore
+              let groupsBefore = hash root ".ros/work/groups.json"
+
+              let planned = remove root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-B"; "--dry-run"; "--json" ] |> PraxisCli.ok
+              Assert.equal "planned" (PraxisCli.text (planned.Json["status"]))
+              Assert.equal [ "TASK-A" ] (members (planned.Json["members"]))
+
+              [ "GROUP-FIXTURE-001", "TASK-C", "not-member"; "GROUP-FIXTURE-001", "NOPE-1", "not-member"; "GROUP-FIXTURE-002", "TASK-A", "last-member"; "GROUP-FIXTURE-404", "TASK-A", "undeclared-group" ]
+              |> List.iter (fun (group, workItem, code) ->
+                  let refused = remove root [ "--id"; group; "--member"; workItem; "--json" ]
+                  Assert.equal 1 refused.ExitCode
+                  Assert.equal "rejected" (PraxisCli.text (refused.Json["status"]))
+                  Assert.equal code (PraxisCli.text (refused.Json["rejections"].[0].["code"])))
+
+              let last = remove root [ "--id"; "GROUP-FIXTURE-002"; "--member"; "TASK-A" ]
+              Assert.isTrue (last.Error.Contains "last member of GROUP-FIXTURE-002") "the refusal explains the last-member rule"
+
+              Assert.equal groupsBefore (hash root ".ros/work/groups.json")
+              Assert.isTrue (not (File.Exists(ledgerPath root))) "no refusal or dry run records a removal"
+
+              Assert.equal 2 (remove root [ "--id"; "GROUP-FIXTURE-001" ]).ExitCode
+              Assert.equal 2 (remove root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--member"; "TASK-B" ]).ExitCode
+              Assert.equal 2 (remove root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--config"; "planner.json" ]).ExitCode
+              Assert.equal 2 (remove root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--cross-repository" ]).ExitCode)
+
+          t "cli: validate reports a recorded removal the group still lists" (fun () ->
+              let root = fixture ()
+              create root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--member"; "TASK-B" ] |> PraxisCli.ok |> ignore
+              let original = File.ReadAllText(groupsPath root)
+              remove root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-B" ] |> PraxisCli.ok |> ignore
+              write root ".ros/work/groups.json" original
+              let broken = PraxisCli.run root None [ "validate"; "--json" ]
+              Assert.equal 1 broken.ExitCode
+              Assert.isTrue (broken.Output.Contains "still lists it") "a ledger/group mismatch is a finding") ]
