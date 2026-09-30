@@ -4824,22 +4824,69 @@
       },
       "completedAt": "2026-09-30T15:40:57.000Z",
       "conclusion": "work group create records durable human-declared groups; refuses unknown/terminal/repeated members and duplicate IDs; never changes member lifecycle; planner reads stored groups as grouping.groups; --dry-run/--json; validate checks stored groups"
-      },
-      {
+    },
+    {
       "id": "PRAXIS-GROUP-02",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T15:57:25Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/Grouping.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/PlanCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PlanningCliTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/GroupingTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/cli.md"
+        },
+        {
+          "type": "metrics",
+          "path": "research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-02.json"
+        }
+      ],
+      "updatedAt": "2026-09-30T16:18:47Z",
       "telemetryExecutionIds": [
         "EXE-20260930T155726122Z-f8ad6210"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "47494b9e36e44b5eafe79cab",
+        "recordedAt": "2026-09-30T16:18:45Z",
+        "executionId": "EXE-20260930T155726122Z-f8ad6210",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-r2-control",
+        "commit": "33ee8d09227704622444b350fd18805d5d0481f0",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-r2-control",
+        "remoteCommit": "33ee8d09227704622444b350fd18805d5d0481f0",
+        "summary": "implementation, merge with PRAXIS-GROUP-01 and session metrics committed and pushed",
+        "nextAction": "Complete PRAXIS-GROUP-02, build registry, validate, commit and push Praxis state",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T16:18:47Z",
+      "conclusion": "work group show: read-only view of one declared (configured or stored) group with member recorded/planning states, partial-completion progress, blocked members and whom they gate, execution repository and architecture notes; text and --json; unknown or recommended-only group exits 1; never writes"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T15:57:25Z",
+  "updatedAt": "2026-09-30T16:18:47Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
