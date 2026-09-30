@@ -65,7 +65,7 @@
 | PRAXIS-PLAN-02 | Accept planner decision DF-ROS-2026-A046 on the owner's approval | complete | planning, governance | medium |
 | PRAXIS-PLAN-03 | Accept DF-ROS-2026-A047 and triage the EX-ROS-2026-A021 cohort on the owner's approval | complete | planning, governance | medium |
 | PRAXIS-PLAN-04 | Grouped-execution guidance: reuse inventory and per-criterion verification pass (EV-ROS-2026-A064) | captured | planning, grouping | medium |
-| PRAXIS-PLAN-05 | Make context overhead and cost observable: session-metrics telemetry adapter and cost.execution_total (EV-ROS-2026-A064) | ready | planning, telemetry | medium |
+| PRAXIS-PLAN-05 | Make context overhead and cost observable: session-metrics telemetry adapter and cost.execution_total (EV-ROS-2026-A064) | complete | planning, telemetry | medium |
 | PRAXIS-PLAN-06 | Renumber the EX-ROS-2026-A021 results record to avoid an evidence ID collision and relate it to the parallel evaluation kit | complete | planning, governance | high |
 | PRAXIS-PLAN-EXP-01 | Run grouping experiment EX-ROS-2026-A021: control arm, grouped arm, blind evaluation, telemetry comparison | complete | planning, experiment | medium |
 | PRAXIS-PR92-ID-RENUMBER | Owner decision: renumber PR #92's colliding DF-ROS-2026-A042/A043 and RQ-ROS-2026-A022/A023 before reconciliation (see EV-ROS-2026-A060 section 9) | captured | pr92, decision | high |
