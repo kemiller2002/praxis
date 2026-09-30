@@ -1,0 +1,120 @@
+{
+  "schema": "ex-ros-2026-a021.session-metrics/1",
+  "experiment": "EX-ROS-2026-A021-R2",
+  "arm": "control",
+  "label": "control-03",
+  "workItem": "PRAXIS-GROUP-03",
+  "sessionId": "session_019PbeHJSP9f4A8L9QXKyQRX",
+  "transcriptSessionId": "087ca60b-1624-5d4c-a77e-734334b417f9",
+  "praxisExecution": "EXE-20260930T163301767Z-acd016eb",
+  "model": {
+    "configured": "claude-opus-5-5",
+    "sessionContextModel": "claude-opus-5-5",
+    "lastServedModel": "claude-opus-5-5",
+    "transcriptModels": [
+      "claude-opus-5-5"
+    ],
+    "source": "get_session (session_context.model, external_metadata.last_served_model) and transcript"
+  },
+  "sessionCreatedAt": "2026-09-30T16:29:07.380204Z",
+  "startedAt": "2026-09-30T16:29:16.255000+00:00",
+  "endedAt": "2026-09-30T16:49:38.460000+00:00",
+  "wallMs": 1222205,
+  "timingScope": "transcript start to the moment this summary was generated; the metrics commit, work checkpoint/complete, registry build, validate and the final Praxis-state commit happen after and are not included",
+  "msToFirstProductionCodeMutation": 687946,
+  "modelRequests": 49,
+  "tokens": {
+    "input": 100,
+    "output": 32702,
+    "cacheRead": 4975415,
+    "cacheCreation": 121056
+  },
+  "tokensScope": "main session transcript only; one Explore subagent (code mapping) additionally used 138787 tokens (runtime task notification total, no input/output/cache breakdown available)",
+  "costUsd": "unknown",
+  "toolCalls": {
+    "Agent": 1,
+    "Bash": 47,
+    "mcp__bf7c680d-5fdc-5ef4-b4a0-abadb619bf0a__get_session": 1
+  },
+  "toolCallsTotal": 49,
+  "toolErrors": {
+    "value": 4,
+    "detail": [
+      "scripts/install-toolchain.sh: Ordo installer 403 (Praxis 3.6.0 installed)",
+      "dotnet-install.sh download blocked by egress proxy (403)",
+      "apt install dotnet-sdk-10.0: 404 before apt-get update",
+      "git reset --hard to the remote branch denied by the permission classifier (resolved by merging instead)"
+    ]
+  },
+  "fileReads": 32,
+  "distinctFilesRead": 25,
+  "repeatedReads": {
+    "/tmp/claude-0/-home-user-praxis/087ca60b-1624-5d4c-a77e-734334b417f9/scratchpad/apt.log": 2,
+    "/tmp/claude-0/-home-user-praxis/087ca60b-1624-5d4c-a77e-734334b417f9/scratchpad/tc.log": 2,
+    "docs/planning.md": 2,
+    "research/experiments/EX-ROS-2026-A021-harness/session_metrics.py": 2,
+    "src/Ros.Domain/Planning/Grouping.fs": 2,
+    "src/Ros.Infrastructure/Planning/FilePlanningRepository.fs": 2,
+    "tests/Ros.Tests/WorkGroupTests.fs": 2
+  },
+  "governanceReads": {
+    "AGENTS.md": 1,
+    "docs/cli.md": 1,
+    "docs/planning.md": 2
+  },
+  "searches": 24,
+  "fileWrites": 8,
+  "distinctFilesEdited": {
+    "summarizer": 0,
+    "fromGit": 10,
+    "note": "the summarizer counts only Edit/Write tool paths; all edits were python scripts via Bash. fromGit counts files in dae9788 (src 7, tests 1, docs 2); the merge 5a03452 additionally resolved .ros/context/current.json and .ros/events/events.jsonl by script"
+  },
+  "builds": {
+    "value": 4,
+    "detail": "1 failed (npm run build:fsharp, NU1605); 3 dotnet build with -p:FSharpCoreImplicitPackageVersion=10.1.400 passed"
+  },
+  "testRuns": {
+    "value": 3,
+    "summarizer": 2,
+    "detail": "F# Ros.Tests.dll once, node --test once, python unittest once (the summarizer's pattern does not match python unittest)"
+  },
+  "failedTests": 0,
+  "retries": {
+    "value": 3,
+    "detail": [
+      ".NET SDK: dotnet-install.sh blocked (403); apt 404 until apt-get update; then apt dotnet-sdk-10.0 10.0.112",
+      "build: npm run build:fsharp failed NU1605 (Ubuntu SDK FSharp.Core 10.0.112 < dependency's 10.1.400); rebuilt with the property override on the command line, no repository change",
+      "push: first push of the start commit rejected (non-fast-forward): PRAXIS-GROUP-01/02 were already on the remote branch while this checkout was stale; merged and re-pushed"
+    ]
+  },
+  "validationFailures": {
+    "value": 0,
+    "detail": "./ros validate passed after implementation"
+  },
+  "contextCompactions": 0,
+  "contextResets": 0,
+  "commits": {
+    "value": 3,
+    "shas": [
+      "b05fd8b",
+      "5a03452",
+      "dae9788"
+    ],
+    "scope": "before this file was written; this file's commit and the final Praxis-state commit follow"
+  },
+  "mergeConflicts": {
+    "value": 2,
+    "files": [
+      ".ros/context/current.json",
+      ".ros/events/events.jsonl"
+    ]
+  },
+  "tests": {
+    "fsharp": "818/818",
+    "node": "104/104",
+    "python": "7/7",
+    "differential": "not run (test:fsharp node differential suites; the change touches no Node-mirrored command)"
+  },
+  "infrastructure": "no .NET in the container; scripts/install-toolchain.sh installs Praxis/Echelon binaries (its Ordo step failed 403), not the .NET SDK, so the SDK came from Ubuntu apt (10.0.112)",
+  "summarizer": "research/experiments/EX-ROS-2026-A021-harness/session_metrics.py (raw output merged here); reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate"
+}
