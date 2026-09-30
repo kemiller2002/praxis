@@ -256,3 +256,26 @@ module WorkGroupJson =
 
     let rejectionNode (rejection: GroupRejection) : JsonNode =
         record [ "code", text (GroupRejection.code rejection); "message", text (GroupRejection.message rejection) ]
+
+    let memberProgressNode (row: MemberProgress) : JsonNode =
+        record
+            [ "workItemId", text row.WorkItemId
+              "category", text (MemberCategory.code row.Category)
+              "state", optionalText row.State
+              "planningState", optionalText row.PlanningState
+              "waitsOn", texts row.WaitsOn
+              "gates", texts row.Gates ]
+
+    /// The partial-completion view (PRX-GRP-042). `complete` is true only
+    /// when every member completed on its own evidence.
+    let progressNode (progress: GroupProgress) : JsonNode =
+        record
+            [ "total", integer progress.Members.Length
+              "complete", boolean (not progress.Members.IsEmpty && progress.Completed.Length = progress.Members.Length)
+              "completed", texts progress.Completed
+              "active", texts progress.Active
+              "blocked", texts progress.Blocked
+              "remaining", texts progress.Remaining
+              "abandoned", texts progress.Abandoned
+              "unknown", texts progress.Unknown
+              "summary", text (GroupProgress.summary progress) ]

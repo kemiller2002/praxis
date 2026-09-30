@@ -67,16 +67,19 @@ module WorkGroupTests =
     let private agentA = agent "example/agent-a" "example" "agent-a" "session-a"
     let private cli clone arguments = run clone (Some agentA) arguments
 
-    /// A Praxis repository with open items ITEM-1..3 (ready), ITEM-4
-    /// (captured), a completed DONE-1 and an abandoned GONE-1, all pushed.
+    /// A Praxis repository with open items ITEM-1..3 (ready; ITEM-3 depends
+    /// on ITEM-2), ITEM-4 (captured), a completed DONE-1 and an abandoned
+    /// GONE-1, all pushed.
     let private withRepository (test: string -> unit) =
         let parent = GitFixture.temporaryDirectory "work-group"
 
         try
             let _, clone = installedRepository parent "clone-a"
 
-            for id in [ "ITEM-1"; "ITEM-2"; "ITEM-3"; "ITEM-4"; "DONE-1"; "GONE-1" ] do
+            for id in [ "ITEM-1"; "ITEM-2"; "ITEM-4"; "DONE-1"; "GONE-1" ] do
                 cli clone [ "add"; $"Work {id}"; "--id"; id ] |> ok |> ignore
+
+            cli clone [ "add"; "Work ITEM-3"; "--id"; "ITEM-3"; "--description"; "Follows the second item. Depends on: ITEM-2." ] |> ok |> ignore
 
             for id in [ "ITEM-1"; "ITEM-2"; "ITEM-3"; "DONE-1"; "GONE-1" ] do
                 cli clone [ "work"; "backlog-transition"; "--id"; id; "--action"; "ready"; "--occurred-at"; now () ] |> ok |> ignore
@@ -216,6 +219,63 @@ module WorkGroupTests =
                   File.Delete(groupsFile clone)
                   let configured = run clone None [ "plan"; "explain-group"; "GROUP-FIXTURE-001"; "--as-of"; asOf; "--config"; configuration; "--json" ] |> ok
                   Assert.equal configured.Output stored.Output))
+
+          t "progress keeps every member's own standing, never implies the group succeeded, and names who a blocked member gates" (fun () ->
+              let group = created "GROUP-AREA-001" [ "ITEM-1"; "ITEM-2"; "ITEM-3"; "ITEM-4" ]
+
+              let facts =
+                  Map.ofList
+                      [ "ITEM-1", { State = Some "complete"; PlanningState = Some "complete"; WaitsOn = [] }
+                        "ITEM-2", { State = Some "blocked"; PlanningState = Some "blocked"; WaitsOn = [] }
+                        "ITEM-3", { State = Some "ready"; PlanningState = Some "waiting-on-dependency"; WaitsOn = [ "ITEM-2" ] }
+                        "ITEM-4", { State = None; PlanningState = None; WaitsOn = [ "ITEM-2" ] } ]
+
+              let progress = WorkGroups.progress group (fun id -> facts[id])
+              Assert.equal [ "ITEM-1" ] progress.Completed
+              Assert.equal [ "ITEM-2" ] progress.Blocked
+              Assert.equal [ "ITEM-3" ] progress.Remaining
+              Assert.equal [ "ITEM-4" ] progress.Unknown
+              let blocked = progress.Members |> List.find (fun row -> row.WorkItemId = "ITEM-2")
+              Assert.equal [ "ITEM-3"; "ITEM-4" ] blocked.Gates
+              Assert.equal "1 of 4 complete (0 active, 1 blocked, 1 remaining, 0 abandoned, 1 unknown)" (GroupProgress.summary progress)
+              let node = WorkGroupJson.progressNode progress
+              Assert.equal false (node["complete"].GetValue<bool>()))
+
+          t "cli show reports members' own recorded and planning states, blocked members and who they gate, and writes nothing" (fun () ->
+              withRepository (fun clone ->
+                  createGroup clone "GROUP-FIXTURE-001" [ "ITEM-1"; "ITEM-2"; "ITEM-3" ] [ "--architecture-note"; "one store" ] |> ok |> ignore
+                  cli clone [ "work"; "start"; "--id"; "ITEM-2"; "--type"; "feature"; "--occurred-at"; now () ] |> ok |> ignore
+                  cli clone [ "work"; "block"; "--id"; "ITEM-2"; "--reason"; "waiting on a decision"; "--occurred-at"; now () ] |> ok |> ignore
+                  let before = GitFixture.git clone [ "status"; "--porcelain"; "--untracked-files=all" ], lifecycle clone, File.ReadAllText(groupsFile clone)
+
+                  let shown = run clone None [ "work"; "group"; "show"; "GROUP-FIXTURE-001"; "--json" ] |> ok
+                  Assert.equal "found" (text shown.Json["status"])
+                  let progress = shown.Json["progress"]
+                  Assert.equal 3 (progress["total"].GetValue<int>())
+                  Assert.equal false (progress["complete"].GetValue<bool>())
+                  Assert.equal "ITEM-2" (text progress["blocked"].[0])
+                  let members = shown.Json["members"].AsArray() |> Seq.map (fun node -> text node["workItemId"], node) |> Map.ofSeq
+                  Assert.equal "blocked" (text members["ITEM-2"].["state"])
+                  Assert.equal "ITEM-3" (text members["ITEM-2"].["gates"].[0])
+                  Assert.equal "ITEM-2" (text members["ITEM-3"].["waitsOn"].[0])
+                  Assert.isTrue (members["ITEM-3"].["planningState"] <> null) "no planning state"
+                  Assert.equal "one store" (text shown.Json["group"].["architectureNotes"].[0])
+
+                  let textView = run clone None [ "work"; "group"; "show"; "GROUP-FIXTURE-001" ] |> ok
+                  Assert.isTrue (textView.Output.Contains "ITEM-2: gates ITEM-3") textView.Output
+                  Assert.isTrue (textView.Output.Contains "0 of 3 complete") textView.Output
+                  Assert.equal before (GitFixture.git clone [ "status"; "--porcelain"; "--untracked-files=all" ], lifecycle clone, File.ReadAllText(groupsFile clone))))
+
+          t "cli show of an unknown group exits 1 in text and JSON; a missing ID exits 2" (fun () ->
+              withRepository (fun clone ->
+                  let missing = run clone None [ "work"; "group"; "show"; "GROUP-NOPE-001" ]
+                  Assert.equal 1 missing.ExitCode
+                  Assert.isTrue (missing.Error.Contains "unknown-group") missing.Error
+                  let json = run clone None [ "work"; "group"; "show"; "GROUP-NOPE-001"; "--json" ]
+                  Assert.equal 1 json.ExitCode
+                  Assert.equal "not-found" (text json.Json["status"])
+                  Assert.equal 2 (run clone None [ "work"; "group"; "show" ]).ExitCode
+                  Assert.isTrue (not (File.Exists(groupsFile clone))) "show created groups.json"))
 
           t "cli validate reports a stored group whose member is not a recorded work item" (fun () ->
               withRepository (fun clone ->

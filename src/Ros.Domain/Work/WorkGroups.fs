@@ -161,6 +161,80 @@ type GroupCreateRequest =
       Actor: Actor
       Reason: string option }
 
+/// Where a member stands inside its group (PRX-GRP-042): each member
+/// completes, or not, on its own.
+[<RequireQualifiedAccess>]
+type MemberCategory =
+    | Completed
+    | Abandoned
+    | Active
+    | Blocked
+    | Remaining
+    | Unknown
+
+[<RequireQualifiedAccess>]
+module MemberCategory =
+    let code category =
+        match category with
+        | MemberCategory.Completed -> "completed"
+        | MemberCategory.Abandoned -> "abandoned"
+        | MemberCategory.Active -> "active"
+        | MemberCategory.Blocked -> "blocked"
+        | MemberCategory.Remaining -> "remaining"
+        | MemberCategory.Unknown -> "unknown"
+
+    let ofState (state: string option) =
+        match state with
+        | Some "complete" -> MemberCategory.Completed
+        | Some "abandoned" -> MemberCategory.Abandoned
+        | Some "active" -> MemberCategory.Active
+        | Some "blocked" -> MemberCategory.Blocked
+        | Some _ -> MemberCategory.Remaining
+        | None -> MemberCategory.Unknown
+
+/// What is known about one member now: its recorded lifecycle state, the
+/// planner's view of it when available, and the work items it still waits on.
+type MemberFacts =
+    { State: string option
+      PlanningState: string option
+      WaitsOn: string list }
+
+[<RequireQualifiedAccess>]
+module MemberFacts =
+    /// Facts from the recorded state alone, without a planner analysis.
+    let ofStanding (standing: string -> MemberStanding) (id: string) =
+        { State = MemberStanding.state (standing id)
+          PlanningState = None
+          WaitsOn = [] }
+
+type MemberProgress =
+    { WorkItemId: string
+      Category: MemberCategory
+      State: string option
+      PlanningState: string option
+      /// Work items this member still waits on.
+      WaitsOn: string list
+      /// Open members of the same group that wait on this member.
+      Gates: string list }
+
+/// A group's partial-completion view. It never says the group succeeded:
+/// `Completed` lists exactly the members that completed on their own.
+type GroupProgress =
+    { Members: MemberProgress list
+      Completed: string list
+      Abandoned: string list
+      Active: string list
+      Blocked: string list
+      Remaining: string list
+      Unknown: string list }
+
+[<RequireQualifiedAccess>]
+module GroupProgress =
+    let summary (progress: GroupProgress) =
+        let count (values: string list) = values.Length
+
+        $"{count progress.Completed} of {progress.Members.Length} complete ({count progress.Active} active, {count progress.Blocked} blocked, {count progress.Remaining} remaining, {count progress.Abandoned} abandoned, {count progress.Unknown} unknown)"
+
 [<RequireQualifiedAccess>]
 module WorkGroups =
     let private groupIdPattern = Regex("^GROUP-[A-Z0-9]+(-[A-Z0-9]+)*$", RegexOptions.CultureInvariant)
@@ -281,3 +355,38 @@ module WorkGroups =
               for entry in group.History do
                   if entry.Operation <> GroupOperation.Created && entry.Member.IsNone then
                       yield id, "history", $"a {GroupOperation.code entry.Operation} entry of {id} names no member" ]
+
+    /// Each member's own standing and who it gates inside the group; the
+    /// same classification serves `work group show` and group checkpoints.
+    let progress (group: StoredWorkGroup) (facts: string -> MemberFacts) : GroupProgress =
+        let members = group.Declaration.Members
+        let known = members |> List.map (fun id -> id, facts id) |> Map.ofList
+
+        let open' id =
+            match MemberCategory.ofState known[id].State with
+            | MemberCategory.Completed
+            | MemberCategory.Abandoned -> false
+            | _ -> true
+
+        let rows =
+            members
+            |> List.map (fun id ->
+                let fact = known[id]
+
+                { WorkItemId = id
+                  Category = MemberCategory.ofState fact.State
+                  State = fact.State
+                  PlanningState = fact.PlanningState
+                  WaitsOn = fact.WaitsOn
+                  Gates = members |> List.filter (fun other -> other <> id && open' other && known[other].WaitsOn |> List.contains id) })
+
+        let inCategory category =
+            rows |> List.filter (fun row -> row.Category = category) |> List.map (fun row -> row.WorkItemId)
+
+        { Members = rows
+          Completed = inCategory MemberCategory.Completed
+          Abandoned = inCategory MemberCategory.Abandoned
+          Active = inCategory MemberCategory.Active
+          Blocked = inCategory MemberCategory.Blocked
+          Remaining = inCategory MemberCategory.Remaining
+          Unknown = inCategory MemberCategory.Unknown }

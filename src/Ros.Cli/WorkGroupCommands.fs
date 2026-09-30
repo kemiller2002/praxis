@@ -19,8 +19,11 @@ open Ros.Infrastructure.Work
 /// `Ros.Domain.Work.WorkGroups`.
 [<RequireQualifiedAccess>]
 module WorkGroupCommands =
+    let showUsage = "work group show GROUP-ID [--config FILE] [--json]"
+
     let usage =
-        "work group create --group GROUP-ID --member ID [--member ID ...] --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--shared-context TEXT ...] [--architecture-note TEXT ...] [--execution-repository NAME] [--cross-repository] [--config FILE] [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
+        showUsage
+        + " | work group create --group GROUP-ID --member ID [--member ID ...] --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--shared-context TEXT ...] [--architecture-note TEXT ...] [--execution-repository NAME] [--cross-repository] [--config FILE] [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
 
     // ---- argument parsing (shared by the family) ----
 
@@ -246,6 +249,134 @@ module WorkGroupCommands =
                   $"  recorded by {ActorKind.code group.CreatedBy.Kind}:{group.CreatedBy.Id} at {group.CreatedAt}" ]
 
             mutate root command arguments groupId decide describe
+
+    // ---- work group show ----
+
+    /// Facts per member from the planner's read-only analysis: recorded
+    /// state, planning state and the work items it still waits on.
+    let private analysisFacts (analysis: PlanningAnalysis) (standing: string -> MemberStanding) : string -> MemberFacts =
+        let byId = analysis.Items |> List.map (fun item -> item.Id, item) |> Map.ofList
+
+        fun id ->
+            match byId.TryFind id with
+            | None -> MemberFacts.ofStanding standing id
+            | Some item ->
+                { State = Some item.LifecycleState
+                  PlanningState = Some(PlanningWorkState.code item.PlanningState)
+                  WaitsOn =
+                    item.Dependencies
+                    |> List.filter (fun resolved -> resolved.Status <> DependencyStatus.Satisfied)
+                    |> List.choose (fun resolved ->
+                        match resolved.Dependency.Target with
+                        | DependencyTarget.WorkItem target -> Some target
+                        | _ -> None)
+                    |> List.distinct }
+
+    let private showText (group: StoredWorkGroup) (progress: GroupProgress) =
+        let declaration = group.Declaration
+        let kind = declaration.Kind |> Option.map GroupKind.code |> Option.defaultValue "unspecified kind"
+        let repository = declaration.ExecutionRepository |> Option.defaultValue "unknown"
+        let scope = if declaration.CrossRepository then "yes" else "no"
+        let bullets (values: string list) = match values with [] -> [ "  (none)" ] | values -> values |> List.map (fun value -> $"  - {value}")
+
+        let memberLine (row: MemberProgress) =
+            let state = row.State |> Option.defaultValue "not recorded"
+            let planning = row.PlanningState |> Option.map (fun value -> $" [planning: {value}]") |> Option.defaultValue ""
+            let listed (label: string) (ids: string list) = match ids with [] -> "" | ids -> "; " + label + " " + String.concat ", " ids
+            let waits = listed "waits on" row.WaitsOn
+            let gates = listed "gates" row.Gates
+            $"  {row.WorkItemId,-24} {MemberCategory.code row.Category,-10} recorded {state}{planning}{waits}{gates}"
+
+        let historyLine (entry: GroupHistoryEntry) =
+            let memberText = entry.Member |> Option.map (fun id -> $" {id}") |> Option.defaultValue ""
+            let reason = entry.Reason |> Option.map (fun text -> $": {text}") |> Option.defaultValue ""
+            let empty = if entry.ExplicitEmpty then " (explicitly left the group empty)" else ""
+            $"  {entry.At} {GroupOperation.code entry.Operation}{memberText} by {ActorKind.code entry.Actor.Kind}:{entry.Actor.Id}{empty}{reason}"
+
+        [ yield $"WORK GROUP {declaration.Id} ({kind}, {GroupOrigin.code declaration.Origin})"
+          yield $"Executes in: {repository} (cross-repository: {scope})"
+          yield $"Progress:    {GroupProgress.summary progress}; each member completes on its own evidence (PRX-GRP-042)"
+          yield ""
+          yield "MEMBERS"
+          yield! progress.Members |> List.map memberLine
+          match progress.Members |> List.filter (fun row -> row.Category = MemberCategory.Blocked) with
+          | [] -> ()
+          | blocked ->
+              yield ""
+              yield "BLOCKED"
+
+              for row in blocked do
+                  let gates = match row.Gates with [] -> "gates no other member" | ids -> "gates " + String.concat ", " ids
+                  yield $"  {row.WorkItemId}: {gates}"
+          yield ""
+          yield "SHARED CONTEXT"
+          yield! bullets declaration.SharedContext
+          yield ""
+          yield "ARCHITECTURE NOTES"
+          yield! bullets declaration.ArchitectureNotes
+          yield ""
+          yield "HISTORY"
+          yield! group.History |> List.map historyLine ]
+
+    /// Read-only: reads the store, the queue, the live context and the
+    /// planner's analysis; never takes a lock and never writes.
+    let show (root: string) (rawArguments: string list) =
+        let command = "work group show"
+        let arguments = parse [ "--config" ] [] rawArguments
+        let asJson = arguments.Switches.Contains "--json"
+
+        let errors =
+            [ yield! commonErrors command arguments [ "--config" ]
+              match arguments.Positional with
+              | [ _ ] -> ()
+              | [] -> yield $"{command} requires GROUP-ID"
+              | _ -> yield $"{command} shows exactly one group" ]
+
+        match errors with
+        | _ :: _ -> reportArgumentErrors command showUsage errors
+        | [] ->
+            let groupId = arguments.Positional.Head
+            let plannedAt = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture)
+            let port = FilePlanningRepository.create root None (single arguments "--config" |> Option.map (resolve root))
+
+            let found =
+                FileWorkGroupRepository.read root
+                |> Result.bind (fun groups ->
+                    standing root
+                    |> Result.bind (fun standing ->
+                        match WorkGroups.tryFind groups groupId with
+                        | None -> Ok None
+                        | Some group ->
+                            Ros.Application.Planning.PlanningOperations.analyze port plannedAt "work-group"
+                            |> Result.map (fun (_, analysis) -> Some(group, WorkGroups.progress group (analysisFacts analysis standing)))))
+
+            match found with
+            | Error message ->
+                if asJson then printJson (envelope command "failed" [ "failure", WorkGroupJson.record [ "code", WorkGroupJson.text "read-failed"; "message", WorkGroupJson.text message ] ])
+                else eprintfn "ERROR %s" message
+
+                1
+            | Ok None ->
+                let rejection = GroupRejection.UnknownGroup groupId
+
+                if asJson then printJson (envelope command "not-found" [ "groupId", WorkGroupJson.text groupId; "rejections", WorkGroupJson.array [ WorkGroupJson.rejectionNode rejection ] ])
+                else eprintfn "ERROR [%s] %s" (GroupRejection.code rejection) (GroupRejection.message rejection)
+
+                1
+            | Ok(Some(group, progress)) ->
+                if asJson then
+                    printJson (
+                        envelope
+                            command
+                            "found"
+                            [ "group", WorkGroupJson.groupNode group
+                              "progress", WorkGroupJson.progressNode progress
+                              "members", progress.Members |> List.map WorkGroupJson.memberProgressNode |> WorkGroupJson.array ]
+                    )
+                else
+                    showText group progress |> List.iter (printfn "%s")
+
+                0
 
     // ---- validate ----
 

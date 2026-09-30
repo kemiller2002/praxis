@@ -382,6 +382,7 @@ See "Durable checkpoints and continuity" in [`work-protocol.md`](work-protocol.m
 ### `work group`
 
 ```
+ros work group show GROUP-ID [--config FILE] [--json]
 ros work group create --group GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP
                       [--kind KIND] [--origin ORIGIN] [--shared-context TEXT]*
                       [--architecture-note TEXT]* [--execution-repository NAME]
@@ -411,6 +412,14 @@ origin `human-declared`). The creation is recorded with the resolved actor,
 is written: invalid arguments exit `2`, refusals (unknown, terminal or
 foreign-repository member, duplicate group) exit `1`. `--dry-run` shows the
 group without writing it.
+
+**`work group show`** is read-only (no lock, no write): the group's
+declaration, each member's own recorded state and planning state (from the
+planner's analysis; `--config` is passed through), partial-completion
+progress (`k of n complete`; `progress.complete` is true only when every
+member completed on its own evidence), the work items each member still waits
+on, blocked members and the open members they gate, shared context,
+architecture notes and history. An unknown group exits `1`.
 
 ### `remote execute`
 
