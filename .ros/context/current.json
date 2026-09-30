@@ -5232,6 +5232,51 @@
       },
       "completedAt": "2026-09-30T18:17:16.000Z",
       "conclusion": "Implemented on main's base from the grouped arm with the control arm's parser, join rule and checkpoint checks ported; work group tests pass (849 total)."
+    },
+    {
+      "id": "PRAXIS-PLAN-05",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Telemetry/SessionTranscript.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/TelemetryIngestClaudeSessionTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PlanningSessionEvidenceTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T18:58:00Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T182239139Z-a3235bc5"
+      ],
+      "latestCheckpoint": {
+        "id": "f0a1d4f609ea095735f4a539",
+        "recordedAt": "2026-09-30T18:57:54Z",
+        "executionId": "EXE-20260930T182239139Z-a3235bc5",
+        "repository": "repository-operating-system",
+        "branch": "claude/session-metrics-telemetry",
+        "commit": "4c0196bf3f487e822f9c52f9f3ba554a73201fed",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/session-metrics-telemetry",
+        "remoteCommit": "4c0196bf3f487e822f9c52f9f3ba554a73201fed",
+        "summary": "anthropic-claude-session adapter, observed cost.execution_total in the planner, implementation duration down-weight, context overhead; 850 F# and 257 Node differential tests pass",
+        "nextAction": "complete PRAXIS-PLAN-05, then registry build, validate and open the draft PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T18:58:00Z"
     }
   ],
   "protocolVersion": "1.0.0",

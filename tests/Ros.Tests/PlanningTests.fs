@@ -54,7 +54,8 @@ module PlanningFixtures =
           Runtime = "runtime-a"
           Model = None
           Costs = []
-          TokenMetrics = 0 }
+          TokenMetrics = 0
+          Session = SessionEvidence.none }
 
     /// Twenty-four finalized development executions of 10..33 minutes.
     let history = [ for index in 0..23 -> executed index $"HIST-{index}" "development" (10L + int64 index) ]

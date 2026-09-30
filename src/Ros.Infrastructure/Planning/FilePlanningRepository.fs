@@ -170,7 +170,12 @@ module FilePlanningRepository =
                                   Currency = text metric "currency"
                                   Kind = costKind metric }
                         | _ -> None)
-                  TokenMetrics = metrics |> List.filter (fun metric -> text metric "id" |> Option.exists (fun id -> id.StartsWith("tokens.", StringComparison.Ordinal))) |> List.length }
+                  TokenMetrics = metrics |> List.filter (fun metric -> text metric "id" |> Option.exists (fun id -> id.StartsWith("tokens.", StringComparison.Ordinal))) |> List.length
+                  Session =
+                    { ActiveMs = latest "time.active_ms" |> Option.map int64
+                      FirstCodeChangeMs = latest "time.first_code_change_ms" |> Option.map int64
+                      GovernanceReads = latest "context.governance_reads" |> Option.map int
+                      RepeatedReads = latest "context.repeated_file_reads" |> Option.map int } }
         | _ -> None
 
     let readExecutions (root: string) : HistoricalExecution list =

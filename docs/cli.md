@@ -276,6 +276,17 @@ Run `ros --help` for the full argument list, and see
 [`work-adapter-contract.md`](work-adapter-contract.md) and
 [`agent-provenance.md`](agent-provenance.md) for what they mean.
 
+`ros telemetry adapters` lists the ingest adapters. Besides production's
+catalog it includes the F#-only `anthropic-claude-session`, which derives
+session metrics (repeated and governance reads, time to first code change,
+active time, requests, tool calls, compactions, tokens) from a Claude Code
+transcript: `ros telemetry ingest ID --adapter anthropic-claude-session
+--input SESSION.jsonl`. Platform-reported cost is recorded with `ros telemetry
+record ID --metric cost.execution_total --value N --currency USD --quality
+observed`; `ros plan` reads both (see
+[`development-telemetry.md`](development-telemetry.md) and
+[`planning.md`](planning.md)).
+
 ### `plan`
 
 ```

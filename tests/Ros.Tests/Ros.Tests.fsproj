@@ -51,6 +51,7 @@
     <Compile Include="TelemetryIngestHookTests.fs" />
     <Compile Include="TelemetryIngestClaudeStatuslineTests.fs" />
     <Compile Include="TelemetryIngestOtelTests.fs" />
+    <Compile Include="TelemetryIngestClaudeSessionTests.fs" />
     <Compile Include="TelemetryClassifyTests.fs" />
     <Compile Include="TelemetryStartTests.fs" />
     <Compile Include="AdapterContractTests.fs" />
@@ -81,6 +82,7 @@
     <Compile Include="WorkAbandonTests.fs" />
     <Compile Include="PlanningTests.fs" />
     <Compile Include="PlanningCliTests.fs" />
+    <Compile Include="PlanningSessionEvidenceTests.fs" />
     <Compile Include="GroupingTests.fs" />
     <Compile Include="PremergeFence.fs" />
     <Compile Include="PremergeCommandSurfaceTests.fs" />
@@ -89,5 +91,8 @@
     <Compile Include="PremergeReleaseTests.fs" />
     <Compile Include="WorkGroupTests.fs" />
     <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Fixtures/claude-session-transcript.jsonl" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

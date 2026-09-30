@@ -119,13 +119,26 @@ unobservable). Stale items go to the state-cleanup section and a serial
 confidence is limited.
 
 **Durations** (PRX-PLAN-060..063, 171..173). Each finalized execution
-contributes productive time = `time.wall_ms - time.blocked_ms`. Active
+contributes productive time = `time.wall_ms - time.blocked_ms`, or its
+runtime-measured session time (`time.active_ms`, from the
+`anthropic-claude-session` adapter) when that is longer: ROS wall time starts
+at `work begin`, which executors often run just before completion. Active
 executions are never measured. Per task class (the telemetry classification
 vocabulary) the planner uses the interquartile range (P25 / median / P75),
 rounded to whole minutes below an hour and five minutes above (PRX-PLAN-061),
 with confidence by sample size (20+ high, 8+ medium, 3+ low, else unknown;
 one level lower when P75 exceeds 4x P25). A class without history falls back
 to the pooled distribution one confidence level lower; no history is unknown.
+Implementation work (the pooled class and `development`, `maintenance`,
+`refactoring`, `defect-bug-fix`, `infrastructure-devops`,
+`testing-verification`, `prototype-proof-of-concept`) loses one more
+confidence level while fewer than half of the distribution's samples carry
+runtime-measured session time (`sessionMeasured` in the analysis JSON), and
+the item's estimate basis says so: in `EX-ROS-2026-A021` the history-based
+model's upper bound of 45 min missed observed durations of 61 and 112 min
+(`EV-ROS-2026-A064`, `HY-ROS-2026-A027`). The estimate range itself is not
+rescaled, because one experiment does not calibrate a factor; measuring
+sessions is what corrects it.
 Segments by provider, runtime and model are reported as measurements only.
 Drift compares the median of the 10 most recent executions with the earlier
 interquartile range.
@@ -139,9 +152,16 @@ unclassified). An active item without a checkpoint is `unclassified`
 continuation. Every item's explanation states this basis.
 
 **Cost** (PRX-PLAN-050..053, 092). `cost.*` metrics are the only monetary
-evidence (`cost.execution_total` when present, else the sum of components),
+evidence: every `cost.execution_total` of an execution (summed, its
+aggregation), else the sum of cost components, else the latest
+`cost.session_cumulative` (a session gauge, never added to components),
 classified observed / provider-reported / calculated / estimated from the
-metric's quality and source. Unless at least `minimumCostSamples` executions
+metric's quality and source. Record platform-reported cost with
+`ros telemetry record ID --metric cost.execution_total --value 9.48
+--currency USD --quality observed --source-type platform --source-name NAME
+--mechanism session-record`. An item whose own finalized executions carry a
+monetary total reports that evidence's strongest kind (`observed` for
+platform cost); other items report `estimated` when history is sufficient. Unless at least `minimumCostSamples` executions
 carry usable cost in one currency, every cost is unknown, the `cost` strategy
 is **unavailable** with the "N of M executions" statement, and a `--budget`
 is `cannot-evaluate`. Every plan still reports known contributors: executions,
@@ -252,8 +272,12 @@ tie-breaks), execution repository, affinity and confidence, intra-group
 collision risk and parallel safety (separately from affinity), recommended
 execution (one sequential agent; one owner with parallel subtasks only when
 every pair is collision-safe; or split by repository), context cost (`n`
-independent acquisitions versus 1 grouped; token and time value unknown until
-measured), partial-completion progress and notes. Across groups it derives
+independent acquisitions versus 1 grouped, with the cold start priced from
+measured history once at least three finalized executions carry
+`time.first_code_change_ms`, else unknown), partial-completion progress and
+notes. The analysis JSON's `history.contextOverhead` reports the measured
+cold start (interquartile range), the median governance-document and repeated
+reads per session, and whether it is sufficient. Across groups it derives
 group->group, item->group and group->external dependencies from member
 dependencies (naming each), detects cycles, and says which groups may run
 concurrently under the `accept-elevated` policy.
@@ -356,7 +380,7 @@ No external dependency was added (PRX-PLAN-004).
 | GRP-045 (and GRP-040's reuse inventory) | Guidance for executors, not enforced by tooling: the group analysis names existing parsers, rules and stores to reuse, and a per-member, per-criterion verification pass precedes each completion (`docs/group-analysis-template.md`; `PRAXIS-PLAN-04`, from `EV-ROS-2026-A064`). |
 | GRP-041..043 | Met by construction (tests 9, 10); per-item attribution in a grouped execution is enforced by the existing work protocol. |
 | GRP-050..052 | Met for dependencies and cycles (dependency test) and repositories (tests 5, 5b); cross-repository orchestration is future work. |
-| GRP-060..063 | Met; context cost is counted, not priced (unmeasured). |
+| GRP-060..063 | Met; context cost is counted, and the cold start is priced from session metrics once measured (`PRAXIS-PLAN-05`). |
 | GRP-070..072 | Met. |
 | GRP-073 | Declarations from configuration and from Praxis state (`work group create`, `PRAXIS-GROUP-01`; `work group show`, `PRAXIS-GROUP-02`; `work group add`, `PRAXIS-GROUP-03`; `work group remove`, `PRAXIS-GROUP-04`; `work group checkpoint`, `PRAXIS-GROUP-05`). `plan execute-group` and automatic grouped execution are not implemented. Phase two was built on the grouped arm of `EX-ROS-2026-A021` with the control arm's shared `grouping.groups` parser, `executionLocation` join rule and checkpoint ownership and re-validation ported (`PRAXIS-GROUP-06`, `EV-ROS-2026-A064`). |
 | GRP-074 | Size and context-pressure splits and architecture merges met (tests 18, 19, merge test); splitting by independent chain or external blockage is not implemented. |
@@ -370,7 +394,10 @@ No external dependency was added (PRX-PLAN-004).
   executions begin just before completion (median productive time about two
   minutes), so estimates are narrow and replay error is high. Starting work
   items when work actually starts would improve every estimate.
-- No cost telemetry exists yet, so `cost` and `--budget` stay unavailable.
+- Cost and context overhead are observable (`PRAXIS-PLAN-05`) but not yet
+  recorded for past executions, so `cost` and `--budget` stay unavailable and
+  context reuse unmeasured until executions record platform cost and ingest
+  their session transcripts.
 - Scope evidence is tags only unless areas are declared; most pairs are
   `elevated` (shared Praxis state) or `unknown`.
 - Decide from the shadow evidence whether autonomous execution should ever
@@ -380,8 +407,8 @@ No external dependency was added (PRX-PLAN-004).
   repeated far less context and produced one consistent model; independent
   executions met individual criteria more faithfully. Next: add a
   reuse-inventory and per-criterion verification step to grouped-execution
-  guidance; turn the experiment's session-metrics script into a telemetry
-  adapter and record platform cost as `cost.execution_total`; replace the
-  history-based duration model for implementation work (it missed both
-  arms); replicate with a loosely related cohort; consider requiring an
+  guidance; (done in `PRAXIS-PLAN-05`: the session-metrics script is the
+  `anthropic-claude-session` adapter, platform cost is recorded as
+  `cost.execution_total`, and implementation durations are down-weighted
+  until sessions are measured); replicate with a loosely related cohort; consider requiring an
   admitted member to reach the group's typical affinity (`EV-ROS-2026-A059`).

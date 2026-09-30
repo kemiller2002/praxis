@@ -456,6 +456,26 @@ const GOLDEN ={
         }
       },
       {
+        "metricId": "context.repeated_file_reads",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
+        "source": {
+          "type": "environment",
+          "name": "runtime-identity",
+          "mechanism": "explicit-or-unmapped-environment"
+        }
+      },
+      {
+        "metricId": "context.governance_reads",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
+        "source": {
+          "type": "environment",
+          "name": "runtime-identity",
+          "mechanism": "explicit-or-unmapped-environment"
+        }
+      },
+      {
         "metricId": "context.compactions",
         "status": "unknown",
         "reason": "runtime capability not reported or mapped",
@@ -617,6 +637,16 @@ const GOLDEN ={
       },
       {
         "metricId": "time.retry_ms",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
+        "source": {
+          "type": "environment",
+          "name": "runtime-identity",
+          "mechanism": "explicit-or-unmapped-environment"
+        }
+      },
+      {
+        "metricId": "time.first_code_change_ms",
         "status": "unknown",
         "reason": "runtime capability not reported or mapped",
         "source": {
@@ -1535,7 +1565,7 @@ const GOLDEN ={
       "evidence": []
     }
   },
-  "test1CapabilitiesLength": 115,
+  "test1CapabilitiesLength": 118,
   "test2Context": {
     "schemaVersion": "1.0.0",
     "protocolVersion": "1.0.0",

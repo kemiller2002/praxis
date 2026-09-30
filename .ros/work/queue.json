@@ -3327,10 +3327,10 @@
         "telemetry"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T17:18:22.924Z",
-      "updatedAt": "2026-09-30T17:20:02.000Z",
+      "updatedAt": "2026-09-30T18:58:00Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

@@ -229,6 +229,26 @@ const WI_A_TASK_RECORD = {
       }
     },
     {
+      "metricId": "context.repeated_file_reads",
+      "status": "unknown",
+      "reason": "runtime capability not reported or mapped",
+      "source": {
+        "type": "environment",
+        "name": "runtime-identity",
+        "mechanism": "explicit-or-unmapped-environment"
+      }
+    },
+    {
+      "metricId": "context.governance_reads",
+      "status": "unknown",
+      "reason": "runtime capability not reported or mapped",
+      "source": {
+        "type": "environment",
+        "name": "runtime-identity",
+        "mechanism": "explicit-or-unmapped-environment"
+      }
+    },
+    {
       "metricId": "context.compactions",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
@@ -390,6 +410,16 @@ const WI_A_TASK_RECORD = {
     },
     {
       "metricId": "time.retry_ms",
+      "status": "unknown",
+      "reason": "runtime capability not reported or mapped",
+      "source": {
+        "type": "environment",
+        "name": "runtime-identity",
+        "mechanism": "explicit-or-unmapped-environment"
+      }
+    },
+    {
+      "metricId": "time.first_code_change_ms",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
       "source": {
@@ -1362,7 +1392,13 @@ function stripVolatile(value) {
   return value;
 }
 
-test("F# telemetry adapters matches production's static catalog exactly", (t) => {
+// PRAXIS-PLAN-05: anthropic-claude-session (session-transcript metrics) is an
+// F#-only adapter added after the F# CLI became primary (DF-ROS-2026-A030);
+// the Node rollback path does not implement it, so it follows production's
+// catalog rather than appearing in it.
+const FSHARP_ONLY_ADAPTERS = ["anthropic-claude-session"];
+
+test("F# telemetry adapters matches production's static catalog exactly, followed by the F#-only adapters", (t) => {
   assert.ok(fs.existsSync(fsharpCli), "build:fsharp must produce the shadow CLI before this test runs");
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ros-telemetry-adapters-"));
   t.after(() => {
@@ -1374,7 +1410,7 @@ test("F# telemetry adapters matches production's static catalog exactly", (t) =>
   });
   const fsharpResult = runFsharp(root, ["adapters"]);
   assert.equal(fsharpResult.status, 0, fsharpResult.stderr);
-  assert.deepEqual(JSON.parse(fsharpResult.stdout), TELEMETRY_ADAPTERS);
+  assert.deepEqual(JSON.parse(fsharpResult.stdout), [...TELEMETRY_ADAPTERS, ...FSHARP_ONLY_ADAPTERS]);
 });
 
 test("F# telemetry show with no target lists every execution record, matching production's real showTelemetry", (t) => {
