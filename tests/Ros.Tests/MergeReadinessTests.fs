@@ -221,7 +221,7 @@ module MergeReadinessTests =
                                   "dirty working tree did not block"
                           | _ -> failwith "expected blockers"
                       finally
-                          File.Delete evidence)) }
+                          File.Delete evidence) }
 
           { Name = "merge readiness cli: command is read-only"
             Run =
@@ -238,4 +238,4 @@ module MergeReadinessTests =
                           Assert.equal 0 (PraxisCli.run root None [ "merge"; "readiness"; "--evidence"; evidence ]).ExitCode
                           Assert.equal before (fingerprint root)
                       finally
-                          File.Delete evidence)) } ]
+                          File.Delete evidence) } ]
