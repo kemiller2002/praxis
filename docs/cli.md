@@ -355,6 +355,30 @@ lifecycle state, queue entry, live context, evidence or telemetry.
 `praxis.work-groups/1.0.0` document (`kind` `work-group-member-added`,
 `work-group-member-planned` or `work-group-rejected`).
 
+### `work group remove`
+
+```
+ros work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP [--dry-run] [--json] [IDENTITY]
+```
+
+Removes one member from a group stored by `work group create` (PRX-GRP-073,
+phase two), recording who removed it and when in the group's `removals`
+(`member`, `removedAt`, `removedBy`); earlier `additions` are kept. It
+refuses, with exit `1` and nothing recorded, a group that is not stored (a
+group only in planner configuration is changed there), an item that is not a
+member, a removal that would leave the group with fewer than two members (a
+group's last members cannot be removed), and an `--occurred-at` before the
+group's latest recorded change. The member's lifecycle state is neither
+consulted nor changed, so a completed, abandoned or no longer known member
+may leave, and a removed member may be added again with `work group add`.
+Argument errors (including `create`-only options and `--config`) exit `2`.
+The only write is `.ros/work/groups.json`: it never changes the member's
+lifecycle state, queue entry, live context, evidence, attribution or
+telemetry. `--dry-run` reports the removal without recording it; `--json`
+emits a `praxis.work-groups/1.0.0` document (`kind`
+`work-group-member-removed`, `work-group-member-removal-planned` or
+`work-group-rejected`).
+
 ### `work group show`
 
 ```

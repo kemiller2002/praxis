@@ -24,6 +24,7 @@ praxis plan simulate --groups [--max-concurrency N]    waves of groups and ungro
 praxis plan compare  --groups [--max-concurrency N]    grouped versus independent execution, per group
 praxis work group show GROUP-ID [--json]               one declared group: member states, progress, blocked members
 praxis work group add --id GROUP-ID --member ID ...    add one member to a stored group (records who added it)
+praxis work group remove --id GROUP-ID --member ID ... remove one member from a stored group (records who removed it)
 ```
 
 Common options: `--observations FILE` (external CI/GitHub evidence, below),
@@ -279,12 +280,19 @@ concurrently under the `accept-elevated` policy.
 records a human-declared group durably in `.ros/work/groups.json`
 (`praxis.work-groups/1.0.0`: each entry is a `grouping.groups` declaration
 plus `createdAt` and `createdBy`, and `additions`, the members `praxis work
-group add` added later, each with `member`, `addedAt` and `addedBy`; an
-entry without `additions` has none). `work group add` refuses unknown and
+group add` added later, each with `member`, `addedAt` and `addedBy`, and
+`removals`, the members `praxis work group remove` removed, each with
+`member`, `removedAt` and `removedBy`; an entry without `additions` or
+`removals` has none). `work group add` refuses unknown and
 terminal items, members already present and, unless the group is
 cross-repository, an item whose execution repository (decided as the planner
 decides it) differs from the group's; it never changes the member's
-lifecycle state. The planner reads every stored group with
+lifecycle state. `work group remove` refuses a non-member, a removal that
+would leave fewer than two members (a group's last members cannot be
+removed), and a time before the group's latest recorded change; it does not
+consult or change the member's lifecycle state, evidence or attribution, so
+a completed or no longer known member may leave, and a removed member may be
+added again. The planner reads every stored group with
 the same reader and in the same way as a configured `grouping.groups` entry,
 stored groups first; an ID declared both there and in `--config` is refused
 (exit `1`) rather than silently resolved. Creation refuses unknown, terminal
@@ -292,7 +300,9 @@ and repeated members and duplicate IDs, and never changes a member's
 lifecycle state. `praxis validate` reports stored groups that are malformed,
 stored twice, have fewer than two distinct members, repeat a member, name a
 work item that no longer exists, or lack their origin, time or actor, and
-additions that name a non-member or lack their time or actor; a member
+additions and removals that contradict current membership (an item
+whose latest change added it but is not a member, or removed it but still
+is) or lack their time or actor; a member
 that completed after the group was declared is valid (partial completion,
 PRX-GRP-042). Reading them keeps every `plan` command read-only.
 
@@ -385,7 +395,7 @@ No external dependency was added (PRX-PLAN-004).
 | GRP-050..052 | Met for dependencies and cycles (dependency test) and repositories (tests 5, 5b); cross-repository orchestration is future work. |
 | GRP-060..063 | Met; context cost is counted, not priced (unmeasured). |
 | GRP-070..072 | Met. |
-| GRP-073 | Declarations from configuration and stored by `work group create` (`PRAXIS-GROUP-01`); `work group show` (`PRAXIS-GROUP-02`) shows one declared group read-only; `work group add` (`PRAXIS-GROUP-03`) adds one member to a stored group. The remaining commands are captured as `PRAXIS-GROUP-04..05`, deferred. |
+| GRP-073 | Declarations from configuration and stored by `work group create` (`PRAXIS-GROUP-01`); `work group show` (`PRAXIS-GROUP-02`) shows one declared group read-only; `work group add` (`PRAXIS-GROUP-03`) adds one member to a stored group; `work group remove` (`PRAXIS-GROUP-04`) removes one. The remaining command is captured as `PRAXIS-GROUP-05`, deferred. |
 | GRP-074 | Size and context-pressure splits and architecture merges met (tests 18, 19, merge test); splitting by independent chain or external blockage is not implemented. |
 | GRP-075 | Met (test 15). |
 | GRP-080..088 | Baseline, cohort, protocol and predictions frozen (`EV-ROS-2026-A059`, `EX-ROS-2026-A021`); the arms have not run. |

@@ -8,7 +8,8 @@ open Ros.Domain.Provenance
 open Ros.Infrastructure.Planning
 
 /// `work group create` records a human-declared execution group in Praxis
-/// state; `work group add` adds one member to it (PRX-GRP-073, phase two).
+/// state; `work group add` adds one member to it and `work group remove`
+/// removes one (PRX-GRP-073, phase two).
 /// This module parses, delegates to
 /// `FileWorkGroupRepository` (Application operation over the Domain
 /// decision) and renders; it holds no grouping policy.
@@ -20,7 +21,10 @@ module WorkGroupCommands =
     let private addUsage =
         "work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--config FILE] [--dry-run] [--json] [IDENTITY]"
 
-    let usage = createUsage + " | " + addUsage
+    let private removeUsage =
+        "work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP [--dry-run] [--json] [IDENTITY]"
+
+    let usage = String.Join(" | ", [ createUsage; addUsage; removeUsage ])
 
     let private flagsWithValues =
         set
@@ -113,6 +117,28 @@ module WorkGroupCommands =
           for token in parsed.Unexpected do
               yield $"unexpected argument '{token}'" ]
 
+    let private removeArgumentErrors (parsed: Parsed) (arguments: string list) =
+        [ match values parsed "--id" with
+          | [ _ ] -> ()
+          | [] -> yield "work group remove requires --id GROUP-ID"
+          | _ -> yield "work group remove changes one group; pass --id once"
+          match values parsed "--member" with
+          | [ _ ] -> ()
+          | [] -> yield "work group remove requires --member ID"
+          | _ -> yield "work group remove removes one member; pass --member once"
+          match values parsed "--occurred-at" with
+          | [ _ ] -> ()
+          | _ -> yield "work group remove requires exactly one --occurred-at TIMESTAMP (the real current time)"
+          if not (values parsed "--config").IsEmpty then
+              yield "--config applies to work group add, not work group remove"
+          for flag in [ "--kind"; "--execution-repository"; "--shared-context" ] do
+              if not (values parsed flag).IsEmpty then
+                  yield $"{flag} is a work group create option; work group remove changes only membership"
+          if List.contains "--cross-repository" arguments then
+              yield "--cross-repository is a work group create option; work group remove changes only membership"
+          for token in parsed.Unexpected do
+              yield $"unexpected argument '{token}'" ]
+
     let private request (parsed: Parsed) (arguments: string list) (actor: Actor) : GroupCreationRequest =
         { Id = values parsed "--id" |> List.head
           Members = values parsed "--member"
@@ -138,6 +164,9 @@ module WorkGroupCommands =
 
         for addition in group.Additions do
             printfn "  %s added by %s at %s" addition.Member addition.AddedBy addition.AddedAt
+
+        for removal in group.Removals do
+            printfn "  %s removed by %s at %s" removal.Member removal.RemovedBy removal.RemovedAt
 
         printfn "member lifecycle states are unchanged; each member is still started, checkpointed and completed on its own"
 
@@ -211,6 +240,46 @@ module WorkGroupCommands =
 
             0
 
+    let private removalRequest (parsed: Parsed) (actor: Actor) : MemberRemovalRequest =
+        { GroupId = values parsed "--id" |> List.head
+          Member = values parsed "--member" |> List.head
+          OccurredAt = values parsed "--occurred-at" |> List.head
+          RemovedBy = actor.Id }
+
+    let private renderRemoval asJson (outcome: MemberRemovalOutcome) =
+        let removed (group: StoredGroup) = List.last group.Removals
+
+        match outcome with
+        | MemberRemovalOutcome.Rejected rejections ->
+            let messages = rejections |> List.map GroupDeclaration.removalMessage
+
+            if asJson then
+                printf "%s" (PlanningJson.renderGroupRejected messages)
+
+            for message in messages do
+                eprintfn "ERROR %s" message
+
+            eprintfn "work group remove rejected; nothing was recorded"
+            1
+        | MemberRemovalOutcome.Planned group ->
+            if asJson then
+                printf "%s" (PlanningJson.renderMemberRemoved true FileWorkGroupStore.relativePath (removed group) group)
+            else
+                printfn "dry run: would remove %s from %s in %s; nothing was recorded" (removed group).Member group.Declaration.Id FileWorkGroupStore.relativePath
+                describe group
+
+            0
+        | MemberRemovalOutcome.Recorded group ->
+            let removal = removed group
+
+            if asJson then
+                printf "%s" (PlanningJson.renderMemberRemoved false FileWorkGroupStore.relativePath removal group)
+            else
+                printfn "removed %s from %s in %s" removal.Member group.Declaration.Id FileWorkGroupStore.relativePath
+                describe group
+
+            0
+
     let private withArguments (errors: Parsed -> string list) (rest: string list) (continuation: Parsed -> int) =
         let parsed = parse { Values = Map.empty; Unexpected = [] } rest
 
@@ -240,6 +309,10 @@ module WorkGroupCommands =
             withArguments (fun parsed -> addArgumentErrors parsed rest) rest (fun parsed ->
                 FileWorkGroupRepository.add root (values parsed "--config" |> List.tryHead) (List.contains "--dry-run" rest) (additionRequest parsed actor)
                 |> reported (renderAddition (List.contains "--json" rest)))
+        | "remove" :: rest ->
+            withArguments (fun parsed -> removeArgumentErrors parsed rest) rest (fun parsed ->
+                FileWorkGroupRepository.remove root (List.contains "--dry-run" rest) (removalRequest parsed actor)
+                |> reported (renderRemoval (List.contains "--json" rest)))
         | _ ->
             eprintfn "Usage: ros %s" usage
             2

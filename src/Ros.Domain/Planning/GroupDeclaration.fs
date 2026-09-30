@@ -13,13 +13,37 @@ type StoredGroup =
       CreatedBy: string
       /// Members added after creation by `work group add`, oldest first:
       /// who added each, and when.
-      Additions: MemberAddition list }
+      Additions: MemberAddition list
+      /// Members removed by `work group remove`, oldest first: who removed
+      /// each, and when.
+      Removals: MemberRemoval list }
+
+/// The provenance of one member removed from a stored group.
+and MemberRemoval =
+    { Member: string
+      RemovedAt: string
+      RemovedBy: string }
 
 /// The provenance of one member added to a stored group.
 and MemberAddition =
     { Member: string
       AddedAt: string
       AddedBy: string }
+
+/// What `work group remove` was asked to record.
+type MemberRemovalRequest =
+    { GroupId: string
+      Member: string
+      OccurredAt: string
+      RemovedBy: string }
+
+[<RequireQualifiedAccess>]
+type MemberRemovalRejection =
+    | UnknownGroup of id: string
+    | NotMember of groupId: string * id: string
+    | TooFewRemaining of groupId: string * remaining: int
+    | PredatesHistory of value: string * latest: string
+    | InvalidTimestamp of value: string
 
 /// What `work group add` was asked to record.
 type MemberAdditionRequest =
@@ -135,7 +159,8 @@ module GroupDeclaration =
                       ArchitectureNotes = [] }
                   CreatedAt = request.OccurredAt
                   CreatedBy = request.CreatedBy
-                  Additions = [] }
+                  Additions = []
+                  Removals = [] }
         | _ -> Error rejections
 
     let additionMessage rejection =
@@ -203,6 +228,83 @@ module GroupDeclaration =
                               AddedBy = request.AddedBy } ] }
         | _, rejections -> Error rejections
 
+    let removalMessage rejection =
+        match rejection with
+        | MemberRemovalRejection.UnknownGroup id -> $"group {id} is not a stored group; declare it with work group create (a group only in planner configuration is changed there)"
+        | MemberRemovalRejection.NotMember(groupId, id) -> $"{id} is not a member of {groupId}"
+        | MemberRemovalRejection.TooFewRemaining(groupId, remaining) ->
+            $"removing it would leave {groupId} with {remaining} member(s); a group needs at least two, so its last members cannot be removed"
+        | MemberRemovalRejection.PredatesHistory(value, latest) -> $"--occurred-at '{value}' predates the group's latest recorded change ({latest})"
+        | MemberRemovalRejection.InvalidTimestamp value -> $"--occurred-at '{value}' is not a timestamp"
+
+    /// When the group was created and each membership change was recorded.
+    let private history (group: StoredGroup) =
+        group.CreatedAt
+        :: (group.Additions |> List.map (fun addition -> addition.AddedAt))
+        @ (group.Removals |> List.map (fun removal -> removal.RemovedAt))
+
+    /// Decides whether `request.Member` may leave the stored group
+    /// `request.GroupId`. Only a member can be removed, a group keeps at least
+    /// two members, and a removal cannot predate the group's recorded
+    /// history. The member's lifecycle state is not consulted and never
+    /// touched: a completed, abandoned or no longer known member may leave.
+    /// Every rejection is reported, not only the first.
+    let decideRemoval (stored: StoredGroup list) (request: MemberRemovalRequest) : Result<StoredGroup, MemberRemovalRejection list> =
+        let group = stored |> List.tryFind (fun candidate -> candidate.Declaration.Id = request.GroupId)
+        let id = request.Member
+
+        let membership =
+            match group with
+            | None -> [ MemberRemovalRejection.UnknownGroup request.GroupId ]
+            | Some group when not (group.Declaration.Members |> List.contains id) -> [ MemberRemovalRejection.NotMember(request.GroupId, id) ]
+            | Some group ->
+                match group.Declaration.Members |> List.filter ((<>) id) |> List.distinct |> List.length with
+                | remaining when remaining < 2 -> [ MemberRemovalRejection.TooFewRemaining(request.GroupId, remaining) ]
+                | _ -> []
+
+        let timestamp =
+            match Text.tryTimestamp request.OccurredAt, group with
+            | None, _ -> [ MemberRemovalRejection.InvalidTimestamp request.OccurredAt ]
+            | Some at, Some group ->
+                history group
+                |> List.choose (fun value -> Text.tryTimestamp value |> Option.map (fun parsed -> parsed, value))
+                |> List.sortBy fst
+                |> List.tryLast
+                |> Option.filter (fun (latest, _) -> at < latest)
+                |> Option.map (fun (_, latest) -> MemberRemovalRejection.PredatesHistory(request.OccurredAt, latest))
+                |> Option.toList
+            | Some _, None -> []
+
+        match group, membership @ timestamp with
+        | Some group, [] ->
+            Ok
+                { group with
+                    Declaration = { group.Declaration with Members = group.Declaration.Members |> List.filter ((<>) id) }
+                    Removals =
+                        group.Removals
+                        @ [ ({ Member = id
+                               RemovedAt = request.OccurredAt
+                               RemovedBy = request.RemovedBy }
+                            : MemberRemoval) ] }
+        | _, rejections -> Error rejections
+
+    /// Each member whose membership changed after creation, with whether
+    /// its latest change added it. An unparsable time sorts first; a member
+    /// added and removed at the same latest instant has no knowable latest
+    /// change and is omitted.
+    let private latestChanges (group: StoredGroup) =
+        let at value = Text.tryTimestamp value |> Option.defaultValue DateTimeOffset.MinValue
+
+        (group.Additions |> List.map (fun addition -> addition.Member, at addition.AddedAt, true))
+        @ (group.Removals |> List.map (fun removal -> removal.Member, at removal.RemovedAt, false))
+        |> List.groupBy (fun (id, _, _) -> id)
+        |> List.choose (fun (id, changes) ->
+            let latest = changes |> List.map (fun (_, time, _) -> time) |> List.max
+
+            match changes |> List.filter (fun (_, time, _) -> time = latest) |> List.map (fun (_, _, added) -> added) |> List.distinct with
+            | [ added ] -> Some(id, added)
+            | _ -> None)
+
     /// `stored` with `group` in place of the stored group of the same ID.
     let replace (stored: StoredGroup list) (group: StoredGroup) =
         stored |> List.map (fun candidate -> if candidate.Declaration.Id = group.Declaration.Id then group else candidate)
@@ -240,13 +342,21 @@ module GroupDeclaration =
                   yield finding "createdAt" $"'{group.CreatedAt}' is not a timestamp"
               if String.IsNullOrWhiteSpace group.CreatedBy then
                   yield finding "createdBy" "the declaring actor is missing"
+              for id, added in latestChanges group do
+                  match added, declaration.Members |> List.contains id with
+                  | true, false -> yield finding "additions" $"added member {id} is not a member"
+                  | false, true -> yield finding "removals" $"removed member {id} is still a member"
+                  | _ -> ()
               for addition in group.Additions do
-                  if not (declaration.Members |> List.contains addition.Member) then
-                      yield finding "additions" $"added member {addition.Member} is not a member"
                   if not (isTimestamp addition.AddedAt) then
                       yield finding "additions" $"'{addition.AddedAt}' (addition of {addition.Member}) is not a timestamp"
                   if String.IsNullOrWhiteSpace addition.AddedBy then
-                      yield finding "additions" $"the actor who added {addition.Member} is missing" ])
+                      yield finding "additions" $"the actor who added {addition.Member} is missing"
+              for removal in group.Removals do
+                  if not (isTimestamp removal.RemovedAt) then
+                      yield finding "removals" $"'{removal.RemovedAt}' (removal of {removal.Member}) is not a timestamp"
+                  if String.IsNullOrWhiteSpace removal.RemovedBy then
+                      yield finding "removals" $"the actor who removed {removal.Member} is missing" ])
 
     /// The declarations the planner reads: stored groups, then those of the
     /// supplied configuration. An ID declared in both is ambiguous and is

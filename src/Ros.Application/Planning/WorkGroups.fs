@@ -2,7 +2,7 @@ namespace Ros.Application.Planning
 
 open Ros.Domain.Planning
 
-/// What `work group create` and `work group add` read and write. The only
+/// What `work group create`, `add` and `remove` read and write. The only
 /// write replaces the stored groups; no member changes a work item's
 /// lifecycle, queue entry, live context, evidence or telemetry (PRX-GRP-002).
 type WorkGroupPort =
@@ -25,6 +25,12 @@ type GroupCreationOutcome =
 [<RequireQualifiedAccess>]
 type MemberAdditionOutcome =
     | Rejected of MemberAdditionRejection list
+    | Planned of StoredGroup
+    | Recorded of StoredGroup
+
+[<RequireQualifiedAccess>]
+type MemberRemovalOutcome =
+    | Rejected of MemberRemovalRejection list
     | Planned of StoredGroup
     | Recorded of StoredGroup
 
@@ -55,3 +61,13 @@ module WorkGroupOperations =
                     | Error rejections -> Ok(MemberAdditionOutcome.Rejected rejections)
                     | Ok group when dryRun -> Ok(MemberAdditionOutcome.Planned group)
                     | Ok group -> GroupDeclaration.replace stored group |> port.Write |> Result.map (fun () -> MemberAdditionOutcome.Recorded group))))
+
+    /// Decides, and unless `dryRun` records, one member leaving a stored
+    /// group. Only the stored groups are read and written.
+    let remove (port: WorkGroupPort) (dryRun: bool) (request: MemberRemovalRequest) : Result<MemberRemovalOutcome, string> =
+        port.Stored()
+        |> Result.bind (fun stored ->
+            match GroupDeclaration.decideRemoval stored request with
+            | Error rejections -> Ok(MemberRemovalOutcome.Rejected rejections)
+            | Ok group when dryRun -> Ok(MemberRemovalOutcome.Planned group)
+            | Ok group -> GroupDeclaration.replace stored group |> port.Write |> Result.map (fun () -> MemberRemovalOutcome.Recorded group))

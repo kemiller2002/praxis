@@ -8,7 +8,7 @@ open Ros.Contracts.Planning
 open Ros.Domain.Planning
 open Ros.Domain.Work
 
-/// `work group create` and `validate` over `.ros/work/groups.json`. Member
+/// `work group create|add|remove` and `validate` over `.ros/work/groups.json`. Member
 /// lifecycle is read with the planner's own read-only queue and context
 /// readers and the authority `work list` uses
 /// (`QueuePresentation.effectiveStatus`); it is never written.
@@ -75,6 +75,9 @@ module FileWorkGroupRepository =
 
     let add (root: string) (configurationFile: string option) (dryRun: bool) (request: MemberAdditionRequest) =
         WorkGroupOperations.add (port root configurationFile) dryRun request
+
+    let remove (root: string) (dryRun: bool) (request: MemberRemovalRequest) =
+        WorkGroupOperations.remove (port root None) dryRun request
 
     /// `validate` findings as (path, field, message).
     let validationFindings (root: string) : (string * string * string) list =

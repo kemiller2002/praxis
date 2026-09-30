@@ -130,6 +130,26 @@ module WorkGroupTests =
             (Some(PraxisCli.agent "agent:adder" "provider-b" "runtime-b" "session-2"))
             ([ "work"; "group"; "add"; "--id"; "GROUP-FIXTURE-CLI-001"; "--member"; memberId; "--occurred-at"; PraxisCli.now () ] @ extra)
 
+    let private removal groupId memberId : MemberRemovalRequest =
+        { GroupId = groupId
+          Member = memberId
+          OccurredAt = "2026-09-30T14:00:00.000Z"
+          RemovedBy = "agent:remover" }
+
+    let private removeFrom stored memberId =
+        GroupDeclaration.decideRemoval stored (removal "GROUP-PRAXIS-TEST-001" memberId)
+
+    let private threeMembers () =
+        match addTo [ storedGroup false (Some "praxis") ] "A-4" with
+        | Ok group -> group
+        | Error found -> failwith $"%A{found}"
+
+    let private removeMember (root: string) (memberId: string) (extra: string list) =
+        PraxisCli.run
+            root
+            (Some(PraxisCli.agent "agent:remover" "provider-c" "runtime-c" "session-3"))
+            ([ "work"; "group"; "remove"; "--id"; "GROUP-FIXTURE-CLI-001"; "--member"; memberId; "--occurred-at"; PraxisCli.now () ] @ extra)
+
     let private declaredIn (groups: JsonObject) (id: string) =
         groups["groups"].AsArray() |> Seq.map (fun group -> group.AsObject()) |> Seq.tryFind (fun group -> text group["id"] = id)
 
@@ -190,7 +210,8 @@ module WorkGroupTests =
                           ArchitectureNotes = [] }
                       CreatedAt = "2026-09-30T12:00:00.000Z"
                       CreatedBy = "agent:test"
-                      Additions = [] } ]
+                      Additions = []
+                      Removals = [] } ]
 
               Assert.empty (GroupDeclaration.findings stored (set [ "A-1"; "D-1" ]))
 
@@ -501,4 +522,189 @@ module WorkGroupTests =
               Assert.equal 2 result.ExitCode
               Assert.isTrue (result.Error.Contains "pass --member once") result.Error
               Assert.isTrue (result.Error.Contains "--occurred-at") result.Error
-              Assert.isTrue (result.Error.Contains "--kind is a work group create option") result.Error) ]
+              Assert.isTrue (result.Error.Contains "--kind is a work group create option") result.Error)
+
+          // ---- work group remove (PRAXIS-GROUP-04) --------------------------------------
+
+          t "remove drops a member and records who removed it and when" (fun () ->
+              let group = threeMembers ()
+
+              match removeFrom [ group ] "A-2" with
+              | Error found -> failwith $"%A{found}"
+              | Ok removed ->
+                  Assert.equal [ "A-1"; "A-4" ] removed.Declaration.Members
+                  Assert.equal group.Additions removed.Additions
+                  Assert.equal group.CreatedBy removed.CreatedBy
+
+                  Assert.equal
+                      [ ({ Member = "A-2"
+                           RemovedAt = "2026-09-30T14:00:00.000Z"
+                           RemovedBy = "agent:remover" }
+                         : MemberRemoval) ]
+                      removed.Removals
+
+                  Assert.empty (GroupDeclaration.findings [ removed ] (set [ "A-1"; "A-2"; "A-4" ])))
+
+          t "remove refuses an unknown group, a non-member and a bad or backdated timestamp" (fun () ->
+              let stored = [ threeMembers () ]
+
+              Assert.equal
+                  [ MemberRemovalRejection.UnknownGroup "GROUP-PRAXIS-TEST-404" ]
+                  (GroupDeclaration.decideRemoval stored (removal "GROUP-PRAXIS-TEST-404" "A-1") |> rejections)
+
+              Assert.equal [ MemberRemovalRejection.NotMember("GROUP-PRAXIS-TEST-001", "A-3") ] (removeFrom stored "A-3" |> rejections)
+              Assert.equal [ MemberRemovalRejection.NotMember("GROUP-PRAXIS-TEST-001", "Z-9") ] (removeFrom stored "Z-9" |> rejections)
+
+              Assert.equal
+                  [ MemberRemovalRejection.InvalidTimestamp "later" ]
+                  (GroupDeclaration.decideRemoval stored { removal "GROUP-PRAXIS-TEST-001" "A-1" with OccurredAt = "later" } |> rejections)
+
+              Assert.equal
+                  [ MemberRemovalRejection.PredatesHistory("2026-09-30T12:30:00.000Z", "2026-09-30T13:00:00.000Z") ]
+                  (GroupDeclaration.decideRemoval stored { removal "GROUP-PRAXIS-TEST-001" "A-1" with OccurredAt = "2026-09-30T12:30:00.000Z" }
+                   |> rejections))
+
+          t "remove refuses to leave a group with fewer than two members" (fun () ->
+              let pair = [ storedGroup false (Some "praxis") ]
+              Assert.equal [ MemberRemovalRejection.TooFewRemaining("GROUP-PRAXIS-TEST-001", 1) ] (removeFrom pair "A-1" |> rejections)
+
+              let remaining =
+                  match removeFrom [ threeMembers () ] "A-4" with
+                  | Ok group -> group
+                  | Error found -> failwith $"%A{found}"
+
+              Assert.equal [ "A-1"; "A-2" ] remaining.Declaration.Members
+
+              Assert.equal
+                  [ MemberRemovalRejection.TooFewRemaining("GROUP-PRAXIS-TEST-001", 1) ]
+                  (GroupDeclaration.decideRemoval [ remaining ] { removal "GROUP-PRAXIS-TEST-001" "A-2" with OccurredAt = "2026-09-30T15:00:00.000Z" }
+                   |> rejections))
+
+          t "remove does not consult lifecycle: a completed or unknown member may leave" (fun () ->
+              let group = { threeMembers () with Declaration = { (threeMembers ()).Declaration with Members = [ "A-1"; "A-2"; "D-1"; "GONE-1" ] } }
+              Assert.isTrue (removeFrom [ group ] "D-1" |> Result.isOk) "a completed member may leave"
+              Assert.isTrue (removeFrom [ group ] "GONE-1" |> Result.isOk) "a member no longer known may leave")
+
+          t "a removed member may be added again, and removals round-trip" (fun () ->
+              let removed =
+                  match removeFrom [ threeMembers () ] "A-4" with
+                  | Ok group -> group
+                  | Error found -> failwith $"%A{found}"
+
+              let readded =
+                  match
+                      GroupDeclaration.decideAddition [ removed ] lifecycle locate "praxis" { addition "GROUP-PRAXIS-TEST-001" "A-4" with OccurredAt = "2026-09-30T15:00:00.000Z" }
+                  with
+                  | Ok group -> group
+                  | Error found -> failwith $"%A{found}"
+
+              Assert.equal [ "A-1"; "A-2"; "A-4" ] readded.Declaration.Members
+              Assert.empty (GroupDeclaration.findings [ removed ] (set [ "A-1"; "A-2"; "A-4" ]))
+              Assert.empty (GroupDeclaration.findings [ readded ] (set [ "A-1"; "A-2"; "A-4" ]))
+
+              let rendered = PlanningJson.renderStoredGroups [ readded ]
+              Assert.equal (Ok [ readded ]) (PlanningJson.parseStoredGroups rendered)
+
+              let legacy = JsonNode.Parse(rendered).AsObject()
+              legacy["groups"].[0].AsObject().Remove "removals" |> ignore
+              Assert.equal (Ok [ { readded with Removals = [] } ]) (PlanningJson.parseStoredGroups (legacy.ToJsonString())))
+
+          t "validate reports removals inconsistent with membership" (fun () ->
+              let removed =
+                  match removeFrom [ threeMembers () ] "A-4" with
+                  | Ok group -> group
+                  | Error found -> failwith $"%A{found}"
+
+              let stillMember = { removed with Declaration = { removed.Declaration with Members = [ "A-1"; "A-2"; "A-4" ] } }
+
+              let unattributed =
+                  { removed with Removals = [ ({ Member = "A-4"; RemovedAt = "whenever"; RemovedBy = " " } : MemberRemoval) ] }
+
+              Assert.equal
+                  [ "removed member A-4 is still a member" ]
+                  (GroupDeclaration.findings [ stillMember ] (set [ "A-1"; "A-2"; "A-4" ]) |> List.map (fun finding -> finding.Message))
+
+              Assert.equal
+                  [ "added member A-4 is not a member"
+                    "'whenever' (removal of A-4) is not a timestamp"
+                    "the actor who removed A-4 is missing" ]
+                  (GroupDeclaration.findings [ unattributed ] (set [ "A-1"; "A-2"; "A-4" ]) |> List.map (fun finding -> finding.Message)))
+
+          t "cli remove records the removal and its remover and changes only the groups file" (fun () ->
+              let root = fixture ()
+              create root [] |> PraxisCli.ok |> ignore
+              addMember root "TASK-C" [] |> PraxisCli.ok |> ignore
+              let before = hashes root
+              let result = removeMember root "TASK-A" [ "--json" ] |> PraxisCli.ok
+              Assert.equal "work-group-member-removed" (text result.Json["kind"])
+              Assert.equal "agent:remover" (text (result.Json["removal"].["removedBy"]))
+              Assert.equal "TASK-A" (text (result.Json["removal"].["member"]))
+              let after = hashes root
+
+              let changed =
+                  (Set.ofSeq (Map.keys before) + Set.ofSeq (Map.keys after))
+                  |> Set.filter (fun path -> before.TryFind path <> after.TryFind path)
+                  |> Set.toList
+
+              Assert.equal [ ".ros/work/groups.json" ] changed
+
+              match FileWorkGroupStore.read root with
+              | Ok [ group ] ->
+                  Assert.equal [ "TASK-B"; "TASK-C" ] group.Declaration.Members
+                  Assert.equal "agent:fixture" group.CreatedBy
+                  Assert.equal [ "agent:adder" ] (group.Additions |> List.map (fun addition -> addition.AddedBy))
+                  Assert.equal [ "TASK-A", "agent:remover" ] (group.Removals |> List.map (fun removal -> removal.Member, removal.RemovedBy))
+              | other -> failwith $"%A{other}"
+
+              Assert.empty (FileWorkGroupRepository.validationFindings root)
+
+              let shown = PraxisCli.run root None [ "work"; "show"; "TASK-A" ] |> PraxisCli.ok
+              Assert.isTrue (shown.Output.Contains "\"status\": \"ready\"") shown.Output
+
+              let planned = PraxisCli.run root None [ "plan"; "groups"; "--json"; "--as-of"; "2026-09-30T00:00:00Z" ] |> PraxisCli.ok
+
+              match declaredIn planned.Json "GROUP-FIXTURE-CLI-001" with
+              | Some group -> Assert.isTrue (not (group["members"].ToJsonString().Contains "TASK-A")) (group.ToJsonString())
+              | None -> failwith "the stored group is not reported by plan groups")
+
+          t "cli remove dry run reports the removal and writes nothing" (fun () ->
+              let root = fixture ()
+              create root [] |> PraxisCli.ok |> ignore
+              addMember root "TASK-C" [] |> PraxisCli.ok |> ignore
+              let before = hashes root
+              let result = removeMember root "TASK-C" [ "--dry-run"; "--json" ] |> PraxisCli.ok
+              Assert.equal "work-group-member-removal-planned" (text result.Json["kind"])
+              Assert.isTrue (result.Json["dryRun"].GetValue<bool>()) "dryRun is reported"
+              Assert.equal before (hashes root))
+
+          t "cli remove refuses non-members, the last members and unknown groups without writing" (fun () ->
+              let root = fixture ()
+              create root [] |> PraxisCli.ok |> ignore
+              let before = hashes root
+
+              let refused memberId (expected: string) =
+                  let result = removeMember root memberId []
+                  Assert.equal 1 result.ExitCode
+                  Assert.isTrue (result.Error.Contains expected) result.Error
+
+              refused "TASK-C" "TASK-C is not a member of GROUP-FIXTURE-CLI-001"
+              refused "NOT-THERE" "NOT-THERE is not a member of GROUP-FIXTURE-CLI-001"
+              refused "TASK-A" "would leave GROUP-FIXTURE-CLI-001 with 1 member(s)"
+
+              let unknown =
+                  PraxisCli.run root None [ "work"; "group"; "remove"; "--id"; "GROUP-FIXTURE-CLI-404"; "--member"; "TASK-A"; "--occurred-at"; PraxisCli.now (); "--json" ]
+
+              Assert.equal 1 unknown.ExitCode
+              Assert.equal "work-group-rejected" (text unknown.Json["kind"])
+              Assert.equal before (hashes root))
+
+          t "cli remove rejects malformed arguments with exit 2" (fun () ->
+              let root = fixture ()
+
+              let result =
+                  PraxisCli.run root None [ "work"; "group"; "remove"; "--id"; "GROUP-FIXTURE-CLI-001"; "--member"; "TASK-A"; "--member"; "TASK-B"; "--config"; "x.json" ]
+
+              Assert.equal 2 result.ExitCode
+              Assert.isTrue (result.Error.Contains "pass --member once") result.Error
+              Assert.isTrue (result.Error.Contains "--occurred-at") result.Error
+              Assert.isTrue (result.Error.Contains "--config applies to work group add") result.Error) ]

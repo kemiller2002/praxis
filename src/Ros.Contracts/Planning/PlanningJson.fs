@@ -1246,12 +1246,16 @@ module PlanningJson =
     let private memberAddition (value: MemberAddition) =
         record [ "member", text value.Member; "addedAt", text value.AddedAt; "addedBy", text value.AddedBy ]
 
+    let private memberRemoval (value: MemberRemoval) =
+        record [ "member", text value.Member; "removedAt", text value.RemovedAt; "removedBy", text value.RemovedBy ]
+
     let private storedGroup (value: StoredGroup) =
         record (
             declaredGroup value.Declaration
             @ [ "createdAt", text value.CreatedAt
                 "createdBy", text value.CreatedBy
-                "additions", value.Additions |> List.map memberAddition |> array ]
+                "additions", value.Additions |> List.map memberAddition |> array
+                "removals", value.Removals |> List.map memberRemoval |> array ]
         )
 
     /// PRX-GRP-073: the `declared-group` document (`work group show`).
@@ -1281,7 +1285,8 @@ module PlanningJson =
 
     /// Reads `.ros/work/groups.json`; each entry is a `grouping.groups`
     /// declaration plus `createdAt`/`createdBy` and the optional `additions`
-    /// (`work group add`; absent means none).
+    /// (`work group add`) and `removals` (`work group remove`); absent means
+    /// none.
     let parseStoredGroups (json: string) : Result<StoredGroup list, string> =
         try
             let root = JsonNode.Parse json |> asObject "work groups"
@@ -1301,7 +1306,17 @@ module PlanningJson =
                             |> List.map (fun addition ->
                                 { Member = readText addition "member"
                                   AddedAt = readText addition "addedAt"
-                                  AddedBy = readText addition "addedBy" }) })
+                                  AddedBy = readText addition "addedBy" })
+                      Removals =
+                        if isNull (field group "removals") then
+                            []
+                        else
+                            objects group "removals"
+                            |> List.map (fun removal ->
+                                ({ Member = readText removal "member"
+                                   RemovedAt = readText removal "removedAt"
+                                   RemovedBy = readText removal "removedBy" }
+                                : MemberRemoval)) })
                 |> Ok
             | other -> Error $"malformed work groups: unsupported schema '{other}' (expected {workGroupsSchema})"
         with
@@ -1329,6 +1344,18 @@ module PlanningJson =
               "dryRun", boolean dryRun
               "path", text path
               "addition", memberAddition addition
+              "group", storedGroup group ]
+        |> render
+
+    /// `work group remove --json`: the group without the removed member (or,
+    /// with `--dry-run`, as it would be).
+    let renderMemberRemoved (dryRun: bool) (path: string) (removal: MemberRemoval) (group: StoredGroup) =
+        record
+            [ "schema", text workGroupsSchema
+              "kind", text (if dryRun then "work-group-member-removal-planned" else "work-group-member-removed")
+              "dryRun", boolean dryRun
+              "path", text path
+              "removal", memberRemoval removal
               "group", storedGroup group ]
         |> render
 
