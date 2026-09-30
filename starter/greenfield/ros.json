@@ -14,17 +14,55 @@
   "registries": "registries",
   "templates": "templates",
   "generated": "generated",
-  "repository": {"id": "{{PROJECT_SLUG}}", "type": "application"},
+  "repository": {
+    "id": "{{PROJECT_SLUG}}",
+    "type": "application"
+  },
   "workProtocol": {
     "version": "1.0.0",
     "enforceAttribution": true,
-    "semanticMapping": {"ready": "ready", "active": "active", "blocked": "blocked", "complete": "complete"},
-    "completionEvidence": {"default": ["implementation", "tests"], "research": ["research-record"], "mechanical": []},
-    "meaningfulPaths": ["**"],
-    "ignoredPaths": [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", ".ros/telemetry/**", ".ros/locks/**", ".ros/remote/**", "registries/**", ".echelon/**"],
-    "continuity": {"requireDurableCheckpoint": true}
+    "semanticMapping": {
+      "ready": "ready",
+      "active": "active",
+      "blocked": "blocked",
+      "complete": "complete"
+    },
+    "completionEvidence": {
+      "default": [
+        "implementation",
+        "tests"
+      ],
+      "research": [
+        "research-record"
+      ],
+      "mechanical": []
+    },
+    "meaningfulPaths": [
+      "**"
+    ],
+    "ignoredPaths": [
+      ".git/**",
+      ".ros/context/**",
+      ".ros/events/**",
+      ".ros/work/**",
+      ".ros/telemetry/**",
+      ".ros/locks/**",
+      ".ros/remote/**",
+      "registries/**",
+      ".echelon/**"
+    ],
+    "continuity": {
+      "requireDurableCheckpoint": true
+    }
   },
-  "provenance": {"version": "1.0.0", "enforce": true, "requiredFrom": "2026-09-25", "requireOriginator": ["RQ"]},
+  "provenance": {
+    "version": "1.0.0",
+    "enforce": true,
+    "requiredFrom": "2026-09-25",
+    "requireOriginator": [
+      "RQ"
+    ]
+  },
   "telemetry": {
     "version": "1.0.0",
     "enabled": true,
@@ -36,5 +74,14 @@
     "maxRawSnapshotsPerExecution": 256,
     "maxRawBytesPerExecution": 8388608,
     "maxCapabilityHistoryEntries": 64
+  },
+  "mergeReadiness": {
+    "enabled": true,
+    "requireCleanWorkingTree": true,
+    "requireRemoteCandidate": true,
+    "requiredChecks": [
+      "repository-validation"
+    ],
+    "optionalChecks": []
   }
 }
