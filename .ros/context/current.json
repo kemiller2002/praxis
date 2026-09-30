@@ -4776,47 +4776,6 @@
       "conclusion": "Live work can now be cancelled truthfully with work abandon."
     },
     {
-      "id": "PRAXIS-A021-EVAL-KIT",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "research/experiments/EX-ROS-2026-A021-evaluation-kit/prepare-blind-bundle.sh"
-        },
-        {
-          "type": "tests",
-          "path": "research/evidence/EV-ROS-2026-A060--a021-blind-evaluation-kit.md"
-        }
-      ],
-      "updatedAt": "2026-09-30T14:42:50.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20260930T144206630Z-1e149d71"
-      ],
-      "latestCheckpoint": {
-        "id": "1ba08dbdaed502c13df0c11f",
-        "recordedAt": "2026-09-30T14:42:34.000Z",
-        "executionId": "EXE-20260930T144206630Z-1e149d71",
-        "repository": "repository-operating-system",
-        "branch": "experiment/a021-evaluation-kit",
-        "commit": "2baaf4aaf1a0f7f2ee3f2939f7d13238c3ee95a5",
-        "remote": {
-          "name": "origin",
-          "url": "https://github.com/kemiller2002/praxis"
-        },
-        "remoteBranch": "experiment/a021-evaluation-kit",
-        "remoteCommit": "2baaf4aaf1a0f7f2ee3f2939f7d13238c3ee95a5",
-        "summary": "Evaluation kit recorded: EV-ROS-2026-A060 (method, owner procedure, validation), EV-ROS-2026-A061 (control-02 record), evaluator-prompt.txt and prepare-blind-bundle.sh; validate passes",
-        "nextAction": "After both arms finish, paste evaluator-prompt.txt into a fresh evaluator session; unblind per EV-ROS-2026-A060",
-        "verification": {
-          "status": "verified",
-          "mechanism": "git-remote-observation"
-        }
-      },
-      "completedAt": "2026-09-30T14:42:50.000Z"
-    },
-    {
       "id": "PRAXIS-PLAN-EXP-01",
       "type": "task",
       "state": "complete",
@@ -4951,6 +4910,48 @@
       },
       "completedAt": "2026-09-30T17:09:15.000Z",
       "conclusion": "Regression fence in place; reconciliation not started. Remaining: PRAXIS-PR92-ID-RENUMBER (owner decision), merge PR #131, PRAXIS-PR92-POSTMERGE-FENCE"
+    },
+    {
+      "id": "PRAXIS-PLAN-07",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/hypotheses/HY-ROS-2026-A028--grouped-execution-value.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ArtifactTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T17:58:33.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T175751373Z-7eb9c757"
+      ],
+      "latestCheckpoint": {
+        "id": "1197fcdb274a57f993cbee96",
+        "recordedAt": "2026-09-30T17:58:32.000Z",
+        "executionId": "EXE-20260930T175751373Z-7eb9c757",
+        "repository": "repository-operating-system",
+        "branch": "research/a021-plan-globally-execute-incrementally",
+        "commit": "221bc8105a9c4f160ae03ee3f2002ebc1a2b0be9",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "research/a021-plan-globally-execute-incrementally",
+        "remoteCommit": "221bc8105a9c4f160ae03ee3f2002ebc1a2b0be9",
+        "summary": "Merged main into PR #130 (dc80420), resolved HY-A028, recorded provenance (221bc81); validate passes with one warning.",
+        "nextAction": "Complete PRAXIS-PLAN-07; owner merges PR #130",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T17:58:33.000Z",
+      "conclusion": "Main merged into PR #130 by merge commit; HY-A028 resolved; A063 provenance migration recorded; validate passes with one warning (A063 originator unrecorded)."
     },
     {
       "id": "PRAXIS-PLAN-04",
@@ -5473,6 +5474,47 @@
       },
       "completedAt": "2026-09-30T21:44:26.000Z",
       "conclusion": "PR #92 reconciled with main (99ecc86, then 1768229); nothing dropped from either side; F# 1254/1254, Site 101/101, all CI green including native release"
+    },
+    {
+      "id": "PRAXIS-A021-EVAL-KIT",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/experiments/EX-ROS-2026-A021-evaluation-kit/prepare-blind-bundle.sh"
+        },
+        {
+          "type": "tests",
+          "path": "research/evidence/EV-ROS-2026-A060--a021-blind-evaluation-kit.md"
+        }
+      ],
+      "updatedAt": "2026-09-30T14:42:50.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T144206630Z-1e149d71"
+      ],
+      "latestCheckpoint": {
+        "id": "1ba08dbdaed502c13df0c11f",
+        "recordedAt": "2026-09-30T14:42:34.000Z",
+        "executionId": "EXE-20260930T144206630Z-1e149d71",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-evaluation-kit",
+        "commit": "2baaf4aaf1a0f7f2ee3f2939f7d13238c3ee95a5",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-evaluation-kit",
+        "remoteCommit": "2baaf4aaf1a0f7f2ee3f2939f7d13238c3ee95a5",
+        "summary": "Evaluation kit recorded: EV-ROS-2026-A060 (method, owner procedure, validation), EV-ROS-2026-A061 (control-02 record), evaluator-prompt.txt and prepare-blind-bundle.sh; validate passes",
+        "nextAction": "After both arms finish, paste evaluator-prompt.txt into a fresh evaluator session; unblind per EV-ROS-2026-A060",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T14:42:50.000Z"
     },
     {
       "id": "PRAXIS-PLAN-08",
