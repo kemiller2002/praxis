@@ -262,7 +262,7 @@ commands. These predate the lifecycle interface and are unchanged:
 ros validate [--json]
 ros registry build [--dry-run] | registry check
 ros git status [--json]
-ros work <capture|list|ready|show|start|resume|block|complete|reconcile|checkpoint|continue|update|attach|context|...>
+ros work <capture|list|ready|show|start|resume|block|complete|reconcile|checkpoint|continue|update|attach|context|group|...>
 ros add "..."
 ros telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
 ros adapter <call|publish>
@@ -305,6 +305,124 @@ reason about together, with the evidence, collision risk and recommended
 execution for each) without changing any item; `explain-group` answers why a
 group exists and what would change it (`DF-ROS-2026-A047`). See
 [`planning.md`](planning.md).
+
+### `work group create`
+
+```
+ros work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP
+                      [--kind KIND] [--execution-repository REPOSITORY] [--cross-repository]
+                      [--shared-context TEXT]* [--architecture-note TEXT]*
+                      [--dry-run] [--json] [IDENTITY]
+```
+
+Records a durable human-declared execution group in `.ros/work/groups.json`
+(PRX-GRP-073 phase two, `PRAXIS-GROUP-01`). Each stored entry is a
+`grouping.groups` entry (`id`, `members`, `kind`, `origin: human-declared`,
+`sharedContext`, `executionRepository`, `crossRepository`,
+`architectureNotes`) plus `declaredAt` and `declaredBy`; the planner reads it
+with the same parser as planner configuration, so `plan groups` and
+`plan explain-group` treat it exactly as a configured declaration. An ID
+declared both there and in a `--config` file is refused rather than resolved.
+
+The command refuses, listing every reason at once and recording nothing: a
+group ID that is not `GROUP-<AREA>-<SEQUENCE>` in upper case or is already
+declared; no members; a repeated member; a member that is not in the backlog
+or live work; a member that is complete or abandoned. It writes only
+`.ros/work/groups.json` and never changes a member's lifecycle state.
+`--dry-run` decides without writing; `--json` emits a
+`praxis.work-group/1.0.0` document with `status` `created`, `planned` or
+`rejected`. `ros validate` checks stored groups (shape, duplicate IDs,
+unknown members); a member that completes after the group was declared is
+partial completion, not a finding.
+
+### `work group add`
+
+```
+ros work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP
+                   [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY]
+```
+
+Adds one work item to a group declared in `.ros/work/groups.json`
+(PRX-GRP-073 phase two, `PRAXIS-GROUP-03`), appending it to the declared
+member order. Who added it, when and why is recorded in the append-only
+ledger `.ros/work/group-membership.json` (`schemaVersion` `1.0.0`; each
+change is `{change: added, group, workItem, addedAt, addedBy, reason}`, with
+`addedBy` in the canonical actor form); the group's own `declaredAt` and
+`declaredBy` are unchanged. The ledger is written first and restored if the
+group cannot be written, so neither file claims an addition the other lacks.
+
+The command refuses, listing every reason at once and recording nothing: a
+group that is not declared; a member ID that is not valid; an item that is
+not in the backlog or live work, or is complete or abandoned; an item already
+in the group; and an item whose execution repository differs from the
+group's, unless the group is `--cross-repository` (PRX-GRP-051). The item's
+execution repository follows the planner's own rule: planner configuration
+`grouping.executionRepositories` (read from `--config FILE`) wins, a
+description naming an external repository is an unknown external repository,
+and anything else executes in this repository; the group's is its declared
+`executionRepository`, or this repository. It writes only
+`.ros/work/groups.json` and `.ros/work/group-membership.json` and never
+changes the member's lifecycle state. `--dry-run` decides without writing;
+`--json` emits a `praxis.work-group/1.0.0` document with `kind`
+`work-group-add`, `status` `added`, `planned` or `rejected`, the resulting
+members, the addition record and coded `rejections`. A refusal exits `1`,
+bad arguments `2`. `ros validate` reports a malformed ledger and a recorded
+addition whose group is not declared or no longer lists the member.
+
+### `work group remove`
+
+```
+ros work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP
+                      [--reason TEXT] [--dry-run] [--json] [IDENTITY]
+```
+
+Removes one member from a group declared in `.ros/work/groups.json`
+(PRX-GRP-073 phase two, `PRAXIS-GROUP-04`); the remaining members keep their
+declared order. Who removed it, when and why is appended to the same ledger
+as additions, `.ros/work/group-membership.json`, as `{change: removed, group,
+workItem, removedAt, removedBy, reason}`; the group's own `declaredAt` and
+`declaredBy` are unchanged, and the ledger is written first and restored if
+the group cannot be written.
+
+The command refuses, listing every reason at once and recording nothing: a
+group that is not declared; an item that is not a member of it; and the
+group's last member, since a declared group always has at least one member
+(add another member first; group IDs are never reused). Removal never
+consults or changes the item itself, so a member that completed or was
+abandoned may leave too, and its lifecycle state, evidence and attribution
+stay exactly as recorded: only `.ros/work/groups.json` and
+`.ros/work/group-membership.json` are written. `--dry-run` decides without
+writing; `--json` emits a `praxis.work-group/1.0.0` document with `kind`
+`work-group-remove`, `status` `removed`, `planned` or `rejected`, the
+resulting members, the removal record and coded `rejections`
+(`undeclared-group`, `not-member`, `last-member`, `blank-reason`). A refusal
+exits `1`, bad arguments `2`. `ros validate` checks each group's and item's
+latest ledger change against the group: a member last added must still be
+listed, and a member last removed must not be.
+
+### `work group show`
+
+```
+ros work group show GROUP-ID [--as-of TIMESTAMP] [--json]
+```
+
+A read-only view of one group declared in `.ros/work/groups.json`
+(PRX-GRP-073 phase two, `PRAXIS-GROUP-02`): its kind, origin, who declared it
+and when, execution repository (and whether it is cross-repository), shared
+context and architecture notes; every member in declared order with its own
+recorded lifecycle state (live work first, then the backlog; `untracked` if
+Praxis cannot find it) beside the planner's own classification, and the open
+hard prerequisites it waits on; partial-completion progress, counting
+complete, abandoned, open, blocked and untracked members separately so the
+group never implies that every member succeeded (PRX-GRP-042); and each
+blocked member (recorded `blocked`, or planned `blocked`, `awaiting-human` or
+`awaiting-evidence`) with its reasons and the pending work it holds back,
+split into fellow members and other items. Planning state is computed through
+the planner's read-only port with the default configuration (`--as-of` sets
+the planning time). `--json` emits a `praxis.work-group/1.0.0` document with
+`kind` `work-group-show` and `status` `found`. A group that is not declared
+exits `1` (`status` `not-found` with `--json`); bad arguments exit `2`. The
+command never writes: no file, no event and no lifecycle state changes.
 
 ### `work reconcile`
 

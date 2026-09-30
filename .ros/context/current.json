@@ -4774,11 +4774,180 @@
       },
       "completedAt": "2026-09-30T09:40:03.000Z",
       "conclusion": "Live work can now be cancelled truthfully with work abandon."
+    },
+    {
+      "id": "PRAXIS-GROUP-01",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T12:04:19.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T115315178Z-82e913b1"
+      ],
+      "latestCheckpoint": {
+        "id": "a0039abc6d6bddd3c7978275",
+        "recordedAt": "2026-09-30T12:04:08.000Z",
+        "executionId": "EXE-20260930T115315178Z-82e913b1",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-control",
+        "commit": "51086ac0ad9216cc08f0508a468d763832d2c8b0",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-control",
+        "remoteCommit": "51086ac0ad9216cc08f0508a468d763832d2c8b0",
+        "summary": "work group create implemented (domain, store, planner merge, CLI with --dry-run/--json, validate findings), tests 803/803 pass, docs updated",
+        "nextAction": "Complete PRAXIS-GROUP-01; do not merge until EX-ROS-2026-A021 is evaluated and phase two accepted",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T12:04:19.000Z"
+    },
+    {
+      "id": "PRAXIS-GROUP-02",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/GroupView.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T12:37:04.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T121813963Z-b4690a18"
+      ],
+      "latestCheckpoint": {
+        "id": "fa12081808e91074696c9714",
+        "recordedAt": "2026-09-30T12:37:03.000Z",
+        "executionId": "EXE-20260930T121813963Z-b4690a18",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-control",
+        "commit": "60e3f03157f85637753860192097c1b42d4f3433",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-control",
+        "remoteCommit": "60e3f03157f85637753860192097c1b42d4f3433",
+        "summary": "work group show implemented (GroupView domain projection, work-group-show JSON, read-only CLI with text/--json, exit 1 for undeclared groups), tests 808/808 pass, docs updated",
+        "nextAction": "Complete PRAXIS-GROUP-02; do not merge until EX-ROS-2026-A021 is evaluated and phase two accepted",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T12:37:04.000Z"
+    },
+    {
+      "id": "PRAXIS-GROUP-03",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/GroupMembership.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T13:05:06.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T125447932Z-92de3550"
+      ],
+      "latestCheckpoint": {
+        "id": "15f8c49264b9052951d4f74b",
+        "recordedAt": "2026-09-30T13:05:05.000Z",
+        "executionId": "EXE-20260930T125447932Z-92de3550",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-control",
+        "commit": "13e26f4caeab2c4468a65365fa2ad389d9542820",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-control",
+        "remoteCommit": "13e26f4caeab2c4468a65365fa2ad389d9542820",
+        "summary": "work group add implemented: one member added to a declared group; refuses undeclared groups, unknown/terminal/present items and cross-repository mismatches; addition provenance in .ros/work/group-membership.json; 816 F# tests pass",
+        "nextAction": "Complete PRAXIS-GROUP-03; next cohort item is PRAXIS-GROUP-04 (work group remove), which should append removals to the same membership ledger",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T13:05:06.000Z",
+      "conclusion": "work group add adds one member to a declared group with recorded provenance; member lifecycle untouched"
+    },
+    {
+      "id": "PRAXIS-GROUP-04",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/GroupMembership.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T16:01:14.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T155638254Z-8adbccbb"
+      ],
+      "latestCheckpoint": {
+        "id": "6b68b1f0e52c82a16a83b776",
+        "recordedAt": "2026-09-30T16:01:01.000Z",
+        "executionId": "EXE-20260930T155638254Z-8adbccbb",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-control",
+        "commit": "b2fd4021558f20e7d1a595f7c32b21355ac43eb1",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-control",
+        "remoteCommit": "b2fd4021558f20e7d1a595f7c32b21355ac43eb1",
+        "summary": "work group remove implemented (881a34d): refuses undeclared groups, non-members, the last member and blank reasons; records who/when/why in the membership ledger; lifecycle, evidence and attribution unchanged. 821 F# tests pass; validate passes.",
+        "nextAction": "Complete the item; do not merge before EX-ROS-2026-A021 is evaluated.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T16:01:14.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T11:34:55.000Z",
+  "updatedAt": "2026-09-30T16:01:14.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

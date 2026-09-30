@@ -39,6 +39,7 @@
     <Compile Include="ExecutionCommands.fs" />
     <Compile Include="InstallationCommands.fs" />
     <Compile Include="PlanCommands.fs" />
+    <Compile Include="WorkGroupCommands.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

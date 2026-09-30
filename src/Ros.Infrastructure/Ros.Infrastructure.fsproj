@@ -42,7 +42,10 @@
     <Compile Include="Remote/FileRemoteRepository.fs" />
     <Compile Include="Execution/ExecutionStore.fs" />
     <Compile Include="Installation/AdministrationClient.fs" />
+    <Compile Include="Planning/WorkGroupStore.fs" />
+    <Compile Include="Planning/GroupMembershipStore.fs" />
     <Compile Include="Planning/FilePlanningRepository.fs" />
+    <Compile Include="Planning/FileWorkGroupRepository.fs" />
   </ItemGroup>
 
   <!-- The scaffold this CLI installs, compiled into the assembly so a released

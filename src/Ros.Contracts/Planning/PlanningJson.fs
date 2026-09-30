@@ -697,6 +697,41 @@ module PlanningJson =
 
     /// The optional planner configuration file. Every field is optional and
     /// defaults to `PlannerConfiguration.defaults`.
+    /// One `grouping.groups` entry. Stored declarations
+    /// (`.ros/work/groups.json`) are read by this same function, so the
+    /// planner treats a stored group exactly as a configured one.
+    let private readDeclaredGroup (group: JsonObject) : DeclaredGroup =
+        let optionalTexts name = if isNull (field group name) then [] else readTexts group name
+
+        { Id = readText group "id"
+          Members = readTexts group "members"
+          Kind = readOptionalText group "kind" |> Option.map (parsed "group kind" GroupKind.tryParse)
+          Origin = readOptionalText group "origin" |> Option.map (parsed "group origin" GroupOrigin.tryParse) |> Option.defaultValue GroupOrigin.HumanDeclared
+          SharedContext = optionalTexts "sharedContext"
+          ExecutionRepository = readOptionalText group "executionRepository"
+          CrossRepository = if isNull (field group "crossRepository") then false else readBool group "crossRepository"
+          ArchitectureNotes = optionalTexts "architectureNotes" }
+
+    /// The `grouping.groups` entry form of a declared group, in fixed field
+    /// order; `readDeclaredGroup` reads it back unchanged.
+    let declaredGroupNode (group: DeclaredGroup) : JsonNode =
+        [ yield "id", text group.Id
+          yield "members", texts group.Members
+          yield! group.Kind |> Option.map (fun kind -> "kind", text (GroupKind.code kind)) |> Option.toList
+          yield "origin", text (GroupOrigin.code group.Origin)
+          yield "sharedContext", texts group.SharedContext
+          yield! group.ExecutionRepository |> Option.map (fun repository -> "executionRepository", text repository) |> Option.toList
+          yield "crossRepository", boolean group.CrossRepository
+          yield "architectureNotes", texts group.ArchitectureNotes ]
+        |> record
+
+    /// Parses one declared group from its JSON object form.
+    let parseDeclaredGroup (node: JsonObject) : Result<DeclaredGroup, string> =
+        try
+            Ok(readDeclaredGroup node)
+        with Malformed message ->
+            Error message
+
     let parseConfiguration (json: string) : Result<PlannerConfiguration, string> =
         try
             let root = JsonNode.Parse json |> asObject "configuration"
@@ -749,18 +784,7 @@ module PlanningJson =
                         readOptionalText node "minimumAffinity"
                         |> Option.map (parsed "affinity" ContextAffinity.tryParse)
                         |> Option.defaultValue fallback.MinimumAffinity
-                      Groups =
-                        optionalList "groups" (fun group ->
-                            let optionalTexts name = if isNull (field group name) then [] else readTexts group name
-
-                            { Id = readText group "id"
-                              Members = readTexts group "members"
-                              Kind = readOptionalText group "kind" |> Option.map (parsed "group kind" GroupKind.tryParse)
-                              Origin = readOptionalText group "origin" |> Option.map (parsed "group origin" GroupOrigin.tryParse) |> Option.defaultValue GroupOrigin.HumanDeclared
-                              SharedContext = optionalTexts "sharedContext"
-                              ExecutionRepository = readOptionalText group "executionRepository"
-                              CrossRepository = if isNull (field group "crossRepository") then false else readBool group "crossRepository"
-                              ArchitectureNotes = optionalTexts "architectureNotes" })
+                      Groups = optionalList "groups" readDeclaredGroup
                       Architecture =
                         optionalList "architecture" (fun decision ->
                             { Decision = readText decision "decision"

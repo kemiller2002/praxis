@@ -241,7 +241,8 @@ pair is kept and noted as below the preferred size. A candidate larger than
 `maximumAutomaticSize`, or larger than a size at which **context pressure**
 was observed for its members, is split in dependency order and the split is
 explained. A group joined only through a shared architecture decision says so
-(a merge). Human declarations are taken as declared, outrank inference, and
+(a merge). Human declarations (`grouping.groups`, or stored with `work group create`
+in `.ros/work/groups.json`, extended with `work group add`, reduced with `work group remove` and viewed with `work group show`) are taken as declared, outrank inference, and
 warn when oversized, overlapping, mixing repositories without
 `crossRepository`, or past observed context pressure.
 
@@ -352,7 +353,7 @@ No external dependency was added (PRX-PLAN-004).
 | GRP-050..052 | Met for dependencies and cycles (dependency test) and repositories (tests 5, 5b); cross-repository orchestration is future work. |
 | GRP-060..063 | Met; context cost is counted, not priced (unmeasured). |
 | GRP-070..072 | Met. |
-| GRP-073 | Declarations from configuration; mutation commands captured as `PRAXIS-GROUP-01..05`, deferred. |
+| GRP-073 | Declarations from configuration and, on the unmerged `EX-ROS-2026-A021` control branch, from `.ros/work/groups.json` via `work group create` (`PRAXIS-GROUP-01`), read back with `work group show` (`PRAXIS-GROUP-02`), extended one member at a time with `work group add` (`PRAXIS-GROUP-03`) and reduced one at a time with `work group remove` (`PRAXIS-GROUP-04`), who added or removed each member recorded in `.ros/work/group-membership.json`; the remaining command is `PRAXIS-GROUP-05`, deferred. Phase two is not accepted until the experiment is evaluated. |
 | GRP-074 | Size and context-pressure splits and architecture merges met (tests 18, 19, merge test); splitting by independent chain or external blockage is not implemented. |
 | GRP-075 | Met (test 15). |
 | GRP-080..088 | Baseline, cohort, protocol and predictions frozen (`EV-ROS-2026-A059`, `EX-ROS-2026-A021`); the arms have not run. |

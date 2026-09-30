@@ -64,5 +64,8 @@
     <Compile Include="Planning/Replay.fs" />
     <Compile Include="Planning/Planner.fs" />
     <Compile Include="Planning/Grouping.fs" />
+    <Compile Include="Planning/GroupDeclaration.fs" />
+    <Compile Include="Planning/GroupView.fs" />
+    <Compile Include="Planning/GroupMembership.fs" />
   </ItemGroup>
 </Project>
