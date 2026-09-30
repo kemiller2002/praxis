@@ -267,7 +267,7 @@ ros add "..."
 ros telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
 ros adapter <call|publish>
 ros provenance <identity|record|show|audit>
-ros plan <analyze|simulate|compare|explain|replay|freshness>
+ros plan <analyze|simulate|compare|explain|replay|freshness|groups|explain-group>
 ```
 
 Run `ros --help` for the full argument list, and see
@@ -286,6 +286,10 @@ ros plan compare   [--max-concurrency N] [--json]
 ros plan explain   ID [--json]
 ros plan replay    [--details] [--json]
 ros plan freshness --plan FILE [--json]
+ros plan groups    [--json]
+ros plan explain-group GROUP-ID [--json]
+ros plan simulate --groups [--max-concurrency N] [--json]
+ros plan compare  --groups [--max-concurrency N] [--json]
      common: [--observations FILE] [--config FILE] [--as-of TIMESTAMP]
 ```
 
@@ -296,7 +300,11 @@ under an explicit strategy and risk policy, with a reason for every entry.
 Unknown durations and costs stay unknown; without cost telemetry the `cost`
 strategy is unavailable and `--budget` cannot be evaluated. `--json` documents
 use the versioned `praxis.plan/1.0.0` schema. `freshness` exits `3` when the
-saved plan is stale. See [`planning.md`](planning.md).
+saved plan is stale. `groups` recommends evidence-based work groups (items to
+reason about together, with the evidence, collision risk and recommended
+execution for each) without changing any item; `explain-group` answers why a
+group exists and what would change it (`DF-ROS-2026-A047`). See
+[`planning.md`](planning.md).
 
 ### `work reconcile`
 

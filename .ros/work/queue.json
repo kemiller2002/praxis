@@ -3220,6 +3220,30 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-EXP-01",
+      "title": "Run grouping experiment EX-ROS-2026-A021: control arm, grouped arm, blind evaluation, telemetry comparison",
+      "description": "Execute the frozen protocol in research/experiments/EX-ROS-2026-A021--grouped-versus-independent-execution.md (PRX-GRP-080..088) once its gate is met: WI-0064 merged, owner approves the cohort GROUP-PRAXIS-WORK-GROUP-001 and the cost (about seven agent sessions), and PRAXIS-GROUP-01..05 are triaged to ready. Deliver the control and grouped branches (unmerged), the independent evaluation, the telemetry and context-overhead comparison, predicted-versus-observed, the outcome classification, and the recommendation for the next planning iteration. Tests HY-ROS-2026-A027 and HY-ROS-2026-A028.",
+      "tags": [
+        "planning",
+        "experiment"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-30T11:18:12.729Z",
+      "updatedAt": "2026-09-30T11:18:12.729Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

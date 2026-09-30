@@ -3,7 +3,7 @@
 Status: **Proposed** (phase one, read-only: `WI-0064`). Extends
 [`PLANNING-OPTIMIZATION.md`](PLANNING-OPTIMIZATION.md) and `DF-ROS-2026-A046`.
 Design and requirement status: [`docs/planning.md`](../docs/planning.md)
-("Work groups"). Experiment protocol: `EV-ROS-2026-A059`.
+("Work groups"). Experiment protocol: `EX-ROS-2026-A021`; baseline: `EV-ROS-2026-A059`; decision: `DF-ROS-2026-A047`.
 
 ## Objective
 
