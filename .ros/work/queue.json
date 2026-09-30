@@ -3075,6 +3075,30 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-WORK-ABANDON-01",
+      "title": "work abandon: cancel live (ready/active/blocked) work items truthfully",
+      "description": "Live work has no cancelled state, so an item the owner cancels (GH-84, GH-90) cannot be recorded as such; backlog abandon refuses items with a live record. Add a terminal live 'abandoned' state and 'work abandon --id ID --reason TEXT' that records who abandoned it and why, finalizes its executions, abandons its backlog row, and claims no attribution.",
+      "tags": [
+        "work-protocol",
+        "cli"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T09:17:29.000Z",
+      "updatedAt": "2026-09-30T09:40:03.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

@@ -4630,11 +4630,53 @@
       },
       "completedAt": "2026-09-30T06:21:56.000Z",
       "conclusion": "Checkpoints no longer claim, and completion/blocking are no longer held back by, commits other items' recorded checkpoints or reconciliations own."
+    },
+    {
+      "id": "PRAXIS-WORK-ABANDON-01",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Model.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkAbandonTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T09:40:03.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T091732622Z-b35f550c"
+      ],
+      "latestCheckpoint": {
+        "id": "f1977b2c0d3772281244821b",
+        "recordedAt": "2026-09-30T09:40:01.000Z",
+        "executionId": "EXE-20260930T091732622Z-b35f550c",
+        "repository": "repository-operating-system",
+        "branch": "claude/praxis-planning-optimization-v6dacf",
+        "commit": "7ee173278a43c28144538ca391b7a11646d63094",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/praxis-planning-optimization-v6dacf",
+        "remoteCommit": "7ee173278a43c28144538ca391b7a11646d63094",
+        "summary": "work abandon implemented (F# + Node), validation, docs, 6 tests",
+        "nextAction": "Complete, then abandon GH-84 and GH-90",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T09:40:03.000Z",
+      "conclusion": "Live work can now be cancelled truthfully with work abandon."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T06:22:14.000Z",
+  "updatedAt": "2026-09-30T09:40:03.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
