@@ -211,7 +211,22 @@
       "extraAllowedTools": [
         "Bash(./ros work:*)",
         "Bash(./ros:*)"
-      ]
+      ],
+      "finishedAt": "2026-09-30T16:42:39Z",
+      "status": "completed",
+      "headAfter": "8ea9be2",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 6.939496,
+        "input_tokens": 190,
+        "output_tokens": 78993,
+        "cache_read_tokens": 17402620,
+        "cache_write_tokens": 234794,
+        "context_used_tokens": 262775,
+        "last_served_model": "claude-opus-5-5",
+        "worker_epoch": 2
+      },
+      "note": "merged origin/experiment/a021-control at 16:30 (1aa11fb) and reworked member resolution against earlier items' stored declarations; metrics file written before its last two commits"
     }
   ],
   "deviations": [
