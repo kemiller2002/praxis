@@ -3375,10 +3375,10 @@
         "governance"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T17:20:29.537Z",
-      "updatedAt": "2026-09-30T17:20:29.000Z",
+      "updatedAt": "2026-09-30T17:20:49.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

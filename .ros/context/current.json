@@ -4819,18 +4819,48 @@
     {
       "id": "PRAXIS-PLAN-06",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T17:20:30.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/evidence/EV-ROS-2026-A064--grouping-experiment-results.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ArtifactTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T17:20:49.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T172030686Z-71d403ef"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "851a16e0bfae363dbb8133f1",
+        "recordedAt": "2026-09-30T17:20:48.000Z",
+        "executionId": "EXE-20260930T172030686Z-71d403ef",
+        "repository": "repository-operating-system",
+        "branch": "claude/grouping-experiment-a021",
+        "commit": "da9dd15990ee19409a5966fcf91887f9494822e3",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/grouping-experiment-a021",
+        "remoteCommit": "da9dd15990ee19409a5966fcf91887f9494822e3",
+        "summary": "Results record renumbered to EV-ROS-2026-A064 and related to the parallel kit",
+        "nextAction": "Complete; open the results PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T17:20:49.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T17:20:30.000Z",
+  "updatedAt": "2026-09-30T17:20:49.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
