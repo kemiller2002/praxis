@@ -1537,6 +1537,20 @@
             "modified"
           ],
           "reason": "PRAXIS-PLAN-06: renumber the A021 results record to EV-ROS-2026-A064 and relate it to the parallel evaluation kit and EV-ROS-2026-A063"
+        },
+        "EXE-20260930T230548914Z-bb6a60fd": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T23:06:18.000Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-PLAN-08: refer to the evaluation kit by its renumbered IDs and record the second blind evaluation's outcome (EV-ROS-2026-A067)"
         }
       }
     },
@@ -1561,6 +1575,178 @@
       "evaluation"
     ],
     "title": "Grouping experiment EX-ROS-2026-A021: one grouped execution versus five independent executions of the work-group commands",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-30",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A065",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A065--a021-blind-evaluation-kit.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T144206630Z-1e149d71": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T14:42:12.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-A021-EVAL-KIT: blind evaluation kit for EX-ROS-2026-A021"
+        },
+        "EXE-20260930T230548914Z-bb6a60fd": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T23:06:18.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PLAN-08: renumbered from EV-ROS-2026-A060..A062 on experiment/a021-evaluation-kit, which collided with main's EV-ROS-2026-A060; content unchanged apart from the IDs"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "research/experiments/EX-ROS-2026-A021-evaluation-kit/evaluator-prompt.txt",
+      "research/experiments/EX-ROS-2026-A021-evaluation-kit/prepare-blind-bundle.sh"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "EX-ROS-2026-A021"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "experiment",
+      "evaluation",
+      "blinding"
+    ],
+    "title": "EX-ROS-2026-A021 blind evaluation kit: method, owner procedure and tooling validation",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-30",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A066",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A066--a021-control-02-session-record.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T144206630Z-1e149d71": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T14:42:13.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-A021-EVAL-KIT: blind evaluation kit for EX-ROS-2026-A021"
+        },
+        "EXE-20260930T230548914Z-bb6a60fd": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T23:06:18.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PLAN-08: renumbered from EV-ROS-2026-A060..A062 on experiment/a021-evaluation-kit, which collided with main's EV-ROS-2026-A060; content unchanged apart from the IDs"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "research/experiments/EX-ROS-2026-A021-evaluation-kit/evaluator-prompt.txt",
+      "research/experiments/EX-ROS-2026-A021-evaluation-kit/prepare-blind-bundle.sh"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "EX-ROS-2026-A021"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "experiment",
+      "control-arm",
+      "deviation"
+    ],
+    "title": "EX-ROS-2026-A021 control arm, PRAXIS-GROUP-02: session record and stale-clone deviation (names an arm; read only after unblinding)",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-30",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A067",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A067--a021-blind-evaluation-report.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T230548914Z-bb6a60fd": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T23:06:18.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PLAN-08: renumbered from EV-ROS-2026-A060..A062 on experiment/a021-evaluation-kit, which collided with main's EV-ROS-2026-A060; content unchanged apart from the IDs"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "EV-ROS-2026-A065"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "EX-ROS-2026-A021"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "experiment",
+      "evaluation"
+    ],
+    "title": "EX-ROS-2026-A021 blind evaluation report (arm-X / arm-Y)",
     "updated": "2026-09-30",
     "version": "1.0.0"
   }

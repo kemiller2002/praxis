@@ -4776,6 +4776,47 @@
       "conclusion": "Live work can now be cancelled truthfully with work abandon."
     },
     {
+      "id": "PRAXIS-A021-EVAL-KIT",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/experiments/EX-ROS-2026-A021-evaluation-kit/prepare-blind-bundle.sh"
+        },
+        {
+          "type": "tests",
+          "path": "research/evidence/EV-ROS-2026-A060--a021-blind-evaluation-kit.md"
+        }
+      ],
+      "updatedAt": "2026-09-30T14:42:50.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T144206630Z-1e149d71"
+      ],
+      "latestCheckpoint": {
+        "id": "1ba08dbdaed502c13df0c11f",
+        "recordedAt": "2026-09-30T14:42:34.000Z",
+        "executionId": "EXE-20260930T144206630Z-1e149d71",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-evaluation-kit",
+        "commit": "2baaf4aaf1a0f7f2ee3f2939f7d13238c3ee95a5",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-evaluation-kit",
+        "remoteCommit": "2baaf4aaf1a0f7f2ee3f2939f7d13238c3ee95a5",
+        "summary": "Evaluation kit recorded: EV-ROS-2026-A060 (method, owner procedure, validation), EV-ROS-2026-A061 (control-02 record), evaluator-prompt.txt and prepare-blind-bundle.sh; validate passes",
+        "nextAction": "After both arms finish, paste evaluator-prompt.txt into a fresh evaluator session; unblind per EV-ROS-2026-A060",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T14:42:50.000Z"
+    },
+    {
       "id": "PRAXIS-PLAN-EXP-01",
       "type": "task",
       "state": "complete",
@@ -5432,11 +5473,57 @@
       },
       "completedAt": "2026-09-30T21:44:26.000Z",
       "conclusion": "PR #92 reconciled with main (99ecc86, then 1768229); nothing dropped from either side; F# 1254/1254, Site 101/101, all CI green including native release"
+    },
+    {
+      "id": "PRAXIS-PLAN-08",
+      "type": "documentation",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/evidence/EV-ROS-2026-A067--a021-blind-evaluation-report.md"
+        },
+        {
+          "type": "implementation",
+          "path": "research/evidence/EV-ROS-2026-A064--grouping-experiment-results.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ArtifactTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T23:06:59.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T230548914Z-bb6a60fd"
+      ],
+      "latestCheckpoint": {
+        "id": "3cc01e46a3bd7e9477729917",
+        "recordedAt": "2026-09-30T23:06:57.000Z",
+        "executionId": "EXE-20260930T230548914Z-bb6a60fd",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-evaluation-kit",
+        "commit": "287693c82dad0208fcb51810c688469082242b39",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-evaluation-kit",
+        "remoteCommit": "287693c82dad0208fcb51810c688469082242b39",
+        "summary": "Kit records renumbered to EV-ROS-2026-A065..A067, main merged (287693c)",
+        "nextAction": "Complete PRAXIS-PLAN-08 and merge the PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T23:06:59.000Z",
+      "conclusion": "Evaluation kit and second blind evaluation renumbered to A065..A067 and ready to land; validate passes with one warning (A067 creator unrecorded; written by the evaluator session in f3bad01)."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T21:44:26.000Z",
+  "updatedAt": "2026-09-30T23:06:59.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
