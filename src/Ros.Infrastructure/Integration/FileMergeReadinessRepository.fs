@@ -12,25 +12,34 @@ open Ros.Infrastructure.Git
 module FileMergeReadinessRepository =
     let private stringArray (element: JsonElement) (name: string) =
         match element.TryGetProperty name with
+        | false, _ -> Ok []
         | true, value when value.ValueKind = JsonValueKind.Array ->
             value.EnumerateArray()
-            |> Seq.choose (fun item ->
-                if item.ValueKind = JsonValueKind.String then
-                    let value = item.GetString()
-                    if String.IsNullOrWhiteSpace value then None else Some value
-                else
-                    None)
-            |> Seq.distinct
             |> Seq.toList
-        | _ -> []
+            |> List.fold
+                (fun state item ->
+                    state
+                    |> Result.bind (fun values ->
+                        if item.ValueKind <> JsonValueKind.String then
+                            Error $"mergeReadiness.{name} entries must be strings"
+                        else
+                            let value = item.GetString()
+                            if String.IsNullOrWhiteSpace value then
+                                Error $"mergeReadiness.{name} entries must be non-blank"
+                            else
+                                Ok(values @ [ value ])))
+                (Ok [])
+            |> Result.map List.distinct
+        | _ -> Error $"mergeReadiness.{name} must be an array of strings"
 
     let private boolOr fallback (element: JsonElement) (name: string) =
         match element.TryGetProperty name with
-        | true, value when value.ValueKind = JsonValueKind.True -> true
-        | true, value when value.ValueKind = JsonValueKind.False -> false
-        | _ -> fallback
+        | false, _ -> Ok fallback
+        | true, value when value.ValueKind = JsonValueKind.True -> Ok true
+        | true, value when value.ValueKind = JsonValueKind.False -> Ok false
+        | _ -> Error $"mergeReadiness.{name} must be a boolean"
 
-    let readPolicy (root: string) : MergeReadinessPolicy =
+    let readPolicy (root: string) : Result<MergeReadinessPolicy, string> =
         let fallback =
             { Enabled = false
               RequiredChecks = []
@@ -41,22 +50,33 @@ module FileMergeReadinessRepository =
         let path = Path.Combine(root, "ros.json")
 
         if not (File.Exists path) then
-            fallback
+            Ok fallback
         else
             try
                 use document = JsonDocument.Parse(File.ReadAllText path)
 
                 match document.RootElement.TryGetProperty "mergeReadiness" with
+                | false, _ -> Ok fallback
                 | true, value when value.ValueKind = JsonValueKind.Object ->
-                    { Enabled = boolOr false value "enabled"
-                      RequiredChecks = stringArray value "requiredChecks"
-                      OptionalChecks = stringArray value "optionalChecks"
-                      RequireCleanWorkingTree = boolOr true value "requireCleanWorkingTree"
-                      RequireRemoteCandidate = boolOr true value "requireRemoteCandidate" }
-                    |> MergeReadiness.normalizePolicy
-                | _ -> fallback
-            with _ ->
-                fallback
+                    boolOr false value "enabled"
+                    |> Result.bind (fun enabled ->
+                        stringArray value "requiredChecks"
+                        |> Result.bind (fun requiredChecks ->
+                            stringArray value "optionalChecks"
+                            |> Result.bind (fun optionalChecks ->
+                                boolOr true value "requireCleanWorkingTree"
+                                |> Result.bind (fun requireCleanWorkingTree ->
+                                    boolOr true value "requireRemoteCandidate"
+                                    |> Result.map (fun requireRemoteCandidate ->
+                                        { Enabled = enabled
+                                          RequiredChecks = requiredChecks
+                                          OptionalChecks = optionalChecks
+                                          RequireCleanWorkingTree = requireCleanWorkingTree
+                                          RequireRemoteCandidate = requireRemoteCandidate }
+                                        |> MergeReadiness.normalizePolicy)))))
+                | _ -> Error "mergeReadiness must be a JSON object"
+            with error ->
+                Error $"cannot parse ros.json mergeReadiness policy: {error.Message}"
 
     let readEvidence (root: string) (relativeOrAbsolutePath: string option) : Result<MergeReadinessEvidence, string> =
         match relativeOrAbsolutePath with
