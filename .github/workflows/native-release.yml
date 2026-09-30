@@ -13,12 +13,12 @@ on:
       - "starter/**"
       - "templates/**"
       - "tests/**"
-      - "package.json"
-      - "package-lock.json"
+      - "release.json"
+      - "Directory.Build.props"
   push:
     branches: [main]
     paths:
-      - "package.json"
+      - "release.json"
       - ".github/workflows/native-release.yml"
       - "scripts/**"
       - "bin/praxis-native.sh"
@@ -49,37 +49,28 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "24"
-          package-manager-cache: false
-
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.11"
-
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: "10.0.x"
 
       - name: Test and validate
         run: |
-          npm run test:all
-          ./ros registry check
-          ./ros validate
+          dotnet build Ros.slnx --configuration Release
+          dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll
+          ./praxis architecture check
+          ./praxis registry check
+          ./praxis validate
 
-      - name: Build package payload
+      # release.json is the single version source; the F# CLI reports it.
+      - name: Resolve release version
         id: package
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="$(node -p "require('./package.json').version")"
+          VERSION="$(./praxis --version | awk '{print $2}')"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          rm -rf dist/native dist/native-stage dist/native-package
-          mkdir -p dist/native dist/native-stage dist/native-package
-          npm pack --ignore-scripts --json > /tmp/praxis-pack.json
-          TARBALL="$(node -e "const x=require('/tmp/praxis-pack.json'); process.stdout.write(x[0].filename)")"
-          tar -xzf "$TARBALL" -C dist/native-package
+          rm -rf dist/native dist/native-stage
+          mkdir -p dist/native dist/native-stage
 
       - name: Build self-contained Praxis binaries
         shell: bash
@@ -116,7 +107,7 @@ jobs:
           trap 'rm -rf "$tool_root" "$project_root"' EXIT
           dotnet tool install EchelonFoundry.Praxis --version "$VERSION" \
             --add-source dist/nuget --tool-path "$tool_root"
-          [ "$("$tool_root/praxis" --version)" = "ros-fs ${VERSION}" ]
+          [ "$("$tool_root/praxis" --version)" = "praxis ${VERSION}" ]
           (
             cd "$project_root"
             git init -q
@@ -136,8 +127,7 @@ jobs:
             name="praxis-${rid}"
             root="dist/native-stage/${name}"
             mkdir -p "$root"
-            cp -R dist/native-package/package "$root/package"
-            cp "dist/publish/${rid}/ros-fs" "$root/praxis-bin"
+            cp "dist/publish/${rid}/praxis" "$root/praxis-bin"
             cp bin/praxis-native.sh "$root/praxis"
             cp bin/echelon.sh "$root/echelon"
             chmod +x "$root/praxis-bin" "$root/praxis" "$root/echelon"
@@ -153,8 +143,7 @@ jobs:
 
           root="dist/native-stage/praxis-win-x64"
           mkdir -p "$root"
-          cp -R dist/native-package/package "$root/package"
-          cp dist/publish/win-x64/ros-fs.exe "$root/praxis-bin.exe"
+          cp dist/publish/win-x64/praxis.exe "$root/praxis-bin.exe"
           cp bin/praxis-native.cmd "$root/praxis.cmd"
           cp bin/echelon.ps1 "$root/echelon.ps1"
           printf '%s\n' "${VERSION}" > "$root/VERSION"
@@ -171,7 +160,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="$(node -p "require('./package.json').version")"
+          VERSION="$(python3 -c 'import json; print(json.load(open("release.json"))["version"])')"
           {
             printf '{\n  "schema": "echelon.release/v1",\n  "systemId": "praxis",\n  "version": "%s",\n' "$VERSION"
             printf '  "repository": "%s",\n  "tag": "v%s",\n  "commit": "%s",\n' "$GITHUB_REPOSITORY" "$VERSION" "$GITHUB_SHA"
@@ -194,7 +183,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="$(node -p "require('./package.json').version")"
+          VERSION="$(./praxis --version | awk '{print $2}')"
           install_root="$(mktemp -d)"
           project_root="$(mktemp -d)"
           trap 'rm -rf "$install_root" "$project_root"' EXIT
@@ -265,7 +254,7 @@ jobs:
             gh release create "v${VERSION}" "${assets[@]}" \
               --target "${GITHUB_SHA}" \
               --title "Praxis v${VERSION}" \
-              --notes "Native Praxis/ROS bundles plus the Echelon bootstrap command. No Node.js or .NET runtime is required on the consuming machine. Assets carry GitHub build-provenance attestations. With .NET 10 installed, the same version is also available as a global tool: dotnet tool install -g EchelonFoundry.Praxis."
+              --notes "Native Praxis bundles (with the legacy ros command as a compatibility alias) plus the Echelon bootstrap command. No Node.js or .NET runtime is required on the consuming machine. Assets carry GitHub build-provenance attestations. With .NET 10 installed, the same version is also available as a global tool: dotnet tool install -g EchelonFoundry.Praxis."
           fi
 
       # NuGet trusted publishing: NuGet/login exchanges this run's OIDC token
@@ -282,7 +271,7 @@ jobs:
         run: |
           set -euo pipefail
           if curl -fsS https://api.nuget.org/v3-flatcontainer/echelonfoundry.praxis/index.json 2>/dev/null \
-              | node -e 'const v=JSON.parse(require("fs").readFileSync(0,"utf8")).versions; process.exit(v.includes(process.argv[1]) ? 0 : 1)' "$VERSION"; then
+              | python3 -c 'import json, sys; sys.exit(0 if sys.argv[1] in json.load(sys.stdin)["versions"] else 1)' "$VERSION"; then
             echo "EchelonFoundry.Praxis ${VERSION} is already on NuGet."
             echo "publish=false" >> "$GITHUB_OUTPUT"
           else
@@ -306,8 +295,10 @@ jobs:
           dotnet nuget push dist/nuget/EchelonFoundry.Praxis.*.nupkg \
             --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
 
-  # The `ros-fs-<rid>` binaries scaffolded projects' ./ros downloads
-  # (formerly built by the retired npm publish workflow).
+  # The legacy `ros-fs-<rid>` binaries that projects scaffolded before the
+  # Praxis rename download through their ./ros launcher (formerly built by the
+  # retired npm publish workflow). They are the same praxis binary under the
+  # legacy name, shipped until a decision retires them.
   ros-fs-assets:
     needs: release
     if: github.event_name != 'pull_request'
@@ -355,7 +346,7 @@ jobs:
           foreach ($command in @(@("ordo", "1.4.0"), @("sde", "1.4.0"), @("praxis", "3.4.0"), @("ros", "3.4.0"))) {
             $name = $command[0]
             $version = $command[1]
-            $reported = if ($name -eq "praxis" -or $name -eq "ros") { "ros-fs $version" } else { $version }
+            $reported = if ($name -eq "praxis" -or $name -eq "ros") { "praxis $version" } else { $version }
             $cmd = Join-Path $bin ($name + ".cmd")
             "@echo off`r`necho $reported`r`nexit /b 0`r`n" | Set-Content -Encoding Ascii $cmd
           }

@@ -1,15 +1,16 @@
 name: Public site
 
 # Checks the static public site (site/) and assembles the artifact that
-# deploy-pages.yml deploys. Independent of the npm and native release workflows.
-# Needs Node only: the site has no dependencies to install.
+# deploy-pages.yml deploys. Independent of the native release workflow.
+# Needs the .NET SDK only: the site tooling (site-tools/SiteTools.fsproj) is
+# F# with no package dependencies.
 
 on:
   pull_request:
     paths:
       - "site/**"
       - "site-tools/**"
-      - "tests/site/**"
+      - "tests/Site.Tests/**"
       - "docs/public-site.md"
       - "docs/site/**"
       - ".ros/**"
@@ -20,7 +21,7 @@ on:
     paths:
       - "site/**"
       - "site-tools/**"
-      - "tests/site/**"
+      - "tests/Site.Tests/**"
       - "docs/public-site.md"
       - "docs/site/**"
       - ".ros/**"
@@ -38,13 +39,14 @@ jobs:
         with:
           # The case-study tests compare the page's claims with Git history.
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
         with:
-          node-version: "22"
+          dotnet-version: "10.0.x"
       - name: Structure, references, accessibility rules, boundary, evidence, tests
-        run: node site-tools/verify.mjs
+        run: dotnet run --project site-tools/SiteTools.fsproj -c Release -- verify
       - name: Assemble and re-check the static artifact
-        run: node site-tools/assemble.mjs _site
+        run: dotnet run --project site-tools/SiteTools.fsproj -c Release -- assemble _site
       - uses: actions/upload-artifact@v4
         with:
           name: public-site

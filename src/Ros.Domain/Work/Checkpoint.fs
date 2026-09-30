@@ -263,7 +263,7 @@ module CheckpointRejection =
         | CheckpointRejection.BlankSummary -> "Pass --summary \"what this checkpoint completed\"."
         | CheckpointRejection.BlankNextAction ->
             "Pass --next-action \"the next intended step\" (for a final checkpoint: \"Run final completion transition\")."
-        | CheckpointRejection.WorkItemNotFound _ -> "Check the ID with './ros work list'; begin the work item first."
+        | CheckpointRejection.WorkItemNotFound _ -> "Check the ID with './praxis work list'; begin the work item first."
         | CheckpointRejection.WorkItemNotActive _ ->
             "Resume blocked work with 'work resume', or begin ready work with 'work start', then checkpoint."
         | CheckpointRejection.NoActiveExecution _ ->

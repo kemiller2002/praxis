@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Takes Praxis remote execution live (GH-90, PRAXIS-REMOTE-11 prerequisites):
 #
-#   1. release  bump package.json, push to main, wait for the native release
+#   1. release  bump release.json, push to main, wait for the native release
 #               workflow, and verify the release's checksum and build-provenance
 #               attestation;
 #   2. enable   pin that release in .echelon/toolchain.json and opt the
@@ -16,7 +16,7 @@
 # release phase, that repository must be kemiller2002/praxis itself).
 #
 # Requirements: bash, git, gh (authenticated, with push access), python3,
-# npm (release phase), and a Praxis CLI (`praxis`, or `./ros` in a source
+# and a Praxis CLI (`praxis`, or `./praxis` in a source
 # checkout; override with PRAXIS=...).
 #
 # Usage:
@@ -85,15 +85,21 @@ TARGET_SLUG="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
 
 if [ -n "${PRAXIS:-}" ]; then read -r -a PRAXIS_CMD <<<"$PRAXIS"
 elif command -v praxis >/dev/null; then PRAXIS_CMD=(praxis)
+elif [ -x ./praxis ]; then PRAXIS_CMD=(./praxis)
+# A checkout from before the rename has only the compatibility launcher.
 elif [ -x ./ros ]; then PRAXIS_CMD=(./ros)
 else die "no Praxis CLI found (install praxis, or set PRAXIS=...)"; fi
 praxis_cli() { "${PRAXIS_CMD[@]}" "$@"; }
 
 # The person running this script is the actor on its work items: declared,
-# never guessed. An explicit ROS_ACTOR/ROS_ACTOR_KIND wins.
-export ROS_ACTOR_KIND="${ROS_ACTOR_KIND:-human}"
-export ROS_ACTOR="${ROS_ACTOR:-$(gh api user -q .login)}"
-echo "repository: $TARGET_SLUG   actor: $ROS_ACTOR_KIND:$ROS_ACTOR   praxis: ${PRAXIS_CMD[*]}   dry-run: $DRY_RUN"
+# never guessed. An explicit PRAXIS_ACTOR/PRAXIS_ACTOR_KIND (or the legacy
+# ROS_ACTOR/ROS_ACTOR_KIND) wins.
+export PRAXIS_ACTOR_KIND="${PRAXIS_ACTOR_KIND:-${ROS_ACTOR_KIND:-human}}"
+export PRAXIS_ACTOR="${PRAXIS_ACTOR:-${ROS_ACTOR:-$(gh api user -q .login)}}"
+# Compatibility: Praxis releases from before the rename read only the legacy
+# names (DF-ROS-2026-A050).
+export ROS_ACTOR_KIND="$PRAXIS_ACTOR_KIND" ROS_ACTOR="$PRAXIS_ACTOR"
+echo "repository: $TARGET_SLUG   actor: $PRAXIS_ACTOR_KIND:$PRAXIS_ACTOR   praxis: ${PRAXIS_CMD[*]}   dry-run: $DRY_RUN"
 
 now() { date -u +%Y-%m-%dT%H:%M:%S.000Z; }
 
@@ -135,8 +141,7 @@ land() {
 if ! $SKIP_RELEASE; then
   step "Release Praxis $VERSION"
   [ "$TARGET_SLUG" = "$REPOSITORY_SLUG" ] || die "the release phase runs in $REPOSITORY_SLUG; use --skip-release elsewhere"
-  command -v npm >/dev/null || die "npm is required for the release phase"
-  CURRENT="$(python3 -c 'import json;print(json.load(open("package.json"))["version"])')"
+  CURRENT="$(python3 -c 'import json;print(json.load(open("release.json"))["version"])')"
   python3 - "$CURRENT" "$VERSION" <<'PY' || die "--version must be newer than the current $CURRENT"
 import sys
 current, requested = (tuple(int(part) for part in value.split(".")) for value in sys.argv[1:3])
@@ -148,7 +153,7 @@ PY
 
   ITEM="RELEASE-${VERSION//./-}"
   begin_item "$ITEM" "Release Praxis $VERSION with remote execution (GH-90)"
-  run npm version "$VERSION" --no-git-tag-version
+  run python3 -c 'import json, sys; release = json.load(open("release.json")); release["version"] = sys.argv[1]; open("release.json", "w").write(json.dumps(release, indent=2) + "\n")' "$VERSION"
   finish_item "$ITEM"
   land "$ITEM: release Praxis $VERSION" "release/$VERSION"
 

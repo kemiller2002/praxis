@@ -2,7 +2,7 @@
 id: EV-ROS-2026-A060
 title: "PR #92 pre-merge regression fence: semantic conflict matrix, baselines, and the reconciliation manifest"
 status: review
-version: 1.0.0
+version: 1.1.0
 owners:
   - repository-governance
 created: 2026-09-30
@@ -31,6 +31,16 @@ provenance:
         runtime: claude-code
       reason: "PRAXIS-PR92-PREMERGE-REGRESSION-FENCE: semantic conflict matrix, baselines and reconciliation manifest for PR #92"
       evidence: [tests/Ros.Tests/PremergeFence.fs]
+    EXE-20260930T181403532Z-5fd55718:
+      operations: [modified]
+      at: 2026-09-30T19:16:06.000Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PR92-RECONCILE: record the reconciliation outcome and the resolution of each section 9 decision"
 ---
 
 # PR #92 pre-merge regression fence
@@ -338,3 +348,52 @@ Risk scale: LOW, MEDIUM, HIGH, CRITICAL.
 
 ## 10. Conclusion
 The HIGH and CRITICAL areas above now each have behavioral protection on the branch where they can run. The remaining post-merge obligations (P1–P7) are specified above. Reconciliation should not start until decision 1 (ID renumbering) is made and this branch's test-only PR has merged into `main`.
+
+## 11. Reconciliation outcome (PRAXIS-PR92-RECONCILE, added 2026-09-30)
+
+The owner approved the reconciliation after PR #131 merged. PR #92's branch
+merged `main` at `99ecc86`. The decisions in section 9 were resolved as follows:
+
+1. **Record IDs.** Renumbered on PR #92 before the merge (`PRAXIS-PR92-ID-RENUMBER`):
+   - DF-ROS-2026-A042 became **A049**; A043 became **A050**.
+   - RQ-ROS-2026-A022 became **A024**; A023 became **A025**.
+   - The proposal of A048 for the first of these was superseded because
+     `feature/gh-127-merge-readiness` already claims DF-ROS-2026-A048.
+   - Main's numbering is unchanged.
+2. **Legacy `ros-fs-<rid>` assets.** They keep shipping (owner decision).
+   `ros-fs-assets.yml` builds them from the `praxis` binary for new tags and
+   from `ros-fs` when backfilling pre-rename tags.
+3. **Version source.** `release.json`, now 3.6.0 (main's release). The
+   one-click release, bump script, remote-enable release phase,
+   native-release manifest and NuGet check no longer use Node or `package.json`.
+4. **Stable-version pin.** PR #92's removal of `readTargetVersion` stands.
+   It served only the retired npm tarballs.
+5. **Orphaned ROS-era helpers.** Upgrade leaves them in place (owner decision).
+   This is characterized by `praxis naming: upgrading a ROS-era installation
+   leaves its legacy Node launcher helper in place`.
+6. **Continuity opt-out.** PR #92's golden ports (`CliGolden.repository`,
+   `CliPort.initializedProject`) and the web tests opt out explicitly through
+   `CliHarness.optOutOfDurableCheckpoints`, as main's Node goldens did.
+   - The ROS-era fixture drops `continuity`, as a real ROS-era `ros.json`
+     would not have it.
+   - Main's additive `abandon` action and `continuity` status block were
+     applied to the goldens the same way main applied them.
+
+**Merge-only defect found and fixed.** Main's new continuity section in the
+scaffolded `starter/greenfield/HANDOFF.md` taught `./ros work checkpoint` and
+`./ros work continue`. It merged without a conflict and now teaches `./praxis`.
+Test P1 guards this.
+
+**Praxis state.** The merge took a three-way, record-level union of
+`queue.json`, `context/current.json` and `events.jsonl`: no record was changed
+on both sides, and no event was dropped or rewritten. Three IDs had been
+created independently on both sides:
+- `WI-0064`: main's completed, checkpointed row is kept. PR #92's captured
+  bug report duplicated main's `WORK-CAPTURE-ID-COLLISION`.
+- `WI-0061`: main's abandoned collision placeholder is kept. PR #92's
+  equivalent placeholder had been re-captured as `FSHARP-ONLY-REPOSITORY`.
+- `PRAXIS-PR92-ID-RENUMBER`: PR #92's completed row is kept.
+
+**Post-merge tests.** P1–P7 are implemented in
+`tests/Ros.Tests/PostmergeReconciliationTests.fs`. The pre-merge fence (37
+tests) and the rename tests (17) run unchanged on the combined tree.

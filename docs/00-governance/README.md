@@ -2,11 +2,11 @@
 id: GV-INDEX-001
 title: Governance Index
 status: canonical
-version: 1.1.0
+version: 1.1.1
 owners:
   - repository-governance
 created: 2026-07-22
-updated: 2026-09-05
+updated: 2026-09-28
 review_cycle: quarterly
 supersedes: []
 superseded_by: []
@@ -18,7 +18,7 @@ tags: [governance, index]
 
 # Governance Index
 
-This directory is the canonical Phase 1 governance layer for the Repository Operating System. It defines authority, agent conduct, research packaging, engineering quality, and the decisions that established those rules.
+This directory is the canonical Phase 1 governance layer for Praxis, Echelon Foundry's repository operating system. It defines authority, agent conduct, research packaging, engineering quality, and the decisions that established those rules.
 
 ## Reading Order and Map
 

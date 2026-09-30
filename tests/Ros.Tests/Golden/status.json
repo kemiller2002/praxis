@@ -1,0 +1,71 @@
+{
+  "test1": {
+    "repository": "status-differential",
+    "protocolVersion": "1.0.0",
+    "validation": "passed",
+    "findingCount": 0,
+    "workItems": [
+      {
+        "id": "{install}",
+        "type": "mechanical",
+        "state": "complete",
+        "semanticState": "complete",
+        "allowedActions": [],
+        "hasExecIds": false
+      }
+    ],
+    "telemetry": {
+      "executionCount": 0,
+      "activeExecutionCount": 0
+    },
+    "nextActions": [
+      "Select an allowed work transition or begin a new work item."
+    ]
+  },
+  "test2": {
+    "repository": "status-differential",
+    "protocolVersion": "1.0.0",
+    "validation": "failed",
+    "findingCount": 1,
+    "workItems": [
+      {
+        "id": "{install}",
+        "type": "mechanical",
+        "state": "complete",
+        "semanticState": "complete",
+        "allowedActions": [],
+        "hasExecIds": false
+      },
+      {
+        "id": "WI-READY",
+        "type": "task",
+        "state": "active",
+        "semanticState": "active",
+        "allowedActions": [
+          "abandon",
+          "block",
+          "complete"
+        ],
+        "hasExecIds": true
+      },
+      {
+        "id": "WI-ACTIVE",
+        "type": "task",
+        "state": "blocked",
+        "semanticState": "blocked",
+        "allowedActions": [
+          "abandon",
+          "resume"
+        ],
+        "hasExecIds": true
+      }
+    ],
+    "telemetry": {
+      "executionCount": 2,
+      "activeExecutionCount": 2
+    },
+    "nextActions": [
+      "Correct the named file and field, then run './praxis validate' again."
+    ]
+  }
+}

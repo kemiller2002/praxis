@@ -3,6 +3,7 @@ module Ros.Tests.Program
 [<EntryPoint>]
 let main _ =
     ArchitectureTests.tests
+    @ CliHarnessTests.tests
     @ ArtifactTests.tests
     @ PersistenceTests.tests
     @ GitTests.tests
@@ -40,6 +41,7 @@ let main _ =
     @ TelemetryIngestHookTests.tests
     @ TelemetryIngestClaudeStatuslineTests.tests
     @ TelemetryIngestOtelTests.tests
+    @ TelemetryIngestClaudeSessionTests.tests
     @ TelemetryClassifyTests.tests
     @ TelemetryStartTests.tests
     @ AdapterContractTests.tests
@@ -52,10 +54,33 @@ let main _ =
     @ ProvenanceEffectTests.tests
     @ WorkReconciliationTests.tests
     @ WorkReconciliationEffectTests.tests
+    @ ImplementationLanguagePolicyTests.tests
+    @ WebInterfaceTests.tests
+    @ HubTests.tests
+    @ WorkDecisionCliTests.tests
+    @ WorkTelemetryCliTests.tests
+    @ WorkGitPathsCliTests.tests
+    @ WorkValidateCliTests.tests
+    @ WorkBacklogCliTests.tests
+    @ WorkLifecycleCliTests.tests
+    @ WorkViewCliTests.tests
+    @ StatusValidateCliTests.tests
+    @ GitArtifactCliTests.tests
+    @ TelemetryCliTests.tests
+    @ TelemetryAdapterCliTests.tests
+    @ AdapterCliTests.tests
+    @ ProvenanceCliTests.tests
+    @ LifecycleCliTests.tests
+    @ EchelonDoctorTests.tests
+    @ InstalledRepositoryTests.tests
     @ RemoteProtocolTests.tests
     @ RemoteIdentityTests.tests
     @ RemoteExecutionTests.tests
+    @ RemoteExecuteCliTests.tests
+    @ RemotePersistScriptTests.tests
+    @ PraxisBootstrapScriptTests.tests
     @ TelemetryStepsUsageTests.tests
+    @ PraxisNamingTests.tests
     @ CheckpointDomainTests.tests
     @ GitDurabilityTests.tests
     @ CheckpointPersistenceTests.tests
@@ -70,10 +95,12 @@ let main _ =
     @ WorkAbandonTests.tests
     @ PlanningTests.tests
     @ PlanningCliTests.tests
+    @ PlanningSessionEvidenceTests.tests
     @ GroupingTests.tests
     @ PremergeCommandSurfaceTests.tests
     @ PremergeRemoteTests.tests
     @ PremergeRemoteScriptTests.tests
     @ PremergeReleaseTests.tests
+    @ PostmergeReconciliationTests.tests
     @ WorkGroupTests.tests
     |> TestRunner.run

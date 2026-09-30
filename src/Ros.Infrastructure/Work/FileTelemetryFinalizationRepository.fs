@@ -759,7 +759,7 @@ module FileTelemetryFinalizationRepository =
         | TextConfidence of string
 
     /// The CLI-reachable shape of production's `recordTelemetryMetric`
-    /// input: every field `./ros telemetry record` can actually populate.
+    /// input: every field `./praxis telemetry record` can actually populate.
     /// `Unit`/`Currency` are explicit overrides of the registry's own
     /// `unit` (`None` means "use the registry's"); `Value` is passed through
     /// unvalidated (matching production's own `Number(rawValue)`, which
@@ -1440,6 +1440,121 @@ module FileTelemetryFinalizationRepository =
           SnapshotId = None
           CollectedAt = collectedAt
           Source = runtimeSource }
+
+    /// PRAXIS-PLAN-05: maps a Claude Code session transcript (JSON Lines)
+    /// to session metrics through the pure `SessionTranscript` derivation:
+    /// requests, tokens, tool calls, reads, searches, writes, builds, tests,
+    /// compactions, repeated and governance reads, time to first code change
+    /// and active time. Every recognized metric gets a capability; a metric
+    /// the transcript does not carry is `supported-unavailable`, never zero.
+    /// The raw snapshot is the content-free summary, never the transcript.
+    /// The snapshot ID is the session ID, so one session is ingested into an
+    /// execution once and its session totals are never summed twice.
+    let private adaptClaudeSession (input: JsonNode) (collectedAt: string) : AdaptedSnapshot =
+        let summary = ClaudeSessionTranscriptReader.entries input |> SessionTranscript.summarize
+        let node (value: 'T) : JsonNode = JsonValue.Create value
+        let optional (value: 'T option) : JsonNode = value |> Option.map node |> Option.toObj
+
+        let record (fields: (string * JsonNode) list) =
+            fields |> List.fold (fun (target: JsonObject) (key, value) -> target[key] <- value; target) (JsonObject())
+
+        let array (values: JsonNode list) : JsonNode =
+            values |> List.fold (fun (target: JsonArray) value -> target.Add value; target) (JsonArray()) :> JsonNode
+
+        let counted (label: string) (values: (string * int) list) : JsonNode =
+            values |> List.map (fun (key, count) -> record [ label, node key; "count", node count ] :> JsonNode) |> array
+
+        // A path outside the working directory stays absolute; it is
+        // counted, but its location is not stored.
+        let repositoryPaths (values: (string * int) list) =
+            values
+            |> List.map (fun (path, count) -> (if Path.IsPathRooted path then "(outside the repository)" else path), count)
+            |> List.groupBy fst
+            |> List.map (fun (path, counts) -> path, counts |> List.sumBy snd)
+            |> List.sortWith (fun (left, _) (right, _) -> String.CompareOrdinal(left, right))
+
+        let stamp (value: DateTimeOffset option) =
+            value |> Option.map (fun at -> at.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture)) |> optional
+
+        let source () =
+            record
+                [ "type", node "runtime-output"
+                  "name", node "claude-code-transcript"
+                  "mechanism", node "session-transcript-jsonl"
+                  "provider", node "anthropic"
+                  "runtime", node "claude-code" ]
+
+        let measurements = SessionTranscript.measurements summary
+
+        let capability (measurement: SessionMeasurement) =
+            record
+                [ "metricId", node measurement.MetricId
+                  "status", node (if measurement.Value.IsSome then capabilityStatusForQuality measurement.Quality else "supported-unavailable")
+                  "reason",
+                  node (
+                      if measurement.Value.IsSome then "derived from the session transcript"
+                      else "adapter recognizes the metric but the transcript did not carry it"
+                  )
+                  "source", source ()
+                  "discoveredAt", node collectedAt ]
+
+        let metric (measurement: SessionMeasurement) (value: decimal) =
+            record
+                [ yield "id", node measurement.MetricId
+                  yield "value", node (float value)
+                  yield "collectedAt", node collectedAt
+                  yield "source", source ()
+                  yield "scope", node "session"
+                  yield "quality", node measurement.Quality
+                  if measurement.Quality = "estimated" then yield "confidence", node "medium"
+                  match measurement.Currency with
+                  | Some currency -> yield "currency", node currency
+                  | None -> () ]
+
+        let raw =
+            record
+                [ "schema", node "praxis.claude-session-summary/1"
+                  "sessionId", optional summary.SessionId
+                  "runtimeVersion", optional summary.RuntimeVersion
+                  "models", summary.Models |> List.map node |> array
+                  "startedAt", stamp summary.StartedAt
+                  "endedAt", stamp summary.EndedAt
+                  "spanMs", optional summary.SpanMs
+                  "activeMs", optional summary.ActiveMs
+                  "idleGapMs", node SessionTranscript.idleGapMs
+                  "idleGapsExcluded", node summary.IdleGapsExcluded
+                  "msToFirstCodeChange", optional summary.MsToFirstCodeChange
+                  "distinctFilesRead", node summary.DistinctFilesRead
+                  "repeatedReads", counted "path" (repositoryPaths summary.RepeatedReads)
+                  "governanceReads", counted "path" (repositoryPaths summary.GovernanceReads)
+                  "toolCalls", counted "name" summary.ToolCalls ]
+
+        let identity =
+            record
+                [ "provider", node "anthropic"
+                  "runtime", node "claude-code"
+                  "runtimeVersion", optional summary.RuntimeVersion
+                  "model", optional (summary.Models |> List.tryExactlyOne)
+                  "sessionId", optional summary.SessionId ]
+
+        { Identity = identity
+          Capabilities = measurements |> List.map capability
+          Metrics = measurements |> List.choose (fun measurement -> measurement.Value |> Option.map (metric measurement))
+          Events = []
+          Classification = None
+          Scope = None
+          QualitySignals = []
+          Links = None
+          Raw = raw
+          MappedFields =
+            [ "schema"; "sessionId"; "runtimeVersion"; "models[]"; "startedAt"; "endedAt"; "spanMs"; "activeMs"
+              "idleGapMs"; "idleGapsExcluded"; "msToFirstCodeChange"; "distinctFilesRead"
+              "repeatedReads[].path"; "repeatedReads[].count"; "governanceReads[].path"; "governanceReads[].count"
+              "toolCalls[].name"; "toolCalls[].count" ]
+          SchemaVersion = null
+          SnapshotId = summary.SessionId |> Option.map (fun session -> $"claude-session-{session}")
+          CollectedAt = collectedAt
+          Source = source () }
 
     /// Mirrors production `adaptOtel`: maps an OpenTelemetry-shaped export
     /// (a single record, an array of records, or an object carrying
@@ -2671,6 +2786,7 @@ module FileTelemetryFinalizationRepository =
                     match adapter with
                     | "openai-codex" -> adaptOpenAICodex inputNode collectedAt
                     | "anthropic-claude-statusline" -> adaptClaudeStatusline inputNode collectedAt
+                    | "anthropic-claude-session" -> adaptClaudeSession inputNode collectedAt
                     | "anthropic-claude-hook" -> adaptHook inputNode collectedAt "anthropic" "claude-code"
                     | "google-gemini-hook" -> adaptHook inputNode collectedAt "google" "gemini-cli"
                     | "github-copilot-hook" -> adaptHook inputNode collectedAt "github" "copilot"

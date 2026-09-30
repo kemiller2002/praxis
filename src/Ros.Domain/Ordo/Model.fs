@@ -46,7 +46,7 @@ type ProviderUsage =
       CachedInputTokens: int option
       ProviderReportedCost: string option }
 
-/// Provider-neutral facts emitted by executable Ordo. ROS observes these facts;
+/// Provider-neutral facts emitted by executable Ordo. Praxis observes these facts;
 /// it does not reinterpret them into application authority or legal transitions.
 type ResolutionObservation =
     { ResolutionId: string
@@ -133,7 +133,7 @@ type ResolutionAssessment =
       /// Who or what made the retrospective assessment. Provider-neutral.
       Assessor: string
       AssessedAt: DateTimeOffset
-      /// When ROS recorded the assessment. Kept separate from AssessedAt so
+      /// When Praxis recorded the assessment. Kept separate from AssessedAt so
       /// imported/historical labels do not pretend they were recorded live.
       RecordedAt: DateTimeOffset
       EvidenceReferences: string list
@@ -244,7 +244,7 @@ type HandoffAuthority =
 module Projection =
     /// Build an effective-current view from an explicit authority selection.
     ///
-    /// ROS must not infer application authority merely because an observation
+    /// Praxis must not infer application authority merely because an observation
     /// is newer. The caller supplies the currently authoritative resolution
     /// identity and any explicitly superseded resolution identities; this
     /// function only resolves those references against immutable history.

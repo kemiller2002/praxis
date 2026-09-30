@@ -56,7 +56,7 @@ let private parentEnvironment () =
     |> Map.ofSeq
 
 /// This very binary: a single-file executable is its own process; under
-/// `dotnet ros-fs.dll` the entry assembly must be named explicitly.
+/// `dotnet praxis.dll` the entry assembly must be named explicitly.
 let private self () =
     let processPath = Environment.ProcessPath
 

@@ -375,6 +375,27 @@ module ProcessGitRepository =
 
     let readUntrackedFiles root = readUntrackedFilesWithExecutable "git" root
 
+    /// Every repository-owned path: tracked files plus untracked files that
+    /// are not ignored (so a new file is seen before it is committed), minus
+    /// tracked files already deleted from the working tree. Sorted ordinally.
+    let listRepositoryFilesWithExecutable executable root : Result<string list, GitFailure> =
+        let fullRoot = IO.Path.GetFullPath root
+
+        match runGit executable fullRoot "git ls-files" [ "ls-files"; "-z"; "--cached"; "--others"; "--exclude-standard" ] with
+        | Error failure -> Error failure
+        | Ok result when result.ExitCode <> 0 ->
+            let message = if result.Error.Length = 0 then $"git exited with code {result.ExitCode}" else result.Error
+            Error { Operation = "git ls-files"; Reason = GitUnavailableReason.CommandFailed; Message = message; ExitCode = Some result.ExitCode }
+        | Ok result ->
+            result.Output.Split('\000', StringSplitOptions.RemoveEmptyEntries)
+            |> Array.distinct
+            |> Array.filter (fun path -> IO.File.Exists(IO.Path.Combine(fullRoot, path)))
+            |> Array.sortWith (fun a b -> String.CompareOrdinal(a, b))
+            |> List.ofArray
+            |> Ok
+
+    let listRepositoryFiles root = listRepositoryFilesWithExecutable "git" root
+
     let readCommitCountWithExecutable executable root (startCommit: string) (endCommit: string) : Result<int, GitFailure> =
         runGitTextTrimmed executable (IO.Path.GetFullPath root) "git rev-list" [ "rev-list"; "--count"; $"{startCommit}..{endCommit}" ]
         |> Result.map int

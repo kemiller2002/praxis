@@ -3,7 +3,7 @@ namespace Ros.Application.Lifecycle
 open Ros.Domain.Lifecycle
 
 /// What a caller must supply to reach the lifecycle core. Deliberately not a
-/// parsed command line: the CLI is one adapter over this API, and ROS, an
+/// parsed command line: the CLI is one adapter over this API, and Praxis, an
 /// integration assembly, a test or a future service host can call the same
 /// functions without simulating argv.
 type LifecycleRequest =

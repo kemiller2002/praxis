@@ -29,7 +29,7 @@ two to four weeks.
 - Definition of the first user and communication problem.
 - A working vertical slice.
 - Evidence and decision traceability.
-- Evaluation of the Repository Operating System pilot.
+- Evaluation of the Praxis pilot.
 
 ## Excluded
 

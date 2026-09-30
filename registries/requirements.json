@@ -22,6 +22,20 @@
             "created"
           ],
           "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        },
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:57.631Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Verification references moved from removed Node tests to their F# ports (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
         }
       }
     },
@@ -38,7 +52,7 @@
       "provider-neutral"
     ],
     "title": "Actor identity is explicit, structured, and provider-neutral",
-    "updated": "2026-09-25",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -64,6 +78,20 @@
             "created"
           ],
           "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        },
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:58.429Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Verification references moved from removed Node tests to their F# ports (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
         }
       }
     },
@@ -80,7 +108,7 @@
       "telemetry"
     ],
     "title": "Every execution has its own identity, separate from the actor's stable identity",
-    "updated": "2026-09-25",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -106,6 +134,34 @@
             "created"
           ],
           "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        },
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:59.082Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Verification references moved from removed Node tests to their F# ports (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        },
+        "EXE-20260928T103758056Z-43f11e6e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T11:23:28.208Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Decision reference renumbered to DF-ROS-2026-A049 after merging main (work item FSHARP-ONLY-MAIN-MERGE)"
         }
       }
     },
@@ -122,7 +178,7 @@
       "attribution"
     ],
     "title": "Work events and captured work items record the acting actor",
-    "updated": "2026-09-25",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -824,5 +880,147 @@
     "title": "A remote agent that can write to the repository but cannot dispatch GitHub Actions can still send praxis.remote requests, with no change to trust, validation or identity",
     "updated": "2026-09-29",
     "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-28",
+    "id": "RQ-ROS-2026-A024",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A024--fsharp-dotnet-only-repository.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:53.294Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Captured the F#/.NET-only repository rule from the user's objective (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        },
+        "EXE-20260928T103758056Z-43f11e6e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T11:23:29.586Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Renumbered from RQ-ROS-2026-A021 (taken on main by remote execution) (work item FSHARP-ONLY-MAIN-MERGE)"
+        },
+        "EXE-20260928T134520493Z-befb2bfe": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T14:30:36.538Z",
+          "operations": [
+            "modified"
+          ]
+        },
+        "EXE-20260930T175640720Z-98771e24": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:57:08.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PR92-ID-RENUMBER: renumbered from A022 on this branch to resolve a collision with a different main record; content unchanged"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A049",
+      "DF-ROS-2026-A033",
+      "requirements/SHARED-APPLICATION-FOUNDATIONS.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "architecture",
+      "fsharp",
+      "dotnet",
+      "tooling",
+      "node-removal",
+      "invariant"
+    ],
+    "title": "Repository-owned implementation and automation are F#/.NET only",
+    "updated": "2026-09-30",
+    "version": "1.0.1"
+  },
+  {
+    "created": "2026-09-28",
+    "id": "RQ-ROS-2026-A025",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A025--praxis-canonical-name.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T134520493Z-befb2bfe": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T14:30:35.274Z",
+          "operations": [
+            "created"
+          ]
+        },
+        "EXE-20260930T175640720Z-98771e24": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:57:08.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PR92-ID-RENUMBER: renumbered from A023 on this branch to resolve a collision with a different main record; content unchanged"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A050",
+      "AGENTS.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "naming",
+      "rename",
+      "praxis",
+      "cli",
+      "compatibility"
+    ],
+    "title": "Praxis is the canonical product and CLI name; ros is compatibility only",
+    "updated": "2026-09-30",
+    "version": "1.0.1"
   }
 ]

@@ -1,16 +1,19 @@
 # CLI reference
 
-The canonical public interface is the `praxis` command (`ros` is kept as an
-alias and as a scaffolded project's `./ros`). Install it from the native
-bundle or as the .NET global tool `EchelonFoundry.Praxis`; see
-[`installation.md`](installation.md).
+The canonical public interface is the `praxis` command (compatibility alias
+`ros`, also kept as a scaffolded project's `./ros`), a self-contained F#
+binary. Install it from the native bundle (see
+[`native-installation.md`](native-installation.md)) or as the .NET global tool
+`EchelonFoundry.Praxis`; see [`installation.md`](installation.md).
 
 ```bash
 praxis <command>
 ```
 
 All five lifecycle commands, and the repository commands below them, are the
-same F# CLI. No lifecycle decision is made in a launcher.
+same F# CLI. No lifecycle decision is made in a launcher: launchers
+(`praxis`, a project's `./praxis`, and the `ros`/`./ros` compatibility aliases)
+only start it, and no Node.js or npm is involved (`DF-ROS-2026-A049`).
 
 ## Lifecycle commands
 
@@ -26,8 +29,8 @@ same F# CLI. No lifecycle decision is made in a launcher.
 
 | Option | Meaning |
 |---|---|
-| `-h`, `--help` | Show help. `ros <command> --help` shows that command's help. |
-| `-V`, `--version` | Print `ros-fs <version>`, the Praxis release version (from `package.json`, the single version source). |
+| `-h`, `--help` | Show help. `praxis <command> --help` shows that command's help. |
+| `-V`, `--version` | Print `praxis <version>`, where the version is the release version (`release.json`). |
 | `--root PATH` | Repository to act on. Defaults to the current directory. |
 | `--package-root PATH` | Install from this scaffold directory instead of the one compiled into the binary. Rarely needed — see [Where the scaffold comes from](installation.md#where-the-scaffold-comes-from). |
 | `--json` | Emit machine-readable JSON on stdout. |
@@ -36,7 +39,7 @@ same F# CLI. No lifecycle decision is made in a launcher.
 ## `init`
 
 ```
-ros init [--profile NAME] [--project NAME] [--dry-run] [--check] [--json] [--verbose]
+praxis init [--profile NAME] [--project NAME] [--dry-run] [--check] [--json] [--verbose]
 ```
 
 Inspects the repository, determines the installed state, calculates the
@@ -54,7 +57,7 @@ will not overwrite, and how ownership works.
 ## `status`
 
 ```
-ros status [--json] [--verbose]
+praxis status [--json] [--verbose]
 ```
 
 Read-only. Prints a JSON document covering work items, validation findings,
@@ -68,7 +71,7 @@ adds the full `installation.managedArtifacts` list.
 ## `verify`
 
 ```
-ros verify [--strict] [--json] [--verbose]
+praxis verify [--strict] [--json] [--verbose]
 ```
 
 Read-only. Checks that every tool-owned artifact the installation manifest
@@ -86,7 +89,7 @@ strict pass always implies a non-strict pass.
 ## `upgrade`
 
 ```
-ros upgrade [--dry-run] [--check] [--json] [--verbose]
+praxis upgrade [--dry-run] [--check] [--json] [--verbose]
 ```
 
 Resolves the ordered chain of migrations from the installed configuration
@@ -96,7 +99,7 @@ reconciles tool-owned files. See [`upgrading.md`](upgrading.md).
 ## `doctor`
 
 ```
-ros doctor [--strict] [--json] [--verbose]
+praxis doctor [--strict] [--json] [--verbose]
 ```
 
 Read-only. Reports every problem it can detect, each with the reason and,
@@ -176,7 +179,7 @@ was added:
     { "severity": "error", "code": "managed-artifact-missing",
       "message": "managed artifact is missing",
       "path": "framework/REP-SPECIFICATION.md",
-      "remedy": "Run 'ros init' to restore the missing tool-owned artifact." }
+      "remedy": "Run 'praxis init' to restore the missing tool-owned artifact." }
   ]
 }
 ```
@@ -259,37 +262,48 @@ The same executable carries the repository's artifact, work and telemetry
 commands. These predate the lifecycle interface and are unchanged:
 
 ```
-ros validate [--json]
-ros registry build [--dry-run] | registry check
-ros git status [--json]
-ros work <capture|list|ready|show|start|resume|block|complete|reconcile|checkpoint|continue|update|attach|context|...>
-ros add "..."
-ros telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
-ros adapter <call|publish>
-ros provenance <identity|record|show|audit>
-ros plan <analyze|simulate|compare|explain|replay|freshness|groups|explain-group>
+praxis validate [--json]
+praxis registry build [--dry-run] | registry check
+praxis git status [--json]
+praxis work <capture|list|ready|show|start|resume|block|complete|reconcile|checkpoint|continue|update|attach|context|...>
+praxis add "..."
+praxis telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
+praxis adapter <call|publish>
+praxis provenance <identity|record|show|audit>
+praxis plan <analyze|simulate|compare|explain|replay|freshness|groups|explain-group>
 ```
 
-Run `ros --help` for the full argument list, and see
+Run `praxis --help` for the full argument list, and see
 [`work-protocol.md`](work-protocol.md),
 [`development-telemetry.md`](development-telemetry.md),
 [`work-adapter-contract.md`](work-adapter-contract.md) and
 [`agent-provenance.md`](agent-provenance.md) for what they mean.
 
+`praxis telemetry adapters` lists the ingest adapters. Besides production's
+catalog it includes the F#-only `anthropic-claude-session`, which derives
+session metrics (repeated and governance reads, time to first code change,
+active time, requests, tool calls, compactions, tokens) from a Claude Code
+transcript: `praxis telemetry ingest ID --adapter anthropic-claude-session
+--input SESSION.jsonl`. Platform-reported cost is recorded with `praxis telemetry
+record ID --metric cost.execution_total --value N --currency USD --quality
+observed`; `praxis plan` reads both (see
+[`development-telemetry.md`](development-telemetry.md) and
+[`planning.md`](planning.md)).
+
 ### `plan`
 
 ```
-ros plan analyze   [--json]
-ros plan simulate  [--for baseline|speed|balanced|cost|max-parallel] [--max-concurrency N]
-                   [--budget AMOUNT [--currency CODE]] [--deadline 4h|90m] [--details] [--json]
-ros plan compare   [--max-concurrency N] [--json]
-ros plan explain   ID [--json]
-ros plan replay    [--details] [--json]
-ros plan freshness --plan FILE [--json]
-ros plan groups    [--json]
-ros plan explain-group GROUP-ID [--json]
-ros plan simulate --groups [--max-concurrency N] [--json]
-ros plan compare  --groups [--max-concurrency N] [--json]
+praxis plan analyze   [--json]
+praxis plan simulate  [--for baseline|speed|balanced|cost|max-parallel] [--max-concurrency N]
+                      [--budget AMOUNT [--currency CODE]] [--deadline 4h|90m] [--details] [--json]
+praxis plan compare   [--max-concurrency N] [--json]
+praxis plan explain   ID [--json]
+praxis plan replay    [--details] [--json]
+praxis plan freshness --plan FILE [--json]
+praxis plan groups    [--json]
+praxis plan explain-group GROUP-ID [--json]
+praxis plan simulate --groups [--max-concurrency N] [--json]
+praxis plan compare  --groups [--max-concurrency N] [--json]
      common: [--observations FILE] [--config FILE] [--as-of TIMESTAMP]
 ```
 
@@ -309,7 +323,7 @@ group exists and what would change it (`DF-ROS-2026-A047`). See
 ### `work reconcile`
 
 ```
-ros work reconcile --id ID --occurred-at TIMESTAMP --reason TEXT
+praxis work reconcile --id ID --occurred-at TIMESTAMP --reason TEXT
                    (--commit REV | --range BASE..HEAD) [--commit REV]* [--range BASE..HEAD]*
                    [--path PATH]* [--dry-run] [--json] [IDENTITY]
 ```
@@ -331,14 +345,14 @@ recording. See "Post-hoc attribution reconciliation" in
 ### `work checkpoint`, `work checkpoint show`, `work continue`
 
 ```
-ros work checkpoint --id ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT
-                    [--step STEP-ID] [--execution EXE-ID] [--json] [IDENTITY]
-ros work checkpoint show ID [--json] [--offline]
-ros work continue --id ID --occurred-at TIMESTAMP [--json] [IDENTITY]
-ros work context [ID] [--text] [--offline]
-ros work block ... [--unrecoverable-reason TEXT]
-ros work abandon --id ID [--id ID]* --occurred-at TIMESTAMP --reason TEXT [IDENTITY]
-ros status [--json] [--verbose] [--offline]
+praxis work checkpoint --id ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT
+                       [--step STEP-ID] [--execution EXE-ID] [--json] [IDENTITY]
+praxis work checkpoint show ID [--json] [--offline]
+praxis work continue --id ID --occurred-at TIMESTAMP [--json] [IDENTITY]
+praxis work context [ID] [--text] [--offline]
+praxis work block ... [--unrecoverable-reason TEXT]
+praxis work abandon --id ID [--id ID]* --occurred-at TIMESTAMP --reason TEXT [IDENTITY]
+praxis status [--json] [--verbose] [--offline]
 ```
 
 **`work checkpoint`** records a verified durable checkpoint. The remote itself
@@ -493,13 +507,14 @@ or `work capture`, and `telemetry start` accepts the same identity
 declaration. Each flag overrides the whitelisted environment:
 
 ```
---actor-kind agent|human|automation|unknown|x-...   (env ROS_ACTOR_KIND)
---agent ID | --actor ID                              (env ROS_ACTOR; stable identity)
+--actor-kind agent|human|automation|unknown|x-...   (env PRAXIS_ACTOR_KIND)
+--agent ID | --actor ID                              (env PRAXIS_ACTOR; stable identity)
 --provider P --model M --model-version V --runtime R --runtime-version V
---session S --conversation C --run R --subagent ID   (env ROS_TELEMETRY_*)
+--session S --conversation C --run R --subagent ID   (env PRAXIS_TELEMETRY_*)
 ```
 
-An invalid `--actor-kind` is an argument error (exit `2`).
+The legacy `ROS_*` names of these variables still work; the `PRAXIS_*` name
+wins when both are set. An invalid `--actor-kind` is an argument error (exit `2`).
 
 | Command | Purpose |
 |---|---|

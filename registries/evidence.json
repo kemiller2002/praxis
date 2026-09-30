@@ -1458,6 +1458,20 @@
             "created"
           ],
           "reason": "PRAXIS-PR92-PREMERGE-REGRESSION-FENCE: semantic conflict matrix, baselines and reconciliation manifest for PR #92"
+        },
+        "EXE-20260930T181403532Z-5fd55718": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T19:16:06.000Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-PR92-RECONCILE: record the reconciliation outcome and the resolution of each section 9 decision"
         }
       }
     },
@@ -1480,7 +1494,7 @@
     ],
     "title": "PR #92 pre-merge regression fence: semantic conflict matrix, baselines, and the reconciliation manifest",
     "updated": "2026-09-30",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   {
     "confidence": "low",

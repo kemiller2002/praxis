@@ -1,12 +1,12 @@
 ---
 id: DF-ROS-2026-A029
 title: Distribute ros-fs via npm as a self-contained single-file binary fetched from GitHub Releases
-status: accepted
+status: superseded
 version: 1.0.0
 owners:
   - repository-governance
 created: 2026-09-10
-updated: 2026-09-10
+updated: 2026-09-28
 author_agent: claude-sonnet-5
 supporting_evidence:
   - EV-ROS-2026-A047
@@ -18,9 +18,22 @@ related_documents:
   - docs/migrations/fsharp/STATUS.md
   - PACKAGE-USAGE.md
 supersedes: []
-superseded_by: []
+superseded_by:
+  - DF-ROS-2026-A049
 tags: [architecture, fsharp, migration, distribution, npm, sde, decision]
 confidence: high
+provenance:
+  contributions:
+    EXE-20260928T090915352Z-fb23943c:
+      operations: [superseded]
+      at: 2026-09-28T10:18:54.616Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Superseded by DF-ROS-2026-A049 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
 ---
 
 # Context

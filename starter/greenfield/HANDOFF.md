@@ -2,11 +2,11 @@
 
 ## Objective
 
-Bootstrap {{PROJECT_NAME}} as a greenfield Repository Operating System pilot.
+Bootstrap {{PROJECT_NAME}} as a greenfield Praxis pilot.
 
 ## Current state
 
-- ROS {{ROS_VERSION}} greenfield profile installed on {{CREATED_DATE}}.
+- Praxis {{ROS_VERSION}} greenfield profile installed on {{CREATED_DATE}}.
 - Project charter is a draft.
 - No first vertical slice, evidence record, hypothesis, or experiment has been
   accepted.
@@ -17,16 +17,16 @@ Bootstrap {{PROJECT_NAME}} as a greenfield Repository Operating System pilot.
 Run:
 
 ```bash
-./ros registry check
-./ros validate
+./praxis registry check
+./praxis validate
 ```
 
 ## Continuity
 
 An executor session is disposable. Before handing off, commit and push the
-work, record `./ros work checkpoint --id ID --occurred-at NOW --summary ...
+work, record `./praxis work checkpoint --id ID --occurred-at NOW --summary ...
 --next-action ...`, and push the `.ros/` state. A successor reads
-`./ros work context ID --text` and takes over with `./ros work continue`.
+`./praxis work context ID --text` and takes over with `./praxis work continue`.
 
 ## Unresolved questions
 

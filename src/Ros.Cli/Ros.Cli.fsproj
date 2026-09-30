@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <AssemblyName>ros-fs</AssemblyName>
+    <AssemblyName>praxis</AssemblyName>
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
   <!-- The .NET global tool (DF-ROS-2026-A044): `dotnet tool install -g
@@ -33,6 +33,11 @@
     <Compile Include="Foundations.fs" />
     <Compile Include="ProvenanceCommands.fs" />
     <Compile Include="ReconciliationCommands.fs" />
+    <Compile Include="ArchitectureCommands.fs" />
+    <Compile Include="WebHttp.fs" />
+    <Compile Include="CliProcess.fs" />
+    <Compile Include="WebInterface.fs" />
+    <Compile Include="Hub.fs" />
     <Compile Include="CheckpointCommands.fs" />
     <Compile Include="RemoteCommands.fs" />
     <Compile Include="ExecutionCommands.fs" />
