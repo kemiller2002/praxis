@@ -4,7 +4,56 @@
   "armStartNote": "baseline commit plus one identical harness commit (session_metrics.py) on both arms",
   "orchestrator": "session_01E8aLYDesB49uhTD6Mpg4yo",
   "sessions": [
-    { "label": "grouped", "arm": "grouped", "items": ["PRAXIS-GROUP-01", "PRAXIS-GROUP-02", "PRAXIS-GROUP-03", "PRAXIS-GROUP-04", "PRAXIS-GROUP-05"], "session": "session_01Am6kL4FMXPviX7x1UJhbx9", "configuredModel": "claude-opus-5-5", "createdAt": "2026-09-30T11:50:34Z", "prompt": "prompts/grouped.txt" },
-    { "label": "control-01", "arm": "control", "items": ["PRAXIS-GROUP-01"], "session": "session_01M75ZaHmVcX1YYzxg2UP4gD", "configuredModel": "claude-opus-5-5", "createdAt": "2026-09-30T11:50:35Z", "prompt": "prompts/control-01.txt" }
+    {
+      "label": "grouped",
+      "arm": "grouped",
+      "items": [
+        "PRAXIS-GROUP-01",
+        "PRAXIS-GROUP-02",
+        "PRAXIS-GROUP-03",
+        "PRAXIS-GROUP-04",
+        "PRAXIS-GROUP-05"
+      ],
+      "session": "session_01Am6kL4FMXPviX7x1UJhbx9",
+      "configuredModel": "claude-opus-5-5",
+      "createdAt": "2026-09-30T11:50:34Z",
+      "prompt": "prompts/grouped.txt"
+    },
+    {
+      "label": "control-01",
+      "arm": "control",
+      "items": [
+        "PRAXIS-GROUP-01"
+      ],
+      "session": "session_01M75ZaHmVcX1YYzxg2UP4gD",
+      "configuredModel": "claude-opus-5-5",
+      "createdAt": "2026-09-30T11:50:35Z",
+      "prompt": "prompts/control-01.txt",
+      "finishedAt": "2026-09-30T12:04:40Z",
+      "status": "completed",
+      "headAfter": "9349e48",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 3.707276,
+        "input_tokens": 118,
+        "output_tokens": 38702,
+        "cache_read_tokens": 8060300,
+        "cache_write_tokens": 165088,
+        "context_used_tokens": 193069,
+        "last_served_model": "claude-opus-5-5"
+      }
+    },
+    {
+      "label": "control-02",
+      "arm": "control",
+      "items": [
+        "PRAXIS-GROUP-02"
+      ],
+      "session": "session_01UTrWKh68vzLeWn5wdDZAXD",
+      "configuredModel": "claude-opus-5-5",
+      "createdAt": "2026-09-30T12:15:58Z",
+      "startCommit": "9349e48",
+      "prompt": "prompts/control-02.txt"
+    }
   ]
 }
