@@ -99,7 +99,7 @@
 | PRAXIS-SITE-26 | Final verification and evidence | complete | gh-84, public-site | high |
 | PRAXIS-SITE-27 | Align Pages deployment workflow with echelon-foundry deploy-pages.yml | complete | gh-84, public-site | medium |
 | PRAXIS-TELEMETRY-CLASSIFY-VOCAB | telemetry classify accepts classifications that validate rejects | captured | telemetry | medium |
-| PRAXIS-XPROVIDER-PROOF-01 | Cross-provider continuation proof: Claude starts, ChatGPT finishes | ready | continuity, proof | medium |
+| PRAXIS-XPROVIDER-PROOF-01 | Cross-provider continuation proof: Claude starts, ChatGPT finishes | complete | continuity, proof | medium |
 | PROJECT-ADMIN-HUB | PROJECT-ADMIN-HUB | complete |  |  |
 | RELEASE-3-5-0 | Release Praxis 3.5.0 with remote execution (GH-90) | complete |  | high |
 | RELEASE-3-6-0 | Release Praxis 3.6.0 | complete |  | medium |

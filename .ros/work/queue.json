@@ -2879,10 +2879,10 @@
         "proof"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-29T12:17:53.950Z",
-      "updatedAt": "2026-09-29T12:17:54.000Z",
+      "updatedAt": "2026-09-30T06:20:14.865Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
