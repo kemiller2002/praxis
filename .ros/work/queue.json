@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 62,
+  "nextSeq": 65,
   "items": [
     {
       "id": "WI-0001",
@@ -3065,6 +3065,31 @@
       "attachments": [],
       "createdAt": "2026-09-29T22:29:33.000Z",
       "updatedAt": "2026-09-29T22:31:41.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0064",
+      "title": "Evidence-based work groups for the advisory planner (plan groups/explain-group) and the frozen grouping A/B experiment protocol",
+      "description": "Advisory, read-only work-group recommendations (planning groups vs execution groups; explicit/derived/inferred affinity signals; context affinity separate from dependency, collision risk and parallel safety; human-declared groups; execution repository; partial completion; group dependencies; size/cohesion/context-pressure splitting) exposed as praxis plan groups / explain-group / simulate --groups / compare --groups, plus the frozen A/B grouping-experiment protocol, cohort and predictions. Requirements: requirements/PLANNING-WORK-GROUPS.md.",
+      "tags": [
+        "planning",
+        "architecture",
+        "cli"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-30T10:28:19.395Z",
+      "updatedAt": "2026-09-30T10:28:47.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

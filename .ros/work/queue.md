@@ -186,6 +186,7 @@
 | WI-0061 | Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict | complete | remote-execution, gh-90 | medium |
 | WI-0062 | Triage SDE 1.3.0 structural review findings | complete | sde, structural-review | high |
 | WI-0063 | Implement ROS next-pass Ordo observation and structured handoff (#63) | complete | ordo,next-pass | high |
+| WI-0064 | Evidence-based work groups for the advisory planner (plan groups/explain-group) and the frozen grouping A/B experiment protocol | ready | planning, architecture, cli | high |
 | WI-0072 | Port provenance follow-ups onto the merged model: collaboration aggregates in provenance audit, producedBy on ordo handoffs, installer event actor | complete | provenance | medium |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |

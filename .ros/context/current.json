@@ -4630,11 +4630,42 @@
       },
       "completedAt": "2026-09-30T06:21:56.000Z",
       "conclusion": "Checkpoints no longer claim, and completion/blocking are no longer held back by, commits other items' recorded checkpoints or reconciliations own."
+    },
+    {
+      "id": "WI-0064",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-30T10:28:47.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T102847967Z-f42c2262"
+      ],
+      "latestCheckpoint": {
+        "id": "01aca498a3b767c7a42860be",
+        "recordedAt": "2026-09-30T10:58:51.000Z",
+        "executionId": "EXE-20260930T102847967Z-f42c2262",
+        "repository": "repository-operating-system",
+        "branch": "claude/plan-work-groups",
+        "commit": "2dcc8f647e764555aca9c05969b5f73b6bcbcd9a",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/plan-work-groups",
+        "remoteCommit": "2dcc8f647e764555aca9c05969b5f73b6bcbcd9a",
+        "summary": "Read-only work-group model, JSON contract, CLI (plan groups, explain-group, simulate/compare --groups) and 25 tests committed; 786 F# tests pass",
+        "nextAction": "Record baseline planner output, select cohort and freeze the A/B experiment protocol and predictions; update docs/planning.md, docs/cli.md, decision and evidence records",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T06:22:14.000Z",
+  "updatedAt": "2026-09-30T10:28:47.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
