@@ -44,6 +44,7 @@
 | PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | abandoned | rename, gh-90 | low |
 | PRAXIS-PR92-ID-RENUMBER | Renumber PR #92's DF/RQ records that collide with main's (A042/A043, RQ A022/A023) | complete | pr92, decision | high |
 | PRAXIS-PR92-PREMERGE-RENAME-FENCE | Harden Praxis rename invariants on PR #92 before main is reconciled | complete | testing, pr92 | high |
+| PRAXIS-PR92-RECONCILE | Reconcile PR #92 (F#-only cleanup, Praxis rename) with current main | ready | pr92 | high |
 | PRAXIS-REMOTE-01 | Remote protocol v1 contract: schemas, typed domain model, validation, fingerprint, decision order | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-02 | Remote provenance roles: asserted request actor, observed executor, transport principal | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-03 | praxis remote execute boundary with request journal, SHA binding and structured results | complete | remote-execution, gh-90 | high |

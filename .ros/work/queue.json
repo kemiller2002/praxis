@@ -2481,6 +2481,29 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PR92-RECONCILE",
+      "title": "Reconcile PR #92 (F#-only cleanup, Praxis rename) with current main",
+      "description": "Owner-approved: merge main into PR #92, resolve every conflict preserving main's newer behavior and PR #92's rename per EV-ROS-2026-A060, write post-merge tests P1-P7 (PRAXIS-PR92-POSTMERGE-FENCE), drive CI green, then merge PR #92 into main. Owner decisions: keep shipping legacy ros-fs-<rid> assets; upgrade leaves tools/ros_fs_launcher.mjs in place.",
+      "tags": [
+        "pr92"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-30T18:14:02.000Z",
+      "updatedAt": "2026-09-30T18:14:02.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
