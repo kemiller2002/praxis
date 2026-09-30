@@ -9,16 +9,21 @@ open Ros.Domain.Provenance
 open Ros.Infrastructure.Planning
 
 /// `work group create`: records a durable human-declared execution group;
-/// `work group show`: a read-only view of one (PRX-GRP-073 phase two). This
-/// module parses, delegates to `FileWorkGroupRepository` or the planner's
-/// read-only port, and renders; the policy lives in `GroupDeclaration` and
-/// `GroupView`. It never changes a member's lifecycle state.
+/// `work group add`: adds one member to a declared group and records who
+/// added it; `work group show`: a read-only view of one (PRX-GRP-073 phase
+/// two). This module parses, delegates to `FileWorkGroupRepository` or the
+/// planner's read-only port, and renders; the policy lives in
+/// `GroupDeclaration`, `GroupMembership` and `GroupView`. It never changes a
+/// member's lifecycle state.
 [<RequireQualifiedAccess>]
 module WorkGroupCommands =
     let usage =
         "work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP [--kind KIND] [--execution-repository REPOSITORY] [--cross-repository] [--shared-context TEXT]* [--architecture-note TEXT]* [--dry-run] [--json] [IDENTITY]"
 
     let showUsage = "work group show GROUP-ID [--as-of TIMESTAMP] [--json]"
+
+    let addUsage =
+        "work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY]"
 
     let private identityFlags =
         set
@@ -45,9 +50,17 @@ module WorkGroupCommands =
                   "--kind"
                   "--execution-repository"
                   "--shared-context"
-                  "--architecture-note" ])
+                  "--architecture-note"
+                  "--reason"
+                  "--config" ])
 
     let private switches = set [ "--dry-run"; "--json"; "--cross-repository" ]
+
+    /// Flags the shared parser knows that only one subcommand accepts.
+    let private createOnly =
+        set [ "--kind"; "--execution-repository"; "--cross-repository"; "--shared-context"; "--architecture-note" ]
+
+    let private addOnly = set [ "--reason"; "--config" ]
 
     type private Parsed =
         { Values: Map<string, string list>
@@ -68,12 +81,28 @@ module WorkGroupCommands =
     let private isTimestamp (value: string) =
         DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind) |> fst
 
-    let private single (parsed: Parsed) flag (required: bool) : Result<string option, string> =
+    let private singleFor (command: string) (parsed: Parsed) flag (required: bool) : Result<string option, string> =
         match values parsed flag, required with
         | [ value ], _ -> Ok(Some value)
         | [], false -> Ok None
-        | [], true -> Error $"work group create requires {flag}"
+        | [], true -> Error $"work group {command} requires {flag}"
         | _ -> Error $"pass {flag} once"
+
+    let private single = singleFor "create"
+
+    /// Flags another subcommand owns, reported rather than silently ignored.
+    let private foreign (command: string) (owned: Set<string>) (parsed: Parsed) =
+        Set.union (parsed.Values |> Map.keys |> Set.ofSeq) parsed.Switches
+        |> Set.intersect owned
+        |> Set.toList
+        |> List.map (fun flag -> $"work group {command} does not accept {flag}")
+
+    let private occurredAtFor (command: string) (parsed: Parsed) =
+        singleFor command parsed "--occurred-at" true
+        |> Result.bind (function
+            | Some value when isTimestamp value -> Ok value
+            | Some value -> Error $"--occurred-at '{value}' is not a timestamp"
+            | None -> Error $"work group {command} requires --occurred-at TIMESTAMP (the real current time)")
 
     let private kind (parsed: Parsed) : Result<GroupKind option, string> =
         single parsed "--kind" false
@@ -89,10 +118,7 @@ module WorkGroupCommands =
     /// Every argument problem at once, or the declared group.
     let private request (parsed: Parsed) : Result<DeclaredGroup * string, string list> =
         let id = single parsed "--id" true
-        let occurredAt = single parsed "--occurred-at" true |> Result.bind (function
-            | Some value when isTimestamp value -> Ok value
-            | Some value -> Error $"--occurred-at '{value}' is not a timestamp"
-            | None -> Error "work group create requires --occurred-at TIMESTAMP (the real current time)")
+        let occurredAt = occurredAtFor "create" parsed
         let repository = single parsed "--execution-repository" false
         let groupKind = kind parsed
 
@@ -104,7 +130,7 @@ module WorkGroupCommands =
             |> List.choose (function
                 | Error message -> Some message
                 | Ok() -> None)
-            |> fun found -> found @ (parsed.Unexpected |> List.map (fun token -> $"unexpected argument '{token}'"))
+            |> fun found -> found @ foreign "create" addOnly parsed @ (parsed.Unexpected |> List.map (fun token -> $"unexpected argument '{token}'"))
 
         match errors, id, occurredAt, repository, groupKind with
         | [], Ok(Some groupId), Ok timestamp, Ok executionRepository, Ok declaredKind ->
@@ -156,8 +182,97 @@ module WorkGroupCommands =
                 printfn "no member's lifecycle state changed; 'plan groups' now reads this declaration"
             0
 
+    // ---- add -------------------------------------------------------------------
+
+    type private AdditionArguments =
+        { Addition: MemberAdditionRequest
+          OccurredAt: string
+          ConfigurationFile: string option }
+
+    /// Every argument problem at once, or the requested addition.
+    let private additionRequest (parsed: Parsed) : Result<AdditionArguments, string list> =
+        let id = singleFor "add" parsed "--id" true
+        let workItem = singleFor "add" parsed "--member" true
+        let occurredAt = occurredAtFor "add" parsed
+        let reason = singleFor "add" parsed "--reason" false
+        let configuration = singleFor "add" parsed "--config" false
+
+        let errors =
+            [ id |> Result.map ignore
+              workItem |> Result.map ignore
+              occurredAt |> Result.map ignore
+              reason |> Result.map ignore
+              configuration |> Result.map ignore ]
+            |> List.choose (function
+                | Error message -> Some message
+                | Ok() -> None)
+            |> fun found -> found @ foreign "add" createOnly parsed @ (parsed.Unexpected |> List.map (fun token -> $"unexpected argument '{token}'"))
+
+        match errors, id, workItem, occurredAt, reason, configuration with
+        | [], Ok(Some groupId), Ok(Some item), Ok timestamp, Ok why, Ok configurationFile ->
+            Ok
+                { Addition = { GroupId = groupId; WorkItem = item; Reason = why }
+                  OccurredAt = timestamp
+                  ConfigurationFile = configurationFile }
+        | errors, _, _, _, _, _ -> Error errors
+
+    let private additionPaths = [ WorkGroupStore.RelativePath; GroupMembershipStore.RelativePath ]
+
+    let private renderAddition asJson outcome =
+        let json status (addition: MemberAddition) members rejections =
+            if asJson then printf "%s" (WorkGroupMembershipJson.renderOutcome status additionPaths addition members rejections)
+
+        let by (addition: MemberAddition) =
+            let why = addition.Reason |> Option.map (fun reason -> $" ({reason})") |> Option.defaultValue ""
+            $"  added by:   {addition.AddedBy.Id} at {addition.AddedAt}{why}"
+
+        match outcome with
+        | WorkGroupAdditionOutcome.Rejected(addition, members, rejections) ->
+            json "rejected" addition members rejections
+            rejections |> List.iter (GroupAdditionRejection.message >> eprintfn "ERROR %s")
+            eprintfn "%s was not added to %s; nothing was recorded" addition.WorkItem addition.GroupId
+            1
+        | WorkGroupAdditionOutcome.Planned(addition, updated) ->
+            json "planned" addition updated.Group.Members []
+
+            if not asJson then
+                printfn "dry run: would add %s to group %s; nothing was recorded" addition.WorkItem addition.GroupId
+                printfn "  members:    %s" (String.Join(' ', updated.Group.Members))
+                printfn "%s" (by addition)
+            0
+        | WorkGroupAdditionOutcome.Added(addition, updated) ->
+            json "added" addition updated.Group.Members []
+
+            if not asJson then
+                printfn "added %s to group %s in %s" addition.WorkItem addition.GroupId WorkGroupStore.RelativePath
+                printfn "  members:    %s" (String.Join(' ', updated.Group.Members))
+                printfn "%s" (by addition)
+                printfn "recorded in %s; no member's lifecycle state changed" GroupMembershipStore.RelativePath
+            0
+
     let run root (arguments: string list) (actor: Actor) =
         match arguments with
+        | "add" :: rest ->
+            let parsed = parse { Values = Map.empty; Switches = Set.empty; Unexpected = [] } rest
+
+            match additionRequest parsed with
+            | Error errors ->
+                errors |> List.iter (eprintfn "ERROR %s")
+                eprintfn "Usage: ros %s" addUsage
+                2
+            | Ok arguments ->
+                let request =
+                    { Addition = arguments.Addition
+                      OccurredAt = arguments.OccurredAt
+                      Actor = actor
+                      ConfigurationFile = arguments.ConfigurationFile
+                      DryRun = parsed.Switches.Contains "--dry-run" }
+
+                match FileWorkGroupRepository.add root request with
+                | Error message ->
+                    eprintfn "ERROR %s" message
+                    1
+                | Ok outcome -> renderAddition (parsed.Switches.Contains "--json") outcome
         | "create" :: rest ->
             let parsed = parse { Values = Map.empty; Switches = Set.empty; Unexpected = [] } rest
 
@@ -179,7 +294,7 @@ module WorkGroupCommands =
                     1
                 | Ok outcome -> render (parsed.Switches.Contains "--json") outcome
         | _ ->
-            eprintfn "Usage: ros %s | %s" usage showUsage
+            eprintfn "Usage: ros %s | %s | %s" usage addUsage showUsage
             2
 
     // ---- show -------------------------------------------------------------------

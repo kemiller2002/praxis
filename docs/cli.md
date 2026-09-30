@@ -335,6 +335,40 @@ or live work; a member that is complete or abandoned. It writes only
 unknown members); a member that completes after the group was declared is
 partial completion, not a finding.
 
+### `work group add`
+
+```
+ros work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP
+                   [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY]
+```
+
+Adds one work item to a group declared in `.ros/work/groups.json`
+(PRX-GRP-073 phase two, `PRAXIS-GROUP-03`), appending it to the declared
+member order. Who added it, when and why is recorded in the append-only
+ledger `.ros/work/group-membership.json` (`schemaVersion` `1.0.0`; each
+change is `{change: added, group, workItem, addedAt, addedBy, reason}`, with
+`addedBy` in the canonical actor form); the group's own `declaredAt` and
+`declaredBy` are unchanged. The ledger is written first and restored if the
+group cannot be written, so neither file claims an addition the other lacks.
+
+The command refuses, listing every reason at once and recording nothing: a
+group that is not declared; a member ID that is not valid; an item that is
+not in the backlog or live work, or is complete or abandoned; an item already
+in the group; and an item whose execution repository differs from the
+group's, unless the group is `--cross-repository` (PRX-GRP-051). The item's
+execution repository follows the planner's own rule: planner configuration
+`grouping.executionRepositories` (read from `--config FILE`) wins, a
+description naming an external repository is an unknown external repository,
+and anything else executes in this repository; the group's is its declared
+`executionRepository`, or this repository. It writes only
+`.ros/work/groups.json` and `.ros/work/group-membership.json` and never
+changes the member's lifecycle state. `--dry-run` decides without writing;
+`--json` emits a `praxis.work-group/1.0.0` document with `kind`
+`work-group-add`, `status` `added`, `planned` or `rejected`, the resulting
+members, the addition record and coded `rejections`. A refusal exits `1`,
+bad arguments `2`. `ros validate` reports a malformed ledger and a recorded
+addition whose group is not declared or no longer lists the member.
+
 ### `work group show`
 
 ```
