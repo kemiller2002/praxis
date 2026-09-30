@@ -5,6 +5,7 @@ open System.IO
 open System.Security.Cryptography
 open System.Text.Json.Nodes
 open Ros.Contracts.Work
+open Ros.Domain.Git
 open Ros.Domain.Planning
 open Ros.Domain.Provenance
 open Ros.Domain.Work
@@ -414,6 +415,95 @@ module WorkGroupTests =
                   Assert.equal before (lifecycle clone)
                   run clone None [ "validate" ] |> ok |> ignore
                   Assert.equal 2 (cli clone [ "work"; "group"; "add"; "--group"; "GROUP-FIXTURE-001"; "--member"; "ITEM-1"; "--allow-empty"; "--occurred-at"; now () ]).ExitCode))
+
+          t "a group checkpoint needs a recorded group, text and the shared durability verdict; it references member checkpoints and changes no member" (fun () ->
+              let group = created "GROUP-AREA-001" [ "ITEM-1"; "ITEM-2"; "ITEM-3" ]
+              let commit = CommitId.tryParse (String.replicate 40 "a") |> Option.get
+
+              let location: GitDurableLocation =
+                  { Repository = "this-repository"
+                    Branch = "feature/x"
+                    LocalCommit = commit
+                    Remote = { Name = "origin"; Url = None }
+                    RemoteBranch = "feature/x"
+                    RemoteCommit = commit }
+
+              let request: GroupCheckpointRequest =
+                  { GroupId = "GROUP-AREA-001"
+                    CheckpointId = "gcp-1"
+                    Summary = "store and create done"
+                    NextAction = "implement show"
+                    Decisions = [ "one store file" ]
+                    OccurredAt = "2026-09-30T14:00:00.000Z"
+                    Actor = human }
+
+              let facts id = MemberFacts.ofStanding (fun candidate -> standings |> Map.tryFind candidate |> Option.defaultValue MemberStanding.Unknown) id
+              let reference id = if id = "ITEM-2" then Some { WorkItemId = id; CheckpointId = "cp-2"; Commit = String.replicate 40 "b" } else None
+              let decide groups request location = WorkGroups.checkpoint (context groups) request facts reference location
+              let codes result = match result with Ok _ -> [] | Error rejections -> rejections |> List.map GroupCheckpointRejection.code
+
+              Assert.equal [ "unknown-group" ] (codes (decide [] request (Ok location)))
+              Assert.equal [ "blank-summary"; "local-ahead" ] (codes (decide [ group ] { request with Summary = " " } (Error [ CheckpointRejection.LocalAhead(1, { Name = "origin"; Url = None }, "feature/x") ])))
+
+              match decide [ group ] request (Ok location) with
+              | Error rejections -> failwith $"{rejections}"
+              | Ok(updated, recorded) ->
+                  Assert.equal [ recorded ] updated.Checkpoints
+                  Assert.equal (group.Declaration, group.History) (updated.Declaration, updated.History)
+                  Assert.equal ([], [ "ITEM-2" ], [ "ITEM-3" ], [ "ITEM-1" ]) (recorded.Completed, recorded.Active, recorded.Blocked, recorded.Remaining)
+                  Assert.equal [ "cp-2" ] (recorded.MemberCheckpoints |> List.map (fun item -> item.CheckpointId))
+                  let rendered = WorkGroupJson.renderStore [ updated ]
+                  Assert.equal (Ok [ updated ]) (WorkGroupJson.readStore rendered))
+
+          t "cli group checkpoint is refused on unpushed or dirty state and records a verified checkpoint over members' own, changing none" (fun () ->
+              withRepository (fun clone ->
+                  createGroup clone "GROUP-FIXTURE-001" [ "ITEM-1"; "ITEM-2"; "ITEM-3" ] [] |> ok |> ignore
+                  cli clone [ "work"; "start"; "--id"; "ITEM-1"; "--type"; "feature"; "--occurred-at"; now () ] |> ok |> ignore
+                  GitFixture.write clone "src/one.txt" "one\n"
+                  pushAll clone "ITEM-1: first slice" |> ignore
+                  cli clone [ "work"; "checkpoint"; "--id"; "ITEM-1"; "--occurred-at"; now (); "--summary"; "first slice"; "--next-action"; "second slice" ] |> ok |> ignore
+                  // The member's own recorded checkpoint and history (not its
+                  // live freshness, which later commits legitimately change).
+                  let memberCheckpoint () =
+                      let shown = (run clone None [ "work"; "checkpoint"; "show"; "ITEM-1"; "--json" ] |> ok).Json
+                      text shown["continuity"].["checkpoint"].["id"], shown["history"].ToJsonString()
+                  let memberBefore = memberCheckpoint ()
+                  let eventsBefore = File.ReadAllText(Path.Combine(clone, ".ros", "events", "events.jsonl"))
+
+                  let checkpoint extra =
+                      cli clone ([ "work"; "group"; "checkpoint"; "--group"; "GROUP-FIXTURE-001"; "--occurred-at"; now (); "--summary"; "store done"; "--next-action"; "show next"; "--decision"; "one store file"; "--json" ] @ extra)
+
+                  GitFixture.write clone "src/two.txt" "two\n"
+                  let dirty = checkpoint []
+                  Assert.equal 1 dirty.ExitCode
+                  Assert.isTrue (rejectionCodes dirty |> List.contains "uncommitted-changes") dirty.Output
+                  GitFixture.commitAll clone "unpushed work" |> ignore
+                  let unpushed = checkpoint []
+                  Assert.equal 1 unpushed.ExitCode
+                  Assert.equal [ "local-ahead" ] (rejectionCodes unpushed)
+                  Assert.isTrue (not ((File.ReadAllText(groupsFile clone)).Contains "gcp-")) "a refused checkpoint was written"
+                  GitFixture.git clone [ "push"; "-q" ] |> ignore
+                  let head = GitFixture.git clone [ "rev-parse"; "HEAD" ]
+
+                  let recorded = checkpoint [] |> ok
+                  let node = recorded.Json["checkpoint"]
+                  Assert.equal head (text node["location"].["commit"])
+                  Assert.equal head (text node["location"].["remoteCommit"])
+                  Assert.equal "verified" (text node["verification"].["status"])
+                  Assert.equal "ITEM-1" (text node["members"].["active"].[0])
+                  Assert.equal 2 (node["members"].["remaining"].AsArray().Count)
+                  Assert.equal "ITEM-1" (text node["memberCheckpoints"].[0].["workItemId"])
+                  Assert.equal "one store file" (text node["decisions"].[0])
+                  Assert.equal "example/agent-a" (text node["actor"].["id"])
+                  Assert.isTrue (isNull node["paths"] && isNull node["executionId"]) "a group checkpoint claimed paths or an execution"
+                  Assert.equal memberBefore (memberCheckpoint ())
+                  Assert.equal eventsBefore (File.ReadAllText(Path.Combine(clone, ".ros", "events", "events.jsonl")))
+
+                  let shown = run clone None [ "work"; "group"; "show"; "GROUP-FIXTURE-001" ] |> ok
+                  Assert.isTrue (shown.Output.Contains "LATEST GROUP CHECKPOINT" && shown.Output.Contains "decision: one store file") shown.Output
+                  run clone None [ "validate" ] |> ok |> ignore
+                  Assert.equal 2 (cli clone [ "work"; "group"; "checkpoint"; "--group"; "GROUP-FIXTURE-001"; "--occurred-at"; now () ]).ExitCode
+                  Assert.equal 1 (cli clone [ "work"; "group"; "checkpoint"; "--group"; "GROUP-FIXTURE-404"; "--occurred-at"; now (); "--summary"; "s"; "--next-action"; "n" ]).ExitCode))
 
           t "cli validate reports a stored group whose member is not a recorded work item" (fun () ->
               withRepository (fun clone ->

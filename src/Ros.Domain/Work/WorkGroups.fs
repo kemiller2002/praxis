@@ -42,12 +42,39 @@ type GroupHistoryEntry =
       /// A removal that deliberately left the group empty (never implicit).
       ExplicitEmpty: bool }
 
+/// A member's own latest durable checkpoint, referenced (never copied or
+/// replaced) by a group checkpoint.
+type MemberCheckpointReference =
+    { WorkItemId: string
+      CheckpointId: string
+      Commit: string }
+
+/// A group-level checkpoint (PRX-GRP-044): where the group stands after a
+/// milestone, verified durable by the same Git rule as `work checkpoint`.
+/// It claims no paths and no execution: attribution stays on members' own
+/// checkpoints (PRX-GRP-043).
+type GroupCheckpoint =
+    { CheckpointId: string
+      RecordedAt: string
+      Actor: Actor
+      Summary: string
+      NextAction: string
+      Decisions: string list
+      Completed: string list
+      Active: string list
+      Blocked: string list
+      Remaining: string list
+      Abandoned: string list
+      MemberCheckpoints: MemberCheckpointReference list
+      Location: GitDurableLocation }
+
 /// A declared group as Praxis state records it.
 type StoredWorkGroup =
     { Declaration: DeclaredGroup
       CreatedAt: string
       CreatedBy: Actor
-      History: GroupHistoryEntry list }
+      History: GroupHistoryEntry list
+      Checkpoints: GroupCheckpoint list }
 
 /// Whether a work item may join a group: it must be known and not terminal.
 /// The state is the recorded lifecycle state (`QueuePresentation`).
@@ -245,6 +272,40 @@ type GroupMemberRequest =
       /// Removal only: deliberately allow leaving the group empty.
       AllowEmpty: bool }
 
+type GroupCheckpointRequest =
+    { GroupId: string
+      /// Chosen by the caller (a digest of the checkpoint), so the decision
+      /// stays pure.
+      CheckpointId: string
+      Summary: string
+      NextAction: string
+      Decisions: string list
+      OccurredAt: string
+      Actor: Actor }
+
+/// Why a group checkpoint was refused: the group, or durability.
+[<RequireQualifiedAccess>]
+type GroupCheckpointRejection =
+    | Group of GroupRejection
+    | Durability of CheckpointRejection
+
+[<RequireQualifiedAccess>]
+module GroupCheckpointRejection =
+    let code rejection =
+        match rejection with
+        | GroupCheckpointRejection.Group group -> GroupRejection.code group
+        | GroupCheckpointRejection.Durability durability -> CheckpointRejection.code durability
+
+    let message rejection =
+        match rejection with
+        | GroupCheckpointRejection.Group group -> GroupRejection.message group
+        | GroupCheckpointRejection.Durability durability -> CheckpointRejection.message durability
+
+    let isArgumentError rejection =
+        match rejection with
+        | GroupCheckpointRejection.Group group -> GroupRejection.isArgumentError group
+        | GroupCheckpointRejection.Durability durability -> CheckpointRejection.isArgumentError durability
+
 [<RequireQualifiedAccess>]
 module WorkGroups =
     let private groupIdPattern = Regex("^GROUP-[A-Z0-9]+(-[A-Z0-9]+)*$", RegexOptions.CultureInvariant)
@@ -317,7 +378,8 @@ module WorkGroups =
                 { Declaration = declaration
                   CreatedAt = request.OccurredAt
                   CreatedBy = request.Actor
-                  History = [ entry GroupOperation.Created None request.OccurredAt request.Actor request.Reason false ] }
+                  History = [ entry GroupOperation.Created None request.OccurredAt request.Actor request.Reason false ]
+                  Checkpoints = [] }
         | rejections -> Error rejections
 
     /// The group a membership change names, or why it cannot be found.
@@ -445,3 +507,51 @@ module WorkGroups =
           Blocked = inCategory MemberCategory.Blocked
           Remaining = inCategory MemberCategory.Remaining
           Unknown = inCategory MemberCategory.Unknown }
+
+    /// `work group checkpoint`: a durable group-level checkpoint over the
+    /// members' own. `location` is the shared Git verification's verdict
+    /// (`CheckpointVerification.verifyLocation`); `memberCheckpoint` gives a
+    /// member's own latest verified checkpoint. Nothing about any member is
+    /// written.
+    let checkpoint
+        (context: GroupContext)
+        (request: GroupCheckpointRequest)
+        (facts: string -> MemberFacts)
+        (memberCheckpoint: string -> MemberCheckpointReference option)
+        (location: Result<GitDurableLocation, CheckpointRejection list>)
+        : Result<StoredWorkGroup * GroupCheckpoint, GroupCheckpointRejection list> =
+        let found = existing context request.GroupId |> Result.mapError (List.map GroupCheckpointRejection.Group)
+
+        let text =
+            [ if (RequiredText.tryCreate request.Summary).IsNone then
+                  GroupCheckpointRejection.Durability CheckpointRejection.BlankSummary
+              if (RequiredText.tryCreate request.NextAction).IsNone then
+                  GroupCheckpointRejection.Durability CheckpointRejection.BlankNextAction ]
+
+        let durability =
+            match location with
+            | Ok _ -> []
+            | Error rejections -> rejections |> List.map GroupCheckpointRejection.Durability
+
+        match found, text @ durability, location with
+        | Ok group, [], Ok git ->
+            let standing = progress group facts
+
+            let recorded =
+                { CheckpointId = request.CheckpointId
+                  RecordedAt = request.OccurredAt
+                  Actor = request.Actor
+                  Summary = request.Summary.Trim()
+                  NextAction = request.NextAction.Trim()
+                  Decisions = request.Decisions
+                  Completed = standing.Completed
+                  Active = standing.Active
+                  Blocked = standing.Blocked
+                  Remaining = standing.Remaining @ standing.Unknown
+                  Abandoned = standing.Abandoned
+                  MemberCheckpoints = group.Declaration.Members |> List.choose memberCheckpoint
+                  Location = git }
+
+            Ok({ group with Checkpoints = group.Checkpoints @ [ recorded ] }, recorded)
+        | Error rejections, others, _ -> Error(rejections @ others)
+        | Ok _, rejections, _ -> Error rejections

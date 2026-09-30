@@ -59,13 +59,46 @@ module WorkGroupJson =
               if entry.ExplicitEmpty then
                   yield "explicitEmpty", boolean true ]
 
+    let locationNode (location: GitDurableLocation) : JsonNode =
+        record
+            [ "repository", text location.Repository
+              "branch", text location.Branch
+              "commit", text location.LocalCommit.Value
+              "remote", (record [ "name", text location.Remote.Name; "url", optionalText location.Remote.Url ] :> JsonNode)
+              "remoteBranch", text location.RemoteBranch
+              "remoteCommit", text location.RemoteCommit.Value ]
+
+    let checkpointNode (checkpoint: GroupCheckpoint) : JsonNode =
+        record
+            [ "id", text checkpoint.CheckpointId
+              "recordedAt", text checkpoint.RecordedAt
+              "actor", (ActorJson.node checkpoint.Actor :> JsonNode)
+              "summary", text checkpoint.Summary
+              "nextAction", text checkpoint.NextAction
+              "decisions", texts checkpoint.Decisions
+              "members",
+              (record
+                  [ "completed", texts checkpoint.Completed
+                    "active", texts checkpoint.Active
+                    "blocked", texts checkpoint.Blocked
+                    "remaining", texts checkpoint.Remaining
+                    "abandoned", texts checkpoint.Abandoned ]
+               :> JsonNode)
+              "memberCheckpoints",
+              checkpoint.MemberCheckpoints
+              |> List.map (fun reference ->
+                  record [ "workItemId", text reference.WorkItemId; "checkpointId", text reference.CheckpointId; "commit", text reference.Commit ] :> JsonNode)
+              |> array
+              "location", locationNode checkpoint.Location
+              "verification", (record [ "status", text "verified"; "mechanism", text "git-remote-observation" ] :> JsonNode) ]
+
     let groupNode (group: StoredWorkGroup) : JsonObject =
         record
             [ yield! declarationFields group.Declaration
               yield "createdAt", text group.CreatedAt
               yield "createdBy", (ActorJson.node group.CreatedBy :> JsonNode)
               yield "history", group.History |> List.map historyNode |> array
-              yield "checkpoints", array [] ]
+              yield "checkpoints", group.Checkpoints |> List.map checkpointNode |> array ]
 
     let storeNode (groups: StoredWorkGroup list) : JsonNode =
         record [ "schemaVersion", integer schemaVersion; "groups", groups |> List.map (groupNode >> fun node -> node :> JsonNode) |> array ]
@@ -191,6 +224,81 @@ module WorkGroupJson =
                   ArchitectureNotes = value notes }
         | errors -> Error errors
 
+    let private child (node: JsonObject) (name: string) : Result<JsonObject, string> =
+        match field node name with
+        | Some(:? JsonObject as value) -> Ok value
+        | _ -> Error $"{name} must be an object"
+
+    let private commit (node: JsonObject) (name: string) : Result<Ros.Domain.Git.CommitId, string> =
+        requiredText node name
+        |> Result.bind (fun raw -> Ros.Domain.Git.CommitId.tryParse raw |> Option.map Ok |> Option.defaultValue (Error $"{name} '{raw}' is not a full commit ID"))
+
+    let readLocation (node: JsonObject) : Result<GitDurableLocation, string list> =
+        let repository = requiredText node "repository"
+        let branch = requiredText node "branch"
+        let local = commit node "commit"
+        let remote = child node "remote"
+        let remoteName = remote |> Result.bind (fun value -> requiredText value "name")
+        let remoteUrl = remote |> Result.bind (fun value -> optionalString value "url")
+        let remoteBranch = requiredText node "remoteBranch"
+        let remoteCommit = commit node "remoteCommit"
+
+        match errorsOf [ boxed repository; boxed branch; boxed local; boxed remoteName; boxed remoteUrl; boxed remoteBranch; boxed remoteCommit ] with
+        | [] ->
+            Ok
+                { Repository = value repository
+                  Branch = value branch
+                  LocalCommit = value local
+                  Remote = { Name = value remoteName; Url = value remoteUrl }
+                  RemoteBranch = value remoteBranch
+                  RemoteCommit = value remoteCommit }
+        | errors -> Error(errors |> List.distinct)
+
+    let readCheckpoint (node: JsonObject) : Result<GroupCheckpoint, string list> =
+        let id = requiredText node "id"
+        let recordedAt = requiredText node "recordedAt"
+        let who = actor node "actor"
+        let summary = requiredText node "summary"
+        let nextAction = requiredText node "nextAction"
+        let decisions = stringList node "decisions"
+        let members = child node "members"
+        let listed name = members |> Result.bind (fun value -> stringList value name)
+        let completed, active, blocked, remaining, abandoned = listed "completed", listed "active", listed "blocked", listed "remaining", listed "abandoned"
+
+        let references =
+            objects node "memberCheckpoints"
+            |> Result.bind (fun entries ->
+                entries
+                |> List.map (fun entry ->
+                    match requiredText entry "workItemId", requiredText entry "checkpointId", requiredText entry "commit" with
+                    | Ok workItemId, Ok checkpointId, Ok commitId -> Ok { WorkItemId = workItemId; CheckpointId = checkpointId; Commit = commitId }
+                    | _ -> Error "memberCheckpoints entries need workItemId, checkpointId and commit")
+                |> List.fold (fun state next -> match state, next with | Ok values, Ok value -> Ok(values @ [ value ]) | Error message, _ | _, Error message -> Error message) (Ok []))
+
+        let location = child node "location" |> Result.mapError List.singleton |> Result.bind readLocation
+
+        let scalar =
+            errorsOf [ boxed id; boxed recordedAt; boxed who; boxed summary; boxed nextAction; boxed decisions; boxed completed; boxed active; boxed blocked; boxed remaining; boxed abandoned; boxed references ]
+            |> List.distinct
+
+        match scalar, location with
+        | [], Ok location ->
+            Ok
+                { CheckpointId = value id
+                  RecordedAt = value recordedAt
+                  Actor = value who
+                  Summary = value summary
+                  NextAction = value nextAction
+                  Decisions = value decisions
+                  Completed = value completed
+                  Active = value active
+                  Blocked = value blocked
+                  Remaining = value remaining
+                  Abandoned = value abandoned
+                  MemberCheckpoints = value references
+                  Location = location }
+        | errors, location -> Error(errors @ (match location with Error problems -> problems | Ok _ -> []))
+
     /// One stored group, or every problem with it.
     let readGroup (node: JsonObject) : Result<StoredWorkGroup, string list> =
         let declaration = readDeclaration node
@@ -205,18 +313,27 @@ module WorkGroupJson =
                 let errors = read |> List.collect (function Error problems -> problems | Ok _ -> [])
                 if errors.IsEmpty then Ok(read |> List.choose (function Ok entry -> Some entry | Error _ -> None)) else Error errors)
 
+        let checkpoints =
+            objects node "checkpoints"
+            |> Result.mapError List.singleton
+            |> Result.bind (fun entries ->
+                let read = entries |> List.map readCheckpoint
+                let errors = read |> List.collect (function Error problems -> problems | Ok _ -> [])
+                if errors.IsEmpty then Ok(read |> List.choose (function Ok checkpoint -> Some checkpoint | Error _ -> None)) else Error errors)
+
         let scalarErrors = errorsOf [ boxed createdAt; boxed createdBy ]
 
-        match declaration, history, scalarErrors with
-        | Ok declaration, Ok history, [] ->
+        match declaration, history, checkpoints, scalarErrors with
+        | Ok declaration, Ok history, Ok checkpoints, [] ->
             Ok
                 { Declaration = declaration
                   CreatedAt = value createdAt
                   CreatedBy = value createdBy
-                  History = history }
+                  History = history
+                  Checkpoints = checkpoints }
         | _ ->
             let problems result = match result with Error problems -> problems | Ok _ -> []
-            Error(problems declaration @ problems history @ scalarErrors)
+            Error(problems declaration @ problems history @ problems checkpoints @ scalarErrors)
 
     /// A parsed store: each group's own result, keyed by its position and
     /// (when readable) its ID, so validation can report every bad record.
@@ -279,3 +396,6 @@ module WorkGroupJson =
               "abandoned", texts progress.Abandoned
               "unknown", texts progress.Unknown
               "summary", text (GroupProgress.summary progress) ]
+
+    let checkpointRejectionNode (rejection: GroupCheckpointRejection) : JsonNode =
+        record [ "code", text (GroupCheckpointRejection.code rejection); "message", text (GroupCheckpointRejection.message rejection) ]

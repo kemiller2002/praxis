@@ -387,6 +387,8 @@ ros work group add    --group GROUP-ID --member ID --occurred-at TIMESTAMP [--co
                       [--reason TEXT] [--dry-run] [--json] [IDENTITY]
 ros work group remove --group GROUP-ID --member ID --occurred-at TIMESTAMP [--allow-empty]
                       [--reason TEXT] [--dry-run] [--json] [IDENTITY]
+ros work group checkpoint --group GROUP-ID --occurred-at TIMESTAMP --summary TEXT
+                      --next-action TEXT [--decision TEXT]* [--dry-run] [--json] [IDENTITY]
 ros work group create --group GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP
                       [--kind KIND] [--origin ORIGIN] [--shared-context TEXT]*
                       [--architecture-note TEXT]* [--execution-repository NAME]
@@ -428,6 +430,18 @@ an item that is not a member. Removing the last member is refused unless
 `--allow-empty` is given; the removal is then recorded as `explicitEmpty` and
 `validate` accepts the empty group. The history entry records who removed it.
 The item's lifecycle state, evidence and attribution are untouched.
+
+**`work group checkpoint`** records a group checkpoint (PRX-GRP-044) after an
+architectural or implementation milestone: the completed, active, blocked,
+remaining and abandoned members, shared decisions (`--decision`, repeatable),
+summary and next action, and the branch and commit. It requires the same
+durable-checkpoint verification as `work checkpoint` (local HEAD equals its
+upstream remote head, read from the remote itself, and no meaningful
+uncommitted change; the same rejection codes) and is refused otherwise. It
+references each member's own latest durable checkpoint by ID and commit and
+never writes, replaces or supersedes one; it records no paths and no
+execution, so no member claims another's changes (PRX-GRP-043). `work group
+show` prints the latest group checkpoint for later member executions.
 
 **`work group show`** is read-only (no lock, no write): the group's
 declaration, each member's own recorded state and planning state (from the
