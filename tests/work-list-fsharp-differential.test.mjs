@@ -37,7 +37,7 @@ const READY_ROW = {
   priority: "high",
   status: "active",
   backlogActions: [],
-  liveWorkItem: { state: "active", semanticState: "active", allowedActions: ["block", "complete"] },
+  liveWorkItem: { state: "active", semanticState: "active", allowedActions: ["abandon", "block", "complete"] },
   attachments: []
 };
 const ACTIVE_ROW = {
@@ -49,7 +49,7 @@ const ACTIVE_ROW = {
   status: "blocked",
   blockedReason: "waiting on review",
   backlogActions: [],
-  liveWorkItem: { state: "blocked", semanticState: "blocked", allowedActions: ["resume"] },
+  liveWorkItem: { state: "blocked", semanticState: "blocked", allowedActions: ["abandon", "resume"] },
   attachments: []
 };
 const CAPTURED_ROW = {

@@ -50,6 +50,7 @@ module WorkListView =
         | LiveWorkState.Active -> "active"
         | LiveWorkState.Blocked -> "blocked"
         | LiveWorkState.Complete -> "complete"
+        | LiveWorkState.Abandoned -> "abandoned"
 
     let private actionCode (action: WorkAction) =
         match action with
@@ -57,6 +58,7 @@ module WorkListView =
         | WorkAction.Block -> "block"
         | WorkAction.Resume -> "resume"
         | WorkAction.Complete -> "complete"
+        | WorkAction.Abandon -> "abandon"
 
     /// Every id present in the queue or the live context, ordinal-sorted;
     /// `backlogActions` only fires for an id known solely to the backlog

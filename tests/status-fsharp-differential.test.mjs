@@ -56,7 +56,7 @@ const GOLDEN = {
         type: "task",
         state: "active",
         semanticState: "active",
-        allowedActions: ["block", "complete"],
+        allowedActions: ["abandon", "block", "complete"],
         hasExecIds: true
       },
       {
@@ -64,7 +64,7 @@ const GOLDEN = {
         type: "task",
         state: "blocked",
         semanticState: "blocked",
-        allowedActions: ["resume"],
+        allowedActions: ["abandon", "resume"],
         hasExecIds: true
       }
     ],

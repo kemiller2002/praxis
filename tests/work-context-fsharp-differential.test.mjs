@@ -41,7 +41,7 @@ const GOLDEN = {
         state: "active",
         semanticState: "active",
         evidence: [],
-        allowedActions: ["block", "complete"],
+        allowedActions: ["abandon", "block", "complete"],
         requiredEvidenceForCompletion: ["implementation", "tests"],
         hasExecIds: true
       },
@@ -52,7 +52,7 @@ const GOLDEN = {
         semanticState: "blocked",
         evidence: [],
         blockReason: "waiting",
-        allowedActions: ["resume"],
+        allowedActions: ["abandon", "resume"],
         requiredEvidenceForCompletion: ["implementation", "tests"],
         hasExecIds: true
       }
@@ -70,7 +70,7 @@ const GOLDEN = {
         state: "active",
         semanticState: "active",
         evidence: [],
-        allowedActions: ["block", "complete"],
+        allowedActions: ["abandon", "block", "complete"],
         requiredEvidenceForCompletion: ["implementation", "tests"],
         hasExecIds: true
       }

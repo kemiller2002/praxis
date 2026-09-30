@@ -222,6 +222,7 @@ module CheckpointRejection =
                 | LiveWorkState.Active -> "active"
                 | LiveWorkState.Blocked -> "blocked"
                 | LiveWorkState.Complete -> "complete"
+                | LiveWorkState.Abandoned -> "abandoned"
 
             $"work item '{id}' is {code}; only active work can be checkpointed"
         | CheckpointRejection.NoActiveExecution id -> $"no active execution of '{id}' belongs to this process's identity"
@@ -888,7 +889,7 @@ module CheckpointAssessment =
               CurrentRecoverability = Some recoverability
               Freshness = freshnessOf local tree recoverability
               Warnings =
-                if itemState = LiveWorkState.Complete then
+                if itemState = LiveWorkState.Complete || itemState = LiveWorkState.Abandoned then
                     []
                 else
                     warningsFor workItemId $"{git.Remote.Name}/{git.RemoteBranch}" local tree recoverability }

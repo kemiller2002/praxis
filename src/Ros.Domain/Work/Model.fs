@@ -6,6 +6,9 @@ type LiveWorkState =
     | Active
     | Blocked
     | Complete
+    /// Terminal: the owner cancelled the work. Nothing was delivered, so
+    /// nothing is claimed.
+    | Abandoned
 
 [<RequireQualifiedAccess>]
 type WorkAction =
@@ -13,6 +16,7 @@ type WorkAction =
     | Block
     | Resume
     | Complete
+    | Abandon
 
 type TransitionRequest =
     { State: LiveWorkState
@@ -25,6 +29,7 @@ type TransitionRequest =
 type TransitionRejection =
     | IllegalTransition of state: LiveWorkState * action: WorkAction
     | BlockReasonRequired
+    | AbandonReasonRequired
     | MissingEvidence of string list
 
 [<RequireQualifiedAccess>]
@@ -36,10 +41,11 @@ type TransitionDecision =
 module WorkTransition =
     let allowedActions state =
         match state with
-        | LiveWorkState.Ready -> [ WorkAction.Begin; WorkAction.Block ]
-        | LiveWorkState.Active -> [ WorkAction.Block; WorkAction.Complete ]
-        | LiveWorkState.Blocked -> [ WorkAction.Resume ]
-        | LiveWorkState.Complete -> []
+        | LiveWorkState.Ready -> [ WorkAction.Begin; WorkAction.Block; WorkAction.Abandon ]
+        | LiveWorkState.Active -> [ WorkAction.Block; WorkAction.Complete; WorkAction.Abandon ]
+        | LiveWorkState.Blocked -> [ WorkAction.Resume; WorkAction.Abandon ]
+        | LiveWorkState.Complete
+        | LiveWorkState.Abandoned -> []
 
     let private target state action =
         match state, action with
@@ -48,6 +54,7 @@ module WorkTransition =
         | LiveWorkState.Active, WorkAction.Block -> Some LiveWorkState.Blocked
         | LiveWorkState.Active, WorkAction.Complete -> Some LiveWorkState.Complete
         | LiveWorkState.Blocked, WorkAction.Resume -> Some LiveWorkState.Active
+        | (LiveWorkState.Ready | LiveWorkState.Active | LiveWorkState.Blocked), WorkAction.Abandon -> Some LiveWorkState.Abandoned
         | _ -> None
 
     let decide request =
@@ -57,6 +64,9 @@ module WorkTransition =
             |> TransitionDecision.Rejected
         | Some _ when request.Action = WorkAction.Block && request.BlockReason |> Option.forall System.String.IsNullOrEmpty ->
             TransitionRejection.BlockReasonRequired |> TransitionDecision.Rejected
+        // The reason travels in BlockReason: it is the one free-text field a transition carries.
+        | Some _ when request.Action = WorkAction.Abandon && request.BlockReason |> Option.forall System.String.IsNullOrWhiteSpace ->
+            TransitionRejection.AbandonReasonRequired |> TransitionDecision.Rejected
         | Some _ when request.Action = WorkAction.Complete ->
             let missing = Set.difference request.RequiredEvidence request.ProvidedEvidence |> Set.toList
 
