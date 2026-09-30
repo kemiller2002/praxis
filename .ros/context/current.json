@@ -4778,18 +4778,48 @@
     {
       "id": "PRAXIS-GROUP-01",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T11:53:14.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T12:04:19.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T115315178Z-82e913b1"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "a0039abc6d6bddd3c7978275",
+        "recordedAt": "2026-09-30T12:04:08.000Z",
+        "executionId": "EXE-20260930T115315178Z-82e913b1",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-control",
+        "commit": "51086ac0ad9216cc08f0508a468d763832d2c8b0",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-control",
+        "remoteCommit": "51086ac0ad9216cc08f0508a468d763832d2c8b0",
+        "summary": "work group create implemented (domain, store, planner merge, CLI with --dry-run/--json, validate findings), tests 803/803 pass, docs updated",
+        "nextAction": "Complete PRAXIS-GROUP-01; do not merge until EX-ROS-2026-A021 is evaluated and phase two accepted",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T12:04:19.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T11:53:14.000Z",
+  "updatedAt": "2026-09-30T12:04:19.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
