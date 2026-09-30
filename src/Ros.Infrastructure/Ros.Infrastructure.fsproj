@@ -10,6 +10,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Git/GitRepository.fs" />
+    <Compile Include="Integration/FileMergeReadinessRepository.fs" />
     <Compile Include="Work/WorkStateTransaction.fs" />
     <Compile Include="Work/BacklogStateTransaction.fs" />
     <Compile Include="Work/FileEvidenceRepository.fs" />
