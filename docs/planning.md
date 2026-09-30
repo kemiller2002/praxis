@@ -272,6 +272,11 @@ concurrently under the `accept-elevated` policy.
     "executionRepositories": { "PRAXIS-REMOTE-12": "conditor" } } }
 ```
 
+**Stored groups.** `praxis work group create` records a declaration in
+`.ros/work/groups.json` with the same fields; the planner merges stored groups
+into `grouping.groups` (a configured group with the same ID wins for that
+run). See [`cli.md`](cli.md) ("`work group`").
+
 An item whose description says "External repository" and that has no
 `executionRepositories` entry is never grouped into this checkout.
 
@@ -352,7 +357,7 @@ No external dependency was added (PRX-PLAN-004).
 | GRP-050..052 | Met for dependencies and cycles (dependency test) and repositories (tests 5, 5b); cross-repository orchestration is future work. |
 | GRP-060..063 | Met; context cost is counted, not priced (unmeasured). |
 | GRP-070..072 | Met. |
-| GRP-073 | Declarations from configuration; mutation commands captured as `PRAXIS-GROUP-01..05`, deferred. |
+| GRP-073 | Declarations from configuration and from Praxis state (`work group create`, `PRAXIS-GROUP-01`); the remaining mutation commands are `PRAXIS-GROUP-02..05`. Phase two is unmerged until `EX-ROS-2026-A021` is evaluated. |
 | GRP-074 | Size and context-pressure splits and architecture merges met (tests 18, 19, merge test); splitting by independent chain or external blockage is not implemented. |
 | GRP-075 | Met (test 15). |
 | GRP-080..088 | Baseline, cohort, protocol and predictions frozen (`EV-ROS-2026-A059`, `EX-ROS-2026-A021`); the arms have not run. |

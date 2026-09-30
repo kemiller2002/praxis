@@ -379,6 +379,39 @@ telemetry" in [`development-telemetry.md`](development-telemetry.md).
 
 See "Durable checkpoints and continuity" in [`work-protocol.md`](work-protocol.md).
 
+### `work group`
+
+```
+ros work group create --group GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP
+                      [--kind KIND] [--origin ORIGIN] [--shared-context TEXT]*
+                      [--architecture-note TEXT]* [--execution-repository NAME]
+                      [--cross-repository] [--config FILE] [--reason TEXT]
+                      [--dry-run] [--json] [IDENTITY]
+```
+
+Durable execution groups (PRX-GRP-073, phase two; `PRAXIS-GROUP-01..05`),
+recorded in `.ros/work/groups.json`. Group commands write that file and
+nothing else: membership never changes a member's lifecycle state, evidence,
+attribution, telemetry or checkpoints. `plan` merges stored groups into
+`grouping.groups`, so a stored group is read exactly as the same declaration
+in planner configuration; a group that `--config` also declares keeps its
+configured form. `validate` checks stored groups (readable records, unique
+IDs, recorded members, no repeated member, a history that begins with the
+creation).
+
+**`work group create`** declares a group. Group IDs are
+`GROUP-<AREA>-<SEQUENCE>` in upper case. Every member must be a recorded work
+item (queue or live context) that is not `complete` or `abandoned`, named
+once, and must execute in the group's repository (`--execution-repository`,
+default this repository) unless `--cross-repository` is given; an item's
+repository is its `grouping.executionRepositories` entry in `--config`, else
+this repository. `--kind` and `--origin` take the planner's codes (default
+origin `human-declared`). The creation is recorded with the resolved actor,
+`--occurred-at` and `--reason`. Every problem is reported together and nothing
+is written: invalid arguments exit `2`, refusals (unknown, terminal or
+foreign-repository member, duplicate group) exit `1`. `--dry-run` shows the
+group without writing it.
+
 ### `remote execute`
 
 ```

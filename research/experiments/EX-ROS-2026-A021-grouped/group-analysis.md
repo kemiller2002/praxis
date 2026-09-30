@@ -253,3 +253,15 @@ complete and abandoned items and one live active and one blocked item.
 - D7: command surface `work group create|show|add|remove|checkpoint`, group
   ID via `--group` (positional for `show`, like `work show ID`), `--json`
   everywhere, `--dry-run` on mutations, exit codes 0/1/2.
+
+## Deviation recorded after the analysis commit
+
+Recorded, not corrected: the protocol's mandated path for this file is a
+`.md` file under `research/experiments/`, which the artifact validator loads
+as an experiment record (`EX-ID--slug.md` with front matter). From the
+analysis commit on, `./ros validate` and `./ros registry build` on this
+branch report exactly one finding for this file. The file stays at the
+mandated path because the explicit instruction outranks canonical
+governance; the conflict is captured as a backlog item for the owner to
+resolve before evaluation. Every later validation on this branch is checked
+for findings other than this one.

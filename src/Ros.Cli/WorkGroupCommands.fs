@@ -1,0 +1,277 @@
+namespace Ros.Cli
+
+open System
+open System.Globalization
+open System.IO
+open System.Text.Json.Nodes
+open Ros.Contracts.Planning
+open Ros.Contracts.Work
+open Ros.Domain.Planning
+open Ros.Domain.Provenance
+open Ros.Domain.Work
+open Ros.Infrastructure.Planning
+open Ros.Infrastructure.Work
+
+/// `work group create|show|add|remove|checkpoint` (PRX-GRP-073, phase two):
+/// durable, human-declared execution groups recorded in
+/// `.ros/work/groups.json`. This module parses arguments, gathers repository
+/// facts through the file adapters, and renders; every decision is made by
+/// `Ros.Domain.Work.WorkGroups`.
+[<RequireQualifiedAccess>]
+module WorkGroupCommands =
+    let usage =
+        "work group create --group GROUP-ID --member ID [--member ID ...] --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--shared-context TEXT ...] [--architecture-note TEXT ...] [--execution-repository NAME] [--cross-repository] [--config FILE] [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
+
+    // ---- argument parsing (shared by the family) ----
+
+    let private identityFlags =
+        [ "--actor-kind"; "--agent"; "--actor"; "--provider"; "--model"; "--model-version"; "--runtime"; "--runtime-version"; "--session"; "--conversation"; "--run"; "--subagent" ]
+
+    /// Parsed arguments: repeatable value flags, boolean switches, and
+    /// everything that was not understood.
+    type Arguments =
+        { Values: Map<string, string list>
+          Switches: Set<string>
+          Positional: string list
+          Unexpected: string list }
+
+    let parse (valueFlags: string list) (switches: string list) (arguments: string list) : Arguments =
+        let values = Set.ofList (valueFlags @ identityFlags)
+        let flags = Set.ofList ("--json" :: switches)
+
+        let rec walk (remaining: string list) (parsed: Arguments) =
+            match remaining with
+            | [] -> { parsed with Values = parsed.Values |> Map.map (fun _ values -> List.rev values); Positional = List.rev parsed.Positional; Unexpected = List.rev parsed.Unexpected }
+            | flag :: value :: rest when values.Contains flag && not (value.StartsWith("--", StringComparison.Ordinal)) ->
+                let existing = parsed.Values |> Map.tryFind flag |> Option.defaultValue []
+                walk rest { parsed with Values = parsed.Values |> Map.add flag (value :: existing) }
+            | flag :: rest when flags.Contains flag -> walk rest { parsed with Switches = parsed.Switches.Add flag }
+            | token :: rest when not (token.StartsWith("--", StringComparison.Ordinal)) -> walk rest { parsed with Positional = token :: parsed.Positional }
+            | token :: rest -> walk rest { parsed with Unexpected = token :: parsed.Unexpected }
+
+        walk arguments { Values = Map.empty; Switches = Set.empty; Positional = []; Unexpected = [] }
+
+    let private all (arguments: Arguments) (flag: string) = arguments.Values |> Map.tryFind flag |> Option.defaultValue []
+
+    let private single (arguments: Arguments) (flag: string) =
+        match all arguments flag with
+        | [ value ] -> Some value
+        | _ -> None
+
+    let private isTimestamp (value: string) =
+        DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind) |> fst
+
+    let private commonErrors (command: string) (arguments: Arguments) (singles: string list) =
+        [ yield! arguments.Unexpected |> List.map (fun token -> $"unexpected argument '{token}'")
+          for flag in singles do
+              if (all arguments flag).Length > 1 then
+                  yield $"{command} accepts {flag} once" ]
+
+    let private occurredAtErrors (command: string) (arguments: Arguments) =
+        match all arguments "--occurred-at" with
+        | [ value ] when isTimestamp value -> []
+        | [ value ] -> [ $"--occurred-at '{value}' is not a timestamp" ]
+        | _ -> [ $"{command} requires exactly one --occurred-at TIMESTAMP (the real current time)" ]
+
+    let private groupErrors (command: string) (arguments: Arguments) =
+        match all arguments "--group" with
+        | [ _ ] -> []
+        | [] -> [ $"{command} requires --group GROUP-ID" ]
+        | _ -> [ $"{command} names exactly one group; pass --group once" ]
+
+    // ---- repository facts ----
+
+    let private resolve (root: string) (path: string) = if Path.IsPathRooted path then path else Path.GetFullPath(Path.Combine(root, path))
+
+    /// Where each item executes: `grouping.executionRepositories` in the
+    /// supplied planner configuration, else this repository -- the rule
+    /// `plan groups` applies (PRX-GRP-051).
+    let private repositoryOf (root: string) (configurationFile: string option) : Result<string * (string -> string), string> =
+        let repository = (FilePlanningRepository.readRepository root).Name
+
+        let configured =
+            match configurationFile |> Option.map (resolve root) with
+            | None -> Ok PlannerConfiguration.defaults
+            | Some file when not (File.Exists file) -> Error $"{file} does not exist"
+            | Some file -> PlanningJson.parseConfiguration (File.ReadAllText file)
+
+        configured
+        |> Result.map (fun configuration ->
+            let mapped = configuration.Grouping.ExecutionRepositories |> Map.ofList
+            repository, (fun id -> mapped |> Map.tryFind id |> Option.defaultValue repository))
+
+    /// The standing of every recorded item, from the queue and live context.
+    let standing (root: string) : Result<string -> MemberStanding, string> =
+        FilePlanningRepository.readQueue root
+        |> Result.bind (fun queue -> FilePlanningRepository.readLive root |> Result.map (MemberStanding.lookup queue))
+
+    let private contextFor (root: string) (configurationFile: string option) (groups: StoredWorkGroup list) : Result<string * GroupContext, string> =
+        standing root
+        |> Result.bind (fun standing ->
+            repositoryOf root configurationFile
+            |> Result.map (fun (repository, locate) ->
+                repository,
+                { Groups = groups
+                  Standing = standing
+                  RepositoryOf = locate }))
+
+    // ---- rendering (shared by the family) ----
+
+    let private envelope (command: string) (status: string) (fields: (string * JsonNode) list) =
+        WorkGroupJson.record ([ "command", WorkGroupJson.text command; "schemaVersion", WorkGroupJson.integer 1; "status", WorkGroupJson.text status ] @ fields)
+
+    let private printJson (node: JsonObject) = printf "%s" (WorkGroupJson.render node)
+
+    let private reportArgumentErrors (command: string) (commandUsage: string) (errors: string list) =
+        errors |> List.iter (eprintfn "ERROR %s")
+        eprintfn "Usage: ros %s" commandUsage
+        2
+
+    let private reportFailure (asJson: bool) (command: string) (message: string) =
+        if asJson then
+            printJson (envelope command "failed" [ "failure", WorkGroupJson.record [ "code", WorkGroupJson.text "persistence-failed"; "message", WorkGroupJson.text message ] ])
+        else
+            eprintfn "ERROR [persistence-failed] %s" message
+
+        1
+
+    let private reportRejections (asJson: bool) (command: string) (groupId: string) (rejections: GroupRejection list) =
+        if asJson then
+            printJson (envelope command "rejected" [ "groupId", WorkGroupJson.text groupId; "rejections", rejections |> List.map WorkGroupJson.rejectionNode |> WorkGroupJson.array ])
+        else
+            for rejection in rejections do
+                eprintfn "ERROR [%s] %s" (GroupRejection.code rejection) (GroupRejection.message rejection)
+
+            eprintfn "%s refused; nothing was recorded" command
+
+        if rejections |> List.forall GroupRejection.isArgumentError then 2 else 1
+
+    let private stateNotice = $"Praxis state changed in {FileWorkGroupRepository.relativePath}; commit and push it. No member's lifecycle, evidence or attribution was changed."
+
+    /// Runs one mutation of the store: facts, decision, write (unless
+    /// `--dry-run`), render. Every mutating verb goes through here.
+    let private mutate
+        (root: string)
+        (command: string)
+        (arguments: Arguments)
+        (groupId: string)
+        (decide: GroupContext -> Result<StoredWorkGroup, GroupRejection list>)
+        (describe: StoredWorkGroup -> string list)
+        =
+        let asJson = arguments.Switches.Contains "--json"
+        let dryRun = arguments.Switches.Contains "--dry-run"
+
+        let outcome =
+            FileWorkGroupRepository.transact root dryRun (fun groups ->
+                match contextFor root (single arguments "--config") groups with
+                | Error message -> Error(Choice1Of2 message)
+                | Ok(_, context) ->
+                    decide context
+                    |> Result.mapError Choice2Of2
+                    |> Result.map (fun group -> WorkGroups.upsert groups group, group))
+
+        match outcome with
+        | Error message
+        | Ok(Error(Choice1Of2 message)) -> reportFailure asJson command message
+        | Ok(Error(Choice2Of2 rejections)) -> reportRejections asJson command groupId rejections
+        | Ok(Ok group) ->
+            let status = if dryRun then "dry-run" else "recorded"
+
+            if asJson then
+                printJson (envelope command status [ "dryRun", WorkGroupJson.boolean dryRun; "group", WorkGroupJson.groupNode group ])
+            else
+                describe group |> List.iter (printfn "%s")
+
+                if dryRun then printfn "dry run: nothing was written"
+                else printfn "%s" stateNotice
+
+            0
+
+    // ---- work group create ----
+
+    let private createValues =
+        [ "--group"; "--member"; "--occurred-at"; "--kind"; "--origin"; "--shared-context"; "--architecture-note"; "--execution-repository"; "--config"; "--reason" ]
+
+    let create (root: string) (rawArguments: string list) (actor: Actor) =
+        let command = "work group create"
+        let arguments = parse createValues [ "--cross-repository"; "--dry-run" ] rawArguments
+
+        let kind = single arguments "--kind" |> Option.map (fun value -> value, GroupKind.tryParse value)
+        let origin = single arguments "--origin" |> Option.map (fun value -> value, GroupOrigin.tryParse value)
+
+        let errors =
+            [ yield! commonErrors command arguments [ "--kind"; "--origin"; "--execution-repository"; "--config"; "--reason" ]
+              yield! arguments.Positional |> List.map (fun token -> $"unexpected argument '{token}'")
+              yield! groupErrors command arguments
+              yield! occurredAtErrors command arguments
+              if (all arguments "--member").IsEmpty then
+                  yield $"{command} requires at least one --member ID"
+              match kind with
+              | Some(value, None) -> yield $"--kind '{value}' is not a group kind (shared-area, shared-architecture, dependency-chain, shared-files, shared-data-model, shared-api-surface, shared-migration, shared-test-surface, context-affinity, custom:NAME)"
+              | _ -> ()
+              match origin with
+              | Some(value, None) -> yield $"--origin '{value}' is not a group origin (human-declared, architecture-declared, dependency-derived, planner-recommended)"
+              | _ -> () ]
+
+        match errors with
+        | _ :: _ -> reportArgumentErrors command usage errors
+        | [] ->
+            let groupId = (single arguments "--group").Value
+
+            let decide (context: GroupContext) =
+                WorkGroups.create
+                    context
+                    { GroupId = groupId
+                      Members = all arguments "--member"
+                      Kind = kind |> Option.bind snd
+                      Origin = origin |> Option.bind snd |> Option.defaultValue GroupOrigin.HumanDeclared
+                      SharedContext = all arguments "--shared-context"
+                      ExecutionRepository =
+                        single arguments "--execution-repository"
+                        |> Option.defaultValue (FilePlanningRepository.readRepository root).Name
+                      CrossRepository = arguments.Switches.Contains "--cross-repository"
+                      ArchitectureNotes = all arguments "--architecture-note"
+                      OccurredAt = (single arguments "--occurred-at").Value
+                      Actor = actor
+                      Reason = single arguments "--reason" }
+
+            let describe (group: StoredWorkGroup) =
+                let declaration = group.Declaration
+                let members = String.concat ", " declaration.Members
+                let repository = declaration.ExecutionRepository |> Option.defaultValue "unknown"
+                let scope = if declaration.CrossRepository then " (cross-repository)" else ""
+
+                [ $"work group {declaration.Id} declared with {declaration.Members.Length} member(s): {members}"
+                  $"  executes in {repository}{scope}; origin {GroupOrigin.code declaration.Origin}"
+                  $"  recorded by {ActorKind.code group.CreatedBy.Kind}:{group.CreatedBy.Id} at {group.CreatedAt}" ]
+
+            mutate root command arguments groupId decide describe
+
+    // ---- validate ----
+
+    /// `validate`'s findings for stored groups: an unreadable store, a
+    /// malformed record, or a stored group that breaks a group invariant.
+    let validationFindings (root: string) : (string * string * string) list =
+        let path = FileWorkGroupRepository.relativePath
+
+        match FileWorkGroupRepository.parse root with
+        | None -> []
+        | Some(Error message) -> [ path, "groups", message ]
+        | Some(Ok read) ->
+            let malformed =
+                read.Groups
+                |> List.collect (fun (index, id, result) ->
+                    match result with
+                    | Ok _ -> []
+                    | Error problems ->
+                        let name = id |> Option.defaultValue $"groups[{index}]"
+                        problems |> List.map (fun problem -> path, name, problem))
+
+            let groups = read.Groups |> List.choose (fun (_, _, result) -> match result with Ok group -> Some group | Error _ -> None)
+
+            let invariants =
+                match contextFor root None groups with
+                | Error message -> [ path, "groups", message ]
+                | Ok(_, context) -> WorkGroups.findings context |> List.map (fun (id, field, message) -> path, (if id = "" then field else $"{id}.{field}"), message)
+
+            malformed @ invariants
