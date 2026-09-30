@@ -4824,11 +4824,57 @@
       },
       "completedAt": "2026-09-30T15:42:20.000Z",
       "conclusion": "work group create records a declared group in .ros/work/groups.json; the planner reads it as grouping.groups; validate checks stored groups."
+    },
+    {
+      "id": "PRAXIS-GROUP-02",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T15:48:25.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T154249782Z-495f67e6"
+      ],
+      "latestCheckpoint": {
+        "id": "e661f25d70838ecfb760b9b3",
+        "recordedAt": "2026-09-30T15:48:23.000Z",
+        "executionId": "EXE-20260930T154249782Z-495f67e6",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-r2-grouped",
+        "commit": "3ae913ef81fdafc0353621177898ee048ba0a3de",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-r2-grouped",
+        "remoteCommit": "3ae913ef81fdafc0353621177898ee048ba0a3de",
+        "summary": "Milestone: work group show (3ae913e). Completed members: PRAXIS-GROUP-01. Remaining: 02 (completion), 03, 04, 05. Shared decisions: D7 member status derived from Grouping.recommend (no second status model); unknown-group rejection code added for later verbs. 806/806 F# tests pass. Branch experiment/a021-r2-grouped.",
+        "nextAction": "Complete PRAXIS-GROUP-02; start PRAXIS-GROUP-03 (work group add reusing WorkGroups.admit)",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T15:48:25.000Z",
+      "conclusion": "work group show prints a declared group's members with their own recorded and planning states, partial progress, blocked members and who they gate; read-only; unknown group exits 1."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T15:42:20.000Z",
+  "updatedAt": "2026-09-30T15:48:25.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
