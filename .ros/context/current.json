@@ -4778,10 +4778,19 @@
     {
       "id": "PRAXIS-A021-EVAL-KIT",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T14:42:06.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/experiments/EX-ROS-2026-A021-evaluation-kit/prepare-blind-bundle.sh"
+        },
+        {
+          "type": "tests",
+          "path": "research/evidence/EV-ROS-2026-A060--a021-blind-evaluation-kit.md"
+        }
+      ],
+      "updatedAt": "2026-09-30T14:42:50.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T144206630Z-1e149d71"
       ],
@@ -4804,12 +4813,13 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-09-30T14:42:50.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T14:42:06.000Z",
+  "updatedAt": "2026-09-30T14:42:50.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
