@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 65,
+  "nextSeq": 66,
   "items": [
     {
       "id": "WI-0001",
@@ -3207,10 +3207,10 @@
         "cli"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T11:00:34.255Z",
-      "updatedAt": "2026-09-30T11:34:17.000Z",
+      "updatedAt": "2026-09-30T16:42:12.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3283,6 +3283,30 @@
       "attachments": [],
       "createdAt": "2026-09-30T09:17:29.000Z",
       "updatedAt": "2026-09-30T09:40:03.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0065",
+      "title": "Checkpoint ownership: a commit reachable from another item's checkpoint but not in its claimed paths is attributed to a later item",
+      "description": "Observed on experiment/a021-control: commit 881a34d (PRAXIS-GROUP-04: work group remove) was made before PRAXIS-GROUP-04's work start, so that item's checkpoint (b2fd402) claimed only its metrics file. CommitOwnership.isForeign treats a covered commit as foreign only when its meaningful paths are a subset of the covering item's claimed paths, so PRAXIS-GROUP-05's checkpoint e438acd3f6864e3e3a135175 (after merging the branch) attributed 881a34d's paths to PRAXIS-GROUP-05: docs/planning.md, src/Ros.Cli/WorkGroupCommands.fs, src/Ros.Contracts/Planning/WorkGroupMembershipJson.fs, src/Ros.Domain/Planning/GroupMembership.fs, src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs, src/Ros.Infrastructure/Planning/GroupMembershipStore.fs, tests/Ros.Tests/WorkGroupTests.fs. PRAXIS-GROUP-05 changed none of them. work reconcile cannot repair it because attribution is path-level and those paths are already attributed by other checkpoints. Acceptance: a commit contained in another item's checkpoint is never attributed to a later item (or is reported as unattributed), with a regression test; decide how the existing over-claim is annotated without rewriting history (PRAXIS-CONT-12, PRX-GRP-043).",
+      "tags": [
+        "checkpoint",
+        "attribution"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-30T16:41:57.258Z",
+      "updatedAt": "2026-09-30T16:42:05.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

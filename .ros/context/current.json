@@ -4943,11 +4943,57 @@
         }
       },
       "completedAt": "2026-09-30T16:01:14.000Z"
+    },
+    {
+      "id": "PRAXIS-GROUP-05",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/GroupCheckpoint.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/GroupCheckpointCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/GroupCheckpointTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T16:42:12.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T161446714Z-da9d4250"
+      ],
+      "latestCheckpoint": {
+        "id": "e438acd3f6864e3e3a135175",
+        "recordedAt": "2026-09-30T16:40:33.000Z",
+        "executionId": "EXE-20260930T161446714Z-da9d4250",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-control",
+        "commit": "2bb713f36a593fa7936e98c6803b990cce81a870",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-control",
+        "remoteCommit": "2bb713f36a593fa7936e98c6803b990cce81a870",
+        "summary": "work group checkpoint and show implemented over declared groups; shared durability verification with work checkpoint; references members' own checkpoints, claims no paths; validate re-checks stored group checkpoints; 829 F# tests pass",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T16:42:12.000Z",
+      "conclusion": "work group checkpoint records durable group checkpoints over declared groups with the same durability verification as work checkpoint, referencing members' own checkpoints and claiming no paths. Caveat: this item's checkpoint e438acd3 also attributed 7 paths of PRAXIS-GROUP-04's commit 881a34d that this item never changed (ownership defect, recorded as WI-0065)."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T16:01:14.000Z",
+  "updatedAt": "2026-09-30T16:42:12.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

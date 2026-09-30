@@ -58,7 +58,7 @@
 | PRAXIS-GROUP-02 | praxis work group show: a declared group with member states and progress | complete | work-group, cli | low |
 | PRAXIS-GROUP-03 | praxis work group add: add a member to a declared group | complete | work-group, cli | low |
 | PRAXIS-GROUP-04 | praxis work group remove: remove a member from a declared group | complete | work-group, cli | low |
-| PRAXIS-GROUP-05 | praxis work group checkpoint: a group checkpoint over members' own checkpoints | ready | work-group, cli | low |
+| PRAXIS-GROUP-05 | praxis work group checkpoint: a group checkpoint over members' own checkpoints | complete | work-group, cli | low |
 | PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | captured | rename, gh-90 | low |
 | PRAXIS-PLAN-01 | Deterministic shadow planner: praxis plan analyze/simulate/compare/explain (PRX-PLAN-001..182) | complete | planning, architecture, cli | high |
 | PRAXIS-PLAN-02 | Accept planner decision DF-ROS-2026-A046 on the owner's approval | complete | planning, governance | medium |
@@ -195,6 +195,7 @@
 | WI-0062 | Triage SDE 1.3.0 structural review findings | complete | sde, structural-review | high |
 | WI-0063 | Implement ROS next-pass Ordo observation and structured handoff (#63) | complete | ordo,next-pass | high |
 | WI-0064 | Evidence-based work groups for the advisory planner (plan groups/explain-group) and the frozen grouping A/B experiment protocol | complete | planning, architecture, cli | high |
+| WI-0065 | Checkpoint ownership: a commit reachable from another item's checkpoint but not in its claimed paths is attributed to a later item | captured | checkpoint, attribution | medium |
 | WI-0072 | Port provenance follow-ups onto the merged model: collaboration aggregates in provenance audit, producedBy on ordo handoffs, installer event actor | complete | provenance | medium |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |
