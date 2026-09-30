@@ -181,7 +181,37 @@
         "Bash(./ros work:*)",
         "Bash(./ros:*)"
       ],
-      "deviation": "the owner approved `./ros work` commands in the orchestrator session at ~15:53Z; approval carried into attempt 3 via extra_allowed_tools and one factual harness line. Control-01..03 and the grouped arm did not need this."
+      "deviation": "the owner approved `./ros work` commands in the orchestrator session at ~15:53Z; approval carried into attempt 3 via extra_allowed_tools and one factual harness line. Control-01..03 and the grouped arm did not need this.",
+      "finishedAt": "2026-09-30T16:01:32Z",
+      "status": "completed",
+      "headAfter": "8c175d5",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 0.7946544,
+        "input_tokens": 32,
+        "output_tokens": 4732,
+        "cache_read_tokens": 1137632,
+        "cache_write_tokens": 59045,
+        "context_used_tokens": 86260,
+        "last_served_model": "claude-opus-5-5"
+      },
+      "metricsNote": "metrics/control-04.json covers attempt 3 only (bookkeeping); the implementation happened in attempt 2. Item 04's control cost is the sum of attempts 1-3."
+    },
+    {
+      "label": "control-05",
+      "arm": "control",
+      "items": [
+        "PRAXIS-GROUP-05"
+      ],
+      "session": "session_01TwUBFD2ZouxsbsYcrFrcrJ",
+      "configuredModel": "claude-opus-5-5",
+      "createdAt": "2026-09-30T16:12:29Z",
+      "startCommit": "8c175d5",
+      "prompt": "prompts/control-05.txt plus harness line 5 (owner approved ./ros work)",
+      "extraAllowedTools": [
+        "Bash(./ros work:*)",
+        "Bash(./ros:*)"
+      ]
     }
   ],
   "deviations": [
