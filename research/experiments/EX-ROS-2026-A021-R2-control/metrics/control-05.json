@@ -1,0 +1,170 @@
+{
+  "schema": "ex-ros-2026-a021.session-metrics/1",
+  "experiment": "EX-ROS-2026-A021-R2",
+  "arm": "control",
+  "label": "control-05",
+  "workItem": "PRAXIS-GROUP-05",
+  "sessionId": "session_01CMeWM1tj4PBwoRA9tJYiSc",
+  "transcriptSessionId": "50e6a549-8ff4-52ce-a491-9f2092ad78a1",
+  "praxisExecution": "EXE-20260930T172001795Z-4f4f37ea",
+  "model": {
+    "configured": "claude-opus-5-5",
+    "sessionContextModel": "claude-opus-5-5",
+    "lastServedModel": "claude-opus-5-5",
+    "transcriptModels": [
+      "claude-opus-5-5"
+    ],
+    "source": "get_session (session_context.model, external_metadata.last_served_model) and transcript"
+  },
+  "sessionCreatedAt": "2026-09-30T17:16:19.406668Z",
+  "startedAt": "2026-09-30T17:16:27.238000+00:00",
+  "endedAt": "2026-09-30T17:35:31.546000+00:00",
+  "wallMs": 1144308,
+  "timingScope": "transcript start to the moment this summary was generated; the metrics commit, work checkpoint/complete, registry build, validate and the final Praxis-state commit happen after and are not included",
+  "msToFirstProductionCodeMutation": 446670,
+  "msToFirstProductionCodeMutationNote": "first write to src/Ros.Domain/Work/Checkpoint.fs at 2026-09-30T17:23:53.908Z (verified in transcript)",
+  "modelRequests": 74,
+  "tokens": {
+    "input": 148,
+    "output": 50666,
+    "cacheRead": 10950794,
+    "cacheCreation": 165127
+  },
+  "tokensScope": "main session transcript only; no subagents were used",
+  "costUsd": "unknown",
+  "toolCalls": {
+    "Bash": 71,
+    "ToolSearch": 1,
+    "Write": 3,
+    "mcp__bf7c680d-5fdc-5ef4-b4a0-abadb619bf0a__get_session": 1
+  },
+  "toolCallsTotal": 76,
+  "toolErrors": {
+    "value": 3,
+    "detail": [
+      "scripts/install-toolchain.sh: native Praxis installed but the Ordo step failed (403), exit 1",
+      "dotnet-install.sh download blocked by egress proxy (403)",
+      "apt-get install dotnet-sdk-10.0 failed before apt-get update (404); succeeded after update (10.0.112)"
+    ],
+    "note": "summarizer count; detail lists observed command failures. Build failures are listed under builds"
+  },
+  "fileReads": 48,
+  "distinctFilesRead": 30,
+  "repeatedReads": {
+    "/tmp/claude-0/-home-user-praxis/50e6a549-8ff4-52ce-a491-9f2092ad78a1/scratchpad/tests.log": 2,
+    "AGENTS.md": 2,
+    "docs/planning.md": 5,
+    "research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-04.json": 2,
+    "src/Ros.Application/Work/Checkpoint.fs": 2,
+    "src/Ros.Cli/CheckpointCommands.fs": 2,
+    "src/Ros.Contracts/Planning/PlanningJson.fs": 3,
+    "src/Ros.Domain/Work/Checkpoint.fs": 2,
+    "src/Ros.Infrastructure/Work/FileCheckpointRepository.fs": 2,
+    "tests/Ros.Tests/CheckpointCliTests.fs": 3,
+    "tests/Ros.Tests/Program.fs": 2,
+    "tests/Ros.Tests/TestFramework.fs": 2,
+    "tests/Ros.Tests/WorkGroupTests.fs": 2
+  },
+  "governanceReads": {
+    "AGENTS.md": 2,
+    "docs/cli.md": 1,
+    "docs/planning.md": 5
+  },
+  "governanceReadsNote": "requirements/PLANNING-WORK-GROUPS.md was read via grep (counted as a search, not a read)",
+  "searches": 49,
+  "fileWrites": 19,
+  "distinctFilesEdited": {
+    "summarizer": 3,
+    "fromGit": 15,
+    "note": "the summarizer counts only Edit/Write tool paths; most edits were python/sed via Bash. fromGit counts files in 2d55157 (src 10, tests 3, docs 2)"
+  },
+  "builds": {
+    "value": 6,
+    "summarizerValue": 8,
+    "detail": "1 failed npm run build:fsharp (NU1605 FSharp.Core downgrade with Ubuntu SDK 10.0.112); 5 dotnet build with -p:FSharpCoreImplicitPackageVersion=10.1.400: 4 succeeded, 1 failed (FS0249 duplicate type name GroupProgress, renamed). Summarizer also counts greps over build logs"
+  },
+  "testRuns": {
+    "value": 3,
+    "summarizerValue": 2,
+    "detail": "Ros.Tests 839 passed / 0 failed (11 new); node --test 104 passed / 0 failed; python unittest 7 passed"
+  },
+  "failedTests": 0,
+  "retries": 1,
+  "retriesNote": "apt install retried after apt-get update",
+  "validationFailures": {
+    "value": 0,
+    "detail": "./ros validate passed before the implementation commit; final validate reported in the completion commit"
+  },
+  "contextCompactions": 0,
+  "commits": {
+    "beforeThisFile": 2,
+    "detail": [
+      "PRAXIS-GROUP-05: start work item",
+      "2d55157 PRAXIS-GROUP-05: work group checkpoint"
+    ],
+    "note": "this metrics commit and the checkpoint/completion commit follow"
+  },
+  "infrastructure": [
+    "No .NET in the container; scripts/install-toolchain.sh installs only native Praxis 3.6.0 (Ordo step 403); Microsoft download host denied by egress proxy; installed dotnet-sdk-10.0 10.0.112 from Ubuntu apt",
+    "npm run build:fsharp fails with that SDK (NU1605); built with dotnet build ... -p:FSharpCoreImplicitPackageVersion=10.1.400, no repository change",
+    "Local branch started at 8b4ffa3; PRAXIS-GROUP-01..04 were on the remote branch and were fast-forwarded in before starting"
+  ],
+  "summarizer": "research/experiments/EX-ROS-2026-A021-harness/session_metrics.py",
+  "raw": {
+    "schema": "ex-ros-2026-a021.session-metrics/1",
+    "label": "control-05",
+    "sessionId": "50e6a549-8ff4-52ce-a491-9f2092ad78a1",
+    "transcript": "50e6a549-8ff4-52ce-a491-9f2092ad78a1.jsonl",
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "startedAt": "2026-09-30T17:16:27.238000+00:00",
+    "endedAt": "2026-09-30T17:35:31.546000+00:00",
+    "wallMs": 1144308,
+    "msToFirstCodeMutation": 446670,
+    "modelRequests": 74,
+    "tokens": {
+      "input": 148,
+      "output": 50666,
+      "cacheRead": 10950794,
+      "cacheCreation": 165127
+    },
+    "costUsd": null,
+    "toolCalls": {
+      "Bash": 71,
+      "ToolSearch": 1,
+      "Write": 3,
+      "mcp__bf7c680d-5fdc-5ef4-b4a0-abadb619bf0a__get_session": 1
+    },
+    "toolErrors": 3,
+    "fileReads": 48,
+    "distinctFilesRead": 30,
+    "repeatedReads": {
+      "/tmp/claude-0/-home-user-praxis/50e6a549-8ff4-52ce-a491-9f2092ad78a1/scratchpad/tests.log": 2,
+      "AGENTS.md": 2,
+      "docs/planning.md": 5,
+      "research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-04.json": 2,
+      "src/Ros.Application/Work/Checkpoint.fs": 2,
+      "src/Ros.Cli/CheckpointCommands.fs": 2,
+      "src/Ros.Contracts/Planning/PlanningJson.fs": 3,
+      "src/Ros.Domain/Work/Checkpoint.fs": 2,
+      "src/Ros.Infrastructure/Work/FileCheckpointRepository.fs": 2,
+      "tests/Ros.Tests/CheckpointCliTests.fs": 3,
+      "tests/Ros.Tests/Program.fs": 2,
+      "tests/Ros.Tests/TestFramework.fs": 2,
+      "tests/Ros.Tests/WorkGroupTests.fs": 2
+    },
+    "governanceReads": {
+      "AGENTS.md": 2,
+      "docs/cli.md": 1,
+      "docs/planning.md": 5
+    },
+    "searches": 49,
+    "fileWrites": 19,
+    "distinctFilesEdited": 3,
+    "builds": 8,
+    "testRuns": 2,
+    "compactions": 0,
+    "notes": "reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate"
+  }
+}
