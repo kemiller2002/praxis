@@ -47,7 +47,7 @@ module MergeReadinessTests =
 
         MergeReadiness.decide policy { observation shaA with Evidence = evidence }
 
-    let private write root relative content =
+    let private write (root: string) (relative: string) (content: string) =
         let path = Path.Combine(root, relative)
         let directory = Path.GetDirectoryName path
         if not (String.IsNullOrEmpty directory) then Directory.CreateDirectory directory |> ignore
