@@ -376,7 +376,7 @@ module CheckpointVerification =
     /// The Git side of the invariant `local HEAD == candidate == remote
     /// branch head`. Returns the verified location or the first reason the
     /// candidate is not remotely recoverable.
-    let private gitLocation (candidate: CheckpointCandidate) (observations: CheckpointObservations) =
+    let private gitLocation (repository: string) (observations: CheckpointObservations) =
         match observations.Head with
         | GitRead.Unavailable failure -> Error(gitFailureRejection failure)
         | GitRead.Observed(HeadState.Unborn branch) -> Error(CheckpointRejection.NoHead branch)
@@ -390,7 +390,7 @@ module CheckpointVerification =
                 Error(CheckpointRejection.RemoteMissing(name, remoteBranch))
             | Some(GitRead.Observed(UpstreamState.Tracking(remote, remoteBranch))) ->
                 let located remoteCommit =
-                    { Repository = candidate.Repository
+                    { Repository = repository
                       Branch = branch
                       LocalCommit = head
                       Remote = remote
@@ -428,21 +428,33 @@ module CheckpointVerification =
         | WorkingTreeState.NotRepository
         | WorkingTreeState.Clean _ -> []
 
-    /// Decides whether a candidate is a durable checkpoint. Every problem
-    /// that can be known independently is reported, so the caller can fix
-    /// them together; nothing unknown is ever accepted.
-    let verify (candidate: CheckpointCandidate) (observations: CheckpointObservations) : Result<Checkpoint, CheckpointRejection list> =
-        let text = textRejections candidate
-        let work = workRejections candidate observations
-        let location = gitLocation candidate observations
+    /// The durability half of verification, shared by every kind of
+    /// checkpoint (a work item's own, and a group's): local HEAD, the
+    /// candidate commit and the remote branch head are one commit, and no
+    /// meaningful work is uncommitted. Every independent problem is reported.
+    let durableLocation (repository: string) (observations: CheckpointObservations) : Result<GitDurableLocation, CheckpointRejection list> =
+        let location = gitLocation repository observations
 
         let tree =
             match location with
             | Error CheckpointRejection.NotGitRepository -> []
             | _ -> treeRejections observations
 
+        match location, tree with
+        | Ok git, [] -> Ok git
+        | Ok _, rejections -> Error rejections
+        | Error rejection, rejections -> Error(rejection :: rejections |> List.distinct)
+
+    /// Decides whether a candidate is a durable checkpoint. Every problem
+    /// that can be known independently is reported, so the caller can fix
+    /// them together; nothing unknown is ever accepted.
+    let verify (candidate: CheckpointCandidate) (observations: CheckpointObservations) : Result<Checkpoint, CheckpointRejection list> =
+        let text = textRejections candidate
+        let work = workRejections candidate observations
+        let location = durableLocation candidate.Repository observations
+
         let rejections =
-            text @ work @ (match location with Error rejection -> [ rejection ] | Ok _ -> []) @ tree
+            text @ work @ (match location with Error rejections -> rejections | Ok _ -> [])
             |> List.distinct
 
         match rejections, location, observations.Execution with

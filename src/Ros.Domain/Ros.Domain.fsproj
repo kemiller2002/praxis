@@ -13,6 +13,7 @@
     <Compile Include="Work/Plan.fs" />
     <Compile Include="Work/ContextPlan.fs" />
     <Compile Include="Work/Checkpoint.fs" />
+    <Compile Include="Work/GroupCheckpoint.fs" />
     <Compile Include="Work/Continuity.fs" />
     <Compile Include="Work/CheckpointValidation.fs" />
     <Compile Include="Work/Ownership.fs" />

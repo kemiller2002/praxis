@@ -1,0 +1,49 @@
+{
+  "schema": "ex-ros-2026-a021.session-metrics/1",
+  "label": "control-05",
+  "sessionId": "6aad1f9c-850c-5887-8b05-412265942056",
+  "transcript": "6aad1f9c-850c-5887-8b05-412265942056.jsonl",
+  "models": [
+    "claude-opus-5-5"
+  ],
+  "startedAt": "2026-09-30T16:12:35.845000+00:00",
+  "endedAt": "2026-09-30T16:28:31.673000+00:00",
+  "wallMs": 955828,
+  "msToFirstCodeMutation": 286781,
+  "modelRequests": 55,
+  "tokens": {
+    "input": 110,
+    "output": 51779,
+    "cacheRead": 7828288,
+    "cacheCreation": 183402
+  },
+  "costUsd": null,
+  "toolCalls": {
+    "Bash": 53,
+    "Write": 5
+  },
+  "toolErrors": 2,
+  "fileReads": 36,
+  "distinctFilesRead": 27,
+  "repeatedReads": {
+    "/root/.claude/projects/-home-user-praxis/6aad1f9c-850c-5887-8b05-412265942056/tool-results/by00hgmc6.txt": 2,
+    "research/experiments/EX-ROS-2026-A021--grouped-versus-independent-execution.md": 2,
+    "src/Ros.Cli/Program.fs": 2,
+    "src/Ros.Domain/Work/Checkpoint.fs": 3,
+    "src/Ros.Infrastructure/Work/FileCheckpointRepository.fs": 2,
+    "tests/Ros.Tests/CheckpointCliTests.fs": 2,
+    "tests/Ros.Tests/Program.fs": 3
+  },
+  "governanceReads": {
+    "AGENTS.md": 1,
+    "docs/cli.md": 1,
+    "requirements/PLANNING-WORK-GROUPS.md": 1
+  },
+  "searches": 44,
+  "fileWrites": 15,
+  "distinctFilesEdited": 5,
+  "builds": 6,
+  "testRuns": 2,
+  "compactions": 0,
+  "notes": "reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate"
+}

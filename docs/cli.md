@@ -379,6 +379,43 @@ telemetry" in [`development-telemetry.md`](development-telemetry.md).
 
 See "Durable checkpoints and continuity" in [`work-protocol.md`](work-protocol.md).
 
+### `work group checkpoint`, `work group checkpoint show`
+
+```
+ros work group checkpoint --group GROUP-ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT
+                          (--member ID [--member ID]* | --config FILE) [--decision TEXT]* [--json] [IDENTITY]
+ros work group checkpoint show GROUP-ID [--json]
+```
+
+**`work group checkpoint`** records a durable checkpoint of a grouped
+execution (PRX-GRP-044): the group ID, its active, completed and remaining
+members (abandoned members are listed separately, never as completed), shared
+architectural decisions (`--decision`, repeatable), the branch and commit, and
+the next action. Members come from the group's declaration in planner
+configuration (`--config FILE`, `grouping.groups`) or from `--member`.
+
+- **Same durability as `work checkpoint`.** The remote itself must show that
+  local HEAD, the checkpoint commit and the upstream branch head are one
+  commit, with no meaningful uncommitted work; the rejections and their codes
+  are the same. At least one member must be active, and the checkpoint is
+  recorded only under the caller's own executions of active members.
+- **Over members' own checkpoints, never instead of them.** Each member entry
+  references that member's latest `work.checkpointed` event by ID; nothing in
+  a member's checkpoint history or `latestCheckpoint` changes. An active
+  member without its own checkpoint at the group commit produces a
+  `member-checkpoint-behind` warning.
+- **No attribution laundering (PRX-GRP-043).** A group checkpoint claims no
+  paths; every change stays attributed through the members' own checkpoints.
+- It is stored as a `work.group.checkpointed` event; `validate` re-checks it
+  and every member checkpoint it references.
+- `--json` prints `status` (`recorded`, `rejected` or `failed`), `checkpoint`,
+  `paths` (always empty), `warnings[]` and `rejections[{code, message,
+  remedy}]`. Exit codes: `0` recorded; `1` refused or not persisted; `2`
+  argument errors (blank text, duplicate members, an undeclared group).
+
+**`work group checkpoint show`** prints a group's checkpoint history, oldest
+first, with each member checkpoint it referenced.
+
 ### `remote execute`
 
 ```
