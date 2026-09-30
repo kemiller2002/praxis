@@ -1,0 +1,210 @@
+[
+  {
+    "arm": "both",
+    "item": "cross-item",
+    "dimension": "build-and-tests",
+    "finding": "Both arms build with 0 warnings; arm-X 811/811 tests pass (19 work-group tests), arm-Y 829/829 (29 work-group + 8 group-checkpoint tests).",
+    "evidence": "output/test-arm-X.log, output/test-arm-Y.log",
+    "severity": "observation"
+  },
+  {
+    "arm": "arm-Y",
+    "item": "cross-item",
+    "dimension": "defects",
+    "finding": "create/add/remove do an unlocked read-modify-write: 8 concurrent creates all exit 0 but only 2 groups are stored; 4 concurrent adds all exit 0 but 1 member and 1 ledger entry are stored; validate still passes.",
+    "evidence": "arm-Y/tree/src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs:57-154; output/fixture/extra-arm-Y.log E4-E6",
+    "severity": "defect"
+  },
+  {
+    "arm": "arm-X",
+    "item": "cross-item",
+    "dimension": "defects",
+    "finding": "The same concurrent create/add runs lose nothing (a successful exit always means stored) because writes go through RegistryLock; under contention some runs fail with an opaque 'unexpected operational failure' (lock module predates the arm, cause not diagnosed).",
+    "evidence": "arm-X/tree/src/Ros.Infrastructure/Work/FileWorkGroupRepository.fs:61-75; output/fixture/extra-arm-X.log E4-E5",
+    "severity": "observation"
+  },
+  {
+    "arm": "arm-Y",
+    "item": "PRAXIS-GROUP-05",
+    "dimension": "defects",
+    "finding": "Text output of work group checkpoint labels the summary 'completed:'.",
+    "evidence": "arm-Y/tree/src/Ros.Cli/GroupCheckpointCommands.fs:156; output/fixture/extra2-arm-Y.log F1",
+    "severity": "defect"
+  },
+  {
+    "arm": "arm-Y",
+    "item": "PRAXIS-GROUP-05",
+    "dimension": "output-contracts",
+    "finding": "work group checkpoint has no --dry-run (exit 2, unexpected argument); arm-X supports it.",
+    "evidence": "output/fixture/fixture-arm-Y.log S30; arm-X S30",
+    "severity": "inconsistency"
+  },
+  {
+    "arm": "arm-X",
+    "item": "PRAXIS-GROUP-05",
+    "dimension": "checkpoint-shape",
+    "finding": "A group checkpoint is recorded with no active member and no execution or identity check; only the Git durability rule is shared with work checkpoint.",
+    "evidence": "arm-X/tree/src/Ros.Domain/Work/WorkGroups.fs:516-557; output/fixture/fixture-arm-X.log S26",
+    "severity": "debt"
+  },
+  {
+    "arm": "arm-Y",
+    "item": "PRAXIS-GROUP-05",
+    "dimension": "checkpoint-shape",
+    "finding": "A group checkpoint requires an active member under the caller's own execution, is a content-addressed event in events.jsonl, references member checkpoints with execution IDs, warns when a member's checkpoint is behind, and has a history view.",
+    "evidence": "arm-Y/tree/src/Ros.Domain/Work/GroupCheckpoint.fs:285-345; output/fixture/fixture-arm-Y.log S26,S31; extra2 F1; extra E8",
+    "severity": "observation"
+  },
+  {
+    "arm": "both",
+    "item": "PRAXIS-GROUP-05",
+    "dimension": "checkpoint-shape",
+    "finding": "Both refuse on dirty or unpushed state, leave current.json byte-identical, and claim no paths (no attribution laundering).",
+    "evidence": "output/fixture/fixture-arm-{X,Y}.log S28,S29,S31",
+    "severity": "observation"
+  },
+  {
+    "arm": "arm-X",
+    "item": "cross-item",
+    "dimension": "store-model",
+    "finding": "One versioned store (.ros/work/groups.json, schemaVersion 1) holds declaration, history and checkpoints; a file without the checkpoints field still loads.",
+    "evidence": "arm-X/tree/src/Ros.Contracts/Work/WorkGroupJson.fs:95-104,300-356",
+    "severity": "observation"
+  },
+  {
+    "arm": "arm-Y",
+    "item": "cross-item",
+    "dimension": "store-model",
+    "finding": "Three stores: groups.json, group-membership.json (written first, restored by hand if the second write fails) and events.jsonl for checkpoints.",
+    "evidence": "arm-Y/tree/src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs:96-106; arm-Y/tree/src/Ros.Infrastructure/Work/FileGroupCheckpointRepository.fs:109-140",
+    "severity": "observation"
+  },
+  {
+    "arm": "arm-X",
+    "item": "cross-item",
+    "dimension": "validation",
+    "finding": "One join rule (eligibility) is shared by create and add, with one rejection type with codes.",
+    "evidence": "arm-X/tree/src/Ros.Domain/Work/WorkGroups.fs:114-168,327-343",
+    "severity": "observation"
+  },
+  {
+    "arm": "arm-Y",
+    "item": "cross-item",
+    "dimension": "validation",
+    "finding": "Member checks are near-copies with four rejection types; create has no execution-repository rule and no --config while add has both; checkpoint uses a different group-ID pattern than create.",
+    "evidence": "arm-Y/tree/src/Ros.Domain/Planning/GroupDeclaration.fs:51-53,101-124; GroupMembership.fs:132-149; GroupCheckpoint.fs:239-242; fixture S6",
+    "severity": "inconsistency"
+  },
+  {
+    "arm": "arm-Y",
+    "item": "cross-item",
+    "dimension": "output-contracts",
+    "finding": "Two JSON envelopes (schema/kind versus command/schemaVersion); create rejections are plain strings while the others use {code,message}; exit codes differ (create argument errors exit 1, checkpoint undeclared group exits 2, add/remove undeclared group exit 1).",
+    "evidence": "output/fixture/fixture-arm-Y.log S2-S5,S26; extra2-arm-Y.log F3; arm-Y/tree/src/Ros.Cli/WorkGroupCommands.fs:165-171",
+    "severity": "inconsistency"
+  },
+  {
+    "arm": "arm-X",
+    "item": "cross-item",
+    "dimension": "output-contracts",
+    "finding": "Every command emits {command, schemaVersion:1, status} with {code,message} rejections; argument-shaped refusals exit 2 and state refusals exit 1.",
+    "evidence": "arm-X/tree/src/Ros.Cli/WorkGroupCommands.fs:141-168; fixture S2-S5",
+    "severity": "observation"
+  },
+  {
+    "arm": "arm-X",
+    "item": "PRAXIS-GROUP-03",
+    "dimension": "reuse",
+    "finding": "The execution-repository rule reads only grouping.executionRepositories and ignores the planner's description-based UnknownExternal inference.",
+    "evidence": "arm-X/tree/src/Ros.Cli/WorkGroupCommands.fs:110-122 vs arm-X/tree/src/Ros.Domain/Planning/Grouping.fs:540-544",
+    "severity": "inconsistency"
+  },
+  {
+    "arm": "arm-X",
+    "item": "PRAXIS-GROUP-01",
+    "dimension": "reuse",
+    "finding": "Re-implements the DeclaredGroup JSON reader instead of reusing PlanningJson.",
+    "evidence": "arm-X/tree/src/Ros.Contracts/Work/WorkGroupJson.fs:204-225",
+    "severity": "debt"
+  },
+  {
+    "arm": "arm-Y",
+    "item": "PRAXIS-GROUP-01",
+    "dimension": "reuse",
+    "finding": "Reuses PlanningJson.parseDeclaredGroup and Grouping.executionLocation (exposed or extracted from the planner).",
+    "evidence": "arm-Y/tree/src/Ros.Contracts/Planning/WorkGroupJson.fs:58; arm-Y/patches/0003 Grouping.fs",
+    "severity": "observation"
+  },
+  {
+    "arm": "both",
+    "item": "PRAXIS-GROUP-01",
+    "dimension": "compatibility",
+    "finding": "The planner merges stored groups: arm-X lets a configured ID shadow the stored one silently (exit 0); arm-Y refuses and the planner command exits 1.",
+    "evidence": "output/fixture/fixture-arm-{X,Y}.log S33; arm-X WorkGroups.fs:433-435; arm-Y GroupDeclaration.fs:162-174",
+    "severity": "inconsistency"
+  },
+  {
+    "arm": "both",
+    "item": "PRAXIS-GROUP-01",
+    "dimension": "acceptance",
+    "finding": "All PRAXIS-GROUP-01 criteria are met in both arms (refusals, duplicate IDs, lifecycle hashes unchanged, planner reads the stored group, --dry-run, --json, validate).",
+    "evidence": "output/fixture S1-S10, F2, extra3",
+    "severity": "observation"
+  },
+  {
+    "arm": "both",
+    "item": "PRAXIS-GROUP-02",
+    "dimension": "acceptance",
+    "finding": "show: text and --json; unknown group exits 1; never writes (hashes equal); partial completion reflected. Blocked-member rows are checked only through the arms' own passing tests.",
+    "evidence": "output/fixture S11-S13, S24",
+    "severity": "observation"
+  },
+  {
+    "arm": "both",
+    "item": "PRAXIS-GROUP-03",
+    "dimension": "acceptance",
+    "finding": "add refuses unknown, terminal, present and other-repository items (cross-repository allowed), records provenance, leaves lifecycle untouched; the planner sees the new member.",
+    "evidence": "output/fixture S14-S17; extra E1-E2; extra3",
+    "severity": "observation"
+  },
+  {
+    "arm": "both",
+    "item": "PRAXIS-GROUP-04",
+    "dimension": "acceptance",
+    "finding": "remove refuses non-members and the last member (arm-X allows --allow-empty, recorded), records provenance, leaves lifecycle untouched.",
+    "evidence": "output/fixture S18-S22, S25",
+    "severity": "observation"
+  },
+  {
+    "arm": "arm-Y",
+    "item": "cross-item",
+    "dimension": "churn",
+    "finding": "+4048/-34 over 6 patches; item 04 reworked item 03's ledger into a MembershipChange union; patch 0006 reworked item 05 after merging items 01-04 (184+/123-).",
+    "evidence": "arm-Y/diffstat.txt; arm-Y/patches/0004, 0006",
+    "severity": "debt"
+  },
+  {
+    "arm": "arm-X",
+    "item": "cross-item",
+    "dimension": "churn",
+    "finding": "+2279/-7 over 5 patches; item 01's history schema already covered add and remove, so later items only added code.",
+    "evidence": "arm-X/diffstat.txt; arm-X/patches/0001 (GroupOperation)",
+    "severity": "observation"
+  },
+  {
+    "arm": "arm-Y",
+    "item": "cross-item",
+    "dimension": "maintainability",
+    "finding": "docs/planning.md still says PRAXIS-GROUP-05 is deferred; three argument-parsing styles across the two CLI modules.",
+    "evidence": "arm-Y/tree/docs/planning.md:356; arm-Y/tree/src/Ros.Cli/GroupCheckpointCommands.fs:31-85",
+    "severity": "debt"
+  },
+  {
+    "arm": "both",
+    "item": "cross-item",
+    "dimension": "blinding",
+    "finding": "Blinding was compromised: arm-X commit subject 'grouped-arm session metrics' and arm-Y docs 'control branch' got past the scrubber.",
+    "evidence": "arm-X/commit-subjects.txt:17; arm-Y/tree/docs/planning.md:356",
+    "severity": "observation"
+  }
+]

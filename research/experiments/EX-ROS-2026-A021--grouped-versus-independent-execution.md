@@ -60,6 +60,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "PRAXIS-PLAN-06: renumber the A021 results record to EV-ROS-2026-A064 and relate it to the parallel evaluation kit and EV-ROS-2026-A063"
+    EXE-20260930T230548914Z-bb6a60fd:
+      operations: [modified]
+      at: 2026-09-30T23:06:18.000Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PLAN-08: refer to the evaluation kit by its renumbered IDs and record the second blind evaluation's outcome (EV-ROS-2026-A067)"
 ---
 
 # Experiment
@@ -283,8 +293,10 @@ deviation in `EX-ROS-2026-A021-harness/`.
   held; durations were underestimated (61 and 112 min against an upper
   bound of 45); context-reuse value, unknown beforehand, was measured.
 
-A parallel evaluation kit (`experiment/a021-evaluation-kit`, `EV-ROS-2026-A060`
-there) remains available as a second, independent evaluation; see
+A second, independent blind evaluation used the parallel evaluation kit
+(`EV-ROS-2026-A065`, method; report `EV-ROS-2026-A067`). It corroborated the
+first evaluation and added a data-loss defect in the control arm's unlocked
+store; its blinding was compromised by two unscrubbed strings. See
 `EV-ROS-2026-A064`, "Relation to other A021 records".
 
 Deviations (recorded in `sessions.json`): an identical harness note in every

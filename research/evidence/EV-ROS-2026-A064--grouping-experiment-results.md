@@ -41,6 +41,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "PRAXIS-PLAN-06: renumber the A021 results record to EV-ROS-2026-A064 and relate it to the parallel evaluation kit and EV-ROS-2026-A063"
+    EXE-20260930T230548914Z-bb6a60fd:
+      operations: [modified]
+      at: 2026-09-30T23:06:18.000Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PLAN-08: refer to the evaluation kit by its renumbered IDs and record the second blind evaluation's outcome (EV-ROS-2026-A067)"
 derived_from: [EX-ROS-2026-A021]
 ---
 
@@ -171,17 +181,27 @@ by the individual-criterion finding.
 
 ## Relation to other A021 records
 
-- A separate blind evaluation kit was prepared in parallel on
-  `experiment/a021-evaluation-kit` (`EV-ROS-2026-A060` there, with its own
-  evaluator prompt, a blinding script and a shared acceptance-criteria
-  fixture). It reserves `EV-ROS-2026-A061` for session notes and
-  `EV-ROS-2026-A062` for its report. That evaluation has not run.
+- A separate blind evaluation kit was prepared in parallel
+  (`EV-ROS-2026-A065`: evaluator prompt, blinding script and shared
+  acceptance-criteria fixture; `EV-ROS-2026-A066`: control-02 session notes).
+  These were numbered A060..A062 on their branch and renumbered because
+  `EV-ROS-2026-A060` already existed on main (`PRAXIS-PLAN-08`).
 - The evaluation summarized here used this protocol's own brief
   (`EX-ROS-2026-A021-harness/prompts/evaluator.txt`) and is one independent
   evaluation, not the kit's.
-- Running the kit's evaluator as a second, independent evaluation would test
-  whether these quality findings replicate across evaluators. This record
-  would then be read alongside `EV-ROS-2026-A062`.
+- The kit's evaluator then ran as a second, independent evaluation
+  (`EV-ROS-2026-A067`, findings in
+  `EX-ROS-2026-A021-evaluation-kit/output/findings.json`). It replicated these
+  quality findings: the grouped arm kept one store, one join rule and one
+  checkpoint shape but duplicated the planner's parser, ignored its
+  external-repository inference and checkpointed without the ownership
+  checks; the control arm reused more and verified checkpoints more fully.
+  It added one defect this evaluation did not report: the control arm's
+  create, add and remove write the store without a lock, so concurrent runs
+  that all exit 0 lose writes. Its blinding was compromised (an unscrubbed
+  "grouped-arm" commit subject and "control branch" in a doc), which it
+  reported before reading any code; read its qualitative judgements with
+  that caveat.
 - `EV-ROS-2026-A063` (preliminary, draft) recorded the early
   context-reacquisition signal from the grouped arm and control items 01-03.
   The final figures here supersede its numbers, not its interpretation.

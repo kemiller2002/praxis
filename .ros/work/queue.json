@@ -3657,6 +3657,53 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-A021-EVAL-KIT",
+      "title": "EX-ROS-2026-A021 blind evaluation kit",
+      "description": "Record the blind evaluation method for EX-ROS-2026-A021 (PRX-GRP-084): evaluator brief, blind-bundle prep script, owner unblinding procedure (EV-ROS-2026-A060), and the control-02 session record (EV-ROS-2026-A061), on branch experiment/a021-evaluation-kit so neither arm sees it. Acceptance: records validate; script validated against the control branch; no arm branch changed.",
+      "tags": [
+        "experiment"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T14:42:05.000Z",
+      "updatedAt": "2026-09-30T14:42:50.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-08",
+      "title": "Land the EX-ROS-2026-A021 evaluation kit and second blind evaluation on main",
+      "description": "Renumber the evaluation kit's records EV-ROS-2026-A060..A062 (collide with main) to A065..A067, merge main, and land the kit and the second blind evaluation report. Owner approved all branches.",
+      "tags": [
+        "planning",
+        "grouping"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T23:05:47.814Z",
+      "updatedAt": "2026-09-30T23:06:59.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
