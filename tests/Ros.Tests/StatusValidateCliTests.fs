@@ -65,7 +65,9 @@ module StatusValidateCliTests =
     /// The retired `normalize`: the additive `installation` block (asserted
     /// separately) removed and execution ids reduced to presence.
     let private normalized (record: JsonNode) =
-        let copy = CliGolden.without (Set.singleton "installation") record
+        // `continuity` (DF-ROS-2026-A042) is additive like `installation`; its
+        // behaviour is pinned by CheckpointCliTests, as main's golden did.
+        let copy = CliGolden.without (set [ "installation"; "continuity" ]) record
 
         for item in CliGolden.items copy.["workItems"] do
             let ids = item.["telemetryExecutionIds"]

@@ -27,6 +27,7 @@
         "semanticState": "active",
         "evidence": [],
         "allowedActions": [
+          "abandon",
           "block",
           "complete"
         ],
@@ -44,6 +45,7 @@
         "evidence": [],
         "blockReason": "waiting",
         "allowedActions": [
+          "abandon",
           "resume"
         ],
         "requiredEvidenceForCompletion": [
@@ -67,6 +69,7 @@
         "semanticState": "active",
         "evidence": [],
         "allowedActions": [
+          "abandon",
           "block",
           "complete"
         ],

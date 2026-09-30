@@ -99,4 +99,5 @@ let main _ =
     @ PremergeRemoteTests.tests
     @ PremergeRemoteScriptTests.tests
     @ PremergeReleaseTests.tests
+    @ PostmergeReconciliationTests.tests
     |> TestRunner.run

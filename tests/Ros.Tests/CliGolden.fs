@@ -180,6 +180,8 @@ module CliGolden =
         try
             CliHarness.git root [ "init"; "-q"; "-b"; "main" ] |> ignore
             CliHarness.rosOk root [ "init"; "--project"; project ] |> ignore
+            // The goldens pin pre-continuity completion semantics.
+            CliHarness.optOutOfDurableCheckpoints root
             prepare root
 
             if commit then

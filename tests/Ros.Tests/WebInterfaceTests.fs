@@ -166,6 +166,8 @@ module WebInterfaceTests =
     /// A served web interface over a fresh, committed greenfield repository.
     let private withServer (test: string -> ServedProcess -> unit) =
         let root = CliHarness.initializedRepository "ros-web" None
+        CliHarness.optOutOfDurableCheckpoints root
+        CliHarness.commitAll root "pre-continuity completion semantics"
 
         try
             use server = new ServedProcess(root, [ "web"; "serve" ])

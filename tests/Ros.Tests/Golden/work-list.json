@@ -28,6 +28,7 @@
         "state": "blocked",
         "semanticState": "blocked",
         "allowedActions": [
+          "abandon",
           "resume"
         ]
       },
@@ -83,6 +84,7 @@
         "state": "active",
         "semanticState": "active",
         "allowedActions": [
+          "abandon",
           "block",
           "complete"
         ]
@@ -119,6 +121,7 @@
         "state": "blocked",
         "semanticState": "blocked",
         "allowedActions": [
+          "abandon",
           "resume"
         ]
       },
@@ -174,6 +177,7 @@
         "state": "active",
         "semanticState": "active",
         "allowedActions": [
+          "abandon",
           "block",
           "complete"
         ]
@@ -198,6 +202,7 @@
           "state": "active",
           "semanticState": "active",
           "allowedActions": [
+            "abandon",
             "block",
             "complete"
           ]
@@ -221,6 +226,7 @@
           "state": "blocked",
           "semanticState": "blocked",
           "allowedActions": [
+            "abandon",
             "resume"
           ]
         },
@@ -288,6 +294,7 @@
         "state": "active",
         "semanticState": "active",
         "allowedActions": [
+          "abandon",
           "block",
           "complete"
         ]

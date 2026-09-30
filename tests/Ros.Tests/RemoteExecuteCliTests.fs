@@ -479,7 +479,7 @@ module RemoteExecuteCliTests =
                       let described = (response["result"])
                       Assert.equal "praxis.describe" (text (described["schema"]))
                       Assert.equal true (CliPort.boolean (described["available"]))
-                      Assert.equal [ "1.0"; "1.1"; "1.2" ] (strings (described["protocolVersions"]))
+                      Assert.equal [ "1.0"; "1.1"; "1.2"; "1.3" ] (strings (described["protocolVersions"]))
                       Assert.equal "docs/remote-agent-contract.md" (text (described["contract"]))
                       Assert.equal [ "read"; "mutate" ] (strings (described["repository"]["capabilities"]))
                       // The transport grant is narrowed by the repository.
@@ -491,7 +491,7 @@ module RemoteExecuteCliTests =
                           |> Option.defaultWith (fun () -> failwith "work.start is described")
 
                       CliPort.deepEqual
-                          """{"operation":"work.start","capability":"mutate","mutating":true,"requiresExpectedSha":true,"requiredArguments":["workItemIds"],"optionalArguments":["type","classifications"]}"""
+                          """{"operation":"work.start","capability":"mutate","mutating":true,"requiresExpectedSha":true,"requiresExecution":false,"introducedIn":"1.0","requiredArguments":["workItemIds"],"optionalArguments":["type","classifications"]}"""
                           start
 
                       Assert.isTrue (find "id" "WI-0100" (described["readyWork"]) |> Option.isSome) "ready work is discoverable"

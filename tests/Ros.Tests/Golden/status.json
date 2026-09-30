@@ -42,6 +42,7 @@
         "state": "active",
         "semanticState": "active",
         "allowedActions": [
+          "abandon",
           "block",
           "complete"
         ],
@@ -53,6 +54,7 @@
         "state": "blocked",
         "semanticState": "blocked",
         "allowedActions": [
+          "abandon",
           "resume"
         ],
         "hasExecIds": true

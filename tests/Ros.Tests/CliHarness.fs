@@ -105,6 +105,22 @@ module CliHarness =
         commitAll root "initialize"
         root
 
+    /// New installations enforce durable checkpoints
+    /// (workProtocol.continuity.requireDurableCheckpoint, DF-ROS-2026-A042):
+    /// meaningful Git-backed work completes only from a verified, pushed
+    /// checkpoint. The Node-parity golden ports and the web tests were frozen
+    /// against the pre-continuity completion semantics in fixtures that have
+    /// no remote, so they opt out explicitly, exactly as main's Node goldens
+    /// did. The enforced behaviour is pinned by CheckpointGuardTests and
+    /// RecoveryProofTests.
+    let optOutOfDurableCheckpoints (root: string) =
+        let path = Path.Combine(root, "ros.json")
+        let config = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText path).AsObject()
+        let continuity = System.Text.Json.Nodes.JsonObject()
+        continuity["requireDurableCheckpoint"] <- System.Text.Json.Nodes.JsonValue.Create false
+        config["workProtocol"].AsObject()["continuity"] <- continuity
+        File.WriteAllText(path, config.ToJsonString(System.Text.Json.JsonSerializerOptions(WriteIndented = true)) + "\n")
+
     let removeDirectory (root: string) =
         try
             if Directory.Exists root then

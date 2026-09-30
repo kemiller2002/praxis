@@ -24,9 +24,9 @@ Run:
 ## Continuity
 
 An executor session is disposable. Before handing off, commit and push the
-work, record `./ros work checkpoint --id ID --occurred-at NOW --summary ...
+work, record `./praxis work checkpoint --id ID --occurred-at NOW --summary ...
 --next-action ...`, and push the `.ros/` state. A successor reads
-`./ros work context ID --text` and takes over with `./ros work continue`.
+`./praxis work context ID --text` and takes over with `./praxis work continue`.
 
 ## Unresolved questions
 

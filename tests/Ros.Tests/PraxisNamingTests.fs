@@ -85,6 +85,11 @@ module PraxisNamingTests =
                     artifact
                 | _ -> artifact))
 
+        // A ROS-era ros.json predates durable-checkpoint enforcement, and an
+        // upgrade never imposes it on existing configuration.
+        let config = CliPort.readJson root "ros.json"
+        config["workProtocol"].AsObject().Remove "continuity" |> ignore
+        CliPort.writeJson root "ros.json" config
         CliHarness.write root ".ros/work/history-marker.txt" "ROS-era state that must survive\n"
         CliHarness.commitAll root "ROS-era installation"
         legacyContent

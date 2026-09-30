@@ -125,6 +125,7 @@ module CliPort =
         let root = CliHarness.temporaryDirectory prefix
         CliHarness.git root [ "init"; "-q"; "-b"; "main" ] |> ignore
         CliHarness.rosOk root [ "init"; "--project"; project ] |> ignore
+        CliHarness.optOutOfDurableCheckpoints root
         CliHarness.commitAll root "baseline"
         root
 

@@ -3609,6 +3609,30 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-TELEMETRY-COST-UNIT",
+      "title": "telemetry record accepts a cost metric with a non-'currency' unit (e.g. --unit USD) that validate then rejects",
+      "description": "Found by PRAXIS-PR92-RECONCILE's P4 test: 'telemetry record --metric cost.session_cumulative --unit USD --currency USD' succeeds, then 'validate' reports metrics[n].unit: cost metric requires unit 'currency'. Record should refuse what validate rejects (write-time validation), like PRAXIS-TELEMETRY-CLASSIFY-VOCAB.",
+      "tags": [
+        "telemetry",
+        "bug"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-30T19:40:19.769Z",
+      "updatedAt": "2026-09-30T19:40:19.769Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
