@@ -4860,18 +4860,48 @@
     {
       "id": "PRAXIS-GROUP-03",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T12:22:38.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T12:27:16.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T122239783Z-17ff3896"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "dd59ecc9fc28cc586f7e0ce5",
+        "recordedAt": "2026-09-30T12:27:14.000Z",
+        "executionId": "EXE-20260930T122239783Z-17ff3896",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-grouped",
+        "commit": "a255fcf159cf93438887de4419457369ea20d080",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-grouped",
+        "remoteCommit": "a255fcf159cf93438887de4419457369ea20d080",
+        "summary": "work group add implemented and tested on the shared join rule. Completed members: PRAXIS-GROUP-01, -02; PRAXIS-GROUP-03 completing now. Remaining: PRAXIS-GROUP-04, -05",
+        "nextAction": "Complete PRAXIS-GROUP-03, then implement work group remove (PRAXIS-GROUP-04)",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T12:27:16.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T12:22:38.000Z",
+  "updatedAt": "2026-09-30T12:27:16.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
