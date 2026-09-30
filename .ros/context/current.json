@@ -4886,18 +4886,61 @@
     {
       "id": "PRAXIS-GROUP-03",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T16:33:01Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/GroupDeclaration.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/cli.md"
+        },
+        {
+          "type": "metrics",
+          "path": "research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-03.json"
+        }
+      ],
+      "updatedAt": "2026-09-30T16:50:10Z",
       "telemetryExecutionIds": [
         "EXE-20260930T163301767Z-acd016eb"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "ed7f3e14d969c61817c80d0e",
+        "recordedAt": "2026-09-30T16:50:08Z",
+        "executionId": "EXE-20260930T163301767Z-acd016eb",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-r2-control",
+        "commit": "65c7a85728b1007e2b1fdce2da9772f41210ca6a",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-r2-control",
+        "remoteCommit": "65c7a85728b1007e2b1fdce2da9772f41210ca6a",
+        "summary": "work group add implemented, tested, documented; session metrics committed and pushed",
+        "nextAction": "Complete PRAXIS-GROUP-03, build registry, validate, commit and push Praxis state",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T16:50:10Z",
+      "conclusion": "work group add: adds one member to a stored group; refuses unknown groups, present members, unknown/terminal items and, unless cross-repository, items executing in another repository; records addedBy/addedAt; member lifecycle untouched; --dry-run/--json; validate checks additions"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T16:33:01Z",
+  "updatedAt": "2026-09-30T16:50:10Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
