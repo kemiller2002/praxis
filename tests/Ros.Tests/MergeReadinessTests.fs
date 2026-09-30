@@ -6,6 +6,7 @@ open System.Security.Cryptography
 open Ros.Contracts.Integration
 open Ros.Domain.Git
 open Ros.Domain.Integration
+open Ros.Infrastructure.Integration
 
 [<RequireQualifiedAccess>]
 module MergeReadinessTests =
@@ -205,6 +206,31 @@ module MergeReadinessTests =
                   | MergeReadinessDecision.Ready _ -> ()
                   | other -> failwith $"{other}" }
 
+
+
+          { Name = "merge readiness: malformed configured policy fails closed instead of disabling enforcement"
+            Run =
+              fun () ->
+                  let root = GitFixture.temporaryDirectory "merge-readiness-policy"
+
+                  try
+                      File.WriteAllText(
+                          Path.Combine(root, "ros.json"),
+                          """{"mergeReadiness":{"enabled":"yes","requiredChecks":"repository-validation"}}"""
+                      )
+
+                      match FileMergeReadinessRepository.readPolicy root with
+                      | Ok policy -> failwith $"malformed policy was accepted as {policy}"
+                      | Error message ->
+                          Assert.isTrue (message.Contains "mergeReadiness") "policy error did not identify mergeReadiness"
+                  finally
+                      GitFixture.cleanup root }
+
+          { Name = "merge readiness: normalized unknown state round-trips without nesting unknown prefixes"
+            Run =
+              fun () ->
+                  let state = CheckState.tryParse "unknown:provider-new-state" |> Option.get
+                  Assert.equal "unknown:provider-new-state" (CheckState.code state) }
 
           { Name = "merge readiness: normalized evidence parses exact commit and provider-neutral states"
             Run =
