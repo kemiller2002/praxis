@@ -2467,10 +2467,10 @@
         "decision"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T17:56:38.000Z",
-      "updatedAt": "2026-09-30T17:56:39.000Z",
+      "updatedAt": "2026-09-30T18:05:38.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

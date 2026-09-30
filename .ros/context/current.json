@@ -3415,18 +3415,28 @@
     {
       "id": "PRAXIS-PR92-ID-RENUMBER",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T17:56:39.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/decisions/DF-ROS-2026-A049--fsharp-dotnet-only-repository.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PraxisNamingTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T18:05:38.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T175640720Z-98771e24"
-      ]
+      ],
+      "completedAt": "2026-09-30T18:05:38.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "ChatGPT",
-  "updatedAt": "2026-09-30T17:56:39.000Z",
+  "updatedAt": "2026-09-30T18:05:38.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
