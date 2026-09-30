@@ -160,5 +160,94 @@
       "portability"
     ],
     "title": "F# distribution cost is acceptable for ROS consumers"
+  },
+  {
+    "confidence": "low",
+    "contradicting_evidence": [],
+    "created": "2026-09-30",
+    "id": "HY-ROS-2026-A027",
+    "path": "research/hypotheses/HY-ROS-2026-A027--advisory-planner-scheduling-value.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T102847967Z-f42c2262": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T11:17:08.787Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "WI-0064: evidence-based work groups and the frozen grouping experiment"
+        }
+      }
+    },
+    "related_documents": [
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "requirements/PLANNING-OPTIMIZATION.md",
+      "DF-ROS-2026-A046",
+      "EX-ROS-2026-A021"
+    ],
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "proposed",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A058",
+      "EV-ROS-2026-A059"
+    ],
+    "tags": [
+      "planning",
+      "scheduling",
+      "experiment"
+    ],
+    "title": "The advisory planner makes useful scheduling recommendations without mutating state"
+  },
+  {
+    "confidence": "very-low",
+    "contradicting_evidence": [],
+    "created": "2026-09-30",
+    "id": "HY-ROS-2026-A028",
+    "path": "research/hypotheses/HY-ROS-2026-A028--grouped-execution-value.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T102847967Z-f42c2262": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T11:17:09.632Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "WI-0064: evidence-based work groups and the frozen grouping experiment"
+        }
+      }
+    },
+    "related_documents": [
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "EX-ROS-2026-A021",
+      "EV-ROS-2026-A059"
+    ],
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "proposed",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [],
+    "tags": [
+      "planning",
+      "grouping",
+      "context",
+      "experiment"
+    ],
+    "title": "One shared reasoning context for strongly related work reduces repeated work or improves architectural consistency"
   }
 ]

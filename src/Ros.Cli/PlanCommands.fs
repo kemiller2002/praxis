@@ -16,11 +16,12 @@ open Ros.Infrastructure.Planning
 [<RequireQualifiedAccess>]
 module PlanCommands =
     let usage =
-        "plan analyze|simulate|compare|explain ID|replay|freshness --plan FILE [--for {baseline|speed|balanced|cost|max-parallel}] [--max-concurrency N] [--budget AMOUNT [--currency CODE]] [--deadline DURATION] [--observations FILE] [--config FILE] [--as-of TIMESTAMP] [--details] [--json]"
+        "plan analyze|simulate [--groups]|compare [--groups]|explain ID|groups|explain-group GROUP-ID|replay|freshness --plan FILE [--for {baseline|speed|balanced|cost|max-parallel}] [--max-concurrency N] [--budget AMOUNT [--currency CODE]] [--deadline DURATION] [--observations FILE] [--config FILE] [--as-of TIMESTAMP] [--details] [--json]"
 
     type private Options =
         { Json: bool
           Details: bool
+          Groups: bool
           Objective: string option
           MaxConcurrency: string option
           Budget: string option
@@ -36,6 +37,7 @@ module PlanCommands =
     let private empty =
         { Json = false
           Details = false
+          Groups = false
           Objective = None
           MaxConcurrency = None
           Budget = None
@@ -53,6 +55,7 @@ module PlanCommands =
         | [] -> options
         | "--json" :: rest -> parse { options with Json = true } rest
         | "--details" :: rest -> parse { options with Details = true } rest
+        | "--groups" :: rest -> parse { options with Groups = true } rest
         | flag :: value :: rest when flag.StartsWith "--" && not (value.StartsWith "--") ->
             let next =
                 match flag with
@@ -352,6 +355,128 @@ module PlanCommands =
               |> List.map (fun outcome ->
                   $"  wave {outcome.RecommendedWave} {RecommendedAction.code outcome.RecommendedAction} {outcome.WorkItem}: {outcome.Outcome} ({outcome.LifecycleThen} -> {outcome.LifecycleNow})") ]
 
+    // ---- work groups ------------------------------------------------------------
+
+    let private executionText (execution: GroupExecution) =
+        match execution with
+        | GroupExecution.OneSequentialAgent -> "one sequential agent"
+        | GroupExecution.OneOwnerIndependentSubtasks -> "one owner; subtasks may run in parallel"
+        | GroupExecution.SplitByRepository -> "split into repository-local groups first"
+
+    let private groupLines (group: WorkGroup) (relations: GroupRelation list) =
+        let id = WorkGroupId.value group.Id
+
+        [ yield id
+          yield $"Area: {group.Area} ({GroupKind.code group.Kind}, {GroupOrigin.code group.Origin}); executes in {group.ExecutionRepository}"
+          yield $"Members: {group.Members.Length} ({group.Progress.Statement})"
+          for entry in group.Members do
+              let gated = if entry.GatedBy.IsEmpty then "" else $"""; waits on blocked {String.concat ", " entry.GatedBy}"""
+              yield $"  {entry.WorkItemId} [{MemberStatus.code entry.Status}, {PlanningWorkState.code entry.PlanningState}] {EvidenceConfidence.code entry.Confidence}: {entry.Reason}{gated}"
+          yield $"Affinity: {ContextAffinity.code group.Affinity}; confidence {EvidenceConfidence.code group.Confidence}"
+          yield "Why grouped:"
+          yield! group.Cohesion |> List.truncate 6 |> List.map (fun line -> $"  - {line.Statement}")
+          let ordered = group.Cohesion |> List.exists (fun line -> match line.Signal with AffinitySignal.HardDependency _ -> true | _ -> false)
+          yield (if ordered then $"""Required sequence: {String.concat " -> " group.RequiredSequence}""" else $"""Sequence: no ordering constraint between members (listed {String.concat ", " group.RequiredSequence})""")
+          yield $"Estimated context reuse: unknown ({group.ContextCost.IndependentAcquisitions} independent context acquisitions -> {group.ContextCost.GroupedAcquisitions})"
+          yield $"Collision risk: {CollisionRisk.code group.Collision}; parallel-safe: {group.ParallelSafe}"
+          yield $"Recommended execution: {executionText group.Execution}"
+          yield! group.ExecutionReasons |> List.map (fun reason -> $"  - {reason}")
+          yield!
+              relations
+              |> List.filter (fun relation -> relation.Left = id || relation.Right = id)
+              |> List.map (fun relation ->
+                  let other = if relation.Left = id then relation.Right else relation.Left
+                  let verdict = if relation.MayRunConcurrently then "may run independently from" else "should not run alongside"
+                  $"  {verdict} {other}: {relation.Reason}")
+          yield! group.Notes |> List.map (fun entry -> $"  {FindingSeverity.code entry.Severity} {GroupNoteCode.code entry.Code}: {entry.Message}") ]
+
+    let private groupsText (snapshot: PlanSnapshot) (report: GroupingReport) =
+        [ yield! snapshotLines snapshot
+          yield report.Statement
+          yield ""
+          yield $"Settings: preferred size {report.Settings.PreferredMinimumSize}..{report.Settings.PreferredMaximumSize}, automatic maximum {report.Settings.MaximumAutomaticSize}, minimum affinity {ContextAffinity.code report.Settings.MinimumAffinity}, cross-group policy {report.Settings.RiskPolicy}"
+          match report.Groups with
+          | [] -> yield "No group recommended: no set of open items shares qualifying evidence."
+          | groups ->
+              for group in groups do
+                  yield ""
+                  yield! groupLines group report.Relations
+          yield ""
+          yield "Group dependencies:"
+          match report.Dependencies with
+          | [] -> yield "  none"
+          | edges ->
+              yield!
+                  edges
+                  |> List.map (fun edge ->
+                      let gating = if edge.Gating then "" else " (satisfied or soft)"
+                      $"""  {GroupEndpoint.describe edge.From} -> {GroupEndpoint.describe edge.To}{gating}: {String.concat "; " edge.Via}""")
+          yield! report.Cycles |> List.map (fun cycle -> $"""  cycle: {String.concat " -> " cycle}""")
+          yield ""
+          yield $"Ungrouped ({report.Ungrouped.Length}):"
+          yield! report.Ungrouped |> List.map (fun entry -> $"  {entry.WorkItem} [{PlanningWorkState.code entry.PlanningState}] affinity {ContextAffinity.code entry.Affinity}: {entry.Reason}")
+          yield ""
+          yield "Unknown:"
+          yield! report.UnknownEvidence |> List.map (fun line -> $"  - {line}") ]
+
+    let private groupExplanationText (snapshot: PlanSnapshot) (explanation: GroupExplanation) =
+        let section (title: string) (lines: string list) =
+            [ yield ""
+              yield title
+              match lines with
+              | [] -> yield "  none"
+              | _ -> yield! lines |> List.map (fun line -> $"  - {line}") ]
+
+        [ yield! snapshotLines snapshot
+          yield ""
+          yield! groupLines explanation.Group []
+          yield! section "Why are these items together?" explanation.WhyTogether
+          yield! section "Why were other related items excluded?" (explanation.Excluded |> List.map (fun entry -> $"{entry.WorkItem} ({ContextAffinity.code entry.Affinity}): {entry.Reason}"))
+          yield! section "What evidence supports the group?" (explanation.Evidence |> List.map (fun (basis, statement) -> $"[{SignalBasis.code basis}] {statement}"))
+          yield! section "What is inferred?" explanation.Inferred
+          yield! section "What is unknown?" explanation.Unknown
+          yield! section "What architecture is shared?" explanation.SharedArchitecture
+          yield! section "What dependency order exists?" explanation.DependencyOrder
+          yield! section "What collision risk exists?" explanation.CollisionRisk
+          yield! section "Why one agent versus several?" explanation.ExecutionRationale
+          yield! section "What evidence would change the recommendation?" explanation.WouldChange ]
+
+    let private scheduleLines (schedule: GroupSchedule) =
+        [ yield $"Group schedule (max concurrency {schedule.MaxConcurrency}, cross-unit policy {schedule.RiskPolicy}): {duration schedule.ExpectedDuration}"
+          yield $"Context acquisitions: {schedule.ContextAcquisitions} as scheduled, {schedule.IndependentContextAcquisitions} if every item ran independently"
+          for wave in schedule.Waves do
+              yield ""
+              yield $"Wave {wave.Number}: {duration wave.ExpectedDuration}"
+
+              for entry in wave.Units do
+                  let members = if entry.IsGroup then $""" [{String.concat " -> " entry.Members}]""" else ""
+                  yield $"  {entry.Unit}{members} ({duration entry.Remaining})"
+                  yield! entry.Reasons |> List.map (fun reason -> $"    - {reason}")
+          if not schedule.NotScheduled.IsEmpty then
+              yield ""
+              yield "Not scheduled:"
+              yield! schedule.NotScheduled |> List.map (fun (unit, why) -> $"  {unit}: {why}")
+          yield ""
+          yield schedule.Statement ]
+
+    let private groupComparisonText (snapshot: PlanSnapshot) (comparison: GroupComparison) =
+        [ yield! snapshotLines snapshot
+          yield ""
+          for tradeoff in comparison.Tradeoffs do
+              yield $"""{tradeoff.Group} ({String.concat ", " tradeoff.Members})"""
+              if not tradeoff.NotYetRunnable.IsEmpty then
+                  yield $"""  hypothetical until triaged: {String.concat ", " tradeoff.NotYetRunnable} cannot run yet"""
+              yield $"  independent: {tradeoff.Independent.Executions} executions, {tradeoff.Independent.ContextAcquisitions} context acquisitions, {tradeoff.Independent.DesignOwners} design owners, peak {tradeoff.Independent.PeakConcurrency}, {duration tradeoff.Independent.ExpectedDuration}"
+              yield $"  grouped:     {tradeoff.Grouped.Executions} execution, {tradeoff.Grouped.ContextAcquisitions} context acquisition, {tradeoff.Grouped.DesignOwners} design owner, peak {tradeoff.Grouped.PeakConcurrency}, {duration tradeoff.Grouped.ExpectedDuration}"
+              yield $"  context: {tradeoff.ContextSaving}"
+              yield $"  architecture: {tradeoff.ArchitectureConsideration}"
+              yield $"  context pressure: {tradeoff.ContextPressureRisk}"
+              yield ""
+          yield $"Item-level speed plan: {duration comparison.ItemPlanDuration}; {comparison.ItemPlanContextAcquisitions} context acquisitions"
+          yield! scheduleLines comparison.Portfolio
+          yield ""
+          yield comparison.Statement ]
+
     let private emit (options: Options) (json: unit -> Text.Json.Nodes.JsonNode) (lines: unit -> string list) =
         if options.Json then printf "%s" (PlanningJson.render (json ()))
         else lines () |> List.iter (printfn "%s")
@@ -373,6 +498,14 @@ module PlanCommands =
             match objective options, maxConcurrency options with
             | Error message, _
             | _, Error message -> fail 2 message
+            | Ok _, Ok limit when options.Groups ->
+                withAnalysis root version options (fun input analysis ->
+                    let schedule = Grouping.schedule input.Configuration analysis (Grouping.recommend input analysis) limit
+
+                    emit
+                        options
+                        (fun () -> PlanningJson.groupSimulation analysis.Snapshot schedule)
+                        (fun () -> snapshotLines analysis.Snapshot @ [ ""; Grouping.advisoryStatement; "" ] @ scheduleLines schedule))
             | Ok objective, Ok limit ->
                 withAnalysis root version options (fun input analysis ->
                     let document = Planner.plan analysis input.Configuration objective limit
@@ -382,6 +515,11 @@ module PlanCommands =
 
             match maxConcurrency options with
             | Error message -> fail 2 message
+            | Ok limit when options.Groups ->
+                withAnalysis root version options (fun input analysis ->
+                    let speed = Scheduling.simulate analysis input.Configuration OptimizationObjective.MinimumDuration limit
+                    let comparison = Grouping.compare input.Configuration analysis (Grouping.recommend input analysis) speed limit
+                    emit options (fun () -> PlanningJson.groupComparison analysis.Snapshot comparison) (fun () -> groupComparisonText analysis.Snapshot comparison))
             | Ok limit ->
                 withAnalysis root version options (fun input analysis ->
                     let comparison = Planner.compare analysis input.Configuration limit
@@ -398,6 +536,25 @@ module PlanCommands =
                     | Ok explanation ->
                         emit options (fun () -> PlanningJson.explanation analysis.Snapshot explanation) (fun () -> explanationText analysis.Snapshot explanation))
             | _ -> fail 2 "plan explain requires exactly one work-item ID"
+        | "groups" :: rest ->
+            let options = parse empty rest
+
+            withAnalysis root version options (fun input analysis ->
+                let report = Grouping.recommend input analysis
+                emit options (fun () -> PlanningJson.groups analysis.Snapshot report) (fun () -> groupsText analysis.Snapshot report))
+        | "explain-group" :: rest ->
+            let options = parse empty rest
+
+            match options.Positional with
+            | [ id ] ->
+                withAnalysis root version { options with Positional = [] } (fun input analysis ->
+                    let report = Grouping.recommend input analysis
+
+                    match Grouping.explain input analysis report id with
+                    | Error message -> fail 1 message
+                    | Ok explanation ->
+                        emit options (fun () -> PlanningJson.groupExplanation analysis.Snapshot explanation) (fun () -> groupExplanationText analysis.Snapshot explanation))
+            | _ -> fail 2 "plan explain-group requires exactly one group ID (see 'plan groups')"
         | "replay" :: rest ->
             let options = parse empty rest
 

@@ -62,5 +62,6 @@
     <Compile Include="Planning/Comparison.fs" />
     <Compile Include="Planning/Replay.fs" />
     <Compile Include="Planning/Planner.fs" />
+    <Compile Include="Planning/Grouping.fs" />
   </ItemGroup>
 </Project>

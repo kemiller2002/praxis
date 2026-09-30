@@ -414,6 +414,10 @@ type ObservationKind =
     | ContinuousIntegrationPassed of subject: string
     | ContinuousIntegrationFailed of subject: string
     | ReleaseExists of tag: string
+    /// Evidence that a grouped execution over these members strained its
+    /// context (compactions, re-reads, forgotten requirements...), as
+    /// indicator name and count (PRX-GRP-074).
+    | ContextPressure of members: string list * indicators: (string * int) list
 
 type Observation =
     { Kind: ObservationKind
@@ -504,6 +508,147 @@ type DeclaredConflict =
       Right: string
       Reason: string }
 
+/// PRX-GRP-011: where a group came from.
+[<RequireQualifiedAccess>]
+type GroupOrigin =
+    | PlannerRecommended
+    | HumanDeclared
+    | DependencyDerived
+    | ArchitectureDeclared
+
+[<RequireQualifiedAccess>]
+module GroupOrigin =
+    let all =
+        [ GroupOrigin.PlannerRecommended
+          GroupOrigin.HumanDeclared
+          GroupOrigin.DependencyDerived
+          GroupOrigin.ArchitectureDeclared ]
+
+    let code origin =
+        match origin with
+        | GroupOrigin.PlannerRecommended -> "planner-recommended"
+        | GroupOrigin.HumanDeclared -> "human-declared"
+        | GroupOrigin.DependencyDerived -> "dependency-derived"
+        | GroupOrigin.ArchitectureDeclared -> "architecture-declared"
+
+    let tryParse value = all |> List.tryFind (fun origin -> code origin = value)
+
+/// PRX-GRP-011: what a group's members share.
+[<RequireQualifiedAccess>]
+type GroupKind =
+    | SharedArea
+    | SharedArchitecture
+    | DependencyChain
+    | SharedFiles
+    | SharedDataModel
+    | SharedApiSurface
+    | SharedMigration
+    | SharedTestSurface
+    | ContextAffinity
+    | Custom of name: string
+
+[<RequireQualifiedAccess>]
+module GroupKind =
+    let private named =
+        [ GroupKind.SharedArea, "shared-area"
+          GroupKind.SharedArchitecture, "shared-architecture"
+          GroupKind.DependencyChain, "dependency-chain"
+          GroupKind.SharedFiles, "shared-files"
+          GroupKind.SharedDataModel, "shared-data-model"
+          GroupKind.SharedApiSurface, "shared-api-surface"
+          GroupKind.SharedMigration, "shared-migration"
+          GroupKind.SharedTestSurface, "shared-test-surface"
+          GroupKind.ContextAffinity, "context-affinity" ]
+
+    let code kind =
+        match kind with
+        | GroupKind.Custom name -> $"custom:{name}"
+        | known -> named |> List.find (fst >> (=) known) |> snd
+
+    let tryParse (value: string) =
+        match value with
+        | custom when custom.StartsWith("custom:", StringComparison.Ordinal) && custom.Length > 7 -> Some(GroupKind.Custom(custom.Substring 7))
+        | _ -> named |> List.tryFind (snd >> (=) value) |> Option.map fst
+
+/// PRX-GRP-060: how much context two work items share. `Unknown` is not
+/// `None`: it means the evidence to decide is missing.
+[<RequireQualifiedAccess>]
+type ContextAffinity =
+    | Unknown
+    | None
+    | Low
+    | Medium
+    | High
+
+[<RequireQualifiedAccess>]
+module ContextAffinity =
+    let all =
+        [ ContextAffinity.Unknown
+          ContextAffinity.None
+          ContextAffinity.Low
+          ContextAffinity.Medium
+          ContextAffinity.High ]
+
+    let code affinity =
+        match affinity with
+        | ContextAffinity.Unknown -> "unknown"
+        | ContextAffinity.None -> "none"
+        | ContextAffinity.Low -> "low"
+        | ContextAffinity.Medium -> "medium"
+        | ContextAffinity.High -> "high"
+
+    let tryParse value = all |> List.tryFind (fun affinity -> code affinity = value)
+
+    /// Strength for thresholds; `Unknown` never meets one.
+    let rank affinity =
+        match affinity with
+        | ContextAffinity.Unknown
+        | ContextAffinity.None -> 0
+        | ContextAffinity.Low -> 1
+        | ContextAffinity.Medium -> 2
+        | ContextAffinity.High -> 3
+
+/// A group a human declared in planner configuration (PRX-GRP-073). It
+/// outranks every inferred grouping of the same items.
+type DeclaredGroup =
+    { Id: string
+      Members: string list
+      Kind: GroupKind option
+      Origin: GroupOrigin
+      SharedContext: string list
+      ExecutionRepository: string option
+      CrossRepository: bool
+      ArchitectureNotes: string list }
+
+/// An accepted architecture decision that materially affects several items
+/// (PRX-GRP-020, PRX-GRP-074 merging).
+type DeclaredArchitecture =
+    { Decision: string
+      Members: string list
+      Statement: string }
+
+/// PRX-GRP-030: size and cohesion boundaries, human declarations, and where
+/// items are executed (PRX-GRP-051). Every value is reported with a group.
+type GroupingConfiguration =
+    { PreferredMinimumSize: int
+      PreferredMaximumSize: int
+      MaximumAutomaticSize: int
+      MinimumAffinity: ContextAffinity
+      Groups: DeclaredGroup list
+      Architecture: DeclaredArchitecture list
+      ExecutionRepositories: (string * string) list }
+
+[<RequireQualifiedAccess>]
+module GroupingConfiguration =
+    let defaults =
+        { PreferredMinimumSize = 3
+          PreferredMaximumSize = 10
+          MaximumAutomaticSize = 12
+          MinimumAffinity = ContextAffinity.Medium
+          Groups = []
+          Architecture = []
+          ExecutionRepositories = [] }
+
 type PlannerConfiguration =
     { MaxConcurrency: int
       MinimumCostSamples: int
@@ -513,7 +658,8 @@ type PlannerConfiguration =
       RemainingFractions: RemainingFractions
       Dependencies: DeclaredDependency list
       Conflicts: DeclaredConflict list
-      Areas: (string * string list) list }
+      Areas: (string * string list) list
+      Grouping: GroupingConfiguration }
 
 [<RequireQualifiedAccess>]
 module PlannerConfiguration =
@@ -540,7 +686,8 @@ module PlannerConfiguration =
           RemainingFractions = defaultFractions
           Dependencies = []
           Conflicts = []
-          Areas = [] }
+          Areas = []
+          Grouping = GroupingConfiguration.defaults }
 
 /// Everything a plan is computed from. Identical inputs produce identical
 /// plans (PRX-PLAN-002).

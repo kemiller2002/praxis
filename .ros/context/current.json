@@ -4636,6 +4636,104 @@
       "conclusion": "Checkpoints no longer claim, and completion/blocking are no longer held back by, commits other items' recorded checkpoints or reconciliations own."
     },
     {
+      "id": "WI-0064",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/Grouping.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/GroupingTests.fs"
+        },
+        {
+          "type": "requirements",
+          "path": "requirements/PLANNING-WORK-GROUPS.md"
+        },
+        {
+          "type": "decision",
+          "path": "research/decisions/DF-ROS-2026-A047--advisory-evidence-based-work-groups.md"
+        },
+        {
+          "type": "evidence",
+          "path": "research/evidence/EV-ROS-2026-A059--grouping-planner-baseline-and-cohort.md"
+        },
+        {
+          "type": "experiment",
+          "path": "research/experiments/EX-ROS-2026-A021--grouped-versus-independent-execution.md"
+        }
+      ],
+      "updatedAt": "2026-09-30T11:18:32.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T102847967Z-f42c2262"
+      ],
+      "latestCheckpoint": {
+        "id": "b2ee1c1bdba0ab4b01378d5a",
+        "recordedAt": "2026-09-30T11:18:30.000Z",
+        "executionId": "EXE-20260930T102847967Z-f42c2262",
+        "repository": "repository-operating-system",
+        "branch": "claude/plan-work-groups",
+        "commit": "370e0a4d8d8558ba8853531bcb18c4a4663bf2d1",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/plan-work-groups",
+        "remoteCommit": "370e0a4d8d8558ba8853531bcb18c4a4663bf2d1",
+        "summary": "Phase one done: read-only group model, CLI, 25 tests (786 F#, 257 differential, 104+122 Node, 7 Python pass); baseline recorded (EV-ROS-2026-A059); protocol, cohort and predictions frozen (EX-ROS-2026-A021); DF-ROS-2026-A047 in review",
+        "nextAction": "Owner reviews DF-ROS-2026-A047 and the proposed cohort; the arms run under PRAXIS-PLAN-EXP-01 once gated conditions hold",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T11:18:32.000Z"
+    },
+    {
+      "id": "PRAXIS-PLAN-03",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/decisions/DF-ROS-2026-A047--advisory-evidence-based-work-groups.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ArtifactTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T11:34:55.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T112849252Z-4c58aae8"
+      ],
+      "latestCheckpoint": {
+        "id": "7728b91d817f008fcf6bf056",
+        "recordedAt": "2026-09-30T11:34:37.000Z",
+        "executionId": "EXE-20260930T112849252Z-4c58aae8",
+        "repository": "repository-operating-system",
+        "branch": "claude/plan-work-groups",
+        "commit": "5c828fd6e444d5800e51d73ebd44662fbd032b8b",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/plan-work-groups",
+        "remoteCommit": "5c828fd6e444d5800e51d73ebd44662fbd032b8b",
+        "summary": "Owner approval recorded: DF-ROS-2026-A047 and EV-ROS-2026-A059 accepted, cohort triaged, main merged in",
+        "nextAction": "Complete, then merge PR #126",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T11:34:55.000Z"
+    },
+    {
       "id": "PRAXIS-WORK-ABANDON-01",
       "type": "feature",
       "state": "complete",
@@ -4680,7 +4778,7 @@
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T09:40:16.000Z",
+  "updatedAt": "2026-09-30T11:34:55.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

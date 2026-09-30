@@ -18,6 +18,10 @@ praxis plan compare   [--max-concurrency N] [--json]   every strategy, Pareto fr
 praxis plan explain   ID [--json]                      why an item is (not) scheduled, under every strategy
 praxis plan replay    [--details] [--json]             historical replay without hindsight
 praxis plan freshness --plan FILE [--json]             is a saved plan stale; what happened since
+praxis plan groups    [--json]                         evidence-based work groups (see "Work groups")
+praxis plan explain-group GROUP-ID [--json]            why a group exists, what it excludes, what would change it
+praxis plan simulate --groups [--max-concurrency N]    waves of groups and ungrouped items
+praxis plan compare  --groups [--max-concurrency N]    grouped versus independent execution, per group
 ```
 
 Common options: `--observations FILE` (external CI/GitHub evidence, below),
@@ -198,10 +202,99 @@ tie-breaks; no clock is read below the CLI (`--as-of` pins it); JSON field
 order is fixed. The logical plan (everything but the snapshot timestamp) of
 identical inputs renders byte-identically, which a test asserts.
 
+## Work groups
+
+Requirements: [`requirements/PLANNING-WORK-GROUPS.md`](../requirements/PLANNING-WORK-GROUPS.md).
+Decision: `DF-ROS-2026-A047`. Baseline and experiment: `EV-ROS-2026-A059`,
+`EX-ROS-2026-A021`.
+
+A **work item** is the governed unit; a **planning group** is an advisory
+recommendation that several items share enough context to be reasoned about
+together; an **execution group** is a deliberate decision to give them one
+execution context. The planner produces planning groups only. Membership
+never changes a member's lifecycle state, evidence, attribution, telemetry
+or checkpoints, and no group field can carry another member's changes.
+
+**Signals** (PRX-GRP-020..022), in evidence priority, each labelled with its
+basis:
+
+| Signal | Basis | Affinity alone |
+| --- | --- | --- |
+| declared together (`grouping.groups`), common architecture decision (`grouping.architecture`) | explicit | high |
+| shared non-generic tag | explicit | medium |
+| hard dependency between the two | explicit (structured) or inferred (text) | medium |
+| both cite the same requirement or decision (`PRX-`, `RQ-`, `DF-`) in their description | derived | medium |
+| overlapping declared paths (`areas`), same checkpoint branch | explicit / derived | high |
+| same ID family, two or more shared title words | inferred | low |
+
+Two non-inferred medium signals corroborate each other to high. A pair with
+no signal is `none` when both items carry scope evidence, and `unknown` when
+either carries none: unknown is never reported as unrelated.
+
+**Forming groups.** Open items (not complete, abandoned or stale; captured
+items may join a planning group but must be triaged before execution) are
+clustered per execution repository. The best-connected item seeds a group;
+the candidate with most qualifying links joins next, ties broken by evidence
+priority, and only if it reaches `minimumAffinity` (default medium) with at
+least two thirds of the members. Nothing joins to fill capacity; a cohesive
+pair is kept and noted as below the preferred size. A candidate larger than
+`maximumAutomaticSize`, or larger than a size at which **context pressure**
+was observed for its members, is split in dependency order and the split is
+explained. A group joined only through a shared architecture decision says so
+(a merge). Human declarations are taken as declared, outrank inference, and
+warn when oversized, overlapping, mixing repositories without
+`crossRepository`, or past observed context pressure.
+
+**Per group** the planner reports kind, origin, area, members with their own
+state and the blocked members they wait on, cohesion lines (`k/n` members per
+signal), shared context, required sequence (hard dependencies, ordinal
+tie-breaks), execution repository, affinity and confidence, intra-group
+collision risk and parallel safety (separately from affinity), recommended
+execution (one sequential agent; one owner with parallel subtasks only when
+every pair is collision-safe; or split by repository), context cost (`n`
+independent acquisitions versus 1 grouped; token and time value unknown until
+measured), partial-completion progress and notes. Across groups it derives
+group->group, item->group and group->external dependencies from member
+dependencies (naming each), detects cycles, and says which groups may run
+concurrently under the `accept-elevated` policy.
+
+**Configuration** (`--config FILE`, all optional):
+
+```json
+{ "grouping": {
+    "preferredSize": [3, 10], "maximumAutomaticSize": 12, "minimumAffinity": "medium",
+    "groups": [ { "id": "GROUP-SUMMA-DATABASE-004", "members": ["DB-21", "DB-22"],
+                  "kind": "shared-migration", "origin": "human-declared",
+                  "sharedContext": ["one typed migration model"],
+                  "executionRepository": "summa", "crossRepository": false,
+                  "architectureNotes": ["no direct SQL outside Strata"] } ],
+    "architecture": [ { "decision": "DF-...", "members": ["A", "B"], "statement": "..." } ],
+    "executionRepositories": { "PRAXIS-REMOTE-12": "conditor" } } }
+```
+
+An item whose description says "External repository" and that has no
+`executionRepositories` entry is never grouped into this checkout.
+
+**Context-pressure evidence** is an observation (`--observations FILE`):
+
+```json
+{ "kind": "context-pressure", "members": ["A", "B", "C", "D"],
+  "indicators": { "compactions": 2, "forgottenRequirements": 1 },
+  "source": "telemetry", "reference": "EXE-..." }
+```
+
+Any positive indicator limits groups sharing a member to one fewer member
+than the observed execution (at least two).
+
+**IDs.** Recommendations are named `GROUP-<REPOSITORY>-<AREA>-<NNN>` and are
+stable for identical inputs only; durable IDs come from declarations.
+
 ## JSON contract
 
 Every document has `"schema": "praxis.plan/1.0.0"` and a `kind`: `analysis`,
-`plan`, `comparison`, `explanation`, `replay` or `freshness`. Every estimate
+`plan`, `comparison`, `explanation`, `replay`, `freshness`, `groups`,
+`group-explanation`, `group-plan` or `group-comparison`. `groups` documents
+round-trip through `PlanningJson.parseGroups`. Every estimate
 is `{lowerMs, expectedMs, upperMs, confidence, display}` (or `{lower,
 expected, upper, confidence}` with `{amount, currency}` for money) and an
 unknown bound is `null`, never `0`. Codes (planning states, reasons,
@@ -214,7 +307,7 @@ new identity scheme is introduced (PRX-PLAN-182).
 
 | Tier | Module |
 | --- | --- |
-| Domain | `Ros.Domain.Planning`: `Model`, `History`, `Inventory`, `Graph`, `Snapshot`, `Scheduling`, `Comparison`, `Replay`, `Planner` |
+| Domain | `Ros.Domain.Planning`: `Model`, `History`, `Inventory`, `Graph`, `Snapshot`, `Scheduling`, `Comparison`, `Replay`, `Planner`, `Grouping` |
 | Contracts | `Ros.Contracts.Planning.PlanningJson` (render, parse, config and observation inputs) |
 | Application | `Ros.Application.Planning`: `PlanningReadPort`, `PlanningOperations.gather/analyze` |
 | Infrastructure | `Ros.Infrastructure.Planning.FilePlanningRepository` (files, read-only Git) |
@@ -246,6 +339,25 @@ No external dependency was added (PRX-PLAN-004).
 | 170-173 | Met in replay and drift; error is not yet persisted over time. |
 | 180-182 | Met. |
 
+## Work-group requirement status
+
+| Requirement | Status |
+| --- | --- |
+| GRP-001..003 | Met: planning groups only; members unchanged (tests 8, 9). |
+| GRP-010..011 | Met with the typed model in `Grouping`; recommended IDs stable for identical input only. |
+| GRP-020..022 | Met for tags, declared paths, branches, dependencies, requirement/decision references, declarations, ID families and titles. Historical co-change, test overlap and deployment boundaries are not observable yet. |
+| GRP-030..031 | Met (tests 2, 18). |
+| GRP-040, 044 | Guidance for executors; `EX-ROS-2026-A021` requires the group analysis. Group checkpoints and durable notes are phase two (`PRAXIS-GROUP-05`). |
+| GRP-041..043 | Met by construction (tests 9, 10); per-item attribution in a grouped execution is enforced by the existing work protocol. |
+| GRP-050..052 | Met for dependencies and cycles (dependency test) and repositories (tests 5, 5b); cross-repository orchestration is future work. |
+| GRP-060..063 | Met; context cost is counted, not priced (unmeasured). |
+| GRP-070..072 | Met. |
+| GRP-073 | Declarations from configuration; mutation commands captured as `PRAXIS-GROUP-01..05`, deferred. |
+| GRP-074 | Size and context-pressure splits and architecture merges met (tests 18, 19, merge test); splitting by independent chain or external blockage is not implemented. |
+| GRP-075 | Met (test 15). |
+| GRP-080..088 | Baseline, cohort, protocol and predictions frozen (`EV-ROS-2026-A059`, `EX-ROS-2026-A021`); the arms have not run. |
+| GRP-090 | All 20 cases in `tests/Ros.Tests/GroupingTests.fs`; case 20 in `PlanningCliTests`. |
+
 ## Known limitations and next steps
 
 - Execution wall time is a weak effort signal in this repository: many
@@ -257,3 +369,7 @@ No external dependency was added (PRX-PLAN-004).
   `elevated` (shared Praxis state) or `unknown`.
 - Decide from the shadow evidence whether autonomous execution should ever
   become a separate later phase (non-goal of this release).
+- Work groups: run `EX-ROS-2026-A021`; instrument context overhead (repeated
+  reads, time to first edit) so reuse can be measured; consider requiring an
+  admitted member to reach the group's typical affinity, since one broad tag
+  can attach a looser item (`EV-ROS-2026-A059`).

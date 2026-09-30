@@ -101,8 +101,43 @@ module Snapshot =
             | ObservationKind.ContinuousIntegrationPassed subject -> $"ci-passed:{subject}"
             | ObservationKind.ContinuousIntegrationFailed subject -> $"ci-failed:{subject}"
             | ObservationKind.ReleaseExists tag -> $"release:{tag}"
+            | ObservationKind.ContextPressure(members, indicators) ->
+                let names = members |> Text.sortOrdinal |> String.concat ";"
+                let counts = indicators |> List.map (fun (name, count) -> $"{name}={count}") |> Text.sortOrdinal |> String.concat ";"
+                $"context-pressure:{names}:{counts}"
 
         $"{kind}@{EvidenceSource.code observation.Provenance.Source}:{observation.Provenance.Reference}"
+
+    /// Grouping settings join the fingerprint only when they differ from the
+    /// defaults, so fingerprints of plans saved before grouping existed stay
+    /// valid.
+    let private groupingCanonical (grouping: GroupingConfiguration) =
+        if grouping = GroupingConfiguration.defaults then
+            []
+        else
+            let joined (values: string list) = values |> Text.sortOrdinal |> String.concat ";"
+
+            let groups =
+                grouping.Groups
+                |> List.map (fun group ->
+                    let kind = group.Kind |> Option.map GroupKind.code |> Option.defaultValue ""
+                    let repository = group.ExecutionRepository |> Option.defaultValue ""
+                    $"{group.Id}={joined group.Members}/{kind}/{GroupOrigin.code group.Origin}/{joined group.SharedContext}/{repository}/{group.CrossRepository}/{joined group.ArchitectureNotes}")
+                |> Text.sortOrdinal
+                |> String.concat ","
+
+            let architecture =
+                grouping.Architecture
+                |> List.map (fun decision -> $"{decision.Decision}={joined decision.Members}/{decision.Statement}")
+                |> Text.sortOrdinal
+                |> String.concat ","
+
+            let repositories = grouping.ExecutionRepositories |> List.map (fun (id, repository) -> $"{id}@{repository}") |> Text.sortOrdinal |> String.concat ","
+
+            [ $"grouping:{grouping.PreferredMinimumSize}-{grouping.PreferredMaximumSize}/{grouping.MaximumAutomaticSize}/{ContextAffinity.code grouping.MinimumAffinity}"
+              groups
+              architecture
+              repositories ]
 
     let private configurationCanonical (configuration: PlannerConfiguration) =
         let weights = configuration.BalancedWeights
@@ -119,7 +154,8 @@ module Snapshot =
               $"{pair fractions.FinalizationOnly},{pair fractions.VerificationRemaining},{pair fractions.ImplementationInProgress},{pair fractions.Unclassified}"
               configuration.Dependencies |> List.map (fun item -> $"{item.From}>{item.To}:{DependencyKind.code item.Kind}") |> Text.sortOrdinal |> String.concat ","
               configuration.Conflicts |> List.map (fun item -> $"{item.Left}x{item.Right}:{item.Reason}") |> Text.sortOrdinal |> String.concat ","
-              configuration.Areas |> List.map (fun (id, paths) -> id + "=" + (paths |> Text.sortOrdinal |> String.concat ";")) |> Text.sortOrdinal |> String.concat "," ]
+              configuration.Areas |> List.map (fun (id, paths) -> id + "=" + (paths |> Text.sortOrdinal |> String.concat ";")) |> Text.sortOrdinal |> String.concat ","
+              yield! groupingCanonical configuration.Grouping ]
 
     let evidenceCanonical (input: PlanningInput) =
         let executions =

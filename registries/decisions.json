@@ -1057,5 +1057,70 @@
     "title": "A deterministic, read-only F# planner recommends evidence-backed execution waves; unknown stays unknown and parallelism is conservative",
     "updated": "2026-09-29",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-30",
+    "decision_type": "architecture",
+    "id": "DF-ROS-2026-A047",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A047--advisory-evidence-based-work-groups.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T102847967Z-f42c2262": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T11:17:12.025Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "WI-0064: evidence-based work groups and the frozen grouping experiment"
+        },
+        "EXE-20260930T112849252Z-4c58aae8": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T11:34:14.614Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-PLAN-03: status review -> accepted on the repository owner's explicit approval of all PR #126 recommendations (the owner approved; this agent only recorded it)"
+        }
+      }
+    },
+    "related_documents": [
+      "EV-ROS-2026-A059",
+      "EX-ROS-2026-A021",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "DF-ROS-2026-A046",
+      "docs/planning.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A059"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "determinism",
+      "attribution"
+    ],
+    "title": "Work groups are advisory, evidence-based recommendations over unchanged work items; grouped execution waits for experimental evidence",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
   }
 ]
