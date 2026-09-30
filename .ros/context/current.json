@@ -2254,15 +2254,17 @@
     {
       "id": "GH-84",
       "type": "task",
-      "state": "blocked",
-      "semanticState": "blocked",
+      "state": "abandoned",
+      "semanticState": "abandoned",
       "evidence": [],
-      "updatedAt": "2026-09-27T08:39:01.000Z",
+      "updatedAt": "2026-09-30T09:40:16.000Z",
       "telemetryExecutionIds": [
         "EXE-20260927T074026833Z-d1d7ea06",
         "EXE-20260927T075155507Z-fcdf36ca"
       ],
-      "blockReason": "Site built and verified (PRAXIS-SITE-01..25); awaiting human review and merge of PR #85 and the one-time Pages setting (docs/site/site-deployment.md). Deployment is not yet captured, so GH-84 is not complete."
+      "blockReason": "Site built and verified (PRAXIS-SITE-01..25); awaiting human review and merge of PR #85 and the one-time Pages setting (docs/site/site-deployment.md). Deployment is not yet captured, so GH-84 is not complete.",
+      "abandonedAt": "2026-09-30T09:40:16.000Z",
+      "abandonedReason": "Cancelled by the repository owner on 2026-09-30. Blocked since before durable checkpoints (27-28 Sep); remaining steps (GH-84: one-time Pages setting; GH-90: PRAXIS-REMOTE-12 in Conditor) will not be pursued under this item."
     },
     {
       "id": "PRAXIS-SITE-01",
@@ -2903,14 +2905,16 @@
     {
       "id": "GH-90",
       "type": "task",
-      "state": "blocked",
-      "semanticState": "blocked",
+      "state": "abandoned",
+      "semanticState": "abandoned",
       "evidence": [],
-      "updatedAt": "2026-09-28T10:21:03.000Z",
+      "updatedAt": "2026-09-30T09:40:16.000Z",
       "telemetryExecutionIds": [
         "EXE-20260928T073932249Z-d48161b9"
       ],
-      "blockReason": "Praxis-side work PRAXIS-REMOTE-01..10 complete and merged via PR #91; remaining PRAXIS-REMOTE-11 (live no-.NET proof) needs: an attested release containing 'remote execute', pinned, with remote.capabilities opted in; PRAXIS-REMOTE-12 follows 11."
+      "blockReason": "Praxis-side work PRAXIS-REMOTE-01..10 complete and merged via PR #91; remaining PRAXIS-REMOTE-11 (live no-.NET proof) needs: an attested release containing 'remote execute', pinned, with remote.capabilities opted in; PRAXIS-REMOTE-12 follows 11.",
+      "abandonedAt": "2026-09-30T09:40:16.000Z",
+      "abandonedReason": "Cancelled by the repository owner on 2026-09-30. Blocked since before durable checkpoints (27-28 Sep); remaining steps (GH-84: one-time Pages setting; GH-90: PRAXIS-REMOTE-12 in Conditor) will not be pursued under this item."
     },
     {
       "id": "PRAXIS-REMOTE-01",
@@ -4698,6 +4702,48 @@
       "telemetryExecutionIds": [
         "EXE-20260930T112849252Z-4c58aae8"
       ]
+    },
+    {
+      "id": "PRAXIS-WORK-ABANDON-01",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Model.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkAbandonTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T09:40:03.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T091732622Z-b35f550c"
+      ],
+      "latestCheckpoint": {
+        "id": "f1977b2c0d3772281244821b",
+        "recordedAt": "2026-09-30T09:40:01.000Z",
+        "executionId": "EXE-20260930T091732622Z-b35f550c",
+        "repository": "repository-operating-system",
+        "branch": "claude/praxis-planning-optimization-v6dacf",
+        "commit": "7ee173278a43c28144538ca391b7a11646d63094",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/praxis-planning-optimization-v6dacf",
+        "remoteCommit": "7ee173278a43c28144538ca391b7a11646d63094",
+        "summary": "work abandon implemented (F# + Node), validation, docs, 6 tests",
+        "nextAction": "Complete, then abandon GH-84 and GH-90",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T09:40:03.000Z",
+      "conclusion": "Live work can now be cancelled truthfully with work abandon."
     }
   ],
   "protocolVersion": "1.0.0",

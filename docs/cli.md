@@ -337,6 +337,7 @@ ros work checkpoint show ID [--json] [--offline]
 ros work continue --id ID --occurred-at TIMESTAMP [--json] [IDENTITY]
 ros work context [ID] [--text] [--offline]
 ros work block ... [--unrecoverable-reason TEXT]
+ros work abandon --id ID [--id ID]* --occurred-at TIMESTAMP --reason TEXT [IDENTITY]
 ros status [--json] [--verbose] [--offline]
 ```
 

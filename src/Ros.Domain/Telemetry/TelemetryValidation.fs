@@ -671,13 +671,17 @@ module TelemetryValidation =
                 if not (byId.ContainsKey id) then
                     findings.Add(finding ".ros/context/current.json" "telemetryExecutionIds" $"work item '{item.Id}' links missing execution '{id}'")
 
-            if requireFinalization && item.SemanticState = LiveWorkState.Complete && not item.TelemetryExecutionIds.IsEmpty then
+            // Abandoned work is ended just as completed work is: its executions must be finalized.
+            if requireFinalization
+               && (item.SemanticState = LiveWorkState.Complete || item.SemanticState = LiveWorkState.Abandoned)
+               && not item.TelemetryExecutionIds.IsEmpty then
                 for id in item.TelemetryExecutionIds do
                     let status = byId.TryFind id |> Option.bind (fun r -> r.Status)
 
                     if status <> Some "finalized" then
                         let path = byId.TryFind id |> Option.map (fun r -> r.Relative) |> Option.defaultValue ".ros/context/current.json"
-                        findings.Add(finding path "status" $"completed work item '{item.Id}' has unfinalized telemetry")
+                        let ended = if item.SemanticState = LiveWorkState.Abandoned then "abandoned" else "completed"
+                        findings.Add(finding path "status" $"{ended} work item '{item.Id}' has unfinalized telemetry")
 
         findings |> List.ofSeq
 

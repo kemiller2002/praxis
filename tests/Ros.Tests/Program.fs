@@ -67,6 +67,7 @@ let main _ =
     @ ExecutionGovernanceTests.tests
     @ InstallationRegistrationTests.tests
     @ CommitOwnershipTests.tests
+    @ WorkAbandonTests.tests
     @ PlanningTests.tests
     @ PlanningCliTests.tests
     @ GroupingTests.tests

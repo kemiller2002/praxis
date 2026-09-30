@@ -24,6 +24,7 @@ module WorkListViewTests =
         | LiveWorkState.Active -> "active"
         | LiveWorkState.Blocked -> "blocked"
         | LiveWorkState.Complete -> "complete"
+        | LiveWorkState.Abandoned -> "abandoned"
 
     let private liveItem id state : LiveWorkItem =
         { Id = id
@@ -59,7 +60,7 @@ module WorkListViewTests =
                       Assert.equal "WI-0002" row.Title
                       Assert.equal [] row.BacklogActions
                       Assert.equal
-                          (Some { State = "active"; SemanticState = "active"; AllowedActions = [ "block"; "complete" ] })
+                          (Some { State = "active"; SemanticState = "active"; AllowedActions = [ "abandon"; "block"; "complete" ] })
                           row.LiveWorkItem
                   | _ -> failwith "expected exactly one row" }
 
