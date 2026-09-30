@@ -9,6 +9,7 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="JsonRendering.fs" />
     <Compile Include="Git/StatusJson.fs" />
+    <Compile Include="Integration/MergeReadinessJson.fs" />
     <Compile Include="Work/DecisionJson.fs" />
     <Compile Include="Work/PlanJson.fs" />
     <Compile Include="Work/ContextPlanJson.fs" />
