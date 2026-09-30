@@ -3303,10 +3303,58 @@
         "pr92"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T16:24:31.000Z",
-      "updatedAt": "2026-09-30T16:24:36.000Z",
+      "updatedAt": "2026-09-30T17:09:15.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PR92-ID-RENUMBER",
+      "title": "Owner decision: renumber PR #92's colliding DF-ROS-2026-A042/A043 and RQ-ROS-2026-A022/A023 before reconciliation (see EV-ROS-2026-A060 section 9)",
+      "description": null,
+      "tags": [
+        "pr92",
+        "decision"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:09:06.599Z",
+      "updatedAt": "2026-09-30T17:09:06.599Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PR92-POSTMERGE-FENCE",
+      "title": "On the reconciled branch, write post-merge tests P1-P7 from EV-ROS-2026-A060 section 6 and re-point PraxisCli to praxis.dll",
+      "description": null,
+      "tags": [
+        "pr92",
+        "testing"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:09:06.997Z",
+      "updatedAt": "2026-09-30T17:09:06.997Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
