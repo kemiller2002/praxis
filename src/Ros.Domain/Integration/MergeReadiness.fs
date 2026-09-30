@@ -41,6 +41,8 @@ module CheckState =
         | "canceled" -> Some CheckState.Cancelled
         | "skipped" -> Some CheckState.Skipped
         | "missing" -> Some CheckState.Missing
+        | value when value.StartsWith("unknown:", System.StringComparison.Ordinal) && value.Length > 8 ->
+            Some(CheckState.Unknown(value.Substring(8)))
         | value when not (System.String.IsNullOrWhiteSpace value) -> Some(CheckState.Unknown value)
         | _ -> None
 
