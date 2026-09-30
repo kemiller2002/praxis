@@ -2433,6 +2433,30 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PR92-PREMERGE-RENAME-FENCE",
+      "title": "Harden Praxis rename invariants on PR #92 before main is reconciled",
+      "description": "Part of PRAXIS-PR92-PREMERGE-REGRESSION-FENCE (tracked on branch test/pr92-premerge-main-characterization). Adds characterization tests for behavior this branch already implements (PRAXIS_/ROS_ telemetry precedence, retained ROS persisted names, customized ROS-era launcher, legacy launcher helper, ROS-era work resumed via praxis, ros==praxis help). No production change. The test edit was drafted in this session before this item began on this branch and is committed under it.",
+      "tags": [
+        "testing",
+        "pr92"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:04:57.000Z",
+      "updatedAt": "2026-09-30T17:04:58.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
