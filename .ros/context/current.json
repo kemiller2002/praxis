@@ -4856,6 +4856,60 @@
         }
       },
       "completedAt": "2026-09-30T17:20:49.000Z"
+    },
+    {
+      "id": "PRAXIS-PR92-PREMERGE-REGRESSION-FENCE",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tests/Ros.Tests/PremergeFence.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PremergeCommandSurfaceTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PremergeRemoteTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PremergeRemoteScriptTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PremergeReleaseTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T17:09:15.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T162437557Z-40b62e08"
+      ],
+      "latestCheckpoint": {
+        "id": "bc4a2e6d6a5acc8b9842e72a",
+        "recordedAt": "2026-09-30T17:09:07.000Z",
+        "executionId": "EXE-20260930T162437557Z-40b62e08",
+        "repository": "repository-operating-system",
+        "branch": "test/pr92-premerge-main-characterization",
+        "commit": "f0ec0a64969b1f82fd3d0ef10a27225986317885",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "test/pr92-premerge-main-characterization",
+        "remoteCommit": "f0ec0a64969b1f82fd3d0ef10a27225986317885",
+        "summary": "Fence complete: 37 main tests (829/829), 7 PR #92 tests (956/956), EV-ROS-2026-A060 matrix and manifest, draft PR #131",
+        "nextAction": "Owner: decide PRAXIS-PR92-ID-RENUMBER, merge PR #131, then reconcile PR #92 and do PRAXIS-PR92-POSTMERGE-FENCE",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T17:09:15.000Z",
+      "conclusion": "Regression fence in place; reconciliation not started. Remaining: PRAXIS-PR92-ID-RENUMBER (owner decision), merge PR #131, PRAXIS-PR92-POSTMERGE-FENCE"
     }
   ],
   "protocolVersion": "1.0.0",

@@ -71,4 +71,8 @@ let main _ =
     @ PlanningTests.tests
     @ PlanningCliTests.tests
     @ GroupingTests.tests
+    @ PremergeCommandSurfaceTests.tests
+    @ PremergeRemoteTests.tests
+    @ PremergeRemoteScriptTests.tests
+    @ PremergeReleaseTests.tests
     |> TestRunner.run

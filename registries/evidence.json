@@ -1432,6 +1432,57 @@
     "version": "1.0.0"
   },
   {
+    "confidence": "high",
+    "created": "2026-09-30",
+    "evidence_type": "test-result",
+    "id": "EV-ROS-2026-A060",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A060--pr92-premerge-semantic-conflict-matrix-and-reconciliation-manifest.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T162437557Z-40b62e08": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:08:11.000Z",
+          "evidence": [
+            "tests/Ros.Tests/PremergeFence.fs"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-PR92-PREMERGE-REGRESSION-FENCE: semantic conflict matrix, baselines and reconciliation manifest for PR #92"
+        }
+      }
+    },
+    "related_documents": [
+      "docs/work-protocol.md",
+      "docs/remote-agent-contract.md",
+      "DF-ROS-2026-A042",
+      "DF-ROS-2026-A044",
+      "DF-ROS-2026-A045"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "supports": [],
+    "tags": [
+      "pr92",
+      "reconciliation",
+      "regression",
+      "characterization",
+      "praxis-rename"
+    ],
+    "title": "PR #92 pre-merge regression fence: semantic conflict matrix, baselines, and the reconciliation manifest",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
+  },
+  {
     "confidence": "low",
     "created": "2026-09-30",
     "derived_from": [

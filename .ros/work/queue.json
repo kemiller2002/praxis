@@ -3389,6 +3389,78 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PR92-PREMERGE-REGRESSION-FENCE",
+      "title": "Regression fence before reconciling PR #92 with main",
+      "description": "Characterize semantic differences between current main and PR #92 and add regression tests around behavior at risk during the future ROS-to-Praxis reconciliation. No production reconciliation occurs in this work item. Baseline refs: main fb6a0f9d6c8e25e979be436346fd803184e306a0, PR #92 3cf2bd37b8a729ac683e6062013b7f2b31e10a5b, merge-base 9ace9d9acf711e1013347b5ed8bb756bcaf298cf (PR #92 21 ahead / 120 behind).",
+      "tags": [
+        "testing",
+        "pr92"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T16:24:31.000Z",
+      "updatedAt": "2026-09-30T17:09:15.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PR92-ID-RENUMBER",
+      "title": "Owner decision: renumber PR #92's colliding DF-ROS-2026-A042/A043 and RQ-ROS-2026-A022/A023 before reconciliation (see EV-ROS-2026-A060 section 9)",
+      "description": null,
+      "tags": [
+        "pr92",
+        "decision"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:09:06.599Z",
+      "updatedAt": "2026-09-30T17:09:06.599Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PR92-POSTMERGE-FENCE",
+      "title": "On the reconciled branch, write post-merge tests P1-P7 from EV-ROS-2026-A060 section 6 and re-point PraxisCli to praxis.dll",
+      "description": null,
+      "tags": [
+        "pr92",
+        "testing"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:09:06.997Z",
+      "updatedAt": "2026-09-30T17:09:06.997Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
