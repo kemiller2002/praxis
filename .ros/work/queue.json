@@ -3111,10 +3111,10 @@
         "cli"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T11:00:32.515Z",
-      "updatedAt": "2026-09-30T11:34:15.000Z",
+      "updatedAt": "2026-09-30T18:17:06.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3135,10 +3135,10 @@
         "cli"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T11:00:33.019Z",
-      "updatedAt": "2026-09-30T11:34:15.000Z",
+      "updatedAt": "2026-09-30T18:17:08.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3159,10 +3159,10 @@
         "cli"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T11:00:33.414Z",
-      "updatedAt": "2026-09-30T11:34:16.000Z",
+      "updatedAt": "2026-09-30T18:17:10.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3183,10 +3183,10 @@
         "cli"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T11:00:33.806Z",
-      "updatedAt": "2026-09-30T11:34:16.000Z",
+      "updatedAt": "2026-09-30T18:17:12.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3207,10 +3207,10 @@
         "cli"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T11:00:34.255Z",
-      "updatedAt": "2026-09-30T11:34:17.000Z",
+      "updatedAt": "2026-09-30T18:17:14.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3351,10 +3351,10 @@
         "cli"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T17:18:23.332Z",
-      "updatedAt": "2026-09-30T18:16:21.000Z",
+      "updatedAt": "2026-09-30T18:17:16.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

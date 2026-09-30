@@ -4914,10 +4914,23 @@
     {
       "id": "PRAXIS-GROUP-01",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T18:16:21.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T18:17:06.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T181623105Z-fe31b75e"
       ],
@@ -4940,15 +4953,30 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-09-30T18:17:06.000Z",
+      "conclusion": "Implemented on main's base from the grouped arm with the control arm's parser, join rule and checkpoint checks ported; work group tests pass (849 total)."
     },
     {
       "id": "PRAXIS-GROUP-02",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T18:16:21.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T18:17:08.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T181623607Z-ef332eb0"
       ],
@@ -4971,15 +4999,30 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-09-30T18:17:08.000Z",
+      "conclusion": "Implemented on main's base from the grouped arm with the control arm's parser, join rule and checkpoint checks ported; work group tests pass (849 total)."
     },
     {
       "id": "PRAXIS-GROUP-03",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T18:16:21.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T18:17:10.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T181624582Z-a14d3860"
       ],
@@ -5002,15 +5045,30 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-09-30T18:17:10.000Z",
+      "conclusion": "Implemented on main's base from the grouped arm with the control arm's parser, join rule and checkpoint checks ported; work group tests pass (849 total)."
     },
     {
       "id": "PRAXIS-GROUP-04",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T18:16:21.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T18:17:12.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T181625124Z-a1e7cbeb"
       ],
@@ -5033,15 +5091,30 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-09-30T18:17:12.000Z",
+      "conclusion": "Implemented on main's base from the grouped arm with the control arm's parser, join rule and checkpoint checks ported; work group tests pass (849 total)."
     },
     {
       "id": "PRAXIS-GROUP-05",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T18:16:21.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T18:17:14.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T181625702Z-d3bf2014"
       ],
@@ -5064,15 +5137,30 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-09-30T18:17:14.000Z",
+      "conclusion": "Implemented on main's base from the grouped arm with the control arm's parser, join rule and checkpoint checks ported; work group tests pass (849 total)."
     },
     {
       "id": "PRAXIS-GROUP-06",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T18:16:21.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T18:17:16.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T181626313Z-1c0b9787"
       ],
@@ -5095,12 +5183,14 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-09-30T18:17:16.000Z",
+      "conclusion": "Implemented on main's base from the grouped arm with the control arm's parser, join rule and checkpoint checks ported; work group tests pass (849 total)."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T18:16:21.000Z",
+  "updatedAt": "2026-09-30T18:17:16.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
