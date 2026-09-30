@@ -389,6 +389,8 @@ ros work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIM
                       [--config FILE] [--dry-run] [--json] [IDENTITY]
 ros work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT]
                    [--config FILE] [--dry-run] [--json] [IDENTITY]
+ros work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT]
+                      [--dry-run] [--json] [IDENTITY]
 ```
 
 Durable, human-declared execution groups (PRX-GRP-073, phase two), stored in
@@ -416,6 +418,12 @@ does not exist. It appends a `member-added` history entry with the actor and
 optional reason; the item itself is untouched. `validate` reports members that
 the membership history does not explain.
 
+**`work group remove`** removes one member. It refuses a non-member and the
+last member (a group always has at least one member; add the replacement
+first). Removal changes membership only: the item's lifecycle state, evidence
+and attribution stay exactly as recorded. It appends a `member-removed`
+history entry with the actor and optional reason.
+
 **`work group show`** is read-only. It prints the stored declaration and, for
 each member, its own recorded state (live context, else backlog) and the
 planner's reading of it (`planningState`, `status`), with partial-completion
@@ -428,7 +436,7 @@ Exit codes: `0` success; `2` argument errors (missing flags, invalid IDs,
 unknown kind, no members); `1` refusals and persistence failures. With
 `--json` every command prints one document
 `{ "command", "schemaVersion": 1, "groupId", "status", ... }` where `status` is
-`created`, `added`, `shown`, `dry-run`, `rejected` (with `rejections[]` of `code`, `message`,
+`created`, `added`, `removed`, `shown`, `dry-run`, `rejected` (with `rejections[]` of `code`, `message`,
 `remedy`) or `failed` (with `failure`).
 
 ### `remote execute`

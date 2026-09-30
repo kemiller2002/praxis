@@ -20,7 +20,7 @@ open Ros.Infrastructure.Work
 [<RequireQualifiedAccess>]
 module WorkGroupCommands =
     let usage =
-        "work group show GROUP-ID [--config FILE] [--json] | work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT] [--config FILE] [--dry-run] [--json] | work group create --id GROUP-ID --member ID [--member ID ...] --occurred-at TIMESTAMP [--kind KIND] [--execution-repository NAME] [--cross-repository] [--shared-context TEXT ...] [--architecture-note TEXT ...] [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY]"
+        "work group show GROUP-ID [--config FILE] [--json] | work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT] [--config FILE] [--dry-run] [--json] | work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT] [--dry-run] [--json] | work group create --id GROUP-ID --member ID [--member ID ...] --occurred-at TIMESTAMP [--kind KIND] [--execution-repository NAME] [--cross-repository] [--shared-context TEXT ...] [--architecture-note TEXT ...] [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY]"
 
     // ---- arguments ----
 
@@ -289,6 +289,11 @@ module WorkGroupCommands =
 
     let private add = membershipChange "add" addUsage "added" WorkGroups.addMember
 
+    let removeUsage =
+        "work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
+
+    let private remove = membershipChange "remove" removeUsage "removed" WorkGroups.removeMember
+
     // ---- work group show ----
 
     let showUsage = "work group show GROUP-ID [--config FILE] [--json]"
@@ -361,6 +366,7 @@ module WorkGroupCommands =
         | "create" :: rest -> ProvenanceCommands.withResolvedActor rest (create root rest)
         | "show" :: rest -> show root version rest
         | "add" :: rest -> ProvenanceCommands.withResolvedActor rest (add root rest)
+        | "remove" :: rest -> ProvenanceCommands.withResolvedActor rest (remove root rest)
         | _ ->
             eprintfn "ERROR unknown work group command"
             eprintfn "Usage: ros %s" usage

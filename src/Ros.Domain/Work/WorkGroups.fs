@@ -27,6 +27,7 @@ type GroupMemberFacts =
 type GroupHistoryOperation =
     | Created
     | MemberAdded
+    | MemberRemoved
 
 [<RequireQualifiedAccess>]
 module GroupHistoryOperation =
@@ -34,11 +35,13 @@ module GroupHistoryOperation =
         match operation with
         | GroupHistoryOperation.Created -> "created"
         | GroupHistoryOperation.MemberAdded -> "member-added"
+        | GroupHistoryOperation.MemberRemoved -> "member-removed"
 
     let tryParse value =
         match value with
         | "created" -> Some GroupHistoryOperation.Created
         | "member-added" -> Some GroupHistoryOperation.MemberAdded
+        | "member-removed" -> Some GroupHistoryOperation.MemberRemoved
         | _ -> None
 
 /// One append-only membership fact, with who caused it (provenance).
@@ -130,6 +133,8 @@ type GroupRejection =
     | RepositoryMismatch of workItemId: string * itemRepository: string * groupRepository: string
     | UnknownGroup of groupId: string
     | AlreadyMember of groupId: string * workItemId: string
+    | NotMember of groupId: string * workItemId: string
+    | LastMember of groupId: string * workItemId: string
 
 [<RequireQualifiedAccess>]
 module GroupRejection =
@@ -146,6 +151,8 @@ module GroupRejection =
         | GroupRejection.RepositoryMismatch _ -> "repository-mismatch"
         | GroupRejection.UnknownGroup _ -> "unknown-group"
         | GroupRejection.AlreadyMember _ -> "already-member"
+        | GroupRejection.NotMember _ -> "not-member"
+        | GroupRejection.LastMember _ -> "last-member"
 
     let message rejection =
         match rejection with
@@ -160,6 +167,8 @@ module GroupRejection =
             $"{id} executes in {item}, but the group executes in {group} and is not cross-repository (PRX-GRP-051)"
         | GroupRejection.UnknownGroup id -> $"no declared group {id} is stored in .ros/work/groups.json"
         | GroupRejection.AlreadyMember(group, id) -> $"{id} is already a member of {group}"
+        | GroupRejection.NotMember(group, id) -> $"{id} is not a member of {group}"
+        | GroupRejection.LastMember(group, id) -> $"{id} is the last member of {group}; a group needs at least one member"
 
     let remedy rejection =
         match rejection with
@@ -173,6 +182,8 @@ module GroupRejection =
         | GroupRejection.RepositoryMismatch _ -> "declare the group with --cross-repository, or group the item with work in its own repository"
         | GroupRejection.UnknownGroup _ -> "check the ID in .ros/work/groups.json, or declare the group with 'work group create'"
         | GroupRejection.AlreadyMember _ -> "nothing to do; 'work group show' lists the members"
+        | GroupRejection.NotMember _ -> "nothing to do; 'work group show' lists the members"
+        | GroupRejection.LastMember _ -> "add the replacement member first; dissolving a group is not supported"
 
     /// Rejections the caller can fix by correcting the command line (exit 2).
     let isArgumentError rejection =
@@ -335,6 +346,21 @@ module WorkGroups =
                         Members = group.Members @ [ change.WorkItemId ]
                         History = group.History @ [ historyOf GroupHistoryOperation.MemberAdded change ] })
 
+    /// Decides `work group remove` (PRAXIS-GROUP-04): refuses a non-member
+    /// and the last member (analysis D8). Only the membership changes; the
+    /// item's lifecycle, evidence and attribution live in its own records
+    /// and are never touched. Records who removed it.
+    let removeMember (stored: StoredGroups) (_: Map<string, GroupMemberFacts>) (change: GroupMembershipChange) =
+        changeGroup stored change (fun group ->
+            match group.Members with
+            | members when not (List.contains change.WorkItemId members) -> Error [ GroupRejection.NotMember(group.Id, change.WorkItemId) ]
+            | [ _ ] -> Error [ GroupRejection.LastMember(group.Id, change.WorkItemId) ]
+            | members ->
+                Ok
+                    { group with
+                        Members = members |> List.filter ((<>) change.WorkItemId)
+                        History = group.History @ [ historyOf GroupHistoryOperation.MemberRemoved change ] })
+
     /// The only projection of a stored group into the planner (analysis D6):
     /// the planner reads it exactly as it reads `grouping.groups`.
     let toDeclared (group: StoredGroup) : DeclaredGroup =
@@ -366,7 +392,8 @@ module WorkGroups =
             (fun members entry ->
                 match entry.Operation with
                 | GroupHistoryOperation.Created -> entry.WorkItemIds
-                | GroupHistoryOperation.MemberAdded -> members @ (entry.WorkItemIds |> List.filter (fun id -> not (List.contains id members))))
+                | GroupHistoryOperation.MemberAdded -> members @ (entry.WorkItemIds |> List.filter (fun id -> not (List.contains id members)))
+                | GroupHistoryOperation.MemberRemoved -> members |> List.filter (fun id -> not (List.contains id entry.WorkItemIds)))
             []
 
     /// Offline checks of the stored groups (analysis §10, D13). A member that

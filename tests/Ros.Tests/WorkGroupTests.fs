@@ -460,4 +460,86 @@ module WorkGroupTests =
                       add clone "GROUP-FIXTURE-002" "EXT-1" [ "--config"; config ] |> ok |> ignore
                       Assert.equal [ "FEAT-1"; "EXT-1" ] (texts (storedGroup clone "GROUP-FIXTURE-002").["members"])) } ]
 
-    let tests = createTests @ showTests @ addTests
+    // ---- PRAXIS-GROUP-04: remove ----
+
+    let private remove clone (groupId: string) (member': string) (extra: string list) =
+        cli clone ([ "work"; "group"; "remove"; "--id"; groupId; "--member"; member'; "--occurred-at"; now (); "--json" ] @ extra)
+
+    let private removeTests =
+        [ { Name = "work group (domain): remove drops only the membership and records a 'member-removed' entry with its actor"
+            Run =
+              fun () ->
+                  let stored, _ = createdGroup [ "FEAT-1"; "FEAT-2" ]
+
+                  match WorkGroups.removeMember stored facts (change "GROUP-HERE-001" "FEAT-1") with
+                  | Error rejections -> failwith $"%A{rejections}"
+                  | Ok(next, group) ->
+                      Assert.equal [ "FEAT-2" ] group.Members
+                      let entry = List.last group.History
+                      Assert.equal GroupHistoryOperation.MemberRemoved entry.Operation
+                      Assert.equal [ "FEAT-1" ] entry.WorkItemIds
+                      Assert.equal "example/agent-b" entry.Actor.Id
+                      Assert.equal group.Members (WorkGroups.membersFromHistory group.History)
+                      Assert.empty (WorkGroups.validate (Set.ofList [ "FEAT-1"; "FEAT-2" ]) next)
+                      // Re-adding after removal is a new, recorded membership.
+                      match WorkGroups.addMember next facts (change "GROUP-HERE-001" "FEAT-1") with
+                      | Ok(_, again) -> Assert.equal [ "FEAT-2"; "FEAT-1" ] (WorkGroups.membersFromHistory again.History)
+                      | Error rejections -> failwith $"%A{rejections}" }
+          { Name = "work group (domain): remove refuses a non-member, the last member and an unknown group"
+            Run =
+              fun () ->
+                  let stored, _ = createdGroup [ "FEAT-1" ]
+                  Assert.equal [ "not-member" ] (codes (WorkGroups.removeMember stored facts (change "GROUP-HERE-001" "FEAT-2")))
+                  Assert.equal [ "last-member" ] (codes (WorkGroups.removeMember stored facts (change "GROUP-HERE-001" "FEAT-1")))
+                  Assert.equal [ "unknown-group" ] (codes (WorkGroups.removeMember stored facts (change "GROUP-HERE-404" "FEAT-1"))) }
+          { Name = "work group remove (cli): removing a completed member never touches its lifecycle, evidence or attribution; provenance is recorded"
+            Run =
+              fun () ->
+                  withRepository (fun clone ->
+                      capture clone "FEAT-1"
+                      capture clone "FEAT-2"
+                      create clone "GROUP-FIXTURE-001" [ "FEAT-1"; "FEAT-2" ] [] |> ok |> ignore
+                      cli clone [ "work"; "start"; "--id"; "FEAT-1"; "--type"; "feature"; "--occurred-at"; now () ] |> ok |> ignore
+                      GitFixture.write clone "src/feature.txt" "feature\n"
+                      pushAll clone "feature work" |> ignore
+                      cli clone [ "work"; "checkpoint"; "--id"; "FEAT-1"; "--occurred-at"; now (); "--summary"; "done"; "--next-action"; "complete" ] |> ok |> ignore
+                      cli clone [ "work"; "complete"; "--id"; "FEAT-1"; "--occurred-at"; now (); "--evidence"; "implementation=src/feature.txt"; "--evidence"; "tests=README.md" ] |> ok |> ignore
+                      let result = leavesMembersUntouched clone (fun () -> remove clone "GROUP-FIXTURE-001" "FEAT-1" [ "--reason"; "delivered separately" ] |> ok)
+                      Assert.equal "removed" (text result.Json["status"])
+                      let group = storedGroup clone "GROUP-FIXTURE-001"
+                      Assert.equal [ "FEAT-2" ] (texts group["members"])
+                      let entry = group["history"].AsArray() |> Seq.last
+                      Assert.equal "member-removed" (text entry["operation"])
+                      Assert.equal "example/agent-a" (text entry["actor"].["id"])
+                      Assert.equal "delivered separately" (text entry["reason"])
+                      let item = (run clone None [ "work"; "context"; "FEAT-1" ] |> ok).Json["workItems"].[0]
+                      Assert.equal "complete" (text item["semanticState"])
+                      Assert.isTrue (item["evidence"].AsArray().Count > 0) "the member's evidence must remain"
+                      let shown = (run clone None [ "work"; "group"; "show"; "GROUP-FIXTURE-001"; "--json" ] |> ok).Json
+                      Assert.equal [ "FEAT-2" ] (shown["members"].AsArray() |> Seq.map (fun node -> text node["workItemId"]) |> Seq.toList)
+                      run clone None [ "validate" ] |> ok |> ignore) }
+          { Name = "work group remove (cli): a non-member and the last member are refused with exit 1; --dry-run writes nothing"
+            Run =
+              fun () ->
+                  withRepository (fun clone ->
+                      capture clone "FEAT-1"
+                      capture clone "FEAT-2"
+                      create clone "GROUP-FIXTURE-001" [ "FEAT-1" ] [] |> ok |> ignore
+                      let before = File.ReadAllText(groupsPath clone)
+
+                      leavesMembersUntouched clone (fun () ->
+                          let notMember = remove clone "GROUP-FIXTURE-001" "FEAT-2" []
+                          Assert.equal 1 notMember.ExitCode
+                          Assert.equal [ "not-member" ] (rejectionCodes notMember)
+                          let last = remove clone "GROUP-FIXTURE-001" "FEAT-1" []
+                          Assert.equal 1 last.ExitCode
+                          Assert.equal [ "last-member" ] (rejectionCodes last)
+                          Assert.equal 2 (cli clone [ "work"; "group"; "remove"; "--id"; "GROUP-FIXTURE-001"; "--member"; "FEAT-1" ]).ExitCode)
+
+                      add clone "GROUP-FIXTURE-001" "FEAT-2" [] |> ok |> ignore
+                      let afterAdd = File.ReadAllText(groupsPath clone)
+                      Assert.isTrue (before <> afterAdd) "add must change the store"
+                      Assert.equal "dry-run" (text (remove clone "GROUP-FIXTURE-001" "FEAT-1" [ "--dry-run" ] |> ok).Json["status"])
+                      Assert.equal afterAdd (File.ReadAllText(groupsPath clone))) } ]
+
+    let tests = createTests @ showTests @ addTests @ removeTests
