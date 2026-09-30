@@ -1,0 +1,283 @@
+namespace Ros.Tests
+
+open System.IO
+open System.Text.Json.Nodes
+open Ros.Domain.Planning
+open Ros.Domain.Provenance
+open Ros.Domain.Work
+
+/// Declared execution groups (`work group ...`, PRX-GRP-073 phase two).
+/// Shared fixtures for every member of GROUP-PRAXIS-WORK-GROUP-001
+/// (analysis §17): pure-domain cases, then the real CLI against an installed
+/// repository with a pushed branch.
+[<RequireQualifiedAccess>]
+module WorkGroupTests =
+    open PraxisCli
+
+    let private agentA = agent "example/agent-a" "example" "agent-a" "session-a"
+
+    let private actor: Actor =
+        { Kind = ActorKind.Agent
+          Id = "example/agent-a"
+          Provider = Some "example"
+          Model = Some "unknown"
+          Runtime = Some "agent-a" }
+
+    // ---- domain fixtures ----
+
+    let private fact id state terminal repository =
+        id,
+        { WorkItemId = id
+          RecordedState = state
+          Terminal = terminal
+          ExecutionRepository = repository }
+
+    let private facts =
+        Map.ofList
+            [ fact "FEAT-1" "ready" false "here"
+              fact "FEAT-2" "active" false "here"
+              fact "FEAT-3" "complete" true "here"
+              fact "EXT-1" "ready" false "elsewhere" ]
+
+    let private declaration id members =
+        { Id = id
+          Kind = Some GroupKind.SharedApiSurface
+          ExecutionRepository = "here"
+          CrossRepository = false
+          SharedContext = [ "one store" ]
+          ArchitectureNotes = [ "one design" ]
+          Members = members
+          OccurredAt = "2026-09-30T12:00:00.000Z"
+          Actor = actor
+          Reason = Some "declared together" }
+
+    let private codes (result: Result<'a, GroupRejection list>) =
+        match result with
+        | Ok _ -> []
+        | Error rejections -> rejections |> List.map GroupRejection.code
+
+    let private createdGroup members =
+        match WorkGroups.create (WorkGroups.empty "here") facts (declaration "GROUP-HERE-001" members) with
+        | Ok(stored, group) -> stored, group
+        | Error rejections -> failwith $"%A{rejections}"
+
+    // ---- CLI fixtures ----
+
+    let private withRepository (test: string -> unit) =
+        let parent = GitFixture.temporaryDirectory "work-group"
+
+        try
+            let _, clone = installedRepository parent "clone-a"
+            test clone
+        finally
+            GitFixture.cleanup parent
+
+    let private cli clone arguments = run clone (Some agentA) arguments
+
+    let private capture clone (id: string) =
+        cli clone [ "add"; $"Work item {id}"; "--id"; id ] |> ok |> ignore
+        cli clone [ "work"; "backlog-transition"; "--id"; id; "--action"; "ready"; "--occurred-at"; now () ] |> ok |> ignore
+
+    let private groupsPath clone = Path.Combine(clone, ".ros", "work", "groups.json")
+
+    /// Every file a member's lifecycle, evidence or attribution lives in.
+    let private memberState clone =
+        [ ".ros/work/queue.json"; ".ros/work/queue.md"; ".ros/context/current.json"; ".ros/events/events.jsonl" ]
+        |> List.map (fun relative ->
+            let file = Path.Combine(clone, relative)
+            relative, (if File.Exists file then Some(File.ReadAllText file) else None))
+
+    let private telemetryFiles clone =
+        let directory = Path.Combine(clone, ".ros", "telemetry", "executions")
+        if Directory.Exists directory then Directory.GetFiles directory |> Array.map File.ReadAllText |> Array.toList else []
+
+    /// Runs `action` and asserts no member-state file or telemetry changed
+    /// (analysis D11).
+    let private leavesMembersUntouched clone (action: unit -> 'a) =
+        let before = memberState clone, telemetryFiles clone
+        let result = action ()
+        Assert.equal before (memberState clone, telemetryFiles clone)
+        result
+
+    let private create clone (id: string) (members: string list) (extra: string list) =
+        cli clone ([ "work"; "group"; "create"; "--id"; id; "--occurred-at"; now (); "--json" ] @ (members |> List.collect (fun m -> [ "--member"; m ])) @ extra)
+
+    let private rejectionCodes (result: Result) =
+        match result.Json["rejections"] with
+        | :? JsonArray as array -> array |> Seq.map (fun node -> text node["code"]) |> Seq.toList
+        | _ -> []
+
+    let private storedGroup clone (id: string) =
+        (JsonNode.Parse(File.ReadAllText(groupsPath clone)).["groups"].AsArray())
+        |> Seq.map (fun node -> node.AsObject())
+        |> Seq.find (fun group -> text group["id"] = id)
+
+    let private texts (node: JsonNode) = node.AsArray() |> Seq.map text |> Seq.toList
+
+    let tests =
+        [ // ---- PRAXIS-GROUP-01: create ----
+          { Name = "work group (domain): create records members, kind, repository and a 'created' history entry with its actor"
+            Run =
+              fun () ->
+                  let stored, group = createdGroup [ "FEAT-1"; "FEAT-2" ]
+                  Assert.equal [ "FEAT-1"; "FEAT-2" ] group.Members
+                  Assert.equal (Some GroupKind.SharedApiSurface) group.Kind
+                  Assert.equal GroupOrigin.HumanDeclared group.Origin
+                  Assert.equal "here" group.ExecutionRepository
+                  let entry = Assert.single group.History
+                  Assert.equal GroupHistoryOperation.Created entry.Operation
+                  Assert.equal actor entry.Actor
+                  Assert.equal [ "FEAT-1"; "FEAT-2" ] entry.WorkItemIds
+                  Assert.equal [ group ] stored.Groups }
+          { Name = "work group (domain): create refuses unknown, terminal and foreign-repository members and duplicate IDs, together"
+            Run =
+              fun () ->
+                  let stored, _ = createdGroup [ "FEAT-1" ]
+                  let result = WorkGroups.create stored facts (declaration "GROUP-HERE-001" [ "NOPE-1"; "FEAT-3"; "EXT-1" ])
+                  Assert.equal [ "group-exists"; "unknown-work-item"; "terminal-work-item"; "repository-mismatch" ] (codes result)
+                  // A cross-repository group admits a member from another repository.
+                  let cross = { declaration "GROUP-HERE-002" [ "FEAT-1"; "EXT-1" ] with CrossRepository = true }
+                  Assert.equal [] (codes (WorkGroups.create stored facts cross)) }
+          { Name = "work group (domain): an invalid ID, no members and a repeated member are argument errors"
+            Run =
+              fun () ->
+                  let result = WorkGroups.create (WorkGroups.empty "here") facts (declaration "group-1" [])
+                  Assert.equal [ "invalid-group-id"; "no-members" ] (codes result)
+                  Assert.isTrue (match result with Error rejections -> rejections |> List.forall GroupRejection.isArgumentError | Ok _ -> false) "argument errors"
+                  Assert.equal [ "repeated-member" ] (codes (WorkGroups.create (WorkGroups.empty "here") facts (declaration "GROUP-X-1" [ "FEAT-1"; "FEAT-1" ]))) }
+          { Name = "work group (domain): member facts mark terminal queue or live states and map execution repositories"
+            Run =
+              fun () ->
+                  let known =
+                      WorkGroups.memberFacts
+                          "local"
+                          [ "B-1", "other" ]
+                          [ "A-1", "ready"; "B-1", "ready"; "C-1", "abandoned" ]
+                          [ "A-1", LiveWorkState.Complete; "D-1", LiveWorkState.Active ]
+
+                  Assert.equal ("complete", true, "local") (known["A-1"].RecordedState, known["A-1"].Terminal, known["A-1"].ExecutionRepository)
+                  Assert.equal ("ready", false, "other") (known["B-1"].RecordedState, known["B-1"].Terminal, known["B-1"].ExecutionRepository)
+                  Assert.equal ("abandoned", true) (known["C-1"].RecordedState, known["C-1"].Terminal)
+                  Assert.equal ("active", false) (known["D-1"].RecordedState, known["D-1"].Terminal) }
+          { Name = "work group (domain): a stored group projects to the planner as a declared group; a configured group with the same ID shadows it"
+            Run =
+              fun () ->
+                  let _, group = createdGroup [ "FEAT-1"; "FEAT-2" ]
+                  let declared = WorkGroups.toDeclared group
+                  Assert.equal "GROUP-HERE-001" declared.Id
+                  Assert.equal [ "FEAT-1"; "FEAT-2" ] declared.Members
+                  Assert.equal (Some "here") declared.ExecutionRepository
+                  Assert.equal [ "one design" ] declared.ArchitectureNotes
+                  let merged = WorkGroups.mergeInto [ group ] GroupingConfiguration.defaults
+                  Assert.equal [ declared ] merged.Groups
+                  let configured = { declared with Members = [ "FEAT-9" ] }
+                  let shadowed = WorkGroups.mergeInto [ group ] { GroupingConfiguration.defaults with Groups = [ configured ] }
+                  Assert.equal [ configured ] shadowed.Groups }
+          { Name = "work group (domain): validate reports unknown and repeated members and duplicate IDs, never a member that completed later"
+            Run =
+              fun () ->
+                  let stored, group = createdGroup [ "FEAT-1"; "FEAT-2" ]
+                  Assert.empty (WorkGroups.validate (Set.ofList [ "FEAT-1"; "FEAT-2" ]) stored)
+                  let broken = { stored with Groups = [ group; { group with Members = [ "FEAT-1"; "FEAT-1"; "GONE-1" ] } ] }
+                  let messages = WorkGroups.validate (Set.ofList [ "FEAT-1"; "FEAT-2" ]) broken |> List.map _.Message
+                  Assert.isTrue (messages |> List.exists (fun m -> m.Contains "declared more than once")) "duplicate ID"
+                  Assert.isTrue (messages |> List.exists (fun m -> m.Contains "FEAT-1 is listed more than once")) "repeated member"
+                  Assert.isTrue (messages |> List.exists (fun m -> m.Contains "GONE-1 is not a work item")) "unknown member" }
+          { Name = "work group create (cli): records the group in .ros/work/groups.json, never touches member state, and the planner reads it as grouping.groups"
+            Run =
+              fun () ->
+                  withRepository (fun clone ->
+                      capture clone "FEAT-1"
+                      capture clone "FEAT-2"
+
+                      let result =
+                          leavesMembersUntouched clone (fun () ->
+                              create clone "GROUP-FIXTURE-001" [ "FEAT-1"; "FEAT-2" ] [ "--kind"; "shared-api-surface"; "--shared-context"; "one store"; "--architecture-note"; "one design" ]
+                              |> ok)
+
+                      let document = result.Json
+                      Assert.equal "work group create" (text document["command"])
+                      Assert.equal "created" (text document["status"])
+                      Assert.equal "GROUP-FIXTURE-001" (text document["groupId"])
+                      let group = storedGroup clone "GROUP-FIXTURE-001"
+                      Assert.equal [ "FEAT-1"; "FEAT-2" ] (texts group["members"])
+                      Assert.equal "shared-api-surface" (text group["kind"])
+                      Assert.equal "human-declared" (text group["origin"])
+                      Assert.equal false (group["crossRepository"].GetValue<bool>())
+                      Assert.equal "example/agent-a" (text group["createdBy"].["id"])
+                      Assert.equal "created" (text group["history"].[0].["operation"])
+
+                      let explained = run clone None [ "plan"; "explain-group"; "GROUP-FIXTURE-001" ] |> ok
+                      Assert.isTrue (explained.Output.Contains "declared a member of GROUP-FIXTURE-001") explained.Output
+                      Assert.isTrue (explained.Output.Contains "shared-api-surface, human-declared") explained.Output
+                      Assert.isTrue (explained.Output.Contains "one design") explained.Output
+                      let groups = run clone None [ "plan"; "groups"; "--json" ] |> ok
+                      Assert.isTrue (groups.Output.Contains "GROUP-FIXTURE-001") "plan groups must list the stored group"
+                      run clone None [ "validate" ] |> ok |> ignore) }
+          { Name = "work group create (cli): --dry-run decides and reports but writes nothing"
+            Run =
+              fun () ->
+                  withRepository (fun clone ->
+                      capture clone "FEAT-1"
+                      let result = leavesMembersUntouched clone (fun () -> create clone "GROUP-FIXTURE-001" [ "FEAT-1" ] [ "--dry-run" ] |> ok)
+                      Assert.equal "dry-run" (text result.Json["status"])
+                      Assert.equal "FEAT-1" (text result.Json["group"].["members"].[0])
+                      Assert.isTrue (not (File.Exists(groupsPath clone))) "a dry run wrote groups.json"
+                      let refused = create clone "GROUP-FIXTURE-001" [ "NOPE-1" ] [ "--dry-run" ]
+                      Assert.equal 1 refused.ExitCode
+                      Assert.equal [ "unknown-work-item" ] (rejectionCodes refused)) }
+          { Name = "work group create (cli): unknown, terminal and duplicate refusals exit 1; argument errors exit 2; nothing is written"
+            Run =
+              fun () ->
+                  withRepository (fun clone ->
+                      capture clone "FEAT-1"
+                      capture clone "FEAT-2"
+                      cli clone [ "work"; "abandon"; "--id"; "FEAT-2"; "--reason"; "not needed"; "--occurred-at"; now () ] |> ok |> ignore
+
+                      leavesMembersUntouched clone (fun () ->
+                          let unknown = create clone "GROUP-FIXTURE-001" [ "FEAT-1"; "NOPE-1" ] []
+                          Assert.equal 1 unknown.ExitCode
+                          Assert.equal [ "unknown-work-item" ] (rejectionCodes unknown)
+                          let terminal = create clone "GROUP-FIXTURE-001" [ "FEAT-1"; "FEAT-2" ] []
+                          Assert.equal 1 terminal.ExitCode
+                          Assert.equal [ "terminal-work-item" ] (rejectionCodes terminal)
+                          Assert.isTrue (not (File.Exists(groupsPath clone))) "a refused create wrote groups.json"
+                          create clone "GROUP-FIXTURE-001" [ "FEAT-1" ] [] |> ok |> ignore
+                          let duplicate = create clone "GROUP-FIXTURE-001" [ "FEAT-1" ] []
+                          Assert.equal 1 duplicate.ExitCode
+                          Assert.equal [ "group-exists" ] (rejectionCodes duplicate)
+                          Assert.equal 2 (create clone "group-lower" [ "FEAT-1" ] []).ExitCode
+                          Assert.equal 2 (create clone "GROUP-FIXTURE-002" [] []).ExitCode
+                          Assert.equal 2 (cli clone [ "work"; "group"; "create"; "--id"; "GROUP-FIXTURE-003"; "--member"; "FEAT-1" ]).ExitCode
+                          Assert.equal 2 (create clone "GROUP-FIXTURE-004" [ "FEAT-1" ] [ "--kind"; "nonsense" ]).ExitCode)
+
+                      Assert.equal 1 ((JsonNode.Parse(File.ReadAllText(groupsPath clone))).["groups"].AsArray().Count)) }
+          { Name = "work group create (cli): a member mapped to another repository is refused unless the group is cross-repository"
+            Run =
+              fun () ->
+                  withRepository (fun clone ->
+                      capture clone "FEAT-1"
+                      capture clone "EXT-1"
+                      let config = Path.Combine(clone, "planner.json")
+                      File.WriteAllText(config, """{ "grouping": { "executionRepositories": { "EXT-1": "other-repository" } } }""")
+                      let mismatch = create clone "GROUP-FIXTURE-001" [ "FEAT-1"; "EXT-1" ] [ "--config"; config ]
+                      Assert.equal 1 mismatch.ExitCode
+                      Assert.equal [ "repository-mismatch" ] (rejectionCodes mismatch)
+                      create clone "GROUP-FIXTURE-001" [ "FEAT-1"; "EXT-1" ] [ "--config"; config; "--cross-repository" ] |> ok |> ignore
+                      Assert.equal true ((storedGroup clone "GROUP-FIXTURE-001").["crossRepository"].GetValue<bool>())) }
+          { Name = "work group (cli): validate checks stored groups"
+            Run =
+              fun () ->
+                  withRepository (fun clone ->
+                      capture clone "FEAT-1"
+                      create clone "GROUP-FIXTURE-001" [ "FEAT-1" ] [] |> ok |> ignore
+                      run clone None [ "validate" ] |> ok |> ignore
+                      let document = JsonNode.Parse(File.ReadAllText(groupsPath clone))
+                      document["groups"].[0].["members"].AsArray().Add(JsonValue.Create "GONE-1")
+                      File.WriteAllText(groupsPath clone, document.ToJsonString())
+                      let invalid = run clone None [ "validate" ]
+                      Assert.equal 1 invalid.ExitCode
+                      Assert.isTrue (invalid.Error.Contains ".ros/work/groups.json") invalid.Error
+                      Assert.isTrue (invalid.Error.Contains "GONE-1 is not a work item") invalid.Error
+                      File.WriteAllText(groupsPath clone, "{ not json")
+                      Assert.equal 1 (run clone None [ "validate" ]).ExitCode) } ]

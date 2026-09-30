@@ -379,6 +379,40 @@ telemetry" in [`development-telemetry.md`](development-telemetry.md).
 
 See "Durable checkpoints and continuity" in [`work-protocol.md`](work-protocol.md).
 
+### `work group`
+
+```
+ros work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP
+                      [--kind KIND] [--execution-repository NAME] [--cross-repository]
+                      [--shared-context TEXT]* [--architecture-note TEXT]* [--reason TEXT]
+                      [--config FILE] [--dry-run] [--json] [IDENTITY]
+```
+
+Durable, human-declared execution groups (PRX-GRP-073, phase two), stored in
+`.ros/work/groups.json` and read by every `plan` command exactly as planner
+configuration's `grouping.groups` (a `--config` file declaring the same group
+ID shadows the stored one for that run). A group records membership only:
+no command in this family changes a member's lifecycle state, evidence,
+attribution or telemetry, or writes any file but `groups.json`.
+
+**`work group create`** declares a group. IDs look like
+`GROUP-<AREA>-<SEQUENCE>`. It refuses an existing group ID, unknown work items,
+terminal (`complete` or `abandoned`) items, and an item that executes in
+another repository (its `grouping.executionRepositories` entry in `--config`)
+unless `--cross-repository` is given. The group's execution repository
+defaults to this repository. The creator's identity is recorded with a
+`created` history entry. `--dry-run` decides and reports without writing.
+`validate` checks stored groups (unknown or repeated members, duplicate IDs,
+malformed records); a member that completes after joining is partial
+completion, not a finding.
+
+Exit codes: `0` success; `2` argument errors (missing flags, invalid IDs,
+unknown kind, no members); `1` refusals and persistence failures. With
+`--json` every command prints one document
+`{ "command", "schemaVersion": 1, "groupId", "status", ... }` where `status` is
+`created`, `dry-run`, `rejected` (with `rejections[]` of `code`, `message`,
+`remedy`) or `failed` (with `failure`).
+
 ### `remote execute`
 
 ```

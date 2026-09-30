@@ -1,6 +1,13 @@
 # Group analysis: GROUP-PRAXIS-WORK-GROUP-001 (EX-ROS-2026-A021-R2, grouped arm)
 
 Written before any production-code mutation, as PRX-GRP-040 requires.
+
+Path note (protocol deviation, recorded not hidden): the protocol names this
+file `group-analysis.md`. It was committed under that name first (commit
+`e604b81`, before any production code). `./ros validate` treats every `.md`
+under `research/experiments/` as an experiment record that must carry front
+matter and an `EX-...--` filename, which `group-analysis.md` cannot, so the
+content was moved unchanged to `group-analysis.txt` to keep validation green.
 Shared group infrastructure (PRX-GRP-043): this document is a group-level
 artifact; it is attributed to `PRAXIS-GROUP-01`, the member whose execution
 (`EXE-20260930T152919551Z-adec0f3f`) produced it, and claimed by no other
