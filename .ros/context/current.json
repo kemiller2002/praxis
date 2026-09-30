@@ -4916,11 +4916,57 @@
       },
       "completedAt": "2026-09-30T15:54:03.000Z",
       "conclusion": "work group add adds one member under the shared admission rule, refuses unknown/terminal/present/foreign-repository items, and records who added it."
+    },
+    {
+      "id": "PRAXIS-GROUP-04",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T15:59:23.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T155429219Z-372e07b5"
+      ],
+      "latestCheckpoint": {
+        "id": "ba9fb26db01cf59209133062",
+        "recordedAt": "2026-09-30T15:59:21.000Z",
+        "executionId": "EXE-20260930T155429219Z-372e07b5",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-r2-grouped",
+        "commit": "4cbe26289259ed3e7ffdb5a9a2ec0a794afcc908",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-r2-grouped",
+        "remoteCommit": "4cbe26289259ed3e7ffdb5a9a2ec0a794afcc908",
+        "summary": "Milestone: work group remove (4cbe262). Completed members: PRAXIS-GROUP-01, -02, -03. Remaining: 04 (completion), 05. Shared decisions: D8 last member refused; membership changes all flow through changeGroup/membershipChange; history replay covers created/added/removed. 815/815 F# tests pass. Branch experiment/a021-r2-grouped.",
+        "nextAction": "Complete PRAXIS-GROUP-04; start PRAXIS-GROUP-05 (group checkpoint reusing extracted CheckpointVerification.durableLocation)",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T15:59:23.000Z",
+      "conclusion": "work group remove removes one member, refuses non-members and the last member, records provenance, and never touches the item's lifecycle, evidence or attribution."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T15:54:03.000Z",
+  "updatedAt": "2026-09-30T15:59:23.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
