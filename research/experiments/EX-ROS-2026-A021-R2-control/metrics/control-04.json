@@ -1,0 +1,149 @@
+{
+  "schema": "ex-ros-2026-a021.session-metrics/1",
+  "experiment": "EX-ROS-2026-A021-R2",
+  "arm": "control",
+  "label": "control-04",
+  "workItem": "PRAXIS-GROUP-04",
+  "sessionId": "session_01KfJswoaJGxqcviM6kiTr2i",
+  "transcriptSessionId": "f0229505-1ba3-56f4-aeb0-ece6c197e167",
+  "praxisExecution": "EXE-20260930T165611070Z-917bff9c",
+  "model": {
+    "configured": "claude-opus-5-5",
+    "sessionContextModel": "claude-opus-5-5",
+    "lastServedModel": "claude-opus-5-5",
+    "transcriptModels": [
+      "claude-opus-5-5"
+    ],
+    "source": "get_session (session_context.model, external_metadata.last_served_model) and transcript"
+  },
+  "sessionCreatedAt": "2026-09-30T16:52:52.043547Z",
+  "startedAt": "2026-09-30T16:52:58.585000+00:00",
+  "endedAt": "2026-09-30T17:06:43.801000+00:00",
+  "wallMs": 825216,
+  "timingScope": "transcript start to the moment this summary was generated; the metrics commit, work checkpoint/complete, registry build, validate and the final Praxis-state commit happen after and are not included",
+  "msToFirstProductionCodeMutation": 280022,
+  "msToFirstProductionCodeMutationNote": "first write to src/Ros.Domain/Planning/GroupDeclaration.fs at 2026-09-30T16:57:38.607Z (verified in transcript)",
+  "modelRequests": 54,
+  "tokens": {
+    "input": 108,
+    "output": 29278,
+    "cacheRead": 6146225,
+    "cacheCreation": 118614
+  },
+  "tokensScope": "main session transcript only; no subagents were used",
+  "costUsd": "unknown",
+  "toolCalls": {
+    "Bash": 53,
+    "Monitor": 2,
+    "TaskStop": 1,
+    "ToolSearch": 1,
+    "mcp__bf7c680d-5fdc-5ef4-b4a0-abadb619bf0a__get_session": 1
+  },
+  "toolCallsTotal": 58,
+  "toolErrors": {
+    "value": 3,
+    "detail": [
+      "dotnet-install.sh download blocked by egress proxy (403); SDK installed via apt instead",
+      "npm run build:fsharp failed: NU1605 FSharp.Core downgrade with Ubuntu SDK 10.0.112 (built with -p:FSharpCoreImplicitPackageVersion=10.1.400)",
+      "./ros work show before the CLI was built (missing ros-fs.dll)",
+      "self-inflicted: first test run piped through head -5 (output lost) and a pkill -f matched its own shell; both background tasks exited 144 and the suite was re-run"
+    ],
+    "note": "summarizer counts 3 tool errors; the detail lists the observed failures including background-task exits"
+  },
+  "fileReads": 25,
+  "distinctFilesRead": 20,
+  "repeatedReads": {
+    "AGENTS.md": 2,
+    "docs/planning.md": 4,
+    "tests/Ros.Tests/WorkGroupTests.fs": 2
+  },
+  "governanceReads": {
+    "AGENTS.md": 2,
+    "docs/cli.md": 1,
+    "docs/planning.md": 4,
+    "requirements/PLANNING-WORK-GROUPS.md": 1
+  },
+  "searches": 37,
+  "fileWrites": 6,
+  "distinctFilesEdited": {
+    "summarizer": 0,
+    "fromGit": 8,
+    "note": "the summarizer counts only Edit/Write tool paths; all edits were python scripts or sed via Bash. fromGit counts files in a3566ad (src 5, tests 1, docs 2)"
+  },
+  "builds": {
+    "value": 4,
+    "detail": "1 failed (npm run build:fsharp, NU1605); 2 dotnet build with -p:FSharpCoreImplicitPackageVersion=10.1.400, both succeeded (the summarizer's count also matches one grep over the build log)"
+  },
+  "testRuns": {
+    "value": 5,
+    "detail": "Ros.Tests: 2 aborted by the operator mistakes above, 1 complete run 828 passed / 0 failed; node --test 104 passed / 0 failed; python unittest 7 passed"
+  },
+  "failedTests": 0,
+  "retries": 2,
+  "retriesNote": "re-ran the F# suite twice after self-inflicted aborts; the build was retried once with the FSharp.Core override",
+  "validationFailures": "unknown until ./ros validate runs after this file is committed; reported in the completion commit",
+  "contextCompactions": 0,
+  "commits": {
+    "beforeThisFile": 2,
+    "detail": [
+      "PRAXIS-GROUP-04: start work item",
+      "a3566ad PRAXIS-GROUP-04: work group remove"
+    ],
+    "note": "this metrics commit and the checkpoint/completion commit follow"
+  },
+  "infrastructure": [
+    "No .NET in the container; Microsoft download host denied by the egress proxy; installed dotnet-sdk-10.0 10.0.112 from Ubuntu apt",
+    "npm run build:fsharp fails with that SDK (NU1605); built with dotnet build ... -p:FSharpCoreImplicitPackageVersion=10.1.400 instead, no repository change",
+    "The local branch started at 8b4ffa3; PRAXIS-GROUP-01..03 were on the remote branch and were fast-forwarded in before starting"
+  ],
+  "summarizer": "research/experiments/EX-ROS-2026-A021-harness/session_metrics.py",
+  "raw": {
+    "schema": "ex-ros-2026-a021.session-metrics/1",
+    "label": "control-04",
+    "sessionId": "f0229505-1ba3-56f4-aeb0-ece6c197e167",
+    "transcript": "f0229505-1ba3-56f4-aeb0-ece6c197e167.jsonl",
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "startedAt": "2026-09-30T16:52:58.585000+00:00",
+    "endedAt": "2026-09-30T17:06:43.801000+00:00",
+    "wallMs": 825216,
+    "msToFirstCodeMutation": 280022,
+    "modelRequests": 54,
+    "tokens": {
+      "input": 108,
+      "output": 29278,
+      "cacheRead": 6146225,
+      "cacheCreation": 118614
+    },
+    "costUsd": null,
+    "toolCalls": {
+      "Bash": 53,
+      "Monitor": 2,
+      "TaskStop": 1,
+      "ToolSearch": 1,
+      "mcp__bf7c680d-5fdc-5ef4-b4a0-abadb619bf0a__get_session": 1
+    },
+    "toolErrors": 3,
+    "fileReads": 25,
+    "distinctFilesRead": 20,
+    "repeatedReads": {
+      "AGENTS.md": 2,
+      "docs/planning.md": 4,
+      "tests/Ros.Tests/WorkGroupTests.fs": 2
+    },
+    "governanceReads": {
+      "AGENTS.md": 2,
+      "docs/cli.md": 1,
+      "docs/planning.md": 4,
+      "requirements/PLANNING-WORK-GROUPS.md": 1
+    },
+    "searches": 37,
+    "fileWrites": 6,
+    "distinctFilesEdited": 0,
+    "builds": 4,
+    "testRuns": 5,
+    "compactions": 0,
+    "notes": "reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate"
+  }
+}
