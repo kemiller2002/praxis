@@ -16,6 +16,15 @@ happens when you run `init`.
 
 ## Quick start
 
+Install the `praxis` command once per machine (see
+[`native-installation.md`](native-installation.md)):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/kemiller2002/praxis/main/scripts/install-native.sh | sh
+```
+
+Then, in a repository:
+
 ```bash
 cd /path/to/your/repository
 
@@ -29,22 +38,26 @@ praxis status
 praxis verify
 ```
 
-## Prerequisites for a scaffolded project's `./ros`
+## Prerequisites
 
-`init` gives the repository its own `./ros`, pinned to the version in its
-`ros.json`. That launcher is a small Node.js script:
+`init` gives the repository its own `./praxis`, pinned to the version in its
+`ros.json`. The `praxis` command and that launcher need:
 
-- Node.js 20 or newer.
-- Network access on first use of a given version and platform, so the launcher
-  can fetch and cache the self-contained CLI binary (`ros-fs-<platform>`) from
-  that version's GitHub Release. Later runs of the same version work offline
-  from `~/.cache/ros-fs/<version>/<platform>/` (override the location with
-  `ROS_FS_CACHE_DIR`).
-- No .NET installation is required: the binary is self-contained.
+- A supported platform: `linux-x64`, `linux-musl-x64`, `linux-arm64`,
+  `osx-x64`, `osx-arm64`, `win-x64`. An unsupported platform fails with a
+  message naming the gap rather than failing obscurely.
+- Network access to install a version (the installer verifies the bundle's
+  SHA-256). Installed versions run offline.
+- No Node.js, npm or .NET installation is required: the binary is
+  self-contained.
 
-Supported platforms: `linux/x64`, `linux/arm64`, `darwin/x64`, `darwin/arm64`,
-`win32/x64`. An unsupported platform fails with a message naming the gap
-rather than failing obscurely.
+A project scaffolded before the Praxis rename keeps its legacy `./ros`, a
+small Node.js 20+ script. It needs network access on first use of a given
+version and platform, to fetch and cache the self-contained CLI binary
+(`ros-fs-<platform>`, still published with every release) from that
+version's GitHub Release; later runs of the same version work offline from
+`~/.cache/ros-fs/<version>/<platform>/` (override the location with
+`ROS_FS_CACHE_DIR`). It needs no .NET.
 
 ## What `init` means
 
@@ -70,7 +83,8 @@ inspect -> determine desired state -> calculate transition
 ### What it may create
 
 - The tool-owned scaffold for the chosen profile: governance documents, the
-  framework and standards, JSON schemas, templates, the `ros` launcher, and
+  framework and standards, JSON schemas, templates, the `praxis` launcher (with
+  `ros` as a compatibility alias), and
   the CI workflow.
 - `ros.json`, the repository's configuration, seeded from a template.
 - `.echelon/ros.json`, the installation manifest.
@@ -78,8 +92,8 @@ inspect -> determine desired state -> calculate transition
 - On a **first** install only, the legacy `.ros/installation.json` snapshot
   plus the installation's work attribution (`.ros/context/current.json`,
   `.ros/events/events.jsonl`, `.ros/work/queue.json`, `.ros/work/queue.md`), so
-  a repository installed by `ros init` is indistinguishable from one installed
-  by the older `ros-bootstrap init`.
+  a repository installed by `praxis init` is indistinguishable from one installed
+  by the retired `ros-bootstrap init`.
 
 ### What it will not overwrite
 
@@ -92,7 +106,7 @@ inspect -> determine desired state -> calculate transition
   seeded once and then belong to you.
 - A **generated** file that already exists, such as anything under
   `registries/`. Its real content comes from your own artifacts via
-  `ros registry build`; copying the package's empty seed over a populated
+  `praxis registry build`; copying the package's empty seed over a populated
   registry would destroy data.
 - A **tool-owned** file you have edited locally. That stops the command rather
   than silently discarding your change.
@@ -121,7 +135,7 @@ later do to it.
 | Ownership | Definition | `init` / `upgrade` | `verify` |
 |---|---|---|---|
 | **tool-owned** | Controlled by the tool. | Replaced when byte-identical to what the installation recorded; a local edit blocks instead. | Presence **and** content are checked. |
-| **generated** | Derived from authoritative inputs already in the repository. | Seeded once. After that only the generator that owns it (`ros registry build`) rewrites it. | Presence only. |
+| **generated** | Derived from authoritative inputs already in the repository. | Seeded once. After that only the generator that owns it (`praxis registry build`) rewrites it. | Presence only. |
 | **user-owned** | Controlled by the repository. | Seeded once if absent, never rewritten. | Presence only; absence is a warning. |
 | **shared** | Seeded by the tool, then edited by the repository. | Seeded once. Only a declared migration may change it, and only when it is unmodified. | Presence only. |
 
@@ -140,23 +154,25 @@ executable. That is what lets a project run its own lifecycle:
 
 ```bash
 cd /path/to/your/repository
-./ros verify      # is the installation intact?
-./ros init        # heal: restore anything tool-owned that is missing
-./ros upgrade     # update to this CLI's version
+./praxis verify   # is the installation intact?
+./praxis init     # heal: restore anything tool-owned that is missing
+./praxis upgrade  # update to this CLI's version
 ```
 
 No package on disk, no network, and no `--package-root` are needed for any
-of those. A project scaffolded by `init` gets a `./ros` launcher that downloads
-the binary for the version pinned in its `ros.json`; that binary is
-self-sufficient from then on.
+of those. A project scaffolded by `init` gets a `./praxis` launcher (POSIX shell,
+plus `praxis.cmd`/`praxis.ps1` on Windows; `ros`, `ros.cmd` and `ros.ps1` are
+compatibility aliases of it) that runs the Praxis version pinned in
+`.echelon/ros.json` (or `ros.json`), installing that release side by side on
+first use; that binary is self-sufficient from then on.
 
 The scaffold is resolved in this order:
 
-1. `--package-root PATH`, when given (the native bundle's `praxis` wrapper
-   passes its bundled payload this way).
-2. `ROS_PACKAGE_ROOT`, when set.
-3. A package directory found by walking up from the executable, then from the
-   working directory — this is what a source checkout hits.
+1. `--package-root PATH`, when given.
+2. `PRAXIS_PACKAGE_ROOT` (or the legacy `ROS_PACKAGE_ROOT`), when set.
+3. A package directory (one with `release.json` and `starter/`) found by
+   walking up from the executable, then from the working directory — this is
+   what a source checkout hits.
 4. The copy compiled into the binary.
 
 A real directory wins so that a source checkout installs the files you are
@@ -202,7 +218,7 @@ changes under `.echelon/` as meaningful repository change for work attribution.
 | Profile | Installs |
 |---|---|
 | `greenfield` | The default. Governance, framework, schemas, templates, empty registries, the CLI launcher and the CI workflow. |
-| `project-administration` | The above plus the hub: a registry of other ROS repositories, a CLI and web UI to create work items in them, and an aggregated read-only view. See [`project-administration-hub.md`](project-administration-hub.md). |
+| `project-administration` | The above plus the hub: a registry of other Praxis repositories, a CLI and web UI to create work items in them, and an aggregated read-only view. See [`project-administration-hub.md`](project-administration-hub.md). |
 
 ```bash
 praxis init \
@@ -216,15 +232,15 @@ target folder.
 ## After installing
 
 ```bash
-./ros registry check
-./ros validate
+./praxis registry check
+./praxis validate
 ```
 
-The scaffolded repository can also run its own lifecycle — `./ros verify`,
-`./ros init` to heal, `./ros upgrade` to update — without a separate install; see
+The scaffolded repository can also run its own lifecycle — `./praxis verify`,
+`./praxis init` to heal, `./praxis upgrade` to update — with nothing else installed; see
 [Where the scaffold comes from](#where-the-scaffold-comes-from).
 
-The scaffolded repository gets its own `./ros`, which runs the same F# CLI
+The scaffolded repository gets its own `./praxis`, which runs the same F# CLI
 pinned to the version recorded in its `ros.json`. It does not read from, or
 link back to, the source checkout that installed it.
 
@@ -234,7 +250,7 @@ A new installation's `ros.json` sets
 `"workProtocol": {"continuity": {"requireDurableCheckpoint": true}}`. With
 that set, meaningful Git-backed work completes only from a verified durable
 checkpoint: the work is committed, pushed, and recorded with
-`ros work checkpoint`. See "Durable checkpoints and continuity" in
+`praxis work checkpoint`. See "Durable checkpoints and continuity" in
 [`work-protocol.md`](work-protocol.md).
 
 A repository with no remote cannot hold a durable checkpoint. Add a remote,
@@ -243,7 +259,8 @@ exists in one place only.
 
 ## Legacy compatibility
 
-`ros-bootstrap init` and `ros-bootstrap verify` still work exactly as before
-and are still published. They are **legacy compatibility**: use `ros init`
-and `ros verify` for new work. See [`upgrading.md`](upgrading.md) for how an
-existing `ros-bootstrap` installation moves across.
+The npm-distributed `ros-bootstrap init` and `ros-bootstrap verify` are
+retired (`DF-ROS-2026-A044`, `DF-ROS-2026-A049`). A repository they installed
+keeps working; see
+[`upgrading.md`](upgrading.md) for how an existing `ros-bootstrap`
+installation moves across.

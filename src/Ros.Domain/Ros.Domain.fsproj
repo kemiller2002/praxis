@@ -52,6 +52,8 @@
     <Compile Include="Lifecycle/Model.fs" />
     <Compile Include="Lifecycle/Migration.fs" />
     <Compile Include="Lifecycle/Planning.fs" />
+    <Compile Include="Architecture/ImplementationLanguagePolicy.fs" />
+    <Compile Include="Naming/EnvironmentAliases.fs" />
     <Compile Include="Execution/Governance.fs" />
     <Compile Include="Installation/Registration.fs" />
     <Compile Include="Planning/Model.fs" />

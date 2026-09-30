@@ -5277,11 +5277,166 @@
         }
       },
       "completedAt": "2026-09-30T18:58:00Z"
+    },
+    {
+      "id": "FSHARP-ONLY-REPOSITORY",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Architecture/ImplementationLanguagePolicy.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "research/decisions/DF-ROS-2026-A041--fsharp-dotnet-only-repository.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ImplementationLanguagePolicyTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-28T10:27:49.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T090915352Z-fb23943c"
+      ],
+      "completedAt": "2026-09-28T10:27:49.000Z"
+    },
+    {
+      "id": "FSHARP-ONLY-MAIN-MERGE",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/decisions/DF-ROS-2026-A042--fsharp-dotnet-only-repository.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RemoteExecuteCliTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-28T11:23:44.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T103758056Z-43f11e6e"
+      ],
+      "completedAt": "2026-09-28T11:23:44.000Z"
+    },
+    {
+      "id": "PRAXIS-CLI-RENAME",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "decision",
+          "path": "research/decisions/DF-ROS-2026-A043--praxis-canonical-name-ros-compatibility.md"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Naming/EnvironmentAliases.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PraxisNamingTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-28T14:30:51.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T134520493Z-befb2bfe"
+      ],
+      "completedAt": "2026-09-28T14:30:51.000Z"
+    },
+    {
+      "id": "PRAXIS-PR92-PREMERGE-RENAME-FENCE",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tests/Ros.Tests/PraxisNamingTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PraxisNamingTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T17:05:26.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T170458814Z-a16ea948"
+      ],
+      "completedAt": "2026-09-30T17:05:26.000Z"
+    },
+    {
+      "id": "PRAXIS-PR92-ID-RENUMBER",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/decisions/DF-ROS-2026-A049--fsharp-dotnet-only-repository.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PraxisNamingTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T18:05:38.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T175640720Z-98771e24"
+      ],
+      "completedAt": "2026-09-30T18:05:38.000Z"
+    },
+    {
+      "id": "PRAXIS-PR92-RECONCILE",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/Program.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PostmergeReconciliationTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T21:44:26.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T181403532Z-5fd55718"
+      ],
+      "latestCheckpoint": {
+        "id": "499ba40009bef0edcc70d7e4",
+        "recordedAt": "2026-09-30T21:30:51.000Z",
+        "executionId": "EXE-20260930T181403532Z-5fd55718",
+        "repository": "repository-operating-system",
+        "branch": "claude/praxis-fsharp-only-cleanup-f97n8u",
+        "commit": "0610b251c1c3d61629a757317da0117a455ace77",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/praxis-fsharp-only-cleanup-f97n8u",
+        "remoteCommit": "0610b251c1c3d61629a757317da0117a455ace77",
+        "summary": "Merged main 1768229 as well (0610b25); F# 1254/1254, Site 101/101, validate passes",
+        "nextAction": "When PR #92 CI is green, mark ready, merge into main, then complete PRAXIS-PR92-RECONCILE on main",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T21:44:26.000Z",
+      "conclusion": "PR #92 reconciled with main (99ecc86, then 1768229); nothing dropped from either side; F# 1254/1254, Site 101/101, all CI green including native release"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T18:19:31.000Z",
+  "updatedAt": "2026-09-30T21:44:26.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

@@ -31,7 +31,7 @@ module ArchitectureTests =
                   yield "Ros.Application must not reference Infrastructure or CLI" ])
 
     let rec private repositoryRoot (directory: DirectoryInfo) =
-        if File.Exists(Path.Combine(directory.FullName, "package.json"))
+        if File.Exists(Path.Combine(directory.FullName, "release.json"))
            && Directory.Exists(Path.Combine(directory.FullName, "src", "Ros.Domain")) then
             directory.FullName
         elif isNull directory.Parent then

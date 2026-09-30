@@ -1,0 +1,80 @@
+{
+  "test1Context": {
+    "schemaVersion": "1.0.0",
+    "protocolVersion": "1.0.0",
+    "repository": "work-resume-differential",
+    "actor": "ros-bootstrap",
+    "baselineDirtyPaths": [],
+    "workItems": [
+      {
+        "id": "{install}",
+        "type": "mechanical",
+        "state": "complete",
+        "semanticState": "complete",
+        "evidence": [
+          {
+            "type": "installation",
+            "path": ".ros/installation.json"
+          }
+        ]
+      },
+      {
+        "id": "WI-BLOCKED",
+        "type": "task",
+        "state": "active",
+        "semanticState": "active",
+        "evidence": [],
+        "blockReason": "waiting on review"
+      }
+    ]
+  },
+  "test1SemanticState": "active",
+  "test1ExecIdsLength": 1,
+  "test1Events": [
+    {
+      "schemaVersion": "1.0.0",
+      "type": "work.started",
+      "workItem": "WI-BLOCKED",
+      "repository": "work-resume-differential",
+      "protocolVersion": "1.0.0",
+      "evidence": [],
+      "paths": [],
+      "actor": {
+        "kind": "unknown",
+        "id": "unknown",
+        "provider": "unknown",
+        "model": "unknown",
+        "runtime": "unknown"
+      },
+      "publication": {
+        "status": "pending"
+      }
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "type": "work.resumed",
+      "workItem": "WI-BLOCKED",
+      "repository": "work-resume-differential",
+      "protocolVersion": "1.0.0",
+      "evidence": [],
+      "paths": [],
+      "actor": {
+        "kind": "unknown",
+        "id": "unknown",
+        "provider": "unknown",
+        "model": "unknown",
+        "runtime": "unknown"
+      },
+      "publication": {
+        "status": "pending"
+      }
+    }
+  ],
+  "test1ExecutionsLength": 1,
+  "test2SemanticState": "active",
+  "test2ExecIdsLength": 1,
+  "test2ExecutionsLength": 1,
+  "test2ExecutionsWorkItemId": "WI-NEVER-BEGUN",
+  "test3Message": "work item 'WI-GHOST' is not in repository context",
+  "test4Message": "cannot resume 'WI-ACTIVE' from 'active'"
+}

@@ -8,14 +8,14 @@ comments. Every claim cites a file and line, a command and its output, or a
 work item.
 -->
 
-- Group: `GROUP-ID` (`./ros plan explain-group GROUP-ID` or `./ros work group show GROUP-ID`)
+- Group: `GROUP-ID` (`./praxis plan explain-group GROUP-ID` or `./praxis work group show GROUP-ID`)
 - Members: `ITEM-1`, `ITEM-2`, ...
 - Execution repository: ...
 - Base commit: ...
 
 ## 1. Members
 
-One row per member, taken from its own description (`./ros work show ID`).
+One row per member, taken from its own description (`./praxis work show ID`).
 Acceptance criteria are listed here and verified per member in section 5.
 
 | Member | Obligation | Acceptance criteria | Depends on |

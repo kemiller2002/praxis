@@ -157,7 +157,7 @@ aggregation), else the sum of cost components, else the latest
 `cost.session_cumulative` (a session gauge, never added to components),
 classified observed / provider-reported / calculated / estimated from the
 metric's quality and source. Record platform-reported cost with
-`ros telemetry record ID --metric cost.execution_total --value 9.48
+`praxis telemetry record ID --metric cost.execution_total --value 9.48
 --currency USD --quality observed --source-type platform --source-name NAME
 --mechanism session-record`. An item whose own finalized executions carry a
 monetary total reports that evidence's strongest kind (`observed` for

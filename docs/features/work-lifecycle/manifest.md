@@ -1,5 +1,12 @@
 # Feature Manifest — Work lifecycle
 
+> **Current state (2026-09-28, `DF-ROS-2026-A049`).** This feature is
+> implemented only in F# (`src/`). The Node modules (`tools/*.mjs`) and the
+> Node test files this manifest's history cites were removed; their
+> end-to-end coverage now lives in `tests/Ros.Tests` (mapping in
+> `docs/migrations/fsharp/TRACEABILITY.md`). References to them
+> below are migration lineage, recoverable from Git history.
+
 ## Purpose
 
 Route changes to the repository-local backlog, live work lifecycle, evidence
@@ -285,8 +292,9 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 
 ## Interfaces
 
-- Inbound: `./ros add`, `./ros work ...`, `./ros adapter ...`, and HTTP routes
-  in `tools/ros_server.mjs`.
+- Inbound: `./praxis add`, `./praxis work ...`, `./praxis adapter ...`, and HTTP routes
+  of `praxis web serve` (`src/Ros.Cli/WebInterface.fs`, which runs these same
+  commands as a child process).
 - Outbound: versioned work/context/event/adapter JSON, queue Markdown,
   attachments, CLI JSON/text, and HTTP JSON/bytes.
 
@@ -403,8 +411,8 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   evidence, shallow clones, tampering, and validation afterwards).
 - Boundary/contract tests: `schemas/work-protocol.schema.json`,
   `schemas/work-adapter-*.schema.json`, and JSON CLI assertions in tests.
-- Integration/live verification: `./ros status`, `./ros work context ID`,
-  `./ros work list`, `./ros work show ID`, and `./ros validate`.
+- Integration/live verification: `./praxis status`, `./praxis work context ID`,
+  `./praxis work list`, `./praxis work show ID`, and `./praxis validate`.
 
 ## Dependencies
 
@@ -415,7 +423,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 
 ## Modification boundaries
 
-- Normal: `tools/ros_cli.mjs`, `tools/ros_server.mjs`, `web/`, work schemas,
+- Normal: `src/**/Work/`, `src/Ros.Cli/WebInterface.fs`, `web/styles.css`, work schemas,
   work docs, and their tests.
 - Escalation required: state mappings, legal transitions, evidence obligations,
   or authoritative-store changes because installed repositories depend on them.

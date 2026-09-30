@@ -10,12 +10,12 @@ open Ros.Infrastructure.Git
 open Ros.Infrastructure.Work
 
 /// Post-hoc attribution reconciliation end to end (issue #80): the real
-/// `ros-fs` CLI against real temporary Git repositories, exercising Git
+/// `praxis` CLI against real temporary Git repositories, exercising Git
 /// evidence, the durable event, idempotency, conflicts, and how `work
 /// validate` and the unified `validate` treat reconciled paths afterwards.
 [<RequireQualifiedAccess>]
 module WorkReconciliationEffectTests =
-    let private cli = Path.Combine(AppContext.BaseDirectory, "ros-fs.dll")
+    let private cli = Path.Combine(AppContext.BaseDirectory, "praxis.dll")
 
     let private identityVariables =
         [ "CLAUDE_CODE_SESSION_ID"; "CODEX_SESSION_ID"; "CODEX_THREAD_ID"; "GEMINI_SESSION_ID"; "COPILOT_SESSION_ID"
@@ -126,7 +126,7 @@ module WorkReconciliationEffectTests =
     let private completedEvent =
         """{"schemaVersion":"1.0.0","type":"work.completed","workItem":"FEAT-2","repository":"reconcile-test","protocolVersion":"1.0.0","occurredAt":"2026-09-01T00:00:00.000Z","evidence":[],"paths":["src/owned.fs"],"telemetryExecutions":[],"publication":{"status":"pending"},"eventId":"000000000000000000000001"}"""
 
-    /// A repository with ROS state and a first commit; returns the root and
+    /// A repository with Praxis state and a first commit; returns the root and
     /// the baseline commit.
     let private withRepository (test: string -> string -> unit) =
         let root = Path.Combine(Path.GetTempPath(), $"ros-reconcile-{Guid.NewGuid():N}")

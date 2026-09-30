@@ -1,0 +1,66 @@
+name: Praxis validation
+
+# Every repository-owned step here runs .NET/F# (DF-ROS-2026-A049): no Node
+# runtime or npm install is part of building, testing or validating Praxis.
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: dotnet restore Ros.slnx
+      - run: dotnet build Ros.slnx --configuration Release --no-restore
+      - name: F# tests
+        run: dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll
+      - name: Python artifact-validator oracle tests
+        run: python3 -m unittest discover -s tests -v
+      - name: F#/.NET-only repository invariant
+        run: ./praxis architecture check
+      - run: ./praxis registry check
+      - run: ./praxis validate
+        env:
+          PRAXIS_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+      # `ros` is a compatibility alias for `praxis` (DF-ROS-2026-A050): the
+      # same program, never a second implementation.
+      - name: Compatibility alias runs the same Praxis CLI
+        run: test "$(./ros --version)" = "$(./praxis --version)"
+
+  # The lifecycle commands must work on every supported operating system,
+  # straight from the F# CLI with its embedded scaffold payload.
+  lifecycle:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+      - run: dotnet build src/Ros.Cli/Ros.Cli.fsproj --configuration Release
+      - name: Initialize, verify and validate a fresh project
+        shell: bash
+        run: |
+          set -euo pipefail
+          cli="$GITHUB_WORKSPACE/src/Ros.Cli/bin/Release/net10.0/praxis.dll"
+          project="$RUNNER_TEMP/lifecycle-project"
+          rm -rf "$project"
+          mkdir -p "$project"
+          git -C "$project" init -q
+          dotnet "$cli" --root "$project" init
+          dotnet "$cli" --root "$project" init --check
+          dotnet "$cli" --root "$project" verify
+          dotnet "$cli" --root "$project" doctor

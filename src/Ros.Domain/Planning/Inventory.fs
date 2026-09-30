@@ -310,7 +310,7 @@ module Inventory =
                         FindingSeverity.Warning
                         [ id ]
                         $"Recorded state: {lifecycle}. Observed: checkpoint commit {checkpoint.Commit} is already merged into {into}. Assessment: the item may be finished; recorded state may be stale."
-                        (Some "reconcile: verify the merged result and record completion (./ros work complete); do not reimplement")
+                        (Some "reconcile: verify the merged result and record completion (./praxis work complete); do not reimplement")
                         EvidenceConfidence.High
                         [ Provenance.create EvidenceSource.Checkpoint $"checkpoint {checkpoint.CheckpointId}"; observation.Provenance ])
             | _ -> None
@@ -520,7 +520,7 @@ module Inventory =
                           FindingCode.ResumableExecution
                           FindingSeverity.Info
                           [ id ]
-                          $"{id} has a verified checkpoint on {checkpoint.Branch} ({checkpoint.Commit}); if its executor is gone, continue it (./ros work continue) rather than restarting. Next action: {checkpoint.NextAction}"
+                          $"{id} has a verified checkpoint on {checkpoint.Branch} ({checkpoint.Commit}); if its executor is gone, continue it (./praxis work continue) rather than restarting. Next action: {checkpoint.NextAction}"
                           (Some "continue from the checkpoint")
                           EvidenceConfidence.High
                           [ Provenance.create EvidenceSource.Checkpoint $"checkpoint {checkpoint.CheckpointId}" ] ]

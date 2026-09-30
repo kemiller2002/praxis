@@ -1,0 +1,63 @@
+{
+  "clean": {
+    "schemaVersion": "1.0.0",
+    "outcome": "clean",
+    "changes": [],
+    "failure": null,
+    "source": {
+      "tool": "git",
+      "command": "status",
+      "format": "porcelain-v1-z"
+    }
+  },
+  "changed": {
+    "schemaVersion": "1.0.0",
+    "outcome": "changed",
+    "changes": [
+      {
+        "code": " M",
+        "kind": "tracked",
+        "index": "unmodified",
+        "workTree": "modified",
+        "path": "modified.txt",
+        "originalPath": null
+      },
+      {
+        "code": "R ",
+        "kind": "tracked",
+        "index": "renamed",
+        "workTree": "unmodified",
+        "path": "renamed.txt",
+        "originalPath": "original.txt"
+      },
+      {
+        "code": "??",
+        "kind": "untracked",
+        "path": "untracked.txt",
+        "originalPath": null
+      }
+    ],
+    "failure": null,
+    "source": {
+      "tool": "git",
+      "command": "status",
+      "format": "porcelain-v1-z"
+    }
+  },
+  "unavailable": {
+    "schemaVersion": "1.0.0",
+    "outcome": "unavailable",
+    "changes": [],
+    "failure": {
+      "operation": "git status",
+      "reason": "not-repository",
+      "message": "fatal: not a git repository (or any of the parent directories): .git",
+      "exitCode": 128
+    },
+    "source": {
+      "tool": "git",
+      "command": "status",
+      "format": "porcelain-v1-z"
+    }
+  }
+}

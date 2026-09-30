@@ -13,7 +13,8 @@ module LifecycleTests =
           Ownership = ownership
           Sha256 = sha
           Executable = false
-          Integration = None }
+          Integration = None
+          Replaces = [] }
 
     let private observed files recorded =
         { ObservedRepository.empty with
@@ -73,6 +74,53 @@ module LifecycleTests =
                       match changesFor payload (observed [] None) |> Assert.single with
                       | PlannedChange.CreateFile("a.md", created, "aaa") -> Assert.equal ownership created
                       | other -> failwith $"Expected a create for {Ownership.toString ownership}, got {other}" }
+
+          { Name = "a renamed file an earlier installation recorded moves instead of being duplicated"
+            Run =
+              fun () ->
+                  let payload = [ { entry "new.yml" Ownership.Shared "current" with Replaces = [ "old.yml" ] } ]
+
+                  // Unmodified since installation: moved and brought up to date.
+                  let clean = observed [ "old.yml", "seed" ] (Some [ recordedArtifact "old.yml" Ownership.Shared "seed" ])
+
+                  match changesFor payload clean |> Assert.single with
+                  | PlannedChange.MoveManagedFile("old.yml", "new.yml", true) -> ()
+                  | other -> failwith $"Expected a rewriting move, got {other}"
+
+                  let cleanPlan = Planning.initialize "greenfield" "pkg" "1.0.0" payload clean
+                  Assert.equal [ "new.yml" ] (cleanPlan.Manifest.ManagedArtifacts |> List.map (fun artifact -> artifact.Path))
+                  Assert.equal "current" (cleanPlan.Manifest.ManagedArtifacts |> Assert.single).Sha256
+
+                  // Edited locally: moved with the edit, and recorded at the edited bytes.
+                  let edited = observed [ "old.yml", "edited" ] (Some [ recordedArtifact "old.yml" Ownership.Shared "seed" ])
+
+                  match changesFor payload edited |> Assert.single with
+                  | PlannedChange.MoveManagedFile("old.yml", "new.yml", false) -> ()
+                  | other -> failwith $"Expected a preserving move, got {other}"
+
+                  let editedPlan = Planning.initialize "greenfield" "pkg" "1.0.0" payload edited
+                  Assert.equal "edited" (editedPlan.Manifest.ManagedArtifacts |> Assert.single).Sha256
+                  Assert.empty editedPlan.Plan.Conflicts }
+
+          { Name = "a renamed file is never moved from an unrecorded path or over an existing destination"
+            Run =
+              fun () ->
+                  let payload = [ { entry "new.yml" Ownership.Shared "current" with Replaces = [ "old.yml" ] } ]
+
+                  // The earlier path is present but was never installed by the tool.
+                  match changesFor payload (observed [ "old.yml", "theirs" ] (Some [])) |> Assert.single with
+                  | PlannedChange.CreateFile("new.yml", Ownership.Shared, "current") -> ()
+                  | other -> failwith $"Expected a plain create, got {other}"
+
+                  // The new destination already exists: the earlier file is left alone.
+                  let both =
+                      observed
+                          [ "old.yml", "seed"; "new.yml", "current" ]
+                          (Some [ recordedArtifact "old.yml" Ownership.Shared "seed" ])
+
+                  Assert.empty (changesFor payload both)
+                  Assert.equal "move-managed-file" (PlannedChange.kind (PlannedChange.MoveManagedFile("a", "b", true)))
+                  Assert.equal (Some "b") (PlannedChange.path (PlannedChange.MoveManagedFile("a", "b", false))) }
 
           { Name = "a file already byte-identical to the payload plans no change"
             Run =
@@ -397,8 +445,8 @@ module LifecycleTests =
                               |> Seq.map (fun entry -> entry.GetProperty("source").GetString())
                               |> List.ofSeq
                               |> fun sources -> manifest :: sources)
-                      // package.json is read for the installed name and version.
-                      |> fun sources -> "package.json" :: sources
+                      // release.json is read for the installed name and version.
+                      |> fun sources -> "release.json" :: sources
                       |> Set.ofList
 
                   let missing = Set.difference declared embedded |> Set.toList

@@ -13,7 +13,7 @@ type Ownership =
     | ToolOwned
     /// Derived from authoritative inputs already in the repository. The
     /// installer seeds it once; after that only the generator that owns it
-    /// (`ros registry build`) rewrites it, never a copy from the package.
+    /// (`praxis registry build`) rewrites it, never a copy from the package.
     | Generated
     /// Controlled by the repository. Seeded once if absent, never rewritten.
     | UserOwned
@@ -53,10 +53,10 @@ module Ownership =
     /// drifted. Used by `doctor` so a remedy names the right command.
     let repairHint =
         function
-        | Ownership.ToolOwned -> "Run 'ros init' to restore it from the package."
-        | Ownership.Generated -> "Run 'ros registry build' to regenerate it from the repository's own artifacts."
+        | Ownership.ToolOwned -> "Run 'praxis init' to restore it from the package."
+        | Ownership.Generated -> "Run 'praxis registry build' to regenerate it from the repository's own artifacts."
         | Ownership.UserOwned -> "This file belongs to the repository; restore it from version control if it was lost."
-        | Ownership.Shared -> "Run 'ros init' to seed it again, or restore your edited copy from version control."
+        | Ownership.Shared -> "Run 'praxis init' to seed it again, or restore your edited copy from version control."
 
 /// One file the payload (this package's own scaffold) wants present in the
 /// target repository, already rendered and hashed.
@@ -67,7 +67,11 @@ type PayloadEntry =
       Executable: bool
       /// Named when installing this file also registers an integration with
       /// something outside the repository (today: a CI workflow).
-      Integration: string option }
+      Integration: string option
+      /// Earlier destinations of this same file (a renamed scaffold file). An
+      /// upgrade moves a recorded earlier file here instead of leaving it
+      /// behind next to a new copy.
+      Replaces: string list }
 
 /// One file a previous installation recorded in `.echelon/ros.json`.
 type RecordedArtifact =
@@ -143,11 +147,11 @@ module InstallationProblem =
             "Restore .echelon/ros.json from version control, or re-run init in a clean checkout."
         | InstallationProblem.ConfigurationVersionUnsupported _ ->
             "Upgrade this CLI: the repository was installed by a newer release than the one running."
-        | InstallationProblem.ManagedArtifactMissing _ -> "Run 'ros init' to restore the missing tool-owned artifact."
+        | InstallationProblem.ManagedArtifactMissing _ -> "Run 'praxis init' to restore the missing tool-owned artifact."
         | InstallationProblem.ManagedArtifactModified _ ->
             "Revert the local edit, or move the change into a user-owned file; tool-owned artifacts are replaced on upgrade."
-        | InstallationProblem.ConfigurationMissing _ -> "Run 'ros init' to create the missing configuration."
-        | InstallationProblem.ConfigurationUnreadable _ -> "Repair the malformed JSON, then re-run 'ros verify'."
+        | InstallationProblem.ConfigurationMissing _ -> "Run 'praxis init' to create the missing configuration."
+        | InstallationProblem.ConfigurationUnreadable _ -> "Repair the malformed JSON, then re-run 'praxis verify'."
 
 /// The installation's state, derived only from inspection. Nothing here
 /// mutates the repository.
@@ -190,6 +194,10 @@ type PlannedChange =
     | UpdateConfiguration of path: string * description: string
     | RegisterIntegration of name: string * path: string
     | RunMigration of fromVersion: int * toVersion: int * description: string
+    /// Moves a file an earlier installation recorded to its renamed
+    /// destination. `rewrite` installs the current content as well, and is
+    /// only planned when the moved file is still exactly what was installed.
+    | MoveManagedFile of fromPath: string * toPath: string * rewrite: bool
 
 [<RequireQualifiedAccess>]
 module PlannedChange =
@@ -199,7 +207,8 @@ module PlannedChange =
         | PlannedChange.CreateFile(path, _, _)
         | PlannedChange.UpdateManagedFile(path, _, _)
         | PlannedChange.UpdateConfiguration(path, _)
-        | PlannedChange.RegisterIntegration(_, path) -> Some path
+        | PlannedChange.RegisterIntegration(_, path)
+        | PlannedChange.MoveManagedFile(_, path, _) -> Some path
         | PlannedChange.RunMigration _ -> None
 
     let kind =
@@ -210,6 +219,7 @@ module PlannedChange =
         | PlannedChange.UpdateConfiguration _ -> "update-configuration"
         | PlannedChange.RegisterIntegration _ -> "register-integration"
         | PlannedChange.RunMigration _ -> "run-migration"
+        | PlannedChange.MoveManagedFile _ -> "move-managed-file"
 
     let describe =
         function
@@ -220,6 +230,8 @@ module PlannedChange =
         | PlannedChange.RegisterIntegration(name, path) -> $"register integration {name} at {path}"
         | PlannedChange.RunMigration(fromVersion, toVersion, description) ->
             $"migrate configuration {fromVersion} -> {toVersion}: {description}"
+        | PlannedChange.MoveManagedFile(fromPath, toPath, true) -> $"move {fromPath} to {toPath} and update it"
+        | PlannedChange.MoveManagedFile(fromPath, toPath, false) -> $"move {fromPath} to {toPath}, keeping its local edits"
 
 /// A reason a plan cannot be executed as calculated, or a fact about the
 /// repository the caller must see before it is. Blocking conflicts stop

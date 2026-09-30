@@ -2221,10 +2221,10 @@
         "gh-90"
       ],
       "priority": "low",
-      "status": "captured",
+      "status": "abandoned",
       "attachments": [],
       "createdAt": "2026-09-28T09:09:00.360Z",
-      "updatedAt": "2026-09-28T09:09:00.360Z",
+      "updatedAt": "2026-09-28T10:40:40.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2234,7 +2234,8 @@
         "runtime": "claude-code"
       },
       "source": "agent-discovery",
-      "sourceReference": "PRAXIS-REMOTE-07"
+      "sourceReference": "PRAXIS-REMOTE-07",
+      "abandonedReason": "Obsolete: DF-ROS-2026-A042 retires the npm package entirely; the native installers already provide the praxis command, and the site's ROS-to-Praxis copy and its test were updated in FSHARP-ONLY-REPOSITORY"
     },
     {
       "id": "PRAXIS-REMOTE-11-PREP",
@@ -3416,17 +3417,17 @@
     },
     {
       "id": "PRAXIS-PR92-ID-RENUMBER",
-      "title": "Owner decision: renumber PR #92's colliding DF-ROS-2026-A042/A043 and RQ-ROS-2026-A022/A023 before reconciliation (see EV-ROS-2026-A060 section 9)",
-      "description": null,
+      "title": "Renumber PR #92's DF/RQ records that collide with main's (A042/A043, RQ A022/A023)",
+      "description": "Owner-approved. Main already uses DF-ROS-2026-A042/A043 and RQ-ROS-2026-A022/A023 for different records. Keep main's numbering; renumber this branch's F#/.NET-only and Praxis-canonical-name records to DF-ROS-2026-A049/A050 and RQ-ROS-2026-A024/A025 (DF-ROS-2026-A048 is claimed by feature/gh-127-merge-readiness), and rewrite every citation outside .ros/ history. Same ID as the backlog row captured on main via EV-ROS-2026-A060.",
       "tags": [
         "pr92",
         "decision"
       ],
       "priority": "high",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
-      "createdAt": "2026-09-30T17:09:06.599Z",
-      "updatedAt": "2026-09-30T17:09:06.599Z",
+      "createdAt": "2026-09-30T17:56:38.000Z",
+      "updatedAt": "2026-09-30T18:05:38.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3451,6 +3452,177 @@
       "attachments": [],
       "createdAt": "2026-09-30T17:09:06.997Z",
       "updatedAt": "2026-09-30T17:09:06.997Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "FSHARP-ONLY-REPOSITORY",
+      "title": "Remove repository-owned Node/JavaScript/TypeScript code and tooling; make Praxis F#/.NET only and enforce it",
+      "description": null,
+      "tags": [
+        "fsharp",
+        "architecture",
+        "tooling",
+        "node-removal"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T09:09:13.000Z",
+      "updatedAt": "2026-09-28T10:27:49.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "FSHARP-ONLY-MAIN-MERGE",
+      "title": "After merging main (GH-90 remote execution): port its Node tests to F# and renumber the colliding DF/RQ records",
+      "description": null,
+      "tags": [
+        "fsharp",
+        "node-removal",
+        "follow-up"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T10:37:56.000Z",
+      "updatedAt": "2026-09-28T11:23:44.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-CLI-RENAME",
+      "title": "Finish the ROS to Praxis product/CLI rename: praxis canonical, ros only as compatibility alias, persisted state or history",
+      "description": "Bootstrapped with the ./ros compatibility launcher because ./praxis did not exist yet in the source checkout. Also merges main (PRAXIS-REMOTE-11-PREP) and ports its two new Node test cases to F#.",
+      "tags": [
+        "rename",
+        "praxis",
+        "cli"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T13:45:19.000Z",
+      "updatedAt": "2026-09-28T14:30:51.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-INTERNAL-NAMESPACES",
+      "title": "Migrate internal Ros.* projects, namespaces, assemblies and Ros.slnx to Praxis.* (deferred from PRAXIS-CLI-RENAME, DF-ROS-2026-A043)",
+      "description": "Internal implementation names only; no user-facing effect. Separate change because of its blast radius (project files, namespaces, test fixtures, embedded resource names, Python oracle naming).",
+      "tags": [
+        "rename",
+        "follow-up"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-28T13:55:54.000Z",
+      "updatedAt": "2026-09-28T13:55:54.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PR92-PREMERGE-RENAME-FENCE",
+      "title": "Harden Praxis rename invariants on PR #92 before main is reconciled",
+      "description": "Part of PRAXIS-PR92-PREMERGE-REGRESSION-FENCE (tracked on branch test/pr92-premerge-main-characterization). Adds characterization tests for behavior this branch already implements (PRAXIS_/ROS_ telemetry precedence, retained ROS persisted names, customized ROS-era launcher, legacy launcher helper, ROS-era work resumed via praxis, ros==praxis help). No production change. The test edit was drafted in this session before this item began on this branch and is committed under it.",
+      "tags": [
+        "testing",
+        "pr92"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:04:57.000Z",
+      "updatedAt": "2026-09-30T17:05:26.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PR92-RECONCILE",
+      "title": "Reconcile PR #92 (F#-only cleanup, Praxis rename) with current main",
+      "description": "Owner-approved: merge main into PR #92, resolve every conflict preserving main's newer behavior and PR #92's rename per EV-ROS-2026-A060, write post-merge tests P1-P7 (PRAXIS-PR92-POSTMERGE-FENCE), drive CI green, then merge PR #92 into main. Owner decisions: keep shipping legacy ros-fs-<rid> assets; upgrade leaves tools/ros_fs_launcher.mjs in place.",
+      "tags": [
+        "pr92"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T18:14:02.000Z",
+      "updatedAt": "2026-09-30T21:44:26.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-TELEMETRY-COST-UNIT",
+      "title": "telemetry record accepts a cost metric with a non-'currency' unit (e.g. --unit USD) that validate then rejects",
+      "description": "Found by PRAXIS-PR92-RECONCILE's P4 test: 'telemetry record --metric cost.session_cumulative --unit USD --currency USD' succeeds, then 'validate' reports metrics[n].unit: cost metric requires unit 'currency'. Record should refuse what validate rejects (write-time validation), like PRAXIS-TELEMETRY-CLASSIFY-VOCAB.",
+      "tags": [
+        "telemetry",
+        "bug"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-30T19:40:19.769Z",
+      "updatedAt": "2026-09-30T19:40:19.769Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

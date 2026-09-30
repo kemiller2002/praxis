@@ -1,4 +1,5 @@
 @echo off
 setlocal
 set "HERE=%~dp0"
-"%HERE%praxis-bin.exe" --package-root "%HERE%package" %*
+rem The self-contained binary embeds its own scaffold payload (DF-ROS-2026-A041).
+"%HERE%praxis-bin.exe" %*

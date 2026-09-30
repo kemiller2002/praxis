@@ -3,7 +3,7 @@ namespace Ros.Domain.Telemetry
 open Ros.Domain.Work
 
 /// Mirrors production `finding(file, field, message)` (`tools/ros_telemetry.mjs`):
-/// the same `{Path; Field; Message}` shape every ROS validator in this
+/// the same `{Path; Field; Message}` shape every Praxis validator in this
 /// migration returns.
 type TelemetryFinding =
     { Path: string

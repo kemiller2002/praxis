@@ -1,5 +1,7 @@
 # ROS F# migration architecture
 
+> **Closed (2026-09-28, `DF-ROS-2026-A049`).** The repository is now F#/.NET only; the Node files this document names were removed and are recoverable from Git history. See [`TRACEABILITY.md`](TRACEABILITY.md) for where their tests moved.
+
 `DF-ROS-2026-A027` is the decision authority. This document is the concise
 implementation map.
 
