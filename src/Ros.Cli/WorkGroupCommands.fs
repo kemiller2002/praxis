@@ -21,6 +21,9 @@ open Ros.Infrastructure.Work
 module WorkGroupCommands =
     let showUsage = "work group show GROUP-ID [--config FILE] [--json]"
 
+    let removeUsage =
+        "work group remove --group GROUP-ID --member ID --occurred-at TIMESTAMP [--allow-empty] [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
+
     let addUsage =
         "work group add --group GROUP-ID --member ID --occurred-at TIMESTAMP [--config FILE] [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
 
@@ -28,6 +31,8 @@ module WorkGroupCommands =
         showUsage
         + " | "
         + addUsage
+        + " | "
+        + removeUsage
         + " | work group create --group GROUP-ID --member ID [--member ID ...] --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--shared-context TEXT ...] [--architecture-note TEXT ...] [--execution-repository NAME] [--cross-repository] [--config FILE] [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
 
     // ---- argument parsing (shared by the family) ----
@@ -292,6 +297,16 @@ module WorkGroupCommands =
         | [] ->
             let request = memberRequest arguments actor
             mutate root command arguments request.GroupId (fun context -> WorkGroups.add context request) (changeLines "added to" request)
+
+    let remove (root: string) (rawArguments: string list) (actor: Actor) =
+        let command = "work group remove"
+        let arguments = parse memberValues [ "--dry-run"; "--allow-empty" ] rawArguments
+
+        match memberErrors command arguments with
+        | _ :: _ as errors -> reportArgumentErrors command removeUsage errors
+        | [] ->
+            let request = memberRequest arguments actor
+            mutate root command arguments request.GroupId (fun context -> WorkGroups.remove context request) (changeLines "removed from" request)
 
     // ---- work group show ----
 

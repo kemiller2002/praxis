@@ -3005,6 +3005,7 @@ let private repositoryDispatch root packageRoot arguments =
     | "work" :: "checkpoint" :: rest -> ProvenanceCommands.withResolvedActor rest (CheckpointCommands.run root rest)
     | "work" :: "group" :: "show" :: rest -> WorkGroupCommands.show root rest
     | "work" :: "group" :: "add" :: rest -> ProvenanceCommands.withResolvedActor rest (WorkGroupCommands.add root rest)
+    | "work" :: "group" :: "remove" :: rest -> ProvenanceCommands.withResolvedActor rest (WorkGroupCommands.remove root rest)
     | "work" :: "group" :: "create" :: rest -> ProvenanceCommands.withResolvedActor rest (WorkGroupCommands.create root rest)
     | [ "telemetry"; "adapters" ] -> runTelemetryAdapters ()
     | "telemetry" :: "show" :: rest -> runTelemetryShow root rest

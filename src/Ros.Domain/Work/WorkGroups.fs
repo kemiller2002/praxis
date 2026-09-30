@@ -345,6 +345,26 @@ module WorkGroups =
                         History = group.History @ [ entry GroupOperation.MemberAdded (Some request.WorkItemId) request.OccurredAt request.Actor request.Reason false ] }
             | rejections -> Error rejections)
 
+    /// `work group remove`: one member leaves. Any member may leave,
+    /// whatever its state; its lifecycle, evidence and attribution are not
+    /// touched. The last member leaves only with `AllowEmpty`, which the
+    /// history records.
+    let remove (context: GroupContext) (request: GroupMemberRequest) : Result<StoredWorkGroup, GroupRejection list> =
+        existing context request.GroupId
+        |> Result.bind (fun group ->
+            let declaration = group.Declaration
+
+            match declaration.Members |> List.contains request.WorkItemId, declaration.Members.Length with
+            | false, _ -> Error [ GroupRejection.NotMember(request.WorkItemId, declaration.Id) ]
+            | true, 1 when not request.AllowEmpty -> Error [ GroupRejection.LastMember(request.WorkItemId, declaration.Id) ]
+            | true, remaining ->
+                Ok
+                    { group with
+                        Declaration = { declaration with Members = declaration.Members |> List.filter ((<>) request.WorkItemId) }
+                        History =
+                            group.History
+                            @ [ entry GroupOperation.MemberRemoved (Some request.WorkItemId) request.OccurredAt request.Actor request.Reason (remaining = 1) ] })
+
     /// The declarations the planner reads: every configured group, then every
     /// stored group whose ID the configuration does not already declare (an
     /// explicit per-invocation configuration is the narrower source).

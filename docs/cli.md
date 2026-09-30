@@ -385,6 +385,8 @@ See "Durable checkpoints and continuity" in [`work-protocol.md`](work-protocol.m
 ros work group show GROUP-ID [--config FILE] [--json]
 ros work group add    --group GROUP-ID --member ID --occurred-at TIMESTAMP [--config FILE]
                       [--reason TEXT] [--dry-run] [--json] [IDENTITY]
+ros work group remove --group GROUP-ID --member ID --occurred-at TIMESTAMP [--allow-empty]
+                      [--reason TEXT] [--dry-run] [--json] [IDENTITY]
 ros work group create --group GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP
                       [--kind KIND] [--origin ORIGIN] [--shared-context TEXT]*
                       [--architecture-note TEXT]* [--execution-repository NAME]
@@ -400,7 +402,7 @@ attribution, telemetry or checkpoints. `plan` merges stored groups into
 in planner configuration; a group that `--config` also declares keeps its
 configured form. `validate` checks stored groups (readable records, unique
 IDs, recorded members, no repeated member, a history that begins with the
-creation).
+creation, and no empty group without an explicit empty removal).
 
 **`work group create`** declares a group. Group IDs are
 `GROUP-<AREA>-<SEQUENCE>` in upper case. Every member must be a recorded work
@@ -420,6 +422,12 @@ group without writing it.
 cross-repository) and refuses an item that is already a member or a group
 that is not recorded. The history entry records who added it (resolved
 actor), when and why. The member's own record is untouched.
+
+**`work group remove`** removes one member, whatever its state, and refuses
+an item that is not a member. Removing the last member is refused unless
+`--allow-empty` is given; the removal is then recorded as `explicitEmpty` and
+`validate` accepts the empty group. The history entry records who removed it.
+The item's lifecycle state, evidence and attribution are untouched.
 
 **`work group show`** is read-only (no lock, no write): the group's
 declaration, each member's own recorded state and planning state (from the

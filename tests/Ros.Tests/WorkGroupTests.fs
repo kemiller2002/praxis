@@ -350,6 +350,71 @@ module WorkGroupTests =
                   Assert.equal [ "repository-mismatch" ] (rejectionCodes refused)
                   add "GROUP-FIXTURE-002" |> ok |> ignore))
 
+          t "remove refuses non-members and the last member unless explicit; any member's state may leave; history records who removed it" (fun () ->
+              let joined = created "GROUP-AREA-001" [ "ITEM-1" ]
+              // DONE-1 completed after it joined.
+              let group = { joined with Declaration = { joined.Declaration with Members = [ "ITEM-1"; "DONE-1" ] } }
+
+              let change (id: string) (allowEmpty: bool) : GroupMemberRequest =
+                  { GroupId = "GROUP-AREA-001"
+                    WorkItemId = id
+                    OccurredAt = "2026-09-30T13:00:00.000Z"
+                    Actor = human
+                    Reason = Some "not part of this design"
+                    AllowEmpty = allowEmpty }
+
+              let remove (target: StoredWorkGroup) id allowEmpty = WorkGroups.remove (context [ target ]) (change id allowEmpty)
+              Assert.equal [ "not-member" ] (codes (remove group "ITEM-2" false))
+              Assert.equal [ "unknown-group" ] (codes (WorkGroups.remove (context []) (change "ITEM-1" false)))
+
+              let withoutDone =
+                  match remove group "DONE-1" false with
+                  | Ok updated -> updated
+                  | Error rejections -> failwith $"{rejections}"
+
+              Assert.equal [ "ITEM-1" ] withoutDone.Declaration.Members
+              let entry = List.last withoutDone.History
+              Assert.equal (GroupOperation.MemberRemoved, Some "DONE-1", human, false) (entry.Operation, entry.Member, entry.Actor, entry.ExplicitEmpty)
+              Assert.equal [ "last-member" ] (codes (remove withoutDone "ITEM-1" false))
+
+              match remove withoutDone "ITEM-1" true with
+              | Error rejections -> failwith $"{rejections}"
+              | Ok empty ->
+                  Assert.equal [] empty.Declaration.Members
+                  Assert.isTrue (List.last empty.History).ExplicitEmpty "the empty removal is not explicit"
+                  Assert.empty (WorkGroups.findings (context [ empty ])))
+
+          t "cli remove leaves every member's lifecycle, evidence and attribution untouched and records who removed it" (fun () ->
+              withRepository (fun clone ->
+                  createGroup clone "GROUP-FIXTURE-001" [ "ITEM-1"; "ITEM-2" ] [] |> ok |> ignore
+                  let before = lifecycle clone
+                  let remove extra = cli clone ([ "work"; "group"; "remove"; "--group"; "GROUP-FIXTURE-001"; "--occurred-at"; now (); "--json" ] @ extra)
+
+                  let dryRun = remove [ "--member"; "ITEM-2"; "--dry-run" ] |> ok
+                  Assert.equal "dry-run" (text dryRun.Json["status"])
+                  Assert.isTrue ((File.ReadAllText(groupsFile clone)).Contains "ITEM-2") "a dry run removed the member"
+
+                  let refused = remove [ "--member"; "ITEM-3" ]
+                  Assert.equal 1 refused.ExitCode
+                  Assert.equal [ "not-member" ] (rejectionCodes refused)
+
+                  let removed = remove [ "--member"; "ITEM-2"; "--reason"; "belongs elsewhere" ] |> ok
+                  let entry = removed.Json["group"].["history"].AsArray() |> Seq.last
+                  Assert.equal "member-removed" (text entry["operation"])
+                  Assert.equal "ITEM-2" (text entry["member"])
+                  Assert.equal "example/agent-a" (text entry["actor"].["id"])
+                  Assert.equal before (lifecycle clone)
+
+                  let last = remove [ "--member"; "ITEM-1" ]
+                  Assert.equal 1 last.ExitCode
+                  Assert.equal [ "last-member" ] (rejectionCodes last)
+                  let emptied = remove [ "--member"; "ITEM-1"; "--allow-empty" ] |> ok
+                  Assert.equal 0 (emptied.Json["group"].["members"].AsArray().Count)
+                  Assert.equal true ((emptied.Json["group"].["history"].AsArray() |> Seq.last).["explicitEmpty"].GetValue<bool>())
+                  Assert.equal before (lifecycle clone)
+                  run clone None [ "validate" ] |> ok |> ignore
+                  Assert.equal 2 (cli clone [ "work"; "group"; "add"; "--group"; "GROUP-FIXTURE-001"; "--member"; "ITEM-1"; "--allow-empty"; "--occurred-at"; now () ]).ExitCode))
+
           t "cli validate reports a stored group whose member is not a recorded work item" (fun () ->
               withRepository (fun clone ->
                   createGroup clone "GROUP-FIXTURE-001" [ "ITEM-1" ] [] |> ok |> ignore
