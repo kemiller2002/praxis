@@ -109,7 +109,7 @@
       }
     },
     {
-      "label": "control-04",
+      "label": "control-04-attempt-1",
       "arm": "control",
       "items": [
         "PRAXIS-GROUP-04"
@@ -118,7 +118,33 @@
       "configuredModel": "claude-opus-5-5",
       "createdAt": "2026-09-30T13:18:43Z",
       "startCommit": "9c17936",
-      "prompt": "prompts/control-04.txt"
+      "prompt": "prompts/control-04.txt",
+      "finishedAt": "2026-09-30T13:28:58Z",
+      "status": "stalled",
+      "statusNote": "turn ended (idle, review_ready) with no post-turn summary and nothing pushed to experiment/a021-control or any other branch; its transcript is not readable from the orchestrator. Counted as a failed control-arm attempt; its cost counts toward the control arm.",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 1.8494294,
+        "input_tokens": 50,
+        "output_tokens": 24541,
+        "cache_read_tokens": 2370287,
+        "cache_write_tokens": 110544,
+        "context_used_tokens": 137759,
+        "last_served_model": "claude-opus-5-5"
+      }
+    },
+    {
+      "label": "control-04",
+      "arm": "control",
+      "items": [
+        "PRAXIS-GROUP-04"
+      ],
+      "session": "session_016DRgw1FNx9124i193wbciS",
+      "configuredModel": "claude-opus-5-5",
+      "createdAt": "2026-09-30T13:34:04Z",
+      "startCommit": "9c17936",
+      "prompt": "prompts/control-04.txt",
+      "note": "retry of control-04-attempt-1 with the identical prompt in a fresh session"
     }
   ]
 }
