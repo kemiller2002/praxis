@@ -93,7 +93,32 @@
       "createdAt": "2026-09-30T12:50:37Z",
       "startCommit": "a47522e",
       "prompt": "prompts/control-03.txt",
-      "note": "started 13 min after control-02 finished (check-in cadence); idle gap is orchestration latency, not arm effort"
+      "note": "started 13 min after control-02 finished (check-in cadence); idle gap is orchestration latency, not arm effort",
+      "finishedAt": "2026-09-30T13:05:30Z",
+      "status": "completed",
+      "headAfter": "9c17936",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 2.8139084,
+        "input_tokens": 86,
+        "output_tokens": 37565,
+        "cache_read_tokens": 5187082,
+        "cache_write_tokens": 128106,
+        "context_used_tokens": 166212,
+        "last_served_model": "claude-opus-5-5"
+      }
+    },
+    {
+      "label": "control-04",
+      "arm": "control",
+      "items": [
+        "PRAXIS-GROUP-04"
+      ],
+      "session": "session_01GoH1a4gYaRBSSTwNBpmLrH",
+      "configuredModel": "claude-opus-5-5",
+      "createdAt": "2026-09-30T13:18:43Z",
+      "startCommit": "9c17936",
+      "prompt": "prompts/control-04.txt"
     }
   ]
 }
