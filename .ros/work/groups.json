@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "groups": [
+    {
+      "id": "GROUP-PRAXIS-WORK-GROUP-001",
+      "members": [
+        "PRAXIS-GROUP-01",
+        "PRAXIS-GROUP-02",
+        "PRAXIS-GROUP-03",
+        "PRAXIS-GROUP-04",
+        "PRAXIS-GROUP-05"
+      ],
+      "kind": "shared-api-surface",
+      "origin": "human-declared",
+      "sharedContext": [
+        "one declared-group record in Praxis state, read by the planner as grouping.groups",
+        "one CLI command family: praxis work group create|show|add|remove|checkpoint",
+        "PRX-GRP-041..044: per-member identity, attribution, partial completion and checkpoints"
+      ],
+      "executionRepository": "repository-operating-system",
+      "crossRepository": false,
+      "architectureNotes": [
+        "Design: research/experiments/EX-ROS-2026-A021-grouped/group-analysis.md (decisions D1-D7)"
+      ],
+      "createdAt": "2026-09-30T12:15:52.000Z",
+      "createdBy": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "history": [
+        {
+          "operation": "created",
+          "member": null,
+          "at": "2026-09-30T12:15:52.000Z",
+          "actor": {
+            "kind": "agent",
+            "id": "anthropic/claude-code",
+            "provider": "anthropic",
+            "model": "unknown",
+            "runtime": "claude-code"
+          },
+          "reason": "EX-ROS-2026-A021 cohort, as declared in the baseline planner configuration"
+        }
+      ],
+      "checkpoints": []
+    }
+  ]
+}

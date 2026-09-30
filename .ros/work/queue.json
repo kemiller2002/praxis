@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 65,
+  "nextSeq": 66,
   "items": [
     {
       "id": "WI-0001",
@@ -3283,6 +3283,30 @@
       "attachments": [],
       "createdAt": "2026-09-30T09:17:29.000Z",
       "updatedAt": "2026-09-30T09:40:03.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0065",
+      "title": "Resolve EX-ROS-2026-A021's mandated research/experiments/EX-ROS-2026-A021-grouped/group-analysis.md versus the artifact validator",
+      "description": "The frozen grouped-arm prompt requires research/experiments/EX-ROS-2026-A021-grouped/group-analysis.md. Every .md under research/experiments is loaded as an experiment artifact, which must be named EX-ID--slug.md and carry front matter, so './ros validate' and './ros registry build' fail on experiment/a021-grouped from the analysis commit onward. The grouped arm kept the mandated path (explicit instruction outranks canonical governance) and recorded the deviation. Options: have artifact enumeration skip supporting subdirectories of an experiment, move the analysis to a non-.md or dot-free supporting name in a later protocol revision, or record the analysis in the experiment record. Decide before evaluating the arms, since the control arm does not carry this failure.",
+      "tags": [
+        "experiment",
+        "validation"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-30T12:06:16.981Z",
+      "updatedAt": "2026-09-30T12:06:16.981Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
