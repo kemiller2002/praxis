@@ -240,10 +240,24 @@
         "arm-x": "9c978cd",
         "arm-y": "5d100ed"
       },
-      "note": "mapping drawn with secrets.randbelow(2), sealed in the orchestrator scratchpad, committed after the evaluation"
+      "note": "mapping drawn with secrets.randbelow(2), sealed in the orchestrator scratchpad, committed after the evaluation",
+      "finishedAt": "2026-09-30T17:13:27Z",
+      "status": "completed",
+      "output": "experiment/a021-evaluation@758724b",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 5.418082,
+        "input_tokens": 1048,
+        "output_tokens": 45265,
+        "cache_read_tokens": 13017465,
+        "cache_write_tokens": 238496,
+        "context_used_tokens": 266477,
+        "last_served_model": "claude-opus-5-5"
+      }
     }
   ],
   "deviations": [
-    "control-04 took three sessions: attempt 1 ended idle without pushing, attempt 2 pushed 881a34d then blocked on a `./ros work` permission prompt, attempt 3 started with the owner's approval pre-granted. All three sessions' costs count toward the control arm."
+    "control-04 took three sessions: attempt 1 ended idle without pushing, attempt 2 pushed 881a34d then blocked on a `./ros work` permission prompt, attempt 3 started with the owner's approval pre-granted. All three sessions' costs count toward the control arm.",
+    "control-05's session was created from experiment/a021-control (head 8c175d5) but its first commit 8d435cb has parent 8b4ffa3, the arm start: the session began without items 01-04, later merged the branch (1aa11fb, conflict in Program.fs) and reconciled (2bb713f). Cause unknown (platform checkout); items 02-04 started from the correct heads."
   ]
 }

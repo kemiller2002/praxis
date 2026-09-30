@@ -59,11 +59,14 @@
 | PRAXIS-GROUP-03 | praxis work group add: add a member to a declared group | ready | work-group, cli | low |
 | PRAXIS-GROUP-04 | praxis work group remove: remove a member from a declared group | ready | work-group, cli | low |
 | PRAXIS-GROUP-05 | praxis work group checkpoint: a group checkpoint over members' own checkpoints | ready | work-group, cli | low |
+| PRAXIS-GROUP-06 | Decide the phase-two work-group implementation base from EX-ROS-2026-A021 | captured | work-group, cli | low |
 | PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | captured | rename, gh-90 | low |
 | PRAXIS-PLAN-01 | Deterministic shadow planner: praxis plan analyze/simulate/compare/explain (PRX-PLAN-001..182) | complete | planning, architecture, cli | high |
 | PRAXIS-PLAN-02 | Accept planner decision DF-ROS-2026-A046 on the owner's approval | complete | planning, governance | medium |
 | PRAXIS-PLAN-03 | Accept DF-ROS-2026-A047 and triage the EX-ROS-2026-A021 cohort on the owner's approval | complete | planning, governance | medium |
-| PRAXIS-PLAN-EXP-01 | Run grouping experiment EX-ROS-2026-A021: control arm, grouped arm, blind evaluation, telemetry comparison | ready | planning, experiment | medium |
+| PRAXIS-PLAN-04 | Grouped-execution guidance: reuse inventory and per-criterion verification pass (EV-ROS-2026-A060) | captured | planning, grouping | medium |
+| PRAXIS-PLAN-05 | Make context overhead and cost observable: session-metrics telemetry adapter and cost.execution_total (EV-ROS-2026-A060) | captured | planning, telemetry | medium |
+| PRAXIS-PLAN-EXP-01 | Run grouping experiment EX-ROS-2026-A021: control arm, grouped arm, blind evaluation, telemetry comparison | active | planning, experiment | medium |
 | PRAXIS-RELEASE-BUMP-WORKFLOW | Release workflow: one-click version bump that publishes | complete | release | high |
 | PRAXIS-REMOTE-01 | Remote protocol v1 contract: schemas, typed domain model, validation, fingerprint, decision order | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-02 | Remote provenance roles: asserted request actor, observed executor, transport principal | complete | remote-execution, gh-90 | high |

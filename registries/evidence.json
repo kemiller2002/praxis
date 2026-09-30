@@ -1430,5 +1430,59 @@
     "title": "Work-group planner baseline on Praxis: no pre-existing cohort, a captured phase-two cohort, and frozen predictions for EX-ROS-2026-A021",
     "updated": "2026-09-30",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "low",
+    "created": "2026-09-30",
+    "derived_from": [
+      "EX-ROS-2026-A021"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A060",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A060--grouping-experiment-results.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T114749635Z-ba7301df": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:18:10.317Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-PLAN-EXP-01: results of the grouping experiment EX-ROS-2026-A021"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "EV-ROS-2026-A059",
+      "HY-ROS-2026-A027",
+      "HY-ROS-2026-A028",
+      "DF-ROS-2026-A047",
+      "requirements/PLANNING-WORK-GROUPS.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "supports": [
+      "HY-ROS-2026-A028"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "experiment",
+      "context",
+      "evaluation"
+    ],
+    "title": "Grouping experiment EX-ROS-2026-A021: one grouped execution versus five independent executions of the work-group commands",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
   }
 ]

@@ -2,10 +2,10 @@
 id: HY-ROS-2026-A027
 title: The advisory planner makes useful scheduling recommendations without mutating state
 research_area: repository-operating-system
-status: proposed
+status: active
 confidence: low
 created: 2026-09-30
-supporting_evidence: [EV-ROS-2026-A058, EV-ROS-2026-A059]
+supporting_evidence: [EV-ROS-2026-A058, EV-ROS-2026-A059, EV-ROS-2026-A060]
 contradicting_evidence: []
 related_theories: []
 related_documents:
@@ -28,6 +28,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "WI-0064: evidence-based work groups and the frozen grouping experiment"
+    EXE-20260930T114749635Z-ba7301df:
+      operations: [modified]
+      at: 2026-09-30T17:18:12.340Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PLAN-EXP-01: results of the grouping experiment EX-ROS-2026-A021"
 ---
 
 # Hypothesis
@@ -58,6 +68,16 @@ durations miss the observed range for most members. Refuted outright if any
 planner command changes repository or Praxis state.
 
 ## Current assessment
+
+Active, partly supported (`EV-ROS-2026-A060`). The stale-state findings on
+`GH-84` and `GH-90` were acted on (the owner abandoned both); the predicted
+dependency order, critical path, `conflict` rating and safe concurrency of one
+held in `EX-ROS-2026-A021`; every planner command was read-only. The
+duration prediction failed (61 and 112 min observed against an upper bound
+of 45), which the falsification criterion names; duration estimation for
+implementation work is the part to replace.
+
+Earlier assessment:
 
 Proposed. `EV-ROS-2026-A058` found the stale-state findings correct on this
 repository and the duration evidence weak (median productive time about two

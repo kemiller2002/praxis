@@ -40,7 +40,9 @@
       "EV-ROS-2026-A059",
       "EV-ROS-2026-A058"
     ],
-    "outputs": [],
+    "outputs": [
+      "EV-ROS-2026-A060"
+    ],
     "path": "research/experiments/EX-ROS-2026-A021--grouped-versus-independent-execution.md",
     "provenance": {
       "contributions": {
@@ -71,6 +73,20 @@
             "modified"
           ],
           "reason": "PRAXIS-PLAN-03: record the owner's approval and cohort triage against the experiment gate"
+        },
+        "EXE-20260930T114749635Z-ba7301df": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:18:11.797Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-PLAN-EXP-01: results of the grouping experiment EX-ROS-2026-A021"
         }
       }
     },
@@ -81,7 +97,7 @@
     ],
     "related_theories": [],
     "research_area": "repository-operating-system",
-    "status": "proposed",
+    "status": "completed",
     "tags": [
       "planning",
       "grouping",
