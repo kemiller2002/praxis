@@ -4784,7 +4784,27 @@
       "updatedAt": "2026-09-30T14:42:06.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T144206630Z-1e149d71"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "1ba08dbdaed502c13df0c11f",
+        "recordedAt": "2026-09-30T14:42:34.000Z",
+        "executionId": "EXE-20260930T144206630Z-1e149d71",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-evaluation-kit",
+        "commit": "2baaf4aaf1a0f7f2ee3f2939f7d13238c3ee95a5",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-evaluation-kit",
+        "remoteCommit": "2baaf4aaf1a0f7f2ee3f2939f7d13238c3ee95a5",
+        "summary": "Evaluation kit recorded: EV-ROS-2026-A060 (method, owner procedure, validation), EV-ROS-2026-A061 (control-02 record), evaluator-prompt.txt and prepare-blind-bundle.sh; validate passes",
+        "nextAction": "After both arms finish, paste evaluator-prompt.txt into a fresh evaluator session; unblind per EV-ROS-2026-A060",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     }
   ],
   "protocolVersion": "1.0.0",
