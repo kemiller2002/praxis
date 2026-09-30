@@ -262,7 +262,7 @@ commands. These predate the lifecycle interface and are unchanged:
 ros validate [--json]
 ros registry build [--dry-run] | registry check
 ros git status [--json]
-ros work <capture|list|ready|show|start|resume|block|complete|reconcile|checkpoint|continue|update|attach|context|...>
+ros work <capture|list|ready|show|start|resume|block|complete|reconcile|checkpoint|continue|update|attach|context|group|...>
 ros add "..."
 ros telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
 ros adapter <call|publish>
@@ -305,6 +305,35 @@ reason about together, with the evidence, collision risk and recommended
 execution for each) without changing any item; `explain-group` answers why a
 group exists and what would change it (`DF-ROS-2026-A047`). See
 [`planning.md`](planning.md).
+
+### `work group create`
+
+```
+ros work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP
+                      [--kind KIND] [--execution-repository REPOSITORY] [--cross-repository]
+                      [--shared-context TEXT]* [--architecture-note TEXT]*
+                      [--dry-run] [--json] [IDENTITY]
+```
+
+Records a durable human-declared execution group in `.ros/work/groups.json`
+(PRX-GRP-073 phase two, `PRAXIS-GROUP-01`). Each stored entry is a
+`grouping.groups` entry (`id`, `members`, `kind`, `origin: human-declared`,
+`sharedContext`, `executionRepository`, `crossRepository`,
+`architectureNotes`) plus `declaredAt` and `declaredBy`; the planner reads it
+with the same parser as planner configuration, so `plan groups` and
+`plan explain-group` treat it exactly as a configured declaration. An ID
+declared both there and in a `--config` file is refused rather than resolved.
+
+The command refuses, listing every reason at once and recording nothing: a
+group ID that is not `GROUP-<AREA>-<SEQUENCE>` in upper case or is already
+declared; no members; a repeated member; a member that is not in the backlog
+or live work; a member that is complete or abandoned. It writes only
+`.ros/work/groups.json` and never changes a member's lifecycle state.
+`--dry-run` decides without writing; `--json` emits a
+`praxis.work-group/1.0.0` document with `status` `created`, `planned` or
+`rejected`. `ros validate` checks stored groups (shape, duplicate IDs,
+unknown members); a member that completes after the group was declared is
+partial completion, not a finding.
 
 ### `work reconcile`
 

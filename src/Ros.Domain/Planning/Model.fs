@@ -560,6 +560,9 @@ module GroupKind =
           GroupKind.SharedTestSurface, "shared-test-surface"
           GroupKind.ContextAffinity, "context-affinity" ]
 
+    /// Codes of the named kinds; `custom:NAME` is also accepted.
+    let knownCodes = named |> List.map snd
+
     let code kind =
         match kind with
         | GroupKind.Custom name -> $"custom:{name}"
