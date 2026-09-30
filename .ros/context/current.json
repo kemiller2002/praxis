@@ -4634,38 +4634,64 @@
     {
       "id": "WI-0064",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T10:28:47.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/Grouping.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/GroupingTests.fs"
+        },
+        {
+          "type": "requirements",
+          "path": "requirements/PLANNING-WORK-GROUPS.md"
+        },
+        {
+          "type": "decision",
+          "path": "research/decisions/DF-ROS-2026-A047--advisory-evidence-based-work-groups.md"
+        },
+        {
+          "type": "evidence",
+          "path": "research/evidence/EV-ROS-2026-A059--grouping-planner-baseline-and-cohort.md"
+        },
+        {
+          "type": "experiment",
+          "path": "research/experiments/EX-ROS-2026-A021--grouped-versus-independent-execution.md"
+        }
+      ],
+      "updatedAt": "2026-09-30T11:18:32.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T102847967Z-f42c2262"
       ],
       "latestCheckpoint": {
-        "id": "01aca498a3b767c7a42860be",
-        "recordedAt": "2026-09-30T10:58:51.000Z",
+        "id": "b2ee1c1bdba0ab4b01378d5a",
+        "recordedAt": "2026-09-30T11:18:30.000Z",
         "executionId": "EXE-20260930T102847967Z-f42c2262",
         "repository": "repository-operating-system",
         "branch": "claude/plan-work-groups",
-        "commit": "2dcc8f647e764555aca9c05969b5f73b6bcbcd9a",
+        "commit": "370e0a4d8d8558ba8853531bcb18c4a4663bf2d1",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
         "remoteBranch": "claude/plan-work-groups",
-        "remoteCommit": "2dcc8f647e764555aca9c05969b5f73b6bcbcd9a",
-        "summary": "Read-only work-group model, JSON contract, CLI (plan groups, explain-group, simulate/compare --groups) and 25 tests committed; 786 F# tests pass",
-        "nextAction": "Record baseline planner output, select cohort and freeze the A/B experiment protocol and predictions; update docs/planning.md, docs/cli.md, decision and evidence records",
+        "remoteCommit": "370e0a4d8d8558ba8853531bcb18c4a4663bf2d1",
+        "summary": "Phase one done: read-only group model, CLI, 25 tests (786 F#, 257 differential, 104+122 Node, 7 Python pass); baseline recorded (EV-ROS-2026-A059); protocol, cohort and predictions frozen (EX-ROS-2026-A021); DF-ROS-2026-A047 in review",
+        "nextAction": "Owner reviews DF-ROS-2026-A047 and the proposed cohort; the arms run under PRAXIS-PLAN-EXP-01 once gated conditions hold",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-09-30T11:18:32.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T10:28:47.000Z",
+  "updatedAt": "2026-09-30T11:18:32.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

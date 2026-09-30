@@ -3086,10 +3086,10 @@
         "cli"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T10:28:19.395Z",
-      "updatedAt": "2026-09-30T10:28:47.000Z",
+      "updatedAt": "2026-09-30T11:18:32.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
