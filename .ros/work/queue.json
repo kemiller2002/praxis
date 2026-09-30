@@ -3344,17 +3344,17 @@
     },
     {
       "id": "PRAXIS-GROUP-06",
-      "title": "Decide the phase-two work-group implementation base from EX-ROS-2026-A021",
+      "title": "Phase-two work groups: grouped arm as base with the control arm's strengths ported",
       "description": "Owner decision. The first blind evaluation (EV-ROS-2026-A064; experiment/a021-evaluation) suggests experiment/a021-grouped (arm X) as the base, porting from experiment/a021-control: the shared grouping.groups parser, the planner's executionLocation join rule, and checkpoint re-validation; and removing the committed experiment group from .ros/work/groups.json. A second evaluation may follow from the kit on experiment/a021-evaluation-kit (EV-ROS-2026-A060..A062). Neither arm is merged by the experiment.",
       "tags": [
         "work-group",
         "cli"
       ],
       "priority": "low",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-09-30T17:18:23.332Z",
-      "updatedAt": "2026-09-30T17:20:03.000Z",
+      "updatedAt": "2026-09-30T18:16:21.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
