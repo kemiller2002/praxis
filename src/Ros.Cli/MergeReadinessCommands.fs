@@ -74,22 +74,25 @@ module MergeReadinessCommands =
             eprintfn "Usage: praxis %s" usage
             2
         else
-            let policy = FileMergeReadinessRepository.readPolicy root
-
-            match FileMergeReadinessRepository.readEvidence root parsed.Evidence with
+            match FileMergeReadinessRepository.readPolicy root with
             | Error message ->
                 eprintfn "ERROR %s" message
                 1
-            | Ok evidence ->
-                let observation = FileMergeReadinessRepository.observe root evidence
-                let decision = MergeReadiness.decide policy observation
+            | Ok policy ->
+                match FileMergeReadinessRepository.readEvidence root parsed.Evidence with
+                | Error message ->
+                    eprintfn "ERROR %s" message
+                    1
+                | Ok evidence ->
+                    let observation = FileMergeReadinessRepository.observe root evidence
+                    let decision = MergeReadiness.decide policy observation
 
-                if parsed.Json then
-                    printf "%s" (MergeReadinessJson.renderDecision policy observation decision)
-                else
-                    printText policy observation decision
+                    if parsed.Json then
+                        printf "%s" (MergeReadinessJson.renderDecision policy observation decision)
+                    else
+                        printText policy observation decision
 
-                match decision with
-                | MergeReadinessDecision.Disabled
-                | MergeReadinessDecision.Ready _ -> 0
-                | MergeReadinessDecision.NotReady _ -> 1
+                    match decision with
+                    | MergeReadinessDecision.Disabled
+                    | MergeReadinessDecision.Ready _ -> 0
+                    | MergeReadinessDecision.NotReady _ -> 1
