@@ -272,6 +272,11 @@ concurrently under the `accept-elevated` policy.
     "executionRepositories": { "PRAXIS-REMOTE-12": "conditor" } } }
 ```
 
+**Stored groups.** `praxis work group create` records a declaration in
+`.ros/work/groups.json` with the same fields, read by the same parser; the planner merges stored groups
+into `grouping.groups` (a configured group with the same ID wins for that
+run). See [`cli.md`](cli.md) ("`work group`").
+
 An item whose description says "External repository" and that has no
 `executionRepositories` entry is never grouped into this checkout.
 
@@ -347,13 +352,13 @@ No external dependency was added (PRX-PLAN-004).
 | GRP-010..011 | Met with the typed model in `Grouping`; recommended IDs stable for identical input only. |
 | GRP-020..022 | Met for tags, declared paths, branches, dependencies, requirement/decision references, declarations, ID families and titles. Historical co-change, test overlap and deployment boundaries are not observable yet. |
 | GRP-030..031 | Met (tests 2, 18). |
-| GRP-040, 044 | Guidance for executors; `EX-ROS-2026-A021` requires the group analysis. Group checkpoints and durable notes are phase two (`PRAXIS-GROUP-05`). |
+| GRP-040, 044 | GRP-040 is guidance for executors (`EX-ROS-2026-A021` requires the group analysis). GRP-044: `work group checkpoint` records durable group checkpoints over members' own; architecture notes and the latest group checkpoint are shown by `work group show` (`PRAXIS-GROUP-05`). |
 | GRP-045 (and GRP-040's reuse inventory) | Guidance for executors, not enforced by tooling: the group analysis names existing parsers, rules and stores to reuse, and a per-member, per-criterion verification pass precedes each completion (`docs/group-analysis-template.md`; `PRAXIS-PLAN-04`, from `EV-ROS-2026-A064`). |
 | GRP-041..043 | Met by construction (tests 9, 10); per-item attribution in a grouped execution is enforced by the existing work protocol. |
 | GRP-050..052 | Met for dependencies and cycles (dependency test) and repositories (tests 5, 5b); cross-repository orchestration is future work. |
 | GRP-060..063 | Met; context cost is counted, not priced (unmeasured). |
 | GRP-070..072 | Met. |
-| GRP-073 | Declarations from configuration; mutation commands captured as `PRAXIS-GROUP-01..05`, deferred. |
+| GRP-073 | Declarations from configuration and from Praxis state (`work group create`, `PRAXIS-GROUP-01`; `work group show`, `PRAXIS-GROUP-02`; `work group add`, `PRAXIS-GROUP-03`; `work group remove`, `PRAXIS-GROUP-04`; `work group checkpoint`, `PRAXIS-GROUP-05`). `plan execute-group` and automatic grouped execution are not implemented. Phase two was built on the grouped arm of `EX-ROS-2026-A021` with the control arm's shared `grouping.groups` parser, `executionLocation` join rule and checkpoint ownership and re-validation ported (`PRAXIS-GROUP-06`, `EV-ROS-2026-A064`). |
 | GRP-074 | Size and context-pressure splits and architecture merges met (tests 18, 19, merge test); splitting by independent chain or external blockage is not implemented. |
 | GRP-075 | Met (test 15). |
 | GRP-080..088 | Met for one cohort: baseline and predictions frozen (`EV-ROS-2026-A059`), both arms run and blindly evaluated (`EX-ROS-2026-A021`), results and classification in `EV-ROS-2026-A064`. One run; replication pending. |
