@@ -98,7 +98,7 @@ module FileCheckpointRepository =
         readItems root |> Result.map (List.tryFind (fun item -> item.WorkItemId = workItemId))
 
     /// The context's `baselineDirtyPaths` and the configured path filter.
-    let readPolicy (root: string) : ContinuityPolicy =
+    let private readBasePolicy (root: string) : ContinuityPolicy =
         let baseline =
             match readContextNode root with
             | Ok(Some context) ->
@@ -113,7 +113,8 @@ module FileCheckpointRepository =
             | _ -> []
 
         { PathFilter = FileWorkConfigRepository.readPathFilterConfig root
-          BaselineDirtyPaths = baseline }
+          BaselineDirtyPaths = baseline
+          Ownership = None }
 
     let private eventNodes (root: string) : JsonObject list =
         let path = Path.Combine(root, eventsRelativePath)
@@ -137,6 +138,62 @@ module FileCheckpointRepository =
         eventNodes root
         |> List.filter CheckpointJson.isCheckpointEvent
         |> List.map (fun node -> node, CheckpointJson.tryReadEvent node)
+
+    /// What every recorded checkpoint and Git-evidenced reconciliation
+    /// claimed: its work item, its commit(s), and the paths it attributed.
+    /// Checkpoint events that do not verify claim nothing.
+    let readClaims (root: string) : CheckpointClaim list =
+        let checkpoints =
+            readEvents root
+            |> List.choose (fun (_, event) ->
+                match event.Checkpoint with
+                | Ok checkpoint ->
+                    Some
+                        { WorkItemId = event.WorkItemId
+                          Commit = checkpoint.Commit.Value
+                          Paths = event.Paths }
+                | Error _ -> None)
+
+        let strings (node: JsonNode) =
+            match node with
+            | :? JsonArray as values ->
+                values
+                |> Seq.choose (function
+                    | :? JsonValue as value when value.GetValueKind() = JsonValueKind.String -> Some(value.GetValue<string>())
+                    | _ -> None)
+                |> Seq.toList
+            | _ -> []
+
+        let reconciliations =
+            eventNodes root
+            |> List.filter (fun node -> text node "type" = Some "work.attribution.reconciled")
+            |> List.collect (fun node ->
+                match text node "workItem", node["gitEvidence"] with
+                | Some workItemId, (:? JsonObject as evidence) ->
+                    let paths = strings node["paths"]
+
+                    match evidence["commits"] with
+                    | :? JsonArray as commits ->
+                        commits
+                        |> Seq.choose (function
+                            | :? JsonObject as commit -> text commit "sha"
+                            | _ -> None)
+                        |> Seq.map (fun sha -> { WorkItemId = workItemId; Commit = sha; Paths = paths })
+                        |> Seq.toList
+                    | _ -> []
+                | _ -> [])
+
+        checkpoints @ reconciliations
+
+    /// The continuity policy, with the recorded checkpoints of every work
+    /// item as ownership evidence, so a work item never claims commits
+    /// another item's checkpoint already owns (PRAXIS-CONT-12).
+    let readPolicy (root: string) : ContinuityPolicy =
+        { readBasePolicy root with
+            Ownership =
+                Some
+                    { History = Ros.Infrastructure.Git.ProcessGitDurability.createCommitHistory root
+                      Claims = readClaims root } }
 
     /// One work item's checkpoint history, oldest first. Never rewritten.
     let readHistory (root: string) (workItemId: string) : CheckpointJson.EventRead list =

@@ -4,11 +4,72 @@ open Ros.Application.Git
 open Ros.Domain.Git
 open Ros.Domain.Work
 
+/// Commit-level history reads the ownership rule needs (PRAXIS-CONT-12).
+type GitCommitHistory =
+    { /// Each commit reachable from the second but not the first, with its
+      /// own changes (none for a merge).
+      Changes: CommitId -> CommitId -> GitRead<CommitChange list>
+      /// The commits reachable from the second but not the first.
+      Reachable: CommitId -> CommitId -> GitRead<string list> }
+
+/// Recorded evidence of which commits other work items own: their durable
+/// checkpoints, and the history reads that relate them to a range.
+type OwnershipEvidence =
+    { History: GitCommitHistory
+      Claims: CheckpointClaim list }
+
 /// Repository facts that continuity decisions share: which paths are
-/// meaningful and which dirty paths predate the work.
+/// meaningful, which dirty paths predate the work, and (when available)
+/// which commits other work items' checkpoints already own.
 type ContinuityPolicy =
     { PathFilter: PathFilterConfig
-      BaselineDirtyPaths: string list }
+      BaselineDirtyPaths: string list
+      Ownership: OwnershipEvidence option }
+
+/// A work item's own changes between two commits (PRAXIS-CONT-12). A raw
+/// difference on a shared branch also contains other items' checkpointed
+/// work; this removes the commits another item's checkpoint already owns.
+/// Without ownership evidence, or when no other item's checkpoint covers any
+/// commit in the range, it is exactly the raw difference; if the commit
+/// history cannot be read it falls back to the raw difference, which claims
+/// more rather than less.
+[<RequireQualifiedAccess>]
+module CheckpointOwnership =
+    let changedPaths (git: GitDurability) (policy: ContinuityPolicy) (workItemId: string) (left: CommitId) (right: CommitId) : GitRead<string list> =
+        let raw () = git.ChangedPaths left right
+
+        match policy.Ownership with
+        | None -> raw ()
+        | Some evidence ->
+            match evidence.Claims |> List.filter (fun claim -> claim.WorkItemId <> workItemId) with
+            | [] -> raw ()
+            | others ->
+                match evidence.History.Changes left right with
+                | GitRead.Unavailable _ -> raw ()
+                | GitRead.Observed changes ->
+                    let inRange = changes |> List.map (fun change -> change.Commit) |> Set.ofList
+
+                    let coverage =
+                        others
+                        |> List.choose (fun claim ->
+                            match CommitId.tryParse claim.Commit with
+                            | None -> None
+                            | Some commit ->
+                                match evidence.History.Reachable left commit with
+                                | GitRead.Observed commits -> Some(claim.WorkItemId, commits |> List.filter inRange.Contains |> Set.ofList)
+                                | GitRead.Unavailable _ -> None)
+
+                    let covering (commit: string) =
+                        coverage |> List.filter (fun (_, commits) -> commits.Contains commit) |> List.map fst |> List.distinct
+
+                    if changes |> List.forall (fun change -> (covering change.Commit).IsEmpty) then
+                        raw ()
+                    else
+                        GitRead.Observed(CommitOwnership.ownPaths policy.PathFilter others covering changes)
+
+    /// The port as seen by one work item: differences are its own changes.
+    let scope (git: GitDurability) (policy: ContinuityPolicy) (workItemId: string) : GitDurability =
+        { git with ChangedPaths = changedPaths git policy workItemId }
 
 /// Gathers the typed observations the pure checkpoint decisions need,
 /// through the `GitDurability` port, in dependency order: a read that the
@@ -150,31 +211,32 @@ module CheckpointOperations =
         |> CheckpointVerification.verify candidate
 
     let assess (git: GitDurability) (policy: ContinuityPolicy) (workItemId: string) (itemState: LiveWorkState) (checkpoint: RecordedCheckpoint option) =
-        CheckpointObservation.recoverability git policy checkpoint
+        CheckpointObservation.recoverability (CheckpointOwnership.scope git policy workItemId) policy checkpoint
         |> CheckpointAssessment.assess workItemId itemState checkpoint
 
     let decideCompletion (git: GitDurability) (policy: ContinuityPolicy) (workItemId: string) (checkpoint: RecordedCheckpoint option) (startCommit: CommitId option) =
         let assessment = assess git policy workItemId LiveWorkState.Active checkpoint
-        let mutation = CheckpointObservation.mutation git policy startCommit assessment.WorkingTree
+        let mutation = CheckpointObservation.mutation (CheckpointOwnership.scope git policy workItemId) policy startCommit assessment.WorkingTree
         CompletionGuard.decide mutation assessment, assessment
 
     let decideBlock (git: GitDurability) (policy: ContinuityPolicy) (workItemId: string) (checkpoint: RecordedCheckpoint option) (startCommit: CommitId option) (reason: string option) =
         let assessment = assess git policy workItemId LiveWorkState.Active checkpoint
-        let mutation = CheckpointObservation.mutation git policy startCommit assessment.WorkingTree
+        let mutation = CheckpointObservation.mutation (CheckpointOwnership.scope git policy workItemId) policy startCommit assessment.WorkingTree
         BlockGuard.decide mutation assessment reason, assessment
 
-    /// The meaningful paths a checkpoint makes durable: what changed from
-    /// the item's previous checkpoint (or, for the first, its start commit)
-    /// to the checkpoint commit. Recorded on the event so path attribution
-    /// survives completing work after committing it. Baseline paths are
-    /// never claimed. An unknown start or an unreadable difference claims
-    /// nothing.
+    /// The meaningful paths a checkpoint makes durable: what this item's own
+    /// commits changed from its previous checkpoint (or, for the first, its
+    /// start commit) to the checkpoint commit; commits another item's
+    /// checkpoint already owns are not claimed (PRAXIS-CONT-12). Recorded on
+    /// the event so path attribution survives completing work after
+    /// committing it. Baseline paths are never claimed. An unknown start or
+    /// an unreadable difference claims nothing.
     let attributablePaths (git: GitDurability) (policy: ContinuityPolicy) (since: CommitId option) (checkpoint: Checkpoint) =
         match since with
         | None -> []
         | Some start when start = checkpoint.Commit -> []
         | Some start ->
-            match git.ChangedPaths start checkpoint.Commit with
+            match CheckpointOwnership.changedPaths git policy checkpoint.WorkItemId start checkpoint.Commit with
             | GitRead.Observed paths ->
                 PathFilter.meaningfulPaths policy.PathFilter paths
                 |> List.filter (fun path -> not (List.contains path policy.BaselineDirtyPaths))

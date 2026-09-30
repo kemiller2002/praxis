@@ -246,7 +246,7 @@ module CheckpointCommands =
         let local =
             match assessment.Local with
             | Some(LocalCheckpointPosition.CommitsAfter(count, _)) -> $"{count} commit(s) with meaningful changes after the checkpoint"
-            | Some(LocalCheckpointPosition.OnlyNonMeaningfulCommitsAfter count) -> $"at the checkpoint ({count} later commit(s) carry only Praxis-owned or ignored state)"
+            | Some(LocalCheckpointPosition.OnlyNonMeaningfulCommitsAfter count) -> $"at the checkpoint ({count} later commit(s) carry no meaningful change of this item's own: only Praxis-owned or ignored state, or work other items' checkpoints already own)"
             | Some position -> LocalCheckpointPosition.code position
             | None -> "not applicable"
 

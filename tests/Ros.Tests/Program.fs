@@ -66,6 +66,7 @@ let main _ =
     @ RecoveryProofTests.tests
     @ ExecutionGovernanceTests.tests
     @ InstallationRegistrationTests.tests
+    @ CommitOwnershipTests.tests
     @ PlanningTests.tests
     @ PlanningCliTests.tests
     |> TestRunner.run

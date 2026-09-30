@@ -52,7 +52,7 @@
 | PRAXIS-CONT-09-GOVERNANCE | AGENTS/governance/docs/starter propagation | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-10-HARDEN | Compatibility, edge cases, validation, final end-to-end review | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-11-SEGMENTATION | Effective-current telemetry segmentation and continuity proof gaps | complete | continuity, durable-checkpoints | high |
-| PRAXIS-CONT-12 | work checkpoint attributes every meaningful path since the previous checkpoint to the checkpointing item, regardless of which work item produced it | captured | continuity, gh-90 | medium |
+| PRAXIS-CONT-12 | work checkpoint attributes every meaningful path since the previous checkpoint to the checkpointing item, regardless of which work item produced it | complete | continuity, gh-90 | medium |
 | PRAXIS-DIST-NATIVE-DOTNET-TOOL | Retire npm distribution; ship native bundles and a .NET global tool | complete | distribution | high |
 | PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | captured | rename, gh-90 | low |
 | PRAXIS-PLAN-01 | Deterministic shadow planner: praxis plan analyze/simulate/compare/explain (PRX-PLAN-001..182) | complete | planning, architecture, cli | high |
@@ -77,7 +77,7 @@
 | PRAXIS-REMOTE-13 | Adapter recognizes GitHub rate limiting on push and pull-request creation (PRX-REMOTE-038) | complete | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-14 | Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict | complete | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-15 | Agent contract: a handoff needs a block before the successor resumes | complete | remote-execution, gh-90 | high |
-| PRAXIS-REMOTE-16 | work complete silently drops the conclusion for non-research work items | active | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-16 | work complete silently drops the conclusion for non-research work items | complete | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-17 | Record the live praxis.remote 1.3 continuation proof as evidence | complete |  | medium |
 | PRAXIS-REMOTE-INBOX-01 | Remote request inbox: a contents-write path to praxis.remote for agents that cannot dispatch Actions | complete | remote-execution, continuity | high |
 | PRAXIS-REMOTE-PROBE-COMPLETE-CROSS | PRAXIS-REMOTE-PROBE-COMPLETE-CROSS | complete |  |  |

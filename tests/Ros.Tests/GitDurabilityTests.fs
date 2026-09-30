@@ -93,7 +93,8 @@ module GitDurabilityTests =
 
     let private policy =
         { PathFilter = { PathFilterConfig.defaultConfig with IgnoredPatterns = PathFilterConfig.defaultConfig.IgnoredPatterns @ [ "registries/**" ] }
-          BaselineDirtyPaths = [] }
+          BaselineDirtyPaths = []
+          Ownership = None }
 
     let private candidate =
         { WorkItemId = "PRAXIS-CONT-02"

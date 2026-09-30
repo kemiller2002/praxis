@@ -15,6 +15,7 @@
     <Compile Include="Work/Checkpoint.fs" />
     <Compile Include="Work/Continuity.fs" />
     <Compile Include="Work/CheckpointValidation.fs" />
+    <Compile Include="Work/Ownership.fs" />
     <Compile Include="Work/Backlog.fs" />
     <Compile Include="Telemetry/ExecutionLink.fs" />
     <Compile Include="Work/TelemetryResolution.fs" />
