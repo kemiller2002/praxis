@@ -1402,6 +1402,17 @@
         "name": "ros",
         "mechanism": "step-lifecycle"
       }
+    },
+    {
+      "type": "step.started",
+      "stepId": "STEP-EXPERIMENT-BASELINE",
+      "name": "baseline planner run, cohort selection, frozen protocol and predictions",
+      "occurredAt": "2026-09-30T10:59:01.259Z",
+      "source": {
+        "type": "ros-clock",
+        "name": "ros",
+        "mechanism": "step-lifecycle"
+      }
     }
   ],
   "repository": {
