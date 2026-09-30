@@ -29,6 +29,39 @@ Beginning work automatically starts a segmented execution record under `.ros/tel
 
 Completion validates configured evidence types and paths before changing state. `./ros validate` rejects meaningful dirty paths when enforcement is enabled and neither active context nor a completed event attributes them. Committed changes that were made without an active work item are repaired with `./ros work reconcile` (see "Post-hoc attribution reconciliation" below), never by touching files. CI is the authoritative enforcement boundary; hooks are optional convenience.
 
+### CI and merge readiness
+
+Work lifecycle, durable continuity and merge readiness are three independent
+dimensions (`DF-ROS-2026-A048`, `requirements/MERGE-READINESS.md`).
+
+An in-progress branch MAY have failing CI. The failure remains a real failure:
+do not hide it, mark it successful, or weaken a required job to obtain a
+temporary green build. When an intermediate failure is understood, record it
+at the next checkpoint/handoff boundary and continue useful work when doing so
+is safe.
+
+A durable checkpoint proves only that the work can be recovered from the
+recorded remote state. Work-item completion proves only the item's lifecycle
+and evidence requirements. Neither claim makes the containing branch
+merge-ready.
+
+`praxis merge readiness [--evidence FILE] [--json]` evaluates one exact
+integration candidate using the repository's `mergeReadiness` policy and
+provider-normalized check evidence. Every required check must be successful
+and bound to that same candidate. Failed, pending, cancelled, skipped,
+missing, unknown, duplicated or stale required evidence blocks readiness.
+When configured, meaningful dirty state or an unverified remote candidate
+also blocks readiness. Any later meaningful commit makes previous readiness
+evidence stale.
+
+A hosting provider SHOULD expose a single aggregate merge gate and make that
+gate a required status check for protected integration branches. The aggregate
+gate must run even when a prerequisite failed or was cancelled, so a failed
+required check cannot disappear as a skipped final job. Provider configuration
+is an external enforcement layer; if the current credentials cannot inspect
+or change it, report that limitation rather than claiming protection exists.
+
+
 Deterministic housekeeping may use the configured `mechanical` work type. It still requires an explicit work-item identity and event, but the default profile does not require implementation/test evidence for that type.
 
 ### Abandoning work
