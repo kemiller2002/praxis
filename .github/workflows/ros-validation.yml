@@ -54,3 +54,71 @@ jobs:
       # through prepack.
       - name: Exercise the packed npm artifact
         run: node --test tests/lifecycle-package.test.mjs
+
+  # CI may be red while a branch is under active development. This aggregate
+  # is the integration boundary: it runs even when an upstream job failed and
+  # proves readiness only for this exact GitHub candidate SHA.
+  merge-gate:
+    name: merge-gate
+    if: ${{ always() }}
+    needs:
+      - validate
+      - packaged-lifecycle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Normalize required-check evidence
+        shell: bash
+        env:
+          CANDIDATE_SHA: ${{ github.sha }}
+          VALIDATE_RESULT: ${{ needs.validate.result }}
+          PACKAGED_RESULT: ${{ needs.packaged-lifecycle.result }}
+        run: |
+          python - <<'PY'
+          import json, os
+
+          def state(value):
+              return {
+                  "success": "succeeded",
+                  "failure": "failed",
+                  "cancelled": "cancelled",
+                  "skipped": "skipped",
+              }.get(value, f"unknown:{value}")
+
+          sha = os.environ["CANDIDATE_SHA"].lower()
+          evidence = {
+              "schema": "praxis.merge-readiness/1",
+              "candidateCommit": sha,
+              "remoteCandidateCurrent": True,
+              "checks": [
+                  {
+                      "id": "repository-validation",
+                      "state": state(os.environ["VALIDATE_RESULT"]),
+                      "commit": sha,
+                  },
+                  {
+                      "id": "packaged-lifecycle",
+                      "state": state(os.environ["PACKAGED_RESULT"]),
+                      "commit": sha,
+                  },
+              ],
+          }
+          path = os.path.join(os.environ["RUNNER_TEMP"], "merge-readiness.json")
+          with open(path, "w", encoding="utf-8") as handle:
+              json.dump(evidence, handle, indent=2)
+              handle.write("\n")
+          PY
+      - run: npm run build:fsharp
+      - name: Require exact-candidate merge readiness
+        run: ./ros merge readiness --evidence "$RUNNER_TEMP/merge-readiness.json" --json
