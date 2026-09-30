@@ -4819,18 +4819,48 @@
     {
       "id": "PRAXIS-GROUP-02",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T12:16:41.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T12:22:08.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T121642633Z-839ae473"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "457cb987a95cdcfb6cc434c9",
+        "recordedAt": "2026-09-30T12:22:06.000Z",
+        "executionId": "EXE-20260930T121642633Z-839ae473",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-grouped",
+        "commit": "b49eff2919993626f738b047e7a44ab65291edd4",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-grouped",
+        "remoteCommit": "b49eff2919993626f738b047e7a44ab65291edd4",
+        "summary": "work group show implemented and tested (read-only, progress classification shared with the future group checkpoint). Completed members: PRAXIS-GROUP-01; PRAXIS-GROUP-02 completing now. Remaining: PRAXIS-GROUP-03, -04, -05",
+        "nextAction": "Complete PRAXIS-GROUP-02, then implement work group add (PRAXIS-GROUP-03) on the shared join rule",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T12:22:08.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T12:16:41.000Z",
+  "updatedAt": "2026-09-30T12:22:08.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

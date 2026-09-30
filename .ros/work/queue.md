@@ -55,7 +55,7 @@
 | PRAXIS-CONT-12 | work checkpoint attributes every meaningful path since the previous checkpoint to the checkpointing item, regardless of which work item produced it | complete | continuity, gh-90 | medium |
 | PRAXIS-DIST-NATIVE-DOTNET-TOOL | Retire npm distribution; ship native bundles and a .NET global tool | complete | distribution | high |
 | PRAXIS-GROUP-01 | praxis work group create: durable human-declared execution group | complete | work-group, cli | low |
-| PRAXIS-GROUP-02 | praxis work group show: a declared group with member states and progress | ready | work-group, cli | low |
+| PRAXIS-GROUP-02 | praxis work group show: a declared group with member states and progress | complete | work-group, cli | low |
 | PRAXIS-GROUP-03 | praxis work group add: add a member to a declared group | ready | work-group, cli | low |
 | PRAXIS-GROUP-04 | praxis work group remove: remove a member from a declared group | ready | work-group, cli | low |
 | PRAXIS-GROUP-05 | praxis work group checkpoint: a group checkpoint over members' own checkpoints | ready | work-group, cli | low |
