@@ -95,7 +95,7 @@ improves outcomes before grouped execution becomes default Praxis behavior.
   considered and why that one is not reused. (`EV-ROS-2026-A064`: the grouped
   arm designed one consistent model but re-implemented the `grouping.groups`
   parser and the planner's execution-location rule.) The template is
-  [`templates/work/GROUP-ANALYSIS-TEMPLATE.md`](../templates/work/GROUP-ANALYSIS-TEMPLATE.md).
+  [`docs/group-analysis-template.md`](../docs/group-analysis-template.md).
 - **PRX-GRP-041** Grouped execution MUST preserve each member's acceptance
   criteria, evidence, changed paths where identifiable, completion,
   provenance, telemetry where possible and checkpoints. It MUST NOT create one
