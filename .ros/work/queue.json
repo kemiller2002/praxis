@@ -3111,10 +3111,10 @@
         "cli"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T11:00:32.515Z",
-      "updatedAt": "2026-09-30T11:34:15.000Z",
+      "updatedAt": "2026-09-30T18:17:06.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3135,10 +3135,10 @@
         "cli"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T11:00:33.019Z",
-      "updatedAt": "2026-09-30T11:34:15.000Z",
+      "updatedAt": "2026-09-30T18:17:08.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3159,10 +3159,10 @@
         "cli"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T11:00:33.414Z",
-      "updatedAt": "2026-09-30T11:34:16.000Z",
+      "updatedAt": "2026-09-30T18:17:10.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3183,10 +3183,10 @@
         "cli"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T11:00:33.806Z",
-      "updatedAt": "2026-09-30T11:34:16.000Z",
+      "updatedAt": "2026-09-30T18:17:12.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3207,10 +3207,10 @@
         "cli"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T11:00:34.255Z",
-      "updatedAt": "2026-09-30T11:34:17.000Z",
+      "updatedAt": "2026-09-30T18:17:14.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3344,17 +3344,17 @@
     },
     {
       "id": "PRAXIS-GROUP-06",
-      "title": "Decide the phase-two work-group implementation base from EX-ROS-2026-A021",
+      "title": "Phase-two work groups: grouped arm as base with the control arm's strengths ported",
       "description": "Owner decision. The first blind evaluation (EV-ROS-2026-A064; experiment/a021-evaluation) suggests experiment/a021-grouped (arm X) as the base, porting from experiment/a021-control: the shared grouping.groups parser, the planner's executionLocation join rule, and checkpoint re-validation; and removing the committed experiment group from .ros/work/groups.json. A second evaluation may follow from the kit on experiment/a021-evaluation-kit (EV-ROS-2026-A060..A062). Neither arm is merged by the experiment.",
       "tags": [
         "work-group",
         "cli"
       ],
       "priority": "low",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T17:18:23.332Z",
-      "updatedAt": "2026-09-30T17:20:03.000Z",
+      "updatedAt": "2026-09-30T18:17:16.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
