@@ -464,6 +464,8 @@ module PlanCommands =
           yield ""
           for tradeoff in comparison.Tradeoffs do
               yield $"""{tradeoff.Group} ({String.concat ", " tradeoff.Members})"""
+              if not tradeoff.NotYetRunnable.IsEmpty then
+                  yield $"""  hypothetical until triaged: {String.concat ", " tradeoff.NotYetRunnable} cannot run yet"""
               yield $"  independent: {tradeoff.Independent.Executions} executions, {tradeoff.Independent.ContextAcquisitions} context acquisitions, {tradeoff.Independent.DesignOwners} design owners, peak {tradeoff.Independent.PeakConcurrency}, {duration tradeoff.Independent.ExpectedDuration}"
               yield $"  grouped:     {tradeoff.Grouped.Executions} execution, {tradeoff.Grouped.ContextAcquisitions} context acquisition, {tradeoff.Grouped.DesignOwners} design owner, peak {tradeoff.Grouped.PeakConcurrency}, {duration tradeoff.Grouped.ExpectedDuration}"
               yield $"  context: {tradeoff.ContextSaving}"

@@ -1056,6 +1056,7 @@ module PlanningJson =
                   record
                       [ "group", text tradeoff.Group
                         "members", texts tradeoff.Members
+                        "notYetRunnable", texts tradeoff.NotYetRunnable
                         "independent", arm tradeoff.Independent
                         "grouped", arm tradeoff.Grouped
                         "contextSaving", text tradeoff.ContextSaving

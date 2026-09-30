@@ -399,7 +399,13 @@ module GroupingTests =
               let group = Assert.single grouping.Groups
               Assert.isTrue (group.Members |> List.forall (fun entry -> entry.Status = MemberStatus.NotRunnable)) "captured members are not runnable"
               Assert.isTrue (group.ExecutionReasons |> List.exists (fun reason -> reason.StartsWith "triage")) "triage comes first"
-              Assert.isTrue (group.Notes |> List.exists (fun entry -> entry.Code = GroupNoteCode.BelowPreferredSize)) "a cohesive pair is kept, and its size noted")
+              Assert.isTrue (group.Notes |> List.exists (fun entry -> entry.Code = GroupNoteCode.BelowPreferredSize)) "a cohesive pair is kept, and its size noted"
+              let planningInput = input queue [] history [] stateSafe
+              let analysis = Planner.analyze planningInput
+              let speed = Scheduling.simulate analysis stateSafe OptimizationObjective.MinimumDuration None
+              let tradeoff = Grouping.compare stateSafe analysis grouping speed None |> fun comparison -> Assert.single comparison.Tradeoffs
+              Assert.equal [ "C-1"; "C-2" ] tradeoff.NotYetRunnable
+              Assert.equal 2 tradeoff.Independent.Executions)
 
           t "compare --groups counts context acquisitions and never claims unmeasured savings" (fun () ->
               let planningInput, analysis, grouping = report persistence [] [] persistenceConfiguration

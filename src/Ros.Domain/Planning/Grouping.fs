@@ -479,6 +479,7 @@ type ArmEstimate =
 type GroupTradeoff =
     { Group: string
       Members: string list
+      NotYetRunnable: string list
       Independent: ArmEstimate
       Grouped: ArmEstimate
       ContextSaving: string
@@ -1466,7 +1467,11 @@ module Grouping =
           Dependencies = edges
           Cycles = endpointCycles edges
           Relations = relations
-          Affinities = pairs |> List.filter (fun pair -> ContextAffinity.rank pair.Level > 0)
+          Affinities =
+            pairs
+            |> List.filter (fun pair ->
+                let isOpen (id: string) = byId.TryFind id |> Option.exists (fun item -> not (PlanningWorkState.isTerminal item.PlanningState))
+                ContextAffinity.rank pair.Level > 0 && isOpen pair.Left && isOpen pair.Right)
           Settings =
             { PreferredMinimumSize = grouping.PreferredMinimumSize
               PreferredMaximumSize = grouping.PreferredMaximumSize
@@ -1740,9 +1745,13 @@ module Grouping =
         let tradeoffs =
             report.Groups
             |> List.map (fun group ->
+                // Hypothetical by design: every open member counts, and the
+                // ones that cannot run yet are named rather than dropped.
                 let items =
                     group.RequiredSequence
-                    |> List.choose (fun id -> analysis.Items |> List.tryFind (fun item -> item.Id = id && PlanningWorkState.isSchedulable item.PlanningState))
+                    |> List.choose (fun id -> analysis.Items |> List.tryFind (fun item -> item.Id = id && not (PlanningWorkState.isTerminal item.PlanningState)))
+
+                let notYetRunnable = items |> List.filter (fun item -> not (PlanningWorkState.isSchedulable item.PlanningState)) |> List.map (fun item -> item.Id)
 
                 let durations = items |> List.map (fun item -> item.RemainingDuration)
                 let pairs = items |> List.collect (fun a -> items |> List.filter (fun b -> Text.ordinal a.Id b.Id < 0) |> List.map (Graph.collision configuration a))
@@ -1762,6 +1771,7 @@ module Grouping =
 
                 { Group = WorkGroupId.value group.Id
                   Members = items |> List.map (fun item -> item.Id)
+                  NotYetRunnable = notYetRunnable
                   Independent =
                     { Executions = items.Length
                       ContextAcquisitions = items.Length
