@@ -37,8 +37,8 @@ bash research/experiments/EX-ROS-2026-A021-evaluation-kit/prepare-blind-bundle.s
 export EVAL="$HOME/a021-eval"
 ```
 
-You may read `research/evidence/EV-ROS-2026-A060--a021-blind-evaluation-kit.md` (the method)
-and the kit folder. Do **not** read `research/evidence/EV-ROS-2026-A061--*` or any other
+You may read `research/evidence/EV-ROS-2026-A065--a021-blind-evaluation-kit.md` (the method)
+and the kit folder. Do **not** read `research/evidence/EV-ROS-2026-A066--*` or any other
 session record of this experiment: they name the arms. Copy the printed **mapping commitment** hash into your report verbatim. After
 this step, use only `$EVAL/bundle/` and `$EVAL/output/`.
 
@@ -136,12 +136,12 @@ Also write `$EVAL/output/findings.json`: an array of
 
 Your container is temporary. On the branch `experiment/a021-evaluation-kit`:
 
-1. Copy the report to `research/evidence/EV-ROS-2026-A062--a021-blind-evaluation-report.md`,
+1. Copy the report to `research/evidence/EV-ROS-2026-A067--a021-blind-evaluation-report.md`,
    and put this front matter at its top (the repository validates it):
 
    ```
    ---
-   id: EV-ROS-2026-A062
+   id: EV-ROS-2026-A067
    title: "EX-ROS-2026-A021 blind evaluation report (arm-X / arm-Y)"
    status: draft
    version: 1.0.0
@@ -154,7 +154,7 @@ Your container is temporary. On the branch `experiment/a021-evaluation-kit`:
    supports: [EX-ROS-2026-A021]
    related_documents:
      - EX-ROS-2026-A021
-     - EV-ROS-2026-A060
+     - EV-ROS-2026-A065
    tags: [planning, grouping, experiment, evaluation]
    confidence: medium
    ---

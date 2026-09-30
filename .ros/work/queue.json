@@ -2221,10 +2221,10 @@
         "gh-90"
       ],
       "priority": "low",
-      "status": "captured",
+      "status": "abandoned",
       "attachments": [],
       "createdAt": "2026-09-28T09:09:00.360Z",
-      "updatedAt": "2026-09-28T09:09:00.360Z",
+      "updatedAt": "2026-09-28T10:40:40.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2234,7 +2234,8 @@
         "runtime": "claude-code"
       },
       "source": "agent-discovery",
-      "sourceReference": "PRAXIS-REMOTE-07"
+      "sourceReference": "PRAXIS-REMOTE-07",
+      "abandonedReason": "Obsolete: DF-ROS-2026-A042 retires the npm package entirely; the native installers already provide the praxis command, and the site's ROS-to-Praxis copy and its test were updated in FSHARP-ONLY-REPOSITORY"
     },
     {
       "id": "PRAXIS-REMOTE-11-PREP",
@@ -3111,10 +3112,10 @@
         "cli"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T11:00:32.515Z",
-      "updatedAt": "2026-09-30T11:34:15.000Z",
+      "updatedAt": "2026-09-30T18:17:06.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3135,10 +3136,10 @@
         "cli"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T11:00:33.019Z",
-      "updatedAt": "2026-09-30T11:34:15.000Z",
+      "updatedAt": "2026-09-30T18:17:08.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3159,10 +3160,10 @@
         "cli"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T11:00:33.414Z",
-      "updatedAt": "2026-09-30T11:34:16.000Z",
+      "updatedAt": "2026-09-30T18:17:10.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3183,10 +3184,10 @@
         "cli"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T11:00:33.806Z",
-      "updatedAt": "2026-09-30T11:34:16.000Z",
+      "updatedAt": "2026-09-30T18:17:12.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3207,10 +3208,10 @@
         "cli"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T11:00:34.255Z",
-      "updatedAt": "2026-09-30T11:34:17.000Z",
+      "updatedAt": "2026-09-30T18:17:14.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3231,10 +3232,10 @@
         "experiment"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T11:18:12.729Z",
-      "updatedAt": "2026-09-30T11:18:12.729Z",
+      "updatedAt": "2026-09-30T17:18:43.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3306,6 +3307,369 @@
       "attachments": [],
       "createdAt": "2026-09-30T14:42:05.000Z",
       "updatedAt": "2026-09-30T14:42:50.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-04",
+      "title": "Grouped-execution guidance: reuse inventory and per-criterion verification pass (EV-ROS-2026-A064)",
+      "description": "EX-ROS-2026-A021's grouped arm produced one consistent model but missed existing rules to reuse (grouping.groups parser, Grouping.executionLocation) and verified individual criteria less fully than independent executions. Add to PRX-GRP-040 guidance and the group-analysis template: an explicit inventory of existing parsers/rules to reuse, and a final per-member, per-criterion verification pass.",
+      "tags": [
+        "planning",
+        "grouping"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:18:22.376Z",
+      "updatedAt": "2026-09-30T18:19:31.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-05",
+      "title": "Make context overhead and cost observable: session-metrics telemetry adapter and cost.execution_total (EV-ROS-2026-A064)",
+      "description": "Promote research/experiments/EX-ROS-2026-A021-harness/session_metrics.py (repeated reads, governance reads, time to first code change, requests, compactions) to a telemetry adapter, and record platform-reported cost as cost.execution_total, so the planner's context-reuse and cost estimates stop being unknown. Also replace or down-weight the history-based duration model for implementation work, which missed both arms' durations.",
+      "tags": [
+        "planning",
+        "telemetry"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:18:22.924Z",
+      "updatedAt": "2026-09-30T18:58:00Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-GROUP-06",
+      "title": "Phase-two work groups: grouped arm as base with the control arm's strengths ported",
+      "description": "Owner decision. The first blind evaluation (EV-ROS-2026-A064; experiment/a021-evaluation) suggests experiment/a021-grouped (arm X) as the base, porting from experiment/a021-control: the shared grouping.groups parser, the planner's executionLocation join rule, and checkpoint re-validation; and removing the committed experiment group from .ros/work/groups.json. A second evaluation may follow from the kit on experiment/a021-evaluation-kit (EV-ROS-2026-A060..A062). Neither arm is merged by the experiment.",
+      "tags": [
+        "work-group",
+        "cli"
+      ],
+      "priority": "low",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:18:23.332Z",
+      "updatedAt": "2026-09-30T18:17:16.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-06",
+      "title": "Renumber the EX-ROS-2026-A021 results record to avoid an evidence ID collision and relate it to the parallel evaluation kit",
+      "description": "EV-ROS-2026-A060 was allocated on three branches (claude/grouping-experiment-a021, experiment/a021-evaluation-kit, test/pr92-premerge-main-characterization). Renumber this branch's results record to EV-ROS-2026-A064 (first ID free on every branch), update its references and follow-up items, and record its relation to the kit (EV-ROS-2026-A060..A062) and EV-ROS-2026-A063.",
+      "tags": [
+        "planning",
+        "governance"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:20:29.537Z",
+      "updatedAt": "2026-09-30T17:20:49.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PR92-PREMERGE-REGRESSION-FENCE",
+      "title": "Regression fence before reconciling PR #92 with main",
+      "description": "Characterize semantic differences between current main and PR #92 and add regression tests around behavior at risk during the future ROS-to-Praxis reconciliation. No production reconciliation occurs in this work item. Baseline refs: main fb6a0f9d6c8e25e979be436346fd803184e306a0, PR #92 3cf2bd37b8a729ac683e6062013b7f2b31e10a5b, merge-base 9ace9d9acf711e1013347b5ed8bb756bcaf298cf (PR #92 21 ahead / 120 behind).",
+      "tags": [
+        "testing",
+        "pr92"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T16:24:31.000Z",
+      "updatedAt": "2026-09-30T17:09:15.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PR92-ID-RENUMBER",
+      "title": "Renumber PR #92's DF/RQ records that collide with main's (A042/A043, RQ A022/A023)",
+      "description": "Owner-approved. Main already uses DF-ROS-2026-A042/A043 and RQ-ROS-2026-A022/A023 for different records. Keep main's numbering; renumber this branch's F#/.NET-only and Praxis-canonical-name records to DF-ROS-2026-A049/A050 and RQ-ROS-2026-A024/A025 (DF-ROS-2026-A048 is claimed by feature/gh-127-merge-readiness), and rewrite every citation outside .ros/ history. Same ID as the backlog row captured on main via EV-ROS-2026-A060.",
+      "tags": [
+        "pr92",
+        "decision"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:56:38.000Z",
+      "updatedAt": "2026-09-30T18:05:38.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PR92-POSTMERGE-FENCE",
+      "title": "On the reconciled branch, write post-merge tests P1-P7 from EV-ROS-2026-A060 section 6 and re-point PraxisCli to praxis.dll",
+      "description": null,
+      "tags": [
+        "pr92",
+        "testing"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:09:06.997Z",
+      "updatedAt": "2026-09-30T17:09:06.997Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "FSHARP-ONLY-REPOSITORY",
+      "title": "Remove repository-owned Node/JavaScript/TypeScript code and tooling; make Praxis F#/.NET only and enforce it",
+      "description": null,
+      "tags": [
+        "fsharp",
+        "architecture",
+        "tooling",
+        "node-removal"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T09:09:13.000Z",
+      "updatedAt": "2026-09-28T10:27:49.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "FSHARP-ONLY-MAIN-MERGE",
+      "title": "After merging main (GH-90 remote execution): port its Node tests to F# and renumber the colliding DF/RQ records",
+      "description": null,
+      "tags": [
+        "fsharp",
+        "node-removal",
+        "follow-up"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T10:37:56.000Z",
+      "updatedAt": "2026-09-28T11:23:44.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-CLI-RENAME",
+      "title": "Finish the ROS to Praxis product/CLI rename: praxis canonical, ros only as compatibility alias, persisted state or history",
+      "description": "Bootstrapped with the ./ros compatibility launcher because ./praxis did not exist yet in the source checkout. Also merges main (PRAXIS-REMOTE-11-PREP) and ports its two new Node test cases to F#.",
+      "tags": [
+        "rename",
+        "praxis",
+        "cli"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T13:45:19.000Z",
+      "updatedAt": "2026-09-28T14:30:51.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-INTERNAL-NAMESPACES",
+      "title": "Migrate internal Ros.* projects, namespaces, assemblies and Ros.slnx to Praxis.* (deferred from PRAXIS-CLI-RENAME, DF-ROS-2026-A043)",
+      "description": "Internal implementation names only; no user-facing effect. Separate change because of its blast radius (project files, namespaces, test fixtures, embedded resource names, Python oracle naming).",
+      "tags": [
+        "rename",
+        "follow-up"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-28T13:55:54.000Z",
+      "updatedAt": "2026-09-28T13:55:54.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PR92-PREMERGE-RENAME-FENCE",
+      "title": "Harden Praxis rename invariants on PR #92 before main is reconciled",
+      "description": "Part of PRAXIS-PR92-PREMERGE-REGRESSION-FENCE (tracked on branch test/pr92-premerge-main-characterization). Adds characterization tests for behavior this branch already implements (PRAXIS_/ROS_ telemetry precedence, retained ROS persisted names, customized ROS-era launcher, legacy launcher helper, ROS-era work resumed via praxis, ros==praxis help). No production change. The test edit was drafted in this session before this item began on this branch and is committed under it.",
+      "tags": [
+        "testing",
+        "pr92"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:04:57.000Z",
+      "updatedAt": "2026-09-30T17:05:26.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PR92-RECONCILE",
+      "title": "Reconcile PR #92 (F#-only cleanup, Praxis rename) with current main",
+      "description": "Owner-approved: merge main into PR #92, resolve every conflict preserving main's newer behavior and PR #92's rename per EV-ROS-2026-A060, write post-merge tests P1-P7 (PRAXIS-PR92-POSTMERGE-FENCE), drive CI green, then merge PR #92 into main. Owner decisions: keep shipping legacy ros-fs-<rid> assets; upgrade leaves tools/ros_fs_launcher.mjs in place.",
+      "tags": [
+        "pr92"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T18:14:02.000Z",
+      "updatedAt": "2026-09-30T21:44:26.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-TELEMETRY-COST-UNIT",
+      "title": "telemetry record accepts a cost metric with a non-'currency' unit (e.g. --unit USD) that validate then rejects",
+      "description": "Found by PRAXIS-PR92-RECONCILE's P4 test: 'telemetry record --metric cost.session_cumulative --unit USD --currency USD' succeeds, then 'validate' reports metrics[n].unit: cost metric requires unit 'currency'. Record should refuse what validate rejects (write-time validation), like PRAXIS-TELEMETRY-CLASSIFY-VOCAB.",
+      "tags": [
+        "telemetry",
+        "bug"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-30T19:40:19.769Z",
+      "updatedAt": "2026-09-30T19:40:19.769Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-08",
+      "title": "Land the EX-ROS-2026-A021 evaluation kit and second blind evaluation on main",
+      "description": "Renumber the evaluation kit's records EV-ROS-2026-A060..A062 (collide with main) to A065..A067, merge main, and land the kit and the second blind evaluation report. Owner approved all branches.",
+      "tags": [
+        "planning",
+        "grouping"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-30T23:05:47.814Z",
+      "updatedAt": "2026-09-30T23:05:47.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

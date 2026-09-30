@@ -464,6 +464,27 @@ type ExecutionStatus =
     | Finalized
     | Active
 
+/// Session-transcript evidence an execution carries (PRAXIS-PLAN-05): the
+/// `anthropic-claude-session` adapter's metrics, each unavailable unless the
+/// execution recorded it.
+type SessionEvidence =
+    { /// `time.active_ms`: runtime-measured active session time.
+      ActiveMs: int64 option
+      /// `time.first_code_change_ms`: the session's cold start.
+      FirstCodeChangeMs: int64 option
+      /// `context.governance_reads`.
+      GovernanceReads: int option
+      /// `context.repeated_file_reads`.
+      RepeatedReads: int option }
+
+[<RequireQualifiedAccess>]
+module SessionEvidence =
+    let none =
+        { ActiveMs = None
+          FirstCodeChangeMs = None
+          GovernanceReads = None
+          RepeatedReads = None }
+
 /// One telemetry execution record, reduced to what planning reads.
 type HistoricalExecution =
     { ExecutionId: string
@@ -478,7 +499,8 @@ type HistoricalExecution =
       Runtime: string
       Model: string option
       Costs: CostObservation list
-      TokenMetrics: int }
+      TokenMetrics: int
+      Session: SessionEvidence }
 
 /// PRX-PLAN-093: explicit balanced weights. They are reported with every
 /// balanced plan.
@@ -1030,6 +1052,9 @@ type Collision =
 type DurationDistribution =
     { TaskClass: string
       SampleCount: int
+      /// Samples whose productive time includes runtime-measured session
+      /// time (`time.active_ms`), not only ROS execution wall time.
+      SessionMeasured: int
       Lower: int64
       Median: int64
       Upper: int64
@@ -1040,6 +1065,18 @@ type CostEvidenceSummary =
       WithUsableCost: int
       WithTokenUsage: int
       Currency: string option
+      Sufficient: bool
+      Statement: string }
+
+/// Measured per-session context overhead (PRAXIS-PLAN-05, PRX-GRP-061):
+/// what one cold start costs, from the session metrics executions recorded.
+type ContextOverheadSummary =
+    { SampledSessions: int
+      /// Time to first code change, interquartile range; unknown unless
+      /// `Sufficient`.
+      ColdStart: Estimate<int64>
+      MedianGovernanceReads: int option
+      MedianRepeatedReads: int option
       Sufficient: bool
       Statement: string }
 
@@ -1064,6 +1101,7 @@ type HistorySummary =
       DurationSamples: int
       Distributions: DurationDistribution list
       Cost: CostEvidenceSummary
+      ContextOverhead: ContextOverheadSummary
       Segments: HistorySegment list
       Drift: DriftAssessment option }
 

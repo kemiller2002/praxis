@@ -31,7 +31,7 @@ module GitTests =
             if initializeGit then
                 run [ "init"; "-q" ]
                 run [ "config"; "user.email"; "test@example.invalid" ]
-                run [ "config"; "user.name"; "ROS Test" ]
+                run [ "config"; "user.name"; "Praxis Test" ]
 
             operation root run
         finally

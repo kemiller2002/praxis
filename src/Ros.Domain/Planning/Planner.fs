@@ -96,7 +96,7 @@ module Planner =
                           FindingSeverity.Advisory
                           []
                           history.Cost.Statement
-                          (Some "record cost.execution_total (or token usage with pricing) for future executions")
+                          (Some "record cost.execution_total (platform-reported cost with --quality observed, or token usage with pricing) for future executions")
                           EvidenceConfidence.High
                           [ Provenance.create EvidenceSource.Telemetry ".ros/telemetry/executions" ]
               match pooled with
@@ -193,6 +193,8 @@ module Planner =
                   yield $"Reconcile recorded state for {names}; stale state changes the runnable graph more than any estimate."
               if not history.Cost.Sufficient then
                   yield $"Collect cost.execution_total for future executions ({history.Cost.WithUsableCost} of {history.Cost.SampledExecutions} carry usable cost evidence); it enables the minimum-cost strategy."
+              if not history.ContextOverhead.Sufficient then
+                  yield $"Ingest session transcripts with the anthropic-claude-session adapter ({history.ContextOverhead.SampledSessions} of at least {History.minimumContextSessions} sessions measured); measured cold starts replace unknown context-reuse value and runtime-measured session time improves implementation duration estimates."
               if not unscoped.IsEmpty then
                   let names = String.concat ", " unscoped
                   yield $"Tag or declare areas for {names} so collision risk can be assessed instead of treated as unknown."

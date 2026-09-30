@@ -5,7 +5,7 @@ open Ros.Domain.Telemetry
 
 /// Who (or what) performed an action. `Agent` is an autonomous or
 /// semi-autonomous AI system; `Automation` is a deterministic non-agent
-/// process (CI, a scheduled job, the ROS installer); `Unknown` is recorded
+/// process (CI, a scheduled job, the Praxis installer); `Unknown` is recorded
 /// honestly rather than guessed. Namespaced `x-...` extensions let a
 /// consuming ecosystem add a category without changing this vocabulary.
 [<RequireQualifiedAccess>]

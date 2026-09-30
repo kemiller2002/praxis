@@ -36,6 +36,11 @@
       "requireDurableCheckpoint": true
     }
   },
+  "implementationPolicy": {
+    "version": "1.0.0",
+    "prohibitNodeArtifacts": true,
+    "exceptions": []
+  },
   "provenance": {
     "version": "1.0.0",
     "enforce": true,

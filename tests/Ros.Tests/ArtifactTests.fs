@@ -11,7 +11,7 @@ open Ros.Infrastructure.Artifacts
 [<RequireQualifiedAccess>]
 module ArtifactTests =
     let rec private repositoryRoot (directory: DirectoryInfo) =
-        if File.Exists(Path.Combine(directory.FullName, "package.json"))
+        if File.Exists(Path.Combine(directory.FullName, "release.json"))
            && Directory.Exists(Path.Combine(directory.FullName, "tests", "fixtures", "artifacts")) then
             directory.FullName
         elif isNull directory.Parent then
@@ -215,4 +215,71 @@ module ArtifactTests =
                     Assert.equal 1 written.Length
                     Assert.equal 7 pending.Length
                     Assert.equal DependencyOutcome.Indeterminate failure.Outcome
-                | outcome -> failwith $"Expected incomplete outcome, received {outcome}" } ]
+                | outcome -> failwith $"Expected incomplete outcome, received {outcome}" }
+          { Name = "frozen valid fixture has the preregistered registry bytes"
+            Run = fun () ->
+                use document = JsonDocument.Parse(File.ReadAllText(Path.Combine(root (), "tests", "fixtures", "artifacts", "manifest.json")))
+
+                let case =
+                    document.RootElement.GetProperty("cases").EnumerateArray()
+                    |> Seq.find (fun item -> item.GetProperty("id").GetString() = "valid-all-kinds")
+
+                let expected = case.GetProperty("registrySha256").EnumerateObject() |> Seq.toList
+                Assert.isTrue (not expected.IsEmpty) "the manifest must preregister registry hashes"
+
+                for registry in expected do
+                    let actual = sha256 (Path.Combine(fixtureRoot "valid-all-kinds", "registries", registry.Name))
+                    Assert.equal (registry.Value.GetString().ToUpperInvariant()) actual }
+          { Name = "registry build reclaims a stale lease left by a dead owner in the on-disk lock format"
+            Run = fun () ->
+                withFixture "valid-all-kinds" (fun fixture ->
+                    let resource = "artifact-registries"
+                    let hash = SHA256.HashData(Text.Encoding.UTF8.GetBytes resource) |> Convert.ToHexString
+                    let lockPath = Path.Combine(fixture, ".ros", "locks", $"{hash.ToLowerInvariant()}.lock")
+                    Directory.CreateDirectory(Path.GetDirectoryName lockPath) |> ignore
+
+                    File.WriteAllText(
+                        lockPath,
+                        """{"pid":999999,"ownerToken":"fsharp-stale-owner","resource":"artifact-registries","acquiredAt":"2026-09-08T00:00:00.0000000Z"}""" + "\n"
+                    )
+
+                    File.SetLastWriteTimeUtc(lockPath, DateTime.UtcNow.AddSeconds -61.0)
+
+                    match ArtifactOperations.buildRegistries true (FileArtifactRepository.create fixture) with
+                    | RegistryBuildOutcome.Completed changes -> Assert.equal 0 changes.Length
+                    | outcome -> failwith $"Expected the stale lease to be reclaimed, received {outcome}"
+
+                    Assert.isTrue (not (File.Exists lockPath)) "the stale lock must be removed") }
+          { Name = "registry build replays a pending registry transaction before building"
+            Run = fun () ->
+                withFixture "valid-all-kinds" (fun fixture ->
+                    let registryPath = "registries/evidence.json"
+                    let registry = Path.Combine(fixture, registryPath)
+                    let expected = File.ReadAllText registry
+                    let transaction = Path.Combine(fixture, ".ros", "transactions", "artifact-registries.json")
+                    Directory.CreateDirectory(Path.GetDirectoryName transaction) |> ignore
+
+                    let pending =
+                        Nodes.JsonObject(
+                            [ Collections.Generic.KeyValuePair<string, Nodes.JsonNode>("schemaVersion", Nodes.JsonValue.Create "1.0.0")
+                              Collections.Generic.KeyValuePair<string, Nodes.JsonNode>("resource", Nodes.JsonValue.Create "artifact-registries")
+                              Collections.Generic.KeyValuePair<string, Nodes.JsonNode>(
+                                  "writes",
+                                  Nodes.JsonArray(
+                                      Nodes.JsonObject(
+                                          [ Collections.Generic.KeyValuePair<string, Nodes.JsonNode>("path", Nodes.JsonValue.Create registryPath)
+                                            Collections.Generic.KeyValuePair<string, Nodes.JsonNode>("content", Nodes.JsonValue.Create expected) ]
+                                      )
+                                  )
+                              ) ]
+                        )
+
+                    File.WriteAllText(transaction, pending.ToJsonString() + "\n")
+                    File.WriteAllText(registry, "[]\n")
+
+                    match ArtifactOperations.buildRegistries false (FileArtifactRepository.create fixture) with
+                    | RegistryBuildOutcome.Completed changes -> Assert.equal 0 changes.Length
+                    | outcome -> failwith $"Expected the pending transaction to be replayed, received {outcome}"
+
+                    Assert.equal expected (File.ReadAllText registry)
+                    Assert.isTrue (not (File.Exists transaction)) "the transaction must be completed") } ]

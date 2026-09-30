@@ -235,6 +235,21 @@ module Inventory =
           Upper = full.Upper |> Option.map (scale upper)
           Confidence = if basis = RemainingBasis.FromScratch then full.Confidence else EvidenceConfidence.cap EvidenceConfidence.Low full.Confidence }
 
+    /// PRAXIS-PLAN-05: an item's own finalized executions with a recorded
+    /// monetary total report that evidence's kind (observed platform cost
+    /// stays `observed`); otherwise sufficient history gives an estimate.
+    let costEvidenceFor (history: HistorySummary) (executions: HistoricalExecution list) (id: string) =
+        let own =
+            executions
+            |> List.filter (fun execution -> execution.WorkItemId = id && execution.Status = ExecutionStatus.Finalized)
+            |> List.map History.executionCostKind
+            |> List.filter ((<>) CostEvidenceKind.Unavailable)
+
+        match own |> List.sortByDescending History.costKindRank |> List.tryHead, history.Cost.Sufficient with
+        | Some kind, _ -> kind
+        | None, true -> CostEvidenceKind.Estimated
+        | None, false -> CostEvidenceKind.Unavailable
+
     let taskClassFor (distributions: DurationDistribution list) (executions: HistoricalExecution list) (id: string) (tags: string list) =
         let hasHistory name = distributions |> List.exists (fun distribution -> distribution.TaskClass = name && distribution.Confidence <> EvidenceConfidence.Unknown)
 
@@ -295,7 +310,7 @@ module Inventory =
                         FindingSeverity.Warning
                         [ id ]
                         $"Recorded state: {lifecycle}. Observed: checkpoint commit {checkpoint.Commit} is already merged into {into}. Assessment: the item may be finished; recorded state may be stale."
-                        (Some "reconcile: verify the merged result and record completion (./ros work complete); do not reimplement")
+                        (Some "reconcile: verify the merged result and record completion (./praxis work complete); do not reimplement")
                         EvidenceConfidence.High
                         [ Provenance.create EvidenceSource.Checkpoint $"checkpoint {checkpoint.CheckpointId}"; observation.Provenance ])
             | _ -> None
@@ -458,7 +473,7 @@ module Inventory =
                   FullDuration = full
                   RemainingDuration = if PlanningWorkState.isTerminal planningState then Estimate.unknown else remaining input.Configuration.RemainingFractions basis full
                   RemainingCost = if PlanningWorkState.isTerminal planningState then Estimate.unknown else remainingCost input.Configuration.RemainingFractions basis costWhole
-                  CostEvidence = if history.Cost.Sufficient then CostEvidenceKind.Estimated else CostEvidenceKind.Unavailable
+                  CostEvidence = costEvidenceFor history input.Executions id
                   Provenance =
                     [ if queueItem.IsSome then yield Provenance.create EvidenceSource.BacklogQueue $".ros/work/queue.json#{id}"
                       if liveItem.IsSome then yield Provenance.create EvidenceSource.LiveContext $".ros/context/current.json#{id}"
@@ -505,7 +520,7 @@ module Inventory =
                           FindingCode.ResumableExecution
                           FindingSeverity.Info
                           [ id ]
-                          $"{id} has a verified checkpoint on {checkpoint.Branch} ({checkpoint.Commit}); if its executor is gone, continue it (./ros work continue) rather than restarting. Next action: {checkpoint.NextAction}"
+                          $"{id} has a verified checkpoint on {checkpoint.Branch} ({checkpoint.Commit}); if its executor is gone, continue it (./praxis work continue) rather than restarting. Next action: {checkpoint.NextAction}"
                           (Some "continue from the checkpoint")
                           EvidenceConfidence.High
                           [ Provenance.create EvidenceSource.Checkpoint $"checkpoint {checkpoint.CheckpointId}" ] ]

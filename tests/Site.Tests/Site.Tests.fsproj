@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The public-site test suite (docs/public-site.md). `praxis-site verify`
+       runs it after the site and evidence checks. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Site.Tests</AssemblyName>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../site-tools/SiteTools.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="TestFramework.fs" />
+    <Compile Include="AccessibilityTests.fs" />
+    <Compile Include="CaseStudyTests.fs" />
+    <Compile Include="ClaimsTests.fs" />
+    <Compile Include="ContentTests.fs" />
+    <Compile Include="DesignTests.fs" />
+    <Compile Include="EvidenceTests.fs" />
+    <Compile Include="PerformanceTests.fs" />
+    <Compile Include="RecordTests.fs" />
+    <Compile Include="ResponsiveTests.fs" />
+    <Compile Include="SecurityTests.fs" />
+    <Compile Include="SiteTests.fs" />
+    <Compile Include="WorkflowTests.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+</Project>

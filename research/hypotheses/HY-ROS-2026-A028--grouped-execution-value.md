@@ -2,10 +2,10 @@
 id: HY-ROS-2026-A028
 title: One shared reasoning context for strongly related work reduces repeated work or improves architectural consistency
 research_area: repository-operating-system
-status: proposed
-confidence: very-low
+status: supported
+confidence: low
 created: 2026-09-30
-supporting_evidence: []
+supporting_evidence: [EV-ROS-2026-A064]
 contradicting_evidence: []
 related_theories: []
 related_documents:
@@ -27,6 +27,26 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "WI-0064: evidence-based work groups and the frozen grouping experiment"
+    EXE-20260930T114749635Z-ba7301df:
+      operations: [modified]
+      at: 2026-09-30T17:18:12.991Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PLAN-EXP-01: results of the grouping experiment EX-ROS-2026-A021"
+    EXE-20260930T172030686Z-71d403ef:
+      operations: [modified]
+      at: 2026-09-30T17:20:33.432Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PLAN-06: renumber the A021 results record to EV-ROS-2026-A064 and relate it to the parallel evaluation kit and EV-ROS-2026-A063"
 ---
 
 # Hypothesis
@@ -60,7 +80,15 @@ outweighs the reuse. One experiment cannot establish causation
 
 ## Current assessment
 
-Proposed and untested. The planner can count context acquisitions (five
+Supported at low confidence by one run (`EV-ROS-2026-A064`): the grouped
+execution repeated less context (AGENTS.md 1 versus 5 reads, governance
+documents 6 versus 15, one cold start), cost $9.48 against $21.51, and
+produced one consistent model where independent executions produced several;
+independent executions were more faithful to individual criteria and tested
+more broadly. No context pressure at five members. Replication with a
+loosely related cohort and another repository is needed before any default.
+
+Before the experiment: The planner can count context acquisitions (five
 independent against one grouped for the proposed cohort) but has no
 measurement of what an acquisition costs, so every saving is unknown until
 the experiment runs.

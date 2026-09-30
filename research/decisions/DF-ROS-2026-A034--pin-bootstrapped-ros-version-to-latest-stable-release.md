@@ -17,11 +17,23 @@ related_documents:
   - lib/bootstrap.mjs
   - .github/workflows/publish.yml
 supersedes: []
-superseded_by: [DF-ROS-2026-A044]
+superseded_by:
+  - DF-ROS-2026-A049
+  - DF-ROS-2026-A044
 tags: [ros-fs, bootstrap, launcher, npm, release]
 confidence: high
 provenance:
   contributions:
+    EXE-20260928T090915352Z-fb23943c:
+      operations: [superseded]
+      at: 2026-09-28T10:18:56.865Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Superseded by DF-ROS-2026-A049 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
     EXE-20260929T163720115Z-f381906c:
       operations: [modified]
       at: 2026-09-29T16:37:22.365Z

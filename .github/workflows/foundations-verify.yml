@@ -40,7 +40,11 @@ jobs:
         shell: bash
         run: |
           set +e
-          dotnet praxis-verifier/src/Ros.Cli/bin/Release/net10.0/ros-fs.dll \
+          # The CLI assembly was ros-fs.dll before the Praxis rename
+          # (DF-ROS-2026-A050); a caller may pin a commit from either side.
+          cli=praxis-verifier/src/Ros.Cli/bin/Release/net10.0/praxis.dll
+          [ -f "$cli" ] || cli=praxis-verifier/src/Ros.Cli/bin/Release/net10.0/ros-fs.dll
+          dotnet "$cli" \
             --root "$GITHUB_WORKSPACE/application" \
             foundations verify --json > "$RUNNER_TEMP/echelon-foundations.json"
           code=$?

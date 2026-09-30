@@ -499,7 +499,21 @@ module Grouping =
         "Advisory grouping: a group is a recommendation to reason about these items together. It changes no work item's state, attribution, evidence or identity, and nothing was started."
 
     let unmeasuredContext =
-        "context reuse is unmeasured: no telemetry yet records repeated reads, repeated searches or time to first productive change, so savings in tokens or time are unknown (PRX-GRP-061)"
+        "context reuse is unmeasured: too few finalized executions record session metrics (repeated and governance reads, time to first code change; the anthropic-claude-session adapter), so savings in tokens or time are unknown (PRX-GRP-061)"
+
+    /// The measured context overhead when history carries enough session
+    /// metrics (PRAXIS-PLAN-05), otherwise the unmeasured statement.
+    let contextNote (history: HistorySummary) =
+        if history.ContextOverhead.Sufficient then history.ContextOverhead.Statement else unmeasuredContext
+
+    /// What avoiding `avoided` cold starts is worth, from measured history.
+    let coldStartSaving (history: HistorySummary) (avoided: int) =
+        let minutes (value: int64) = Math.Round(decimal value / 60_000m, 1).ToString(Globalization.CultureInfo.InvariantCulture)
+
+        match history.ContextOverhead.ColdStart with
+        | { Lower = Some lower; Expected = Some median; Upper = Some upper } when history.ContextOverhead.Sufficient ->
+            $"{avoided} cold start(s) avoided by construction; at the measured cold start (median {minutes median} min, interquartile {minutes lower}-{minutes upper} min, {history.ContextOverhead.SampledSessions} sessions) that is about {minutes (int64 avoided * median)} min of time to first code change"
+        | _ -> $"{avoided} cold start(s) avoided by construction; their token and time value is unknown (unmeasured)"
 
     let riskPolicy = Scheduling.acceptElevated
 
@@ -531,17 +545,32 @@ module Grouping =
         let generic = configuration.GenericTags |> List.map (fun tag -> tag.ToLowerInvariant()) |> Set.ofList
         item.Tags |> List.map (fun tag -> tag.ToLowerInvariant()) |> List.filter (generic.Contains >> not) |> Text.distinctOrdinal
 
+    /// PRX-GRP-051: where an item's implementation happens. Declared
+    /// `grouping.executionRepositories` wins; a description naming an
+    /// external repository is an inference; otherwise it is this repository.
+    let executionLocation
+        (grouping: GroupingConfiguration)
+        (repository: string)
+        (queue: PlanningQueueItem list)
+        (id: string)
+        : ExecutionLocation * SignalBasis =
+        let description =
+            queue
+            |> List.tryFind (fun entry -> entry.Id = id)
+            |> Option.bind (fun entry -> entry.Description)
+            |> Option.defaultValue ""
+
+        match grouping.ExecutionRepositories |> List.tryFind (fun (item, _) -> item = id) with
+        | Some(_, declared) -> ExecutionLocation.Repository declared, SignalBasis.Explicit
+        | None when externalPattern.IsMatch description -> ExecutionLocation.UnknownExternal, SignalBasis.Inferred
+        | None -> ExecutionLocation.Repository repository, SignalBasis.Derived
+
     let private evidenceFor (input: PlanningInput) (item: ItemAnalysis) : Evidence =
         let configuration = input.Configuration
         let grouping = configuration.Grouping
         let queued = input.Queue |> List.tryFind (fun entry -> entry.Id = item.Id)
         let description = queued |> Option.bind (fun entry -> entry.Description) |> Option.defaultValue ""
-
-        let location, basis =
-            match grouping.ExecutionRepositories |> List.tryFind (fun (id, _) -> id = item.Id) with
-            | Some(_, repository) -> ExecutionLocation.Repository repository, SignalBasis.Explicit
-            | None when externalPattern.IsMatch description -> ExecutionLocation.UnknownExternal, SignalBasis.Inferred
-            | None -> ExecutionLocation.Repository input.Repository, SignalBasis.Derived
+        let location, basis = executionLocation grouping input.Repository input.Queue item.Id
 
         { Item = item
           Areas = areaTags configuration item
@@ -1191,11 +1220,11 @@ module Grouping =
           ContextCost =
             { IndependentAcquisitions = remaining
               GroupedAcquisitions = (if remaining = 0 then 0 else 1)
-              ColdStart = Estimate.unknown
+              ColdStart = if remaining = 0 then Estimate.unknown else context.Analysis.History.ContextOverhead.ColdStart
               SharedContext = Estimate.unknown
               MemberIncremental = Estimate.unknown
               Statement =
-                $"grouped: coldStart + sharedContext + sum(memberIncremental) = 1 context acquisition; independent: {remaining} x (coldStart + itemCost) = {remaining} acquisitions; {unmeasuredContext}" }
+                $"grouped: coldStart + sharedContext + sum(memberIncremental) = 1 context acquisition; independent: {remaining} x (coldStart + itemCost) = {remaining} acquisitions; {contextNote context.Analysis.History}" }
           Progress = progress members'
           ArchitectureNotes = candidate.Declared |> Option.map (fun declared -> declared.ArchitectureNotes) |> Option.defaultValue []
           Notes = declaredNotes @ candidate.Notes @ merged @ sizeNotes @ otherNotes }
@@ -1456,7 +1485,7 @@ module Grouping =
                 |> List.map (relation configuration context edges left))
 
         let unknowns =
-            [ unmeasuredContext
+            [ if not analysis.History.ContextOverhead.Sufficient then unmeasuredContext
               "historical co-change is not observable: telemetry does not yet link executions to the files they changed per work item"
               if configuration.Areas.IsEmpty then "no declared paths (planner configuration 'areas'): file and module overlap is unknown, only tags are compared"
               if grouping.Groups.IsEmpty then "no human-declared groups"
@@ -1735,7 +1764,7 @@ module Grouping =
           ContextAcquisitions = built |> List.sumBy (fun wave -> wave.Units.Length)
           IndependentContextAcquisitions = built |> List.sumBy (fun wave -> wave.Units |> List.sumBy (fun unit -> unit.Members.Length))
           Statement =
-            $"portfolio -> groups -> items: each group is one reasoning owner; units co-run only under the {riskPolicy.Name} policy. Durations are the members' item estimates summed; the context reuse that grouping might add is not modelled because it is unmeasured." }
+            $"portfolio -> groups -> items: each group is one reasoning owner; units co-run only under the {riskPolicy.Name} policy. Durations are the members' item estimates summed; the context reuse that grouping might add is not subtracted from them ({contextNote analysis.History})." }
 
     /// PRX-GRP-072 (`compare --groups`): grouped versus independent execution
     /// of each group, and the group schedule versus the item-level speed plan.
@@ -1784,8 +1813,7 @@ module Grouping =
                       ExpectedDuration = Estimate.sumDurations durations
                       PeakConcurrency = min 1 items.Length
                       DesignOwners = min 1 items.Length }
-                  ContextSaving =
-                    $"{max 0 (items.Length - 1)} cold start(s) avoided by construction; their token and time value is unknown (unmeasured)"
+                  ContextSaving = coldStartSaving analysis.History (max 0 (items.Length - 1))
                   ArchitectureConsideration =
                     $"independent execution gives {items.Length} separate design owner(s) over shared context ({shared}); grouped execution gives one, which must still keep per-item attribution"
                   ContextPressureRisk =

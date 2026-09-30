@@ -26,7 +26,16 @@ module Assert =
 
 [<RequireQualifiedAccess>]
 module TestRunner =
-    let run (tests: TestCase list) =
+    /// `PRAXIS_TEST_FILTER=text` runs only tests whose name contains the
+    /// text (a local convenience; CI never sets it).
+    let private selected (tests: TestCase list) =
+        match Environment.GetEnvironmentVariable "PRAXIS_TEST_FILTER" with
+        | null
+        | "" -> tests
+        | filter -> tests |> List.filter (fun test -> test.Name.Contains(filter, StringComparison.OrdinalIgnoreCase))
+
+    let run (allTests: TestCase list) =
+        let tests = selected allTests
         let mutable failures = 0
 
         for test in tests do

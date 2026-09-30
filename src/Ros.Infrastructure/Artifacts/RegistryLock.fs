@@ -142,7 +142,7 @@ module RegistryLock =
                         lockFailure
                             "acquire artifact registry lock"
                             DependencyOutcome.Failed
-                            $"timed out waiting for ROS lock '{resource}'"
+                            $"timed out waiting for Praxis lock '{resource}'"
                     )
                 else
                     Thread.Sleep settings.RetryDelay

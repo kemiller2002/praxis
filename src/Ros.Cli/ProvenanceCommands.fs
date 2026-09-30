@@ -207,7 +207,7 @@ module ProvenanceCommands =
                 printfn "discovered via: %s (actor kind from %s)" source.Mechanism kindSource
 
                 match active with
-                | [] -> printfn "active executions: none (run './ros work begin --id ID --occurred-at TIMESTAMP' to start one)"
+                | [] -> printfn "active executions: none (run './praxis work begin --id ID --occurred-at TIMESTAMP' to start one)"
                 | views ->
                     printfn "active executions:"
 

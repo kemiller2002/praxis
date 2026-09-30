@@ -4815,11 +4815,680 @@
         }
       },
       "completedAt": "2026-09-30T14:42:50.000Z"
+    },
+    {
+      "id": "PRAXIS-PLAN-EXP-01",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/evidence/EV-ROS-2026-A060--grouping-experiment-results.md"
+        },
+        {
+          "type": "tests",
+          "path": "research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt"
+        }
+      ],
+      "updatedAt": "2026-09-30T17:18:43.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T114749635Z-ba7301df"
+      ],
+      "latestCheckpoint": {
+        "id": "d8d6a32e5376296833d1aad6",
+        "recordedAt": "2026-09-30T17:18:41.000Z",
+        "executionId": "EXE-20260930T114749635Z-ba7301df",
+        "repository": "repository-operating-system",
+        "branch": "claude/grouping-experiment-a021",
+        "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/grouping-experiment-a021",
+        "remoteCommit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+        "summary": "EX-ROS-2026-A021 complete: both arms run, blind evaluation done, results in EV-ROS-2026-A060, hypotheses updated, follow-ups captured",
+        "nextAction": "Owner review of EV-ROS-2026-A060 and the phase-two decision PRAXIS-GROUP-06",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T17:18:43.000Z"
+    },
+    {
+      "id": "PRAXIS-PLAN-06",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/evidence/EV-ROS-2026-A064--grouping-experiment-results.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ArtifactTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T17:20:49.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T172030686Z-71d403ef"
+      ],
+      "latestCheckpoint": {
+        "id": "851a16e0bfae363dbb8133f1",
+        "recordedAt": "2026-09-30T17:20:48.000Z",
+        "executionId": "EXE-20260930T172030686Z-71d403ef",
+        "repository": "repository-operating-system",
+        "branch": "claude/grouping-experiment-a021",
+        "commit": "da9dd15990ee19409a5966fcf91887f9494822e3",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/grouping-experiment-a021",
+        "remoteCommit": "da9dd15990ee19409a5966fcf91887f9494822e3",
+        "summary": "Results record renumbered to EV-ROS-2026-A064 and related to the parallel kit",
+        "nextAction": "Complete; open the results PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T17:20:49.000Z"
+    },
+    {
+      "id": "PRAXIS-PR92-PREMERGE-REGRESSION-FENCE",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tests/Ros.Tests/PremergeFence.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PremergeCommandSurfaceTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PremergeRemoteTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PremergeRemoteScriptTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PremergeReleaseTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T17:09:15.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T162437557Z-40b62e08"
+      ],
+      "latestCheckpoint": {
+        "id": "bc4a2e6d6a5acc8b9842e72a",
+        "recordedAt": "2026-09-30T17:09:07.000Z",
+        "executionId": "EXE-20260930T162437557Z-40b62e08",
+        "repository": "repository-operating-system",
+        "branch": "test/pr92-premerge-main-characterization",
+        "commit": "f0ec0a64969b1f82fd3d0ef10a27225986317885",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "test/pr92-premerge-main-characterization",
+        "remoteCommit": "f0ec0a64969b1f82fd3d0ef10a27225986317885",
+        "summary": "Fence complete: 37 main tests (829/829), 7 PR #92 tests (956/956), EV-ROS-2026-A060 matrix and manifest, draft PR #131",
+        "nextAction": "Owner: decide PRAXIS-PR92-ID-RENUMBER, merge PR #131, then reconcile PR #92 and do PRAXIS-PR92-POSTMERGE-FENCE",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T17:09:15.000Z",
+      "conclusion": "Regression fence in place; reconciliation not started. Remaining: PRAXIS-PR92-ID-RENUMBER (owner decision), merge PR #131, PRAXIS-PR92-POSTMERGE-FENCE"
+    },
+    {
+      "id": "PRAXIS-PLAN-04",
+      "type": "documentation",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "requirements/PLANNING-WORK-GROUPS.md"
+        },
+        {
+          "type": "implementation",
+          "path": "templates/work/GROUP-ANALYSIS-TEMPLATE.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ArtifactTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T18:19:31.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T181835255Z-ded3dcb1"
+      ],
+      "latestCheckpoint": {
+        "id": "e13842b9b6f089a68f7feaef",
+        "recordedAt": "2026-09-30T18:19:27.000Z",
+        "executionId": "EXE-20260930T181835255Z-ded3dcb1",
+        "repository": "repository-operating-system",
+        "branch": "claude/grouped-execution-guidance",
+        "commit": "afa355a48b8a7204abccff66f60ee046d91de737",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/grouped-execution-guidance",
+        "remoteCommit": "afa355a48b8a7204abccff66f60ee046d91de737",
+        "summary": "GRP-040 reuse inventory, GRP-045 verification pass and the group-analysis template committed and pushed",
+        "nextAction": "Complete PRAXIS-PLAN-04 and open the PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T18:19:31.000Z",
+      "conclusion": "Guidance added: reuse inventory (GRP-040), per-criterion verification pass (GRP-045), group-analysis template. Guidance only; not enforced by tooling."
+    },
+    {
+      "id": "PRAXIS-GROUP-01",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T18:17:06.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T181623105Z-fe31b75e"
+      ],
+      "latestCheckpoint": {
+        "id": "d5a0a8e3629b830919549da2",
+        "recordedAt": "2026-09-30T18:16:48.000Z",
+        "executionId": "EXE-20260930T181623105Z-fe31b75e",
+        "repository": "repository-operating-system",
+        "branch": "claude/work-groups-phase-two",
+        "commit": "da83cd240665dd3653cb09c883b0869af194340a",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/work-groups-phase-two",
+        "remoteCommit": "da83cd240665dd3653cb09c883b0869af194340a",
+        "summary": "Implemented in da83cd2 (phase two on the grouped arm with control-arm ports); 849 tests pass",
+        "nextAction": "Complete PRAXIS-GROUP-01 with implementation and test evidence",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T18:17:06.000Z",
+      "conclusion": "Implemented on main's base from the grouped arm with the control arm's parser, join rule and checkpoint checks ported; work group tests pass (849 total)."
+    },
+    {
+      "id": "PRAXIS-GROUP-02",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T18:17:08.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T181623607Z-ef332eb0"
+      ],
+      "latestCheckpoint": {
+        "id": "625532c4da92cb2fd040c1cf",
+        "recordedAt": "2026-09-30T18:16:49.000Z",
+        "executionId": "EXE-20260930T181623607Z-ef332eb0",
+        "repository": "repository-operating-system",
+        "branch": "claude/work-groups-phase-two",
+        "commit": "da83cd240665dd3653cb09c883b0869af194340a",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/work-groups-phase-two",
+        "remoteCommit": "da83cd240665dd3653cb09c883b0869af194340a",
+        "summary": "Implemented in da83cd2 (phase two on the grouped arm with control-arm ports); 849 tests pass",
+        "nextAction": "Complete PRAXIS-GROUP-02 with implementation and test evidence",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T18:17:08.000Z",
+      "conclusion": "Implemented on main's base from the grouped arm with the control arm's parser, join rule and checkpoint checks ported; work group tests pass (849 total)."
+    },
+    {
+      "id": "PRAXIS-GROUP-03",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T18:17:10.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T181624582Z-a14d3860"
+      ],
+      "latestCheckpoint": {
+        "id": "d25be123e01c053593debc5b",
+        "recordedAt": "2026-09-30T18:16:51.000Z",
+        "executionId": "EXE-20260930T181624582Z-a14d3860",
+        "repository": "repository-operating-system",
+        "branch": "claude/work-groups-phase-two",
+        "commit": "da83cd240665dd3653cb09c883b0869af194340a",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/work-groups-phase-two",
+        "remoteCommit": "da83cd240665dd3653cb09c883b0869af194340a",
+        "summary": "Implemented in da83cd2 (phase two on the grouped arm with control-arm ports); 849 tests pass",
+        "nextAction": "Complete PRAXIS-GROUP-03 with implementation and test evidence",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T18:17:10.000Z",
+      "conclusion": "Implemented on main's base from the grouped arm with the control arm's parser, join rule and checkpoint checks ported; work group tests pass (849 total)."
+    },
+    {
+      "id": "PRAXIS-GROUP-04",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T18:17:12.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T181625124Z-a1e7cbeb"
+      ],
+      "latestCheckpoint": {
+        "id": "aff868b75f36a0f9f9177391",
+        "recordedAt": "2026-09-30T18:16:52.000Z",
+        "executionId": "EXE-20260930T181625124Z-a1e7cbeb",
+        "repository": "repository-operating-system",
+        "branch": "claude/work-groups-phase-two",
+        "commit": "da83cd240665dd3653cb09c883b0869af194340a",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/work-groups-phase-two",
+        "remoteCommit": "da83cd240665dd3653cb09c883b0869af194340a",
+        "summary": "Implemented in da83cd2 (phase two on the grouped arm with control-arm ports); 849 tests pass",
+        "nextAction": "Complete PRAXIS-GROUP-04 with implementation and test evidence",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T18:17:12.000Z",
+      "conclusion": "Implemented on main's base from the grouped arm with the control arm's parser, join rule and checkpoint checks ported; work group tests pass (849 total)."
+    },
+    {
+      "id": "PRAXIS-GROUP-05",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T18:17:14.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T181625702Z-d3bf2014"
+      ],
+      "latestCheckpoint": {
+        "id": "3343b7053c14890a8a21dad9",
+        "recordedAt": "2026-09-30T18:16:54.000Z",
+        "executionId": "EXE-20260930T181625702Z-d3bf2014",
+        "repository": "repository-operating-system",
+        "branch": "claude/work-groups-phase-two",
+        "commit": "da83cd240665dd3653cb09c883b0869af194340a",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/work-groups-phase-two",
+        "remoteCommit": "da83cd240665dd3653cb09c883b0869af194340a",
+        "summary": "Implemented in da83cd2 (phase two on the grouped arm with control-arm ports); 849 tests pass",
+        "nextAction": "Complete PRAXIS-GROUP-05 with implementation and test evidence",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T18:17:14.000Z",
+      "conclusion": "Implemented on main's base from the grouped arm with the control arm's parser, join rule and checkpoint checks ported; work group tests pass (849 total)."
+    },
+    {
+      "id": "PRAXIS-GROUP-06",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T18:17:16.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T181626313Z-1c0b9787"
+      ],
+      "latestCheckpoint": {
+        "id": "8d1dfc22000bc2ac20ef91ec",
+        "recordedAt": "2026-09-30T18:16:56.000Z",
+        "executionId": "EXE-20260930T181626313Z-1c0b9787",
+        "repository": "repository-operating-system",
+        "branch": "claude/work-groups-phase-two",
+        "commit": "da83cd240665dd3653cb09c883b0869af194340a",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/work-groups-phase-two",
+        "remoteCommit": "da83cd240665dd3653cb09c883b0869af194340a",
+        "summary": "Implemented in da83cd2 (phase two on the grouped arm with control-arm ports); 849 tests pass",
+        "nextAction": "Complete PRAXIS-GROUP-06 with implementation and test evidence",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T18:17:16.000Z",
+      "conclusion": "Implemented on main's base from the grouped arm with the control arm's parser, join rule and checkpoint checks ported; work group tests pass (849 total)."
+    },
+    {
+      "id": "PRAXIS-PLAN-05",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Telemetry/SessionTranscript.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/TelemetryIngestClaudeSessionTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PlanningSessionEvidenceTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T18:58:00Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T182239139Z-a3235bc5"
+      ],
+      "latestCheckpoint": {
+        "id": "f0a1d4f609ea095735f4a539",
+        "recordedAt": "2026-09-30T18:57:54Z",
+        "executionId": "EXE-20260930T182239139Z-a3235bc5",
+        "repository": "repository-operating-system",
+        "branch": "claude/session-metrics-telemetry",
+        "commit": "4c0196bf3f487e822f9c52f9f3ba554a73201fed",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/session-metrics-telemetry",
+        "remoteCommit": "4c0196bf3f487e822f9c52f9f3ba554a73201fed",
+        "summary": "anthropic-claude-session adapter, observed cost.execution_total in the planner, implementation duration down-weight, context overhead; 850 F# and 257 Node differential tests pass",
+        "nextAction": "complete PRAXIS-PLAN-05, then registry build, validate and open the draft PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T18:58:00Z"
+    },
+    {
+      "id": "FSHARP-ONLY-REPOSITORY",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Architecture/ImplementationLanguagePolicy.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "research/decisions/DF-ROS-2026-A041--fsharp-dotnet-only-repository.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ImplementationLanguagePolicyTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-28T10:27:49.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T090915352Z-fb23943c"
+      ],
+      "completedAt": "2026-09-28T10:27:49.000Z"
+    },
+    {
+      "id": "FSHARP-ONLY-MAIN-MERGE",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/decisions/DF-ROS-2026-A042--fsharp-dotnet-only-repository.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/RemoteExecuteCliTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-28T11:23:44.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T103758056Z-43f11e6e"
+      ],
+      "completedAt": "2026-09-28T11:23:44.000Z"
+    },
+    {
+      "id": "PRAXIS-CLI-RENAME",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "decision",
+          "path": "research/decisions/DF-ROS-2026-A043--praxis-canonical-name-ros-compatibility.md"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Naming/EnvironmentAliases.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PraxisNamingTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-28T14:30:51.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T134520493Z-befb2bfe"
+      ],
+      "completedAt": "2026-09-28T14:30:51.000Z"
+    },
+    {
+      "id": "PRAXIS-PR92-PREMERGE-RENAME-FENCE",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tests/Ros.Tests/PraxisNamingTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PraxisNamingTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T17:05:26.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T170458814Z-a16ea948"
+      ],
+      "completedAt": "2026-09-30T17:05:26.000Z"
+    },
+    {
+      "id": "PRAXIS-PR92-ID-RENUMBER",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/decisions/DF-ROS-2026-A049--fsharp-dotnet-only-repository.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PraxisNamingTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T18:05:38.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T175640720Z-98771e24"
+      ],
+      "completedAt": "2026-09-30T18:05:38.000Z"
+    },
+    {
+      "id": "PRAXIS-PR92-RECONCILE",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/Program.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PostmergeReconciliationTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T21:44:26.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T181403532Z-5fd55718"
+      ],
+      "latestCheckpoint": {
+        "id": "499ba40009bef0edcc70d7e4",
+        "recordedAt": "2026-09-30T21:30:51.000Z",
+        "executionId": "EXE-20260930T181403532Z-5fd55718",
+        "repository": "repository-operating-system",
+        "branch": "claude/praxis-fsharp-only-cleanup-f97n8u",
+        "commit": "0610b251c1c3d61629a757317da0117a455ace77",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/praxis-fsharp-only-cleanup-f97n8u",
+        "remoteCommit": "0610b251c1c3d61629a757317da0117a455ace77",
+        "summary": "Merged main 1768229 as well (0610b25); F# 1254/1254, Site 101/101, validate passes",
+        "nextAction": "When PR #92 CI is green, mark ready, merge into main, then complete PRAXIS-PR92-RECONCILE on main",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T21:44:26.000Z",
+      "conclusion": "PR #92 reconciled with main (99ecc86, then 1768229); nothing dropped from either side; F# 1254/1254, Site 101/101, all CI green including native release"
+    },
+    {
+      "id": "PRAXIS-PLAN-08",
+      "type": "documentation",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-30T23:05:47.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T230548914Z-bb6a60fd"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T14:42:50.000Z",
+  "updatedAt": "2026-09-30T23:05:47.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

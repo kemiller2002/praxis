@@ -17,15 +17,15 @@ module FindingContractTests =
         [ { Name = "a stale-registry finding repairs with 'registry build', regardless of field"
             Run =
               fun () ->
-                  Assert.equal "Run './ros registry build'." (FindingContract.repair (finding "registries/x.json" "" "registry is stale; run 'ros registry build'")) }
+                  Assert.equal "Run './praxis registry build'." (FindingContract.repair (finding "registries/x.json" "" "registry is stale; run 'ros registry build'")) }
 
           { Name = "a work_items-fielded finding repairs with production's own work-begin instruction"
             Run =
               fun () ->
                   Assert.equal
-                      "Run './ros work begin WORK-ID', perform the change, then complete it with configured evidence."
+                      "Run './praxis work begin --id WORK-ID --occurred-at TIMESTAMP', perform the change, then complete it with configured evidence."
                       (FindingContract.repair (finding ".git" "work_items" "meaningful change has no active or completed work-item attribution")) }
 
           { Name = "any other finding repairs with the generic correct-and-revalidate instruction"
             Run =
-              fun () -> Assert.equal "Correct the named file and field, then run './ros validate' again." (FindingContract.repair (finding "a.md" "id" "invalid identifier")) } ]
+              fun () -> Assert.equal "Correct the named file and field, then run './praxis validate' again." (FindingContract.repair (finding "a.md" "id" "invalid identifier")) } ]

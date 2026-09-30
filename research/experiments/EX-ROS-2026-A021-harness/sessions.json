@@ -1,0 +1,263 @@
+{
+  "baselineCommit": "fb6a0f9d6c8e25e979be436346fd803184e306a0",
+  "armStartCommit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+  "armStartNote": "baseline commit plus one identical harness commit (session_metrics.py) on both arms",
+  "orchestrator": "session_01E8aLYDesB49uhTD6Mpg4yo",
+  "sessions": [
+    {
+      "label": "grouped",
+      "arm": "grouped",
+      "items": [
+        "PRAXIS-GROUP-01",
+        "PRAXIS-GROUP-02",
+        "PRAXIS-GROUP-03",
+        "PRAXIS-GROUP-04",
+        "PRAXIS-GROUP-05"
+      ],
+      "session": "session_01Am6kL4FMXPviX7x1UJhbx9",
+      "configuredModel": "claude-opus-5-5",
+      "createdAt": "2026-09-30T11:50:34Z",
+      "prompt": "prompts/grouped.txt",
+      "finishedAt": "2026-09-30T12:51:45Z",
+      "status": "completed",
+      "headAfter": "5face88",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 9.476795,
+        "input_tokens": 234,
+        "output_tokens": 112377,
+        "cache_read_tokens": 24507715,
+        "cache_write_tokens": 290847,
+        "context_used_tokens": 318828,
+        "last_served_model": "claude-opus-5-5",
+        "worker_epoch": 2
+      }
+    },
+    {
+      "label": "control-01",
+      "arm": "control",
+      "items": [
+        "PRAXIS-GROUP-01"
+      ],
+      "session": "session_01M75ZaHmVcX1YYzxg2UP4gD",
+      "configuredModel": "claude-opus-5-5",
+      "createdAt": "2026-09-30T11:50:35Z",
+      "prompt": "prompts/control-01.txt",
+      "finishedAt": "2026-09-30T12:04:40Z",
+      "status": "completed",
+      "headAfter": "9349e48",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 3.707276,
+        "input_tokens": 118,
+        "output_tokens": 38702,
+        "cache_read_tokens": 8060300,
+        "cache_write_tokens": 165088,
+        "context_used_tokens": 193069,
+        "last_served_model": "claude-opus-5-5"
+      }
+    },
+    {
+      "label": "control-02",
+      "arm": "control",
+      "items": [
+        "PRAXIS-GROUP-02"
+      ],
+      "session": "session_01UTrWKh68vzLeWn5wdDZAXD",
+      "configuredModel": "claude-opus-5-5",
+      "createdAt": "2026-09-30T12:15:58Z",
+      "startCommit": "9349e48",
+      "prompt": "prompts/control-02.txt",
+      "finishedAt": "2026-09-30T12:37:43Z",
+      "status": "completed",
+      "headAfter": "a47522e",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 3.4215014,
+        "input_tokens": 120,
+        "output_tokens": 33231,
+        "cache_read_tokens": 7899527,
+        "cache_write_tokens": 147062,
+        "context_used_tokens": 185168,
+        "last_served_model": "claude-opus-5-5"
+      }
+    },
+    {
+      "label": "control-03",
+      "arm": "control",
+      "items": [
+        "PRAXIS-GROUP-03"
+      ],
+      "session": "session_01YGBK32KQyTahKaVAyZUdGQ",
+      "configuredModel": "claude-opus-5-5",
+      "createdAt": "2026-09-30T12:50:37Z",
+      "startCommit": "a47522e",
+      "prompt": "prompts/control-03.txt",
+      "note": "started 13 min after control-02 finished (check-in cadence); idle gap is orchestration latency, not arm effort",
+      "finishedAt": "2026-09-30T13:05:30Z",
+      "status": "completed",
+      "headAfter": "9c17936",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 2.8139084,
+        "input_tokens": 86,
+        "output_tokens": 37565,
+        "cache_read_tokens": 5187082,
+        "cache_write_tokens": 128106,
+        "context_used_tokens": 166212,
+        "last_served_model": "claude-opus-5-5"
+      }
+    },
+    {
+      "label": "control-04-attempt-1",
+      "arm": "control",
+      "items": [
+        "PRAXIS-GROUP-04"
+      ],
+      "session": "session_01GoH1a4gYaRBSSTwNBpmLrH",
+      "configuredModel": "claude-opus-5-5",
+      "createdAt": "2026-09-30T13:18:43Z",
+      "startCommit": "9c17936",
+      "prompt": "prompts/control-04.txt",
+      "finishedAt": "2026-09-30T13:28:58Z",
+      "status": "stalled",
+      "statusNote": "turn ended (idle, review_ready) with no post-turn summary and nothing pushed to experiment/a021-control or any other branch; its transcript is not readable from the orchestrator. Counted as a failed control-arm attempt; its cost counts toward the control arm.",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 1.8494294,
+        "input_tokens": 50,
+        "output_tokens": 24541,
+        "cache_read_tokens": 2370287,
+        "cache_write_tokens": 110544,
+        "context_used_tokens": 137759,
+        "last_served_model": "claude-opus-5-5"
+      }
+    },
+    {
+      "label": "control-04-attempt-2",
+      "arm": "control",
+      "items": [
+        "PRAXIS-GROUP-04"
+      ],
+      "session": "session_016DRgw1FNx9124i193wbciS",
+      "configuredModel": "claude-opus-5-5",
+      "createdAt": "2026-09-30T13:34:04Z",
+      "startCommit": "9c17936",
+      "prompt": "prompts/control-04.txt",
+      "note": "retry of control-04-attempt-1 with the identical prompt in a fresh session",
+      "status": "blocked-abandoned",
+      "blockedAt": "2026-09-30T13:46:53Z",
+      "blockNote": "pushed 881a34d, then stopped for a permission prompt on `./ros work *` commands (auto mode); needs the owner to approve in the session UI. Attempt 1 most likely stopped at the same prompt (it ended idle without a summary).",
+      "platformUsageAtBlock": {
+        "cost_usd": 1.9885424,
+        "output_tokens": 26866,
+        "cache_read_tokens": 3017392
+      },
+      "abandonedAt": "2026-09-30T15:54:00Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 1.9885424,
+        "input_tokens": 62,
+        "output_tokens": 26866,
+        "cache_read_tokens": 3017392,
+        "cache_write_tokens": 105937,
+        "context_used_tokens": 143277,
+        "last_served_model": "claude-opus-5-5"
+      },
+      "abandonNote": "never unblocked in its own UI; its pushed commit 881a34d stays on the branch and is carried into attempt 3"
+    },
+    {
+      "label": "control-04",
+      "arm": "control",
+      "items": [
+        "PRAXIS-GROUP-04"
+      ],
+      "session": "session_01NprWNWjMYoEj4NpDRf9Ui6",
+      "configuredModel": "claude-opus-5-5",
+      "createdAt": "2026-09-30T15:54:07Z",
+      "startCommit": "881a34d",
+      "prompt": "prompts/control-04.txt plus harness line 5 (fact about 881a34d and the owner's approval)",
+      "extraAllowedTools": [
+        "Bash(./ros work:*)",
+        "Bash(./ros:*)"
+      ],
+      "deviation": "the owner approved `./ros work` commands in the orchestrator session at ~15:53Z; approval carried into attempt 3 via extra_allowed_tools and one factual harness line. Control-01..03 and the grouped arm did not need this.",
+      "finishedAt": "2026-09-30T16:01:32Z",
+      "status": "completed",
+      "headAfter": "8c175d5",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 0.7946544,
+        "input_tokens": 32,
+        "output_tokens": 4732,
+        "cache_read_tokens": 1137632,
+        "cache_write_tokens": 59045,
+        "context_used_tokens": 86260,
+        "last_served_model": "claude-opus-5-5"
+      },
+      "metricsNote": "metrics/control-04.json covers attempt 3 only (bookkeeping); the implementation happened in attempt 2. Item 04's control cost is the sum of attempts 1-3."
+    },
+    {
+      "label": "control-05",
+      "arm": "control",
+      "items": [
+        "PRAXIS-GROUP-05"
+      ],
+      "session": "session_01TwUBFD2ZouxsbsYcrFrcrJ",
+      "configuredModel": "claude-opus-5-5",
+      "createdAt": "2026-09-30T16:12:29Z",
+      "startCommit": "8c175d5",
+      "prompt": "prompts/control-05.txt plus harness line 5 (owner approved ./ros work)",
+      "extraAllowedTools": [
+        "Bash(./ros work:*)",
+        "Bash(./ros:*)"
+      ],
+      "finishedAt": "2026-09-30T16:42:39Z",
+      "status": "completed",
+      "headAfter": "8ea9be2",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 6.939496,
+        "input_tokens": 190,
+        "output_tokens": 78993,
+        "cache_read_tokens": 17402620,
+        "cache_write_tokens": 234794,
+        "context_used_tokens": 262775,
+        "last_served_model": "claude-opus-5-5",
+        "worker_epoch": 2
+      },
+      "note": "merged origin/experiment/a021-control at 16:30 (1aa11fb) and reworked member resolution against earlier items' stored declarations; metrics file written before its last two commits"
+    },
+    {
+      "label": "evaluator",
+      "arm": null,
+      "session": "session_01FjbtwyN1sUhmDHcgyBNNnn",
+      "configuredModel": "claude-opus-5-5",
+      "createdAt": "2026-09-30T16:52:15Z",
+      "startCommit": "8b4ffa3",
+      "prompt": "prompts/evaluator.txt",
+      "blindBranches": {
+        "arm-x": "9c978cd",
+        "arm-y": "5d100ed"
+      },
+      "note": "mapping drawn with secrets.randbelow(2), sealed in the orchestrator scratchpad, committed after the evaluation",
+      "finishedAt": "2026-09-30T17:13:27Z",
+      "status": "completed",
+      "output": "experiment/a021-evaluation@758724b",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 5.418082,
+        "input_tokens": 1048,
+        "output_tokens": 45265,
+        "cache_read_tokens": 13017465,
+        "cache_write_tokens": 238496,
+        "context_used_tokens": 266477,
+        "last_served_model": "claude-opus-5-5"
+      }
+    }
+  ],
+  "deviations": [
+    "control-04 took three sessions: attempt 1 ended idle without pushing, attempt 2 pushed 881a34d then blocked on a `./ros work` permission prompt, attempt 3 started with the owner's approval pre-granted. All three sessions' costs count toward the control arm.",
+    "control-05's session was created from experiment/a021-control (head 8c175d5) but its first commit 8d435cb has parent 8b4ffa3, the arm start: the session began without items 01-04, later merged the branch (1aa11fb, conflict in Program.fs) and reconciled (2bb713f). Cause unknown (platform checkout); items 02-04 started from the correct heads."
+  ]
+}

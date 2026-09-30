@@ -172,6 +172,7 @@ module PlanningJson =
         record
             [ "taskClass", text value.TaskClass
               "samples", integer value.SampleCount
+              "sessionMeasured", integer value.SessionMeasured
               "lowerMs", long value.Lower
               "medianMs", long value.Median
               "upperMs", long value.Upper
@@ -194,6 +195,14 @@ module PlanningJson =
               "durationSamples", integer value.DurationSamples
               "durations", value.Distributions |> List.map distribution |> array
               "cost", costSummary value.Cost
+              "contextOverhead",
+              record
+                  [ "sampledSessions", integer value.ContextOverhead.SampledSessions
+                    "coldStart", duration value.ContextOverhead.ColdStart
+                    "medianGovernanceReads", value.ContextOverhead.MedianGovernanceReads |> Option.map integer |> Option.toObj
+                    "medianRepeatedReads", value.ContextOverhead.MedianRepeatedReads |> Option.map integer |> Option.toObj
+                    "sufficient", boolean value.ContextOverhead.Sufficient
+                    "statement", text value.ContextOverhead.Statement ]
               "segments",
               value.Segments
               |> List.map (fun segment ->
@@ -695,6 +704,28 @@ module PlanningJson =
             at 0, at 1
         | _ -> fail $"{name} must be [lower, upper]"
 
+    /// One `grouping.groups` entry. Stored declarations
+    /// (`.ros/work/groups.json`) are read by this same function, so the
+    /// planner treats a stored group exactly as a configured one.
+    let private readDeclaredGroup (group: JsonObject) : DeclaredGroup =
+        let optionalTexts name = if isNull (field group name) then [] else readTexts group name
+
+        { Id = readText group "id"
+          Members = readTexts group "members"
+          Kind = readOptionalText group "kind" |> Option.map (parsed "group kind" GroupKind.tryParse)
+          Origin = readOptionalText group "origin" |> Option.map (parsed "group origin" GroupOrigin.tryParse) |> Option.defaultValue GroupOrigin.HumanDeclared
+          SharedContext = optionalTexts "sharedContext"
+          ExecutionRepository = readOptionalText group "executionRepository"
+          CrossRepository = if isNull (field group "crossRepository") then false else readBool group "crossRepository"
+          ArchitectureNotes = optionalTexts "architectureNotes" }
+
+    /// Parses one declared group from its `grouping.groups` object form.
+    let parseDeclaredGroup (node: JsonObject) : Result<DeclaredGroup, string> =
+        try
+            Ok(readDeclaredGroup node)
+        with Malformed message ->
+            Error message
+
     /// The optional planner configuration file. Every field is optional and
     /// defaults to `PlannerConfiguration.defaults`.
     let parseConfiguration (json: string) : Result<PlannerConfiguration, string> =
@@ -750,17 +781,7 @@ module PlanningJson =
                         |> Option.map (parsed "affinity" ContextAffinity.tryParse)
                         |> Option.defaultValue fallback.MinimumAffinity
                       Groups =
-                        optionalList "groups" (fun group ->
-                            let optionalTexts name = if isNull (field group name) then [] else readTexts group name
-
-                            { Id = readText group "id"
-                              Members = readTexts group "members"
-                              Kind = readOptionalText group "kind" |> Option.map (parsed "group kind" GroupKind.tryParse)
-                              Origin = readOptionalText group "origin" |> Option.map (parsed "group origin" GroupOrigin.tryParse) |> Option.defaultValue GroupOrigin.HumanDeclared
-                              SharedContext = optionalTexts "sharedContext"
-                              ExecutionRepository = readOptionalText group "executionRepository"
-                              CrossRepository = if isNull (field group "crossRepository") then false else readBool group "crossRepository"
-                              ArchitectureNotes = optionalTexts "architectureNotes" })
+                        optionalList "groups" readDeclaredGroup
                       Architecture =
                         optionalList "architecture" (fun decision ->
                             { Decision = readText decision "decision"

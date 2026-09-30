@@ -5,7 +5,7 @@ open System.Diagnostics
 open System.IO
 open System.Text.Json.Nodes
 
-/// Drives the real `ros-fs` binary (the same CLI `./ros` and `praxis` run)
+/// Drives the real `praxis` binary (the same CLI `./praxis` and its `./ros` alias run)
 /// against fixture repositories, with identity supplied only through the
 /// documented environment variables.
 module PraxisCli =
@@ -52,7 +52,7 @@ module PraxisCli =
           Runtime = runtime
           Session = session }
 
-    let private cli = Path.Combine(AppContext.BaseDirectory, "ros-fs.dll")
+    let private cli = Path.Combine(AppContext.BaseDirectory, "praxis.dll")
 
     let now () = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
 

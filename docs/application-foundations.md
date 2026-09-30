@@ -11,8 +11,8 @@ is currently missing.
 Run:
 
 ```bash
-./ros foundations verify
-./ros foundations verify --json
+./praxis foundations verify
+./praxis foundations verify --json
 ```
 
 Exit code `0` means every required capability passed. Exit code `3` means

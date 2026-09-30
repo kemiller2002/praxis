@@ -32,7 +32,7 @@ No stack-specific standard is canonical in Phase 1 because the repository contai
 - Avoid speculative abstractions. Prefer code whose behavior can be reasoned about locally.
 - Comments explain intent, constraints, or why—not syntax already visible.
 - Validate inputs and failure paths at trust boundaries; choose safe defaults.
-- Instrument development through the ROS execution contract. Prefer Git, compiler, test, build, static-analysis, and runtime outputs over agent estimates; preserve provenance and declare attribution gaps caused by dirty baselines or unavailable runtime APIs.
+- Instrument development through the Praxis execution contract. Prefer Git, compiler, test, build, static-analysis, and runtime outputs over agent estimates; preserve provenance and declare attribution gaps caused by dirty baselines or unavailable runtime APIs.
 
 ## Architecture Decisions
 

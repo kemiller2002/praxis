@@ -1,8 +1,10 @@
 name: ros-fs release assets
 
 # The self-contained `ros-fs-<rid>` binaries and `checksums.txt` that a
-# scaffolded project's `./ros` launcher (starter/greenfield/tools/
-# ros_fs_launcher.mjs) downloads for its pinned version. They used to be
+# project scaffolded before the Praxis rename downloads through its `./ros`
+# launcher (tools/ros_fs_launcher.mjs) for its pinned version. From the
+# rename on, the binary is `praxis`; it ships here under the legacy name so
+# those projects keep working (DF-ROS-2026-A050). They used to be
 # built only by the npm publish workflow; npm distribution is retired
 # (DF-ROS-2026-A044), so native-release.yml calls this for every release,
 # and it can be dispatched by hand to backfill a release that lacks them.
@@ -74,15 +76,20 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          version="$(node -p "require('./package.json').version")"
-          [ "v${version}" = "$TAG" ] || { echo "::error::$TAG checks out package.json version $version"; exit 1; }
+          # A tag from before the rename declares its version in package.json;
+          # later tags declare it in release.json. No Node is needed either way.
+          if [ -f release.json ]; then source_file=release.json; else source_file=package.json; fi
+          version="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["version"])' "$source_file")"
+          [ "v${version}" = "$TAG" ] || { echo "::error::$TAG checks out $source_file version $version"; exit 1; }
           mkdir -p dist/ros-fs
           for rid in linux-x64 linux-arm64 osx-x64 osx-arm64 win-x64; do
             dotnet publish src/Ros.Cli/Ros.Cli.fsproj -c Release -r "$rid" --self-contained true \
               -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o "dist/publish/$rid"
+            # The assembly is `praxis` from the rename on, `ros-fs` before it.
+            if [ -f "dist/publish/$rid/praxis" ] || [ -f "dist/publish/$rid/praxis.exe" ]; then binary=praxis; else binary=ros-fs; fi
             case "$rid" in
-              win-x64) cp "dist/publish/$rid/ros-fs.exe" "dist/ros-fs/ros-fs-$rid.exe" ;;
-              *) cp "dist/publish/$rid/ros-fs" "dist/ros-fs/ros-fs-$rid" ;;
+              win-x64) cp "dist/publish/$rid/$binary.exe" "dist/ros-fs/ros-fs-$rid.exe" ;;
+              *) cp "dist/publish/$rid/$binary" "dist/ros-fs/ros-fs-$rid" ;;
             esac
           done
           (cd dist/ros-fs && sha256sum ros-fs-* > checksums.txt && cat checksums.txt)
