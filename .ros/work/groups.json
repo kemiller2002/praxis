@@ -45,7 +45,79 @@
           "reason": "EX-ROS-2026-A021 cohort, as declared in the baseline planner configuration"
         }
       ],
-      "checkpoints": []
+      "checkpoints": [
+        {
+          "id": "gcp-b991e0a02747141789fb0150",
+          "recordedAt": "2026-09-30T12:50:54.000Z",
+          "actor": {
+            "kind": "agent",
+            "id": "anthropic/claude-code",
+            "provider": "anthropic",
+            "model": "unknown",
+            "runtime": "claude-code"
+          },
+          "summary": "All five commands implemented on one store, one join rule, one progress classification and the shared checkpoint verification; each member checkpointed on its own",
+          "nextAction": "Complete PRAXIS-GROUP-05; then evaluate EX-ROS-2026-A021 (do not merge before evaluation)",
+          "decisions": [
+            "D1 store .ros/work/groups.json with planner grouping.groups field names",
+            "D2 one join rule (recorded, non-terminal, same repository unless cross-repository) at join time only",
+            "D4 every mutation appends a history entry with the resolved actor",
+            "D5 last-member removal only with --allow-empty, recorded",
+            "D6 group checkpoint = shared Git verification + references to members' own checkpoints; no paths or executions"
+          ],
+          "members": {
+            "completed": [
+              "PRAXIS-GROUP-01",
+              "PRAXIS-GROUP-02",
+              "PRAXIS-GROUP-03",
+              "PRAXIS-GROUP-04"
+            ],
+            "active": [
+              "PRAXIS-GROUP-05"
+            ],
+            "blocked": [],
+            "remaining": [],
+            "abandoned": []
+          },
+          "memberCheckpoints": [
+            {
+              "workItemId": "PRAXIS-GROUP-01",
+              "checkpointId": "8f411996abc038771ece0c7e",
+              "commit": "7bedf17ac691280375c94a593c4253088c25aae9"
+            },
+            {
+              "workItemId": "PRAXIS-GROUP-02",
+              "checkpointId": "457cb987a95cdcfb6cc434c9",
+              "commit": "b49eff2919993626f738b047e7a44ab65291edd4"
+            },
+            {
+              "workItemId": "PRAXIS-GROUP-03",
+              "checkpointId": "dd59ecc9fc28cc586f7e0ce5",
+              "commit": "a255fcf159cf93438887de4419457369ea20d080"
+            },
+            {
+              "workItemId": "PRAXIS-GROUP-04",
+              "checkpointId": "177a25d8272f7962a652e398",
+              "commit": "12a215cb3bf7ee2d0a08626ba2b116f6900c2ddf"
+            }
+          ],
+          "location": {
+            "repository": "repository-operating-system",
+            "branch": "experiment/a021-grouped",
+            "commit": "dbbe65b70be3c1d74e0decde66f92dc1c5415a31",
+            "remote": {
+              "name": "origin",
+              "url": "https://github.com/kemiller2002/praxis"
+            },
+            "remoteBranch": "experiment/a021-grouped",
+            "remoteCommit": "dbbe65b70be3c1d74e0decde66f92dc1c5415a31"
+          },
+          "verification": {
+            "status": "verified",
+            "mechanism": "git-remote-observation"
+          }
+        }
+      ]
     }
   ]
 }
