@@ -4870,11 +4870,57 @@
       },
       "completedAt": "2026-09-30T15:48:25.000Z",
       "conclusion": "work group show prints a declared group's members with their own recorded and planning states, partial progress, blocked members and who they gate; read-only; unknown group exits 1."
+    },
+    {
+      "id": "PRAXIS-GROUP-03",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T15:54:03.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20260930T154851616Z-b21b4af9"
+      ],
+      "latestCheckpoint": {
+        "id": "ebb9f20df90a9dafa56627aa",
+        "recordedAt": "2026-09-30T15:54:02.000Z",
+        "executionId": "EXE-20260930T154851616Z-b21b4af9",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-r2-grouped",
+        "commit": "d110e5825801e946ac3020e90f0902db08975972",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-r2-grouped",
+        "remoteCommit": "d110e5825801e946ac3020e90f0902db08975972",
+        "summary": "Milestone: work group add (d110e58). Completed members: PRAXIS-GROUP-01, PRAXIS-GROUP-02. Remaining: 03 (completion), 04, 05. Shared decisions: D3 admission rule reused unchanged; membership-change pipeline (GroupMembershipChange, changeGroup, CLI membershipChange) built for add and reusable by remove; validate replays history. 811/811 F# tests pass. Branch experiment/a021-r2-grouped.",
+        "nextAction": "Complete PRAXIS-GROUP-03; start PRAXIS-GROUP-04 (work group remove on the same pipeline)",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T15:54:03.000Z",
+      "conclusion": "work group add adds one member under the shared admission rule, refuses unknown/terminal/present/foreign-repository items, and records who added it."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T15:48:25.000Z",
+  "updatedAt": "2026-09-30T15:54:03.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
