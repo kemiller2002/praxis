@@ -132,7 +132,7 @@
 | PRAXIS-SITE-27 | Align Pages deployment workflow with echelon-foundry deploy-pages.yml | complete | gh-84, public-site | medium |
 | PRAXIS-STATE-MERGE-01 | Parallel work items conflict in single-document Praxis state files | captured | work-protocol | high |
 | PRAXIS-TELEMETRY-CLASSIFY-VOCAB | telemetry classify accepts classifications that validate rejects | captured | telemetry | medium |
-| PRAXIS-TELEMETRY-COST-UNIT | telemetry record accepts a cost metric with a non-'currency' unit (e.g. --unit USD) that validate then rejects | active | telemetry, bug | medium |
+| PRAXIS-TELEMETRY-COST-UNIT | telemetry record accepts a cost metric with a non-'currency' unit (e.g. --unit USD) that validate then rejects | complete | telemetry, bug | medium |
 | PRAXIS-WORK-ABANDON-01 | work abandon: cancel live (ready/active/blocked) work items truthfully | complete | work-protocol, cli | high |
 | PROJECT-ADMIN-HUB | PROJECT-ADMIN-HUB | complete |  |  |
 | RELEASE-3-5-0 | Release Praxis 3.5.0 with remote execution (GH-90) | complete |  | high |

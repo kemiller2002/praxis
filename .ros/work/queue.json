@@ -3619,10 +3619,10 @@
         "bug"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T19:40:19.769Z",
-      "updatedAt": "2026-09-30T22:26:09.000Z",
+      "updatedAt": "2026-09-30T23:11:45.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
