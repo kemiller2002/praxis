@@ -1430,5 +1430,103 @@
     "title": "Work-group planner baseline on Praxis: no pre-existing cohort, a captured phase-two cohort, and frozen predictions for EX-ROS-2026-A021",
     "updated": "2026-09-30",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-30",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A060",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A060--a021-blind-evaluation-kit.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T144206630Z-1e149d71": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T14:42:12.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-A021-EVAL-KIT: blind evaluation kit for EX-ROS-2026-A021"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "research/experiments/EX-ROS-2026-A021-evaluation-kit/evaluator-prompt.txt",
+      "research/experiments/EX-ROS-2026-A021-evaluation-kit/prepare-blind-bundle.sh"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "EX-ROS-2026-A021"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "experiment",
+      "evaluation",
+      "blinding"
+    ],
+    "title": "EX-ROS-2026-A021 blind evaluation kit: method, owner procedure and tooling validation",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-30",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A061",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A061--a021-control-02-session-record.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T144206630Z-1e149d71": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T14:42:13.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-A021-EVAL-KIT: blind evaluation kit for EX-ROS-2026-A021"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "research/experiments/EX-ROS-2026-A021-evaluation-kit/evaluator-prompt.txt",
+      "research/experiments/EX-ROS-2026-A021-evaluation-kit/prepare-blind-bundle.sh"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "EX-ROS-2026-A021"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "experiment",
+      "control-arm",
+      "deviation"
+    ],
+    "title": "EX-ROS-2026-A021 control arm, PRAXIS-GROUP-02: session record and stale-clone deviation (names an arm; read only after unblinding)",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
   }
 ]
