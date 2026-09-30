@@ -71,3 +71,60 @@ module WorkGroupOperations =
             | Error rejections -> Ok(MemberRemovalOutcome.Rejected rejections)
             | Ok group when dryRun -> Ok(MemberRemovalOutcome.Planned group)
             | Ok group -> GroupDeclaration.replace stored group |> port.Write |> Result.map (fun () -> MemberRemovalOutcome.Recorded group))
+
+/// What `work group checkpoint` reads and writes. The only write appends to
+/// the group checkpoints; members' own checkpoints, lifecycle, attribution
+/// and telemetry are read, never written (PRX-GRP-043, PRX-GRP-044).
+type GroupCheckpointPort =
+    { Stored: unit -> Result<StoredGroup list, string>
+      Lifecycle: unit -> Result<Map<string, string>, string>
+      /// Each work item's own latest durable checkpoint.
+      MemberCheckpoints: unit -> Result<Map<string, MemberCheckpointReference>, string>
+      /// Whether one of each named work item's active executions is this
+      /// process's own.
+      Executions: string list -> Map<string, Ros.Domain.Work.ExecutionObservation>
+      History: unit -> Result<GroupCheckpoint list, string>
+      /// `work checkpoint`'s durability verdict on HEAD now, for a repository.
+      Durability: string -> Result<Ros.Domain.Work.GitDurableLocation, Ros.Domain.Work.CheckpointRejection list>
+      Write: GroupCheckpoint list -> Result<unit, string> }
+
+[<RequireQualifiedAccess>]
+type GroupCheckpointOutcome =
+    | Rejected of GroupCheckpointRejection list
+    | Planned of GroupCheckpoint
+    | Recorded of GroupCheckpoint
+
+[<RequireQualifiedAccess>]
+module GroupCheckpointOperations =
+    let private observe (port: GroupCheckpointPort) (request: GroupCheckpointRequest) =
+        port.Stored()
+        |> Result.bind (fun stored ->
+            port.Lifecycle()
+            |> Result.bind (fun lifecycle ->
+                port.MemberCheckpoints()
+                |> Result.bind (fun memberCheckpoints ->
+                    port.History()
+                    |> Result.map (fun history ->
+                        let active =
+                            stored
+                            |> List.tryFind (fun group -> group.Declaration.Id = request.GroupId)
+                            |> Option.map (fun group -> (GroupCheckpoints.progress lifecycle group.Declaration.Members).Active)
+                            |> Option.defaultValue []
+
+                        history,
+                        ({ Stored = stored
+                           Lifecycle = lifecycle
+                           MemberCheckpoints = memberCheckpoints
+                           Executions = port.Executions active
+                           History = history
+                           Durability = port.Durability request.Repository }
+                        : GroupCheckpointObservations)))))
+
+    /// Decides, and unless `dryRun` records, one group checkpoint.
+    let checkpoint (port: GroupCheckpointPort) (dryRun: bool) (request: GroupCheckpointRequest) : Result<GroupCheckpointOutcome, string> =
+        observe port request
+        |> Result.bind (fun (history, observations) ->
+            match GroupCheckpoints.decide observations request with
+            | Error rejections -> Ok(GroupCheckpointOutcome.Rejected rejections)
+            | Ok checkpoint when dryRun -> Ok(GroupCheckpointOutcome.Planned checkpoint)
+            | Ok checkpoint -> history @ [ checkpoint ] |> port.Write |> Result.map (fun () -> GroupCheckpointOutcome.Recorded checkpoint))

@@ -2084,7 +2084,9 @@ let private computeUnifiedFindings root : Result<ArtifactFinding list, string> =
                     FileTelemetryUsageRepository.stepReferenceFindings root |> List.map (fun (path, field, message) -> convert path field message)
 
                 let workGroupFindings =
-                    Ros.Infrastructure.Planning.FileWorkGroupRepository.validationFindings root |> List.map (fun (path, field, message) -> convert path field message)
+                    Ros.Infrastructure.Planning.FileWorkGroupRepository.validationFindings root
+                    @ Ros.Infrastructure.Planning.FileGroupCheckpointRepository.validationFindings root
+                    |> List.map (fun (path, field, message) -> convert path field message)
 
                 match ProvenanceCommands.findingsOf FindingSeverity.Error root with
                 | Error message -> Error message

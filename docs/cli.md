@@ -379,6 +379,46 @@ emits a `praxis.work-groups/1.0.0` document (`kind`
 `work-group-member-removed`, `work-group-member-removal-planned` or
 `work-group-rejected`).
 
+### `work group checkpoint`
+
+```
+ros work group checkpoint --id GROUP-ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT [--decision TEXT]* [--dry-run] [--json] [IDENTITY]
+```
+
+Records a durable **group-level** checkpoint of a group stored by `work group
+create` (PRX-GRP-044, phase two) in `.ros/work/group-checkpoints.json`: the
+group ID, its active, completed, abandoned and remaining members (each by its
+own lifecycle state; abandoned members are never counted as completed), the
+shared architectural decisions (`--decision`, repeatable), the branch and
+commit, the milestone (`--summary`) and the next action. Checkpoint IDs are
+`GROUP-ID/GCP-NNN`, sequential per group.
+
+It requires the same durable-checkpoint verification as `work checkpoint`
+(the same decision over the same Git port): HEAD on a named branch with an
+upstream, the remote branch head read from the remote itself equal to local
+HEAD, and no meaningful uncommitted changes, so it refuses with `work
+checkpoint`'s own codes (`local-ahead`, `uncommitted-changes`, and so on).
+Like `work checkpoint`, it also requires active work: at least one member
+must be active and this process must hold its own active execution of one
+(`no-active-member`, `missing-execution`). Blank text and a malformed
+`--occurred-at` exit `2`; every other refusal exits `1`; nothing is recorded
+either way.
+
+It **references** each member's own latest checkpoint (`memberCheckpoints`:
+member, checkpoint ID, execution, commit) and lists the members with none;
+it never records, copies or replaces a member's checkpoint, changes no
+member's lifecycle state, events, context, evidence or telemetry, and claims
+no changed paths for any member (PRX-GRP-043): each member still
+checkpoints and completes on its own. `praxis validate` reports a group
+checkpoint whose group is not stored, whose ID is out of sequence, or whose
+reference names a checkpoint that is not that member's own. `--dry-run`
+verifies without recording; `--json` emits a
+`praxis.work-group-checkpoints/1.0.0` document (`kind`
+`work-group-checkpoint-recorded`, `work-group-checkpoint-planned` or
+`work-group-checkpoint-rejected`, with each rejection's `code`, `message`
+and `remedy`). Commit and push the new Praxis state afterwards, as after
+`work checkpoint`.
+
 ### `work group show`
 
 ```

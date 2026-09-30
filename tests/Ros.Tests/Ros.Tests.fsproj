@@ -83,6 +83,7 @@
     <Compile Include="PlanningCliTests.fs" />
     <Compile Include="GroupingTests.fs" />
     <Compile Include="WorkGroupTests.fs" />
+    <Compile Include="GroupCheckpointTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

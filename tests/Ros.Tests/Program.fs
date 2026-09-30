@@ -72,4 +72,5 @@ let main _ =
     @ PlanningCliTests.tests
     @ GroupingTests.tests
     @ WorkGroupTests.tests
+    @ GroupCheckpointTests.tests
     |> TestRunner.run

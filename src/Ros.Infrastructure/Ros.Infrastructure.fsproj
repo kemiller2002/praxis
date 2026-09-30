@@ -44,6 +44,7 @@
     <Compile Include="Planning/FileWorkGroupStore.fs" />
     <Compile Include="Planning/FilePlanningRepository.fs" />
     <Compile Include="Planning/FileWorkGroupRepository.fs" />
+    <Compile Include="Planning/FileGroupCheckpointRepository.fs" />
   </ItemGroup>
 
   <!-- The scaffold this CLI installs, compiled into the assembly so a released

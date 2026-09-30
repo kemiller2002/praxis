@@ -25,6 +25,7 @@ praxis plan compare  --groups [--max-concurrency N]    grouped versus independen
 praxis work group show GROUP-ID [--json]               one declared group: member states, progress, blocked members
 praxis work group add --id GROUP-ID --member ID ...    add one member to a stored group (records who added it)
 praxis work group remove --id GROUP-ID --member ID ... remove one member from a stored group (records who removed it)
+praxis work group checkpoint --id GROUP-ID ...        durable group-level checkpoint over the members' own checkpoints
 ```
 
 Common options: `--observations FILE` (external CI/GitHub evidence, below),
@@ -306,6 +307,17 @@ is) or lack their time or actor; a member
 that completed after the group was declared is valid (partial completion,
 PRX-GRP-042). Reading them keeps every `plan` command read-only.
 
+**Group checkpoints** (PRX-GRP-044, phase two). `praxis work group
+checkpoint` records a durable group-level checkpoint in
+`.ros/work/group-checkpoints.json` (`praxis.work-group-checkpoints/1.0.0`):
+group ID, active, completed, abandoned and remaining members, shared
+decisions, branch and commit, milestone and next action. It is accepted only
+under `work checkpoint`'s own durability verification and only while a
+member is active under the checkpointing executor's own execution. It
+references each member's own latest checkpoint and never records, replaces
+or claims one, so members keep their own checkpoint history and attribution
+(PRX-GRP-043). See `docs/cli.md`.
+
 An item whose description says "External repository" and that has no
 `executionRepositories` entry is never grouped into this checkout.
 
@@ -390,12 +402,12 @@ No external dependency was added (PRX-PLAN-004).
 | GRP-010..011 | Met with the typed model in `Grouping`; recommended IDs stable for identical input only. |
 | GRP-020..022 | Met for tags, declared paths, branches, dependencies, requirement/decision references, declarations, ID families and titles. Historical co-change, test overlap and deployment boundaries are not observable yet. |
 | GRP-030..031 | Met (tests 2, 18). |
-| GRP-040, 044 | Guidance for executors; `EX-ROS-2026-A021` requires the group analysis. Group checkpoints and durable notes are phase two (`PRAXIS-GROUP-05`). |
+| GRP-040, 044 | Guidance for executors; `EX-ROS-2026-A021` requires the group analysis. Group checkpoints with shared decisions are recorded by `work group checkpoint` (`PRAXIS-GROUP-05`, phase two), verified as `work checkpoint` verifies. |
 | GRP-041..043 | Met by construction (tests 9, 10); per-item attribution in a grouped execution is enforced by the existing work protocol. |
 | GRP-050..052 | Met for dependencies and cycles (dependency test) and repositories (tests 5, 5b); cross-repository orchestration is future work. |
 | GRP-060..063 | Met; context cost is counted, not priced (unmeasured). |
 | GRP-070..072 | Met. |
-| GRP-073 | Declarations from configuration and stored by `work group create` (`PRAXIS-GROUP-01`); `work group show` (`PRAXIS-GROUP-02`) shows one declared group read-only; `work group add` (`PRAXIS-GROUP-03`) adds one member to a stored group; `work group remove` (`PRAXIS-GROUP-04`) removes one. The remaining command is captured as `PRAXIS-GROUP-05`, deferred. |
+| GRP-073 | Declarations from configuration and stored by `work group create` (`PRAXIS-GROUP-01`); `work group show` (`PRAXIS-GROUP-02`) shows one declared group read-only; `work group add` (`PRAXIS-GROUP-03`) adds one member to a stored group; `work group remove` (`PRAXIS-GROUP-04`) removes one; `work group checkpoint` (`PRAXIS-GROUP-05`) records a durable group-level checkpoint (GRP-044) that references members' own checkpoints and never replaces them (GRP-043). |
 | GRP-074 | Size and context-pressure splits and architecture merges met (tests 18, 19, merge test); splitting by independent chain or external blockage is not implemented. |
 | GRP-075 | Met (test 15). |
 | GRP-080..088 | Baseline, cohort, protocol and predictions frozen (`EV-ROS-2026-A059`, `EX-ROS-2026-A021`); the arms have not run. |
