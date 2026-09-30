@@ -4901,18 +4901,48 @@
     {
       "id": "PRAXIS-GROUP-04",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T12:27:51.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T12:33:20.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T122752409Z-13cdea5b"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "177a25d8272f7962a652e398",
+        "recordedAt": "2026-09-30T12:33:17.000Z",
+        "executionId": "EXE-20260930T122752409Z-13cdea5b",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-grouped",
+        "commit": "12a215cb3bf7ee2d0a08626ba2b116f6900c2ddf",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-grouped",
+        "remoteCommit": "12a215cb3bf7ee2d0a08626ba2b116f6900c2ddf",
+        "summary": "work group remove implemented and tested (explicit empty removal). Completed members: PRAXIS-GROUP-01, -02, -03; PRAXIS-GROUP-04 completing now. Remaining: PRAXIS-GROUP-05",
+        "nextAction": "Complete PRAXIS-GROUP-04, then implement work group checkpoint (PRAXIS-GROUP-05) on the shared Git verification",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T12:33:20.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T12:27:51.000Z",
+  "updatedAt": "2026-09-30T12:33:20.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
