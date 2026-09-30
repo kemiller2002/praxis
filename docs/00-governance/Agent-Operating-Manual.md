@@ -34,6 +34,7 @@ tags: [governance, agents, operations]
 9. Finalize execution telemetry, preserving runtime limitations, deterministic metrics, scope changes, and evidence links.
 10. Update affected code, documentation, decisions, journals, packages, and registries, attributing every canonical record you create or materially change with `./ros provenance record`.
 11. Leave a self-contained handoff, and make it durable: commit and push the work, record a durable checkpoint, and push the Praxis state.
+12. When presenting a branch for integration, evaluate merge readiness against the exact final candidate. Intermediate red CI is allowed during active work; merge-ready claims are not.
 
 ## Operating Modes
 
@@ -133,6 +134,33 @@ An executor session is disposable; repository state and Praxis state are the con
 - Blocking after work no checkpoint covers requires a checkpoint first, or a truthful `--unrecoverable-reason` stating why the latest local state cannot be made remotely recoverable.
 - A successor takes over with `./ros work continue` under its own identity, in a clean checkout that contains the checkpoint. The successor gets a new execution and the predecessor is recorded as interrupted. Never reuse, edit, or claim a predecessor's execution. Never discard someone's uncommitted work to make recovery work.
 - New observability is effective-current: Praxis preserves truthful historical gaps rather than restarting work or fabricating telemetry (`DF-ROS-2026-A043`). Adopt step telemetry at your next material slice without restarting the execution or work item. Usage recorded before adoption stays **execution-level**; only later usage is **step-level**; the earlier period's step attribution is **unavailable**, not zero. Never invent earlier steps or split earlier usage among steps.
+
+## CI and Merge Readiness
+
+CI health is an **integration-candidate property**, not an invariant of every
+in-progress commit (`DF-ROS-2026-A048`,
+`requirements/MERGE-READINESS.md`).
+
+- An active development branch may have failing CI. Keep failures visible,
+  state what is known and unknown, and continue useful bounded work when the
+  failure is expected or belongs to an unfinished slice.
+- Do not add `continue-on-error`, waive a required check, or relabel a failure
+  success merely to make an intermediate commit green.
+- A durable checkpoint answers whether another executor can recover the work.
+  It does not answer whether the branch may merge. A work-item completion
+  answers whether that item met its acceptance contract. It also does not
+  answer whether the branch may merge.
+- Merge readiness is evaluated for one exact candidate commit. Every
+  configured required check must have successful evidence for that same
+  commit. Failed, pending, cancelled, skipped, missing, unknown, duplicated
+  or stale required evidence blocks readiness.
+- Any meaningful commit after a successful readiness evaluation invalidates
+  that evaluation. Run the final checks again against the new candidate.
+- Optional checks are optional only when repository policy declares them so.
+  An agent explanation cannot override the merge gate.
+- Prefer useful work while normal CI batching occurs. At the final candidate
+  boundary, inspect the authoritative results and repair every required
+  failure before calling the candidate merge-ready.
 
 ## Artifact Thresholds
 
