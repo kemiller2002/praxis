@@ -1,0 +1,139 @@
+{
+  "schema": "ex-ros-2026-a021-r2.grouped-metrics/1",
+  "experiment": "EX-ROS-2026-A021-R2",
+  "arm": "grouped",
+  "branch": "experiment/a021-r2-grouped",
+  "baseline": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+  "snapshot": "taken with PRAXIS-GROUP-05 still active, before its checkpoint/completion and the final Praxis-state commit; those last steps (a few minutes, 2-3 commits) are not in these numbers",
+  "sessionId": {
+    "ccrSession": "session_01FtMsxoVE5eL6Zkz2gsLNgD",
+    "transcriptSession": "272cb45c-8469-5697-a0cd-38010c1069e2"
+  },
+  "model": {
+    "configured": "claude-opus-5-5",
+    "sessionContextModel": "claude-opus-5-5",
+    "lastServedModel": "claude-opus-5-5",
+    "transcriptModels": [
+      "claude-opus-5-5"
+    ],
+    "source": "get_session (session_context.model, external_metadata.last_served_model) at session start; transcript message.model"
+  },
+  "startedAt": "2026-09-30T15:23:02.017000+00:00",
+  "endedAt": "2026-09-30T16:17:26.165000+00:00",
+  "wallClockMs": 3264148,
+  "timeToFirstProductionCodeMutationMs": 562998,
+  "modelRequests": 126,
+  "tokens": {
+    "input": 252,
+    "output": 127220,
+    "cacheRead": 26221290,
+    "cacheCreated": 306752
+  },
+  "costUsd": null,
+  "costNote": "unknown: the transcript carries no cost-state record",
+  "toolCalls": 134,
+  "toolCallsByName": {
+    "Bash": 124,
+    "Edit": 3,
+    "Write": 6,
+    "mcp__bf7c680d-5fdc-5ef4-b4a0-abadb619bf0a__get_session": 1
+  },
+  "toolErrors": 1,
+  "fileReads": 69,
+  "distinctFilesRead": 47,
+  "repeatedFileReads": {
+    "/tmp/claude-0/-home-user-praxis/272cb45c-8469-5697-a0cd-38010c1069e2/tasks/b32dtkbc2.output": 2,
+    "/tmp/claude-0/npmtest.log": 2,
+    "/tmp/claude-0/testfs.log": 2,
+    "AGENTS.md": 2,
+    "docs/planning.md": 3,
+    "requirements/PLANNING-WORK-GROUPS.md": 2,
+    "research/experiments/EX-ROS-2026-A021-harness/session_metrics.py": 2,
+    "src/Ros.Application/Work/Checkpoint.fs": 2,
+    "src/Ros.Cli/CheckpointCommands.fs": 2,
+    "src/Ros.Cli/PlanCommands.fs": 3,
+    "src/Ros.Domain/Planning/Grouping.fs": 4,
+    "src/Ros.Domain/Planning/Model.fs": 2,
+    "src/Ros.Domain/Work/Checkpoint.fs": 2,
+    "src/Ros.Infrastructure/Artifacts/RegistryLock.fs": 2,
+    "src/Ros.Infrastructure/Planning/FilePlanningRepository.fs": 2,
+    "tests/Ros.Tests/CheckpointCliTests.fs": 2,
+    "tests/Ros.Tests/CheckpointGuardTests.fs": 3
+  },
+  "governanceReads": {
+    "AGENTS.md": 2,
+    "docs/cli.md": 1,
+    "docs/planning.md": 3,
+    "requirements/PLANNING-WORK-GROUPS.md": 2
+  },
+  "searches": 98,
+  "fileWrites": 38,
+  "distinctFilesEdited": 8,
+  "distinctFilesEditedNote": "script counts Edit/Write tool targets only; most edits were scripted in Bash. git diff --name-only against the baseline is the authoritative changed-file list (see changedFiles)",
+  "changedFiles": [
+    "docs/cli.md",
+    "docs/planning.md",
+    "research/experiments/EX-ROS-2026-A021-R2-grouped/group-analysis.txt",
+    "research/experiments/EX-ROS-2026-A021-R2-grouped/plan-explain-group-at-start.txt",
+    "src/Ros.Cli/Program.fs",
+    "src/Ros.Cli/Ros.Cli.fsproj",
+    "src/Ros.Cli/WorkGroupCommands.fs",
+    "src/Ros.Contracts/Ros.Contracts.fsproj",
+    "src/Ros.Contracts/Work/WorkGroupJson.fs",
+    "src/Ros.Domain/Ros.Domain.fsproj",
+    "src/Ros.Domain/Work/Checkpoint.fs",
+    "src/Ros.Domain/Work/WorkGroups.fs",
+    "src/Ros.Infrastructure/Planning/FilePlanningRepository.fs",
+    "src/Ros.Infrastructure/Ros.Infrastructure.fsproj",
+    "src/Ros.Infrastructure/Work/FileWorkGroupRepository.fs",
+    "tests/Ros.Tests/Program.fs",
+    "tests/Ros.Tests/Ros.Tests.fsproj",
+    "tests/Ros.Tests/WorkGroupTests.fs"
+  ],
+  "builds": 18,
+  "buildsNote": "script heuristic: Bash commands matching 'dotnet build' or 'build:fsharp' (includes one grep of package.json)",
+  "testRuns": 8,
+  "failedTests": {
+    "total": 2,
+    "detail": "one run of the F# suite: 2 new PRAXIS-GROUP-05 CLI tests failed (wrong checkpoint JSON key in the test; blank-summary asserted on a dirty tree); fixed in the tests, re-run 819/819"
+  },
+  "retries": {
+    "total": 3,
+    "detail": [
+      "first build failed NU1605 (Ubuntu SDK 10.0.112 ships FSharp.Core 10.0.112; rebuilt with env FSharpCoreImplicitPackageVersion=10.1.400)",
+      "CLI compile error FS3373 (interpolated string) fixed and rebuilt",
+      "F# suite re-run after the 2 test failures"
+    ]
+  },
+  "validationFailures": {
+    "total": 1,
+    "detail": "./ros validate rejected research/experiments/EX-ROS-2026-A021-R2-grouped/group-analysis.md (every .md under research/experiments is an experiment record needing front matter and an EX-...-- filename); moved unchanged to group-analysis.txt"
+  },
+  "contextCompactions": 0,
+  "contextResets": 0,
+  "commitsAtSnapshot": 11,
+  "commitLog": [
+    "cc65ee1 PRAXIS-GROUP-05: work group checkpoint over members' own checkpoints",
+    "2185c6c PRAXIS-GROUP-04: record completion (Praxis state)",
+    "4cbe262 PRAXIS-GROUP-04: work group remove (membership only, last member refused)",
+    "b4aca6a PRAXIS-GROUP-03: record completion (Praxis state)",
+    "d110e58 PRAXIS-GROUP-03: work group add (admission rule reuse, member-added provenance)",
+    "e39e9f1 PRAXIS-GROUP-02: record completion (Praxis state)",
+    "3ae913e PRAXIS-GROUP-02: work group show (read-only view with member states and progress)",
+    "67d55bd PRAXIS-GROUP-01: record completion (Praxis state)",
+    "b09aaec PRAXIS-GROUP-01: work group create and the declared-group store (shared group infrastructure)",
+    "b057e30 PRAXIS-GROUP-01: record work start (Praxis state)",
+    "e604b81 PRAXIS-GROUP-01: group analysis for GROUP-PRAXIS-WORK-GROUP-001 (shared group infrastructure)"
+  ],
+  "finalTestTotals": {
+    "fsharp": "819/819",
+    "nodeDifferential(test:fsharp)": "257/257",
+    "nodeNpmTest": "104/104",
+    "python": "7/7"
+  },
+  "infrastructure": [
+    "no .NET preinstalled; Microsoft download hosts blocked by egress policy (403); scripts/install-toolchain.sh installs the native praxis bundle, not an SDK; installed dotnet-sdk-10.0 10.0.112 from the Ubuntu archive via apt",
+    "build requires env FSharpCoreImplicitPackageVersion=10.1.400 (no repository change)"
+  ],
+  "rawSummary": "session-metrics-raw.json (session_metrics.py output, unmodified)"
+}

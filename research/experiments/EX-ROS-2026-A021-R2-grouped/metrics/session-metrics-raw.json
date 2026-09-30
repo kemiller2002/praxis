@@ -1,0 +1,62 @@
+{
+  "schema": "ex-ros-2026-a021.session-metrics/1",
+  "label": "grouped",
+  "sessionId": "272cb45c-8469-5697-a0cd-38010c1069e2",
+  "transcript": "272cb45c-8469-5697-a0cd-38010c1069e2.jsonl",
+  "models": [
+    "claude-opus-5-5"
+  ],
+  "startedAt": "2026-09-30T15:23:02.017000+00:00",
+  "endedAt": "2026-09-30T16:17:26.165000+00:00",
+  "wallMs": 3264148,
+  "msToFirstCodeMutation": 562998,
+  "modelRequests": 126,
+  "tokens": {
+    "input": 252,
+    "output": 127220,
+    "cacheRead": 26221290,
+    "cacheCreation": 306752
+  },
+  "costUsd": null,
+  "toolCalls": {
+    "Bash": 124,
+    "Edit": 3,
+    "Write": 6,
+    "mcp__bf7c680d-5fdc-5ef4-b4a0-abadb619bf0a__get_session": 1
+  },
+  "toolErrors": 1,
+  "fileReads": 69,
+  "distinctFilesRead": 47,
+  "repeatedReads": {
+    "/tmp/claude-0/-home-user-praxis/272cb45c-8469-5697-a0cd-38010c1069e2/tasks/b32dtkbc2.output": 2,
+    "/tmp/claude-0/npmtest.log": 2,
+    "/tmp/claude-0/testfs.log": 2,
+    "AGENTS.md": 2,
+    "docs/planning.md": 3,
+    "requirements/PLANNING-WORK-GROUPS.md": 2,
+    "research/experiments/EX-ROS-2026-A021-harness/session_metrics.py": 2,
+    "src/Ros.Application/Work/Checkpoint.fs": 2,
+    "src/Ros.Cli/CheckpointCommands.fs": 2,
+    "src/Ros.Cli/PlanCommands.fs": 3,
+    "src/Ros.Domain/Planning/Grouping.fs": 4,
+    "src/Ros.Domain/Planning/Model.fs": 2,
+    "src/Ros.Domain/Work/Checkpoint.fs": 2,
+    "src/Ros.Infrastructure/Artifacts/RegistryLock.fs": 2,
+    "src/Ros.Infrastructure/Planning/FilePlanningRepository.fs": 2,
+    "tests/Ros.Tests/CheckpointCliTests.fs": 2,
+    "tests/Ros.Tests/CheckpointGuardTests.fs": 3
+  },
+  "governanceReads": {
+    "AGENTS.md": 2,
+    "docs/cli.md": 1,
+    "docs/planning.md": 3,
+    "requirements/PLANNING-WORK-GROUPS.md": 2
+  },
+  "searches": 98,
+  "fileWrites": 38,
+  "distinctFilesEdited": 8,
+  "builds": 18,
+  "testRuns": 8,
+  "compactions": 0,
+  "notes": "reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate"
+}
