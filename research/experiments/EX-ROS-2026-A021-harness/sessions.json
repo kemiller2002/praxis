@@ -1,0 +1,10 @@
+{
+  "baselineCommit": "fb6a0f9d6c8e25e979be436346fd803184e306a0",
+  "armStartCommit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+  "armStartNote": "baseline commit plus one identical harness commit (session_metrics.py) on both arms",
+  "orchestrator": "session_01E8aLYDesB49uhTD6Mpg4yo",
+  "sessions": [
+    { "label": "grouped", "arm": "grouped", "items": ["PRAXIS-GROUP-01", "PRAXIS-GROUP-02", "PRAXIS-GROUP-03", "PRAXIS-GROUP-04", "PRAXIS-GROUP-05"], "session": "session_01Am6kL4FMXPviX7x1UJhbx9", "configuredModel": "claude-opus-5-5", "createdAt": "2026-09-30T11:50:34Z", "prompt": "prompts/grouped.txt" },
+    { "label": "control-01", "arm": "control", "items": ["PRAXIS-GROUP-01"], "session": "session_01M75ZaHmVcX1YYzxg2UP4gD", "configuredModel": "claude-opus-5-5", "createdAt": "2026-09-30T11:50:35Z", "prompt": "prompts/control-01.txt" }
+  ]
+}

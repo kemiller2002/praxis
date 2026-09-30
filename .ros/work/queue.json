@@ -3231,10 +3231,10 @@
         "experiment"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-09-30T11:18:12.729Z",
-      "updatedAt": "2026-09-30T11:18:12.729Z",
+      "updatedAt": "2026-09-30T11:47:48.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
