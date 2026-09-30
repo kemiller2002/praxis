@@ -59,11 +59,15 @@
 | PRAXIS-GROUP-03 | praxis work group add: add a member to a declared group | ready | work-group, cli | low |
 | PRAXIS-GROUP-04 | praxis work group remove: remove a member from a declared group | ready | work-group, cli | low |
 | PRAXIS-GROUP-05 | praxis work group checkpoint: a group checkpoint over members' own checkpoints | ready | work-group, cli | low |
+| PRAXIS-GROUP-06 | Decide the phase-two work-group implementation base from EX-ROS-2026-A021 | captured | work-group, cli | low |
 | PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | captured | rename, gh-90 | low |
 | PRAXIS-PLAN-01 | Deterministic shadow planner: praxis plan analyze/simulate/compare/explain (PRX-PLAN-001..182) | complete | planning, architecture, cli | high |
 | PRAXIS-PLAN-02 | Accept planner decision DF-ROS-2026-A046 on the owner's approval | complete | planning, governance | medium |
 | PRAXIS-PLAN-03 | Accept DF-ROS-2026-A047 and triage the EX-ROS-2026-A021 cohort on the owner's approval | complete | planning, governance | medium |
-| PRAXIS-PLAN-EXP-01 | Run grouping experiment EX-ROS-2026-A021: control arm, grouped arm, blind evaluation, telemetry comparison | captured | planning, experiment | medium |
+| PRAXIS-PLAN-04 | Grouped-execution guidance: reuse inventory and per-criterion verification pass (EV-ROS-2026-A064) | captured | planning, grouping | medium |
+| PRAXIS-PLAN-05 | Make context overhead and cost observable: session-metrics telemetry adapter and cost.execution_total (EV-ROS-2026-A064) | captured | planning, telemetry | medium |
+| PRAXIS-PLAN-06 | Renumber the EX-ROS-2026-A021 results record to avoid an evidence ID collision and relate it to the parallel evaluation kit | complete | planning, governance | high |
+| PRAXIS-PLAN-EXP-01 | Run grouping experiment EX-ROS-2026-A021: control arm, grouped arm, blind evaluation, telemetry comparison | complete | planning, experiment | medium |
 | PRAXIS-PR92-ID-RENUMBER | Owner decision: renumber PR #92's colliding DF-ROS-2026-A042/A043 and RQ-ROS-2026-A022/A023 before reconciliation (see EV-ROS-2026-A060 section 9) | captured | pr92, decision | high |
 | PRAXIS-PR92-POSTMERGE-FENCE | On the reconciled branch, write post-merge tests P1-P7 from EV-ROS-2026-A060 section 6 and re-point PraxisCli to praxis.dll | captured | pr92, testing | high |
 | PRAXIS-PR92-PREMERGE-REGRESSION-FENCE | Regression fence before reconciling PR #92 with main | complete | testing, pr92 | high |

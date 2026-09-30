@@ -3231,10 +3231,10 @@
         "experiment"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T11:18:12.729Z",
-      "updatedAt": "2026-09-30T11:18:12.729Z",
+      "updatedAt": "2026-09-30T17:18:43.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3283,6 +3283,102 @@
       "attachments": [],
       "createdAt": "2026-09-30T09:17:29.000Z",
       "updatedAt": "2026-09-30T09:40:03.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-04",
+      "title": "Grouped-execution guidance: reuse inventory and per-criterion verification pass (EV-ROS-2026-A064)",
+      "description": "EX-ROS-2026-A021's grouped arm produced one consistent model but missed existing rules to reuse (grouping.groups parser, Grouping.executionLocation) and verified individual criteria less fully than independent executions. Add to PRX-GRP-040 guidance and the group-analysis template: an explicit inventory of existing parsers/rules to reuse, and a final per-member, per-criterion verification pass.",
+      "tags": [
+        "planning",
+        "grouping"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:18:22.376Z",
+      "updatedAt": "2026-09-30T17:20:02.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-05",
+      "title": "Make context overhead and cost observable: session-metrics telemetry adapter and cost.execution_total (EV-ROS-2026-A064)",
+      "description": "Promote research/experiments/EX-ROS-2026-A021-harness/session_metrics.py (repeated reads, governance reads, time to first code change, requests, compactions) to a telemetry adapter, and record platform-reported cost as cost.execution_total, so the planner's context-reuse and cost estimates stop being unknown. Also replace or down-weight the history-based duration model for implementation work, which missed both arms' durations.",
+      "tags": [
+        "planning",
+        "telemetry"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:18:22.924Z",
+      "updatedAt": "2026-09-30T17:20:02.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-GROUP-06",
+      "title": "Decide the phase-two work-group implementation base from EX-ROS-2026-A021",
+      "description": "Owner decision. The first blind evaluation (EV-ROS-2026-A064; experiment/a021-evaluation) suggests experiment/a021-grouped (arm X) as the base, porting from experiment/a021-control: the shared grouping.groups parser, the planner's executionLocation join rule, and checkpoint re-validation; and removing the committed experiment group from .ros/work/groups.json. A second evaluation may follow from the kit on experiment/a021-evaluation-kit (EV-ROS-2026-A060..A062). Neither arm is merged by the experiment.",
+      "tags": [
+        "work-group",
+        "cli"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:18:23.332Z",
+      "updatedAt": "2026-09-30T17:20:03.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-06",
+      "title": "Renumber the EX-ROS-2026-A021 results record to avoid an evidence ID collision and relate it to the parallel evaluation kit",
+      "description": "EV-ROS-2026-A060 was allocated on three branches (claude/grouping-experiment-a021, experiment/a021-evaluation-kit, test/pr92-premerge-main-characterization). Renumber this branch's results record to EV-ROS-2026-A064 (first ID free on every branch), update its references and follow-up items, and record its relation to the kit (EV-ROS-2026-A060..A062) and EV-ROS-2026-A063.",
+      "tags": [
+        "planning",
+        "governance"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:20:29.537Z",
+      "updatedAt": "2026-09-30T17:20:49.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

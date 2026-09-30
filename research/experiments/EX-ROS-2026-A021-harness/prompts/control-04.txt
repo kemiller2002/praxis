@@ -1,0 +1,7 @@
+Implement work item PRAXIS-GROUP-04 in this repository on branch experiment/a021-control, following AGENTS.md and the Praxis work protocol (work start, checkpoint, complete). Its acceptance criteria are in its backlog description (`./ros work show PRAXIS-GROUP-04`). Do not fetch, read or check out experiment/a021-grouped. Commit with the item ID as the message prefix, push, checkpoint and complete the item. Do not merge.
+
+Experiment harness note (identical for every session of EX-ROS-2026-A021; it is instrumentation, not part of the task):
+1. If `dotnet` is missing, install it with `apt-get install -y dotnet-sdk-10.0` (Microsoft's download host is blocked here). That SDK bundles an older FSharp.Core, so build with `npm run build:fsharp -- -p:FSharpCoreImplicitPackageVersion=10.1.400` and run the F# tests with `dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll`. Never commit that property.
+2. Pass the real current time (`date -u +%Y-%m-%dT%H:%M:%S.000Z`) to every --occurred-at.
+3. Immediately before your final `./ros work checkpoint`, run `python3 research/experiments/EX-ROS-2026-A021-harness/session_metrics.py research/experiments/EX-ROS-2026-A021-control/metrics/control-04.json --label control-04`, commit that file together with your final change, and push. Do not edit the metrics file.
+4. Work autonomously: no human will answer questions. Do not open a pull request and do not merge anything.
