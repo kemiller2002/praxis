@@ -71,4 +71,5 @@ let main _ =
     @ PlanningTests.tests
     @ PlanningCliTests.tests
     @ GroupingTests.tests
+    @ MergeReadinessTests.tests
     |> TestRunner.run
