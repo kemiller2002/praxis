@@ -4864,18 +4864,49 @@
     {
       "id": "PRAXIS-GROUP-03",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-09-30T12:54:47.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/GroupMembership.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-30T13:05:06.000Z",
       "telemetryExecutionIds": [
         "EXE-20260930T125447932Z-92de3550"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "15f8c49264b9052951d4f74b",
+        "recordedAt": "2026-09-30T13:05:05.000Z",
+        "executionId": "EXE-20260930T125447932Z-92de3550",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a021-control",
+        "commit": "13e26f4caeab2c4468a65365fa2ad389d9542820",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a021-control",
+        "remoteCommit": "13e26f4caeab2c4468a65365fa2ad389d9542820",
+        "summary": "work group add implemented: one member added to a declared group; refuses undeclared groups, unknown/terminal/present items and cross-repository mismatches; addition provenance in .ros/work/group-membership.json; 816 F# tests pass",
+        "nextAction": "Complete PRAXIS-GROUP-03; next cohort item is PRAXIS-GROUP-04 (work group remove), which should append removals to the same membership ledger",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-09-30T13:05:06.000Z",
+      "conclusion": "work group add adds one member to a declared group with recorded provenance; member lifecycle untouched"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-09-30T12:54:47.000Z",
+  "updatedAt": "2026-09-30T13:05:06.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
