@@ -6,6 +6,7 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Git/Model.fs" />
     <Compile Include="Git/Durability.fs" />
+    <Compile Include="Integration/MergeReadiness.fs" />
     <Compile Include="Work/Identity.fs" />
     <Compile Include="Work/PathFilter.fs" />
     <Compile Include="Work/Attribution.fs" />
