@@ -52,6 +52,7 @@ Apply, in descending order: explicit user instruction; applicable safety, legal,
 - Important claims cite `EV-`, `HY-`, and `TH-` records when those records exist. Material decisions use `DF-`, which canonically means **Decision Record**.
 - Do not silently change canonical policy. Propose or record the change, its evidence, consequences, version, and migration path.
 - Do not claim a test passed unless it ran and passed. Name skipped or unavailable checks and their implications.
+- CI health is lifecycle-dependent. An in-progress branch may be red, but failures remain visible and must be reported truthfully. A durable checkpoint means recoverable, not mergeable, and work-item completion does not make the branch merge-ready. Never represent a branch or commit as merge-ready until every configured required check succeeds against that exact candidate commit; any later meaningful commit invalidates that readiness evidence. Never waive a required check through narrative or by suppressing its failure.
 - Treat execution telemetry as evidence: discover capabilities, distinguish zero from unavailable, preserve normalized and sanitized raw provider data, prefer deterministic collection, and never invent a metric.
 - Not every edit needs a REP. Use the artifact threshold in the Agent Operating Manual.
 
@@ -80,6 +81,7 @@ to your filesystem, process, or conversation, must be able to continue. See
   with no meaningful uncommitted work: `./ros work checkpoint --id ID
   --occurred-at NOW --summary "what is done" --next-action "what is next"
   [--step STEP-ID]`. Praxis never commits, pushes, or stashes for you.
+- A checkpoint has **no CI implication**. It is valid to checkpoint coherent, pushed in-progress work whose CI is failing, provided the failure is reported truthfully and the next action records what remains. Merge readiness is a separate exact-candidate decision; see `requirements/MERGE-READINESS.md` and `DF-ROS-2026-A048`.
 - A **historical checkpoint** is that record; it is never rewritten. A
   **currently recoverable checkpoint** is one the remote still carries now;
   `./ros work context ID --text` and `./ros status` report both, separately.
