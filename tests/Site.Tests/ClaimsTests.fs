@@ -12,7 +12,7 @@ let private text () =
 let tests =
     [ test "attribution enforcement is described with its leniency while work is open" (fun () ->
           let text = text ()
-          Assert.matches @"not request\.HasActiveOrBlockedWork" (read "src/Ros.Domain/Work/Attribution.fs") "Attribution.fs"
+          Assert.matches @"not request\.HasActiveOrBlockedWork" (read "src/Praxis.Domain/Work/Attribution.fs") "Attribution.fs"
           Assert.matches "when any work item is active or blocked, unattributed changes are not reported" text "page"
           Assert.notMatches "Never quietly absorbed|not absorbed into the nearest" text "page")
 

@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Praxis.Domain/Praxis.Domain.fsproj" />
+    <Project Path="src/Praxis.Contracts/Praxis.Contracts.fsproj" />
+    <Project Path="src/Praxis.Application/Praxis.Application.fsproj" />
+    <Project Path="src/Praxis.Infrastructure/Praxis.Infrastructure.fsproj" />
+    <Project Path="src/Praxis.Cli/Praxis.Cli.fsproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Praxis.Tests/Praxis.Tests.fsproj" />
+  </Folder>
+  <Folder Name="/site/">
+    <Project Path="site-tools/SiteTools.fsproj" />
+    <Project Path="tests/Site.Tests/Site.Tests.fsproj" />
+  </Folder>
+</Solution>

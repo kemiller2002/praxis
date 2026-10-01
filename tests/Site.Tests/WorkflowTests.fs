@@ -94,11 +94,11 @@ let tests =
               Assert.notMatches "(?i)site/|site-pages|pages" (read file) file)
 
       test "the release payload does not ship the public site" (fun () ->
-          let infrastructure = "src/Ros.Infrastructure/Ros.Infrastructure.fsproj"
+          let infrastructure = "src/Praxis.Infrastructure/Praxis.Infrastructure.fsproj"
 
           if exists infrastructure then
               let embedded =
-                  Regex.Matches(read infrastructure, @"<EmbeddedResource Include=""\$\(RosRepositoryRoot\)([^""]+)""")
+                  Regex.Matches(read infrastructure, @"<EmbeddedResource Include=""\$\(PraxisRepositoryRoot\)([^""]+)""")
                   |> Seq.map (fun found -> found.Groups[1].Value)
                   |> List.ofSeq
 

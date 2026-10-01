@@ -91,7 +91,7 @@ let tests =
               names)
 
       test "every command the chain names exists in the CLI" (fun () ->
-          let cli = read "src/Ros.Cli/Program.fs"
+          let cli = read "src/Praxis.Cli/Program.fs"
 
           let verbs =
               groups "<code>([^<]+)</code>" 1 (section (html ()) "how")
@@ -121,7 +121,7 @@ let tests =
               Assert.matches $">{quality}<" agents quality
 
           Assert.notMatches ">Declared<" agents "declared is not a metric quality"
-          let validation = read "src/Ros.Domain/Telemetry/TelemetryValidation.fs"
+          let validation = read "src/Praxis.Domain/Telemetry/TelemetryValidation.fs"
 
           for quality in [ "observed"; "derived"; "estimated" ] do
               Assert.isTrue (validation.Contains($"\"{quality}\"")) quality
@@ -131,7 +131,7 @@ let tests =
           Assert.matches "Praxis does not compute cost" agents "cost")
 
       test "the runtimes the page says are detected are the ones the CLI detects" (fun () ->
-          let identity = read "src/Ros.Domain/Telemetry/Identity.fs"
+          let identity = read "src/Praxis.Domain/Telemetry/Identity.fs"
           let agents = section (html ()) "agents"
 
           for name, mechanism in
@@ -205,7 +205,7 @@ let tests =
 
       test "integrations listed as available are backed by CLI commands" (fun () ->
           let independence = section (html ()) "independence"
-          let cli = read "src/Ros.Cli/Program.fs"
+          let cli = read "src/Praxis.Cli/Program.fs"
           Assert.matches ">Available now<" independence "available"
           Assert.matches ">Architectural direction<" independence "direction"
 
@@ -268,7 +268,7 @@ let tests =
               Assert.matches "is no longer published" start "the retired npm package is named only as retired"
 
           // With .NET 10, the same release installs as a global tool.
-          let tool = read "src/Ros.Cli/Ros.Cli.fsproj"
+          let tool = read "src/Praxis.Cli/Praxis.Cli.fsproj"
           let packageId = Regex.Match(tool, "<PackageId>([^<]+)</PackageId>").Groups[1].Value
           Assert.matches "<ToolCommandName>praxis</ToolCommandName>" tool "the tool's command is praxis"
           Assert.isTrue (start.Contains $"dotnet tool install -g {packageId}") "the page installs the real .NET tool"

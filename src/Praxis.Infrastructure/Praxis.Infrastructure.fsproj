@@ -1,0 +1,93 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Praxis.Domain/Praxis.Domain.fsproj" />
+    <ProjectReference Include="../Praxis.Contracts/Praxis.Contracts.fsproj" />
+    <ProjectReference Include="../Praxis.Application/Praxis.Application.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Git/GitRepository.fs" />
+    <Compile Include="Architecture/FileImplementationPolicyRepository.fs" />
+    <Compile Include="Work/WorkStateTransaction.fs" />
+    <Compile Include="Work/BacklogStateTransaction.fs" />
+    <Compile Include="Work/FileEvidenceRepository.fs" />
+    <Compile Include="Work/FileTelemetryStateRepository.fs" />
+    <Compile Include="Work/FileWorkConfigRepository.fs" />
+    <Compile Include="Work/FileEventLogRepository.fs" />
+    <Compile Include="Work/FileBacklogQueueRepository.fs" />
+    <Compile Include="Work/FileWorkListRepository.fs" />
+    <Compile Include="Artifacts/FrontMatter.fs" />
+    <Compile Include="Artifacts/RegistryLock.fs" />
+    <Compile Include="Artifacts/RegistryTransaction.fs" />
+    <Compile Include="Artifacts/FileArtifactRepository.fs" />
+    <Compile Include="Json/CanonicalJson.fs" />
+    <Compile Include="Work/FileWorkContextRepository.fs" />
+    <Compile Include="Work/FileReconciliationRepository.fs" />
+    <Compile Include="Work/FileMetricRegistryRepository.fs" />
+    <Compile Include="Work/FileTelemetryExecutionRepository.fs" />
+    <Compile Include="Work/ClaudeSessionTranscriptReader.fs" />
+    <Compile Include="Work/FileTelemetryFinalizationRepository.fs" />
+    <Compile Include="Work/FileTelemetryQueryRepository.fs" />
+    <Compile Include="Work/FileTelemetryUsageRepository.fs" />
+    <Compile Include="Work/FileTelemetryValidationRepository.fs" />
+    <Compile Include="Work/FileAdapterRepository.fs" />
+    <Compile Include="Provenance/FileProvenanceRepository.fs" />
+    <Compile Include="Work/FileCheckpointRepository.fs" />
+    <Compile Include="Ordo/FileObservationRepository.fs" />
+    <Compile Include="Lifecycle/Payload.fs" />
+    <Compile Include="Lifecycle/Installation.fs" />
+    <Compile Include="Remote/GitHubActionsExecutor.fs" />
+    <Compile Include="Remote/FileRemoteRepository.fs" />
+    <Compile Include="Execution/ExecutionStore.fs" />
+    <Compile Include="Installation/AdministrationClient.fs" />
+    <Compile Include="Work/FileWorkGroupRepository.fs" />
+    <Compile Include="Planning/FilePlanningRepository.fs" />
+  </ItemGroup>
+
+  <!-- The scaffold this CLI installs, compiled into the assembly so a released
+       binary can run `init` and `upgrade` inside a repository that has only the
+       executable: no package directory on disk, no network, and no explicitly supplied
+       package root. A
+       directory payload still wins when one is present (Payload.resolveSource),
+       so a source checkout installs the files being edited.
+
+       These items must cover exactly the `source` paths in both starter
+       manifests. LifecycleTests asserts that set equality, so adding a manifest
+       entry outside these rules fails the tests rather than shipping a binary
+       that cannot install itself. -->
+  <ItemGroup>
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)release.json" LogicalName="praxis.payload/release.json" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)AGENTS.md" LogicalName="praxis.payload/AGENTS.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)BOOTSTRAP.md" LogicalName="praxis.payload/BOOTSTRAP.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)CLAUDE.md" LogicalName="praxis.payload/CLAUDE.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)GEMINI.md" LogicalName="praxis.payload/GEMINI.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot).github/copilot-instructions.md" LogicalName="praxis.payload/.github/copilot-instructions.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)telemetry/metrics.json" LogicalName="praxis.payload/telemetry/metrics.json" />
+
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/development-telemetry.md" LogicalName="praxis.payload/docs/development-telemetry.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/ordo-observation.md" LogicalName="praxis.payload/docs/ordo-observation.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/remote-protocol.md" LogicalName="praxis.payload/docs/remote-protocol.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/remote-agent-contract.md" LogicalName="praxis.payload/docs/remote-agent-contract.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/project-administration-hub.md" LogicalName="praxis.payload/docs/project-administration-hub.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/web-interface.md" LogicalName="praxis.payload/docs/web-interface.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/work-adapter-contract.md" LogicalName="praxis.payload/docs/work-adapter-contract.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/work-backlog-guide.md" LogicalName="praxis.payload/docs/work-backlog-guide.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/work-protocol.md" LogicalName="praxis.payload/docs/work-protocol.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/agent-provenance.md" LogicalName="praxis.payload/docs/agent-provenance.md" />
+
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/00-governance/**/*.*" LogicalName="praxis.payload/docs/00-governance/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)framework/**/*.*" LogicalName="praxis.payload/framework/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)schemas/**/*.*" Exclude="$(PraxisRepositoryRoot)schemas/provenance-actor.schema.json;$(PraxisRepositoryRoot)schemas/artifact-provenance.schema.json;$(PraxisRepositoryRoot)schemas/echelon-doctor-v1.schema.json;$(PraxisRepositoryRoot)schemas/echelon-inventory-v1.schema.json;$(PraxisRepositoryRoot)schemas/echelon-foundations-v1.schema.json" LogicalName="praxis.payload/schemas/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)templates/**/*.*" Exclude="$(PraxisRepositoryRoot)templates/application-foundations.json" LogicalName="praxis.payload/templates/%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- The web interface and hub pages are rendered by the CLI itself; only
+         their stylesheets ship, and `praxis web serve`/`praxis hub serve` fall back
+         to these embedded copies when a repository has none on disk. -->
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)web/styles.css" LogicalName="praxis.payload/web/styles.css" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)web-hub/styles.css" LogicalName="praxis.payload/web-hub/styles.css" />
+
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)starter/**/*.*" LogicalName="praxis.payload/starter/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

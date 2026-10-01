@@ -9,7 +9,7 @@
 
   <!-- Repository root, used to locate the scaffold this CLI embeds. -->
   <PropertyGroup>
-    <RosRepositoryRoot>$(MSBuildThisFileDirectory)</RosRepositoryRoot>
+    <PraxisRepositoryRoot>$(MSBuildThisFileDirectory)</PraxisRepositoryRoot>
   </PropertyGroup>
 
   <!-- release.json is the single authoritative version source for the F#
@@ -18,8 +18,8 @@
        drift from the released version. The CLI reads it back at runtime
        from its own AssemblyInformationalVersion. -->
   <PropertyGroup>
-    <RosPackageVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)release.json')), '"version"\s*:\s*"([^"]+)"').Groups.get_Item(1).Value)</RosPackageVersion>
-    <Version>$(RosPackageVersion)</Version>
-    <InformationalVersion>$(RosPackageVersion)</InformationalVersion>
+    <PraxisPackageVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)release.json')), '"version"\s*:\s*"([^"]+)"').Groups.get_Item(1).Value)</PraxisPackageVersion>
+    <Version>$(PraxisPackageVersion)</Version>
+    <InformationalVersion>$(PraxisPackageVersion)</InformationalVersion>
   </PropertyGroup>
 </Project>
