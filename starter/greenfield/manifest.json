@@ -463,6 +463,11 @@
       "template": false
     },
     {
+      "source": "docs/fallback-reconciliation.md",
+      "destination": "docs/fallback-reconciliation.md",
+      "template": false
+    },
+    {
       "source": "docs/work-adapter-contract.md",
       "destination": "docs/work-adapter-contract.md",
       "template": false

@@ -733,9 +733,9 @@ module CheckpointCommands =
                 node["status"] <-
                     JsonValue.Create(
                         match step.Status with
-                        | Praxis.Domain.Telemetry.StepStatus.Running -> "running"
-                        | Praxis.Domain.Telemetry.StepStatus.Completed -> "completed"
-                        | Praxis.Domain.Telemetry.StepStatus.Failed -> "failed"
+                        | Praxis.Domain.Telemetry.EventStepStatus.Running -> "running"
+                        | Praxis.Domain.Telemetry.EventStepStatus.Completed -> "completed"
+                        | Praxis.Domain.Telemetry.EventStepStatus.Failed -> "failed"
                     )
 
                 array.Add(node: JsonNode)

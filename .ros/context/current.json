@@ -5626,6 +5626,190 @@
       "completedAt": "2026-09-30T23:11:45.000Z"
     },
     {
+      "id": "PR79-FALLBACK-RECONCILIATION",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileEnvelopeReconciliationDispatcher.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/EnvelopeReconciliationTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-28T07:05:38Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T145842499Z-f1b40c22"
+      ],
+      "completedAt": "2026-09-28T07:05:38Z"
+    },
+    {
+      "id": "WI-0065",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Work/FileStepRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/StepTelemetryTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-27T12:12:42Z",
+      "telemetryExecutionIds": [
+        "EXE-20260927T013711437Z-b3dfcbfc"
+      ],
+      "completedAt": "2026-09-27T12:12:42Z"
+    },
+    {
+      "id": "PKG-FALLBACK-GUIDE",
+      "type": "bug",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "package.json"
+        },
+        {
+          "type": "implementation",
+          "path": "starter/greenfield/manifest.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/lifecycle-package.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-28T07:30:17Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T071427744Z-4668f242"
+      ],
+      "completedAt": "2026-09-28T07:30:17Z"
+    },
+    {
+      "id": "PKG-FALLBACK-PAYLOAD",
+      "type": "bug",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Ros.Infrastructure.fsproj"
+        },
+        {
+          "type": "tests",
+          "path": "tests/lifecycle-package.test.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/Program.fs"
+        }
+      ],
+      "updatedAt": "2026-09-28T07:56:47Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T075108583Z-722e436a"
+      ],
+      "completedAt": "2026-09-28T07:56:47Z"
+    },
+    {
+      "id": "PKG-FALLBACK-GOLDEN",
+      "type": "bug",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tests/work-start-fsharp-differential.test.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/work-start-fsharp-differential.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-28T08:08:03Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T080326499Z-c10879d6"
+      ],
+      "completedAt": "2026-09-28T08:08:03Z"
+    },
+    {
+      "id": "PR79-MAIN-INTEGRATION",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Telemetry/Steps.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/StepTelemetryTests.fs"
+        }
+      ],
+      "updatedAt": "2026-09-28T13:27:30Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T122823444Z-e1fc1859"
+      ],
+      "completedAt": "2026-09-28T13:27:30Z"
+    },
+    {
+      "id": "PR79-MAIN-INTEGRATION-2",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Telemetry/Step.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/StepCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/StepTelemetryTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/EnvelopeReconciliationTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-01T06:49:31Z",
+      "telemetryExecutionIds": [
+        "EXE-20260928T134154662Z-5c00e767"
+      ],
+      "latestCheckpoint": {
+        "id": "d65220d8a10f5939986feeb4",
+        "recordedAt": "2026-10-01T06:48:55Z",
+        "executionId": "EXE-20260928T134154662Z-5c00e767",
+        "stepId": "STEP-20260928T134159000Z-55ba965e",
+        "repository": "repository-operating-system",
+        "branch": "WI-0064",
+        "commit": "0714fbb1c88519b6a9d33d60f7ca2dba2124f9b4",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/Repository-Operating-System.git"
+        },
+        "remoteBranch": "WI-0064",
+        "remoteCommit": "0714fbb1c88519b6a9d33d60f7ca2dba2124f9b4",
+        "summary": "Merged latest main into PR 79, preserved step telemetry and F#-only architecture, resolved canonical state collisions, and passed the complete local validation matrix.",
+        "nextAction": "Complete the active integration step and work item, persist final Praxis state, and merge PR 79 after required GitHub checks pass.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-01T06:49:31Z"
+    },
+    {
       "id": "PRAXIS-INTERNAL-NAMESPACES",
       "type": "refactor",
       "state": "complete",
@@ -5677,7 +5861,7 @@
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-01T06:46:03.000Z",
+  "updatedAt": "2026-10-01T06:49:31Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

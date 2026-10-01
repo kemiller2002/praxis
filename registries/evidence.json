@@ -1801,5 +1801,180 @@
     "title": "EX-ROS-2026-A021 blind evaluation report (arm-X / arm-Y)",
     "updated": "2026-09-30",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-28",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A068",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A068--fallback-reconciliation-and-final-fsharp-validation.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T145842499Z-f1b40c22": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T07:03:10Z",
+          "evidence": [
+            "DF-ROS-2026-A051"
+          ],
+          "last": "2026-09-28T07:03:52Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "Final F# validation and adversarial evidence for journaled fallback step reconciliation"
+        },
+        "EXE-20260928T134154662Z-5c00e767": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-01T06:26:26Z",
+          "last": "2026-10-01T06:45:44Z",
+          "operations": [
+            "migrated",
+            "modified"
+          ],
+          "reason": "Renumber after latest main independently assigned EV-ROS-2026-A054"
+        }
+      }
+    },
+    "related_documents": [
+      "docs/fallback-reconciliation.md",
+      "protocol/praxis-envelope-v1.schema.json",
+      "research/evidence/EV-ROS-2026-A069--step-level-execution-telemetry-validation.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "DF-ROS-2026-A037",
+      "DF-ROS-2026-A051",
+      "RQ-ROS-2026-A019",
+      "RQ-ROS-2026-A026"
+    ],
+    "tags": [
+      "telemetry",
+      "steps",
+      "fallback",
+      "reconciliation",
+      "fsharp",
+      "validation"
+    ],
+    "title": "Runtime-free step reconciliation and final F# validation",
+    "updated": "2026-09-28",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-27",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A069",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A069--step-level-execution-telemetry-validation.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T013711437Z-b3dfcbfc": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-27T07:23:55Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Implementation and validation evidence for first-class step telemetry"
+        },
+        "EXE-20260927T145842499Z-f1b40c22": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T02:12:55Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Migrate step CLI requirement reference after main integration"
+        },
+        "EXE-20260928T122823444Z-e1fc1859": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T12:45:23Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "Renumber canonical step-telemetry evidence after integrating main's independently assigned EV-ROS-2026-A053"
+        },
+        "EXE-20260928T134154662Z-5c00e767": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-01T06:26:26Z",
+          "last": "2026-10-01T06:45:44Z",
+          "operations": [
+            "migrated",
+            "modified"
+          ],
+          "reason": "Renumber after latest main independently assigned EV-ROS-2026-A055"
+        }
+      }
+    },
+    "related_documents": [
+      "docs/development-telemetry.md",
+      "docs/cli.md",
+      "docs/work-protocol.md",
+      "schemas/execution-telemetry.schema.json",
+      "protocol/praxis-envelope-v1.schema.json"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "DF-ROS-2026-A037",
+      "RQ-ROS-2026-A013",
+      "RQ-ROS-2026-A014",
+      "RQ-ROS-2026-A015",
+      "RQ-ROS-2026-A016",
+      "RQ-ROS-2026-A017",
+      "RQ-ROS-2026-A018",
+      "RQ-ROS-2026-A019",
+      "RQ-ROS-2026-A027"
+    ],
+    "tags": [
+      "telemetry",
+      "execution",
+      "steps",
+      "validation",
+      "provenance"
+    ],
+    "title": "First-class step-level execution telemetry implementation and validation",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
   }
 ]

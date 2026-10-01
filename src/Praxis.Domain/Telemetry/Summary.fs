@@ -29,6 +29,7 @@ type SummaryExecution =
       SessionId: string option
       StartedAt: string option
       FinalizedAt: string option
+      StepCount: int
       Metrics: SummaryMetricMeasurement list }
 
 type TimingSummary =
@@ -55,6 +56,7 @@ type TelemetrySummary =
     { SchemaVersion: string
       WorkItemId: string option
       ExecutionCount: int
+      StepCount: int
       Providers: string list
       Runtimes: string list
       Timing: TimingSummary
@@ -232,6 +234,7 @@ module TelemetrySummary =
         { SchemaVersion = "1.0.0"
           WorkItemId = workItemId
           ExecutionCount = executions.Length
+          StepCount = executions |> List.sumBy _.StepCount
           Providers = providers
           Runtimes = runtimes
           Timing = TimingSummary.compute executions

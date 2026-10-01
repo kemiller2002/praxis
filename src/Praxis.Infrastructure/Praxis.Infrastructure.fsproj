@@ -17,6 +17,10 @@
     <Compile Include="Work/FileTelemetryStateRepository.fs" />
     <Compile Include="Work/FileWorkConfigRepository.fs" />
     <Compile Include="Work/FileEventLogRepository.fs" />
+    <Compile Include="Work/RawTelemetrySanitizer.fs" />
+    <Compile Include="Work/FileEnvelopeReconciliationTransaction.fs" />
+    <Compile Include="Work/FileEnvelopeReconciliationStore.fs" />
+    <Compile Include="Work/ReconciliationEnvelopeJson.fs" />
     <Compile Include="Work/FileBacklogQueueRepository.fs" />
     <Compile Include="Work/FileWorkListRepository.fs" />
     <Compile Include="Artifacts/FrontMatter.fs" />
@@ -25,12 +29,15 @@
     <Compile Include="Artifacts/FileArtifactRepository.fs" />
     <Compile Include="Json/CanonicalJson.fs" />
     <Compile Include="Work/FileWorkContextRepository.fs" />
-    <Compile Include="Work/FileReconciliationRepository.fs" />
     <Compile Include="Work/FileMetricRegistryRepository.fs" />
+    <Compile Include="Work/FileEnvelopeExecutionRepository.fs" />
+    <Compile Include="Work/FileEnvelopeReconciliationDispatcher.fs" />
+    <Compile Include="Work/FileReconciliationRepository.fs" />
     <Compile Include="Work/FileTelemetryExecutionRepository.fs" />
     <Compile Include="Work/ClaudeSessionTranscriptReader.fs" />
-    <Compile Include="Work/FileTelemetryFinalizationRepository.fs" />
     <Compile Include="Work/FileTelemetryQueryRepository.fs" />
+    <Compile Include="Work/FileStepRepository.fs" />
+    <Compile Include="Work/FileTelemetryFinalizationRepository.fs" />
     <Compile Include="Work/FileTelemetryUsageRepository.fs" />
     <Compile Include="Work/FileTelemetryValidationRepository.fs" />
     <Compile Include="Work/FileAdapterRepository.fs" />
@@ -68,6 +75,7 @@
     <EmbeddedResource Include="$(PraxisRepositoryRoot)telemetry/metrics.json" LogicalName="praxis.payload/telemetry/metrics.json" />
 
     <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/development-telemetry.md" LogicalName="praxis.payload/docs/development-telemetry.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/fallback-reconciliation.md" LogicalName="praxis.payload/docs/fallback-reconciliation.md" />
     <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/ordo-observation.md" LogicalName="praxis.payload/docs/ordo-observation.md" />
     <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/remote-protocol.md" LogicalName="praxis.payload/docs/remote-protocol.md" />
     <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/remote-agent-contract.md" LogicalName="praxis.payload/docs/remote-agent-contract.md" />

@@ -13,10 +13,10 @@ open Praxis.Domain.Telemetry
 module TelemetrySegmentationTests =
     open PraxisCli
 
-    let private step stepId startedAt : Step =
+    let private step stepId startedAt : EventStep =
         { StepId = stepId
           Name = None
-          Status = StepStatus.Running
+          Status = EventStepStatus.Running
           StartedAt = startedAt
           EndedAt = None
           Reason = None }

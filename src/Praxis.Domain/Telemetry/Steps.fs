@@ -37,15 +37,15 @@ type StepEvent =
       OccurredAt: string }
 
 [<RequireQualifiedAccess>]
-type StepStatus =
+type EventStepStatus =
     | Running
     | Completed
     | Failed
 
-type Step =
+type EventStep =
     { StepId: string
       Name: string option
-      Status: StepStatus
+      Status: EventStepStatus
       StartedAt: string
       EndedAt: string option
       Reason: string option }
@@ -65,21 +65,21 @@ module Steps =
     let isValidStepId (value: string) = stepIdPattern.IsMatch value
 
     /// The steps an execution's events describe, in start order.
-    let project (events: StepEvent list) : Step list =
+    let project (events: StepEvent list) : EventStep list =
         events
         |> List.fold
-            (fun (steps: Step list) event ->
+            (fun (steps: EventStep list) event ->
                 match event.Transition, steps |> List.tryFind (fun step -> step.StepId = event.StepId) with
                 | StepTransition.Start, None ->
                     steps
                     @ [ { StepId = event.StepId
                           Name = event.Name
-                          Status = StepStatus.Running
+                          Status = EventStepStatus.Running
                           StartedAt = event.OccurredAt
                           EndedAt = None
                           Reason = None } ]
-                | (StepTransition.Complete | StepTransition.Fail), Some step when step.Status = StepStatus.Running ->
-                    let status = if event.Transition = StepTransition.Complete then StepStatus.Completed else StepStatus.Failed
+                | (StepTransition.Complete | StepTransition.Fail), Some step when step.Status = EventStepStatus.Running ->
+                    let status = if event.Transition = StepTransition.Complete then EventStepStatus.Completed else EventStepStatus.Failed
 
                     steps
                     |> List.map (fun candidate ->
@@ -102,16 +102,16 @@ module Steps =
             | StepTransition.Start, Some _ -> StepDecision.AlreadyRecorded
             | (StepTransition.Complete | StepTransition.Fail), None ->
                 StepDecision.Rejected $"step '{requested.StepId}' has not been started in this execution"
-            | StepTransition.Complete, Some { Status = StepStatus.Running }
-            | StepTransition.Fail, Some { Status = StepStatus.Running } -> StepDecision.Record requested
-            | StepTransition.Complete, Some { Status = StepStatus.Completed }
-            | StepTransition.Fail, Some { Status = StepStatus.Failed } -> StepDecision.AlreadyRecorded
+            | StepTransition.Complete, Some { Status = EventStepStatus.Running }
+            | StepTransition.Fail, Some { Status = EventStepStatus.Running } -> StepDecision.Record requested
+            | StepTransition.Complete, Some { Status = EventStepStatus.Completed }
+            | StepTransition.Fail, Some { Status = EventStepStatus.Failed } -> StepDecision.AlreadyRecorded
             | _, Some step ->
                 let ended =
                     match step.Status with
-                    | StepStatus.Completed -> "completed"
-                    | StepStatus.Failed -> "failed"
-                    | StepStatus.Running -> "running"
+                    | EventStepStatus.Completed -> "completed"
+                    | EventStepStatus.Failed -> "failed"
+                    | EventStepStatus.Running -> "running"
 
                 StepDecision.Rejected $"step '{requested.StepId}' already ended as {ended}"
 
@@ -159,13 +159,13 @@ module TelemetrySegmentation =
 
     /// The earliest recorded step start, by instant where every start
     /// parses, otherwise the first in record order.
-    let private boundary (steps: Step list) =
+    let private boundary (steps: EventStep list) =
         match steps |> List.map (fun step -> step.StartedAt, instant step.StartedAt) with
         | [] -> Option.None
         | starts when starts |> List.forall (snd >> Option.isSome) -> starts |> List.minBy (snd >> Option.get) |> fst |> Some
         | (first, _) :: _ -> Some first
 
-    let derive (executionStartedAt: string option) (steps: Step list) : TelemetrySegmentation =
+    let derive (executionStartedAt: string option) (steps: EventStep list) : TelemetrySegmentation =
         match boundary steps with
         | Option.None -> TelemetrySegmentation.ExecutionLevel
         | Some adoptedAt ->
@@ -212,7 +212,7 @@ module TelemetrySegmentation =
     /// execution started. A measurement without a step is legal whatever the
     /// execution's segmentation, so adopting steps never invalidates history.
     /// Returns the (index, step) of each dangling reference.
-    let danglingStepReferences (steps: Step list) (measurementSteps: string option list) : (int * string) list =
+    let danglingStepReferences (steps: EventStep list) (measurementSteps: string option list) : (int * string) list =
         let started = steps |> List.map _.StepId |> Set.ofList
 
         measurementSteps

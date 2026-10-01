@@ -181,18 +181,13 @@ let tests =
               reconciliation
               "principle")
 
-      test "resilience separates what exists from what is only direction" (fun () ->
+      test "resilience presents native and fallback execution as available entry paths" (fun () ->
           let resilience = section (html ()) "resilience"
           Assert.matches @"The process survives the tool\." resilience "heading"
-          Assert.matches ">Available now<" resilience "available"
-          Assert.matches ">Architectural direction<" resilience "direction"
-          let planned = from "availability__col--planned" resilience
-          Assert.matches @"Not implemented\." planned "planned"
-
-          Assert.notMatches
-              "(?i)fallback|double-entry"
-              (upTo "availability__col--planned" resilience)
-              "fallback appears only under direction")
+          Assert.equal 2 (count ">Available now<" resilience)
+          Assert.matches "Double-entry execution" resilience "fallback entry path"
+          Assert.matches "reconciles fallback records through the native transition and evidence rules" resilience "canonical reconciliation"
+          Assert.notMatches ">Architectural direction<|Not implemented\." resilience "implemented capability")
 
       test "the record locations the page names exist in this repository" (fun () ->
           let records = section (html ()) "records"

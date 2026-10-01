@@ -38,7 +38,7 @@ module TelemetryStepsUsageTests =
                             event StepTransition.Complete "plan" "t3"
                             event StepTransition.Fail "build" "t4" ]
 
-                  Assert.equal [ "plan", StepStatus.Completed, Some "t3"; "build", StepStatus.Failed, Some "t4" ] (steps |> List.map (fun step -> step.StepId, step.Status, step.EndedAt)) }
+                  Assert.equal [ "plan", EventStepStatus.Completed, Some "t3"; "build", EventStepStatus.Failed, Some "t4" ] (steps |> List.map (fun step -> step.StepId, step.Status, step.EndedAt)) }
 
           { Name = "steps: repeating a transition is an idempotent no-op; an illegal one is refused, never coerced"
             Run =

@@ -29,6 +29,7 @@ site-tools/obj/
 
 # Generated transient work
 .ros/locks/
+.praxis/processing/reconcile-*.json
 work/staging/*
 work/review/*
 logs/*

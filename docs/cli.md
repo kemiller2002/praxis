@@ -267,7 +267,10 @@ praxis registry build [--dry-run] | registry check
 praxis git status [--json]
 praxis work <capture|list|ready|show|start|resume|block|complete|reconcile|checkpoint|continue|update|attach|context|...>
 praxis add "..."
+praxis step <plan|begin|resume|complete|block|abandon|record|availability|checkpoint|link|list|show>
 praxis telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
+praxis reconcile --envelope FILE
+praxis inbox list
 praxis adapter <call|publish>
 praxis provenance <identity|record|show|audit>
 praxis plan <analyze|simulate|compare|explain|replay|freshness|groups|explain-group>
@@ -278,6 +281,10 @@ Run `praxis --help` for the full argument list, and see
 [`development-telemetry.md`](development-telemetry.md),
 [`work-adapter-contract.md`](work-adapter-contract.md) and
 [`agent-provenance.md`](agent-provenance.md) for what they mean.
+
+### `reconcile --envelope`
+
+Validates one runtime-free envelope, dispatches its ordered work requests through the native work/evidence rules, imports optional execution steps into canonical telemetry, commits only the resulting canonical paths, and creates `praxis-reconcile/<transaction-id>`. Exit `0` means applied or an already-checkpointed replay, `1` means an interrupted transaction remains pending and is safe to retry, and `2` means the envelope was rejected without canonical mutation. `inbox list` inventories pending envelope/document inputs. See [`fallback-reconciliation.md`](fallback-reconciliation.md).
 
 `praxis telemetry adapters` lists the ingest adapters. Besides production's
 catalog it includes the F#-only `anthropic-claude-session`, which derives
@@ -522,6 +529,16 @@ wins when both are set. An invalid `--actor-kind` is an argument error (exit `2`
 | `provenance record --path PATH\|--id ID --operation OP [--reason T] [--evidence REF]* [--derived-from REF]* [--execution EXE] [--occurred-at TS] [--json]` | attribute a contribution to an artifact's front matter and append an `artifact.contributed` event; identity is inherited from the active execution; idempotent |
 | `provenance show ID\|PATH [--json]` | contributors, involvement label, lineage (sources and derivatives), legacy-declared authors, and events |
 | `provenance audit [--json]` | coverage, per-actor summaries, flattened contribution facts for metrics, and every finding including informational ones; exits `1` on errors |
+| `step plan --name NAME --occurred-at TS [--description TEXT] [--classification TYPE]* [--parent STEP] [--execution EXE] [--json]` | add a planned step to the current execution |
+| `step begin --name NAME --occurred-at TS [...]` | create and activate a step; use `--parent` for a nested child |
+| `step begin\|resume --id STEP --occurred-at TS [--execution EXE]` | activate a planned or blocked step |
+| `step complete\|block\|abandon [--id STEP] --occurred-at TS [--reason TEXT]` | transition the explicit step or current active leaf; block requires a reason |
+| `step record --metric ID --value N --collected-at TS [--id STEP] [--quality observed\|derived\|estimated] [cost provenance flags]` | record one canonical step-attributed normalized measurement |
+| `step availability --metric ID --status supported-unavailable\|unsupported\|unknown --reason TEXT --occurred-at TS [--id STEP]` | record measurement availability without inventing a value |
+| `step checkpoint --phase begin\|end (--measurement MEAS\|--snapshot SNAP)+ --occurred-at TS [--id STEP]` | preserve source observations and derive compatible cumulative deltas |
+| `step link --kind KIND --value VALUE --occurred-at TS [--source SOURCE] [--id STEP]` | relate sourced engineering evidence without duplicating its canonical record |
+| `step list [--execution EXE\|--work-item ID] [--json]` | list ordered steps; JSON is deterministic and includes summaries |
+| `step show STEP-ID` | show the canonical step, availability, measurements, duration, nesting, and evidence as JSON |
 
 `validate` reports provenance errors (which fail validation) and provenance
 warnings (which do not). In `--json`, warnings carry `"severity":"warning"`,

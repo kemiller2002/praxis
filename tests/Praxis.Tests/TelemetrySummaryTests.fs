@@ -11,6 +11,7 @@ module TelemetrySummaryTests =
           SessionId = sessionId
           StartedAt = startedAt
           FinalizedAt = finalizedAt
+          StepCount = 0
           Metrics = metrics }
 
     let private measurement id unit value collectedAt aggregation : SummaryMetricMeasurement =

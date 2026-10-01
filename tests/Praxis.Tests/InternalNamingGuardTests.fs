@@ -138,7 +138,7 @@ module InternalNamingGuardTests =
               fun () ->
                   // These workflows build the commit they run on, so every path
                   // they hand to `dotnet` must exist in this checkout.
-                  for name in [ "praxis-validation.yml"; "native-release.yml"; "release.yml"; "site.yml" ] do
+                  for name in [ "praxis-validation.yml"; "native-release.yml"; "release.yml"; "site.yml"; "praxis-reconcile.yml" ] do
                       let paths = dotnetProjectPaths (workflow name)
                       Assert.isTrue (not paths.IsEmpty) $"{name} builds a project"
 
@@ -149,7 +149,7 @@ module InternalNamingGuardTests =
 
                   // These build a caller-pinned or tagged ref that may predate
                   // the rename, so they must still find the pre-rename project.
-                  for name in [ "foundations-verify.yml"; "ros-fs-assets.yml" ] do
+                  for name in [ "foundations-verify.yml"; "ros-fs-assets.yml"; "praxis-reconcile-apply.yml" ] do
                       let text = workflow name
                       Assert.isTrue (text.Contains "src/Ros.Cli/Ros.Cli.fsproj") $"{name} keeps the pre-rename project fallback"
                       Assert.isTrue (text.Contains(cliProject ())) $"{name} builds the current CLI project" }

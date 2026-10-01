@@ -61,7 +61,8 @@ PY
 # Everything this script needs from Praxis's own documents, read as JSON.
 # Values that reach a commit message were validated by Praxis as tokens
 # (no whitespace or control characters); they are re-checked here anyway.
-FACTS="$(python3 - "$RESPONSE" <<'PY'
+read_facts() {
+python3 - "$RESPONSE" <<'PY'
 import json, re, sys
 response = json.load(open(sys.argv[1], encoding="utf-8"))
 token = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/@+~-]{0,200}$")
@@ -97,7 +98,8 @@ print(safe(executor.get("kind")) + " run " + safe(executor.get("runId"), "-") + 
 print(safe(response.get("praxisVersion")))
 print("\t".join(paths))
 PY
-)" || { result false "" "" "" internal never "the response lists state that is not Praxis-owned; nothing was persisted"; exit 2; }
+}
+FACTS="$(read_facts)" || { result false "" "" "" internal never "the response lists state that is not Praxis-owned; nothing was persisted"; exit 2; }
 
 
 if [ "$(printf '%s\n' "$FACTS" | sed -n 1p)" = "nothing" ]; then
@@ -184,7 +186,8 @@ else
   # Request IDs may contain characters Git forbids in ref names (':' or
   # '..'), so the branch is named by a digest of the ID, which is always a
   # valid, deterministic ref; the ID itself is in the title and trailers.
-  BRANCH="praxis/remote/$(printf '%s' "$REQUEST_ID" | python3 -c 'import hashlib,sys; print(hashlib.sha256(sys.stdin.buffer.read()).hexdigest()[:24])')"
+  BRANCH_DIGEST="$(printf "%s" "$REQUEST_ID" | python3 -c "import hashlib,sys; print(hashlib.sha256(sys.stdin.buffer.read()).hexdigest()[:24])")"
+  BRANCH="praxis/remote/$BRANCH_DIGEST"
 
   # A same-request retry (after the pull request could not be opened, or the
   # run was interrupted) finds this request's state branch already pushed.

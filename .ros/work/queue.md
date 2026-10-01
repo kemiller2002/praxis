@@ -6,6 +6,7 @@
 | ATTR-COMPLETE-BASE-REF-SWEEP | Stop work complete from sweeping ROS_BASE_REF committed-range paths into its completion event | captured | attribution, reconciliation | medium |
 | ATTR-RECONCILE-SYMLINK-SUBMODULE | Content-match symbolic links and submodules for reconciled attribution | captured | attribution, reconciliation | low |
 | BOOTSTRAP-ADOPTION-FIX | BOOTSTRAP-ADOPTION-FIX | complete |  |  |
+| BUG-WORK-ID-COLLISION | Reject auto-generated backlog IDs already present in work context | captured | bug, work-protocol | medium |
 | CI-BASE-REF-FIX | CI-BASE-REF-FIX | complete |  |  |
 | CI-LATEST-ON-VERSION-BUMP | CI-LATEST-ON-VERSION-BUMP | blocked |  |  |
 | CI-NPM-PUBLISH | CI-NPM-PUBLISH | complete |  |  |
@@ -40,8 +41,14 @@
 | OIDC-REPO-IDENTITY | OIDC-REPO-IDENTITY | complete |  |  |
 | PKG-BIN-EXECUTABLE | PKG-BIN-EXECUTABLE | complete |  |  |
 | PKG-ECHELON-FOUNDRY | PKG-ECHELON-FOUNDRY | complete |  |  |
+| PKG-FALLBACK-GOLDEN | Align F# payload differential golden | complete | fsharp, testing | high |
+| PKG-FALLBACK-GUIDE | Ship fallback reconciliation guide in distributed package | complete | packaging, documentation | high |
+| PKG-FALLBACK-PAYLOAD | Embed fallback reconciliation guide in native F# payload | complete | fsharp, packaging | high |
 | PKG-MIT-LICENSE | PKG-MIT-LICENSE | complete |  |  |
 | PKG-PUBLISH-READINESS | PKG-PUBLISH-READINESS | complete |  |  |
+| PR79-FALLBACK-RECONCILIATION | Complete dual-entry reconciliation and merge PR #79 | complete | reconciliation, integration | high |
+| PR79-MAIN-INTEGRATION | Integrate current main into PR 79 | complete | fsharp, integration | high |
+| PR79-MAIN-INTEGRATION-2 | Integrate latest main into PR 79 after CI race | complete |  | medium |
 | PRAXIS-A021-EVAL-KIT | EX-ROS-2026-A021 blind evaluation kit | complete | experiment | medium |
 | PRAXIS-CLI-RENAME | Finish the ROS to Praxis product/CLI rename: praxis canonical, ros only as compatibility alias, persisted state or history | complete | rename, praxis, cli | high |
 | PRAXIS-CONT-00 | Durable work checkpoints and agent continuity (umbrella) | complete | continuity, durable-checkpoints | high |
@@ -212,6 +219,7 @@
 | WI-0062 | Triage SDE 1.3.0 structural review findings | complete | sde, structural-review | high |
 | WI-0063 | Implement ROS next-pass Ordo observation and structured handoff (#63) | complete | ordo,next-pass | high |
 | WI-0064 | Evidence-based work groups for the advisory planner (plan groups/explain-group) and the frozen grouping A/B experiment protocol | complete | planning, architecture, cli | high |
+| WI-0065 | Implement first-class step-level execution telemetry | complete | telemetry, execution | high |
 | WI-0072 | Port provenance follow-ups onto the merged model: collaboration aggregates in provenance audit, producedBy on ordo handoffs, installer event actor | complete | provenance | medium |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |

@@ -124,6 +124,10 @@ module FileTelemetryQueryRepository =
                   SessionId = identity |> Option.bind (fun i -> stringField i "sessionId")
                   StartedAt = stringField node "startedAt"
                   FinalizedAt = stringField node "finalizedAt"
+                  StepCount =
+                    match node["steps"] with
+                    | :? JsonArray as steps -> steps.Count
+                    | _ -> 0
                   Metrics = metrics }
 
     /// Reads every execution record matching `workItemId` (or every record

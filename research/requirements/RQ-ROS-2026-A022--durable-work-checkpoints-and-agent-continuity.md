@@ -309,4 +309,3 @@ recorded in `EV-ROS-2026-A055`.
 
 **Remaining.** Protocol 1.3 has not run live through GitHub Actions. That
 needs a release containing it, pinned in `.echelon/toolchain.json`.
-

@@ -48,6 +48,7 @@ module InternalNamingTests =
     let allowedTokens: (string * string * string) list =
         [ ".github/workflows/foundations-verify.yml", "src/Ros.Cli/Ros.Cli.fsproj", "builds a caller-pinned ref that may predate the rename"
           ".github/workflows/ros-fs-assets.yml", "src/Ros.Cli/Ros.Cli.fsproj", "builds a tagged ref that may predate the rename"
+          ".github/workflows/praxis-reconcile-apply.yml", "src/Ros.Cli/Ros.Cli.fsproj", "builds the trusted base commit, which may predate the rename"
           "tests/Praxis.Tests/InternalNamingGuardTests.fs", "src/Ros.Cli/Ros.Cli.fsproj", "asserts the pinned-ref fallback above"
           "tests/Praxis.Tests/InternalNamingGuardTests.fs", "Ros.Cli.dll", "asserts no assembly is named after the internal project" ]
 

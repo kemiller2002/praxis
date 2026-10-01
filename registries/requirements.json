@@ -591,6 +591,315 @@
   },
   {
     "created": "2026-09-27",
+    "id": "RQ-ROS-2026-A013",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A013--execution-step-model.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T013711437Z-b3dfcbfc": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-27T01:55:33.976Z",
+          "last": "2026-09-27T07:23:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "First-class step-level execution telemetry requirements and architecture"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A037",
+      "docs/development-telemetry.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "verified",
+    "tags": [
+      "telemetry",
+      "execution",
+      "steps",
+      "provenance"
+    ],
+    "title": "Executions contain ordered, attributable steps",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-27",
+    "id": "RQ-ROS-2026-A014",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A014--step-lifecycle.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T013711437Z-b3dfcbfc": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-27T01:55:34.188Z",
+          "last": "2026-09-27T07:23:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "First-class step-level execution telemetry requirements and architecture"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A037",
+      "RQ-ROS-2026-A013"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "verified",
+    "tags": [
+      "telemetry",
+      "steps",
+      "lifecycle",
+      "validation"
+    ],
+    "title": "Step lifecycle is explicit and state directed",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-27",
+    "id": "RQ-ROS-2026-A015",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A015--step-usage-telemetry.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T013711437Z-b3dfcbfc": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-27T01:55:34.399Z",
+          "last": "2026-09-27T07:23:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "First-class step-level execution telemetry requirements and architecture"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A010",
+      "DF-ROS-2026-A037"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "verified",
+    "tags": [
+      "telemetry",
+      "tokens",
+      "checkpoints",
+      "quality"
+    ],
+    "title": "Step usage telemetry preserves availability and derivation",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-27",
+    "id": "RQ-ROS-2026-A016",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A016--step-cost-attribution.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T013711437Z-b3dfcbfc": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-27T01:55:34.610Z",
+          "last": "2026-09-27T07:23:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "First-class step-level execution telemetry requirements and architecture"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A037",
+      "RQ-ROS-2026-A015"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "verified",
+    "tags": [
+      "telemetry",
+      "cost",
+      "pricing",
+      "provenance"
+    ],
+    "title": "Step cost retains method and pricing provenance",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-27",
+    "id": "RQ-ROS-2026-A017",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A017--step-engineering-evidence.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T013711437Z-b3dfcbfc": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-27T01:55:34.823Z",
+          "last": "2026-09-27T07:23:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "First-class step-level execution telemetry requirements and architecture"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A036",
+      "DF-ROS-2026-A037"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "verified",
+    "tags": [
+      "steps",
+      "evidence",
+      "provenance",
+      "engineering"
+    ],
+    "title": "Step evidence uses references with contribution-safe provenance",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-27",
+    "id": "RQ-ROS-2026-A018",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A018--step-aggregation-and-analysis.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T013711437Z-b3dfcbfc": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-27T01:55:35.035Z",
+          "last": "2026-09-27T07:23:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "First-class step-level execution telemetry requirements and architecture"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A010",
+      "DF-ROS-2026-A037"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "verified",
+    "tags": [
+      "steps",
+      "aggregation",
+      "metrics",
+      "research"
+    ],
+    "title": "Step aggregation is non-overlapping and analysis ready",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-27",
+    "id": "RQ-ROS-2026-A019",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A019--step-portability-and-fallback.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T013711437Z-b3dfcbfc": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-27T01:55:35.246Z",
+          "last": "2026-09-27T07:23:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "First-class step-level execution telemetry requirements and architecture"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A037",
+      "requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "verified",
+    "tags": [
+      "steps",
+      "fallback",
+      "reconciliation",
+      "instance-identity",
+      "compatibility"
+    ],
+    "title": "Steps remain backward compatible and portable through fallback execution",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-27",
     "id": "RQ-ROS-2026-A020",
     "owners": [
       "repository-governance"
@@ -1022,5 +1331,175 @@
     "title": "Praxis is the canonical product and CLI name; ros is compatibility only",
     "updated": "2026-09-30",
     "version": "1.0.1"
+  },
+  {
+    "created": "2026-09-27",
+    "id": "RQ-ROS-2026-A026",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A026--runtime-free-reconciliation.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T145842499Z-f1b40c22": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T01:07:43.000Z",
+          "last": "2026-09-28T02:12:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "Runtime-free canonical reconciliation requirement"
+        },
+        "EXE-20260928T122823444Z-e1fc1859": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T12:46:05Z",
+          "evidence": [
+            "DF-ROS-2026-A051"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "Update fallback decision reference after resolving the canonical ID collision with main"
+        },
+        "EXE-20260928T134154662Z-5c00e767": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-01T06:26:26Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "Renumber after latest main independently assigned RQ-ROS-2026-A022"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A051",
+      "RQ-ROS-2026-A019",
+      "requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md",
+      "protocol/praxis-envelope-v1.schema.json",
+      "docs/fallback-reconciliation.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "fallback",
+      "reconciliation",
+      "offline",
+      "telemetry",
+      "provenance",
+      "instance-identity"
+    ],
+    "title": "Runtime-free envelopes reconcile into canonical work and execution state",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-27",
+    "derived_from": [
+      "RQ-ROS-2026-A020"
+    ],
+    "id": "RQ-ROS-2026-A027",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A027--step-cli-and-query.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T013711437Z-b3dfcbfc": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-27T01:55:35.455Z",
+          "last": "2026-09-27T07:23:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "First-class step-level execution telemetry requirements and architecture"
+        },
+        "EXE-20260927T145842499Z-f1b40c22": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T01:07:46.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "Resolve requirement identifier collision introduced by main integration"
+        },
+        "EXE-20260928T122823444Z-e1fc1859": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T12:45:21Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "Renumber canonical step-telemetry requirement after integrating main's independently assigned RQ-ROS-2026-A021"
+        },
+        "EXE-20260928T134154662Z-5c00e767": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-01T06:26:26Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "Renumber after latest main independently assigned RQ-ROS-2026-A023"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A037",
+      "RQ-ROS-2026-A013",
+      "RQ-ROS-2026-A014"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "verified",
+    "tags": [
+      "steps",
+      "cli",
+      "query",
+      "json"
+    ],
+    "title": "Step lifecycle and evidence have deterministic CLI inspection",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
   }
 ]

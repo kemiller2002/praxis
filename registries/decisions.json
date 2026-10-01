@@ -690,6 +690,86 @@
     "created": "2026-09-27",
     "decision_type": "architecture",
     "derived_from": [
+      "DF-ROS-2026-A010",
+      "DF-ROS-2026-A036"
+    ],
+    "id": "DF-ROS-2026-A037",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A037--execution-step-telemetry.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T013711437Z-b3dfcbfc": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-27T01:55:35.666Z",
+          "last": "2026-09-27T07:23:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "First-class step-level execution telemetry requirements and architecture"
+        },
+        "EXE-20260927T145842499Z-f1b40c22": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T01:07:45.000Z",
+          "evidence": [
+            "DF-ROS-2026-A051"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "Record closure of the fallback dispatcher follow-up"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A010",
+      "DF-ROS-2026-A036",
+      "RQ-ROS-2026-A013",
+      "RQ-ROS-2026-A014",
+      "RQ-ROS-2026-A015",
+      "RQ-ROS-2026-A016",
+      "RQ-ROS-2026-A017",
+      "RQ-ROS-2026-A018",
+      "RQ-ROS-2026-A019",
+      "RQ-ROS-2026-A027",
+      "DF-ROS-2026-A051",
+      "requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [],
+    "tags": [
+      "architecture",
+      "execution",
+      "steps",
+      "telemetry",
+      "provenance"
+    ],
+    "title": "Execution-owned step ledger with referenced canonical telemetry",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-27",
+    "decision_type": "architecture",
+    "derived_from": [
       "RQ-ROS-2026-A020"
     ],
     "id": "DF-ROS-2026-A040",
@@ -1385,5 +1465,91 @@
     "title": "Praxis is the canonical product and CLI name; ros remains only for compatibility, persisted state and history",
     "updated": "2026-09-30",
     "version": "1.0.1"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-27",
+    "decision_type": "architecture",
+    "derived_from": [
+      "RQ-ROS-2026-A019",
+      "RQ-ROS-2026-A026"
+    ],
+    "id": "DF-ROS-2026-A051",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A051--journaled-fallback-reconciliation.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T145842499Z-f1b40c22": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T01:07:44.000Z",
+          "last": "2026-09-28T02:12:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "Journaled fallback reconciliation architecture"
+        },
+        "EXE-20260928T122823444Z-e1fc1859": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T12:45:22Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "Renumber canonical fallback decision after integrating main's independently assigned DF-ROS-2026-A041"
+        },
+        "EXE-20260928T134154662Z-5c00e767": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-01T06:26:26Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "Renumber after latest main independently assigned DF-ROS-2026-A042"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A037",
+      "requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md",
+      "docs/fallback-reconciliation.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "RQ-ROS-2026-A019",
+      "RQ-ROS-2026-A026"
+    ],
+    "tags": [
+      "architecture",
+      "fallback",
+      "reconciliation",
+      "transaction",
+      "checkpoint",
+      "provenance"
+    ],
+    "title": "Journaled exact-path fallback reconciliation with Git checkpoint",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
   }
 ]

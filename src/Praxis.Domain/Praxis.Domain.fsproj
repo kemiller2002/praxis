@@ -7,10 +7,13 @@
     <Compile Include="Git/Model.fs" />
     <Compile Include="Git/Durability.fs" />
     <Compile Include="Work/Identity.fs" />
+    <Compile Include="Telemetry/Step.fs" />
     <Compile Include="Work/PathFilter.fs" />
     <Compile Include="Work/Attribution.fs" />
+    <Compile Include="Work/EnvelopeReconciliationReceipt.fs" />
     <Compile Include="Work/Model.fs" />
     <Compile Include="Work/Plan.fs" />
+    <Compile Include="Work/EnvelopeReconciliation.fs" />
     <Compile Include="Work/ContextPlan.fs" />
     <Compile Include="Work/Checkpoint.fs" />
     <Compile Include="Work/Continuity.fs" />

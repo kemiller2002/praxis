@@ -32,7 +32,9 @@
     <Compile Include="Lifecycle.fs" />
     <Compile Include="Foundations.fs" />
     <Compile Include="ProvenanceCommands.fs" />
+    <Compile Include="StepCommands.fs" />
     <Compile Include="ReconciliationCommands.fs" />
+    <Compile Include="EnvelopeReconciliationCommands.fs" />
     <Compile Include="ArchitectureCommands.fs" />
     <Compile Include="WebHttp.fs" />
     <Compile Include="CliProcess.fs" />

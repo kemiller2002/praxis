@@ -355,4 +355,19 @@ module FileTelemetryValidationRepository =
                     unreadable.Add { Relative = relative; Message = $"malformed telemetry JSON: {error.Message}" }
                     None)
 
-        TelemetryValidation.findings config registry (unreadable |> List.ofSeq) records workItems
+        let canonical = TelemetryValidation.findings config registry (unreadable |> List.ofSeq) records workItems
+
+        let stepFindings =
+            executionFiles root config.ExecutionRoot
+            |> List.collect (fun file ->
+                let relative = relativePath root file
+
+                try
+                    match JsonNode.Parse(File.ReadAllText file) with
+                    | :? JsonObject as record ->
+                        FileStepRepository.findings record
+                        |> List.map (fun message -> ({ Path = relative; Field = "steps"; Message = message }: TelemetryFinding))
+                    | _ -> []
+                with _ -> [])
+
+        canonical @ stepFindings

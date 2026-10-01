@@ -33,7 +33,6 @@ module CheckpointJson =
         node["name"] <- JsonValue.Create remote.Name
         remote.Url |> Option.iter (fun url -> node["url"] <- JsonValue.Create url)
         node
-
     let private verificationNode (verification: CheckpointVerification) =
         let node = JsonObject()
         node["status"] <- JsonValue.Create "verified"
@@ -281,4 +280,3 @@ module CheckpointJson =
         | _ -> ()
 
         node
-
