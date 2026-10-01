@@ -5808,11 +5808,22 @@
         }
       },
       "completedAt": "2026-10-01T06:49:31Z"
+    },
+    {
+      "id": "EXP-A022-BASELINE",
+      "type": "research",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-01T10:43:18.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261001T104318707Z-560ffe3c"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-01T06:49:31Z",
+  "updatedAt": "2026-10-01T10:43:18.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
