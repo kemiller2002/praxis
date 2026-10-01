@@ -5849,7 +5849,27 @@
       "updatedAt": "2026-10-01T10:51:33.000Z",
       "telemetryExecutionIds": [
         "EXE-20261001T105134505Z-4886c699"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "c017c33a83e3534c3913609b",
+        "recordedAt": "2026-10-01T11:03:59.000Z",
+        "executionId": "EXE-20261001T105134505Z-4886c699",
+        "repository": "repository-operating-system",
+        "branch": "claude/praxis-a022-experiment-setup-xpq6a6",
+        "commit": "aa4a50566346bf142855bfe9e5a3126d042b8a88",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/praxis-a022-experiment-setup-xpq6a6",
+        "remoteCommit": "aa4a50566346bf142855bfe9e5a3126d042b8a88",
+        "summary": "A022 design, affinity model, frozen cohorts, protocols, blinding, records committed and pushed",
+        "nextAction": "Independent review passes; fix findings; complete EXP-A022-BASELINE and EXP-A022-DESIGN",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     }
   ],
   "protocolVersion": "1.0.0",
