@@ -3448,10 +3448,10 @@
         "testing"
       ],
       "priority": "high",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T17:09:06.997Z",
-      "updatedAt": "2026-09-30T17:09:06.997Z",
+      "updatedAt": "2026-09-30T22:26:16.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3643,10 +3643,10 @@
         "bug"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T19:40:19.769Z",
-      "updatedAt": "2026-09-30T19:40:19.769Z",
+      "updatedAt": "2026-09-30T23:11:45.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
