@@ -5818,7 +5818,27 @@
       "updatedAt": "2026-10-01T10:43:18.000Z",
       "telemetryExecutionIds": [
         "EXE-20261001T104318707Z-560ffe3c"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "3a79de59ab757bef12aadfca",
+        "recordedAt": "2026-10-01T10:44:50.000Z",
+        "executionId": "EXE-20261001T104318707Z-560ffe3c",
+        "repository": "repository-operating-system",
+        "branch": "claude/praxis-a022-experiment-setup-xpq6a6",
+        "commit": "9faf138f0185ccb5b280af81ed4c46c2af9a2eb0",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/praxis-a022-experiment-setup-xpq6a6",
+        "remoteCommit": "9faf138f0185ccb5b280af81ed4c46c2af9a2eb0",
+        "summary": "Cohort work items captured and triaged; backlog state committed and pushed",
+        "nextAction": "Complete the baseline item; its Praxis-state commit becomes the frozen baseline",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     }
   ],
   "protocolVersion": "1.0.0",
