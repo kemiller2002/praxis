@@ -1,4 +1,4 @@
-# Praxis remote protocol (`praxis.remote` 1.2)
+# Praxis remote protocol (`praxis.remote` 1.3)
 
 This page specifies the typed request/response contract that lets an agent
 with **no local .NET or Praxis runtime** ask a trusted executor to run an
@@ -103,7 +103,7 @@ not validated, and is excluded from the fingerprint.
 | `request.status` | read | `requestId` | request-journal lookup |
 | `work.start` | mutate | `workItemIds[]`, `type?`, `classifications[]?` | `praxis work start` |
 | `work.resume` | mutate | `workItemIds[]` | `praxis work resume` |
-| `work.block` | mutate | `workItemIds[]`, `reason` | `praxis work block` |
+| `work.block` | mutate | `workItemIds[]`, `reason`, `unrecoverableReason?` (1.3) | `praxis work block` |
 | `telemetry.record` | mutate | `metric`, `value`, and optional `workItemId`, `unit`, `currency`, `quality`, `confidence`, `scope`, `sourceType`, `sourceName`, `mechanism`, `pricingSource`, `pricingVersion`, `collectedAt` | `praxis telemetry record` |
 | `work.complete` | complete | `workItemIds[]`, `evidence[{type, path}]?`, `conclusion?` | `praxis work complete` |
 | `work.reconcile` | reconcile | `workItemId`, `reason`, and at least one of `commits[]` or `ranges[]` (`BASE..HEAD`), plus `paths[]?` | `praxis work reconcile` (#80) |
@@ -111,6 +111,8 @@ not validated, and is excluded from the fingerprint.
 | `step.complete` (1.1) | mutate | `stepId`, `reason?`; requires `execution.id` | `praxis telemetry step complete` |
 | `step.fail` (1.1) | mutate | `stepId`, `reason?`; requires `execution.id` | `praxis telemetry step fail` |
 | `batch` (1.2) | each constituent's own | `requests[]` of `{requestId, operation, execution?, arguments?}` | each constituent's command, in order |
+| `work.checkpoint` (1.3) | mutate | `workItemId`, `summary`, `nextAction`, `stepId?`; requires `execution.id` | `praxis work checkpoint --json` |
+| `work.continue` (1.3) | mutate | `workItemId` | `praxis work continue --json` |
 
 **Version 1.1 additions.** Version 1.1 adds the step operations and the
 optional `step` argument of `telemetry.record` (PRAXIS-REMOTE-04). A 1.0
@@ -119,6 +121,17 @@ request cannot use them.
 **Step operations** act on the requester's *own* execution. That execution
 must be named in `execution.id`, and it must be one the requester may
 continue.
+
+**Completion finalizes only the requester's own executions (GH-113).**
+`work.complete` finalizes every active execution of each item it completes,
+so every one of them must be an execution the requester may continue,
+whether or not the request names one in `execution.id`. If any belongs to
+another actor or run -- including another session of the same agent -- the
+request is refused as `domain-rejected` on `arguments.workItemIds`, and
+nothing is persisted. The successor takes the work over with `work.continue`
+first (which records the predecessor as interrupted), then completes it in
+its own execution. The owner of the only active execution may still omit
+`execution.id`.
 
 **Batches (version 1.2).** The `batch` operation carries ordered
 constituents in `arguments.requests`. Each constituent has the form
@@ -150,6 +163,26 @@ start-ups without weakening any guarantee.
   - `persistence.paths` lists the state that successful constituents kept,
     so the adapter persists that state even when the batch as a whole did
     not succeed.
+
+**Durable checkpoints (version 1.3,
+[`DF-ROS-2026-A042`](../research/decisions/DF-ROS-2026-A042--durable-work-checkpoints-and-executor-continuation.md)).**
+
+- **`work.checkpoint`** is recorded in the requester's own execution. The
+  request never asserts a commit: the executor is checked out at
+  `expectedSha`, and the command verifies that commit against the remote
+  branch head itself.
+- **Persisted state.** The adapter's commit of the resulting Praxis state
+  changes only non-meaningful paths, so the checkpoint stays current.
+- **`work.continue`** creates the successor's execution, whose parent is the
+  predecessor.
+- **`unrecoverableReason`** on `work.block` is added in 1.3. Without it, the
+  block fingerprint is byte-for-byte the 1.0-1.2 encoding, so journalled
+  requests still replay.
+- **Discovery.** `praxis.describe` publishes `requiresExecution` and
+  `introducedIn` for every operation.
+- **Reading state.** `work.context` returns the `continuity` block. A remote
+  reader sees the historical checkpoint and its current recoverability
+  separately.
 
 The `admin` capability is reserved.
 
@@ -449,6 +482,17 @@ record.
   access to the repository, and `workflow_call` can start the workflow.
   There is no `pull_request` trigger, so forks can neither run it nor
   obtain its credentials.
+- **The inbox relay** (`praxis-remote-inbox.yml`, `DF-ROS-2026-A045`) is for
+  a writer that cannot dispatch. It runs on a push to a `praxis-inbox/**`
+  branch that adds or changes `.praxis-inbox/*.json`, and dispatches this
+  workflow with each file's exact bytes on the ref the request names.
+  - It needs only `contents: read` and `actions: write`.
+  - It checks only what routing needs: the document is JSON, the
+    `protocol`, the `requestId`, and a `refs/heads/` ref that is not an
+    inbox branch.
+  - Everything else is decided here, by Praxis.
+  - Pushing a branch requires write access, so its trust boundary is the
+    same as dispatch's.
 - **Credentials per job.** The default is `permissions: {}`.
   - `praxis remote classify` decides whether a request mutates.
   - Reads execute in a job with `contents: read`.
@@ -486,7 +530,9 @@ record.
    - In `pull-request` mode, the state is pushed to
      `praxis/remote/<digest of the request ID>` and a pull request is
      opened. The result is `persisted: false` with the pull request URL,
-     until the pull request is merged.
+     until the pull request is merged. A same-request retry reuses that
+     branch when its tip carries the request's `Praxis-Request-Id`, and
+     reports `reused: true`; it never pushes a second state for the request.
 
 The adapter writes its own `praxis.remote-adapter-result` document next to
 the Praxis response. The job succeeds only when the Praxis outcome is

@@ -10,8 +10,8 @@ open Ros.Infrastructure.Lifecycle
 
 /// The distributed package version, taken from the assembly's own
 /// informational version. `Directory.Build.props` sets that from
-/// `package.json`, so the CLI and the npm release can never report different
-/// versions.
+/// `release.json`, so the CLI and the release it ships in can never report
+/// different versions.
 let Version =
     let raw =
         typeof<LifecycleRequest>.Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
@@ -76,10 +76,12 @@ type Command =
 // ---------------------------------------------------------------------------
 
 let private globalHelp =
-    """ros -- Repository Operating System lifecycle CLI
+    """praxis -- Praxis, Echelon Foundry's repository operating system
+
+The legacy `ros` command is supported as a compatibility alias for `praxis`.
 
 Usage:
-  ros <command> [options]
+  praxis <command> [options]
 
 Commands:
   init        Bring this repository into a valid installed state. Idempotent.
@@ -89,7 +91,7 @@ Commands:
   doctor      Diagnose problems and explain how to fix them. Read-only.
 
 Options:
-  -h, --help            Show this help, or 'ros <command> --help'.
+  -h, --help            Show this help, or 'praxis <command> --help'.
   -V, --version         Print the CLI version and exit.
   --root PATH           Repository to act on (default: current directory).
   --package-root PATH   Install from this scaffold directory instead of the one
@@ -110,10 +112,10 @@ This CLI also carries the repository's artifact, work and telemetry commands
 follows below; see docs/cli.md for the complete reference."""
 
 let private initHelp =
-    """ros init -- bring this repository into a valid installed state
+    """praxis init -- bring this repository into a valid installed state
 
 Usage:
-  ros init [--profile NAME] [--project NAME] [--dry-run] [--check] [--json] [--verbose]
+  praxis init [--profile NAME] [--project NAME] [--dry-run] [--check] [--json] [--verbose]
 
 What it does:
   Inspects the repository, determines the installed state, calculates the
@@ -139,20 +141,23 @@ Options:
   --verbose        List every planned change, not just the counts.
 
 Examples:
-  ros init
-  ros init --dry-run --json
-  ros init --profile project-administration --project 'Project Administration'
+  praxis init
+  praxis init --dry-run --json
+  praxis init --profile project-administration --project 'Project Administration'
 """
 
 let private statusHelp =
-    """ros status -- report installation, validation and work state
+    """praxis status -- report installation, validation and work state
 
 Usage:
-  ros status [--json] [--verbose]
+  praxis status [--json] [--verbose] [--offline]
 
 What it does:
   Reads the repository and prints a JSON document describing the work items,
-  validation findings, telemetry counts and the installation. Never writes.
+  validation findings, telemetry counts, the installation, and continuity:
+  the durable checkpoint of each active or blocked work item, observed
+  against its remote now, with warnings stated as observed facts. Never
+  writes.
 
   Output is JSON with or without --json: this command emitted JSON before the
   lifecycle interface existed and consumers depend on that. --json is accepted
@@ -161,15 +166,16 @@ What it does:
 Options:
   --json      Accepted for symmetry; the output is JSON either way.
   --verbose   Include every managed artifact in the installation block.
+  --offline   Never contact a remote; remote state is reported as unknown.
 
 Example:
-  ros status --json"""
+  praxis status --json"""
 
 let private verifyHelp =
-    """ros verify -- check that the capability is correctly installed
+    """praxis verify -- check that the capability is correctly installed
 
 Usage:
-  ros verify [--strict] [--json] [--verbose]
+  praxis verify [--strict] [--json] [--verbose]
 
 What it does:
   Reads .echelon/ros.json and checks that every tool-owned artifact it records
@@ -190,14 +196,14 @@ Exit codes:
   0 valid; 3 verification failed.
 
 Examples:
-  ros verify
-  ros verify --strict --json"""
+  praxis verify
+  praxis verify --strict --json"""
 
 let private upgradeHelp =
-    """ros upgrade -- migrate an existing installation to this CLI's version
+    """praxis upgrade -- migrate an existing installation to this CLI's version
 
 Usage:
-  ros upgrade [--dry-run] [--check] [--json] [--verbose]
+  praxis upgrade [--dry-run] [--check] [--json] [--verbose]
 
 What it does:
   Determines the installed configuration version, resolves the ordered chain of
@@ -223,14 +229,14 @@ Exit codes:
   5 migration blocked.
 
 Examples:
-  ros upgrade --dry-run --json
-  ros upgrade"""
+  praxis upgrade --dry-run --json
+  praxis upgrade"""
 
 let private doctorHelp =
-    """ros doctor -- diagnose problems and explain how to fix them
+    """praxis doctor -- diagnose problems and explain how to fix them
 
 Usage:
-  ros doctor [--strict] [--json] [--verbose]
+  praxis doctor [--strict] [--json] [--verbose]
 
 What it does:
   Reports every problem it can detect, each with the reason it is a problem
@@ -249,8 +255,8 @@ Exit codes:
   0 no errors; 3 at least one error (or, with --strict, any warning).
 
 Examples:
-  ros doctor
-  ros doctor --json"""
+  praxis doctor
+  praxis doctor --json"""
 
 let helpFor (topic: string option) =
     match topic with
@@ -364,7 +370,7 @@ let parse (packageRoot: string option) (arguments: string list) : Result<Command
             // `status` is also a pre-existing repository command; the
             // lifecycle parser only claims it to validate its flags.
             rest
-            |> check baseFlags (fun () -> Command.Status { Common = commonOptions rest })
+            |> check (baseFlags + Set.singleton "--offline") (fun () -> Command.Status { Common = commonOptions rest })
         | _ -> None
 
 // ---------------------------------------------------------------------------
@@ -565,7 +571,7 @@ let private runVerify root (options: VerifyOptions) =
             eprintfn "verification failed with %d finding(s)" failures.Length
 
             if not options.Common.Verbose then
-                eprintfn "run 'ros doctor' to see why, and how to fix each one"
+                eprintfn "run 'praxis doctor' to see why, and how to fix each one"
 
     if valid then ExitCode.Success else ExitCode.VerificationFailed
 
@@ -608,9 +614,10 @@ let run (renderHelp: string option -> string) (root: string) (command: Command) 
         printfn "%s" (renderHelp topic)
         Some ExitCode.Success
     | Command.Version ->
-        // Format unchanged from before the lifecycle interface existed; only
-        // the value changed, from a placeholder to the real package version.
-        printfn "ros-fs %s" Version
+        // "<program> <version>". Consumers (echelon doctor, the verified
+        // bootstrap) read only the version token, so the program name could
+        // move from the historical `ros-fs` to `praxis` (DF-ROS-2026-A050).
+        printfn "praxis %s" Version
         Some ExitCode.Success
     | Command.Init options -> Some(runInit root options)
     | Command.Verify options -> Some(runVerify root options)

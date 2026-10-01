@@ -9,7 +9,7 @@ Use this path only when the repository's Praxis executable cannot run. The JSON 
 3. Use a globally unique, stable `transactionId`. Reuse it for every retry.
 4. Record ordered timeline/request pairs. Supported request types are `work.start` (or `work.begin`), `work.block`, `work.resume`, and `work.complete`.
 5. Include `praxisInstanceId` only when it is actually available. Do not invent provider, model, runtime, session, token, or cost data.
-6. Put the envelope under `.praxis/outbox/events/` for CI discovery, or pass its path directly to `./ros reconcile --envelope FILE` once Praxis is available.
+6. Put the envelope under `.praxis/outbox/events/` for CI discovery, or pass its path directly to `./praxis reconcile --envelope FILE` once Praxis is available.
 
 Minimal start envelope:
 
@@ -54,8 +54,8 @@ The optional `execution.steps` shape is defined by [`protocol/praxis-envelope-v1
 ## Reconciliation and retry
 
 ```bash
-./ros reconcile --envelope .praxis/outbox/events/tx-WI-1234-001.json
-./ros inbox list
+./praxis reconcile --envelope .praxis/outbox/events/tx-WI-1234-001.json
+./praxis inbox list
 ```
 
 Praxis verifies the actual branch, base ancestry, instance identity, request/timeline order, legal transitions, evidence paths, step lifecycle, measurement semantics, execution identity, and raw-telemetry retention limits. It renders all requests in an isolated staging root before canonical mutation. A completion envelope that supplies an execution must supply only terminal steps. A fallback completion also fails closed when the existing work item has a linked active native execution; finalize that execution through the native runtime before reconciling completion, so fallback input cannot silently abandon its telemetry.

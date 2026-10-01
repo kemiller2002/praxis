@@ -5,6 +5,7 @@ open System.ComponentModel
 open System.Diagnostics
 open Ros.Application.Git
 open Ros.Domain.Git
+open Ros.Application.Work
 open Ros.Domain.Work
 
 [<RequireQualifiedAccess>]
@@ -319,6 +320,21 @@ module ProcessGitRepository =
 
     let readBranchAndCommit root = readBranchAndCommitWithExecutable "git" root
 
+    /// A read-only Git query's non-empty output lines, or why it failed. Used
+    /// by the advisory planner, which only ever observes the repository.
+    let readLinesWithExecutable executable root (arguments: string list) : Result<string list, GitFailure> =
+        match runGit executable (IO.Path.GetFullPath root) "git" arguments with
+        | Error failure -> Error failure
+        | Ok result when result.ExitCode <> 0 ->
+            Error
+                { Operation = "git " + String.Join(" ", arguments)
+                  Reason = GitUnavailableReason.CommandFailed
+                  Message = result.Error
+                  ExitCode = Some result.ExitCode }
+        | Ok result -> Ok(result.Output.Split([| '\r'; '\n' |], StringSplitOptions.RemoveEmptyEntries) |> Array.toList)
+
+    let readLines root arguments = readLinesWithExecutable "git" root arguments
+
     /// Mirrors production `runGitText`'s default (trimmed) success/failure
     /// shape for the git-diff-derived change-summary reads
     /// `cleanBaselineChanges` performs: `git diff --name-status`, `git diff
@@ -358,6 +374,27 @@ module ProcessGitRepository =
         | Ok result -> Ok result.Output
 
     let readUntrackedFiles root = readUntrackedFilesWithExecutable "git" root
+
+    /// Every repository-owned path: tracked files plus untracked files that
+    /// are not ignored (so a new file is seen before it is committed), minus
+    /// tracked files already deleted from the working tree. Sorted ordinally.
+    let listRepositoryFilesWithExecutable executable root : Result<string list, GitFailure> =
+        let fullRoot = IO.Path.GetFullPath root
+
+        match runGit executable fullRoot "git ls-files" [ "ls-files"; "-z"; "--cached"; "--others"; "--exclude-standard" ] with
+        | Error failure -> Error failure
+        | Ok result when result.ExitCode <> 0 ->
+            let message = if result.Error.Length = 0 then $"git exited with code {result.ExitCode}" else result.Error
+            Error { Operation = "git ls-files"; Reason = GitUnavailableReason.CommandFailed; Message = message; ExitCode = Some result.ExitCode }
+        | Ok result ->
+            result.Output.Split('\000', StringSplitOptions.RemoveEmptyEntries)
+            |> Array.distinct
+            |> Array.filter (fun path -> IO.File.Exists(IO.Path.Combine(fullRoot, path)))
+            |> Array.sortWith (fun a b -> String.CompareOrdinal(a, b))
+            |> List.ofArray
+            |> Ok
+
+    let listRepositoryFiles root = listRepositoryFilesWithExecutable "git" root
 
     let readCommitCountWithExecutable executable root (startCommit: string) (endCommit: string) : Result<int, GitFailure> =
         runGitTextTrimmed executable (IO.Path.GetFullPath root) "git rev-list" [ "rev-list"; "--count"; $"{startCommit}..{endCommit}" ]
@@ -499,3 +536,388 @@ module ProcessGitRepository =
         |> Map.ofList
 
     let readPathStates root paths = readPathStatesWithExecutable "git" root paths
+
+/// Parsers for the Git reads durability depends on. Kept separate from the
+/// process runner so every accepted and refused output form is testable.
+[<RequireQualifiedAccess>]
+module GitDurabilityParser =
+    let private malformed operation message =
+        { Operation = operation
+          Reason = GitUnavailableReason.MalformedOutput
+          Message = message
+          ExitCode = None }
+
+    /// A remote URL with any user information (which can carry a token, as
+    /// `https://x-access-token:...@host/...` does in CI) removed. An
+    /// scp-like `user@host:path` names an SSH login, not a secret, and is
+    /// kept as Git shows it.
+    let sanitizeUrl (url: string) =
+        let schemeUserInfo = System.Text.RegularExpressions.Regex(@"^([A-Za-z][A-Za-z0-9+.\-]*://)[^/@]*@")
+        schemeUserInfo.Replace(url.Trim(), "$1")
+
+    /// `git ls-remote REMOTE refs/heads/BRANCH` output: exactly one line for
+    /// that ref, `SHA<TAB>refs/heads/BRANCH`. No line means the branch does
+    /// not exist on the remote.
+    let parseLsRemote (branch: string) (output: string) : Result<CommitId option, GitFailure> =
+        let target = $"refs/heads/{branch}"
+
+        let lines =
+            output.Split([| '\n' |], StringSplitOptions.RemoveEmptyEntries)
+            |> Array.map (fun line -> line.TrimEnd('\r'))
+            |> Array.toList
+
+        let matching =
+            lines
+            |> List.choose (fun line ->
+                match line.Split('\t') with
+                | [| sha; reference |] when reference = target -> Some sha
+                | _ -> None)
+
+        match matching with
+        | [] when lines |> List.forall (fun line -> line.Split('\t').Length = 2) -> Ok None
+        | [] -> Error(malformed "git ls-remote" "ls-remote output was not SHA<TAB>REF lines")
+        | [ sha ] ->
+            match CommitId.tryParse sha with
+            | Some commit -> Ok(Some commit)
+            | None -> Error(malformed "git ls-remote" $"'{sha}' is not a full commit ID")
+        | _ -> Error(malformed "git ls-remote" $"ls-remote reported {matching.Length} heads for {target}")
+
+    /// `git rev-list --left-right --count A...B` output: `LEFT<TAB>RIGHT`.
+    let parseLeftRightCount (output: string) : Result<CommitRelation, GitFailure> =
+        match output.Trim().Split([| '\t'; ' ' |], StringSplitOptions.RemoveEmptyEntries) with
+        | [| left; right |] ->
+            match Int32.TryParse left, Int32.TryParse right with
+            | (true, ahead), (true, behind) when ahead >= 0 && behind >= 0 -> Ok(CommitRelation.ofCounts ahead behind)
+            | _ -> Error(malformed "git rev-list" $"'{output.Trim()}' is not two counts")
+        | _ -> Error(malformed "git rev-list" $"'{output.Trim()}' is not two counts")
+
+    /// `git diff --name-only -z` output.
+    let parseNameList (output: string) : string list =
+        output.Split('\000', StringSplitOptions.RemoveEmptyEntries)
+        |> Array.map (fun path -> path.Trim('\n', '\r'))
+        |> Array.filter (fun path -> path.Length > 0)
+        |> Array.distinct
+        |> Array.toList
+
+/// The process-backed `GitDurability` port. Reads only: nothing here
+/// fetches, commits, pushes, or moves a ref. Remote reads run with prompts
+/// disabled and a bounded timeout, so an unreachable or credential-demanding
+/// remote is reported as unreachable instead of hanging.
+[<RequireQualifiedAccess>]
+module ProcessGitDurability =
+    type private Run =
+        { ExitCode: int
+          Output: string
+          Error: string
+          TimedOut: bool }
+
+    let defaultRemoteTimeout = TimeSpan.FromSeconds 30.0
+
+    /// `ROS_GIT_REMOTE_TIMEOUT_SECONDS` bounds a remote read; absent or
+    /// invalid values use the default.
+    let remoteTimeout () =
+        match Environment.GetEnvironmentVariable "ROS_GIT_REMOTE_TIMEOUT_SECONDS" with
+        | null -> defaultRemoteTimeout
+        | value ->
+            match Double.TryParse(value, Globalization.NumberStyles.Float, Globalization.CultureInfo.InvariantCulture) with
+            | true, seconds when seconds > 0.0 -> TimeSpan.FromSeconds seconds
+            | _ -> defaultRemoteTimeout
+
+    let private run executable (root: string) (operation: string) (timeout: TimeSpan option) (arguments: string list) : Result<Run, GitFailure> =
+        try
+            let startInfo = ProcessStartInfo()
+            startInfo.FileName <- executable
+            startInfo.UseShellExecute <- false
+            startInfo.RedirectStandardOutput <- true
+            startInfo.RedirectStandardError <- true
+            startInfo.RedirectStandardInput <- true
+            startInfo.Environment["GIT_TERMINAL_PROMPT"] <- "0"
+            startInfo.Environment["GCM_INTERACTIVE"] <- "never"
+            startInfo.Environment["GIT_ASKPASS"] <- ""
+            startInfo.Environment["SSH_ASKPASS"] <- ""
+            startInfo.ArgumentList.Add "-C"
+            startInfo.ArgumentList.Add root
+            arguments |> List.iter startInfo.ArgumentList.Add
+
+            use child = new Process(StartInfo = startInfo)
+
+            if not (child.Start()) then
+                Error
+                    { Operation = operation
+                      Reason = GitUnavailableReason.ToolUnavailable
+                      Message = "git process did not start"
+                      ExitCode = None }
+            else
+                child.StandardInput.Close()
+                let standardOutput = child.StandardOutput.ReadToEndAsync()
+                let standardError = child.StandardError.ReadToEndAsync()
+
+                let exited =
+                    match timeout with
+                    | Some limit -> child.WaitForExit(int limit.TotalMilliseconds)
+                    | None ->
+                        child.WaitForExit()
+                        true
+
+                if not exited then
+                    try
+                        child.Kill true
+                    with _ ->
+                        ()
+
+                    Ok
+                        { ExitCode = -1
+                          Output = ""
+                          Error = $"timed out after {timeout.Value.TotalSeconds:F0}s"
+                          TimedOut = true }
+                else
+                    child.WaitForExit()
+
+                    Ok
+                        { ExitCode = child.ExitCode
+                          Output = standardOutput.Result
+                          Error = standardError.Result.Trim()
+                          TimedOut = false }
+        with
+        | :? Win32Exception as error ->
+            Error
+                { Operation = operation
+                  Reason = GitUnavailableReason.ToolUnavailable
+                  Message = error.Message
+                  ExitCode = None }
+        | error ->
+            Error
+                { Operation = operation
+                  Reason = GitUnavailableReason.CommandFailed
+                  Message = error.Message
+                  ExitCode = None }
+
+    let private failureOf operation (result: Run) =
+        let reason =
+            if result.Error.Contains("not a git repository", StringComparison.OrdinalIgnoreCase) then
+                GitUnavailableReason.NotRepository
+            else
+                GitUnavailableReason.CommandFailed
+
+        { Operation = operation
+          Reason = reason
+          Message = if result.Error.Length = 0 then $"git exited with code {result.ExitCode}" else result.Error
+          ExitCode = Some result.ExitCode }
+
+    let private configValue executable root (key: string) : GitRead<string option> =
+        match run executable root "git config" None [ "config"; "--get"; key ] with
+        | Error failure -> GitRead.Unavailable failure
+        | Ok result when result.ExitCode = 0 -> GitRead.Observed(Some(result.Output.Trim()))
+        | Ok result when result.ExitCode = 1 -> GitRead.Observed None
+        | Ok result -> GitRead.Unavailable(failureOf "git config" result)
+
+    let private head executable root () : GitRead<HeadState> =
+        match run executable root "git symbolic-ref" None [ "symbolic-ref"; "-q"; "HEAD" ] with
+        | Error failure -> GitRead.Unavailable failure
+        | Ok symbolic when symbolic.ExitCode <> 0 && symbolic.ExitCode <> 1 -> GitRead.Unavailable(failureOf "git symbolic-ref" symbolic)
+        | Ok symbolic ->
+            let branch =
+                if symbolic.ExitCode = 0 then
+                    let reference = symbolic.Output.Trim()
+                    Some(if reference.StartsWith "refs/heads/" then reference.Substring "refs/heads/".Length else reference)
+                else
+                    None
+
+            match run executable root "git rev-parse" None [ "rev-parse"; "--verify"; "-q"; "HEAD^{commit}" ] with
+            | Error failure -> GitRead.Unavailable failure
+            | Ok resolved when resolved.ExitCode = 0 ->
+                match CommitId.tryParse (resolved.Output.Trim()), branch with
+                | Some commit, Some name -> GitRead.Observed(HeadState.OnBranch(name, commit))
+                | Some commit, None -> GitRead.Observed(HeadState.Detached commit)
+                | None, _ ->
+                    GitRead.Unavailable
+                        { Operation = "git rev-parse"
+                          Reason = GitUnavailableReason.MalformedOutput
+                          Message = $"'{resolved.Output.Trim()}' is not a full commit ID"
+                          ExitCode = None }
+            | Ok resolved when resolved.ExitCode = 1 -> GitRead.Observed(HeadState.Unborn branch)
+            | Ok resolved -> GitRead.Unavailable(failureOf "git rev-parse" resolved)
+
+    let private remote executable root (name: string) : GitRead<RemoteIdentity option> =
+        match configValue executable root $"remote.{name}.url" with
+        | GitRead.Unavailable failure -> GitRead.Unavailable failure
+        | GitRead.Observed None -> GitRead.Observed None
+        | GitRead.Observed(Some url) ->
+            GitRead.Observed(
+                Some
+                    { Name = name
+                      Url = Some(GitDurabilityParser.sanitizeUrl url) }
+            )
+
+    let private upstream executable root (branch: string) : GitRead<UpstreamState> =
+        match configValue executable root $"branch.{branch}.remote", configValue executable root $"branch.{branch}.merge" with
+        | GitRead.Unavailable failure, _
+        | _, GitRead.Unavailable failure -> GitRead.Unavailable failure
+        | GitRead.Observed None, _
+        | _, GitRead.Observed None
+        | GitRead.Observed(Some "."), _ -> GitRead.Observed UpstreamState.NoUpstream
+        | GitRead.Observed(Some remoteName), GitRead.Observed(Some merge) ->
+            let remoteBranch = if merge.StartsWith "refs/heads/" then merge.Substring "refs/heads/".Length else merge
+
+            match remote executable root remoteName with
+            | GitRead.Unavailable failure -> GitRead.Unavailable failure
+            | GitRead.Observed None -> GitRead.Observed(UpstreamState.RemoteNotConfigured(remoteName, remoteBranch))
+            | GitRead.Observed(Some identity) -> GitRead.Observed(UpstreamState.Tracking(identity, remoteBranch))
+
+    let private remoteBranch executable root (identity: RemoteIdentity) (branch: string) : RemoteBranchObservation =
+        let arguments = [ "ls-remote"; "--heads"; "--"; identity.Name; $"refs/heads/{branch}" ]
+
+        match run executable root "git ls-remote" (Some(remoteTimeout ())) arguments with
+        | Error failure when failure.Reason = GitUnavailableReason.ToolUnavailable -> RemoteBranchObservation.Unavailable failure
+        | Error failure -> RemoteBranchObservation.Unreachable failure
+        | Ok result when result.TimedOut ->
+            RemoteBranchObservation.Unreachable
+                { Operation = "git ls-remote"
+                  Reason = GitUnavailableReason.CommandFailed
+                  Message = $"remote '{identity.Name}' did not answer: {result.Error}"
+                  ExitCode = None }
+        | Ok result when result.ExitCode = 0 ->
+            match GitDurabilityParser.parseLsRemote branch result.Output with
+            | Ok(Some commit) -> RemoteBranchObservation.At commit
+            | Ok None -> RemoteBranchObservation.Missing
+            | Error failure -> RemoteBranchObservation.Unavailable failure
+        | Ok result when result.Error.Contains("not a git repository", StringComparison.OrdinalIgnoreCase) ->
+            RemoteBranchObservation.Unavailable(failureOf "git ls-remote" result)
+        | Ok result -> RemoteBranchObservation.Unreachable(failureOf "git ls-remote" result)
+
+    let private exists executable root (commit: CommitId) =
+        match run executable root "git cat-file" None [ "cat-file"; "-e"; $"{commit.Value}^{{commit}}" ] with
+        | Error failure -> Error failure
+        | Ok result when result.ExitCode = 0 -> Ok true
+        | Ok result when result.Error.Contains("not a git repository", StringComparison.OrdinalIgnoreCase) -> Error(failureOf "git cat-file" result)
+        | Ok _ -> Ok false
+
+    let private relation executable root (left: CommitId) (right: CommitId) : CommitRelationObservation =
+        match exists executable root left, exists executable root right with
+        | Error failure, _
+        | _, Error failure -> CommitRelationObservation.Unavailable failure
+        | Ok false, _ -> CommitRelationObservation.ObjectMissing left
+        | _, Ok false -> CommitRelationObservation.ObjectMissing right
+        | Ok true, Ok true ->
+            match run executable root "git rev-list" None [ "rev-list"; "--left-right"; "--count"; $"{left.Value}...{right.Value}" ] with
+            | Error failure -> CommitRelationObservation.Unavailable failure
+            | Ok result when result.ExitCode <> 0 -> CommitRelationObservation.Unavailable(failureOf "git rev-list" result)
+            | Ok result ->
+                match GitDurabilityParser.parseLeftRightCount result.Output with
+                | Ok value -> CommitRelationObservation.Related value
+                | Error failure -> CommitRelationObservation.Unavailable failure
+
+    let private changedPaths executable root (left: CommitId) (right: CommitId) : GitRead<string list> =
+        match run executable root "git diff" None [ "diff"; "--name-only"; "-z"; "--no-renames"; "--no-ext-diff"; left.Value; right.Value; "--" ] with
+        | Error failure -> GitRead.Unavailable failure
+        | Ok result when result.ExitCode <> 0 -> GitRead.Unavailable(failureOf "git diff" result)
+        | Ok result -> GitRead.Observed(GitDurabilityParser.parseNameList result.Output)
+
+    /// Each commit in `left..right` with its own changes: a non-merge commit
+    /// against its parent, a merge with none (its changes belong to the
+    /// lines of history it joins). Read-only.
+    let private commitChanges executable root (left: CommitId) (right: CommitId) : GitRead<CommitChange list> =
+        match run executable root "git rev-list" None [ "rev-list"; "--parents"; "--reverse"; $"{left.Value}..{right.Value}" ] with
+        | Error failure -> GitRead.Unavailable failure
+        | Ok result when result.ExitCode <> 0 -> GitRead.Unavailable(failureOf "git rev-list" result)
+        | Ok result ->
+            let lines = result.Output.Split([| '\r'; '\n' |], StringSplitOptions.RemoveEmptyEntries) |> Array.toList
+
+            lines
+            |> List.fold
+                (fun (acc: GitRead<CommitChange list>) line ->
+                    match acc with
+                    | GitRead.Unavailable _ -> acc
+                    | GitRead.Observed changes ->
+                        match line.Split(' ', StringSplitOptions.RemoveEmptyEntries) |> Array.toList with
+                        | [] -> acc
+                        | commit :: parents when parents.Length > 1 ->
+                            GitRead.Observed(changes @ [ { Commit = commit; IsMerge = true; Paths = [] } ])
+                        | commit :: _ ->
+                            match run executable root "git diff-tree" None [ "diff-tree"; "--no-commit-id"; "--name-only"; "-r"; "-z"; "--no-renames"; "--root"; commit ] with
+                            | Error failure -> GitRead.Unavailable failure
+                            | Ok tree when tree.ExitCode <> 0 -> GitRead.Unavailable(failureOf "git diff-tree" tree)
+                            | Ok tree ->
+                                GitRead.Observed(changes @ [ { Commit = commit; IsMerge = false; Paths = GitDurabilityParser.parseNameList tree.Output } ]))
+                (GitRead.Observed [])
+
+    let private reachable executable root (left: CommitId) (right: CommitId) : GitRead<string list> =
+        match run executable root "git rev-list" None [ "rev-list"; $"{left.Value}..{right.Value}" ] with
+        | Error failure -> GitRead.Unavailable failure
+        | Ok result when result.ExitCode <> 0 -> GitRead.Unavailable(failureOf "git rev-list" result)
+        | Ok result -> GitRead.Observed(result.Output.Split([| '\r'; '\n' |], StringSplitOptions.RemoveEmptyEntries) |> Array.toList)
+
+    /// The commit-level reads the ownership rule needs (PRAXIS-CONT-12),
+    /// each answer computed once per process.
+    let createCommitHistoryWithExecutable executable (root: string) : GitCommitHistory =
+        let fullRoot = IO.Path.GetFullPath root
+
+        let memo (compute: 'key -> 'value) =
+            let cache = Collections.Concurrent.ConcurrentDictionary<'key, 'value>()
+            fun key -> cache.GetOrAdd(key, compute)
+
+        let changes = memo (fun (left: CommitId, right: CommitId) -> commitChanges executable fullRoot left right)
+        let reach = memo (fun (left: CommitId, right: CommitId) -> reachable executable fullRoot left right)
+
+        { Changes = fun left right -> changes (left, right)
+          Reachable = fun left right -> reach (left, right) }
+
+    let createCommitHistory root = createCommitHistoryWithExecutable "git" root
+
+    let createWithExecutable executable (root: string) : GitDurability =
+        let fullRoot = IO.Path.GetFullPath root
+        let status = ProcessGitRepository.createWithExecutable executable fullRoot
+
+        { Head = head executable fullRoot
+          Upstream = upstream executable fullRoot
+          Remote = remote executable fullRoot
+          RemoteBranch = remoteBranch executable fullRoot
+          Relation = relation executable fullRoot
+          ChangedPaths = changedPaths executable fullRoot
+          Status = status.ObserveStatus }
+
+    let create root = createWithExecutable "git" root
+
+    /// The same port with each answer computed once per process: a status or
+    /// context report that assesses several work items reads HEAD, the tree,
+    /// and each remote branch once. With `offline`, the remote is never
+    /// contacted and its state is reported as not observed (unknown), never
+    /// as current.
+    let createFor (root: string) (offline: bool) : GitDurability =
+        let port = create root
+
+        let memo (compute: 'key -> 'value) =
+            let cache = Collections.Concurrent.ConcurrentDictionary<'key, 'value>()
+            fun key -> cache.GetOrAdd(key, compute)
+
+        // `unit` is null at runtime, so the zero-argument reads are lazy
+        // values rather than dictionary entries.
+        let head =
+            let value = lazy (port.Head())
+            fun () -> value.Value
+
+        let status =
+            let value = lazy (port.Status())
+            fun () -> value.Value
+
+        let remoteBranch =
+            if offline then
+                fun (_: RemoteIdentity) (_: string) ->
+                    RemoteBranchObservation.Unavailable
+                        { Operation = "git ls-remote"
+                          Reason = GitUnavailableReason.CommandFailed
+                          Message = "the remote was not observed (--offline)"
+                          ExitCode = None }
+            else
+                let cached = memo (fun (remote: RemoteIdentity, branch: string) -> port.RemoteBranch remote branch)
+                fun remote branch -> cached (remote, branch)
+
+        let relation = memo (fun (left: CommitId, right: CommitId) -> port.Relation left right)
+        let changed = memo (fun (left: CommitId, right: CommitId) -> port.ChangedPaths left right)
+
+        { port with
+            Head = head
+            Status = status
+            RemoteBranch = remoteBranch
+            Relation = fun left right -> relation (left, right)
+            ChangedPaths = fun left right -> changed (left, right) }

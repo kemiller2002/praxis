@@ -58,7 +58,17 @@ module FileTelemetryUsageRepository =
             | UsageDimension.Day ->
                 [ text record "startedAt" |> Option.filter (fun value -> value.Length >= 10) |> Option.map (fun value -> value.Substring(0, 10)) |> Option.defaultValue "unknown" ]
             | UsageDimension.Step ->
-                FileTelemetryFinalizationRepository.stepEvents record |> Steps.project |> List.map _.StepId
+                let steps = FileTelemetryFinalizationRepository.stepEvents record |> Steps.project
+                // An execution with an execution-scoped period belongs to the
+                // outside-any-step group too, so if it reported nothing there
+                // it is listed as unavailable rather than counted as zero.
+                let outside =
+                    if TelemetrySegmentation.derive (text record "startedAt") steps |> TelemetrySegmentation.hasExecutionScopedPeriod then
+                        [ Usage.outsideAnyStep ]
+                    else
+                        []
+
+                (steps |> List.map _.StepId) @ outside
 
         let executionsByKey =
             records
@@ -101,3 +111,65 @@ module FileTelemetryUsageRepository =
 
         { ExecutionsByKey = executionsByKey
           Measurements = measurements }
+
+    /// How one execution's telemetry is segmented, and where each of its
+    /// recorded measurements belongs relative to step adoption.
+    type ExecutionSegmentation =
+        { ExecutionId: string
+          Status: string option
+          StartedAt: string option
+          Segmentation: TelemetrySegmentation
+          Scopes: MeasurementScope list }
+
+    let segmentationOf (record: JsonObject) : ExecutionSegmentation =
+        let startedAt = text record "startedAt"
+        let segmentation = FileTelemetryFinalizationRepository.stepEvents record |> Steps.project |> TelemetrySegmentation.derive startedAt
+
+        let scopes =
+            match record["metrics"] with
+            | :? JsonArray as metrics ->
+                metrics
+                |> Seq.choose (function
+                    | :? JsonObject as metric ->
+                        let step = child metric "dimensions" |> Option.bind (fun node -> text node "step")
+                        Some(TelemetrySegmentation.scopeOf segmentation step (text metric "collectedAt" |> Option.defaultValue ""))
+                    | _ -> None)
+                |> Seq.toList
+            | _ -> []
+
+        { ExecutionId = text record "executionId" |> Option.defaultValue ""
+          Status = text record "status"
+          StartedAt = startedAt
+          Segmentation = segmentation
+          Scopes = scopes }
+
+    /// Every execution of the work item, in start order. Read-only.
+    let segmentations (root: string) (workItemId: string) : ExecutionSegmentation list =
+        FileTelemetryQueryRepository.readAll root
+        |> List.filter (fun record -> text record "workItemId" = Some workItemId)
+        |> List.map segmentationOf
+        |> List.sortBy (fun execution -> execution.StartedAt |> Option.defaultValue "", execution.ExecutionId)
+
+    /// `validate`'s step-reference findings, as (path, field, message):
+    /// a metric's `dimensions.step` must name a step its execution started.
+    let stepReferenceFindings (root: string) : (string * string * string) list =
+        FileTelemetryQueryRepository.readAll root
+        |> List.collect (fun record ->
+            let executionId = text record "executionId" |> Option.defaultValue ""
+            let steps = FileTelemetryFinalizationRepository.stepEvents record |> Steps.project
+
+            let metricSteps =
+                match record["metrics"] with
+                | :? JsonArray as metrics ->
+                    metrics
+                    |> Seq.map (function
+                        | :? JsonObject as metric -> child metric "dimensions" |> Option.bind (fun node -> text node "step")
+                        | _ -> None)
+                    |> Seq.toList
+                | _ -> []
+
+            TelemetrySegmentation.danglingStepReferences steps metricSteps
+            |> List.map (fun (index, stepId) ->
+                $".ros/telemetry/executions/{executionId}.json",
+                $"metrics[{index}].dimensions.step",
+                $"metric is attributed to step '{stepId}', which execution '{executionId}' never started"))

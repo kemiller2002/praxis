@@ -114,7 +114,7 @@ module ArtifactOperations =
                     |> List.map (fun (change: RegistryChange) ->
                         ({ Path = change.Path
                            Field = ""
-                           Message = "registry is stale; run 'ros registry build'" }: ArtifactFinding))
+                           Message = "registry is stale; run 'praxis registry build'" }: ArtifactFinding))
 
                 loaded.ParseFindings @ stale
                 |> List.sortWith compareFindings

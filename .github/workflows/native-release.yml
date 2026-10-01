@@ -13,12 +13,12 @@ on:
       - "starter/**"
       - "templates/**"
       - "tests/**"
-      - "package.json"
-      - "package-lock.json"
+      - "release.json"
+      - "Directory.Build.props"
   push:
     branches: [main]
     paths:
-      - "package.json"
+      - "release.json"
       - ".github/workflows/native-release.yml"
       - "scripts/**"
       - "bin/praxis-native.sh"
@@ -42,19 +42,12 @@ concurrency:
 jobs:
   release:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.package.outputs.version }}
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "24"
-          package-manager-cache: false
-
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.11"
 
       - uses: actions/setup-dotnet@v6
         with:
@@ -62,22 +55,22 @@ jobs:
 
       - name: Test and validate
         run: |
-          npm run test:all
-          ./ros registry check
-          ./ros validate
+          dotnet build Ros.slnx --configuration Release
+          dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll
+          ./praxis architecture check
+          ./praxis registry check
+          ./praxis validate
 
-      - name: Build package payload
+      # release.json is the single version source; the F# CLI reports it.
+      - name: Resolve release version
         id: package
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="$(node -p "require('./package.json').version")"
+          VERSION="$(./praxis --version | awk '{print $2}')"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          rm -rf dist/native dist/native-stage dist/native-package
-          mkdir -p dist/native dist/native-stage dist/native-package
-          npm pack --ignore-scripts --json > /tmp/praxis-pack.json
-          TARBALL="$(node -e "const x=require('/tmp/praxis-pack.json'); process.stdout.write(x[0].filename)")"
-          tar -xzf "$TARBALL" -C dist/native-package
+          rm -rf dist/native dist/native-stage
+          mkdir -p dist/native dist/native-stage
 
       - name: Build self-contained Praxis binaries
         shell: bash
@@ -97,6 +90,31 @@ jobs:
           publish_one osx-arm64
           publish_one win-x64
 
+      # The .NET global tool (DF-ROS-2026-A044). Packed and exercised on every
+      # run, including pull requests, so a packaging regression is caught
+      # before release; pushed to NuGet below only for a new version.
+      - name: Pack and smoke test the .NET global tool
+        env:
+          VERSION: ${{ steps.package.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist/nuget
+          dotnet pack src/Ros.Cli/Ros.Cli.fsproj -c Release -o dist/nuget
+          ls dist/nuget
+          tool_root="$(mktemp -d)"
+          project_root="$(mktemp -d)"
+          trap 'rm -rf "$tool_root" "$project_root"' EXIT
+          dotnet tool install EchelonFoundry.Praxis --version "$VERSION" \
+            --add-source dist/nuget --tool-path "$tool_root"
+          [ "$("$tool_root/praxis" --version)" = "praxis ${VERSION}" ]
+          (
+            cd "$project_root"
+            git init -q
+            "$tool_root/praxis" init
+            "$tool_root/praxis" verify
+          )
+
       - name: Assemble native bundles
         env:
           VERSION: ${{ steps.package.outputs.version }}
@@ -109,8 +127,7 @@ jobs:
             name="praxis-${rid}"
             root="dist/native-stage/${name}"
             mkdir -p "$root"
-            cp -R dist/native-package/package "$root/package"
-            cp "dist/publish/${rid}/ros-fs" "$root/praxis-bin"
+            cp "dist/publish/${rid}/praxis" "$root/praxis-bin"
             cp bin/praxis-native.sh "$root/praxis"
             cp bin/echelon.sh "$root/echelon"
             chmod +x "$root/praxis-bin" "$root/praxis" "$root/echelon"
@@ -126,8 +143,7 @@ jobs:
 
           root="dist/native-stage/praxis-win-x64"
           mkdir -p "$root"
-          cp -R dist/native-package/package "$root/package"
-          cp dist/publish/win-x64/ros-fs.exe "$root/praxis-bin.exe"
+          cp dist/publish/win-x64/praxis.exe "$root/praxis-bin.exe"
           cp bin/praxis-native.cmd "$root/praxis.cmd"
           cp bin/echelon.ps1 "$root/echelon.ps1"
           printf '%s\n' "${VERSION}" > "$root/VERSION"
@@ -136,11 +152,38 @@ jobs:
           (cd dist/native && sha256sum praxis-* > native-checksums.txt)
           cat dist/native/native-checksums.txt
 
+      # Machine-readable release metadata (Echelon Registry
+      # schemas/release-manifest.schema.json, echelon.release/v1) so installers
+      # such as Conditor and inventories such as Project Administration can
+      # resolve this release without scraping. Canonical executable: praxis.
+      - name: Generate release manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(python3 -c 'import json; print(json.load(open("release.json"))["version"])')"
+          {
+            printf '{\n  "schema": "echelon.release/v1",\n  "systemId": "praxis",\n  "version": "%s",\n' "$VERSION"
+            printf '  "repository": "%s",\n  "tag": "v%s",\n  "commit": "%s",\n' "$GITHUB_REPOSITORY" "$VERSION" "$GITHUB_SHA"
+            printf '  "executable": "praxis",\n  "compatibilityAliases": ["ros"],\n'
+            printf '  "provides": [ { "id": "agent.identity", "contractVersion": 1 }, { "id": "engineering.metrics", "contractVersion": 1 } ],\n'
+            printf '  "distributions": [ { "channel": "github-release", "package": null, "url": "https://github.com/%s/releases/tag/v%s" } ],\n' "$GITHUB_REPOSITORY" "$VERSION"
+            printf '  "artifacts": [\n'
+            first=1
+            while read -r sha name; do
+              rid="${name#praxis-}"; rid="${rid%.tar.gz}"; rid="${rid%.zip}"
+              [[ $first -eq 1 ]] || printf ',\n'
+              first=0
+              printf '    { "name": "%s", "platform": "%s", "sha256": "%s" }' "$name" "$rid" "$sha"
+            done < dist/native/native-checksums.txt
+            printf '\n  ]\n}\n'
+          } > dist/native/echelon-release.json
+          python3 -m json.tool dist/native/echelon-release.json
+
       - name: Smoke test native installer and installed Praxis
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="$(node -p "require('./package.json').version")"
+          VERSION="$(./praxis --version | awk '{print $2}')"
           install_root="$(mktemp -d)"
           project_root="$(mktemp -d)"
           trap 'rm -rf "$install_root" "$project_root"' EXIT
@@ -192,6 +235,7 @@ jobs:
           subject-path: |
             dist/native/praxis-*
             dist/native/native-checksums.txt
+            dist/native/echelon-release.json
 
       - name: Publish GitHub release assets
         if: github.event_name != 'pull_request' && steps.release.outputs.publish == 'true'
@@ -201,7 +245,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          assets=(dist/native/praxis-* dist/native/native-checksums.txt)
+          assets=(dist/native/praxis-* dist/native/native-checksums.txt dist/native/echelon-release.json)
 
           # Uploads never overwrite: an asset that already exists is never replaced.
           if gh release view "v${VERSION}" >/dev/null 2>&1; then
@@ -210,8 +254,57 @@ jobs:
             gh release create "v${VERSION}" "${assets[@]}" \
               --target "${GITHUB_SHA}" \
               --title "Praxis v${VERSION}" \
-              --notes "Native Praxis/ROS bundles plus the Echelon bootstrap command. No Node.js or .NET runtime is required on the consuming machine. Assets carry GitHub build-provenance attestations."
+              --notes "Native Praxis bundles (with the legacy ros command as a compatibility alias) plus the Echelon bootstrap command. No Node.js or .NET runtime is required on the consuming machine. Assets carry GitHub build-provenance attestations. With .NET 10 installed, the same version is also available as a global tool: dotnet tool install -g EchelonFoundry.Praxis."
           fi
+
+      # NuGet trusted publishing: NuGet/login exchanges this run's OIDC token
+      # for a short-lived API key, so no long-lived key is stored. It needs a
+      # trusted-publishing policy for this repository and workflow on
+      # nuget.org, the account name in vars.NUGET_USER, and
+      # vars.NUGET_PUBLISH_ENABLED set to 'true'.
+      - name: Check whether this version is already on NuGet
+        id: nuget
+        if: github.event_name != 'pull_request' && vars.NUGET_PUBLISH_ENABLED == 'true'
+        env:
+          VERSION: ${{ steps.package.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if curl -fsS https://api.nuget.org/v3-flatcontainer/echelonfoundry.praxis/index.json 2>/dev/null \
+              | python3 -c 'import json, sys; sys.exit(0 if sys.argv[1] in json.load(sys.stdin)["versions"] else 1)' "$VERSION"; then
+            echo "EchelonFoundry.Praxis ${VERSION} is already on NuGet."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Log in to NuGet
+        id: nuget-login
+        if: steps.nuget.outputs.publish == 'true'
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER }}
+
+      - name: Publish the .NET global tool to NuGet
+        if: steps.nuget.outputs.publish == 'true'
+        env:
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet nuget push dist/nuget/EchelonFoundry.Praxis.*.nupkg \
+            --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+  # The legacy `ros-fs-<rid>` binaries that projects scaffolded before the
+  # Praxis rename download through their ./ros launcher (formerly built by the
+  # retired npm publish workflow). They are the same praxis binary under the
+  # legacy name, shipped until a decision retires them.
+  ros-fs-assets:
+    needs: release
+    if: github.event_name != 'pull_request'
+    uses: ./.github/workflows/ros-fs-assets.yml
+    with:
+      tag: v${{ needs.release.outputs.version }}
 
 
   windows-powershell-syntax:
@@ -253,7 +346,7 @@ jobs:
           foreach ($command in @(@("ordo", "1.4.0"), @("sde", "1.4.0"), @("praxis", "3.4.0"), @("ros", "3.4.0"))) {
             $name = $command[0]
             $version = $command[1]
-            $reported = if ($name -eq "praxis" -or $name -eq "ros") { "ros-fs $version" } else { $version }
+            $reported = if ($name -eq "praxis" -or $name -eq "ros") { "praxis $version" } else { $version }
             $cmd = Join-Path $bin ($name + ".cmd")
             "@echo off`r`necho $reported`r`nexit /b 0`r`n" | Set-Content -Encoding Ascii $cmd
           }

@@ -285,6 +285,24 @@
       "repository-governance"
     ],
     "path": "research/decisions/DF-ROS-2026-A029--fsharp-npm-binary-distribution.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:54.616Z",
+          "operations": [
+            "superseded"
+          ],
+          "reason": "Superseded by DF-ROS-2026-A049 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        }
+      }
+    },
     "related_documents": [
       "DF-ROS-2026-A027",
       "DF-ROS-2026-A028",
@@ -292,8 +310,10 @@
       "docs/migrations/fsharp/STATUS.md",
       "PACKAGE-USAGE.md"
     ],
-    "status": "accepted",
-    "superseded_by": [],
+    "status": "superseded",
+    "superseded_by": [
+      "DF-ROS-2026-A049"
+    ],
     "supersedes": [],
     "supporting_evidence": [
       "EV-ROS-2026-A047",
@@ -309,7 +329,7 @@
       "decision"
     ],
     "title": "Distribute ros-fs via npm as a self-contained single-file binary fetched from GitHub Releases",
-    "updated": "2026-09-10",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -394,6 +414,24 @@
       "repository-governance"
     ],
     "path": "research/decisions/DF-ROS-2026-A032--fsharp-full-node-replacement.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:55.363Z",
+          "operations": [
+            "superseded"
+          ],
+          "reason": "Superseded by DF-ROS-2026-A049 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        }
+      }
+    },
     "related_documents": [
       "DF-ROS-2026-A028",
       "DF-ROS-2026-A029",
@@ -402,8 +440,10 @@
       "AGENTS.md",
       "PACKAGE-USAGE.md"
     ],
-    "status": "accepted",
-    "superseded_by": [],
+    "status": "superseded",
+    "superseded_by": [
+      "DF-ROS-2026-A049"
+    ],
     "supersedes": [
       "DF-ROS-2026-A031"
     ],
@@ -420,7 +460,7 @@
       "decision"
     ],
     "title": "Full Node replacement is the accepted end-state; starter template ./ros becomes F#",
-    "updated": "2026-09-11",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -432,6 +472,24 @@
       "repository-governance"
     ],
     "path": "research/decisions/DF-ROS-2026-A033--node-internal-library-only-golden-master-tests.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:56.141Z",
+          "operations": [
+            "superseded"
+          ],
+          "reason": "Superseded by DF-ROS-2026-A049 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        }
+      }
+    },
     "related_documents": [
       "DF-ROS-2026-A028",
       "DF-ROS-2026-A030",
@@ -440,8 +498,10 @@
       "AGENTS.md",
       "PACKAGE-USAGE.md"
     ],
-    "status": "accepted",
-    "superseded_by": [],
+    "status": "superseded",
+    "superseded_by": [
+      "DF-ROS-2026-A049"
+    ],
     "supersedes": [],
     "supporting_evidence": [
       "EV-ROS-2026-A047",
@@ -456,7 +516,7 @@
       "decision"
     ],
     "title": "Node retained as internal-library-only; test suite stops treating it as a live CLI oracle",
-    "updated": "2026-09-11",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -468,6 +528,38 @@
       "repository-governance"
     ],
     "path": "research/decisions/DF-ROS-2026-A034--pin-bootstrapped-ros-version-to-latest-stable-release.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:56.865Z",
+          "operations": [
+            "superseded"
+          ],
+          "reason": "Superseded by DF-ROS-2026-A049 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        },
+        "EXE-20260929T163720115Z-f381906c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T16:37:22.365Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Superseded by DF-ROS-2026-A044: npm snapshot releases retired (PRAXIS-DIST-NATIVE-DOTNET-TOOL)"
+        }
+      }
+    },
     "related_documents": [
       "EV-ROS-2026-A051",
       "DF-ROS-2026-A029",
@@ -476,8 +568,11 @@
       ".github/workflows/publish.yml"
     ],
     "research_area": "repository-operating-system",
-    "status": "accepted",
-    "superseded_by": [],
+    "status": "superseded",
+    "superseded_by": [
+      "DF-ROS-2026-A049",
+      "DF-ROS-2026-A044"
+    ],
     "supersedes": [],
     "supports": [],
     "tags": [
@@ -488,7 +583,7 @@
       "release"
     ],
     "title": "ros-bootstrap init pins a scaffolded project's ros.json to the latest stable release, not the installed package's own version",
-    "updated": "2026-09-11",
+    "updated": "2026-09-29",
     "version": "1.0.0"
   },
   {
@@ -631,7 +726,7 @@
           },
           "at": "2026-09-28T01:07:45.000Z",
           "evidence": [
-            "DF-ROS-2026-A042"
+            "DF-ROS-2026-A051"
           ],
           "operations": [
             "modified"
@@ -650,8 +745,8 @@
       "RQ-ROS-2026-A017",
       "RQ-ROS-2026-A018",
       "RQ-ROS-2026-A019",
-      "RQ-ROS-2026-A023",
-      "DF-ROS-2026-A042",
+      "RQ-ROS-2026-A027",
+      "DF-ROS-2026-A051",
       "requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md"
     ],
     "research_area": "repository-operating-system",
@@ -785,6 +880,20 @@
             "modified"
           ],
           "reason": "Amendment 1.2.0: successor continuation never links a foreign execution (PRAXIS-REMOTE-09)"
+        },
+        "EXE-20260928T103758056Z-43f11e6e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T11:23:30.270Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Validation references point at the F# port of tests/remote-execute.test.mjs (DF-ROS-2026-A049) (work item FSHARP-ONLY-MAIN-MERGE)"
         }
       }
     },
@@ -825,18 +934,551 @@
     "version": "1.2.0"
   },
   {
-    "confidence": "high",
-    "created": "2026-09-27",
+    "confidence": "medium",
+    "created": "2026-09-29",
     "decision_type": "architecture",
     "derived_from": [
-      "RQ-ROS-2026-A019",
       "RQ-ROS-2026-A022"
     ],
     "id": "DF-ROS-2026-A042",
     "owners": [
       "repository-governance"
     ],
-    "path": "research/decisions/DF-ROS-2026-A042--journaled-fallback-reconciliation.md",
+    "path": "research/decisions/DF-ROS-2026-A042--durable-work-checkpoints-and-executor-continuation.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T063242003Z-c2cc74a2": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T06:34:39.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Architecture decision for durable checkpoints and executor continuation (PRAXIS-CONT-00)"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A022",
+      "RQ-ROS-2026-A021",
+      "DF-ROS-2026-A041",
+      "DF-ROS-2026-A036",
+      "DF-ROS-2026-A040",
+      "docs/work-protocol.md",
+      "docs/remote-protocol.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [],
+    "supports": [
+      "RQ-ROS-2026-A022"
+    ],
+    "tags": [
+      "continuity",
+      "checkpoints",
+      "durability",
+      "git",
+      "remote-execution",
+      "handoff"
+    ],
+    "title": "Durable work checkpoints are verified Git-remote evidence recorded as work.checkpointed events, with executor continuation as a new execution rather than a lifecycle transition",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-29",
+    "decision_type": "architecture",
+    "derived_from": [
+      "RQ-ROS-2026-A022"
+    ],
+    "id": "DF-ROS-2026-A043",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A043--effective-current-step-telemetry-segmentation.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T101141946Z-cddc93be": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T10:20:45.229Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Effective-current step telemetry segmentation decision (PRAXIS-CONT-11-SEGMENTATION)"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A022",
+      "DF-ROS-2026-A042",
+      "docs/development-telemetry.md",
+      "docs/work-protocol.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [],
+    "supports": [
+      "RQ-ROS-2026-A022"
+    ],
+    "tags": [
+      "telemetry",
+      "steps",
+      "effective-current",
+      "continuity",
+      "schema-evolution"
+    ],
+    "title": "Step telemetry is effective-current; an execution's segmentation boundary is derived from its own first step, never stored or backfilled",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-29",
+    "decision_type": "architecture",
+    "id": "DF-ROS-2026-A044",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A044--retire-npm-distribute-native-bundles-and-dotnet-tool.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T163720115Z-f381906c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T16:37:21.814Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Owner decision to retire npm distribution; native bundles plus .NET global tool (PRAXIS-DIST-NATIVE-DOTNET-TOOL; re-landed from PR #108)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A029",
+      "DF-ROS-2026-A034",
+      "DF-ROS-2026-A041",
+      "PACKAGE-USAGE.md",
+      "docs/installation.md",
+      "docs/native-installation.md",
+      ".github/workflows/native-release.yml",
+      ".github/workflows/ros-fs-assets.yml",
+      ".github/workflows/release.yml"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [
+      "DF-ROS-2026-A034"
+    ],
+    "supporting_evidence": [],
+    "supports": [],
+    "tags": [
+      "distribution",
+      "release",
+      "npm",
+      "nuget",
+      "dotnet-tool",
+      "native"
+    ],
+    "title": "Retire npm distribution; distribute Praxis as self-contained native bundles and a .NET global tool",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-29",
+    "decision_type": "architecture",
+    "derived_from": [
+      "RQ-ROS-2026-A023",
+      "RQ-ROS-2026-A022"
+    ],
+    "id": "DF-ROS-2026-A045",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A045--remote-request-inbox-relay.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T162324008Z-39bbe593": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T16:23:38.842Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-REMOTE-INBOX-01: capture the cross-provider continuation gap and its remedy (re-landed from claude/remote-inbox-relay-v3)"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A023",
+      "EV-ROS-2026-A057",
+      "DF-ROS-2026-A041",
+      "docs/remote-agent-contract.md",
+      ".github/workflows/praxis-remote.yml",
+      ".github/workflows/praxis-remote-inbox.yml"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A057"
+    ],
+    "supports": [
+      "RQ-ROS-2026-A023"
+    ],
+    "tags": [
+      "remote-execution",
+      "github-actions",
+      "continuity",
+      "cross-provider"
+    ],
+    "title": "A push-triggered inbox relay routes praxis.remote requests committed to praxis-inbox/** branches to praxis-remote.yml, unchanged",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-29",
+    "decision_type": "architecture",
+    "id": "DF-ROS-2026-A046",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A046--deterministic-advisory-planner.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T172554288Z-0f639674": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T18:08:50.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-PLAN-01: advisory planner and its first shadow experiment"
+        },
+        "EXE-20260929T222935210Z-1813973a": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T22:29:44.000Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-PLAN-02: status review -> accepted on the repository owner's explicit approval (the owner approved; this agent only recorded it)"
+        }
+      }
+    },
+    "related_documents": [
+      "EV-ROS-2026-A058",
+      "requirements/PLANNING-OPTIMIZATION.md",
+      "docs/planning.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A058"
+    ],
+    "tags": [
+      "planning",
+      "scheduling",
+      "telemetry",
+      "determinism"
+    ],
+    "title": "A deterministic, read-only F# planner recommends evidence-backed execution waves; unknown stays unknown and parallelism is conservative",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-30",
+    "decision_type": "architecture",
+    "id": "DF-ROS-2026-A047",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A047--advisory-evidence-based-work-groups.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T102847967Z-f42c2262": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T11:17:12.025Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "WI-0064: evidence-based work groups and the frozen grouping experiment"
+        },
+        "EXE-20260930T112849252Z-4c58aae8": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T11:34:14.614Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-PLAN-03: status review -> accepted on the repository owner's explicit approval of all PR #126 recommendations (the owner approved; this agent only recorded it)"
+        }
+      }
+    },
+    "related_documents": [
+      "EV-ROS-2026-A059",
+      "EX-ROS-2026-A021",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "DF-ROS-2026-A046",
+      "docs/planning.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A059"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "determinism",
+      "attribution"
+    ],
+    "title": "Work groups are advisory, evidence-based recommendations over unchanged work items; grouped execution waits for experimental evidence",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-28",
+    "decision_type": "architecture",
+    "derived_from": [
+      "RQ-ROS-2026-A024"
+    ],
+    "id": "DF-ROS-2026-A049",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A049--fsharp-dotnet-only-repository.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:53.922Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Architecture decision removing repository-owned Node and enforcing the invariant (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        },
+        "EXE-20260928T103758056Z-43f11e6e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T11:23:28.913Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Renumbered from DF-ROS-2026-A041 (taken on main by remote execution); records that remote execution fits the rule (work item FSHARP-ONLY-MAIN-MERGE)"
+        },
+        "EXE-20260928T134520493Z-befb2bfe": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T14:30:36.088Z",
+          "operations": [
+            "modified"
+          ]
+        },
+        "EXE-20260930T175640720Z-98771e24": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:57:07.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PR92-ID-RENUMBER: renumbered from A042 on this branch to resolve a collision with a different main record; content unchanged"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A024",
+      "DF-ROS-2026-A009",
+      "DF-ROS-2026-A030",
+      "AGENTS.md",
+      "docs/cli.md",
+      "docs/native-installation.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [
+      "DF-ROS-2026-A029",
+      "DF-ROS-2026-A032",
+      "DF-ROS-2026-A033",
+      "DF-ROS-2026-A034"
+    ],
+    "supports": [
+      "RQ-ROS-2026-A024"
+    ],
+    "tags": [
+      "architecture",
+      "fsharp",
+      "dotnet",
+      "node-removal",
+      "distribution",
+      "invariant",
+      "decision"
+    ],
+    "title": "The repository is F#/.NET only; repository-owned Node/JavaScript/TypeScript is removed and prohibited by an automated invariant",
+    "updated": "2026-09-30",
+    "version": "1.0.1"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-28",
+    "decision_type": "architecture",
+    "derived_from": [
+      "RQ-ROS-2026-A025"
+    ],
+    "id": "DF-ROS-2026-A050",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A050--praxis-canonical-name-ros-compatibility.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T134520493Z-befb2bfe": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T14:30:35.702Z",
+          "operations": [
+            "created"
+          ]
+        },
+        "EXE-20260930T175640720Z-98771e24": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:57:07.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PR92-ID-RENUMBER: renumbered from A043 on this branch to resolve a collision with a different main record; content unchanged"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A025",
+      "DF-ROS-2026-A049",
+      "DF-ROS-2026-A041",
+      "AGENTS.md",
+      "docs/cli.md",
+      "docs/native-installation.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "RQ-ROS-2026-A025"
+    ],
+    "tags": [
+      "naming",
+      "rename",
+      "praxis",
+      "cli",
+      "compatibility",
+      "decision"
+    ],
+    "title": "Praxis is the canonical product and CLI name; ros remains only for compatibility, persisted state and history",
+    "updated": "2026-09-30",
+    "version": "1.0.1"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-27",
+    "decision_type": "architecture",
+    "derived_from": [
+      "RQ-ROS-2026-A019",
+      "RQ-ROS-2026-A026"
+    ],
+    "id": "DF-ROS-2026-A051",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A051--journaled-fallback-reconciliation.md",
     "provenance": {
       "contributions": {
         "EXE-20260927T145842499Z-f1b40c22": {
@@ -868,6 +1510,20 @@
             "migrated"
           ],
           "reason": "Renumber canonical fallback decision after integrating main's independently assigned DF-ROS-2026-A041"
+        },
+        "EXE-20260928T134154662Z-5c00e767": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-01T06:26:26Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "Renumber after latest main independently assigned DF-ROS-2026-A042"
         }
       }
     },
@@ -882,7 +1538,7 @@
     "supersedes": [],
     "supports": [
       "RQ-ROS-2026-A019",
-      "RQ-ROS-2026-A022"
+      "RQ-ROS-2026-A026"
     ],
     "tags": [
       "architecture",

@@ -114,3 +114,110 @@ module Steps =
                     | EventStepStatus.Running -> "running"
 
                 StepDecision.Rejected $"step '{requested.StepId}' already ended as {ended}"
+
+/// When an execution's usage and evidence were attributable to steps
+/// (DF-ROS-2026-A042, effective-current observability). Step tracking may be
+/// adopted partway through an execution: everything recorded before the
+/// first step stays execution-scoped, its step attribution is unavailable
+/// (never zero, never redistributed), and the execution stays valid. The
+/// boundary is derived from the execution's own `step.started` events, so
+/// no extra field is stored and no history is rewritten.
+[<RequireQualifiedAccess>]
+type PreStepPeriod =
+    /// Steps were tracked from the execution's start.
+    | Absent
+    /// Activity from the execution's start until adoption is execution-scoped.
+    | ExecutionScopedFrom of executionStartedAt: string
+    /// The execution's start is unknown, so whether activity preceded
+    /// adoption cannot be known.
+    | Unknown
+
+[<RequireQualifiedAccess>]
+type TelemetrySegmentation =
+    /// No step was ever recorded: all telemetry is execution-scoped and step
+    /// attribution was not captured.
+    | ExecutionLevel
+    /// Step tracking began at `stepTrackingStartedAt`.
+    | StepLevel of stepTrackingStartedAt: string * before: PreStepPeriod
+
+/// Where one measurement's usage belongs relative to step adoption.
+[<RequireQualifiedAccess>]
+type MeasurementScope =
+    | Step of stepId: string
+    /// Execution-scoped, recorded before step tracking was adopted (or in an
+    /// execution that never adopted it): step attribution unavailable.
+    | ExecutionBeforeSteps
+    /// Execution-scoped, recorded after adoption but outside any step.
+    | ExecutionOutsideSteps
+
+[<RequireQualifiedAccess>]
+module TelemetrySegmentation =
+    let private instant (value: string) =
+        match System.DateTimeOffset.TryParse(value, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind) with
+        | true, parsed -> Some parsed
+        | _ -> Option.None
+
+    /// The earliest recorded step start, by instant where every start
+    /// parses, otherwise the first in record order.
+    let private boundary (steps: EventStep list) =
+        match steps |> List.map (fun step -> step.StartedAt, instant step.StartedAt) with
+        | [] -> Option.None
+        | starts when starts |> List.forall (snd >> Option.isSome) -> starts |> List.minBy (snd >> Option.get) |> fst |> Some
+        | (first, _) :: _ -> Some first
+
+    let derive (executionStartedAt: string option) (steps: EventStep list) : TelemetrySegmentation =
+        match boundary steps with
+        | Option.None -> TelemetrySegmentation.ExecutionLevel
+        | Some adoptedAt ->
+            let before =
+                match executionStartedAt |> Option.bind instant, instant adoptedAt with
+                | Some started, Some adopted when started < adopted -> PreStepPeriod.ExecutionScopedFrom executionStartedAt.Value
+                | Some _, Some _ -> PreStepPeriod.Absent
+                | _ -> PreStepPeriod.Unknown
+
+            TelemetrySegmentation.StepLevel(adoptedAt, before)
+
+    let code segmentation =
+        match segmentation with
+        | TelemetrySegmentation.ExecutionLevel -> "execution-level"
+        | TelemetrySegmentation.StepLevel(_, PreStepPeriod.Absent) -> "step-level"
+        | TelemetrySegmentation.StepLevel _ -> "step-level-adopted"
+
+    let stepTrackingStartedAt segmentation =
+        match segmentation with
+        | TelemetrySegmentation.ExecutionLevel -> Option.None
+        | TelemetrySegmentation.StepLevel(adoptedAt, _) -> Some adoptedAt
+
+    /// Whether some of the execution's activity is execution-scoped with no
+    /// step attribution: its usage there is unknown per step, never zero.
+    let hasExecutionScopedPeriod segmentation =
+        match segmentation with
+        | TelemetrySegmentation.ExecutionLevel
+        | TelemetrySegmentation.StepLevel(_, PreStepPeriod.ExecutionScopedFrom _)
+        | TelemetrySegmentation.StepLevel(_, PreStepPeriod.Unknown) -> true
+        | TelemetrySegmentation.StepLevel(_, PreStepPeriod.Absent) -> false
+
+    /// Classifies a measurement without ever moving it into a step it was
+    /// not recorded against.
+    let scopeOf segmentation (step: string option) (collectedAt: string) : MeasurementScope =
+        match step, segmentation with
+        | Some stepId, _ -> MeasurementScope.Step stepId
+        | Option.None, TelemetrySegmentation.ExecutionLevel -> MeasurementScope.ExecutionBeforeSteps
+        | Option.None, TelemetrySegmentation.StepLevel(adoptedAt, _) ->
+            match instant collectedAt, instant adoptedAt with
+            | Some collected, Some adopted when collected >= adopted -> MeasurementScope.ExecutionOutsideSteps
+            | _ -> MeasurementScope.ExecutionBeforeSteps
+
+    /// Offline validation: every step-scoped measurement names a step its own
+    /// execution started. A measurement without a step is legal whatever the
+    /// execution's segmentation, so adopting steps never invalidates history.
+    /// Returns the (index, step) of each dangling reference.
+    let danglingStepReferences (steps: EventStep list) (measurementSteps: string option list) : (int * string) list =
+        let started = steps |> List.map _.StepId |> Set.ofList
+
+        measurementSteps
+        |> List.indexed
+        |> List.choose (fun (index, step) ->
+            match step with
+            | Some stepId when not (started.Contains stepId) -> Some(index, stepId)
+            | _ -> Option.None)

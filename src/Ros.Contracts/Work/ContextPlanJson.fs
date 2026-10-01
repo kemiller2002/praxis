@@ -26,6 +26,7 @@ module WorkContextPlanContract =
         | "active" -> Ok LiveWorkState.Active
         | "blocked" -> Ok LiveWorkState.Blocked
         | "complete" -> Ok LiveWorkState.Complete
+        | "abandoned" -> Ok LiveWorkState.Abandoned
         | other -> Error $"unsupported semantic work state '{other}'"
 
     let private parseEvidence (element: JsonElement) =

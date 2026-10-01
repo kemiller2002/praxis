@@ -6,7 +6,7 @@ version: 1.0.0
 owners:
   - repository-governance
 created: 2026-09-25
-updated: 2026-09-25
+updated: 2026-09-28
 research_area: repository-operating-system
 priority: high
 related_documents:
@@ -25,6 +25,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+    EXE-20260928T090915352Z-fb23943c:
+      operations: [modified]
+      at: 2026-09-28T10:18:58.429Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Verification references moved from removed Node tests to their F# ports (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
 ---
 
 # Requirement
@@ -44,4 +54,4 @@ Separating the stable actor from the individual run lets analysis attribute work
 ## Verification
 
 - ProvenanceTests: two executions of the same agent share a stable identity but remain distinct contributions; legacy execution records without actorKind project from their recorded discovery mechanism
-- tests/work-start-fsharp-differential.test.mjs and tests/telemetry-start-fsharp-differential.test.mjs (identity.actorKind)
+- tests/Ros.Tests/WorkLifecycleCliTests.fs and tests/Ros.Tests/TelemetryCliTests.fs (identity.actorKind)

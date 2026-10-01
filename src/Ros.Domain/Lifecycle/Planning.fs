@@ -82,7 +82,19 @@ module Planning =
         // Choice1: a change to make. Choice2: a conflict. Choice3: a path left
         // untouched on purpose (already correct, or deliberately preserved).
         match Map.tryFind entry.Path observed.Files with
-        | None -> Choice1Of3(PlannedChange.CreateFile(entry.Path, entry.Ownership, entry.Sha256))
+        | None ->
+            // A renamed file the tool installed earlier moves rather than
+            // being duplicated; a local edit travels with it untouched.
+            let earlier =
+                entry.Replaces
+                |> List.tryPick (fun oldPath ->
+                    match Map.tryFind oldPath observed.Files, Map.tryFind oldPath recordedArtifacts with
+                    | Some oldSha, Some artifact -> Some(oldPath, (oldSha = artifact.Sha256))
+                    | _ -> None)
+
+            match earlier with
+            | Some(oldPath, unmodified) -> Choice1Of3(PlannedChange.MoveManagedFile(oldPath, entry.Path, unmodified))
+            | None -> Choice1Of3(PlannedChange.CreateFile(entry.Path, entry.Ownership, entry.Sha256))
         | Some diskSha when diskSha = entry.Sha256 -> Choice3Of3 entry.Path
         | Some diskSha ->
             match entry.Ownership with
@@ -93,7 +105,7 @@ module Planning =
             // that explicitly targets the file may rewrite it.
             | Ownership.Shared -> Choice3Of3 entry.Path
             // Seeded once. Its real content is derived from the repository's
-            // own artifacts by `ros registry build`, so copying the package's
+            // own artifacts by `praxis registry build`, so copying the package's
             // empty seed over a populated registry would destroy data.
             | Ownership.Generated -> Choice3Of3 entry.Path
             | Ownership.ToolOwned ->
@@ -108,12 +120,14 @@ module Planning =
     /// What the manifest would record for one payload entry once the plan has
     /// run. A preserved file is recorded at the hash it actually has, so that
     /// a later `verify` never reports drift the tool itself chose to accept.
-    let private artifactRecord (observed: ObservedRepository) (entry: PayloadEntry) : RecordedArtifact =
+    let private artifactRecord (observed: ObservedRepository) (movedAsIs: Map<string, string>) (entry: PayloadEntry) : RecordedArtifact =
         let sha =
             if Ownership.integrityChecked entry.Ownership then
                 entry.Sha256
             else
-                Map.tryFind entry.Path observed.Files |> Option.defaultValue entry.Sha256
+                Map.tryFind entry.Path observed.Files
+                |> Option.orElse (Map.tryFind entry.Path movedAsIs |> Option.bind (fun oldPath -> Map.tryFind oldPath observed.Files))
+                |> Option.defaultValue entry.Sha256
 
         { Path = entry.Path
           Ownership = entry.Ownership
@@ -173,8 +187,16 @@ module Planning =
 
         let changedPaths = fileChanges |> List.choose PlannedChange.path |> Set.ofList
 
+        // A file moved with its local edits keeps the bytes it had.
+        let movedAsIs =
+            fileChanges
+            |> List.choose (function
+                | PlannedChange.MoveManagedFile(fromPath, toPath, false) -> Some(toPath, fromPath)
+                | _ -> None)
+            |> Map.ofList
+
         let manifest =
-            payload |> List.map (artifactRecord observed) |> manifestFor profile packageName version
+            payload |> List.map (artifactRecord observed movedAsIs) |> manifestFor profile packageName version
 
         let manifestChange =
             if observed.Manifest = Some manifest then
@@ -315,14 +337,14 @@ module Diagnostics =
                       "not-installed"
                       $"no installation manifest at {Planning.ManifestPath} and no legacy {Planning.LegacyManifestPath}"
                       (Some Planning.ManifestPath)
-                      (Some "Run 'ros init' to install this capability into the repository.") ]
+                      (Some "Run 'praxis init' to install this capability into the repository.") ]
             | InstallationState.UpgradeRequired(InstalledVersion installed, AvailableVersion available) ->
                 [ diagnosis
                       Severity.Warning
                       "upgrade-available"
                       $"installed version {installed} differs from this CLI's {available}"
                       None
-                      (Some "Run 'ros upgrade' (add --dry-run first to see the plan).") ]
+                      (Some "Run 'praxis upgrade' (add --dry-run first to see the plan).") ]
             | InstallationState.Installed _ -> []
 
         let legacyDiagnoses =
@@ -332,7 +354,7 @@ module Diagnostics =
                       "legacy-installation"
                       $"this repository was installed by 'ros-bootstrap init' and has no {Planning.ManifestPath} yet"
                       (Some Planning.LegacyManifestPath)
-                      (Some "Run 'ros upgrade' to adopt the installation manifest; the legacy snapshot is left in place.") ]
+                      (Some "Run 'praxis upgrade' to adopt the installation manifest; the legacy snapshot is left in place.") ]
             else
                 []
 

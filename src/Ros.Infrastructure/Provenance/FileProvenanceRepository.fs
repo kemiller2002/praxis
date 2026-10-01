@@ -357,7 +357,7 @@ module FileProvenanceRepository =
                     Ok(contributionKey request.OccurredAt current, current)
                 | true, [], [] ->
                     Error
-                        "no active execution: an agent contribution must be recorded inside a work execution; run './ros work begin --id ID --occurred-at TIMESTAMP' first"
+                        "no active execution: an agent contribution must be recorded inside a work execution; run './praxis work begin --id ID --occurred-at TIMESTAMP' first"
                 | true, [], others ->
                     let ids = others |> List.map (fun view -> $"{view.ExecutionId} ({Actor.describe view.Actor})") |> String.concat ", "
 

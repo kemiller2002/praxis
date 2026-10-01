@@ -1,0 +1,383 @@
+{
+  "mergedWorkView": [
+    {
+      "id": "{install}",
+      "title": "{install}",
+      "description": null,
+      "tags": [],
+      "priority": null,
+      "status": "complete",
+      "backlogActions": [],
+      "liveWorkItem": {
+        "state": "complete",
+        "semanticState": "complete",
+        "allowedActions": []
+      },
+      "attachments": []
+    },
+    {
+      "id": "WI-ACTIVE",
+      "title": "Active item",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "blocked",
+      "blockedReason": "waiting on review",
+      "backlogActions": [],
+      "liveWorkItem": {
+        "state": "blocked",
+        "semanticState": "blocked",
+        "allowedActions": [
+          "abandon",
+          "resume"
+        ]
+      },
+      "attachments": []
+    },
+    {
+      "id": "WI-ATTACH",
+      "title": "Ready with attachment",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "backlogActions": [
+        "abandon",
+        "block",
+        "start"
+      ],
+      "liveWorkItem": null,
+      "attachments": [
+        {
+          "id": "ATT-1",
+          "name": "note.txt",
+          "size": 7,
+          "contentType": null
+        }
+      ]
+    },
+    {
+      "id": "WI-CAPTURED",
+      "title": "Captured only item",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "captured",
+      "backlogActions": [
+        "abandon",
+        "ready"
+      ],
+      "liveWorkItem": null,
+      "attachments": []
+    },
+    {
+      "id": "WI-READY",
+      "title": "Ready item",
+      "description": "desc text",
+      "tags": [
+        "alpha"
+      ],
+      "priority": "high",
+      "status": "active",
+      "backlogActions": [],
+      "liveWorkItem": {
+        "state": "active",
+        "semanticState": "active",
+        "allowedActions": [
+          "abandon",
+          "block",
+          "complete"
+        ]
+      },
+      "attachments": []
+    }
+  ],
+  "bareWork": [
+    {
+      "id": "{install}",
+      "title": "{install}",
+      "description": null,
+      "tags": [],
+      "priority": null,
+      "status": "complete",
+      "backlogActions": [],
+      "liveWorkItem": {
+        "state": "complete",
+        "semanticState": "complete",
+        "allowedActions": []
+      },
+      "attachments": []
+    },
+    {
+      "id": "WI-ACTIVE",
+      "title": "Active item",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "blocked",
+      "blockedReason": "waiting on review",
+      "backlogActions": [],
+      "liveWorkItem": {
+        "state": "blocked",
+        "semanticState": "blocked",
+        "allowedActions": [
+          "abandon",
+          "resume"
+        ]
+      },
+      "attachments": []
+    },
+    {
+      "id": "WI-ATTACH",
+      "title": "Ready with attachment",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "backlogActions": [
+        "abandon",
+        "block",
+        "start"
+      ],
+      "liveWorkItem": null,
+      "attachments": [
+        {
+          "id": "ATT-1",
+          "name": "note.txt",
+          "size": 7,
+          "contentType": null
+        }
+      ]
+    },
+    {
+      "id": "WI-CAPTURED",
+      "title": "Captured only item",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "captured",
+      "backlogActions": [
+        "abandon",
+        "ready"
+      ],
+      "liveWorkItem": null,
+      "attachments": []
+    },
+    {
+      "id": "WI-READY",
+      "title": "Ready item",
+      "description": "desc text",
+      "tags": [
+        "alpha"
+      ],
+      "priority": "high",
+      "status": "active",
+      "backlogActions": [],
+      "liveWorkItem": {
+        "state": "active",
+        "semanticState": "active",
+        "allowedActions": [
+          "abandon",
+          "block",
+          "complete"
+        ]
+      },
+      "attachments": []
+    }
+  ],
+  "show": {
+    "WI-READY": {
+      "detail": null,
+      "row": {
+        "id": "WI-READY",
+        "title": "Ready item",
+        "description": "desc text",
+        "tags": [
+          "alpha"
+        ],
+        "priority": "high",
+        "status": "active",
+        "backlogActions": [],
+        "liveWorkItem": {
+          "state": "active",
+          "semanticState": "active",
+          "allowedActions": [
+            "abandon",
+            "block",
+            "complete"
+          ]
+        },
+        "attachments": [],
+        "detail": null
+      }
+    },
+    "WI-ACTIVE": {
+      "detail": null,
+      "row": {
+        "id": "WI-ACTIVE",
+        "title": "Active item",
+        "description": null,
+        "tags": [],
+        "priority": "medium",
+        "status": "blocked",
+        "blockedReason": "waiting on review",
+        "backlogActions": [],
+        "liveWorkItem": {
+          "state": "blocked",
+          "semanticState": "blocked",
+          "allowedActions": [
+            "abandon",
+            "resume"
+          ]
+        },
+        "attachments": [],
+        "detail": null
+      }
+    },
+    "WI-CAPTURED": {
+      "detail": null,
+      "row": {
+        "id": "WI-CAPTURED",
+        "title": "Captured only item",
+        "description": null,
+        "tags": [],
+        "priority": "medium",
+        "status": "captured",
+        "backlogActions": [
+          "abandon",
+          "ready"
+        ],
+        "liveWorkItem": null,
+        "attachments": [],
+        "detail": null
+      }
+    },
+    "WI-ATTACH": {
+      "detail": null,
+      "row": {
+        "id": "WI-ATTACH",
+        "title": "Ready with attachment",
+        "description": null,
+        "tags": [],
+        "priority": "medium",
+        "status": "ready",
+        "backlogActions": [
+          "abandon",
+          "block",
+          "start"
+        ],
+        "liveWorkItem": null,
+        "attachments": [
+          {
+            "id": "ATT-1",
+            "name": "note.txt",
+            "size": 7,
+            "contentType": null
+          }
+        ],
+        "detail": null
+      }
+    }
+  },
+  "tagAlpha": [
+    {
+      "id": "WI-READY",
+      "title": "Ready item",
+      "description": "desc text",
+      "tags": [
+        "alpha"
+      ],
+      "priority": "high",
+      "status": "active",
+      "backlogActions": [],
+      "liveWorkItem": {
+        "state": "active",
+        "semanticState": "active",
+        "allowedActions": [
+          "abandon",
+          "block",
+          "complete"
+        ]
+      },
+      "attachments": []
+    }
+  ],
+  "statusReady": [
+    {
+      "id": "WI-ATTACH",
+      "title": "Ready with attachment",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "backlogActions": [
+        "abandon",
+        "block",
+        "start"
+      ],
+      "liveWorkItem": null,
+      "attachments": [
+        {
+          "id": "ATT-1",
+          "name": "note.txt",
+          "size": 7,
+          "contentType": null
+        }
+      ]
+    }
+  ],
+  "statusReadyTagAlpha": [],
+  "readyView": [
+    {
+      "id": "WI-ATTACH",
+      "title": "Ready with attachment",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "backlogActions": [
+        "abandon",
+        "block",
+        "start"
+      ],
+      "liveWorkItem": null,
+      "attachments": [
+        {
+          "id": "ATT-1",
+          "name": "note.txt",
+          "size": 7,
+          "contentType": null
+        }
+      ]
+    }
+  ],
+  "addItem": {
+    "id": "WI-NEW",
+    "title": "A new obligation",
+    "status": "captured",
+    "tags": [
+      "alpha",
+      "beta"
+    ],
+    "priority": "high"
+  },
+  "addList": [
+    {
+      "id": "{install}",
+      "title": "{install}",
+      "tags": [],
+      "priority": null,
+      "status": "complete"
+    },
+    {
+      "id": "WI-NEW",
+      "title": "A new obligation",
+      "tags": [
+        "alpha",
+        "beta"
+      ],
+      "priority": "high",
+      "status": "captured"
+    }
+  ]
+}

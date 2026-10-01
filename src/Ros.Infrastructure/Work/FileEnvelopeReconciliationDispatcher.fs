@@ -65,12 +65,14 @@ module FileEnvelopeReconciliationDispatcher =
         | WorkAction.Resume -> "active"
         | WorkAction.Block -> "blocked"
         | WorkAction.Complete -> "complete"
+        | WorkAction.Abandon -> "abandoned"
 
     let private actionName = function
         | WorkAction.Begin -> "start"
         | WorkAction.Block -> "block"
         | WorkAction.Resume -> "resume"
         | WorkAction.Complete -> "complete"
+        | WorkAction.Abandon -> "abandon"
 
     let private rejectionMessage = function
         | WorkContextRejection.NoWorkItems -> "no-work-items"
@@ -79,6 +81,7 @@ module FileEnvelopeReconciliationDispatcher =
         | WorkContextRejection.ItemTransitionRejected(id, TransitionRejection.IllegalTransition(state, transition)) ->
             $"illegal-transition:{id}:{state}:{actionName transition}"
         | WorkContextRejection.ItemTransitionRejected(_, TransitionRejection.BlockReasonRequired) -> "block-reason-required"
+        | WorkContextRejection.ItemTransitionRejected(_, TransitionRejection.AbandonReasonRequired) -> "abandon-reason-required"
         | WorkContextRejection.ItemTransitionRejected(id, TransitionRejection.MissingEvidence missing) ->
             let joined = String.concat "," missing
             $"missing-evidence:{id}:{joined}"

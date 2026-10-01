@@ -177,7 +177,7 @@ module ReconciliationCommands =
             for error in errors do
                 eprintfn "ERROR %s" error
 
-            eprintfn "Usage: ros %s" usage
+            eprintfn "Usage: praxis %s" usage
             2
         | [] ->
             let command: ReconciliationCommand =

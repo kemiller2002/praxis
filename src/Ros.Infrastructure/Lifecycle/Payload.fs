@@ -105,6 +105,16 @@ module Payload =
         | true, value when value.ValueKind = JsonValueKind.True -> true
         | _ -> false
 
+    /// `replaces`: one earlier destination, or an array of them.
+    let private stringsProperty (element: JsonElement) name =
+        match element.TryGetProperty(name: string) with
+        | true, value when value.ValueKind = JsonValueKind.String -> [ value.GetString() ]
+        | true, value when value.ValueKind = JsonValueKind.Array ->
+            value.EnumerateArray()
+            |> Seq.choose (fun item -> if item.ValueKind = JsonValueKind.String then Some(item.GetString()) else None)
+            |> List.ofSeq
+        | _ -> []
+
     let sha256Hex (content: byte array) =
         content |> SHA256.HashData |> Convert.ToHexString |> _.ToLowerInvariant()
 
@@ -243,11 +253,11 @@ module Payload =
                 []
 
     let private looksLikePackageRoot (candidate: string) =
-        File.Exists(Path.Combine(candidate, "package.json"))
+        File.Exists(Path.Combine(candidate, "release.json"))
         && File.Exists(Path.Combine(candidate, "starter", "greenfield", "manifest.json"))
 
     /// Where this package's own scaffold lives. An explicit `--package-root`
-    /// wins; otherwise the environment variable the npm launcher sets; then a
+    /// wins; otherwise the `ROS_PACKAGE_ROOT` environment variable; then a
     /// walk up from the executable (a source checkout, or a cached binary
     /// sitting inside the package); then a walk up from the working
     /// directory.
@@ -292,9 +302,9 @@ module Payload =
         | None -> if (embeddedPaths ()).IsEmpty then None else Some EmbeddedPayload
 
     let private readPackageMetadata (source: PayloadSource) =
-        match readPayloadText source "package.json" with
+        match readPayloadText source "release.json" with
         | Error message -> Error message
-        | Ok None -> Error "the payload has no package.json, so its name and version cannot be read"
+        | Ok None -> Error "the payload has no release.json, so its name and version cannot be read"
         | Ok(Some text) ->
             use document = JsonDocument.Parse(text, jsonOptions)
             let root = document.RootElement
@@ -303,26 +313,6 @@ module Payload =
                 stringProperty root "name" |> Option.defaultValue "",
                 stringProperty root "version" |> Option.defaultValue "0.0.0"
             )
-
-    /// `publish.yml` bundles `lib/stable-ros-version.json` into every
-    /// published tarball, naming the newest stable release. A snapshot
-    /// install must scaffold that version rather than its own, since a
-    /// snapshot has no GitHub Release and therefore no runnable binary.
-    ///
-    /// Only a directory payload can carry that file. An embedded payload is
-    /// only ever reached from a binary that a real release published, so its
-    /// own version is already the one to pin.
-    let private readTargetVersion (source: PayloadSource) (packageVersion: string) =
-        match source with
-        | EmbeddedPayload -> packageVersion
-        | PayloadDirectory root ->
-            let overridePath = Path.Combine(root, "lib", "stable-ros-version.json")
-
-            if File.Exists overridePath then
-                use document = readJson overridePath
-                stringProperty document.RootElement "version" |> Option.defaultValue packageVersion
-            else
-                packageVersion
 
     /// Read, render and hash the whole scaffold for one profile. Nothing is
     /// written; the result is the desired state the planner compares against.
@@ -341,7 +331,9 @@ module Payload =
         |> Result.bind (fun manifestText ->
             readPackageMetadata payloadSource
             |> Result.bind (fun (packageName, packageVersion) ->
-                let targetVersion = readTargetVersion payloadSource packageVersion
+                // Every payload is a released version with its own native
+                // bundle, so a scaffolded project pins exactly that version.
+                let targetVersion = packageVersion
 
                 let variables =
                     Map.ofList
@@ -377,7 +369,8 @@ module Payload =
                                       Ownership = ownership
                                       Sha256 = sha256Hex content
                                       Executable = boolProperty entry "executable"
-                                      Integration = stringProperty entry "integration" }
+                                      Integration = stringProperty entry "integration"
+                                      Replaces = stringsProperty entry "replaces" }
                                   Content = content })
 
                 let entries =

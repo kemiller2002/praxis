@@ -46,7 +46,7 @@ module ContributionOperation =
 /// One actor's contribution to one artifact. Keyed by the execution that
 /// produced it (`EXE-...`) so every contribution made during one execution
 /// is traceable to that execution, and two executions of the same agent can
-/// never collapse into one entry. A contribution made outside any ROS
+/// never collapse into one entry. A contribution made outside any Praxis
 /// execution (typically a human editing directly) uses a generated
 /// `CTB-...` key and records no execution.
 type Contribution =

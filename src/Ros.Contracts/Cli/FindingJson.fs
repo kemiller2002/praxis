@@ -8,17 +8,21 @@ open Ros.Domain.Artifacts
 module FindingContract =
     let repair finding =
         if finding.Message.Contains("registry is stale") then
-            "Run './ros registry build'."
+            "Run './praxis registry build'."
         elif finding.Field = "work_reconciliation" then
-            "Never edit or hand-write reconciliation events. Restore the event log from version control, then re-run './ros work reconcile' with Git evidence."
+            "Never edit or hand-write reconciliation events. Restore the event log from version control, then re-run './praxis work reconcile' with Git evidence."
+        elif finding.Field = "implementation_language" then
+            "Reimplement this behaviour in F#/.NET and delete the file, or record an approved DF- decision and a narrow ros.json implementationPolicy exception (DF-ROS-2026-A049)."
+        elif finding.Field.StartsWith("implementationPolicy", System.StringComparison.Ordinal) then
+            "Correct ros.json implementationPolicy: each exception needs an exact path (or directory ending in '/') and the accepted DF- decision approving it."
         elif finding.Field = "work_items" then
-            "Run './ros work begin WORK-ID', perform the change, then complete it with configured evidence."
+            "Run './praxis work begin --id WORK-ID --occurred-at TIMESTAMP', perform the change, then complete it with configured evidence."
         elif finding.Message.Contains("provenance record") then
-            "Inside the responsible work execution, run the './ros provenance record' command named in the message."
+            "Inside the responsible work execution, run the './praxis provenance record' command named in the message."
         elif finding.Field.StartsWith("provenance", System.StringComparison.Ordinal) then
-            "Correct the provenance block (or re-record it with './ros provenance record'); never rewrite another contributor's entry."
+            "Correct the provenance block (or re-record it with './praxis provenance record'); never rewrite another contributor's entry."
         else
-            "Correct the named file and field, then run './ros validate' again."
+            "Correct the named file and field, then run './praxis validate' again."
 
     /// `validate --json`: `valid` reflects errors only; warnings (currently
     /// provenance warnings) are reported with `"severity":"warning"` and

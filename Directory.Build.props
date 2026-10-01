@@ -12,12 +12,13 @@
     <RosRepositoryRoot>$(MSBuildThisFileDirectory)</RosRepositoryRoot>
   </PropertyGroup>
 
-  <!-- package.json is the single authoritative version source for both the
-       npm package and the F# CLI, so the CLI's reported version can never
-       drift from the released package version. The CLI reads it back at
-       runtime from its own AssemblyInformationalVersion. -->
+  <!-- release.json is the single authoritative version source for the F#
+       CLI and every channel it ships in (native bundles, the .NET global
+       tool; DF-ROS-2026-A044), so the CLI's reported version can never
+       drift from the released version. The CLI reads it back at runtime
+       from its own AssemblyInformationalVersion. -->
   <PropertyGroup>
-    <RosPackageVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)package.json')), '"version"\s*:\s*"([^"]+)"').Groups.get_Item(1).Value)</RosPackageVersion>
+    <RosPackageVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)release.json')), '"version"\s*:\s*"([^"]+)"').Groups.get_Item(1).Value)</RosPackageVersion>
     <Version>$(RosPackageVersion)</Version>
     <InformationalVersion>$(RosPackageVersion)</InformationalVersion>
   </PropertyGroup>

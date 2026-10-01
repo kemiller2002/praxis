@@ -2,11 +2,11 @@
 id: GV-DEC-001
 title: Governance Decision Log
 status: canonical
-version: 1.2.0
+version: 1.4.0
 owners:
   - repository-governance
 created: 2026-07-22
-updated: 2026-09-28
+updated: 2026-09-29
 review_cycle: quarterly
 supersedes: []
 superseded_by: []
@@ -201,3 +201,51 @@ On 2026-07-22, repository discovery found the Phase 1 execution prompt as the on
   execution is not installed.
 - **Revisit trigger:** The end-to-end proof or agent evaluations show that
   agents cannot complete the flow from the contract alone.
+
+## DF-GOV-013 — Durable Continuity Is a Governance Rule
+
+- **Date:** 2026-09-29
+- **Status:** accepted
+- **Context:** Handoffs were prose in block reasons and chat. An executor
+  that disappears can take unpushed work with it. `RQ-ROS-2026-A022`
+  requires that a successor on another machine be able to continue without
+  the original executor's filesystem, process, or conversation.
+- **Hypothesis:** Governance plus a verified mechanism prevents work that
+  exists only locally, without meaningless commits. Governance states the
+  rule and the recovery boundaries. The mechanism is `work checkpoint`,
+  enforced completion, and `work continue` (`DF-ROS-2026-A042`).
+- **Evidence considered:**
+  - the two-clone agent-loss proof (`tests/Ros.Tests/RecoveryProofTests.fs`);
+  - the remote contract test (`tests/remote-checkpoint.test.mjs`);
+  - this repository's own dogfooding, where every `PRAXIS-CONT-*` item
+    completed from a verified checkpoint.
+- **Alternatives:**
+  - Timed or per-edit checkpoints. These produce noise and meaningless
+    commits.
+  - Automatic commit and push. This takes the choice of a coherent
+    recovery point away from the executor.
+  - Documentation only. Unverified claims of durability are what the rule
+    exists to prevent.
+- **Decision:**
+  - `AGENTS.md` ("Durable checkpoints and continuity"), the Agent Operating
+    Manual ("Durable Continuity"), and the Engineering Standards'
+    Definition of Done state the rule: an executor session is disposable;
+    repository and Praxis state are the continuity boundary.
+  - They also list the recovery boundaries at which agents checkpoint.
+  - New installations enforce durable completion through
+    `workProtocol.continuity.requireDurableCheckpoint`. Existing
+    installations opt in.
+- **Confidence:** Medium (0.75). No live cloud-agent run of protocol 1.3
+  has happened yet.
+- **Consequences:**
+  - Git-backed work follows the order commit, push, checkpoint, complete,
+    then persist the Praxis state.
+  - No-change work is unaffected.
+- **Revisit trigger:**
+  - Agents routinely need `--unrecoverable-reason`.
+  - The meaningful-mutation heuristic blocks legitimate work.
+- **Amendment (2026-09-29, `DF-ROS-2026-A043`):** New observability is
+  effective-current. Governance states that step telemetry is adopted
+  prospectively, never by restarting work, and that historical step
+  attribution that was never captured stays unavailable rather than being
+  reconstructed or read as zero.

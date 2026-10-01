@@ -1,0 +1,122 @@
+name: ros-fs release assets
+
+# The self-contained `ros-fs-<rid>` binaries and `checksums.txt` that a
+# project scaffolded before the Praxis rename downloads through its `./ros`
+# launcher (tools/ros_fs_launcher.mjs) for its pinned version. From the
+# rename on, the binary is `praxis`; it ships here under the legacy name so
+# those projects keep working (DF-ROS-2026-A050). They used to be
+# built only by the npm publish workflow; npm distribution is retired
+# (DF-ROS-2026-A044), so native-release.yml calls this for every release,
+# and it can be dispatched by hand to backfill a release that lacks them.
+#
+# Assets are immutable: if the release already has checksums.txt, nothing
+# is built or uploaded.
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: "Release tag, e.g. v3.6.0"
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to add ros-fs assets to, e.g. v3.6.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: ros-fs-assets-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  assets:
+    if: github.repository == 'kemiller2002/praxis'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the tag and whether the release still needs assets
+        id: need
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::'$TAG' is not a vX.Y.Z tag"; exit 1; }
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null || { echo "::error::release $TAG does not exist"; exit 1; }
+          names="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')"
+          case $'\n'"${names}"$'\n' in
+            *$'\n'"checksums.txt"$'\n'*)
+              echo "$TAG already has ros-fs assets; released assets are immutable."
+              echo "build=false" >> "$GITHUB_OUTPUT" ;;
+            *)
+              echo "build=true" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - uses: actions/checkout@v6
+        if: steps.need.outputs.build == 'true'
+        with:
+          ref: ${{ inputs.tag }}
+
+      - uses: actions/setup-dotnet@v6
+        if: steps.need.outputs.build == 'true'
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Build self-contained ros-fs binaries
+        if: steps.need.outputs.build == 'true'
+        env:
+          TAG: ${{ inputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # A tag from before the rename declares its version in package.json;
+          # later tags declare it in release.json. No Node is needed either way.
+          if [ -f release.json ]; then source_file=release.json; else source_file=package.json; fi
+          version="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["version"])' "$source_file")"
+          [ "v${version}" = "$TAG" ] || { echo "::error::$TAG checks out $source_file version $version"; exit 1; }
+          mkdir -p dist/ros-fs
+          for rid in linux-x64 linux-arm64 osx-x64 osx-arm64 win-x64; do
+            dotnet publish src/Ros.Cli/Ros.Cli.fsproj -c Release -r "$rid" --self-contained true \
+              -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o "dist/publish/$rid"
+            # The assembly is `praxis` from the rename on, `ros-fs` before it.
+            if [ -f "dist/publish/$rid/praxis" ] || [ -f "dist/publish/$rid/praxis.exe" ]; then binary=praxis; else binary=ros-fs; fi
+            case "$rid" in
+              win-x64) cp "dist/publish/$rid/$binary.exe" "dist/ros-fs/ros-fs-$rid.exe" ;;
+              *) cp "dist/publish/$rid/$binary" "dist/ros-fs/ros-fs-$rid" ;;
+            esac
+          done
+          (cd dist/ros-fs && sha256sum ros-fs-* > checksums.txt && cat checksums.txt)
+
+      - name: Attest build provenance
+        if: steps.need.outputs.build == 'true'
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
+        with:
+          subject-path: |
+            dist/ros-fs/ros-fs-*
+            dist/ros-fs/checksums.txt
+
+      - name: Upload to the release
+        if: steps.need.outputs.build == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Never overwrite: an asset that already exists is never replaced.
+          gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" dist/ros-fs/ros-fs-* dist/ros-fs/checksums.txt
+          published="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')"
+          for asset in dist/ros-fs/ros-fs-* dist/ros-fs/checksums.txt; do
+            name="$(basename "$asset")"
+            case $'\n'"${published}"$'\n' in
+              *$'\n'"${name}"$'\n'*) ;;
+              *) echo "::error::$TAG is missing asset ${name}"; exit 1 ;;
+            esac
+          done

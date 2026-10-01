@@ -12,9 +12,11 @@
     <Compile Include="Work/Operations.fs" />
     <Compile Include="Work/EnvelopeReconciliationOperations.fs" />
     <Compile Include="Work/Reconciliation.fs" />
+    <Compile Include="Work/Checkpoint.fs" />
     <Compile Include="Telemetry/Operations.fs" />
     <Compile Include="Artifacts/Operations.fs" />
     <Compile Include="Ordo/Operations.fs" />
     <Compile Include="Lifecycle/Operations.fs" />
+    <Compile Include="Planning/Operations.fs" />
   </ItemGroup>
 </Project>

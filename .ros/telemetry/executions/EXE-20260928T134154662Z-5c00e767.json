@@ -1455,6 +1455,278 @@
         "name": "step",
         "mechanism": "step-lifecycle"
       }
+    },
+    {
+      "type": "step.relationship.recorded",
+      "occurredAt": "2026-10-01T06:48:00Z",
+      "stepId": "STEP-20260928T134159000Z-55ba965e",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.relationship.recorded",
+      "occurredAt": "2026-10-01T06:48:00Z",
+      "stepId": "STEP-20260928T134159000Z-55ba965e",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.relationship.recorded",
+      "occurredAt": "2026-10-01T06:48:00Z",
+      "stepId": "STEP-20260928T134159000Z-55ba965e",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.relationship.recorded",
+      "occurredAt": "2026-10-01T06:48:00Z",
+      "stepId": "STEP-20260928T134159000Z-55ba965e",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.relationship.recorded",
+      "occurredAt": "2026-10-01T06:48:00Z",
+      "stepId": "STEP-20260928T134159000Z-55ba965e",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.relationship.recorded",
+      "occurredAt": "2026-10-01T06:48:00Z",
+      "stepId": "STEP-20260928T134159000Z-55ba965e",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.relationship.recorded",
+      "occurredAt": "2026-10-01T06:48:00Z",
+      "stepId": "STEP-20260928T134159000Z-55ba965e",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.relationship.recorded",
+      "occurredAt": "2026-10-01T06:48:00Z",
+      "stepId": "STEP-20260928T134159000Z-55ba965e",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.relationship.recorded",
+      "occurredAt": "2026-10-01T06:48:00Z",
+      "stepId": "STEP-20260928T134159000Z-55ba965e",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.relationship.recorded",
+      "occurredAt": "2026-10-01T06:48:00Z",
+      "stepId": "STEP-20260928T134159000Z-55ba965e",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.relationship.recorded",
+      "occurredAt": "2026-10-01T06:48:00Z",
+      "stepId": "STEP-20260928T134159000Z-55ba965e",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.relationship.recorded",
+      "occurredAt": "2026-10-01T06:48:00Z",
+      "stepId": "STEP-20260928T134159000Z-55ba965e",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.relationship.recorded",
+      "occurredAt": "2026-10-01T06:48:00Z",
+      "stepId": "STEP-20260928T134159000Z-55ba965e",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.relationship.recorded",
+      "occurredAt": "2026-10-01T06:48:00Z",
+      "stepId": "STEP-20260928T134159000Z-55ba965e",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.relationship.recorded",
+      "occurredAt": "2026-10-01T06:48:00Z",
+      "stepId": "STEP-20260928T134159000Z-55ba965e",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.relationship.recorded",
+      "occurredAt": "2026-10-01T06:48:00Z",
+      "stepId": "STEP-20260928T134159000Z-55ba965e",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
     }
   ],
   "repository": {
@@ -1794,15 +2066,214 @@
       },
       "relationships": {
         "filesObserved": [],
-        "filesChanged": [],
+        "filesChanged": [
+          {
+            "value": "src/Ros.Domain/Telemetry/Step.fs",
+            "source": "agent-observation",
+            "recordedAt": "2026-10-01T06:48:00Z",
+            "actor": {
+              "kind": "agent",
+              "id": "openai/codex",
+              "provider": "openai",
+              "model": "unknown",
+              "runtime": "codex"
+            }
+          },
+          {
+            "value": "src/Ros.Cli/StepCommands.fs",
+            "source": "agent-observation",
+            "recordedAt": "2026-10-01T06:48:00Z",
+            "actor": {
+              "kind": "agent",
+              "id": "openai/codex",
+              "provider": "openai",
+              "model": "unknown",
+              "runtime": "codex"
+            }
+          },
+          {
+            "value": "src/Ros.Infrastructure/Work/FileStepRepository.fs",
+            "source": "agent-observation",
+            "recordedAt": "2026-10-01T06:48:00Z",
+            "actor": {
+              "kind": "agent",
+              "id": "openai/codex",
+              "provider": "openai",
+              "model": "unknown",
+              "runtime": "codex"
+            }
+          },
+          {
+            "value": "src/Ros.Cli/EnvelopeReconciliationCommands.fs",
+            "source": "agent-observation",
+            "recordedAt": "2026-10-01T06:48:00Z",
+            "actor": {
+              "kind": "agent",
+              "id": "openai/codex",
+              "provider": "openai",
+              "model": "unknown",
+              "runtime": "codex"
+            }
+          }
+        ],
         "commits": [],
         "commands": [],
-        "tests": [],
-        "validations": [],
-        "evidence": [],
-        "decisions": [],
-        "requirements": [],
-        "outcomes": []
+        "tests": [
+          {
+            "value": "TMPDIR=/private/tmp dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll — 1313/1313 passed",
+            "source": "agent-observation",
+            "recordedAt": "2026-10-01T06:48:00Z",
+            "actor": {
+              "kind": "agent",
+              "id": "openai/codex",
+              "provider": "openai",
+              "model": "unknown",
+              "runtime": "codex"
+            }
+          },
+          {
+            "value": "python3 -m unittest discover -s tests -v — 7/7 passed",
+            "source": "agent-observation",
+            "recordedAt": "2026-10-01T06:48:00Z",
+            "actor": {
+              "kind": "agent",
+              "id": "openai/codex",
+              "provider": "openai",
+              "model": "unknown",
+              "runtime": "codex"
+            }
+          },
+          {
+            "value": "dotnet run --project site-tools/SiteTools.fsproj -c Release --no-build -- verify — 101/101 passed",
+            "source": "agent-observation",
+            "recordedAt": "2026-10-01T06:48:00Z",
+            "actor": {
+              "kind": "agent",
+              "id": "openai/codex",
+              "provider": "openai",
+              "model": "unknown",
+              "runtime": "codex"
+            }
+          }
+        ],
+        "validations": [
+          {
+            "value": "./praxis architecture check --json — valid",
+            "source": "agent-observation",
+            "recordedAt": "2026-10-01T06:48:00Z",
+            "actor": {
+              "kind": "agent",
+              "id": "openai/codex",
+              "provider": "openai",
+              "model": "unknown",
+              "runtime": "codex"
+            }
+          },
+          {
+            "value": "./praxis validate --json — valid, 0 errors, 2 pre-existing warnings",
+            "source": "agent-observation",
+            "recordedAt": "2026-10-01T06:48:00Z",
+            "actor": {
+              "kind": "agent",
+              "id": "openai/codex",
+              "provider": "openai",
+              "model": "unknown",
+              "runtime": "codex"
+            }
+          }
+        ],
+        "evidence": [
+          {
+            "value": "EV-ROS-2026-A068",
+            "source": "agent-observation",
+            "recordedAt": "2026-10-01T06:48:00Z",
+            "actor": {
+              "kind": "agent",
+              "id": "openai/codex",
+              "provider": "openai",
+              "model": "unknown",
+              "runtime": "codex"
+            }
+          },
+          {
+            "value": "EV-ROS-2026-A069",
+            "source": "agent-observation",
+            "recordedAt": "2026-10-01T06:48:00Z",
+            "actor": {
+              "kind": "agent",
+              "id": "openai/codex",
+              "provider": "openai",
+              "model": "unknown",
+              "runtime": "codex"
+            }
+          }
+        ],
+        "decisions": [
+          {
+            "value": "DF-ROS-2026-A037",
+            "source": "agent-observation",
+            "recordedAt": "2026-10-01T06:48:00Z",
+            "actor": {
+              "kind": "agent",
+              "id": "openai/codex",
+              "provider": "openai",
+              "model": "unknown",
+              "runtime": "codex"
+            }
+          },
+          {
+            "value": "DF-ROS-2026-A051",
+            "source": "agent-observation",
+            "recordedAt": "2026-10-01T06:48:00Z",
+            "actor": {
+              "kind": "agent",
+              "id": "openai/codex",
+              "provider": "openai",
+              "model": "unknown",
+              "runtime": "codex"
+            }
+          }
+        ],
+        "requirements": [
+          {
+            "value": "RQ-ROS-2026-A026",
+            "source": "agent-observation",
+            "recordedAt": "2026-10-01T06:48:00Z",
+            "actor": {
+              "kind": "agent",
+              "id": "openai/codex",
+              "provider": "openai",
+              "model": "unknown",
+              "runtime": "codex"
+            }
+          },
+          {
+            "value": "RQ-ROS-2026-A027",
+            "source": "agent-observation",
+            "recordedAt": "2026-10-01T06:48:00Z",
+            "actor": {
+              "kind": "agent",
+              "id": "openai/codex",
+              "provider": "openai",
+              "model": "unknown",
+              "runtime": "codex"
+            }
+          }
+        ],
+        "outcomes": [
+          {
+            "value": "PR #79 integrated with latest main as an F#-only implementation and passed the final local validation gate",
+            "source": "agent-observation",
+            "recordedAt": "2026-10-01T06:48:00Z",
+            "actor": {
+              "kind": "agent",
+              "id": "openai/codex",
+              "provider": "openai",
+              "model": "unknown",
+              "runtime": "codex"
+            }
+          }
+        ]
       },
       "transitions": [
         {

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://repository-operating-system.local/schemas/work-protocol.schema.json",
-  "title": "ROS work protocol configuration",
+  "title": "Praxis work protocol configuration",
   "type": "object",
   "required": ["repository", "workProtocol"],
   "properties": {
@@ -19,7 +19,13 @@
         "semanticMapping": {"type": "object", "additionalProperties": {"enum": ["backlog", "ready", "active", "review", "blocked", "complete"]}},
         "completionEvidence": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}}},
         "meaningfulPaths": {"type": "array", "items": {"type": "string"}},
-        "ignoredPaths": {"type": "array", "items": {"type": "string"}}
+        "ignoredPaths": {"type": "array", "items": {"type": "string"}},
+        "continuity": {
+          "description": "Durable checkpoints and executor continuity (RQ-ROS-2026-A022, DF-ROS-2026-A042). Absent: continuity warnings are reported, but completion and blocking are not guarded (legacy-compatible). requireDurableCheckpoint: meaningful Git-backed work completes only when its final state is a durable checkpoint re-verified at its remote, and blocking after un-checkpointed work needs a checkpoint or a recorded --unrecoverable-reason.",
+          "type": "object",
+          "properties": {"requireDurableCheckpoint": {"type": "boolean"}},
+          "additionalProperties": true
+        }
       },
       "additionalProperties": true
     },

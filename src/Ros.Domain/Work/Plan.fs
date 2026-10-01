@@ -82,6 +82,7 @@ module WorkTransitionPlanning =
         | WorkAction.Block -> "work.blocked"
         | WorkAction.Resume -> "work.resumed"
         | WorkAction.Complete -> "work.completed"
+        | WorkAction.Abandon -> "work.abandoned"
 
     let private telemetryIntents (request: WorkTransitionPlanRequest) =
         if not request.TelemetryEnabled then
@@ -97,6 +98,10 @@ module WorkTransitionPlanning =
                  else
                      [])
                 @ [ TelemetryIntent.FinalizeExecutions ]
+            // Abandoning ends the work: every execution of it is finalized,
+            // and none is created only to be finalized.
+            | WorkAction.Abandon ->
+                if request.Item.TelemetryExecutionIds.IsEmpty then [] else [ TelemetryIntent.FinalizeExecutions ]
 
     let plan (request: WorkTransitionPlanRequest) =
         let decision =
@@ -119,7 +124,11 @@ module WorkTransitionPlanning =
                     SemanticState = target
                     Evidence = evidence
                     BlockReason =
-                        if request.Action = WorkAction.Block then request.BlockReason else request.Item.BlockReason
+                        match request.Action with
+                        | WorkAction.Block -> request.BlockReason
+                        // No longer blocked; the abandonment reason lives on the event.
+                        | WorkAction.Abandon -> None
+                        | _ -> request.Item.BlockReason
                     UpdatedAt = Some request.OccurredAt
                     CompletedAt =
                         if request.Action = WorkAction.Complete then Some request.OccurredAt else request.Item.CompletedAt }

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://repository-operating-system.local/schemas/execution-telemetry.schema.json",
-  "title": "ROS provider-neutral execution telemetry record",
+  "title": "Praxis provider-neutral execution telemetry record",
   "type": "object",
   "required": ["schemaVersion", "executionId", "workItemId", "status", "startedAt", "identity", "provenance", "classification", "capabilities", "metrics", "rawTelemetry", "events", "repository", "links"],
   "properties": {

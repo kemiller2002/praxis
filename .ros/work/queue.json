@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 62,
+  "nextSeq": 65,
   "items": [
     {
       "id": "WI-0001",
@@ -1884,10 +1884,10 @@
         "gh-90"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "abandoned",
       "attachments": [],
       "createdAt": "2026-09-28T07:39:24.585Z",
-      "updatedAt": "2026-09-28T07:39:31.000Z",
+      "updatedAt": "2026-09-30T09:40:16.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -1897,7 +1897,8 @@
         "runtime": "claude-code"
       },
       "source": "github-issue",
-      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90",
+      "abandonedReason": "Cancelled by the repository owner on 2026-09-30. Blocked since before durable checkpoints (27-28 Sep); remaining steps (GH-84: one-time Pages setting; GH-90: PRAXIS-REMOTE-12 in Conditor) will not be pursued under this item."
     },
     {
       "id": "PRAXIS-REMOTE-01",
@@ -2148,10 +2149,10 @@
         "gh-90"
       ],
       "priority": "high",
-      "status": "blocked",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-28T07:45:12.033Z",
-      "updatedAt": "2026-09-28T09:40:22.000Z",
+      "updatedAt": "2026-09-29T05:44:27.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2161,8 +2162,7 @@
         "runtime": "claude-code"
       },
       "source": "github-issue",
-      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90",
-      "blockedReason": "Praxis-side dependencies (04, 06, 07, 09) are complete. Blocked on human action: (1) merge PR #91 so praxis-remote.yml exists on the default branch (GitHub only dispatches workflows there); (2) publish a Praxis release containing 'remote execute' with build-provenance attestations (version bump; native-release.yml now attests and never clobbers); (3) pin that release in .echelon/toolchain.json and opt in via ros.json remote.capabilities in the proving repository."
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
     },
     {
       "id": "PRAXIS-REMOTE-12",
@@ -2173,10 +2173,10 @@
         "gh-90"
       ],
       "priority": "low",
-      "status": "blocked",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-09-28T07:45:13.354Z",
-      "updatedAt": "2026-09-28T07:45:14.000Z",
+      "updatedAt": "2026-09-29T05:44:43.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2186,8 +2186,7 @@
         "runtime": "claude-code"
       },
       "source": "github-issue",
-      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90",
-      "blockedReason": "Depends on PRAXIS-REMOTE-11 (DF-ROS-2026-A041 decomposition)"
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
     },
     {
       "id": "ACTOR-KIND-ANCHOR",
@@ -2222,10 +2221,10 @@
         "gh-90"
       ],
       "priority": "low",
-      "status": "captured",
+      "status": "abandoned",
       "attachments": [],
       "createdAt": "2026-09-28T09:09:00.360Z",
-      "updatedAt": "2026-09-28T09:09:00.360Z",
+      "updatedAt": "2026-09-28T10:40:40.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2235,10 +2234,1479 @@
         "runtime": "claude-code"
       },
       "source": "agent-discovery",
-      "sourceReference": "PRAXIS-REMOTE-07"
+      "sourceReference": "PRAXIS-REMOTE-07",
+      "abandonedReason": "Obsolete: DF-ROS-2026-A042 retires the npm package entirely; the native installers already provide the praxis command, and the site's ROS-to-Praxis copy and its test were updated in FSHARP-ONLY-REPOSITORY"
+    },
+    {
+      "id": "PRAXIS-REMOTE-11-PREP",
+      "title": "Prepare the live remote proof: ignore the request journal for attribution and script release, pin, opt-in and dispatch",
+      "description": "Child of GH-90. (1) .ros/remote/** is Praxis bookkeeping but was missing from ignoredPaths (repo and both starter profiles), so committed journal entries would read as unattributed meaningful changes. (2) A maintainer script that bumps and releases Praxis, verifies the attested release, pins it, opts a repository in, and dispatches a first praxis.describe request.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T11:30:52.055Z",
+      "updatedAt": "2026-09-28T11:38:45.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "PRAXIS-REMOTE-11"
+    },
+    {
+      "id": "PRAXIS-REMOTE-11-PREP-CI",
+      "title": "Fix PR #93 CI: enable-script test commits without a git identity",
+      "description": "Child of GH-90 / follow-up to PRAXIS-REMOTE-11-PREP. The dry-run test for scripts/praxis-remote-enable.sh commits in a fresh clone that has no user.name/user.email; CI runners have no global identity, so the commit fails. Configure a local identity in the test clone.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T11:43:42.000Z",
+      "updatedAt": "2026-09-28T11:43:50.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-REMOTE-13",
+      "title": "Adapter recognizes GitHub rate limiting on push and pull-request creation (PRX-REMOTE-038)",
+      "description": "Child of GH-90. RQ-ROS-2026-A021 1.1.0 records the remaining PRX-REMOTE-038 gap: scripts/praxis-remote-persist.sh reports any non-conflict push failure, and any pull-request creation failure, as repository-write-failed, although the protocol already defines rate-limited. Classify GitHub rate limiting (HTTP 429, primary/secondary API rate limit) as rate-limited with same-request retry, keep concurrency-conflict and other write failures distinct, and test against real Git remotes. Depends on: PRAXIS-REMOTE-06.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T20:00:24.000Z",
+      "updatedAt": "2026-09-29T01:13:00.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "RQ-ROS-2026-A021"
+    },
+    {
+      "id": "WI-0061",
+      "title": "Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict",
+      "description": "Found in PRAXIS-REMOTE-13. In persistence: pull-request mode, scripts/praxis-remote-persist.sh pushes praxis/remote/<digest(requestId)> before gh pr create. If PR creation then fails (rate-limited or repository-write-failed, both advising same-request retry), the retry runs on a fresh checkout, produces a different commit, and pushing it to the existing per-request branch is non-fast-forward, so the adapter reports concurrency-conflict/after-refresh, contradicting the same-request advice. Decide how a retry recognizes and reuses its own existing state branch (e.g. open the PR for it) without force-pushing.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "medium",
+      "status": "abandoned",
+      "attachments": [],
+      "createdAt": "2026-09-28T20:03:07.959Z",
+      "updatedAt": "2026-09-29T01:12:39.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null,
+      "abandonedReason": "Allocated by 'ros add' with an ID that collides with the completed work item WI-0061 in the live context (generated IDs are checked against the queue only). The obligation is re-captured as PRAXIS-REMOTE-14; the allocator defect as WORK-CAPTURE-ID-COLLISION."
+    },
+    {
+      "id": "PRAXIS-REMOTE-14",
+      "title": "Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict",
+      "description": "Child of GH-90, found in PRAXIS-REMOTE-13 (supersedes the abandoned, ID-colliding WI-0061 backlog entry). In persistence: pull-request mode, scripts/praxis-remote-persist.sh pushes praxis/remote/<digest(requestId)> before gh pr create. If PR creation then fails (rate-limited or repository-write-failed, both advising same-request retry), the retry runs on a fresh checkout, produces a different commit, and pushing it to the existing per-request branch is non-fast-forward, so the adapter reports concurrency-conflict/after-refresh, contradicting the same-request advice. Decide how a retry recognizes and reuses its own existing state branch without force-pushing. Depends on: PRAXIS-REMOTE-06.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T01:12:52.000Z",
+      "updatedAt": "2026-09-29T01:27:58.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "PRAXIS-REMOTE-13"
+    },
+    {
+      "id": "WORK-CAPTURE-ID-COLLISION",
+      "title": "ros add can auto-allocate a WI-NNNN ID that already belongs to a live-context work item",
+      "description": "src/Ros.Domain/Work/Capture.fs generates WI-NNNN IDs by skipping only IDs in the backlog queue, never the live context (explicit --id is checked against both). On 2026-09-28 it allocated WI-0061, already a completed work item, so the new obligation's merged view read 'complete' (abandoned; see PRAXIS-REMOTE-14). praxis validate and CI did not flag the duplicate. Skip context IDs during generation and have validation report a backlog item whose ID collides with a context item in a different state; reconcile with the Node parity differential (tests/work-capture-fsharp-differential.test.mjs).",
+      "tags": [
+        "work-protocol",
+        "backlog"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-29T01:12:52.000Z",
+      "updatedAt": "2026-09-29T01:12:52.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "PRAXIS-REMOTE-13"
+    },
+    {
+      "id": "RELEASE-3-5-0",
+      "title": "Release Praxis 3.5.0 with remote execution (GH-90)",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T01:18:39.766Z",
+      "updatedAt": "2026-09-29T01:21:51.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+    },
+    {
+      "id": "REMOTE-ENABLE-3-5-0",
+      "title": "Pin Praxis 3.5.0 and enable remote execution (read,mutate,complete) (GH-90)",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T04:27:54.789Z",
+      "updatedAt": "2026-09-29T04:28:28.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+    },
+    {
+      "id": "PRAXIS-REMOTE-11-PROOF",
+      "title": "Live proof: a cloud agent without .NET is governed through remote Praxis",
+      "description": "Child of GH-90 / PRAXIS-REMOTE-11 (PRX-REMOTE-042). The work item the end-to-end proof operates on. An agent with only GitHub access (no .NET, F# or Praxis) discovers remote Praxis with praxis.describe, starts this item under its own execution, records a step and its self-reported token usage through typed requests to .github/workflows/praxis-remote.yml, validates, and reads the structured result. A second, independent agent then resumes and completes it under its own execution, linked to the first by parentExecutionId, without impersonation. Captured ready so remote agents can start it (there is no remote capture operation).",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T04:28:27.000Z",
+      "updatedAt": "2026-09-29T05:27:44.389Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": "PRAXIS-REMOTE-11"
+    },
+    {
+      "id": "PRAXIS-REMOTE-15",
+      "title": "Agent contract: a handoff needs a block before the successor resumes",
+      "description": "Found by the live proof (run 36524551943, req-proof-b-resume-1): docs/remote-agent-contract.md section 5 tells a successor to 'Resume the work item as yourself', but work.resume is legal only from blocked, so resuming an item the predecessor left active is domain-rejected. Document the handoff: the predecessor blocks with a handoff reason when it stops; if the predecessor is gone, the successor blocks with a reason naming it, then resumes. Add a regression test for the abandoned-predecessor takeover. Depends on: PRAXIS-REMOTE-09.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T05:21:56.000Z",
+      "updatedAt": "2026-09-29T05:23:13.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "PRAXIS-REMOTE-11-PROOF"
+    },
+    {
+      "id": "PRAXIS-REMOTE-16",
+      "title": "work complete silently drops the conclusion for non-research work items",
+      "description": "Found by the live proof (req-proof-b2-complete-1): work.complete accepts a conclusion (remote argument and local --conclusion), but FileWorkContextRepository persists it only for research-type items (ported Node behaviour), so a mechanical/feature completion's conclusion is discarded without any diagnostic, locally and remotely. Either persist the conclusion for every item type or refuse it where it cannot be kept; never accept and drop it. Depends on: PRAXIS-REMOTE-03.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T05:44:04.000Z",
+      "updatedAt": "2026-09-30T06:22:14.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "EV-ROS-2026-A054"
+    },
+    {
+      "id": "PRAXIS-CONT-00",
+      "title": "Durable work checkpoints and agent continuity (umbrella)",
+      "description": "Umbrella: an executor session is disposable; repository state plus Praxis state is durable. Children PRAXIS-CONT-01..10 in dependency order.",
+      "tags": [
+        "continuity",
+        "durable-checkpoints"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T06:32:13.000Z",
+      "updatedAt": "2026-09-29T08:03:01.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-CONT-01-DOMAIN",
+      "title": "Durable checkpoint domain model and invariants",
+      "description": "Typed checkpoint, verification, freshness, recoverability, guard and continuation decisions in Ros.Domain. Depends on: none.",
+      "tags": [
+        "continuity",
+        "durable-checkpoints"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T06:32:13.000Z",
+      "updatedAt": "2026-09-29T06:45:40.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-CONT-02-GIT",
+      "title": "Git remote/upstream/durability observations",
+      "description": "Extend Ros.Domain.Git / Ros.Application.Git / Ros.Infrastructure.Git with head, upstream, remote branch (ls-remote), relation and meaningful-diff observations. Depends on: PRAXIS-CONT-01-DOMAIN.",
+      "tags": [
+        "continuity",
+        "durable-checkpoints"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T06:32:14.000Z",
+      "updatedAt": "2026-09-29T06:50:34.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-CONT-03-PERSIST",
+      "title": "Checkpoint events, projection, persistence, schema compatibility",
+      "description": "work.checkpointed event, latestCheckpoint projection in current.json, atomic write via work-state journal, additive schema. Depends on: PRAXIS-CONT-01-DOMAIN, PRAXIS-CONT-02-GIT.",
+      "tags": [
+        "continuity",
+        "durable-checkpoints"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T06:32:14.000Z",
+      "updatedAt": "2026-09-29T06:59:07.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-CONT-04-CLI",
+      "title": "work checkpoint, context/status presentation, JSON contract",
+      "description": "work checkpoint command, work checkpoint show, context/status continuity blocks, --json. Depends on: PRAXIS-CONT-03-PERSIST.",
+      "tags": [
+        "continuity",
+        "durable-checkpoints"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T06:32:14.000Z",
+      "updatedAt": "2026-09-29T07:08:53.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-CONT-05-GUARDS",
+      "title": "Completion/block lifecycle continuity guards",
+      "description": "Durable completion guard with remote re-verification, no-change exception, block guard with explicit unrecoverable reason. Depends on: PRAXIS-CONT-04-CLI.",
+      "tags": [
+        "continuity",
+        "durable-checkpoints"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T06:32:15.000Z",
+      "updatedAt": "2026-09-29T07:15:47.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-CONT-06-CONTINUE",
+      "title": "Cross-executor work continue / takeover semantics",
+      "description": "work continue: new execution, predecessor lineage, safe checkout checks, recovery instructions. Depends on: PRAXIS-CONT-04-CLI.",
+      "tags": [
+        "continuity",
+        "durable-checkpoints"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T06:32:15.000Z",
+      "updatedAt": "2026-09-29T07:22:25.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-CONT-07-REMOTE",
+      "title": "Remote-agent / GitHub Actions checkpoint capability",
+      "description": "praxis.remote 1.3: work.checkpoint and work.continue operations, discovery, expectedSha concurrency. Depends on: PRAXIS-CONT-05-GUARDS, PRAXIS-CONT-06-CONTINUE.",
+      "tags": [
+        "continuity",
+        "durable-checkpoints"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T06:32:16.000Z",
+      "updatedAt": "2026-09-29T07:34:16.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-CONT-08-RECOVERY",
+      "title": "Two-clone recovery and agent-loss integration proof",
+      "description": "Bare remote, clone-a / clone-b, executor loss, continuation, completion. Depends on: PRAXIS-CONT-06-CONTINUE.",
+      "tags": [
+        "continuity",
+        "durable-checkpoints"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T06:32:16.000Z",
+      "updatedAt": "2026-09-29T07:37:58.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-CONT-09-GOVERNANCE",
+      "title": "AGENTS/governance/docs/starter propagation",
+      "description": "Docs, AGENTS.md, operating manual, starter/upgrade propagation. Depends on: PRAXIS-CONT-05-GUARDS, PRAXIS-CONT-06-CONTINUE, PRAXIS-CONT-07-REMOTE.",
+      "tags": [
+        "continuity",
+        "durable-checkpoints"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T06:32:16.000Z",
+      "updatedAt": "2026-09-29T07:53:38.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-CONT-10-HARDEN",
+      "title": "Compatibility, edge cases, validation, final end-to-end review",
+      "description": "Full suites, requirement-by-requirement review, final durable checkpoint. Depends on: all.",
+      "tags": [
+        "continuity",
+        "durable-checkpoints"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T06:32:17.000Z",
+      "updatedAt": "2026-09-29T08:02:59.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-CONT-11-SEGMENTATION",
+      "title": "Effective-current telemetry segmentation and continuity proof gaps",
+      "description": "Audit of PRAXIS-CONT-00..10 against the durable-checkpoint specification found gaps: work context/status/continue expose no telemetry segmentation boundary (execution-level before / step-level from); telemetry usage --by step omits unsegmented executions that reported nothing (unavailable, not zero); requirements 33-40 (mid-execution step adoption, successor step telemetry, separate attribution) lack tests; the recovery proof lacks a pre-step predecessor and step-tracked successor and does not assert checkpoint == remote head strictly; several checkpoint validation rules are untested.",
+      "tags": [
+        "continuity",
+        "durable-checkpoints"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T10:11:23.945Z",
+      "updatedAt": "2026-09-29T10:22:06.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-TELEMETRY-CLASSIFY-VOCAB",
+      "title": "telemetry classify accepts classifications that validate rejects",
+      "description": "Found during PRAXIS-CONT-11-SEGMENTATION: './ros telemetry classify ID --classification production-engineering' succeeded and wrote the value into the execution record, and './ros validate' then failed with 'invalid work classification'. classify should refuse values outside the work-classification vocabulary (or x- extensions) that validate enforces, at write time.",
+      "tags": [
+        "telemetry"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-29T10:22:02.822Z",
+      "updatedAt": "2026-09-29T10:22:02.822Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-RELEASE-BUMP-WORKFLOW",
+      "title": "Release workflow: one-click version bump that publishes",
+      "description": "A workflow_dispatch workflow bumps package.json/package-lock.json (patch|minor|major|exact) as an attributed Praxis work item under the GitHub Actions identity (start, commit, push, durable checkpoint, complete), then dispatches publish.yml and native-release.yml, since GITHUB_TOKEN pushes do not trigger push workflows. publish.yml accepts a dispatched base ref for its version-change detection and attribution range.",
+      "tags": [
+        "release"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T10:40:02.207Z",
+      "updatedAt": "2026-09-29T10:44:33.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "RELEASE-3-6-0",
+      "title": "Release Praxis 3.6.0",
+      "description": "Bump package.json and package-lock.json from 3.5.0 to 3.6.0 so publish.yml releases it.",
+      "tags": [],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T10:58:08.214Z",
+      "updatedAt": "2026-09-29T10:58:12.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "automation",
+        "id": "github/github-actions",
+        "provider": "github",
+        "model": "unknown",
+        "runtime": "github-actions"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "REMOTE-ENABLE-3-6-0",
+      "title": "Pin Praxis 3.6.0 for remote execution (praxis.remote 1.3)",
+      "description": "Bump .echelon/toolchain.json praxis from 3.5.0 to 3.6.0 so the remote runner supports work.checkpoint and work.continue (GH-90 successor proof).",
+      "tags": [],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T11:05:20.369Z",
+      "updatedAt": "2026-09-29T11:06:03.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+    },
+    {
+      "id": "PRAXIS-REMOTE-17",
+      "title": "Record the live praxis.remote 1.3 continuation proof as evidence",
+      "description": "Evidence record for PRAXIS-REMOTE-12-CONTINUE-PROOF: two runtime-less agents, work.checkpoint then work.continue on Praxis 3.6.0, verified against main and the Actions API.",
+      "tags": [],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T12:07:17.561Z",
+      "updatedAt": "2026-09-29T12:08:18.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+    },
+    {
+      "id": "PRAXIS-CONT-12",
+      "title": "work checkpoint attributes every meaningful path since the previous checkpoint to the checkpointing item, regardless of which work item produced it",
+      "description": "Found while driving PR #107. (1) Two work items active on one branch: after PRAXIS-REMOTE-17 committed EV-ROS-2026-A056, a fresh PRAXIS-REMOTE-16 checkpoint (required before completion because meaningful commits followed its last checkpoint) listed that EV file in its work.checkpointed paths, so it is attributed to both items. (2) A long-running umbrella item (GH-90, begun 2026-09-28) resumed and checkpointed by a new executor attributed all 119 meaningful paths changed on main since it began, including other items' merged work, to the new execution. Checkpoint attribution should be limited to paths the item's own executions changed (or the requester should name them), and completion should not force a checkpoint that claims another item's commits. Both attempts were discarded unrecorded.",
+      "tags": [
+        "continuity",
+        "gh-90"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T12:17:16.712Z",
+      "updatedAt": "2026-09-30T06:21:56.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "agent-discovery",
+      "sourceReference": "https://github.com/kemiller2002/praxis/pull/107"
+    },
+    {
+      "id": "EXEC-INSTALL-109",
+      "title": "Execution envelopes, step ledger, worktrees, legal actions, installation registration client",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T12:24:15.000Z",
+      "updatedAt": "2026-09-29T12:38:51.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/109"
+    },
+    {
+      "id": "EXEC-INSTALL-109-NPM-BIN",
+      "title": "Keep npm bin as ros only; praxis stays canonical via native release and ./praxis",
+      "description": "Site consistency test (tests/site/content.test.mjs) states npm exposes ros, not praxis. Adding an npm praxis bin contradicted it; changing that evaluator from the judged execution is not allowed, and npm publication is disabled. Revert the npm bin addition.",
+      "tags": [],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T12:50:16.000Z",
+      "updatedAt": "2026-09-29T12:50:34.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github",
+      "sourceReference": "https://github.com/kemiller2002/praxis/pull/110"
+    },
+    {
+      "id": "PRAXIS-REMOTE-INBOX-01",
+      "title": "Remote request inbox: a contents-write path to praxis.remote for agents that cannot dispatch Actions",
+      "description": "Re-landed on current main a third time (from claude/remote-inbox-relay-v3, PR #116; before that PRs #112 and #111), because PR #115 moved main's Praxis state and the single-document state files conflicted again (PRAXIS-STATE-MERGE-01). Code, docs and records only; Praxis state written by the CLI. Scope: praxis-remote-inbox.yml relays .praxis-inbox/*.json committed to praxis-inbox/** branches to praxis-remote.yml unchanged, for agents that can commit but cannot dispatch Actions (RQ-ROS-2026-A023, DF-ROS-2026-A045, EV-ROS-2026-A057).",
+      "tags": [
+        "remote-execution",
+        "continuity"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T16:23:22.859Z",
+      "updatedAt": "2026-09-29T16:25:50.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-STATE-MERGE-01",
+      "title": "Parallel work items conflict in single-document Praxis state files",
+      "description": "Found repeatedly on 2026-09-29: PRs #106, #108, #110, #111, #112 and #116 each conflicted with main only in .ros/context/current.json, .ros/work/queue.json and .ros/events/events.jsonl, whenever main's Praxis state moved (other work items, remote-execution commits, PR #115). Resolution has required hand-editing Praxis state (PR #106's resolution corrupted current.json and dropped a queue item) or re-landing the branch with state re-recorded through the CLI. Praxis needs a supported merge path (a CLI-owned state merge or git merge driver: union of append-only events, three-way merge of id-keyed items) or a per-item state layout that cannot conflict. It must never require hand edits.",
+      "tags": [
+        "work-protocol"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-29T16:23:39.433Z",
+      "updatedAt": "2026-09-29T16:23:39.433Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-DIST-NATIVE-DOTNET-TOOL",
+      "title": "Retire npm distribution; ship native bundles and a .NET global tool",
+      "description": "Owner decision (2026-09-29): stop publishing to npm; keep self-contained native bundles; add a .NET global tool (EchelonFoundry.Praxis). Re-landed on current main a second time (from claude/retire-npm-dotnet-tool-v2, PR #108; before that PR #106) because main's Praxis state moved (PRAXIS-STATE-MERGE-01). Code, docs and workflows only, three-way merged with main's EXEC-INSTALL-109 changes; Praxis state recorded through the CLI.",
+      "tags": [
+        "distribution"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T16:37:18.954Z",
+      "updatedAt": "2026-09-29T16:43:08.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-01",
+      "title": "Deterministic shadow planner: praxis plan analyze/simulate/compare/explain (PRX-PLAN-001..182)",
+      "description": "Advisory, read-only F# planning capability over the unified queue/context inventory: typed planning states, dependency graph with cycles/critical path/unlock value, checkpoint-aware remaining work, evidence-backed stale-state findings, historical duration ranges, explicit unknown cost, collision graph, FIFO/speed/balanced/cost/max-parallel strategies, Pareto comparison, explanations, versioned JSON, historical replay. Requirements: requirements/PLANNING-OPTIMIZATION.md.",
+      "tags": [
+        "planning",
+        "architecture",
+        "cli"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T17:25:49.000Z",
+      "updatedAt": "2026-09-29T18:15:08.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-02",
+      "title": "Accept planner decision DF-ROS-2026-A046 on the owner's approval",
+      "description": "The repository owner approved the advisory-planner design after PR #120 merged; move DF-ROS-2026-A046 from review to accepted.",
+      "tags": [
+        "planning",
+        "governance"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-29T22:29:33.000Z",
+      "updatedAt": "2026-09-29T22:31:41.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     },
     {
       "id": "WI-0064",
+      "title": "Evidence-based work groups for the advisory planner (plan groups/explain-group) and the frozen grouping A/B experiment protocol",
+      "description": "Advisory, read-only work-group recommendations (planning groups vs execution groups; explicit/derived/inferred affinity signals; context affinity separate from dependency, collision risk and parallel safety; human-declared groups; execution repository; partial completion; group dependencies; size/cohesion/context-pressure splitting) exposed as praxis plan groups / explain-group / simulate --groups / compare --groups, plus the frozen A/B grouping-experiment protocol, cohort and predictions. Requirements: requirements/PLANNING-WORK-GROUPS.md.",
+      "tags": [
+        "planning",
+        "architecture",
+        "cli"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T10:28:19.395Z",
+      "updatedAt": "2026-09-30T11:18:32.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-GROUP-01",
+      "title": "praxis work group create: durable human-declared execution group",
+      "description": "Record a declared group (ID, members, kind, execution repository, cross-repository flag, shared context) in Praxis state. Acceptance: refuses unknown or terminal members and duplicate IDs; never changes a member's lifecycle state; the planner reads the stored declaration exactly as it reads grouping.groups; --dry-run and --json supported; validate checks stored groups. Phase two of requirements/PLANNING-WORK-GROUPS.md (covers PRX-GRP-073); proposed cohort of EX-ROS-2026-A021. Must not be merged before that experiment is evaluated and the owner accepts phase two.",
+      "tags": [
+        "work-group",
+        "cli"
+      ],
+      "priority": "low",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T11:00:32.515Z",
+      "updatedAt": "2026-09-30T18:17:06.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-GROUP-02",
+      "title": "praxis work group show: a declared group with member states and progress",
+      "description": "Read-only view of one declared group: members with their own recorded and planning states, partial-completion progress, blocked members and who they gate, execution repository, architecture notes. Acceptance: text and --json; unknown group exits 1; never writes. Depends on: PRAXIS-GROUP-01. Phase two of requirements/PLANNING-WORK-GROUPS.md (covers PRX-GRP-073); proposed cohort of EX-ROS-2026-A021. Must not be merged before that experiment is evaluated and the owner accepts phase two.",
+      "tags": [
+        "work-group",
+        "cli"
+      ],
+      "priority": "low",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T11:00:33.019Z",
+      "updatedAt": "2026-09-30T18:17:08.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-GROUP-03",
+      "title": "praxis work group add: add a member to a declared group",
+      "description": "Add one work item to a declared group. Acceptance: refuses unknown/terminal items, items already present, and an item whose execution repository differs unless the group is cross-repository; records who added it (provenance); member lifecycle untouched. Depends on: PRAXIS-GROUP-01. Phase two of requirements/PLANNING-WORK-GROUPS.md (covers PRX-GRP-073); proposed cohort of EX-ROS-2026-A021. Must not be merged before that experiment is evaluated and the owner accepts phase two.",
+      "tags": [
+        "work-group",
+        "cli"
+      ],
+      "priority": "low",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T11:00:33.414Z",
+      "updatedAt": "2026-09-30T18:17:10.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-GROUP-04",
+      "title": "praxis work group remove: remove a member from a declared group",
+      "description": "Remove one member from a declared group. Acceptance: refuses non-members; removal never changes the item's lifecycle state, evidence or attribution; removing the last member is refused or explicit; provenance recorded. Depends on: PRAXIS-GROUP-01. Phase two of requirements/PLANNING-WORK-GROUPS.md (covers PRX-GRP-073); proposed cohort of EX-ROS-2026-A021. Must not be merged before that experiment is evaluated and the owner accepts phase two.",
+      "tags": [
+        "work-group",
+        "cli"
+      ],
+      "priority": "low",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T11:00:33.806Z",
+      "updatedAt": "2026-09-30T18:17:12.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-GROUP-05",
+      "title": "praxis work group checkpoint: a group checkpoint over members' own checkpoints",
+      "description": "Record a group checkpoint (PRX-GRP-044): group ID, active/completed/remaining members, shared architectural decisions, branch and commit, next action. Acceptance: requires the same durable-checkpoint verification as work checkpoint; references members' own checkpoints and never replaces them; no member claims another's changes (PRX-GRP-043). Depends on: PRAXIS-GROUP-01, PRAXIS-GROUP-02. Phase two of requirements/PLANNING-WORK-GROUPS.md (covers PRX-GRP-073); proposed cohort of EX-ROS-2026-A021. Must not be merged before that experiment is evaluated and the owner accepts phase two.",
+      "tags": [
+        "work-group",
+        "cli"
+      ],
+      "priority": "low",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T11:00:34.255Z",
+      "updatedAt": "2026-09-30T18:17:14.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-EXP-01",
+      "title": "Run grouping experiment EX-ROS-2026-A021: control arm, grouped arm, blind evaluation, telemetry comparison",
+      "description": "Execute the frozen protocol in research/experiments/EX-ROS-2026-A021--grouped-versus-independent-execution.md (PRX-GRP-080..088) once its gate is met: WI-0064 merged, owner approves the cohort GROUP-PRAXIS-WORK-GROUP-001 and the cost (about seven agent sessions), and PRAXIS-GROUP-01..05 are triaged to ready. Deliver the control and grouped branches (unmerged), the independent evaluation, the telemetry and context-overhead comparison, predicted-versus-observed, the outcome classification, and the recommendation for the next planning iteration. Tests HY-ROS-2026-A027 and HY-ROS-2026-A028.",
+      "tags": [
+        "planning",
+        "experiment"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T11:18:12.729Z",
+      "updatedAt": "2026-09-30T17:18:43.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-03",
+      "title": "Accept DF-ROS-2026-A047 and triage the EX-ROS-2026-A021 cohort on the owner's approval",
+      "description": "The repository owner approved all recommendations of PR #126: accept DF-ROS-2026-A047, approve cohort GROUP-PRAXIS-WORK-GROUP-001 and the cost of the EX-ROS-2026-A021 arms, and triage PRAXIS-GROUP-01..05 to ready.",
+      "tags": [
+        "planning",
+        "governance"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T11:28:47.243Z",
+      "updatedAt": "2026-09-30T11:34:55.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-WORK-ABANDON-01",
+      "title": "work abandon: cancel live (ready/active/blocked) work items truthfully",
+      "description": "Live work has no cancelled state, so an item the owner cancels (GH-84, GH-90) cannot be recorded as such; backlog abandon refuses items with a live record. Add a terminal live 'abandoned' state and 'work abandon --id ID --reason TEXT' that records who abandoned it and why, finalizes its executions, abandons its backlog row, and claims no attribution.",
+      "tags": [
+        "work-protocol",
+        "cli"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T09:17:29.000Z",
+      "updatedAt": "2026-09-30T09:40:03.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-04",
+      "title": "Grouped-execution guidance: reuse inventory and per-criterion verification pass (EV-ROS-2026-A064)",
+      "description": "EX-ROS-2026-A021's grouped arm produced one consistent model but missed existing rules to reuse (grouping.groups parser, Grouping.executionLocation) and verified individual criteria less fully than independent executions. Add to PRX-GRP-040 guidance and the group-analysis template: an explicit inventory of existing parsers/rules to reuse, and a final per-member, per-criterion verification pass.",
+      "tags": [
+        "planning",
+        "grouping"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:18:22.376Z",
+      "updatedAt": "2026-09-30T18:19:31.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-05",
+      "title": "Make context overhead and cost observable: session-metrics telemetry adapter and cost.execution_total (EV-ROS-2026-A064)",
+      "description": "Promote research/experiments/EX-ROS-2026-A021-harness/session_metrics.py (repeated reads, governance reads, time to first code change, requests, compactions) to a telemetry adapter, and record platform-reported cost as cost.execution_total, so the planner's context-reuse and cost estimates stop being unknown. Also replace or down-weight the history-based duration model for implementation work, which missed both arms' durations.",
+      "tags": [
+        "planning",
+        "telemetry"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:18:22.924Z",
+      "updatedAt": "2026-09-30T18:58:00Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-GROUP-06",
+      "title": "Phase-two work groups: grouped arm as base with the control arm's strengths ported",
+      "description": "Owner decision. The first blind evaluation (EV-ROS-2026-A064; experiment/a021-evaluation) suggests experiment/a021-grouped (arm X) as the base, porting from experiment/a021-control: the shared grouping.groups parser, the planner's executionLocation join rule, and checkpoint re-validation; and removing the committed experiment group from .ros/work/groups.json. A second evaluation may follow from the kit on experiment/a021-evaluation-kit (EV-ROS-2026-A060..A062). Neither arm is merged by the experiment.",
+      "tags": [
+        "work-group",
+        "cli"
+      ],
+      "priority": "low",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:18:23.332Z",
+      "updatedAt": "2026-09-30T18:17:16.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-06",
+      "title": "Renumber the EX-ROS-2026-A021 results record to avoid an evidence ID collision and relate it to the parallel evaluation kit",
+      "description": "EV-ROS-2026-A060 was allocated on three branches (claude/grouping-experiment-a021, experiment/a021-evaluation-kit, test/pr92-premerge-main-characterization). Renumber this branch's results record to EV-ROS-2026-A064 (first ID free on every branch), update its references and follow-up items, and record its relation to the kit (EV-ROS-2026-A060..A062) and EV-ROS-2026-A063.",
+      "tags": [
+        "planning",
+        "governance"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:20:29.537Z",
+      "updatedAt": "2026-09-30T17:20:49.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PR92-PREMERGE-REGRESSION-FENCE",
+      "title": "Regression fence before reconciling PR #92 with main",
+      "description": "Characterize semantic differences between current main and PR #92 and add regression tests around behavior at risk during the future ROS-to-Praxis reconciliation. No production reconciliation occurs in this work item. Baseline refs: main fb6a0f9d6c8e25e979be436346fd803184e306a0, PR #92 3cf2bd37b8a729ac683e6062013b7f2b31e10a5b, merge-base 9ace9d9acf711e1013347b5ed8bb756bcaf298cf (PR #92 21 ahead / 120 behind).",
+      "tags": [
+        "testing",
+        "pr92"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T16:24:31.000Z",
+      "updatedAt": "2026-09-30T17:09:15.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PR92-ID-RENUMBER",
+      "title": "Renumber PR #92's DF/RQ records that collide with main's (A042/A043, RQ A022/A023)",
+      "description": "Owner-approved. Main already uses DF-ROS-2026-A042/A043 and RQ-ROS-2026-A022/A023 for different records. Keep main's numbering; renumber this branch's F#/.NET-only and Praxis-canonical-name records to DF-ROS-2026-A049/A050 and RQ-ROS-2026-A024/A025 (DF-ROS-2026-A048 is claimed by feature/gh-127-merge-readiness), and rewrite every citation outside .ros/ history. Same ID as the backlog row captured on main via EV-ROS-2026-A060.",
+      "tags": [
+        "pr92",
+        "decision"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:56:38.000Z",
+      "updatedAt": "2026-09-30T18:05:38.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PR92-POSTMERGE-FENCE",
+      "title": "On the reconciled branch, write post-merge tests P1-P7 from EV-ROS-2026-A060 section 6 and re-point PraxisCli to praxis.dll",
+      "description": null,
+      "tags": [
+        "pr92",
+        "testing"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:09:06.997Z",
+      "updatedAt": "2026-09-30T22:26:16.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-07",
+      "title": "Reconcile PR #130 (PGEI) with main after the A021 results",
+      "description": "Merge main into research/a021-plan-globally-execute-incrementally, resolve HY-ROS-2026-A028 (completed result plus PGEI mechanism), and restore missing provenance for EV-ROS-2026-A063 so validation passes. Acceptance: ./ros validate passes; no history rewrite.",
+      "tags": [
+        "planning",
+        "grouping"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:57:50.357Z",
+      "updatedAt": "2026-09-30T17:58:33.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "FSHARP-ONLY-REPOSITORY",
+      "title": "Remove repository-owned Node/JavaScript/TypeScript code and tooling; make Praxis F#/.NET only and enforce it",
+      "description": null,
+      "tags": [
+        "fsharp",
+        "architecture",
+        "tooling",
+        "node-removal"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T09:09:13.000Z",
+      "updatedAt": "2026-09-28T10:27:49.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "FSHARP-ONLY-MAIN-MERGE",
+      "title": "After merging main (GH-90 remote execution): port its Node tests to F# and renumber the colliding DF/RQ records",
+      "description": null,
+      "tags": [
+        "fsharp",
+        "node-removal",
+        "follow-up"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T10:37:56.000Z",
+      "updatedAt": "2026-09-28T11:23:44.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-CLI-RENAME",
+      "title": "Finish the ROS to Praxis product/CLI rename: praxis canonical, ros only as compatibility alias, persisted state or history",
+      "description": "Bootstrapped with the ./ros compatibility launcher because ./praxis did not exist yet in the source checkout. Also merges main (PRAXIS-REMOTE-11-PREP) and ports its two new Node test cases to F#.",
+      "tags": [
+        "rename",
+        "praxis",
+        "cli"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T13:45:19.000Z",
+      "updatedAt": "2026-09-28T14:30:51.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-INTERNAL-NAMESPACES",
+      "title": "Migrate internal Ros.* projects, namespaces, assemblies and Ros.slnx to Praxis.* (deferred from PRAXIS-CLI-RENAME, DF-ROS-2026-A043)",
+      "description": "Internal implementation names only; no user-facing effect. Separate change because of its blast radius (project files, namespaces, test fixtures, embedded resource names, Python oracle naming).",
+      "tags": [
+        "rename",
+        "follow-up"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-28T13:55:54.000Z",
+      "updatedAt": "2026-09-28T13:55:54.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PR92-PREMERGE-RENAME-FENCE",
+      "title": "Harden Praxis rename invariants on PR #92 before main is reconciled",
+      "description": "Part of PRAXIS-PR92-PREMERGE-REGRESSION-FENCE (tracked on branch test/pr92-premerge-main-characterization). Adds characterization tests for behavior this branch already implements (PRAXIS_/ROS_ telemetry precedence, retained ROS persisted names, customized ROS-era launcher, legacy launcher helper, ROS-era work resumed via praxis, ros==praxis help). No production change. The test edit was drafted in this session before this item began on this branch and is committed under it.",
+      "tags": [
+        "testing",
+        "pr92"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T17:04:57.000Z",
+      "updatedAt": "2026-09-30T17:05:26.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PR92-RECONCILE",
+      "title": "Reconcile PR #92 (F#-only cleanup, Praxis rename) with current main",
+      "description": "Owner-approved: merge main into PR #92, resolve every conflict preserving main's newer behavior and PR #92's rename per EV-ROS-2026-A060, write post-merge tests P1-P7 (PRAXIS-PR92-POSTMERGE-FENCE), drive CI green, then merge PR #92 into main. Owner decisions: keep shipping legacy ros-fs-<rid> assets; upgrade leaves tools/ros_fs_launcher.mjs in place.",
+      "tags": [
+        "pr92"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T18:14:02.000Z",
+      "updatedAt": "2026-09-30T21:44:26.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-TELEMETRY-COST-UNIT",
+      "title": "telemetry record accepts a cost metric with a non-'currency' unit (e.g. --unit USD) that validate then rejects",
+      "description": "Found by PRAXIS-PR92-RECONCILE's P4 test: 'telemetry record --metric cost.session_cumulative --unit USD --currency USD' succeeds, then 'validate' reports metrics[n].unit: cost metric requires unit 'currency'. Record should refuse what validate rejects (write-time validation), like PRAXIS-TELEMETRY-CLASSIFY-VOCAB.",
+      "tags": [
+        "telemetry",
+        "bug"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T19:40:19.769Z",
+      "updatedAt": "2026-09-30T23:11:45.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-A021-EVAL-KIT",
+      "title": "EX-ROS-2026-A021 blind evaluation kit",
+      "description": "Record the blind evaluation method for EX-ROS-2026-A021 (PRX-GRP-084): evaluator brief, blind-bundle prep script, owner unblinding procedure (EV-ROS-2026-A060), and the control-02 session record (EV-ROS-2026-A061), on branch experiment/a021-evaluation-kit so neither arm sees it. Acceptance: records validate; script validated against the control branch; no arm branch changed.",
+      "tags": [
+        "experiment"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T14:42:05.000Z",
+      "updatedAt": "2026-09-30T14:42:50.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-08",
+      "title": "Land the EX-ROS-2026-A021 evaluation kit and second blind evaluation on main",
+      "description": "Renumber the evaluation kit's records EV-ROS-2026-A060..A062 (collide with main) to A065..A067, merge main, and land the kit and the second blind evaluation report. Owner approved all branches.",
+      "tags": [
+        "planning",
+        "grouping"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-30T23:05:47.814Z",
+      "updatedAt": "2026-09-30T23:06:59.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PR79-FALLBACK-RECONCILIATION",
       "title": "Complete dual-entry reconciliation and merge PR #79",
       "description": null,
       "tags": [
@@ -2284,28 +3752,6 @@
       },
       "source": "manual",
       "sourceReference": null
-    },
-    {
-      "id": "WI-0061",
-      "title": "Ship fallback reconciliation guide in distributed package",
-      "description": null,
-      "tags": [],
-      "priority": "medium",
-      "status": "abandoned",
-      "attachments": [],
-      "createdAt": "2026-09-28T07:13:30.037Z",
-      "updatedAt": "2026-09-28T07:14:00Z",
-      "createdBy": "unknown",
-      "createdByActor": {
-        "kind": "agent",
-        "id": "openai/codex",
-        "provider": "openai",
-        "model": "unknown",
-        "runtime": "codex"
-      },
-      "source": "manual",
-      "sourceReference": null,
-      "abandonedReason": "Auto-generated ID collided with an existing completed work item after main integration; replaced by explicit PKG-FALLBACK-GUIDE"
     },
     {
       "id": "PKG-FALLBACK-GUIDE",

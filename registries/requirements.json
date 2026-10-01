@@ -22,6 +22,20 @@
             "created"
           ],
           "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        },
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:57.631Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Verification references moved from removed Node tests to their F# ports (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
         }
       }
     },
@@ -38,7 +52,7 @@
       "provider-neutral"
     ],
     "title": "Actor identity is explicit, structured, and provider-neutral",
-    "updated": "2026-09-25",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -64,6 +78,20 @@
             "created"
           ],
           "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        },
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:58.429Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Verification references moved from removed Node tests to their F# ports (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
         }
       }
     },
@@ -80,7 +108,7 @@
       "telemetry"
     ],
     "title": "Every execution has its own identity, separate from the actor's stable identity",
-    "updated": "2026-09-25",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -106,6 +134,34 @@
             "created"
           ],
           "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        },
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:59.082Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Verification references moved from removed Node tests to their F# ports (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        },
+        "EXE-20260928T103758056Z-43f11e6e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T11:23:28.208Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Decision reference renumbered to DF-ROS-2026-A049 after merging main (work item FSHARP-ONLY-MAIN-MERGE)"
         }
       }
     },
@@ -122,7 +178,7 @@
       "attribution"
     ],
     "title": "Work events and captured work items record the acting actor",
-    "updated": "2026-09-25",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -927,6 +983,41 @@
             "modified"
           ],
           "reason": "Captured from GitHub issue #90 (work item GH-90): remote/cloud-agent execution as a first-class capability"
+        },
+        "EXE-20260928T200030786Z-eca55c92": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T20:02:59.000Z",
+          "evidence": [
+            "scripts/praxis-remote-persist.sh",
+            "tests/praxis-remote-adapter.test.mjs"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRX-REMOTE-038 delivered by PRAXIS-REMOTE-13: adapter classifies GitHub rate limiting as rate-limited"
+        },
+        "EXE-20260929T054321231Z-0f9f1e9a": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T05:44:18.000Z",
+          "evidence": [
+            "EV-ROS-2026-A054"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRX-REMOTE-001/011/029/042 demonstrated live (PRAXIS-REMOTE-11); gaps recorded as PRAXIS-REMOTE-15 and PRAXIS-REMOTE-16"
         }
       }
     },
@@ -951,16 +1042,303 @@
       "gh-90"
     ],
     "title": "Praxis governance is independent of the execution environment; remote/cloud-agent execution is a first-class capability",
-    "updated": "2026-09-28",
-    "version": "1.1.0"
+    "updated": "2026-09-29",
+    "version": "1.3.0"
   },
   {
-    "created": "2026-09-27",
+    "created": "2026-09-29",
+    "depends_on": [
+      "RQ-ROS-2026-A021",
+      "RQ-ROS-2026-A020"
+    ],
+    "derived_from": [
+      "RQ-ROS-2026-A021"
+    ],
+    "evidence_ids": [
+      "EV-ROS-2026-A055"
+    ],
     "id": "RQ-ROS-2026-A022",
     "owners": [
       "repository-governance"
     ],
-    "path": "research/requirements/RQ-ROS-2026-A022--runtime-free-reconciliation.md",
+    "path": "research/requirements/RQ-ROS-2026-A022--durable-work-checkpoints-and-agent-continuity.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T063242003Z-c2cc74a2": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T06:34:39.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Canonical requirements for durable work checkpoints and agent continuity (PRAXIS-CONT-00)"
+        },
+        "EXE-20260929T075409917Z-4a1d9b5a": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T08:02:40.000Z",
+          "evidence": [
+            "EV-ROS-2026-A055"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "Implementation status and evidence EV-ROS-2026-A055 (PRAXIS-CONT-10-HARDEN)"
+        },
+        "EXE-20260929T101141946Z-cddc93be": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T10:20:45.774Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Add CONT-080..086 effective-current telemetry requirements dropped from 1.1.0 (PRAXIS-CONT-11-SEGMENTATION)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A042",
+      "DF-ROS-2026-A043",
+      "RQ-ROS-2026-A021",
+      "DF-ROS-2026-A041",
+      "DF-ROS-2026-A036",
+      "docs/work-protocol.md",
+      "docs/remote-protocol.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "tags": [
+      "continuity",
+      "checkpoints",
+      "durability",
+      "handoff",
+      "git",
+      "remote-execution"
+    ],
+    "title": "Durable work checkpoints and agent continuity — an executor session is disposable; repository state plus Praxis state is durable",
+    "updated": "2026-09-29",
+    "version": "1.2.0"
+  },
+  {
+    "created": "2026-09-29",
+    "depends_on": [
+      "RQ-ROS-2026-A022",
+      "RQ-ROS-2026-A021"
+    ],
+    "derived_from": [
+      "RQ-ROS-2026-A022"
+    ],
+    "evidence_ids": [
+      "EV-ROS-2026-A057"
+    ],
+    "id": "RQ-ROS-2026-A023",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A023--remote-requests-without-actions-dispatch.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T162324008Z-39bbe593": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T16:23:38.263Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-REMOTE-INBOX-01: capture the cross-provider continuation gap and its remedy (re-landed from claude/remote-inbox-relay-v3)"
+        }
+      }
+    },
+    "related_documents": [
+      "EV-ROS-2026-A057",
+      "DF-ROS-2026-A041",
+      "DF-ROS-2026-A045",
+      "docs/remote-agent-contract.md",
+      "docs/remote-protocol.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "tags": [
+      "remote-execution",
+      "continuity",
+      "cross-provider",
+      "github-actions"
+    ],
+    "title": "A remote agent that can write to the repository but cannot dispatch GitHub Actions can still send praxis.remote requests, with no change to trust, validation or identity",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-28",
+    "id": "RQ-ROS-2026-A024",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A024--fsharp-dotnet-only-repository.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:53.294Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Captured the F#/.NET-only repository rule from the user's objective (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        },
+        "EXE-20260928T103758056Z-43f11e6e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T11:23:29.586Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Renumbered from RQ-ROS-2026-A021 (taken on main by remote execution) (work item FSHARP-ONLY-MAIN-MERGE)"
+        },
+        "EXE-20260928T134520493Z-befb2bfe": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T14:30:36.538Z",
+          "operations": [
+            "modified"
+          ]
+        },
+        "EXE-20260930T175640720Z-98771e24": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:57:08.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PR92-ID-RENUMBER: renumbered from A022 on this branch to resolve a collision with a different main record; content unchanged"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A049",
+      "DF-ROS-2026-A033",
+      "requirements/SHARED-APPLICATION-FOUNDATIONS.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "architecture",
+      "fsharp",
+      "dotnet",
+      "tooling",
+      "node-removal",
+      "invariant"
+    ],
+    "title": "Repository-owned implementation and automation are F#/.NET only",
+    "updated": "2026-09-30",
+    "version": "1.0.1"
+  },
+  {
+    "created": "2026-09-28",
+    "id": "RQ-ROS-2026-A025",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A025--praxis-canonical-name.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T134520493Z-befb2bfe": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T14:30:35.274Z",
+          "operations": [
+            "created"
+          ]
+        },
+        "EXE-20260930T175640720Z-98771e24": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:57:08.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PR92-ID-RENUMBER: renumbered from A023 on this branch to resolve a collision with a different main record; content unchanged"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A050",
+      "AGENTS.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "naming",
+      "rename",
+      "praxis",
+      "cli",
+      "compatibility"
+    ],
+    "title": "Praxis is the canonical product and CLI name; ros is compatibility only",
+    "updated": "2026-09-30",
+    "version": "1.0.1"
+  },
+  {
+    "created": "2026-09-27",
+    "id": "RQ-ROS-2026-A026",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A026--runtime-free-reconciliation.md",
     "priority": "high",
     "provenance": {
       "contributions": {
@@ -990,17 +1368,31 @@
           },
           "at": "2026-09-28T12:46:05Z",
           "evidence": [
-            "DF-ROS-2026-A042"
+            "DF-ROS-2026-A051"
           ],
           "operations": [
             "modified"
           ],
           "reason": "Update fallback decision reference after resolving the canonical ID collision with main"
+        },
+        "EXE-20260928T134154662Z-5c00e767": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-01T06:26:26Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "Renumber after latest main independently assigned RQ-ROS-2026-A022"
         }
       }
     },
     "related_documents": [
-      "DF-ROS-2026-A042",
+      "DF-ROS-2026-A051",
       "RQ-ROS-2026-A019",
       "requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md",
       "protocol/praxis-envelope-v1.schema.json",
@@ -1025,11 +1417,11 @@
     "derived_from": [
       "RQ-ROS-2026-A020"
     ],
-    "id": "RQ-ROS-2026-A023",
+    "id": "RQ-ROS-2026-A027",
     "owners": [
       "repository-governance"
     ],
-    "path": "research/requirements/RQ-ROS-2026-A023--step-cli-and-query.md",
+    "path": "research/requirements/RQ-ROS-2026-A027--step-cli-and-query.md",
     "priority": "high",
     "provenance": {
       "contributions": {
@@ -1076,6 +1468,20 @@
             "migrated"
           ],
           "reason": "Renumber canonical step-telemetry requirement after integrating main's independently assigned RQ-ROS-2026-A021"
+        },
+        "EXE-20260928T134154662Z-5c00e767": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-01T06:26:26Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "Renumber after latest main independently assigned RQ-ROS-2026-A023"
         }
       }
     },

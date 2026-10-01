@@ -99,7 +99,7 @@ module RuntimeCapabilities =
 
 /// Mirrors production's `initialCapabilities`/`upsertCapability`
 /// (`tools/ros_telemetry.mjs`): every metric in the registry starts with a
-/// derived status describing what ROS or the runtime family is expected to
+/// derived status describing what Praxis or the runtime family is expected to
 /// be able to report, and a later observation merges in without discarding
 /// what was previously true — it is moved into a capped `history` instead.
 [<RequireQualifiedAccess>]
@@ -112,7 +112,7 @@ module Capability =
                 if metric.Id.StartsWith "git." && not gitAvailable then
                     "supported-unavailable", "Git is unavailable"
                 else
-                    "derived", "ROS can derive this metric when its preconditions hold"
+                    "derived", "Praxis can derive this metric when its preconditions hold"
             elif runtimeKnown.Contains metric.Id then
                 "supported-unavailable", "runtime family can expose this metric, but no observation has been ingested for this execution"
             else

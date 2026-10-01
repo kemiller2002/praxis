@@ -17,15 +17,6 @@ open Ros.Infrastructure.Work
 /// credentials in the runner's environment never reach the command.
 [<RequireQualifiedAccess>]
 module RemoteIdentityTests =
-    let rec private repositoryRoot (directory: DirectoryInfo) =
-        if File.Exists(Path.Combine(directory.FullName, "package.json"))
-           && Directory.Exists(Path.Combine(directory.FullName, "src", "Ros.Infrastructure")) then
-            directory.FullName
-        elif isNull directory.Parent then
-            failwith "Could not locate repository root"
-        else
-            repositoryRoot directory.Parent
-
     /// A GitHub-hosted runner's environment, including the kinds of
     /// credentials and host identity markers that must never leak.
     let private runnerEnvironment =
@@ -214,7 +205,7 @@ module RemoteIdentityTests =
               fun () ->
                   let source =
                       File.ReadAllText(
-                          Path.Combine(repositoryRoot (DirectoryInfo(Directory.GetCurrentDirectory())), "src", "Ros.Infrastructure", "Work", "FileTelemetryExecutionRepository.fs")
+                          Path.Combine(CliPort.repositoryRoot.Value, "src", "Ros.Infrastructure", "Work", "FileTelemetryExecutionRepository.fs")
                       )
 
                   let start = source.IndexOf "environmentIdentityInputs () : IdentityInputs ="

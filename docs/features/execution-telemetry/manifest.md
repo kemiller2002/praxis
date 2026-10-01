@@ -1,5 +1,12 @@
 # Feature Manifest — Execution telemetry
 
+> **Current state (2026-09-28, `DF-ROS-2026-A049`).** This feature is
+> implemented only in F# (`src/`). The Node modules (`tools/*.mjs`) and the
+> Node test files this manifest's history cites were removed; their
+> end-to-end coverage now lives in `tests/Ros.Tests` (mapping in
+> `docs/migrations/fsharp/TRACEABILITY.md`). References to them
+> below are migration lineage, recoverable from Git history.
+
 ## Purpose
 
 Route changes to provider-neutral execution evidence, adaptive metric
@@ -23,7 +30,7 @@ capabilities, lifecycle capture, classification, and aggregation.
   unresolved-step finalization guard. `FileStepRepository` owns the locked
   JSON effect, measurement/checkpoint references, querying, and validation.
 - Capabilities / authority: runtime/provider observations may report supported,
-  unavailable, unsupported, or unknown fields; ROS-derived and estimated
+  unavailable, unsupported, or unknown fields; Praxis-derived and estimated
   values require distinct provenance.
 - Important effects and effect contracts: per-execution atomic files and locks;
   execution/context linking composed under `work-protocol` and the recoverable
@@ -309,7 +316,7 @@ capabilities, lifecycle capture, classification, and aggregation.
   deliberately broken hand-written record (wrong-format id/filename
   mismatch/non-string identity field/invalid status/duplicate
   classification types/invalid capability timestamp/negative metric
-  value/ROS-derived-quality mismatch), capability history chronological
+  value/Praxis-derived-quality mismatch), capability history chronological
   ordering, an invalid quality-signal detector, unredacted raw-payload
   fields, cross-record work-item back-linkage, and a completed work item
   with unfinalized linked telemetry -- all byte-for-byte identical. This
@@ -318,7 +325,7 @@ capabilities, lifecycle capture, classification, and aggregation.
 
 ## Interfaces
 
-- Inbound: automatic work lifecycle calls and `./ros telemetry
+- Inbound: automatic work lifecycle calls and `./praxis telemetry
   start|ingest|record|classify|finalize|show|summary|adapters`.
 - Outbound: execution records, normalized metrics, provider-specific raw
   extensions, capabilities, lifecycle events, and summary JSON.
@@ -329,8 +336,8 @@ capabilities, lifecycle capture, classification, and aggregation.
   tests.
 - Boundary/contract tests: `schemas/execution-telemetry.schema.json`,
   `telemetry/metrics.json`, adapter fixtures, and unknown/zero/unavailable tests.
-- Integration/live verification: `./ros telemetry show|summary` and
-  `./ros validate`.
+- Integration/live verification: `./praxis telemetry show|summary` and
+  `./praxis validate`.
 - F# telemetry-read real-effect tests: `tests/Ros.Tests/TelemetryQueryTests.fs`
   and `tests/telemetry-show-fsharp-differential.test.mjs` (imports
   production's own `showTelemetry`/`TELEMETRY_ADAPTERS` directly from
@@ -492,7 +499,7 @@ capabilities, lifecycle capture, classification, and aggregation.
 
 ## Modification boundaries
 
-- Normal: `tools/ros_telemetry.mjs`, metric registry, telemetry schema/docs,
+- Normal: `src/**/Telemetry/`, `src/Ros.Infrastructure/Work/FileTelemetry*`, metric registry, telemetry schema/docs,
   and telemetry tests.
 - Escalation required: metric meaning, quality/capability semantics, redaction,
   retention, identity, or aggregation contract changes.
