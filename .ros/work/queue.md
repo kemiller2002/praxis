@@ -49,6 +49,7 @@
 | PR79-FALLBACK-RECONCILIATION | Complete dual-entry reconciliation and merge PR #79 | complete | reconciliation, integration | high |
 | PR79-MAIN-INTEGRATION | Integrate current main into PR 79 | complete | fsharp, integration | high |
 | PR79-MAIN-INTEGRATION-2 | Integrate latest main into PR 79 after CI race | complete |  | medium |
+| PR79-POSTMERGE-PROVENANCE | Fix PR #79 post-merge provenance validation | complete |  | high |
 | PRAXIS-A021-EVAL-KIT | EX-ROS-2026-A021 blind evaluation kit | complete | experiment | medium |
 | PRAXIS-CLI-RENAME | Finish the ROS to Praxis product/CLI rename: praxis canonical, ros only as compatibility alias, persisted state or history | complete | rename, praxis, cli | high |
 | PRAXIS-CONT-00 | Durable work checkpoints and agent continuity (umbrella) | complete | continuity, durable-checkpoints | high |

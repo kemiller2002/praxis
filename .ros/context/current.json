@@ -5857,11 +5857,53 @@
         }
       },
       "completedAt": "2026-10-01T06:46:03.000Z"
+    },
+    {
+      "id": "PR79-POSTMERGE-PROVENANCE",
+      "type": "bug",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/requirements/RQ-ROS-2026-A022--durable-work-checkpoints-and-agent-continuity.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ProvenanceCliTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-01T11:21:36Z",
+      "telemetryExecutionIds": [
+        "EXE-20261001T112010850Z-0bbe08ef"
+      ],
+      "latestCheckpoint": {
+        "id": "ca3d407cb52a86563226669b",
+        "recordedAt": "2026-10-01T11:21:15Z",
+        "executionId": "EXE-20261001T112010850Z-0bbe08ef",
+        "stepId": "STEP-20261001T112017000Z-f2f41a7f",
+        "repository": "repository-operating-system",
+        "branch": "codex/pr79-postmerge-provenance",
+        "commit": "071e072108c1fc78f485442c37ca784c328aea6f",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/Repository-Operating-System.git"
+        },
+        "remoteBranch": "codex/pr79-postmerge-provenance",
+        "remoteCommit": "071e072108c1fc78f485442c37ca784c328aea6f",
+        "summary": "Recorded the missing PR #79 contribution on RQ-ROS-2026-A022 and proved the exact base-aware validation condition now passes with zero errors.",
+        "nextAction": "Complete the correction step and work item, persist state, then merge the follow-up PR after CI passes.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-01T11:21:36Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-01T06:49:31Z",
+  "updatedAt": "2026-10-01T11:21:36Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
