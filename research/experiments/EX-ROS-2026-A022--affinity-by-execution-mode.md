@@ -2,7 +2,7 @@
 id: EX-ROS-2026-A022
 title: Work affinity by execution mode: grouped versus independent 2x2 replication
 research_area: repository-operating-system
-status: planned
+status: proposed
 created: 2026-10-01
 tests_hypotheses:
   - HY-ROS-2026-A028
@@ -349,7 +349,7 @@ The experiment is complete only when:
 
 ## Current status
 
-Protocol drafted and pre-registered in Praxis on 2026-10-01. No target
+Protocol drafted and pre-registered in the repository on 2026-10-01. No target
 repository, baseline, cohorts, arm mapping or implementation result has been
 selected yet. Target selection must satisfy the gate above before this record
 can move from planned to running.
