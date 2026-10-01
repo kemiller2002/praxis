@@ -3895,6 +3895,27 @@
       "sourceReference": null
     },
     {
+      "id": "PR79-POSTMERGE-PROVENANCE",
+      "title": "Fix PR #79 post-merge provenance validation",
+      "description": "Record the missing contribution for the durable-checkpoint requirement changed during PR #79 integration, verify base-aware validation, and restore a clean main CI state.",
+      "tags": [],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-01T11:19:47Z",
+      "updatedAt": "2026-10-01T11:21:36Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
       "id": "WI-0066",
       "title": "Retire the Python artifact-validator oracle: add the missing F# supersession-reciprocity test, delete tools/ros_cli.py, tools/__init__.py and tests/test_ros_cli.py, and drop the oracle CI step and docs",
       "description": null,
