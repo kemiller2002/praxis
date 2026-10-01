@@ -17,6 +17,19 @@ related_documents:
 supersedes: []
 superseded_by: []
 tags: [planning, grouping, affinity, context, experiment]
+provenance:
+  contributions:
+    EXE-20261001T160615840Z-adece80d:
+      operations: [created]
+      at: 2026-10-01T16:06:17.000Z
+      actor:
+        kind: agent
+        id: openai/chatgpt
+        provider: openai
+        model: gpt-5.6-sol
+        runtime: chatgpt
+      reason: "Created the affinity-moderation hypothesis that distinguishes cohesion effects from generic session setup-cost amortization."
+      evidence: [EV-ROS-2026-A070]
 ---
 
 # Hypothesis

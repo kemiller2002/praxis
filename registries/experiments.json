@@ -148,6 +148,27 @@
     ],
     "outputs": [],
     "path": "research/experiments/EX-ROS-2026-A022--affinity-by-execution-mode.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261001T160615840Z-adece80d": {
+          "actor": {
+            "id": "openai/chatgpt",
+            "kind": "agent",
+            "model": "gpt-5.6-sol",
+            "provider": "openai",
+            "runtime": "chatgpt"
+          },
+          "at": "2026-10-01T16:06:17.000Z",
+          "evidence": [
+            "EV-ROS-2026-A070"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "Created the pre-registered 2x2 high/low-affinity by grouped/independent falsification experiment."
+        }
+      }
+    },
     "related_documents": [
       "requirements/PLANNING-WORK-GROUPS.md",
       "HY-ROS-2026-A028",

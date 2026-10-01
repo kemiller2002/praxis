@@ -17,6 +17,19 @@ related_documents:
   - HY-ROS-2026-A028
   - HY-ROS-2026-A029
 tags: [planning, grouping, affinity, experiment, replication, falsification]
+provenance:
+  contributions:
+    EXE-20261001T160615840Z-adece80d:
+      operations: [created]
+      at: 2026-10-01T16:06:17.000Z
+      actor:
+        kind: agent
+        id: openai/chatgpt
+        provider: openai
+        model: gpt-5.6-sol
+        runtime: chatgpt
+      reason: "Created the pre-registered 2x2 high/low-affinity by grouped/independent falsification experiment."
+      evidence: [EV-ROS-2026-A070]
 ---
 
 # Experiment

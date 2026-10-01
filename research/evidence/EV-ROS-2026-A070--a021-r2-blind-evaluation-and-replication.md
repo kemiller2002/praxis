@@ -18,6 +18,18 @@ related_documents:
 tags: [planning, grouping, replication, blind-evaluation, context, cost]
 confidence: low
 derived_from: [EX-ROS-2026-A021]
+provenance:
+  contributions:
+    EXE-20261001T160615840Z-adece80d:
+      operations: [created]
+      at: 2026-10-01T16:06:16.000Z
+      actor:
+        kind: agent
+        id: openai/chatgpt
+        provider: openai
+        model: gpt-5.6-sol
+        runtime: chatgpt
+      reason: "Created by OpenAI ChatGPT during the R2 integration; the source-Praxis execution was established after the pinned remote runtime failed, with the preceding commits reconciled post-hoc."
 ---
 
 # Evidence

@@ -1989,6 +1989,24 @@
       "repository-governance"
     ],
     "path": "research/evidence/EV-ROS-2026-A070--a021-r2-blind-evaluation-and-replication.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261001T160615840Z-adece80d": {
+          "actor": {
+            "id": "openai/chatgpt",
+            "kind": "agent",
+            "model": "gpt-5.6-sol",
+            "provider": "openai",
+            "runtime": "chatgpt"
+          },
+          "at": "2026-10-01T16:06:16.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Created by OpenAI ChatGPT during the R2 integration; the source-Praxis execution was established after the pinned remote runtime failed, with the preceding commits reconciled post-hoc."
+        }
+      }
+    },
     "related_documents": [
       "EX-ROS-2026-A021",
       "HY-ROS-2026-A028",

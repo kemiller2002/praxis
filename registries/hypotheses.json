@@ -299,6 +299,23 @@
             "modified"
           ],
           "reason": "PRAXIS-PLAN-07: merge-conflict resolution combining the completed A021 result (EV-ROS-2026-A064) with the owner's PGEI mechanism (EV-ROS-2026-A063)"
+        },
+        "EXE-20261001T160615840Z-adece80d": {
+          "actor": {
+            "id": "openai/chatgpt",
+            "kind": "agent",
+            "model": "gpt-5.6-sol",
+            "provider": "openai",
+            "runtime": "chatgpt"
+          },
+          "at": "2026-10-01T16:06:16.000Z",
+          "evidence": [
+            "EV-ROS-2026-A070"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "Updated the grouping hypothesis with the R2 replication evidence and the next falsification test."
         }
       }
     },
@@ -336,6 +353,27 @@
     "created": "2026-10-01",
     "id": "HY-ROS-2026-A029",
     "path": "research/hypotheses/HY-ROS-2026-A029--affinity-moderates-grouping-value.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261001T160615840Z-adece80d": {
+          "actor": {
+            "id": "openai/chatgpt",
+            "kind": "agent",
+            "model": "gpt-5.6-sol",
+            "provider": "openai",
+            "runtime": "chatgpt"
+          },
+          "at": "2026-10-01T16:06:17.000Z",
+          "evidence": [
+            "EV-ROS-2026-A070"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "Created the affinity-moderation hypothesis that distinguishes cohesion effects from generic session setup-cost amortization."
+        }
+      }
+    },
     "related_documents": [
       "HY-ROS-2026-A028",
       "EV-ROS-2026-A064",
