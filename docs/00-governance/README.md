@@ -2,7 +2,7 @@
 id: GV-INDEX-001
 title: Governance Index
 status: canonical
-version: 1.1.1
+version: 1.2.0
 owners:
   - repository-governance
 created: 2026-07-22
@@ -14,6 +14,18 @@ related_documents:
   - ../../AGENTS.md
   - AI-Repository-Operating-System.md
 tags: [governance, index]
+provenance:
+  contributions:
+    EXE-20261001T120908481Z-a6b1be1d:
+      operations: [modified]
+      at: 2026-10-01T13:58:22.000Z
+      actor:
+        kind: agent
+        id: openai/codex
+        provider: openai
+        model: unknown
+        runtime: codex
+      reason: "Route new agents through the elapsed-time upstream synchronization rule"
 ---
 
 # Governance Index
@@ -38,7 +50,7 @@ Canonical changes require evidence and impact review, an entry in the decision l
 
 ## New-Agent Entry
 
-Read `AGENTS.md`, follow this reading order only as far as the task requires, inspect current state and applicable domain records, then execute the smallest sufficient workflow. If no domain record exists, state that limitation rather than inventing one.
+Read `AGENTS.md`, follow this reading order only as far as the task requires, inspect current state and applicable domain records, then execute the smallest sufficient workflow. Start the configured upstream-drift clock with `./praxis sync check --start`, repeat the fetch-only check after 30 minutes of elapsed wall time at a safe boundary, and require a fresh, integrated report before final validation (`DF-GOV-014`). If no domain record exists, state that limitation rather than inventing one.
 
 ## Phase and Known Gaps
 

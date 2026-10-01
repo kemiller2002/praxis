@@ -27,7 +27,7 @@ the entire repository without a reason.
 
 ## 4. Execute
 
-Before meaningful repository mutation, establish attributable intent with `./praxis work begin --id WORK-ID --occurred-at TIMESTAMP` and inspect `./praxis work context WORK-ID` for allowed actions and required evidence. Use `./praxis status` for a compact repository check. Follow `docs/work-protocol.md`.
+Before meaningful repository mutation, establish attributable intent with `./praxis work begin --id WORK-ID --occurred-at TIMESTAMP`, inspect `./praxis work context WORK-ID` for allowed actions and required evidence, and run `./praxis sync check --start`. Repeat `./praxis sync check` at safe work boundaries whenever 30 minutes have elapsed since the last successful fetch—including time spent stalled or waiting—and immediately before final validation. Fetching never authorizes automatic merge, rebase, pull, stash, reset, or discard. Use `./praxis status` for a compact repository check. Follow `docs/work-protocol.md`.
 
 `work begin` automatically starts a provider-neutral execution record. Discover what the current runtime can expose, classify the work, ingest trustworthy runtime or tool output where available, and leave unavailable metrics unavailable rather than zero. Unknown provider fields belong in sanitized raw telemetry. `work complete` finalizes active records; follow `docs/development-telemetry.md` for adapters, R&D context, provenance, privacy, and aggregation.
 

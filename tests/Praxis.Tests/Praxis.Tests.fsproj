@@ -19,6 +19,7 @@
     <Compile Include="ArtifactTests.fs" />
     <Compile Include="PersistenceTests.fs" />
     <Compile Include="GitTests.fs" />
+    <Compile Include="UpstreamSyncTests.fs" />
     <Compile Include="WorkTests.fs" />
     <Compile Include="EnvelopeReconciliationTests.fs" />
     <Compile Include="WorkPlanTests.fs" />

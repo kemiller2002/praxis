@@ -61,7 +61,7 @@ praxis status [--json] [--verbose]
 ```
 
 Read-only. Prints a JSON document covering work items, validation findings,
-telemetry counts and the installation.
+telemetry counts, upstream synchronization freshness, and the installation.
 
 The output is JSON with or without `--json`. This command emitted JSON before
 the lifecycle interface existed and consumers depend on that, so the default
@@ -265,6 +265,7 @@ commands. These predate the lifecycle interface and are unchanged:
 praxis validate [--json]
 praxis registry build [--dry-run] | registry check
 praxis git status [--json]
+praxis sync status [--json] | sync check [--start] [--json]
 praxis work <capture|list|ready|show|start|resume|block|complete|reconcile|checkpoint|continue|update|attach|context|...>
 praxis add "..."
 praxis step <plan|begin|resume|complete|block|abandon|record|availability|checkpoint|link|list|show>
@@ -281,6 +282,33 @@ Run `praxis --help` for the full argument list, and see
 [`development-telemetry.md`](development-telemetry.md),
 [`work-adapter-contract.md`](work-adapter-contract.md) and
 [`agent-provenance.md`](agent-provenance.md) for what they mean.
+
+### `sync status`, `sync check`
+
+```
+praxis sync status [--json]
+praxis sync check [--start] [--json]
+```
+
+`sync check` performs the configured fetch-only upstream check and records its
+state in per-worktree Git metadata. `--start` resets the session's starting
+upstream commit and is used once at agent startup. A routine check retains that
+baseline. The default policy is `origin/main` with a 30-minute maximum age,
+configured at `workProtocol.upstreamSync` in `ros.json`.
+
+`sync status` is local and read-only: it never fetches. Both commands report
+freshness, HEAD and start/current upstream commits, ahead/behind counts,
+incoming/local/overlap paths, whether integration is required, and whether
+final validation is safe against the fetched snapshot. A failed fetch exits
+`1` and does not reset the last-success clock; invalid arguments exit `2`.
+Disabled policy exits `0` and reports `outcome: "disabled"`.
+
+The check never pulls, merges, rebases, switches, stashes, resets, discards,
+commits, pushes, or edits working files. Agents integrate an advanced upstream
+deliberately at a safe boundary and rerun affected validation. “Current” means
+the latest successfully fetched snapshot within the configured window, not a
+guarantee that the remote cannot move after the check. See [Upstream
+synchronization and bounded drift](work-protocol.md#upstream-synchronization-and-bounded-drift).
 
 ### `reconcile --envelope`
 

@@ -2,7 +2,7 @@
 id: GV-AGENT-001
 title: Agent Operating Manual
 status: canonical
-version: 1.4.0
+version: 1.5.0
 owners:
   - repository-governance
 created: 2026-07-22
@@ -17,6 +17,18 @@ related_documents:
   - ../development-telemetry.md
   - ../agent-provenance.md
 tags: [governance, agents, operations]
+provenance:
+  contributions:
+    EXE-20261001T120908481Z-a6b1be1d:
+      operations: [modified]
+      at: 2026-10-01T13:58:22.000Z
+      actor:
+        kind: agent
+        id: openai/codex
+        provider: openai
+        model: unknown
+        runtime: codex
+      reason: "Define elapsed-time upstream checks, non-mutating boundaries, and final-validation freshness"
 ---
 
 # Agent Operating Manual
@@ -27,13 +39,14 @@ tags: [governance, agents, operations]
 2. Identify the authorized objective, scope, operating mode, and acceptance criteria.
 3. Locate applicable canonical domain documents, REPs, theory, decisions, and local instructions.
 4. If you are taking over active work whose executor disappeared, use a clean checkout of the checkpoint's branch and `./praxis work continue` instead of beginning anew (see Durable Continuity). Otherwise, establish your identity (`./praxis provenance identity`; declare it with `PRAXIS_ACTOR_KIND`/`PRAXIS_ACTOR`/`PRAXIS_TELEMETRY_*` (legacy `ROS_*` names still work) when your runtime is not detected, never fabricating unknown values), then begin the authorized work item so Praxis starts an execution record carrying that identity; inspect repository state, including uncommitted user work, and establish a baseline where practical.
-5. Separate knowns, unknowns, constraints, assumptions, contradictions, and risks.
-6. Choose the smallest sufficient process and artifact threshold.
-7. Execute within scope, making reversible decisions where justified.
-8. Validate in proportion to risk.
-9. Finalize execution telemetry, preserving runtime limitations, deterministic metrics, scope changes, and evidence links.
-10. Update affected code, documentation, decisions, journals, packages, and registries, attributing every canonical record you create or materially change with `./praxis provenance record`.
-11. Leave a self-contained handoff, and make it durable: commit and push the work, record a durable checkpoint, and push the Praxis state.
+5. Run `./praxis sync check --start` to fetch and record the configured upstream baseline without altering working files. If upstream checking is explicitly disabled or unavailable, record that constraint.
+6. Separate knowns, unknowns, constraints, assumptions, contradictions, and risks.
+7. Choose the smallest sufficient process and artifact threshold.
+8. Execute within scope, making reversible decisions where justified.
+9. Validate in proportion to risk and against a fresh upstream synchronization report.
+10. Finalize execution telemetry, preserving runtime limitations, deterministic metrics, scope changes, and evidence links.
+11. Update affected code, documentation, decisions, journals, packages, and registries, attributing every canonical record you create or materially change with `./praxis provenance record`.
+12. Leave a self-contained handoff, and make it durable: commit and push the work, record a durable checkpoint, and push the Praxis state.
 
 ## Operating Modes
 
@@ -122,6 +135,33 @@ infer historical authorship from style, timestamps, filenames, or Git metadata.
 Recorded identity is self-reported provenance, not authentication. The
 canonical model, validation rules, and examples are in
 `docs/agent-provenance.md`.
+
+## Upstream Synchronization
+
+Upstream freshness is an elapsed-time safety rule (`DF-GOV-014`), distinct
+from the coherent recovery-boundary rule for durable checkpoints. At startup,
+run `./praxis sync check --start`. At the next safe work boundary after 30
+minutes have elapsed since the last successful check, run `./praxis sync
+check` again. Wall-clock time includes stalls, waits, and time when the agent
+was not actively executing. Run one more check immediately before final
+validation and handoff.
+
+The check may fetch only the configured remote branch and persist its own
+state under per-worktree Git metadata. It must not modify the working tree or
+automatically pull, merge, rebase, switch, stash, reset, discard, commit, or
+push. A failed or unavailable check never resets freshness. `sync status`
+must distinguish unavailable facts from zero and report the start/current
+upstream commits, ahead/behind relation, incoming and local paths, exact
+overlap, and final-validation safety.
+
+When upstream advances, integrate it at a coherent boundary under the
+repository's branch policy, preserving user work and rerunning affected
+validation. Final validation is not current while the check is stale,
+unavailable, or reports the local branch behind. If safe integration is not
+possible, block or hand off with the exact reason; never force a destructive
+resolution. “Current upstream” means the most recent successfully fetched
+snapshot within the configured window, not proof that the remote cannot move
+after observation.
 
 ## Durable Continuity
 

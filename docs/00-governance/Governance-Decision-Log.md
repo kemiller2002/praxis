@@ -2,7 +2,7 @@
 id: GV-DEC-001
 title: Governance Decision Log
 status: canonical
-version: 1.4.0
+version: 1.5.0
 owners:
   - repository-governance
 created: 2026-07-22
@@ -16,6 +16,18 @@ related_documents:
   - ../../prompts/Codex-Prompt-ROS-Phase-1-Governance-Foundation.md
   - ../development-telemetry.md
 tags: [governance, decisions, phase-1]
+provenance:
+  contributions:
+    EXE-20261001T120908481Z-a6b1be1d:
+      operations: [modified]
+      at: 2026-10-01T13:58:22.000Z
+      actor:
+        kind: agent
+        id: openai/codex
+        provider: openai
+        model: unknown
+        runtime: codex
+      reason: "Record DF-GOV-014 for bounded upstream drift based on 30 minutes of elapsed wall time"
 ---
 
 # Governance Decision Log
@@ -249,3 +261,46 @@ On 2026-07-22, repository discovery found the Phase 1 execution prompt as the on
   prospectively, never by restarting work, and that historical step
   attribution that was never captured stays unavailable rather than being
   reconstructed or read as zero.
+
+## DF-GOV-014 — Bound Upstream Drift by Elapsed Time
+
+- **Date:** 2026-10-01
+- **Status:** accepted
+- **Context:** An agent can remain active or stalled while `main` advances.
+  Checking only at startup permits large late conflicts and can make final
+  validation describe a stale base. Checking after a fixed number of agent
+  actions misses time spent waiting on tools, systems, or people.
+- **Hypothesis:** A fetch-only check after a bounded amount of elapsed wall
+  time keeps drift small without disrupting in-progress work. Integration at
+  coherent boundaries preserves user changes and makes validation meaningful.
+- **Evidence considered:** The initiating user requirement explicitly chose
+  30 minutes of elapsed time because an agent can stall while other work moves
+  forward; Git can refresh remote-tracking state without changing working
+  files; exact path intersection provides a deterministic first-order overlap
+  signal. No evidence supports an automatic merge/rebase policy that would be
+  safe across repositories and dirty worktrees.
+- **Alternatives:** Check only at startup or completion; count commands or
+  active execution time; run `git pull` on a timer; automatically merge or
+  rebase. These respectively allow late drift, ignore stalls, or mutate work
+  without repository-specific judgment.
+- **Decision:** Agents run `praxis sync check --start` at startup, repeat the
+  fetch-only check at the next safe boundary whenever 30 minutes have elapsed
+  since the last successful check, and run it immediately before final
+  validation and handoff. Failed checks do not reset the clock. The command
+  records state in per-worktree Git metadata and never alters working files or
+  performs pull, merge, rebase, switch, stash, reset, discard, commit, or push.
+  Reports expose start/current upstream commits, freshness, ahead/behind,
+  incoming/local paths, exact overlap, required integration, and whether final
+  validation is safe. An advanced upstream is integrated deliberately under
+  repository policy; unsafe integration is reported, never forced.
+- **Confidence:** High (0.87). The elapsed-time rule directly addresses the
+  observed stall mode; future telemetry may justify a shorter or adaptive
+  default.
+- **Consequences:** Long-running agents perform bounded network reads and
+  discover conflicts earlier. “Current” is explicitly the most recent fetched
+  snapshot within the window, not a guarantee that the remote did not move
+  immediately after observation. Repositories without a usable upstream must
+  disable the policy explicitly and retain that limitation in handoff.
+- **Revisit trigger:** Operational evidence shows excessive fetch cost,
+  recurring drift inside 30 minutes, false overlap signals, or a repository
+  class where safe automatic integration can be specified.
