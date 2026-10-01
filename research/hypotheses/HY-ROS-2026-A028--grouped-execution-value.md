@@ -5,7 +5,7 @@ research_area: repository-operating-system
 status: supported
 confidence: low
 created: 2026-09-30
-supporting_evidence: [EV-ROS-2026-A063, EV-ROS-2026-A064]
+supporting_evidence: [EV-ROS-2026-A063, EV-ROS-2026-A064, EV-ROS-2026-A070]
 contradicting_evidence: []
 related_theories: []
 related_documents:
@@ -14,6 +14,9 @@ related_documents:
   - EV-ROS-2026-A059
   - EV-ROS-2026-A063
   - EV-ROS-2026-A064
+  - EV-ROS-2026-A070
+  - EX-ROS-2026-A022
+  - HY-ROS-2026-A029
 supersedes: []
 superseded_by: []
 tags: [planning, grouping, context, experiment]
@@ -140,21 +143,22 @@ claim that grouping sometimes helps.
 
 ## Current assessment
 
-Supported at low confidence by one run (`EV-ROS-2026-A064`): the grouped
-execution repeated less context (AGENTS.md 1 versus 5 reads, governance
-documents 6 versus 15, one cold start), cost $9.48 against $21.51, and
-produced one consistent model where independent executions produced several;
-independent executions were more faithful to individual criteria and tested
-more broadly. No context pressure at five members. Replication with a
-loosely related cohort and another repository is needed before any default.
+Supported at low confidence by the original A021 run (`EV-ROS-2026-A064`)
+and its R2 execution replication (`EV-ROS-2026-A070`).
 
-Before the experiment: The planner can count context acquisitions (five
-independent against one grouped for the proposed cohort) but has no
-measurement of what an acquisition costs, so every saving is unknown until
-the experiment runs.
+Both executions show the same directional high-affinity result: grouped
+execution reduced repeated context acquisition and produced a more unified
+cross-item architecture, while independent execution retained advantages in
+some localized implementation details. R2 directly measured 58.72% lower
+platform cost and 61.08% lower elapsed time for grouped execution, with two
+confirmed acceptance defects in each arm.
 
-`EV-ROS-2026-A063` was an interim reading taken after three of five control
-sessions; the completed run in `EV-ROS-2026-A064` is consistent with it. The
-PGEI mechanism above remains a proposed explanation: the run shows reduced
-reacquisition, not yet the cohesion/size threshold or the low-affinity
-predictions, which need the replication cohorts.
+The confidence remains low. Both runs use the same repository, baseline and
+feature family, and R2's control arm had a stale-checkout deviation. The
+evidence therefore supports a narrow high-affinity mechanism rather than a
+general claim about waterfall, iteration or batching.
+
+`HY-ROS-2026-A029` separates the proposed cohesion mechanism from generic
+session setup-cost amortization. `EX-ROS-2026-A022` is the pre-registered
+2x2 falsification test: high- versus low-affinity cohorts crossed with grouped
+versus independent execution in a non-Praxis repository.

@@ -1,0 +1,300 @@
+{
+  "experiment": "EX-ROS-2026-A021-R2",
+  "evaluator": {
+    "organization": "OpenAI",
+    "product": "ChatGPT",
+    "model": "GPT-5.6 Sol",
+    "role": "independent blind evaluator"
+  },
+  "shas": {
+    "baseline": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+    "blindKit": "6f82f671e955f67afb40bfe73cf1b93840c67d47",
+    "M": "72a6c0408140bce1b9c1b60fe174e7080d3f3c05",
+    "N": "f6d0b5c49a2c592d3d8791dc819518578116a1cc"
+  },
+  "blinding": {
+    "mappingKnown": false,
+    "compromised": false,
+    "leaks": [],
+    "prohibitedSourcesAccessed": []
+  },
+  "checksumVerification": {
+    "arm-M.patch": {
+      "sha256": "8a275ee42f0a63f06a510da1819844e4da51b138c692afde8447665230a39c00",
+      "result": "match"
+    },
+    "arm-N.patch": {
+      "sha256": "ca35f3d46432b048f2e0f786e31145863de9f499bb4901db622a5fcbae33f541",
+      "result": "match"
+    },
+    "acceptance-criteria.txt": {
+      "sha256": "98c8e5903fe98add5cdfa3ec94ba7c625800ed77255bc5d9736340af17a8a137",
+      "result": "match"
+    }
+  },
+  "arms": {
+    "M": {
+      "sha": "72a6c0408140bce1b9c1b60fe174e7080d3f3c05",
+      "build": {
+        "exactShaCi": "passed",
+        "dotnetSdk": "10.0.401",
+        "warnings": 0,
+        "errors": 0,
+        "requestedOverrideBuildRunByEvaluator": false,
+        "note": "Exact-SHA CI build passed, but its build command did not include -p:FSharpCoreImplicitPackageVersion=10.1.400."
+      },
+      "tests": {
+        "fsharpHarness": {
+          "passed": 839,
+          "failed": 0
+        },
+        "nodePrimary": {
+          "passed": 104,
+          "failed": 0,
+          "skipped": 0
+        },
+        "python": {
+          "passed": 7,
+          "failed": 0
+        },
+        "nodeDifferential": {
+          "passed": 257,
+          "failed": 0,
+          "skipped": 0
+        },
+        "rosValidate": "passed",
+        "independentEvaluatorFixtureRun": "not-confirmed"
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "PRAXIS-GROUP-01",
+          "result": "defect",
+          "summary": "Core create behavior works, but execution-repository recording/admission invariants are incomplete."
+        },
+        {
+          "id": "PRAXIS-GROUP-02",
+          "result": "confirmed",
+          "summary": "Read-only text/JSON show covers required state, progress, gating, repository and architecture information."
+        },
+        {
+          "id": "PRAXIS-GROUP-03",
+          "result": "confirmed",
+          "summary": "Add refusals, repository compatibility, provenance and non-mutation are implemented."
+        },
+        {
+          "id": "PRAXIS-GROUP-04",
+          "result": "confirmed",
+          "summary": "Remove refusals, explicit minimum-member behavior, provenance and non-mutation are implemented."
+        },
+        {
+          "id": "PRAXIS-GROUP-05",
+          "result": "confirmed",
+          "summary": "Durability, member-checkpoint references, ownership validation and progress are strongly implemented."
+        }
+      ],
+      "defects": [
+        {
+          "id": "M-D1",
+          "workItem": "PRAXIS-GROUP-01",
+          "requirement": "A created group records/identifies its execution repository (PRX-GRP-051).",
+          "observed": "CLI leaves ExecutionRepository=None when --execution-repository is omitted and the stored declaration preserves None.",
+          "expected": "Every execution group identifies where implementation occurs, normally defaulting to the local repository.",
+          "result": "defect",
+          "evidence": [
+            "src/Ros.Cli/WorkGroupCommands.fs:180-201",
+            "src/Ros.Domain/Planning/GroupDeclaration.fs:151-159",
+            "requirements/PLANNING-WORK-GROUPS.md:114-118"
+          ]
+        },
+        {
+          "id": "M-D2",
+          "workItem": "PRAXIS-GROUP-01",
+          "requirement": "Mixed-repository groups must be explicitly cross-repository or split.",
+          "observed": "Create validates lifecycle but has no member-location/repository check; add has a separate RepositoryMismatch check.",
+          "expected": "Initial member admission obeys the same execution-repository invariant as later additions.",
+          "result": "defect",
+          "evidence": [
+            "src/Ros.Domain/Planning/GroupDeclaration.fs:125-164",
+            "src/Ros.Domain/Planning/GroupDeclaration.fs:184-229",
+            "requirements/PLANNING-WORK-GROUPS.md:114-118"
+          ]
+        }
+      ],
+      "designRisks": [
+        {
+          "id": "M-R1",
+          "concern": "concurrency",
+          "observed": "create/add/remove use atomic file replacement without a lock spanning read-decide-write; checkpoint separately takes work-protocol lock.",
+          "inference": "Concurrent successful mutations can lose an update and can interleave with checkpoint/lifecycle transitions.",
+          "result": "design-risk",
+          "evidence": [
+            "src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs:31-43,66-80",
+            "src/Ros.Cli/WorkGroupCommands.fs:393-450"
+          ],
+          "runtimeProbe": "not-confirmed"
+        },
+        {
+          "id": "M-R2",
+          "concern": "fragmentation",
+          "observed": "Declarations and group checkpoints use separate stores/contracts, and show is routed through PlanCommands.",
+          "result": "design-risk"
+        }
+      ]
+    },
+    "N": {
+      "sha": "f6d0b5c49a2c592d3d8791dc819518578116a1cc",
+      "build": {
+        "exactShaCi": "passed",
+        "dotnetSdk": "10.0.401",
+        "warnings": 0,
+        "errors": 0,
+        "requestedOverrideBuildRunByEvaluator": false,
+        "note": "Exact-SHA CI build passed, but its build command did not include -p:FSharpCoreImplicitPackageVersion=10.1.400."
+      },
+      "tests": {
+        "fsharpHarness": {
+          "passed": 819,
+          "failed": 0
+        },
+        "nodePrimary": {
+          "passed": 104,
+          "failed": 0,
+          "skipped": 0
+        },
+        "python": {
+          "passed": 7,
+          "failed": 0
+        },
+        "nodeDifferential": {
+          "passed": 257,
+          "failed": 0,
+          "skipped": 0
+        },
+        "rosValidate": "passed",
+        "independentEvaluatorFixtureRun": "not-confirmed"
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "PRAXIS-GROUP-01",
+          "result": "confirmed",
+          "summary": "Create uses the shared admission rule, records repository/context/notes, supports dry-run/JSON and validates stored groups."
+        },
+        {
+          "id": "PRAXIS-GROUP-02",
+          "result": "confirmed",
+          "summary": "Read-only text/JSON show covers required state, progress, gating, repository and architecture information."
+        },
+        {
+          "id": "PRAXIS-GROUP-03",
+          "result": "confirmed",
+          "summary": "Add reuses central admission, records structured provenance and preserves member state."
+        },
+        {
+          "id": "PRAXIS-GROUP-04",
+          "result": "confirmed",
+          "summary": "Remove refusals, provenance and member record preservation are implemented."
+        },
+        {
+          "id": "PRAXIS-GROUP-05",
+          "result": "defect",
+          "summary": "Core checkpoint path works, but blank shared decisions are silently dropped and validation cannot verify checkpoint ownership."
+        }
+      ],
+      "defects": [
+        {
+          "id": "N-D1",
+          "workItem": "PRAXIS-GROUP-05",
+          "requirement": "Blank/invalid checkpoint fields are refused.",
+          "observed": "Shared decisions are trimmed and blank values filtered out instead of rejected.",
+          "expected": "A supplied blank shared decision is rejected as invalid input.",
+          "result": "defect",
+          "evidence": [
+            "src/Ros.Domain/Work/WorkGroups.fs:479-510",
+            "src/Ros.Cli/WorkGroupCommands.fs:386-408"
+          ]
+        },
+        {
+          "id": "N-D2",
+          "workItem": "PRAXIS-GROUP-05",
+          "requirement": "No attribution laundering; validate detects invalid stored group state.",
+          "observed": "Stored checkpoint validation never compares member checkpoint IDs with the work items that own those checkpoints.",
+          "expected": "A member reference to another member's checkpoint is a validation finding.",
+          "result": "defect",
+          "evidence": [
+            "src/Ros.Contracts/Work/WorkGroupJson.fs:77-98",
+            "src/Ros.Domain/Work/WorkGroups.fs:553-593",
+            "requirements/PLANNING-WORK-GROUPS.md:98-106"
+          ]
+        }
+      ],
+      "designRisks": [
+        {
+          "id": "N-R1",
+          "concern": "maintainability",
+          "observed": "WorkGroups.fs centralizes models, admission, mutation decisions, checkpoint decisions, validation and views in one 651-line domain module.",
+          "result": "design-risk"
+        },
+        {
+          "id": "N-R2",
+          "concern": "checkpoint progress",
+          "observed": "An abandoned member can be excluded from active/completed/remaining due to mixed planner-status and recorded-state classification.",
+          "result": "design-risk",
+          "evidence": [
+            "src/Ros.Domain/Work/WorkGroups.fs:465-510",
+            "src/Ros.Domain/Planning/Grouping.fs:201-212"
+          ]
+        }
+      ]
+    }
+  },
+  "confirmedAcceptanceDefectCount": {
+    "M": 2,
+    "N": 2
+  },
+  "crossArmFindings": [
+    {
+      "concern": "member-admission",
+      "fact": "N reuses one admission rule for create/add. M uses separate create/add rules; repository compatibility exists only in M add.",
+      "result": "confirmed"
+    },
+    {
+      "concern": "persistence",
+      "fact": "M uses two group-related stores; N uses one.",
+      "result": "confirmed"
+    },
+    {
+      "concern": "concurrency",
+      "fact": "N locks read-decide-write for every group mutation. M atomically replaces the file but does not lock create/add/remove.",
+      "result": "design-risk"
+    },
+    {
+      "concern": "checkpoint-validation",
+      "fact": "M validates member checkpoint ownership; N does not.",
+      "result": "confirmed"
+    },
+    {
+      "concern": "json-envelope",
+      "fact": "N has one common work-group command envelope; M uses separate work-group mutation/checkpoint/planner-show schema families.",
+      "result": "confirmed"
+    },
+    {
+      "concern": "group-id-grammar",
+      "fact": "M requires at least two post-GROUP segments; N permits one. Baseline permits conventions.",
+      "result": "not-confirmed"
+    }
+  ],
+  "conclusions": [
+    "Arm M shows stronger checkpoint integrity and attribution validation.",
+    "Arm N shows stronger cross-command repository-admission consistency and transactional mutation safety.",
+    "Both exact blind SHAs passed the repository CI available to the evaluator.",
+    "Both arms have two confirmed acceptance defects under this evaluation.",
+    "No numeric score, overall winner, methodology judgment, or arm mapping is asserted."
+  ],
+  "protocolDeviations": [
+    "No evaluator-local clean worktrees/clones because the local container could not resolve github.com.",
+    "The local container had no .NET SDK, so the exact requested build with FSharpCoreImplicitPackageVersion=10.1.400 was not run by the evaluator.",
+    "Build/test evidence uses exact-SHA permitted GitHub Actions logs; their build command did not include the requested FSharpCore override.",
+    "No fresh evaluator-authored symmetric CLI fixture or concurrency stress probe could be run.",
+    "Formal evidence is stored temporarily under the blind output directory without an EV number because the blind kit ends at A059 while its README explicitly marks A060-A062 as prohibited non-blind material."
+  ]
+}

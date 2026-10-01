@@ -1976,5 +1976,40 @@
     "title": "First-class step-level execution telemetry implementation and validation",
     "updated": "2026-09-27",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "low",
+    "created": "2026-10-01",
+    "derived_from": [
+      "EX-ROS-2026-A021-R2"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A070",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A070--a021-r2-blind-evaluation-and-replication.md",
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "HY-ROS-2026-A028",
+      "EX-ROS-2026-A022",
+      "research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "supports": [
+      "HY-ROS-2026-A028"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "replication",
+      "blind-evaluation",
+      "context",
+      "cost"
+    ],
+    "title": "A021 R2 blind evaluation, unblinding, and replication comparison",
+    "updated": "2026-10-01",
+    "version": "1.0.0"
   }
 ]
