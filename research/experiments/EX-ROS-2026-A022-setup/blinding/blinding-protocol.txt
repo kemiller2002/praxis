@@ -1,0 +1,106 @@
+EX-ROS-2026-A022 -- blinding protocol
+=====================================
+
+Goal: the evaluator judges implementation quality without knowing, or being
+able to infer from material we control, which implementation was grouped and
+which independent, and without seeing execution cost, duration, tokens,
+session identities, commit history or orchestration logs.
+
+1. Units of evaluation
+----------------------
+Two kits, one per cohort. Each kit contains exactly the two implementations
+of one cohort (grouped and independent) under neutral arm identifiers. The
+four arm identifiers (arm-<6 hex>) and two kit identifiers (kit-<6 hex>) are
+drawn with the OS CSPRNG by a022_commitment.py; which arm of a kit is
+grouped is drawn independently for each kit. There is no "arm A is always
+grouped" pattern and no shared identifier between kits.
+
+Each kit is evaluated in its own fresh evaluator session with identical
+instructions (evaluator-instructions.txt), so an evaluator cannot link arms
+across kits by style. Both evaluator sessions use the same provider and
+model, preferably not the model that implemented the arms (A021-R2 used an
+OpenAI model as evaluator); the identity is recorded either way. Evaluators
+are not told the hypothesis, the affinity classification of their kit, the
+other kit's existence, or the experiment's predictions.
+
+2. What the evaluator receives
+------------------------------
+Built by prepare_blind_kit.py from the sealed reveal (orchestrator only):
+  - blind/a022/<arm>: one squashed commit on the baseline per arm, neutral
+    author/committer "A022 blind kit", fixed date 2026-01-01T00:00:00Z,
+    message "blind arm <arm>". Tree = the arm's final tree with .ros/ reset to
+    the baseline and research/experiments/EX-ROS-2026-A022-runs/ removed.
+    The push triggers CI on exactly that commit, which the evaluator may use.
+  - blind/a022/<kit>: one commit on the baseline adding
+    research/experiments/EX-ROS-2026-A022-blind-<kit>/ with README.txt,
+    work-items.txt (the cohort's items, verbatim from the baseline backlog),
+    <arm>.patch for both arms (git diff from the baseline, .ros excluded),
+    evaluator-instructions.txt, findings-template.json,
+    mapping-commitment.sha256 and SHA256SUMS.
+
+3. Leak review (PASS 2 of the setup review) and the mitigation for each
+-----------------------------------------------------------------------
+  channel                       mitigation
+  ----------------------------  ---------------------------------------------
+  branch names                  execution branches are experiment/a022-run-<4 hex>
+                                with no condition in the name; blind branches use
+                                neutral ids; the token->condition table exists only
+                                in the orchestration record and the sealed reveal
+  commit messages, count,       squashed into one commit per arm with a neutral
+  shape, authors, dates,        author, date and message; Claude-Session trailers
+  session trailers              disappear with the history
+  file paths                    the grouped condition's cohort-analysis.txt and every
+                                session's metrics live under
+                                research/experiments/EX-ROS-2026-A022-runs/<token>/,
+                                removed from blind trees; product paths are the
+                                implementation and are evidence, not a leak
+  session metadata              .ros/ (telemetry executions, events, checkpoints,
+                                actors, session identities) reset to the baseline
+  metrics                       never in a kit; written only on the orchestration
+                                branch, which evaluators are forbidden to read
+  implementation comments,      harness note rule 5 forbids references to the
+  docs, test names              experiment or execution mode in product files; the
+                                kit builder additionally redacts experiment terms
+                                (cohort, grouped/independent execution, worker
+                                session, A022, run tokens, shared reasoning, fresh
+                                session/context, session URLs) in lines the arm added,
+                                in documentation and in the comment part of code
+                                lines, by one rule applied to every arm; matches
+                                inside code are never altered (that would change
+                                behaviour) and are logged as residual leaks
+  generated artifacts           .ros/ reset; registries/ and other generated files
+                                are kept because they are product output
+  CI history                    evaluators may read CI only for the blind commits;
+                                the execution branches' CI runs are named by the
+                                execution branch and are forbidden
+  orchestrator logs, run        on the orchestration branch only, forbidden; the
+  record, reveal                plaintext reveal is never in any repository (section 5
+                                of commitment-reveal.txt)
+  evaluator cross-linking       one kit per evaluator session
+
+Residual, unavoidable leaks (recorded, not fixable without changing the
+evidence): coding style, diff size, the presence of cross-item shared
+infrastructure (which is itself one of the things being measured), and
+redaction marks ("[redacted]") whose density could differ between arms. The
+leak log (count and location of redactions and residual matches per arm) is
+written outside the repository by the kit builder and published in the
+results only after the evaluations are committed. The evaluator reports any
+suspected leak in its findings ("blinding.suspectedLeaks").
+
+4. Order of events
+------------------
+  1. All four conditions finished; final SHAs recorded (orchestration record).
+  2. a022_commitment.py generate -> sealed reveal + commitment
+     (commitment-reveal.txt section 3); reveal escrow done and owner receipt
+     confirmed (section 5 there) BEFORE any kit exists.
+  3. prepare_blind_kit.py --push -> blind arm and kit branches; the
+     orchestrator checks: each blind arm's src/, tests/ and docs/ match
+     exactly one execution branch except for redacted lines; SHA256SUMS
+     verify; no path under .ros/ differs from the baseline.
+  4. Commit the commitment hash (and only the hash) to the orchestration
+     record as well, so it is fixed in two places before evaluation.
+  5. Two fresh evaluator sessions, one per kit, with the evaluator prompt
+     (protocol/orchestration.txt step E3).
+  6. Each evaluation is pushed to blind/a022/evaluation-<kit>; its commit SHA
+     is recorded. Only then does the reveal begin (commitment-reveal.txt
+     section 6).

@@ -1976,5 +1976,58 @@
     "title": "First-class step-level execution telemetry implementation and validation",
     "updated": "2026-09-27",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "contradicts": [],
+    "created": "2026-10-01",
+    "derived_from": [
+      "EV-ROS-2026-A059"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A071",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A071--a022-cohort-selection-and-affinity-baseline.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261001T105134505Z-4886c699": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-01T11:03:42.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "EXP-A022-DESIGN: frozen baseline, cohort selection and pre-execution affinity analysis"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A022",
+      "HY-ROS-2026-A029",
+      "HY-ROS-2026-A028",
+      "EV-ROS-2026-A059",
+      "research/experiments/EX-ROS-2026-A022-setup/README.txt"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [],
+    "tags": [
+      "planning",
+      "grouping",
+      "affinity",
+      "cohort",
+      "baseline",
+      "experiment"
+    ],
+    "title": "EX-ROS-2026-A022 frozen baseline, cohort selection and pre-execution affinity analysis",
+    "updated": "2026-10-01",
+    "version": "1.0.0"
   }
 ]

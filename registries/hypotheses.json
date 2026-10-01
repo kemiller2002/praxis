@@ -325,5 +325,57 @@
       "experiment"
     ],
     "title": "One shared reasoning context for strongly related work reduces repeated work or improves architectural consistency"
+  },
+  {
+    "confidence": "very-low",
+    "contradicting_evidence": [],
+    "created": "2026-10-01",
+    "derived_from": [
+      "HY-ROS-2026-A028"
+    ],
+    "id": "HY-ROS-2026-A029",
+    "path": "research/hypotheses/HY-ROS-2026-A029--cohesion-moderates-shared-context-value.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261001T105134505Z-4886c699": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-01T11:03:41.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "EXP-A022-DESIGN: cohesion-moderation hypothesis narrowing HY-ROS-2026-A028"
+        }
+      }
+    },
+    "related_documents": [
+      "HY-ROS-2026-A028",
+      "EX-ROS-2026-A021",
+      "EX-ROS-2026-A022",
+      "EV-ROS-2026-A063",
+      "EV-ROS-2026-A064",
+      "EV-ROS-2026-A071",
+      "requirements/PLANNING-WORK-GROUPS.md"
+    ],
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "proposed",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [],
+    "tags": [
+      "planning",
+      "grouping",
+      "context",
+      "cohesion",
+      "affinity",
+      "experiment"
+    ],
+    "title": "Architectural cohesion moderates the value of one shared reasoning context over independent executions"
   }
 ]

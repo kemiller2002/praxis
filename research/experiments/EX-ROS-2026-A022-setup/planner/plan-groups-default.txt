@@ -1,0 +1,97 @@
+Repository repository-operating-system at f806f817e465 (unknown); planned 2026-10-01T11:00:00.000Z by planner 3.6.0
+Work-state fingerprint d0bb000434352107
+Advisory shadow plan: nothing was started, completed, reprioritized or otherwise changed. No single schedule is optimal across cost, duration and collision risk. The frontier lists the non-dominated alternatives; choose the tradeoff that matters.
+Advisory grouping: a group is a recommendation to reason about these items together. It changes no work item's state, attribution, evidence or identity, and nothing was started.
+
+Settings: preferred size 3..10, automatic maximum 12, minimum affinity medium, cross-group policy accept-elevated
+
+GROUP-REPOSITORY-OPERATING-SYSTEM-ATTRIBUTION-001
+Area: attribution (shared-area, planner-recommended); executes in repository-operating-system
+Members: 2 (0 of 2 complete; each member completes on its own evidence and the group never implies that every member succeeded (PRX-GRP-042))
+  ATTR-COMPLETE-BASE-REF-SWEEP [not-runnable, captured] high: with ATTR-RECONCILE-SYMLINK-SUBMODULE: high: same area 'attribution'; same area 'reconciliation'; both cite requirement DF-ROS-2026-A040
+  ATTR-RECONCILE-SYMLINK-SUBMODULE [runnable, ready] high: with ATTR-COMPLETE-BASE-REF-SWEEP: high: same area 'attribution'; same area 'reconciliation'; both cite requirement DF-ROS-2026-A040
+Affinity: high; confidence high
+Why grouped:
+  - 2/2 same area 'attribution' [explicit]
+  - 2/2 same area 'reconciliation' [explicit]
+  - 2/2 both cite requirement DF-ROS-2026-A040 [derived]
+Sequence: no ordering constraint between members (listed ATTR-COMPLETE-BASE-REF-SWEEP, ATTR-RECONCILE-SYMLINK-SUBMODULE)
+Estimated context reuse: unknown (2 independent context acquisitions -> 1)
+Collision risk: elevated; parallel-safe: False
+Recommended execution: one sequential agent
+  - one reasoning owner by default (PRX-GRP-063); high affinity usually means shared files, so one warmed agent keeps one design
+  - intra-group collision risk is elevated: parallel subtasks are not proven independent
+  - triage ATTR-COMPLETE-BASE-REF-SWEEP first: a planning group may hold captured work, but only triaged members can execute
+  may run independently from GROUP-REPOSITORY-OPERATING-SYSTEM-CONTROL-PLANE-001: no dependency and cross-group collision risk elevated is admitted by the accept-elevated policy; they may run concurrently
+  may run independently from GROUP-REPOSITORY-OPERATING-SYSTEM-WORK-PROTOCOL-001: no dependency and cross-group collision risk elevated is admitted by the accept-elevated policy; they may run concurrently
+  info below-preferred-size: 2 members is below the preferred 3..10; the group is kept because its members are cohesive, not to reach a size
+
+GROUP-REPOSITORY-OPERATING-SYSTEM-CONTROL-PLANE-001
+Area: control-plane (shared-area, planner-recommended); executes in repository-operating-system
+Members: 6 (0 of 6 complete; each member completes on its own evidence and the group never implies that every member succeeded (PRX-GRP-042))
+  PRAXIS-CTL-01 [runnable, ready] high: with PRAXIS-CTL-05: medium: same area 'control-plane'; same ID family PRAXIS-CTL; similar titles (control, host, plane)
+  PRAXIS-CTL-02 [runnable, ready] high: with PRAXIS-CTL-03: high: same area 'control-plane'; both cite requirement PRX-CTL-005; both cite requirement PRX-CTL-011; same ID family PRAXIS-CTL; similar titles (control, plane, read)
+  PRAXIS-CTL-03 [runnable, ready] high: with PRAXIS-CTL-02: high: same area 'control-plane'; both cite requirement PRX-CTL-005; both cite requirement PRX-CTL-011; same ID family PRAXIS-CTL; similar titles (control, plane, read)
+  PRAXIS-CTL-04 [runnable, ready] high: with PRAXIS-CTL-01: medium: same area 'control-plane'; same ID family PRAXIS-CTL; similar titles (control, plane)
+  PRAXIS-CTL-05 [runnable, ready] high: with PRAXIS-CTL-01: medium: same area 'control-plane'; same ID family PRAXIS-CTL; similar titles (control, host, plane)
+  PRAXIS-CTL-06 [runnable, ready] high: with PRAXIS-CTL-02: medium: same area 'control-plane'; PRAXIS-CTL-06 depends on PRAXIS-CTL-02 (inferred); same ID family PRAXIS-CTL; similar titles (control, plane)
+Affinity: medium; confidence high
+Why grouped:
+  - 6/6 same area 'control-plane' [explicit]
+  - 6/6 same ID family PRAXIS-CTL [inferred]
+  - 6/6 similar titles (control, plane) [inferred]
+  - 2/6 PRAXIS-CTL-06 depends on PRAXIS-CTL-02 (inferred) [inferred]
+  - 2/6 both cite requirement PRX-CTL-005 [derived]
+  - 2/6 both cite requirement PRX-CTL-011 [derived]
+Required sequence: PRAXIS-CTL-01 -> PRAXIS-CTL-02 -> PRAXIS-CTL-03 -> PRAXIS-CTL-04 -> PRAXIS-CTL-05 -> PRAXIS-CTL-06
+Estimated context reuse: unknown (6 independent context acquisitions -> 1)
+Collision risk: elevated; parallel-safe: False
+Recommended execution: one sequential agent
+  - one reasoning owner by default (PRX-GRP-063); high affinity usually means shared files, so one warmed agent keeps one design
+  - members depend on each other, so their order is fixed
+  - intra-group collision risk is elevated: parallel subtasks are not proven independent
+  may run independently from GROUP-REPOSITORY-OPERATING-SYSTEM-ATTRIBUTION-001: no dependency and cross-group collision risk elevated is admitted by the accept-elevated policy; they may run concurrently
+  may run independently from GROUP-REPOSITORY-OPERATING-SYSTEM-WORK-PROTOCOL-001: no dependency and cross-group collision risk elevated is admitted by the accept-elevated policy; they may run concurrently
+
+GROUP-REPOSITORY-OPERATING-SYSTEM-WORK-PROTOCOL-001
+Area: work-protocol (shared-area, planner-recommended); executes in repository-operating-system
+Members: 3 (0 of 3 complete; each member completes on its own evidence and the group never implies that every member succeeded (PRX-GRP-042))
+  BUG-WORK-ID-COLLISION [not-runnable, captured] high: with PRAXIS-STATE-MERGE-01: medium: same area 'work-protocol'
+  PRAXIS-STATE-MERGE-01 [runnable, ready] high: with BUG-WORK-ID-COLLISION: medium: same area 'work-protocol'
+  WORK-CAPTURE-ID-COLLISION [not-runnable, captured] high: with PRAXIS-STATE-MERGE-01: medium: same area 'work-protocol'
+Affinity: medium; confidence high
+Why grouped:
+  - 3/3 same area 'work-protocol' [explicit]
+  - 2/3 similar titles (already, auto, context) [inferred]
+Sequence: no ordering constraint between members (listed BUG-WORK-ID-COLLISION, PRAXIS-STATE-MERGE-01, WORK-CAPTURE-ID-COLLISION)
+Estimated context reuse: unknown (3 independent context acquisitions -> 1)
+Collision risk: elevated; parallel-safe: False
+Recommended execution: one sequential agent
+  - one reasoning owner by default (PRX-GRP-063); high affinity usually means shared files, so one warmed agent keeps one design
+  - intra-group collision risk is elevated: parallel subtasks are not proven independent
+  - triage BUG-WORK-ID-COLLISION, WORK-CAPTURE-ID-COLLISION first: a planning group may hold captured work, but only triaged members can execute
+  may run independently from GROUP-REPOSITORY-OPERATING-SYSTEM-ATTRIBUTION-001: no dependency and cross-group collision risk elevated is admitted by the accept-elevated policy; they may run concurrently
+  may run independently from GROUP-REPOSITORY-OPERATING-SYSTEM-CONTROL-PLANE-001: no dependency and cross-group collision risk elevated is admitted by the accept-elevated policy; they may run concurrently
+
+Group dependencies:
+  none
+
+Ungrouped (11):
+  ACTOR-KIND-ANCHOR [ready] affinity none: no shared context with any other open item
+  CI-LATEST-ON-VERSION-BUMP [awaiting-evidence] affinity unknown: affinity unknown: the item carries no scope evidence (area tag, declared path, requirement, dependency or checkpoint), so the planner cannot say what it shares (PRX-GRP-090 case 11)
+  EXP-A022-BASELINE [partially-complete] affinity none: no shared context with any other open item
+  PRAXIS-CN-GL-KINDS [ready] affinity none: no shared context with any other open item
+  PRAXIS-INTERNAL-NAMESPACES [captured] affinity none: no shared context with any other open item
+  PRAXIS-PLAN-ERROR-HISTORY [ready] affinity none: no shared context with any other open item
+  PRAXIS-REMOTE-12 [ready] affinity none: executes in an external repository that is not declared (grouping.executionRepositories); it is never grouped into this checkout (PRX-GRP-051)
+  PRAXIS-TELEMETRY-CLASSIFY-VOCAB [ready] affinity none: no shared context with any other open item
+  WI-0002 [captured] affinity medium: related to PRAXIS-CTL-06 (medium: same area 'hub') but not cohesive with any formed group: grouping needs medium affinity with at least two thirds of a group's members
+  WI-ACTIVE [blocked] affinity unknown: affinity unknown: the item carries no scope evidence (area tag, declared path, requirement, dependency or checkpoint), so the planner cannot say what it shares (PRX-GRP-090 case 11)
+  WI-READY [active] affinity unknown: affinity unknown: the item carries no scope evidence (area tag, declared path, requirement, dependency or checkpoint), so the planner cannot say what it shares (PRX-GRP-090 case 11)
+
+Unknown:
+  - context reuse is unmeasured: too few finalized executions record session metrics (repeated and governance reads, time to first code change; the anthropic-claude-session adapter), so savings in tokens or time are unknown (PRX-GRP-061)
+  - historical co-change is not observable: telemetry does not yet link executions to the files they changed per work item
+  - no declared paths (planner configuration 'areas'): file and module overlap is unknown, only tags are compared
+  - no human-declared groups
+  - monetary cost is unknown

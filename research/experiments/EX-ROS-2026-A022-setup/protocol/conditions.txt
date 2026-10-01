@@ -1,0 +1,103 @@
+EX-ROS-2026-A022 -- the four conditions and their protocols
+==========================================================
+
+                      shared / grouped        independent
+  high affinity       A (one session)         B (five fresh workers, in order)
+  low affinity        C (one session)         D (five fresh workers, in order)
+
+Items (frozen; criteria/cohort-*.txt; order is ordinal by ID):
+  high: PRAXIS-CTL-02, PRAXIS-CTL-03, PRAXIS-CTL-04, PRAXIS-CTL-05, PRAXIS-CTL-06
+  low:  ACTOR-KIND-ANCHOR, ATTR-RECONCILE-SYMLINK-SUBMODULE, PRAXIS-CN-GL-KINDS,
+        PRAXIS-PLAN-ERROR-HISTORY, PRAXIS-STATE-MERGE-01
+
+Every condition starts at baseline B on its own branch
+experiment/a022-run-<token> (baseline.txt). The only difference between the
+grouped and independent conditions of one cohort is the independent
+variable: one continuing reasoning context for the whole cohort, with a
+cohort-level analysis before implementation, versus one fresh context per
+item.
+
+1. Grouped protocol (A, C)
+--------------------------
+One fresh implementing session per condition.
+  1. Fresh session: created for this condition only, no prior conversation.
+  2. Start guard (start-guard.txt) with EXPECTED = B.
+  3. Work prompt: prompts/grouped.txt with <BRANCH>, <TOKEN>, <ITEMS> (one
+     line per item: ID and title), <FIRST>, <ALL-IDS> (IDs joined by
+     ", ") and <HARNESS-NOTE> (prompts/harness-note.txt with <BRANCH>,
+     <TOKEN>, <LABEL> = g) substituted.
+  4. The session reads all items before editing, writes and pushes
+     research/experiments/EX-ROS-2026-A022-runs/<token>/cohort-analysis.txt
+     before any product change (captured premeditated architecture; the
+     orchestrator verifies afterwards that the first commit touching a
+     product path comes after the analysis commit), identifies shared
+     invariants and infrastructure, then implements in the same context with
+     normal incremental commits, Praxis checkpoints at milestones, a
+     per-criterion verification pass, per-item completion, no CI polling,
+     and finishes all items before stopping.
+  5. It is not required to implement items one at a time; a cross-cutting
+     change names every item it serves.
+
+2. Independent protocol (B, D)
+------------------------------
+Five fresh implementing sessions per condition, one per item, strictly one
+after another in the frozen order, on the condition's single branch.
+  1. Each worker receives only its own item (prompts/independent.txt with
+     <ITEM>, <BRANCH>, <LABEL> = w1..w5 and the harness note) plus whatever
+     the repository itself contains.
+  2. It starts without any previous worker's transcript, scratchpad or
+     reasoning: a new session, created only after the previous worker is
+     idle and its final SHA is on the remote.
+  3. It works from the current integrated branch state: EXPECTED = previous
+     worker's final SHA (B for w1), enforced by the start guard BEFORE the
+     worker receives its item (start-guard.txt G1..G8).
+  4. It may read code produced by previous workers: that code is repository
+     state.
+  5. It never receives anything produced by a grouped condition (different
+     branch, forbidden by the harness note; checked afterwards from its
+     event log).
+  6. It implements its item normally with the same per-criterion
+     verification instruction the grouped session has.
+  7. It commits, pushes, checkpoints and completes before the next worker is
+     created (post-conditions P1..P5 in start-guard.txt).
+
+3. What is deliberately the same in both
+----------------------------------------
+Model, runtime, environment, permission mode, baseline, items and their
+criteria, AGENTS.md and repository documentation, the harness note, the
+start guard, the instruction to verify every acceptance criterion
+individually, the metrics instrument, no CI polling, no pull requests, no
+merging. The grouped condition alone gets the cohort-analysis step; that is
+the treatment (shared reasoning before mutation), as in A021.
+
+4. Stop conditions
+------------------
+Normal stop: every item of the condition is completed or blocked with a
+recorded reason, and the final Praxis state is pushed.
+
+Per-session failure (the session errors, its container is lost, or it stops
+with work unfinished and unrecoverable): the orchestrator may start ONE
+replacement session for that item (independent) or ONE continuation session
+for the condition (grouped), from the current remote head, through the start
+guard, with `./praxis work continue` and the same prompt plus the line
+"You are continuing interrupted work; read the checkpoints first." Recorded
+as a deviation; its cost and time count for the condition. For a grouped
+condition this breaks the single shared context and is flagged as a major
+deviation in the results.
+
+Budget stop (pre-registered, per condition): 8 hours from the condition's
+first session creation, or USD 120 of platform cost, whichever comes first.
+On a budget stop the orchestrator interrupts the running session, records
+what was completed, and the condition is reported as incomplete. A single
+independent worker is also stopped after 3 hours.
+
+No other intervention: the orchestrator never fixes, edits, rebases or
+completes an implementing session's work, never answers a question except
+with the fixed reply "No one will answer questions during this run; use your
+best judgment, record assumptions, and continue.", and never passes
+information from one condition to another.
+
+Item found impossible or invalid after freezing: it is blocked by the
+implementing session with its reason, the condition continues, and the
+analysis reports the item as not completed in that condition. The cohort is
+never changed and nothing is substituted.

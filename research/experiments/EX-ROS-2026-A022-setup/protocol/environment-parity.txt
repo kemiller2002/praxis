@@ -1,0 +1,53 @@
+EX-ROS-2026-A022 -- environment parity
+======================================
+
+Held the same for every implementing session of all four conditions, as far
+as the platform allows. Each is recorded per session in the run record; a
+difference is a deviation, never silently corrected in one condition only.
+
+  item                         how it is held equal / recorded
+  ---------------------------  ------------------------------------------------
+  model                        create_session model = the orchestrator's
+                               configured model for the run (the A021-R2 runs
+                               used claude-opus-5-5); per session record
+                               configured_model, session_context.model and
+                               external_metadata.last_served_model from
+                               get_session after the session ends. A fallback
+                               or switch in any session is a deviation.
+  model configuration          platform defaults; no per-session override
+  agent runtime                Claude Code remote sessions; record
+                               container_cc_version per session
+  container / environment      the same environment_id for every session
+                               (the orchestrator's own, inherited)
+  permission mode              the same for every session (inherited; record it)
+  repository baseline          B = f806f817e4656e00550313d839b59ceea87a682d
+  build tooling                harness note step 1 (dotnet-sdk-10.0 from the
+                               Ubuntu archive, the FSharp.Core override); the
+                               SDK version actually installed is recorded
+                               from each session's log
+  network / tools              the environment's policy; identical by
+                               construction (same environment_id)
+  Praxis / Ordo instructions   AGENTS.md, CLAUDE.md and docs at B; the prompts
+                               in protocol/prompts/
+  launch time                  all four conditions are launched within 15
+                               minutes of each other, in an order the
+                               orchestrator draws at random and records, so
+                               that time-of-day and platform drift affect all
+                               conditions alike
+
+Known, unavoidable differences (recorded, not corrected)
+--------------------------------------------------------
+- Independent workers start at different times (sequential by design), so
+  they meet later platform conditions than the grouped session of the same
+  cohort.
+- Platform-level session tags (for example config:auto-create-pr:draft,
+  A021-R2 deviation E3) are set by the platform; no pull request may be
+  opened.
+- A tool installation that fails transiently in one session and succeeds on
+  retry is that session's own work; it is not repaired by the orchestrator.
+
+The orchestrator never makes a fix available to one condition that is not
+available to the others. If a defect in the harness itself is found
+mid-run (for example the metrics script fails), the fix is applied
+identically to all later sessions of all conditions, recorded with the time
+it took effect, and earlier sessions are reported as measured.

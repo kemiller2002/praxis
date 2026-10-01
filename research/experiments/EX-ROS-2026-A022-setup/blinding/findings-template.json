@@ -1,0 +1,33 @@
+{
+  "schema": "a022-blind-findings/1",
+  "experiment": "EX-ROS-2026-A022",
+  "kit": "kit-<id>",
+  "evaluator": { "provider": "", "product": "", "model": "", "runtime": "", "implementedNothing": true },
+  "shas": { "baseline": "", "kit": "", "arms": { "arm-<first>": "", "arm-<second>": "" } },
+  "kitVerification": { "sha256sums": "pass | fail", "details": "" },
+  "sourcesAccessed": [ "every file, branch, commit, CI run and document read" ],
+  "blinding": {
+    "mappingKnown": false,
+    "suspectedLeaks": [ { "arm": "", "location": "", "text": "", "whatItSuggested": "" } ],
+    "prohibitedSourcesAccessed": []
+  },
+  "builds": {
+    "arm-<id>": { "build": "pass | fail | not-run", "tests": { "passed": null, "failed": null }, "validate": "pass | fail | not-run", "method": "local | exact-sha CI", "notes": "" }
+  },
+  "criteria": [
+    { "item": "WORK-ITEM-ID", "criterion": "(1)", "arm": "arm-<id>", "status": "met | partially-met | not-met | unknown", "evidence": "" }
+  ],
+  "defects": [
+    { "id": "D1", "arm": "arm-<id>", "item": "WORK-ITEM-ID or cross-item", "severity": "critical | major | minor", "confirmed": true, "description": "", "reproduction": "", "evidence": "" }
+  ],
+  "crossItemFindings": [
+    {
+      "id": "X1",
+      "category": "invariant-consistency | duplicated-concept | conflicting-validation | storage-fragmentation | api-consistency | error-model-consistency | transaction-concurrency | architecture-duplication | cross-item-integration | tests | maintainability | not-applicable",
+      "arms": { "arm-<first>": "what this arm does", "arm-<second>": "what this arm does" },
+      "favours": "arm-<first> | arm-<second> | equivalent | indeterminate",
+      "evidence": ""
+    }
+  ],
+  "notes": ""
+}

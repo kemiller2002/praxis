@@ -1,0 +1,33 @@
+Work items, verbatim from .ros/work/queue.json at f806f817e4656e00550313d839b59ceea87a682d.
+The acceptance criteria are the 'Acceptance:' text in each description.
+
+ACTOR-KIND-ANCHOR: ActorKind extension pattern accepts a trailing newline ($ anchor)
+  status at baseline: ready; tags: provenance, security
+
+ActorKind.tryParse (src/Ros.Domain/Provenance/Actor.fs) matches ^x-[a-z0-9][a-z0-9-]*$ with a .NET $ anchor, which also matches before a trailing newline, so 'x-agent\n' parses as an extension kind. Found while hardening praxis.remote input validation (PRAXIS-REMOTE-01 guards its own path with a control-character check). Fix: anchor with \z and add a test; audit other Domain patterns for the same anchor.
+
+Acceptance: (1) ActorKind.tryParse rejects a value with a trailing newline or carriage return (for example x-agent followed by a newline); (2) every regular expression under src/Ros.Domain used to validate a whole value is audited, and each one that anchors with $ is corrected (for example to \z) or recorded with the reason it is safe; the audit list is part of the completion evidence; (3) a test for each corrected pattern; (4) no accepted valid value changes. Not to be merged to main before experiment EX-ROS-2026-A022 is evaluated and the repository owner decides.
+
+ATTR-RECONCILE-SYMLINK-SUBMODULE: Content-match symbolic links and submodules for reconciled attribution
+  status at baseline: ready; tags: attribution, reconciliation
+
+ReconciliationCoverage hashes working-tree content with git hash-object, which follows symlinks and cannot hash submodules, so a reconciled symlink or submodule path never matches its recorded blob and always fails validation (fail closed). Compare the link target text / gitlink commit instead. Follow-up from GH-80 / DF-ROS-2026-A040.
+
+Acceptance: (1) a reconciled symbolic-link path whose link target is unchanged matches its recorded blob (compare what Git stores for the link, not the followed file); (2) a reconciled submodule path matches when its gitlink commit is unchanged; (3) a changed link target or gitlink still fails closed; (4) regular-file behaviour is unchanged; (5) tests use real Git fixtures for both cases. Not to be merged to main before experiment EX-ROS-2026-A022 is evaluated and the repository owner decides.
+
+PRAXIS-CN-GL-KINDS: Govern the CN (concept) and GL (glossary) artifact kinds the standards define
+  status at baseline: ready; tags: artifacts, standards
+
+GitHub issue #56. framework/standards/IDENTIFIERS.md lists the CN and GL prefixes, but the F# artifact model (src/Ros.Domain/Artifacts/Model.fs, Policy.fs) defines no such kinds, so such records are neither discovered, registered nor validated. Direction, as the issue suggests: add the kinds. Acceptance: (1) CN and GL are artifact kinds with a documented root directory, allowed statuses and identifier/filename rules consistent with the standards; (2) praxis registry build generates their registries and registry check detects staleness; (3) praxis validate applies to them the same identifier, filename, status, reference and provenance checks as other kinds; (4) the starter scaffolds and the Python artifact-validator oracle (tools/ros_cli.py) agree with the F# model wherever they enumerate kinds; (5) tests; afterwards the standards and the tooling no longer disagree. Not to be merged to main before experiment EX-ROS-2026-A022 is evaluated and the repository owner decides.
+
+PRAXIS-PLAN-ERROR-HISTORY: Persist planner estimate error over time
+  status at baseline: ready; tags: planning
+
+PRX-PLAN-170..173 of requirements/PLANNING-OPTIMIZATION.md; docs/planning.md records 170-173 as met in replay and drift except that error is not yet persisted over time (also the remaining scope of GitHub issue #119). Acceptance: (1) an explicit, opt-in planner command records a replay's estimate-error summary durably (all other plan commands stay read-only), keyed by planner version, repository commit and as-of time, and idempotent for identical inputs; (2) a read view reports error over time, segmented by task class and, where recorded, by provider/model/runtime, with no hard-coded provider performance claims; (3) measurements older than a configured horizon are reported as stale and not used as authoritative; (4) output is deterministic (PRX-PLAN-002); (5) praxis validate checks the stored history; (6) tests and the docs/planning.md status row updated. Not to be merged to main before experiment EX-ROS-2026-A022 is evaluated and the repository owner decides.
+
+PRAXIS-STATE-MERGE-01: Parallel work items conflict in single-document Praxis state files
+  status at baseline: ready; tags: work-protocol
+
+Found repeatedly on 2026-09-29: PRs #106, #108, #110, #111, #112 and #116 each conflicted with main only in .ros/context/current.json, .ros/work/queue.json and .ros/events/events.jsonl, whenever main's Praxis state moved (other work items, remote-execution commits, PR #115). Resolution has required hand-editing Praxis state (PR #106's resolution corrupted current.json and dropped a queue item) or re-landing the branch with state re-recorded through the CLI. Praxis needs a supported merge path (a CLI-owned state merge or git merge driver: union of append-only events, three-way merge of id-keyed items) or a per-item state layout that cannot conflict. It must never require hand edits.
+
+Acceptance: (1) a supported, documented path merges two branches whose Praxis state changed independently (for example different work items started, checkpointed or completed on each) with no hand edit of .ros state: a CLI-owned merge, a Git merge driver installed by Praxis, or a state layout that cannot conflict; (2) append-only event history keeps every event exactly once in a deterministic order, and id-keyed items merge three-way; (3) genuinely conflicting changes to the same item fail closed with a report naming the item, never silently picking a side; (4) praxis validate passes on the merged result in a test that reproduces the conflict pattern described above; (5) every single-document Praxis state file that ordinary parallel work modifies is covered, or listed as not covered with the reason; (6) docs/work-protocol.md documents the path; tests. Not to be merged to main before experiment EX-ROS-2026-A022 is evaluated and the repository owner decides.

@@ -4,77 +4,69 @@ Baseline: f806f817e4656e00550313d839b59ceea87a682d
 Strong dimensions: D10-transactions, D12-assumptions, D2-state, D3-invariants, D6-producer
 Generic elements excluded from counts: cli:validate, docs/cli.md, err:validate-finding, src/Ros.Cli/Program.fs
 
-Cohort candidate 'high' (6 items, 15 pairs)
+Cohort candidate 'high' (5 items, 10 pairs)
 ------------------------------------------------------------
 Dimensions present per pair (count, 0..12):
-           1   2   3   4   5   6
-CTL-01     .   5   5   5   5   6
-CTL-02     5   .   7   9   6   7
-CTL-03     5   7   .   7   6   5
-CTL-04     5   9   7   .   7   6
-CTL-05     5   6   6   7   .   7
-CTL-06     6   7   5   6   7   .
-  1 = PRAXIS-CTL-01
-  2 = PRAXIS-CTL-02
-  3 = PRAXIS-CTL-03
-  4 = PRAXIS-CTL-04
-  5 = PRAXIS-CTL-05
-  6 = PRAXIS-CTL-06
+           1   2   3   4   5
+CTL-02     .   7   9   6   7
+CTL-03     7   .   7   6   5
+CTL-04     9   7   .   7   6
+CTL-05     6   6   7   .   7
+CTL-06     7   5   6   7   .
+  1 = PRAXIS-CTL-02
+  2 = PRAXIS-CTL-03
+  3 = PRAXIS-CTL-04
+  4 = PRAXIS-CTL-05
+  5 = PRAXIS-CTL-06
 
 Strong dimensions present per pair (0..5):
-           1   2   3   4   5   6
-CTL-01     .   0   0   0   1   1
-CTL-02     0   .   2   4   2   2
-CTL-03     0   2   .   2   2   1
-CTL-04     0   4   2   .   3   2
-CTL-05     1   2   2   3   .   3
-CTL-06     1   2   1   2   3   .
-  1 = PRAXIS-CTL-01
-  2 = PRAXIS-CTL-02
-  3 = PRAXIS-CTL-03
-  4 = PRAXIS-CTL-04
-  5 = PRAXIS-CTL-05
-  6 = PRAXIS-CTL-06
+           1   2   3   4   5
+CTL-02     .   2   4   2   2
+CTL-03     2   .   2   2   1
+CTL-04     4   2   .   3   2
+CTL-05     2   2   3   .   3
+CTL-06     2   1   2   3   .
+  1 = PRAXIS-CTL-02
+  2 = PRAXIS-CTL-03
+  3 = PRAXIS-CTL-04
+  4 = PRAXIS-CTL-05
+  5 = PRAXIS-CTL-06
 
-median count 6; strong min 0 max 4; pairs with a strong dimension 12/15
-dimension coverage (pairs): D1-concepts 15, D2-state 5, D3-invariants 10, D4-files 15, D5-surfaces 15, D6-producer 3, D7-ordering 1, D8-validation 0, D9-errors 10, D10-transactions 0, D11-tests 12, D12-assumptions 7
-rules: H1-every-pair-strong>=1=no, H2-median-count>=5=yes, H3-half-pairs-strong>=2=yes, L1-no-pair-strong>1=no, L2-strong-pairs<=1/5=no, L3-median-count<=1=no
-classification under model.txt section 6: NEITHER
+median count 7.0; strong min 1 max 4; pairs with a strong dimension 10/10
+dimension coverage (pairs): D1-concepts 10, D2-state 5, D3-invariants 10, D4-files 10, D5-surfaces 10, D6-producer 2, D7-ordering 1, D8-validation 0, D9-errors 6, D10-transactions 0, D11-tests 7, D12-assumptions 6
+rules: H1-every-pair-strong>=1=yes, H2-median-count>=5=yes, H3-half-pairs-strong>=2=yes, L1-no-pair-strong>1=no, L2-strong-pairs<=1/5=no, L3-median-count<=1=no
+classification under model.txt section 6: HIGH
 
-Cohort candidate 'low' (6 items, 15 pairs)
+Cohort candidate 'low' (5 items, 10 pairs)
 ------------------------------------------------------------
 Dimensions present per pair (count, 0..12):
-                             1   2   3   4   5   6
-ACTOR-KIND-ANCHOR            .   0   1   0   0   1
-SYMLINK-SUBMODULE            0   .   0   0   1   0
-CN-GL-KINDS                  1   0   .   0   0   0
-PLAN-ERROR-HISTORY           0   0   0   .   0   0
-STATE-MERGE-01               0   1   0   0   .   0
-TELEMETRY-CLASSIFY-VOCAB     1   0   0   0   0   .
+                       1   2   3   4   5
+ACTOR-KIND-ANCHOR      .   0   1   0   0
+SYMLINK-SUBMODULE      0   .   0   0   1
+CN-GL-KINDS            1   0   .   0   0
+PLAN-ERROR-HISTORY     0   0   0   .   0
+STATE-MERGE-01         0   1   0   0   .
   1 = ACTOR-KIND-ANCHOR
   2 = ATTR-RECONCILE-SYMLINK-SUBMODULE
   3 = PRAXIS-CN-GL-KINDS
   4 = PRAXIS-PLAN-ERROR-HISTORY
   5 = PRAXIS-STATE-MERGE-01
-  6 = PRAXIS-TELEMETRY-CLASSIFY-VOCAB
 
 Strong dimensions present per pair (0..5):
-                             1   2   3   4   5   6
-ACTOR-KIND-ANCHOR            .   0   0   0   0   0
-SYMLINK-SUBMODULE            0   .   0   0   1   0
-CN-GL-KINDS                  0   0   .   0   0   0
-PLAN-ERROR-HISTORY           0   0   0   .   0   0
-STATE-MERGE-01               0   1   0   0   .   0
-TELEMETRY-CLASSIFY-VOCAB     0   0   0   0   0   .
+                       1   2   3   4   5
+ACTOR-KIND-ANCHOR      .   0   0   0   0
+SYMLINK-SUBMODULE      0   .   0   0   1
+CN-GL-KINDS            0   0   .   0   0
+PLAN-ERROR-HISTORY     0   0   0   .   0
+STATE-MERGE-01         0   1   0   0   .
   1 = ACTOR-KIND-ANCHOR
   2 = ATTR-RECONCILE-SYMLINK-SUBMODULE
   3 = PRAXIS-CN-GL-KINDS
   4 = PRAXIS-PLAN-ERROR-HISTORY
   5 = PRAXIS-STATE-MERGE-01
-  6 = PRAXIS-TELEMETRY-CLASSIFY-VOCAB
 
-median count 0; strong min 0 max 1; pairs with a strong dimension 1/15
-dimension coverage (pairs): D1-concepts 0, D2-state 1, D3-invariants 0, D4-files 2, D5-surfaces 0, D6-producer 0, D7-ordering 0, D8-validation 0, D9-errors 0, D10-transactions 0, D11-tests 0, D12-assumptions 0
+median count 0.0; strong min 0 max 1; pairs with a strong dimension 1/10
+dimension coverage (pairs): D1-concepts 0, D2-state 1, D3-invariants 0, D4-files 1, D5-surfaces 0, D6-producer 0, D7-ordering 0, D8-validation 0, D9-errors 0, D10-transactions 0, D11-tests 0, D12-assumptions 0
 rules: H1-every-pair-strong>=1=no, H2-median-count>=5=no, H3-half-pairs-strong>=2=no, L1-no-pair-strong>1=yes, L2-strong-pairs<=1/5=yes, L3-median-count<=1=yes
 classification under model.txt section 6: LOW
 

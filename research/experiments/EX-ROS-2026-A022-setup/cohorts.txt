@@ -1,0 +1,173 @@
+EX-ROS-2026-A022 -- cohort inventory, selection and rationale
+=============================================================
+
+Recorded 2026-10-01 against the frozen baseline
+f806f817e4656e00550313d839b59ceea87a682d. Pre-execution information only.
+
+1. Inventory of open work at the baseline
+-----------------------------------------
+Sources: the merged backlog view (.ros/work/queue.json overridden by the live
+context .ros/context/current.json, as `praxis work` reports it), the open
+GitHub issues of kemiller2002/praxis, and requirement documents with
+unimplemented requirements (requirements/*.md, docs/planning.md status rows,
+docs/execution-runtime.md "Not yet implemented").
+
+Of 66 backlog rows marked 'ready' in queue.json, 62 are complete in the live
+context (stale backlog status; data hygiene, not open work). The genuinely
+open local items before this setup were:
+
+  PRAXIS-STATE-MERGE-01             captured  high    work-protocol
+  WORK-CAPTURE-ID-COLLISION         captured  medium  work-protocol, backlog
+  BUG-WORK-ID-COLLISION             captured  medium  bug, work-protocol (duplicate of the row above)
+  ATTR-COMPLETE-BASE-REF-SWEEP      captured  medium  attribution, reconciliation
+  ATTR-RECONCILE-SYMLINK-SUBMODULE  captured  low     attribution, reconciliation
+  ACTOR-KIND-ANCHOR                 captured  low     provenance, security
+  PRAXIS-TELEMETRY-CLASSIFY-VOCAB   captured  medium  telemetry
+  PRAXIS-INTERNAL-NAMESPACES        captured  low     rename, follow-up
+  WI-0002                           captured  medium  hub, follow-up
+  PRAXIS-REMOTE-12                  ready     low     remote-execution (external repository)
+  CI-LATEST-ON-VERSION-BUMP         blocked   (context only; stale)
+  WI-READY, WI-ACTIVE               test data leaked into the live context
+
+Open GitHub issues: #129 (PGEI formalization, gated on these experiments),
+#128 (remote 3.6.0 rejects abandoned rows; fixed in source, needs a release),
+#127 (merge readiness; implemented on an unmerged branch),
+#121 (CI debounce; implemented in open PR #122), #119 (planner; residual
+gaps), #114 (launcher; fixed in source, needs a release), #96/#94
+(execution orchestration requirements; control plane, UI, containment open),
+#90 (remote execution; residue external), #84 (site; owner setting only),
+#56 (CN/GL artifact kinds), #54/#53/#52 (external or obsolete).
+
+As in A021 (EV-ROS-2026-A059), the backlog held no pre-existing open cohort
+of five or more items in one architectural area. The largest pre-existing
+clusters were pairs (the ATTR pair; the duplicate ID-collision pair with
+PRAXIS-STATE-MERGE-01).
+
+2. Where each cohort comes from
+-------------------------------
+High affinity: the "Local control-plane API and host" requirement family of
+requirements/EXECUTION-ORCHESTRATION.md (PRX-CTL-001..012 with PRX-UI-009,
+-024, -027; status Proposed; tracked by #94/#96; listed as not yet implemented
+in docs/execution-runtime.md). It is a different subsystem from the A021
+work-group commands (HTTP host, typed control-plane contract, executions and
+receipts, hub) and is implementable in F# inside this repository on top of
+the existing `praxis web serve` and `praxis hub serve`. The designer split the
+family into work items along requirement-ID boundaries (one item per
+requirement cluster, each citing its PRX IDs) and captured them at the
+baseline. That the designer wrote these items is a threat to validity
+(section 6), as it was in A021.
+
+Low affinity: pre-existing items from five unrelated subsystems, four of them
+captured by other executions before this experiment was conceived, plus one
+item captured from a long-open issue (#56). Their acceptance criteria were
+made explicit at the baseline from their own descriptions; each original
+description is preserved verbatim ahead of the added "Acceptance:" text.
+They are not trivial or defective work: PRAXIS-STATE-MERGE-01 is the
+repository's highest-priority open item, and each item fixes a confirmed,
+still-present defect or an acknowledged gap.
+
+3. Frozen cohorts (execution order is ordinal by ID)
+----------------------------------------------------
+HIGH (5)                        subsystem                         criteria  expected scope
+  PRAXIS-CTL-02  typed read API: work state, legal actions          6       medium
+  PRAXIS-CTL-03  read API: executions, receipts, evidence           6       medium
+  PRAXIS-CTL-04  transition requests with structured refusals       5       medium
+  PRAXIS-CTL-05  no canonical host state; restart reconstruction    5       medium
+  PRAXIS-CTL-06  multi-repository aggregation (hub)                 5       medium
+                                                         total     27
+  Dependencies: PRAXIS-CTL-06 depends on PRAXIS-CTL-02 (declared).
+
+LOW (5)
+  ACTOR-KIND-ANCHOR                 provenance input validation      4       small; audit spans 19 Domain files
+  ATTR-RECONCILE-SYMLINK-SUBMODULE  Git reconciliation identity      5       small to medium
+  PRAXIS-CN-GL-KINDS                artifact kinds and registries    5       medium
+  PRAXIS-PLAN-ERROR-HISTORY         planner calibration history      6       medium
+  PRAXIS-STATE-MERGE-01             Praxis state persistence/merge   6       substantial
+                                                         total     26
+  Dependencies: none declared.
+
+Verbatim item text: criteria/cohort-high.txt and criteria/cohort-low.txt.
+Affinity: affinity/affinity-matrix.txt (primary), planner/README.txt
+(secondary). Selection history: affinity/selection-log.txt.
+
+Why the high cohort is high (summary of the matrix): every pair shares the
+control-plane host files, the typed control-plane contract and route family,
+and at least one strong dimension; the members share the invariants "no
+second canonical store", "converge on the CLI transition path" and, for the
+read items, "read endpoints never write"; PRAXIS-CTL-04 defines the refusal
+model PRAXIS-CTL-02 reports; PRAXIS-CTL-05 imposes a fingerprint and identity
+on every other member's responses; PRAXIS-CTL-06 consumes PRAXIS-CTL-02's
+contract. A cohort-level design (one envelope, one refusal model, one way of
+reading state through the CLI) is plausibly valuable.
+
+Why the low cohort is low: the members touch five different stores and
+module trees; 9 of 10 pairs share no dimension at all beyond generic files;
+the exceptions are one shared file (src/Ros.Domain/Artifacts/Policy.fs for
+ACTOR-KIND-ANCHOR x PRAXIS-CN-GL-KINDS) and one shared store
+(.ros/events/events.jsonl, read by ATTR-RECONCILE-SYMLINK-SUBMODULE,
+merged by PRAXIS-STATE-MERGE-01). No item's design needs another's.
+
+4. Rejected candidates and reasons
+----------------------------------
+  PRAXIS-CTL-01                    failed affinity rule H1 (selection-log.txt)
+  PRAXIS-TELEMETRY-CLASSIFY-VOCAB  removed for cohort-size parity (smallest stated scope)
+  WORK-CAPTURE-ID-COLLISION,
+  BUG-WORK-ID-COLLISION            a duplicate pair; strongly coupled to PRAXIS-STATE-MERGE-01
+                                   (matrix: count 4, strong 3), so including either
+                                   would raise the low cohort's affinity; outside
+                                   the control-plane family
+  ATTR-COMPLETE-BASE-REF-SWEEP     requires a decision record first (golden-master
+                                   divergence) and is strongly coupled to
+                                   ATTR-RECONCILE-SYMLINK-SUBMODULE (count 7, strong 2)
+  PRAXIS-INTERNAL-NAMESPACES       mechanical rename of every project; collides with
+                                   every other item; a draft PR (#140) already exists
+  WI-0002, PRAXIS-REMOTE-12        work in other repositories or on a local machine
+  CI-LATEST-ON-VERSION-BUMP,
+  WI-READY, WI-ACTIVE              stale or test data
+  #127, #121                       implementations already exist on unmerged
+                                   branches (an arm could find them); CI behaviour
+                                   observable only on GitHub
+  #128, #114                       fixed in source; remaining work is a human release
+  #129                             governed by these very experiments (conflict of interest)
+  #119 residue                     PRX-PLAN-170..173 part taken as PRAXIS-PLAN-ERROR-HISTORY;
+                                   the rest needs time to pass or owner decisions
+  #94/#96 UI and containment       operator UI requires browser interop (Limen) and
+                                   Forma; containment needs host enforcement; not
+                                   implementable as a self-contained F# item here
+  #90 identity residue             PRX-REMOTE-045..050 text is not in this repository
+  #84, #52, #53, #54               owner settings, external teams, or obsolete
+  Work-group / planner items       (GRP-073 execute-group, GRP-074 splits, affinity
+                                   admission) the A021 subsystem, and they would modify
+                                   the planner this experiment uses for corroboration
+
+5. Expected implementation scope
+--------------------------------
+High: each member extends src/Ros.Cli/WebInterface.fs, WebHttp.fs, Hub.fs and
+CliProcess.fs and adds typed contracts (expected under src/Ros.Contracts), with
+tests in tests/Ros.Tests/WebInterfaceTests.fs and HubTests.fs and docs in
+docs/web-interface.md and docs/project-administration-hub.md. Expected size
+per member: medium (one to a few hundred source lines plus tests).
+Low: each member stays in its own subsystem (see observations.json 'files').
+PRAXIS-STATE-MERGE-01 is the largest item of either cohort.
+
+6. Possible confounders (also in the experiment record, "Threats")
+------------------------------------------------------------------
+- Designer-authored high cohort: the designer captured PRAXIS-CTL-02..06 and
+  wrote their criteria; the low cohort is mostly pre-existing text.
+- Complexity and affinity overlap: the high cohort is five medium items in a
+  new surface; the low cohort mixes small fixes and one substantial item.
+  Criteria counts are close (27 and 26) but per-item difficulty differs.
+- Novelty: the high cohort builds a new API surface (more design freedom,
+  more room for cross-item inconsistency); the low cohort mostly fixes
+  existing behaviour (less design freedom). Some of the expected
+  consistency difference is therefore built into the cohorts, which is part
+  of what "affinity" means here and is reported as such.
+- One shared file and one shared store inside the low cohort (section 3).
+- PRAXIS-CTL-01 and PRAXIS-TELEMETRY-CLASSIFY-VOCAB remain ready in the
+  baseline backlog with the same "not to be merged" note; an implementer may
+  notice them. The prompts restrict each condition to its own items.
+- The baseline's live context contains one active work item of the setup
+  itself (EXP-A022-BASELINE; it completes on the setup branch, not in the
+  arms) besides the pre-existing test-data items WI-READY (active) and
+  WI-ACTIVE (blocked). Implementers must not touch any of them; the prompts
+  say so.

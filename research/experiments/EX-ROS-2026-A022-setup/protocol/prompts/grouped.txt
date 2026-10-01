@@ -1,0 +1,45 @@
+Implement the following work items in this repository on branch <BRANCH>,
+together, in this one session, as one continuing piece of work:
+
+<ITEMS>
+
+Follow AGENTS.md and the Praxis work protocol. Read the harness note at the
+end of this message first.
+
+1. Read every item before changing anything (`./praxis work show ID` for
+   each) and inspect the code and documents they touch. Start all of them
+   with one command:
+   `./praxis work start --id <FIRST> --id ... --occurred-at ...`.
+2. Before changing any product file (anything under src/, tests/, docs/,
+   starter/, schemas/, registries/, tools/ or the repository root), write a
+   cohort-level architecture analysis to
+   research/experiments/EX-ROS-2026-A022-runs/<TOKEN>/cohort-analysis.txt
+   (plain text), using the sections of docs/group-analysis-template.md:
+   the members and their acceptance criteria; a reuse inventory of existing
+   parsers, rules, stores, command pipelines, conventions and test helpers,
+   with locations; shared invariants and common infrastructure; conflicting
+   requirements and how each is resolved; where one design can serve several
+   items (contracts, stores, validation rules, error model, transaction
+   boundaries) and where it cannot; compatibility; common tests; order and
+   milestones; risks of solving each item separately. If you find little to
+   share, say so: do not invent shared abstractions. Commit it alone, with
+   the message "<ALL-IDS>: cohort analysis", and push it before any product
+   change.
+3. Then implement the items. You may build cross-cutting infrastructure once
+   and use it for several items; you need not finish the items one at a time.
+   Commit and push in normal increments; each commit message begins with the
+   ID(s) of the item(s) it serves, and a shared change names every item it
+   serves.
+4. After each architectural milestone and after each item is done, record
+   `./praxis work checkpoint` for the affected item(s) with a summary that
+   names completed and remaining items and the next action.
+5. Before completing any item, verify each of its acceptance criteria
+   individually (met, partially met, not met, unknown, with the test or
+   command that shows it), append that verification to cohort-analysis.txt,
+   and complete the item with `./praxis work complete` and its own evidence.
+   An item with a criterion not met stays active or is blocked; it is not
+   completed.
+6. Continue until every item is completed or blocked. Use metrics label
+   "g".
+
+<HARNESS-NOTE>

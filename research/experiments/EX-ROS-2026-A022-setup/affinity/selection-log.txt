@@ -1,0 +1,60 @@
+EX-ROS-2026-A022 -- cohort selection log
+=========================================
+
+Every change to the candidate cohorts made by the affinity rule, in order.
+All of it happened during setup, before any experimental condition existed.
+No implementation of any candidate was inspected at any point.
+
+1. Initial candidates (commit 525b7adb65ba304239e544026e21d4b2aee43e1f)
+-----------------------------------------------------------------------
+high: PRAXIS-CTL-01, -02, -03, -04, -05, -06
+low:  ACTOR-KIND-ANCHOR, ATTR-RECONCILE-SYMLINK-SUBMODULE, PRAXIS-CN-GL-KINDS,
+      PRAXIS-PLAN-ERROR-HISTORY, PRAXIS-STATE-MERGE-01,
+      PRAXIS-TELEMETRY-CLASSIFY-VOCAB
+
+Rules (model.txt section 6), thresholds fixed before this first run:
+  high: H1 every pair strong >= 1        NO   (CTL-01 x CTL-02, -03, -04 have 0)
+        H2 median count >= 5             yes  (6)
+        H3 half the pairs strong >= 2    yes
+        -> NEITHER
+  low:  L1 no pair strong > 1            yes
+        L2 <= 1/5 of pairs strong >= 1   yes  (1 of 15)
+        L3 median count <= 1             yes  (0)
+        -> LOW
+
+Reproduce: git checkout 525b7ad -- research/experiments/EX-ROS-2026-A022-setup/affinity
+           python3 research/experiments/EX-ROS-2026-A022-setup/affinity/compute_affinity.py
+
+2. Rule-driven change
+---------------------
+- PRAXIS-CTL-01 removed from the high cohort: it fails H1. Its only couplings
+  with CTL-02/03/04 are weak ones (shared host files, surfaces, the JSON
+  error body); its diagnostics endpoint could share an envelope with the read
+  API, but its acceptance criteria do not require that ('possible'
+  relations, not counted). It remains a ready backlog item outside the
+  experiment.
+- PRAXIS-TELEMETRY-CLASSIFY-VOCAB removed from the low cohort for size
+  parity (model.txt section 6): fewest acceptance criteria (4, tied with
+  ACTOR-KIND-ANCHOR), then fewest expected files (3 against 19). Its
+  affinity counts were not used. It remains a ready backlog item outside the
+  experiment.
+
+3. Frozen cohorts (this commit; affinity-matrix.txt)
+----------------------------------------------------
+high (5): PRAXIS-CTL-02, PRAXIS-CTL-03, PRAXIS-CTL-04, PRAXIS-CTL-05, PRAXIS-CTL-06
+          H1 yes (strong min 1), H2 yes (median 7), H3 yes -> HIGH
+low  (5): ACTOR-KIND-ANCHOR, ATTR-RECONCILE-SYMLINK-SUBMODULE, PRAXIS-CN-GL-KINDS,
+          PRAXIS-PLAN-ERROR-HISTORY, PRAXIS-STATE-MERGE-01
+          L1 yes (strong max 1), L2 yes (1 of 10), L3 yes (median 0) -> LOW
+
+Planner corroboration: see ../planner/README.txt (one recorded discrepancy:
+with declared areas the planner pairs ACTOR-KIND-ANCHOR and
+PRAXIS-CN-GL-KINDS at 'high' through one shared file).
+
+4. After freezing
+-----------------
+Nothing may be added, removed or substituted. If an item proves impossible or
+invalid during execution, the condition records it (the item is blocked with
+its reason and reported), and the analysis reports the cohort with that item
+missing in every condition that could not complete it. It is never silently
+replaced.

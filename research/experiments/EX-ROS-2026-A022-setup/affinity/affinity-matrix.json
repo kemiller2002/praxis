@@ -27,54 +27,52 @@
   "cohorts": {
     "high": {
       "members": [
-        "PRAXIS-CTL-01",
         "PRAXIS-CTL-02",
         "PRAXIS-CTL-03",
         "PRAXIS-CTL-04",
         "PRAXIS-CTL-05",
         "PRAXIS-CTL-06"
       ],
-      "pairs": 15,
+      "pairs": 10,
       "countDistribution": {
-        "5": 5,
-        "6": 4,
+        "5": 1,
+        "6": 3,
         "7": 5,
         "9": 1
       },
       "strongDistribution": {
-        "0": 3,
-        "1": 3,
+        "1": 1,
         "2": 6,
         "3": 2,
         "4": 1
       },
-      "medianCount": 6,
-      "minStrong": 0,
+      "medianCount": 7.0,
+      "minStrong": 1,
       "maxStrong": 4,
-      "pairsWithStrong": 12,
+      "pairsWithStrong": 10,
       "dimensionCoverage": {
-        "D1-concepts": 15,
+        "D1-concepts": 10,
         "D2-state": 5,
         "D3-invariants": 10,
-        "D4-files": 15,
-        "D5-surfaces": 15,
-        "D6-producer": 3,
+        "D4-files": 10,
+        "D5-surfaces": 10,
+        "D6-producer": 2,
         "D7-ordering": 1,
         "D8-validation": 0,
-        "D9-errors": 10,
+        "D9-errors": 6,
         "D10-transactions": 0,
-        "D11-tests": 12,
-        "D12-assumptions": 7
+        "D11-tests": 7,
+        "D12-assumptions": 6
       },
       "rules": {
-        "H1-every-pair-strong>=1": false,
+        "H1-every-pair-strong>=1": true,
         "H2-median-count>=5": true,
         "H3-half-pairs-strong>=2": true,
         "L1-no-pair-strong>1": false,
         "L2-strong-pairs<=1/5": false,
         "L3-median-count<=1": false
       },
-      "classification": "neither"
+      "classification": "high"
     },
     "low": {
       "members": [
@@ -82,19 +80,18 @@
         "ATTR-RECONCILE-SYMLINK-SUBMODULE",
         "PRAXIS-CN-GL-KINDS",
         "PRAXIS-PLAN-ERROR-HISTORY",
-        "PRAXIS-STATE-MERGE-01",
-        "PRAXIS-TELEMETRY-CLASSIFY-VOCAB"
+        "PRAXIS-STATE-MERGE-01"
       ],
-      "pairs": 15,
+      "pairs": 10,
       "countDistribution": {
-        "0": 12,
-        "1": 3
+        "0": 8,
+        "1": 2
       },
       "strongDistribution": {
-        "0": 14,
+        "0": 9,
         "1": 1
       },
-      "medianCount": 0,
+      "medianCount": 0.0,
       "minStrong": 0,
       "maxStrong": 1,
       "pairsWithStrong": 1,
@@ -102,7 +99,7 @@
         "D1-concepts": 0,
         "D2-state": 1,
         "D3-invariants": 0,
-        "D4-files": 2,
+        "D4-files": 1,
         "D5-surfaces": 0,
         "D6-producer": 0,
         "D7-ordering": 0,
