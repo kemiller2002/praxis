@@ -3893,6 +3893,27 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PR79-POSTMERGE-PROVENANCE",
+      "title": "Fix PR #79 post-merge provenance validation",
+      "description": "Record the missing contribution for the durable-checkpoint requirement changed during PR #79 integration, verify base-aware validation, and restore a clean main CI state.",
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-01T11:19:47Z",
+      "updatedAt": "2026-10-01T11:19:58Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

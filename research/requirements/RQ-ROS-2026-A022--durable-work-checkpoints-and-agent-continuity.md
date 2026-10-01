@@ -54,6 +54,17 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Add CONT-080..086 effective-current telemetry requirements dropped from 1.1.0 (PRAXIS-CONT-11-SEGMENTATION)"
+    EXE-20261001T112010850Z-0bbe08ef:
+      operations: [modified]
+      at: 2026-10-01T11:20:30Z
+      actor:
+        kind: agent
+        id: openai/codex
+        provider: openai
+        model: unknown
+        runtime: codex
+      reason: "Post-merge correction: PR #79 normalized the file's EOF whitespace during integration; record that responsible contribution so base-aware validation remains truthful."
+      evidence: [https://github.com/kemiller2002/praxis/actions/runs/36826902106/job/110254499248]
 ---
 
 # Requirement

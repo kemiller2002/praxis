@@ -5857,11 +5857,22 @@
         }
       },
       "completedAt": "2026-10-01T06:46:03.000Z"
+    },
+    {
+      "id": "PR79-POSTMERGE-PROVENANCE",
+      "type": "bug",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-01T11:20:06Z",
+      "telemetryExecutionIds": [
+        "EXE-20261001T112010850Z-0bbe08ef"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-01T06:49:31Z",
+  "updatedAt": "2026-10-01T11:20:06Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
