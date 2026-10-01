@@ -2,10 +2,10 @@
 id: HY-ROS-2026-A028
 title: One shared reasoning context for strongly related work reduces repeated work or improves architectural consistency
 research_area: repository-operating-system
-status: proposed
-confidence: very-low
+status: supported
+confidence: low
 created: 2026-09-30
-supporting_evidence: []
+supporting_evidence: [EV-ROS-2026-A063]
 contradicting_evidence: []
 related_theories: []
 related_documents:
@@ -60,7 +60,21 @@ outweighs the reuse. One experiment cannot establish causation
 
 ## Current assessment
 
-Proposed and untested. The planner can count context acquisitions (five
-independent against one grouped for the proposed cohort) but has no
-measurement of what an acquisition costs, so every saving is unknown until
-the experiment runs.
+Supported at low confidence by EV-ROS-2026-A063.
+
+The original A021 execution and its R2 replication show the same directional
+architectural result for this high-affinity cohort: one shared reasoning
+context produced a more unified cross-item model, while independent execution
+retained advantages in some localized implementation details. R2 also directly
+measured substantially lower platform cost and elapsed time for grouped
+execution.
+
+This is not evidence that waterfall development is generally superior. The
+supported claim is narrower: when work items are tightly coupled through shared
+domain invariants and infrastructure, preserving one reasoning context can
+reduce repeated context acquisition and cross-item architectural drift.
+
+Confidence remains low because both runs use the same repository, baseline and
+feature family, and R2 control had a stale-checkout protocol deviation. The
+next useful tests are a high-affinity cohort in another subsystem/repository
+and a deliberately low-affinity cohort.
