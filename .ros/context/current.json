@@ -5812,69 +5812,87 @@
     {
       "id": "EXP-A022-BASELINE",
       "type": "research",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-01T10:43:18.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "research-record",
+          "path": "research/evidence/EV-ROS-2026-A071--a022-cohort-selection-and-affinity-baseline.md"
+        }
+      ],
+      "updatedAt": "2026-10-01T11:18:55.000Z",
       "telemetryExecutionIds": [
         "EXE-20261001T104318707Z-560ffe3c"
       ],
       "latestCheckpoint": {
-        "id": "3a79de59ab757bef12aadfca",
-        "recordedAt": "2026-10-01T10:44:50.000Z",
+        "id": "0be89c4401bddef0469232b1",
+        "recordedAt": "2026-10-01T11:18:52.000Z",
         "executionId": "EXE-20261001T104318707Z-560ffe3c",
         "repository": "repository-operating-system",
         "branch": "claude/praxis-a022-experiment-setup-xpq6a6",
-        "commit": "9faf138f0185ccb5b280af81ed4c46c2af9a2eb0",
+        "commit": "ff08eea725d5e1ca7c5f5c0e438b3274e197249d",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
         "remoteBranch": "claude/praxis-a022-experiment-setup-xpq6a6",
-        "remoteCommit": "9faf138f0185ccb5b280af81ed4c46c2af9a2eb0",
-        "summary": "Cohort work items captured and triaged; backlog state committed and pushed",
-        "nextAction": "Complete the baseline item; its Praxis-state commit becomes the frozen baseline",
+        "remoteCommit": "ff08eea725d5e1ca7c5f5c0e438b3274e197249d",
+        "summary": "Baseline f806f817 frozen; selection evidence EV-ROS-2026-A071 recorded",
+        "nextAction": "Complete",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-01T11:18:55.000Z",
+      "conclusion": "Baseline f806f817e4656e00550313d839b59ceea87a682d frozen with ten cohort items ready; selection evidence EV-ROS-2026-A071."
     },
     {
       "id": "EXP-A022-DESIGN",
       "type": "research",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-01T10:51:33.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "research-record",
+          "path": "research/experiments/EX-ROS-2026-A022--cohesion-moderated-grouped-execution.md"
+        },
+        {
+          "type": "research-record",
+          "path": "research/hypotheses/HY-ROS-2026-A029--cohesion-moderates-shared-context-value.md"
+        }
+      ],
+      "updatedAt": "2026-10-01T11:18:57.000Z",
       "telemetryExecutionIds": [
         "EXE-20261001T105134505Z-4886c699"
       ],
       "latestCheckpoint": {
-        "id": "c017c33a83e3534c3913609b",
-        "recordedAt": "2026-10-01T11:03:59.000Z",
+        "id": "04fd7a2bb9cb1ae306370161",
+        "recordedAt": "2026-10-01T11:18:54.000Z",
         "executionId": "EXE-20261001T105134505Z-4886c699",
         "repository": "repository-operating-system",
         "branch": "claude/praxis-a022-experiment-setup-xpq6a6",
-        "commit": "aa4a50566346bf142855bfe9e5a3126d042b8a88",
+        "commit": "ff08eea725d5e1ca7c5f5c0e438b3274e197249d",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
         "remoteBranch": "claude/praxis-a022-experiment-setup-xpq6a6",
-        "remoteCommit": "aa4a50566346bf142855bfe9e5a3126d042b8a88",
-        "summary": "A022 design, affinity model, frozen cohorts, protocols, blinding, records committed and pushed",
-        "nextAction": "Independent review passes; fix findings; complete EXP-A022-BASELINE and EXP-A022-DESIGN",
+        "remoteCommit": "ff08eea725d5e1ca7c5f5c0e438b3274e197249d",
+        "summary": "Design frozen, reviewed and fixed; records and setup directory pushed",
+        "nextAction": "Complete; owner review of PR #141",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-01T11:18:57.000Z",
+      "conclusion": "EX-ROS-2026-A022 designed and frozen (proposed); no condition run. Readiness R11-R13 pending owner/orchestrator."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-01T10:51:33.000Z",
+  "updatedAt": "2026-10-01T11:18:57.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
