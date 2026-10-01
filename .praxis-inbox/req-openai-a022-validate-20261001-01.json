@@ -1,0 +1,18 @@
+{
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.0",
+  "requestId": "req-openai-a022-validate-20261001-01",
+  "operation": "validate",
+  "repository": {
+    "ref": "refs/heads/research/a022-affinity-falsification",
+    "expectedSha": "3ea1c9dddcf541ce9694fc5607fc0e15d8a47567"
+  },
+  "actor": {
+    "kind": "agent",
+    "id": "openai/chatgpt",
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "runtime": "chatgpt"
+  },
+  "arguments": {}
+}
