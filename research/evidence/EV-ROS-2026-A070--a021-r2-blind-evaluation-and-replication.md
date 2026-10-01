@@ -17,7 +17,7 @@ related_documents:
   - research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt
 tags: [planning, grouping, replication, blind-evaluation, context, cost]
 confidence: low
-derived_from: [EX-ROS-2026-A021-R2]
+derived_from: [EX-ROS-2026-A021]
 ---
 
 # Evidence
