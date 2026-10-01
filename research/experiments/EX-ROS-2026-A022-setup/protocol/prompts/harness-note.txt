@@ -4,8 +4,10 @@ instrumentation, not part of the task):
 1. Toolchain. If `dotnet` is missing, install it with
    `apt-get install -y dotnet-sdk-10.0` (run `apt-get update` first if the
    package is not found). That SDK bundles an older FSharp.Core, so build with
-   `dotnet build Ros.slnx --configuration Release -p:FSharpCoreImplicitPackageVersion=10.1.400`
-   and run the F# tests with `dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll`.
+   `dotnet restore Ros.slnx` and
+   `dotnet build Ros.slnx --configuration Release --no-restore -p:FSharpCoreImplicitPackageVersion=10.1.400`;
+   run the F# tests with `dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll`
+   and the Python oracle tests with `python3 -m unittest discover -s tests`.
    Never commit that property or any toolchain workaround.
 2. Pass the real current time (`date -u +%Y-%m-%dT%H:%M:%S.000Z`) to every
    --occurred-at.
@@ -13,7 +15,11 @@ instrumentation, not part of the task):
    other branch, tag or pull request, and do not open any path named
    research/experiments/EX-ROS-2026-A022* or research/hypotheses/HY-ROS-2026-A029*
    on any ref (your branch has none of them except the run directory named
-   below).
+   below). Do not read the records of earlier grouping experiments
+   (research/experiments/EX-ROS-2026-A021*, research/evidence/EV-ROS-2026-A059*,
+   EV-ROS-2026-A063* to EV-ROS-2026-A067*, research/hypotheses/HY-ROS-2026-A027*
+   and HY-ROS-2026-A028*); you only run the metrics script in step 8, you do
+   not need to read it.
 4. Implement only the work item(s) named in this message. Do not start,
    change, complete or abandon any other backlog item, including
    EXP-A022-BASELINE, WI-READY, WI-ACTIVE and any other ready item. If one of
@@ -25,7 +31,11 @@ instrumentation, not part of the task):
    in commit messages, do not refer to this experiment, to how the work is
    being executed (sessions, workers, batches, cohorts, grouping or
    independence), or to other executions. Commit messages begin with the
-   work-item ID(s) they serve.
+   work-item ID(s) they serve; the analysis commit message named in this
+   message is the only other wording allowed.
+5a. Do the work yourself in this session: do not use subagents or any
+   tool that starts another agent or model context (for example the Agent
+   or Task tool).
 6. Do not wait for CI after a push and do not poll CI. Build and run tests
    locally. CI results are collected afterwards.
 7. Work autonomously: no human will answer questions. Do not open a pull
@@ -35,7 +45,9 @@ instrumentation, not part of the task):
    commit that file together with your final change, and push. Do not edit
    the metrics file. Files under research/experiments/ must not be named
    *.md (`praxis validate` treats every .md there as an experiment record).
-9. Finish by: local build and tests passing (or failures reported), metrics
+9. "Product files" means every path outside .ros/ and outside
+   research/experiments/EX-ROS-2026-A022-runs/.
+10. Finish by: local build and tests passing (or failures reported), metrics
    committed and pushed, `./praxis work checkpoint` and
    `./praxis work complete` for each of your items, `./praxis registry build`,
    `./praxis validate`, the resulting Praxis state committed and pushed. Then

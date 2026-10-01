@@ -22,8 +22,9 @@ tags: [planning, grouping, context, cohesion, affinity, experiment]
 provenance:
   contributions:
     EXE-20261001T105134505Z-4886c699:
-      operations: [created]
+      operations: [created, modified]
       at: 2026-10-01T11:03:41.000Z
+      last: 2026-10-01T11:18:32.000Z
       actor:
         kind: agent
         id: anthropic/claude-code
@@ -76,7 +77,7 @@ grouped/independent; affinity defined before execution by the model in
    architectural inconsistencies, without a material loss in acceptance
    quality.
 2. The grouped-over-independent resource advantage (independent/grouped
-   ratios of platform cost, output tokens and summed session time) is
+   ratios of platform cost, output tokens and summed active session time) is
    materially greater for the high-affinity cohort than for the
    low-affinity cohort.
 3. The grouped-over-independent consistency advantage is greater for the

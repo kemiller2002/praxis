@@ -1,5 +1,5 @@
-The checkout is not at the expected commit. Run exactly the following
+The checkout is not in the expected state. Run exactly the following
 command and reply with its complete output and nothing else. Do not read
 any file or run any other command.
 
-git fetch --quiet origin <BRANCH> && git checkout --quiet -B <BRANCH> <EXPECTED> && git branch --quiet --set-upstream-to=origin/<BRANCH> <BRANCH> && printf 'A022-GUARD HEAD=%s ORIGIN=%s BRANCH=%s DIRTY=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse origin/<BRANCH>)" "$(git rev-parse --abbrev-ref HEAD)" "$(git status --porcelain | wc -l | tr -d ' ')"
+(git config --get-all remote.origin.fetch | grep -qxF '+refs/heads/<BRANCH>:refs/remotes/origin/<BRANCH>' || git config --add remote.origin.fetch '+refs/heads/<BRANCH>:refs/remotes/origin/<BRANCH>') && git fetch --quiet origin && git checkout --quiet --force -B <BRANCH> <EXPECTED> && git config branch.<BRANCH>.remote origin && git config branch.<BRANCH>.merge refs/heads/<BRANCH>; printf 'A022-GUARD HEAD=%s REMOTE=%s TRACKING=%s BRANCH=%s UPSTREAM=%s DIRTY=%s\n' "$(git rev-parse HEAD)" "$(git ls-remote origin refs/heads/<BRANCH> | cut -f1)" "$(git rev-parse --verify --quiet refs/remotes/origin/<BRANCH> || echo none)" "$(git symbolic-ref --quiet --short HEAD || echo DETACHED)" "$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo none)" "$(git status --porcelain | wc -l | tr -d ' ')"

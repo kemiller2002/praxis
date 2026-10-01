@@ -10,10 +10,9 @@ end of this message first.
    each) and inspect the code and documents they touch. Start all of them
    with one command:
    `./praxis work start --id <FIRST> --id ... --occurred-at ...`.
-2. Before changing any product file (anything under src/, tests/, docs/,
-   starter/, schemas/, registries/, tools/ or the repository root), write a
+2. Before changing any product file (harness note step 9), write a
    cohort-level architecture analysis to
-   research/experiments/EX-ROS-2026-A022-runs/<TOKEN>/cohort-analysis.txt
+   research/experiments/EX-ROS-2026-A022-runs/<TOKEN>/analysis-g.txt
    (plain text), using the sections of docs/group-analysis-template.md:
    the members and their acceptance criteria; a reuse inventory of existing
    parsers, rules, stores, command pipelines, conventions and test helpers,
@@ -23,8 +22,8 @@ end of this message first.
    boundaries) and where it cannot; compatibility; common tests; order and
    milestones; risks of solving each item separately. If you find little to
    share, say so: do not invent shared abstractions. Commit it alone, with
-   the message "<ALL-IDS>: cohort analysis", and push it before any product
-   change.
+   the message "<ALL-IDS>: architecture analysis before implementation",
+   and push it before any product change.
 3. Then implement the items. You may build cross-cutting infrastructure once
    and use it for several items; you need not finish the items one at a time.
    Commit and push in normal increments; each commit message begins with the
@@ -35,7 +34,7 @@ end of this message first.
    names completed and remaining items and the next action.
 5. Before completing any item, verify each of its acceptance criteria
    individually (met, partially met, not met, unknown, with the test or
-   command that shows it), append that verification to cohort-analysis.txt,
+   command that shows it), append that verification to analysis-g.txt,
    and complete the item with `./praxis work complete` and its own evidence.
    An item with a criterion not met stays active or is blocked; it is not
    completed.

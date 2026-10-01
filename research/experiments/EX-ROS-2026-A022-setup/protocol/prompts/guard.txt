@@ -3,4 +3,4 @@ and reply with its complete output and nothing else. Do not read any file,
 open any work item or run any other command yet; further instructions follow
 in the next message.
 
-git fetch --quiet origin <BRANCH> && printf 'A022-GUARD HEAD=%s ORIGIN=%s BRANCH=%s DIRTY=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse origin/<BRANCH>)" "$(git rev-parse --abbrev-ref HEAD)" "$(git status --porcelain | wc -l | tr -d ' ')"
+git fetch --quiet origin +refs/heads/<BRANCH>:refs/remotes/origin/<BRANCH>; printf 'A022-GUARD HEAD=%s REMOTE=%s TRACKING=%s BRANCH=%s UPSTREAM=%s DIRTY=%s\n' "$(git rev-parse HEAD)" "$(git ls-remote origin refs/heads/<BRANCH> | cut -f1)" "$(git rev-parse --verify --quiet refs/remotes/origin/<BRANCH> || echo none)" "$(git symbolic-ref --quiet --short HEAD || echo DETACHED)" "$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo none)" "$(git status --porcelain | wc -l | tr -d ' ')"

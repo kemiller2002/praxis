@@ -45,14 +45,24 @@ creates the execution branch at exactly B:
 
 The four `git ls-remote` results are recorded in the run record before the
 first session is created. Branch names carry no condition: the mapping from
-token to condition is recorded only in the orchestration record (blinding
+token to condition is recorded only in the sealed run record (blinding
 protocol section 3). B must be fetched by SHA if main has moved on; B is on
 the setup branch, and the orchestrator also pushes a protective tag:
 
     git tag ex-a022-baseline f806f817e4656e00550313d839b59ceea87a682d
     git push origin refs/tags/ex-a022-baseline
 
-so B stays reachable even if the setup branch is squash-merged or deleted.
+so B stays reachable even if the setup branch is deleted. The orchestrator
+also tags the initial selection commit the same way:
+
+    git tag ex-a022-selection-initial 525b7adb65ba304239e544026e21d4b2aee43e1f
+    git push origin refs/tags/ex-a022-selection-initial
+
+The setup session could not push these tags itself (its Git access is
+limited to the setup branch; the push was refused with HTTP 403). Until the
+tags exist, B and 525b7ad are reachable only as ancestors of the setup
+branch, so the setup PR must be merged with a merge commit (never squashed
+or rebased) and the branch must not be deleted before the tags are pushed.
 
 Every condition starts at B. The independent conditions then integrate
 sequentially on their own branch: worker k starts at worker k-1's final SHA

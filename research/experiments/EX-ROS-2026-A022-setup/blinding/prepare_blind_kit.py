@@ -39,12 +39,23 @@ RUNS_DIR = "research/experiments/EX-ROS-2026-A022-runs"
 NEUTRAL = {"GIT_AUTHOR_NAME": "A022 blind kit", "GIT_AUTHOR_EMAIL": "blind-kit@invalid",
            "GIT_COMMITTER_NAME": "A022 blind kit", "GIT_COMMITTER_EMAIL": "blind-kit@invalid",
            "GIT_AUTHOR_DATE": "2026-01-01T00:00:00+0000", "GIT_COMMITTER_DATE": "2026-01-01T00:00:00+0000"}
+# Experiment-specific terms only: bare "a022" is not matched because the
+# repository has unrelated records such as RQ-ROS-2026-A022 and HY-ROS-2026-A022.
 LEAK = re.compile(
     r"(?i)\b(cohort|grouped[ -]execution|independent[ -]execution|worker[ -]session"
-    r"|ex-ros-2026-a022|a022|run-[0-9a-f]{4}|shared[ -]reasoning|fresh[ -](session|context)"
-    r"|claude-session|claude\.ai/code/session_\w+|session_[A-Za-z0-9]{12,})\b")
+    r"|ex-ros-2026-a022|exp-a022[\w-]*|experiment/a022[\w/-]*|a022-runs?\b[\w/-]*"
+    r"|shared[ -]reasoning|fresh[ -](session|context)"
+    r"|claude-session|claude\.ai/code/session_\w+|session_[A-Za-z0-9]{12,}"
+    r"|EXE-(?!00000000T)[0-9]{8}T[0-9]{9}Z-[0-9a-f]{8})\b")
 TEXT_SUFFIXES = (".md", ".txt", ".rst")
-COMMENT_START = re.compile(r"//|\(\*|^\s*\*|^\s*#")
+# Execution identities and contribution times in research records and
+# registries (provenance front matter) would show how many executions an arm
+# used and when; they are neutralized in every added line of these paths.
+PROVENANCE_PATHS = ("research/", "registries/", "requirements/")
+EXE_ID = re.compile(r"EXE-[0-9]{8}T[0-9]{9}Z-[0-9a-f]{8}")
+TIMESTAMP = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?Z")
+GATE_SENTENCE = ("Not to be merged to main before experiment EX-ROS-2026-A022 is evaluated "
+                 "and the repository owner decides.")
 sys.path.insert(0, str(HERE))
 from a022_commitment import verify  # noqa: E402
 
@@ -59,19 +70,38 @@ def git_text(*args, env=None, stdin=None):
     return git(*args, env=env, stdin=stdin).decode("utf-8").strip()
 
 
+def comment_start(line):
+    """Index where a comment starts, ignoring markers inside double-quoted strings."""
+    stripped = line.lstrip()
+    if stripped.startswith(("*", "#")):
+        return len(line) - len(stripped)
+    candidates = [m.start() for m in re.finditer(r"//|\(\*", line) if line[:m.start()].count('"') % 2 == 0]
+    return min(candidates) if candidates else None
+
+
+def neutralize(path, line):
+    """Neutral execution IDs and times in provenance-bearing paths."""
+    if not path.startswith(PROVENANCE_PATHS):
+        return line, []
+    found = EXE_ID.findall(line) + [m.group(0) for m in TIMESTAMP.finditer(line)]
+    new = TIMESTAMP.sub("1970-01-01T00:00:00.000Z", EXE_ID.sub("EXE-00000000T000000000Z-00000000", line))
+    return new, found
+
+
 def redact_line(path, line):
-    """(new_line, hits): redact matches in text files and in the comment part of a code line."""
+    """(new_line, redacted, residual_in_code) for one added line."""
+    line, normalized = neutralize(path, line)
     hits = [m.group(0) for m in LEAK.finditer(line)]
     if not hits:
-        return line, [], []
-    if path.endswith(TEXT_SUFFIXES):
-        return LEAK.sub("[redacted]", line), hits, []
-    comment = COMMENT_START.search(line)
-    if comment is None:
-        return line, [], hits
-    head, tail = line[:comment.start()], line[comment.start():]
+        return line, normalized, []
+    if path.endswith(TEXT_SUFFIXES) or path.startswith(PROVENANCE_PATHS):
+        return LEAK.sub("[redacted]", line), normalized + hits, []
+    start = comment_start(line)
+    if start is None:
+        return line, normalized, hits
+    head, tail = line[:start], line[start:]
     in_code = [m.group(0) for m in LEAK.finditer(head)]
-    return head + LEAK.sub("[redacted]", tail), [m.group(0) for m in LEAK.finditer(tail)], in_code
+    return head + LEAK.sub("[redacted]", tail), normalized + [m.group(0) for m in LEAK.finditer(tail)], in_code
 
 
 def scan_file(path, text, baseline_lines=frozenset()):
@@ -87,7 +117,7 @@ def scan_file(path, text, baseline_lines=frozenset()):
 
 
 def changed_paths(final):
-    names = git_text("diff", "--name-only", "--diff-filter=AM", BASELINE, final)
+    names = git_text("diff", "--name-only", "--no-renames", "--diff-filter=AM", BASELINE, final)
     return [p for p in names.split("\n") if p and not p.startswith((".ros/", RUNS_DIR + "/"))]
 
 
@@ -125,7 +155,8 @@ def blind_arm_commit(arm, final):
 def kit_commit(kit, cohort, arms, arm_commits, commitment_hex):
     files = {
         "README.txt": kit_readme(kit, arms, arm_commits),
-        "work-items.txt": (SETUP / "criteria" / f"cohort-{cohort}.txt").read_text(encoding="utf-8"),
+        "work-items.txt": (SETUP / "criteria" / f"cohort-{cohort}.txt").read_text(encoding="utf-8")
+                          .replace(GATE_SENTENCE, "[merge-timing note removed for blinding]"),
         "evaluator-instructions.txt": (HERE / "evaluator-instructions.txt").read_text(encoding="utf-8"),
         "findings-template.json": (HERE / "findings-template.json").read_text(encoding="utf-8"),
         "mapping-commitment.sha256": commitment_hex + "\n",

@@ -72,9 +72,14 @@ before section 6.
 ------------------------------------------------------------------
 Before any kit is built:
   E1. Owner copy: the orchestrator sends reveal.json and commitment.sha256 to
-      the repository owner as files (SendUserFile, outside Git), and asks the
-      owner to confirm receipt by replying with the commitment hex. The run
-      does not continue until the owner has confirmed.
+      the repository owner outside Git: with SendUserFile if the orchestrator
+      session has that tool, otherwise by printing both in its transcript
+      (E2) and telling the owner where. It asks the owner to confirm receipt
+      by replying with the commitment hex. There is no timeout: kits are not
+      built until the owner has confirmed; the wait is recorded in the
+      public log. If the owner reports the copy lost before confirming,
+      generate again (new salt, new commitment) and record it; nothing has
+      been shown to an evaluator yet, so this costs nothing.
   E2. Transcript copy: the orchestrator prints the reveal's exact content once
       in its own session (e.g. `cat reveal.json; echo`). The orchestrator
       session transcript is owner-accessible and evaluator-inaccessible.
@@ -92,8 +97,8 @@ Before any kit is built:
       temporary directory and runs
         a022_commitment.py verify --reveal <decrypted> --commitment <hex>
       which must print "verified". The rehearsal output is recorded in the
-      orchestration record. Kits are built only after E1 confirmation and a
-      passing E4.
+      sealed run record and the public log. Kits are built only after E1
+      confirmation and a passing E4.
 The plaintext reveal never enters any repository, branch or path an
 evaluator may read, until section 6.
 
@@ -104,8 +109,8 @@ evaluator may read, until section 6.
       escrow (decrypt with PASS); any one suffices.
   R3. Run a022_commitment.py verify --reveal reveal.json --commitment <hex>
       against the commitment that was committed before evaluation (the hex
-      in each kit's mapping-commitment.sha256 and in the orchestration
-      record; all must be identical). Also recompute with sha256sum.
+      in each kit's mapping-commitment.sha256 and in the public log on the
+      orchestration branch; all must be identical). Also recompute with sha256sum.
   R4. Require an exact match. On a mismatch, stop: nothing is associated
       with conditions; the failure is recorded as invalidating the blinding
       claim, and the mapping may only be reconstructed by exact tree

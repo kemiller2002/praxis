@@ -346,8 +346,10 @@
             "runtime": "claude-code"
           },
           "at": "2026-10-01T11:03:41.000Z",
+          "last": "2026-10-01T11:18:32.000Z",
           "operations": [
-            "created"
+            "created",
+            "modified"
           ],
           "reason": "EXP-A022-DESIGN: cohesion-moderation hypothesis narrowing HY-ROS-2026-A028"
         }

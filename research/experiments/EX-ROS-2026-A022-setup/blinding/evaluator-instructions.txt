@@ -10,18 +10,18 @@ are not asked for an overall score or a winner, and "equivalent" or
 
 1. What you may use
 -------------------
-Only:
+Only these refs: this kit's branch, the two arm branches named in
+README.txt (blind/a022/<arm>), and the baseline commit named in README.txt.
+Within them, only:
   - this kit directory (README.txt, work-items.txt, the two <arm>.patch files,
     SHA256SUMS, mapping-commitment.sha256, this file, findings-template.json);
-  - the two arm branches named in README.txt (blind/a022/<arm>), and their
-    GitHub Actions results for exactly those commits;
-  - the baseline commit named in README.txt, for comparison;
-  - AGENTS.md and any repository documentation as it exists at the baseline.
-Nothing else. In particular do NOT fetch, read, list the contents of or check
-out: any branch whose name starts with experiment/ or claude/, any other
-blind/ branch or kit, any path named research/experiments/EX-ROS-2026-A022*
-outside this kit, research/hypotheses/HY-ROS-2026-A029*, any pull request, or
-any session transcript or log. Do not try to recover the mapping (for example
+  - the two arms' trees and the GitHub Actions results for exactly the two
+    arm commits;
+  - AGENTS.md and repository documentation as they are at the baseline
+    (`git show <baseline>:path`).
+Nothing else: no other branch, tag or ref (including main), no pull request,
+no other Actions run, no session transcript or log. In particular do not
+read anything under research/ except this kit directory, or registries/. Do not try to recover the mapping (for example
 by comparing trees with other branches or by brute-forcing the commitment).
 If you see something that seems to reveal how an arm was produced, do not
 pursue it: record it under "blinding" in your findings and continue.
@@ -41,8 +41,11 @@ Record the result. A mismatch stops the evaluation; report it.
   ./praxis validate
 Note: Praxis state (.ros/) on both arm branches was reset to the baseline for
 blinding, so `./praxis work show ID` reports the baseline state for the
-items, and a validate finding that depends on .ros/ may be an artifact of the
-reset; say so when you report it. If you cannot build locally, use the arm
+items; execution IDs and timestamps in added research or registry lines were
+replaced by placeholders; and some experiment-related words in comments and
+documentation read "[redacted]". A validate finding caused by any of these is
+an artifact of blinding; say so when you report it and do not count it
+against an arm. If you cannot build locally, use the arm
 commits' own GitHub Actions results and say so. Never report a build or test
 result you did not observe.
 

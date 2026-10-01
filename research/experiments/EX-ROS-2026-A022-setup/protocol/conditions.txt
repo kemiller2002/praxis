@@ -13,9 +13,14 @@ Items (frozen; criteria/cohort-*.txt; order is ordinal by ID):
 Every condition starts at baseline B on its own branch
 experiment/a022-run-<token> (baseline.txt). The only difference between the
 grouped and independent conditions of one cohort is the independent
-variable: one continuing reasoning context for the whole cohort, with a
-cohort-level analysis before implementation, versus one fresh context per
-item.
+variable: one continuing reasoning context that analyses the whole cohort
+before implementation and then implements it, versus one fresh context per
+item that analyses and implements only that item. Both write an
+architecture analysis (same template sections, same reuse inventory) before
+any product change; its scope (cohort or item) and the continuity of the
+context are what differ. A021 gave the analysis step to the grouped arm
+only; A022 makes it symmetric so that "plan before mutating" is not
+confounded with "share one context".
 
 1. Grouped protocol (A, C)
 --------------------------
@@ -25,9 +30,10 @@ One fresh implementing session per condition.
   3. Work prompt: prompts/grouped.txt with <BRANCH>, <TOKEN>, <ITEMS> (one
      line per item: ID and title), <FIRST>, <ALL-IDS> (IDs joined by
      ", ") and <HARNESS-NOTE> (prompts/harness-note.txt with <BRANCH>,
-     <TOKEN>, <LABEL> = g) substituted.
+     <TOKEN>, <LABEL> = g) substituted. A continuation session (section 4)
+     uses <LABEL> = gc1.
   4. The session reads all items before editing, writes and pushes
-     research/experiments/EX-ROS-2026-A022-runs/<token>/cohort-analysis.txt
+     research/experiments/EX-ROS-2026-A022-runs/<token>/analysis-g.txt
      before any product change (captured premeditated architecture; the
      orchestrator verifies afterwards that the first commit touching a
      product path comes after the analysis commit), identifies shared
@@ -43,8 +49,10 @@ One fresh implementing session per condition.
 Five fresh implementing sessions per condition, one per item, strictly one
 after another in the frozen order, on the condition's single branch.
   1. Each worker receives only its own item (prompts/independent.txt with
-     <ITEM>, <BRANCH>, <LABEL> = w1..w5 and the harness note) plus whatever
-     the repository itself contains.
+     <ITEM>, <BRANCH>, <TOKEN>, <LABEL> = w1..w5, and the harness note with
+     the same <BRANCH>, <TOKEN>, <LABEL>) plus whatever the repository
+     itself contains. A replacement for worker n (section 4) uses
+     <LABEL> = w<n>r1.
   2. It starts without any previous worker's transcript, scratchpad or
      reasoning: a new session, created only after the previous worker is
      idle and its final SHA is on the remote.
@@ -56,8 +64,10 @@ after another in the frozen order, on the condition's single branch.
   5. It never receives anything produced by a grouped condition (different
      branch, forbidden by the harness note; checked afterwards from its
      event log).
-  6. It implements its item normally with the same per-criterion
-     verification instruction the grouped session has.
+  6. It writes its item-level architecture analysis
+     (runs/<token>/analysis-w<n>.txt) before any product change, then
+     implements its item with the same per-criterion verification
+     instruction the grouped session has.
   7. It commits, pushes, checkpoints and completes before the next worker is
      created (post-conditions P1..P5 in start-guard.txt).
 
@@ -65,10 +75,11 @@ after another in the frozen order, on the condition's single branch.
 ----------------------------------------
 Model, runtime, environment, permission mode, baseline, items and their
 criteria, AGENTS.md and repository documentation, the harness note, the
-start guard, the instruction to verify every acceptance criterion
-individually, the metrics instrument, no CI polling, no pull requests, no
-merging. The grouped condition alone gets the cohort-analysis step; that is
-the treatment (shared reasoning before mutation), as in A021.
+start guard, an architecture analysis with a reuse inventory before any
+product change, the instruction to verify every acceptance criterion
+individually, the metrics instrument, no subagents, no CI polling, no pull
+requests, no merging. The treatment is the shared, continuing context and
+the cohort scope of its analysis.
 
 4. Stop conditions
 ------------------
@@ -85,11 +96,17 @@ as a deviation; its cost and time count for the condition. For a grouped
 condition this breaks the single shared context and is flagged as a major
 deviation in the results.
 
-Budget stop (pre-registered, per condition): 8 hours from the condition's
-first session creation, or USD 120 of platform cost, whichever comes first.
-On a budget stop the orchestrator interrupts the running session, records
-what was completed, and the condition is reported as incomplete. A single
-independent worker is also stopped after 3 hours.
+Budget stop (pre-registered, per condition): 8 hours of summed active
+session time (from delivery of each session's work prompt to the end of its
+final turn; orchestrator gaps between sessions do not count), or USD 120 of
+platform cost, whichever comes first. On a budget stop the orchestrator
+interrupts the running session, records what was completed, and the
+condition is reported as incomplete. A single independent worker is stopped
+after 3 hours of active time; that counts as a session failure for its item
+(one replacement, below). If a replacement also fails or is stopped, the item
+is recorded as incomplete and the condition continues with the next worker
+from the remote head. A grouped continuation that also fails ends the
+condition as incomplete.
 
 No other intervention: the orchestrator never fixes, edits, rebases or
 completes an implementing session's work, never answers a question except

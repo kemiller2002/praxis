@@ -5,116 +5,170 @@ Audience: the experiment orchestrator (EO), a Claude Code remote session
 that can create, message, inspect and archive other sessions
 (create_session, send_message, get_session, list_events, archive_session)
 and push to this repository. The EO implements nothing, edits no
-implementation, and is never counted in any condition's metrics.
+implementation, evaluates nothing, and is never counted in any condition's
+metrics.
 
 Everything the EO needs is in research/experiments/EX-ROS-2026-A022-setup/
-on the setup branch (or main once merged). Nothing here may be changed after
-step L1 except to record what happened; deviations are recorded, never
+on the setup branch. Nothing here may change after step L1 except by dated
+additions that record what happened; deviations are recorded, never
 silently corrected.
 
 Abbreviations: B = f806f817e4656e00550313d839b59ceea87a682d (baseline.txt);
-SETUP = research/experiments/EX-ROS-2026-A022-setup.
+SETUP = research/experiments/EX-ROS-2026-A022-setup; SEALED = a directory
+outside every repository working tree on the EO's machine (e.g.
+$HOME/a022-sealed).
+
+Why a sealed run record: anything that ties a run token to a condition
+(the token table, per-token session lists, metrics) would let anyone with
+read access to the repository map a blind arm to its condition by tree
+identity. Until the reveal, such material exists in plaintext only in SEALED,
+in the EO's own transcript and with the owner; the repository holds only
+ciphertext.
 
 O. Preparation
 --------------
-O1. Readiness: every item of SETUP/readiness-checklist.txt section 1 is
-    'pass'. Otherwise stop.
-O2. Create the orchestration branch from the setup commit the readiness
-    check passed on:
-      git push origin <setup-sha>:refs/heads/experiment/a022-orchestration
-    The run record is research/experiments/EX-ROS-2026-A022-results/run-record.txt
-    on that branch (plain text, append-only, UTC timestamps). Commit and push
-    it after every step below.
-O3. Draw four run tokens (`openssl rand -hex 2`, distinct) and a launch
-    order (a random permutation of A, B, C, D, drawn without replacement:
+O1. Readiness: re-check SETUP/readiness-checklist.txt sections 1 and 2;
+    record the setup commit SHA the check passed on (SETUP-SHA). Stop on
+    any failure.
+O2. Run-record passphrase: PASS_RUN=$(openssl rand -hex 32). Deliver it to
+    the owner (SendUserFile of a file containing it if that tool exists in
+    the EO session; otherwise print it in the EO transcript and tell the
+    owner where), and print it once in the EO transcript.
+O3. Orchestration branch from SETUP-SHA:
+      git push origin <SETUP-SHA>:refs/heads/experiment/a022-orchestration
+    Plain (public) log: research/experiments/EX-ROS-2026-A022-results/public-log.txt,
+    which never names a condition, cohort or mode, only times, step names
+    and the commitment hash once it exists. Sealed run record:
+    SEALED/run-record.txt (plaintext, append-only, UTC times), committed
+    after every step as
+      openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt -pass "pass:$PASS_RUN" \
+        -in SEALED/run-record.txt \
+        -out research/experiments/EX-ROS-2026-A022-results/sealed/run-record.txt.enc
+    (same for SEALED/metrics/*.json and any raw inputs, as *.enc). Commit and
+    push after every step below.
+O4. Draw four run tokens (`openssl rand -hex 2`, distinct) and the launch
+    order (a random permutation of A, B, C, D drawn without replacement:
       python3 -c "import secrets; l=list('ABCD'); print([l.pop(secrets.randbelow(len(l))) for _ in range(4)])"
-    ). Record:
+    ). Sealed record only:
       condition A high/grouped      token tA
       condition B high/independent  token tB
       condition C low/grouped       token tC
       condition D low/independent   token tD
       launch order ...
-O4. Protective baseline tag and four branches at B (baseline.txt "Branch
-    creation"); record the four `git ls-remote` lines.
-O5. Record the EO's own get_session (model, environment_id, permission mode,
+O5. Protective tags and four branches at B (baseline.txt "Branch
+    creation"); record the four `git ls-remote` lines (public log: tokens
+    only).
+O6. Record the EO's own get_session (model, environment_id, permission mode,
     runtime version).
 
 L. Launch (all four within 15 minutes, in the drawn order)
 -----------------------------------------------------------
-For a grouped condition (A or C), token t, cohort items in frozen order:
-  L1. create_session(source_url = https://github.com/kemiller2002/praxis,
-      source_revision = experiment/a022-run-t, title = "a022 run t",
-      no prompt). Model, environment and permission mode inherited from the
-      EO (environment-parity.txt).
-  L2. Start guard (start-guard.txt G3..G8) with EXPECTED = B.
-  L3. send_message with prompts/grouped.txt, substituting
-        <BRANCH>      experiment/a022-run-t
-        <TOKEN>       t
-        <ITEMS>       one line per item "ID: title" (criteria/cohort-*.txt)
-        <FIRST>       first item ID
-        <ALL-IDS>     the IDs joined with ", "
-        <HARNESS-NOTE> prompts/harness-note.txt with <BRANCH>, <TOKEN>, <LABEL>=g
-      Record the exact text sent (the run record keeps a copy per session).
-For an independent condition (B or D), token t:
-  L4. Worker 1 = first item; EXPECTED = B. create_session as L1; guard as
-      L2; send prompts/independent.txt with <ITEM>, <BRANCH>, <LABEL>=w1 and
-      the harness note (<LABEL>=w1).
-  Later workers are started in step M3.
+Every implementing session is created with
+  create_session(source_url = https://github.com/kemiller2002/praxis,
+                 source_revision = experiment/a022-run-<t>,
+                 outcome_branch  = experiment/a022-run-<t>,
+                 title = "a022 run <t>", no prompt)
+model, environment and permission mode inherited from the EO
+(environment-parity.txt), then put through the start guard
+(start-guard.txt G3..G7) before any work prompt.
+
+Grouped condition (A or C), token t, cohort items in frozen order
+(criteria/cohort-*.txt):
+  L1. Create, guard with EXPECTED = B.
+  L2. send_message with prompts/grouped.txt, substituting
+        <BRANCH>       experiment/a022-run-t
+        <TOKEN>        t
+        <ITEMS>        one line per item "ID: title"
+        <FIRST>        the first item ID
+        <ALL-IDS>      the item IDs joined with ", "
+        <HARNESS-NOTE> prompts/harness-note.txt with <BRANCH>, <TOKEN>,
+                       <LABEL> = g substituted
+      Record the exact text sent (sealed) and the delivery time (the
+      session's active time starts here).
+Independent condition (B or D), token t:
+  L3. Worker 1 = the first item; EXPECTED = B. Create, guard, then send
+      prompts/independent.txt with <ITEM>, <BRANCH>, <TOKEN>, <LABEL> = w1,
+      and <HARNESS-NOTE> with the same <BRANCH>, <TOKEN>, <LABEL>.
+  Later workers start in step M3.
 
 M. Monitoring
 -------------
-M1. Do not poll implementing sessions more often than every 10 minutes.
-    The only messages the EO may send to an implementing session are the
-    guard, repair and work prompts, the fixed reply to a question
-    (conditions.txt section 4), and an interrupt at a budget stop.
+M1. Except for the guard exchange (handled at once), do not poll an
+    implementing session more often than every 10 minutes. The only
+    messages the EO may send to an implementing session are the guard,
+    repair and work prompts, the fixed reply to a question (conditions.txt
+    section 4) and an interrupt at a budget stop.
 M2. A session is finished when it is idle and has reported its final SHA.
-    For every finished session record get_session (created_at, updated_at,
-    configured/context/last-served model, usage) and run the post-conditions
-    P1..P5 (start-guard.txt).
-M3. Independent conditions: as soon as worker k is finished and P1..P5 are
-    recorded, EXPECTED := the remote head; create worker k+1 (fresh session)
-    and run the guard BEFORE sending its work prompt (labels w2..w5).
-M4. Failures, replacements, continuations and budget stops: conditions.txt
-    section 4. Record each with time and reason.
-M5. Cross-condition access check, after each session: search its event log
-    (list_events) for any fetch, checkout, read or ls-remote of another
-    experiment/a022-run-* branch, of experiment/a022-orchestration, of
-    research/experiments/EX-ROS-2026-A022-setup, or of HY-ROS-2026-A029.
-    Record findings (expected none). A violation is a deviation; the session's
-    work is kept and flagged.
+    Immediately record get_session (created_at, updated_at, models, usage)
+    and the timestamp of its final assistant event from list_events (the end
+    of its active time), then run the post-conditions P1..P5
+    (start-guard.txt). Archive it only after recording.
+M3. Independent: as soon as worker k is finished and P1..P5 are recorded,
+    EXPECTED := the remote head (P1); create worker k+1 and run the guard
+    BEFORE sending its work prompt (labels w2..w5).
+M4. Failures, replacements (label w<n>r1), continuations (label gc1) and
+    budget stops: conditions.txt section 4. Record each with time and
+    reason.
+M5. Cross-condition access check after each session: search its event log
+    (list_events) for any fetch, checkout, read, log or ls-remote of
+    another experiment/a022-run-* branch, experiment/a022-orchestration,
+    claude/praxis-a022-experiment-setup-* or any blind/ ref; any path
+    research/experiments/EX-ROS-2026-A022-setup, EX-ROS-2026-A022--*,
+    HY-ROS-2026-A029 or EV-ROS-2026-A071; the earlier grouping records the
+    harness note forbids; and any subagent use (Agent/Task tool). Record
+    findings (expected none). A violation is a deviation; the work is kept
+    and flagged.
 
 C. Collection (after all four conditions finish)
 ------------------------------------------------
-C1. Final SHAs: `git ls-remote origin refs/heads/experiment/a022-run-*`.
-C2. Grouped conditions: verify the analysis commit precedes the first commit
-    touching a product path:
-      git log --reverse --format=%H B..final | while read c; do
-        git diff-tree --no-commit-id --name-only -r $c; done
-    (record the first commit that touches anything outside .ros/ and
-    research/experiments/EX-ROS-2026-A022-runs/, and the analysis commit).
+C1. Final SHAs: `git ls-remote origin refs/heads/experiment/a022-run-*`,
+    then `git fetch origin` those four branches.
+C2. Analysis-first check for every session that wrote an analysis: the
+    analysis commit must precede the first commit touching a product path
+    (anything outside .ros/ and research/experiments/EX-ROS-2026-A022-runs/):
+      git rev-list --reverse <start>..<final> | while read c; do
+        printf '%s ' "$c"; git diff-tree --no-commit-id --name-only -r "$c" | tr '\n' ' '; echo; done
+    Record the analysis commit and the first product commit for each.
 C3. Metrics per condition per SETUP/measurement/metrics-schema.json from
-    get_session, the committed session_metrics files, event logs, git
-    (commands in the schema) and GitHub Actions runs on each execution
-    branch. Write research/experiments/EX-ROS-2026-A022-results/metrics/<t>.json
-    and keep the raw inputs beside them. Unknown is null, never 0.
-C4. Do NOT read or summarize implementation quality. The EO does not
-    evaluate.
+    the recorded get_session data and event timestamps, the committed
+    session_metrics files, event logs, git (commands in the schema) and the
+    GitHub Actions runs of each execution branch. Write them to
+    SEALED/metrics/<t>.json with the raw inputs beside them and commit only
+    the ciphertext. Unknown is null, never 0.
+C4. Do NOT read or summarize implementation quality.
 
-K. Commitment, escrow and kits
-------------------------------
+K. Commitment, escrow, branch archive, kits
+-------------------------------------------
 K1. blinding/commitment-reveal.txt section 4 (generate) and section 5
-    (escrow E1..E4). Record the commitment hex in the run record.
-K2. python3 SETUP/blinding/prepare_blind_kit.py --reveal ~/a022-sealed/reveal.json
-      --commitment <hex> --out ~/a022-kit-out --push
+    (escrow E1..E4). Put the commitment hex in the public log.
+K2. Archive and remove the execution branches, so that blind trees cannot
+    be matched to conditions by reading the repository during evaluation:
+      for t in tA tB tC tD; do
+        git bundle create SEALED/run-$t.bundle refs/remotes/origin/experiment/a022-run-$t
+        openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt -pass "pass:$PASS_RUN" \
+          -in SEALED/run-$t.bundle -out research/experiments/EX-ROS-2026-A022-results/sealed/run-$t.bundle.enc
+      done
+    commit and push the ciphertexts; rehearse: decrypt each into a temporary
+    directory, `git bundle verify`, fetch it into a scratch repository and
+    compare its head with the recorded final SHA (record the output). Only
+    after all four rehearsals pass:
+      git push origin --delete experiment/a022-run-tA experiment/a022-run-tB \
+                               experiment/a022-run-tC experiment/a022-run-tD
+    (this deletion is covered by the owner's approval at readiness R11).
+    The protective tag ex-a022-baseline stays.
+K3. python3 SETUP/blinding/prepare_blind_kit.py --reveal SEALED/reveal.json
+      --commitment <hex> --out SEALED/kit-out --push
     then the checks of blinding-protocol.txt section 4 step 3. Keep
-    ~/a022-kit-out/leak-log.json and blind-refs.json out of the repository
-    until step R5 (send them to the owner with the reveal, E1).
+    SEALED/kit-out/leak-log.json and blind-refs.json sealed until R5.
 
 E. Blind evaluation (one fresh evaluator session per kit)
 ---------------------------------------------------------
-E1. Evaluator sessions: same provider and model for both kits; preferably a
-    model that did not implement the arms. Record identity.
-E2. Give each evaluator only its kit branch name and this prompt:
+E1. Evaluator sessions: the same provider and model for both kits,
+    preferably a model that did not implement the arms. Record identity.
+    A Claude Code evaluator session is created with
+    source_revision = blind/a022/<kit> (not the default branch); an
+    evaluator on another platform is given only the kit branch name.
+E2. Give each evaluator only this prompt:
       "You are a blind evaluator. Check out branch blind/a022/<kit> of
       https://github.com/kemiller2002/praxis and follow
       research/experiments/EX-ROS-2026-A022-blind-<kit>/evaluator-instructions.txt
@@ -124,12 +178,22 @@ E3. Do not answer evaluator questions beyond: "Use your best judgment within
     the instructions and record the assumption."
 E4. Record each evaluation commit SHA. The evaluations are final once
     pushed.
+E5. Audit: for Claude Code evaluator sessions, search their event logs as in
+    M5, plus any access to refs other than B, the kit and its two arms.
+    For an evaluator on another platform, only its self-reported sources are
+    available; record that limitation.
 
 R. Reveal and results
 ---------------------
-R1..R6: blinding/commitment-reveal.txt section 6. Then write the results
-evidence record (next free EV ID), update EX-ROS-2026-A022 (Results,
-Analysis, Conclusion), HY-ROS-2026-A029 and, where warranted,
-HY-ROS-2026-A028, applying the pre-registered analysis plan and outcome
-classes in the experiment record without changing them. Merge nothing from
+R1..R6: blinding/commitment-reveal.txt section 6. Then restore the
+execution branches from the bundles (push each bundle's head to its
+original branch name and verify it equals the recorded final SHA), commit
+the plaintext run record, metrics, raw inputs and leak log, write the
+results evidence record (next free EV ID), and update EX-ROS-2026-A022
+(Results, Analysis, Conclusion), HY-ROS-2026-A029 and, where warranted,
+HY-ROS-2026-A028, applying the pre-registered analysis plan and decision
+table in the experiment record without changing them. Merge nothing from
 the execution branches into main without a separate owner decision.
+
+The setup PR is not merged to main before step R5: on main the design would
+be visible to an evaluator session that starts from the default branch.

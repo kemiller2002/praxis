@@ -22,8 +22,9 @@ tags: [planning, grouping, context, cohesion, affinity, experiment, protocol, bl
 provenance:
   contributions:
     EXE-20261001T105134505Z-4886c699:
-      operations: [created]
+      operations: [created, modified]
       at: 2026-10-01T11:03:41.000Z
+      last: 2026-10-01T11:18:32.000Z
       actor:
         kind: agent
         id: anthropic/claude-code
@@ -65,9 +66,12 @@ condition has run and no cohort item has been implemented.
 
 Execution may begin only when every item of
 `research/experiments/EX-ROS-2026-A022-setup/readiness-checklist.txt`
-section 1 passes. At setup completion R1..R10 pass; R11 (the owner's
-approval of cohorts, protocol and cost) and R12 (a separate, explicit
-instruction to execute) are pending.
+section 1 passes. At setup completion R1..R9 and R14 pass and R10 is met by
+the setup commit the orchestrator records; R11 (the owner's approval of
+cohorts, protocol, cost and the temporary deletion of execution branches),
+R12 (a separate, explicit instruction to execute) and R13 (protective tags,
+pushed by the orchestrator) are pending. The setup PR must not be merged to
+main before the reveal.
 
 Nothing in this record or in the setup directory may change after the first
 condition starts, except dated additions that record what happened.
@@ -81,8 +85,12 @@ Deviations are recorded, never silently corrected.
 | low affinity   | C (1 session)    | D (5 fresh workers, sequential) |
 
 Independent variable: execution topology (one continuing reasoning context
-for the cohort with a cohort-level analysis before implementation, versus
-one fresh context per item). Moderator: cohort affinity, defined before
+that analyses the whole cohort before implementing it, versus one fresh
+context per item that analyses and implements only that item). Both
+topologies write an architecture analysis with a reuse inventory before any
+product change; A021 gave that step to the grouped arm only, so "plan before
+mutating" was confounded with "share one context". A022 removes that
+confound. Moderator: cohort affinity, defined before
 execution. Held constant: baseline, items and criteria, instructions,
 model, runtime, environment, permissions, toolchain, harness, metrics
 instrument, evaluator instructions.
@@ -146,7 +154,7 @@ Exact protocols and every message sent to a session are in
 
 - **Grouped (A, C)** (`conditions.txt` section 1): one fresh session;
   start guard; reads every item; writes and pushes a cohort-level
-  architecture analysis (`research/experiments/EX-ROS-2026-A022-runs/<token>/cohort-analysis.txt`,
+  architecture analysis (`research/experiments/EX-ROS-2026-A022-runs/<token>/analysis-g.txt`,
   following `docs/group-analysis-template.md`) before any product change, so
   premeditated architecture is distinguishable from later explanation;
   implements in the same context, cross-cutting where appropriate, with
@@ -154,13 +162,21 @@ Exact protocols and every message sent to a session are in
   per-criterion verification pass, no CI polling; finishes every item.
 - **Independent (B, D)** (`conditions.txt` section 2): one fresh session per
   item, strictly in order on one branch; each receives only its item and the
-  repository; may read earlier workers' code; never sees grouped material;
-  same per-criterion verification instruction; commits, checkpoints and
+  repository; writes and pushes an item-level architecture analysis
+  (`analysis-w<n>.txt`, same template sections) before any product change;
+  may read earlier workers' code; never sees grouped material; same
+  per-criterion verification instruction; commits, checkpoints and
   completes before the next worker starts.
+- **Both**: no subagents (a grouped session that delegates would no longer
+  be one context); the earlier grouping experiments' records may not be read
+  (they state the expected result); no CI polling.
 - **Stale-checkout protection** (`start-guard.txt`): before every session
   receives any task, the orchestrator verifies, from the tool output in the
-  session's event log, `HEAD == origin/<branch> == EXPECTED` (baseline, or the
-  previous worker's final SHA read from the remote) with a clean tree;
+  session's event log, that HEAD, the remote branch (`git ls-remote`) and
+  the tracking ref all equal EXPECTED (baseline, or the previous worker's
+  final SHA read from the remote), that the checked-out branch and its
+  upstream are the run branch, and that the tree is clean (sessions are
+  created with the run branch as their outcome branch);
   otherwise the session is repaired (local reset only) or replaced and the
   incident recorded, and a mismatch on the remote stops the condition.
   After each worker: the remote head equals the reported SHA, descends from
@@ -181,7 +197,9 @@ Exact protocols and every message sent to a session are in
 
 `EX-ROS-2026-A022-setup/measurement/metrics-schema.json`, collected by the
 orchestrator after all conditions finish and kept separate from quality
-evaluation: wall-clock span and summed session time; platform cost; model
+evaluation: summed active session time (work-prompt delivery to final
+event, excluding guard and orchestrator gaps; primary), wall-clock span and
+orchestration overhead (reported); platform cost; model
 requests; input, output, cache-read and cache-write tokens; file reads;
 searches; files read more than once (within a session and across a
 condition); governance-document reads; builds; test runs; failed
@@ -220,7 +238,7 @@ and before any kit exists: a CSPRNG-drawn mapping and 256-bit salt in a
 canonical JSON payload (keys sorted, no whitespace, ASCII, UTF-8, no
 trailing newline; experiment ID, arm IDs, cohort, mode, run token, execution
 branch, final SHA, kit IDs, salt); commitment = SHA-256 of those bytes,
-committed (hash only) to every kit and the orchestration record. The
+committed (hash only) to every kit and the orchestration branch's public log. The
 plaintext never enters a repository before the reveal; it is escrowed three
 ways (owner file with confirmed receipt, orchestrator transcript, and an
 AES-256 ciphertext on the orchestration branch whose passphrase goes only to
@@ -247,7 +265,7 @@ the same items), so differences in cohort size and difficulty affect both
 sides of each comparison.
 
 1. **Resource advantage** per cohort: the ratio independent/grouped for
-   (a) platform cost, (b) output tokens, (c) summed session time; also
+   (a) platform cost, (b) output tokens, (c) summed active session time; also
    reported, not primary: wall-clock span, model requests, cache-read
    tokens, file reads, searches, files read more than once across the
    condition, governance reads, builds, test runs. "Material" means a ratio
@@ -275,21 +293,52 @@ findings are reported alongside.
 
 ## Outcome classes (interpretations, fixed before execution)
 
-- **A. High-affinity grouped advantage, little or no low-affinity
-  advantage**: supports `HY-ROS-2026-A029` (cohesion moderates).
+- **A. High-affinity grouped advantage, little/no low-affinity advantage**:
+  supports `HY-ROS-2026-A029` (cohesion moderates).
 - **B. Similar grouped advantage at both affinity levels**: supports a more
   general shared-context effect; weakens cohesion as the moderator.
-- **C. No meaningful grouped advantage at either level**: weakens
-  `HY-ROS-2026-A029` and potentially `HY-ROS-2026-A028`.
-- **D. Grouped quality materially worse despite resource savings** (in
-  either cohort): weakens the claim that grouping gives net engineering
-  value (for that affinity level).
+- **C. No meaningful grouped advantage**: weakens `HY-ROS-2026-A029` and
+  potentially `HY-ROS-2026-A028`.
+- **D. Grouped quality materially worse despite resource savings**: weakens
+  the claim that grouping gives net engineering value (at that affinity
+  level).
 - **E. Low-affinity grouped worse while high-affinity grouped better**:
   strong evidence that Praxis should choose execution topology by affinity.
-- **F. Invalid or inconclusive**: a condition incomplete at a budget stop,
-  a grouped condition that needed a continuation session, a failed
-  commitment verification, or a confirmed cross-condition leak; reported as
-  such, with whatever partial evidence survives.
+- **F. Invalid or inconclusive** (protocol failure).
+
+### Decision table (exhaustive, with precedence)
+
+Inputs, per cohort c in {high, low}, from the analysis plan:
+- G_c (resource): **adv** if at least two of the three primary ratios
+  (independent/grouped: cost, output tokens, active time) are >= 1.25;
+  **dis** if at least two are <= 0.80; otherwise **none**.
+- Q_c (quality): **loss** if the grouped arm shows a material quality loss
+  (analysis plan item 3); otherwise **ok**.
+- K_c (consistency): **adv**, **dis** or **none** per analysis plan item 4
+  (the mirror condition for **dis**).
+- M (moderation): **greater** if R_high/R_low >= 1.25 for at least two of
+  the three primary ratios; **similar** if all three lie in 0.80..1.25;
+  **mixed** otherwise.
+
+Classification, first matching row wins:
+
+| # | Condition | Class |
+| --- | --- | --- |
+| 1 | a condition incomplete at a budget stop, a grouped continuation session, a failed commitment verification, or a confirmed cross-condition or evaluator leak | F |
+| 2 | G_high = adv, Q_high = ok, and (G_low = dis or Q_low = loss or K_low = dis) | E |
+| 3 | G_high = adv, Q_high = ok, M = greater, G_low = none | A (clean) |
+| 4 | G_high = adv, Q_high = ok, M = greater, G_low = adv | A (with a general effect) |
+| 5 | G_high = adv and G_low = adv and M = similar | B |
+| 6 | G_high != adv and G_low != adv | C |
+| 7 | G_high = adv, Q_high = loss | D (high) |
+| 8 | anything else (for example M = mixed, or G_high != adv with G_low = adv) | unclassified: reported descriptively, no support claimed |
+
+Qualifiers, reported with every class: D is also flagged for any cohort with
+G_c = adv and Q_c = loss (for example "A (clean) + D(low)"); K_high = adv
+strengthens A or E and its absence is stated; K_low is expected to be
+**none** for lack of cross-item decisions and does not count for or against
+A. A grouped context-pressure finding (compactions, late inconsistent
+decisions) is reported with any class.
 
 ## Acceptance criteria
 
@@ -340,6 +389,13 @@ per-kit randomized neutral IDs and a salted, escrowed commitment.
 | Excluded items left ready in the backlog | Prompts restrict each condition to its items; checked afterwards |
 | Low-cohort internal couplings (one shared file, one shared store) | Recorded in the matrix and `cohorts.txt`; findings on those pairs read accordingly |
 | Two low items (`PRAXIS-CN-GL-KINDS`, `PRAXIS-STATE-MERGE-01`) could involve design choices the owner might reject | Criteria fix the direction where the source states one; the evaluator judges against the frozen text |
+| Compound treatment (planning versus shared context) | Both topologies write an analysis with a reuse inventory before product changes; only its scope and the context's continuity differ |
+| Subagent use dissolving the single context, and transcript metrics missing subagent work | Subagents forbidden in every session; event logs checked; platform usage (primary) covers the whole session |
+| Transcript-metrics snapshot taken before each session's last steps (A021-R2 G2/C3) | Same rule in every session; it undercounts each independent worker, so transcript metrics favour independent slightly; primary metrics come from platform usage and event timestamps |
+| Implementers inferring the hypothesis from earlier records at B | The harness note forbids reading the earlier grouping records; event logs checked; residual risk recorded (the item text names EX-ROS-2026-A022) |
+| Evaluator differences confounded with cohort (one evaluator session per kit) | Same model and instructions for both; recorded as a threat; a second independent evaluation per kit is recommended if budget allows |
+| Execution history visible in GitHub Actions after the branches are archived | Evaluators forbidden from Actions runs other than the two blind commits; residual risk recorded |
+| Mapping recoverable from repository contents by tree identity | Token table and per-token records sealed; execution branches archived as encrypted bundles and deleted before kits exist, restored after the reveal |
 
 ## Setup review (three passes, 2026-10-01)
 
@@ -373,6 +429,53 @@ escrow, and deviation recording are present. Fixed during the pass: the
 metrics schema now distinguishes what the transcript instrument provides
 from what must come from event logs; the launch-order draw command was
 corrected.
+
+### Independent adversarial review (after the three passes)
+
+A separate, read-only reviewer session re-ran the checks and reported 21
+defects (5 high, 7 medium, 11 low). All of them were fixed before setup
+completion, except that the protective tags could not be pushed from this
+session; that step is now the orchestrator's.
+
+High-severity defects:
+- The start guard could pass with the right commit checked out on the wrong
+  branch or on a detached HEAD.
+- The guard read a tracking ref that might be missing, instead of the
+  remote itself.
+- Both guard defects were reproduced on throwaway repositories and then
+  fixed: `ls-remote`, an explicit refspec, branch and upstream checks, and
+  `outcome_branch`.
+- The token-to-condition mapping and the execution branches would have let
+  anyone with repository access recover the mapping by tree identity. Both
+  are now sealed, and the branches are archived before kits exist.
+- Provenance execution IDs and timestamps would have survived into blind
+  trees. They are now neutralized.
+- The primary time metric included orchestrator latency, which independent
+  conditions pay five times. It is now active time.
+
+Medium-severity defects:
+- Evaluators could reach the design on main or on the default branch.
+- The outcome classes were not exhaustive; the decision table was added.
+- Only the grouped arm had the analysis step, and subagents were
+  uncontrolled.
+- Implementers could read earlier records that state the expected result.
+- The redaction pattern both over-matched and under-matched.
+- The escrow relied on one tool with no fallback.
+- The confound between evaluator and cohort was not listed.
+
+Low-severity defects:
+- Placeholders, labels and the setup SHA were incomplete or undefined.
+- The baseline and selection commits were unprotected; the tag push was
+  refused here and is delegated to the orchestrator.
+- A commit-message rule contradicted the analysis commit message.
+- "Product path" had two definitions.
+- One cross-reference was wrong.
+- The freeze rule contradicted the mid-run fix rule.
+- A fetch step was missing.
+- Some stop cases were unspecified.
+- An ordering claim could not be verified from Git; it is now stated as
+  such.
+- The harness note was missing two CI steps.
 
 ## Product implication (future; not implemented)
 

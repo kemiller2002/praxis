@@ -28,31 +28,44 @@ Procedure
 ---------
 G1. Orchestrator: read EXPECTED from the remote, never from a worker's claim:
       git ls-remote origin refs/heads/<branch>      -> must equal EXPECTED
+    and fetch it locally (`git fetch origin <branch>`) for P2..P5.
     (for worker k>1 EXPECTED is that value, recorded right after worker k-1
     went idle and after confirming worker k-1 reported the same SHA).
 G2. Create the session (create_session, source_url = this repository,
-    source_revision = <branch>) with NO prompt, or with the guard prompt
-    below as its first and only message.
-G3. Send the GUARD PROMPT (protocol/prompts/guard.txt) with <branch>
-    substituted. It contains one command and asks for its output only.
+    source_revision = <branch>, outcome_branch = <branch> so the platform
+    pushes to exactly this branch with no session suffix) with no prompt.
+G3. Immediately send the GUARD PROMPT (prompts/guard.txt) with <branch>
+    substituted. It contains one command and asks for its output only. The
+    guard exchange is exempt from the 10-minute polling rule (orchestration
+    M1): the orchestrator waits for it and acts at once.
 G4. Read the command's actual tool output from the session's event log
     (list_events: the tool_result of the Bash call), not the model's prose.
-    Pass if and only if
-      HEAD == EXPECTED and ORIGIN == EXPECTED and BRANCH == <branch> and DIRTY == 0.
-G5. Pass: record {session, expected, head, origin, branch, dirty, time} in
-    the run record; send the work prompt.
-G6. Fail with ORIGIN == EXPECTED but HEAD != EXPECTED (stale or wrong local
-    checkout): do NOT send the work prompt. Send the REPAIR PROMPT
-    (protocol/prompts/repair.txt), which resets the local branch to EXPECTED
-    and re-runs the guard command. Re-check as in G4. Record the incident
-    (both outputs) as a deviation of kind 'stale-checkout-repaired'. If the
-    second check still fails, archive the session unused, create a new
-    session and start again at G2 (record 'session-replaced-before-work').
-G7. Fail with ORIGIN != EXPECTED (the remote is not where the orchestrator
-    expects): stop the condition. Nothing is repaired automatically: find
-    out why (unpushed work, an extra push), record it, and resume only when
-    the remote is explained and equals the intended EXPECTED.
-G8. DIRTY != 0 on a fresh session: treat as G6.
+    The guard prints HEAD, REMOTE (from `git ls-remote`, i.e. the remote
+    itself), TRACKING (refs/remotes/origin/<branch> after an explicit-refspec
+    fetch, so a single-branch clone cannot hide it), BRANCH (the checked-out
+    branch, or DETACHED), UPSTREAM (the configured upstream, which `praxis
+    work checkpoint` relies on) and DIRTY. Pass if and only if
+      HEAD == REMOTE == TRACKING == EXPECTED, BRANCH == <branch>,
+      UPSTREAM == origin/<branch> and DIRTY == 0.
+G5. Pass: record {session, expected, the full guard line, time} in the run
+    record; send the work prompt.
+G6. REMOTE == EXPECTED but anything else differs (stale or wrong local
+    commit, wrong or detached branch, missing upstream, a dirty tree): do
+    NOT send the work prompt. Send the REPAIR PROMPT (prompts/repair.txt,
+    with <branch> and <EXPECTED> substituted), which adds an explicit fetch
+    refspec, force-checks-out <branch> at EXPECTED, configures the upstream
+    and re-prints the guard line. Re-check as in G4. Record the incident
+    (both lines) as a deviation 'stale-checkout-repaired'. If the second
+    check still fails, archive the session unused, create a new session and
+    start again at G2 (record 'session-replaced-before-work').
+G7. REMOTE != EXPECTED: compare with the orchestrator's own G1 `git
+    ls-remote`. If they agree with each other but not with EXPECTED, the
+    remote is not where the orchestrator expects: stop the condition,
+    nothing is repaired automatically; find out why (unpushed work, an
+    extra push), record it, and resume only when the remote is explained
+    and equals the intended EXPECTED. If REMOTE is empty (the session cannot
+    reach the remote), treat it as a session failure: archive it unused and
+    create a new one (recorded).
 
 After each worker (post-condition)
 ----------------------------------
@@ -64,8 +77,9 @@ P3. The first commit the worker added must have EXPECTED as its parent:
       git rev-parse <that>^           -> must equal EXPECTED
 P4. No merge commits in EXPECTED..<final> (`git rev-list --merges` empty).
     A merge is recorded as a deviation, never rewritten.
-P5. The worker's item is complete in .ros at <final> (`./praxis work show
-    ITEM` on a checkout of <final>), or blocked with a recorded reason.
+P5. The worker's item is complete at <final>, or blocked with a recorded
+    reason: `git show <final>:.ros/context/current.json` names the item with
+    state complete (or blocked and its reason). No build is needed.
 P1..P5 results are recorded per worker. EXPECTED for the next worker is the
 P1 value.
 

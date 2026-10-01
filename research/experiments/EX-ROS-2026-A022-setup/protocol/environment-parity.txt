@@ -47,7 +47,8 @@ Known, unavoidable differences (recorded, not corrected)
   retry is that session's own work; it is not repaired by the orchestrator.
 
 The orchestrator never makes a fix available to one condition that is not
-available to the others. If a defect in the harness itself is found
-mid-run (for example the metrics script fails), the fix is applied
-identically to all later sessions of all conditions, recorded with the time
-it took effect, and earlier sessions are reported as measured.
+available to the others. If a defect in the harness itself is found mid-run
+(for example the metrics script fails), it is handled by a dated addition to
+the run record (the frozen files are not edited): the same workaround is
+given to all later sessions of all conditions, the time it took effect is
+recorded, and earlier sessions are reported as measured.

@@ -11,7 +11,11 @@ architectural affinity differs. "High" and "low" must therefore be defined by
 a reproducible rule over information available before implementation, not by
 intuition, and the underlying observations must stay auditable. This file is
 that rule. It was written, and the thresholds in section 6 fixed, before
-compute_affinity.py was first run on the observations.
+compute_affinity.py was first run on the observations. Git cannot prove that
+order: this file and the first computation were committed together
+(525b7ad). What Git does show is that the rule did not change when its
+result was unfavourable: the first computation rejected the designed high
+cohort, and the selection, not the thresholds, changed.
 
 2. Inputs (all pre-execution)
 -----------------------------

@@ -37,8 +37,10 @@
   },
   "metrics": {
     "time": {
-      "elapsed.span_seconds": "first session createdAt to last session idleAt (independent includes the gaps between workers)",
-      "elapsed.session_sum_seconds": "sum over sessions of idleAt - createdAt",
+      "elapsed.active_sum_seconds": "PRIMARY. Sum over sessions of (timestamp of the session's final assistant event - delivery time of its work prompt), both from the event log; excludes session creation, the start guard and orchestrator gaps, which a grouped condition pays once and an independent condition five times",
+      "elapsed.span_seconds": "first work-prompt delivery to the last session's final event (independent includes the gaps between workers); reported, not primary",
+      "elapsed.session_sum_seconds": "sum over sessions of get_session updated_at - created_at, captured immediately when the session finishes; reported, not primary",
+      "orchestration_overhead_seconds": "span minus active sum; reported separately",
       "elapsed.time_to_first_product_edit_seconds": "per session, from session_metrics.py (first code mutation)"
     },
     "platform": {

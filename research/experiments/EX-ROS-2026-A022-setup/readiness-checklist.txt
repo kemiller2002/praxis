@@ -2,7 +2,8 @@ EX-ROS-2026-A022 -- readiness checklist
 =======================================
 
 Execution (orchestration.txt step L1) may begin only when every item in
-section 1 is 'pass'. The orchestrator re-checks the mechanical items itself
+section 1 is 'pass' (R13 is completed by the orchestrator itself at O5,
+before L1). The orchestrator re-checks the mechanical items itself
 at step O1 and records the result; it does not rely on this file's status
 column alone.
 
@@ -33,15 +34,22 @@ setup commit itself is named in the experiment record's "Status and gate").
        protocol/prompts/ (guard, repair, grouped, independent,
        harness note) and the evaluator prompt in orchestration.txt E2
   R9   SHA256SUMS in this directory verify (`sha256sum -c SHA256SUMS`)     pass
-  R10  The setup branch's final commit is green in CI and `praxis          pass when the
-       validate` passes on it (the repository's ready-to-merge             setup PR's head
-       requirement)                                                        is green (see PR)
+  R10  The setup commit to be used (SETUP-SHA) is green in CI and         see the setup
+       `praxis validate` passes on it (the repository's ready-to-merge     session's final
+       requirement); the orchestrator records SETUP-SHA at step O1         report / PR #141
   R11  The repository owner has approved the cohorts, the protocol and     PENDING (owner)
        the cost (about 12 implementing sessions, 2 evaluator sessions,
        1 orchestrator session; per-condition cap USD 120 / 8 h), recorded
        in the run record with the date
   R12  A separate, explicit instruction to execute has been given          PENDING (owner)
        (this setup was instructed not to run any condition)
+  R13  The protective tags ex-a022-baseline (B) and                         PENDING (orchestrator,
+       ex-a022-selection-initial (525b7ad) exist on the remote             step O5; the setup
+       (baseline.txt)                                                      session's push was
+                                                                           refused, HTTP 403)
+  R14  The setup PR has not been merged to main, and will not be before     pass (open, draft)
+       the reveal (orchestration.txt, last paragraph); if it ever is, it
+       is merged with a merge commit, never squashed
 
 2. Re-check at launch (orchestrator, step O1)
 ---------------------------------------------

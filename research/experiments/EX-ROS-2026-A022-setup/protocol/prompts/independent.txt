@@ -6,12 +6,25 @@ Its acceptance criteria are in its backlog description
 (`./praxis work show <ITEM>`). Earlier commits on this branch, if any, are
 part of the repository: read and build on them as you would any other code.
 
+Start the item, then, before changing any product file (harness note step
+9), write an architecture analysis for this item to
+research/experiments/EX-ROS-2026-A022-runs/<TOKEN>/analysis-<LABEL>.txt
+(plain text), using the sections of docs/group-analysis-template.md that
+apply to a single item: the item and its acceptance criteria; a reuse
+inventory of existing parsers, rules, stores, command pipelines,
+conventions and test helpers, with locations; invariants and the
+infrastructure the item shares with existing code; the design (contracts,
+stores, validation rules, error model, transaction boundaries);
+compatibility; tests; risks. Commit it alone, with the message
+"<ITEM>: architecture analysis before implementation", and push it before
+any product change.
+
 Commit and push in normal increments with <ITEM> as the commit-message
 prefix, and record `./praxis work checkpoint` after meaningful milestones.
 Before completing the item, verify each of its acceptance criteria
 individually (met, partially met, not met, unknown, with the test or command
-that shows it) and include that verification in your completion evidence or
-final report. An item with a criterion not met is not completed: it stays
-active or is blocked. Use metrics label "<LABEL>".
+that shows it) and append that verification to analysis-<LABEL>.txt. An
+item with a criterion not met is not completed: it stays active or is
+blocked. Use metrics label "<LABEL>".
 
 <HARNESS-NOTE>
