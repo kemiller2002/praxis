@@ -3965,10 +3965,10 @@
         "planning,experiment"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-01T16:06:15.091Z",
-      "updatedAt": "2026-10-01T16:06:15.000Z",
+      "updatedAt": "2026-10-01T16:06:20.000Z",
       "createdBy": "openai/chatgpt",
       "createdByActor": {
         "kind": "agent",
