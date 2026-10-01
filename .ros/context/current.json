@@ -5940,11 +5940,43 @@
         }
       },
       "completedAt": "2026-10-01T11:32:55.000Z"
+    },
+    {
+      "id": "WI-0067",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-10-01T12:35:50.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261001T121006993Z-e5417666"
+      ],
+      "latestCheckpoint": {
+        "id": "b693c7e1cc1aea0f257173c0",
+        "recordedAt": "2026-10-01T12:23:32.000Z",
+        "executionId": "EXE-20261001T121006993Z-e5417666",
+        "repository": "repository-operating-system",
+        "branch": "wi-layout",
+        "commit": "df1213ac0db34c6ced2e18837b8e9e1e44d72ee7",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/praxis-internal-namespaces-s3h5rt",
+        "remoteCommit": "df1213ac0db34c6ced2e18837b8e9e1e44d72ee7",
+        "summary": "Removed setup_ros_layout.py and its SDE-MAP row. F# 1325/1325; architecture, registry, validate pass.",
+        "nextAction": "Open the PR, wait for CI, complete WI-0067 and merge.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-01T12:35:50.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-01T11:32:55.000Z",
+  "updatedAt": "2026-10-01T12:35:50.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
