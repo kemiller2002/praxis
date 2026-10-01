@@ -3942,10 +3942,10 @@
       "description": null,
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-01T12:10:01.664Z",
-      "updatedAt": "2026-10-01T12:10:05.000Z",
+      "updatedAt": "2026-10-01T12:35:50.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
