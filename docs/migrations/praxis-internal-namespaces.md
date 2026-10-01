@@ -49,7 +49,7 @@ the historical record can observe keeps its `ros` spelling.
 | D. Historical identity | `DF-ROS-*`, `RQ-ROS-*`, `EV-ROS-*`, `HY-ROS-*`, `EX-ROS-*`, `JR-ROS-*`, `RP-ROS-*`; research records, experiment inputs/outputs (e.g. `EX-ROS-2026-A021-*` cohort and planner-config JSON naming `src/Ros.*`), `.ros/` events and telemetry naming old paths, `docs/migrations/fsharp/*`, `docs/upgrades/SDE-1.3.0-*`, `registries/*` generated from those records | immutable history: they describe what was true when written |
 | E. Serialized/versioned contracts | `schemas/ros-*.schema.json`, `collector: "ros"`, `ros-clock`, JSON property names | persisted/wire contracts; no evidence they are internal |
 | Test fixtures | `tests/Praxis.Tests/Fixtures/claude-session-transcript.jsonl` (a recorded command line naming `Ros.slnx`) | recorded input data; the adapter test asserts how it is parsed, not what it names |
-| Compatibility debt | Python oracle `tools/ros_cli.py` / `tests/test_ros_cli.py` | named "internal" by DF-ROS-2026-A050, but `EV-*` evidence and `registries/evidence.json` cite `tests/test_ros_cli.py` as a `source_uri`; renaming it would break a historical reference. Kept; revisit with a superseding evidence record if desired |
+| Resolved separately | Python oracle `tools/ros_cli.py` / `tests/test_ros_cli.py` | kept by this migration because `EV-*` evidence cites `tests/test_ros_cli.py` as a `source_uri`. That citation is historical text that no validator resolves, so WI-0066 later retired the oracle outright (its one uncovered case, supersession reciprocity, now has an F# test); the file remains in Git history |
 
 ## Permanent invariant
 

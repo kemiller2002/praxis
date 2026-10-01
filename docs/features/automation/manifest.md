@@ -43,7 +43,7 @@ execution (`RQ-ROS-2026-A024`). External actions (for example
 ## Dependencies
 
 - Allowed direct dependencies: GitHub Actions, Git, the .NET SDK, Python for
-  the root legacy artifact-validator oracle, the GitHub CLI, and Praxis CLI
+  the remote action's embedded report script, the GitHub CLI, and Praxis CLI
   commands. Not Node/npm.
 
 ## Modification boundaries

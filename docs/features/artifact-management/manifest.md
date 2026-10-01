@@ -42,9 +42,10 @@ replaceable projections.
 
 ## Tests and verification
 
-- Local behavior tests: `tests/test_ros_cli.py`, artifact cases in
-  `tests/work-protocol.test.mjs`, and the F# compatibility suite linked from
-  `docs/migrations/fsharp/README.md`.
+- Local behavior tests: `tests/Praxis.Tests/ArtifactTests.fs` and
+  `GitArtifactCliTests.fs` over the frozen `tests/fixtures/artifacts` cases.
+  The Python artifact-validator oracle (`tools/ros_cli.py`) was retired once
+  the F# suite covered all of its cases (WI-0066).
 - Boundary/contract tests: `schemas/*.schema.json`, registry byte comparison,
   and old/new differential fixtures.
 - Integration/live verification: `./praxis registry check` and `./praxis validate`.
@@ -73,4 +74,4 @@ replaceable projections.
 - Owner: repository-governance
 - Last checked against implementation: 2026-09-07
 - Known gaps: the JSON schema omits the runtime-supported `medium-high`
-  confidence value; Node and Python duplicate the parser and policy.
+  confidence value.

@@ -303,10 +303,10 @@ stale — is made in F#. Planning is pure and separate from execution:
 ```bash
 dotnet build Praxis.slnx --configuration Release
 dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll    # F# unit and end-to-end CLI tests
-python3 -m unittest discover -s tests                       # Python artifact-validator oracle
 ```
 
-Requires only the .NET 10 SDK (and Python 3 for the oracle tests). This
+Requires the .NET 10 SDK, plus Python 3, which one remote-action script test
+invokes. This
 repository is F#/.NET only (`RQ-ROS-2026-A024`): it owns no JavaScript,
 TypeScript, npm or Node tooling, and `./praxis architecture check` (also part of
 `./praxis validate`) fails, naming each path, if any appears.
