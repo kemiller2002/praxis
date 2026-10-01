@@ -1,0 +1,139 @@
+EX-ROS-2026-A022 -- work-item affinity model (frozen before any arm runs)
+=======================================================================
+
+Plain text on purpose: every *.md under research/experiments is parsed as an
+experiment record by `praxis validate`.
+
+1. Purpose
+----------
+A022 compares grouped and independent execution on two cohorts whose
+architectural affinity differs. "High" and "low" must therefore be defined by
+a reproducible rule over information available before implementation, not by
+intuition, and the underlying observations must stay auditable. This file is
+that rule. It was written, and the thresholds in section 6 fixed, before
+compute_affinity.py was first run on the observations.
+
+2. Inputs (all pre-execution)
+-----------------------------
+- observations.json: one observation sheet per candidate item, recorded from
+  the item's baseline backlog description, the requirement or issue it cites,
+  and the baseline code (commit f806f817e4656e00550313d839b59ceea87a682d).
+  No implementation of any candidate existed or was inspected.
+- relations.json: directional judgments between items (producer/consumer,
+  ordering, assumption propagation), each 'definite' (follows from stated
+  acceptance criteria or requirement text) or 'possible' (a plausible
+  implementation choice, not required).
+- The Praxis planner (`praxis plan groups`, planner 3.6.0) at the baseline,
+  as an independent, tool-computed corroboration (section 7).
+
+3. Dimensions
+-------------
+For each unordered pair (i, j) the model records twelve dimensions. Each is
+recorded as present or absent together with the shared elements that make it
+present, so a reader can audit every cell.
+
+  D1  concepts      shared named domain concepts               (observations.concepts)
+  D2  state         shared durable store, at least one side     (observations.state)
+                    writing it or changing its format; a store
+                    both sides only read does not count
+  D3  invariants    shared named invariants                     (observations.invariants)
+  D4  files         shared expected files (exact path or the    (observations.files)
+                    same new-file glob)
+  D5  surfaces      shared public surface: CLI command, HTTP    (observations.surfaces)
+                    route family, JSON contract
+  D6  producer      a definite producer/consumer relation       (relations.json)
+                    in either direction
+  D7  ordering      a definite ordering dependency              (relations.json)
+  D8  validation    shared named validation rules               (observations.validation)
+  D9  errors        shared named error/refusal model            (observations.errors)
+  D10 transactions  shared named transaction boundary           (observations.transactions)
+  D11 tests         shared test surfaces (test files)           (observations.tests)
+  D12 assumptions   a definite assumption-propagation relation  (relations.json)
+                    in either direction ("one item is likely to
+                    change assumptions used by another")
+
+Strong dimensions are the ones that, if present, mean one item's design
+decisions bind the other: D2 state, D3 invariants, D6 producer/consumer,
+D10 transactions, D12 assumption propagation. The others (shared files, tests,
+surfaces, concepts) are weaker: they show proximity, not necessarily a shared
+decision.
+
+4. Generic elements (excluded from counts, reported separately)
+---------------------------------------------------------------
+Some elements are touched by almost every change in this repository and would
+make every pair look related. They are listed here and excluded from the
+counts; the matrix still shows them under "generic overlaps".
+
+  src/Ros.Cli/Program.fs      (the CLI dispatcher; most commands are wired here)
+  docs/cli.md                 (command reference)
+  cli:validate                (aggregates every contributor's findings)
+  err:validate-finding        (the uniform validate finding shape)
+
+No other exclusion is applied.
+
+5. Reported measures
+--------------------
+Per pair:
+  - dims: the dimensions present (D1..D12) with their shared elements;
+  - count: number of dimensions present (0..12);
+  - strong: number of strong dimensions present (0..5);
+  - possible: 'possible' relations, listed, never counted.
+Per cohort (over its unordered pairs):
+  - the number of pairs, the distribution of count and strong, the median
+    count, the minimum strong, the number of pairs with strong >= 1;
+  - a per-dimension coverage line: in how many pairs each dimension is
+    present.
+No weighted or composite quality score is computed. The counts are a
+reading aid; the observations are the evidence.
+
+6. Classification rule (fixed before computation)
+-------------------------------------------------
+A cohort is HIGH-AFFINITY when all of:
+  H1  every pair has at least one strong dimension;
+  H2  the median pair count is at least 5 of 12;
+  H3  at least half of the pairs have two or more strong dimensions.
+
+A cohort is LOW-AFFINITY when all of:
+  L1  no pair has more than one strong dimension;
+  L2  at most one fifth of the pairs (3 of 15 for six items) have a strong
+      dimension at all;
+  L3  the median pair count is at most 1 of 12.
+
+Low affinity means little coupling, not none: a shared file or one shared
+store is allowed and recorded. Neither rule mentions size, difficulty or
+quality.
+
+If a selected cohort fails its rule, the selection, not the rule, changes,
+and the failure and the change are recorded in selection-log.txt with the
+computation that showed them (both are reproducible from Git history).
+
+Cohort sizes are equal. If removing an item from one cohort makes the sizes
+differ, the other cohort is reduced by removing its item with the fewest
+acceptance criteria, ties broken by the fewest expected files (the smallest
+stated scope), because a size difference and a complexity difference are
+both pre-registered threats and this choice reduces the second. The rule
+does not look at affinity counts.
+
+7. Planner corroboration (secondary)
+------------------------------------
+The Praxis planner computes affinity from item metadata (tags, cited
+requirement IDs, dependencies, declared areas). It is reported for both
+cohorts with (a) the default configuration, i.e. nothing the designer
+supplied beyond the backlog items themselves, and (b) planner-config-areas.json,
+which declares each item's expected files (the 'files' of observations.json,
+at directory granularity where the planner needs it). Expected corroboration:
+the high cohort forms one planner group with affinity medium or higher; no two
+low-cohort items share a planner group or a planner affinity above low.
+
+Known circularity: the new items' tags, cited requirement IDs and declared
+dependency were written by the experiment designer, and the planner reads
+exactly those. The planner therefore corroborates consistency of the
+metadata, not independent truth. The observation matrix is primary.
+
+8. Reproducing
+--------------
+  python3 research/experiments/EX-ROS-2026-A022-setup/affinity/compute_affinity.py
+
+reads observations.json and relations.json and rewrites affinity-matrix.json
+and affinity-matrix.txt byte-for-byte deterministically (sorted keys, sorted
+pairs, no timestamps). SHA256SUMS in the setup directory pins all of them.

@@ -16,6 +16,7 @@
 | EXEC-INSTALL-109 | Execution envelopes, step ledger, worktrees, legal actions, installation registration client | complete |  | high |
 | EXEC-INSTALL-109-NPM-BIN | Keep npm bin as ros only; praxis stays canonical via native release and ./praxis | complete |  | high |
 | EXP-A022-BASELINE | Prepare and freeze the backlog baseline for experiment EX-ROS-2026-A022 | active | research, experiment | medium |
+| EXP-A022-DESIGN | Design, document and freeze experiment EX-ROS-2026-A022 (cohesion-moderated grouped execution) | ready | research, experiment | medium |
 | FEAT-AGENT-PROVENANCE | FEAT-AGENT-PROVENANCE | complete |  |  |
 | FSHARP-ONLY-MAIN-MERGE | After merging main (GH-90 remote execution): port its Node tests to F# and renumber the colliding DF/RQ records | complete | fsharp, node-removal, follow-up | high |
 | FSHARP-ONLY-REPOSITORY | Remove repository-owned Node/JavaScript/TypeScript code and tooling; make Praxis F#/.NET only and enforce it | complete | fsharp, architecture, tooling, node-removal | high |

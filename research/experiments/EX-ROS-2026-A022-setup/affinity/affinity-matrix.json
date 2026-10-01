@@ -1,0 +1,1668 @@
+{
+  "experiment": "EX-ROS-2026-A022",
+  "schema": "a022-affinity-matrix/1",
+  "baseline": "f806f817e4656e00550313d839b59ceea87a682d",
+  "inputs": [
+    "observations.json",
+    "relations.json"
+  ],
+  "strongDimensions": [
+    "D10-transactions",
+    "D12-assumptions",
+    "D2-state",
+    "D3-invariants",
+    "D6-producer"
+  ],
+  "genericExcluded": [
+    "cli:validate",
+    "docs/cli.md",
+    "err:validate-finding",
+    "src/Ros.Cli/Program.fs"
+  ],
+  "thresholds": {
+    "H2-min-median-count": 5,
+    "L3-max-median-count": 1,
+    "L2-max-strong-pair-fraction": 0.2
+  },
+  "cohorts": {
+    "high": {
+      "members": [
+        "PRAXIS-CTL-01",
+        "PRAXIS-CTL-02",
+        "PRAXIS-CTL-03",
+        "PRAXIS-CTL-04",
+        "PRAXIS-CTL-05",
+        "PRAXIS-CTL-06"
+      ],
+      "pairs": 15,
+      "countDistribution": {
+        "5": 5,
+        "6": 4,
+        "7": 5,
+        "9": 1
+      },
+      "strongDistribution": {
+        "0": 3,
+        "1": 3,
+        "2": 6,
+        "3": 2,
+        "4": 1
+      },
+      "medianCount": 6,
+      "minStrong": 0,
+      "maxStrong": 4,
+      "pairsWithStrong": 12,
+      "dimensionCoverage": {
+        "D1-concepts": 15,
+        "D2-state": 5,
+        "D3-invariants": 10,
+        "D4-files": 15,
+        "D5-surfaces": 15,
+        "D6-producer": 3,
+        "D7-ordering": 1,
+        "D8-validation": 0,
+        "D9-errors": 10,
+        "D10-transactions": 0,
+        "D11-tests": 12,
+        "D12-assumptions": 7
+      },
+      "rules": {
+        "H1-every-pair-strong>=1": false,
+        "H2-median-count>=5": true,
+        "H3-half-pairs-strong>=2": true,
+        "L1-no-pair-strong>1": false,
+        "L2-strong-pairs<=1/5": false,
+        "L3-median-count<=1": false
+      },
+      "classification": "neither"
+    },
+    "low": {
+      "members": [
+        "ACTOR-KIND-ANCHOR",
+        "ATTR-RECONCILE-SYMLINK-SUBMODULE",
+        "PRAXIS-CN-GL-KINDS",
+        "PRAXIS-PLAN-ERROR-HISTORY",
+        "PRAXIS-STATE-MERGE-01",
+        "PRAXIS-TELEMETRY-CLASSIFY-VOCAB"
+      ],
+      "pairs": 15,
+      "countDistribution": {
+        "0": 12,
+        "1": 3
+      },
+      "strongDistribution": {
+        "0": 14,
+        "1": 1
+      },
+      "medianCount": 0,
+      "minStrong": 0,
+      "maxStrong": 1,
+      "pairsWithStrong": 1,
+      "dimensionCoverage": {
+        "D1-concepts": 0,
+        "D2-state": 1,
+        "D3-invariants": 0,
+        "D4-files": 2,
+        "D5-surfaces": 0,
+        "D6-producer": 0,
+        "D7-ordering": 0,
+        "D8-validation": 0,
+        "D9-errors": 0,
+        "D10-transactions": 0,
+        "D11-tests": 0,
+        "D12-assumptions": 0
+      },
+      "rules": {
+        "H1-every-pair-strong>=1": false,
+        "H2-median-count>=5": false,
+        "H3-half-pairs-strong>=2": false,
+        "L1-no-pair-strong>1": true,
+        "L2-strong-pairs<=1/5": true,
+        "L3-median-count<=1": true
+      },
+      "classification": "low"
+    }
+  },
+  "pairs": [
+    {
+      "pair": [
+        "ACTOR-KIND-ANCHOR",
+        "ATTR-COMPLETE-BASE-REF-SWEEP"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ACTOR-KIND-ANCHOR",
+        "ATTR-RECONCILE-SYMLINK-SUBMODULE"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ACTOR-KIND-ANCHOR",
+        "PRAXIS-CN-GL-KINDS"
+      ],
+      "count": 1,
+      "strong": 0,
+      "dimensions": {
+        "D4-files": [
+          "src/Ros.Domain/Artifacts/Policy.fs"
+        ]
+      },
+      "possibleRelations": [
+        "assumption-propagation ACTOR-KIND-ANCHOR -> PRAXIS-CN-GL-KINDS: The audit may change the artifact identifier pattern in Artifacts/Policy.fs, which already includes CN and GL; the kinds work does not need that pattern to change."
+      ],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ACTOR-KIND-ANCHOR",
+        "PRAXIS-CTL-01"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ACTOR-KIND-ANCHOR",
+        "PRAXIS-CTL-02"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ACTOR-KIND-ANCHOR",
+        "PRAXIS-CTL-03"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ACTOR-KIND-ANCHOR",
+        "PRAXIS-CTL-04"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ACTOR-KIND-ANCHOR",
+        "PRAXIS-CTL-05"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ACTOR-KIND-ANCHOR",
+        "PRAXIS-CTL-06"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ACTOR-KIND-ANCHOR",
+        "PRAXIS-PLAN-ERROR-HISTORY"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ACTOR-KIND-ANCHOR",
+        "PRAXIS-STATE-MERGE-01"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ACTOR-KIND-ANCHOR",
+        "PRAXIS-TELEMETRY-CLASSIFY-VOCAB"
+      ],
+      "count": 1,
+      "strong": 0,
+      "dimensions": {
+        "D4-files": [
+          "src/Ros.Domain/Telemetry/TelemetryValidation.fs"
+        ]
+      },
+      "possibleRelations": [
+        "assumption-propagation ACTOR-KIND-ANCHOR -> PRAXIS-TELEMETRY-CLASSIFY-VOCAB: The audit may touch patterns in TelemetryValidation.fs; the classification vocabulary check is a list membership, not a regular expression."
+      ],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ACTOR-KIND-ANCHOR",
+        "WORK-CAPTURE-ID-COLLISION"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ATTR-COMPLETE-BASE-REF-SWEEP",
+        "ATTR-RECONCILE-SYMLINK-SUBMODULE"
+      ],
+      "count": 7,
+      "strong": 2,
+      "dimensions": {
+        "D1-concepts": [
+          "reconciled-attribution"
+        ],
+        "D2-state": [
+          "state:.ros/events/events.jsonl"
+        ],
+        "D4-files": [
+          "src/Ros.Domain/Work/Reconciliation.fs",
+          "src/Ros.Infrastructure/Git/GitRepository.fs"
+        ],
+        "D5-surfaces": [
+          "cli:work reconcile"
+        ],
+        "D8-validation": [
+          "rule:reconciliation-coverage"
+        ],
+        "D11-tests": [
+          "tests/Ros.Tests/WorkReconciliationTests.fs"
+        ],
+        "D12-assumptions": [
+          "ATTR-COMPLETE-BASE-REF-SWEEP -> ATTR-RECONCILE-SYMLINK-SUBMODULE: Both change what reconciliation must cover (DF-ROS-2026-A040): moving post-hoc paths to reconcile increases the paths ReconciliationCoverage must content-match."
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ATTR-COMPLETE-BASE-REF-SWEEP",
+        "PRAXIS-CN-GL-KINDS"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ATTR-COMPLETE-BASE-REF-SWEEP",
+        "PRAXIS-CTL-01"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": [
+        "src/Ros.Cli/Program.fs"
+      ]
+    },
+    {
+      "pair": [
+        "ATTR-COMPLETE-BASE-REF-SWEEP",
+        "PRAXIS-CTL-02"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ATTR-COMPLETE-BASE-REF-SWEEP",
+        "PRAXIS-CTL-03"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ATTR-COMPLETE-BASE-REF-SWEEP",
+        "PRAXIS-CTL-04"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ATTR-COMPLETE-BASE-REF-SWEEP",
+        "PRAXIS-CTL-05"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ATTR-COMPLETE-BASE-REF-SWEEP",
+        "PRAXIS-CTL-06"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ATTR-COMPLETE-BASE-REF-SWEEP",
+        "PRAXIS-PLAN-ERROR-HISTORY"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ATTR-COMPLETE-BASE-REF-SWEEP",
+        "PRAXIS-STATE-MERGE-01"
+      ],
+      "count": 2,
+      "strong": 2,
+      "dimensions": {
+        "D2-state": [
+          "state:.ros/events/events.jsonl"
+        ],
+        "D10-transactions": [
+          "txn:work-state-transaction"
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": [
+        "src/Ros.Cli/Program.fs"
+      ]
+    },
+    {
+      "pair": [
+        "ATTR-COMPLETE-BASE-REF-SWEEP",
+        "PRAXIS-TELEMETRY-CLASSIFY-VOCAB"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": [
+        "src/Ros.Cli/Program.fs"
+      ]
+    },
+    {
+      "pair": [
+        "ATTR-COMPLETE-BASE-REF-SWEEP",
+        "WORK-CAPTURE-ID-COLLISION"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": [
+        "src/Ros.Cli/Program.fs"
+      ]
+    },
+    {
+      "pair": [
+        "ATTR-RECONCILE-SYMLINK-SUBMODULE",
+        "PRAXIS-CN-GL-KINDS"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": [
+        "err:validate-finding"
+      ]
+    },
+    {
+      "pair": [
+        "ATTR-RECONCILE-SYMLINK-SUBMODULE",
+        "PRAXIS-CTL-01"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ATTR-RECONCILE-SYMLINK-SUBMODULE",
+        "PRAXIS-CTL-02"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ATTR-RECONCILE-SYMLINK-SUBMODULE",
+        "PRAXIS-CTL-03"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ATTR-RECONCILE-SYMLINK-SUBMODULE",
+        "PRAXIS-CTL-04"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ATTR-RECONCILE-SYMLINK-SUBMODULE",
+        "PRAXIS-CTL-05"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ATTR-RECONCILE-SYMLINK-SUBMODULE",
+        "PRAXIS-CTL-06"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ATTR-RECONCILE-SYMLINK-SUBMODULE",
+        "PRAXIS-PLAN-ERROR-HISTORY"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ATTR-RECONCILE-SYMLINK-SUBMODULE",
+        "PRAXIS-STATE-MERGE-01"
+      ],
+      "count": 1,
+      "strong": 1,
+      "dimensions": {
+        "D2-state": [
+          "state:.ros/events/events.jsonl"
+        ]
+      },
+      "possibleRelations": [
+        "assumption-propagation PRAXIS-STATE-MERGE-01 -> ATTR-RECONCILE-SYMLINK-SUBMODULE: Reconciliation coverage reads reconciliation events from events.jsonl; a merge that reorders or deduplicates events could matter only if coverage depended on order, which its criteria do not state."
+      ],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ATTR-RECONCILE-SYMLINK-SUBMODULE",
+        "PRAXIS-TELEMETRY-CLASSIFY-VOCAB"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "ATTR-RECONCILE-SYMLINK-SUBMODULE",
+        "WORK-CAPTURE-ID-COLLISION"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": [
+        "err:validate-finding"
+      ]
+    },
+    {
+      "pair": [
+        "PRAXIS-CN-GL-KINDS",
+        "PRAXIS-CTL-01"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CN-GL-KINDS",
+        "PRAXIS-CTL-02"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CN-GL-KINDS",
+        "PRAXIS-CTL-03"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CN-GL-KINDS",
+        "PRAXIS-CTL-04"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CN-GL-KINDS",
+        "PRAXIS-CTL-05"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CN-GL-KINDS",
+        "PRAXIS-CTL-06"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CN-GL-KINDS",
+        "PRAXIS-PLAN-ERROR-HISTORY"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CN-GL-KINDS",
+        "PRAXIS-STATE-MERGE-01"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CN-GL-KINDS",
+        "PRAXIS-TELEMETRY-CLASSIFY-VOCAB"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CN-GL-KINDS",
+        "WORK-CAPTURE-ID-COLLISION"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": [
+        "err:validate-finding"
+      ]
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-01",
+        "PRAXIS-CTL-02"
+      ],
+      "count": 5,
+      "strong": 0,
+      "dimensions": {
+        "D1-concepts": [
+          "control-plane-host"
+        ],
+        "D4-files": [
+          "docs/web-interface.md",
+          "src/Ros.Cli/WebHttp.fs",
+          "src/Ros.Cli/WebInterface.fs",
+          "src/Ros.Contracts/ControlPlane/*"
+        ],
+        "D5-surfaces": [
+          "contract:control-plane-json",
+          "http:control-plane-api"
+        ],
+        "D9-errors": [
+          "err:http-json-error-body"
+        ],
+        "D11-tests": [
+          "tests/Ros.Tests/WebInterfaceTests.fs"
+        ]
+      },
+      "possibleRelations": [
+        "assumption-propagation PRAXIS-CTL-01 -> PRAXIS-CTL-02: The diagnostics endpoint may establish the JSON envelope and error-body convention later endpoints reuse."
+      ],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-01",
+        "PRAXIS-CTL-03"
+      ],
+      "count": 5,
+      "strong": 0,
+      "dimensions": {
+        "D1-concepts": [
+          "control-plane-host"
+        ],
+        "D4-files": [
+          "docs/web-interface.md",
+          "src/Ros.Cli/WebHttp.fs",
+          "src/Ros.Cli/WebInterface.fs",
+          "src/Ros.Contracts/ControlPlane/*"
+        ],
+        "D5-surfaces": [
+          "contract:control-plane-json",
+          "http:control-plane-api"
+        ],
+        "D9-errors": [
+          "err:http-json-error-body"
+        ],
+        "D11-tests": [
+          "tests/Ros.Tests/WebInterfaceTests.fs"
+        ]
+      },
+      "possibleRelations": [
+        "assumption-propagation PRAXIS-CTL-01 -> PRAXIS-CTL-03: As above."
+      ],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-01",
+        "PRAXIS-CTL-04"
+      ],
+      "count": 5,
+      "strong": 0,
+      "dimensions": {
+        "D1-concepts": [
+          "control-plane-host"
+        ],
+        "D4-files": [
+          "docs/web-interface.md",
+          "src/Ros.Cli/WebHttp.fs",
+          "src/Ros.Cli/WebInterface.fs",
+          "src/Ros.Contracts/ControlPlane/*"
+        ],
+        "D5-surfaces": [
+          "contract:control-plane-json",
+          "http:control-plane-api"
+        ],
+        "D9-errors": [
+          "err:http-json-error-body"
+        ],
+        "D11-tests": [
+          "tests/Ros.Tests/WebInterfaceTests.fs"
+        ]
+      },
+      "possibleRelations": [
+        "assumption-propagation PRAXIS-CTL-01 -> PRAXIS-CTL-04: As above; the startup refusal and the transition refusal may share one refusal model."
+      ],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-01",
+        "PRAXIS-CTL-05"
+      ],
+      "count": 5,
+      "strong": 1,
+      "dimensions": {
+        "D1-concepts": [
+          "control-plane-host"
+        ],
+        "D4-files": [
+          "docs/web-interface.md",
+          "src/Ros.Cli/Hub.fs",
+          "src/Ros.Cli/WebHttp.fs",
+          "src/Ros.Cli/WebInterface.fs",
+          "src/Ros.Contracts/ControlPlane/*"
+        ],
+        "D5-surfaces": [
+          "contract:control-plane-json",
+          "http:control-plane-api"
+        ],
+        "D6-producer": [
+          "PRAXIS-CTL-01 -> PRAXIS-CTL-05: PRAXIS-CTL-01 criterion 3 defines the host's typed diagnostics (bind, port, authorization); PRAXIS-CTL-05's 'repository and commit identity' per response belongs to the same host-identity data."
+        ],
+        "D11-tests": [
+          "tests/Ros.Tests/HubTests.fs",
+          "tests/Ros.Tests/WebInterfaceTests.fs"
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-01",
+        "PRAXIS-CTL-06"
+      ],
+      "count": 6,
+      "strong": 1,
+      "dimensions": {
+        "D1-concepts": [
+          "control-plane-host"
+        ],
+        "D4-files": [
+          "docs/project-administration-hub.md",
+          "src/Ros.Cli/Hub.fs",
+          "src/Ros.Cli/WebHttp.fs",
+          "src/Ros.Contracts/ControlPlane/*"
+        ],
+        "D5-surfaces": [
+          "cli:hub serve",
+          "contract:control-plane-json",
+          "http:control-plane-api"
+        ],
+        "D9-errors": [
+          "err:http-json-error-body"
+        ],
+        "D11-tests": [
+          "tests/Ros.Tests/HubTests.fs"
+        ],
+        "D12-assumptions": [
+          "PRAXIS-CTL-01 -> PRAXIS-CTL-06: PRAXIS-CTL-01 changes how praxis hub serve accepts --host and reads configuration; PRAXIS-CTL-06 extends the same host."
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-01",
+        "PRAXIS-PLAN-ERROR-HISTORY"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-01",
+        "PRAXIS-STATE-MERGE-01"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": [
+        "src/Ros.Cli/Program.fs"
+      ]
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-01",
+        "PRAXIS-TELEMETRY-CLASSIFY-VOCAB"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": [
+        "src/Ros.Cli/Program.fs"
+      ]
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-01",
+        "WORK-CAPTURE-ID-COLLISION"
+      ],
+      "count": 1,
+      "strong": 0,
+      "dimensions": {
+        "D4-files": [
+          "src/Ros.Cli/Hub.fs"
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": [
+        "src/Ros.Cli/Program.fs"
+      ]
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-02",
+        "PRAXIS-CTL-03"
+      ],
+      "count": 7,
+      "strong": 2,
+      "dimensions": {
+        "D1-concepts": [
+          "api-versioning",
+          "control-plane-host",
+          "unknowns"
+        ],
+        "D3-invariants": [
+          "inv:converge-on-cli-paths",
+          "inv:no-second-canonical-store",
+          "inv:read-endpoints-never-write",
+          "inv:unknown-is-not-empty"
+        ],
+        "D4-files": [
+          "docs/web-interface.md",
+          "src/Ros.Cli/CliProcess.fs",
+          "src/Ros.Cli/WebHttp.fs",
+          "src/Ros.Cli/WebInterface.fs",
+          "src/Ros.Contracts/ControlPlane/*"
+        ],
+        "D5-surfaces": [
+          "contract:control-plane-json",
+          "http:control-plane-api"
+        ],
+        "D9-errors": [
+          "err:http-json-error-body"
+        ],
+        "D11-tests": [
+          "tests/Ros.Tests/WebInterfaceTests.fs"
+        ],
+        "D12-assumptions": [
+          "PRAXIS-CTL-02 -> PRAXIS-CTL-03: Both define 'typed, versioned' read contracts on the same host (PRX-CTL-005/011); the versioning and envelope convention chosen by one constrains the other."
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-02",
+        "PRAXIS-CTL-04"
+      ],
+      "count": 9,
+      "strong": 4,
+      "dimensions": {
+        "D1-concepts": [
+          "control-plane-host",
+          "legal-actions",
+          "semantic-state",
+          "transition-refusal-reason"
+        ],
+        "D2-state": [
+          "state:.ros/context/current.json",
+          "state:.ros/work/queue.json"
+        ],
+        "D3-invariants": [
+          "inv:converge-on-cli-paths",
+          "inv:no-second-canonical-store"
+        ],
+        "D4-files": [
+          "docs/web-interface.md",
+          "src/Ros.Cli/CliProcess.fs",
+          "src/Ros.Cli/WebHttp.fs",
+          "src/Ros.Cli/WebInterface.fs",
+          "src/Ros.Contracts/ControlPlane/*"
+        ],
+        "D5-surfaces": [
+          "contract:control-plane-json",
+          "http:/api/work",
+          "http:control-plane-api"
+        ],
+        "D6-producer": [
+          "PRAXIS-CTL-02 -> PRAXIS-CTL-04: PRAXIS-CTL-04 criterion 2 returns 'the item's resulting typed state', the work-item contract PRAXIS-CTL-02 defines."
+        ],
+        "D9-errors": [
+          "err:http-json-error-body",
+          "err:structured-refusal"
+        ],
+        "D11-tests": [
+          "tests/Ros.Tests/WebInterfaceTests.fs"
+        ],
+        "D12-assumptions": [
+          "PRAXIS-CTL-04 -> PRAXIS-CTL-02: PRAXIS-CTL-02 criterion 1 reports reasons for refused transitions; PRAXIS-CTL-04 criterion 3 defines the structured refusal. One refusal model or two is a decision either item forces on the other."
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-02",
+        "PRAXIS-CTL-05"
+      ],
+      "count": 6,
+      "strong": 2,
+      "dimensions": {
+        "D1-concepts": [
+          "api-versioning",
+          "control-plane-host"
+        ],
+        "D3-invariants": [
+          "inv:converge-on-cli-paths",
+          "inv:no-second-canonical-store",
+          "inv:read-endpoints-never-write"
+        ],
+        "D4-files": [
+          "docs/web-interface.md",
+          "src/Ros.Cli/CliProcess.fs",
+          "src/Ros.Cli/WebHttp.fs",
+          "src/Ros.Cli/WebInterface.fs",
+          "src/Ros.Contracts/ControlPlane/*"
+        ],
+        "D5-surfaces": [
+          "contract:control-plane-json",
+          "http:control-plane-api"
+        ],
+        "D11-tests": [
+          "tests/Ros.Tests/WebInterfaceTests.fs"
+        ],
+        "D12-assumptions": [
+          "PRAXIS-CTL-05 -> PRAXIS-CTL-02: PRAXIS-CTL-05 criterion 2 requires every response to carry the state fingerprint and repository/commit identity, which changes PRAXIS-CTL-02's response shape."
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-02",
+        "PRAXIS-CTL-06"
+      ],
+      "count": 7,
+      "strong": 2,
+      "dimensions": {
+        "D1-concepts": [
+          "api-versioning",
+          "control-plane-host",
+          "semantic-state"
+        ],
+        "D3-invariants": [
+          "inv:converge-on-cli-paths",
+          "inv:no-second-canonical-store",
+          "inv:read-endpoints-never-write"
+        ],
+        "D4-files": [
+          "src/Ros.Cli/CliProcess.fs",
+          "src/Ros.Cli/WebHttp.fs",
+          "src/Ros.Contracts/ControlPlane/*"
+        ],
+        "D5-surfaces": [
+          "contract:control-plane-json",
+          "http:control-plane-api"
+        ],
+        "D6-producer": [
+          "PRAXIS-CTL-02 -> PRAXIS-CTL-06: PRAXIS-CTL-06 criterion 1 reuses the single-repository work contract that PRAXIS-CTL-02 criterion 1 defines."
+        ],
+        "D7-ordering": [
+          "PRAXIS-CTL-02 -> PRAXIS-CTL-06: PRAXIS-CTL-06 states 'Depends on: PRAXIS-CTL-02 (its per-repository contract)'."
+        ],
+        "D9-errors": [
+          "err:http-json-error-body"
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-02",
+        "PRAXIS-PLAN-ERROR-HISTORY"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-02",
+        "PRAXIS-STATE-MERGE-01"
+      ],
+      "count": 1,
+      "strong": 1,
+      "dimensions": {
+        "D2-state": [
+          "state:.ros/context/current.json",
+          "state:.ros/work/queue.json"
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-02",
+        "PRAXIS-TELEMETRY-CLASSIFY-VOCAB"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-02",
+        "WORK-CAPTURE-ID-COLLISION"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-03",
+        "PRAXIS-CTL-04"
+      ],
+      "count": 7,
+      "strong": 2,
+      "dimensions": {
+        "D1-concepts": [
+          "control-plane-host"
+        ],
+        "D2-state": [
+          "state:.ros/context/current.json"
+        ],
+        "D3-invariants": [
+          "inv:converge-on-cli-paths",
+          "inv:no-second-canonical-store"
+        ],
+        "D4-files": [
+          "docs/web-interface.md",
+          "src/Ros.Cli/CliProcess.fs",
+          "src/Ros.Cli/WebHttp.fs",
+          "src/Ros.Cli/WebInterface.fs",
+          "src/Ros.Contracts/ControlPlane/*"
+        ],
+        "D5-surfaces": [
+          "contract:control-plane-json",
+          "http:control-plane-api"
+        ],
+        "D9-errors": [
+          "err:http-json-error-body"
+        ],
+        "D11-tests": [
+          "tests/Ros.Tests/WebInterfaceTests.fs"
+        ]
+      },
+      "possibleRelations": [
+        "assumption-propagation PRAXIS-CTL-03 -> PRAXIS-CTL-04: A successful complete transition records evidence that PRAXIS-CTL-03 reports; the evidence representation could be shared."
+      ],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-03",
+        "PRAXIS-CTL-05"
+      ],
+      "count": 6,
+      "strong": 2,
+      "dimensions": {
+        "D1-concepts": [
+          "api-versioning",
+          "control-plane-host"
+        ],
+        "D3-invariants": [
+          "inv:converge-on-cli-paths",
+          "inv:no-second-canonical-store",
+          "inv:read-endpoints-never-write"
+        ],
+        "D4-files": [
+          "docs/web-interface.md",
+          "src/Ros.Cli/CliProcess.fs",
+          "src/Ros.Cli/WebHttp.fs",
+          "src/Ros.Cli/WebInterface.fs",
+          "src/Ros.Contracts/ControlPlane/*"
+        ],
+        "D5-surfaces": [
+          "contract:control-plane-json",
+          "http:control-plane-api"
+        ],
+        "D11-tests": [
+          "tests/Ros.Tests/WebInterfaceTests.fs"
+        ],
+        "D12-assumptions": [
+          "PRAXIS-CTL-05 -> PRAXIS-CTL-03: As above for PRAXIS-CTL-03's responses."
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-03",
+        "PRAXIS-CTL-06"
+      ],
+      "count": 5,
+      "strong": 1,
+      "dimensions": {
+        "D1-concepts": [
+          "api-versioning",
+          "control-plane-host"
+        ],
+        "D3-invariants": [
+          "inv:converge-on-cli-paths",
+          "inv:no-second-canonical-store",
+          "inv:read-endpoints-never-write"
+        ],
+        "D4-files": [
+          "src/Ros.Cli/CliProcess.fs",
+          "src/Ros.Cli/WebHttp.fs",
+          "src/Ros.Contracts/ControlPlane/*"
+        ],
+        "D5-surfaces": [
+          "contract:control-plane-json",
+          "http:control-plane-api"
+        ],
+        "D9-errors": [
+          "err:http-json-error-body"
+        ]
+      },
+      "possibleRelations": [
+        "assumption-propagation PRAXIS-CTL-03 -> PRAXIS-CTL-06: The hub could expose executions too if it reuses the full single-repository contract."
+      ],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-03",
+        "PRAXIS-PLAN-ERROR-HISTORY"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-03",
+        "PRAXIS-STATE-MERGE-01"
+      ],
+      "count": 1,
+      "strong": 1,
+      "dimensions": {
+        "D2-state": [
+          "state:.ros/context/current.json"
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-03",
+        "PRAXIS-TELEMETRY-CLASSIFY-VOCAB"
+      ],
+      "count": 1,
+      "strong": 1,
+      "dimensions": {
+        "D2-state": [
+          "state:.ros/telemetry/executions"
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-03",
+        "WORK-CAPTURE-ID-COLLISION"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-04",
+        "PRAXIS-CTL-05"
+      ],
+      "count": 7,
+      "strong": 3,
+      "dimensions": {
+        "D1-concepts": [
+          "control-plane-host"
+        ],
+        "D2-state": [
+          "state:.ros/context/current.json",
+          "state:.ros/work/queue.json"
+        ],
+        "D3-invariants": [
+          "inv:converge-on-cli-paths",
+          "inv:no-second-canonical-store"
+        ],
+        "D4-files": [
+          "docs/web-interface.md",
+          "src/Ros.Cli/CliProcess.fs",
+          "src/Ros.Cli/WebHttp.fs",
+          "src/Ros.Cli/WebInterface.fs",
+          "src/Ros.Contracts/ControlPlane/*"
+        ],
+        "D5-surfaces": [
+          "contract:control-plane-json",
+          "http:control-plane-api"
+        ],
+        "D11-tests": [
+          "tests/Ros.Tests/WebInterfaceTests.fs"
+        ],
+        "D12-assumptions": [
+          "PRAXIS-CTL-05 -> PRAXIS-CTL-04: As above for PRAXIS-CTL-04's responses; PRAXIS-CTL-05 criterion 4 also constrains how PRAXIS-CTL-04 may write (only through the CLI path)."
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-04",
+        "PRAXIS-CTL-06"
+      ],
+      "count": 6,
+      "strong": 2,
+      "dimensions": {
+        "D1-concepts": [
+          "control-plane-host",
+          "semantic-state"
+        ],
+        "D2-state": [
+          "state:.ros/context/current.json",
+          "state:.ros/work/queue.json"
+        ],
+        "D3-invariants": [
+          "inv:converge-on-cli-paths",
+          "inv:no-second-canonical-store"
+        ],
+        "D4-files": [
+          "src/Ros.Cli/CliProcess.fs",
+          "src/Ros.Cli/WebHttp.fs",
+          "src/Ros.Contracts/ControlPlane/*"
+        ],
+        "D5-surfaces": [
+          "contract:control-plane-json",
+          "http:control-plane-api"
+        ],
+        "D9-errors": [
+          "err:http-json-error-body"
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-04",
+        "PRAXIS-PLAN-ERROR-HISTORY"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-04",
+        "PRAXIS-STATE-MERGE-01"
+      ],
+      "count": 1,
+      "strong": 1,
+      "dimensions": {
+        "D2-state": [
+          "state:.ros/context/current.json",
+          "state:.ros/work/queue.json"
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-04",
+        "PRAXIS-TELEMETRY-CLASSIFY-VOCAB"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-04",
+        "WORK-CAPTURE-ID-COLLISION"
+      ],
+      "count": 1,
+      "strong": 1,
+      "dimensions": {
+        "D2-state": [
+          "state:.ros/context/current.json",
+          "state:.ros/work/queue.json"
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-05",
+        "PRAXIS-CTL-06"
+      ],
+      "count": 7,
+      "strong": 3,
+      "dimensions": {
+        "D1-concepts": [
+          "api-versioning",
+          "control-plane-host"
+        ],
+        "D2-state": [
+          "state:.ros/hub/registry.json"
+        ],
+        "D3-invariants": [
+          "inv:converge-on-cli-paths",
+          "inv:no-second-canonical-store",
+          "inv:read-endpoints-never-write"
+        ],
+        "D4-files": [
+          "src/Ros.Cli/CliProcess.fs",
+          "src/Ros.Cli/Hub.fs",
+          "src/Ros.Cli/WebHttp.fs",
+          "src/Ros.Contracts/ControlPlane/*"
+        ],
+        "D5-surfaces": [
+          "contract:control-plane-json",
+          "http:control-plane-api"
+        ],
+        "D11-tests": [
+          "tests/Ros.Tests/HubTests.fs"
+        ],
+        "D12-assumptions": [
+          "PRAXIS-CTL-05 -> PRAXIS-CTL-06: PRAXIS-CTL-05 covers praxis hub serve too; its fingerprint/identity rule shapes PRAXIS-CTL-06's aggregated responses."
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-05",
+        "PRAXIS-PLAN-ERROR-HISTORY"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-05",
+        "PRAXIS-STATE-MERGE-01"
+      ],
+      "count": 1,
+      "strong": 1,
+      "dimensions": {
+        "D2-state": [
+          "state:.ros/context/current.json",
+          "state:.ros/work/queue.json"
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-05",
+        "PRAXIS-TELEMETRY-CLASSIFY-VOCAB"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-05",
+        "WORK-CAPTURE-ID-COLLISION"
+      ],
+      "count": 1,
+      "strong": 0,
+      "dimensions": {
+        "D4-files": [
+          "src/Ros.Cli/Hub.fs"
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-06",
+        "PRAXIS-PLAN-ERROR-HISTORY"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-06",
+        "PRAXIS-STATE-MERGE-01"
+      ],
+      "count": 1,
+      "strong": 1,
+      "dimensions": {
+        "D2-state": [
+          "state:.ros/context/current.json",
+          "state:.ros/work/queue.json"
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-06",
+        "PRAXIS-TELEMETRY-CLASSIFY-VOCAB"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-CTL-06",
+        "WORK-CAPTURE-ID-COLLISION"
+      ],
+      "count": 1,
+      "strong": 0,
+      "dimensions": {
+        "D4-files": [
+          "src/Ros.Cli/Hub.fs"
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-PLAN-ERROR-HISTORY",
+        "PRAXIS-STATE-MERGE-01"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [
+        "assumption-propagation PRAXIS-PLAN-ERROR-HISTORY -> PRAXIS-STATE-MERGE-01: If the error history is a single-document Praxis state file modified by ordinary parallel work, PRAXIS-STATE-MERGE-01 criterion 5 would have to cover or list it."
+      ],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-PLAN-ERROR-HISTORY",
+        "PRAXIS-TELEMETRY-CLASSIFY-VOCAB"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-PLAN-ERROR-HISTORY",
+        "WORK-CAPTURE-ID-COLLISION"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": []
+    },
+    {
+      "pair": [
+        "PRAXIS-STATE-MERGE-01",
+        "PRAXIS-TELEMETRY-CLASSIFY-VOCAB"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": [
+        "src/Ros.Cli/Program.fs"
+      ]
+    },
+    {
+      "pair": [
+        "PRAXIS-STATE-MERGE-01",
+        "WORK-CAPTURE-ID-COLLISION"
+      ],
+      "count": 4,
+      "strong": 3,
+      "dimensions": {
+        "D1-concepts": [
+          "work-item-identity"
+        ],
+        "D2-state": [
+          "state:.ros/context/current.json",
+          "state:.ros/work/queue.json"
+        ],
+        "D10-transactions": [
+          "txn:backlog-state-transaction"
+        ],
+        "D12-assumptions": [
+          "WORK-CAPTURE-ID-COLLISION -> PRAXIS-STATE-MERGE-01: Both define how work-item identity is kept unique across the queue and the live context; a merged state can introduce exactly the cross-store collision WORK-CAPTURE-ID-COLLISION validates."
+        ]
+      },
+      "possibleRelations": [],
+      "genericOverlaps": [
+        "src/Ros.Cli/Program.fs"
+      ]
+    },
+    {
+      "pair": [
+        "PRAXIS-TELEMETRY-CLASSIFY-VOCAB",
+        "WORK-CAPTURE-ID-COLLISION"
+      ],
+      "count": 0,
+      "strong": 0,
+      "dimensions": {},
+      "possibleRelations": [],
+      "genericOverlaps": [
+        "src/Ros.Cli/Program.fs"
+      ]
+    }
+  ]
+}

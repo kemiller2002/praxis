@@ -4103,6 +4103,30 @@
       },
       "source": "manual",
       "sourceReference": "requirements/PLANNING-OPTIMIZATION.md#PRX-PLAN-170"
+    },
+    {
+      "id": "EXP-A022-DESIGN",
+      "title": "Design, document and freeze experiment EX-ROS-2026-A022 (cohesion-moderated grouped execution)",
+      "description": "Record HY-ROS-2026-A029, the EX-ROS-2026-A022 specification, the affinity model and matrix, cohort selection, protocols, metrics schema, blinding and commitment protocol, evaluator kit and readiness checklist, on top of the frozen baseline. Setup only: no experimental condition is run and no cohort item is implemented.",
+      "tags": [
+        "research",
+        "experiment"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-01T10:51:33.000Z",
+      "updatedAt": "2026-10-01T10:51:33.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
