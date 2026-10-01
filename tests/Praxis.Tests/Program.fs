@@ -104,4 +104,5 @@ let main _ =
     @ PostmergeReconciliationTests.tests
     @ WorkGroupTests.tests
     @ InternalNamingGuardTests.tests
+    @ InternalNamingTests.tests
     |> TestRunner.run

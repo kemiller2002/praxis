@@ -118,6 +118,7 @@
     <Compile Include="PostmergeReconciliationTests.fs" />
     <Compile Include="WorkGroupTests.fs" />
     <Compile Include="InternalNamingGuardTests.fs" />
+    <Compile Include="InternalNamingTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
