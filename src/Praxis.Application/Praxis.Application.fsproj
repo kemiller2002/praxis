@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Praxis.Domain/Praxis.Domain.fsproj" />
+    <ProjectReference Include="../Praxis.Contracts/Praxis.Contracts.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Git/Operations.fs" />
+    <Compile Include="Work/Operations.fs" />
+    <Compile Include="Work/EnvelopeReconciliationOperations.fs" />
+    <Compile Include="Work/Reconciliation.fs" />
+    <Compile Include="Work/Checkpoint.fs" />
+    <Compile Include="Telemetry/Operations.fs" />
+    <Compile Include="Artifacts/Operations.fs" />
+    <Compile Include="Ordo/Operations.fs" />
+    <Compile Include="Lifecycle/Operations.fs" />
+    <Compile Include="Planning/Operations.fs" />
+  </ItemGroup>
+</Project>

@@ -22,7 +22,7 @@ installable but receive no updates.
 | .NET global tool (NuGet) | developers with .NET 10 | `dotnet tool install -g EchelonFoundry.Praxis` | `native-release.yml` |
 | `ros-fs-<platform>` binaries (GitHub Releases) | the legacy `./ros` launcher of a project scaffolded before the Praxis rename, which downloads the one for its pinned version | automatic, on first use | `ros-fs-assets.yml`, called by `native-release.yml` |
 
-All three run the same F# CLI (`src/Ros.Cli`), and each carries the scaffold
+All three run the same F# CLI (`src/Praxis.Cli`), and each carries the scaffold
 it installs compiled into the assembly, so none of them needs anything else at
 run time. The legacy `ros-fs-<platform>` binaries are the same `praxis` binary
 shipped under the legacy name so those projects keep working
@@ -132,8 +132,8 @@ not at its upstream head, and a version that is malformed or not newer.
 Before releasing, run the same gate locally:
 
 ```bash
-dotnet build Ros.slnx --configuration Release
-dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll
+dotnet build Praxis.slnx --configuration Release
+dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
 ./praxis architecture check
 ./praxis registry check
 ./praxis validate
@@ -170,7 +170,7 @@ There is no separate payload package. The starter scaffold, templates,
 schemas, telemetry configuration and the agent documents are compiled into
 the CLI assembly, so the native bundle, the .NET tool and the legacy `ros-fs`
 binaries all carry the same payload. The lifecycle tests in
-`tests/Ros.Tests` (for example `LifecycleCliTests.fs`) exercise the documented
+`tests/Praxis.Tests` (for example `LifecycleCliTests.fs`) exercise the documented
 lifecycle commands against throwaway repositories.
 
 ## Legacy compatibility

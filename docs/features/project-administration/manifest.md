@@ -11,11 +11,11 @@ of truth.
 - State, including presentation state: `.ros/hub/registry.json` and derived
   `.ros/hub/registry.md`; decision `DF-ROS-2026-A009` (implementation language:
   `DF-ROS-2026-A049`, superseding `DF-ROS-2026-A033`'s Node web/hub exception).
-- Pure model and decisions: `src/Ros.Cli/Hub.fs` module `HubRegistry` (registry
+- Pure model and decisions: `src/Praxis.Cli/Hub.fs` module `HubRegistry` (registry
   parse/render, Markdown projection, `register`/`unregister`/`find`, spoke
   repository-id resolution, spoke command lines, row annotation/merge, `praxis hub`
   option parsing).
-- Transitions / commands / messages: `src/Ros.Cli/Hub.fs` module `Hub`
+- Transitions / commands / messages: `src/Praxis.Cli/Hub.fs` module `Hub`
   (`registerRepo`, `unregisterRepo`, `listRepos`, `createWork`, `listWork`,
   `runSpoke`, and the `praxis hub` command dispatcher `run`).
 - Invariants and guards: repository identity/path checks (`HubRegistry.register`,
@@ -33,20 +33,20 @@ of truth.
   `praxis-hub` shell shorthand (`./praxis hub "$@"`; `ros-hub` is its
   compatibility alias), and `praxis hub serve`'s
   server-rendered pages and `/api/*` JSON routes (`HubWeb`, over `HttpHost` in
-  `src/Ros.Cli/WebHttp.fs`).
+  `src/Praxis.Cli/WebHttp.fs`).
 - Outbound: hub registry JSON/Markdown, aggregated spoke JSON/errors, and
   delegated spoke work changes.
 
 ## Tests and verification
 
-- Local behavior tests: `tests/Ros.Tests/HubTests.fs` (registry model and
+- Local behavior tests: `tests/Praxis.Tests/HubTests.fs` (registry model and
   compatibility, command lines, routes, `praxis hub` end to end, `praxis hub serve`
   JSON API and form flows against real spoke repositories).
 - Boundary/contract tests: spoke `./praxis` JSON/exit behavior; the registry file
   format is pinned byte for byte by a fixture; no formal versioned hub API
   schema exists.
 - Integration/live verification: `praxis init --profile project-administration`
-  scaffolding is covered by `tests/Ros.Tests/LifecycleTests.fs`.
+  scaffolding is covered by `tests/Praxis.Tests/LifecycleTests.fs`.
 
 ## Dependencies
 
@@ -58,7 +58,7 @@ of truth.
 
 ## Modification boundaries
 
-- Normal: `src/Ros.Cli/Hub.fs`, `src/Ros.Cli/WebHttp.fs`, `web-hub/styles.css`,
+- Normal: `src/Praxis.Cli/Hub.fs`, `src/Praxis.Cli/WebHttp.fs`, `web-hub/styles.css`,
   project-administration starter files, docs, and tests.
 - Escalation required: any attempt to make the hub authoritative for spoke work,
   expose it beyond the trusted local boundary, or couple it to Time Entry.

@@ -185,7 +185,7 @@ script (`research/experiments/EX-ROS-2026-A021-harness/session_metrics.py`)
 into Praxis, so context overhead and cold-start cost become measurable
 (`EV-ROS-2026-A064`). The input is a Claude Code session transcript (JSON
 Lines, `~/.claude/projects/*/SESSION.jsonl`). Derivation is deterministic
-(`Ros.Domain.Telemetry.SessionTranscript`); nothing is inferred by a model.
+(`Praxis.Domain.Telemetry.SessionTranscript`); nothing is inferred by a model.
 
 | Metric | Quality | How it is derived |
 | --- | --- | --- |

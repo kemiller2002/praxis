@@ -9,8 +9,8 @@ explicit Praxis operation.
 - **How it was designed:** [`DF-ROS-2026-A041`](../research/decisions/DF-ROS-2026-A041--remote-execution-protocol-and-adapter-architecture.md).
 - **Schemas:** [`schemas/praxis-remote-request.schema.json`](../schemas/praxis-remote-request.schema.json)
   and [`schemas/praxis-remote-response.schema.json`](../schemas/praxis-remote-response.schema.json).
-- **Typed model:** `Ros.Domain.Remote` (`src/Ros.Domain/Remote/Protocol.fs`).
-- **JSON contract:** `Ros.Contracts.Remote.RemoteJson`.
+- **Typed model:** `Praxis.Domain.Remote` (`src/Praxis.Domain/Remote/Protocol.fs`).
+- **JSON contract:** `Praxis.Contracts.Remote.RemoteJson`.
 - **Operating it** (installation, permissions, upgrades, troubleshooting):
   [`remote-execution-operations.md`](remote-execution-operations.md).
 

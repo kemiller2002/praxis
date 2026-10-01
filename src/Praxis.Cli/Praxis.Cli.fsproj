@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>praxis</AssemblyName>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+  <!-- The .NET global tool (DF-ROS-2026-A044): `dotnet tool install -g
+       EchelonFoundry.Praxis` provides `praxis` wherever .NET 10 is installed.
+       The scaffold is embedded in the assembly, so the tool needs no package
+       root. Machines without .NET use the native bundles instead. -->
+  <PropertyGroup>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>praxis</ToolCommandName>
+    <PackageId>EchelonFoundry.Praxis</PackageId>
+    <Authors>Echelon Foundry</Authors>
+    <Description>Praxis (Echelon Foundry Repository Operating System): initialization, verification, work protocol, telemetry, provenance and durable checkpoints for research and engineering repositories.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/kemiller2002/praxis</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/kemiller2002/praxis</RepositoryUrl>
+    <PackageTags>praxis;repository;governance;provenance;telemetry;cli</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Praxis.Domain/Praxis.Domain.fsproj" />
+    <ProjectReference Include="../Praxis.Contracts/Praxis.Contracts.fsproj" />
+    <ProjectReference Include="../Praxis.Application/Praxis.Application.fsproj" />
+    <ProjectReference Include="../Praxis.Infrastructure/Praxis.Infrastructure.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="EchelonFoundry.Aegis.Core" Version="1.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Lifecycle.fs" />
+    <Compile Include="Foundations.fs" />
+    <Compile Include="ProvenanceCommands.fs" />
+    <Compile Include="StepCommands.fs" />
+    <Compile Include="ReconciliationCommands.fs" />
+    <Compile Include="EnvelopeReconciliationCommands.fs" />
+    <Compile Include="ArchitectureCommands.fs" />
+    <Compile Include="WebHttp.fs" />
+    <Compile Include="CliProcess.fs" />
+    <Compile Include="WebInterface.fs" />
+    <Compile Include="Hub.fs" />
+    <Compile Include="CheckpointCommands.fs" />
+    <Compile Include="RemoteCommands.fs" />
+    <Compile Include="ExecutionCommands.fs" />
+    <Compile Include="InstallationCommands.fs" />
+    <Compile Include="PlanCommands.fs" />
+    <Compile Include="WorkGroupCommands.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+</Project>

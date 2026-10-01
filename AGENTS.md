@@ -2,11 +2,11 @@
 id: GV-START-001
 title: Agent Startup Guide
 status: canonical
-version: 1.10.0
+version: 1.10.1
 owners:
   - repository-governance
 created: 2026-07-22
-updated: 2026-09-29
+updated: 2026-10-01
 review_cycle: quarterly
 supersedes: []
 superseded_by: []
@@ -225,7 +225,7 @@ JavaScript, TypeScript, npm or Node tooling, and `./praxis architecture check`
 (also part of `./praxis validate` here) fails on any such file. Do not add one;
 implement the behaviour in F#. In this checkout `./praxis` is a shell launcher
 for the built CLI; if it reports it needs building, run
-`dotnet build Ros.slnx --configuration Release` first (CI always builds before
+`dotnet build Praxis.slnx --configuration Release` first (CI always builds before
 `./praxis` runs). In an installed project `./praxis` runs the Praxis version the
 project pins, installing that native release on first use.
 

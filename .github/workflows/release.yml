@@ -41,7 +41,7 @@ jobs:
           dotnet-version: "10.0.x"
 
       - name: Build Praxis
-        run: dotnet build Ros.slnx --configuration Release
+        run: dotnet build Praxis.slnx --configuration Release
 
       - name: Use the GitHub Actions bot as the Git author
         run: |

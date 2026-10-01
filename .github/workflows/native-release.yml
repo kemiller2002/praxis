@@ -55,8 +55,8 @@ jobs:
 
       - name: Test and validate
         run: |
-          dotnet build Ros.slnx --configuration Release
-          dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll
+          dotnet build Praxis.slnx --configuration Release
+          dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
           ./praxis architecture check
           ./praxis registry check
           ./praxis validate
@@ -80,7 +80,7 @@ jobs:
             rid="$1"
             out="dist/publish/${rid}"
             rm -rf "$out"
-            dotnet publish src/Ros.Cli/Ros.Cli.fsproj               -c Release -r "$rid" --self-contained true               -p:PublishSingleFile=true               -p:IncludeNativeLibrariesForSelfExtract=true               -o "$out"
+            dotnet publish src/Praxis.Cli/Praxis.Cli.fsproj               -c Release -r "$rid" --self-contained true               -p:PublishSingleFile=true               -p:IncludeNativeLibrariesForSelfExtract=true               -o "$out"
           }
 
           publish_one linux-x64
@@ -100,7 +100,7 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf dist/nuget
-          dotnet pack src/Ros.Cli/Ros.Cli.fsproj -c Release -o dist/nuget
+          dotnet pack src/Praxis.Cli/Praxis.Cli.fsproj -c Release -o dist/nuget
           ls dist/nuget
           tool_root="$(mktemp -d)"
           project_root="$(mktemp -d)"

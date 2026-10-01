@@ -30,9 +30,23 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      # The base commit may predate the internal namespace rename
+      # (PRAXIS-INTERNAL-NAMESPACES): the CLI project was
+      # src/Ros.Cli/Ros.Cli.fsproj before it.
       - name: Build trusted reconciler
         working-directory: trusted-praxis
-        run: dotnet build src/Ros.Cli/Ros.Cli.fsproj --configuration Release
+        shell: bash
+        run: |
+          set -euo pipefail
+          project=src/Praxis.Cli/Praxis.Cli.fsproj
+          [ -f "$project" ] || project=src/Ros.Cli/Ros.Cli.fsproj
+          dotnet build "$project" --configuration Release
+          bin="$GITHUB_WORKSPACE/trusted-praxis/$(dirname "$project")/bin/Release/net10.0"
+          # The CLI assembly is praxis.dll from the Praxis rename on
+          # (DF-ROS-2026-A050), ros-fs.dll before it.
+          cli="$bin/praxis.dll"
+          [ -f "$cli" ] || cli="$bin/ros-fs.dll"
+          echo "PRAXIS_TRUSTED_CLI=$cli" >> "$GITHUB_ENV"
       - name: Checkout candidate data
         uses: actions/checkout@v4
         with:
@@ -52,11 +66,11 @@ jobs:
           shopt -s nullglob
           envelopes=(candidate/.praxis/outbox/events/*.json)
           for envelope in "${envelopes[@]}"; do
-            dotnet trusted-praxis/src/Ros.Cli/bin/Release/net10.0/ros-fs.dll \
+            dotnet "$PRAXIS_TRUSTED_CLI" \
               --root candidate reconcile --envelope "$envelope"
           done
           if [[ ${#envelopes[@]} -gt 0 ]]; then
-            dotnet trusted-praxis/src/Ros.Cli/bin/Release/net10.0/ros-fs.dll \
+            dotnet "$PRAXIS_TRUSTED_CLI" \
               --root candidate validate --json
             git -C candidate push origin "HEAD:$PRAXIS_HEAD_REF"
             while IFS= read -r tag; do

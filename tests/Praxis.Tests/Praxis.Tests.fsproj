@@ -1,0 +1,131 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Praxis.Tests</AssemblyName>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Praxis.Domain/Praxis.Domain.fsproj" />
+    <ProjectReference Include="../../src/Praxis.Contracts/Praxis.Contracts.fsproj" />
+    <ProjectReference Include="../../src/Praxis.Application/Praxis.Application.fsproj" />
+    <ProjectReference Include="../../src/Praxis.Infrastructure/Praxis.Infrastructure.fsproj" />
+    <ProjectReference Include="../../src/Praxis.Cli/Praxis.Cli.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="TestFramework.fs" />
+    <Compile Include="CliHarness.fs" />
+    <Compile Include="CliGolden.fs" />
+    <Compile Include="ArchitectureTests.fs" />
+    <Compile Include="ArtifactTests.fs" />
+    <Compile Include="PersistenceTests.fs" />
+    <Compile Include="GitTests.fs" />
+    <Compile Include="WorkTests.fs" />
+    <Compile Include="EnvelopeReconciliationTests.fs" />
+    <Compile Include="WorkPlanTests.fs" />
+    <Compile Include="BacklogTests.fs" />
+    <Compile Include="TelemetryTests.fs" />
+    <Compile Include="TelemetryResolutionTests.fs" />
+    <Compile Include="ChangeSummaryTests.fs" />
+    <Compile Include="PathFilterTests.fs" />
+    <Compile Include="WorkAttributionTests.fs" />
+    <Compile Include="QueueValidationTests.fs" />
+    <Compile Include="QueuePresentationTests.fs" />
+    <Compile Include="BacklogTransitionEffectTests.fs" />
+    <Compile Include="WorkCaptureTests.fs" />
+    <Compile Include="WorkCaptureEffectTests.fs" />
+    <Compile Include="WorkUpdateTests.fs" />
+    <Compile Include="WorkUpdateEffectTests.fs" />
+    <Compile Include="WorkAttachmentTests.fs" />
+    <Compile Include="WorkAttachmentEffectTests.fs" />
+    <Compile Include="TelemetryIdentityTests.fs" />
+    <Compile Include="WorkContextEffectTests.fs" />
+    <Compile Include="WorkContextViewTests.fs" />
+    <Compile Include="WorkListViewTests.fs" />
+    <Compile Include="TelemetryValidationTests.fs" />
+    <Compile Include="FindingContractTests.fs" />
+    <Compile Include="TelemetryQueryTests.fs" />
+    <Compile Include="TelemetryLifecycleTests.fs" />
+    <Compile Include="TelemetrySummaryTests.fs" />
+    <Compile Include="TutelaTelemetryTests.fs" />
+    <Compile Include="TelemetryFinalizeTargetTests.fs" />
+    <Compile Include="TelemetryRecordMetricTests.fs" />
+    <Compile Include="TelemetryIngestTests.fs" />
+    <Compile Include="TelemetryIngestOpenAICodexTests.fs" />
+    <Compile Include="TelemetryIngestHookTests.fs" />
+    <Compile Include="TelemetryIngestClaudeStatuslineTests.fs" />
+    <Compile Include="TelemetryIngestOtelTests.fs" />
+    <Compile Include="TelemetryIngestClaudeSessionTests.fs" />
+    <Compile Include="TelemetryClassifyTests.fs" />
+    <Compile Include="TelemetryStartTests.fs" />
+    <Compile Include="StepTelemetryTests.fs" />
+    <Compile Include="AdapterContractTests.fs" />
+    <Compile Include="AdapterCallEffectTests.fs" />
+    <Compile Include="AdapterPublishEffectTests.fs" />
+    <Compile Include="LifecycleTests.fs" />
+    <Compile Include="FoundationsTests.fs" />
+    <Compile Include="OrdoObservationTests.fs" />
+    <Compile Include="ProvenanceTests.fs" />
+    <Compile Include="ProvenanceEffectTests.fs" />
+    <Compile Include="WorkReconciliationTests.fs" />
+    <Compile Include="WorkReconciliationEffectTests.fs" />
+    <Compile Include="ImplementationLanguagePolicyTests.fs" />
+    <Compile Include="WebInterfaceTests.fs" />
+    <Compile Include="HubTests.fs" />
+    <Compile Include="WorkDecisionCliTests.fs" />
+    <Compile Include="WorkTelemetryCliTests.fs" />
+    <Compile Include="WorkGitPathsCliTests.fs" />
+    <Compile Include="WorkValidateCliTests.fs" />
+    <Compile Include="WorkBacklogCliTests.fs" />
+    <Compile Include="WorkLifecycleCliTests.fs" />
+    <Compile Include="WorkViewCliTests.fs" />
+    <Compile Include="StatusValidateCliTests.fs" />
+    <Compile Include="GitArtifactCliTests.fs" />
+    <Compile Include="CliPortSupport.fs" />
+    <Compile Include="TelemetryCliTests.fs" />
+    <Compile Include="TelemetryAdapterCliTests.fs" />
+    <Compile Include="AdapterCliTests.fs" />
+    <Compile Include="ProvenanceCliTests.fs" />
+    <Compile Include="LifecycleCliTests.fs" />
+    <Compile Include="EchelonDoctorTests.fs" />
+    <Compile Include="InstalledRepositoryTests.fs" />
+    <Compile Include="RemoteProtocolTests.fs" />
+    <Compile Include="RemoteIdentityTests.fs" />
+    <Compile Include="RemoteExecutionTests.fs" />
+    <Compile Include="RemoteExecuteCliTests.fs" />
+    <Compile Include="RemotePersistScriptTests.fs" />
+    <Compile Include="PraxisBootstrapScriptTests.fs" />
+    <Compile Include="TelemetryStepsUsageTests.fs" />
+    <Compile Include="PraxisNamingTests.fs" />
+    <Compile Include="CheckpointDomainTests.fs" />
+    <Compile Include="GitDurabilityTests.fs" />
+    <Compile Include="CheckpointPersistenceTests.fs" />
+    <Compile Include="CheckpointCliTests.fs" />
+    <Compile Include="CheckpointGuardTests.fs" />
+    <Compile Include="ContinuationCliTests.fs" />
+    <Compile Include="TelemetrySegmentationTests.fs" />
+    <Compile Include="RecoveryProofTests.fs" />
+    <Compile Include="ExecutionGovernanceTests.fs" />
+    <Compile Include="InstallationRegistrationTests.fs" />
+    <Compile Include="CommitOwnershipTests.fs" />
+    <Compile Include="WorkAbandonTests.fs" />
+    <Compile Include="PlanningTests.fs" />
+    <Compile Include="PlanningCliTests.fs" />
+    <Compile Include="PlanningSessionEvidenceTests.fs" />
+    <Compile Include="GroupingTests.fs" />
+    <Compile Include="PremergeFence.fs" />
+    <Compile Include="PremergeCommandSurfaceTests.fs" />
+    <Compile Include="PremergeRemoteTests.fs" />
+    <Compile Include="PremergeRemoteScriptTests.fs" />
+    <Compile Include="PremergeReleaseTests.fs" />
+    <Compile Include="PostmergeReconciliationTests.fs" />
+    <Compile Include="WorkGroupTests.fs" />
+    <Compile Include="InternalNamingGuardTests.fs" />
+    <Compile Include="InternalNamingTests.fs" />
+    <Compile Include="TelemetryCostUnitTests.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Golden/*.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Fixtures/claude-session-transcript.jsonl" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

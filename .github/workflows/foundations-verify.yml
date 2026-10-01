@@ -32,8 +32,17 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
+      # The CLI project was src/Ros.Cli/Ros.Cli.fsproj before the internal
+      # namespace rename (PRAXIS-INTERNAL-NAMESPACES); a caller may pin a
+      # commit from either side.
       - name: Build pinned Praxis verifier
-        run: dotnet build praxis-verifier/src/Ros.Cli/Ros.Cli.fsproj --configuration Release
+        shell: bash
+        run: |
+          set -euo pipefail
+          project=praxis-verifier/src/Praxis.Cli/Praxis.Cli.fsproj
+          [ -f "$project" ] || project=praxis-verifier/src/Ros.Cli/Ros.Cli.fsproj
+          dotnet build "$project" --configuration Release
+          echo "PRAXIS_VERIFIER_BIN=$(dirname "$project")/bin/Release/net10.0" >> "$GITHUB_ENV"
 
       - name: Verify declared Echelon application foundations
         id: foundations
@@ -42,8 +51,8 @@ jobs:
           set +e
           # The CLI assembly was ros-fs.dll before the Praxis rename
           # (DF-ROS-2026-A050); a caller may pin a commit from either side.
-          cli=praxis-verifier/src/Ros.Cli/bin/Release/net10.0/praxis.dll
-          [ -f "$cli" ] || cli=praxis-verifier/src/Ros.Cli/bin/Release/net10.0/ros-fs.dll
+          cli="$PRAXIS_VERIFIER_BIN/praxis.dll"
+          [ -f "$cli" ] || cli="$PRAXIS_VERIFIER_BIN/ros-fs.dll"
           dotnet "$cli" \
             --root "$GITHUB_WORKSPACE/application" \
             foundations verify --json > "$RUNNER_TEMP/echelon-foundations.json"

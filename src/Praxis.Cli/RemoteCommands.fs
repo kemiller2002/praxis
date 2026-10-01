@@ -1,0 +1,835 @@
+module Praxis.Cli.RemoteCommands
+
+open System
+open System.Globalization
+open System.IO
+open System.Reflection
+open Praxis.Contracts.Remote
+open Praxis.Domain.Remote
+open Praxis.Infrastructure.Artifacts
+open Praxis.Infrastructure.Remote
+
+/// `praxis remote execute` (PRAXIS-REMOTE-03, `DF-ROS-2026-A041`): the
+/// transport-independent boundary that runs one `praxis.remote` request.
+///
+/// The boundary decides (`RequestDecision`), then carries an accepted
+/// request out with the *same* command implementation the local CLI runs:
+/// this binary, invoked with a typed argument list in a child process whose
+/// environment carries only the requester's asserted identity and the
+/// executor's observed facts (`RemoteIdentity.childEnvironment`). There is
+/// no second rule set. Around a mutation it adds only what remote
+/// execution needs and local execution does not: a clean-tree and
+/// expected-commit binding, a refusal to leave the repository less valid
+/// than it found it, a restore of anything a refused mutation wrote, and a
+/// journal entry that makes the outcome recoverable from the repository.
+/// Transport concerns (dispatch, checkout, commit, push) stay in the
+/// adapter.
+
+let usage =
+    "remote execute --request FILE [--grant read|mutate|complete|reconcile]* [--output FILE] [--timeout-seconds N] | remote classify --request FILE | remote describe"
+
+[<Literal>]
+let private MaxRequestBytes = 262144L
+
+[<Literal>]
+let private MaxMessageLength = 2000
+
+let private optionValue name (arguments: string list) =
+    arguments |> List.pairwise |> List.tryPick (fun (flag, value) -> if flag = name then Some value else None)
+
+let private optionValues name (arguments: string list) =
+    arguments |> List.pairwise |> List.choose (fun (flag, value) -> if flag = name then Some value else None)
+
+let private now () =
+    DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture)
+
+let private environmentVariable (name: string) =
+    match Environment.GetEnvironmentVariable name with
+    | null
+    | "" -> None
+    | value -> Some value
+
+let private parentEnvironment () =
+    Environment.GetEnvironmentVariables()
+    |> Seq.cast<Collections.DictionaryEntry>
+    |> Seq.map (fun entry -> string entry.Key, string entry.Value)
+    |> Map.ofSeq
+
+/// This very binary: a single-file executable is its own process; under
+/// `dotnet praxis.dll` the entry assembly must be named explicitly.
+let private self () =
+    let processPath = Environment.ProcessPath
+
+    match Path.GetFileNameWithoutExtension processPath with
+    | "dotnet" -> processPath, [ Assembly.GetEntryAssembly().Location ]
+    | _ -> processPath, []
+
+/// A command's diagnostics, bounded, and never carrying credential
+/// material even if a command were to print some.
+let private diagnostic (text: string) =
+    let trimmed = text.Trim()
+    let bounded = if trimmed.Length > MaxMessageLength then trimmed.Substring(0, MaxMessageLength) + "..." else trimmed
+
+    if SecretMaterial.looksLikeSecret bounded then "[diagnostics withheld: they looked like credential material]"
+    else bounded
+
+type private Context =
+    { Root: string
+      Version: string
+      Executor: ExecutorFacts
+      ObservedRef: string option
+      ObservedSha: string option
+      Grants: Set<Capability>
+      Timeout: TimeSpan }
+
+let private runAs (context: Context) (actor: RequestActor option) (arguments: string list) =
+    let program, prefix = self ()
+    let environment = RemoteIdentity.childEnvironment (parentEnvironment ()) actor context.Executor
+    FileRemoteRepository.run context.Root program (prefix @ [ "--root"; context.Root ] @ arguments) environment context.Timeout
+
+let private runCommand (context: Context) (request: Request) (arguments: string list) =
+    runAs context request.Actor arguments
+
+let private validationFindings (context: Context) (request: Request) =
+    let outcome = runCommand context request [ "validate"; "--json" ]
+    RemoteJson.parseValidationFindings outcome.Stdout
+
+let private failure code message problems = RemoteFailure.create code message problems
+
+let private withExecutor (context: Context) (response: Response) =
+    { response with Executor = Some context.Executor }
+
+let private rejectedFor (context: Context) (request: Request) (value: RemoteFailure) =
+    Response.rejected
+        request.ProtocolVersion
+        context.Version
+        (Some request.RequestId)
+        (Some(Operation.code request.Operation))
+        request.Repository
+        context.ObservedSha
+        value
+    |> withExecutor context
+
+[<Literal>]
+let private GitHubWorkflow = ".github/workflows/praxis-remote.yml"
+
+[<Literal>]
+let private AgentContract = "docs/remote-agent-contract.md"
+
+/// The `praxis.describe` discovery document (PRAXIS-REMOTE-07,
+/// `PRX-REMOTE-033`): everything an agent without a local runtime needs to
+/// decide what it can do -- versions, operations and their arguments, the
+/// authority available, the repository's current work, and where results
+/// are kept. Work state comes from the same `status` command the local CLI
+/// runs; nothing here re-derives it.
+let private describe (context: Context) =
+    let status = runAs context None [ "status"; "--json" ]
+
+    let openWork =
+        try
+            use document = System.Text.Json.JsonDocument.Parse status.Stdout
+
+            match document.RootElement.TryGetProperty "workItems" with
+            | true, items when items.ValueKind = System.Text.Json.JsonValueKind.Array ->
+                items.EnumerateArray()
+                |> Seq.filter (fun item ->
+                    match item.TryGetProperty "semanticState" with
+                    | true, state -> state.GetString() <> "complete"
+                    | _ -> true)
+                |> Seq.map (fun item -> item.GetRawText())
+                |> Seq.toList
+                |> Some
+            | _ -> None
+        with _ ->
+            None
+
+    let readyWork =
+        let ready = runAs context None [ "work"; "ready" ]
+
+        try
+            use document = System.Text.Json.JsonDocument.Parse ready.Stdout
+
+            if document.RootElement.ValueKind = System.Text.Json.JsonValueKind.Array then
+                document.RootElement.EnumerateArray()
+                |> Seq.map (fun item ->
+                    let text (name: string) =
+                        match item.TryGetProperty name with
+                        | true, value when value.ValueKind = System.Text.Json.JsonValueKind.String -> Some(value.GetString())
+                        | _ -> None
+
+                    text "id", text "title", text "priority")
+                |> Seq.toList
+                |> Some
+            else
+                None
+        with _ ->
+            None
+
+    Praxis.Contracts.JsonRendering.renderIndented (fun writer ->
+        writer.WriteStartObject()
+        writer.WriteString("schema", "praxis.describe")
+        writer.WriteNumber("schemaVersion", 1)
+        writer.WriteBoolean("available", true)
+        writer.WriteString("protocol", ProtocolVersion.Protocol)
+        writer.WriteStartArray("protocolVersions")
+        [ 0 .. ProtocolVersion.current.Minor ]
+        |> List.iter (fun minor -> writer.WriteStringValue(ProtocolVersion.code { ProtocolVersion.current with Minor = minor }))
+        writer.WriteEndArray()
+        writer.WriteString("praxisVersion", context.Version)
+        writer.WriteString("contract", AgentContract)
+        writer.WriteStartObject("repository")
+
+        match context.ObservedRef with
+        | Some reference -> writer.WriteString("ref", reference)
+        | None -> writer.WriteNull("ref")
+
+        match context.ObservedSha with
+        | Some sha -> writer.WriteString("sha", sha)
+        | None -> writer.WriteNull("sha")
+
+        writer.WriteStartArray("capabilities")
+        FileRemoteRepository.readRepositoryCapabilities context.Root |> Set.toList |> List.map Capability.code |> List.iter writer.WriteStringValue
+        writer.WriteEndArray()
+        writer.WriteEndObject()
+        writer.WriteStartArray("grants")
+        context.Grants |> Set.toList |> List.map Capability.code |> List.iter writer.WriteStringValue
+        writer.WriteEndArray()
+        writer.WriteStartArray("operations")
+
+        Operation.all
+        |> List.iter (fun operation ->
+            let required, optional = Operation.arguments operation
+            writer.WriteStartObject()
+            writer.WriteString("operation", Operation.code operation)
+            writer.WriteString("capability", Capability.code (Operation.capability operation))
+            writer.WriteBoolean("mutating", Operation.isMutating operation)
+            writer.WriteBoolean("requiresExpectedSha", Operation.isMutating operation)
+            writer.WriteBoolean("requiresExecution", Operation.requiresExecution operation)
+            writer.WriteString("introducedIn", ProtocolVersion.code { ProtocolVersion.current with Minor = Operation.introducedIn operation })
+            writer.WriteStartArray("requiredArguments")
+            required |> List.iter writer.WriteStringValue
+            writer.WriteEndArray()
+            writer.WriteStartArray("optionalArguments")
+            optional |> List.iter writer.WriteStringValue
+            writer.WriteEndArray()
+            writer.WriteEndObject())
+
+        writer.WriteEndArray()
+
+        match openWork with
+        | Some items ->
+            writer.WriteStartArray("openWork")
+            items |> List.iter (fun raw -> writer.WriteRawValue raw)
+            writer.WriteEndArray()
+        | None -> writer.WriteNull("openWork")
+
+        match readyWork with
+        | Some items ->
+            writer.WriteStartArray("readyWork")
+
+            items
+            |> List.iter (fun (id, title, priority) ->
+                writer.WriteStartObject()
+                [ "id", id; "title", title; "priority", priority ]
+                |> List.iter (fun (name, value) ->
+                    match value with
+                    | Some text -> writer.WriteString(name, text)
+                    | None -> writer.WriteNull(name))
+                writer.WriteEndObject())
+
+            writer.WriteEndArray()
+        | None -> writer.WriteNull("readyWork")
+
+        writer.WriteStartArray("transports")
+
+        if File.Exists(Path.Combine(context.Root, GitHubWorkflow)) then
+            writer.WriteStartObject()
+            writer.WriteString("kind", "github-actions")
+            writer.WriteString("workflow", GitHubWorkflow)
+            writer.WriteString("dispatch", "workflow_dispatch with inputs request (JSON) and request_id, on the branch the request targets")
+            writer.WriteEndObject()
+
+        writer.WriteEndArray()
+        writer.WriteStartObject("results")
+        writer.WriteString("journal", $"{RemotePersistence.JournalDirectory}/<requestId>.json")
+        writer.WriteString("statusOperation", Operation.code Operation.RequestStatus)
+        writer.WriteString("retry", "reuse the same requestId; a recorded mutation replays instead of running again")
+        writer.WriteEndObject()
+        writer.WriteEndObject())
+
+let private requestStatus (context: Context) (requestId: string) =
+    match FileRemoteRepository.lookup context.Root requestId with
+    | Error message -> Error message
+    | Ok(_, recorded) ->
+        Ok(
+            Praxis.Contracts.JsonRendering.renderIndented (fun writer ->
+                writer.WriteStartObject()
+                writer.WriteString("requestId", requestId)
+                writer.WriteBoolean("recorded", recorded.IsSome)
+
+                match recorded with
+                | Some response ->
+                    writer.WritePropertyName("response")
+                    writer.WriteRawValue(response)
+                | None -> writer.WriteNull("response")
+
+                writer.WriteEndObject())
+        )
+
+/// Runs a read operation's command and reports it verbatim.
+let private executeRead (context: Context) (request: Request) (arguments: string list) =
+    let outcome = runCommand context request arguments
+    let result = Some(RemoteJson.commandResult outcome.Stdout)
+
+    if outcome.TimedOut then
+        rejectedFor context request (failure FailureCode.Timeout "the command did not finish in time" [])
+    else
+        match CommandOutcome.classify request.Operation outcome.ExitCode with
+        | None -> Response.succeeded context.Version request context.ObservedSha result |> withExecutor context
+        | Some code -> { rejectedFor context request (failure code (diagnostic outcome.Stderr) []) with Result = result }
+
+/// Undoes whatever a refused mutation wrote, then reports the refusal. If
+/// the undo itself fails the outcome is honestly `unknown`.
+let private refuse (context: Context) (request: Request) (before: Map<string, byte[]>) (written: string list) (value: RemoteFailure) (result: string option) =
+    match FileRemoteRepository.restoreTo context.Root before written with
+    | Ok() -> { rejectedFor context request value with Result = result }
+    | Error message ->
+        { rejectedFor
+              context
+              request
+              (failure
+                  FailureCode.RepositoryWriteFailed
+                  $"the mutation was refused ({FailureCode.code value.Code}: {value.Message}) but restoring the working tree failed: {diagnostic message}"
+                  value.Problems) with
+            Result = result }
+
+/// Runs one mutation. `baseline` is the Praxis-owned state earlier
+/// constituents of the same batch have already written (empty for a single
+/// request): the tree may differ from the named commit by exactly that and
+/// nothing else, and a refusal restores the tree to how this mutation found
+/// it -- never undoing an earlier constituent's accepted work.
+let private executeMutationWithin (context: Context) (baseline: Set<string>) (request: Request) (arguments: string list) =
+    let changed () =
+        FileRemoteRepository.changedPaths context.Root |> Result.map RemotePersistence.partition
+
+    match changed () with
+    | Error message -> rejectedFor context request (failure FailureCode.Internal $"cannot observe the working tree: {diagnostic message}" [])
+    | Ok(owned, other) when not (other.IsEmpty && Set.isSubset (Set.ofList owned) baseline) ->
+        // Uncommitted changes mean the executor's state is not the commit
+        // the request was formed against.
+        rejectedFor
+            context
+            request
+            (failure
+                FailureCode.StaleRef
+                "the working tree has uncommitted changes, so it is not the commit the request names"
+                [ { Field = "repository.expectedSha"; Message = "the executor's working tree differs from it" } ])
+    | Ok(ownedBefore, _) ->
+        let snapshot = FileRemoteRepository.snapshot context.Root ownedBefore
+        let before = validationFindings context request |> Option.defaultValue []
+        let outcome = runCommand context request arguments
+        let result = Some(RemoteJson.commandResult outcome.Stdout)
+
+        match changed () with
+        | Error message ->
+            rejectedFor context request (failure FailureCode.RepositoryWriteFailed $"cannot observe what the command wrote: {diagnostic message}" [])
+        | Ok(owned, other) ->
+            let written = owned @ other
+
+            if outcome.TimedOut then
+                refuse context request snapshot written (failure FailureCode.Timeout "the command did not finish in time; anything it wrote was undone" []) result
+            else
+                match CommandOutcome.classify request.Operation outcome.ExitCode with
+                | Some code -> refuse context request snapshot written (failure code (diagnostic outcome.Stderr) []) result
+                | None when not other.IsEmpty ->
+                    refuse
+                        context
+                        request
+                        snapshot
+                        written
+                        (failure
+                            FailureCode.Internal
+                            "the command wrote outside Praxis-owned state; nothing was kept"
+                            (other |> List.map (fun path -> { Field = "persistence"; Message = $"not Praxis-owned: {path}" })))
+                        result
+                | None ->
+                    let after = validationFindings context request |> Option.defaultValue []
+
+                    match ValidationRegression.introduced before after with
+                    | (_ :: _) as introduced ->
+                        refuse
+                            context
+                            request
+                            snapshot
+                            written
+                            (failure
+                                FailureCode.ValidationFailed
+                                "the mutation would leave the repository less valid than it was; it was undone"
+                                (introduced |> List.map (fun finding -> { Field = finding.Path; Message = finding.Message })))
+                            result
+                    | [] ->
+                        let journal = RemotePersistence.journalPath request.RequestId
+
+                        let response =
+                            { Response.succeeded context.Version request context.ObservedSha result with
+                                Executor = Some context.Executor
+                                Persistence = (owned @ [ journal ]) |> List.distinct |> List.sort }
+
+                        let entry: RemoteJournal.Entry =
+                            { Request = request
+                              Fingerprint = RequestFingerprint.compute request
+                              RecordedAt = now ()
+                              Principal = context.Executor.Principal
+                              Response = RemoteJson.renderResponse response }
+
+                        match FileRemoteRepository.write context.Root entry with
+                        | Ok _ -> response
+                        | Error message ->
+                            refuse
+                                context
+                                request
+                                snapshot
+                                owned
+                                (failure FailureCode.RepositoryWriteFailed $"the journal entry could not be written; the mutation was undone: {diagnostic message}" [])
+                                result
+
+/// Why a request may not act on an execution: the refusal's message, and the
+/// request field it concerns.
+type private OwnershipProblem = { Message: string; Field: string; FieldMessage: string }
+
+/// The actor and run identity a request asserts for its requester.
+let private requesterOf (request: Request) =
+    let requester = request.Actor |> Option.map _.Actor |> Option.defaultValue Praxis.Domain.Provenance.Actor.unknown
+
+    let identity: Praxis.Domain.Telemetry.Identity =
+        { Provider = requester.Provider |> Option.defaultValue "unknown"
+          Model = requester.Model
+          ModelVersion = None
+          Runtime = requester.Runtime |> Option.defaultValue "unknown"
+          RuntimeVersion = None
+          SessionId = request.Actor |> Option.bind _.SessionId
+          ConversationId = None
+          RunId = None
+          AgentId = Some requester.Id
+          SubagentId = None
+          ParentExecutionId = None }
+
+    requester, identity
+
+/// The work items whose active executions a request finalizes: `work
+/// complete` finalizes every active execution of each item it completes
+/// (`FileTelemetryFinalizationRepository.finalizeWorkExecutions`).
+let private finalizedWorkItems (request: Request) =
+    match request.Arguments with
+    | Arguments.WorkComplete complete -> complete.WorkItemIds
+    | _ -> []
+
+/// A request may only act on executions its requester may continue
+/// (`ActorResolution.mayContinue`): the same actor in the same run. Naming
+/// another agent's execution -- or one from another session -- would record
+/// the requester's work under someone else's identity, so it is refused.
+/// Completion is held to the same rule whether or not the request names an
+/// execution (GH-113): it may not finalize an active execution that belongs
+/// to another actor or run. The successor takes the work over with
+/// `work.continue` first, which records the predecessor as interrupted.
+let private executionOwnershipProblem (context: Context) (request: Request) =
+    let requester, identity = requesterOf request
+    let executions = lazy (Praxis.Infrastructure.Provenance.FileProvenanceRepository.readExecutions context.Root)
+
+    let continuable (view: Praxis.Infrastructure.Provenance.ExecutionRecordView) =
+        Praxis.Domain.Provenance.ActorResolution.mayContinue requester identity view.Actor view.Identity
+
+    let named () =
+        request.ExecutionId
+        |> Option.bind (fun executionId ->
+            let problem message =
+                Some
+                    { Message = message
+                      Field = "execution.id"
+                      FieldMessage = "not an execution this requester may continue" }
+
+            match executions.Value |> List.tryFind (fun view -> view.ExecutionId = executionId) with
+            | None -> problem $"execution '{executionId}' does not exist"
+            | Some view when not (continuable view) -> problem $"execution '{executionId}' belongs to another actor or run; continue in your own execution"
+            | Some _ -> None)
+
+    let finalized () =
+        match finalizedWorkItems request |> Set.ofList with
+        | workItems when workItems.IsEmpty -> None
+        | workItems ->
+            // An execution a successor already took over (`work.continue`, or
+            // `work.resume` after a block) names it as its parent; the handoff
+            // is recorded, so it is no longer anyone's live work.
+            let handedOver = executions.Value |> List.choose _.Identity.ParentExecutionId |> Set.ofList
+
+            executions.Value
+            |> List.filter (fun view ->
+                view.Status = "active"
+                && workItems.Contains view.WorkItemId
+                && not (handedOver.Contains view.ExecutionId)
+                && not (continuable view))
+            |> List.sortBy _.StartedAt
+            |> List.tryHead
+            |> Option.map (fun view ->
+                { Message =
+                    $"work item '{view.WorkItemId}' has active execution '{view.ExecutionId}', which belongs to another actor or run; take the work over with work.continue, then complete it in your own execution"
+                  Field = "arguments.workItemIds"
+                  FieldMessage = "completing would finalize an execution this requester may not continue" })
+
+    named () |> Option.orElseWith finalized
+
+let private ownershipRejection (context: Context) (request: Request) =
+    executionOwnershipProblem context request
+    |> Option.map (fun problem ->
+        rejectedFor
+            context
+            request
+            (failure FailureCode.DomainRejected problem.Message [ { Field = problem.Field; Message = problem.FieldMessage } ]))
+
+/// Runs one already-authorized, non-batch request.
+let private executeSingle (context: Context) (baseline: Set<string>) (request: Request) : Response =
+    match ownershipRejection context request with
+    | Some rejection -> rejection
+    | None ->
+        match ExecutionPlan.forRequest (now ()) request with
+        | ExecutionPlan.Describe -> Response.succeeded context.Version request context.ObservedSha (Some(describe context)) |> withExecutor context
+        | ExecutionPlan.RequestStatus requestId ->
+            match requestStatus context requestId with
+            | Ok result -> Response.succeeded context.Version request context.ObservedSha (Some result) |> withExecutor context
+            | Error message -> rejectedFor context request (failure FailureCode.Internal (diagnostic message) [])
+        | ExecutionPlan.Command arguments when Operation.isMutating request.Operation -> executeMutationWithin context baseline request arguments
+        | ExecutionPlan.Command arguments -> executeRead context request arguments
+        | ExecutionPlan.Batch _ -> rejectedFor context request (failure FailureCode.InvalidRequest "a batch cannot contain a batch" [])
+
+/// One constituent's result: its outcome, the paths it kept, and its
+/// rendered response (a replay's is the recorded one, flagged).
+type private ConstituentResult =
+    { RequestId: string
+      Outcome: Outcome
+      Failure: RemoteFailure option
+      Persistence: string list
+      Rendered: string }
+
+/// Runs a batch's constituents in order (PRAXIS-REMOTE-08). Each keeps its
+/// own request ID, journal entry, and outcome; a constituent already
+/// journalled replays instead of running again; the first constituent that
+/// does not succeed stops the batch, and the rest are reported as not run.
+/// Work earlier constituents completed stays completed and is reported for
+/// persistence, so a partial batch is never ambiguous.
+let private executeBatch (context: Context) (batch: Request) (constituents: Request list) : Response =
+    let outcomeOf (rendered: string) =
+        try
+            use document = System.Text.Json.JsonDocument.Parse rendered
+
+            match document.RootElement.GetProperty("outcome").GetString() with
+            | "succeeded" -> Outcome.Succeeded
+            | "rejected" -> Outcome.Rejected
+            | "failed" -> Outcome.Failed
+            | _ -> Outcome.Unknown
+        with _ ->
+            Outcome.Unknown
+
+    let run (baseline: Set<string>) (request: Request) : ConstituentResult =
+        let fresh (response: Response) =
+            { RequestId = request.RequestId
+              Outcome = response.Outcome
+              Failure = response.Failure
+              Persistence = response.Persistence
+              Rendered = RemoteJson.renderResponse response }
+
+        if not (Operation.isMutating request.Operation) then
+            executeSingle context baseline request |> fresh
+        else
+            match FileRemoteRepository.lookup context.Root request.RequestId with
+            | Error message -> rejectedFor context request (failure FailureCode.Internal (diagnostic message) []) |> fresh
+            | Ok(JournalLookup.Recorded fingerprint, Some recorded) when fingerprint = RequestFingerprint.compute request ->
+                let replayed = RemoteJournal.replayedResponse recorded
+
+                { RequestId = request.RequestId
+                  Outcome = outcomeOf replayed
+                  Failure = None
+                  Persistence = []
+                  Rendered = replayed }
+            | Ok(JournalLookup.Recorded _, _) ->
+                rejectedFor
+                    context
+                    request
+                    (failure FailureCode.IdempotencyConflict "this request ID was already used for a different request; use a new request ID for a new intent" [])
+                |> fresh
+            | Ok _ -> executeSingle context baseline request |> fresh
+
+    let results, notRun =
+        constituents
+        |> List.fold
+            (fun (results: ConstituentResult list, notRun: string list) request ->
+                match results |> List.tryLast with
+                | Some last when last.Outcome <> Outcome.Succeeded -> results, notRun @ [ request.RequestId ]
+                | _ ->
+                    let baseline = results |> List.collect _.Persistence |> Set.ofList
+                    results @ [ run baseline request ], notRun)
+            ([], [])
+
+    let firstFailure = results |> List.tryFind (fun result -> result.Outcome <> Outcome.Succeeded)
+    let kept = results |> List.collect _.Persistence |> List.distinct
+
+    let resultDocument =
+        Praxis.Contracts.JsonRendering.renderIndented (fun writer ->
+            writer.WriteStartObject()
+            writer.WriteNumber("total", constituents.Length)
+            writer.WriteNumber("completed", results |> List.filter (fun result -> result.Outcome = Outcome.Succeeded) |> List.length)
+
+            match firstFailure with
+            | Some failed -> writer.WriteString("stoppedAt", failed.RequestId)
+            | None -> writer.WriteNull("stoppedAt")
+
+            writer.WriteStartArray("notRun")
+            notRun |> List.iter writer.WriteStringValue
+            writer.WriteEndArray()
+            writer.WriteStartArray("responses")
+
+            results
+            |> List.iter (fun result ->
+                use document = System.Text.Json.JsonDocument.Parse result.Rendered
+                document.RootElement.WriteTo writer)
+
+            writer.WriteEndArray()
+            writer.WriteEndObject())
+
+    let batchJournal = RemotePersistence.journalPath batch.RequestId
+
+    let response =
+        match firstFailure with
+        | None ->
+            { Response.succeeded context.Version batch context.ObservedSha (Some resultDocument) with
+                Executor = Some context.Executor }
+        | Some failed ->
+            let cause =
+                failed.Failure
+                |> Option.defaultValue (failure FailureCode.Internal "a constituent did not succeed" [])
+
+            { rejectedFor
+                  context
+                  batch
+                  { cause with Message = $"constituent '{failed.RequestId}' did not succeed ({FailureCode.code cause.Code}): {cause.Message}" } with
+                Outcome = failed.Outcome
+                Result = Some resultDocument }
+
+    let stoppedBy = firstFailure |> Option.bind _.Failure |> Option.map _.Code
+
+    if not (BatchJournal.shouldRecord (not kept.IsEmpty) stoppedBy) then
+        { response with Persistence = kept |> List.distinct |> List.sort }
+    else
+        // Accepted constituents are durable; the batch's own entry makes a
+        // retry of the whole batch replay rather than re-run.
+        let withPersistence = { response with Persistence = kept @ [ batchJournal ] |> List.distinct |> List.sort }
+
+        let entry: RemoteJournal.Entry =
+            { Request = batch
+              Fingerprint = RequestFingerprint.compute batch
+              RecordedAt = now ()
+              Principal = context.Executor.Principal
+              Response = RemoteJson.renderResponse withPersistence }
+
+        match FileRemoteRepository.write context.Root entry with
+        | Ok _ -> withPersistence
+        | Error message ->
+            { withPersistence with
+                Outcome = Outcome.Unknown
+                Failure =
+                    Some(
+                        failure
+                            FailureCode.RepositoryWriteFailed
+                            $"the batch's constituents were recorded but its own journal entry was not: {diagnostic message}; ask request.status for each constituent"
+                            []
+                    ) }
+
+/// Decides and executes one parsed request, returning the rendered response.
+let private handle (context: Context) (request: Request) : Response * string option =
+    let decideAndRun lookup recorded =
+        let trusted: TrustedContext =
+            { Principal = context.Executor.Principal |> Option.defaultValue "unknown"
+              Grants = context.Grants
+              ObservedRef = context.ObservedRef
+              ObservedSha = context.ObservedSha }
+
+        match RequestDecision.decide trusted lookup request with
+        | Decision.Reject value -> rejectedFor context request value, None
+        | Decision.Replay ->
+            // The recorded response is returned as it was, flagged as a
+            // replay; nothing executes again.
+            Response.succeeded context.Version request context.ObservedSha None, recorded |> Option.map RemoteJournal.replayedResponse
+        | Decision.Execute ->
+            match ExecutionPlan.forRequest (now ()) request with
+            | ExecutionPlan.Batch constituents -> executeBatch context request constituents, None
+            | _ -> executeSingle context Set.empty request, None
+
+    if not (RequestShape.isMutating request) then
+        decideAndRun JournalLookup.NotRecorded None
+    else
+        // One remote mutation at a time per working tree: the journal check,
+        // the command, and the journal write form one critical section.
+        match RegistryLock.acquire context.Root "remote-requests" RegistryLock.defaultSettings with
+        | Error lockFailure -> rejectedFor context request (failure FailureCode.ConcurrencyConflict lockFailure.Message []), None
+        | Ok lease ->
+            try
+                match FileRemoteRepository.lookup context.Root request.RequestId with
+                | Error message -> rejectedFor context request (failure FailureCode.Internal (diagnostic message) []), None
+                | Ok(lookup, recorded) -> decideAndRun lookup recorded
+            finally
+                lease.Release() |> ignore
+
+let private emit (output: string option) (rendered: string) (succeeded: bool) =
+    printf "%s" rendered
+    output |> Option.iter (fun file -> File.WriteAllText(file, rendered))
+    if succeeded then 0 else 1
+
+let run (root: string) (version: string) (arguments: string list) : int =
+    let grants = optionValues "--grant" arguments |> List.map (fun value -> value, Capability.tryParse value)
+    let timeoutSeconds = optionValue "--timeout-seconds" arguments
+
+    match optionValue "--request" arguments, grants |> List.tryFind (snd >> Option.isNone), timeoutSeconds |> Option.map Int32.TryParse with
+    | None, _, _ ->
+        eprintfn "ERROR usage: %s" usage
+        2
+    | _, Some(bad, _), _ ->
+        eprintfn "ERROR unknown capability '%s'; expected read, mutate, complete, reconcile, or admin" bad
+        2
+    | _, _, Some(false, _) ->
+        eprintfn "ERROR --timeout-seconds must be a whole number"
+        2
+    | Some requestFile, None, parsedTimeout ->
+        let fullRoot = Path.GetFullPath root
+        let observedRef, observedSha = FileRemoteRepository.observeHead fullRoot
+
+        let executor =
+            GitHubActionsExecutor.observe environmentVariable version
+            |> Option.defaultValue
+                { Kind = "local"
+                  RunId = None
+                  RunAttempt = None
+                  WorkflowRef = None
+                  Repository = None
+                  Host = None
+                  Principal = None
+                  PraxisVersion = version }
+
+        let context =
+            { Root = fullRoot
+              Version = version
+              Executor = executor
+              ObservedRef = observedRef
+              ObservedSha = observedSha
+              Grants =
+                RemotePolicy.effectiveGrants
+                    (FileRemoteRepository.readRepositoryCapabilities fullRoot)
+                    (grants |> List.choose snd |> Set.ofList)
+              Timeout =
+                parsedTimeout
+                |> Option.map (snd >> float >> TimeSpan.FromSeconds)
+                |> Option.defaultValue (TimeSpan.FromMinutes 10.0) }
+
+        let output = optionValue "--output" arguments
+
+        let text =
+            try
+                let info = FileInfo requestFile
+
+                if info.Length > MaxRequestBytes then Error $"the request exceeds {MaxRequestBytes} bytes"
+                else Ok(File.ReadAllText requestFile)
+            with error ->
+                Error $"the request file cannot be read: {error.Message}"
+
+        let respond (response: Response) =
+            emit output (RemoteJson.renderResponse response) (response.Outcome = Outcome.Succeeded)
+
+        match text with
+        | Error message ->
+            Response.rejected ProtocolVersion.current version None None { Ref = None; ExpectedSha = None } observedSha (failure FailureCode.InvalidRequest message [])
+            |> withExecutor context
+            |> respond
+        | Ok document ->
+            match RemoteJson.parseRequest ProtocolVersion.current document with
+            | Error parseFailure -> RemoteJson.rejection ProtocolVersion.current version observedSha parseFailure |> withExecutor context |> respond
+            | Ok request ->
+                match handle context request with
+                | _, Some replayed ->
+                    let succeeded =
+                        try
+                            use document = System.Text.Json.JsonDocument.Parse replayed
+                            document.RootElement.GetProperty("outcome").GetString() = "succeeded"
+                        with _ ->
+                            false
+
+                    emit output replayed succeeded
+                | response, None -> respond response
+
+/// `praxis remote classify`: the capability a request needs, decided by the
+/// protocol's own catalog, so an adapter can choose least-privilege
+/// credentials (a read-only job for reads) without re-implementing any of
+/// it. Only the document's shape and operation are examined; nothing is
+/// authorized or executed.
+let classify (version: string) (arguments: string list) : int =
+    match optionValue "--request" arguments with
+    | None ->
+        eprintfn "ERROR usage: remote classify --request FILE"
+        2
+    | Some requestFile ->
+        let text =
+            try
+                let info = FileInfo requestFile
+                if info.Length > MaxRequestBytes then Error $"the request exceeds {MaxRequestBytes} bytes" else Ok(File.ReadAllText requestFile)
+            with error ->
+                Error $"the request file cannot be read: {error.Message}"
+
+        let rejection (response: Response) =
+            printf "%s" (RemoteJson.renderResponse response)
+            1
+
+        match text with
+        | Error message ->
+            Response.rejected ProtocolVersion.current version None None { Ref = None; ExpectedSha = None } None (failure FailureCode.InvalidRequest message [])
+            |> rejection
+        | Ok document ->
+            match RemoteJson.parseRequest ProtocolVersion.current document with
+            | Error parseFailure -> RemoteJson.rejection ProtocolVersion.current version None parseFailure |> rejection
+            | Ok request ->
+                printf
+                    "%s"
+                    (Praxis.Contracts.JsonRendering.renderIndented (fun writer ->
+                        writer.WriteStartObject()
+                        writer.WriteString("requestId", request.RequestId)
+                        writer.WriteString("operation", Operation.code request.Operation)
+                        writer.WriteStartArray("capabilities")
+                        RequestShape.capabilities request |> Set.toList |> List.map Capability.code |> List.iter writer.WriteStringValue
+                        writer.WriteEndArray()
+                        writer.WriteBoolean("mutating", RequestShape.isMutating request)
+                        writer.WriteEndObject()))
+
+                0
+
+/// `praxis remote describe`: the same discovery document, produced locally
+/// (for documentation, diagnosis, or an agent that does have a runtime).
+/// Grants are the repository's own opt-in; nothing is executed remotely.
+let describeLocal (root: string) (version: string) : int =
+    let fullRoot = Path.GetFullPath root
+    let observedRef, observedSha = FileRemoteRepository.observeHead fullRoot
+
+    let context =
+        { Root = fullRoot
+          Version = version
+          Executor =
+            { Kind = "local"
+              RunId = None
+              RunAttempt = None
+              WorkflowRef = None
+              Repository = None
+              Host = None
+              Principal = None
+              PraxisVersion = version }
+          ObservedRef = observedRef
+          ObservedSha = observedSha
+          Grants = FileRemoteRepository.readRepositoryCapabilities fullRoot
+          Timeout = TimeSpan.FromMinutes 2.0 }
+
+    printf "%s" (describe context)
+    0

@@ -104,7 +104,7 @@ authentication in front of it. `web-hub/styles.css` in the hub repository
 styles the page (a built-in copy is used when it is absent).
 
 The pages and the JSON API below call the same functions as `praxis hub`
-(`Ros.Cli.Hub`); uploaded files touch disk only as short-lived temp files
+(`Praxis.Cli.Hub`); uploaded files touch disk only as short-lived temp files
 passed to the spoke's own `work attach`, and are deleted afterwards.
 
 ### API
@@ -136,7 +136,7 @@ the whole view.
 
 ## Tests
 
-`tests/Ros.Tests/HubTests.fs` unit-tests the registry model (parsing and
+`tests/Praxis.Tests/HubTests.fs` unit-tests the registry model (parsing and
 re-rendering a registry written by the earlier Node hub byte for byte, the
 Markdown projection, duplicate path/id rejection), the spoke command lines,
 and the routes, then drives the real `praxis hub` commands and `praxis hub serve`

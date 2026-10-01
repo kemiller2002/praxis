@@ -82,8 +82,12 @@ jobs:
           version="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["version"])' "$source_file")"
           [ "v${version}" = "$TAG" ] || { echo "::error::$TAG checks out $source_file version $version"; exit 1; }
           mkdir -p dist/ros-fs
+          # The CLI project is src/Praxis.Cli from the internal namespace rename
+          # (PRAXIS-INTERNAL-NAMESPACES) on, src/Ros.Cli/Ros.Cli.fsproj before it.
+          project=src/Praxis.Cli/Praxis.Cli.fsproj
+          [ -f "$project" ] || project=src/Ros.Cli/Ros.Cli.fsproj
           for rid in linux-x64 linux-arm64 osx-x64 osx-arm64 win-x64; do
-            dotnet publish src/Ros.Cli/Ros.Cli.fsproj -c Release -r "$rid" --self-contained true \
+            dotnet publish "$project" -c Release -r "$rid" --self-contained true \
               -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o "dist/publish/$rid"
             # The assembly is `praxis` from the rename on, `ros-fs` before it.
             if [ -f "dist/publish/$rid/praxis" ] || [ -f "dist/publish/$rid/praxis.exe" ]; then binary=praxis; else binary=ros-fs; fi

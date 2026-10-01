@@ -5808,6 +5808,55 @@
         }
       },
       "completedAt": "2026-10-01T06:49:31Z"
+    },
+    {
+      "id": "PRAXIS-INTERNAL-NAMESPACES",
+      "type": "refactor",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "docs/migrations/praxis-internal-namespaces.md"
+        },
+        {
+          "type": "implementation",
+          "path": "Praxis.slnx"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/InternalNamingTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/InternalNamingGuardTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-01T06:46:03.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261001T054443609Z-a036bd9e"
+      ],
+      "latestCheckpoint": {
+        "id": "eb4fc675019ebc3f9697ddc6",
+        "recordedAt": "2026-10-01T06:31:48.000Z",
+        "executionId": "EXE-20261001T054443609Z-a036bd9e",
+        "repository": "repository-operating-system",
+        "branch": "claude/praxis-internal-namespaces-s3h5rt",
+        "commit": "05854ee4c4c35c5a826076bbca6cf5bc22252289",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/praxis-internal-namespaces-s3h5rt",
+        "remoteCommit": "05854ee4c4c35c5a826076bbca6cf5bc22252289",
+        "summary": "Rename complete and merged with main e6b6096: src/Praxis.*, tests/Praxis.Tests, Praxis.slnx, Praxis.* namespaces, PraxisRepositoryRoot/PraxisPackageVersion, praxis.payload/; CI/launcher/docs updated; pinned-ref workflows fall back to src/Ros.Cli; InternalNamingTests invariant added. Build 0 warnings; F# 1268/1268; Site 101/101; Python 7/7; architecture/registry/validate pass; publish+pack+tool smoke pass.",
+        "nextAction": "Open the draft PR, ingest session telemetry, drive CI green, then work complete with implementation/tests evidence.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-01T06:46:03.000Z"
     }
   ],
   "protocolVersion": "1.0.0",

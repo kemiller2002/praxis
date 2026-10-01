@@ -20,10 +20,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: dotnet restore Ros.slnx
-      - run: dotnet build Ros.slnx --configuration Release --no-restore
+      - run: dotnet restore Praxis.slnx
+      - run: dotnet build Praxis.slnx --configuration Release --no-restore
       - name: F# tests
-        run: dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
       - name: Python artifact-validator oracle tests
         run: python3 -m unittest discover -s tests -v
       - name: F#/.NET-only repository invariant
@@ -50,12 +50,12 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: "10.0.x"
-      - run: dotnet build src/Ros.Cli/Ros.Cli.fsproj --configuration Release
+      - run: dotnet build src/Praxis.Cli/Praxis.Cli.fsproj --configuration Release
       - name: Initialize, verify and validate a fresh project
         shell: bash
         run: |
           set -euo pipefail
-          cli="$GITHUB_WORKSPACE/src/Ros.Cli/bin/Release/net10.0/praxis.dll"
+          cli="$GITHUB_WORKSPACE/src/Praxis.Cli/bin/Release/net10.0/praxis.dll"
           project="$RUNNER_TEMP/lifecycle-project"
           rm -rf "$project"
           mkdir -p "$project"
