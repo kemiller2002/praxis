@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 65,
+  "nextSeq": 67,
   "items": [
     {
       "id": "WI-0001",
@@ -3911,6 +3911,27 @@
         "provider": "openai",
         "model": "unknown",
         "runtime": "codex"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0066",
+      "title": "Retire the Python artifact-validator oracle: add the missing F# supersession-reciprocity test, delete tools/ros_cli.py, tools/__init__.py and tests/test_ros_cli.py, and drop the oracle CI step and docs",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-01T11:03:05.375Z",
+      "updatedAt": "2026-10-01T11:32:55.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
       },
       "source": "manual",
       "sourceReference": null

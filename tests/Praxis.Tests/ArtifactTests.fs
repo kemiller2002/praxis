@@ -101,8 +101,48 @@ module ArtifactTests =
                     [ "id", ArtifactValue.Text "REP-NHEA-2026-001"
                       "title", ArtifactValue.Text "Legacy non-human evidence package" ] } ]
 
+    let private evidence (slug: string) (identifier: string) (status: string) (references: (string * string list) list) =
+        { RelativePath = $"research/evidence/{identifier}--{slug}.md"
+          FileName = $"{identifier}--{slug}.md"
+          Metadata =
+            references
+            |> List.map (fun (field, targets) -> field, ArtifactValue.Sequence(targets |> List.map ArtifactValue.Text))
+            |> List.append
+                [ "id", ArtifactValue.Text identifier
+                  "title", ArtifactValue.Text slug
+                  "status", ArtifactValue.Text status
+                  "evidence_type", ArtifactValue.Text "primary" ]
+            |> Map.ofList }
+
+    let private reciprocityFindings documents =
+        ArtifactPolicy.validate [] documents
+        |> List.filter (fun finding -> finding.Message.EndsWith "is not reciprocal")
+
     let tests =
-        [ { Name = "legacy research-package identifiers remain valid without widening other artifact kinds"
+        [ { Name = "supersession must be reciprocal in both directions"
+            Run = fun () ->
+                // Ported from the retired Python oracle (tests/test_ros_cli.py).
+                let older = evidence "old" "EV-TEST-2026-A001" "superseded"
+                let newer = evidence "new" "EV-TEST-2026-A002" "accepted"
+
+                [ older [ "superseded_by", [] ]; newer [ "supersedes", [ "EV-TEST-2026-A001" ] ] ]
+                |> reciprocityFindings
+                |> Assert.equal
+                    [ { Path = "research/evidence/EV-TEST-2026-A002--new.md"
+                        Field = "supersedes"
+                        Message = "'EV-TEST-2026-A001' is not reciprocal" } ]
+
+                [ older [ "superseded_by", [ "EV-TEST-2026-A002" ] ]; newer [] ]
+                |> reciprocityFindings
+                |> Assert.equal
+                    [ { Path = "research/evidence/EV-TEST-2026-A001--old.md"
+                        Field = "superseded_by"
+                        Message = "'EV-TEST-2026-A002' is not reciprocal" } ]
+
+                [ older [ "superseded_by", [ "EV-TEST-2026-A002" ] ]; newer [ "supersedes", [ "EV-TEST-2026-A001" ] ] ]
+                |> ArtifactPolicy.validate []
+                |> Assert.empty }
+          { Name = "legacy research-package identifiers remain valid without widening other artifact kinds"
             Run = fun () ->
                 Assert.equal true (ArtifactPolicy.isValidIdentifier "RP-EDF-2026-002")
                 Assert.equal true (ArtifactPolicy.isValidIdentifier "REP-NHEA-2026-001")

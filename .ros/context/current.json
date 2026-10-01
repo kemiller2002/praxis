@@ -5899,11 +5899,52 @@
         }
       },
       "completedAt": "2026-10-01T11:21:36Z"
+    },
+    {
+      "id": "WI-0066",
+      "type": "refactor",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/praxis-validation.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ArtifactTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-01T11:32:55.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261001T110310238Z-aa5e8cb4"
+      ],
+      "latestCheckpoint": {
+        "id": "41524582c3c7cabc9a5e378d",
+        "recordedAt": "2026-10-01T11:22:30.000Z",
+        "executionId": "EXE-20261001T110310238Z-aa5e8cb4",
+        "repository": "repository-operating-system",
+        "branch": "wi-0066",
+        "commit": "3959240f959332e3438a553b302d1dc1b1a20caa",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/praxis-internal-namespaces-s3h5rt",
+        "remoteCommit": "3959240f959332e3438a553b302d1dc1b1a20caa",
+        "summary": "Python oracle retired: added F# supersession-reciprocity test (mutation-checked), deleted tools/ros_cli.py, tools/__init__.py, tests/test_ros_cli.py, dropped the CI step and doc citations. F# 1325/1325; architecture, registry, validate pass.",
+        "nextAction": "Open the PR, drive CI green, then work complete.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-01T11:32:55.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-01T11:21:36Z",
+  "updatedAt": "2026-10-01T11:32:55.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
