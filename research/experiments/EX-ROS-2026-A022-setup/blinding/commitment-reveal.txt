@@ -1,0 +1,116 @@
+EX-ROS-2026-A022 -- mapping commitment and reveal
+=================================================
+
+1. What went wrong in A021-R2
+-----------------------------
+A021-R2 committed sha256("arm-M=<mode>;arm-N=<mode>;salt=<hex>") before
+evaluation, but the salt was handed to the owner informally and was not
+recoverable when the evaluation finished, so the commitment could not be
+recomputed; the mapping was established afterwards by exact blob identity
+instead. The string format was also only loosely specified. A022 fixes all
+three: an exactly specified canonical payload, a recoverable sealed reveal
+with a verified escrow, and a pre-evaluation rehearsal of the verification.
+
+2. Why a salt is essential
+--------------------------
+Each kit has only two possible mappings, so an unsalted hash of the mapping
+could be inverted by trying both. The 256-bit salt makes the commitment
+hiding; SHA-256 makes it binding.
+
+3. Canonical payload (CANONICAL-1) and commitment
+-------------------------------------------------
+Produced by `a022_commitment.py generate` (CSPRNG: Python `secrets`):
+
+  {
+    "blindArms": {
+      "arm-<6hex>": { "cohort": "high|low", "mode": "grouped|independent",
+                      "runToken": "<4hex>",
+                      "executionBranch": "experiment/a022-run-<4hex>",
+                      "finalSha": "<40hex>" },
+      ... four entries ...
+    },
+    "experiment": "EX-ROS-2026-A022",
+    "kits": { "kit-<6hex>": "high", "kit-<6hex>": "low" },
+    "payloadVersion": 1,
+    "salt": "<64 lowercase hex = 32 random bytes>"
+  }
+
+Canonicalization rules (byte-exact):
+  - JSON text encoded as UTF-8;
+  - object keys sorted ascending by Unicode code point, at every level;
+  - no insignificant whitespace: separators exactly "," and ":";
+  - every non-ASCII character escaped as \uXXXX (the payload is ASCII anyway);
+  - strings as Python's json.dumps writes them; no trailing newline.
+  Equivalent: json.dumps(payload, sort_keys=True, separators=(",", ":"),
+  ensure_ascii=True).encode("utf-8").
+
+Commitment = lowercase hexadecimal SHA-256 of exactly those bytes.
+reveal.json contains exactly those bytes; commitment.sha256 contains the hex
+followed by one newline.
+
+Independent recomputation without the script:
+  sha256sum reveal.json                      # must print the commitment
+  python3 -c 'import json,sys; b=open(sys.argv[1],"rb").read(); \
+    assert json.dumps(json.loads(b),sort_keys=True,separators=(",",":"),ensure_ascii=True).encode()==b' reveal.json
+
+4. Generating
+-------------
+After all four conditions finish (final SHAs known), on the orchestrator's
+machine, with OUT outside any repository working tree (the script refuses
+otherwise):
+
+  python3 research/experiments/EX-ROS-2026-A022-setup/blinding/a022_commitment.py generate \
+     --high-grouped <tA> --high-independent <tB> --low-grouped <tC> --low-independent <tD> \
+     --final <tA>=<shaA> --final <tB>=<shaB> --final <tC>=<shaC> --final <tD>=<shaD> \
+     --out "$HOME/a022-sealed"
+
+It prints the commitment and the evaluator-visible kit table (kit -> its two
+arm ids). Nothing else from the reveal is ever written to a repository
+before section 6.
+
+5. Escrow: keeping the reveal recoverable but away from evaluators
+------------------------------------------------------------------
+Before any kit is built:
+  E1. Owner copy: the orchestrator sends reveal.json and commitment.sha256 to
+      the repository owner as files (SendUserFile, outside Git), and asks the
+      owner to confirm receipt by replying with the commitment hex. The run
+      does not continue until the owner has confirmed.
+  E2. Transcript copy: the orchestrator prints the reveal's exact content once
+      in its own session (e.g. `cat reveal.json; echo`). The orchestrator
+      session transcript is owner-accessible and evaluator-inaccessible.
+  E3. Encrypted repository escrow: the orchestrator encrypts the reveal with a
+      fresh 256-bit passphrase and commits only the ciphertext:
+        PASS=$(openssl rand -hex 32)
+        openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt \
+          -in "$HOME/a022-sealed/reveal.json" -out reveal.json.enc -pass "pass:$PASS"
+      to the orchestration branch at
+      research/experiments/EX-ROS-2026-A022-results/sealed/reveal.json.enc,
+      and delivers PASS to the owner together with E1 (and in E2). Without
+      PASS the ciphertext reveals nothing; evaluators are forbidden from the
+      orchestration branch anyway.
+  E4. Rehearsal: the orchestrator decrypts the committed ciphertext into a
+      temporary directory and runs
+        a022_commitment.py verify --reveal <decrypted> --commitment <hex>
+      which must print "verified". The rehearsal output is recorded in the
+      orchestration record. Kits are built only after E1 confirmation and a
+      passing E4.
+The plaintext reveal never enters any repository, branch or path an
+evaluator may read, until section 6.
+
+6. Reveal (only after both evaluations are pushed)
+--------------------------------------------------
+  R1. Record both evaluation commit SHAs (blind/a022/evaluation-<kit>).
+  R2. Obtain the reveal from the owner copy, the transcript copy, or the
+      escrow (decrypt with PASS); any one suffices.
+  R3. Run a022_commitment.py verify --reveal reveal.json --commitment <hex>
+      against the commitment that was committed before evaluation (the hex
+      in each kit's mapping-commitment.sha256 and in the orchestration
+      record; all must be identical). Also recompute with sha256sum.
+  R4. Require an exact match. On a mismatch, stop: nothing is associated
+      with conditions; the failure is recorded as invalidating the blinding
+      claim, and the mapping may only be reconstructed by exact tree
+      identity, explicitly labelled as such (the A021-R2 fallback).
+  R5. Commit reveal.json (plaintext) and the verification output to the
+      results directory on the orchestration branch.
+  R6. Only then associate the evaluators' findings with conditions and
+      write the results record.

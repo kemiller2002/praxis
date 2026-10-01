@@ -1,0 +1,3290 @@
+{
+  "schema": "praxis.plan/1.0.0",
+  "kind": "groups",
+  "snapshot": {
+    "repository": "repository-operating-system",
+    "commit": "f806f817e4656e00550313d839b59ceea87a682d",
+    "branch": null,
+    "plannedAt": "2026-10-01T11:00:00.000Z",
+    "plannerVersion": "3.6.0",
+    "workStateFingerprint": "d0bb0004343521073d6c7238685ac45052fde2f20cb398d9493f05211ee49c83",
+    "inputFingerprint": "226e0a4d850a4bfbfce8382614239ea451565eea7367686e4ecb19e75e84ca8c",
+    "collisionFingerprint": "0f0f2a516d9467d53b2b5ef037a2714c3fc56052201326aefbdcf702cbb6764f",
+    "items": [
+      {
+        "workItem": "ACTOR-KIND-ANCHOR",
+        "lifecycleState": "ready",
+        "planningState": "ready",
+        "checkpointId": null,
+        "digest": "d0ec66d56f9a6710c3a8e58d8e39e3d72da908fcab3396b9a88010478442a738"
+      },
+      {
+        "workItem": "ATTR-COMPLETE-BASE-REF-SWEEP",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "5cc50b05113c49fdcc5f406a013fec812af3f4ff0270da7cd497f772eed24c55"
+      },
+      {
+        "workItem": "ATTR-RECONCILE-SYMLINK-SUBMODULE",
+        "lifecycleState": "ready",
+        "planningState": "ready",
+        "checkpointId": null,
+        "digest": "169bfd1eed66510a52e5a662683ba29f52a91d4b98cb537d4fa5a018a91d7f18"
+      },
+      {
+        "workItem": "BOOTSTRAP-ADOPTION-FIX",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "a48eaa10d4345f312e7d959ad05c34c633bf199d8cb38e87af3c2bada15cab81"
+      },
+      {
+        "workItem": "BUG-WORK-ID-COLLISION",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "ef79fc040ad85548851cc406152cce2075719ae8c544ec88f56f89f3da47160d"
+      },
+      {
+        "workItem": "CI-BASE-REF-FIX",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "fd4b03c76f540c0fbfec6f7c8588c228177cebc30a6233ea33d9a8e61751d6f0"
+      },
+      {
+        "workItem": "CI-LATEST-ON-VERSION-BUMP",
+        "lifecycleState": "blocked",
+        "planningState": "awaiting-evidence",
+        "checkpointId": null,
+        "digest": "240b8cf63035bf2db83ab0cd99e4067a0685a63b529a8e886be1e0773f1f0eab"
+      },
+      {
+        "workItem": "CI-NPM-PUBLISH",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "cb1e96eed27dd15abc53edcaab6ffbec3e2d7b34649674638ab7532b56c7d7a5"
+      },
+      {
+        "workItem": "DOC-BACKLOG-USAGE-GUIDE",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "cbb067a63d034d9bd2a6588fa2f227c1ff7d67acf96829fe204d2a6c764a910d"
+      },
+      {
+        "workItem": "DOC-PROJECT-ADMIN-README",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "c95e49625d1c490cf2887782943adf1b8bf4bd9b5a219a2023d4b9158e628473"
+      },
+      {
+        "workItem": "DOC-WEB-README",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "6639679e190b3de9434729adf6c673656d299eb8283b5864ae537018fd9a2733"
+      },
+      {
+        "workItem": "EXEC-INSTALL-109",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "32e3a8b3195cb6a8fe8df13d",
+        "digest": "bf42099908d1c389e348d5049507c2fb9a4d64326781c78fe8fc12786be8e7b2"
+      },
+      {
+        "workItem": "EXEC-INSTALL-109-NPM-BIN",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "0bd541f58dd9c727c608959a",
+        "digest": "7298766bc722e95c19e1ec744d1e4dbf6e6dec86a1df48b1c3a76fc1d93d5f95"
+      },
+      {
+        "workItem": "EXP-A022-BASELINE",
+        "lifecycleState": "active",
+        "planningState": "partially-complete",
+        "checkpointId": "3a79de59ab757bef12aadfca",
+        "digest": "e069c42dd04dedc9bace9b4c9d0add22ec468ee2107f58cc4aa5e9af6a715529"
+      },
+      {
+        "workItem": "FEAT-AGENT-PROVENANCE",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "2cb3b1dd86f49c4b12fdf29a4b95c4d49f1109ebbf53fdfdd2ca3262df65f0bf"
+      },
+      {
+        "workItem": "FSHARP-ONLY-MAIN-MERGE",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "db3dca87148f12925391d00aee8d6e8ad59b83c3a8ee158a28b7ede40fff978f"
+      },
+      {
+        "workItem": "FSHARP-ONLY-REPOSITORY",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "30d5e1dcaf2c2219037009bf8bcbcbb4f011deb1461b1ddb5eb7eba76622d096"
+      },
+      {
+        "workItem": "GH-113",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "8c04f53c3437f14d14b3783d",
+        "digest": "226cecb48a25187fd7c3a72db0fd0695a14045e70df0f6623440553202914561"
+      },
+      {
+        "workItem": "GH-80",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "4ebcbecc690102d47d79c8056fa908868b07d4f7fd6659b0ed3326ec44b4a438"
+      },
+      {
+        "workItem": "GH-84",
+        "lifecycleState": "abandoned",
+        "planningState": "abandoned",
+        "checkpointId": null,
+        "digest": "957b8bb4e620b098f3b7af117fd95516318863bfcf60a95ecd9c4bdfc3a55211"
+      },
+      {
+        "workItem": "GH-90",
+        "lifecycleState": "abandoned",
+        "planningState": "abandoned",
+        "checkpointId": null,
+        "digest": "ac489adc833d62fed1ae0bfff2f0ba1c66a4ca0d7b4302e6161a582b2bec9687"
+      },
+      {
+        "workItem": "MIG-05-BACKLOG-PERSISTENCE",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "018abdfd072c0b7fa5b90c40f048e7d8d72380fbd04f2c9370ebf8c0f76360cd"
+      },
+      {
+        "workItem": "MIG-05-PERSISTENCE",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "94244eb9f7f94549b1f4643d938cc8df73c5c17cd04d929ad5253db295c163cd"
+      },
+      {
+        "workItem": "MIG-05-TELEMETRY-RECOVERY",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "58fe70f13556b338a50ef35d7e3d53dbe56595fbc47260498d78867b53302550"
+      },
+      {
+        "workItem": "MIG-05-WORK-INTEGRATION",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "ab8549cbf63cc20a260477d079bcf87f0aba8b749b1b879ff88205d26f641862"
+      },
+      {
+        "workItem": "MIG-05-WORK-PERSISTENCE",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "e5203b3ce36c500e78801f6c058d8d78f9f9c1e9719c2bc3a627bf8182a7924e"
+      },
+      {
+        "workItem": "MIG-06-GIT-INTEGRATION",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "2567913bd317974a94ec5d548e5e6dacc5040e748327452e5766b7375242371e"
+      },
+      {
+        "workItem": "MIG-06-GIT-PROVENANCE",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "68488fb8617a7a3d06a24c598a52b78364cf2c1ad8a3947d74fb35b30951e6db"
+      },
+      {
+        "workItem": "MIG-07-BACKLOG-PLAN",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "f292d30dc62850669fece179de2e6e0cac127a39282b70b308e1030827968a20"
+      },
+      {
+        "workItem": "MIG-07-FOUR-TIER-AUDIT",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "30561b608c91bf517142241083e08fa7acc96c42ca50497a02f8b647abbcb851"
+      },
+      {
+        "workItem": "MIG-07-GIT-PATH-COMPOSITION",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "b4a03da8dce8f36345b815e60d40a78d4fab4c78f2113f8ae09f81a6a62bca54"
+      },
+      {
+        "workItem": "MIG-07-TELEMETRY-RESOLUTION",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "fa5356a76ce0535105dca10c1f226b27952b33441e29c7e2bc112aa665319f22"
+      },
+      {
+        "workItem": "MIG-07-VERIFIED-CONTEXT",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "97203010178839a1debddb141d670cb22c5dd7aec332def027c52ab9a269b3ee"
+      },
+      {
+        "workItem": "MIG-07-WORK-CONTEXT",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "8ecb35bb9c7a40a7438521d3cd986eee14715dc934226fe6c053b8bef98c42d0"
+      },
+      {
+        "workItem": "MIG-07-WORK-EVIDENCE",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "44a645f79136c655765e04fcf4898da56d80792a93c852f453cefffc9db8b90b"
+      },
+      {
+        "workItem": "MIG-07-WORK-LIFECYCLE",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "a20706547280a7ee32a630fe2c06215d3f8e90172502eefbceb5d93316365cd7"
+      },
+      {
+        "workItem": "MIG-07-WORK-ORCHESTRATION",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "df0681d354ce58e240a5b52acbde840ba160c19ce4c35bebef6d6a00b0a717fc"
+      },
+      {
+        "workItem": "OIDC-REPO-IDENTITY",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "0beca7cfec1d3cf17831c54777ff5c932399d189d0c72abc9205cc8e9493a9b1"
+      },
+      {
+        "workItem": "PKG-BIN-EXECUTABLE",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "8c15e349d9906a33bc7f8d971536cd36a3bcd296180f50ddf680ec88eb43f405"
+      },
+      {
+        "workItem": "PKG-ECHELON-FOUNDRY",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "0a452ad02b6155b5adc815c492467daab280df340baf3e4eb0ab7c6b20afab62"
+      },
+      {
+        "workItem": "PKG-FALLBACK-GOLDEN",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "d5ebcb3997fb74a4d2d626965e3862eee35e8bfabb119d79d95e9800eed9d965"
+      },
+      {
+        "workItem": "PKG-FALLBACK-GUIDE",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "4ad0bde13635c7f707b80b7ca566ddb5bc7fec955d76144aecef531ef8a95a17"
+      },
+      {
+        "workItem": "PKG-FALLBACK-PAYLOAD",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "095540db63e13e9227a83817747e5af1b6e46bffa07b3a538296e44249816dd5"
+      },
+      {
+        "workItem": "PKG-MIT-LICENSE",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "f424f01dc23fc2a724d9388eedb01bfb4f47759ebdd2714c311e853748fc80c8"
+      },
+      {
+        "workItem": "PKG-PUBLISH-READINESS",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "92b34a04ab5d04ba293f8ed631be6082d15f81037b9f57578bb79d8e8e43883c"
+      },
+      {
+        "workItem": "PR79-FALLBACK-RECONCILIATION",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "1441c502f6308eec82d9529560d7a87cdc01d88a30aac8c6d9a52a9467a7d6a5"
+      },
+      {
+        "workItem": "PR79-MAIN-INTEGRATION",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "392de89c3ff48aaec601975c18de3d3c55dee17a01abbc602d90593a8f052393"
+      },
+      {
+        "workItem": "PR79-MAIN-INTEGRATION-2",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "d65220d8a10f5939986feeb4",
+        "digest": "96216f2b7a06833d756ec8f596829114d854575520b089991e01b79159824fc1"
+      },
+      {
+        "workItem": "PRAXIS-A021-EVAL-KIT",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "1ba08dbdaed502c13df0c11f",
+        "digest": "fa407f319847b073e96077897386bdcbee3becd07bf2b1c3668cb4e0f684e71f"
+      },
+      {
+        "workItem": "PRAXIS-CLI-RENAME",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "26597c841e7fe2dda56be670a97fd42cb30cd9f265af404af400b185ada87fcd"
+      },
+      {
+        "workItem": "PRAXIS-CN-GL-KINDS",
+        "lifecycleState": "ready",
+        "planningState": "ready",
+        "checkpointId": null,
+        "digest": "a62e74dc111be332d04e6c6b0586231cb19c062c3ad6de63b193d254374cc080"
+      },
+      {
+        "workItem": "PRAXIS-CONT-00",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "ee3390bb5aae91055f8c5ff8",
+        "digest": "d31e87307f73478580030066e90a696bbbb4a037c4b61e4b92dce5c7d9d7c569"
+      },
+      {
+        "workItem": "PRAXIS-CONT-01-DOMAIN",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "1c7d83fb25251ff831187823e8c294bda19243372bcdbd1c64c745f9ecb49fe1"
+      },
+      {
+        "workItem": "PRAXIS-CONT-02-GIT",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "8c1b9e5b32e9ac01f215d33714a0d0c14a1ecea4aff47260fc9dce14765388f5"
+      },
+      {
+        "workItem": "PRAXIS-CONT-03-PERSIST",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "6dba97b222e76484367cb88865f8b3554c252da8eb0fc541f27e3caf9697bed5"
+      },
+      {
+        "workItem": "PRAXIS-CONT-04-CLI",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "b84b11ef733c113be245e31c",
+        "digest": "f251780306b5dabbccda8171cdf68b05dc2475ae186adfa60dfded81ebcef66c"
+      },
+      {
+        "workItem": "PRAXIS-CONT-05-GUARDS",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "3df9a933fd9b9b48c34f3a81",
+        "digest": "5ab4ab8b553c8d9a1e1cb04d8c9b191099f80e355c6792c16cf9a0d51ae8084b"
+      },
+      {
+        "workItem": "PRAXIS-CONT-06-CONTINUE",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "1219cf4caf651cd7a643a49c",
+        "digest": "7debc75c7244d561cecbaf98993a19ccba67a99f417b37c2b74b89739fa31332"
+      },
+      {
+        "workItem": "PRAXIS-CONT-07-REMOTE",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "8261feeac0d8ce858934fe88",
+        "digest": "8f21c874a6ed4f75afc3c1ed846a1d0b26f4d9433074e42b805a1772997bc1b4"
+      },
+      {
+        "workItem": "PRAXIS-CONT-08-RECOVERY",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "17bb1af5b06dedf379bc7858",
+        "digest": "ce9caba9eb7d1539c0e235b63965da7868f7ee9de677fdc0a73acdb83869bf11"
+      },
+      {
+        "workItem": "PRAXIS-CONT-09-GOVERNANCE",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "597b30de245e5038749d4867",
+        "digest": "db5f5291918fafe659a4b2aa45b70476ab13f5362dd3819bd24daab89e94a2e1"
+      },
+      {
+        "workItem": "PRAXIS-CONT-10-HARDEN",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "8ef4e1bf0ca1676833af00e8",
+        "digest": "f0af3e0567013a86de5252b91c09901dca8c80a5d9b02896876d00ae3348f35a"
+      },
+      {
+        "workItem": "PRAXIS-CONT-11-SEGMENTATION",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "08342602dd36c47d90ce2947",
+        "digest": "919d8cd6e7b3623e75e53f478f33b7ff4b7b3626f0708c305d7dec593a8e133b"
+      },
+      {
+        "workItem": "PRAXIS-CONT-12",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "697a35ea38902bd740b00d73",
+        "digest": "b34dd1f8645ea4fc05ee7545a27cf1dc417e4530739ba6cbc5aec37bc43992e6"
+      },
+      {
+        "workItem": "PRAXIS-CTL-01",
+        "lifecycleState": "ready",
+        "planningState": "ready",
+        "checkpointId": null,
+        "digest": "cb65ab7d49a5b03c3ee92d9e0a44622d70ec28de5599ee59f03295671432df37"
+      },
+      {
+        "workItem": "PRAXIS-CTL-02",
+        "lifecycleState": "ready",
+        "planningState": "ready",
+        "checkpointId": null,
+        "digest": "fb1942a613eba3fb5fca4a55e46980f5d1e10beac62a99c8f7081fd14f90e86f"
+      },
+      {
+        "workItem": "PRAXIS-CTL-03",
+        "lifecycleState": "ready",
+        "planningState": "ready",
+        "checkpointId": null,
+        "digest": "a7384664f26465ebc477b862b89044659ffb3fb860bbf531550eb52106f33298"
+      },
+      {
+        "workItem": "PRAXIS-CTL-04",
+        "lifecycleState": "ready",
+        "planningState": "ready",
+        "checkpointId": null,
+        "digest": "c74718555256ec55b71e1ce2479c12853de62dd63c6cffc1d2c5eba8377c958d"
+      },
+      {
+        "workItem": "PRAXIS-CTL-05",
+        "lifecycleState": "ready",
+        "planningState": "ready",
+        "checkpointId": null,
+        "digest": "155f4cd7a8db8ee6c67aab9b4de83e3e145e20e8b85802972fd7dc4341338d86"
+      },
+      {
+        "workItem": "PRAXIS-CTL-06",
+        "lifecycleState": "ready",
+        "planningState": "ready",
+        "checkpointId": null,
+        "digest": "32b1784f7a03f12f9cbd27b58a328c93ad1bcbc14dbea2cfa78f588d9caed12b"
+      },
+      {
+        "workItem": "PRAXIS-DIST-NATIVE-DOTNET-TOOL",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "1f76f8517788d75b6215a984",
+        "digest": "9f5148412647967907833ef1ef9cfd44f60cafebc79c85b24ed1a673dae0a3c4"
+      },
+      {
+        "workItem": "PRAXIS-GROUP-01",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "d5a0a8e3629b830919549da2",
+        "digest": "e01eed3cd2a80b0279f31eaafc432e7c7834b958a9cfaa4f5c36b24015c27525"
+      },
+      {
+        "workItem": "PRAXIS-GROUP-02",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "625532c4da92cb2fd040c1cf",
+        "digest": "2f59eb04bb0717a281187b4298218541d388161b83f5857f07d0435d7a72040a"
+      },
+      {
+        "workItem": "PRAXIS-GROUP-03",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "d25be123e01c053593debc5b",
+        "digest": "6806d98ab973423a1ac56cb24db24eee914cee12a5ddb1b33bc76069bee5fdca"
+      },
+      {
+        "workItem": "PRAXIS-GROUP-04",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "aff868b75f36a0f9f9177391",
+        "digest": "2b8e54d9b9835bb4a4d9fb84c6e8cca0e8c787b51219cdb47082c69a95a8b922"
+      },
+      {
+        "workItem": "PRAXIS-GROUP-05",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "3343b7053c14890a8a21dad9",
+        "digest": "9b7dd88eed8fcf6ab5368d2d6e32845f3aef2cb92d9db610d2af69ca7f5e9698"
+      },
+      {
+        "workItem": "PRAXIS-GROUP-06",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "8d1dfc22000bc2ac20ef91ec",
+        "digest": "bcc42f1c77f204bd9c00139eb65eba393a7bdd4d71ad24e7123e8ba24aa7b631"
+      },
+      {
+        "workItem": "PRAXIS-INTERNAL-NAMESPACES",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "a60ad69a0cd8ba31748187e6a9a4594e521f302001081016573daea5c92a53a7"
+      },
+      {
+        "workItem": "PRAXIS-NPM-BIN",
+        "lifecycleState": "abandoned",
+        "planningState": "abandoned",
+        "checkpointId": null,
+        "digest": "b65c200fe564226520668d3820dac858207a5fc0f372f883067f52a802eedf9d"
+      },
+      {
+        "workItem": "PRAXIS-PLAN-01",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "06e9e9033b86d8a58a7e3153",
+        "digest": "20a3ebeec4c4ac1d572ceac82512de6e1de63c40599dd6182062e57ce8f4299b"
+      },
+      {
+        "workItem": "PRAXIS-PLAN-02",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "c76a247aedab4dca95974ada",
+        "digest": "42bfb2da36dc3fe6754837141f1dd3f428ec07ed3e601584b786f8ba19a5c438"
+      },
+      {
+        "workItem": "PRAXIS-PLAN-03",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "7728b91d817f008fcf6bf056",
+        "digest": "3c885c446f604a087cbdfe1413f79aef56093fecf854dcf6a70e2659a5d36843"
+      },
+      {
+        "workItem": "PRAXIS-PLAN-04",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "e13842b9b6f089a68f7feaef",
+        "digest": "2a8535c6c799e81279cd8eb2a912483d0d7f485fa6f6cab8a473aed89aba213c"
+      },
+      {
+        "workItem": "PRAXIS-PLAN-05",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "f0a1d4f609ea095735f4a539",
+        "digest": "0240957151c8102f619dbbdb280a77adc1e6a887bd6af57f55a8edc38b942de2"
+      },
+      {
+        "workItem": "PRAXIS-PLAN-06",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "851a16e0bfae363dbb8133f1",
+        "digest": "d7b5065270614766c04439d1f2b0685277a4ad55da923fa88f14b2fa46c22584"
+      },
+      {
+        "workItem": "PRAXIS-PLAN-07",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "1197fcdb274a57f993cbee96",
+        "digest": "9355341b2d2f17fd10b1d1dcc564f3f2289018c12fa872626d4c9a731f6d1414"
+      },
+      {
+        "workItem": "PRAXIS-PLAN-08",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "3cc01e46a3bd7e9477729917",
+        "digest": "37139b66be60f4092ae901c6b042afd82a475390af3da0b0d73ed5042bfb9216"
+      },
+      {
+        "workItem": "PRAXIS-PLAN-ERROR-HISTORY",
+        "lifecycleState": "ready",
+        "planningState": "ready",
+        "checkpointId": null,
+        "digest": "ea305943f682e356c57432b0e26ac5e468d95966cec88f9f101387f2814430cd"
+      },
+      {
+        "workItem": "PRAXIS-PLAN-EXP-01",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "d8d6a32e5376296833d1aad6",
+        "digest": "ebce3741f8fcb55a16c363fde07dfeabc1ac102ab49b443af6b842caf53bf4c6"
+      },
+      {
+        "workItem": "PRAXIS-PR92-ID-RENUMBER",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "35819248b408ec631a129636a99f55c742c7e5ca2f3595b75489def94cd633b3"
+      },
+      {
+        "workItem": "PRAXIS-PR92-POSTMERGE-FENCE",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "add5c2f127ff37988258f946db3460e33824d99e78933e256cfd4c24f8afbd37"
+      },
+      {
+        "workItem": "PRAXIS-PR92-PREMERGE-REGRESSION-FENCE",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "bc4a2e6d6a5acc8b9842e72a",
+        "digest": "1a1a0ea4739a8ae3eb32bb158b246264fc1776d724c90e85b3132f8e4a6cba49"
+      },
+      {
+        "workItem": "PRAXIS-PR92-PREMERGE-RENAME-FENCE",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "5a2b1c965e80eddbd503accde308cb4bc80cc50dc9fe3bcd688ddb8e1a26b57d"
+      },
+      {
+        "workItem": "PRAXIS-PR92-RECONCILE",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "499ba40009bef0edcc70d7e4",
+        "digest": "c73d5542f8c2031a9ec6087591f47d8b4b04dce90e6240b19d07e90f1eb2d9a9"
+      },
+      {
+        "workItem": "PRAXIS-RELEASE-BUMP-WORKFLOW",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "e80b18f9f40b0a464cce6311",
+        "digest": "0b00cef81c5c86e34c7b36fb846b1ed1fbd7c59812d8f9676413e0041f9b46de"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-01",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "601cdbecc217136835db0f825effaca55e83b7c278aa28a65d3417e8a604a280"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-02",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "a5917969df7a0e985e653de86897df3b5fa594203e25c9f63d8b687146d706b7"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-03",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "d050bc5de15f1768d2cb24f4e10982670dc267eeddef1446566795370482abbb"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-04",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "1ce13d7f9b79f86ffd2e42fa00f3cdb2b26c60d759968671e11e2022c276a844"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-05",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "994c571a76d57087b6955d7f89e23499a34a13def9cd904918710d68efd55776"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-06",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "349540b7ed64fb93fe360f29262e35c6929a9277113fcca6435cb8ea8f1cfde1"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-07",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "43bcb92eff1885e7d8b9aa629f2e5892085ddbed0886db39c5fcb8782ccfad37"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-08",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "819b5d83fe955ea97a89585591d48fed1260133f4d522e507767eacc18c33a8a"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-09",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "31f802c002a14108b44c0b8e8922e8f4b65aeff5a7b4eeadd5db3f58cf4ca3a3"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-10",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "f5e43ba48c9e35721f17de0c682cf3334084f4b2be293d0b09b004ee09441b71"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-11",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "949bc02915dd3b837351822fc2d7ab8a2d80bbe5eb4531935a40e052ba2262d5"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-11-PREP",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "ddff55e295088d58131361f3b99355c367ed336d722ecec2a296cef3720f82e9"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-11-PREP-CI",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "f2ae1dd489fa56690eee9678df7a8579bb7842eeddeb5f4a9480c8649070cfbd"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-11-PROOF",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "60a5a2b096a70d184dffba265424a0053ffd07e7670775f7cd8a9b04ed627bb2"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-12",
+        "lifecycleState": "ready",
+        "planningState": "ready",
+        "checkpointId": null,
+        "digest": "c51d92dc0b0de2ab6b07f92258076991e502c6bab06289c447e94ff7a352dc10"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-12-CONTINUE-PROOF",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "c18e54e9104edeb12da69080",
+        "digest": "82ce999453b0671d9dbf1fbe562e7bb05c698da4c9c55c1168f004c0459054c2"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-13",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "5981ccd7a3f78ffb72e39476a330630767a496045884a3b0f34aeb8c06919dd7"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-14",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "ed751aa3ff2be3d9b662d82ca6d6719d287eded43f25f0c04c28b035c258aae3"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-15",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "ee04d880fb32fa9209e14d131089c7ec98809df490d2b69a6fa68dcd390bb076"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-16",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "4c32d79a4f90b55a82b6b096",
+        "digest": "cba9c5951defd9900336e4c323ca6334d788160d0af7da54286ca3964f2a7449"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-17",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "a635c2a5afe7f4cf833ccb96",
+        "digest": "bed173182a9f879234456f679bb6331a5ff7390c5995b89d0da6c72f6d303e26"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-INBOX-01",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "260dd5cad33298cf6a8059d9",
+        "digest": "7d80a3885c7d339cb6ffdb905e03e76cc2cd3992f8bf5e0ce2d06903a588bc63"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-PROBE-COMPLETE-CROSS",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "71edb9aaea2d7f27d08b3f4b",
+        "digest": "16a6631499bd6d1afbf0c61b171f374dccc3103a16b14e87369c886a839a4e52"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-PROBE-COMPLETE-NOEXEC",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "998cc970af87a66fafebcb4e",
+        "digest": "42adc49bdc6e6bb3ecafec94f2e33c9e59ad2892f1ae93ccc569a30a8233dcb7"
+      },
+      {
+        "workItem": "PRAXIS-REMOTE-PROBE-COMPLETE-WITHEXEC",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "ce9a03588509da1c5cd80146",
+        "digest": "1cb4423764061d0f3a98ff7f6cfc6b801bfaf4c0a50f4e03ed1b1e00111ed6ad"
+      },
+      {
+        "workItem": "PRAXIS-SITE-01",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "9418678f05218e4a2b803b386692873d436f6b930edb33fa975ca4ff5ceea960"
+      },
+      {
+        "workItem": "PRAXIS-SITE-02",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "2e35c9022400351c1129a770c32b71f0807259d9d77bf13eac0e92d434c732a3"
+      },
+      {
+        "workItem": "PRAXIS-SITE-03",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "8d9c5b4c975b71e291dfe28fdd424042bb8f6745a6b4588ed4c4c5618af1e5c7"
+      },
+      {
+        "workItem": "PRAXIS-SITE-04",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "2137be4c76fbee6422d12b588b07706189c71c88c97b3ff47f25889f86c2b2dc"
+      },
+      {
+        "workItem": "PRAXIS-SITE-05",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "c5d10818ee7372f30327e365ae8afdc8706b2598a04fb96fb4f7e5e4d5af0097"
+      },
+      {
+        "workItem": "PRAXIS-SITE-06",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "dad14b451e675eba03b765cb7fa5f55f708a0479435bb22fdbc24e64507bbb68"
+      },
+      {
+        "workItem": "PRAXIS-SITE-07",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "d4db0caa3d67c521b76a14b5dd3b9f5ddc2295818ca21dc0c97cabb7ef56f57c"
+      },
+      {
+        "workItem": "PRAXIS-SITE-08",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "9cbde1ef8385ea32c011a9f86a2e53a8d84e2c11b4f51d961a327a08bd5675a2"
+      },
+      {
+        "workItem": "PRAXIS-SITE-09",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "93b6db5148018fd44c51fdd1f94b0d34bbcc5f455f8816b42ea74900a7ab5148"
+      },
+      {
+        "workItem": "PRAXIS-SITE-10",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "20e0f3cb359c3a2cdf1cef766bf74a5ddfbc3520a728613661b54bc4d7b646cb"
+      },
+      {
+        "workItem": "PRAXIS-SITE-11",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "1fca91f2335f897acb41a02fec430c22819fbeff14dab0d51ad172b44be0de4a"
+      },
+      {
+        "workItem": "PRAXIS-SITE-12",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "a79c1b54b12159a33212059e82d98e2d7c0976f3d850ac0a1ef0be93269b229f"
+      },
+      {
+        "workItem": "PRAXIS-SITE-13",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "0261229927f27ae1ed61550dc731f636686b2ef62202e547dd6d692017388e15"
+      },
+      {
+        "workItem": "PRAXIS-SITE-14",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "5223ef4159d11a840409a998ea2a70860736f75f33e3c35697aaa4dd788e3f42"
+      },
+      {
+        "workItem": "PRAXIS-SITE-15",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "b4ac6c745b41d464b9196fe7a23b7f14fb8e8f7e72412360814900dfff4b2d2d"
+      },
+      {
+        "workItem": "PRAXIS-SITE-16",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "71b56d39e35c717d787f58f432c2f15633a0df78dd992daa06f3c2683fc186a3"
+      },
+      {
+        "workItem": "PRAXIS-SITE-17",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "1e680e98fffe725f6725f58b35dc8fea0751b0fc4cf29619f6267549aa1ea850"
+      },
+      {
+        "workItem": "PRAXIS-SITE-18",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "00585c0eb145b1bc6b6212fa275fde02a0e2ad5265ff702a97aeb82f5ede1a79"
+      },
+      {
+        "workItem": "PRAXIS-SITE-19",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "75b7bb4ae6832f327ec378a2c9745f26dec08c57c3f54433d28fca2ba676d30a"
+      },
+      {
+        "workItem": "PRAXIS-SITE-20",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "741630fc008277e8a3e6ba5a3cedfa6c7251a7f6019e43baa496c3b1f4be0e7a"
+      },
+      {
+        "workItem": "PRAXIS-SITE-21",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "11e59703f002bf2660fdcedfb8485d10264404ba7834be981f3b4d682cbaef53"
+      },
+      {
+        "workItem": "PRAXIS-SITE-22",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "42a68b99bd02f7baba474f5e681b64b9167efb312560dedb9184bcdf2ae23ea3"
+      },
+      {
+        "workItem": "PRAXIS-SITE-23",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "5d681ed561841d114a391b74cb742cbf160fe7bebbaeeaf5aa6c843bdbd0be2c"
+      },
+      {
+        "workItem": "PRAXIS-SITE-24",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "8e1e5e26db8bd46e418bcbf56bc69965594cda9db8c04905b6eef9b6c7f89418"
+      },
+      {
+        "workItem": "PRAXIS-SITE-25",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "3cdb92e8ebd6a217f675fc04741006ee027c8d3c4edefb78a2e614626472d599"
+      },
+      {
+        "workItem": "PRAXIS-SITE-26",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "2b426a3261281dad1511d1617f37c8cbc85439728a19fd6c22d027532dbb472d"
+      },
+      {
+        "workItem": "PRAXIS-SITE-27",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "6570ac72cac68919f0d7ad369e6aad79c7f229503a9bccb25bbe0b3d0f664eb3"
+      },
+      {
+        "workItem": "PRAXIS-STATE-MERGE-01",
+        "lifecycleState": "ready",
+        "planningState": "ready",
+        "checkpointId": null,
+        "digest": "518f9974aca1a67845a18af0f965de90ec67dadb67c291566b627fba10097bb3"
+      },
+      {
+        "workItem": "PRAXIS-TELEMETRY-CLASSIFY-VOCAB",
+        "lifecycleState": "ready",
+        "planningState": "ready",
+        "checkpointId": null,
+        "digest": "915ea6f87f46960707f191700067e2a73f0c9d3fa91f1b494a10e9cc599eea20"
+      },
+      {
+        "workItem": "PRAXIS-TELEMETRY-COST-UNIT",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "5e2de7d5e09aff26dfb2aeb6",
+        "digest": "b8f151fbc82e9bdc8965b6b6e2c30b7c20d3fcd0c5b3f29cf53c4186c71c5490"
+      },
+      {
+        "workItem": "PRAXIS-WORK-ABANDON-01",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "f1977b2c0d3772281244821b",
+        "digest": "6032b32c3d023b4da0693b51362161429562f2d0c1a2f4a26b71a9b1e764c17d"
+      },
+      {
+        "workItem": "PROJECT-ADMIN-HUB",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "23eb894cc195751926b358c6845cace32e9e478c99d92b387a86b925c04e1dec"
+      },
+      {
+        "workItem": "RELEASE-3-5-0",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "3d2dea01dcf8f38119c233a8d0753f360ffcca28bdd984af11bf86aa0f5a6f7d"
+      },
+      {
+        "workItem": "RELEASE-3-6-0",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "1d523e8f460347fa145b5107",
+        "digest": "f036d5b5c0f78758c45550b80a8a3278450274199e49f40d232e9054a2b8a4a8"
+      },
+      {
+        "workItem": "REMOTE-ENABLE-3-5-0",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "ff344822163a0c95acd34110eaceb2716673163ef8e7c245420102b08c1ea8d3"
+      },
+      {
+        "workItem": "REMOTE-ENABLE-3-6-0",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "13fe418eab93db82fc0f3213",
+        "digest": "08696848cbdd0320c5b7a42cdfe5f7b66482fd8d85d697c702c4f729faafac09"
+      },
+      {
+        "workItem": "ROADMAP-PHASE-2",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "8aacb0ea304f12cae074ca1a637f0e3e622e77ebcc065eaf046cba9c93c81bd0"
+      },
+      {
+        "workItem": "ROADMAP-PHASE-3",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "9e2926204c2cfe2476eb020469a6c94925b092fb4d00b8119d7a4fe40919e411"
+      },
+      {
+        "workItem": "ROADMAP-PHASE-4",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "4970a4e44f325ab9a5c743e29abe624d8bb6e99b1bf759890b63a95c8071154d"
+      },
+      {
+        "workItem": "ROS-AUTHORITY-SWITCH-DECISION",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "2edabe1aa2952faebf5eb4317e161bd69b891eae584a59eb125e477897cd15b5"
+      },
+      {
+        "workItem": "TASK-20260816-PROMPTS",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "06381613e87603cc455499f237a232ad0f5dc5194d2464ca9e8730388c6da9c6"
+      },
+      {
+        "workItem": "WEB-INTERFACE",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "01abce510a9ef24cc337ae7880cdbef5eff0380cb08d583754c9a5f38a527340"
+      },
+      {
+        "workItem": "WI-0001",
+        "lifecycleState": "abandoned",
+        "planningState": "abandoned",
+        "checkpointId": null,
+        "digest": "77ff96e3de1ba7c345586cd8f8ddb588b6bdb061c432b14077f51cc16b26c280"
+      },
+      {
+        "workItem": "WI-0002",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "45dafb9e5c79b4e09e8deb084b4fdd141d33145a5fb0201a951d7b86807b51c6"
+      },
+      {
+        "workItem": "WI-0003",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "b90c577e5955e91081c5a2b9ebc90ef81996df7a40c70b0747ae8a92eee85d82"
+      },
+      {
+        "workItem": "WI-0004",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "0b78f8a29c6d009e146fe6f38976cdb36a1d785671879f8562794ebe7a9e536b"
+      },
+      {
+        "workItem": "WI-0005",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "571e189705c34b745d3a159846447028f364524c413d1000db19dc77d766ed87"
+      },
+      {
+        "workItem": "WI-0006",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "3ec1cc26ee820b250998adcc96043b42bd9cf2192638ab359dfa25f9350bb3dc"
+      },
+      {
+        "workItem": "WI-0007",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "4c1572aacefe34c07ab5286e9d5c78c3be17c00b0408917b94e884dee84370de"
+      },
+      {
+        "workItem": "WI-0008",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "7b4c0de544eed19a79d5452c9a7fd74f27c28609ca19d1f04e7369129edb202d"
+      },
+      {
+        "workItem": "WI-0009",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "1186a4eb76b358de678a27cd6043cdc96c38f9881e633aa65df2c57cd50df32d"
+      },
+      {
+        "workItem": "WI-0010",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "7c6362cffaa5e6010e0f6427547dedd1bf228b1b305ec5240419690199f92194"
+      },
+      {
+        "workItem": "WI-0011",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "af034244e26dbfa6c26fc2db4ae970e16a8dec6c500ca0f1fbba5ec468de8382"
+      },
+      {
+        "workItem": "WI-0012",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "f22e638d434b724a8f24ac71a0ef18b93d00fc2ae97324205ade2b3278ea5486"
+      },
+      {
+        "workItem": "WI-0013",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "d3f78fb1e0bd4a17f69411f847c0e3f533d45f525839debf0e9138fbb77907f5"
+      },
+      {
+        "workItem": "WI-0014",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "b1a6350e69c153508ef5562b09917232c03e2b1399f5e89a8d54fc8abc11e1cc"
+      },
+      {
+        "workItem": "WI-0015",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "aa3588f475325163158f7a48562fbfff9676eeb70ca6746e82aef886cb57a0dc"
+      },
+      {
+        "workItem": "WI-0016",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "4059c389541d9b3858a6842b25b90e9dde989791de8465794976524fff920324"
+      },
+      {
+        "workItem": "WI-0017",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "f87c0b558a9498c7814ffbc096eff19ee6618a1df29a29741517791ffe2fd27e"
+      },
+      {
+        "workItem": "WI-0018",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "6385618942aad8711a045ad13254a3db508a2d61ac01e72e71695015f6e83ce4"
+      },
+      {
+        "workItem": "WI-0019",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "e34c09a6e0ac7749636a84e71fced5cb5c2bc00c9a232cdcbc4aa08893ed2b06"
+      },
+      {
+        "workItem": "WI-0020",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "2ff8097c002ebcf53b38b17226d7072f85c466ceed825bea5c80a4c935f7e047"
+      },
+      {
+        "workItem": "WI-0021",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "784876700f62a8f584f4fbc1b9ed91b55870f8b7774bee84fcbe9c4505101f94"
+      },
+      {
+        "workItem": "WI-0022",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "6eb2bd84768e36ad15c319bbc29f6824007d8cb4c3ba4100656a583956041d8d"
+      },
+      {
+        "workItem": "WI-0023",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "4e616df280ab749fd36f93de63e72ce0b2fda7f1850b8c7232c79dfac81e0419"
+      },
+      {
+        "workItem": "WI-0024",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "da88959df0490c6880cacdac115b022e7e44b0d63451ec61abedcd84e6a9ac3d"
+      },
+      {
+        "workItem": "WI-0025",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "8d1652cb599e33178e14d8050e8608fbace159b5354a33df0062599f621a1ca1"
+      },
+      {
+        "workItem": "WI-0026",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "831ce0cba7bd4ef82b09dc84393105035f1ad16a12453aa35544ae7d284098b4"
+      },
+      {
+        "workItem": "WI-0027",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "5126dc5c70a2f48cb7556c98595da1c59f7af72f62992f1eac947961e53a900a"
+      },
+      {
+        "workItem": "WI-0028",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "f7d3dbaabac266436ca067f00859cf7d28251983c21cd11f6b799f3578a582b5"
+      },
+      {
+        "workItem": "WI-0029",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "6e93d4c516f682bdf2be848971cf007e093383a52c631bbd45688eaf4b5179ef"
+      },
+      {
+        "workItem": "WI-0030",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "03835a25ff5751cb71f1bf3320dc3a90828f03401bf899b2fbf4b69573ceca4b"
+      },
+      {
+        "workItem": "WI-0031",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "0a593c681a9b32730cfa871e94be0dab57022e31f740eab700823cd825fe3415"
+      },
+      {
+        "workItem": "WI-0032",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "d8c2e3d97e7e0fedfe034cf765dc8ccb81f58b8ca46c7919aeb6ffd556048c6b"
+      },
+      {
+        "workItem": "WI-0033",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "86466afb0f572928173a843f5a798fd283645d9533003cb6a0d7b06a426087b1"
+      },
+      {
+        "workItem": "WI-0034",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "be15bb2155d79d3cf3f5ddb84c2420db1ca6300fcc12c30afe75dbf4e3fb9602"
+      },
+      {
+        "workItem": "WI-0035",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "2c1d0e2aef5a7d2849c9ee319329103bb4ed50634ef8e8fbf5bed9e81002a96e"
+      },
+      {
+        "workItem": "WI-0036",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "1087fc3f782f97d3d3a83f6610b0390041e372021aefabb0264b880825be357b"
+      },
+      {
+        "workItem": "WI-0037",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "f94567fe82bfb9bd08bf2302d5e4e6d8bd24982e5e413525c1a8e28ce6505f3a"
+      },
+      {
+        "workItem": "WI-0038",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "e18a1f69546bf3a5d2ec6c09147d9db1d3b4dd38f06d1675ebcd3ec57e9712e1"
+      },
+      {
+        "workItem": "WI-0039",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "6ca17b7d5a1c7b36fb0af307b1181405d6ca28d3f2c2484b58f65e6b8317a79d"
+      },
+      {
+        "workItem": "WI-0040",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "104c2118c3a57a0ada4d37164293337931af02716ad06d7906d3ca6aab012313"
+      },
+      {
+        "workItem": "WI-0041",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "aced1464b3a630a1507311262a05e639a12cad010d9dd815c766ec8d6afa1286"
+      },
+      {
+        "workItem": "WI-0042",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "8754a0d9124d775af82ff14135f3771e90f2fef71b989945d69575968ce3d51d"
+      },
+      {
+        "workItem": "WI-0043",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "246ee0c808ecc497ec44ed0f71dabef35f856b847e0d6654a95d138bb0701f12"
+      },
+      {
+        "workItem": "WI-0044",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "00958929db7c3d227068c8e4dbcff4a9bbc864c6d829c4c4caa2542e0f235e72"
+      },
+      {
+        "workItem": "WI-0045",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "d5daf457b14118de4f1e17a0c27bc13a3de6ad7466ea8878c3f96e606fcd5f96"
+      },
+      {
+        "workItem": "WI-0046",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "0c238b512de41f1b37ac90d5690dcedbc69481243228ce3162a143d56e9dbb97"
+      },
+      {
+        "workItem": "WI-0047",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "3161e5fecbb69433e4188bec369943d1b5de773c38016d15949ac413ce8d80a4"
+      },
+      {
+        "workItem": "WI-0048",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "b0e0a2ac0c4ee634c3a5a308e2ed981397ed6bd74d0704d7f71195bb5af48feb"
+      },
+      {
+        "workItem": "WI-0049",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "3d99709cc7095121c3924586a03200daed87de05182c4a57ea606c9d4a2a3c90"
+      },
+      {
+        "workItem": "WI-0050",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "1e0ee9d3a4be202da6cad84b8873523576a7d235215e3b5e3a0e36af67777dac"
+      },
+      {
+        "workItem": "WI-0051",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "fc94e0105b6a8f0039f7f1511ea275b9d814dcd6bba2a68ab8c636aed3c12a03"
+      },
+      {
+        "workItem": "WI-0052",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "f34f66e0cc40abde5d215cfc2aa7cebb75190e2952aeccdfe67eb61c8f0690bf"
+      },
+      {
+        "workItem": "WI-0053",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "148a03b1f84e0d51c16a91c1ef053c21034b80c64a5c51e030552f5217e94c79"
+      },
+      {
+        "workItem": "WI-0054",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "38b445f745f0e4e78422a902d03c751ccbee85ede0431d1a854c4b009fd96238"
+      },
+      {
+        "workItem": "WI-0055",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "4562da9978dfa27f09032a195636a81a00ee20cb0d022b930118712019625f3c"
+      },
+      {
+        "workItem": "WI-0056",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "ff68a1eec071c826752e1bb2c55f3de98c75c21206141b642462e7c42a9839d5"
+      },
+      {
+        "workItem": "WI-0057",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "60a3b25d67a7a5da1901ab58cfe479bcb3406475eb5ead0429284e7b877e92b1"
+      },
+      {
+        "workItem": "WI-0058",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "cc545acaf377d4b2139f572349422d63d87153596c70162c4a9f869824518083"
+      },
+      {
+        "workItem": "WI-0059",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "5199a2f0e57a8e0eea2c3f3524daf05616e1d0159329a32651443e4fc017cba1"
+      },
+      {
+        "workItem": "WI-0060",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "a87a75218f06f614ed5e0cd6c18a7693ccb6efd6276a0a3510f8c37e6aafb164"
+      },
+      {
+        "workItem": "WI-0061",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "5d36d420c29bd9bd7972d94d32c227b27c239709fde9576287c71e27bda7cd72"
+      },
+      {
+        "workItem": "WI-0062",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "43b007ddff9fc0027c68c635ebf955294d23f035b5a4a7dbe132092537feb383"
+      },
+      {
+        "workItem": "WI-0063",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "812c7c71e3f8ed79e64857fe178d7afc7e7d0e5dbd042504592416f463ab07f6"
+      },
+      {
+        "workItem": "WI-0064",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": "b2ee1c1bdba0ab4b01378d5a",
+        "digest": "5daaebc00b194291ca7ec8d9d5c87aeffd126151dc8eb4d213311e3e87611b69"
+      },
+      {
+        "workItem": "WI-0065",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "5970610d63901294f41b0de6c638acddaa6b29cde0aee8f5fd210dcf40932458"
+      },
+      {
+        "workItem": "WI-0072",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "14ea049a68bc28e75c696b55ad38e4c56d3a4ac3ca5fd858b1dae39b86b94e68"
+      },
+      {
+        "workItem": "WI-ACTIVE",
+        "lifecycleState": "blocked",
+        "planningState": "blocked",
+        "checkpointId": null,
+        "digest": "c825d80b2ec6a2e0171304272e718f2dbbabab99b977b7e74e8b2dfe9184f112"
+      },
+      {
+        "workItem": "WI-READY",
+        "lifecycleState": "active",
+        "planningState": "active",
+        "checkpointId": null,
+        "digest": "40f89f6147bb185ffd70cf9df2ed777a3280faab8c5d1ddd666099d998a0b6aa"
+      },
+      {
+        "workItem": "WORK-CAPTURE-ID-COLLISION",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "424010be9e7b807dcf58bf037ba41f027fbc7c0fd33ab9f15e68bbd62d24dbc2"
+      },
+      {
+        "workItem": "WORK-ITEM-ATTACHMENTS",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "6a640c5f6f10811fcef3e614a7e7b9ed1bfaf96c5ff89a5851a3b43429282bb9"
+      },
+      {
+        "workItem": "WORKQUEUE-BACKLOG-LAYER",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "d7cf9ea2c7a4931fa3bcbe136c5cc93c82c3326fdbbdb30aa68a7a44acd9b4a6"
+      }
+    ]
+  },
+  "statement": "Advisory grouping: a group is a recommendation to reason about these items together. It changes no work item's state, attribution, evidence or identity, and nothing was started.",
+  "settings": {
+    "preferredSize": [
+      3,
+      10
+    ],
+    "maximumAutomaticSize": 12,
+    "minimumAffinity": "medium",
+    "riskPolicy": "accept-elevated"
+  },
+  "groups": [
+    {
+      "id": "GROUP-REPOSITORY-OPERATING-SYSTEM-ATTRIBUTION-001",
+      "kind": "shared-area",
+      "origin": "planner-recommended",
+      "area": "attribution",
+      "executionRepository": "repository-operating-system",
+      "crossRepository": false,
+      "affinity": "high",
+      "confidence": "high",
+      "members": [
+        {
+          "workItem": "ATTR-COMPLETE-BASE-REF-SWEEP",
+          "reason": "with ATTR-RECONCILE-SYMLINK-SUBMODULE: high: same area 'attribution'; same area 'reconciliation'; both cite requirement DF-ROS-2026-A040",
+          "confidence": "high",
+          "recordedState": "captured",
+          "planningState": "captured",
+          "status": "not-runnable",
+          "gatedBy": []
+        },
+        {
+          "workItem": "ATTR-RECONCILE-SYMLINK-SUBMODULE",
+          "reason": "with ATTR-COMPLETE-BASE-REF-SWEEP: high: same area 'attribution'; same area 'reconciliation'; both cite requirement DF-ROS-2026-A040",
+          "confidence": "high",
+          "recordedState": "ready",
+          "planningState": "ready",
+          "status": "runnable",
+          "gatedBy": []
+        }
+      ],
+      "cohesion": [
+        {
+          "signal": {
+            "code": "shared-area",
+            "detail": "attribution",
+            "basis": "explicit",
+            "level": "medium",
+            "confidence": "high",
+            "description": "same area 'attribution'"
+          },
+          "members": [
+            "ATTR-COMPLETE-BASE-REF-SWEEP",
+            "ATTR-RECONCILE-SYMLINK-SUBMODULE"
+          ],
+          "covered": 2,
+          "total": 2,
+          "statement": "2/2 same area 'attribution' [explicit]"
+        },
+        {
+          "signal": {
+            "code": "shared-area",
+            "detail": "reconciliation",
+            "basis": "explicit",
+            "level": "medium",
+            "confidence": "high",
+            "description": "same area 'reconciliation'"
+          },
+          "members": [
+            "ATTR-COMPLETE-BASE-REF-SWEEP",
+            "ATTR-RECONCILE-SYMLINK-SUBMODULE"
+          ],
+          "covered": 2,
+          "total": 2,
+          "statement": "2/2 same area 'reconciliation' [explicit]"
+        },
+        {
+          "signal": {
+            "code": "shared-requirement",
+            "detail": "DF-ROS-2026-A040",
+            "basis": "derived",
+            "level": "medium",
+            "confidence": "medium",
+            "description": "both cite requirement DF-ROS-2026-A040"
+          },
+          "members": [
+            "ATTR-COMPLETE-BASE-REF-SWEEP",
+            "ATTR-RECONCILE-SYMLINK-SUBMODULE"
+          ],
+          "covered": 2,
+          "total": 2,
+          "statement": "2/2 both cite requirement DF-ROS-2026-A040 [derived]"
+        }
+      ],
+      "sharedContext": [
+        "same area 'attribution'",
+        "same area 'reconciliation'",
+        "both cite requirement DF-ROS-2026-A040"
+      ],
+      "requiredSequence": [
+        "ATTR-COMPLETE-BASE-REF-SWEEP",
+        "ATTR-RECONCILE-SYMLINK-SUBMODULE"
+      ],
+      "collisionRisk": "elevated",
+      "collisions": [
+        {
+          "left": "ATTR-COMPLETE-BASE-REF-SWEEP",
+          "right": "ATTR-RECONCILE-SYMLINK-SUBMODULE",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "attribution",
+              "risk": "elevated"
+            },
+            {
+              "code": "shared-area",
+              "detail": "reconciliation",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        }
+      ],
+      "parallelSafe": false,
+      "recommendedExecution": "one-sequential-agent",
+      "executionReasons": [
+        "one reasoning owner by default (PRX-GRP-063); high affinity usually means shared files, so one warmed agent keeps one design",
+        "intra-group collision risk is elevated: parallel subtasks are not proven independent",
+        "triage ATTR-COMPLETE-BASE-REF-SWEEP first: a planning group may hold captured work, but only triaged members can execute"
+      ],
+      "contextCost": {
+        "independentAcquisitions": 2,
+        "groupedAcquisitions": 1,
+        "coldStart": {
+          "lowerMs": null,
+          "expectedMs": null,
+          "upperMs": null,
+          "confidence": "unknown",
+          "display": "unknown"
+        },
+        "sharedContext": {
+          "lowerMs": null,
+          "expectedMs": null,
+          "upperMs": null,
+          "confidence": "unknown",
+          "display": "unknown"
+        },
+        "memberIncremental": {
+          "lowerMs": null,
+          "expectedMs": null,
+          "upperMs": null,
+          "confidence": "unknown",
+          "display": "unknown"
+        },
+        "estimatedReuse": "unknown",
+        "statement": "grouped: coldStart + sharedContext + sum(memberIncremental) = 1 context acquisition; independent: 2 x (coldStart + itemCost) = 2 acquisitions; context reuse is unmeasured: too few finalized executions record session metrics (repeated and governance reads, time to first code change; the anthropic-claude-session adapter), so savings in tokens or time are unknown (PRX-GRP-061)"
+      },
+      "progress": {
+        "total": 2,
+        "complete": 0,
+        "inProgress": 0,
+        "runnable": 1,
+        "blocked": 0,
+        "notRunnable": 1,
+        "statement": "0 of 2 complete; each member completes on its own evidence and the group never implies that every member succeeded (PRX-GRP-042)"
+      },
+      "architectureNotes": [],
+      "notes": [
+        {
+          "code": "below-preferred-size",
+          "severity": "info",
+          "message": "2 members is below the preferred 3..10; the group is kept because its members are cohesive, not to reach a size"
+        }
+      ]
+    },
+    {
+      "id": "GROUP-REPOSITORY-OPERATING-SYSTEM-CONTROL-PLANE-001",
+      "kind": "shared-area",
+      "origin": "planner-recommended",
+      "area": "control-plane",
+      "executionRepository": "repository-operating-system",
+      "crossRepository": false,
+      "affinity": "medium",
+      "confidence": "high",
+      "members": [
+        {
+          "workItem": "PRAXIS-CTL-01",
+          "reason": "with PRAXIS-CTL-05: medium: same area 'control-plane'; same ID family PRAXIS-CTL; similar titles (control, host, plane)",
+          "confidence": "high",
+          "recordedState": "ready",
+          "planningState": "ready",
+          "status": "runnable",
+          "gatedBy": []
+        },
+        {
+          "workItem": "PRAXIS-CTL-02",
+          "reason": "with PRAXIS-CTL-03: high: same area 'control-plane'; both cite requirement PRX-CTL-005; both cite requirement PRX-CTL-011; same ID family PRAXIS-CTL; similar titles (control, plane, read)",
+          "confidence": "high",
+          "recordedState": "ready",
+          "planningState": "ready",
+          "status": "runnable",
+          "gatedBy": []
+        },
+        {
+          "workItem": "PRAXIS-CTL-03",
+          "reason": "with PRAXIS-CTL-02: high: same area 'control-plane'; both cite requirement PRX-CTL-005; both cite requirement PRX-CTL-011; same ID family PRAXIS-CTL; similar titles (control, plane, read)",
+          "confidence": "high",
+          "recordedState": "ready",
+          "planningState": "ready",
+          "status": "runnable",
+          "gatedBy": []
+        },
+        {
+          "workItem": "PRAXIS-CTL-04",
+          "reason": "with PRAXIS-CTL-01: medium: same area 'control-plane'; same ID family PRAXIS-CTL; similar titles (control, plane)",
+          "confidence": "high",
+          "recordedState": "ready",
+          "planningState": "ready",
+          "status": "runnable",
+          "gatedBy": []
+        },
+        {
+          "workItem": "PRAXIS-CTL-05",
+          "reason": "with PRAXIS-CTL-01: medium: same area 'control-plane'; same ID family PRAXIS-CTL; similar titles (control, host, plane)",
+          "confidence": "high",
+          "recordedState": "ready",
+          "planningState": "ready",
+          "status": "runnable",
+          "gatedBy": []
+        },
+        {
+          "workItem": "PRAXIS-CTL-06",
+          "reason": "with PRAXIS-CTL-02: medium: same area 'control-plane'; PRAXIS-CTL-06 depends on PRAXIS-CTL-02 (inferred); same ID family PRAXIS-CTL; similar titles (control, plane)",
+          "confidence": "high",
+          "recordedState": "ready",
+          "planningState": "ready",
+          "status": "runnable",
+          "gatedBy": []
+        }
+      ],
+      "cohesion": [
+        {
+          "signal": {
+            "code": "shared-area",
+            "detail": "control-plane",
+            "basis": "explicit",
+            "level": "medium",
+            "confidence": "high",
+            "description": "same area 'control-plane'"
+          },
+          "members": [
+            "PRAXIS-CTL-01",
+            "PRAXIS-CTL-02",
+            "PRAXIS-CTL-03",
+            "PRAXIS-CTL-04",
+            "PRAXIS-CTL-05",
+            "PRAXIS-CTL-06"
+          ],
+          "covered": 6,
+          "total": 6,
+          "statement": "6/6 same area 'control-plane' [explicit]"
+        },
+        {
+          "signal": {
+            "code": "requirement-family",
+            "detail": "PRAXIS-CTL",
+            "basis": "inferred",
+            "level": "low",
+            "confidence": "low",
+            "description": "same ID family PRAXIS-CTL"
+          },
+          "members": [
+            "PRAXIS-CTL-01",
+            "PRAXIS-CTL-02",
+            "PRAXIS-CTL-03",
+            "PRAXIS-CTL-04",
+            "PRAXIS-CTL-05",
+            "PRAXIS-CTL-06"
+          ],
+          "covered": 6,
+          "total": 6,
+          "statement": "6/6 same ID family PRAXIS-CTL [inferred]"
+        },
+        {
+          "signal": {
+            "code": "similar-title",
+            "detail": "control,plane",
+            "basis": "inferred",
+            "level": "low",
+            "confidence": "low",
+            "description": "similar titles (control, plane)"
+          },
+          "members": [
+            "PRAXIS-CTL-01",
+            "PRAXIS-CTL-02",
+            "PRAXIS-CTL-03",
+            "PRAXIS-CTL-04",
+            "PRAXIS-CTL-05",
+            "PRAXIS-CTL-06"
+          ],
+          "covered": 6,
+          "total": 6,
+          "statement": "6/6 similar titles (control, plane) [inferred]"
+        },
+        {
+          "signal": {
+            "code": "hard-dependency",
+            "detail": "PRAXIS-CTL-06>PRAXIS-CTL-02",
+            "basis": "inferred",
+            "level": "medium",
+            "confidence": "low",
+            "description": "PRAXIS-CTL-06 depends on PRAXIS-CTL-02 (inferred)"
+          },
+          "members": [
+            "PRAXIS-CTL-02",
+            "PRAXIS-CTL-06"
+          ],
+          "covered": 2,
+          "total": 6,
+          "statement": "2/6 PRAXIS-CTL-06 depends on PRAXIS-CTL-02 (inferred) [inferred]"
+        },
+        {
+          "signal": {
+            "code": "shared-requirement",
+            "detail": "PRX-CTL-005",
+            "basis": "derived",
+            "level": "medium",
+            "confidence": "medium",
+            "description": "both cite requirement PRX-CTL-005"
+          },
+          "members": [
+            "PRAXIS-CTL-02",
+            "PRAXIS-CTL-03"
+          ],
+          "covered": 2,
+          "total": 6,
+          "statement": "2/6 both cite requirement PRX-CTL-005 [derived]"
+        },
+        {
+          "signal": {
+            "code": "shared-requirement",
+            "detail": "PRX-CTL-011",
+            "basis": "derived",
+            "level": "medium",
+            "confidence": "medium",
+            "description": "both cite requirement PRX-CTL-011"
+          },
+          "members": [
+            "PRAXIS-CTL-02",
+            "PRAXIS-CTL-03"
+          ],
+          "covered": 2,
+          "total": 6,
+          "statement": "2/6 both cite requirement PRX-CTL-011 [derived]"
+        },
+        {
+          "signal": {
+            "code": "similar-title",
+            "detail": "control,host,plane",
+            "basis": "inferred",
+            "level": "low",
+            "confidence": "low",
+            "description": "similar titles (control, host, plane)"
+          },
+          "members": [
+            "PRAXIS-CTL-01",
+            "PRAXIS-CTL-05"
+          ],
+          "covered": 2,
+          "total": 6,
+          "statement": "2/6 similar titles (control, host, plane) [inferred]"
+        },
+        {
+          "signal": {
+            "code": "similar-title",
+            "detail": "control,plane,read",
+            "basis": "inferred",
+            "level": "low",
+            "confidence": "low",
+            "description": "similar titles (control, plane, read)"
+          },
+          "members": [
+            "PRAXIS-CTL-02",
+            "PRAXIS-CTL-03"
+          ],
+          "covered": 2,
+          "total": 6,
+          "statement": "2/6 similar titles (control, plane, read) [inferred]"
+        },
+        {
+          "signal": {
+            "code": "similar-title",
+            "detail": "control,plane,state",
+            "basis": "inferred",
+            "level": "low",
+            "confidence": "low",
+            "description": "similar titles (control, plane, state)"
+          },
+          "members": [
+            "PRAXIS-CTL-02",
+            "PRAXIS-CTL-05"
+          ],
+          "covered": 2,
+          "total": 6,
+          "statement": "2/6 similar titles (control, plane, state) [inferred]"
+        }
+      ],
+      "sharedContext": [
+        "same area 'control-plane'"
+      ],
+      "requiredSequence": [
+        "PRAXIS-CTL-01",
+        "PRAXIS-CTL-02",
+        "PRAXIS-CTL-03",
+        "PRAXIS-CTL-04",
+        "PRAXIS-CTL-05",
+        "PRAXIS-CTL-06"
+      ],
+      "collisionRisk": "elevated",
+      "collisions": [
+        {
+          "left": "PRAXIS-CTL-01",
+          "right": "PRAXIS-CTL-02",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "control-plane",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "PRAXIS-CTL-01",
+          "right": "PRAXIS-CTL-03",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "control-plane",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "PRAXIS-CTL-01",
+          "right": "PRAXIS-CTL-04",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "control-plane",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "PRAXIS-CTL-01",
+          "right": "PRAXIS-CTL-05",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "control-plane",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "PRAXIS-CTL-01",
+          "right": "PRAXIS-CTL-06",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "control-plane",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "PRAXIS-CTL-02",
+          "right": "PRAXIS-CTL-03",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "control-plane",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "PRAXIS-CTL-02",
+          "right": "PRAXIS-CTL-04",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "control-plane",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "PRAXIS-CTL-02",
+          "right": "PRAXIS-CTL-05",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "control-plane",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "PRAXIS-CTL-02",
+          "right": "PRAXIS-CTL-06",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "control-plane",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "PRAXIS-CTL-03",
+          "right": "PRAXIS-CTL-04",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "control-plane",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "PRAXIS-CTL-03",
+          "right": "PRAXIS-CTL-05",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "control-plane",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "PRAXIS-CTL-03",
+          "right": "PRAXIS-CTL-06",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "control-plane",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "PRAXIS-CTL-04",
+          "right": "PRAXIS-CTL-05",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "control-plane",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "PRAXIS-CTL-04",
+          "right": "PRAXIS-CTL-06",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "control-plane",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "PRAXIS-CTL-05",
+          "right": "PRAXIS-CTL-06",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "control-plane",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        }
+      ],
+      "parallelSafe": false,
+      "recommendedExecution": "one-sequential-agent",
+      "executionReasons": [
+        "one reasoning owner by default (PRX-GRP-063); high affinity usually means shared files, so one warmed agent keeps one design",
+        "members depend on each other, so their order is fixed",
+        "intra-group collision risk is elevated: parallel subtasks are not proven independent"
+      ],
+      "contextCost": {
+        "independentAcquisitions": 6,
+        "groupedAcquisitions": 1,
+        "coldStart": {
+          "lowerMs": null,
+          "expectedMs": null,
+          "upperMs": null,
+          "confidence": "unknown",
+          "display": "unknown"
+        },
+        "sharedContext": {
+          "lowerMs": null,
+          "expectedMs": null,
+          "upperMs": null,
+          "confidence": "unknown",
+          "display": "unknown"
+        },
+        "memberIncremental": {
+          "lowerMs": null,
+          "expectedMs": null,
+          "upperMs": null,
+          "confidence": "unknown",
+          "display": "unknown"
+        },
+        "estimatedReuse": "unknown",
+        "statement": "grouped: coldStart + sharedContext + sum(memberIncremental) = 1 context acquisition; independent: 6 x (coldStart + itemCost) = 6 acquisitions; context reuse is unmeasured: too few finalized executions record session metrics (repeated and governance reads, time to first code change; the anthropic-claude-session adapter), so savings in tokens or time are unknown (PRX-GRP-061)"
+      },
+      "progress": {
+        "total": 6,
+        "complete": 0,
+        "inProgress": 0,
+        "runnable": 6,
+        "blocked": 0,
+        "notRunnable": 0,
+        "statement": "0 of 6 complete; each member completes on its own evidence and the group never implies that every member succeeded (PRX-GRP-042)"
+      },
+      "architectureNotes": [],
+      "notes": []
+    },
+    {
+      "id": "GROUP-REPOSITORY-OPERATING-SYSTEM-WORK-PROTOCOL-001",
+      "kind": "shared-area",
+      "origin": "planner-recommended",
+      "area": "work-protocol",
+      "executionRepository": "repository-operating-system",
+      "crossRepository": false,
+      "affinity": "medium",
+      "confidence": "high",
+      "members": [
+        {
+          "workItem": "BUG-WORK-ID-COLLISION",
+          "reason": "with PRAXIS-STATE-MERGE-01: medium: same area 'work-protocol'",
+          "confidence": "high",
+          "recordedState": "captured",
+          "planningState": "captured",
+          "status": "not-runnable",
+          "gatedBy": []
+        },
+        {
+          "workItem": "PRAXIS-STATE-MERGE-01",
+          "reason": "with BUG-WORK-ID-COLLISION: medium: same area 'work-protocol'",
+          "confidence": "high",
+          "recordedState": "ready",
+          "planningState": "ready",
+          "status": "runnable",
+          "gatedBy": []
+        },
+        {
+          "workItem": "WORK-CAPTURE-ID-COLLISION",
+          "reason": "with PRAXIS-STATE-MERGE-01: medium: same area 'work-protocol'",
+          "confidence": "high",
+          "recordedState": "captured",
+          "planningState": "captured",
+          "status": "not-runnable",
+          "gatedBy": []
+        }
+      ],
+      "cohesion": [
+        {
+          "signal": {
+            "code": "shared-area",
+            "detail": "work-protocol",
+            "basis": "explicit",
+            "level": "medium",
+            "confidence": "high",
+            "description": "same area 'work-protocol'"
+          },
+          "members": [
+            "BUG-WORK-ID-COLLISION",
+            "PRAXIS-STATE-MERGE-01",
+            "WORK-CAPTURE-ID-COLLISION"
+          ],
+          "covered": 3,
+          "total": 3,
+          "statement": "3/3 same area 'work-protocol' [explicit]"
+        },
+        {
+          "signal": {
+            "code": "similar-title",
+            "detail": "already,auto,context",
+            "basis": "inferred",
+            "level": "low",
+            "confidence": "low",
+            "description": "similar titles (already, auto, context)"
+          },
+          "members": [
+            "BUG-WORK-ID-COLLISION",
+            "WORK-CAPTURE-ID-COLLISION"
+          ],
+          "covered": 2,
+          "total": 3,
+          "statement": "2/3 similar titles (already, auto, context) [inferred]"
+        }
+      ],
+      "sharedContext": [
+        "same area 'work-protocol'"
+      ],
+      "requiredSequence": [
+        "BUG-WORK-ID-COLLISION",
+        "PRAXIS-STATE-MERGE-01",
+        "WORK-CAPTURE-ID-COLLISION"
+      ],
+      "collisionRisk": "elevated",
+      "collisions": [
+        {
+          "left": "BUG-WORK-ID-COLLISION",
+          "right": "PRAXIS-STATE-MERGE-01",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "work-protocol",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "BUG-WORK-ID-COLLISION",
+          "right": "WORK-CAPTURE-ID-COLLISION",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "work-protocol",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "PRAXIS-STATE-MERGE-01",
+          "right": "WORK-CAPTURE-ID-COLLISION",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "work-protocol",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        }
+      ],
+      "parallelSafe": false,
+      "recommendedExecution": "one-sequential-agent",
+      "executionReasons": [
+        "one reasoning owner by default (PRX-GRP-063); high affinity usually means shared files, so one warmed agent keeps one design",
+        "intra-group collision risk is elevated: parallel subtasks are not proven independent",
+        "triage BUG-WORK-ID-COLLISION, WORK-CAPTURE-ID-COLLISION first: a planning group may hold captured work, but only triaged members can execute"
+      ],
+      "contextCost": {
+        "independentAcquisitions": 3,
+        "groupedAcquisitions": 1,
+        "coldStart": {
+          "lowerMs": null,
+          "expectedMs": null,
+          "upperMs": null,
+          "confidence": "unknown",
+          "display": "unknown"
+        },
+        "sharedContext": {
+          "lowerMs": null,
+          "expectedMs": null,
+          "upperMs": null,
+          "confidence": "unknown",
+          "display": "unknown"
+        },
+        "memberIncremental": {
+          "lowerMs": null,
+          "expectedMs": null,
+          "upperMs": null,
+          "confidence": "unknown",
+          "display": "unknown"
+        },
+        "estimatedReuse": "unknown",
+        "statement": "grouped: coldStart + sharedContext + sum(memberIncremental) = 1 context acquisition; independent: 3 x (coldStart + itemCost) = 3 acquisitions; context reuse is unmeasured: too few finalized executions record session metrics (repeated and governance reads, time to first code change; the anthropic-claude-session adapter), so savings in tokens or time are unknown (PRX-GRP-061)"
+      },
+      "progress": {
+        "total": 3,
+        "complete": 0,
+        "inProgress": 0,
+        "runnable": 1,
+        "blocked": 0,
+        "notRunnable": 2,
+        "statement": "0 of 3 complete; each member completes on its own evidence and the group never implies that every member succeeded (PRX-GRP-042)"
+      },
+      "architectureNotes": [],
+      "notes": []
+    }
+  ],
+  "ungrouped": [
+    {
+      "workItem": "ACTOR-KIND-ANCHOR",
+      "planningState": "ready",
+      "affinity": "none",
+      "reason": "no shared context with any other open item"
+    },
+    {
+      "workItem": "CI-LATEST-ON-VERSION-BUMP",
+      "planningState": "awaiting-evidence",
+      "affinity": "unknown",
+      "reason": "affinity unknown: the item carries no scope evidence (area tag, declared path, requirement, dependency or checkpoint), so the planner cannot say what it shares (PRX-GRP-090 case 11)"
+    },
+    {
+      "workItem": "EXP-A022-BASELINE",
+      "planningState": "partially-complete",
+      "affinity": "none",
+      "reason": "no shared context with any other open item"
+    },
+    {
+      "workItem": "PRAXIS-CN-GL-KINDS",
+      "planningState": "ready",
+      "affinity": "none",
+      "reason": "no shared context with any other open item"
+    },
+    {
+      "workItem": "PRAXIS-INTERNAL-NAMESPACES",
+      "planningState": "captured",
+      "affinity": "none",
+      "reason": "no shared context with any other open item"
+    },
+    {
+      "workItem": "PRAXIS-PLAN-ERROR-HISTORY",
+      "planningState": "ready",
+      "affinity": "none",
+      "reason": "no shared context with any other open item"
+    },
+    {
+      "workItem": "PRAXIS-REMOTE-12",
+      "planningState": "ready",
+      "affinity": "none",
+      "reason": "executes in an external repository that is not declared (grouping.executionRepositories); it is never grouped into this checkout (PRX-GRP-051)"
+    },
+    {
+      "workItem": "PRAXIS-TELEMETRY-CLASSIFY-VOCAB",
+      "planningState": "ready",
+      "affinity": "none",
+      "reason": "no shared context with any other open item"
+    },
+    {
+      "workItem": "WI-0002",
+      "planningState": "captured",
+      "affinity": "medium",
+      "reason": "related to PRAXIS-CTL-06 (medium: same area 'hub') but not cohesive with any formed group: grouping needs medium affinity with at least two thirds of a group's members"
+    },
+    {
+      "workItem": "WI-ACTIVE",
+      "planningState": "blocked",
+      "affinity": "unknown",
+      "reason": "affinity unknown: the item carries no scope evidence (area tag, declared path, requirement, dependency or checkpoint), so the planner cannot say what it shares (PRX-GRP-090 case 11)"
+    },
+    {
+      "workItem": "WI-READY",
+      "planningState": "active",
+      "affinity": "unknown",
+      "reason": "affinity unknown: the item carries no scope evidence (area tag, declared path, requirement, dependency or checkpoint), so the planner cannot say what it shares (PRX-GRP-090 case 11)"
+    }
+  ],
+  "dependencies": [],
+  "cycles": [],
+  "relations": [
+    {
+      "left": "GROUP-REPOSITORY-OPERATING-SYSTEM-ATTRIBUTION-001",
+      "right": "GROUP-REPOSITORY-OPERATING-SYSTEM-CONTROL-PLANE-001",
+      "collisionRisk": "elevated",
+      "dependent": false,
+      "mayRunConcurrently": true,
+      "reason": "no dependency and cross-group collision risk elevated is admitted by the accept-elevated policy; they may run concurrently"
+    },
+    {
+      "left": "GROUP-REPOSITORY-OPERATING-SYSTEM-ATTRIBUTION-001",
+      "right": "GROUP-REPOSITORY-OPERATING-SYSTEM-WORK-PROTOCOL-001",
+      "collisionRisk": "elevated",
+      "dependent": false,
+      "mayRunConcurrently": true,
+      "reason": "no dependency and cross-group collision risk elevated is admitted by the accept-elevated policy; they may run concurrently"
+    },
+    {
+      "left": "GROUP-REPOSITORY-OPERATING-SYSTEM-CONTROL-PLANE-001",
+      "right": "GROUP-REPOSITORY-OPERATING-SYSTEM-WORK-PROTOCOL-001",
+      "collisionRisk": "elevated",
+      "dependent": false,
+      "mayRunConcurrently": true,
+      "reason": "no dependency and cross-group collision risk elevated is admitted by the accept-elevated policy; they may run concurrently"
+    }
+  ],
+  "affinities": [
+    {
+      "left": "ATTR-COMPLETE-BASE-REF-SWEEP",
+      "right": "ATTR-RECONCILE-SYMLINK-SUBMODULE",
+      "affinity": "high",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "attribution",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'attribution'"
+        },
+        {
+          "code": "shared-area",
+          "detail": "reconciliation",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'reconciliation'"
+        },
+        {
+          "code": "shared-requirement",
+          "detail": "DF-ROS-2026-A040",
+          "basis": "derived",
+          "level": "medium",
+          "confidence": "medium",
+          "description": "both cite requirement DF-ROS-2026-A040"
+        }
+      ],
+      "statement": "high: same area 'attribution'; same area 'reconciliation'; both cite requirement DF-ROS-2026-A040"
+    },
+    {
+      "left": "BUG-WORK-ID-COLLISION",
+      "right": "PRAXIS-STATE-MERGE-01",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "work-protocol",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'work-protocol'"
+        }
+      ],
+      "statement": "medium: same area 'work-protocol'"
+    },
+    {
+      "left": "BUG-WORK-ID-COLLISION",
+      "right": "WORK-CAPTURE-ID-COLLISION",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "work-protocol",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'work-protocol'"
+        },
+        {
+          "code": "similar-title",
+          "detail": "already,auto,context",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "similar titles (already, auto, context)"
+        }
+      ],
+      "statement": "medium: same area 'work-protocol'; similar titles (already, auto, context)"
+    },
+    {
+      "left": "PRAXIS-CTL-01",
+      "right": "PRAXIS-CTL-02",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "control-plane",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'control-plane'"
+        },
+        {
+          "code": "requirement-family",
+          "detail": "PRAXIS-CTL",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "same ID family PRAXIS-CTL"
+        },
+        {
+          "code": "similar-title",
+          "detail": "control,plane",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "similar titles (control, plane)"
+        }
+      ],
+      "statement": "medium: same area 'control-plane'; same ID family PRAXIS-CTL; similar titles (control, plane)"
+    },
+    {
+      "left": "PRAXIS-CTL-01",
+      "right": "PRAXIS-CTL-03",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "control-plane",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'control-plane'"
+        },
+        {
+          "code": "requirement-family",
+          "detail": "PRAXIS-CTL",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "same ID family PRAXIS-CTL"
+        },
+        {
+          "code": "similar-title",
+          "detail": "control,plane",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "similar titles (control, plane)"
+        }
+      ],
+      "statement": "medium: same area 'control-plane'; same ID family PRAXIS-CTL; similar titles (control, plane)"
+    },
+    {
+      "left": "PRAXIS-CTL-01",
+      "right": "PRAXIS-CTL-04",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "control-plane",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'control-plane'"
+        },
+        {
+          "code": "requirement-family",
+          "detail": "PRAXIS-CTL",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "same ID family PRAXIS-CTL"
+        },
+        {
+          "code": "similar-title",
+          "detail": "control,plane",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "similar titles (control, plane)"
+        }
+      ],
+      "statement": "medium: same area 'control-plane'; same ID family PRAXIS-CTL; similar titles (control, plane)"
+    },
+    {
+      "left": "PRAXIS-CTL-01",
+      "right": "PRAXIS-CTL-05",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "control-plane",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'control-plane'"
+        },
+        {
+          "code": "requirement-family",
+          "detail": "PRAXIS-CTL",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "same ID family PRAXIS-CTL"
+        },
+        {
+          "code": "similar-title",
+          "detail": "control,host,plane",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "similar titles (control, host, plane)"
+        }
+      ],
+      "statement": "medium: same area 'control-plane'; same ID family PRAXIS-CTL; similar titles (control, host, plane)"
+    },
+    {
+      "left": "PRAXIS-CTL-01",
+      "right": "PRAXIS-CTL-06",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "control-plane",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'control-plane'"
+        },
+        {
+          "code": "requirement-family",
+          "detail": "PRAXIS-CTL",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "same ID family PRAXIS-CTL"
+        },
+        {
+          "code": "similar-title",
+          "detail": "control,plane",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "similar titles (control, plane)"
+        }
+      ],
+      "statement": "medium: same area 'control-plane'; same ID family PRAXIS-CTL; similar titles (control, plane)"
+    },
+    {
+      "left": "PRAXIS-CTL-02",
+      "right": "PRAXIS-CTL-03",
+      "affinity": "high",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "control-plane",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'control-plane'"
+        },
+        {
+          "code": "shared-requirement",
+          "detail": "PRX-CTL-005",
+          "basis": "derived",
+          "level": "medium",
+          "confidence": "medium",
+          "description": "both cite requirement PRX-CTL-005"
+        },
+        {
+          "code": "shared-requirement",
+          "detail": "PRX-CTL-011",
+          "basis": "derived",
+          "level": "medium",
+          "confidence": "medium",
+          "description": "both cite requirement PRX-CTL-011"
+        },
+        {
+          "code": "requirement-family",
+          "detail": "PRAXIS-CTL",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "same ID family PRAXIS-CTL"
+        },
+        {
+          "code": "similar-title",
+          "detail": "control,plane,read",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "similar titles (control, plane, read)"
+        }
+      ],
+      "statement": "high: same area 'control-plane'; both cite requirement PRX-CTL-005; both cite requirement PRX-CTL-011; same ID family PRAXIS-CTL; similar titles (control, plane, read)"
+    },
+    {
+      "left": "PRAXIS-CTL-02",
+      "right": "PRAXIS-CTL-04",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "control-plane",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'control-plane'"
+        },
+        {
+          "code": "requirement-family",
+          "detail": "PRAXIS-CTL",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "same ID family PRAXIS-CTL"
+        },
+        {
+          "code": "similar-title",
+          "detail": "control,plane",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "similar titles (control, plane)"
+        }
+      ],
+      "statement": "medium: same area 'control-plane'; same ID family PRAXIS-CTL; similar titles (control, plane)"
+    },
+    {
+      "left": "PRAXIS-CTL-02",
+      "right": "PRAXIS-CTL-05",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "control-plane",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'control-plane'"
+        },
+        {
+          "code": "requirement-family",
+          "detail": "PRAXIS-CTL",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "same ID family PRAXIS-CTL"
+        },
+        {
+          "code": "similar-title",
+          "detail": "control,plane,state",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "similar titles (control, plane, state)"
+        }
+      ],
+      "statement": "medium: same area 'control-plane'; same ID family PRAXIS-CTL; similar titles (control, plane, state)"
+    },
+    {
+      "left": "PRAXIS-CTL-02",
+      "right": "PRAXIS-CTL-06",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "control-plane",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'control-plane'"
+        },
+        {
+          "code": "hard-dependency",
+          "detail": "PRAXIS-CTL-06>PRAXIS-CTL-02",
+          "basis": "inferred",
+          "level": "medium",
+          "confidence": "low",
+          "description": "PRAXIS-CTL-06 depends on PRAXIS-CTL-02 (inferred)"
+        },
+        {
+          "code": "requirement-family",
+          "detail": "PRAXIS-CTL",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "same ID family PRAXIS-CTL"
+        },
+        {
+          "code": "similar-title",
+          "detail": "control,plane",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "similar titles (control, plane)"
+        }
+      ],
+      "statement": "medium: same area 'control-plane'; PRAXIS-CTL-06 depends on PRAXIS-CTL-02 (inferred); same ID family PRAXIS-CTL; similar titles (control, plane)"
+    },
+    {
+      "left": "PRAXIS-CTL-03",
+      "right": "PRAXIS-CTL-04",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "control-plane",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'control-plane'"
+        },
+        {
+          "code": "requirement-family",
+          "detail": "PRAXIS-CTL",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "same ID family PRAXIS-CTL"
+        },
+        {
+          "code": "similar-title",
+          "detail": "control,plane",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "similar titles (control, plane)"
+        }
+      ],
+      "statement": "medium: same area 'control-plane'; same ID family PRAXIS-CTL; similar titles (control, plane)"
+    },
+    {
+      "left": "PRAXIS-CTL-03",
+      "right": "PRAXIS-CTL-05",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "control-plane",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'control-plane'"
+        },
+        {
+          "code": "requirement-family",
+          "detail": "PRAXIS-CTL",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "same ID family PRAXIS-CTL"
+        },
+        {
+          "code": "similar-title",
+          "detail": "control,plane",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "similar titles (control, plane)"
+        }
+      ],
+      "statement": "medium: same area 'control-plane'; same ID family PRAXIS-CTL; similar titles (control, plane)"
+    },
+    {
+      "left": "PRAXIS-CTL-03",
+      "right": "PRAXIS-CTL-06",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "control-plane",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'control-plane'"
+        },
+        {
+          "code": "requirement-family",
+          "detail": "PRAXIS-CTL",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "same ID family PRAXIS-CTL"
+        },
+        {
+          "code": "similar-title",
+          "detail": "control,plane",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "similar titles (control, plane)"
+        }
+      ],
+      "statement": "medium: same area 'control-plane'; same ID family PRAXIS-CTL; similar titles (control, plane)"
+    },
+    {
+      "left": "PRAXIS-CTL-04",
+      "right": "PRAXIS-CTL-05",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "control-plane",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'control-plane'"
+        },
+        {
+          "code": "requirement-family",
+          "detail": "PRAXIS-CTL",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "same ID family PRAXIS-CTL"
+        },
+        {
+          "code": "similar-title",
+          "detail": "control,plane",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "similar titles (control, plane)"
+        }
+      ],
+      "statement": "medium: same area 'control-plane'; same ID family PRAXIS-CTL; similar titles (control, plane)"
+    },
+    {
+      "left": "PRAXIS-CTL-04",
+      "right": "PRAXIS-CTL-06",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "control-plane",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'control-plane'"
+        },
+        {
+          "code": "requirement-family",
+          "detail": "PRAXIS-CTL",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "same ID family PRAXIS-CTL"
+        },
+        {
+          "code": "similar-title",
+          "detail": "control,plane",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "similar titles (control, plane)"
+        }
+      ],
+      "statement": "medium: same area 'control-plane'; same ID family PRAXIS-CTL; similar titles (control, plane)"
+    },
+    {
+      "left": "PRAXIS-CTL-05",
+      "right": "PRAXIS-CTL-06",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "control-plane",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'control-plane'"
+        },
+        {
+          "code": "requirement-family",
+          "detail": "PRAXIS-CTL",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "same ID family PRAXIS-CTL"
+        },
+        {
+          "code": "similar-title",
+          "detail": "control,plane",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "similar titles (control, plane)"
+        }
+      ],
+      "statement": "medium: same area 'control-plane'; same ID family PRAXIS-CTL; similar titles (control, plane)"
+    },
+    {
+      "left": "PRAXIS-CTL-06",
+      "right": "WI-0002",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "hub",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'hub'"
+        }
+      ],
+      "statement": "medium: same area 'hub'"
+    },
+    {
+      "left": "PRAXIS-STATE-MERGE-01",
+      "right": "WORK-CAPTURE-ID-COLLISION",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "work-protocol",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'work-protocol'"
+        }
+      ],
+      "statement": "medium: same area 'work-protocol'"
+    }
+  ],
+  "unknownEvidence": [
+    "context reuse is unmeasured: too few finalized executions record session metrics (repeated and governance reads, time to first code change; the anthropic-claude-session adapter), so savings in tokens or time are unknown (PRX-GRP-061)",
+    "historical co-change is not observable: telemetry does not yet link executions to the files they changed per work item",
+    "no declared paths (planner configuration 'areas'): file and module overlap is unknown, only tags are compared",
+    "no human-declared groups",
+    "monetary cost is unknown"
+  ]
+}

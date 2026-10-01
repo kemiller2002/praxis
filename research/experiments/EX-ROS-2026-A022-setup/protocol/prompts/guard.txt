@@ -1,0 +1,6 @@
+Before anything else, run exactly the following command in the repository
+and reply with its complete output and nothing else. Do not read any file,
+open any work item or run any other command yet; further instructions follow
+in the next message.
+
+git fetch --quiet origin <BRANCH> && printf 'A022-GUARD HEAD=%s ORIGIN=%s BRANCH=%s DIRTY=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse origin/<BRANCH>)" "$(git rev-parse --abbrev-ref HEAD)" "$(git status --porcelain | wc -l | tr -d ' ')"

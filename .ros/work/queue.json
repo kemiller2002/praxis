@@ -1183,16 +1183,16 @@
     {
       "id": "ATTR-RECONCILE-SYMLINK-SUBMODULE",
       "title": "Content-match symbolic links and submodules for reconciled attribution",
-      "description": "ReconciliationCoverage hashes working-tree content with git hash-object, which follows symlinks and cannot hash submodules, so a reconciled symlink or submodule path never matches its recorded blob and always fails validation (fail closed). Compare the link target text / gitlink commit instead. Follow-up from GH-80 / DF-ROS-2026-A040.",
+      "description": "ReconciliationCoverage hashes working-tree content with git hash-object, which follows symlinks and cannot hash submodules, so a reconciled symlink or submodule path never matches its recorded blob and always fails validation (fail closed). Compare the link target text / gitlink commit instead. Follow-up from GH-80 / DF-ROS-2026-A040.\n\nAcceptance: (1) a reconciled symbolic-link path whose link target is unchanged matches its recorded blob (compare what Git stores for the link, not the followed file); (2) a reconciled submodule path matches when its gitlink commit is unchanged; (3) a changed link target or gitlink still fails closed; (4) regular-file behaviour is unchanged; (5) tests use real Git fixtures for both cases. Not to be merged to main before experiment EX-ROS-2026-A022 is evaluated and the repository owner decides.",
       "tags": [
         "attribution",
         "reconciliation"
       ],
       "priority": "low",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-09-27T02:00:52.000Z",
-      "updatedAt": "2026-09-27T02:00:52.000Z",
+      "updatedAt": "2026-10-01T10:44:36.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2191,16 +2191,16 @@
     {
       "id": "ACTOR-KIND-ANCHOR",
       "title": "ActorKind extension pattern accepts a trailing newline ($ anchor)",
-      "description": "ActorKind.tryParse (src/Ros.Domain/Provenance/Actor.fs) matches ^x-[a-z0-9][a-z0-9-]*$ with a .NET $ anchor, which also matches before a trailing newline, so 'x-agent\\n' parses as an extension kind. Found while hardening praxis.remote input validation (PRAXIS-REMOTE-01 guards its own path with a control-character check). Fix: anchor with \\z and add a test; audit other Domain patterns for the same anchor.",
+      "description": "ActorKind.tryParse (src/Ros.Domain/Provenance/Actor.fs) matches ^x-[a-z0-9][a-z0-9-]*$ with a .NET $ anchor, which also matches before a trailing newline, so 'x-agent\\n' parses as an extension kind. Found while hardening praxis.remote input validation (PRAXIS-REMOTE-01 guards its own path with a control-character check). Fix: anchor with \\z and add a test; audit other Domain patterns for the same anchor.\n\nAcceptance: (1) ActorKind.tryParse rejects a value with a trailing newline or carriage return (for example x-agent followed by a newline); (2) every regular expression under src/Ros.Domain used to validate a whole value is audited, and each one that anchors with $ is corrected (for example to \\z) or recorded with the reason it is safe; the audit list is part of the completion evidence; (3) a test for each corrected pattern; (4) no accepted valid value changes. Not to be merged to main before experiment EX-ROS-2026-A022 is evaluated and the repository owner decides.",
       "tags": [
         "provenance",
         "security"
       ],
       "priority": "low",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-09-28T07:59:26.521Z",
-      "updatedAt": "2026-09-28T07:59:26.521Z",
+      "updatedAt": "2026-10-01T10:44:37.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2787,15 +2787,15 @@
     {
       "id": "PRAXIS-TELEMETRY-CLASSIFY-VOCAB",
       "title": "telemetry classify accepts classifications that validate rejects",
-      "description": "Found during PRAXIS-CONT-11-SEGMENTATION: './ros telemetry classify ID --classification production-engineering' succeeded and wrote the value into the execution record, and './ros validate' then failed with 'invalid work classification'. classify should refuse values outside the work-classification vocabulary (or x- extensions) that validate enforces, at write time.",
+      "description": "Found during PRAXIS-CONT-11-SEGMENTATION: './ros telemetry classify ID --classification production-engineering' succeeded and wrote the value into the execution record, and './ros validate' then failed with 'invalid work classification'. classify should refuse values outside the work-classification vocabulary (or x- extensions) that validate enforces, at write time.\n\nAcceptance: (1) telemetry classify refuses, with a non-zero exit and nothing written, any classification that praxis validate would reject, and still accepts vocabulary values and x- extensions; (2) every other write path that records work classifications (for example telemetry start --classification and work start --classification) applies the same rule; (3) the write-time check and validate share one definition of the vocabulary rather than two copies; (4) tests. Not to be merged to main before experiment EX-ROS-2026-A022 is evaluated and the repository owner decides.",
       "tags": [
         "telemetry"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-09-29T10:22:02.822Z",
-      "updatedAt": "2026-09-29T10:22:02.822Z",
+      "updatedAt": "2026-10-01T10:44:37.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2986,15 +2986,15 @@
     {
       "id": "PRAXIS-STATE-MERGE-01",
       "title": "Parallel work items conflict in single-document Praxis state files",
-      "description": "Found repeatedly on 2026-09-29: PRs #106, #108, #110, #111, #112 and #116 each conflicted with main only in .ros/context/current.json, .ros/work/queue.json and .ros/events/events.jsonl, whenever main's Praxis state moved (other work items, remote-execution commits, PR #115). Resolution has required hand-editing Praxis state (PR #106's resolution corrupted current.json and dropped a queue item) or re-landing the branch with state re-recorded through the CLI. Praxis needs a supported merge path (a CLI-owned state merge or git merge driver: union of append-only events, three-way merge of id-keyed items) or a per-item state layout that cannot conflict. It must never require hand edits.",
+      "description": "Found repeatedly on 2026-09-29: PRs #106, #108, #110, #111, #112 and #116 each conflicted with main only in .ros/context/current.json, .ros/work/queue.json and .ros/events/events.jsonl, whenever main's Praxis state moved (other work items, remote-execution commits, PR #115). Resolution has required hand-editing Praxis state (PR #106's resolution corrupted current.json and dropped a queue item) or re-landing the branch with state re-recorded through the CLI. Praxis needs a supported merge path (a CLI-owned state merge or git merge driver: union of append-only events, three-way merge of id-keyed items) or a per-item state layout that cannot conflict. It must never require hand edits.\n\nAcceptance: (1) a supported, documented path merges two branches whose Praxis state changed independently (for example different work items started, checkpointed or completed on each) with no hand edit of .ros state: a CLI-owned merge, a Git merge driver installed by Praxis, or a state layout that cannot conflict; (2) append-only event history keeps every event exactly once in a deterministic order, and id-keyed items merge three-way; (3) genuinely conflicting changes to the same item fail closed with a report naming the item, never silently picking a side; (4) praxis validate passes on the merged result in a test that reproduces the conflict pattern described above; (5) every single-document Praxis state file that ordinary parallel work modifies is covered, or listed as not covered with the reason; (6) docs/work-protocol.md documents the path; tests. Not to be merged to main before experiment EX-ROS-2026-A022 is evaluated and the repository owner decides.",
       "tags": [
         "work-protocol"
       ],
       "priority": "high",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-09-29T16:23:39.433Z",
-      "updatedAt": "2026-09-29T16:23:39.433Z",
+      "updatedAt": "2026-10-01T10:44:35.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3890,6 +3890,240 @@
         "provider": "openai",
         "model": "unknown",
         "runtime": "codex"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "EXP-A022-BASELINE",
+      "title": "Prepare and freeze the backlog baseline for experiment EX-ROS-2026-A022",
+      "description": "Capture and triage the work items whose acceptance criteria an experiment will hold fixed, so that every condition starts from one frozen commit. Backlog state changes only; no product code. The experiment design itself is recorded separately after the baseline commit.",
+      "tags": [
+        "research",
+        "experiment"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-01T10:43:14.000Z",
+      "updatedAt": "2026-10-01T10:43:17.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-CTL-01",
+      "title": "Control-plane host bind policy and declared listen scope",
+      "description": "Covers PRX-CTL-001 (host foundation), PRX-CTL-002 and PRX-CTL-003 of requirements/EXECUTION-ORCHESTRATION.md for the existing local hosts, praxis web serve and praxis hub serve. Today either host binds whatever --host names without any configuration check, and nothing reports the effective scope. Acceptance: (1) both hosts bind to loopback by default; (2) a non-loopback --host is refused (non-zero exit, nothing listening) unless repository configuration explicitly authorizes broader exposure, and the refusal names that setting; (3) the effective bind address, port, whether it is loopback-only, and the authorization source are reported in the startup output and by a read-only diagnostics endpoint of the host as typed JSON; (4) docs/web-interface.md and docs/project-administration-hub.md describe the policy; (5) tests cover the default, refused, authorized and reported cases. Not to be merged to main before experiment EX-ROS-2026-A022 is evaluated and the repository owner decides.",
+      "tags": [
+        "control-plane"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-01T10:44:16.000Z",
+      "updatedAt": "2026-10-01T10:44:16.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": "requirements/EXECUTION-ORCHESTRATION.md#PRX-CTL-002"
+    },
+    {
+      "id": "PRAXIS-CTL-02",
+      "title": "Typed control-plane read API for work state and legal actions",
+      "description": "Covers PRX-CTL-005 (work state, legal actions, obligations, unknowns) and PRX-CTL-011 (typed control-plane data) of requirements/EXECUTION-ORCHESTRATION.md for praxis web serve. Today GET /api/work and GET /api/work/ID relay CLI output with no versioned contract. Acceptance: (1) a versioned, documented JSON contract defined in the F# contracts for the work list and for one work item: identity, semantic state, recorded backlog and live state, legal next actions, and, for transitions the kernel refuses where it can say why, that reason; (2) obligations and unknowns are included where Praxis records them, and reported explicitly as unavailable (not empty) when no source exists; (3) read endpoints never write repository state; (4) an unknown item returns 404 with a structured error body; (5) existing /api/work clients keep working or the change is documented; (6) tests. Not to be merged to main before experiment EX-ROS-2026-A022 is evaluated and the repository owner decides.",
+      "tags": [
+        "control-plane"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-01T10:44:17.000Z",
+      "updatedAt": "2026-10-01T10:44:17.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": "requirements/EXECUTION-ORCHESTRATION.md#PRX-CTL-005"
+    },
+    {
+      "id": "PRAXIS-CTL-03",
+      "title": "Control-plane read API for executions, receipts and evidence",
+      "description": "Covers PRX-CTL-005 (executions, receipts, evidence), PRX-CTL-011 and PRX-CTL-012 of requirements/EXECUTION-ORCHESTRATION.md for praxis web serve. Acceptance: (1) typed, versioned read endpoints list executions (optionally for one work item) and show one execution: role, status, actor, and provider/model/runtime presented as execution-host information, never as the owner of work state; (2) an execution's steps with expected and observed receipts and their match, mismatch or indeterminate state; (3) a work item's recorded evidence and durable checkpoints; (4) telemetry usage and cost where recorded, and explicitly unknown otherwise; (5) the data is obtained through the same paths as praxis execution show --json, work context, work checkpoint show and telemetry usage, not re-derived; (6) the endpoints never write; tests. Not to be merged to main before experiment EX-ROS-2026-A022 is evaluated and the repository owner decides.",
+      "tags": [
+        "control-plane"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-01T10:44:17.000Z",
+      "updatedAt": "2026-10-01T10:44:18.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": "requirements/EXECUTION-ORCHESTRATION.md#PRX-CTL-005"
+    },
+    {
+      "id": "PRAXIS-CTL-04",
+      "title": "Control-plane transition requests with structured refusals",
+      "description": "Covers PRX-CTL-006, PRX-UI-024 and PRX-UI-027 of requirements/EXECUTION-ORCHESTRATION.md at the API level of praxis web serve. Today POST /api/work/ID/ACTION returns the CLI's failure text as a plain message. Acceptance: (1) one transition-request endpoint accepts a requested action for a work item (ready, block, abandon, start, resume, complete, with their arguments) and executes it through the same transition path as the CLI, never reimplementing a rule; (2) success returns the item's resulting typed state; (3) a refused transition returns a structured refusal (machine-readable category, the kernel's message, the requested action) with an appropriate HTTP status and leaves Praxis state byte-for-byte unchanged, shown by a test; (4) the actor identity and provenance recorded for an API transition are those of the equivalent CLI command and are never inferred from the HTTP client; (5) the existing per-action routes keep working or are documented as superseded; tests. Not to be merged to main before experiment EX-ROS-2026-A022 is evaluated and the repository owner decides.",
+      "tags": [
+        "control-plane"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-01T10:44:18.000Z",
+      "updatedAt": "2026-10-01T10:44:18.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": "requirements/EXECUTION-ORCHESTRATION.md#PRX-CTL-006"
+    },
+    {
+      "id": "PRAXIS-CTL-05",
+      "title": "Control-plane host holds no canonical state and reconstructs on restart",
+      "description": "Covers PRX-CTL-004, PRX-CTL-008 and PRX-UI-009 of requirements/EXECUTION-ORCHESTRATION.md for praxis web serve and praxis hub serve. Acceptance: (1) the host keeps no workflow state of its own: every response is derived from durable repository and Praxis records at request time, or from a cache invalidated by a state fingerprint; (2) responses carry the state fingerprint and the repository and commit identity they were derived from, so a client can detect staleness; (3) a test restarts the host (a new instance on the same repository) and obtains identical responses, and a test changes Praxis state through the CLI while the host runs and observes the change without a restart; (4) an automated check fails if the host writes repository files other than through the CLI transition path; (5) documented. Not to be merged to main before experiment EX-ROS-2026-A022 is evaluated and the repository owner decides.",
+      "tags": [
+        "control-plane"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-01T10:44:19.000Z",
+      "updatedAt": "2026-10-01T10:44:19.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": "requirements/EXECUTION-ORCHESTRATION.md#PRX-CTL-008"
+    },
+    {
+      "id": "PRAXIS-CTL-06",
+      "title": "Multi-repository control-plane aggregation without a central store",
+      "description": "Covers PRX-CTL-007 of requirements/EXECUTION-ORCHESTRATION.md for praxis hub serve. Acceptance: (1) the hub exposes typed read endpoints listing registered repositories with their availability, and each repository's work list and work item, by delegating to that repository's own Praxis CLI and using the same per-repository contract as the single-repository API; (2) the hub persists only registration data, never a copy of any repository's work state, and a test shows a state change in a registered repository appearing without hub involvement; (3) an unreachable or incompatible repository is reported for that repository and does not fail the whole response; (4) any mutation offered through the hub is delegated to the owning repository's transition path; (5) docs/project-administration-hub.md updated; tests. Depends on: PRAXIS-CTL-02 (its per-repository contract). Not to be merged to main before experiment EX-ROS-2026-A022 is evaluated and the repository owner decides.",
+      "tags": [
+        "control-plane",
+        "hub"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-01T10:44:19.000Z",
+      "updatedAt": "2026-10-01T10:44:19.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": "requirements/EXECUTION-ORCHESTRATION.md#PRX-CTL-007"
+    },
+    {
+      "id": "PRAXIS-CN-GL-KINDS",
+      "title": "Govern the CN (concept) and GL (glossary) artifact kinds the standards define",
+      "description": "GitHub issue #56. framework/standards/IDENTIFIERS.md lists the CN and GL prefixes, but the F# artifact model (src/Ros.Domain/Artifacts/Model.fs, Policy.fs) defines no such kinds, so such records are neither discovered, registered nor validated. Direction, as the issue suggests: add the kinds. Acceptance: (1) CN and GL are artifact kinds with a documented root directory, allowed statuses and identifier/filename rules consistent with the standards; (2) praxis registry build generates their registries and registry check detects staleness; (3) praxis validate applies to them the same identifier, filename, status, reference and provenance checks as other kinds; (4) the starter scaffolds and the Python artifact-validator oracle (tools/ros_cli.py) agree with the F# model wherever they enumerate kinds; (5) tests; afterwards the standards and the tooling no longer disagree. Not to be merged to main before experiment EX-ROS-2026-A022 is evaluated and the repository owner decides.",
+      "tags": [
+        "artifacts",
+        "standards"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-01T10:44:20.000Z",
+      "updatedAt": "2026-10-01T10:44:20.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": "GH-56"
+    },
+    {
+      "id": "PRAXIS-PLAN-ERROR-HISTORY",
+      "title": "Persist planner estimate error over time",
+      "description": "PRX-PLAN-170..173 of requirements/PLANNING-OPTIMIZATION.md; docs/planning.md records 170-173 as met in replay and drift except that error is not yet persisted over time (also the remaining scope of GitHub issue #119). Acceptance: (1) an explicit, opt-in planner command records a replay's estimate-error summary durably (all other plan commands stay read-only), keyed by planner version, repository commit and as-of time, and idempotent for identical inputs; (2) a read view reports error over time, segmented by task class and, where recorded, by provider/model/runtime, with no hard-coded provider performance claims; (3) measurements older than a configured horizon are reported as stale and not used as authoritative; (4) output is deterministic (PRX-PLAN-002); (5) praxis validate checks the stored history; (6) tests and the docs/planning.md status row updated. Not to be merged to main before experiment EX-ROS-2026-A022 is evaluated and the repository owner decides.",
+      "tags": [
+        "planning"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-01T10:44:20.000Z",
+      "updatedAt": "2026-10-01T10:44:21.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": "requirements/PLANNING-OPTIMIZATION.md#PRX-PLAN-170"
+    },
+    {
+      "id": "EXP-A022-DESIGN",
+      "title": "Design, document and freeze experiment EX-ROS-2026-A022 (cohesion-moderated grouped execution)",
+      "description": "Record HY-ROS-2026-A029, the EX-ROS-2026-A022 specification, the affinity model and matrix, cohort selection, protocols, metrics schema, blinding and commitment protocol, evaluator kit and readiness checklist, on top of the frozen baseline. Setup only: no experimental condition is run and no cohort item is implemented.",
+      "tags": [
+        "research",
+        "experiment"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-01T10:51:33.000Z",
+      "updatedAt": "2026-10-01T10:51:33.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
       },
       "source": "manual",
       "sourceReference": null

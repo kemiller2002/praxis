@@ -1,0 +1,94 @@
+{
+  "schema": "a022-execution-metrics/1",
+  "experiment": "EX-ROS-2026-A022",
+  "rules": [
+    "One document per condition: research/experiments/EX-ROS-2026-A022-results/metrics/<token>.json on the orchestration branch, written only after every condition has finished.",
+    "Every metric is an object {value, source, quality}. value is a number or null; null means unknown or unavailable and is never written as 0. quality is observed | derived | unavailable.",
+    "Raw inputs are preserved beside the document: get_session JSON per session, the session_metrics.py file per session, git outputs, CI run listings.",
+    "No metric is combined with another into a score. Token counts are not quality measures.",
+    "The orchestrator's own session is never counted in any condition; it is reported separately."
+  ],
+  "condition": {
+    "token": "string, the run token",
+    "cohort": "high | low",
+    "mode": "grouped | independent",
+    "branch": "experiment/a022-run-<token>",
+    "baselineSha": "f806f817e4656e00550313d839b59ceea87a682d",
+    "finalSha": "string",
+    "launchOrder": "integer, 1..4, from the orchestrator's random draw",
+    "items": "array of {id, outcome: completed|blocked|incomplete, reason}"
+  },
+  "sessions": {
+    "description": "one entry per implementing session (1 for grouped, 5 or more for independent), in start order",
+    "fields": {
+      "sessionId": "string (withheld from evaluators)",
+      "role": "grouped | worker-<n> | replacement-<n> | continuation",
+      "item": "string or null",
+      "createdAt": "get_session.created_at",
+      "idleAt": "get_session.updated_at after the final turn",
+      "configuredModel": "get_session.configured_model",
+      "contextModel": "get_session.session_context.model",
+      "lastServedModel": "get_session.external_metadata.last_served_model",
+      "runtimeVersion": "container_cc_version",
+      "guard": "{expected, head, origin, branch, dirty, passed, repairs}",
+      "post": "{finalSha, P1, P2, P3, P4, P5} (start-guard.txt)",
+      "usage": "get_session.external_metadata.usage verbatim (input, output, cache-read, cache-write tokens, cost USD)"
+    }
+  },
+  "metrics": {
+    "time": {
+      "elapsed.span_seconds": "first session createdAt to last session idleAt (independent includes the gaps between workers)",
+      "elapsed.session_sum_seconds": "sum over sessions of idleAt - createdAt",
+      "elapsed.time_to_first_product_edit_seconds": "per session, from session_metrics.py (first code mutation)"
+    },
+    "platform": {
+      "cost.platform_usd": "sum of get_session usage cost",
+      "tokens.input": "sum",
+      "tokens.output": "sum",
+      "tokens.cache_read": "sum",
+      "tokens.cache_write": "sum"
+    },
+    "activity (from session_metrics.py per session (schema ex-ros-2026-a021.session-metrics/1), summed; null if any session lacks it, per-session values preserved)": {
+      "model_requests": "assistant messages with usage (distinct message ids)",
+      "tool_calls": "all tool calls",
+      "file_reads": "Read tool calls plus read commands",
+      "searches": "Grep/Glob tool calls plus search commands",
+      "files_read_more_than_once.within_session": "distinct paths read 2+ times in one session",
+      "files_read_more_than_once.across_condition": "distinct paths read in 2+ sessions of the condition; derived by the orchestrator from the sessions' event logs (list_events tool calls), null if the logs are not retrievable",
+      "governance_reads": "reads of AGENTS.md, CLAUDE.md, docs/00-governance/, docs/work-protocol.md, docs/cli.md, docs/planning.md and the other governance paths session_metrics.py lists",
+      "builds": "build commands",
+      "test_runs": "test commands",
+      "failed_builds_or_tests": "build/test commands whose tool result reports failure; derived from event logs (session_metrics.py reports toolErrors only), null if unavailable",
+      "tool_errors": "session_metrics.py toolErrors; retries of the same failed command derived from event logs where available, else null",
+      "context_compactions": "compaction events",
+      "cold_starts": "number of sessions (context acquisitions)"
+    },
+    "repository (from git at the condition's final SHA; .ros/ and research/experiments/EX-ROS-2026-A022-runs/ excluded unless stated)": {
+      "commits": "git rev-list --count B..final",
+      "merge_commits": "git rev-list --merges --count B..final",
+      "changed_files": "git diff --name-only B final | wc -l",
+      "source_loc_added": "git diff --numstat B final -- src/ (sum of added)",
+      "source_loc_removed": "git diff --numstat B final -- src/ (sum of removed)",
+      "test_loc_added": "git diff --numstat B final -- tests/",
+      "test_loc_removed": "git diff --numstat B final -- tests/",
+      "other_loc_added_removed": "docs/, starter/, schemas/, tools/, registries/, root files, reported per top-level directory",
+      "praxis_state_changed": "boolean, any .ros/ change (expected true)"
+    },
+    "ci (GitHub Actions 'Praxis validation' runs on the condition's branch, listed after the condition ends)": {
+      "ci_runs": "count of runs",
+      "ci_runs_failed": "count with conclusion other than success",
+      "ci_final_conclusion": "conclusion of the run for finalSha"
+    },
+    "local validation reported by the sessions": {
+      "final_build": "pass | fail | unknown",
+      "final_tests": "{passed, failed} or unknown",
+      "final_validate": "pass | fail | unknown"
+    },
+    "protocol": {
+      "guard_incidents": "count of failed guards (repairs or replacements)",
+      "deviations": "list of {kind, session, description, time}",
+      "analysis_before_product_change": "grouped only: boolean (first product-path commit is after the analysis commit)",
+      "cross_condition_access": "list of any read/fetch of another condition's branch or the A022 design found in the event log (expected empty)"
+    }
+  }
+}

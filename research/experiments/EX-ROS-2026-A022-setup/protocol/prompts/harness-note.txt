@@ -1,0 +1,44 @@
+Experiment harness note (identical for every implementing session; it is
+instrumentation, not part of the task):
+
+1. Toolchain. If `dotnet` is missing, install it with
+   `apt-get install -y dotnet-sdk-10.0` (run `apt-get update` first if the
+   package is not found). That SDK bundles an older FSharp.Core, so build with
+   `dotnet build Ros.slnx --configuration Release -p:FSharpCoreImplicitPackageVersion=10.1.400`
+   and run the F# tests with `dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll`.
+   Never commit that property or any toolchain workaround.
+2. Pass the real current time (`date -u +%Y-%m-%dT%H:%M:%S.000Z`) to every
+   --occurred-at.
+3. Work only on your branch, <BRANCH>. Do not fetch, read or check out any
+   other branch, tag or pull request, and do not open any path named
+   research/experiments/EX-ROS-2026-A022* or research/hypotheses/HY-ROS-2026-A029*
+   on any ref (your branch has none of them except the run directory named
+   below).
+4. Implement only the work item(s) named in this message. Do not start,
+   change, complete or abandon any other backlog item, including
+   EXP-A022-BASELINE, WI-READY, WI-ACTIVE and any other ready item. If one of
+   your items proves impossible or invalid as written, block it with
+   `./praxis work block --id ID --occurred-at ... --reason "..."`, say why in
+   your final report, and continue with the rest; never substitute other
+   work.
+5. In product files (source, tests, test names, documentation, comments) and
+   in commit messages, do not refer to this experiment, to how the work is
+   being executed (sessions, workers, batches, cohorts, grouping or
+   independence), or to other executions. Commit messages begin with the
+   work-item ID(s) they serve.
+6. Do not wait for CI after a push and do not poll CI. Build and run tests
+   locally. CI results are collected afterwards.
+7. Work autonomously: no human will answer questions. Do not open a pull
+   request and do not merge anything.
+8. Immediately before your final `./praxis work checkpoint`, run
+   `python3 research/experiments/EX-ROS-2026-A021-harness/session_metrics.py research/experiments/EX-ROS-2026-A022-runs/<TOKEN>/metrics/<LABEL>.json --label <LABEL>`,
+   commit that file together with your final change, and push. Do not edit
+   the metrics file. Files under research/experiments/ must not be named
+   *.md (`praxis validate` treats every .md there as an experiment record).
+9. Finish by: local build and tests passing (or failures reported), metrics
+   committed and pushed, `./praxis work checkpoint` and
+   `./praxis work complete` for each of your items, `./praxis registry build`,
+   `./praxis validate`, the resulting Praxis state committed and pushed. Then
+   reply with the final pushed commit SHA (`git rev-parse HEAD` after
+   `git push`) and a short report: items completed or blocked, tests run and
+   their results, anything that did not go as expected.

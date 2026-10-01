@@ -1,0 +1,93 @@
+EX-ROS-2026-A022 -- instructions for the blind evaluator
+========================================================
+
+You are evaluating two implementations of the same set of work items. Each
+implementation started from the same baseline commit. You do not know, and
+must not try to find out, how either implementation was produced. Your job
+is to report concrete, checkable findings about the two implementations. You
+are not asked for an overall score or a winner, and "equivalent" or
+"indeterminate" is a valid finding.
+
+1. What you may use
+-------------------
+Only:
+  - this kit directory (README.txt, work-items.txt, the two <arm>.patch files,
+    SHA256SUMS, mapping-commitment.sha256, this file, findings-template.json);
+  - the two arm branches named in README.txt (blind/a022/<arm>), and their
+    GitHub Actions results for exactly those commits;
+  - the baseline commit named in README.txt, for comparison;
+  - AGENTS.md and any repository documentation as it exists at the baseline.
+Nothing else. In particular do NOT fetch, read, list the contents of or check
+out: any branch whose name starts with experiment/ or claude/, any other
+blind/ branch or kit, any path named research/experiments/EX-ROS-2026-A022*
+outside this kit, research/hypotheses/HY-ROS-2026-A029*, any pull request, or
+any session transcript or log. Do not try to recover the mapping (for example
+by comparing trees with other branches or by brute-forcing the commitment).
+If you see something that seems to reveal how an arm was produced, do not
+pursue it: record it under "blinding" in your findings and continue.
+
+You implement nothing and change neither arm.
+
+2. Verify the kit first
+-----------------------
+  sha256sum -c SHA256SUMS            (inside the kit directory)
+Record the result. A mismatch stops the evaluation; report it.
+
+3. Build and test each arm (each in its own clean checkout or worktree)
+------------------------------------------------------------------------
+  git checkout blind/a022/<arm>
+  dotnet build Ros.slnx --configuration Release [-p:FSharpCoreImplicitPackageVersion=10.1.400 if the SDK's FSharp.Core is too old]
+  dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll
+  ./praxis validate
+Note: Praxis state (.ros/) on both arm branches was reset to the baseline for
+blinding, so `./praxis work show ID` reports the baseline state for the
+items, and a validate finding that depends on .ros/ may be an artifact of the
+reset; say so when you report it. If you cannot build locally, use the arm
+commits' own GitHub Actions results and say so. Never report a build or test
+result you did not observe.
+
+4. What to assess
+-----------------
+For each work item in work-items.txt and for each arm:
+  - each acceptance criterion: met, partially met, not met, or unknown, with
+    the evidence (file:line, test name, command and output). A criterion is
+    "not met" only on concrete evidence.
+  - confirmed defects: behaviour that is wrong against the item's text, with
+    a reproduction (command, input, observed and expected result) or a
+    precise code citation. Mark severity (critical: data loss, security,
+    corrupt state; major: criterion failed; minor: other).
+Across the items, for each arm, and comparing the two arms:
+  - invariant consistency: does the arm hold the items' shared invariants
+    one way, or several different ways?
+  - duplicated concepts: the same idea implemented more than once;
+  - conflicting validation rules: two rules for the same input;
+  - storage fragmentation: one fact stored in several places or formats;
+  - API consistency: one contract/envelope/naming/versioning convention or
+    several;
+  - error-model consistency: one way of reporting refusals and errors or
+    several;
+  - transaction and concurrency behaviour: atomicity, locking, partial
+    writes, races, idempotence;
+  - architecture duplication and cross-item integration: do the items'
+    implementations use each other's pieces where they should, or work
+    around them;
+  - tests: what is tested, what is not, test quality;
+  - maintainability-relevant structure: size and cohesion of the new code,
+    coupling, dead code, workarounds, technical debt.
+Where the items have little in common, say that the cross-item questions do
+not apply rather than forcing a finding.
+
+5. How to report
+----------------
+Fill findings-template.json (one JSON document) and write a prose report
+EVALUATION.txt (plain text). Every finding has an id, the arm(s) it concerns,
+a category from the template, the evidence, and, for comparisons, which arm
+it favours or "equivalent" or "indeterminate". Do not compute a total or a
+score. Report your own identity (provider, product, model, runtime) and every
+source you accessed.
+
+Commit both files, and nothing else, to a new branch
+blind/a022/evaluation-<kit> created from the kit branch, under
+research/experiments/EX-ROS-2026-A022-blind-<kit>/output/, and push it.
+Then report the pushed commit SHA. Your evaluation is final once pushed:
+corrections after that are new, dated commits, never rewrites.

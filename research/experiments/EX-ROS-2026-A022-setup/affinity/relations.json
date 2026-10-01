@@ -1,0 +1,37 @@
+{
+  "experiment": "EX-ROS-2026-A022",
+  "schema": "a022-affinity-relations/1",
+  "baseline": "f806f817e4656e00550313d839b59ceea87a682d",
+  "basis": "Directional relations between candidate items judged from their baseline descriptions, cited requirements and baseline code. 'definite' means the relation follows from the stated acceptance criteria or requirement text; 'possible' means a plausible implementation choice would create it, but the criteria do not require it. Only 'definite' relations count in the matrix; 'possible' relations are reported beside it. Unlisted pairs have no judged relation.",
+  "kinds": {
+    "producer-consumer": "one item creates a type, contract, endpoint, record or rule that the other item's acceptance criteria consume",
+    "ordering": "one item's stated dependency requires the other to be done first",
+    "assumption-propagation": "a design decision one item must make changes an assumption the other item's implementation relies on"
+  },
+  "relations": [
+    { "from": "PRAXIS-CTL-02", "to": "PRAXIS-CTL-06", "kind": "ordering", "strength": "definite", "rationale": "PRAXIS-CTL-06 states 'Depends on: PRAXIS-CTL-02 (its per-repository contract)'." },
+    { "from": "PRAXIS-CTL-02", "to": "PRAXIS-CTL-06", "kind": "producer-consumer", "strength": "definite", "rationale": "PRAXIS-CTL-06 criterion 1 reuses the single-repository work contract that PRAXIS-CTL-02 criterion 1 defines." },
+    { "from": "PRAXIS-CTL-02", "to": "PRAXIS-CTL-04", "kind": "producer-consumer", "strength": "definite", "rationale": "PRAXIS-CTL-04 criterion 2 returns 'the item's resulting typed state', the work-item contract PRAXIS-CTL-02 defines." },
+    { "from": "PRAXIS-CTL-04", "to": "PRAXIS-CTL-02", "kind": "assumption-propagation", "strength": "definite", "rationale": "PRAXIS-CTL-02 criterion 1 reports reasons for refused transitions; PRAXIS-CTL-04 criterion 3 defines the structured refusal. One refusal model or two is a decision either item forces on the other." },
+    { "from": "PRAXIS-CTL-02", "to": "PRAXIS-CTL-03", "kind": "assumption-propagation", "strength": "definite", "rationale": "Both define 'typed, versioned' read contracts on the same host (PRX-CTL-005/011); the versioning and envelope convention chosen by one constrains the other." },
+    { "from": "PRAXIS-CTL-05", "to": "PRAXIS-CTL-02", "kind": "assumption-propagation", "strength": "definite", "rationale": "PRAXIS-CTL-05 criterion 2 requires every response to carry the state fingerprint and repository/commit identity, which changes PRAXIS-CTL-02's response shape." },
+    { "from": "PRAXIS-CTL-05", "to": "PRAXIS-CTL-03", "kind": "assumption-propagation", "strength": "definite", "rationale": "As above for PRAXIS-CTL-03's responses." },
+    { "from": "PRAXIS-CTL-05", "to": "PRAXIS-CTL-04", "kind": "assumption-propagation", "strength": "definite", "rationale": "As above for PRAXIS-CTL-04's responses; PRAXIS-CTL-05 criterion 4 also constrains how PRAXIS-CTL-04 may write (only through the CLI path)." },
+    { "from": "PRAXIS-CTL-05", "to": "PRAXIS-CTL-06", "kind": "assumption-propagation", "strength": "definite", "rationale": "PRAXIS-CTL-05 covers praxis hub serve too; its fingerprint/identity rule shapes PRAXIS-CTL-06's aggregated responses." },
+    { "from": "PRAXIS-CTL-01", "to": "PRAXIS-CTL-05", "kind": "producer-consumer", "strength": "definite", "rationale": "PRAXIS-CTL-01 criterion 3 defines the host's typed diagnostics (bind, port, authorization); PRAXIS-CTL-05's 'repository and commit identity' per response belongs to the same host-identity data." },
+    { "from": "PRAXIS-CTL-01", "to": "PRAXIS-CTL-06", "kind": "assumption-propagation", "strength": "definite", "rationale": "PRAXIS-CTL-01 changes how praxis hub serve accepts --host and reads configuration; PRAXIS-CTL-06 extends the same host." },
+    { "from": "PRAXIS-CTL-01", "to": "PRAXIS-CTL-02", "kind": "assumption-propagation", "strength": "possible", "rationale": "The diagnostics endpoint may establish the JSON envelope and error-body convention later endpoints reuse." },
+    { "from": "PRAXIS-CTL-01", "to": "PRAXIS-CTL-03", "kind": "assumption-propagation", "strength": "possible", "rationale": "As above." },
+    { "from": "PRAXIS-CTL-01", "to": "PRAXIS-CTL-04", "kind": "assumption-propagation", "strength": "possible", "rationale": "As above; the startup refusal and the transition refusal may share one refusal model." },
+    { "from": "PRAXIS-CTL-03", "to": "PRAXIS-CTL-04", "kind": "assumption-propagation", "strength": "possible", "rationale": "A successful complete transition records evidence that PRAXIS-CTL-03 reports; the evidence representation could be shared." },
+    { "from": "PRAXIS-CTL-03", "to": "PRAXIS-CTL-06", "kind": "assumption-propagation", "strength": "possible", "rationale": "The hub could expose executions too if it reuses the full single-repository contract." },
+
+    { "from": "PRAXIS-STATE-MERGE-01", "to": "ATTR-RECONCILE-SYMLINK-SUBMODULE", "kind": "assumption-propagation", "strength": "possible", "rationale": "Reconciliation coverage reads reconciliation events from events.jsonl; a merge that reorders or deduplicates events could matter only if coverage depended on order, which its criteria do not state." },
+    { "from": "PRAXIS-PLAN-ERROR-HISTORY", "to": "PRAXIS-STATE-MERGE-01", "kind": "assumption-propagation", "strength": "possible", "rationale": "If the error history is a single-document Praxis state file modified by ordinary parallel work, PRAXIS-STATE-MERGE-01 criterion 5 would have to cover or list it." },
+    { "from": "ACTOR-KIND-ANCHOR", "to": "PRAXIS-CN-GL-KINDS", "kind": "assumption-propagation", "strength": "possible", "rationale": "The audit may change the artifact identifier pattern in Artifacts/Policy.fs, which already includes CN and GL; the kinds work does not need that pattern to change." },
+    { "from": "ACTOR-KIND-ANCHOR", "to": "PRAXIS-TELEMETRY-CLASSIFY-VOCAB", "kind": "assumption-propagation", "strength": "possible", "rationale": "The audit may touch patterns in TelemetryValidation.fs; the classification vocabulary check is a list membership, not a regular expression." },
+
+    { "from": "WORK-CAPTURE-ID-COLLISION", "to": "PRAXIS-STATE-MERGE-01", "kind": "assumption-propagation", "strength": "definite", "rationale": "Both define how work-item identity is kept unique across the queue and the live context; a merged state can introduce exactly the cross-store collision WORK-CAPTURE-ID-COLLISION validates." },
+    { "from": "ATTR-COMPLETE-BASE-REF-SWEEP", "to": "ATTR-RECONCILE-SYMLINK-SUBMODULE", "kind": "assumption-propagation", "strength": "definite", "rationale": "Both change what reconciliation must cover (DF-ROS-2026-A040): moving post-hoc paths to reconcile increases the paths ReconciliationCoverage must content-match." }
+  ]
+}

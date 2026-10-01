@@ -1,0 +1,17 @@
+Implement work item <ITEM> in this repository on branch <BRANCH>,
+following AGENTS.md and the Praxis work protocol (work start, checkpoint,
+complete). Read the harness note at the end of this message first.
+
+Its acceptance criteria are in its backlog description
+(`./praxis work show <ITEM>`). Earlier commits on this branch, if any, are
+part of the repository: read and build on them as you would any other code.
+
+Commit and push in normal increments with <ITEM> as the commit-message
+prefix, and record `./praxis work checkpoint` after meaningful milestones.
+Before completing the item, verify each of its acceptance criteria
+individually (met, partially met, not met, unknown, with the test or command
+that shows it) and include that verification in your completion evidence or
+final report. An item with a criterion not met is not completed: it stays
+active or is blocked. Use metrics label "<LABEL>".
+
+<HARNESS-NOTE>

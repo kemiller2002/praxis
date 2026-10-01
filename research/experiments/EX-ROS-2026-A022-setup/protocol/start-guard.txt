@@ -1,0 +1,73 @@
+EX-ROS-2026-A022 -- start guard (stale-checkout protection)
+==========================================================
+
+Why
+---
+In EX-ROS-2026-A021-R2 (deviation C2) two control workers began from the
+baseline instead of the branch head, although the previous worker's commits
+were already on the remote: the platform served a stale checkout and nobody
+checked. GROUP-02 was then designed without GROUP-01's code. A022 makes that
+impossible to go unnoticed and requires it to be repaired before a worker
+reads anything.
+
+Rule
+----
+Before EVERY implementing session begins work (both grouped sessions and
+every independent worker), the orchestrator verifies
+
+    actual HEAD == origin/<branch> == EXPECTED
+
+where EXPECTED is the baseline B for a grouped session and for the first
+worker of an independent condition, and the previous worker's final pushed
+SHA (as the orchestrator itself read it with `git ls-remote`) for every later
+worker. The check happens in the session's first turn, before the session is
+given its work item or any task, so the session has read nothing but the
+repository's auto-loaded instructions (CLAUDE.md) at that point.
+
+Procedure
+---------
+G1. Orchestrator: read EXPECTED from the remote, never from a worker's claim:
+      git ls-remote origin refs/heads/<branch>      -> must equal EXPECTED
+    (for worker k>1 EXPECTED is that value, recorded right after worker k-1
+    went idle and after confirming worker k-1 reported the same SHA).
+G2. Create the session (create_session, source_url = this repository,
+    source_revision = <branch>) with NO prompt, or with the guard prompt
+    below as its first and only message.
+G3. Send the GUARD PROMPT (protocol/prompts/guard.txt) with <branch>
+    substituted. It contains one command and asks for its output only.
+G4. Read the command's actual tool output from the session's event log
+    (list_events: the tool_result of the Bash call), not the model's prose.
+    Pass if and only if
+      HEAD == EXPECTED and ORIGIN == EXPECTED and BRANCH == <branch> and DIRTY == 0.
+G5. Pass: record {session, expected, head, origin, branch, dirty, time} in
+    the run record; send the work prompt.
+G6. Fail with ORIGIN == EXPECTED but HEAD != EXPECTED (stale or wrong local
+    checkout): do NOT send the work prompt. Send the REPAIR PROMPT
+    (protocol/prompts/repair.txt), which resets the local branch to EXPECTED
+    and re-runs the guard command. Re-check as in G4. Record the incident
+    (both outputs) as a deviation of kind 'stale-checkout-repaired'. If the
+    second check still fails, archive the session unused, create a new
+    session and start again at G2 (record 'session-replaced-before-work').
+G7. Fail with ORIGIN != EXPECTED (the remote is not where the orchestrator
+    expects): stop the condition. Nothing is repaired automatically: find
+    out why (unpushed work, an extra push), record it, and resume only when
+    the remote is explained and equals the intended EXPECTED.
+G8. DIRTY != 0 on a fresh session: treat as G6.
+
+After each worker (post-condition)
+----------------------------------
+P1. The worker reports its final SHA; the orchestrator reads the remote head
+    with `git ls-remote` and requires equality.
+P2. `git merge-base --is-ancestor EXPECTED <final>` must hold.
+P3. The first commit the worker added must have EXPECTED as its parent:
+      git rev-list --reverse --ancestry-path EXPECTED..<final> | head -1
+      git rev-parse <that>^           -> must equal EXPECTED
+P4. No merge commits in EXPECTED..<final> (`git rev-list --merges` empty).
+    A merge is recorded as a deviation, never rewritten.
+P5. The worker's item is complete in .ros at <final> (`./praxis work show
+    ITEM` on a checkout of <final>), or blocked with a recorded reason.
+P1..P5 results are recorded per worker. EXPECTED for the next worker is the
+P1 value.
+
+The guard is identical for grouped sessions so both conditions carry the
+same first exchange and its (small) token cost.

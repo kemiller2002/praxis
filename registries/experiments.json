@@ -138,5 +138,61 @@
       "HY-ROS-2026-A028"
     ],
     "title": "Grouped versus independent execution of one high-affinity cohort (frozen protocol)"
+  },
+  {
+    "created": "2026-10-01",
+    "derived_from": [
+      "EX-ROS-2026-A021"
+    ],
+    "id": "EX-ROS-2026-A022",
+    "inputs": [
+      "EV-ROS-2026-A071",
+      "EV-ROS-2026-A064",
+      "EV-ROS-2026-A063"
+    ],
+    "path": "research/experiments/EX-ROS-2026-A022--cohesion-moderated-grouped-execution.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261001T105134505Z-4886c699": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-01T11:03:41.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "EXP-A022-DESIGN: frozen 2x2 protocol for cohesion-moderated grouped execution"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "research/experiments/EX-ROS-2026-A022-setup/README.txt",
+      "requirements/EXECUTION-ORCHESTRATION.md",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "docs/group-analysis-template.md"
+    ],
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "proposed",
+    "tags": [
+      "planning",
+      "grouping",
+      "context",
+      "cohesion",
+      "affinity",
+      "experiment",
+      "protocol",
+      "blind-evaluation"
+    ],
+    "tests_hypotheses": [
+      "HY-ROS-2026-A029",
+      "HY-ROS-2026-A028"
+    ],
+    "title": "Cohesion-moderated grouped execution - 2x2 of cohort affinity by execution topology (frozen protocol)"
   }
 ]
