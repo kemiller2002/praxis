@@ -3900,10 +3900,10 @@
       "description": "Record the missing contribution for the durable-checkpoint requirement changed during PR #79 integration, verify base-aware validation, and restore a clean main CI state.",
       "tags": [],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-01T11:19:47Z",
-      "updatedAt": "2026-10-01T11:19:58Z",
+      "updatedAt": "2026-10-01T11:21:36Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
