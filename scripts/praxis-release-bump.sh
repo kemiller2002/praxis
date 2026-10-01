@@ -10,7 +10,7 @@
 # before the Praxis state is committed and pushed. Nothing is published here.
 #
 # Requires: a clean checkout of a branch with an upstream, a built ./praxis
-# (dotnet build Ros.slnx --configuration Release), python3, and a Git
+# (dotnet build Praxis.slnx --configuration Release), python3, and a Git
 # identity. Prints `version=`,
 # `base=` and `head=` lines (append them to $GITHUB_OUTPUT in Actions).
 set -euo pipefail

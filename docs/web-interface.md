@@ -61,7 +61,7 @@ protocol: one place owns meaning, everything else is a thin adapter over it.
 browser (server-rendered HTML, plain form posts, no script)
         | HTTP
         v
-praxis web serve (Ros.Cli.WebInterface: routing + rendering, no domain logic)
+praxis web serve (Praxis.Cli.WebInterface: routing + rendering, no domain logic)
         | runs this same CLI as a child process: praxis --root ROOT work ...
         v
 praxis work capture/update/attach/backlog-transition/start/resume/block/complete,
@@ -69,7 +69,7 @@ work list/show, validate --json, status --json  (the kernel)
 ```
 
 - **One orchestration path.** Every read and every change is exactly one
-  invocation of the CLI's own command (`Ros.Cli.WebInterface.commandLine`
+  invocation of the CLI's own command (`Praxis.Cli.WebInterface.commandLine`
   maps each operation to its argument vector; no shell is involved, so no
   title or description can be interpreted as shell syntax). A request that
   would fail on the CLI fails the same way over HTTP, with the same message.
@@ -126,7 +126,7 @@ attachment.
 
 ## Tests
 
-`tests/Ros.Tests/WebInterfaceTests.fs` unit-tests the pure pieces (escaping,
+`tests/Praxis.Tests/WebInterfaceTests.fs` unit-tests the pure pieces (escaping,
 form and multipart parsing, routing, the operation-to-command mapping, the
 allowed-action projection) and starts the real `praxis web serve` on a free
 loopback port against a temporary repository, driving it with `HttpClient`:

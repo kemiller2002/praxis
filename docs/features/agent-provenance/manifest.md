@@ -6,7 +6,7 @@ live in the linked decision, requirements, source symbols, and tests.
 > **Current state (2026-09-28, `DF-ROS-2026-A049`).** This feature is
 > implemented only in F# (`src/`). The Node modules (`tools/*.mjs`) and the
 > Node test files this manifest's history cites were removed; their
-> end-to-end coverage now lives in `tests/Ros.Tests` (mapping in
+> end-to-end coverage now lives in `tests/Praxis.Tests` (mapping in
 > `docs/migrations/fsharp/TRACEABILITY.md`). References to them
 > below are migration lineage, recoverable from Git history.
 
@@ -30,12 +30,12 @@ without destroying earlier provenance.
   - authority decision `DF-ROS-2026-A036`, requirements
     `RQ-ROS-2026-A001`..`A012`.
 - Transitions / commands / messages:
-  - `src/Ros.Cli/Program.fs` `runProvenanceIdentity`,
+  - `src/Praxis.Cli/Program.fs` `runProvenanceIdentity`,
     `runProvenanceRecord`, `runProvenanceShow`, `runProvenanceAudit`,
     `withResolvedActor`, and `identityOverridesFrom`;
-  - `Ros.Infrastructure.Provenance.FileProvenanceRepository.record`.
+  - `Praxis.Infrastructure.Provenance.FileProvenanceRepository.record`.
 - Invariants and guards:
-  - `Ros.Domain.Provenance.ActorKind`, `Actor`, `ActorResolution`;
+  - `Praxis.Domain.Provenance.ActorKind`, `Actor`, `ActorResolution`;
   - `ArtifactProvenance.record` and `ArtifactProvenance.problems`;
   - `ProvenanceValidation.findings`, `EventProvenance.findings`.
 - Capabilities / authority:
@@ -45,7 +45,7 @@ without destroying earlier provenance.
     (`FileProvenanceRepository.resolveAttribution`);
   - identity is self-reported provenance, not authentication.
 - Important effects and effect contracts:
-  - surgical front-matter edits (`Ros.Contracts.Provenance.
+  - surgical front-matter edits (`Praxis.Contracts.Provenance.
     ProvenanceFrontMatter`) verified by read-back before an atomic write;
   - event append through the shared `work-state` journal under the
     `work-protocol` lock.
@@ -69,10 +69,10 @@ without destroying earlier provenance.
 
 ## Tests and verification
 
-- Local behavior tests: `tests/Ros.Tests/ProvenanceTests.fs`, which includes
+- Local behavior tests: `tests/Praxis.Tests/ProvenanceTests.fs`, which includes
   property tests of accumulation and serialization round-trip.
 - Boundary/contract tests:
-  - `tests/Ros.Tests/ProvenanceEffectTests.fs` covers files, events, adapter
+  - `tests/Praxis.Tests/ProvenanceEffectTests.fs` covers files, events, adapter
     export, registries, and impersonation refusal;
   - `tests/provenance-actor-fsharp-differential.test.mjs` checks Node/F#
     actor parity;
@@ -83,7 +83,7 @@ without destroying earlier provenance.
 ## Dependencies
 
 - Allowed direct dependencies:
-  - telemetry identity discovery (`Ros.Domain.Telemetry.Identity`);
+  - telemetry identity discovery (`Praxis.Domain.Telemetry.Identity`);
   - the artifact front-matter codec and policy;
   - execution records;
   - the work-state journal.

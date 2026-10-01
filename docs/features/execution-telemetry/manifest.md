@@ -3,7 +3,7 @@
 > **Current state (2026-09-28, `DF-ROS-2026-A049`).** This feature is
 > implemented only in F# (`src/`). The Node modules (`tools/*.mjs`) and the
 > Node test files this manifest's history cites were removed; their
-> end-to-end coverage now lives in `tests/Ros.Tests` (mapping in
+> end-to-end coverage now lives in `tests/Praxis.Tests` (mapping in
 > `docs/migrations/fsharp/TRACEABILITY.md`). References to them
 > below are migration lineage, recoverable from Git history.
 
@@ -37,13 +37,13 @@ capabilities, lifecycle capture, classification, and aggregation.
   initial capability seeding). That identity/Git/registry/capability
   machinery, plus a real clean-baseline change summary and finalization,
   already shipped as part of `work start`/`work complete`
-  (`Ros.Infrastructure.Work.FileTelemetryExecutionRepository`/
+  (`Praxis.Infrastructure.Work.FileTelemetryExecutionRepository`/
   `FileTelemetryFinalizationRepository`, in the work-lifecycle manifest) --
   MIG-08's own first increment is the two read-only `telemetry ...`
   commands with zero further new complexity: `telemetry adapters`
-  (`Ros.Domain.Telemetry.TelemetryAdapters`, a direct port of the
+  (`Praxis.Domain.Telemetry.TelemetryAdapters`, a direct port of the
   `TELEMETRY_ADAPTERS` catalog) and `telemetry show`
-  (`Ros.Infrastructure.Work.FileTelemetryQueryRepository`, a lock-free read
+  (`Praxis.Infrastructure.Work.FileTelemetryQueryRepository`, a lock-free read
   of `.ros/telemetry/executions/*.json`). A follow-on slice closed a real
   gap left open by `work start`/`work complete`: `recordTelemetryLifecycle`
   (`FileTelemetryFinalizationRepository.recordLifecycle`) now appends the
@@ -57,7 +57,7 @@ capabilities, lifecycle capture, classification, and aggregation.
   `BlockedDuration.compute`, shipped in the `work complete` increment) now
   computes a real nonzero value instead of always zero. A third increment
   ports `telemetry summary`'s aggregation (`summarizeTelemetry`/
-  `timingSummary`): a new pure `Ros.Domain.Telemetry.Summary` module
+  `timingSummary`): a new pure `Praxis.Domain.Telemetry.Summary` module
   computes four real aggregation strategies (`sum`, `maximum`,
   `latest-per-session` -- a real per-session dedup, not a plain sum -- and
   `none`, falling back to a plain "latest wins" default) and an
@@ -100,14 +100,14 @@ capabilities, lifecycle capture, classification, and aggregation.
   (explicit-null-overwrites) kept as two distinct functions, general
   metric normalization honoring every field an ingested metric supplies,
   capability upsert now keyed by `(metricId, providerField)` rather than
-  `metricId` alone (`Ros.Domain.Telemetry.Capability` gained an optional
+  `metricId` alone (`Praxis.Domain.Telemetry.Capability` gained an optional
   `ProviderField`, and `MetricId` itself is now optional), raw-payload
   redaction/truncation plus the four-branch byte-budget retention policy
   (new `FileWorkConfigRepository` raw-telemetry config readers), the
   three derived quality metrics routed through the same metric-
   normalization path, and provenance-source dedup by content digest. A
   new general `CanonicalJson.stabilize`/`contentDigest`
-  (`Ros.Infrastructure.Json`) mirrors production's `stable()` for
+  (`Praxis.Infrastructure.Json`) mirrors production's `stable()` for
   arbitrary caller-supplied JSON. A seventh increment ships `telemetry
   classify --classification NAME [...] [--rationale TEXT]
   [--evidence-link LINK]* [--rd-context FILE]`, a thin wrapper over the
@@ -126,7 +126,7 @@ capabilities, lifecycle capture, classification, and aggregation.
   (`FileTelemetryFinalizationRepository.resolveOrCreateExecution`/
   `startTarget`, new): rejects a work item that is missing from context
   or not active/blocked with production's identical message from either
-  cause; calls the same low-level pure `Ros.Domain.Telemetry.
+  cause; calls the same low-level pure `Praxis.Domain.Telemetry.
   ExecutionLinkRecovery.decide` `work start`/`resume`'s own telemetry
   resolution uses, recovering an unambiguous detached (unlinked, active)
   candidate, rejecting on more than one with production's exact `; rerun
@@ -235,7 +235,7 @@ capabilities, lifecycle capture, classification, and aggregation.
   telling an ISO string apart from a numeric nanosecond/millisecond/
   second epoch value by magnitude) is ported for realistic OTel export
   timestamp shapes. This closes MIG-08's telemetry-ingest adapter
-  inventory -- every name in `Ros.Domain.Telemetry.TelemetryAdapters.all`
+  inventory -- every name in `Praxis.Domain.Telemetry.TelemetryAdapters.all`
   now dispatches to a real F# effect, so `ingestTarget`'s "not yet
   supported by this CLI" rejection became permanently unreachable and was
   retired along with the allowlist that guarded it.
@@ -244,7 +244,7 @@ capabilities, lifecycle capture, classification, and aggregation.
   scope: `telemetry start`'s own `--execution-id` and its eleven
   identity-override flags, excluded since the eighth increment above.
   `--execution-id` needed no new decision logic at all --
-  `Ros.Domain.Telemetry.ExecutionLinkRecovery.decide`'s pure
+  `Praxis.Domain.Telemetry.ExecutionLinkRecovery.decide`'s pure
   `RequestedExecutionId` handling, already shipped and already tested,
   was simply threaded through from the CLI for the first time: a match
   among detached candidates recovers that execution; a non-match with
@@ -252,7 +252,7 @@ capabilities, lifecycle capture, classification, and aggregation.
   --execution-id ...` message (naming the first candidate in sorted
   order); no candidates at all lets the requested id become the newly
   created execution's own id. The eleven identity flags reuse
-  `Ros.Domain.Telemetry.Identity.discover`'s already-complete override
+  `Praxis.Domain.Telemetry.Identity.discover`'s already-complete override
   handling, built earlier in this migration and never missing a field --
   the actual gap was purely in the CLI-to-repository wiring.
   `FileTelemetryExecutionRepository.CreateExecutionRequest` gained
@@ -279,16 +279,16 @@ capabilities, lifecycle capture, classification, and aggregation.
   finalization-completeness linkage. A follow-on increment (work-lifecycle
   manifest) unified this with the other four `validate` contributors into
   one real `ros-fs validate [--json]` command. Unlike every other
-  validator in this migration (`Ros.Domain.Work.QueueValidation`,
-  `Ros.Domain.Work.Attribution`), this one does not follow the usual
+  validator in this migration (`Praxis.Domain.Work.QueueValidation`,
+  `Praxis.Domain.Work.Attribution`), this one does not follow the usual
   Domain-decides/
   Infrastructure-reads split at the file level in the obvious way -- it
   still does, but through an unusually wide typed boundary. A new
-  `Ros.Domain.Telemetry.TelemetryValidation` (Tier 2, per
+  `Praxis.Domain.Telemetry.TelemetryValidation` (Tier 2, per
   `.sde/architecture/FOUR-TIER-ARCHITECTURE.md`) makes every legality
   decision over a family of plain `Parsed*`/`Raw*` types (`Validation.fs`)
   -- no `JsonNode` crosses into it at all -- while a new
-  `Ros.Infrastructure.Work.FileTelemetryValidationRepository` does
+  `Praxis.Infrastructure.Work.FileTelemetryValidationRepository` does
   nothing but parse raw JSON into those types and report structural
   facts (is this key present, does this shape parse), never a legality
   judgment itself. Two closed-union design points matter: `FieldPresence
@@ -332,17 +332,17 @@ capabilities, lifecycle capture, classification, and aggregation.
   `telemetry/metrics.json`, adapter fixtures, and unknown/zero/unavailable tests.
 - Integration/live verification: `./praxis telemetry show|summary` and
   `./praxis validate`.
-- F# telemetry-read real-effect tests: `tests/Ros.Tests/TelemetryQueryTests.fs`
+- F# telemetry-read real-effect tests: `tests/Praxis.Tests/TelemetryQueryTests.fs`
   and `tests/telemetry-show-fsharp-differential.test.mjs` (imports
   production's own `showTelemetry`/`TELEMETRY_ADAPTERS` directly from
   `tools/ros_telemetry.mjs` rather than reimplementing them).
 - F# telemetry-lifecycle real-effect tests:
-  `tests/Ros.Tests/TelemetryLifecycleTests.fs` and
+  `tests/Praxis.Tests/TelemetryLifecycleTests.fs` and
   `tests/work-telemetry-lifecycle-fsharp-differential.test.mjs` (a real
   `work block`/`work resume`/`work complete` cycle proving the lifecycle
   events, their metrics, and a real nonzero `time.blocked_ms`).
 - F# telemetry-summary real-effect tests:
-  `tests/Ros.Tests/TelemetrySummaryTests.fs` (every `TimingSummary`/
+  `tests/Praxis.Tests/TelemetrySummaryTests.fs` (every `TimingSummary`/
   `MetricAggregation` branch) and
   `tests/telemetry-summary-fsharp-differential.test.mjs` (a real
   `work start`/`work complete` cycle with cross-checked deterministic
@@ -350,7 +350,7 @@ capabilities, lifecycle capture, classification, and aggregation.
   executions proving `latest-per-session`/`none` byte-for-byte against
   production).
 - F# telemetry-finalize real-effect tests:
-  `tests/Ros.Tests/TelemetryFinalizeTargetTests.fs` (every
+  `tests/Praxis.Tests/TelemetryFinalizeTargetTests.fs` (every
   `resolveFinalizeTarget` branch: `EXE-` exact match, workItemId match
   regardless of status, single/zero/multiple active-item resolution,
   unknown-target rejection, already-finalized untouched) and
@@ -362,7 +362,7 @@ capabilities, lifecycle capture, classification, and aggregation.
   messages, the already-finalized byte-identical-file fast path, and an
   F#-only assertion that `--input` is rejected with exit code 2).
 - F# telemetry-record real-effect tests:
-  `tests/Ros.Tests/TelemetryRecordMetricTests.fs` (every resolution
+  `tests/Praxis.Tests/TelemetryRecordMetricTests.fs` (every resolution
   branch, unknown-metric/non-finite-value rejections, content-addressed
   dedup, a fresh capability creation and an existing-capability-to-history
   upsert, and unit/currency/confidence overrides) and
@@ -375,7 +375,7 @@ capabilities, lifecycle capture, classification, and aggregation.
   transition, and unit/currency/confidence overrides cross-checked
   byte-for-byte against production).
 - F# telemetry-ingest real-effect tests:
-  `tests/Ros.Tests/TelemetryIngestTests.fs` (identity/metric/event
+  `tests/Praxis.Tests/TelemetryIngestTests.fs` (identity/metric/event
   merging with redaction and derived metrics, snapshot dedup,
   declared-capability upsert-into-history, the declared-unavailable
   conflict, classification/scope/links merge semantics, quality-signal
@@ -388,7 +388,7 @@ capabilities, lifecycle capture, classification, and aggregation.
   declared-unavailable rejection's shared snapshotId, config-driven
   retention behavior, and stdin (`-`) input).
 - F# telemetry-classify real-effect tests:
-  `tests/Ros.Tests/TelemetryClassifyTests.fs` (the classification shape,
+  `tests/Praxis.Tests/TelemetryClassifyTests.fs` (the classification shape,
   the empty-classification-list rejection, an rd-context merge,
   non-dedup across repeated calls, and EXE-prefixed target resolution)
   and `tests/telemetry-classify-fsharp-differential.test.mjs`
@@ -397,7 +397,7 @@ capabilities, lifecycle capture, classification, and aggregation.
   shape byte-for-byte, `--rd-context` file merging, the
   empty-classification rejection, and non-dedup across two real calls).
 - F# telemetry-start real-effect tests:
-  `tests/Ros.Tests/TelemetryStartTests.fs` (fresh creation with no
+  `tests/Praxis.Tests/TelemetryStartTests.fs` (fresh creation with no
   candidate, detached-execution recovery, new-execution-when-only-
   candidate-already-linked, ambiguity rejection with production's exact
   message, the not-active-or-blocked rejection for both a missing and a
@@ -406,7 +406,7 @@ capabilities, lifecycle capture, classification, and aggregation.
   scenarios end-to-end against the real `ros` CLI, plus an F#-only
   assertion that `--execution-id` is rejected with exit code 2).
 - F# telemetry-ingest openai-codex real-effect tests:
-  `tests/Ros.Tests/TelemetryIngestOpenAICodexTests.fs` (the fixed
+  `tests/Praxis.Tests/TelemetryIngestOpenAICodexTests.fs` (the fixed
   six-field capability declaration with presence-gated metrics, the
   context.window_size metric-without-adapter-capability quirk, per-entry
   turnIndex assignment, reverse-order identity.model resolution including
@@ -417,7 +417,7 @@ capabilities, lifecycle capture, classification, and aggregation.
   production's own `ingestTelemetry`/`adaptOpenAICodex`, the reverse-order
   identity resolution, and unknown-field discovery).
 - F# telemetry-ingest hook-adapter real-effect tests:
-  `tests/Ros.Tests/TelemetryIngestHookTests.fs` (the PostToolUse
+  `tests/Praxis.Tests/TelemetryIngestHookTests.fs` (the PostToolUse
   tool-use/tool-category/identity mapping, the truthy-error and no-error
   `tool.failures` branches, SubagentStart's `agent.subagents_spawned`/
   `agentId`, PostCompact/PermissionRequest/PermissionDenied's own distinct
@@ -427,7 +427,7 @@ capabilities, lifecycle capture, classification, and aggregation.
   PermissionDenied -- plus the no-error PostToolUse case, compared
   byte-for-byte against production's own `ingestTelemetry`/`adaptHook`).
 - F# telemetry-ingest claude-statusline real-effect tests:
-  `tests/Ros.Tests/TelemetryIngestClaudeStatuslineTests.fs` (the
+  `tests/Praxis.Tests/TelemetryIngestClaudeStatuslineTests.fs` (the
   fully-populated field mapping including the utilization division and
   full identity resolution, the `cost.session_cumulative`
   `"estimated"`-status quirk, the all-absent case with every capability
@@ -437,7 +437,7 @@ capabilities, lifecycle capture, classification, and aggregation.
   estimated-status quirk in isolation, compared byte-for-byte against
   production's own `ingestTelemetry`/`adaptClaudeStatusline`).
 - F# telemetry-ingest OTel-adapter-family real-effect tests:
-  `tests/Ros.Tests/TelemetryIngestOtelTests.fs` (a direct-field mapping
+  `tests/Praxis.Tests/TelemetryIngestOtelTests.fs` (a direct-field mapping
   with its derived capability, nested `resource.attributes` provider/
   model/session discovery, the api-request success/failure branch, the
   tool-result string-`"false"` failure branch, the three
@@ -450,18 +450,18 @@ capabilities, lifecycle capture, classification, and aggregation.
   other two OTel adapter names' own identity seeding, byte-for-byte
   against production's own `ingestTelemetry`/`adaptOtel`).
 - F# telemetry-start identity/execution-id real-effect tests:
-  `tests/Ros.Tests/TelemetryStartTests.fs` (`--execution-id` recovering a
+  `tests/Praxis.Tests/TelemetryStartTests.fs` (`--execution-id` recovering a
   matching detached candidate, rejecting a non-matching one with
   production's exact rerun message, becoming a freshly created
   execution's own id with no candidates present, and all eleven identity
   flags threading into the created record's identity) and
-  `tests/Ros.Tests/WorkContextEffectTests.fs` (`createExecution`'s own
+  `tests/Praxis.Tests/WorkContextEffectTests.fs` (`createExecution`'s own
   `ExecutionId` override in isolation); a real differential
   (`tests/telemetry-start-fsharp-differential.test.mjs`) drives the
   actual `ros` CLI wrapper directly, not just the exported function,
   covering all four scenarios byte-for-byte against production.
 - F# telemetry-validate (`telemetryFindings`) real-effect tests:
-  `tests/Ros.Tests/TelemetryValidationTests.fs` (~30 focused tests, one
+  `tests/Praxis.Tests/TelemetryValidationTests.fs` (~30 focused tests, one
   violated rule per test against a hand-verified zero-finding baseline
   record: the config/registry state machine's four branches, executionId/
   workItemId requiredness and shape, identity truthiness and the 11-field
@@ -493,7 +493,7 @@ capabilities, lifecycle capture, classification, and aggregation.
 
 ## Modification boundaries
 
-- Normal: `src/**/Telemetry/`, `src/Ros.Infrastructure/Work/FileTelemetry*`, metric registry, telemetry schema/docs,
+- Normal: `src/**/Telemetry/`, `src/Praxis.Infrastructure/Work/FileTelemetry*`, metric registry, telemetry schema/docs,
   and telemetry tests.
 - Escalation required: metric meaning, quality/capability semantics, redaction,
   retention, identity, or aggregation contract changes.
@@ -528,7 +528,7 @@ capabilities, lifecycle capture, classification, and aggregation.
   publish` are owned by the work-lifecycle manifest, not this one -- see
   its own Known gaps for their status. `telemetryFindings` (the telemetry
   contributor to production's combined `validate` findings) is also now
-  real (`Ros.Domain.Telemetry.TelemetryValidation`/`Ros.Infrastructure.
+  real (`Praxis.Domain.Telemetry.TelemetryValidation`/`Praxis.Infrastructure.
   Work.FileTelemetryValidationRepository`, exposed standalone as `ros-fs
   telemetry validate`), and a follow-on increment folded it into the
   real, unified `ros-fs validate [--json]` command (artifact findings +

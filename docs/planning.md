@@ -84,7 +84,7 @@ Every field is optional; the defaults are shown.
                           "implementationInProgress": [0.25, 0.75], "unclassified": [0.10, 0.90] },
   "dependencies": [ { "from": "B", "to": "A", "kind": "hard" } ],
   "conflicts": [ { "left": "A", "right": "B", "reason": "both rewrite Program.fs" } ],
-  "areas": { "A": ["src/Ros.Cli"], "B": ["docs/"] } }
+  "areas": { "A": ["src/Praxis.Cli"], "B": ["docs/"] } }
 ```
 
 ## How it decides
@@ -336,11 +336,11 @@ new identity scheme is introduced (PRX-PLAN-182).
 
 | Tier | Module |
 | --- | --- |
-| Domain | `Ros.Domain.Planning`: `Model`, `History`, `Inventory`, `Graph`, `Snapshot`, `Scheduling`, `Comparison`, `Replay`, `Planner`, `Grouping` |
-| Contracts | `Ros.Contracts.Planning.PlanningJson` (render, parse, config and observation inputs) |
-| Application | `Ros.Application.Planning`: `PlanningReadPort`, `PlanningOperations.gather/analyze` |
-| Infrastructure | `Ros.Infrastructure.Planning.FilePlanningRepository` (files, read-only Git) |
-| CLI | `Ros.Cli.PlanCommands` |
+| Domain | `Praxis.Domain.Planning`: `Model`, `History`, `Inventory`, `Graph`, `Snapshot`, `Scheduling`, `Comparison`, `Replay`, `Planner`, `Grouping` |
+| Contracts | `Praxis.Contracts.Planning.PlanningJson` (render, parse, config and observation inputs) |
+| Application | `Praxis.Application.Planning`: `PlanningReadPort`, `PlanningOperations.gather/analyze` |
+| Infrastructure | `Praxis.Infrastructure.Planning.FilePlanningRepository` (files, read-only Git) |
+| CLI | `Praxis.Cli.PlanCommands` |
 
 No external dependency was added (PRX-PLAN-004).
 
@@ -386,7 +386,7 @@ No external dependency was added (PRX-PLAN-004).
 | GRP-074 | Size and context-pressure splits and architecture merges met (tests 18, 19, merge test); splitting by independent chain or external blockage is not implemented. |
 | GRP-075 | Met (test 15). |
 | GRP-080..088 | Met for one cohort: baseline and predictions frozen (`EV-ROS-2026-A059`), both arms run and blindly evaluated (`EX-ROS-2026-A021`), results and classification in `EV-ROS-2026-A064`. One run; replication pending. |
-| GRP-090 | All 20 cases in `tests/Ros.Tests/GroupingTests.fs`; case 20 in `PlanningCliTests`. |
+| GRP-090 | All 20 cases in `tests/Praxis.Tests/GroupingTests.fs`; case 20 in `PlanningCliTests`. |
 
 ## Known limitations and next steps
 

@@ -126,7 +126,7 @@ is wrong, then `praxis init` or `praxis upgrade` to converge.
 ## What is proven
 
 The guarantees above are the ones covered by the end-to-end lifecycle tests in
-`tests/Ros.Tests`, which run the real built CLI against throwaway repositories,
+`tests/Praxis.Tests`, which run the real built CLI against throwaway repositories,
 both from a source checkout and from its embedded payload alone:
 
 - uninstalled → current (`init`)

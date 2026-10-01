@@ -284,10 +284,10 @@ platform fails with a message naming the gap.
 native bundle (praxis wrapper) | .NET global tool | project ./praxis launcher (or the ros / ./ros aliases)
     |
     v
-F# CLI (src/Ros.Cli)
+F# CLI (src/Praxis.Cli)
     |
     v
-F# domain and application core (src/Ros.Domain, src/Ros.Application)
+F# domain and application core (src/Praxis.Domain, src/Praxis.Application)
 ```
 
 Each entry point only locates the CLI, forwards arguments and stdio, and
@@ -301,8 +301,8 @@ stale — is made in F#. Planning is pure and separate from execution:
 ## Development
 
 ```bash
-dotnet build Ros.slnx --configuration Release
-dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll    # F# unit and end-to-end CLI tests
+dotnet build Praxis.slnx --configuration Release
+dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll    # F# unit and end-to-end CLI tests
 python3 -m unittest discover -s tests                       # Python artifact-validator oracle
 ```
 
@@ -323,7 +323,7 @@ Inside this source checkout, `./praxis` runs the locally built CLI directly:
 ### Packaging
 
 ```bash
-dotnet pack src/Ros.Cli/Ros.Cli.fsproj -c Release -o dist/nuget   # the .NET global tool
+dotnet pack src/Praxis.Cli/Praxis.Cli.fsproj -c Release -o dist/nuget   # the .NET global tool
 ```
 
 There is no `package.json` and no npm payload: the scaffold is compiled into
@@ -364,7 +364,7 @@ setup.
 |---|---|
 | `praxis init` exits `4` naming a tool-owned file | You edited a file the tool owns. Revert it, or move the change into a user-owned file. |
 | `praxis verify` exits `3` | Run `praxis doctor` — it names each problem and the command that fixes it. |
-| `Unsupported operating system` / `Unsupported architecture` from the installer | That platform is not supported. Build from source in a checkout with `dotnet build Ros.slnx --configuration Release`. |
+| `Unsupported operating system` / `Unsupported architecture` from the installer | That platform is not supported. Build from source in a checkout with `dotnet build Praxis.slnx --configuration Release`. |
 | `installed configuration version N is newer than this CLI supports` | The repository was installed by a newer release. Upgrade the CLI. |
 
 ## Repository concepts

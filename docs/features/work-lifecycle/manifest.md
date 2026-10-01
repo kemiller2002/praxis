@@ -3,7 +3,7 @@
 > **Current state (2026-09-28, `DF-ROS-2026-A049`).** This feature is
 > implemented only in F# (`src/`). The Node modules (`tools/*.mjs`) and the
 > Node test files this manifest's history cites were removed; their
-> end-to-end coverage now lives in `tests/Ros.Tests` (mapping in
+> end-to-end coverage now lives in `tests/Praxis.Tests` (mapping in
 > `docs/migrations/fsharp/TRACEABILITY.md`). References to them
 > below are migration lineage, recoverable from Git history.
 
@@ -24,7 +24,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 - Invariants and guards: `BACKLOG_TRANSITIONS`, `TRANSITIONS`,
   `SEMANTIC_STATES`, `WORK_ID_RE`, completion-evidence checks, and
   `effectiveStatus` in `tools/ros_cli.mjs`; typed transition and orchestration
-  planning in `Ros.Domain.Work`.
+  planning in `Praxis.Domain.Work`.
 - Capabilities / authority: `contextView` returns allowed actions and required
   evidence; file-adapter scopes are checked by `validateAdapterRequest`.
 - Important effects and effect contracts: atomic JSON/text and a local
@@ -34,34 +34,34 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   `tools/ros_git.mjs` process adapter. The shadow F# application observes
   completion evidence through a typed filesystem port after semantic guards,
   and observes real candidate telemetry executions through
-  `Ros.Infrastructure.Work.FileTelemetryStateRepository` when resolving
+  `Praxis.Infrastructure.Work.FileTelemetryStateRepository` when resolving
   execution IDs. It also observes real Git status and configured
   `ros.json` meaningful/ignored path patterns by default when planning a
-  context, through `Ros.Domain.Work.PathFilter` and
-  `Ros.Infrastructure.Work.FileWorkConfigRepository`. A read-only
+  context, through `Praxis.Domain.Work.PathFilter` and
+  `Praxis.Infrastructure.Work.FileWorkConfigRepository`. A read-only
   `ros-fs work validate` diagnostic mirrors production `workFindings`
   (the work-attribution contributor to Node's `validate`), reading the
-  same event log through `Ros.Infrastructure.Work.FileEventLogRepository`
+  same event log through `Praxis.Infrastructure.Work.FileEventLogRepository`
   and the same `enforceAttribution` flag through
-  `Ros.Infrastructure.Work.FileWorkConfigRepository.readEnforceAttribution`.
+  `Praxis.Infrastructure.Work.FileWorkConfigRepository.readEnforceAttribution`.
   A read-only `ros-fs work backlog-validate` diagnostic mirrors production
   `queueFindings` (the backlog-queue contributor to Node's `validate`),
   reading the raw `.ros/work/queue.json` rows through
-  `Ros.Infrastructure.Work.FileBacklogQueueRepository`. `ros-fs work
+  `Praxis.Infrastructure.Work.FileBacklogQueueRepository`. `ros-fs work
   backlog-transition` (`DF-ROS-2026-A028` Phase A's first increment) is a
   real effect, not a diagnostic: it writes `.ros/work/queue.json` and
   `.ros/work/queue.md` for the backlog-only `ready`/`block`/`abandon`
   actions, under the same `work-protocol` file lock and `backlog-state`
   recovery journal production's own writer uses, via
   `FileBacklogQueueRepository.applyStateChange` (JSON-node surgery
-  preserving every unmodeled field) and `Ros.Domain.Work.QueuePresentation`
+  preserving every unmodeled field) and `Praxis.Domain.Work.QueuePresentation`
   (the markdown projection). It excludes `start`, production's own separate,
   telemetry-entangled promotion effect. `ros-fs work capture` (Phase A's
   second increment) is the same kind of real effect for production
   `add`/`captureWork`: title/priority validation, explicit-id validation
   against both the queue and the live context, and collision-avoiding
   sequential ID generation over `nextSeq`, via
-  `Ros.Domain.Work.WorkCapture` and
+  `Praxis.Domain.Work.WorkCapture` and
   `FileBacklogQueueRepository.captureItem` (which also synthesizes
   production's own default document when `queue.json` does not exist yet).
   It excludes `--file` attachment, a separate, larger effect. `ros-fs work
@@ -69,7 +69,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   production `update`/`findOrCreateQueueEntry`: per-field `Keep`/`Set`
   changes for only the fields explicitly provided, and the same
   context-only-id upsert (with production's exact minimal-record defaults)
-  via `Ros.Domain.Work.WorkUpdate` and
+  via `Praxis.Domain.Work.WorkUpdate` and
   `FileBacklogQueueRepository.applyUpdate`, which shares its
   parse-or-synthesize/commit machinery with `captureItem`. It also
   excludes `--file` attachment. `ros-fs work attach` (Phase A's fourth and
@@ -84,7 +84,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   characters to `_`, `file` fallback only when that leaves nothing). Multiple
   `--file` flags commit as that many separate `work-protocol` lock cycles, one
   per file, matching production's own per-file loop, via
-  `Ros.Domain.Work.WorkAttachment` and
+  `Praxis.Domain.Work.WorkAttachment` and
   `FileBacklogQueueRepository.applyAttachment`/`readAttachmentSequences`,
   which share `findOrAppendItem` (extracted from `applyUpdate`, behavior
   unchanged) with the other two item-touching effects. With this increment,
@@ -95,17 +95,17 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   including a real telemetry execution creation when no recoverable
   candidate exists (production `startExecution`). It writes
   `.ros/context/current.json` and appends `.ros/events/events.jsonl`
-  through `Ros.Infrastructure.Work.FileWorkContextRepository.applyContextPlan`
+  through `Praxis.Infrastructure.Work.FileWorkContextRepository.applyContextPlan`
   (JSON-node surgery, preserving fields the typed `LiveWorkItem` does not
   model, such as a research item's `conclusion`) under the shared
   `work-state` recovery journal (MIG-05), composing the pure decision layer
   that already existed (`WorkContextPlanning.plan` and
   `TelemetryPlanResolution.resolveContext`) with two new real ports:
-  `Ros.Infrastructure.Work.FileTelemetryExecutionRepository.createExecution`
+  `Praxis.Infrastructure.Work.FileTelemetryExecutionRepository.createExecution`
   (identity discovery purely from whitelisted environment variables via
-  `Ros.Domain.Telemetry.Identity`, a real Git baseline snapshot, the full
-  metric registry, and capability seeding via `Ros.Domain.Telemetry.Capability`)
-  and `Ros.Infrastructure.Json.CanonicalJson` (the shared SHA-256 hashing
+  `Praxis.Domain.Telemetry.Identity`, a real Git baseline snapshot, the full
+  metric registry, and capability seeding via `Praxis.Domain.Telemetry.Capability`)
+  and `Praxis.Infrastructure.Json.CanonicalJson` (the shared SHA-256 hashing
   primitive behind both the event log's `eventId` and the execution
   record's `measurementId`). It excludes `resume`/`block`/`complete` (which
   additionally need `finalizeWorkExecutions`/`recordTelemetryLifecycle`),
@@ -130,7 +130,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   this manifest reproduces a confirmed production quirk once found; this
   one is corrected instead, since Node is being deprecated rather than
   patched: `runWorkResume` now supplies the work item's most recently
-  created execution (`Ros.Infrastructure.Work.FileTelemetryQueryRepository.
+  created execution (`Praxis.Infrastructure.Work.FileTelemetryQueryRepository.
   readLatestExecutionId`, new) as `CreateExecutionRequest.
   ParentExecutionId` (new field, threaded into the pre-existing `Identity.
   discover`/`IdentityInputs.ParentExecutionId`, which already worked
@@ -158,16 +158,16 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   increment) closes the live-work family: production
   `transitionUnlocked`'s `complete` action, including real evidence-path
   verification against the filesystem (`WorkOperations.planVerifiedContext`/
-  `Ros.Infrastructure.Work.FileEvidenceRepository`, checked only after the
+  `Praxis.Infrastructure.Work.FileEvidenceRepository`, checked only after the
   frozen decision layer accepts the required evidence types), per-work-type
   required evidence read from `ros.json`'s `workProtocol.completionEvidence`
   (`FileWorkConfigRepository.readCompletionEvidence`), and unconditional
   telemetry-execution finalization via a new
-  `Ros.Infrastructure.Work.FileTelemetryFinalizationRepository.finalizeWorkExecutions`
+  `Praxis.Infrastructure.Work.FileTelemetryFinalizationRepository.finalizeWorkExecutions`
   (called directly per completing id, since the shared telemetry-resolution
   pipeline discards the `FinalizeExecutions` intent signal it computes).
   Finalization computes a real `git diff`-derived clean-baseline change
-  summary (`Ros.Domain.Telemetry.ChangeSummary`'s `ChangeSummaryParser`/
+  summary (`Praxis.Domain.Telemetry.ChangeSummary`'s `ChangeSummaryParser`/
   `ChangeClassification`/`BlockedDuration`, reduced to the fields
   production's own `finalizeExecution` reads) or one of production's exact
   three unavailable reasons when the stored starting snapshot was not clean.
@@ -186,7 +186,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   execution, work context, or lock at all, operating entirely on a
   caller-named standalone JSON store. Work items and events inside that
   store are caller-defined, open-ended JSON, so a new pure
-  `Ros.Domain.Work.AdapterContract.decide` inspects only the handful of
+  `Praxis.Domain.Work.AdapterContract.decide` inspects only the handful of
   fields production itself reads (a work item's `state`, an event's
   `eventId`), mirroring `callFileAdapter`/`validateAdapterRequest`'s exact
   branch order: protocol-version and operation-support checks before the
@@ -194,7 +194,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   it), then a cached `requestId` replay, then repository authorization,
   then `simulateOutcome: "unknown"` fault injection regardless of
   operation or scope, then each operation's own forbidden/not-found/
-  conflict checks. `Ros.Infrastructure.Work.FileAdapterRepository.call`
+  conflict checks. `Praxis.Infrastructure.Work.FileAdapterRepository.call`
   performs the actual read/mutate/write: a `transitionWorkItem` success
   mutates only `state`/`updatedBy` on the existing work-item node in
   place, preserving every other caller-defined field verbatim; a
@@ -211,7 +211,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   `publishedAt` on every call, matching production's own unconditional
   per-call refresh (a real, non-obvious quirk verified against real Node
   before writing any test: a duplicate-only republish still rewrites
-  every receipt). `Ros.Infrastructure.Work.FileAdapterRepository.publish`
+  every receipt). `Praxis.Infrastructure.Work.FileAdapterRepository.publish`
   (new, alongside `call` in the same module) creates the target's parent
   directory unconditionally before appending -- even with zero events,
   which creates the directory but no destination file -- and a
@@ -226,11 +226,11 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   production's own `contextView` reads `.ros/context/current.json`,
   optionally filtered to one work item, computing two fields fresh on
   every call rather than storing them -- `allowedActions` (reusing the
-  existing `Ros.Domain.Work.WorkTransition.allowedActions`, matching
+  existing `Praxis.Domain.Work.WorkTransition.allowedActions`, matching
   production's own `TRANSITIONS[item.semanticState]` table exactly,
   including its empty-array fallback for a semantic state the table does
   not recognize) and `requiredEvidenceForCompletion` (reusing the
-  existing `Ros.Infrastructure.Work.FileWorkConfigRepository.
+  existing `Praxis.Infrastructure.Work.FileWorkConfigRepository.
   readCompletionEvidence`, the same per-type/default lookup `work
   complete`'s evidence check already used). No new decision logic was
   needed at all -- both pieces of domain logic already existed from
@@ -243,9 +243,9 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   increment, the second of `EV-ROS-2026-A046`'s four unassigned rows) are
   production's `mergedWorkView`/`showWork`: the merged backlog-queue/
   live-context projection at its full fidelity, wider than
-  `Ros.Domain.Work.QueuePresentation.mergedRows`'s five-field `queue.md`-only
+  `Praxis.Domain.Work.QueuePresentation.mergedRows`'s five-field `queue.md`-only
   projection (which this increment leaves untouched). A new
-  `Ros.Domain.Work.WorkListView.mergedRows` reuses
+  `Praxis.Domain.Work.WorkListView.mergedRows` reuses
   `QueuePresentation.effectiveStatus` for the shared status-precedence rule
   and adds a new `BacklogTransition.allowedActions` lookup table (mirroring
   production's own `BACKLOG_TRANSITIONS`, independent of `BacklogTransition.
@@ -256,8 +256,8 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   JSON when neither the live item nor the backlog record names one --
   production's own object literal leaves it `undefined`, which
   `JSON.stringify` drops, never coercing it to `null`.
-  `Ros.Infrastructure.Work.FileWorkListRepository` reads the live context
-  through the same typed `Ros.Contracts.Work.WorkContextPlanContract.
+  `Praxis.Infrastructure.Work.FileWorkListRepository` reads the live context
+  through the same typed `Praxis.Contracts.Work.WorkContextPlanContract.
   parseJson` every write-side effect already uses, and reads `queue.json`
   wide enough for the new fields via a new `QueueItemDetail` parse
   (distinct from `FileBacklogQueueRepository.readItems`'s narrower
@@ -272,20 +272,20 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 - Post-hoc attribution reconciliation (issue #80, `DF-ROS-2026-A040`,
   `RQ-ROS-2026-A020`): `ros-fs work reconcile` is an F#-only real effect
   (the Node library is frozen per `DF-ROS-2026-A033`). The decision and every
-  invariant live in `Ros.Domain.Work.WorkReconciliation` (selector parsing,
+  invariant live in `Praxis.Domain.Work.WorkReconciliation` (selector parsing,
   per-`(commit, path)` assessment, fail-closed rejections, idempotency and
   conflict claims), `ReconciliationValidation` (checks of recorded events),
   and `ReconciliationCoverage` (content-bound attribution);
-  `Ros.Application.Work.WorkReconciliationOperations` gathers Git evidence
-  through the read-only `Ros.Application.Git.GitHistory` port, implemented by
-  `Ros.Infrastructure.Git.ProcessGitRepository.createHistory`
+  `Praxis.Application.Work.WorkReconciliationOperations` gathers Git evidence
+  through the read-only `Praxis.Application.Git.GitHistory` port, implemented by
+  `Praxis.Infrastructure.Git.ProcessGitRepository.createHistory`
   (`rev-parse --verify`, `merge-base --is-ancestor`, `rev-list`, `show`,
   `diff-tree --raw -M`, shallow-boundary detection, and `hash-object` for
-  current path content); `Ros.Contracts.Work.ReconciliationEventContract`
+  current path content); `Praxis.Contracts.Work.ReconciliationEventContract`
   owns the `work.attribution.reconciled` event shape; and
-  `Ros.Infrastructure.Work.FileReconciliationRepository` decides under the
+  `Praxis.Infrastructure.Work.FileReconciliationRepository` decides under the
   `work-protocol` lock and appends through the `work-state` journal.
-  `Ros.Cli.ReconciliationCommands` only parses and renders. `work validate`
+  `Praxis.Cli.ReconciliationCommands` only parses and renders. `work validate`
   and `validate` attribute a reconciled path only while its current content
   matches recorded evidence, and report invalid reconciliation events as
   `work_reconciliation` findings.
@@ -293,7 +293,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 ## Interfaces
 
 - Inbound: `./praxis add`, `./praxis work ...`, `./praxis adapter ...`, and HTTP routes
-  of `praxis web serve` (`src/Ros.Cli/WebInterface.fs`, which runs these same
+  of `praxis web serve` (`src/Praxis.Cli/WebInterface.fs`, which runs these same
   commands as a child process).
 - Outbound: versioned work/context/event/adapter JSON, queue Markdown,
   attachments, CLI JSON/text, and HTTP JSON/bytes.
@@ -302,47 +302,47 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 
 - Local behavior tests: `tests/work-protocol.test.mjs` and
   `tests/ros-server.test.mjs`; the typed Git seam is exercised by
-  `tests/Ros.Tests/GitTests.fs` and `tests/git-fsharp-differential.test.mjs`.
-- Shadow orchestration tests: `tests/Ros.Tests/WorkPlanTests.fs` and the legal
+  `tests/Praxis.Tests/GitTests.fs` and `tests/git-fsharp-differential.test.mjs`.
+- Shadow orchestration tests: `tests/Praxis.Tests/WorkPlanTests.fs` and the legal
   item/event projection differential in `tests/work-fsharp-differential.test.mjs`.
-- Telemetry execution-ID resolution tests: `tests/Ros.Tests/TelemetryResolutionTests.fs`
+- Telemetry execution-ID resolution tests: `tests/Praxis.Tests/TelemetryResolutionTests.fs`
   and `tests/work-telemetry-fsharp-differential.test.mjs`.
-- Git observed/meaningful-path composition tests: `tests/Ros.Tests/PathFilterTests.fs`,
-  the base-comparison cases in `tests/Ros.Tests/GitTests.fs`, and
+- Git observed/meaningful-path composition tests: `tests/Praxis.Tests/PathFilterTests.fs`,
+  the base-comparison cases in `tests/Praxis.Tests/GitTests.fs`, and
   `tests/work-git-paths-fsharp-differential.test.mjs`.
-- Work-attribution validation tests: `tests/Ros.Tests/WorkAttributionTests.fs`
+- Work-attribution validation tests: `tests/Praxis.Tests/WorkAttributionTests.fs`
   and `tests/work-attribution-fsharp-differential.test.mjs`.
-- Backlog-queue validation tests: `tests/Ros.Tests/QueueValidationTests.fs`
+- Backlog-queue validation tests: `tests/Praxis.Tests/QueueValidationTests.fs`
   and `tests/work-backlog-validate-fsharp-differential.test.mjs`.
-- Backlog-transition real-effect tests: `tests/Ros.Tests/QueuePresentationTests.fs`,
-  `tests/Ros.Tests/BacklogTransitionEffectTests.fs`, and
+- Backlog-transition real-effect tests: `tests/Praxis.Tests/QueuePresentationTests.fs`,
+  `tests/Praxis.Tests/BacklogTransitionEffectTests.fs`, and
   `tests/work-backlog-transition-fsharp-differential.test.mjs`.
-- Work-capture real-effect tests: `tests/Ros.Tests/WorkCaptureTests.fs`,
-  `tests/Ros.Tests/WorkCaptureEffectTests.fs`, and
+- Work-capture real-effect tests: `tests/Praxis.Tests/WorkCaptureTests.fs`,
+  `tests/Praxis.Tests/WorkCaptureEffectTests.fs`, and
   `tests/work-capture-fsharp-differential.test.mjs`.
-- Work-update real-effect tests: `tests/Ros.Tests/WorkUpdateTests.fs`,
-  `tests/Ros.Tests/WorkUpdateEffectTests.fs`, and
+- Work-update real-effect tests: `tests/Praxis.Tests/WorkUpdateTests.fs`,
+  `tests/Praxis.Tests/WorkUpdateEffectTests.fs`, and
   `tests/work-update-fsharp-differential.test.mjs`.
-- Work-attach real-effect tests: `tests/Ros.Tests/WorkAttachmentTests.fs`,
-  `tests/Ros.Tests/WorkAttachmentEffectTests.fs`, and
+- Work-attach real-effect tests: `tests/Praxis.Tests/WorkAttachmentTests.fs`,
+  `tests/Praxis.Tests/WorkAttachmentEffectTests.fs`, and
   `tests/work-attach-fsharp-differential.test.mjs`.
-- Work-start real-effect tests: `tests/Ros.Tests/TelemetryIdentityTests.fs`,
-  `tests/Ros.Tests/WorkContextEffectTests.fs`, and
+- Work-start real-effect tests: `tests/Praxis.Tests/TelemetryIdentityTests.fs`,
+  `tests/Praxis.Tests/WorkContextEffectTests.fs`, and
   `tests/work-start-fsharp-differential.test.mjs`.
 - Work-resume real-effect tests: `tests/work-resume-fsharp-differential.test.mjs`
   (reuses `work start`'s typed/infrastructure tests, since no new
   Domain/Infrastructure code was added).
 - Work-block real-effect tests: `tests/work-block-fsharp-differential.test.mjs`,
   plus the `blockReason`-persistence regression test in
-  `tests/Ros.Tests/WorkContextEffectTests.fs`.
-- Work-complete real-effect tests: `tests/Ros.Tests/ChangeSummaryTests.fs`
+  `tests/Praxis.Tests/WorkContextEffectTests.fs`.
+- Work-complete real-effect tests: `tests/Praxis.Tests/ChangeSummaryTests.fs`
   (change-summary parsing/aggregation and blocked-duration computation) and
   `tests/work-complete-fsharp-differential.test.mjs`.
-- Adapter-call real-effect tests: `tests/Ros.Tests/AdapterContractTests.fs`
+- Adapter-call real-effect tests: `tests/Praxis.Tests/AdapterContractTests.fs`
   (every pure `decide` branch: protocol mismatch, unsupported operation,
   cached replay, repository unauthorized, fault injection, and each
   operation's forbidden/not-found/conflict/success case),
-  `tests/Ros.Tests/AdapterCallEffectTests.fs` (the JSON store
+  `tests/Praxis.Tests/AdapterCallEffectTests.fs` (the JSON store
   read/mutate/write around those decisions, including the
   missing-field/protocol-mismatch untouched-store paths and the
   transition/publish mutation-persistence paths), and
@@ -351,7 +351,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   missing-field/missing-file scenarios byte-for-byte against production's
   own CLI).
 - Adapter-publish real-effect tests:
-  `tests/Ros.Tests/AdapterPublishEffectTests.fs` (fresh-destination
+  `tests/Praxis.Tests/AdapterPublishEffectTests.fs` (fresh-destination
   append, eventId dedup across repeated calls, the unconditional per-call
   receipt refresh, the zero-event directory-creation-without-a-file
   quirk, and a directory-creation failure leaving neither file touched)
@@ -360,16 +360,16 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   receipt-count byte-for-byte against production, the write-failure
   rejection, the missing-`--target` message, and the zero-event case).
 - `work resume` `parentExecutionId` correction tests:
-  `tests/Ros.Tests/TelemetryQueryTests.fs` (`readLatestExecutionId`'s
+  `tests/Praxis.Tests/TelemetryQueryTests.fs` (`readLatestExecutionId`'s
   chronological-latest resolution and its none-for-unknown-item case) and
-  `tests/Ros.Tests/WorkContextEffectTests.fs` (`createExecution` threading
+  `tests/Praxis.Tests/WorkContextEffectTests.fs` (`createExecution` threading
   a supplied `ParentExecutionId` into the created record's identity, and
   leaving it absent by default); `tests/work-resume-parent-execution-
   fsharp-differential.test.mjs` documents the divergence explicitly,
   running both real Node (confirming the defect persists: `null`) and the
   F# CLI (confirming the corrected linkage) side by side, rather than
   asserting byte-for-byte parity.
-- Work-context real-effect tests: `tests/Ros.Tests/WorkContextViewTests.fs`
+- Work-context real-effect tests: `tests/Praxis.Tests/WorkContextViewTests.fs`
   (every item's `allowedActions`/`requiredEvidenceForCompletion` computed
   fresh, ID filtering preserving unmodeled fields such as a research
   item's `conclusion`, the not-in-context rejection, and the
@@ -378,7 +378,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   `add`/`work ready`/`work start`/`work block` cycle driving the actual
   `ros` CLI wrapper directly, covering the no-ID view, ID filtering, and
   the unknown-ID rejection byte-for-byte against production).
-- Work-list/work-show real-effect tests: `tests/Ros.Tests/WorkListViewTests.fs`
+- Work-list/work-show real-effect tests: `tests/Praxis.Tests/WorkListViewTests.fs`
   (backlog-only `backlogActions`, live-only `liveWorkItem` with a
   defaulted title, a blocked live item overriding both `status` and
   `blockedReason` over a stale backlog record, the genuine
@@ -389,7 +389,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   `ros` CLI wrapper directly, covering `work list`, bare `work`, `work
   show` across backlog-only/live/blocked/attachment items, and the
   unknown-ID rejection byte-for-byte against production).
-- Unified-validate real-effect tests: `tests/Ros.Tests/FindingContractTests.fs`
+- Unified-validate real-effect tests: `tests/Praxis.Tests/FindingContractTests.fs`
   (the three repair-message branches, including the `work_items` one added
   for this increment) and `tests/validate-unified-fsharp-differential.test.mjs`
   (a clean bootstrap in both `--json` and text form; a combined
@@ -403,9 +403,9 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   active/blocked work items, real linked telemetry executions, a real
   backlog-status finding, and real execution/active-execution counts --
   byte-for-byte identical to production's own `statusView`).
-- Attribution reconciliation tests: `tests/Ros.Tests/WorkReconciliationTests.fs`
+- Attribution reconciliation tests: `tests/Praxis.Tests/WorkReconciliationTests.fs`
   (pure decision, parser, event contract, record validation, coverage) and
-  `tests/Ros.Tests/WorkReconciliationEffectTests.fs` (the real CLI against
+  `tests/Praxis.Tests/WorkReconciliationEffectTests.fs` (the real CLI against
   real Git repositories: added/modified/deleted/renamed files, ranges,
   partial attribution, idempotency, conflicts, ambiguous and unavailable
   evidence, shallow clones, tampering, and validation afterwards).
@@ -423,7 +423,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
 
 ## Modification boundaries
 
-- Normal: `src/**/Work/`, `src/Ros.Cli/WebInterface.fs`, `web/styles.css`, work schemas,
+- Normal: `src/**/Work/`, `src/Praxis.Cli/WebInterface.fs`, `web/styles.css`, work schemas,
   work docs, and their tests.
 - Escalation required: state mappings, legal transitions, evidence obligations,
   or authoritative-store changes because installed repositories depend on them.
@@ -468,20 +468,20 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   already-existing `WorkTransition.allowedActions`/`readCompletionEvidence`
   domain logic, requiring no lock. `work`/`work list`/`work show [ID]` are
   now real read-only effects as well, via a new
-  `Ros.Domain.Work.WorkListView.mergedRows` (the full-fidelity merge
+  `Praxis.Domain.Work.WorkListView.mergedRows` (the full-fidelity merge
   production's own `mergedRows` computes, wider than
   `QueuePresentation`'s five-field markdown-only projection) and a new
-  `Ros.Infrastructure.Work.FileWorkListRepository`; `--tag`/`--status`
+  `Praxis.Infrastructure.Work.FileWorkListRepository`; `--tag`/`--status`
   filtering is not yet ported. `ros-fs validate [--json]` is now a real,
   unified effect too: production's own top-level `validate(root)`
   combines artifact findings, registry staleness, `workFindings`,
   `queueFindings`, and `telemetryFindings` (execution-telemetry
   manifest) into one sorted array, and every one of those five
   contributors already had a real F# equivalent from earlier increments
-  — this closes purely CLI-layer composition (`Ros.Cli.Program.
+  — this closes purely CLI-layer composition (`Praxis.Cli.Program.
   runValidateUnified`), reusing each contributor's existing decision
   logic unchanged and adding the one missing repair-message branch
-  (`field = "work_items"`) to the shared `Ros.Contracts.Cli.
+  (`field = "work_items"`) to the shared `Praxis.Contracts.Cli.
   FindingContract`. Confirmed against real Node across a combined
   scenario (a backlog-status violation, a disabled-telemetry violation,
   a stale registry, a malformed artifact, and an unattributed Git
@@ -501,7 +501,7 @@ obligations, attachments, events, and the local HTTP presentation adapter.
   (execution-telemetry manifest, `FileTelemetryQueryRepository.readAll`)
   filtered to `status === "active"` for the active count -- so this
   increment adds no new Domain or Infrastructure code at all, purely
-  CLI-layer composition (`Ros.Cli.Program.runStatus`). `nextActions`
+  CLI-layer composition (`Praxis.Cli.Program.runStatus`). `nextActions`
   deduplicates each finding's own repair hint via `List.distinct`
   (first-occurrence order, matching JS's `[...new Set(...)]`), falling
   back to production's exact single default message when there are no

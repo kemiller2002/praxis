@@ -5,8 +5,8 @@
 Route changes to native acquisition, profile materialization, installation
 attribution and installation-integrity verification. The canonical entry
 point is the F# CLI's lifecycle interface: `init`, `status`, `verify`,
-`upgrade` and `doctor` (`Ros.Domain.Lifecycle`, `Ros.Application.Lifecycle`,
-`Ros.Infrastructure.Lifecycle`), installed as the `praxis` command (with the `ros`
+`upgrade` and `doctor` (`Praxis.Domain.Lifecycle`, `Praxis.Application.Lifecycle`,
+`Praxis.Infrastructure.Lifecycle`), installed as the `praxis` command (with the `ros`
 compatibility alias) by the native installers. The npm package, its Node launchers and
 `ros-bootstrap` are retired (`DF-ROS-2026-A049`).
 
@@ -19,7 +19,7 @@ compatibility alias) by the native installers. The npm package, its Node launche
   and the per-user native installation root (`~/.echelon/tools/praxis/<version>/`,
   override `ECHELON_HOME`).
 - Transitions / commands / messages: the F# lifecycle commands
-  (`src/Ros.Cli/Lifecycle.fs`); `scripts/install-native.sh`/`.ps1` (download,
+  (`src/Praxis.Cli/Lifecycle.fs`); `scripts/install-native.sh`/`.ps1` (download,
   checksum, install, optionally activate); `bin/praxis-native.sh`/`.cmd` (bundle
   launchers); the scaffolded `./praxis` (`starter/greenfield/praxis`, plus
   `praxis.cmd`/`praxis.ps1`, with `ros`/`ros.cmd`/`ros.ps1` as aliases that
@@ -47,9 +47,9 @@ compatibility alias) by the native installers. The npm package, its Node launche
 
 ## Tests and verification
 
-- `tests/Ros.Tests/LifecycleTests.fs` (pure ownership, planning, migration,
+- `tests/Praxis.Tests/LifecycleTests.fs` (pure ownership, planning, migration,
   diagnosis rules, embedded payload equals the manifests' sources) and the
-  end-to-end lifecycle tests in `tests/Ros.Tests` (real CLI against throwaway
+  end-to-end lifecycle tests in `tests/Praxis.Tests` (real CLI against throwaway
   repositories, from a checkout and from the embedded payload alone).
 - `.github/workflows/praxis-validation.yml` `lifecycle` job: init/verify/doctor
   on Linux, Windows and macOS.
