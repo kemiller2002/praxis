@@ -3879,10 +3879,10 @@
       "description": null,
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-28T13:41:54.261Z",
-      "updatedAt": "2026-09-28T13:41:46Z",
+      "updatedAt": "2026-10-01T06:49:31Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
