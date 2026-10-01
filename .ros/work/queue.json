@@ -3572,10 +3572,10 @@
         "follow-up"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-28T13:55:54.000Z",
-      "updatedAt": "2026-10-01T05:44:42.000Z",
+      "updatedAt": "2026-10-01T06:46:03.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
