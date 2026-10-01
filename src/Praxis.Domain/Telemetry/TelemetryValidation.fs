@@ -20,6 +20,17 @@ open Praxis.Domain.Work
 module TelemetryValidation =
     let private finding path field message : TelemetryFinding = { Path = path; Field = field; Message = message }
 
+    /// The one rule for money-valued metrics, shared by `validate` and the
+    /// write path (`telemetry record`): a metric the registry defines in unit
+    /// `currency` must be recorded in unit `currency` with an ISO-style
+    /// three-letter currency code.
+    let costUnitMessage = "cost metric requires unit 'currency' and an ISO-style three-letter currency"
+
+    let violatesCostUnit (definitionUnit: string) (unit: string option) (currency: string option) : bool =
+        definitionUnit = "currency"
+        && (unit <> Some "currency"
+            || not (currency |> Option.map (fun code -> Regex.IsMatch(code, "^[A-Z]{3}$")) |> Option.defaultValue false))
+
     let private nonEmpty (value: string option) : string option = value |> Option.filter (fun s -> s <> "")
 
     let private isTimestamp (value: string) : bool =
@@ -345,10 +356,8 @@ module TelemetryValidation =
 
                 match definition with
                 | Some d when d.Unit = "currency" ->
-                    let currencyValid = item.Currency |> Option.map (fun c -> Regex.IsMatch(c, "^[A-Z]{3}$")) |> Option.defaultValue false
-
-                    if item.Unit <> Some "currency" || not currencyValid then
-                        findings.Add(finding relative $"{field}.unit" "cost metric requires unit 'currency' and an ISO-style three-letter currency")
+                    if violatesCostUnit d.Unit item.Unit item.Currency then
+                        findings.Add(finding relative $"{field}.unit" costUnitMessage)
 
                     if item.SourceType = Some "calculated" then
                         if (nonEmpty item.PricingSource).IsNone || (nonEmpty item.PricingVersion).IsNone then

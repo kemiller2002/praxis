@@ -105,4 +105,5 @@ let main _ =
     @ WorkGroupTests.tests
     @ InternalNamingGuardTests.tests
     @ InternalNamingTests.tests
+    @ TelemetryCostUnitTests.tests
     |> TestRunner.run

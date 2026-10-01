@@ -119,6 +119,7 @@
     <Compile Include="WorkGroupTests.fs" />
     <Compile Include="InternalNamingGuardTests.fs" />
     <Compile Include="InternalNamingTests.fs" />
+    <Compile Include="TelemetryCostUnitTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
