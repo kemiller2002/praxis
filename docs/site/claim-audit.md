@@ -69,7 +69,7 @@ installers' source.
 | Records are files in the repository | Implemented | `.ros/`, `research/`, `registries/` exist (tested) |
 | Ordo, work-adapter contract, `echelon` | Implemented | CLI commands (tested); installer requires `echelon` |
 | Other Echelon integrations | Direction | labelled on page |
-| Double-entry / fallback execution | Direction | labelled "Not implemented. Not scheduled." |
+| Double-entry / fallback execution | Implemented | `docs/fallback-reconciliation.md`; `FileEnvelopeReconciliationDispatcher.fs`; crash/retry and checkpoint tests |
 | Installers, checksums, `praxis`/`ros` names | Implemented | installers read; v3.4.0 run (`get-started-verification.md`) |
 | "Done is a claim" answers | Demonstrated | `data-evidence`, checked against records |
 | GH-84 handoff | Demonstrated | `data-evidence`, checked against records |

@@ -469,13 +469,13 @@ ERROR src/report.fs:work_items: meaningful change has no active or completed wor
             <li>A finalized execution is closed. Continuing the work opens a new one rather than reopening the old.</li>
           </ul>
         </div>
-        <div class="availability__col availability__col--planned">
-          <p class="availability__label"><span class="status status--pending">Architectural direction</span></p>
+        <div class="availability__col">
+          <p class="availability__label"><span class="status status--verified">Available now</span></p>
           <ul class="availability__list">
             <li>Double-entry execution: when the Praxis CLI cannot run, an agent writes a conforming fallback execution record by hand.</li>
-            <li>CI later reconciles fallback records against Git and the protocol, and accepts or rejects them on evidence.</li>
+            <li>CI reconciles fallback records through the native transition and evidence rules, commits canonical state, and checkpoints the transaction.</li>
           </ul>
-          <p class="availability__note">Not implemented. Not scheduled. This is the direction the record format is designed to allow, stated so nobody mistakes it for a feature.</p>
+          <p class="availability__note">Accepted input is removed only after its checkpoint exists. Rejected input remains inspectable, and interrupted transactions resume without applying a transition twice.</p>
         </div>
       </div>
     </div>

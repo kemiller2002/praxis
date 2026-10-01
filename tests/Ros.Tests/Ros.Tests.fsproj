@@ -20,6 +20,7 @@
     <Compile Include="PersistenceTests.fs" />
     <Compile Include="GitTests.fs" />
     <Compile Include="WorkTests.fs" />
+    <Compile Include="EnvelopeReconciliationTests.fs" />
     <Compile Include="WorkPlanTests.fs" />
     <Compile Include="BacklogTests.fs" />
     <Compile Include="TelemetryTests.fs" />
@@ -56,6 +57,7 @@
     <Compile Include="TelemetryIngestClaudeSessionTests.fs" />
     <Compile Include="TelemetryClassifyTests.fs" />
     <Compile Include="TelemetryStartTests.fs" />
+    <Compile Include="StepTelemetryTests.fs" />
     <Compile Include="AdapterContractTests.fs" />
     <Compile Include="AdapterCallEffectTests.fs" />
     <Compile Include="AdapterPublishEffectTests.fs" />

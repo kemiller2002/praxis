@@ -10,6 +10,7 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Git/Operations.fs" />
     <Compile Include="Work/Operations.fs" />
+    <Compile Include="Work/EnvelopeReconciliationOperations.fs" />
     <Compile Include="Work/Reconciliation.fs" />
     <Compile Include="Work/Checkpoint.fs" />
     <Compile Include="Telemetry/Operations.fs" />

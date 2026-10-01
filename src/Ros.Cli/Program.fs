@@ -24,12 +24,16 @@ open System.Text.Json
 open System.Text.Json.Nodes
 open Aegis
 
-/// Single authoritative version, read from package.json at build time; see
+/// Single authoritative version, read from release.json at build time; see
 /// Ros.Cli.Lifecycle.Version and Directory.Build.props.
 let Version = Lifecycle.Version
 
-let private usage =
+let private usageBase =
     "Usage: praxis [--root PATH] version | " + ExecutionCommands.usage + " | " + InstallationCommands.usage + " | " + PlanCommands.usage + " | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--unrecoverable-reason TEXT] [--actor NAME] | work abandon --id ID [--id ID]* --occurred-at TIMESTAMP --reason TEXT [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | " + ReconciliationCommands.usage + " | " + CheckpointCommands.usage + " | " + CheckpointCommands.continueUsage + " | " + WorkGroupCommands.usage + " | work context [ID] [--text] [--offline] | status [--json] [--verbose] [--offline] | " + RemoteCommands.usage + " | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--step STEP-ID] [--quiet] | telemetry step start|complete|fail [TARGET] --step STEP-ID [--name TEXT] [--reason TEXT] [--occurred-at TIMESTAMP] | telemetry usage [WORKITEM] [--by work-item|execution|step|provider|model|day] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | foundations verify [--json] | adapter publish --target FILE | ordo ingest --input FILE | ordo assess --input FILE | ordo observe-search --input FILE | ordo observe-effect --input FILE | ordo current | ordo handoff --revision REV --source SOURCE [--fact TEXT]* [--assumption TEXT]* [--unknown TEXT]* [--obligation TEXT]* [--next-action TEXT]* | " + ArchitectureCommands.usage + " | provenance identity [--json] [IDENTITY] | provenance record (--path PATH|--id ID) --operation {created|modified|reviewed|approved|superseded|migrated} [--reason TEXT] [--evidence REF]* [--derived-from REF]* [--execution EXE-ID] [--occurred-at TIMESTAMP] [--json] | provenance show ID|PATH [--json] | provenance audit [--json] | web serve [--port N (default 4310)] [--host H (default 127.0.0.1)] | hub register PATH [--name NAME] | hub unregister ID | hub repos | hub create REPO-ID TITLE [--tag T]* [--priority P] [--description D] [--id ID] [--actor NAME] [--file PATH[=NAME]]* | hub work [--repo ID] [--tag T]* [--status S] | hub serve [--port N (default 4320)] [--host H (default 127.0.0.1)]; IDENTITY (work start/resume/block/complete, add, telemetry start): [--actor-kind {agent|human|automation|unknown|x-...}] [--agent ID|--actor ID] [--provider P] [--model M] [--runtime R] ..."
+
+let private usage =
+    usageBase
+    + " | step {plan|begin|resume|complete|block|abandon|record|availability|checkpoint|link|list|show} [options] | reconcile --envelope FILE | inbox list"
 
 /// Removes one global `--name VALUE` option from the argument list wherever
 /// it appears, so the command parsers below only ever see their own flags.
@@ -2321,6 +2325,9 @@ let private runTelemetrySummary root (arguments: string list) =
         | None -> null
 
     output["executionCount"] <- JsonValue.Create summary.ExecutionCount
+    // Preserve the historical no-step JSON shape while exposing the exact
+    // additive aggregate as soon as any matching execution contains steps.
+    if summary.StepCount > 0 then output["stepCount"] <- JsonValue.Create summary.StepCount
     let providersNode = JsonArray()
     summary.Providers |> List.iter (fun provider -> providersNode.Add(JsonValue.Create provider: JsonNode))
     output["providers"] <- providersNode
@@ -2959,6 +2966,8 @@ let private repositoryDispatch root packageRoot arguments =
         printfn "%s" (fullHelp None)
         0
     | "validate" :: rest -> runValidateUnified root rest
+    | [ "reconcile"; "--envelope"; envelope ] -> EnvelopeReconciliationCommands.reconcile root envelope
+    | [ "inbox"; "list" ] -> EnvelopeReconciliationCommands.inbox root
     | "foundations" :: "verify" :: rest when rest |> List.forall ((=) "--json") ->
         Foundations.run root (rest |> List.contains "--json")
     | "status" :: rest when rest |> List.forall (fun value -> value = "--json" || value = "--verbose" || value = "--offline") ->
@@ -3029,6 +3038,7 @@ let private repositoryDispatch root packageRoot arguments =
     | "ordo" :: "current" :: rest -> runOrdoCurrent root rest
     | "ordo" :: "handoff" :: rest -> runOrdoHandoff root rest
     | "provenance" :: rest -> ProvenanceCommands.run root rest
+    | "step" :: rest -> StepCommands.run root rest
     | "architecture" :: rest -> ArchitectureCommands.run root rest
     | "remote" :: "execute" :: rest -> RemoteCommands.run root Version rest
     | "remote" :: "classify" :: rest -> RemoteCommands.classify Version rest

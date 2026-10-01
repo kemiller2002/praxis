@@ -17,6 +17,10 @@
     <Compile Include="Work/FileTelemetryStateRepository.fs" />
     <Compile Include="Work/FileWorkConfigRepository.fs" />
     <Compile Include="Work/FileEventLogRepository.fs" />
+    <Compile Include="Work/RawTelemetrySanitizer.fs" />
+    <Compile Include="Work/FileEnvelopeReconciliationTransaction.fs" />
+    <Compile Include="Work/FileEnvelopeReconciliationStore.fs" />
+    <Compile Include="Work/ReconciliationEnvelopeJson.fs" />
     <Compile Include="Work/FileBacklogQueueRepository.fs" />
     <Compile Include="Work/FileWorkListRepository.fs" />
     <Compile Include="Artifacts/FrontMatter.fs" />
@@ -25,12 +29,15 @@
     <Compile Include="Artifacts/FileArtifactRepository.fs" />
     <Compile Include="Json/CanonicalJson.fs" />
     <Compile Include="Work/FileWorkContextRepository.fs" />
-    <Compile Include="Work/FileReconciliationRepository.fs" />
     <Compile Include="Work/FileMetricRegistryRepository.fs" />
+    <Compile Include="Work/FileEnvelopeExecutionRepository.fs" />
+    <Compile Include="Work/FileEnvelopeReconciliationDispatcher.fs" />
+    <Compile Include="Work/FileReconciliationRepository.fs" />
     <Compile Include="Work/FileTelemetryExecutionRepository.fs" />
     <Compile Include="Work/ClaudeSessionTranscriptReader.fs" />
-    <Compile Include="Work/FileTelemetryFinalizationRepository.fs" />
     <Compile Include="Work/FileTelemetryQueryRepository.fs" />
+    <Compile Include="Work/FileStepRepository.fs" />
+    <Compile Include="Work/FileTelemetryFinalizationRepository.fs" />
     <Compile Include="Work/FileTelemetryUsageRepository.fs" />
     <Compile Include="Work/FileTelemetryValidationRepository.fs" />
     <Compile Include="Work/FileAdapterRepository.fs" />
@@ -68,6 +75,7 @@
     <EmbeddedResource Include="$(RosRepositoryRoot)telemetry/metrics.json" LogicalName="ros.payload/telemetry/metrics.json" />
 
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/development-telemetry.md" LogicalName="ros.payload/docs/development-telemetry.md" />
+    <EmbeddedResource Include="$(RosRepositoryRoot)docs/fallback-reconciliation.md" LogicalName="ros.payload/docs/fallback-reconciliation.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/ordo-observation.md" LogicalName="ros.payload/docs/ordo-observation.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/remote-protocol.md" LogicalName="ros.payload/docs/remote-protocol.md" />
     <EmbeddedResource Include="$(RosRepositoryRoot)docs/remote-agent-contract.md" LogicalName="ros.payload/docs/remote-agent-contract.md" />

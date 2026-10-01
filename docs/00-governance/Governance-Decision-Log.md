@@ -249,4 +249,3 @@ On 2026-07-22, repository discovery found the Phase 1 execution prompt as the on
   prospectively, never by restarting work, and that historical step
   attribution that was never captured stays unavailable rather than being
   reconstructed or read as zero.
-

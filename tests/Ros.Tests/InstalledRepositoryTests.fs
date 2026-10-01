@@ -132,5 +132,3 @@ module InstalledRepositoryTests =
                     let result = ros root [ "init"; "--profile"; "nonexistent"; "--project"; "X" ]
                     Assert.isTrue (result.Exit <> 0) "an unsupported profile must fail"
                     CliPort.contains "unsupported profile 'nonexistent'; available profiles: greenfield, project-administration" result.Err) } ]
-
-

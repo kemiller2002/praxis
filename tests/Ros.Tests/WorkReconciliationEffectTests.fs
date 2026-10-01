@@ -484,6 +484,23 @@ module WorkReconciliationEffectTests =
                             "src/a.fs", "work_items"
                             "src/b.fs", "work_items" ]
                           (workFindings root baseline |> List.sort)) }
+          { Name = "reconcile: malformed event JSON is a validation finding rather than an operational crash"
+            Run =
+              fun () ->
+                  withRepository (fun root baseline ->
+                      let path = Path.Combine(root, ".ros", "events", "events.jsonl")
+                      File.AppendAllText(path, "{\n")
+                      let result = ros root [ "ROS_BASE_REF", baseline ] [ "work"; "validate"; "--json" ]
+                      assertExit 1 result
+                      Assert.equal "" result.Err
+                      let findings = (parse result.Out).["findings"].AsArray()
+                      Assert.isTrue
+                          (findings
+                           |> Seq.exists (fun finding ->
+                               finding["path"].GetValue<string>() = ".ros/events/events.jsonl"
+                               && finding["field"].GetValue<string>() = "work_reconciliation"
+                               && finding["message"].GetValue<string>().Contains("line 2")))
+                          $"missing malformed-event finding: {result.Out}") }
           { Name = "reconcile: reconciling a change never pre-authorizes a later change to the same path"
             Run =
               fun () ->

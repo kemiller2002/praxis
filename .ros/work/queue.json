@@ -3704,6 +3704,195 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PR79-FALLBACK-RECONCILIATION",
+      "title": "Complete dual-entry reconciliation and merge PR #79",
+      "description": null,
+      "tags": [
+        "reconciliation",
+        "integration"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T14:58:28.449Z",
+      "updatedAt": "2026-09-28T07:05:38Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0065",
+      "title": "Implement first-class step-level execution telemetry",
+      "description": null,
+      "tags": [
+        "telemetry",
+        "execution"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-27T01:36:53.000Z",
+      "updatedAt": "2026-09-27T12:12:42Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PKG-FALLBACK-GUIDE",
+      "title": "Ship fallback reconciliation guide in distributed package",
+      "description": null,
+      "tags": [
+        "packaging",
+        "documentation"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:14:10Z",
+      "updatedAt": "2026-09-28T07:30:17Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "BUG-WORK-ID-COLLISION",
+      "title": "Reject auto-generated backlog IDs already present in work context",
+      "description": "After integrating main, ./ros add selected WI-0061 even though current context already contained completed WI-0061. The duplicate backlog entry was immediately abandoned and replaced with an explicit ID. Add cross-store ID allocation regression coverage.",
+      "tags": [
+        "bug",
+        "work-protocol"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:30:38Z",
+      "updatedAt": "2026-09-28T07:30:38Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PKG-FALLBACK-PAYLOAD",
+      "title": "Embed fallback reconciliation guide in native F# payload",
+      "description": "The native standalone F# binary embeds the starter manifest but omitted the new manifest source document, causing offline init to fail.",
+      "tags": [
+        "fsharp",
+        "packaging"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T07:50:51Z",
+      "updatedAt": "2026-09-28T07:56:47Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PKG-FALLBACK-GOLDEN",
+      "title": "Align F# payload differential golden",
+      "description": "Update the F# work-start differential fixture for the fallback guide embedded in the native payload, then revalidate PR 79.",
+      "tags": [
+        "fsharp",
+        "testing"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T08:03:02Z",
+      "updatedAt": "2026-09-28T08:08:03Z",
+      "createdBy": "ChatGPT",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "ChatGPT",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "github-actions",
+      "sourceReference": "https://github.com/kemiller2002/praxis/pull/79"
+    },
+    {
+      "id": "PR79-MAIN-INTEGRATION",
+      "title": "Integrate current main into PR 79",
+      "description": "Resolve overlaps between step telemetry and the merged remote-execution work on current main, preserve both designs, rerun validation, and merge PR 79.",
+      "tags": [
+        "fsharp",
+        "integration"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T12:28:11Z",
+      "updatedAt": "2026-09-28T13:27:30Z",
+      "createdBy": "ChatGPT",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "ChatGPT",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "github-pull-request",
+      "sourceReference": "https://github.com/kemiller2002/praxis/pull/79"
+    },
+    {
+      "id": "PR79-MAIN-INTEGRATION-2",
+      "title": "Integrate latest main into PR 79 after CI race",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-28T13:41:54.261Z",
+      "updatedAt": "2026-10-01T06:49:31Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

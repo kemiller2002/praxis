@@ -114,21 +114,30 @@ module FileReconciliationRepository =
             |> Seq.toList
         | _ -> []
 
+    let private parseEventObject (line: int) (text: string) =
+        try
+            match JsonNode.Parse text with
+            | :? JsonObject as node -> Ok node
+            | _ -> Error(ReconciliationEventRead.Malformed(line, "event must be a JSON object"))
+        with :? JsonException ->
+            Error(ReconciliationEventRead.Malformed(line, "event is not valid JSON"))
+
     /// Every reconciliation event in the log, parsed and integrity-checked.
     let readEvents (root: string) : ReconciliationEventRead list =
         eventLines root
         |> List.choose (fun (line, text) ->
-            match JsonNode.Parse text with
-            | :? JsonObject as node when ReconciliationEventContract.isReconciliation node ->
+            match parseEventObject line text with
+            | Ok node when ReconciliationEventContract.isReconciliation node ->
                 Some(ReconciliationEventContract.read line (integrityVerified node) node)
-            | _ -> None)
+            | Ok _ -> None
+            | Error malformed -> Some malformed)
 
     /// Paths named by every event that is not a reconciliation event.
     let readContemporaneousPaths (root: string) : Set<string> =
         eventLines root
         |> List.collect (fun (_, text) ->
-            match JsonNode.Parse text with
-            | :? JsonObject as node when not (ReconciliationEventContract.isReconciliation node) -> stringPaths node
+            match parseEventObject 0 text with
+            | Ok node when not (ReconciliationEventContract.isReconciliation node) -> stringPaths node
             | _ -> [])
         |> Set.ofList
 

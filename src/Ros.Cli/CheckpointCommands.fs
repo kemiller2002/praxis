@@ -733,9 +733,9 @@ module CheckpointCommands =
                 node["status"] <-
                     JsonValue.Create(
                         match step.Status with
-                        | Ros.Domain.Telemetry.StepStatus.Running -> "running"
-                        | Ros.Domain.Telemetry.StepStatus.Completed -> "completed"
-                        | Ros.Domain.Telemetry.StepStatus.Failed -> "failed"
+                        | Ros.Domain.Telemetry.EventStepStatus.Running -> "running"
+                        | Ros.Domain.Telemetry.EventStepStatus.Completed -> "completed"
+                        | Ros.Domain.Telemetry.EventStepStatus.Failed -> "failed"
                     )
 
                 array.Add(node: JsonNode)

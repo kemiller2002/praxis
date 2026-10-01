@@ -1,0 +1,65 @@
+name: Praxis reconcile apply
+
+# This privileged boundary never executes code from the pull request. It
+# builds Praxis from the trusted base commit, then treats the candidate tree
+# and envelopes strictly as input data. Forks remain read-only and are handled
+# by praxis-reconcile.yml.
+on:
+  pull_request_target:
+    paths:
+      - '.praxis/outbox/events/**'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: praxis-reconcile-${{ github.event.pull_request.head.ref }}
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout trusted Praxis source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+          path: trusted-praxis
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build trusted reconciler
+        working-directory: trusted-praxis
+        run: dotnet build src/Ros.Cli/Ros.Cli.fsproj --configuration Release
+      - name: Checkout candidate data
+        uses: actions/checkout@v4
+        with:
+          # Bind validation and application to the immutable commit that
+          # triggered this event. A later branch update makes the final
+          # non-force push fail safely instead of changing reviewed input.
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          path: candidate
+      - name: Apply envelopes with trusted reconciler
+        env:
+          PRAXIS_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+          git -C candidate config user.name "Praxis Reconciler"
+          git -C candidate config user.email "praxis-reconciler@users.noreply.github.com"
+          shopt -s nullglob
+          envelopes=(candidate/.praxis/outbox/events/*.json)
+          for envelope in "${envelopes[@]}"; do
+            dotnet trusted-praxis/src/Ros.Cli/bin/Release/net10.0/ros-fs.dll \
+              --root candidate reconcile --envelope "$envelope"
+          done
+          if [[ ${#envelopes[@]} -gt 0 ]]; then
+            dotnet trusted-praxis/src/Ros.Cli/bin/Release/net10.0/ros-fs.dll \
+              --root candidate validate --json
+            git -C candidate push origin "HEAD:$PRAXIS_HEAD_REF"
+            while IFS= read -r tag; do
+              git -C candidate push origin "refs/tags/$tag:refs/tags/$tag"
+            done < <(git -C candidate tag --list 'praxis-reconcile/*')
+          fi

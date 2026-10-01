@@ -8,6 +8,7 @@ let main _ =
     @ PersistenceTests.tests
     @ GitTests.tests
     @ WorkTests.tests
+    @ EnvelopeReconciliationTests.tests
     @ WorkPlanTests.tests
     @ BacklogTests.tests
     @ TelemetryTests.tests
@@ -44,6 +45,7 @@ let main _ =
     @ TelemetryIngestClaudeSessionTests.tests
     @ TelemetryClassifyTests.tests
     @ TelemetryStartTests.tests
+    @ StepTelemetryTests.tests
     @ AdapterContractTests.tests
     @ AdapterCallEffectTests.tests
     @ AdapterPublishEffectTests.tests
