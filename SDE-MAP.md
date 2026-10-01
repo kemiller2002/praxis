@@ -37,4 +37,3 @@ tests do.
 | SDE methodology bundle | `.sde/README.md` and `.sde/MANIFEST.json` are an installed governed input; project code must not duplicate or edit its rules. |
 | Shared persistence helper | `src/Praxis.Infrastructure/Work/*Transaction.fs` are effect implementations used by work and telemetry rather than an independent semantic area. |
 | Shared Git process adapter | `src/Praxis.Infrastructure/Git/GitRepository.fs` implements the effect boundary for the F# Git observation contract; work and telemetry own their caller policies. |
-| Legacy Python layout generator | `setup_ros_layout.py` is an uncalled compatibility candidate, not current semantic authority. |

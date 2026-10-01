@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 67,
+  "nextSeq": 68,
   "items": [
     {
       "id": "WI-0001",
@@ -3925,6 +3925,27 @@
       "attachments": [],
       "createdAt": "2026-10-01T11:03:05.375Z",
       "updatedAt": "2026-10-01T11:32:55.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0067",
+      "title": "Remove the uncalled legacy Python layout generator setup_ros_layout.py (superseded by praxis init) and its SDE-MAP row",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-01T12:10:01.664Z",
+      "updatedAt": "2026-10-01T12:35:50.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
