@@ -792,6 +792,19 @@
             "created"
           ],
           "reason": "Architecture decision for post-hoc attribution reconciliation (work item GH-80)"
+        },
+        "EXE-20261002T145824028Z-c9baf025": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-02T15:11:15.000Z",
+          "operations": [
+            "modified"
+          ]
         }
       }
     },
@@ -819,8 +832,8 @@
       "validation"
     ],
     "title": "Post-hoc attribution reconciliation as an append-only, Git-evidenced, content-bound event",
-    "updated": "2026-09-27",
-    "version": "1.0.0"
+    "updated": "2026-10-02",
+    "version": "1.1.0"
   },
   {
     "confidence": "medium",

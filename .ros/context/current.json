@@ -5849,7 +5849,27 @@
       "updatedAt": "2026-10-02T14:58:22.000Z",
       "telemetryExecutionIds": [
         "EXE-20261002T145823283Z-f067e226"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "f9854068466c350c4242e3e4",
+        "recordedAt": "2026-10-02T15:05:15.000Z",
+        "executionId": "EXE-20261002T145823283Z-f067e226",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a022-run-bc34",
+        "commit": "234779d8d6bbce45c0d22961ed353991e3b0013d",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a022-run-bc34",
+        "remoteCommit": "234779d8d6bbce45c0d22961ed353991e3b0013d",
+        "summary": "ACTOR-KIND-ANCHOR implementation pushed (234779d): all whole-value Domain validators anchored with \\z, tests added. Remaining items: ATTR-RECONCILE-SYMLINK-SUBMODULE, PRAXIS-CN-GL-KINDS, PRAXIS-STATE-MERGE-01, PRAXIS-PLAN-ERROR-HISTORY.",
+        "nextAction": "Implement ATTR-RECONCILE-SYMLINK-SUBMODULE; verify ACTOR-KIND-ANCHOR criteria after full test run.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     },
     {
       "id": "ATTR-RECONCILE-SYMLINK-SUBMODULE",

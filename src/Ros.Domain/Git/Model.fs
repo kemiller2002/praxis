@@ -163,3 +163,22 @@ module GitCommitChange =
         match change.Kind, change.OriginalPath with
         | GitCommitChangeKind.Renamed, Some original -> [ change.Path; original ]
         | _ -> [ change.Path ]
+
+/// The object id Git gives content it stores: the hash of a
+/// `<type> <length>\0` header followed by the bytes, in the repository's
+/// object format.
+[<RequireQualifiedAccess>]
+module GitObjectId =
+    type Format =
+        | Sha1
+        | Sha256
+
+    let private hash format (bytes: byte array) =
+        match format with
+        | Sha1 -> System.Security.Cryptography.SHA1.HashData bytes
+        | Sha256 -> System.Security.Cryptography.SHA256.HashData bytes
+
+    /// The blob id of `content`, as `git hash-object --no-filters` reports it.
+    let blob (format: Format) (content: byte array) =
+        let header = System.Text.Encoding.ASCII.GetBytes $"blob {content.Length}\000"
+        Array.append header content |> hash format |> System.Convert.ToHexString |> fun hex -> hex.ToLowerInvariant()

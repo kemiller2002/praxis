@@ -415,8 +415,15 @@ work item. Reconciliation events must never be written or edited by hand.
 Known limits: attribution remains path-based for contemporaneous events, as
 before; reconciliation cannot judge whether a commit *semantically* belongs to
 the named work item, so the `reason`, the recorded actor, and the reviewable
-evidence are what make a wrong reconciliation detectable; symbolic links and
-submodules are not matched by content and so fail closed.
+evidence are what make a wrong reconciliation detectable.
+
+Content binding compares what Git stores for a path. A regular file is hashed
+as `git hash-object` would store it; a symbolic link is matched by its link
+target text (the blob Git stores for mode `120000`), never by the file it
+points to; a submodule is matched by the commit checked out in it (its
+`160000` gitlink). Retargeting a link or checking out another submodule commit
+is a new, unattributed change; a plain directory or an uninitialised submodule
+cannot be matched and fails closed.
 
 ## Local backlog
 

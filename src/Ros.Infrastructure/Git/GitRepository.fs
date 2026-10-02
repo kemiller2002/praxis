@@ -508,32 +508,95 @@ module ProcessGitRepository =
 
     let createHistory root = createHistoryWithExecutable "git" root
 
-    /// The current working-tree content of each path as Git would store it
-    /// (`git hash-object`, which applies the path's clean filters), or
-    /// `Absent` when nothing exists there. Anything Git cannot hash (a
-    /// directory, a submodule, an I/O failure) is `Unreadable`, which never
-    /// matches recorded evidence, so validation fails closed.
+    /// What occupies a path in the working tree, as far as Git's storage of
+    /// it is concerned.
+    [<RequireQualifiedAccess>]
+    type private WorkingTreeEntry =
+        | Missing
+        /// A symbolic link: Git stores its target text as a blob (mode 120000).
+        | SymbolicLink of target: string
+        /// A checked-out submodule: Git stores a gitlink (mode 160000) whose
+        /// object id is the submodule's commit.
+        | Submodule
+        | File
+        /// A plain directory, or anything else Git cannot store as one entry.
+        | Other
+
+    let private classify (fullRoot: string) (path: string) =
+        let full = IO.Path.Combine(fullRoot, path)
+        let info = IO.FileInfo full
+
+        match info.LinkTarget with
+        | null when IO.File.Exists full -> WorkingTreeEntry.File
+        | null when IO.Directory.Exists full ->
+            let marker = IO.Path.Combine(full, ".git")
+            if IO.File.Exists marker || IO.Directory.Exists marker then WorkingTreeEntry.Submodule else WorkingTreeEntry.Other
+        | null -> WorkingTreeEntry.Missing
+        | target -> WorkingTreeEntry.SymbolicLink target
+
+    /// The repository's object hash (`sha1` or `sha256`); `None` when Git
+    /// cannot say, so nothing is hashed under a guessed format.
+    let private objectFormat executable fullRoot =
+        match runGitTextTrimmed executable fullRoot "git rev-parse" [ "rev-parse"; "--show-object-format" ] with
+        | Ok "sha1" -> Some GitObjectId.Sha1
+        | Ok "sha256" -> Some GitObjectId.Sha256
+        | _ -> None
+
+    let private symbolicLinkState executable fullRoot target =
+        match objectFormat executable fullRoot with
+        | Some format -> PathContentState.Present(GitObjectId.blob format (Text.Encoding.UTF8.GetBytes(target: string)))
+        | None -> PathContentState.Unreadable
+
+    /// A submodule's gitlink is the commit checked out in it; an
+    /// uninitialised or unreadable submodule never matches.
+    let private submoduleState executable fullRoot path =
+        match runGitTextTrimmed executable (IO.Path.Combine(fullRoot, path)) "git rev-parse" [ "rev-parse"; "--verify"; "HEAD^{commit}" ] with
+        | Ok output ->
+            CommitId.tryParse output
+            |> Option.map (CommitId.value >> PathContentState.Present)
+            |> Option.defaultValue PathContentState.Unreadable
+        | Error _ -> PathContentState.Unreadable
+
+    let private fileStates executable fullRoot (files: string list) =
+        match files with
+        | [] -> []
+        | _ ->
+            match runGit executable fullRoot "git hash-object" ([ "hash-object"; "--" ] @ files) with
+            | Ok result when result.ExitCode = 0 ->
+                match result.Output.Split([| '\r'; '\n' |], StringSplitOptions.RemoveEmptyEntries) |> Array.toList with
+                | hashes when hashes.Length = files.Length -> List.zip files (hashes |> List.map PathContentState.Present)
+                | _ -> files |> List.map (fun path -> path, PathContentState.Unreadable)
+            | _ -> files |> List.map (fun path -> path, PathContentState.Unreadable)
+
+    /// The current working-tree content of each path as Git would store it,
+    /// or `Absent` when nothing exists there. A regular file is hashed with
+    /// `git hash-object` (which applies the path's clean filters); a symbolic
+    /// link is the blob of its target text, never the file it points to; a
+    /// submodule is its checked-out commit (the gitlink). Anything else (a
+    /// plain directory, an uninitialised submodule, an I/O failure) is
+    /// `Unreadable`, which never matches recorded evidence, so validation
+    /// fails closed.
     let readPathStatesWithExecutable executable root (paths: string list) : Map<string, PathContentState> =
         let fullRoot = IO.Path.GetFullPath root
-        let exists (path: string) = IO.File.Exists(IO.Path.Combine(fullRoot, path))
-        let present, absent = paths |> List.distinct |> List.partition exists
-        let absentStates = absent |> List.filter (fun path -> not (IO.Directory.Exists(IO.Path.Combine(fullRoot, path))))
+        let entries = paths |> List.distinct |> List.map (fun path -> path, classify fullRoot path)
 
-        let presentStates =
-            match present with
-            | [] -> []
-            | _ ->
-                match runGit executable fullRoot "git hash-object" ([ "hash-object"; "--" ] @ present) with
-                | Ok result when result.ExitCode = 0 ->
-                    match result.Output.Split([| '\r'; '\n' |], StringSplitOptions.RemoveEmptyEntries) |> Array.toList with
-                    | hashes when hashes.Length = present.Length -> List.zip present (hashes |> List.map PathContentState.Present)
-                    | _ -> present |> List.map (fun path -> path, PathContentState.Unreadable)
-                | _ -> present |> List.map (fun path -> path, PathContentState.Unreadable)
+        let files =
+            entries
+            |> List.choose (function
+                | path, WorkingTreeEntry.File -> Some path
+                | _ -> None)
 
-        (absentStates |> List.map (fun path -> path, PathContentState.Absent))
-        @ presentStates
-        @ (absent |> List.except absentStates |> List.map (fun path -> path, PathContentState.Unreadable))
-        |> Map.ofList
+        let others =
+            entries
+            |> List.choose (fun (path, entry) ->
+                match entry with
+                | WorkingTreeEntry.File -> None
+                | WorkingTreeEntry.Missing -> Some(path, PathContentState.Absent)
+                | WorkingTreeEntry.SymbolicLink target -> Some(path, symbolicLinkState executable fullRoot target)
+                | WorkingTreeEntry.Submodule -> Some(path, submoduleState executable fullRoot path)
+                | WorkingTreeEntry.Other -> Some(path, PathContentState.Unreadable))
+
+        fileStates executable fullRoot files @ others |> Map.ofList
 
     let readPathStates root paths = readPathStatesWithExecutable "git" root paths
 

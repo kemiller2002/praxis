@@ -552,4 +552,63 @@ module WorkReconciliationEffectTests =
                       Assert.equal true (entry["valid"].GetValue<bool>())
                       Assert.equal "kevin" (entry["actor"].["id"].GetValue<string>())
                       Assert.equal "Alice <alice@example.invalid>" (entry["commits"].[0].["author"].GetValue<string>())
-                      Assert.isTrue (isNull (parse (ros root [] [ "work"; "show"; "FEAT-2" ]).Out).["reconciliations"]) "FEAT-2 has none") } ]
+                      Assert.isTrue (isNull (parse (ros root [] [ "work"; "show"; "FEAT-2" ]).Out).["reconciliations"]) "FEAT-2 has none") }
+          { Name = "reconcile: a working-tree blob id is the one git hash-object reports, in either object format"
+            Run =
+              fun () ->
+                  withRepository (fun root _ ->
+                      let content = "line one\nline two\n"
+                      write root "src/plain.fs" content
+                      let expected = git root [ "hash-object"; "--no-filters"; "src/plain.fs" ]
+                      Assert.equal expected (Ros.Domain.Git.GitObjectId.blob Ros.Domain.Git.GitObjectId.Sha1 (Text.Encoding.UTF8.GetBytes content))
+                      Assert.equal 64 (Ros.Domain.Git.GitObjectId.blob Ros.Domain.Git.GitObjectId.Sha256 [||]).Length) }
+          { Name = "reconcile: a reconciled symbolic link matches while its target text is unchanged, not the file it points to"
+            Run =
+              fun () ->
+                  withRepository (fun root baseline ->
+                      write root "src/target.fs" "target\n"
+                      write root "src/other.fs" "other\n"
+                      File.CreateSymbolicLink(Path.Combine(root, "src", "link.fs"), "target.fs") |> ignore
+                      let work = commitAll root "add a link" "Alice"
+                      Assert.equal "120000" ((git root [ "ls-files"; "-s"; "src/link.fs" ]).Split(' ').[0])
+                      assertSucceeded (reconcile root [ "--id"; "FEAT-1"; "--reason"; "recovery"; "--commit"; work ])
+                      Assert.empty (workFindings root baseline)
+
+                      // Editing the file the link points to changes that file, never the link.
+                      write root "src/target.fs" "target edited\n"
+                      Assert.equal [ "src/target.fs", "work_items" ] (workFindings root baseline)
+                      write root "src/target.fs" "target\n"
+                      Assert.empty (workFindings root baseline)
+
+                      // Pointing the link elsewhere is a new, unattributed change.
+                      File.Delete(Path.Combine(root, "src", "link.fs"))
+                      File.CreateSymbolicLink(Path.Combine(root, "src", "link.fs"), "other.fs") |> ignore
+                      Assert.equal [ "src/link.fs", "work_items" ] (workFindings root baseline)) }
+          { Name = "reconcile: a reconciled submodule matches while its gitlink commit is unchanged and fails closed otherwise"
+            Run =
+              fun () ->
+                  withRepository (fun root baseline ->
+                      let library = Path.Combine(Path.GetTempPath(), $"ros-reconcile-sub-{Guid.NewGuid():N}")
+                      Directory.CreateDirectory library |> ignore
+
+                      try
+                          git library [ "init"; "-q"; "-b"; "main" ] |> ignore
+                          write library "lib.fs" "one\n"
+                          let first = commitAll library "first" "Carol"
+                          write library "lib.fs" "two\n"
+                          commitAll library "second" "Carol" |> ignore
+
+                          git root [ "-c"; "protocol.file.allow=always"; "submodule"; "add"; "-q"; library; "vendor/lib" ] |> ignore
+                          let work = commitAll root "add a submodule" "Alice"
+                          Assert.equal "160000" ((git root [ "ls-files"; "-s"; "vendor/lib" ]).Split(' ').[0])
+                          assertSucceeded (reconcile root [ "--id"; "FEAT-1"; "--reason"; "recovery"; "--commit"; work ])
+                          Assert.empty (workFindings root baseline)
+
+                          // A different checked-out commit is a different gitlink.
+                          git (Path.Combine(root, "vendor", "lib")) [ "checkout"; "-q"; first ] |> ignore
+                          Assert.equal [ "vendor/lib", "work_items" ] (workFindings root baseline)
+                      finally
+                          try
+                              Directory.Delete(library, true)
+                          with _ ->
+                              ()) } ]
