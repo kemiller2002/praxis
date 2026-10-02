@@ -1,0 +1,55 @@
+{
+  "schema": "ex-ros-2026-a021.session-metrics/1",
+  "label": "w1",
+  "sessionId": "91092692-a0e4-5d9d-962f-9fcb51d5228c",
+  "transcript": "91092692-a0e4-5d9d-962f-9fcb51d5228c.jsonl",
+  "models": [
+    "claude-opus-5-5"
+  ],
+  "startedAt": "2026-10-02T14:42:03.524000+00:00",
+  "endedAt": "2026-10-02T15:21:25.985000+00:00",
+  "wallMs": 2362461,
+  "msToFirstCodeMutation": 1070017,
+  "modelRequests": 48,
+  "tokens": {
+    "input": 100,
+    "output": 34035,
+    "cacheRead": 6161798,
+    "cacheCreation": 129329
+  },
+  "costUsd": {
+    "value": 0.2180978,
+    "source": "runtime cost-state (estimate; last record)"
+  },
+  "toolCalls": {
+    "Bash": 41,
+    "Edit": 7,
+    "Read": 1,
+    "ReadNotifications": 1,
+    "ToolSearch": 1,
+    "Write": 1,
+    "mcp__claude-code-remote__send_message": 1
+  },
+  "toolErrors": 1,
+  "fileReads": 41,
+  "distinctFilesRead": 29,
+  "repeatedReads": {
+    "/tmp/claude-0/ftests.log": 2,
+    "src/Ros.Domain/Architecture/ImplementationLanguagePolicy.fs": 2,
+    "src/Ros.Domain/Artifacts/Policy.fs": 3,
+    "src/Ros.Domain/Telemetry/TelemetryValidation.fs": 6,
+    "src/Ros.Domain/Work/EnvelopeReconciliation.fs": 2,
+    "tests/Ros.Tests/ProvenanceTests.fs": 2,
+    "tests/Ros.Tests/TelemetryValidationTests.fs": 2
+  },
+  "governanceReads": {
+    "AGENTS.md": 1
+  },
+  "searches": 37,
+  "fileWrites": 12,
+  "distinctFilesEdited": 6,
+  "builds": 6,
+  "testRuns": 3,
+  "compactions": 0,
+  "notes": "reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate"
+}
