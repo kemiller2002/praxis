@@ -5839,11 +5839,66 @@
           "mechanism": "git-remote-observation"
         }
       }
+    },
+    {
+      "id": "ACTOR-KIND-ANCHOR",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-02T14:58:22.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261002T145823283Z-f067e226"
+      ]
+    },
+    {
+      "id": "ATTR-RECONCILE-SYMLINK-SUBMODULE",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-02T14:58:22.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261002T145824028Z-c9baf025"
+      ]
+    },
+    {
+      "id": "PRAXIS-CN-GL-KINDS",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-02T14:58:22.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261002T145824828Z-b14ba23a"
+      ]
+    },
+    {
+      "id": "PRAXIS-PLAN-ERROR-HISTORY",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-02T14:58:22.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261002T145825399Z-7a87163a"
+      ]
+    },
+    {
+      "id": "PRAXIS-STATE-MERGE-01",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-02T14:58:22.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261002T145826078Z-d36d4a90"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-01T10:43:18.000Z",
+  "updatedAt": "2026-10-02T14:58:22.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
