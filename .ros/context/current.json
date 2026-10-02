@@ -5849,7 +5849,27 @@
       "updatedAt": "2026-10-02T14:57:18.000Z",
       "telemetryExecutionIds": [
         "EXE-20261002T145718941Z-5cdb3714"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "c81c23767efabcce46c4157f",
+        "recordedAt": "2026-10-02T15:26:04.000Z",
+        "executionId": "EXE-20261002T145718941Z-5cdb3714",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a022-run-9b87",
+        "commit": "280db9a911104ff1cd7736faebc69656c675b46f",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a022-run-9b87",
+        "remoteCommit": "280db9a911104ff1cd7736faebc69656c675b46f",
+        "summary": "Milestone: control-plane contract, CLI command group, web /api/v1 and hub /api/v1 implemented and tested (commit 280db9a). Completed: none yet. Remaining: CTL-02..06 docs (control-plane API, web interface, hub) and per-criterion verification.",
+        "nextAction": "Write docs/control-plane-api.md and update docs/web-interface.md and docs/project-administration-hub.md, then verify each criterion and complete",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     },
     {
       "id": "PRAXIS-CTL-03",
@@ -5860,7 +5880,27 @@
       "updatedAt": "2026-10-02T14:57:18.000Z",
       "telemetryExecutionIds": [
         "EXE-20261002T145719759Z-a597d9b8"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "eac5057ea0dffaa2d9c70fe5",
+        "recordedAt": "2026-10-02T15:26:05.000Z",
+        "executionId": "EXE-20261002T145719759Z-a597d9b8",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a022-run-9b87",
+        "commit": "280db9a911104ff1cd7736faebc69656c675b46f",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a022-run-9b87",
+        "remoteCommit": "280db9a911104ff1cd7736faebc69656c675b46f",
+        "summary": "Milestone: control-plane contract, CLI command group, web /api/v1 and hub /api/v1 implemented and tested (commit 280db9a). Completed: none yet. Remaining: CTL-02..06 docs (control-plane API, web interface, hub) and per-criterion verification.",
+        "nextAction": "Write docs/control-plane-api.md and update docs/web-interface.md and docs/project-administration-hub.md, then verify each criterion and complete",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     },
     {
       "id": "PRAXIS-CTL-04",
@@ -5871,7 +5911,27 @@
       "updatedAt": "2026-10-02T14:57:18.000Z",
       "telemetryExecutionIds": [
         "EXE-20261002T145720800Z-573b4aad"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "938741f67c2b2b66e0ba61e6",
+        "recordedAt": "2026-10-02T15:26:07.000Z",
+        "executionId": "EXE-20261002T145720800Z-573b4aad",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a022-run-9b87",
+        "commit": "280db9a911104ff1cd7736faebc69656c675b46f",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a022-run-9b87",
+        "remoteCommit": "280db9a911104ff1cd7736faebc69656c675b46f",
+        "summary": "Milestone: control-plane contract, CLI command group, web /api/v1 and hub /api/v1 implemented and tested (commit 280db9a). Completed: none yet. Remaining: CTL-02..06 docs (control-plane API, web interface, hub) and per-criterion verification.",
+        "nextAction": "Write docs/control-plane-api.md and update docs/web-interface.md and docs/project-administration-hub.md, then verify each criterion and complete",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     },
     {
       "id": "PRAXIS-CTL-05",
@@ -5882,7 +5942,27 @@
       "updatedAt": "2026-10-02T14:57:18.000Z",
       "telemetryExecutionIds": [
         "EXE-20261002T145721444Z-ec85a8bd"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "e6360a68ec0dd9ce40f403f4",
+        "recordedAt": "2026-10-02T15:26:08.000Z",
+        "executionId": "EXE-20261002T145721444Z-ec85a8bd",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a022-run-9b87",
+        "commit": "280db9a911104ff1cd7736faebc69656c675b46f",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a022-run-9b87",
+        "remoteCommit": "280db9a911104ff1cd7736faebc69656c675b46f",
+        "summary": "Milestone: control-plane contract, CLI command group, web /api/v1 and hub /api/v1 implemented and tested (commit 280db9a). Completed: none yet. Remaining: CTL-02..06 docs (control-plane API, web interface, hub) and per-criterion verification.",
+        "nextAction": "Write docs/control-plane-api.md and update docs/web-interface.md and docs/project-administration-hub.md, then verify each criterion and complete",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     },
     {
       "id": "PRAXIS-CTL-06",
@@ -5893,7 +5973,27 @@
       "updatedAt": "2026-10-02T14:57:18.000Z",
       "telemetryExecutionIds": [
         "EXE-20261002T145722238Z-8fe9da37"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "351c2de62a98d3c084b9f92e",
+        "recordedAt": "2026-10-02T15:26:10.000Z",
+        "executionId": "EXE-20261002T145722238Z-8fe9da37",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a022-run-9b87",
+        "commit": "280db9a911104ff1cd7736faebc69656c675b46f",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a022-run-9b87",
+        "remoteCommit": "280db9a911104ff1cd7736faebc69656c675b46f",
+        "summary": "Milestone: control-plane contract, CLI command group, web /api/v1 and hub /api/v1 implemented and tested (commit 280db9a). Completed: none yet. Remaining: CTL-02..06 docs (control-plane API, web interface, hub) and per-criterion verification.",
+        "nextAction": "Write docs/control-plane-api.md and update docs/web-interface.md and docs/project-administration-hub.md, then verify each criterion and complete",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     }
   ],
   "protocolVersion": "1.0.0",
