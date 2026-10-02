@@ -1,0 +1,212 @@
+Architecture analysis: ACTOR-KIND-ANCHOR
+=======================================
+
+- Item: ACTOR-KIND-ANCHOR ("ActorKind extension pattern accepts a trailing
+  newline ($ anchor)"), `./praxis work show ACTOR-KIND-ANCHOR`
+- Execution repository: kemiller2002/praxis, branch experiment/a022-run-a41b
+- Base commit: f806f817e4656e00550313d839b59ceea87a682d
+- Execution: EXE-20261002T145702173Z-32f2c5a6 (started by `./praxis work start`)
+
+
+1. Item and acceptance criteria
+-------------------------------
+
+Obligation: ActorKind.tryParse (src/Ros.Domain/Provenance/Actor.fs:21-38)
+validates an extension kind with `^x-[a-z0-9][a-z0-9-]*$`. In .NET, `$`
+without RegexOptions.Multiline also matches immediately before a final
+"\n", so `x-agent\n` is accepted and stored verbatim as
+ActorKind.Extension "x-agent\n". Fix by anchoring with `\z`, and audit
+the other Domain patterns for the same defect.
+
+Acceptance criteria (verbatim from the backlog description):
+  AC1. ActorKind.tryParse rejects a value with a trailing newline or
+       carriage return (for example x-agent followed by a newline).
+  AC2. Every regular expression under src/Ros.Domain used to validate a
+       whole value is audited; each one that anchors with $ is corrected
+       (for example to \z) or recorded with the reason it is safe; the
+       audit list is part of the completion evidence.
+  AC3. A test for each corrected pattern.
+  AC4. No accepted valid value changes.
+Also stated: not to be merged to main before experiment EX-ROS-2026-A022
+is evaluated and the repository owner decides. No PR or merge is part of
+this item.
+
+Note on "carriage return": `$` never matched before a bare "\r", so
+`x-agent\r` and `x-agent\r\n` were already rejected (`\r` is not in the
+character class); only a single trailing "\n" slipped through. The test
+still covers "\n", "\r" and "\r\n" so AC1 is demonstrated, not inferred.
+
+
+2. Reuse inventory
+------------------
+
+Search used: `grep -rnaP 'Regex|IsMatch|\.Match\(' src/Ros.Domain` (the
+`-a` is needed because grep treats TelemetryValidation.fs as binary).
+
+Existing element | Location | What it does | Reuse?
+---|---|---|---
+`\z`-anchored validation convention | src/Ros.Domain/Remote/Protocol.fs:199, 574-581 (RequestValidation), src/Ros.Domain/Telemetry/Steps.fs:63, src/Ros.Domain/Git/Durability.fs:20 | Newer validators already anchor whole values with `\z` | Reused as the convention; every fix uses the same `^...\z` form
+RequestValidation.controlCharacter | src/Ros.Domain/Remote/Protocol.fs:582 | Rejects control characters for remote input (the guard PRAXIS-REMOTE-01 added) | Not reused: it is a separate, additional guard on one path; the item asks for the patterns themselves to be correct
+ActorKind.tryParse / resolve | src/Ros.Domain/Provenance/Actor.fs:21-65 | Parses the actor kind vocabulary; `resolve` uses it for `--actor-kind` / PRAXIS_ACTOR_KIND | Fixed in place
+ContributionOperation.tryParse | src/Ros.Domain/Provenance/ArtifactProvenance.fs:21-44 | Same `x-` extension pattern for contribution operations | Fixed in place
+Contribution.isExecutionId / isValidKey / isTimestamp | src/Ros.Domain/Provenance/ArtifactProvenance.fs:66-85 | EXE-/CTB- keys and ISO timestamps of provenance contributions | Fixed in place
+ArtifactPolicy identifierPattern / legacyResearchPackagePattern | src/Ros.Domain/Artifacts/Policy.fs:8-18, 76, 88, 106 | Canonical artifact IDs and legacy RP/REP names | Fixed in place
+ImplementationLanguagePolicy.decisionPattern | src/Ros.Domain/Architecture/ImplementationLanguagePolicy.fs:51, 123 | Exception must cite a DF- decision | Fixed in place
+TelemetryValidation currency / classification extension / execution id | src/Ros.Domain/Telemetry/TelemetryValidation.fs:32, 79, 535 | Cost currency code, `x-` work classifications, portable EXE- id | Fixed in place. Not replaced by Contribution.isExecutionId: Telemetry compiles before Provenance (Actor.fs opens Ros.Domain.Telemetry), so it cannot depend on it
+WorkGroups.isValidGroupId | src/Ros.Domain/Work/WorkGroups.fs:325-327 | GROUP- ids | Fixed in place
+WorkItemId.isValid | src/Ros.Domain/Work/Identity.fs:8 | Work item ids; used by Backlog, QueueValidation, Checkpoint, Reconciliation, WorkGroups, ContextPlan and CLI argument checks | Fixed in place (one fix covers all callers)
+EnvelopeReconciliation sha / workItem / transaction / currency | src/Ros.Domain/Work/EnvelopeReconciliation.fs:125-128 | Fallback envelope fields | Fixed in place
+PathFilter.globMatch | src/Ros.Domain/Work/PathFilter.fs:50-58 | Whole-path glob match for ignoredPaths | Fixed in place (builds `^...$` dynamically)
+Test harness `{ Name; Run }` lists + Assert | tests/Ros.Tests/*.fs, Program.fs | Project test convention | Reused
+Existing fixtures | ProvenanceTests.fs:138-146; ArtifactTests.fs:90-110 (legacyResearchPackageDocuments); TelemetryValidationTests.fs (validRecord, runOne, fieldsOf); TelemetryCostUnitTests.fs; EnvelopeReconciliationTests.fs:55-77 (envelope, observed); ImplementationLanguagePolicyTests.fs:11, 95-110 (enforced); PathFilterTests.fs:10-32 (cases); WorkGroupTests.fs:63-133 (request, context, codes) | Valid baselines per module | Reused: each new test is added next to the existing tests of the same module, overriding exactly the field under test
+
+No new abstraction is introduced. A shared "whole-value regex" helper was
+considered (e.g. a `Pattern.whole` that appends `\z`) and rejected: the
+patterns live in five namespaces with a strict compile order
+(Telemetry before Provenance, etc.), the newer code already writes `\z`
+inline, and a helper would be a larger, cross-cutting change for no
+behavioural gain.
+
+
+3. Audit list (AC2) and design
+------------------------------
+
+3a. Whole-value validators anchored with `$` -> corrected to `\z`
+
+ #  Location                                              Pattern (before)                                   Entry point tested
+ P1  Provenance/Actor.fs:22                               ^x-[a-z0-9][a-z0-9-]*$                             ActorKind.tryParse / resolve
+ P2  Provenance/ArtifactProvenance.fs:23                  ^x-[a-z0-9][a-z0-9-]*$                             ContributionOperation.tryParse
+ P3  Provenance/ArtifactProvenance.fs:68                  ^EXE-[A-Za-z0-9._-]+$                              Contribution.isExecutionId / isValidKey
+ P4  Provenance/ArtifactProvenance.fs:71                  ^CTB-[A-Za-z0-9._-]+$                              Contribution.isValidKey
+ P5  Provenance/ArtifactProvenance.fs:74                  ^yyyy-MM-ddTHH:mm:ss(.f{1,9})?Z$                   Contribution.isTimestamp (DateTimeOffset.TryParse
+                                                                                                             tolerates trailing whitespace, so the regex is the only guard)
+ P6  Artifacts/Policy.fs:10                               artifact identifier alternation ...$              ArtifactPolicy.isValidIdentifier / validate
+ P7  Artifacts/Policy.fs:16                               legacy RP/REP alternation ...$                     ArtifactPolicy.validate (legacy file-name rule)
+ P8  Architecture/ImplementationLanguagePolicy.fs:51      ^DF-[A-Z0-9]+(-[A-Z0-9]+)+$                        ImplementationLanguagePolicy.configurationFindings
+ P9  Telemetry/TelemetryValidation.fs:32                  ^[A-Z]{3}$ (inline Regex.IsMatch)                  TelemetryValidation.violatesCostUnit
+ P10 Telemetry/TelemetryValidation.fs:79                  ^x-...(?:/...)?$ classification extension          TelemetryValidation.findings (classification.types)
+ P11 Telemetry/TelemetryValidation.fs:535                 ^EXE-[A-Za-z0-9._-]+$ (inline)                     TelemetryValidation.findings (executionId)
+ P12 Work/WorkGroups.fs:325                               ^GROUP-[A-Z0-9]+(-[A-Z0-9]+)*$                     WorkGroups.isValidGroupId / create
+ P13 Work/Identity.fs:8                                   ^[A-Z][A-Z0-9_-]*-[A-Z0-9][A-Z0-9_-]*$ (inline)    WorkItemId.isValid
+ P14 Work/EnvelopeReconciliation.fs:125                   ^[0-9a-fA-F]{40}$ (sha)                            EnvelopeReconciliation.decide
+ P15 Work/EnvelopeReconciliation.fs:126                   ^[A-Za-z0-9][A-Za-z0-9._-]*$ (workItem)            EnvelopeReconciliation.decide
+ P16 Work/EnvelopeReconciliation.fs:127                   ^[A-Za-z0-9][A-Za-z0-9._-]*$ (transaction)         EnvelopeReconciliation.decide
+ P17 Work/EnvelopeReconciliation.fs:128                   ^[A-Z]{3}$ (currency)                              EnvelopeReconciliation.decide
+ P18 Work/PathFilter.fs:55                                generated ^<glob>$                                 PathFilter.globMatch
+
+3b. Already correct (anchored with `\z`): Remote/Protocol.fs:199
+(ProtocolVersion) and :574-581 (RequestValidation: requestId, workItemId,
+executionId, ref, sha, revision, token, currency); Telemetry/Steps.fs:63
+(step id); Git/Durability.fs:20 (CommitId). No change.
+
+3c. Recorded as safe (not whole-value validation), no change:
+ - Provenance/ProvenancePolicy.fs:48 `^[0-9]{4}-[0-9]{2}-[0-9]{2}`: a
+   prefix test on a trimmed value; only the first 10 characters are used
+   (`trimmed[..9]`). It has no end anchor by design.
+ - Telemetry/SessionTranscript.fs:118-128: heuristic classification of
+   shell commands from transcripts (reads, searches, builds, tests,
+   writes). `pathToken` (:121) has `$` but is applied to tokens produced
+   by splitting on ' ', '\t', '\n' (:148), so a token cannot end with a
+   newline. Not validation.
+ - Telemetry/ChangeSummary.fs:57-63: test/doc file classification of
+   changed paths for summaries; a classification, never an accept/reject
+   decision.
+ - Planning/Graph.fs:251 `-\d+$` and Planning/Grouping.fs:929
+   `Regex.Replace(requirement, @"-\d+$", "")`: suffix detection/stripping
+   on ids that were already validated as work-item/requirement ids; they
+   derive a family name, they do not decide validity.
+ - Planning/Inventory.fs:14-25, 186-188 and Planning/Grouping.fs:523-528,
+   889: free-text searches (no whole-value anchors, or Replace).
+ - Remote/Protocol.fs:551-561 SecretMaterial: unanchored searches by
+   design. Protocol.fs:582 controlCharacter: unanchored search by design.
+ - Work/Attachment.fs:55: Regex.Replace sanitizer, no anchor.
+
+3d. Design
+ - Contract: each predicate/parser keeps its signature and result type;
+   only the end anchor changes from `$` to `\z`. For P18 the generated
+   pattern becomes `^...\z`.
+ - Validation rule: a whole value matches only if the pattern consumes
+   every character; `\z` is end-of-input with no newline exception.
+ - Error model: unchanged. Rejected values flow into the existing
+   findings/None/Error paths (e.g. "unknown actor kind", InvalidWorkItemId,
+   "execution identity must be portable ..."). The ImplementationLanguage
+   and Telemetry messages quote the pattern text; the EXE message at
+   TelemetryValidation.fs:536 quotes `^EXE-[A-Za-z0-9._-]+$` and is left
+   as is (it is a human-readable description, pinned by existing golden
+   behaviour; changing it is not required by any criterion).
+ - Stores / transaction boundaries: none touched. No stored format
+   changes; values on disk that are valid today stay valid (AC4).
+
+
+4. Invariants and shared infrastructure
+---------------------------------------
+
+ - Invariant: for every string s without a trailing "\n", `^R$` and `^R\z`
+   decide identically (RegexOptions.Multiline is not used by any audited
+   pattern; verified in the grep above). Therefore AC4 holds by
+   construction; tests additionally assert each previously-accepted
+   example is still accepted.
+ - WorkItemId.isValid (P13) is shared by Backlog, QueueValidation,
+   Checkpoint, Reconciliation, WorkGroups, ContextPlan and CLI argument
+   parsing (src/Ros.Cli/CheckpointCommands.fs:340, 815;
+   ReconciliationCommands.fs:76). Fixing it once tightens all of them.
+ - The Telemetry and Provenance EXE- patterns (P3, P11) are separate
+   copies because of compile order; both are fixed so they stay
+   consistent with RequestValidation.executionIdPattern (already `\z`).
+ - Original Node implementations (TelemetryValidation.fs docs refer to
+   tools/ros_telemetry.mjs, PathFilter "mirrors Node") used JavaScript
+   `$`, which (without the m flag) matches only at end of input. `\z` is
+   the faithful .NET equivalent, so this restores parity rather than
+   changing semantics.
+
+
+5. Compatibility
+----------------
+
+ - Only inputs ending in "\n" change outcome (accepted -> rejected). Such
+   values cannot be produced by the CLI's own writers (they emit the
+   parsed, already-validated values) and would be corrupt if present.
+ - PathFilter (P18): a path ending in "\n" no longer matches an ignore
+   glob, so it would count as meaningful. This is the conservative
+   direction for attribution (nothing is silently ignored).
+ - `./praxis validate` is run on this repository after the change to
+   confirm no stored record is newly rejected.
+ - Out of scope (AC2 names src/Ros.Domain only): a few `$`-anchored
+   patterns exist in other projects (`grep` finds 6 candidate lines
+   outside Ros.Domain). They are not changed here; if any validates a
+   whole value it should be filed as its own backlog item.
+
+
+6. Tests
+--------
+
+One test per corrected pattern (AC3), added to the module that already
+tests that entry point and reusing its valid fixture:
+ - ProvenanceTests: P1 (also via ActorKind.resolve), P2, P3, P4, P5.
+ - ArtifactTests: P6, P7.
+ - ImplementationLanguagePolicyTests: P8.
+ - TelemetryCostUnitTests: P9.
+ - TelemetryValidationTests: P10, P11.
+ - WorkGroupTests: P12.
+ - A Work identity test (WorkTests or the module that owns WorkItemId):
+   P13.
+ - EnvelopeReconciliationTests: P14-P17.
+ - PathFilterTests: P18.
+Each test asserts (a) a valid example is still accepted (AC4) and (b) the
+same example with "\n" appended is rejected; P1 also covers "\r" and
+"\r\n" (AC1). Full suites: F# `Ros.Tests.dll` and Python
+`python3 -m unittest discover -s tests`, plus `./praxis validate`.
+
+
+7. Risks
+--------
+
+ - Missing a pattern: mitigated by the grep over every Regex/IsMatch use
+   in src/Ros.Domain and the explicit 3a/3b/3c lists.
+ - A stored record that today relies on a trailing newline: mitigated by
+   running `./praxis validate` on this repository; any finding would be
+   reported, not hidden.
+ - Error-message drift: messages are unchanged, so golden CLI tests are not
+   expected to move.
+ - Generated pattern in PathFilter: the `\z` is appended in an
+   interpolated string; tested directly through globMatch.
