@@ -33,7 +33,8 @@ let private usageBase =
 
 let private usage =
     usageBase
-    + " | step {plan|begin|resume|complete|block|abandon|record|availability|checkpoint|link|list|show} [options] | reconcile --envelope FILE | inbox list"
+    + " | step {plan|begin|resume|complete|block|abandon|record|availability|checkpoint|link|list|show} [options] | reconcile --envelope FILE | inbox list | "
+    + StateMergeCommands.usage
 
 /// Removes one global `--name VALUE` option from the argument list wherever
 /// it appears, so the command parsers below only ever see their own flags.
@@ -2966,6 +2967,7 @@ let private repositoryDispatch root packageRoot arguments =
         printfn "%s" (fullHelp None)
         0
     | "validate" :: rest -> runValidateUnified root rest
+    | "state" :: rest -> StateMergeCommands.run root rest
     | [ "reconcile"; "--envelope"; envelope ] -> EnvelopeReconciliationCommands.reconcile root envelope
     | [ "inbox"; "list" ] -> EnvelopeReconciliationCommands.inbox root
     | "foundations" :: "verify" :: rest when rest |> List.forall ((=) "--json") ->

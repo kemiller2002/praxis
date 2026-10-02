@@ -11,3 +11,24 @@
 * text=auto eol=lf
 *.bat text eol=crlf
 *.cmd text eol=crlf
+
+# >>> praxis state merge driver (managed by 'praxis state merge-driver install')
+/.ros/events/events.jsonl merge=praxis-state
+/.ros/planning/estimate-error.jsonl merge=praxis-state
+/.ros/context/current.json merge=praxis-state
+/.ros/work/queue.json merge=praxis-state
+/.ros/work/queue.md merge=praxis-state
+/.ros/work/groups.json merge=praxis-state
+/.ros/publications.json merge=praxis-state
+/registries/decisions.json merge=praxis-state
+/registries/evidence.json merge=praxis-state
+/registries/experiments.json merge=praxis-state
+/registries/hypotheses.json merge=praxis-state
+/registries/journals.json merge=praxis-state
+/registries/missions.json merge=praxis-state
+/registries/research-packages.json merge=praxis-state
+/registries/theories.json merge=praxis-state
+/registries/requirements.json merge=praxis-state
+/registries/concepts.json merge=praxis-state
+/registries/glossary.json merge=praxis-state
+# <<< praxis state merge driver

@@ -107,4 +107,5 @@ let main _ =
     @ WorkGroupTests.tests
     @ TelemetryCostUnitTests.tests
     @ ValueAnchorTests.tests
+    @ StateMergeTests.tests
     |> TestRunner.run

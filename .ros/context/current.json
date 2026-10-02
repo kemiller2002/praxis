@@ -5880,7 +5880,27 @@
       "updatedAt": "2026-10-02T14:58:22.000Z",
       "telemetryExecutionIds": [
         "EXE-20261002T145824028Z-c9baf025"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "cb90343aa55db97281de8ed9",
+        "recordedAt": "2026-10-02T15:11:27.000Z",
+        "executionId": "EXE-20261002T145824028Z-c9baf025",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a022-run-bc34",
+        "commit": "95cbe1b8618865f87ea251cfd0709ddc8ed01168",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a022-run-bc34",
+        "remoteCommit": "95cbe1b8618865f87ea251cfd0709ddc8ed01168",
+        "summary": "ATTR-RECONCILE-SYMLINK-SUBMODULE implemented and pushed: symlink/gitlink content matching with real Git fixture tests; docs and DF-ROS-2026-A040 amended. Done: ACTOR-KIND-ANCHOR (implementation), ATTR. Remaining: PRAXIS-CN-GL-KINDS, PRAXIS-STATE-MERGE-01, PRAXIS-PLAN-ERROR-HISTORY.",
+        "nextAction": "Implement PRAXIS-CN-GL-KINDS.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     },
     {
       "id": "PRAXIS-CN-GL-KINDS",
@@ -5891,7 +5911,27 @@
       "updatedAt": "2026-10-02T14:58:22.000Z",
       "telemetryExecutionIds": [
         "EXE-20261002T145824828Z-b14ba23a"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "106f84b40a4dd3360bca5bb9",
+        "recordedAt": "2026-10-02T15:16:45.000Z",
+        "executionId": "EXE-20261002T145824828Z-b14ba23a",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a022-run-bc34",
+        "commit": "93a41b9ea77f716c8a91620d9d5536cbc6163b16",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a022-run-bc34",
+        "remoteCommit": "93a41b9ea77f716c8a91620d9d5536cbc6163b16",
+        "summary": "PRAXIS-CN-GL-KINDS implemented and pushed (93a41b9): CN/GL kinds, optional registries, statuses, oracle and starter parity, standard documented, tests. Done: ACTOR-KIND-ANCHOR, ATTR-RECONCILE-SYMLINK-SUBMODULE, PRAXIS-CN-GL-KINDS (implementation). Remaining: PRAXIS-STATE-MERGE-01, PRAXIS-PLAN-ERROR-HISTORY.",
+        "nextAction": "Build the Praxis state merge engine and driver (PRAXIS-STATE-MERGE-01).",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     },
     {
       "id": "PRAXIS-PLAN-ERROR-HISTORY",

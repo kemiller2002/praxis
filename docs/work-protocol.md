@@ -425,6 +425,65 @@ points to; a submodule is matched by the commit checked out in it (its
 is a new, unattributed change; a plain directory or an uninitialised submodule
 cannot be matched and fails closed.
 
+## Merging Praxis state from parallel branches
+
+Parallel work items on different branches each append to the event log and
+rewrite the context, backlog and registries, so a plain Git merge of two such
+branches conflicts in those files even when the work never overlapped. Praxis
+merges them itself through a Git merge driver it installs. Never resolve a
+conflict in Praxis state by editing the file.
+
+Install it once per clone (Git keeps merge-driver commands in local
+configuration, never in the repository) and commit `.gitattributes`:
+
+```sh
+./praxis state merge-driver install     # --dry-run reports what it would change
+./praxis state merge-driver status      # exit 0 when installed, 3 otherwise
+```
+
+`install` adds a managed block to `.gitattributes` marking each covered file
+`merge=praxis-state` and sets `merge.praxis-state.driver` to
+`./praxis state merge-file --path %P --base %O --ours %A --theirs %B`. Without
+the local configuration Git falls back to its ordinary text merge, so a clone
+that has not run `install` behaves exactly as before. Once a repository's
+clones use the driver, planner configuration may set `praxisStateMergeSafe`
+(see [`planning.md`](planning.md)).
+
+How each file merges:
+
+| File | Rule |
+|---|---|
+| `.ros/events/events.jsonl`, `.ros/planning/estimate-error.jsonl` | Append-only: the common history stays as it is; entries added on either side follow it exactly once, interleaved by (`occurredAt`/`asOf`, id) so the result does not depend on which side is merged into which. An entry removed or rewritten on one side, or one id added with two contents, is a conflict. |
+| `.ros/context/current.json` | Work items merge three-way by `id`; `updatedAt` takes the later value, `startedAt` the earlier, `actor` follows the later `updatedAt`; every other field merges three-way. |
+| `.ros/work/queue.json` | Items merge three-way by `id`; `nextSeq` takes the larger value. |
+| `.ros/work/queue.md` | Rows merge three-way by their ID cell and stay sorted by it. |
+| `.ros/work/groups.json` | Groups merge three-way by `id`. |
+| `.ros/publications.json` | Receipts merge three-way by event id. |
+| `registries/<kind>.json` (every governed artifact kind) | Entries merge three-way by `id` and stay sorted by it. |
+
+A three-way merge takes whichever side changed an item. When both sides
+changed the same item differently (for example the same work item updated on
+both branches, or two branches that generated the same backlog ID), the driver
+refuses: it prints `CONFLICT <file>: <item>: <reason>` naming every such item,
+leaves Git's conflict markers in the file (so `praxis validate` cannot pass on
+it) and the merge stops. Resolve it with Praxis commands on one side, for
+example abandon or update the item there, and merge again.
+
+Not covered, and why:
+
+- One file per record (`.ros/telemetry/executions/*.json`,
+  `.ros/remote/requests/*`, `.ros/work/items/*.md`, `.ros/work/attachments/`,
+  `.ros/executions/`, `.ros/ordo/`): parallel work writes different files, so
+  there is nothing to merge; the same record changed on two branches is a
+  real conflict about that record.
+- Transient files (`.ros/transactions/`, `.ros/locks/`): recovery journals and
+  locks that exist only while a command runs and are never committed.
+- Installation bookkeeping (`.ros/installation.json`, `.echelon/ros.json`):
+  written only by `praxis init` and `praxis upgrade`, not by ordinary work.
+- `.ros/hub/registry.json`, `registries/agents.json`, `registries/projects.json`:
+  no Praxis command writes them during ordinary work (the hub registry belongs
+  to a project-administration repository's own registration commands).
+
 ## Local backlog
 
 Beginning a work item with `work begin` requires an ID to already exist. The

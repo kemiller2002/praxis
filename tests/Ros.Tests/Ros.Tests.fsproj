@@ -121,6 +121,7 @@
     <Compile Include="WorkGroupTests.fs" />
     <Compile Include="TelemetryCostUnitTests.fs" />
     <Compile Include="ValueAnchorTests.fs" />
+    <Compile Include="StateMergeTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
