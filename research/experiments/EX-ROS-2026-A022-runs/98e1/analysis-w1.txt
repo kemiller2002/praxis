@@ -165,3 +165,22 @@ Routes: GET /api/v1/work?tag=T&status=S, GET /api/v1/work/ID.
   documented.
 - Status mismatch between merged semanticState and the raw backlog status is
   intended (both are reported) but could confuse clients; documented.
+
+8. Verification pass (before completing)
+----------------------------------------
+
+Build: dotnet build Ros.slnx --configuration Release --no-restore -> 0 errors, 0 warnings.
+Full F# suite: dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll -> "1326 test(s); 1326 passed; 0 failed".
+Python oracle tests: python3 -m unittest discover -s tests -> "Ran 7 tests ... OK".
+./praxis architecture check -> passed.
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| AC1 versioned, documented contract in the F# contracts (identity, semantic state, recorded backlog and live state, legal next actions, kernel refusal reasons) | met | src/Ros.Contracts/Work/WorkStateJson.fs (contract "praxis.work-state", version 1; list and item documents); projection src/Ros.Domain/Work/WorkStateView.fs; docs/web-interface.md "Versioned work-state contract". Tests "work state: a backlog-only item's legal actions...", "...a live item's legal actions...", "...refused transitions carry the kernel's reason", "...legal actions state what the kernel will demand", "work state contract: documents carry contract, version and kind..." all PASS; manual GET /api/v1/work/PRAXIS-CTL-02 returned the documented shape. |
+| AC2 obligations and unknowns where recorded; explicitly unavailable (not empty) without a source | met | Obligations from workProtocol.completionEvidence and continuity.requireDurableCheckpoint; unavailable with reason for backlog-only items; unknowns unavailable (no per-item source, Ordo handoff unknowns are not stored) except an unrecognized backlog status, reported as a recorded unknown. Tests "work state: obligations are recorded for live work and unavailable, not empty...", "work state: unknowns are unavailable without a source..." and the contract test asserting unavailable is an object with reason and no items list: PASS. |
+| AC3 read endpoints never write repository state | met | v1 routes read in-process with no command, lock or write (WebInterface.stateResponse + FileWorkListRepository.readStateSources/readDetail). Test "web serve: read endpoints leave every repository file byte-identical" hashes every file (including .git) before/after GETs to /api/v1/work, /api/v1/work?status=..., /api/v1/work/ID, an unknown id, /api/work, /api/work/ID: PASS. |
+| AC4 unknown item -> 404 with structured error body | met | {"contract":"praxis.error","version":1,"code":"work-item-not-found","error":...,"workItemId":...} on /api/v1/work/ID and /api/work/ID. Test "web serve: an unknown work item is a structured 404 on the versioned and the legacy routes" PASS; manual curl returned 404 with that body on both. |
+| AC5 existing /api/work clients keep working or change documented | met | /api/work, /api/work/ready, /api/work/ID shapes unchanged (test "web serve: the legacy /api/work shapes are unchanged..." PASS; all pre-existing web tests pass). The one behaviour change, unknown id 400 -> 404 (body keeps "error"), is documented in docs/web-interface.md; the existing test was updated to expect 404. |
+| AC6 tests | met | tests/Ros.Tests/WorkStateViewTests.fs (13 tests) registered in tests/Ros.Tests/Program.fs; all pass in the full run above. |
+
+All criteria met; the item can be completed.

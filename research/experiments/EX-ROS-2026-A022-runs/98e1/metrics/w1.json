@@ -1,0 +1,53 @@
+{
+  "schema": "ex-ros-2026-a021.session-metrics/1",
+  "label": "w1",
+  "sessionId": "29672a5c-fb10-5a3a-999c-0acb6deecc72",
+  "transcript": "29672a5c-fb10-5a3a-999c-0acb6deecc72.jsonl",
+  "models": [
+    "claude-opus-5-5"
+  ],
+  "startedAt": "2026-10-02T14:42:03.919000+00:00",
+  "endedAt": "2026-10-02T15:39:10.563000+00:00",
+  "wallMs": 3426644,
+  "msToFirstCodeMutation": 1103264,
+  "modelRequests": 63,
+  "tokens": {
+    "input": 131,
+    "output": 48797,
+    "cacheRead": 9377843,
+    "cacheCreation": 161859
+  },
+  "costUsd": {
+    "value": 0.21132659999999998,
+    "source": "runtime cost-state (estimate; last record)"
+  },
+  "toolCalls": {
+    "Bash": 52,
+    "Edit": 5,
+    "Read": 2,
+    "ReadNotifications": 1,
+    "ToolSearch": 1,
+    "Write": 4,
+    "mcp__claude-code-remote__send_message": 1
+  },
+  "toolErrors": 2,
+  "fileReads": 36,
+  "distinctFilesRead": 28,
+  "repeatedReads": {
+    "/tmp/build.log": 2,
+    "/tmp/restore.log": 2,
+    "/tmp/tests.log": 2,
+    "src/Ros.Cli/Program.fs": 3,
+    "tests/Ros.Tests/WebInterfaceTests.fs": 4
+  },
+  "governanceReads": {
+    "AGENTS.md": 1
+  },
+  "searches": 37,
+  "fileWrites": 19,
+  "distinctFilesEdited": 7,
+  "builds": 8,
+  "testRuns": 6,
+  "compactions": 0,
+  "notes": "reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate"
+}
