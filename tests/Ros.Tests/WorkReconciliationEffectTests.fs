@@ -184,6 +184,41 @@ module WorkReconciliationEffectTests =
         |> Seq.map (fun change -> change["status"].GetValue<string>(), change["path"].GetValue<string>())
         |> Seq.toList
 
+    let private symlink root (relativePath: string) (target: string) =
+        let path = Path.Combine(root, relativePath)
+        Directory.CreateDirectory(Path.GetDirectoryName path) |> ignore
+        File.Delete path
+        File.CreateSymbolicLink(path, target) |> ignore
+
+    /// A separate repository with two commits, for use as a submodule;
+    /// returns its path and both commits, oldest first.
+    let private withSubmoduleSource (test: string -> string * string -> unit) =
+        let source = Path.Combine(Path.GetTempPath(), $"ros-reconcile-sub-{Guid.NewGuid():N}")
+        Directory.CreateDirectory source |> ignore
+
+        try
+            git source [ "init"; "-q"; "-b"; "main" ] |> ignore
+            git source [ "config"; "commit.gpgsign"; "false" ] |> ignore
+            write source "lib.fs" "one\n"
+            let first = commitAll source "one" "Carol"
+            write source "lib.fs" "two\n"
+            let second = commitAll source "two" "Carol"
+            git source [ "checkout"; "-q"; first ] |> ignore
+            test source (first, second)
+        finally
+            try
+                Directory.Delete(source, true)
+            with _ ->
+                ()
+
+    /// Adds `source` as a submodule at `relativePath`, checked out at `commit`.
+    let private addSubmodule root (source: string) (relativePath: string) (commit: string) =
+        git root [ "-c"; "protocol.file.allow=always"; "submodule"; "add"; "-q"; source; relativePath ] |> ignore
+        git (Path.Combine(root, relativePath)) [ "checkout"; "-q"; commit ] |> ignore
+
+    /// The object id Git stores for `path` in commit `revision`.
+    let private storedId root (revision: string) (path: string) = git root [ "rev-parse"; $"{revision}:{path}" ]
+
     let tests =
         [ { Name = "reconcile: an unattributed committed file is detected, reconciled, and then validates"
             Run =
@@ -552,4 +587,79 @@ module WorkReconciliationEffectTests =
                       Assert.equal true (entry["valid"].GetValue<bool>())
                       Assert.equal "kevin" (entry["actor"].["id"].GetValue<string>())
                       Assert.equal "Alice <alice@example.invalid>" (entry["commits"].[0].["author"].GetValue<string>())
-                      Assert.isTrue (isNull (parse (ros root [] [ "work"; "show"; "FEAT-2" ]).Out).["reconciliations"]) "FEAT-2 has none") } ]
+                      Assert.isTrue (isNull (parse (ros root [] [ "work"; "show"; "FEAT-2" ]).Out).["reconciliations"]) "FEAT-2 has none") }
+          { Name = "reconcile: current path states are the ids Git stores for files, symbolic links and submodules"
+            Run =
+              fun () ->
+                  withRepository (fun root _ ->
+                      withSubmoduleSource (fun source (first, second) ->
+                          write root "src/file.fs" "file\n"
+                          write root "docs/target.txt" "target\n"
+                          write root "docs/folder/inner.txt" "inner\n"
+                          symlink root "src/link" "../docs/target.txt"
+                          symlink root "src/dangling" "no-such-file"
+                          symlink root "src/folder-link" "../docs/folder"
+                          addSubmodule root source "libs/sub" first
+                          let work = commitAll root "mixed kinds" "Alice"
+                          Directory.CreateDirectory(Path.Combine(root, "plain")) |> ignore
+
+                          let tracked = [ "src/file.fs"; "src/link"; "src/dangling"; "src/folder-link"; "libs/sub" ]
+                          let states = ProcessGitRepository.readPathStates root (tracked @ [ "plain"; "missing.fs" ])
+
+                          tracked
+                          |> List.iter (fun path -> Assert.equal (PathContentState.Present(storedId root work path)) states[path])
+
+                          Assert.equal (PathContentState.Present first) states["libs/sub"]
+                          Assert.equal PathContentState.Unreadable states["plain"]
+                          Assert.equal PathContentState.Absent states["missing.fs"]
+
+                          // Editing the followed file changes the file, not the link.
+                          write root "docs/target.txt" "target edited\n"
+                          symlink root "src/dangling" "another-missing-file"
+                          git (Path.Combine(root, "libs", "sub")) [ "checkout"; "-q"; second ] |> ignore
+                          let after = ProcessGitRepository.readPathStates root tracked
+                          Assert.equal (PathContentState.Present(storedId root work "src/link")) after["src/link"]
+                          Assert.isTrue (after["src/dangling"] <> states["src/dangling"]) "a retargeted link must change state"
+                          Assert.equal (PathContentState.Present second) after["libs/sub"]
+
+                          // An uninitialized submodule cannot be read, so it never matches.
+                          git root [ "submodule"; "deinit"; "-q"; "--force"; "libs/sub" ] |> ignore
+                          let deinitialized = ProcessGitRepository.readPathStates root [ "libs/sub" ]
+                          Assert.equal PathContentState.Unreadable deinitialized["libs/sub"])) }
+          { Name = "reconcile: a reconciled symbolic link matches while its target is unchanged and fails once retargeted"
+            Run =
+              fun () ->
+                  withRepository (fun root baseline ->
+                      write root "docs/target.txt" "target\n"
+                      symlink root "src/link" "../docs/target.txt"
+                      let work = commitAll root "add a link" "Alice"
+                      Assert.equal [ "docs/target.txt", "work_items"; "src/link", "work_items" ] (workFindings root baseline)
+                      assertSucceeded (reconcile root [ "--id"; "FEAT-1"; "--reason"; "recovery"; "--commit"; work ])
+                      Assert.empty (workFindings root baseline)
+
+                      // The followed file changing is a change to that file only.
+                      write root "docs/target.txt" "target edited later\n"
+                      Assert.equal [ "docs/target.txt", "work_items" ] (workFindings root baseline)
+
+                      write root "docs/target.txt" "target\n"
+                      Assert.empty (workFindings root baseline)
+                      symlink root "src/link" "../docs/other.txt"
+                      Assert.equal [ "src/link", "work_items" ] (workFindings root baseline)) }
+          { Name = "reconcile: a reconciled submodule matches while its gitlink commit is unchanged and fails once moved"
+            Run =
+              fun () ->
+                  withRepository (fun root baseline ->
+                      withSubmoduleSource (fun source (first, second) ->
+                          addSubmodule root source "libs/sub" first
+                          let work = commitAll root "add a submodule" "Alice"
+                          Assert.equal [ ".gitmodules", "work_items"; "libs/sub", "work_items" ] (workFindings root baseline)
+                          assertSucceeded (reconcile root [ "--id"; "FEAT-1"; "--reason"; "recovery"; "--commit"; work ])
+                          Assert.equal [ "added", ".gitmodules"; "added", "libs/sub" ] (Assert.single (reconciliations root) |> changesOf |> List.sort)
+                          Assert.equal first (storedId root work "libs/sub")
+                          Assert.empty (workFindings root baseline)
+
+                          let submodule = Path.Combine(root, "libs", "sub")
+                          git submodule [ "checkout"; "-q"; second ] |> ignore
+                          Assert.equal [ "libs/sub", "work_items" ] (workFindings root baseline)
+                          git submodule [ "checkout"; "-q"; first ] |> ignore
+                          Assert.empty (workFindings root baseline))) } ]

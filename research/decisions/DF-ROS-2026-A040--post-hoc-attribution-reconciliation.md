@@ -2,11 +2,11 @@
 id: DF-ROS-2026-A040
 title: Post-hoc attribution reconciliation as an append-only, Git-evidenced, content-bound event
 status: accepted
-version: 1.0.0
+version: 1.1.0
 owners:
   - repository-governance
 created: 2026-09-27
-updated: 2026-09-27
+updated: 2026-10-02
 research_area: repository-operating-system
 decision_type: architecture
 supports: [RQ-ROS-2026-A020]
@@ -33,6 +33,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Architecture decision for post-hoc attribution reconciliation (work item GH-80)"
+    EXE-20261002T153817257Z-a12f8b56:
+      operations: [modified]
+      at: 2026-10-02T15:44:17.000Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Symbolic links and submodules are now content-matched by what Git stores (work item ATTR-RECONCILE-SYMLINK-SUBMODULE)"
 derived_from: [RQ-ROS-2026-A020]
 ---
 # Decision
@@ -120,7 +130,11 @@ the same paths.
 - Reconciliation cannot judge whether a commit semantically belongs to a work
   item; the recorded reason, actor, and evidence make a wrong reconciliation
   reviewable and detectable rather than impossible.
-- Symbolic links and submodules are not matched by content and fail closed.
+- Symbolic links and submodules are matched by what Git stores for them: a
+  link by the blob of its target text (never the followed file), a submodule
+  by its checked-out gitlink commit (work item
+  ATTR-RECONCILE-SYMLINK-SUBMODULE). An uninitialized submodule, or anything
+  else that cannot be read exactly, still fails closed.
 - `work complete` with `ROS_BASE_REF` set still sweeps committed-range paths
   into its completion event (pre-existing behavior kept for Node parity); that
   is a separate follow-up.

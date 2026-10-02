@@ -404,6 +404,18 @@ a change never pre-authorizes later edits: change that path again without an
 active work item and it is reported again, and the new commit needs its own
 attribution. Paths the reconciliation did not cover still fail.
 
+Current content is compared the way Git stores each kind of path:
+
+| Path | Current content compared with the recorded blob |
+|---|---|
+| regular file | its blob, with the path's clean filters applied |
+| symbolic link | the blob of its link target text, never the file it points to (editing that file is a change to that file only; retargeting the link is a change to the link) |
+| submodule | the commit checked out in its work tree (the gitlink); moving it to another commit is a change |
+
+Anything that cannot be established exactly — an uninitialized submodule, a
+plain directory, an I/O or Git failure — never matches, so validation fails
+closed.
+
 Validation also checks every reconciliation event itself and reports a
 `work_reconciliation` finding (and attributes nothing) when an event's
 `eventId` no longer matches its content, it names an unknown or abandoned work
@@ -415,8 +427,9 @@ work item. Reconciliation events must never be written or edited by hand.
 Known limits: attribution remains path-based for contemporaneous events, as
 before; reconciliation cannot judge whether a commit *semantically* belongs to
 the named work item, so the `reason`, the recorded actor, and the reviewable
-evidence are what make a wrong reconciliation detectable; symbolic links and
-submodules are not matched by content and so fail closed.
+evidence are what make a wrong reconciliation detectable; an uninitialized
+submodule cannot be read, so its reconciled path fails closed until it is
+initialized.
 
 ## Local backlog
 
