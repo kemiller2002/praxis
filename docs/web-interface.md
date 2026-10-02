@@ -90,9 +90,29 @@ work list/show, validate --json, status --json  (the kernel)
   (so a project can restyle the pages); otherwise the copy compiled into the
   CLI is used, so `web serve` works in any Praxis repository.
 
+## Versioned API (`/api/v1`)
+
+New clients use the typed, versioned control-plane API: work state with
+legal actions and the kernel's refusal reasons, obligations, evidence,
+checkpoints, telemetry usage, executions with their receipts, and one
+transition-request endpoint with structured refusals. Every response carries
+the repository, commit and state fingerprint it was derived from. See
+[`docs/control-plane-api.md`](control-plane-api.md).
+
+| Method | Path | Equivalent CLI command |
+|---|---|---|
+| `GET` | `/api/v1/source` | `praxis control-plane source` |
+| `GET` | `/api/v1/work?tag=T&status=S` | `praxis control-plane work --tag T --status S` |
+| `GET` | `/api/v1/work/:id` | `praxis control-plane work ID` |
+| `GET` | `/api/v1/work/:id/evidence` | `praxis control-plane evidence ID` |
+| `GET` | `/api/v1/executions?workItem=ID` | `praxis control-plane executions --work-item ID` |
+| `GET` | `/api/v1/executions/:id` | `praxis control-plane execution EXE-ID` |
+| `POST` | `/api/v1/work/:id/transitions` `{action, reason?, type?, evidence?, conclusion?}` | `praxis control-plane transition --id ID --action ...` |
+
 ## API reference
 
-The JSON API remains for scripts and other tools. Mutating endpoints return
+The unversioned JSON API below is superseded by `/api/v1` but keeps working
+unchanged for existing scripts and tools. Mutating endpoints return
 the same unified row shape as `GET /api/work/:id` (backlog fields plus
 `liveWorkItem` once an item has been started). Request bodies are JSON (the
 attachment route takes `multipart/form-data`; the other `POST` routes also
@@ -126,6 +146,8 @@ attachment.
 
 ## Tests
 
+`tests/Ros.Tests/ControlPlaneTests.fs` covers `/api/v1` (see
+[`docs/control-plane-api.md`](control-plane-api.md#tests)).
 `tests/Ros.Tests/WebInterfaceTests.fs` unit-tests the pure pieces (escaping,
 form and multipart parsing, routing, the operation-to-command mapping, the
 allowed-action projection) and starts the real `praxis web serve` on a free

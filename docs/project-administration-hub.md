@@ -124,6 +124,40 @@ path has moved, or whose Praxis installation is too old to support a command,
 surfaces as a single error entry for that repository rather than failing
 the whole view.
 
+### Versioned API
+
+`/api/v1` is the typed control-plane API across repositories
+([`docs/control-plane-api.md`](control-plane-api.md)). The hub produces none
+of its per-repository data itself: each repository's documents come from
+that repository's own `./praxis control-plane ...`, so a hub client reads the
+same per-repository contract as a client of that repository's own
+`praxis web serve`.
+
+| Method | Path | Effect |
+|---|---|---|
+| `GET` | `/api/v1/repos` | Every registered repository with its `availability` and its `source` document |
+| `GET` | `/api/v1/work?tag=&status=` | Every registered repository's `work-list` document |
+| `GET` | `/api/v1/repos/:id/work?tag=&status=` | That repository's `work-list` document, relayed unchanged |
+| `GET` | `/api/v1/repos/:id/work/:workId` | That repository's `work-item` document |
+| `GET` | `/api/v1/repos/:id/work/:workId/evidence` | That repository's `evidence` document |
+| `POST` | `/api/v1/repos/:id/work/:workId/transitions` | Delegated to that repository's own `control-plane transition` |
+
+The aggregate documents (`hub-repositories`, `hub-work`) list one entry per
+repository: `id`, `name`, `path`, `availability` and that repository's
+`document`. `availability.status` is `available`, `unreachable` (the path or
+launcher is gone, or its Praxis could not run) or `incompatible` (its Praxis
+predates the control plane or speaks another contract version), with a
+`reason`. One repository's failure is reported in its own entry and never
+fails the response. A relayed request to a repository that cannot answer is
+`503` (`unavailable`) or `502` (`incompatible`); an unregistered repository
+is `404`.
+
+The hub persists only its registration data (`.ros/hub/registry.json` and
+`registry.md`). It never keeps a copy of any repository's work state: a
+change made in a registered repository, without the hub, appears in the
+hub's next response, and every mutation offered through the hub is the
+owning repository's own transition path.
+
 ## What this deliberately does not do
 
 - No authentication, no multi-user access control, no audit log beyond
@@ -136,6 +170,10 @@ the whole view.
 
 ## Tests
 
+`tests/Ros.Tests/ControlPlaneTests.fs` covers `/api/v1`: availability of
+healthy, moved and pre-control-plane repositories, relayed documents identical
+to each repository's own, a change made in a repository appearing without the
+hub, delegated transitions, and a hub whose own files are unchanged by reads.
 `tests/Ros.Tests/HubTests.fs` unit-tests the registry model (parsing and
 re-rendering a registry written by the earlier Node hub byte for byte, the
 Markdown projection, duplicate path/id rejection), the spoke command lines,

@@ -405,7 +405,8 @@ git commit -am "Implement capability boundary" && git push
 ```
 
 See [`docs/work-protocol.md`](docs/work-protocol.md) and, for a UI over the same
-backlog, [`docs/web-interface.md`](docs/web-interface.md) (`./praxis web serve`).
+backlog, [`docs/web-interface.md`](docs/web-interface.md) (`./praxis web serve`);
+its typed, versioned API is [`docs/control-plane-api.md`](docs/control-plane-api.md).
 
 External project-management products integrate through the normalized
 [work adapter contract](docs/work-adapter-contract.md); they are not embedded
