@@ -446,8 +446,9 @@ configuration, never in the repository) and commit `.gitattributes`:
 `./praxis state merge-file --path %P --base %O --ours %A --theirs %B`. Without
 the local configuration Git falls back to its ordinary text merge, so a clone
 that has not run `install` behaves exactly as before. Once a repository's
-clones use the driver, planner configuration may set `praxisStateMergeSafe`
-(see [`planning.md`](planning.md)).
+clones use the driver, the planner configuration may set
+`praxisStateMergeSafe` (the planner then stops treating shared Praxis state
+files as a collision between parallel items).
 
 How each file merges:
 
