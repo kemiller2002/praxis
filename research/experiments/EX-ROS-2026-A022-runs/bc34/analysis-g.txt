@@ -1,0 +1,180 @@
+Cohort architecture analysis
+============================
+
+Members: ACTOR-KIND-ANCHOR, ATTR-RECONCILE-SYMLINK-SUBMODULE, PRAXIS-CN-GL-KINDS,
+         PRAXIS-PLAN-ERROR-HISTORY, PRAXIS-STATE-MERGE-01
+Execution repository: kemiller2002/praxis, branch experiment/a022-run-bc34
+Base commit: f806f817e4656e00550313d839b59ceea87a682d
+Baseline: dotnet build (Release) clean; Ros.Tests 1313 passed, 0 failed (12m06s).
+All five items were started together with one `./praxis work start` call
+(executions EXE-20261002T1458*).
+
+
+1. Members
+----------
+
+ACTOR-KIND-ANCHOR (low) - ActorKind extension pattern accepts a trailing newline.
+  Obligation: anchor whole-value validators so "x-agent\n" is rejected; audit Domain.
+  Criteria: (1) ActorKind.tryParse rejects trailing LF / CR; (2) every whole-value
+  regex under src/Ros.Domain audited, each `$` anchor corrected (\z) or recorded
+  as safe with reason, audit list is completion evidence; (3) a test per
+  corrected pattern; (4) no accepted valid value changes.
+  Depends on: -
+
+ATTR-RECONCILE-SYMLINK-SUBMODULE (low) - content-match symlinks and submodules.
+  Criteria: (1) reconciled symlink with unchanged target matches its recorded
+  blob (what Git stores for the link, not the followed file); (2) reconciled
+  submodule matches while its gitlink commit is unchanged; (3) a changed link
+  target or gitlink still fails closed; (4) regular-file behaviour unchanged;
+  (5) tests use real Git fixtures for both cases.
+  Depends on: -
+
+PRAXIS-CN-GL-KINDS (medium) - govern CN (concept) and GL (glossary) kinds.
+  Criteria: (1) CN and GL are artifact kinds with documented root directory,
+  allowed statuses, identifier/filename rules consistent with the standards;
+  (2) registry build generates their registries and registry check detects
+  staleness; (3) validate applies identifier, filename, status, reference and
+  provenance checks to them; (4) starter scaffolds and tools/ros_cli.py agree
+  with the F# model wherever they enumerate kinds; (5) tests; standards and
+  tooling no longer disagree.
+  Depends on: -
+
+PRAXIS-PLAN-ERROR-HISTORY (medium) - persist planner estimate error over time.
+  Criteria: (1) explicit opt-in planner command records a replay's
+  estimate-error summary durably, keyed by planner version, repository commit
+  and as-of time, idempotent for identical inputs; all other plan commands stay
+  read-only; (2) read view reports error over time, segmented by task class and
+  (where recorded) provider/model/runtime, no hard-coded provider claims;
+  (3) measurements older than a configured horizon are reported stale and not
+  authoritative; (4) deterministic output (PRX-PLAN-002); (5) praxis validate
+  checks the stored history; (6) tests and docs/planning.md status row.
+  Depends on: - (its store layout is chosen together with PRAXIS-STATE-MERGE-01)
+
+PRAXIS-STATE-MERGE-01 (high) - parallel work conflicts in single-document state.
+  Criteria: (1) supported, documented path merges two branches whose Praxis
+  state changed independently, no hand edit of .ros; (2) append-only events kept
+  exactly once in deterministic order, id-keyed items merged three-way;
+  (3) genuinely conflicting changes to one item fail closed naming the item;
+  (4) praxis validate passes on the merged result in a test reproducing the
+  conflict pattern; (5) every single-document state file that ordinary parallel
+  work modifies is covered or listed as not covered with reason;
+  (6) docs/work-protocol.md documents the path; tests.
+  Depends on: -
+
+
+2. Reuse inventory
+------------------
+
+Searches: grep -rna 'Regex\|IsMatch' src/Ros.Domain; grep -rn
+"ReconciliationCoverage\|hash-object" src; grep -rn "ArtifactKinds.configurations"
+src tests; grep -rn "PraxisStateMergeSafe" src docs; grep -rhn
+'Path.Combine(root, ".ros"' src; grep -rn "computeUnifiedFindings" src/Ros.Cli.
+
+| Existing element | Location | What it does | Use |
+| ActorKind.extensionPattern | src/Ros.Domain/Provenance/Actor.fs:22 | `^x-...$` validator | fix (\z) |
+| RequestValidation patterns | src/Ros.Domain/Remote/Protocol.fs:572-584 | already `\z`-anchored; precedent for the fix | reuse as convention |
+| CommitId pattern | src/Ros.Domain/Git/Durability.fs:20 | already `\z` | precedent |
+| StepId pattern | src/Ros.Domain/Telemetry/Steps.fs:63 | already `\z` | precedent |
+| ArtifactPolicy.identifierPattern | src/Ros.Domain/Artifacts/Policy.fs:8-18 | identifier validator; already lists CN and GL | fix anchor; reused unchanged for CN/GL |
+| ArtifactPolicy.allowedStatuses | src/Ros.Domain/Artifacts/Policy.fs:38 | status sets per prefix | extend with CN, GL |
+| ArtifactKinds.configurations (+OptionalRegistry) | src/Ros.Domain/Artifacts/Model.fs:67 | kind -> dir, registry, prefix; RQ added the same way (optional registry) | extend; follow RQ precedent |
+| FileArtifactRepository.enumerateArtifacts | src/Ros.Infrastructure/Artifacts/FileArtifactRepository.fs:19 | discovers by configured dirs | reuse unchanged |
+| ArtifactOperations.checkRegistries (optional registry rule) | src/Ros.Application/Artifacts/Operations.fs:67-73 | staleness, optional empty registries | reuse unchanged |
+| ProvenancePolicy (applies to every discovered document) | src/Ros.Domain/Provenance/ProvenancePolicy.fs:134 | provenance checks by prefix | reuse unchanged |
+| tools/ros_cli.py ID_RE / ALLOWED_STATUS / KIND_CONFIG | tools/ros_cli.py:15,37,47 | Python oracle; lacks RQ today | extend (CN, GL, and RQ so it agrees) |
+| setup_ros_layout.py | setup_ros_layout.py:68-69 | already names research/concepts, research/glossary | source of directory names |
+| starter manifest | starter/greenfield/manifest.json:160-200 | scaffolds research dirs | extend |
+| readPathStatesWithExecutable | src/Ros.Infrastructure/Git/GitRepository.fs:516 | `git hash-object` per path; directories/submodules -> Unreadable | extend (symlink, gitlink) |
+| ReconciliationCoverage / PathContentState | src/Ros.Domain/Work/Reconciliation.fs:466-516 | compares recorded blob with current state | reuse unchanged (pure string compare) |
+| GitDiffTreeParser (records dst object id; gitlink = commit id) | src/Ros.Infrastructure/Git/GitRepository.fs:102-137 | recorded evidence | reuse unchanged |
+| Replay.replay / ReplayPrediction | src/Ros.Domain/Planning/Replay.fs | per-execution predicted vs actual | reuse as the measurement source |
+| History.samples / segments / drift | src/Ros.Domain/Planning/History.fs:57,331,353 | provider/runtime/model segmentation, drift | reuse samples for provider join; segmentation convention reused |
+| PlannerConfiguration + PlanningJson config parse | src/Ros.Domain/Planning/Model.fs:674; src/Ros.Contracts/Planning/PlanningJson.fs:802 | optional fields with defaults | extend (horizon) |
+| PlanCommands.run / withAnalysis / emit | src/Ros.Cli/PlanCommands.fs:488-580 | plan subcommands, --json, --as-of | extend (two subcommands) |
+| FileWorkGroupRepository.writeAtomic + lock | src/Ros.Infrastructure/Work/FileWorkGroupRepository.fs | atomic store write | pattern reused for the history store |
+| computeUnifiedFindings | src/Ros.Cli/Program.fs:2057 | composes all validate findings | extend (history findings) |
+| PraxisStateMergeSafe planner flag | src/Ros.Domain/Planning/Graph.fs:231, Planner.fs:140 | planner assumes state files collide | unchanged default; documented interaction |
+| .ros event / queue / context stores | src/Ros.Infrastructure/Work/* (events.jsonl, queue.json, queue.md, current.json) | single-document state files | covered by merge |
+| Test framework + Git fixture helpers | tests/Ros.Tests/TestFramework.fs, GitTests.fs, WorkReconciliationEffectTests | temp repos, real git | reuse |
+
+New abstractions proposed and what was considered:
+- A pure three-way merge module for Praxis state (Domain). Considered: the
+  recovery journal (.ros/transactions) - it recovers one writer's interrupted
+  transaction and has no notion of two histories; nothing else merges.
+  `grep -rn "merge" src/Ros.Domain` finds only planner/grouping text.
+- A planner error-history store. Considered: telemetry executions (per
+  execution, not per replay), work groups store (different domain). None fits.
+
+
+3. Cohort-level design
+----------------------
+
+Common architecture and shared invariants
+- Whole-value validation in Domain anchors with \z (ACTOR-KIND-ANCHOR). Every
+  new validator introduced by the other items (merge driver path kinds, history
+  record IDs/fields) follows the same rule, so the audit stays true afterwards.
+- State that ordinary parallel work writes must be mergeable without hand edits
+  (STATE-MERGE). PLAN-ERROR-HISTORY adds a new .ros store; it is designed as an
+  append-only JSONL file whose lines carry a content-derived id, so the same
+  append-only union rule that merges events.jsonl merges it. This is the one
+  genuine shared design point in the cohort.
+- validate is the single composition point (computeUnifiedFindings): CN/GL
+  ride the existing artifact pipeline; history findings are a new contributor.
+
+Conflicting requirements and resolution
+- STATE-MERGE "never silently pick a side" vs. derived bookkeeping fields
+  (current.json updatedAt/actor, queue.json nextSeq). Resolution: these are
+  documented derived fields with a deterministic rule (latest timestamp, max
+  sequence, actor of the latest update), not items; every id-keyed item and
+  every other field merges three-way and fails closed on divergence.
+- PLAN-ERROR-HISTORY "all other plan commands stay read-only" vs. a writing
+  command. Resolution: only the new `plan record-error` writes; the existing
+  read-only test continues to hash state around every other command.
+- Idempotency vs. a recording timestamp: the record carries no wall-clock
+  field; its key is (planner version, commit, as-of) and its id is a SHA-256 of
+  the canonical record, so re-recording identical inputs is a no-op.
+- Planner `praxisStateMergeSafe` default stays false: installing the driver is
+  a repository's explicit choice; docs say to set the flag once installed.
+
+One design serving several items
+- Append-only JSONL union with id keys: events.jsonl (STATE-MERGE) and the
+  estimate-error history (PLAN-ERROR-HISTORY).
+- \z rule: ACTOR-KIND-ANCHOR's audit plus new validators of the others.
+- Nothing is shared between ATTR (Git path hashing) and CN/GL (artifact kinds)
+  and the rest beyond test helpers: they are solved separately; no shared
+  abstraction is invented for them.
+
+Compatibility
+- \z changes reject only values ending in a newline; no valid value changes.
+- CN/GL registries are OptionalRegistry=true so existing installations do not
+  become stale on upgrade (RQ precedent).
+- ATTR changes only paths that are symlinks or submodules; regular files keep
+  `git hash-object`.
+- Merge driver is opt-in via `praxis state merge install` (.gitattributes +
+  local git config); without it Git behaves as today.
+- History store absent = no findings, no behaviour change.
+
+Common tests
+- Table-driven anchor tests; real Git fixtures (temp repos) for ATTR and
+  STATE-MERGE; F#/Python oracle parity for kind enumeration; determinism
+  (render twice, byte-compare) for the history read view.
+
+Risks of solving each item separately
+- A history store designed without the merge rule would be a new conflicting
+  single-document file (exactly the STATE-MERGE failure).
+- New validators written after the anchor audit could reintroduce `$`.
+- Otherwise low: the items touch disjoint modules.
+
+Shared infrastructure attribution
+- Merge engine: PRAXIS-STATE-MERGE-01. History store's mergeability:
+  PRAXIS-PLAN-ERROR-HISTORY (uses the engine's JSONL rule; commit names both).
+
+
+4. Order and milestones
+-----------------------
+1. ACTOR-KIND-ANCHOR (sets the anchoring rule).            checkpoint
+2. ATTR-RECONCILE-SYMLINK-SUBMODULE (independent, small).   checkpoint
+3. PRAXIS-CN-GL-KINDS (independent).                         checkpoint
+4. PRAXIS-STATE-MERGE-01 merge engine + driver + docs.       checkpoint (milestone: engine)
+5. PRAXIS-PLAN-ERROR-HISTORY store (JSONL covered by 4), commands, validate.  checkpoint
+6. Verification pass per item, completion, registry build, validate.
