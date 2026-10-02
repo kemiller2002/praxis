@@ -2,7 +2,7 @@
 id: EX-ROS-2026-A022
 title: Work affinity by execution mode: grouped versus independent 2x2 replication
 research_area: repository-operating-system
-status: proposed
+status: blocked
 created: 2026-10-01
 tests_hypotheses:
   - HY-ROS-2026-A028
@@ -16,6 +16,8 @@ related_documents:
   - requirements/PLANNING-WORK-GROUPS.md
   - HY-ROS-2026-A028
   - HY-ROS-2026-A029
+  - EV-ROS-2026-A072
+  - EX-ROS-2026-A023
 tags: [planning, grouping, affinity, experiment, replication, falsification]
 provenance:
   contributions:
@@ -30,6 +32,17 @@ provenance:
         runtime: chatgpt
       reason: "Created the pre-registered 2x2 high/low-affinity by grouped/independent falsification experiment."
       evidence: [EV-ROS-2026-A070]
+    EXE-20261002T122339366Z-b15d6ac8:
+      operations: [modified]
+      at: 2026-10-02T12:32:12.000Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Set status blocked and appended the 2026-10-02 target-selection outcome; preregistered protocol sections unchanged"
+      evidence: [EV-ROS-2026-A072]
 ---
 
 # Experiment
@@ -366,3 +379,46 @@ Protocol drafted and pre-registered in the repository on 2026-10-01. No target
 repository, baseline, cohorts, arm mapping or implementation result has been
 selected yet. Target selection must satisfy the gate above before this record
 can move from planned to running.
+
+**2026-10-02: blocked at the target-repository gate.** See the outcome
+section below and `EV-ROS-2026-A072`.
+
+## Target-selection outcome (2026-10-02)
+
+This section reports what happened when the gate above was applied. It
+changes nothing above it: the research question, gate, cohort rules, arms,
+measures, interpretations and falsification criteria are exactly as
+preregistered in PR #145, before any candidate was inspected.
+
+- **Candidates.** The thirteen allowlisted repositories (`forma`,
+  `forma-studio`, `folio`, `limen`, `iter`, `dokimos`, `vigila`, `chrona`,
+  `summa`, `strata`, `conditor`, `aegis`, `percepta`), plus
+  `kemiller2002/signal`, inspected afterwards at the owner's request.
+  `kemiller2002/praxis` was read for protocol only and was never a candidate.
+- **Result: no eligible target repository.** Effective ready work, read
+  through Praxis's own `work list`, is 0 in thirteen repositories and 1 in
+  strata. Ten are required. Signal has the richest genuine backlog (19
+  specified items) but fails for structural reasons: its items are captured,
+  not ready, behind the active, uncheckpointed baseline item GH-5; its
+  domain-wide shared contracts leave no low-affinity cohort (0 of 11,628
+  five-item subsets are free of explicit relations); and its subsystem-scale
+  items would confound affinity with task size.
+- **What was not done.** No implementation arm was started, no baseline or
+  cohort was frozen, and no `experiment/a022-*` branch was created. No work
+  item was invented, split or promoted to make an arm runnable, and no
+  two-repository substitution was made.
+- **Status.** `blocked`: the protocol is valid but cannot currently execute
+  because no eligible target exists. It may resume, unchanged, if a
+  repository later satisfies the gate through its own development. Doing so
+  requires a fresh inventory at a new frozen baseline.
+- **Hypotheses.** A gate failure is information about feasibility, not
+  evidence for or against HY-ROS-2026-A028 or HY-ROS-2026-A029. Neither
+  hypothesis was tested, and neither confidence is changed by this outcome.
+- **Earlier unmerged design.** Branch
+  `claude/praxis-a022-experiment-setup-xpq6a6` holds an earlier A022 setup
+  that predates this protocol, targeted Praxis, and captured its own cohort
+  items. It ran no arm and is superseded by this record (`EV-ROS-2026-A072`,
+  section 5).
+- **Follow-on.** `EX-ROS-2026-A023` tests the same mechanism with repository
+  as a blocking factor, so no single repository has to supply both affinity
+  levels. It does not replace or amend this protocol.

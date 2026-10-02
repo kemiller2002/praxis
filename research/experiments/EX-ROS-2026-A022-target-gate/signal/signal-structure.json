@@ -1,0 +1,1494 @@
+{
+  "repository": "kemiller2002/signal",
+  "items": [
+    {
+      "id": "WI-0002",
+      "title": "Canonical survey domain contracts and F# module boundaries",
+      "requirementGroups": 25,
+      "sourceDocuments": 11,
+      "acceptanceCriteria": 5,
+      "extensions": [
+        "2026-09-21",
+        "2026-09-22"
+      ],
+      "contractMentions": [
+        "AdminReportState",
+        "SurveyGroup",
+        "SurveyGroupResult",
+        "SurveyInstance",
+        "SurveyResponse",
+        "SurveyResult",
+        "SurveySubmission",
+        "SurveyTemplate"
+      ],
+      "dependencyText": "None; establishes the contract baseline consumed by WI-0003 through WI-0009."
+    },
+    {
+      "id": "WI-0003",
+      "title": "Template authoring, publication, versioning, and compatibility",
+      "requirementGroups": 34,
+      "sourceDocuments": 9,
+      "acceptanceCriteria": 5,
+      "extensions": [
+        "2026-09-21",
+        "2026-09-22"
+      ],
+      "contractMentions": [],
+      "dependencyText": "Depends on WI-0002 contracts; collaborates with WI-0006, WI-0007, WI-0009, and WI-0010."
+    },
+    {
+      "id": "WI-0004",
+      "title": "Answer model, URL encoding, and live respondent lifecycle",
+      "requirementGroups": 38,
+      "sourceDocuments": 11,
+      "acceptanceCriteria": 5,
+      "extensions": [
+        "2026-09-21",
+        "2026-09-22"
+      ],
+      "contractMentions": [],
+      "dependencyText": "Depends on WI-0002; integrates with WI-0005, WI-0006, WI-0007, WI-0008, and WI-0010."
+    },
+    {
+      "id": "WI-0005",
+      "title": "Identity, anonymity, roles, and group semantics",
+      "requirementGroups": 21,
+      "sourceDocuments": 9,
+      "acceptanceCriteria": 5,
+      "extensions": [
+        "2026-09-21"
+      ],
+      "contractMentions": [],
+      "dependencyText": "Depends on WI-0002; integrates with WI-0004, WI-0008, WI-0009, and WI-0010 privacy tests."
+    },
+    {
+      "id": "WI-0006",
+      "title": "Deterministic rules, validation, flow, completion, and recommendations",
+      "requirementGroups": 13,
+      "sourceDocuments": 6,
+      "acceptanceCriteria": 5,
+      "extensions": [
+        "2026-09-21"
+      ],
+      "contractMentions": [],
+      "dependencyText": "Depends on WI-0002 and answer semantics from WI-0004; exposes inputs/outputs to WI-0007 and WI-0009."
+    },
+    {
+      "id": "WI-0007",
+      "title": "Scoring engine, result semantics, and explainability",
+      "requirementGroups": 42,
+      "sourceDocuments": 11,
+      "acceptanceCriteria": 5,
+      "extensions": [
+        "2026-09-21",
+        "2026-09-22"
+      ],
+      "contractMentions": [
+        "SurveyGroupResult",
+        "SurveyResult"
+      ],
+      "dependencyText": "Depends on WI-0002, WI-0004, and WI-0006; feeds WI-0008 and WI-0009."
+    },
+    {
+      "id": "WI-0008",
+      "title": "Administrator import, aggregation, and report-state persistence",
+      "requirementGroups": 23,
+      "sourceDocuments": 9,
+      "acceptanceCriteria": 5,
+      "extensions": [
+        "2026-09-21",
+        "2026-09-22"
+      ],
+      "contractMentions": [
+        "AdminReportState",
+        "SurveyGroupResult",
+        "SurveyResult"
+      ],
+      "dependencyText": "Depends on WI-0002, WI-0004, WI-0005, WI-0006, and WI-0007; provides data to WI-0009."
+    },
+    {
+      "id": "WI-0009",
+      "title": "Reporting contract, privacy, comparisons, and renderers",
+      "requirementGroups": 16,
+      "sourceDocuments": 8,
+      "acceptanceCriteria": 5,
+      "extensions": [
+        "2026-09-21"
+      ],
+      "contractMentions": [
+        "AdminReportState",
+        "SurveyGroupResult",
+        "SurveyResult"
+      ],
+      "dependencyText": "Depends on WI-0002 and WI-0008; consumes semantics from WI-0005 and WI-0007."
+    },
+    {
+      "id": "WI-0010",
+      "title": "Cross-cutting test, performance, security, migration, and acceptance program",
+      "requirementGroups": 52,
+      "sourceDocuments": 12,
+      "acceptanceCriteria": 5,
+      "extensions": [
+        "2026-09-21",
+        "2026-09-22"
+      ],
+      "contractMentions": [
+        "AdminReportState"
+      ],
+      "dependencyText": "Runs alongside and gates WI-0002 through WI-0009."
+    },
+    {
+      "id": "WI-0011",
+      "title": "Administrator application state, group management, and Limen UX",
+      "requirementGroups": 20,
+      "sourceDocuments": 1,
+      "acceptanceCriteria": 5,
+      "extensions": [
+        "2026-09-22"
+      ],
+      "contractMentions": [],
+      "dependencyText": "Depends on WI-0002, WI-0005, WI-0008, WI-0009, and current Limen capability contracts; feeds WI-0012 through WI-0020."
+    },
+    {
+      "id": "WI-0012",
+      "title": "Storage provider contract and GitHub repository provider",
+      "requirementGroups": 17,
+      "sourceDocuments": 1,
+      "acceptanceCriteria": 5,
+      "extensions": [
+        "2026-09-22"
+      ],
+      "contractMentions": [],
+      "dependencyText": "Depends on WI-0011 and WI-0008; provides persistence to WI-0013, WI-0016, WI-0018, and WI-0020."
+    },
+    {
+      "id": "WI-0013",
+      "title": "Administrator import, concurrency, durable aggregation, and indexes",
+      "requirementGroups": 12,
+      "sourceDocuments": 1,
+      "acceptanceCriteria": 5,
+      "extensions": [
+        "2026-09-22"
+      ],
+      "contractMentions": [
+        "SurveyGroupResult"
+      ],
+      "dependencyText": "Extends WI-0008; depends on WI-0012 plus WI-0004 through WI-0007; feeds WI-0014, WI-0016, and WI-0020."
+    },
+    {
+      "id": "WI-0014",
+      "title": "Administrator analytics, comparisons, lineage, and dependency invalidation",
+      "requirementGroups": 16,
+      "sourceDocuments": 1,
+      "acceptanceCriteria": 5,
+      "extensions": [
+        "2026-09-22"
+      ],
+      "contractMentions": [],
+      "dependencyText": "Depends on WI-0013, WI-0003, WI-0007, and WI-0009; provides analysis/lineage to WI-0015, WI-0016, WI-0019, and WI-0020."
+    },
+    {
+      "id": "WI-0015",
+      "title": "Typed visualization grammar, dashboards, and accessibility",
+      "requirementGroups": 6,
+      "sourceDocuments": 1,
+      "acceptanceCriteria": 5,
+      "extensions": [
+        "2026-09-22"
+      ],
+      "contractMentions": [],
+      "dependencyText": "Depends on WI-0014, WI-0009, WI-0011, Limen, and Visual Engineering; feeds WI-0016 and WI-0020."
+    },
+    {
+      "id": "WI-0016",
+      "title": "Report builder, snapshots, exports, configuration packages, and policy packs",
+      "requirementGroups": 12,
+      "sourceDocuments": 1,
+      "acceptanceCriteria": 5,
+      "extensions": [
+        "2026-09-22"
+      ],
+      "contractMentions": [],
+      "dependencyText": "Extends WI-0009; depends on WI-0014 and WI-0015; interacts with WI-0012 storage and WI-0017 privacy/lifecycle."
+    },
+    {
+      "id": "WI-0017",
+      "title": "Administrator privacy, security, audit, retention, and deletion lifecycle",
+      "requirementGroups": 14,
+      "sourceDocuments": 1,
+      "acceptanceCriteria": 5,
+      "extensions": [
+        "2026-09-22"
+      ],
+      "contractMentions": [],
+      "dependencyText": "Depends on WI-0005, WI-0012, WI-0013, and WI-0016; gates WI-0018 and WI-0020."
+    },
+    {
+      "id": "WI-0018",
+      "title": "Storage migration, backup, schema evolution, and operational recovery",
+      "requirementGroups": 14,
+      "sourceDocuments": 1,
+      "acceptanceCriteria": 5,
+      "extensions": [
+        "2026-09-22"
+      ],
+      "contractMentions": [],
+      "dependencyText": "Depends on WI-0012, WI-0013, WI-0017, and WI-0016; feeds WI-0020."
+    },
+    {
+      "id": "WI-0019",
+      "title": "Administrator sandbox, synthetic data, advanced analytics extensions, and phase boundary",
+      "requirementGroups": 4,
+      "sourceDocuments": 1,
+      "acceptanceCriteria": 5,
+      "extensions": [],
+      "contractMentions": [],
+      "dependencyText": "Depends on WI-0011 through WI-0017 as preview targets; supplies fixtures/evidence to WI-0020."
+    },
+    {
+      "id": "WI-0020",
+      "title": "Administrator cross-cutting verification, performance, and acceptance program",
+      "requirementGroups": 18,
+      "sourceDocuments": 1,
+      "acceptanceCriteria": 5,
+      "extensions": [
+        "2026-09-22"
+      ],
+      "contractMentions": [],
+      "dependencyText": "Specialized extension of WI-0010; runs alongside and gates WI-0011 through WI-0019."
+    }
+  ],
+  "relations": [
+    {
+      "from": "WI-0002",
+      "to": "WI-0003",
+      "kind": "coupling",
+      "clause": "establishes the contract baseline consumed by WI-0003 through WI-0009."
+    },
+    {
+      "from": "WI-0002",
+      "to": "WI-0004",
+      "kind": "coupling",
+      "clause": "establishes the contract baseline consumed by WI-0003 through WI-0009."
+    },
+    {
+      "from": "WI-0002",
+      "to": "WI-0005",
+      "kind": "coupling",
+      "clause": "establishes the contract baseline consumed by WI-0003 through WI-0009."
+    },
+    {
+      "from": "WI-0002",
+      "to": "WI-0006",
+      "kind": "coupling",
+      "clause": "establishes the contract baseline consumed by WI-0003 through WI-0009."
+    },
+    {
+      "from": "WI-0002",
+      "to": "WI-0007",
+      "kind": "coupling",
+      "clause": "establishes the contract baseline consumed by WI-0003 through WI-0009."
+    },
+    {
+      "from": "WI-0002",
+      "to": "WI-0008",
+      "kind": "coupling",
+      "clause": "establishes the contract baseline consumed by WI-0003 through WI-0009."
+    },
+    {
+      "from": "WI-0002",
+      "to": "WI-0009",
+      "kind": "coupling",
+      "clause": "establishes the contract baseline consumed by WI-0003 through WI-0009."
+    },
+    {
+      "from": "WI-0003",
+      "to": "WI-0002",
+      "kind": "hard",
+      "clause": "Depends on WI-0002 contracts"
+    },
+    {
+      "from": "WI-0003",
+      "to": "WI-0006",
+      "kind": "coupling",
+      "clause": "collaborates with WI-0006, WI-0007, WI-0009, and WI-0010."
+    },
+    {
+      "from": "WI-0003",
+      "to": "WI-0007",
+      "kind": "coupling",
+      "clause": "collaborates with WI-0006, WI-0007, WI-0009, and WI-0010."
+    },
+    {
+      "from": "WI-0003",
+      "to": "WI-0009",
+      "kind": "coupling",
+      "clause": "collaborates with WI-0006, WI-0007, WI-0009, and WI-0010."
+    },
+    {
+      "from": "WI-0003",
+      "to": "WI-0010",
+      "kind": "coupling",
+      "clause": "collaborates with WI-0006, WI-0007, WI-0009, and WI-0010."
+    },
+    {
+      "from": "WI-0004",
+      "to": "WI-0002",
+      "kind": "hard",
+      "clause": "Depends on WI-0002"
+    },
+    {
+      "from": "WI-0004",
+      "to": "WI-0005",
+      "kind": "coupling",
+      "clause": "integrates with WI-0005, WI-0006, WI-0007, WI-0008, and WI-0010."
+    },
+    {
+      "from": "WI-0004",
+      "to": "WI-0006",
+      "kind": "coupling",
+      "clause": "integrates with WI-0005, WI-0006, WI-0007, WI-0008, and WI-0010."
+    },
+    {
+      "from": "WI-0004",
+      "to": "WI-0007",
+      "kind": "coupling",
+      "clause": "integrates with WI-0005, WI-0006, WI-0007, WI-0008, and WI-0010."
+    },
+    {
+      "from": "WI-0004",
+      "to": "WI-0008",
+      "kind": "coupling",
+      "clause": "integrates with WI-0005, WI-0006, WI-0007, WI-0008, and WI-0010."
+    },
+    {
+      "from": "WI-0004",
+      "to": "WI-0010",
+      "kind": "coupling",
+      "clause": "integrates with WI-0005, WI-0006, WI-0007, WI-0008, and WI-0010."
+    },
+    {
+      "from": "WI-0005",
+      "to": "WI-0002",
+      "kind": "hard",
+      "clause": "Depends on WI-0002"
+    },
+    {
+      "from": "WI-0005",
+      "to": "WI-0004",
+      "kind": "coupling",
+      "clause": "integrates with WI-0004, WI-0008, WI-0009, and WI-0010 privacy tests."
+    },
+    {
+      "from": "WI-0005",
+      "to": "WI-0008",
+      "kind": "coupling",
+      "clause": "integrates with WI-0004, WI-0008, WI-0009, and WI-0010 privacy tests."
+    },
+    {
+      "from": "WI-0005",
+      "to": "WI-0009",
+      "kind": "coupling",
+      "clause": "integrates with WI-0004, WI-0008, WI-0009, and WI-0010 privacy tests."
+    },
+    {
+      "from": "WI-0005",
+      "to": "WI-0010",
+      "kind": "coupling",
+      "clause": "integrates with WI-0004, WI-0008, WI-0009, and WI-0010 privacy tests."
+    },
+    {
+      "from": "WI-0006",
+      "to": "WI-0002",
+      "kind": "hard",
+      "clause": "Depends on WI-0002 and answer semantics from WI-0004"
+    },
+    {
+      "from": "WI-0006",
+      "to": "WI-0004",
+      "kind": "hard",
+      "clause": "Depends on WI-0002 and answer semantics from WI-0004"
+    },
+    {
+      "from": "WI-0006",
+      "to": "WI-0007",
+      "kind": "coupling",
+      "clause": "exposes inputs/outputs to WI-0007 and WI-0009."
+    },
+    {
+      "from": "WI-0006",
+      "to": "WI-0009",
+      "kind": "coupling",
+      "clause": "exposes inputs/outputs to WI-0007 and WI-0009."
+    },
+    {
+      "from": "WI-0007",
+      "to": "WI-0002",
+      "kind": "hard",
+      "clause": "Depends on WI-0002, WI-0004, and WI-0006"
+    },
+    {
+      "from": "WI-0007",
+      "to": "WI-0004",
+      "kind": "hard",
+      "clause": "Depends on WI-0002, WI-0004, and WI-0006"
+    },
+    {
+      "from": "WI-0007",
+      "to": "WI-0006",
+      "kind": "hard",
+      "clause": "Depends on WI-0002, WI-0004, and WI-0006"
+    },
+    {
+      "from": "WI-0007",
+      "to": "WI-0008",
+      "kind": "coupling",
+      "clause": "feeds WI-0008 and WI-0009."
+    },
+    {
+      "from": "WI-0007",
+      "to": "WI-0009",
+      "kind": "coupling",
+      "clause": "feeds WI-0008 and WI-0009."
+    },
+    {
+      "from": "WI-0008",
+      "to": "WI-0002",
+      "kind": "hard",
+      "clause": "Depends on WI-0002, WI-0004, WI-0005, WI-0006, and WI-0007"
+    },
+    {
+      "from": "WI-0008",
+      "to": "WI-0004",
+      "kind": "hard",
+      "clause": "Depends on WI-0002, WI-0004, WI-0005, WI-0006, and WI-0007"
+    },
+    {
+      "from": "WI-0008",
+      "to": "WI-0005",
+      "kind": "hard",
+      "clause": "Depends on WI-0002, WI-0004, WI-0005, WI-0006, and WI-0007"
+    },
+    {
+      "from": "WI-0008",
+      "to": "WI-0006",
+      "kind": "hard",
+      "clause": "Depends on WI-0002, WI-0004, WI-0005, WI-0006, and WI-0007"
+    },
+    {
+      "from": "WI-0008",
+      "to": "WI-0007",
+      "kind": "hard",
+      "clause": "Depends on WI-0002, WI-0004, WI-0005, WI-0006, and WI-0007"
+    },
+    {
+      "from": "WI-0008",
+      "to": "WI-0009",
+      "kind": "coupling",
+      "clause": "provides data to WI-0009."
+    },
+    {
+      "from": "WI-0009",
+      "to": "WI-0002",
+      "kind": "hard",
+      "clause": "Depends on WI-0002 and WI-0008"
+    },
+    {
+      "from": "WI-0009",
+      "to": "WI-0008",
+      "kind": "hard",
+      "clause": "Depends on WI-0002 and WI-0008"
+    },
+    {
+      "from": "WI-0009",
+      "to": "WI-0005",
+      "kind": "coupling",
+      "clause": "consumes semantics from WI-0005 and WI-0007."
+    },
+    {
+      "from": "WI-0009",
+      "to": "WI-0007",
+      "kind": "coupling",
+      "clause": "consumes semantics from WI-0005 and WI-0007."
+    },
+    {
+      "from": "WI-0010",
+      "to": "WI-0002",
+      "kind": "hard",
+      "clause": "Runs alongside and gates WI-0002 through WI-0009."
+    },
+    {
+      "from": "WI-0010",
+      "to": "WI-0003",
+      "kind": "hard",
+      "clause": "Runs alongside and gates WI-0002 through WI-0009."
+    },
+    {
+      "from": "WI-0010",
+      "to": "WI-0004",
+      "kind": "hard",
+      "clause": "Runs alongside and gates WI-0002 through WI-0009."
+    },
+    {
+      "from": "WI-0010",
+      "to": "WI-0005",
+      "kind": "hard",
+      "clause": "Runs alongside and gates WI-0002 through WI-0009."
+    },
+    {
+      "from": "WI-0010",
+      "to": "WI-0006",
+      "kind": "hard",
+      "clause": "Runs alongside and gates WI-0002 through WI-0009."
+    },
+    {
+      "from": "WI-0010",
+      "to": "WI-0007",
+      "kind": "hard",
+      "clause": "Runs alongside and gates WI-0002 through WI-0009."
+    },
+    {
+      "from": "WI-0010",
+      "to": "WI-0008",
+      "kind": "hard",
+      "clause": "Runs alongside and gates WI-0002 through WI-0009."
+    },
+    {
+      "from": "WI-0010",
+      "to": "WI-0009",
+      "kind": "hard",
+      "clause": "Runs alongside and gates WI-0002 through WI-0009."
+    },
+    {
+      "from": "WI-0011",
+      "to": "WI-0002",
+      "kind": "hard",
+      "clause": "Depends on WI-0002, WI-0005, WI-0008, WI-0009, and current Limen capability contracts"
+    },
+    {
+      "from": "WI-0011",
+      "to": "WI-0005",
+      "kind": "hard",
+      "clause": "Depends on WI-0002, WI-0005, WI-0008, WI-0009, and current Limen capability contracts"
+    },
+    {
+      "from": "WI-0011",
+      "to": "WI-0008",
+      "kind": "hard",
+      "clause": "Depends on WI-0002, WI-0005, WI-0008, WI-0009, and current Limen capability contracts"
+    },
+    {
+      "from": "WI-0011",
+      "to": "WI-0009",
+      "kind": "hard",
+      "clause": "Depends on WI-0002, WI-0005, WI-0008, WI-0009, and current Limen capability contracts"
+    },
+    {
+      "from": "WI-0011",
+      "to": "WI-0012",
+      "kind": "coupling",
+      "clause": "feeds WI-0012 through WI-0020."
+    },
+    {
+      "from": "WI-0011",
+      "to": "WI-0013",
+      "kind": "coupling",
+      "clause": "feeds WI-0012 through WI-0020."
+    },
+    {
+      "from": "WI-0011",
+      "to": "WI-0014",
+      "kind": "coupling",
+      "clause": "feeds WI-0012 through WI-0020."
+    },
+    {
+      "from": "WI-0011",
+      "to": "WI-0015",
+      "kind": "coupling",
+      "clause": "feeds WI-0012 through WI-0020."
+    },
+    {
+      "from": "WI-0011",
+      "to": "WI-0016",
+      "kind": "coupling",
+      "clause": "feeds WI-0012 through WI-0020."
+    },
+    {
+      "from": "WI-0011",
+      "to": "WI-0017",
+      "kind": "coupling",
+      "clause": "feeds WI-0012 through WI-0020."
+    },
+    {
+      "from": "WI-0011",
+      "to": "WI-0018",
+      "kind": "coupling",
+      "clause": "feeds WI-0012 through WI-0020."
+    },
+    {
+      "from": "WI-0011",
+      "to": "WI-0019",
+      "kind": "coupling",
+      "clause": "feeds WI-0012 through WI-0020."
+    },
+    {
+      "from": "WI-0011",
+      "to": "WI-0020",
+      "kind": "coupling",
+      "clause": "feeds WI-0012 through WI-0020."
+    },
+    {
+      "from": "WI-0012",
+      "to": "WI-0011",
+      "kind": "hard",
+      "clause": "Depends on WI-0011 and WI-0008"
+    },
+    {
+      "from": "WI-0012",
+      "to": "WI-0008",
+      "kind": "hard",
+      "clause": "Depends on WI-0011 and WI-0008"
+    },
+    {
+      "from": "WI-0012",
+      "to": "WI-0013",
+      "kind": "coupling",
+      "clause": "provides persistence to WI-0013, WI-0016, WI-0018, and WI-0020."
+    },
+    {
+      "from": "WI-0012",
+      "to": "WI-0016",
+      "kind": "coupling",
+      "clause": "provides persistence to WI-0013, WI-0016, WI-0018, and WI-0020."
+    },
+    {
+      "from": "WI-0012",
+      "to": "WI-0018",
+      "kind": "coupling",
+      "clause": "provides persistence to WI-0013, WI-0016, WI-0018, and WI-0020."
+    },
+    {
+      "from": "WI-0012",
+      "to": "WI-0020",
+      "kind": "coupling",
+      "clause": "provides persistence to WI-0013, WI-0016, WI-0018, and WI-0020."
+    },
+    {
+      "from": "WI-0013",
+      "to": "WI-0008",
+      "kind": "hard",
+      "clause": "Extends WI-0008"
+    },
+    {
+      "from": "WI-0013",
+      "to": "WI-0012",
+      "kind": "hard",
+      "clause": "depends on WI-0012 plus WI-0004 through WI-0007"
+    },
+    {
+      "from": "WI-0013",
+      "to": "WI-0004",
+      "kind": "hard",
+      "clause": "depends on WI-0012 plus WI-0004 through WI-0007"
+    },
+    {
+      "from": "WI-0013",
+      "to": "WI-0005",
+      "kind": "hard",
+      "clause": "depends on WI-0012 plus WI-0004 through WI-0007"
+    },
+    {
+      "from": "WI-0013",
+      "to": "WI-0006",
+      "kind": "hard",
+      "clause": "depends on WI-0012 plus WI-0004 through WI-0007"
+    },
+    {
+      "from": "WI-0013",
+      "to": "WI-0007",
+      "kind": "hard",
+      "clause": "depends on WI-0012 plus WI-0004 through WI-0007"
+    },
+    {
+      "from": "WI-0013",
+      "to": "WI-0014",
+      "kind": "coupling",
+      "clause": "feeds WI-0014, WI-0016, and WI-0020."
+    },
+    {
+      "from": "WI-0013",
+      "to": "WI-0016",
+      "kind": "coupling",
+      "clause": "feeds WI-0014, WI-0016, and WI-0020."
+    },
+    {
+      "from": "WI-0013",
+      "to": "WI-0020",
+      "kind": "coupling",
+      "clause": "feeds WI-0014, WI-0016, and WI-0020."
+    },
+    {
+      "from": "WI-0014",
+      "to": "WI-0013",
+      "kind": "hard",
+      "clause": "Depends on WI-0013, WI-0003, WI-0007, and WI-0009"
+    },
+    {
+      "from": "WI-0014",
+      "to": "WI-0003",
+      "kind": "hard",
+      "clause": "Depends on WI-0013, WI-0003, WI-0007, and WI-0009"
+    },
+    {
+      "from": "WI-0014",
+      "to": "WI-0007",
+      "kind": "hard",
+      "clause": "Depends on WI-0013, WI-0003, WI-0007, and WI-0009"
+    },
+    {
+      "from": "WI-0014",
+      "to": "WI-0009",
+      "kind": "hard",
+      "clause": "Depends on WI-0013, WI-0003, WI-0007, and WI-0009"
+    },
+    {
+      "from": "WI-0014",
+      "to": "WI-0015",
+      "kind": "coupling",
+      "clause": "provides analysis/lineage to WI-0015, WI-0016, WI-0019, and WI-0020."
+    },
+    {
+      "from": "WI-0014",
+      "to": "WI-0016",
+      "kind": "coupling",
+      "clause": "provides analysis/lineage to WI-0015, WI-0016, WI-0019, and WI-0020."
+    },
+    {
+      "from": "WI-0014",
+      "to": "WI-0019",
+      "kind": "coupling",
+      "clause": "provides analysis/lineage to WI-0015, WI-0016, WI-0019, and WI-0020."
+    },
+    {
+      "from": "WI-0014",
+      "to": "WI-0020",
+      "kind": "coupling",
+      "clause": "provides analysis/lineage to WI-0015, WI-0016, WI-0019, and WI-0020."
+    },
+    {
+      "from": "WI-0015",
+      "to": "WI-0014",
+      "kind": "hard",
+      "clause": "Depends on WI-0014, WI-0009, WI-0011, Limen, and Visual Engineering"
+    },
+    {
+      "from": "WI-0015",
+      "to": "WI-0009",
+      "kind": "hard",
+      "clause": "Depends on WI-0014, WI-0009, WI-0011, Limen, and Visual Engineering"
+    },
+    {
+      "from": "WI-0015",
+      "to": "WI-0011",
+      "kind": "hard",
+      "clause": "Depends on WI-0014, WI-0009, WI-0011, Limen, and Visual Engineering"
+    },
+    {
+      "from": "WI-0015",
+      "to": "WI-0016",
+      "kind": "coupling",
+      "clause": "feeds WI-0016 and WI-0020."
+    },
+    {
+      "from": "WI-0015",
+      "to": "WI-0020",
+      "kind": "coupling",
+      "clause": "feeds WI-0016 and WI-0020."
+    },
+    {
+      "from": "WI-0016",
+      "to": "WI-0009",
+      "kind": "hard",
+      "clause": "Extends WI-0009"
+    },
+    {
+      "from": "WI-0016",
+      "to": "WI-0014",
+      "kind": "hard",
+      "clause": "depends on WI-0014 and WI-0015"
+    },
+    {
+      "from": "WI-0016",
+      "to": "WI-0015",
+      "kind": "hard",
+      "clause": "depends on WI-0014 and WI-0015"
+    },
+    {
+      "from": "WI-0016",
+      "to": "WI-0012",
+      "kind": "coupling",
+      "clause": "interacts with WI-0012 storage and WI-0017 privacy/lifecycle."
+    },
+    {
+      "from": "WI-0016",
+      "to": "WI-0017",
+      "kind": "coupling",
+      "clause": "interacts with WI-0012 storage and WI-0017 privacy/lifecycle."
+    },
+    {
+      "from": "WI-0017",
+      "to": "WI-0005",
+      "kind": "hard",
+      "clause": "Depends on WI-0005, WI-0012, WI-0013, and WI-0016"
+    },
+    {
+      "from": "WI-0017",
+      "to": "WI-0012",
+      "kind": "hard",
+      "clause": "Depends on WI-0005, WI-0012, WI-0013, and WI-0016"
+    },
+    {
+      "from": "WI-0017",
+      "to": "WI-0013",
+      "kind": "hard",
+      "clause": "Depends on WI-0005, WI-0012, WI-0013, and WI-0016"
+    },
+    {
+      "from": "WI-0017",
+      "to": "WI-0016",
+      "kind": "hard",
+      "clause": "Depends on WI-0005, WI-0012, WI-0013, and WI-0016"
+    },
+    {
+      "from": "WI-0017",
+      "to": "WI-0018",
+      "kind": "hard",
+      "clause": "gates WI-0018 and WI-0020."
+    },
+    {
+      "from": "WI-0017",
+      "to": "WI-0020",
+      "kind": "hard",
+      "clause": "gates WI-0018 and WI-0020."
+    },
+    {
+      "from": "WI-0018",
+      "to": "WI-0012",
+      "kind": "hard",
+      "clause": "Depends on WI-0012, WI-0013, WI-0017, and WI-0016"
+    },
+    {
+      "from": "WI-0018",
+      "to": "WI-0013",
+      "kind": "hard",
+      "clause": "Depends on WI-0012, WI-0013, WI-0017, and WI-0016"
+    },
+    {
+      "from": "WI-0018",
+      "to": "WI-0017",
+      "kind": "hard",
+      "clause": "Depends on WI-0012, WI-0013, WI-0017, and WI-0016"
+    },
+    {
+      "from": "WI-0018",
+      "to": "WI-0016",
+      "kind": "hard",
+      "clause": "Depends on WI-0012, WI-0013, WI-0017, and WI-0016"
+    },
+    {
+      "from": "WI-0018",
+      "to": "WI-0020",
+      "kind": "coupling",
+      "clause": "feeds WI-0020."
+    },
+    {
+      "from": "WI-0019",
+      "to": "WI-0011",
+      "kind": "hard",
+      "clause": "Depends on WI-0011 through WI-0017 as preview targets"
+    },
+    {
+      "from": "WI-0019",
+      "to": "WI-0012",
+      "kind": "hard",
+      "clause": "Depends on WI-0011 through WI-0017 as preview targets"
+    },
+    {
+      "from": "WI-0019",
+      "to": "WI-0013",
+      "kind": "hard",
+      "clause": "Depends on WI-0011 through WI-0017 as preview targets"
+    },
+    {
+      "from": "WI-0019",
+      "to": "WI-0014",
+      "kind": "hard",
+      "clause": "Depends on WI-0011 through WI-0017 as preview targets"
+    },
+    {
+      "from": "WI-0019",
+      "to": "WI-0015",
+      "kind": "hard",
+      "clause": "Depends on WI-0011 through WI-0017 as preview targets"
+    },
+    {
+      "from": "WI-0019",
+      "to": "WI-0016",
+      "kind": "hard",
+      "clause": "Depends on WI-0011 through WI-0017 as preview targets"
+    },
+    {
+      "from": "WI-0019",
+      "to": "WI-0017",
+      "kind": "hard",
+      "clause": "Depends on WI-0011 through WI-0017 as preview targets"
+    },
+    {
+      "from": "WI-0019",
+      "to": "WI-0020",
+      "kind": "coupling",
+      "clause": "supplies fixtures/evidence to WI-0020."
+    },
+    {
+      "from": "WI-0020",
+      "to": "WI-0010",
+      "kind": "hard",
+      "clause": "Specialized extension of WI-0010"
+    },
+    {
+      "from": "WI-0020",
+      "to": "WI-0011",
+      "kind": "hard",
+      "clause": "runs alongside and gates WI-0011 through WI-0019."
+    },
+    {
+      "from": "WI-0020",
+      "to": "WI-0012",
+      "kind": "hard",
+      "clause": "runs alongside and gates WI-0011 through WI-0019."
+    },
+    {
+      "from": "WI-0020",
+      "to": "WI-0013",
+      "kind": "hard",
+      "clause": "runs alongside and gates WI-0011 through WI-0019."
+    },
+    {
+      "from": "WI-0020",
+      "to": "WI-0014",
+      "kind": "hard",
+      "clause": "runs alongside and gates WI-0011 through WI-0019."
+    },
+    {
+      "from": "WI-0020",
+      "to": "WI-0015",
+      "kind": "hard",
+      "clause": "runs alongside and gates WI-0011 through WI-0019."
+    },
+    {
+      "from": "WI-0020",
+      "to": "WI-0016",
+      "kind": "hard",
+      "clause": "runs alongside and gates WI-0011 through WI-0019."
+    },
+    {
+      "from": "WI-0020",
+      "to": "WI-0017",
+      "kind": "hard",
+      "clause": "runs alongside and gates WI-0011 through WI-0019."
+    },
+    {
+      "from": "WI-0020",
+      "to": "WI-0018",
+      "kind": "hard",
+      "clause": "runs alongside and gates WI-0011 through WI-0019."
+    },
+    {
+      "from": "WI-0020",
+      "to": "WI-0019",
+      "kind": "hard",
+      "clause": "runs alongside and gates WI-0011 through WI-0019."
+    }
+  ],
+  "summary": {
+    "itemCount": 19,
+    "explicitRelations": 125,
+    "hardRelations": 72,
+    "undirectedPairsAll": 84,
+    "undirectedPairsHard": 70,
+    "possiblePairs": 171,
+    "degreeAll": {
+      "WI-0002": 9,
+      "WI-0003": 6,
+      "WI-0004": 7,
+      "WI-0005": 8,
+      "WI-0006": 8,
+      "WI-0007": 9,
+      "WI-0008": 10,
+      "WI-0009": 11,
+      "WI-0010": 9,
+      "WI-0011": 13,
+      "WI-0012": 8,
+      "WI-0013": 13,
+      "WI-0014": 9,
+      "WI-0015": 6,
+      "WI-0016": 10,
+      "WI-0017": 8,
+      "WI-0018": 6,
+      "WI-0019": 8,
+      "WI-0020": 10
+    },
+    "isolatedItems": [],
+    "hardLinkedToContractRoot": [
+      "WI-0003",
+      "WI-0004",
+      "WI-0005",
+      "WI-0006",
+      "WI-0007",
+      "WI-0008",
+      "WI-0009",
+      "WI-0010",
+      "WI-0011",
+      "WI-0012",
+      "WI-0013",
+      "WI-0014",
+      "WI-0015",
+      "WI-0016",
+      "WI-0017",
+      "WI-0018",
+      "WI-0019",
+      "WI-0020"
+    ],
+    "gatedByVerificationPrograms": [
+      "WI-0002",
+      "WI-0003",
+      "WI-0004",
+      "WI-0005",
+      "WI-0006",
+      "WI-0007",
+      "WI-0008",
+      "WI-0009",
+      "WI-0010",
+      "WI-0011",
+      "WI-0012",
+      "WI-0013",
+      "WI-0014",
+      "WI-0015",
+      "WI-0016",
+      "WI-0017",
+      "WI-0018",
+      "WI-0019"
+    ],
+    "requirementGroups": {
+      "WI-0002": 25,
+      "WI-0003": 34,
+      "WI-0004": 38,
+      "WI-0005": 21,
+      "WI-0006": 13,
+      "WI-0007": 42,
+      "WI-0008": 23,
+      "WI-0009": 16,
+      "WI-0010": 52,
+      "WI-0011": 20,
+      "WI-0012": 17,
+      "WI-0013": 12,
+      "WI-0014": 16,
+      "WI-0015": 6,
+      "WI-0016": 12,
+      "WI-0017": 14,
+      "WI-0018": 14,
+      "WI-0019": 4,
+      "WI-0020": 18
+    },
+    "acceptanceCriteria": {
+      "WI-0002": 5,
+      "WI-0003": 5,
+      "WI-0004": 5,
+      "WI-0005": 5,
+      "WI-0006": 5,
+      "WI-0007": 5,
+      "WI-0008": 5,
+      "WI-0009": 5,
+      "WI-0010": 5,
+      "WI-0011": 5,
+      "WI-0012": 5,
+      "WI-0013": 5,
+      "WI-0014": 5,
+      "WI-0015": 5,
+      "WI-0016": 5,
+      "WI-0017": 5,
+      "WI-0018": 5,
+      "WI-0019": 5,
+      "WI-0020": 5
+    },
+    "sourceDocuments": {
+      "WI-0002": 11,
+      "WI-0003": 9,
+      "WI-0004": 11,
+      "WI-0005": 9,
+      "WI-0006": 6,
+      "WI-0007": 11,
+      "WI-0008": 9,
+      "WI-0009": 8,
+      "WI-0010": 12,
+      "WI-0011": 1,
+      "WI-0012": 1,
+      "WI-0013": 1,
+      "WI-0014": 1,
+      "WI-0015": 1,
+      "WI-0016": 1,
+      "WI-0017": 1,
+      "WI-0018": 1,
+      "WI-0019": 1,
+      "WI-0020": 1
+    },
+    "edgeFree5SubsetsHardOnly": 31,
+    "edgeFree5SubsetsAllRelations": 0,
+    "edgeFree5SubsetsHardOnlyNotAllHardLinkedToContracts": 0,
+    "edgeFree5SubsetsAllRelationsNotAllHardLinkedToContracts": 0
+  },
+  "edgeFree5SubsetsHardOnly": [
+    {
+      "members": [
+        "WI-0003",
+        "WI-0004",
+        "WI-0005",
+        "WI-0009",
+        "WI-0012"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0004",
+        "WI-0005",
+        "WI-0009",
+        "WI-0018"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0004",
+        "WI-0005",
+        "WI-0009",
+        "WI-0019"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0004",
+        "WI-0005",
+        "WI-0009",
+        "WI-0020"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0004",
+        "WI-0005",
+        "WI-0012",
+        "WI-0015"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0004",
+        "WI-0005",
+        "WI-0012",
+        "WI-0016"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0004",
+        "WI-0005",
+        "WI-0015",
+        "WI-0018"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0004",
+        "WI-0005",
+        "WI-0018",
+        "WI-0019"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0004",
+        "WI-0009",
+        "WI-0018",
+        "WI-0019"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0005",
+        "WI-0006",
+        "WI-0009",
+        "WI-0012"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0005",
+        "WI-0006",
+        "WI-0009",
+        "WI-0018"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0005",
+        "WI-0006",
+        "WI-0009",
+        "WI-0019"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0005",
+        "WI-0006",
+        "WI-0009",
+        "WI-0020"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0005",
+        "WI-0006",
+        "WI-0012",
+        "WI-0015"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0005",
+        "WI-0006",
+        "WI-0012",
+        "WI-0016"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0005",
+        "WI-0006",
+        "WI-0015",
+        "WI-0018"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0005",
+        "WI-0006",
+        "WI-0018",
+        "WI-0019"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0005",
+        "WI-0007",
+        "WI-0009",
+        "WI-0012"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0005",
+        "WI-0007",
+        "WI-0009",
+        "WI-0018"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0005",
+        "WI-0007",
+        "WI-0009",
+        "WI-0019"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0005",
+        "WI-0007",
+        "WI-0009",
+        "WI-0020"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0005",
+        "WI-0007",
+        "WI-0012",
+        "WI-0015"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0005",
+        "WI-0007",
+        "WI-0012",
+        "WI-0016"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0005",
+        "WI-0007",
+        "WI-0015",
+        "WI-0018"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0005",
+        "WI-0007",
+        "WI-0018",
+        "WI-0019"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0005",
+        "WI-0009",
+        "WI-0018",
+        "WI-0019"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0006",
+        "WI-0009",
+        "WI-0018",
+        "WI-0019"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0003",
+        "WI-0007",
+        "WI-0009",
+        "WI-0018",
+        "WI-0019"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0004",
+        "WI-0005",
+        "WI-0009",
+        "WI-0018",
+        "WI-0019"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0005",
+        "WI-0006",
+        "WI-0009",
+        "WI-0018",
+        "WI-0019"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    },
+    {
+      "members": [
+        "WI-0005",
+        "WI-0007",
+        "WI-0009",
+        "WI-0018",
+        "WI-0019"
+      ],
+      "allHardLinkedToContracts": true,
+      "membersHardLinkedToContracts": 5
+    }
+  ],
+  "edgeFree5SubsetsAllRelations": []
+}

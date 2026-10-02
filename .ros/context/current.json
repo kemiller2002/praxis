@@ -6052,11 +6052,53 @@
         }
       },
       "completedAt": "2026-10-02T10:26:25.000Z"
+    },
+    {
+      "id": "PRAXIS-PLAN-EXP-03",
+      "type": "research",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "research-record",
+          "path": "research/evidence/EV-ROS-2026-A072--a022-target-repository-gate-outcome.md"
+        },
+        {
+          "type": "research-record",
+          "path": "research/experiments/EX-ROS-2026-A023--affinity-moderation-across-repository-blocks.md"
+        }
+      ],
+      "updatedAt": "2026-10-02T12:48:09.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261002T122339366Z-b15d6ac8"
+      ],
+      "latestCheckpoint": {
+        "id": "9d4d9de3f304cfec16f2552c",
+        "recordedAt": "2026-10-02T12:48:07.000Z",
+        "executionId": "EXE-20261002T122339366Z-b15d6ac8",
+        "repository": "repository-operating-system",
+        "branch": "research/a022-target-gate-outcome",
+        "commit": "a39b1768abfbce5ddb9c051d2d33b077d549b387",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "research/a022-target-gate-outcome",
+        "remoteCommit": "a39b1768abfbce5ddb9c051d2d33b077d549b387",
+        "summary": "A022 gate outcome recorded (EV-ROS-2026-A072, A022 blocked, protocol unchanged); Signal GH-5 investigated; EX-ROS-2026-A023 preregistered; full validation passed (1328 tests)",
+        "nextAction": "Complete PRAXIS-PLAN-EXP-03; next work is PRAXIS-PLAN-EXP-04 (A023 instrument and inventory)",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-02T12:48:09.000Z",
+      "conclusion": "A022 remains unexecuted and blocked: no inspected repository satisfied its unchanged same-repository gate. The follow-on EX-ROS-2026-A023 is preregistered."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/chatgpt",
-  "updatedAt": "2026-10-02T10:26:25.000Z",
+  "updatedAt": "2026-10-02T12:48:09.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

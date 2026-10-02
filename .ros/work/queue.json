@@ -4004,6 +4004,78 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-EXP-03",
+      "title": "Record A022 target-gate result and design affinity follow-on experiment",
+      "description": "Preserve the EX-ROS-2026-A022 target-repository gate outcome (no eligible target among the allowlisted repositories plus kemiller2002/signal), record it as evidence without loosening the preregistered gate, set the legal experiment status, and preregister a new blocked multi-repository experiment that tests HY-ROS-2026-A029 with repository as a blocking factor and affinity as a frozen measured variable. No A022 arm is started.",
+      "tags": [
+        "planning",
+        "experiment"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-02T12:23:33.000Z",
+      "updatedAt": "2026-10-02T12:48:09.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "user-request",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-QUEUE-MD-LIVE-STATE",
+      "title": "queue.md shows the pre-promotion backlog status after work start/complete until the next backlog write",
+      "description": "Reproduced on Praxis 3.6.0: capture -> ready -> 'work start' leaves .ros/work/queue.md (and queue.json status) at 'ready' while 'work list' reports 'active', because queue.md is regenerated only on backlog-queue writes (FileBacklogQueueRepository) and not on live-context transitions. Observed in kemiller2002/signal at 637218a: GH-5 reads 'ready' in queue.md and 'active' in .ros/context/current.json since 2026-09-22T22:12:02Z. Readers of the human projection (and agents) can mistake in-flight work for ready work. Fix: regenerate queue.md from QueuePresentation.mergedRows on every live transition that changes effective status (start/block/resume/complete/abandon), with a test. Evidence: research/experiments/EX-ROS-2026-A022-target-gate/signal/gh5-state-investigation.txt.",
+      "tags": [
+        "work",
+        "backlog"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-02T12:29:46.000Z",
+      "updatedAt": "2026-10-02T12:32:27.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "PRAXIS-PLAN-EXP-03",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-EXP-04",
+      "title": "Build and freeze the EX-ROS-2026-A023 affinity/scale instrument, then run its target inventory",
+      "description": "Implement the preregistered A023 instrument (signals A1-A8, generic-element exclusion, structural affinity A_b, high/low/medium rules, scale measures and S/M/L classes) with tests and a --check reproduction, under research/experiments/EX-ROS-2026-A023-setup/ as plain text; freeze it by hash; then inventory candidate repositories at frozen SHAs and record whether the minimum design (2 high + 2 low blocks in one scale class) exists. If not, set EX-ROS-2026-A023 to blocked. Do not change the preregistered rules; do not create, ready, or split work in any candidate repository. Signal enters only after its GH-5 baseline lands through its own lifecycle.",
+      "tags": [
+        "planning",
+        "experiment"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-02T12:36:30.000Z",
+      "updatedAt": "2026-10-02T12:36:30.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "PRAXIS-PLAN-EXP-03",
+      "sourceReference": null
     }
   ]
 }

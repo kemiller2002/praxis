@@ -13,6 +13,8 @@ related_documents:
   - EV-ROS-2026-A064
   - EV-ROS-2026-A070
   - EX-ROS-2026-A022
+  - EX-ROS-2026-A023
+  - EV-ROS-2026-A072
   - requirements/PLANNING-WORK-GROUPS.md
 supersedes: []
 superseded_by: []
@@ -30,6 +32,17 @@ provenance:
         runtime: chatgpt
       reason: "Created the affinity-moderation hypothesis that distinguishes cohesion effects from generic session setup-cost amortization."
       evidence: [EV-ROS-2026-A070]
+    EXE-20261002T122339366Z-b15d6ac8:
+      operations: [modified]
+      at: 2026-10-02T12:36:07.000Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Linked EX-ROS-2026-A023 and EV-ROS-2026-A072; recorded that A022 could not instantiate its low-affinity control; confidence unchanged"
+      evidence: [EV-ROS-2026-A072]
 ---
 
 # Hypothesis
@@ -94,3 +107,18 @@ The original A021 run and R2 both support the high-affinity half of the
 mechanism, but neither contains a low-affinity control. They therefore do not
 yet test this interaction directly. `EX-ROS-2026-A022` is the pre-registered
 test.
+
+**2026-10-02.** `EX-ROS-2026-A022` could not instantiate its intended
+low-affinity control. Its preregistered target gate found no repository, among
+fourteen inspected, that supplies both a matched high-affinity cohort and a
+low-affinity cohort of genuine ready work (`EV-ROS-2026-A072`). A022 is
+`blocked` with its criteria unchanged. This is feasibility information only:
+it is neither supporting nor contradicting evidence, and confidence stays
+`very-low`.
+
+`EX-ROS-2026-A023` (preregistered 2026-10-02) tests the same interaction
+without the same-repository bottleneck. It compares grouped and independent
+execution within each repository block, treats repository as a blocking
+factor, and treats affinity as a frozen measured moderator across blocks. It
+also adds a setup-adjusted ratio that separates this hypothesis's
+context-reuse mechanism from generic fresh-session setup amortization.

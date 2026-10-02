@@ -1,0 +1,517 @@
+{
+  "experiment": "EX-ROS-2026-A022",
+  "gate": {
+    "readyPerCohort": 5,
+    "readyTotalMinimum": 10,
+    "rule": "same repository must supply >=5 genuine ready high-affinity and >=5 genuine ready low-affinity items"
+  },
+  "praxisCliVersion": "praxis 3.6.0",
+  "generatedAt": "2026-10-02T12:25:20Z",
+  "candidates": [
+    {
+      "repository": "kemiller2002/forma",
+      "candidateOrigin": "allowlist",
+      "frozenSha": "1564993990b3abd4313742ef2953802429d64259",
+      "observedSha": "1564993990b3abd4313742ef2953802429d64259",
+      "shaMatches": true,
+      "hasPraxisBacklog": true,
+      "versions": {
+        "rosJsonVersion": "3.1.4",
+        "installedVersion": "3.1.4"
+      },
+      "itemCount": 52,
+      "stateCounts": {
+        "active": 1,
+        "captured": 5,
+        "complete": 46
+      },
+      "readyCount": 0,
+      "readyIds": [],
+      "unfinished": [
+        {
+          "id": "GH-18",
+          "state": "active"
+        },
+        {
+          "id": "WI-0012",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0013",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0014",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0015",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0016",
+          "state": "captured"
+        }
+      ],
+      "meetsReadyCountGate": false
+    },
+    {
+      "repository": "kemiller2002/forma-studio",
+      "candidateOrigin": "allowlist",
+      "frozenSha": "e8ea17b3c4be16128ac50e8ca76bb144c9412479",
+      "observedSha": "e8ea17b3c4be16128ac50e8ca76bb144c9412479",
+      "shaMatches": true,
+      "hasPraxisBacklog": true,
+      "versions": {
+        "rosJsonVersion": "3.1.4",
+        "installedVersion": "3.1.4"
+      },
+      "itemCount": 13,
+      "stateCounts": {
+        "complete": 13
+      },
+      "readyCount": 0,
+      "readyIds": [],
+      "unfinished": [],
+      "meetsReadyCountGate": false
+    },
+    {
+      "repository": "kemiller2002/folio",
+      "candidateOrigin": "allowlist",
+      "frozenSha": "eefcebab9c265f36f7c11316571fdb33a2b5a849",
+      "observedSha": "eefcebab9c265f36f7c11316571fdb33a2b5a849",
+      "shaMatches": true,
+      "hasPraxisBacklog": true,
+      "versions": {
+        "rosJsonVersion": "3.1.4",
+        "installedVersion": "3.1.4"
+      },
+      "itemCount": 18,
+      "stateCounts": {
+        "captured": 1,
+        "complete": 17
+      },
+      "readyCount": 0,
+      "readyIds": [],
+      "unfinished": [
+        {
+          "id": "WI-0001",
+          "state": "captured"
+        }
+      ],
+      "meetsReadyCountGate": false
+    },
+    {
+      "repository": "kemiller2002/limen",
+      "candidateOrigin": "allowlist",
+      "frozenSha": "303b7beaaae6bce99bfa32228e86b607505ab273",
+      "observedSha": "303b7beaaae6bce99bfa32228e86b607505ab273",
+      "shaMatches": true,
+      "hasPraxisBacklog": true,
+      "versions": {
+        "rosJsonVersion": "1.2.1",
+        "installedVersion": "3.1.3"
+      },
+      "itemCount": 146,
+      "stateCounts": {
+        "captured": 3,
+        "complete": 143
+      },
+      "readyCount": 0,
+      "readyIds": [],
+      "unfinished": [
+        {
+          "id": "WI-0032",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0046",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0047",
+          "state": "captured"
+        }
+      ],
+      "meetsReadyCountGate": false
+    },
+    {
+      "repository": "kemiller2002/iter",
+      "candidateOrigin": "allowlist",
+      "frozenSha": "321767f48bc824c6730257abecd3768da980839b",
+      "observedSha": "321767f48bc824c6730257abecd3768da980839b",
+      "shaMatches": true,
+      "hasPraxisBacklog": true,
+      "versions": {
+        "rosJsonVersion": "3.6.0",
+        "installedVersion": "3.6.0"
+      },
+      "itemCount": 1,
+      "stateCounts": {
+        "complete": 1
+      },
+      "readyCount": 0,
+      "readyIds": [],
+      "unfinished": [],
+      "meetsReadyCountGate": false
+    },
+    {
+      "repository": "kemiller2002/dokimos",
+      "candidateOrigin": "allowlist",
+      "frozenSha": "e641048c52edd8755c2964b6bafa4ae860e34062",
+      "observedSha": "e641048c52edd8755c2964b6bafa4ae860e34062",
+      "shaMatches": true,
+      "hasPraxisBacklog": true,
+      "versions": {
+        "rosJsonVersion": "3.1.4",
+        "installedVersion": "3.1.4"
+      },
+      "itemCount": 30,
+      "stateCounts": {
+        "active": 2,
+        "captured": 1,
+        "complete": 27
+      },
+      "readyCount": 0,
+      "readyIds": [],
+      "unfinished": [
+        {
+          "id": "DOK-OPS-026",
+          "state": "captured"
+        },
+        {
+          "id": "DOK-WEB-001",
+          "state": "active"
+        },
+        {
+          "id": "DOK-WEB-002",
+          "state": "active"
+        }
+      ],
+      "meetsReadyCountGate": false
+    },
+    {
+      "repository": "kemiller2002/vigila",
+      "candidateOrigin": "allowlist",
+      "frozenSha": "bc02eddc2145a7e9bd4875eb1df738d2096129e0",
+      "observedSha": "bc02eddc2145a7e9bd4875eb1df738d2096129e0",
+      "shaMatches": true,
+      "hasPraxisBacklog": true,
+      "versions": {
+        "rosJsonVersion": "3.0.3",
+        "installedVersion": "3.1.4"
+      },
+      "itemCount": 31,
+      "stateCounts": {
+        "captured": 7,
+        "complete": 24
+      },
+      "readyCount": 0,
+      "readyIds": [],
+      "unfinished": [
+        {
+          "id": "WI-0019",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0020",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0021",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0025",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0026",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0027",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0028",
+          "state": "captured"
+        }
+      ],
+      "meetsReadyCountGate": false
+    },
+    {
+      "repository": "kemiller2002/chrona",
+      "candidateOrigin": "allowlist",
+      "frozenSha": "495db073db7a79add6de9897294ec59795665e1d",
+      "observedSha": "495db073db7a79add6de9897294ec59795665e1d",
+      "shaMatches": true,
+      "hasPraxisBacklog": true,
+      "versions": {
+        "rosJsonVersion": "2.0.1",
+        "installedVersion": "3.1.3"
+      },
+      "itemCount": 9,
+      "stateCounts": {
+        "active": 1,
+        "blocked": 1,
+        "complete": 7
+      },
+      "readyCount": 0,
+      "readyIds": [],
+      "unfinished": [
+        {
+          "id": "GH-4",
+          "state": "active"
+        },
+        {
+          "id": "WI-0004",
+          "state": "blocked"
+        }
+      ],
+      "meetsReadyCountGate": false
+    },
+    {
+      "repository": "kemiller2002/summa",
+      "candidateOrigin": "allowlist",
+      "frozenSha": "6290d36e056f90ca401483a70e684994999006ef",
+      "observedSha": "6290d36e056f90ca401483a70e684994999006ef",
+      "shaMatches": true,
+      "hasPraxisBacklog": true,
+      "versions": {
+        "rosJsonVersion": "2.0.1-main.78.1",
+        "installedVersion": "3.1.4"
+      },
+      "itemCount": 7,
+      "stateCounts": {
+        "active": 1,
+        "complete": 6
+      },
+      "readyCount": 0,
+      "readyIds": [],
+      "unfinished": [
+        {
+          "id": "GH-4",
+          "state": "active"
+        }
+      ],
+      "meetsReadyCountGate": false
+    },
+    {
+      "repository": "kemiller2002/strata",
+      "candidateOrigin": "allowlist",
+      "frozenSha": "3512d3217e809c6725a38a0e4ef36f504fc673ea",
+      "observedSha": "3512d3217e809c6725a38a0e4ef36f504fc673ea",
+      "shaMatches": true,
+      "hasPraxisBacklog": true,
+      "versions": {
+        "rosJsonVersion": "2.0.1",
+        "installedVersion": "3.1.4"
+      },
+      "itemCount": 105,
+      "stateCounts": {
+        "complete": 104,
+        "ready": 1
+      },
+      "readyCount": 1,
+      "readyIds": [
+        "WI-0101"
+      ],
+      "unfinished": [
+        {
+          "id": "WI-0101",
+          "state": "ready"
+        }
+      ],
+      "meetsReadyCountGate": false
+    },
+    {
+      "repository": "kemiller2002/conditor",
+      "candidateOrigin": "allowlist",
+      "frozenSha": "a925ca52f8435a948c946cf49bd7d4f9a0810adf",
+      "observedSha": "a925ca52f8435a948c946cf49bd7d4f9a0810adf",
+      "shaMatches": true,
+      "hasPraxisBacklog": false,
+      "versions": {
+        "rosJsonVersion": null,
+        "installedVersion": null
+      },
+      "itemCount": 0,
+      "stateCounts": {},
+      "readyCount": 0,
+      "readyIds": [],
+      "unfinished": [],
+      "meetsReadyCountGate": false
+    },
+    {
+      "repository": "kemiller2002/aegis",
+      "candidateOrigin": "allowlist",
+      "frozenSha": "e629468f504458534faabc1b4cc34ded0ae60dce",
+      "observedSha": "e629468f504458534faabc1b4cc34ded0ae60dce",
+      "shaMatches": true,
+      "hasPraxisBacklog": true,
+      "versions": {
+        "rosJsonVersion": "3.0.0",
+        "installedVersion": "3.1.4"
+      },
+      "itemCount": 188,
+      "stateCounts": {
+        "blocked": 6,
+        "complete": 182
+      },
+      "readyCount": 0,
+      "readyIds": [],
+      "unfinished": [
+        {
+          "id": "AEG-ADD-052",
+          "state": "blocked"
+        },
+        {
+          "id": "AEG-CORE-033",
+          "state": "blocked"
+        },
+        {
+          "id": "AEG-LOG-004",
+          "state": "blocked"
+        },
+        {
+          "id": "AEG-LOG-010",
+          "state": "blocked"
+        },
+        {
+          "id": "AEG-LOG-037",
+          "state": "blocked"
+        },
+        {
+          "id": "AEG-LOG-044",
+          "state": "blocked"
+        }
+      ],
+      "meetsReadyCountGate": false
+    },
+    {
+      "repository": "kemiller2002/percepta",
+      "candidateOrigin": "allowlist",
+      "frozenSha": "6df2dbc48af3fd48f8da139e83aa32eca054ef82",
+      "observedSha": "6df2dbc48af3fd48f8da139e83aa32eca054ef82",
+      "shaMatches": true,
+      "hasPraxisBacklog": true,
+      "versions": {
+        "rosJsonVersion": "3.4.0",
+        "installedVersion": "3.4.0"
+      },
+      "itemCount": 6,
+      "stateCounts": {
+        "complete": 6
+      },
+      "readyCount": 0,
+      "readyIds": [],
+      "unfinished": [],
+      "meetsReadyCountGate": false
+    },
+    {
+      "repository": "kemiller2002/signal",
+      "candidateOrigin": "added-after-initial-pass",
+      "frozenSha": "637218a14179c9ac4f1ab1333c75d03f9df6d797",
+      "observedSha": "637218a14179c9ac4f1ab1333c75d03f9df6d797",
+      "shaMatches": true,
+      "hasPraxisBacklog": true,
+      "versions": {
+        "rosJsonVersion": "1.2.1-main.16.1",
+        "installedVersion": "3.1.4"
+      },
+      "itemCount": 27,
+      "stateCounts": {
+        "active": 1,
+        "captured": 19,
+        "complete": 7
+      },
+      "readyCount": 0,
+      "readyIds": [],
+      "unfinished": [
+        {
+          "id": "GH-5",
+          "state": "active"
+        },
+        {
+          "id": "WI-0002",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0003",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0004",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0005",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0006",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0007",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0008",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0009",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0010",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0011",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0012",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0013",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0014",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0015",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0016",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0017",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0018",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0019",
+          "state": "captured"
+        },
+        {
+          "id": "WI-0020",
+          "state": "captured"
+        }
+      ],
+      "meetsReadyCountGate": false
+    }
+  ],
+  "eligibleByReadyCount": []
+}

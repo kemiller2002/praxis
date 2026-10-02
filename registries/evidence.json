@@ -2029,5 +2029,61 @@
     "title": "A021 R2 blind evaluation, unblinding, and replication comparison",
     "updated": "2026-10-01",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "contradicts": [],
+    "created": "2026-10-02",
+    "derived_from": [
+      "EX-ROS-2026-A022"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A072",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A072--a022-target-repository-gate-outcome.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261002T122339366Z-b15d6ac8": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-02T12:32:11.000Z",
+          "last": "2026-10-02T12:47:35.000Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "Recorded the EX-ROS-2026-A022 target-repository gate outcome (no eligible target across 14 inspected repositories, Signal analysed) without changing the gate"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A022",
+      "EX-ROS-2026-A023",
+      "HY-ROS-2026-A028",
+      "HY-ROS-2026-A029",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "research/experiments/EX-ROS-2026-A022-target-gate/README.txt"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "supports": [],
+    "tags": [
+      "planning",
+      "grouping",
+      "affinity",
+      "experiment",
+      "target-selection",
+      "feasibility"
+    ],
+    "title": "EX-ROS-2026-A022 target-repository gate outcome",
+    "updated": "2026-10-02",
+    "version": "1.0.0"
   }
 ]
