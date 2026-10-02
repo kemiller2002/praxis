@@ -5839,11 +5839,66 @@
           "mechanism": "git-remote-observation"
         }
       }
+    },
+    {
+      "id": "PRAXIS-CTL-02",
+      "type": "feature",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-02T14:57:18.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261002T145718941Z-5cdb3714"
+      ]
+    },
+    {
+      "id": "PRAXIS-CTL-03",
+      "type": "feature",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-02T14:57:18.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261002T145719759Z-a597d9b8"
+      ]
+    },
+    {
+      "id": "PRAXIS-CTL-04",
+      "type": "feature",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-02T14:57:18.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261002T145720800Z-573b4aad"
+      ]
+    },
+    {
+      "id": "PRAXIS-CTL-05",
+      "type": "feature",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-02T14:57:18.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261002T145721444Z-ec85a8bd"
+      ]
+    },
+    {
+      "id": "PRAXIS-CTL-06",
+      "type": "feature",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-02T14:57:18.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261002T145722238Z-8fe9da37"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-01T10:43:18.000Z",
+  "updatedAt": "2026-10-02T14:57:18.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
