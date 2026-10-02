@@ -342,7 +342,7 @@ module ControlPlaneTests =
                       let usage = JsonNode.Parse((CliHarness.rosOk root [ "telemetry"; "usage"; id ]).Out)
                       Assert.equal (usage.ToJsonString()) ((at after [ "data"; "usage"; "value" ]).ToJsonString())) }
 
-          { Name = "control-plane executions: steps show expected and observed receipts and their match state"
+          { Name = "control-plane executions: steps show expected and observed receipts and their match, mismatch or indeterminate state"
             Run =
               fun () ->
                   withRepository "ros-cp-exec" (fun root ->
@@ -353,6 +353,9 @@ module ControlPlaneTests =
                       CliHarness.rosOk root [ "execution"; "step"; "declare"; executionId; "--step"; "s2"; "--expect-command"; "false"; "--sequence"; "2" ] |> ignore
                       CliHarness.rosOk root [ "execution"; "step"; "run"; executionId; "--step"; "s1"; "--command"; "true" ] |> ignore
                       CliHarness.ros root [ "execution"; "step"; "run"; executionId; "--step"; "s2"; "--command"; "false" ] |> ignore
+                      // Started, never observed: its effect is unknown.
+                      CliHarness.rosOk root [ "execution"; "step"; "declare"; executionId; "--step"; "s3"; "--expect-command"; "true"; "--sequence"; "3" ] |> ignore
+                      CliHarness.rosOk root [ "execution"; "step"; "start"; executionId; "--step"; "s3" ] |> ignore
                       let listed = document root [ "executions"; "--work-item"; id ]
                       Assert.equal [ executionId ] ((at listed [ "data" ]).AsArray() |> Seq.map (fun entry -> Http.text entry "executionId") |> Seq.toList)
                       let shown = document root [ "execution"; executionId ]
@@ -365,6 +368,8 @@ module ControlPlaneTests =
                       let step name = steps |> List.find (fun entry -> Http.text entry "stepId" = name)
                       Assert.equal "match" (Http.text (step "s1") "status")
                       Assert.equal "mismatch" (Http.text (step "s2") "status")
+                      Assert.equal "indeterminate" (Http.text (step "s3") "status")
+                      Assert.equal [] (items (at (step "s3") [ "observations" ]))
                       Assert.equal "command-succeeded" (Http.text (at (step "s1") [ "expected" ]) "kind")
                       let observation = items (at (step "s2") [ "observations" ]) |> List.head
                       let fact = items (at observation [ "observed"; "facts" ]) |> List.head
