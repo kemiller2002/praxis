@@ -3949,10 +3949,10 @@
         "control-plane"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-01T10:44:17.000Z",
-      "updatedAt": "2026-10-01T10:44:17.000Z",
+      "updatedAt": "2026-10-02T15:44:09.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3972,10 +3972,10 @@
         "control-plane"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-01T10:44:17.000Z",
-      "updatedAt": "2026-10-01T10:44:18.000Z",
+      "updatedAt": "2026-10-02T15:44:11.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -3995,10 +3995,10 @@
         "control-plane"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-01T10:44:18.000Z",
-      "updatedAt": "2026-10-01T10:44:18.000Z",
+      "updatedAt": "2026-10-02T15:44:13.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4018,10 +4018,10 @@
         "control-plane"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-01T10:44:19.000Z",
-      "updatedAt": "2026-10-01T10:44:19.000Z",
+      "updatedAt": "2026-10-02T15:44:15.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4042,10 +4042,10 @@
         "hub"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-01T10:44:19.000Z",
-      "updatedAt": "2026-10-01T10:44:19.000Z",
+      "updatedAt": "2026-10-02T15:44:17.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
