@@ -151,3 +151,71 @@ confidence: medium-high
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ConceptAndGlossaryKindTests(unittest.TestCase):
+    def test_concept_and_glossary_registries_are_optional_until_a_record_exists(self) -> None:
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            (root / "registries").mkdir()
+            self.assertEqual(build_registries(root), 0)
+            self.assertFalse((root / "registries/concepts.json").exists())
+            self.assertFalse((root / "registries/glossary.json").exists())
+            self.assertEqual(validate(root), [])
+
+            write_artifact(
+                root,
+                "research/concepts/CN-ROS-2026-A1B2--work-item.md",
+                """
+id: CN-ROS-2026-A1B2
+title: Work item
+status: accepted
+related_documents: [GL-ROS-2026-0001]
+""",
+            )
+            write_artifact(
+                root,
+                "research/glossary/GL-ROS-2026-0001--checkpoint.md",
+                """
+id: GL-ROS-2026-0001
+title: Checkpoint
+status: draft
+""",
+            )
+            stale = {finding.path for finding in validate(root) if "stale" in finding.message}
+            self.assertEqual(stale, {"registries/concepts.json", "registries/glossary.json"})
+            self.assertEqual(build_registries(root), 0)
+            self.assertEqual(validate(root), [])
+
+    def test_concept_and_glossary_rules_match_other_kinds(self) -> None:
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            (root / "registries").mkdir()
+            write_artifact(
+                root,
+                "research/concepts/CN-ROS-2026-A1B2--work-item.md",
+                """
+id: CN-ROS-2026-A1B2
+title: Work item
+status: canonical
+related_documents: [GL-ROS-2026-FFFF]
+""",
+            )
+            write_artifact(
+                root,
+                "research/glossary/wrong-name.md",
+                """
+id: GL-ROS-2026-0002
+title: Misnamed
+status: accepted
+""",
+            )
+            findings = {(f.path, f.field, f.message) for f in validate(root, check_registries=False)}
+            self.assertEqual(
+                findings,
+                {
+                    ("research/concepts/CN-ROS-2026-A1B2--work-item.md", "related_documents", "broken reference 'GL-ROS-2026-FFFF'"),
+                    ("research/concepts/CN-ROS-2026-A1B2--work-item.md", "status", "'canonical' is not allowed for CN"),
+                    ("research/glossary/wrong-name.md", "id", "filename must start with 'GL-ROS-2026-0002--'"),
+                },
+            )

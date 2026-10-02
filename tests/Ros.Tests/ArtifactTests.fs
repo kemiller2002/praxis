@@ -282,4 +282,145 @@ module ArtifactTests =
                     | outcome -> failwith $"Expected the pending transaction to be replayed, received {outcome}"
 
                     Assert.equal expected (File.ReadAllText registry)
-                    Assert.isTrue (not (File.Exists transaction)) "the transaction must be completed") } ]
+                    Assert.isTrue (not (File.Exists transaction)) "the transaction must be completed") }
+          { Name = "concept and glossary kinds have documented roots, optional registries and their own statuses"
+            Run = fun () ->
+                let kind prefix = ArtifactKinds.configurations |> List.find (fun configuration -> configuration.IdentifierPrefix = prefix)
+                let concept = kind "CN"
+                let glossary = kind "GL"
+                Assert.equal (ArtifactKind.Concept, "research/concepts", "registries/concepts.json", true) (concept.Kind, concept.SourceDirectory, concept.RegistryPath, concept.OptionalRegistry)
+                Assert.equal (ArtifactKind.Glossary, "research/glossary", "registries/glossary.json", true) (glossary.Kind, glossary.SourceDirectory, glossary.RegistryPath, glossary.OptionalRegistry)
+                Assert.equal (Some concept) (ArtifactKinds.tryFindByIdentifier "CN-ROS-2026-A1B2")
+                Assert.equal (Some glossary) (ArtifactKinds.tryFindByIdentifier "GL-ROS-2026-0001") }
+          { Name = "concept and glossary records are discovered, registered, checked for staleness and validated like other kinds"
+            Run = fun () ->
+                withFixture "valid-all-kinds" (fun fixture ->
+                    let write (relative: string) (text: string) =
+                        let path = Path.Combine(fixture, relative)
+                        Directory.CreateDirectory(Path.GetDirectoryName path) |> ignore
+                        File.WriteAllText(path, text)
+
+                    let repository = FileArtifactRepository.create fixture
+
+                    // With no records, neither optional registry is required.
+                    match ArtifactOperations.checkRegistries repository with
+                    | RegistryCheckOutcome.Completed findings -> Assert.empty findings
+                    | outcome -> failwith $"Expected a clean check, received {outcome}"
+
+                    write "research/concepts/CN-ROS-2026-A1B2--work-item.md" "---\nid: CN-ROS-2026-A1B2\ntitle: Work item\nstatus: accepted\nrelated_documents: [GL-ROS-2026-0001]\n---\n# Work item\n"
+                    write "research/glossary/GL-ROS-2026-0001--checkpoint.md" "---\nid: GL-ROS-2026-0001\ntitle: Checkpoint\nstatus: draft\n---\n# Checkpoint\n"
+                    Assert.empty (artifactFindings repository)
+
+                    match ArtifactOperations.checkRegistries repository with
+                    | RegistryCheckOutcome.Completed findings ->
+                        Assert.equal [ "registries/concepts.json"; "registries/glossary.json" ] (findings |> List.map _.Path |> List.sort)
+                    | outcome -> failwith $"Expected stale findings, received {outcome}"
+
+                    match ArtifactOperations.buildRegistries false repository with
+                    | RegistryBuildOutcome.Completed changes -> Assert.equal 2 changes.Length
+                    | outcome -> failwith $"Expected a completed build, received {outcome}"
+
+                    let concepts = JsonDocument.Parse(File.ReadAllText(Path.Combine(fixture, "registries", "concepts.json")))
+                    Assert.equal "CN-ROS-2026-A1B2" (concepts.RootElement[0].GetProperty("id").GetString())
+                    Assert.equal "research/concepts/CN-ROS-2026-A1B2--work-item.md" (concepts.RootElement[0].GetProperty("path").GetString())
+
+                    match ArtifactOperations.checkRegistries repository with
+                    | RegistryCheckOutcome.Completed findings -> Assert.empty findings
+                    | outcome -> failwith $"Expected a current registry, received {outcome}"
+
+                    write "research/glossary/GL-ROS-2026-0001--checkpoint.md" "---\nid: GL-ROS-2026-0001\ntitle: Durable checkpoint\nstatus: draft\n---\n"
+
+                    match ArtifactOperations.checkRegistries repository with
+                    | RegistryCheckOutcome.Completed findings -> Assert.equal [ "registries/glossary.json" ] (findings |> List.map _.Path)
+                    | outcome -> failwith $"Expected a stale glossary registry, received {outcome}"
+
+                    // Identifier, filename, status and reference rules apply.
+                    write "research/concepts/CN-ROS-2026-A1B2--work-item.md" "---\nid: CN-ROS-2026-A1B2\ntitle: Work item\nstatus: canonical\nrelated_documents: [GL-ROS-2026-FFFF]\n---\n"
+                    write "research/glossary/wrong-name.md" "---\nid: GL-ROS-2026-0002\ntitle: Misnamed\nstatus: accepted\n---\n"
+                    write "research/glossary/GL-bad--term.md" "---\nid: GL-bad\ntitle: Bad\n---\n"
+
+                    Assert.equal
+                        [ "research/concepts/CN-ROS-2026-A1B2--work-item.md", "related_documents", "broken reference 'GL-ROS-2026-FFFF'"
+                          "research/concepts/CN-ROS-2026-A1B2--work-item.md", "status", "'canonical' is not allowed for CN"
+                          "research/glossary/GL-bad--term.md", "id", "invalid identifier 'GL-bad'"
+                          "research/glossary/wrong-name.md", "id", "filename must start with 'GL-ROS-2026-0002--'" ]
+                        (artifactFindings repository |> List.map (fun finding -> finding.Path, finding.Field, finding.Message))) }
+          { Name = "concept and glossary records are subject to the provenance policy"
+            Run = fun () ->
+                withFixture "valid-all-kinds" (fun fixture ->
+                    let path = Path.Combine(fixture, "research", "concepts", "CN-ROS-2026-A1B2--work-item.md")
+                    Directory.CreateDirectory(Path.GetDirectoryName path) |> ignore
+                    File.WriteAllText(path, "---\nid: CN-ROS-2026-A1B2\ntitle: Work item\nstatus: accepted\ncreated: 2026-10-02\n---\n")
+
+                    let documents =
+                        match (FileArtifactRepository.create fixture).Load() with
+                        | Ok load -> load.Documents
+                        | Error failure -> failwith failure.Message
+
+                    let request: Ros.Domain.Provenance.ProvenanceValidationRequest =
+                        { Policy = { Enforced = true; RequiredFrom = Some "2026-01-01"; RequireOriginator = Ros.Domain.Provenance.ProvenancePolicy.defaultRequireOriginator }
+                          Documents = documents
+                          Executions = Map.empty
+                          KnownIdentifiers = Set.empty }
+
+                    let findings = Ros.Domain.Provenance.ProvenanceValidation.findings request
+
+                    Assert.isTrue
+                        (findings |> List.exists (fun finding -> finding.Path = "research/concepts/CN-ROS-2026-A1B2--work-item.md" && finding.Field = "provenance"))
+                        $"expected a provenance finding for the concept, got %A{findings}") }
+          { Name = "the Python artifact oracle enumerates the same kinds, directories, registries and statuses as the F# model"
+            Run = fun () ->
+                let script =
+                    "import json, sys; sys.path.insert(0, 'tools'); import ros_cli as c; "
+                    + "print(json.dumps({'kinds': sorted([d, r, p, n in c.OPTIONAL_REGISTRY_KINDS] for n, (d, r, p) in c.KIND_CONFIG.items()), "
+                    + "'statuses': {k: sorted(v) for k, v in c.ALLOWED_STATUS.items()}, 'pattern': c.ID_RE.pattern}))"
+
+                let startInfo = Diagnostics.ProcessStartInfo("python3")
+                startInfo.WorkingDirectory <- root ()
+                startInfo.RedirectStandardOutput <- true
+                startInfo.RedirectStandardError <- true
+                [ "-c"; script ] |> List.iter startInfo.ArgumentList.Add
+                use child = Diagnostics.Process.Start startInfo
+                let output = child.StandardOutput.ReadToEnd()
+                child.WaitForExit()
+                Assert.equal 0 child.ExitCode
+                use oracle = JsonDocument.Parse output
+
+                let oracleKinds =
+                    oracle.RootElement.GetProperty("kinds").EnumerateArray()
+                    |> Seq.map (fun entry -> entry[0].GetString(), entry[1].GetString(), entry[2].GetString(), entry[3].GetBoolean())
+                    |> Seq.toList
+
+                let modelKinds =
+                    ArtifactKinds.configurations
+                    |> List.map (fun configuration -> configuration.SourceDirectory, configuration.RegistryPath, configuration.IdentifierPrefix, configuration.OptionalRegistry)
+                    |> List.sort
+
+                Assert.equal modelKinds oracleKinds
+
+                // Every prefix the identifier pattern admits is a governed kind, and vice versa.
+                let pattern = oracle.RootElement.GetProperty("pattern").GetString()
+                let start = pattern.IndexOf("(?:(", StringComparison.Ordinal) + 4
+                let admitted = pattern.Substring(start, pattern.IndexOf(")", start, StringComparison.Ordinal) - start).Split('|') |> Set.ofArray
+                Assert.equal (modelKinds |> List.map (fun (_, _, prefix, _) -> prefix) |> Set.ofList) admitted
+
+                // Each governed prefix agrees on its allowed statuses (an absent entry means none are enforced).
+                let oracleStatuses =
+                    oracle.RootElement.GetProperty("statuses").EnumerateObject()
+                    |> Seq.map (fun property -> property.Name, property.Value.EnumerateArray() |> Seq.map _.GetString() |> Set.ofSeq)
+                    |> Map.ofSeq
+
+                for _, _, prefix, _ in modelKinds do
+                    let identifier = $"{prefix}-ROS-2026-0001"
+                    let document status =
+                        { RelativePath = $"x/{identifier}--x.md"
+                          FileName = $"{identifier}--x.md"
+                          Metadata = Map.ofList [ "id", ArtifactValue.Text identifier; "title", ArtifactValue.Text "x"; "status", ArtifactValue.Text status ] }
+
+                    match oracleStatuses.TryFind prefix with
+                    | Some statuses ->
+                        for status in statuses do
+                            Assert.empty (ArtifactPolicy.validate [] [ document status ])
+
+                        Assert.isTrue (not (ArtifactPolicy.validate [] [ document "not-a-status" ]).IsEmpty) $"{prefix} accepted an unknown status"
+                    | None -> Assert.empty (ArtifactPolicy.validate [] [ document "not-a-status" ]) } ]

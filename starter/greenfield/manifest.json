@@ -198,6 +198,21 @@
     },
     {
       "source": "starter/greenfield/empty.keep",
+      "destination": "research/concepts/.gitkeep",
+      "template": false
+    },
+    {
+      "source": "starter/greenfield/empty.keep",
+      "destination": "research/glossary/.gitkeep",
+      "template": false
+    },
+    {
+      "source": "starter/greenfield/empty.keep",
+      "destination": "research/requirements/.gitkeep",
+      "template": false
+    },
+    {
+      "source": "starter/greenfield/empty.keep",
       "destination": "missions/active/.gitkeep",
       "template": false
     },

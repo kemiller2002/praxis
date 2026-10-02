@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 ID_RE = re.compile(
-    r"^(?:(RP|JR|EV|HY|TH|EX|DF|CN|GL|MS)-[A-Z0-9]+(?:-[A-Z0-9]+)*-[0-9]{4}-(?:[0-9]{4}|[A-F0-9]{4})|RP-[0-9]{4}-[0-9]{2}-[0-9]{2}-[A-Z0-9]+(?:-[A-Z0-9]+)*)$"
+    r"^(?:(RP|JR|EV|HY|TH|EX|DF|CN|GL|MS|RQ)-[A-Z0-9]+(?:-[A-Z0-9]+)*-[0-9]{4}-(?:[0-9]{4}|[A-F0-9]{4})|RP-[0-9]{4}-[0-9]{2}-[0-9]{2}-[A-Z0-9]+(?:-[A-Z0-9]+)*)$"
 )
 REFERENCE_FIELDS = {
     "contradicts",
@@ -41,6 +41,9 @@ ALLOWED_STATUS = {
     "MS": {"proposed", "approved", "active", "blocked", "completed", "cancelled", "archived"},
     "RP": {"draft", "review", "accepted", "canonical", "deprecated", "archived", "superseded", "withdrawn"},
     "TH": {"candidate", "supported", "established", "challenged", "superseded", "rejected"},
+    "RQ": {"draft", "proposed", "accepted", "implemented", "verified", "deprecated", "superseded", "rejected"},
+    "CN": {"draft", "review", "accepted", "superseded", "withdrawn"},
+    "GL": {"draft", "review", "accepted", "superseded", "withdrawn"},
 }
 CONFIDENCE = {"very-low", "low", "medium", "medium-high", "high", "very-high"}
 
@@ -53,7 +56,13 @@ KIND_CONFIG = {
     "missions": ("missions", "registries/missions.json", "MS"),
     "research-packages": ("research/packages", "registries/research-packages.json", "RP"),
     "theories": ("research/theories", "registries/theories.json", "TH"),
+    "requirements": ("research/requirements", "registries/requirements.json", "RQ"),
+    "concepts": ("research/concepts", "registries/concepts.json", "CN"),
+    "glossary": ("research/glossary", "registries/glossary.json", "GL"),
 }
+# Kinds added after installations existed: with no documents their registry
+# file is optional (mirrors ArtifactKindConfiguration.OptionalRegistry).
+OPTIONAL_REGISTRY_KINDS = {"requirements", "concepts", "glossary"}
 
 
 @dataclass(frozen=True)
@@ -266,9 +275,11 @@ def registry_entries(artifacts: list[Artifact], artifact_prefix: str) -> list[di
 
 def rendered_registries(root: Path, artifacts: list[Artifact]) -> dict[Path, str]:
     rendered: dict[Path, str] = {}
-    for _, registry, artifact_prefix in KIND_CONFIG.values():
+    for name, (_, registry, artifact_prefix) in KIND_CONFIG.items():
         path = root / registry
         entries = registry_entries(artifacts, artifact_prefix)
+        if not entries and name in OPTIONAL_REGISTRY_KINDS and not path.exists():
+            continue
         rendered[path] = json.dumps(entries, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
     return rendered
 
