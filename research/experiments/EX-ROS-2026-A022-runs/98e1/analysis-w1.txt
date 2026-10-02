@@ -1,0 +1,167 @@
+Architecture analysis: PRAXIS-CTL-02
+=====================================
+
+Item: PRAXIS-CTL-02 "Typed control-plane read API for work state and legal actions"
+Branch: experiment/a022-run-98e1, base commit f806f817e4656e00550313d839b59ceea87a682d
+Source of the criteria: ./praxis work show PRAXIS-CTL-02 (backlog description).
+Requirements covered: PRX-CTL-005 and PRX-CTL-011, requirements/EXECUTION-ORCHESTRATION.md:323 and :422.
+
+1. Item and acceptance criteria
+-------------------------------
+
+Obligation: `praxis web serve` answers GET /api/work and GET /api/work/ID by
+relaying the CLI's `work list` / `work show` JSON (src/Ros.Cli/WebInterface.fs:700
+`execute`, :705-706). That JSON has no version and no contract type of its own;
+it is assembled ad hoc in src/Ros.Cli/Program.fs:726 `workListRowNode`.
+
+Acceptance criteria (verbatim intent, numbered as in the description):
+ AC1 A versioned, documented JSON contract defined in the F# contracts
+     (src/Ros.Contracts) for the work list and for one work item, carrying:
+     identity, semantic state, recorded backlog and live state, legal next
+     actions, and for transitions the kernel refuses where it can say why,
+     that reason.
+ AC2 Obligations and unknowns included where Praxis records them, and reported
+     explicitly as unavailable (not empty) when no source exists.
+ AC3 Read endpoints never write repository state.
+ AC4 An unknown item returns 404 with a structured error body.
+ AC5 Existing /api/work clients keep working, or the change is documented.
+ AC6 Tests.
+
+2. Reuse inventory
+------------------
+
+| Existing element | Location | What it does | Reuse decision |
+|---|---|---|---|
+| WorkListView.mergedRows | src/Ros.Domain/Work/WorkListView.fs:71 | Merges queue.json items and live context items into one row per id: effective status, backlogActions (backlog-only), liveWorkItem.allowedActions | Reused unchanged as the basis of the row identity/status fields; the new projection does not recompute effective status. |
+| QueuePresentation.effectiveStatus | src/Ros.Domain/Work/QueuePresentation.fs | "Live wins unless ready" rule for status | Reused indirectly via mergedRows (the semantic state of the contract is the row's status). |
+| QueueItemDetail / LiveWorkItem | src/Ros.Domain/Work/WorkListView.fs:13, src/Ros.Domain/Work/Plan.fs:7 | Typed backlog record and typed live record (workType, localState, semantic state, evidence, blockReason, timestamps, telemetry execution ids) | Reused as the recorded-backlog and recorded-live inputs; mergedRows loses the raw queue status and the live record's extra fields, so the projection takes these records directly as well. |
+| WorkTransition.allowedActions / decide | src/Ros.Domain/Work/Model.fs:42, :60 | The live-work kernel: legal actions per state; rejections IllegalTransition, BlockReasonRequired, AbandonReasonRequired, MissingEvidence | Reused: legality and refusal reasons are obtained by asking `decide`, not by a second table. |
+| BacklogTransition.allowedActions / decide | src/Ros.Domain/Work/Backlog.fs:95, :102 | The backlog kernel; rejections IllegalTransition, BlockReasonRequired | Reused the same way for backlog-only items. |
+| BacklogState.parse / BacklogAction.code | src/Ros.Domain/Work/Backlog.fs | Codes for backlog states/actions | Reused for codes. A queue status that does not parse is reported as an unknown, not guessed. |
+| WorkListView private semanticStateCode/actionCode | src/Ros.Domain/Work/WorkListView.fs:47-60 | Live state / action codes | Private, and already duplicated in QueuePresentation (grep -rn "semanticStateCode" src shows two copies). Extended: made public as `WorkListView.stateCode` / `WorkListView.actionCode` and reused, so no third copy is written. |
+| FileWorkListRepository.readListView / readShowView | src/Ros.Infrastructure/Work/FileWorkListRepository.fs:124, :129 | Pure-read of .ros/context/current.json and .ros/work/queue.json (+ items/ID.md detail) | Extended: a new read returning the raw sources (queue items, context items, detail) so the projection can see recorded backlog status and live fields. No writes. |
+| FileWorkConfigRepository.readCompletionEvidence | src/Ros.Infrastructure/Work/FileWorkConfigRepository.fs:223 | Required completion evidence per work type (default implementation+tests) — the same set `work complete` enforces | Reused as the obligation source for completion evidence. |
+| FileWorkConfigRepository.readRequireDurableCheckpoint | src/Ros.Infrastructure/Work/FileWorkConfigRepository.fs:66 | Whether completion/blocking require a durable checkpoint | Reused as the second obligation source. |
+| Ordo HandoffAuthority (Unknowns, Obligations) | src/Ros.Domain/Ordo/Model.fs:226-241, src/Ros.Application/Ordo/Operations.fs:67 | Handoff projection with caller-supplied unknowns/obligations | Not reused: computed on demand from command-line arguments, never persisted and not keyed by work item (Operations.fs:67-93; no store in src/Ros.Infrastructure/Ordo/FileObservationRepository.fs). It is therefore not a recorded per-item source; unknowns are reported unavailable with that reason. |
+| CheckpointCommands obligations node | src/Ros.Cli/CheckpointCommands.fs:887-890 | `work continue --json` reports requiredEvidenceForCompletion | Same source (readCompletionEvidence); the contract uses the same evidence-type list so the two surfaces agree. |
+| Contract module style | src/Ros.Contracts/Work/WorkGroupJson.fs | `schemaVersion`, small node builders (text/optionalText/array/record) | Followed: new src/Ros.Contracts/Work/WorkStateJson.fs with the same builder style. |
+| HttpMessages.jsonNode / jsonError | src/Ros.Cli/WebHttp.fs:134, :136 | JSON responses, `{"error": "..."}` | jsonNode reused; the structured error body keeps the `error` key so existing clients reading `error` continue to work. |
+| WebInterface.route / handle | src/Ros.Cli/WebInterface.fs:169, :764 | Pure routing to WebRoute, effects in handle | Extended with versioned read routes; routing stays pure and unit-tested. |
+| Program.runWorkList filtering | src/Ros.Cli/Program.fs:788 | --tag (AND) / --status filtering over merged rows | Moved into the domain as `WorkListView.filter` and reused by both the CLI and the versioned API so the two filters cannot drift. |
+| Test harness | tests/Ros.Tests/WebInterfaceTests.fs (ServedProcess, withServer, Http helpers), tests/Ros.Tests/CliHarness.fs:77-116 | Starts the real server against a temporary initialized repository | Reused for the HTTP tests; pure projection tests use the existing Assert/TestCase style. |
+
+3. Invariants and shared infrastructure
+---------------------------------------
+
+- One authority for legality: the kernel `decide` functions. The read API never
+  states an action is legal unless `decide` would allow it for that state, and
+  never invents a refusal reason the kernel does not give (PRX-CTL-006).
+- One authority for row identity/status: WorkListView.mergedRows. The versioned
+  contract and `work list` must report the same ids and the same status.
+- Which kernel governs an item: a live context item governs whenever one exists
+  (mergedRows emits backlogActions only for backlog-only ids). The contract
+  states this explicitly as `governedBy: "live" | "backlog"`.
+- Reads are pure: the versioned endpoints read files in-process through the
+  Infrastructure read functions; no CLI subprocess, no lock, no event append.
+- Shared infrastructure touched: WebInterface routing (shared with the HTML UI
+  and the legacy API), Program.fs work list (filter extraction). Both keep their
+  existing outputs byte-for-byte.
+
+4. Design
+---------
+
+Contract (Ros.Contracts.Work.WorkStateJson, contract id "praxis.work-state",
+version 1):
+
+  list document:
+    { "contract": "praxis.work-state", "version": 1, "kind": "work-list",
+      "items": [ WorkItemState, ... ] }
+  item document:
+    { "contract": "praxis.work-state", "version": 1, "kind": "work-item",
+      "item": WorkItemState }
+
+  WorkItemState:
+    id, title, semanticState (the merged status), governedBy ("live"|"backlog"),
+    backlog: null | { status, blockedReason, tags, priority, description,
+                      attachments: [ {id,name,size,contentType,uploadedAt} ] }
+    live:    null | { localState, semanticState, workType, blockReason,
+                      evidence: [ {type,path} ], updatedAt, completedAt,
+                      telemetryExecutionIds }
+    actions: [ { action, legal: true, requires: { reason: bool,
+                 evidenceTypes: [..] } }
+             | { action, legal: false, refusal: { code, message } } ]
+       every action of the governing kernel's alphabet is listed; legal ones
+       carry what the kernel will demand, refused ones the kernel's reason.
+    obligations: { availability: "available", source: [...], items: [
+                     { code: "completion-evidence", evidenceTypes, description },
+                     { code: "durable-checkpoint", description } ] }
+               | { availability: "unavailable", reason }
+    unknowns:    { availability: "unavailable", reason }  (no per-item source
+                 exists today) | { availability: "available", items: [...] }
+       An unparseable recorded backlog status is reported as an unknown item
+       (availability available) because Praxis cannot say what is legal.
+    detail (item document only): the items/ID.md text or null.
+
+Domain (Ros.Domain.Work.WorkStateView, pure):
+  - `actionsFor` derives action availability by probing the kernel: decide with
+    a reason and the full required evidence -> IllegalTransition => refused with
+    reason; otherwise legal, and a second probe without a reason tells whether a
+    reason is required; required evidence is the configured set.
+  - `obligationsFor` from (live record, required evidence, durable-checkpoint
+    flag): non-terminal live items owe completion evidence (and a durable
+    checkpoint when configured); terminal live items owe nothing (available,
+    empty); backlog-only items: completion evidence depends on the work type,
+    which is fixed only at start, so obligations are "unavailable" with that
+    reason rather than an empty list that would claim none exist.
+  - `project` builds every WorkItemState from mergedRows + sources.
+
+Store: no new store; read-only access to .ros/work/queue.json,
+.ros/context/current.json, .ros/work/items/ID.md, ros.json.
+
+Validation rules: none new. Error model: unknown id -> 404
+  { "contract": "praxis.error", "version": 1, "code": "work-item-not-found",
+    "error": "work item 'X' was not found", "workItemId": "X" };
+  unreadable state -> 500 code "work-state-unreadable". The legacy
+  GET /api/work/ID also answers an unknown id with this 404 body (today 400).
+Transaction boundaries: none — reads only, no lock taken.
+
+Routes: GET /api/v1/work?tag=T&status=S, GET /api/v1/work/ID.
+
+5. Compatibility
+----------------
+
+- GET /api/work, /api/work/ready, /api/work/ID keep their exact current shape
+  (CLI relay). The only change: an unknown ID on GET /api/work/ID is 404 instead
+  of 400; the body still has the `error` string and gains structured fields.
+  Documented in docs/web-interface.md.
+- `work list` / `work show` CLI output unchanged (the filter is moved, not
+  changed). The HTML UI is unchanged.
+- New routes are additive under /api/v1/; a future breaking change bumps
+  `version` and the path.
+
+6. Tests
+--------
+
+- Pure: projection over hand-built queue/context records — backlog-only item in
+  each backlog state (legal actions + refusals), live item in each state,
+  reason/evidence requirements, obligations available/unavailable, unknown
+  backlog status reported as an unknown, mergedRows agreement.
+- Contract: rendered JSON carries contract/version/kind and the documented
+  field names; unavailable is an object with availability "unavailable", never [].
+- Routing: /api/v1/work and /api/v1/work/ID map to the new routes.
+- HTTP (real server): list and item documents; unknown id -> 404 structured on
+  both v1 and legacy routes; repository files byte-identical before/after a
+  sequence of GETs (AC3); legacy /api/work shape still an array of rows (AC5).
+
+7. Risks
+--------
+
+- Drift between the read model and the CLI's real guards: `work complete` also
+  enforces durable checkpoints and git-path evidence checks outside the pure
+  kernel. Mitigation: those are reported as obligations, not as legality.
+- Live "abandon" requires a reason in the kernel; the web UI's abandon form
+  routes to backlog-transition. Out of scope; the contract reports the kernel.
+- The legacy 400->404 change could affect a client that matched on 400;
+  documented.
+- Status mismatch between merged semanticState and the raw backlog status is
+  intended (both are reported) but could confuse clients; documented.
