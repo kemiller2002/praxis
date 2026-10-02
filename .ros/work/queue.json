@@ -4052,6 +4052,30 @@
       },
       "source": "PRAXIS-PLAN-EXP-03",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-EXP-04",
+      "title": "Build and freeze the EX-ROS-2026-A023 affinity/scale instrument, then run its target inventory",
+      "description": "Implement the preregistered A023 instrument (signals A1-A8, generic-element exclusion, structural affinity A_b, high/low/medium rules, scale measures and S/M/L classes) with tests and a --check reproduction, under research/experiments/EX-ROS-2026-A023-setup/ as plain text; freeze it by hash; then inventory candidate repositories at frozen SHAs and record whether the minimum design (2 high + 2 low blocks in one scale class) exists. If not, set EX-ROS-2026-A023 to blocked. Do not change the preregistered rules; do not create, ready, or split work in any candidate repository. Signal enters only after its GH-5 baseline lands through its own lifecycle.",
+      "tags": [
+        "planning",
+        "experiment"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-02T12:36:30.000Z",
+      "updatedAt": "2026-10-02T12:36:30.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "PRAXIS-PLAN-EXP-03",
+      "sourceReference": null
     }
   ]
 }

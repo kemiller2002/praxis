@@ -16,6 +16,8 @@ related_documents:
   - EV-ROS-2026-A064
   - EV-ROS-2026-A070
   - EX-ROS-2026-A022
+  - EX-ROS-2026-A023
+  - EV-ROS-2026-A072
   - HY-ROS-2026-A029
 supersedes: []
 superseded_by: []
@@ -73,6 +75,16 @@ provenance:
         runtime: chatgpt
       reason: "Updated the grouping hypothesis with the R2 replication evidence and the next falsification test."
       evidence: [EV-ROS-2026-A070]
+    EXE-20261002T122339366Z-b15d6ac8:
+      operations: [modified]
+      at: 2026-10-02T12:36:08.000Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Linked EX-ROS-2026-A023 and EV-ROS-2026-A072; confidence unchanged"
 ---
 
 # Hypothesis

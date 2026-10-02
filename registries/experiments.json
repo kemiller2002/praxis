@@ -209,5 +209,66 @@
       "HY-ROS-2026-A029"
     ],
     "title": "Work affinity by execution mode: grouped versus independent 2x2 replication"
+  },
+  {
+    "created": "2026-10-02",
+    "derived_from": [
+      "EX-ROS-2026-A022",
+      "EV-ROS-2026-A072"
+    ],
+    "id": "EX-ROS-2026-A023",
+    "inputs": [
+      "EV-ROS-2026-A064",
+      "EV-ROS-2026-A070",
+      "EV-ROS-2026-A072"
+    ],
+    "outputs": [],
+    "path": "research/experiments/EX-ROS-2026-A023--affinity-moderation-across-repository-blocks.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261002T122339366Z-b15d6ac8": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-02T12:36:06.000Z",
+          "evidence": [
+            "EV-ROS-2026-A072"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "Preregistered the blocked multi-repository follow-on to A022: within-repository grouped/independent contrasts, repository as blocking factor, frozen measured affinity, scale classes and a setup-adjusted ratio"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A022",
+      "EX-ROS-2026-A021",
+      "HY-ROS-2026-A028",
+      "HY-ROS-2026-A029",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "docs/planning.md"
+    ],
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "proposed",
+    "tags": [
+      "planning",
+      "grouping",
+      "affinity",
+      "experiment",
+      "blocked-design",
+      "multi-repository",
+      "falsification"
+    ],
+    "tests_hypotheses": [
+      "HY-ROS-2026-A029",
+      "HY-ROS-2026-A028"
+    ],
+    "title": "Affinity moderation of grouped execution across repository blocks"
   }
 ]
