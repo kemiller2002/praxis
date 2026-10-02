@@ -6062,7 +6062,27 @@
       "updatedAt": "2026-10-02T12:23:38.000Z",
       "telemetryExecutionIds": [
         "EXE-20261002T122339366Z-b15d6ac8"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "a22668fb25037e0d8c8de658",
+        "recordedAt": "2026-10-02T12:27:13.000Z",
+        "executionId": "EXE-20261002T122339366Z-b15d6ac8",
+        "repository": "repository-operating-system",
+        "branch": "research/a022-target-gate-outcome",
+        "commit": "999016638710c835b517a3801c57be9a16445f88",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "research/a022-target-gate-outcome",
+        "remoteCommit": "999016638710c835b517a3801c57be9a16445f88",
+        "summary": "Inventory of 14 repositories re-verified through Praxis 3.6.0 at frozen SHAs (0 eligible, max ready=1); Signal structure, scale and planner outputs captured under research/experiments/EX-ROS-2026-A022-target-gate/",
+        "nextAction": "Investigate Signal GH-5 queue.md/current.json discrepancy, then write the gate-outcome evidence record and update EX-ROS-2026-A022",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     }
   ],
   "protocolVersion": "1.0.0",
