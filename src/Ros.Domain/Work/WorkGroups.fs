@@ -322,7 +322,7 @@ module GroupCheckpointRejection =
 
 [<RequireQualifiedAccess>]
 module WorkGroups =
-    let private groupIdPattern = Regex("^GROUP-[A-Z0-9]+(-[A-Z0-9]+)*$", RegexOptions.CultureInvariant)
+    let private groupIdPattern = Regex(@"^GROUP-[A-Z0-9]+(-[A-Z0-9]+)*\z", RegexOptions.CultureInvariant)
 
     let isValidGroupId (value: string) = groupIdPattern.IsMatch value
 

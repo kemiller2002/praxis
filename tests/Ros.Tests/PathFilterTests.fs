@@ -30,6 +30,12 @@ module PathFilterTests =
               fun () ->
                   for pattern, value, expected in cases do
                       Assert.equal expected (PathFilter.globMatch pattern value) }
+          { Name = "glob match covers the whole path: a trailing newline is not absorbed by the end anchor"
+            Run =
+              fun () ->
+                  for pattern, value in [ "*.md", "README.md"; ".ros/context/**", ".ros/context/current.json"; "src/*.ts", "src/foo.ts" ] do
+                      Assert.equal true (PathFilter.globMatch pattern value)
+                      Assert.equal false (PathFilter.globMatch pattern (value + "\n")) }
           { Name = "default config marks a path meaningful only outside every ignored pattern"
             Run =
               fun () ->

@@ -7,13 +7,13 @@ open System.Text.RegularExpressions
 module ArtifactPolicy =
     let private identifierPattern =
         Regex(
-            "^(?:(RP|JR|EV|HY|TH|EX|DF|CN|GL|MS|RQ)-[A-Z0-9]+(?:-[A-Z0-9]+)*-[0-9]{4}-(?:[0-9]{4}|[A-F0-9]{4})|RP-[0-9]{4}-[0-9]{2}-[0-9]{2}-[A-Z0-9]+(?:-[A-Z0-9]+)*|(?:RP|REP)-[A-Z0-9]+(?:-[A-Z0-9]+)*-[0-9]{4}-[0-9]{3})$",
+            @"^(?:(RP|JR|EV|HY|TH|EX|DF|CN|GL|MS|RQ)-[A-Z0-9]+(?:-[A-Z0-9]+)*-[0-9]{4}-(?:[0-9]{4}|[A-F0-9]{4})|RP-[0-9]{4}-[0-9]{2}-[0-9]{2}-[A-Z0-9]+(?:-[A-Z0-9]+)*|(?:RP|REP)-[A-Z0-9]+(?:-[A-Z0-9]+)*-[0-9]{4}-[0-9]{3})\z",
             RegexOptions.CultureInvariant
         )
 
     let private legacyResearchPackagePattern =
         Regex(
-            "^(?:RP-[0-9]{4}-[0-9]{2}-[0-9]{2}-[A-Z0-9]+(?:-[A-Z0-9]+)*|(?:RP|REP)-[A-Z0-9]+(?:-[A-Z0-9]+)*-[0-9]{4}-[0-9]{3})$",
+            @"^(?:RP-[0-9]{4}-[0-9]{2}-[0-9]{2}-[A-Z0-9]+(?:-[A-Z0-9]+)*|(?:RP|REP)-[A-Z0-9]+(?:-[A-Z0-9]+)*-[0-9]{4}-[0-9]{3})\z",
             RegexOptions.CultureInvariant
         )
 

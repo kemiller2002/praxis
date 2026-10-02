@@ -29,7 +29,7 @@ module TelemetryValidation =
     let violatesCostUnit (definitionUnit: string) (unit: string option) (currency: string option) : bool =
         definitionUnit = "currency"
         && (unit <> Some "currency"
-            || not (currency |> Option.map (fun code -> Regex.IsMatch(code, "^[A-Z]{3}$")) |> Option.defaultValue false))
+            || not (currency |> Option.map (fun code -> Regex.IsMatch(code, @"^[A-Z]{3}\z")) |> Option.defaultValue false))
 
     let private nonEmpty (value: string option) : string option = value |> Option.filter (fun s -> s <> "")
 
@@ -76,7 +76,7 @@ module TelemetryValidation =
               "prototype-proof-of-concept"
               "administrative-process" ]
 
-    let private classificationExtensionRegex = Regex(@"^x-[a-z0-9][a-z0-9._-]*(?:/[a-z0-9][a-z0-9._-]*)?$", RegexOptions.Compiled)
+    let private classificationExtensionRegex = Regex(@"^x-[a-z0-9][a-z0-9._-]*(?:/[a-z0-9][a-z0-9._-]*)?\z", RegexOptions.Compiled)
 
     let private validClassification (value: string) =
         workClassifications.Contains value || classificationExtensionRegex.IsMatch value
@@ -532,7 +532,7 @@ module TelemetryValidation =
         match executionId with
         | None -> findings.Add(finding relative "executionId" "execution identity is required")
         | Some id ->
-            if not (Regex.IsMatch(id, "^EXE-[A-Za-z0-9._-]+$")) then
+            if not (Regex.IsMatch(id, @"^EXE-[A-Za-z0-9._-]+\z")) then
                 findings.Add(finding relative "executionId" "execution identity must be portable and match ^EXE-[A-Za-z0-9._-]+$")
 
             if IO.Path.GetFileNameWithoutExtension relative <> id then

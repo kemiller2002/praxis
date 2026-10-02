@@ -48,7 +48,7 @@ module ImplementationLanguagePolicy =
         { ProhibitNodeArtifacts = false
           Exceptions = [] }
 
-    let private decisionPattern = Regex(@"^DF-[A-Z0-9]+(-[A-Z0-9]+)+$", RegexOptions.CultureInvariant)
+    let private decisionPattern = Regex(@"^DF-[A-Z0-9]+(-[A-Z0-9]+)+\z", RegexOptions.CultureInvariant)
 
     let private normalize (path: string) = path.Replace('\\', '/')
 

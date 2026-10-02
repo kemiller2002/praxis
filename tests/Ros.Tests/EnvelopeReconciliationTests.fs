@@ -98,6 +98,29 @@ module EnvelopeReconciliationTests =
     let tests =
         [ { Name = "reconciliation accepts a legal envelope"
             Run = fun () -> Assert.equal Accept (EnvelopeReconciliation.decide envelope observed) }
+          { Name = "reconciliation rejects a transaction id, work item, base commit, or currency with a trailing newline"
+            Run = fun () ->
+                let findingsOf candidate =
+                    match EnvelopeReconciliation.decide candidate observed with
+                    | Reject findings -> findings
+                    | _ -> []
+
+                let expectFinding candidate expected =
+                    Assert.isTrue (findingsOf candidate |> List.contains expected) $"missing finding %A{expected}"
+
+                expectFinding { envelope with TransactionId = "tx-1\n" } (InvalidTransactionId "tx-1\n")
+                expectFinding { envelope with WorkItem = "WI-0064\n"; Branch = "WI-0064\n" } (InvalidWorkItemId "WI-0064\n")
+                expectFinding { envelope with BaseCommit = String.replicate 40 "a" + "\n" } (InvalidBaseCommit(String.replicate 40 "a" + "\n"))
+
+                let costing currency =
+                    let cost =
+                        { MeasurementId = "MEAS-COST"; MetricId = "cost.step_total"; Value = Some 0.12; Unit = Some "currency"; Currency = Some currency
+                          Quality = Some "reported"; Availability = "reported"; RawJson = "{}" }
+
+                    { stepEnvelope with Execution = Some { stepEnvelope.Execution.Value with Steps = [ { validStep with Measurements = [ cost ] } ] } }
+
+                Assert.equal Accept (EnvelopeReconciliation.decide (costing "USD") observed)
+                expectFinding (costing "USD\n") (InvalidStepStructure "STEP-1:MEAS-COST:cost-currency-required") }
           { Name = "reconciliation rejects claimed work-item branch mismatch"
             Run = fun () ->
                 match EnvelopeReconciliation.decide { envelope with Branch = "main" } observed with

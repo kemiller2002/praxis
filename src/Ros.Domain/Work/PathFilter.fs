@@ -52,7 +52,7 @@ module PathFilter =
         let withDoubleStarPlaceholder = escaped.Replace("**", doubleStarPlaceholder)
         let withSingleStarExpanded = withDoubleStarPlaceholder.Replace("*", "[^/]*")
         let withDoubleStarExpanded = withSingleStarExpanded.Replace(doubleStarPlaceholder, ".*")
-        $"^{withDoubleStarExpanded}$"
+        $"^{withDoubleStarExpanded}\\z"
 
     let globMatch (pattern: string) (value: string) =
         Regex.IsMatch(value, toRegexPattern pattern)

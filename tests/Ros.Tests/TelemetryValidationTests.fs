@@ -248,6 +248,30 @@ module TelemetryValidationTests =
                       (fieldsOf (runOne { validRecord with Classification = Some { validClassification with Types = Some [ Some "not-real" ] } }))
                   Assert.equal [] (runOne { validRecord with Classification = Some { validClassification with Types = Some [ Some "x-custom/thing" ] } }) }
 
+          { Name = "an x- classification extension with a trailing newline is not a known classification"
+            Run =
+              fun () ->
+                  Assert.equal
+                      [ "invalid work classification 'x-custom/thing\n'" ]
+                      (runOne { validRecord with Classification = Some { validClassification with Types = Some [ Some "x-custom/thing\n" ] } }
+                       |> List.map (fun f -> f.Message)) }
+
+          { Name = "an execution id with a trailing newline is not portable, even when the file name carries the same newline"
+            Run =
+              fun () ->
+                  let lineBroken = { validRecord with ExecutionId = Some "EXE-TEST-0001\n"; Relative = ".ros/telemetry/executions/EXE-TEST-0001\n.json" }
+
+                  Assert.isTrue
+                      (runOne lineBroken
+                       |> List.exists (fun f -> f.Field = "executionId" && f.Message.StartsWith "execution identity must be portable"))
+                      "expected the portability finding for a line-broken execution id" }
+
+          { Name = "a cost currency with a trailing newline violates the cost unit rule; the same code without it does not"
+            Run =
+              fun () ->
+                  Assert.isTrue (not (TelemetryValidation.violatesCostUnit "currency" (Some "currency") (Some "USD"))) "USD is a valid currency"
+                  Assert.isTrue (TelemetryValidation.violatesCostUnit "currency" (Some "currency") (Some "USD\n")) "a line-broken currency must be refused" }
+
           { Name = "research-development classification requires at least one factual-uncertainty flag"
             Run =
               fun () ->

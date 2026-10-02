@@ -20,7 +20,7 @@ type ContributionOperation =
 [<RequireQualifiedAccess>]
 module ContributionOperation =
     let private extensionPattern =
-        Regex("^x-[a-z0-9][a-z0-9-]*$", RegexOptions.CultureInvariant)
+        Regex(@"^x-[a-z0-9][a-z0-9-]*\z", RegexOptions.CultureInvariant)
 
     let code operation =
         match operation with
@@ -65,13 +65,13 @@ type Contribution =
 [<RequireQualifiedAccess>]
 module Contribution =
     let private executionPattern =
-        Regex("^EXE-[A-Za-z0-9._-]+$", RegexOptions.CultureInvariant)
+        Regex(@"^EXE-[A-Za-z0-9._-]+\z", RegexOptions.CultureInvariant)
 
     let private contributionKeyPattern =
-        Regex("^CTB-[A-Za-z0-9._-]+$", RegexOptions.CultureInvariant)
+        Regex(@"^CTB-[A-Za-z0-9._-]+\z", RegexOptions.CultureInvariant)
 
     let private timestampPattern =
-        Regex("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{1,9})?Z$", RegexOptions.CultureInvariant)
+        Regex(@"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{1,9})?Z\z", RegexOptions.CultureInvariant)
 
     let isExecutionId (value: string) = executionPattern.IsMatch value
 

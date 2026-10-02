@@ -108,6 +108,23 @@ module ArtifactTests =
                 Assert.equal true (ArtifactPolicy.isValidIdentifier "REP-NHEA-2026-001")
                 Assert.equal false (ArtifactPolicy.isValidIdentifier "EV-EDF-2026-001")
                 ArtifactPolicy.validate [] legacyResearchPackageDocuments |> Assert.empty }
+          { Name = "artifact identifiers with a trailing newline are invalid, and do not qualify for the legacy file-name rule"
+            Run = fun () ->
+                Assert.equal true (ArtifactPolicy.isValidIdentifier "EV-TEST-2026-A001")
+                Assert.equal false (ArtifactPolicy.isValidIdentifier "EV-TEST-2026-A001\n")
+                Assert.equal false (ArtifactPolicy.isValidIdentifier "RP-EDF-2026-002\n")
+
+                let lineBroken =
+                    { RelativePath = "research/packages/RP-EDF-2026-002\n.md"
+                      FileName = "RP-EDF-2026-002\n.md"
+                      Metadata =
+                        Map.ofList
+                            [ "id", ArtifactValue.Text "RP-EDF-2026-002\n"
+                              "title", ArtifactValue.Text "Legacy EDF research package" ] }
+
+                let messages = ArtifactPolicy.validate [] [ lineBroken ] |> List.map (fun finding -> finding.Message)
+                Assert.isTrue (messages |> List.contains "invalid identifier 'RP-EDF-2026-002\n'") "expected the identifier finding"
+                Assert.isTrue (messages |> List.contains "filename must start with 'RP-EDF-2026-002\n--'") "the legacy name rule must not apply" }
           { Name = "valid fixture passes typed artifact validation"
             Run = fun () ->
                 withFixture "valid-all-kinds" (fun fixture ->

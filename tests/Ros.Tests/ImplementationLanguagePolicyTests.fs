@@ -108,6 +108,15 @@ module ImplementationLanguagePolicyTests =
                         "implementationPolicy.exceptions[1].path" ]
                       fields }
 
+          { Name = "configuration: an exception decision with a trailing newline does not cite a DF- decision"
+            Run =
+              fun () ->
+                  let policyCiting decision = { enforced with Exceptions = [ { Path = "ok.js"; Decision = decision } ] }
+                  let fieldsFor decision = ImplementationLanguagePolicy.configurationFindings (policyCiting decision) |> List.map (fun finding -> finding.Field)
+
+                  Assert.equal [] (fieldsFor "DF-ROS-2026-A999")
+                  Assert.equal [ "implementationPolicy.exceptions[0].decision" ] (fieldsFor "DF-ROS-2026-A999\n") }
+
           { Name = "architecture check: fails with exact offending paths and exit 1 when Node artifacts are present"
             Run =
               fun () ->

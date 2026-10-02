@@ -143,6 +143,33 @@ module ProvenanceTests =
                   Assert.equal None (ActorKind.tryParse "robot")
                   Assert.equal None (ActorKind.tryParse "x-")
                   Assert.isTrue (ActorKind.resolve (Some "robot") "any" |> Result.isError) "an invalid explicit kind must be rejected, never coerced" }
+          { Name = "an actor kind extension with a trailing line break is rejected, the same extension without one is still accepted"
+            Run =
+              fun () ->
+                  Assert.equal (Some(ActorKind.Extension "x-agent")) (ActorKind.tryParse "x-agent")
+
+                  for suffix in [ "\n"; "\r"; "\r\n" ] do
+                      Assert.equal None (ActorKind.tryParse ("x-agent" + suffix))
+                      Assert.isTrue (ActorKind.resolve (Some("x-agent" + suffix)) "any" |> Result.isError) "a line-broken explicit kind must be rejected" }
+          { Name = "a contribution operation extension with a trailing newline is rejected"
+            Run =
+              fun () ->
+                  Assert.equal (Some(ContributionOperation.Extension "x-audit")) (ContributionOperation.tryParse "x-audit")
+                  Assert.equal None (ContributionOperation.tryParse "x-audit\n") }
+          { Name = "contribution keys and timestamps with a trailing newline are rejected"
+            Run =
+              fun () ->
+                  let execution = "EXE-20261002T145702173Z-32f2c5a6"
+                  let contribution = "CTB-20261002-0001"
+                  let timestamp = "2026-10-02T14:57:01.000Z"
+                  Assert.isTrue (Contribution.isExecutionId execution) "a portable execution id is accepted"
+                  Assert.isTrue (Contribution.isValidKey execution) "an execution key is accepted"
+                  Assert.isTrue (Contribution.isValidKey contribution) "a contribution key is accepted"
+                  Assert.isTrue (Contribution.isTimestamp timestamp) "an ISO-8601 UTC timestamp is accepted"
+                  Assert.isTrue (not (Contribution.isExecutionId (execution + "\n"))) "execution id with a trailing newline"
+                  Assert.isTrue (not (Contribution.isValidKey (execution + "\n"))) "execution key with a trailing newline"
+                  Assert.isTrue (not (Contribution.isValidKey (contribution + "\n"))) "contribution key with a trailing newline"
+                  Assert.isTrue (not (Contribution.isTimestamp (timestamp + "\n"))) "timestamp with a trailing newline" }
           { Name = "agent identity is resolved from a known agent runtime without fabricating the model"
             Run =
               fun () ->

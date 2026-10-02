@@ -135,6 +135,14 @@ module WorkGroupTests =
               let crossRepository = { request "GROUP-AREA-003" [ "ITEM-1"; "ELSE-1" ] with CrossRepository = true }
               Assert.equal [] (codes (WorkGroups.create (context []) crossRepository)))
 
+          t "group and member IDs with a trailing newline are invalid; the same IDs without it are accepted" (fun () ->
+              Assert.isTrue (WorkGroups.isValidGroupId "GROUP-AREA-004") "a group ID is accepted"
+              Assert.isTrue (not (WorkGroups.isValidGroupId "GROUP-AREA-004\n")) "a line-broken group ID is refused"
+              Assert.isTrue (WorkItemId.isValid "ITEM-1") "a work item ID is accepted"
+              Assert.isTrue (not (WorkItemId.isValid "ITEM-1\n")) "a line-broken work item ID is refused"
+              Assert.equal [ "invalid-group-id" ] (codes (WorkGroups.create (context []) (request "GROUP-AREA-004\n" [ "ITEM-1" ])))
+              Assert.equal [ "invalid-member-id" ] (codes (WorkGroups.create (context []) (request "GROUP-AREA-004" [ "ITEM-1\n" ]))))
+
           t "a created group records its declaration and a creation entry, and nothing about any member's lifecycle" (fun () ->
               let group = created "GROUP-AREA-001" [ "ITEM-2"; "ITEM-1" ]
               Assert.equal [ "ITEM-2"; "ITEM-1" ] group.Declaration.Members
