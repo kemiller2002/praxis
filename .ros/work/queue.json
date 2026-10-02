@@ -4032,7 +4032,7 @@
     {
       "id": "PRAXIS-QUEUE-MD-LIVE-STATE",
       "title": "queue.md shows the pre-promotion backlog status after work start/complete until the next backlog write",
-      "description": "Reproduced on Praxis 3.6.0: capture -> ready -> 'work start' leaves .ros/work/queue.md (and queue.json status) at 'ready' while 'work list' reports 'active', because queue.md is regenerated only on backlog-queue writes (FileBacklogQueueRepository) and not on live-context transitions. Observed in kemiller2002/signal at 637218a: GH-5 reads 'ready' in queue.md and 'active' in .ros/context/current.json since 2026-09-22T22:12:02Z. Readers of the human projection (and agents) can mistake in-flight work for ready work. Fix: regenerate queue.md from QueuePresentation.mergedRows on every live transition that changes effective status (start/block/resume/complete/abandon), with a test. Evidence: research/experiments/EX-ROS-2026-A022-target-gate/signal/gh5-state-investigation.md.",
+      "description": "Reproduced on Praxis 3.6.0: capture -> ready -> 'work start' leaves .ros/work/queue.md (and queue.json status) at 'ready' while 'work list' reports 'active', because queue.md is regenerated only on backlog-queue writes (FileBacklogQueueRepository) and not on live-context transitions. Observed in kemiller2002/signal at 637218a: GH-5 reads 'ready' in queue.md and 'active' in .ros/context/current.json since 2026-09-22T22:12:02Z. Readers of the human projection (and agents) can mistake in-flight work for ready work. Fix: regenerate queue.md from QueuePresentation.mergedRows on every live transition that changes effective status (start/block/resume/complete/abandon), with a test. Evidence: research/experiments/EX-ROS-2026-A022-target-gate/signal/gh5-state-investigation.txt.",
       "tags": [
         "work",
         "backlog"
@@ -4041,7 +4041,7 @@
       "status": "captured",
       "attachments": [],
       "createdAt": "2026-10-02T12:29:46.000Z",
-      "updatedAt": "2026-10-02T12:29:46.000Z",
+      "updatedAt": "2026-10-02T12:32:27.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

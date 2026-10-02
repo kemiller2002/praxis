@@ -166,17 +166,36 @@
             "created"
           ],
           "reason": "Created the pre-registered 2x2 high/low-affinity by grouped/independent falsification experiment."
+        },
+        "EXE-20261002T122339366Z-b15d6ac8": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-02T12:32:12.000Z",
+          "evidence": [
+            "EV-ROS-2026-A072"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "Set status blocked and appended the 2026-10-02 target-selection outcome; preregistered protocol sections unchanged"
         }
       }
     },
     "related_documents": [
       "requirements/PLANNING-WORK-GROUPS.md",
       "HY-ROS-2026-A028",
-      "HY-ROS-2026-A029"
+      "HY-ROS-2026-A029",
+      "EV-ROS-2026-A072",
+      "EX-ROS-2026-A023"
     ],
     "related_theories": [],
     "research_area": "repository-operating-system",
-    "status": "proposed",
+    "status": "blocked",
     "tags": [
       "planning",
       "grouping",
