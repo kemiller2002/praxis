@@ -84,12 +84,13 @@
 | PRAXIS-PLAN-08 | Land the EX-ROS-2026-A021 evaluation kit and second blind evaluation on main | complete | planning, grouping | medium |
 | PRAXIS-PLAN-EXP-01 | Run grouping experiment EX-ROS-2026-A021: control arm, grouped arm, blind evaluation, telemetry comparison | complete | planning, experiment | medium |
 | PRAXIS-PLAN-EXP-02 | Preserve A021 R2 replication and pre-register the affinity falsification experiment | complete | planning,experiment | medium |
-| PRAXIS-PLAN-EXP-03 | Record A022 target-gate result and design affinity follow-on experiment | ready | planning, experiment | medium |
+| PRAXIS-PLAN-EXP-03 | Record A022 target-gate result and design affinity follow-on experiment | active | planning, experiment | medium |
 | PRAXIS-PR92-ID-RENUMBER | Renumber PR #92's DF/RQ records that collide with main's (A042/A043, RQ A022/A023) | complete | pr92, decision | high |
 | PRAXIS-PR92-POSTMERGE-FENCE | On the reconciled branch, write post-merge tests P1-P7 from EV-ROS-2026-A060 section 6 and re-point PraxisCli to praxis.dll | complete | pr92, testing | high |
 | PRAXIS-PR92-PREMERGE-REGRESSION-FENCE | Regression fence before reconciling PR #92 with main | complete | testing, pr92 | high |
 | PRAXIS-PR92-PREMERGE-RENAME-FENCE | Harden Praxis rename invariants on PR #92 before main is reconciled | complete | testing, pr92 | high |
 | PRAXIS-PR92-RECONCILE | Reconcile PR #92 (F#-only cleanup, Praxis rename) with current main | complete | pr92 | high |
+| PRAXIS-QUEUE-MD-LIVE-STATE | queue.md shows the pre-promotion backlog status after work start/complete until the next backlog write | captured | work, backlog | low |
 | PRAXIS-RELEASE-BUMP-WORKFLOW | Release workflow: one-click version bump that publishes | complete | release | high |
 | PRAXIS-REMOTE-01 | Remote protocol v1 contract: schemas, typed domain model, validation, fingerprint, decision order | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-02 | Remote provenance roles: asserted request actor, observed executor, transport principal | complete | remote-execution, gh-90 | high |
