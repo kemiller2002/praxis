@@ -7,6 +7,7 @@ let main _ =
     @ ArtifactTests.tests
     @ PersistenceTests.tests
     @ GitTests.tests
+    @ UpstreamSyncTests.tests
     @ WorkTests.tests
     @ EnvelopeReconciliationTests.tests
     @ WorkPlanTests.tests

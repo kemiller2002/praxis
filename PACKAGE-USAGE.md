@@ -70,6 +70,13 @@ install-native.sh / install-native.ps1   (or a project's ./praxis on first use)
 F# domain and application core
 ```
 
+Agent sessions use the same executable to keep upstream drift bounded. Run
+`praxis sync check --start` at startup, repeat `praxis sync check` after 30
+minutes of elapsed wall time at a safe boundary, and run it immediately before
+final validation. It fetches the configured branch and reports drift/overlap;
+it never pulls, merges, rebases, stashes, resets, or edits working files. See
+`docs/work-protocol.md`.
+
 No Node.js, npm or .NET installation is needed on the consuming machine. The
 binary carries the scaffold it installs, compiled in, so a repository's own
 `./praxis` can run `init` and `upgrade` with no package on disk and no network.

@@ -3979,6 +3979,31 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "WI-UPSTREAM-SYNC-20261001",
+      "title": "Add elapsed-time upstream synchronization policy and drift reporting",
+      "description": null,
+      "tags": [
+        "governance",
+        "git",
+        "agents"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-02T09:56:29.061Z",
+      "updatedAt": "2026-10-02T10:26:25.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

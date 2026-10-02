@@ -2,7 +2,7 @@
 id: GV-START-001
 title: Agent Startup Guide
 status: canonical
-version: 1.10.1
+version: 1.11.0
 owners:
   - repository-governance
 created: 2026-07-22
@@ -20,6 +20,28 @@ related_documents:
   - docs/remote-agent-contract.md
   - docs/remote-protocol.md
 tags: [governance, agents, startup, provenance]
+provenance:
+  contributions:
+    EXE-20261001T120908481Z-a6b1be1d:
+      operations: [modified]
+      at: 2026-10-01T13:58:10.000Z
+      actor:
+        kind: agent
+        id: openai/codex
+        provider: openai
+        model: unknown
+        runtime: codex
+      reason: "Adopt the 30-minute elapsed-time upstream synchronization rule and safe integration boundaries"
+    EXE-20261002T095646730Z-345f9f99:
+      operations: [modified]
+      at: 2026-10-02T09:57:17.000Z
+      actor:
+        kind: agent
+        id: openai/codex
+        provider: openai
+        model: unknown
+        runtime: codex
+      reason: "Adopt the 30-minute elapsed-time upstream synchronization rule and safe integration boundaries"
 ---
 
 # Agent Startup Guide
@@ -55,6 +77,7 @@ Apply, in descending order: explicit user instruction; applicable safety, legal,
 - Do not silently change canonical policy. Propose or record the change, its evidence, consequences, version, and migration path.
 - Do not claim a test passed unless it ran and passed. Name skipped or unavailable checks and their implications.
 - Treat execution telemetry as evidence: discover capabilities, distinguish zero from unavailable, preserve normalized and sanitized raw provider data, prefer deterministic collection, and never invent a metric.
+- Keep upstream drift bounded: start with `./praxis sync check --start`, repeat the fetch-only check whenever 30 minutes have elapsed since the last successful check, and integrate upstream changes at a safe work boundary before final validation.
 - Not every edit needs a REP. Use the artifact threshold in the Agent Operating Manual.
 
 ## Handoff
@@ -66,6 +89,34 @@ For substantial work, record: objective; work completed; files changed; decision
 Before meaningful mutation, identify the external work item and run `./praxis work begin --id ID --occurred-at TIMESTAMP` (see the F# CLI note below for the timestamp — it must be the real current time, not an arbitrary one). That transition starts an execution-telemetry record; inspect `./praxis work context ID`, classify the work, and ingest runtime telemetry that the current environment can expose. For substantial execution, use `./praxis step begin --name "..." --occurred-at TIMESTAMP` and `./praxis step complete --occurred-at TIMESTAMP` around meaningful plan units; do not create command-level noise or retroactive steps. Preserve unknown provider fields through the sanitized raw layer and record unsupported/unavailable capability explicitly. Perform the bounded work, gather configured evidence, commit and push it, record a durable checkpoint (see "Durable checkpoints and continuity" below), request a legal transition with `./praxis work complete --id ID --occurred-at TIMESTAMP --evidence TYPE=PATH` (repeatable; finalizes active telemetry), then run `./praxis registry build` and `./praxis validate`, and commit and push the resulting Praxis state. Attribute canonical records you create or change with `./praxis provenance record` (see Agent Identity and Provenance below). Use `./praxis work block --id ID --occurred-at TIMESTAMP --reason TEXT` and `./praxis work resume --id ID --occurred-at TIMESTAMP` rather than hand-editing context. Use `./praxis status` when resuming unfamiliar work. Meaningful committed changes require machine-readable attribution; see `docs/work-protocol.md` and `docs/development-telemetry.md`. If meaningful changes were committed while no work item was active, reconcile them after the fact with `./praxis work reconcile --id ID --reason TEXT --commit REV --occurred-at TIMESTAMP` (Git-evidenced, recorded as post-hoc, never a substitute for beginning work). Never touch, rewrite, or recommit files to manufacture attribution, and never create a work item only to absorb changes.
 
 No externally-assigned ID yet? Check `./praxis work ready` for capturable, unblocked repository work before assuming none exists, and use `./praxis add "..."` to record a newly discovered obligation instead of leaving it as an unfiled comment or dropped observation (`add` does not require `--occurred-at`; it defaults to the real current time). `./praxis work start --id ID --occurred-at TIMESTAMP` (`begin` is also accepted) promotes a ready backlog item into the protocol above. This local backlog is repository-scoped triage, not a project-management system; see the "Local backlog" section of `docs/work-protocol.md`.
+
+## Upstream synchronization and bounded drift
+
+Long-running or stalled agents must not assume their starting view of `main`
+is still current. After selecting the worktree and before meaningful mutation,
+run `./praxis sync check --start`. Repeat `./praxis sync check` at coherent work
+boundaries whenever 30 minutes of wall-clock time have elapsed since the last
+successful check. Waiting on tools, external systems, or the user counts toward
+that elapsed time. Also run it immediately before final validation and handoff.
+
+The check performs a bounded `git fetch` of the configured upstream and writes
+only per-worktree Git metadata. It never pulls, merges, rebases, switches,
+stashes, resets, discards, commits, or edits working files. `./praxis sync
+status` and the additive `upstreamSync` block in `./praxis status` report the
+starting and current upstream commits, elapsed freshness, ahead/behind counts,
+incoming and local paths, exact overlap, and whether final validation can be
+claimed against the fetched upstream snapshot. A failed check does not reset
+the 30-minute clock.
+
+When upstream advanced, stop at the next safe boundary, inspect overlap, and
+integrate according to the repository's branch policy while preserving user
+work. Re-run affected tests after integration. Do not begin final validation
+while the report is stale, unavailable, or behind. If integration is unsafe or
+blocked, record the exact condition and hand off instead of forcing it. A fresh
+report proves only the latest successfully fetched snapshot; no local tool can
+prove that a remote did not move immediately afterward. Configure the policy at
+`workProtocol.upstreamSync` in `ros.json`; repositories with no usable upstream
+must disable it explicitly and record that limitation.
 
 ## Durable checkpoints and continuity
 

@@ -404,6 +404,18 @@ git commit -am "Implement capability boundary" && git push
 ./praxis work context WORK-ID --text      # latest recoverable checkpoint and current state
 ```
 
+**Bounded upstream drift.** Start a work session with `praxis sync check
+--start`, repeat `praxis sync check` at a safe boundary whenever 30 minutes of
+wall-clock time have elapsed since the last successful fetch, and check again
+immediately before final validation. Stalls and waits count. The command never
+pulls or integrates automatically; it reports ahead/behind state and exact path
+overlap so the agent can preserve user work and integrate deliberately.
+
+```bash
+./praxis sync check --start --json
+./praxis sync status --json
+```
+
 See [`docs/work-protocol.md`](docs/work-protocol.md) and, for a UI over the same
 backlog, [`docs/web-interface.md`](docs/web-interface.md) (`./praxis web serve`).
 

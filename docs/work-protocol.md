@@ -60,6 +60,69 @@ delivery that never happened.
 - `--reason` is required, and completed or already abandoned work cannot be
   abandoned.
 
+## Upstream synchronization and bounded drift
+
+Upstream synchronization is a fetch-only elapsed-time guard (`DF-GOV-014`).
+It is separate from durable checkpoints: upstream checks happen on a clock,
+while durable checkpoints happen only at coherent recovery boundaries.
+
+```bash
+./praxis sync check --start --json   # startup: fetch and record the baseline
+./praxis sync status --json          # read-only; never contacts the remote
+./praxis sync check --json           # when due, and before final validation
+```
+
+The default configuration for new repositories is:
+
+```json
+{
+  "workProtocol": {
+    "upstreamSync": {
+      "enabled": true,
+      "remote": "origin",
+      "branch": "main",
+      "maxAgeMinutes": 30
+    }
+  }
+}
+```
+
+The interval is wall-clock elapsed time from the last successful fetch.
+Waiting, a stalled tool, a suspended executor, and time spent awaiting user
+input all count. A failed attempt is recorded but does not reset the clock.
+Run the due check at the next safe boundary rather than interrupting a
+non-atomic command. Run it immediately before final validation and handoff
+even if another boundary is not due.
+
+`sync check` fetches only the configured branch, with prompts disabled and a
+bounded timeout. It updates Git remote-tracking metadata and stores its state
+at `git rev-parse --git-path praxis/upstream-sync.json`; it never dirties the
+checkout. It does not pull, merge, rebase, switch, stash, reset, discard,
+commit, or push. `sync status` makes no network request. Both commands report:
+
+- the configured remote, branch, remote-tracking ref, and maximum age;
+- last attempt and last successful check, elapsed milliseconds, due time, and
+  stale state;
+- HEAD, the upstream commit at session start, and the current fetched upstream
+  commit;
+- ahead/behind counts and whether integration is required;
+- incoming paths, upstream paths changed since session start, local committed
+  and uncommitted paths, and their exact intersection;
+- `safeForFinalValidation` / `validationAgainstCurrentUpstream`.
+
+When the report is behind, integrate at a coherent boundary according to the
+repository's branch policy, preserve user work, then rerun affected tests and
+the final check. Exact overlap is a warning signal, not a proof that a merge
+will or will not conflict. A stale, unavailable, failed, or behind report is
+never safe for final validation. If integration cannot be performed safely,
+block or hand off with the exact condition instead of forcing it. A fresh
+report is evidence about the most recently fetched snapshot only; a remote can
+move after any observation. Repositories without a usable upstream set
+`enabled` to `false` and record that limitation.
+
+`./praxis status` includes the same read-only report as additive
+`upstreamSync` output; it does not fetch.
+
 ## Durable checkpoints and continuity
 
 **An executor session is disposable. Repository state and Praxis state are

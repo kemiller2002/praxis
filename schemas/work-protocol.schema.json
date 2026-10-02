@@ -25,6 +25,18 @@
           "type": "object",
           "properties": {"requireDurableCheckpoint": {"type": "boolean"}},
           "additionalProperties": true
+        },
+        "upstreamSync": {
+          "description": "Elapsed-time upstream synchronization policy (DF-GOV-014). The clock is measured from the last successful fetch; failed checks do not reset it. Checks fetch only and never merge, rebase, pull, stash, reset, or alter working files.",
+          "type": "object",
+          "required": ["enabled", "remote", "branch", "maxAgeMinutes"],
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "remote": {"type": "string", "minLength": 1},
+            "branch": {"type": "string", "minLength": 1},
+            "maxAgeMinutes": {"type": "number", "exclusiveMinimum": 0}
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": true
