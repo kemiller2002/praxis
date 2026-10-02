@@ -456,12 +456,12 @@ module WebInterfaceTests =
                       Assert.equal 400 (Http.status after)
                       Http.contains "abandoned" (Http.text (Http.json after) "error")) }
 
-          { Name = "web serve: an unknown item is a clean 400 and title text is stored, never executed"
+          { Name = "web serve: an unknown item is a clean 404 and title text is stored, never executed"
             Run =
               fun () ->
                   withServer (fun root server ->
                       let missing = server.Get "/api/work/NOPE-0001"
-                      Assert.equal 400 (Http.status missing)
+                      Assert.equal 404 (Http.status missing)
                       Http.contains "not found" (Http.text (Http.json missing) "error")
                       let marker = Path.Combine(root, "pwned")
                       let dangerous = $"; touch {marker} #`touch {marker}` $(touch {marker})"

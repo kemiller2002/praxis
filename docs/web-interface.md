@@ -73,7 +73,10 @@ work list/show, validate --json, status --json  (the kernel)
   maps each operation to its argument vector; no shell is involved, so no
   title or description can be interpreted as shell syntax). A request that
   would fail on the CLI fails the same way over HTTP, with the same message.
-  Mutations answer with the item's `work show` record.
+  Mutations answer with the item's `work show` record. The exception is the
+  versioned read routes (`/api/v1/work`, below). They read the recorded
+  state in-process through the same repository readers and transition
+  kernels the CLI uses, and never write.
 - **Pure core, effects at the edge.** Routing, form and `multipart/form-data`
   parsing, the operation-to-command mapping, and HTML rendering (which
   escapes every repository-provided value) are pure functions with unit
@@ -124,6 +127,71 @@ Errors are `4xx` with `{"error": "..."}`, where the message is the CLI's own
 `ERROR` line; an unknown `/api/...` route is `404`, as is an unknown
 attachment.
 
+`GET /api/work/:id` for an id Praxis does not know answers `404` with the
+structured error body described below (it was `400` before the versioned
+contract existed). The body still carries the message in `error`, so a client
+that only reads `error` keeps working; a client that matched on status `400`
+for a missing item must accept `404`.
+
+## Versioned work-state contract (`/api/v1/work`)
+
+The `/api/work` reads above relay the CLI's `work list`/`work show` output
+unchanged and unversioned. The control-plane read routes return a typed,
+versioned contract instead (`praxis.work-state`, version `1`, defined in
+`src/Ros.Contracts/Work/WorkStateJson.fs` over the projection
+`src/Ros.Domain/Work/WorkStateView.fs`):
+
+| Method | Path | Answers |
+|---|---|---|
+| `GET` | `/api/v1/work?tag=T&status=S` | `{contract, version, kind: "work-list", items: [WorkItemState]}`; `tag`/`status` filter exactly as `work list --tag/--status` |
+| `GET` | `/api/v1/work/:id` | `{contract, version, kind: "work-item", item: WorkItemState + detail}` |
+
+These routes only read `.ros/work/queue.json`, `.ros/context/current.json`,
+`.ros/work/items/ID.md` and `ros.json` in-process. They run no command, take
+no lock and write nothing.
+
+`WorkItemState`:
+
+| Field | Meaning |
+|---|---|
+| `id`, `title` | Identity. |
+| `semanticState` | The merged status `work list` reports for the item. |
+| `governedBy` | `"live"` when the item is in the live context (the live work kernel decides its actions), else `"backlog"`. |
+| `backlog` | The recorded backlog entry (`status`, `blockedReason`, `description`, `tags`, `priority`, `attachments`), or `null` for an item that was started without being captured. |
+| `live` | The recorded live entry (`localState`, `semanticState`, `workType`, `blockReason`, `evidence`, `updatedAt`, `completedAt`, `telemetryExecutionIds`), or `null` for a backlog-only item. |
+| `actions` | Every action of the governing kernel (live: `begin`, `block`, `resume`, `complete`, `abandon`; backlog: `ready`, `block`, `start`, `abandon`). A legal action is `{action, legal: true, requires: {reason, evidenceTypes}}`, stating whether the kernel demands a reason and which completion evidence types. A refused action is `{action, legal: false, refusal: {code, message}}` with the kernel's reason (`illegal-transition`). Legality comes from the kernels' own `decide`, so it cannot disagree with the CLI. |
+| `obligations` | What Praxis records the item still owes: `completion-evidence` (from `workProtocol.completionEvidence` for the item's work type) and `durable-checkpoint` (when `workProtocol.continuity.requireDurableCheckpoint` is set). Terminal items owe nothing. |
+| `unknowns` | Material unknowns Praxis records for the item. |
+| `detail` | Item documents only: the `items/ID.md` text, or `null`. |
+
+`obligations` and `unknowns` are never a bare list. They are either
+`{availability: "available", sources: [...], items: [...]}` (possibly with no
+items) or `{availability: "unavailable", reason: "..."}` when Praxis has no
+source for them. Today Praxis records no per-item unknowns, so `unknowns` is
+unavailable, except that a backlog status Praxis does not recognise is reported
+as an `unrecognized-backlog-status` unknown (and no actions are offered). A
+backlog-only item's obligations are unavailable because they depend on the
+work type, which is fixed when the item is started.
+
+The `durable-checkpoint` obligation and the CLI's checks of evidence paths are
+enforced by `work complete`, not by the transition kernel, so they appear as
+obligations rather than as reasons an action is refused.
+
+Errors use one structured body:
+
+```json
+{ "contract": "praxis.error", "version": 1, "code": "work-item-not-found",
+  "error": "work item 'X' was not found", "workItemId": "X" }
+```
+
+`404` with `work-item-not-found` for an unknown id (on `/api/v1/work/:id` and
+`/api/work/:id`), and `500` with `work-state-unreadable` when the recorded
+state cannot be read.
+
+Adding a field is not a breaking change. Removing or renaming a field, or
+changing a field's meaning, increments `version` and is served under a new
+`/api/vN/` path.
+
 ## Tests
 
 `tests/Ros.Tests/WebInterfaceTests.fs` unit-tests the pure pieces (escaping,
@@ -136,3 +204,10 @@ multipart uploads (several files, custom names, duplicate display names,
 byte-for-byte download), the HTML form flows (capture with a file, redirects
 carrying the CLI's own errors, clearing tags, completing with evidence), and
 that no page carries script and hostile titles are escaped.
+
+`tests/Ros.Tests/WorkStateViewTests.fs` covers the work-state contract: legal
+actions and refusals against both kernels in every state, the requirements a
+legal action reports, obligations and unknowns (available and unavailable),
+agreement with `work list`, the rendered JSON, routing, and over HTTP the
+versioned routes, the structured `404` on both item routes, the legacy shapes,
+and that every repository file is byte-identical after the read routes run.

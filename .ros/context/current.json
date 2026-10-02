@@ -5849,7 +5849,27 @@
       "updatedAt": "2026-10-02T14:57:20.000Z",
       "telemetryExecutionIds": [
         "EXE-20261002T145721438Z-8a26e86f"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "b2c1b5b7fab9f70e28b6f357",
+        "recordedAt": "2026-10-02T15:05:05.000Z",
+        "executionId": "EXE-20261002T145721438Z-8a26e86f",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a022-run-98e1",
+        "commit": "748389b77d3978ce02c4761d874df0e1931dfb1e",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a022-run-98e1",
+        "remoteCommit": "748389b77d3978ce02c4761d874df0e1931dfb1e",
+        "summary": "work-state v1 contract, domain projection and /api/v1/work routes implemented and pushed",
+        "nextAction": "add tests and docs, verify acceptance criteria",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     }
   ],
   "protocolVersion": "1.0.0",

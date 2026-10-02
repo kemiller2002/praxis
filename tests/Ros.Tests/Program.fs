@@ -58,6 +58,7 @@ let main _ =
     @ WorkReconciliationEffectTests.tests
     @ ImplementationLanguagePolicyTests.tests
     @ WebInterfaceTests.tests
+    @ WorkStateViewTests.tests
     @ HubTests.tests
     @ WorkDecisionCliTests.tests
     @ WorkTelemetryCliTests.tests
