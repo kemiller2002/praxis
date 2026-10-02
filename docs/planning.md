@@ -3,7 +3,9 @@
 The planner reads a repository's work state and recommends an execution
 strategy. It is **advisory and read-only** (PRX-PLAN-001): it never starts,
 completes, blocks, reprioritizes or reconciles work, never creates branches,
-launches agents or writes `.ros/`, and every command prints to stdout only.
+launches agents or writes `.ros/`, and every command prints to stdout only --
+except `plan record-error`, which a caller runs explicitly to append one
+estimate-error measurement to `.ros/planning/estimate-error.jsonl`.
 Requirements: [`requirements/PLANNING-OPTIMIZATION.md`](../requirements/PLANNING-OPTIMIZATION.md).
 Decision: `DF-ROS-2026-A046`. First shadow experiment: `EV-ROS-2026-A058`.
 
@@ -17,6 +19,8 @@ praxis plan simulate  [--for baseline|speed|balanced|cost|max-parallel]
 praxis plan compare   [--max-concurrency N] [--json]   every strategy, Pareto frontier, concurrency curve
 praxis plan explain   ID [--json]                      why an item is (not) scheduled, under every strategy
 praxis plan replay    [--details] [--json]             historical replay without hindsight
+praxis plan record-error [--as-of TIMESTAMP] [--json]  opt-in: store this replay's error summary (writes)
+praxis plan error-history [--details] [--json]         recorded error over time; stale measurements marked
 praxis plan freshness --plan FILE [--json]             is a saved plan stale; what happened since
 praxis plan groups    [--json]                         evidence-based work groups (see "Work groups")
 praxis plan explain-group GROUP-ID [--json]            why a group exists, what it excludes, what would change it
@@ -28,7 +32,8 @@ Common options: `--observations FILE` (external CI/GitHub evidence, below),
 `--config FILE` (planner configuration, below), `--as-of TIMESTAMP` (pin the
 planning timestamp, for reproducible documents). In this checkout use `./ros
 plan ...`. Exit codes: `0` success, `1` input could not be read, `2` invalid
-arguments, `3` (`freshness` only) the plan is stale.
+arguments, `3` (`freshness` only) the plan is stale, `6` (`record-error` only)
+the repository has no commit to key a measurement by.
 
 Typical use: `praxis plan analyze` first; reconcile what it reports as stale;
 then `praxis plan compare` to see the tradeoffs; `praxis plan simulate --for
@@ -84,7 +89,8 @@ Every field is optional; the defaults are shown.
                           "implementationInProgress": [0.25, 0.75], "unclassified": [0.10, 0.90] },
   "dependencies": [ { "from": "B", "to": "A", "kind": "hard" } ],
   "conflicts": [ { "left": "A", "right": "B", "reason": "both rewrite Program.fs" } ],
-  "areas": { "A": ["src/Ros.Cli"], "B": ["docs/"] } }
+  "areas": { "A": ["src/Ros.Cli"], "B": ["docs/"] },
+  "estimateErrorHorizonDays": 90 }
 ```
 
 ## How it decides
@@ -217,6 +223,25 @@ It also reports observed execution overlap against the baseline's modeled
 concurrency of one, how often backlog creation order matched actual start
 order, and cost evidence.
 
+**Error over time** (PRX-PLAN-170..173). `plan record-error` is the one
+planner command that writes, and only when run explicitly. It replays the
+executions finalized at or before its `--as-of` time and appends one
+measurement to `.ros/planning/estimate-error.jsonl`: overall error and error
+segmented by task class and, where telemetry recorded them, by provider, model
+and runtime (observations of recorded telemetry, never built-in claims about
+any provider). A measurement is keyed by planner version, repository commit
+and as-of time; recording the same key again with identical content writes
+nothing, and a different measurement under an existing key is refused (exit
+`1`). `plan error-history` lists the measurements chronologically with one
+series per segment; a measurement older than `estimateErrorHorizonDays`
+(default 90) before `--as-of` is marked stale and is never authoritative, so
+the authoritative one is the latest inside the horizon, if any. `praxis
+validate` checks every stored line (parseable, id matching its key, full
+commit SHA, timestamp, counts and ratios in range, no duplicates). The store
+is JSON Lines with content-derived ids, so the Praxis state merge driver
+merges two branches' measurements as an append-only log (see
+[`work-protocol.md`](work-protocol.md)).
+
 **Determinism** (PRX-PLAN-002). All ordering is ordinal with explicit
 tie-breaks; no clock is read below the CLI (`--as-of` pins it); JSON field
 order is fixed. The logical plan (everything but the snapshot timestamp) of
@@ -322,7 +347,8 @@ stable for identical inputs only; durable IDs come from declarations.
 
 Every document has `"schema": "praxis.plan/1.0.0"` and a `kind`: `analysis`,
 `plan`, `comparison`, `explanation`, `replay`, `freshness`, `groups`,
-`group-explanation`, `group-plan` or `group-comparison`. `groups` documents
+`group-explanation`, `group-plan`, `group-comparison`,
+`estimate-error-record` or `estimate-error-history`. `groups` documents
 round-trip through `PlanningJson.parseGroups`. Every estimate
 is `{lowerMs, expectedMs, upperMs, confidence, display}` (or `{lower,
 expected, upper, confidence}` with `{amount, currency}` for money) and an
@@ -336,10 +362,10 @@ new identity scheme is introduced (PRX-PLAN-182).
 
 | Tier | Module |
 | --- | --- |
-| Domain | `Ros.Domain.Planning`: `Model`, `History`, `Inventory`, `Graph`, `Snapshot`, `Scheduling`, `Comparison`, `Replay`, `Planner`, `Grouping` |
+| Domain | `Ros.Domain.Planning`: `Model`, `History`, `Inventory`, `Graph`, `Snapshot`, `Scheduling`, `Comparison`, `Replay`, `ErrorHistory`, `Planner`, `Grouping` |
 | Contracts | `Ros.Contracts.Planning.PlanningJson` (render, parse, config and observation inputs) |
 | Application | `Ros.Application.Planning`: `PlanningReadPort`, `PlanningOperations.gather/analyze` |
-| Infrastructure | `Ros.Infrastructure.Planning.FilePlanningRepository` (files, read-only Git) |
+| Infrastructure | `Ros.Infrastructure.Planning.FilePlanningRepository` (files, read-only Git); `FileErrorHistoryRepository` (the one store `record-error` writes) |
 | CLI | `Ros.Cli.PlanCommands` |
 
 No external dependency was added (PRX-PLAN-004).
@@ -365,7 +391,7 @@ No external dependency was added (PRX-PLAN-004).
 | 150-152 | Met, except predicted-vs-actual cost (no cost evidence exists yet). |
 | 160-161 | Met; see `EV-ROS-2026-A058`. |
 | 162 | Mechanism met (`freshness` outcomes); the comparison itself needs time to pass. |
-| 170-173 | Met in replay and drift; error is not yet persisted over time. |
+| 170-173 | Met: replay and drift, and error persisted over time by the opt-in `plan record-error` and reported by `plan error-history`, segmented by task class and recorded provider/model/runtime, with a configurable staleness horizon. |
 | 180-182 | Met. |
 
 ## Work-group requirement status

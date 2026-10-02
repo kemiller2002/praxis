@@ -12,11 +12,13 @@ open Ros.Infrastructure.Planning
 /// `praxis plan ...`: the advisory, read-only planner
 /// (requirements/PLANNING-OPTIMIZATION.md). This module parses, delegates to
 /// the Application/Domain planner over a read-only port, and renders. No
-/// plan command writes anything: output goes to stdout only.
+/// plan command writes anything -- output goes to stdout only -- except the
+/// explicit, opt-in `plan record-error`, which appends one estimate-error
+/// measurement to `.ros/planning/estimate-error.jsonl` (PRX-PLAN-170).
 [<RequireQualifiedAccess>]
 module PlanCommands =
     let usage =
-        "plan analyze|simulate [--groups]|compare [--groups]|explain ID|groups|explain-group GROUP-ID|replay|freshness --plan FILE [--for {baseline|speed|balanced|cost|max-parallel}] [--max-concurrency N] [--budget AMOUNT [--currency CODE]] [--deadline DURATION] [--observations FILE] [--config FILE] [--as-of TIMESTAMP] [--details] [--json]"
+        "plan analyze|simulate [--groups]|compare [--groups]|explain ID|groups|explain-group GROUP-ID|replay|record-error|error-history|freshness --plan FILE [--for {baseline|speed|balanced|cost|max-parallel}] [--max-concurrency N] [--budget AMOUNT [--currency CODE]] [--deadline DURATION] [--observations FILE] [--config FILE] [--as-of TIMESTAMP] [--details] [--json]"
 
     type private Options =
         { Json: bool
@@ -483,6 +485,34 @@ module PlanCommands =
 
         0
 
+    let private tryTimestamp (value: string) =
+        match DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind) with
+        | true, parsed -> Some parsed
+        | _ -> None
+
+    let private errorHistoryText (details: bool) (view: ErrorHistoryView) =
+        let percent (value: decimal option) = value |> Option.map (fun ratio -> $"{Math.Round(ratio * 100m, 1)}%%") |> Option.defaultValue "unknown"
+        let overall (measurement: ErrorMeasurement) = measurement.Segments |> List.tryFind (fun segment -> segment.Dimension = "all")
+
+        [ yield view.Statement
+          yield ""
+          for entry in view.Entries do
+              let summary =
+                  match overall entry.Measurement with
+                  | Some segment -> $"{segment.Predictions} prediction(s), {percent segment.Coverage} within range, median relative error {percent segment.MedianRelativeError}"
+                  | None -> "no overall segment"
+
+              let marker =
+                  if entry.Stale then " (stale)"
+                  elif view.Authoritative |> Option.exists (fun current -> current.Id = entry.Measurement.Id) then " (authoritative)"
+                  else ""
+
+              yield $"{entry.Measurement.AsOf}  planner {entry.Measurement.PlannerVersion}  {summary}{marker}"
+
+              if details then
+                  for segment in entry.Measurement.Segments |> List.filter (fun segment -> segment.Dimension <> "all") do
+                      yield $"    {segment.Dimension}={segment.Value}: {segment.Predictions} prediction(s), {percent segment.Coverage} within range, median relative error {percent segment.MedianRelativeError}" ]
+
     // ---- commands -------------------------------------------------------------
 
     let run (root: string) (version: string) (arguments: string list) : int =
@@ -561,6 +591,42 @@ module PlanCommands =
             withAnalysis root version options (fun input _ ->
                 let report = Replay.replay input.Configuration input.Queue input.Executions
                 emit options (fun () -> PlanningJson.replay report) (fun () -> replayText options.Details report))
+        | "record-error" :: rest ->
+            let options = parse empty rest
+
+            withAnalysis root version options (fun input analysis ->
+                match input.Commit, tryTimestamp analysis.Snapshot.PlannedAt with
+                | None, _ -> fail 6 "plan record-error needs a repository commit to key the measurement; commit first"
+                | _, None -> fail 2 $"invalid as-of time '{analysis.Snapshot.PlannedAt}'"
+                | Some commit, Some asOf ->
+                    let computed = ErrorHistory.measure input.PlannerVersion commit asOf analysis.Snapshot.PlannedAt input.Executions
+
+                    match FileErrorHistoryRepository.record root computed with
+                    | Error message -> fail 1 message
+                    | Ok outcome ->
+                        let line =
+                            match outcome with
+                            | ErrorRecordOutcome.Recorded measurement -> $"recorded estimate-error measurement {measurement.Id} (planner {measurement.PlannerVersion}, commit {measurement.Commit.Substring(0, 12)}, as of {measurement.AsOf})"
+                            | ErrorRecordOutcome.AlreadyRecorded measurement -> $"estimate-error measurement {measurement.Id} is already recorded; nothing written"
+                            | ErrorRecordOutcome.KeyConflict(existing, _) -> $"a different measurement {existing.Id} is already recorded for this planner version, commit and as-of time; nothing written"
+
+                        emit options (fun () -> PlanningJson.errorRecord outcome) (fun () -> [ line ]) |> ignore
+
+                        match outcome with
+                        | ErrorRecordOutcome.KeyConflict _ -> 1
+                        | _ -> 0)
+        | "error-history" :: rest ->
+            let options = parse empty rest
+
+            withAnalysis root version options (fun input analysis ->
+                match tryTimestamp analysis.Snapshot.PlannedAt with
+                | None -> fail 2 $"invalid as-of time '{analysis.Snapshot.PlannedAt}'"
+                | Some asOf ->
+                    match FileErrorHistoryRepository.read root with
+                    | _, (number, message) :: _ -> fail 1 $"{FileErrorHistoryRepository.relativePath} line {number}: {message}"
+                    | measurements, [] ->
+                        let view = ErrorHistory.view asOf analysis.Snapshot.PlannedAt input.Configuration.EstimateErrorHorizonDays measurements
+                        emit options (fun () -> PlanningJson.errorHistory view) (fun () -> errorHistoryText options.Details view))
         | "freshness" :: rest ->
             let options = parse empty rest
 

@@ -5953,7 +5953,27 @@
       "updatedAt": "2026-10-02T14:58:22.000Z",
       "telemetryExecutionIds": [
         "EXE-20261002T145826078Z-d36d4a90"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "edaf4d77736b3419d7880972",
+        "recordedAt": "2026-10-02T15:30:17.000Z",
+        "executionId": "EXE-20261002T145826078Z-d36d4a90",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a022-run-bc34",
+        "commit": "5d791784c1cba4fcf4982e4c05672b542dc3fbf0",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a022-run-bc34",
+        "remoteCommit": "5d791784c1cba4fcf4982e4c05672b542dc3fbf0",
+        "summary": "Milestone: state merge engine, installed driver, docs and tests pushed. Done (implementation): ACTOR-KIND-ANCHOR, ATTR-RECONCILE-SYMLINK-SUBMODULE, PRAXIS-CN-GL-KINDS, PRAXIS-STATE-MERGE-01. Remaining: PRAXIS-PLAN-ERROR-HISTORY.",
+        "nextAction": "Implement PRAXIS-PLAN-ERROR-HISTORY on the append-only JSONL store the merge driver covers.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     }
   ],
   "protocolVersion": "1.0.0",

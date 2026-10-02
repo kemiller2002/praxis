@@ -203,8 +203,90 @@ module PlanningCliTests =
                     [ "plan"; "explain-group"; groupId root ]
                     [ "plan"; "explain-group"; groupId root; "--json" ]
                     [ "plan"; "simulate"; "--groups" ]
-                    [ "plan"; "compare"; "--groups"; "--json" ] ] do
+                    [ "plan"; "compare"; "--groups"; "--json" ]
+                    [ "plan"; "error-history" ]
+                    [ "plan"; "error-history"; "--details"; "--json" ] ] do
                   let result = PraxisCli.run root None arguments
                   Assert.isTrue (result.ExitCode = 0 || result.ExitCode = 3) $"{String.Join(' ', arguments)} failed: {result.Error}"
 
-              Assert.equal before (fingerprint root)) ]
+              Assert.equal before (fingerprint root))
+          t "record-error stores a keyed replay summary once and only when asked" (fun () ->
+              let root = fixture ()
+              let store = Path.Combine(root, ".ros", "planning", "estimate-error.jsonl")
+              Assert.isTrue (not (File.Exists store)) "no plan command records anything by itself"
+              let asOf = "2026-09-02T00:00:00.000Z"
+              let first = PraxisCli.run root None [ "plan"; "record-error"; "--as-of"; asOf; "--json" ] |> json
+              Assert.equal "recorded" (text first.["status"])
+              let measurement = first.["measurement"]
+              Assert.equal asOf (text measurement.["asOf"])
+              Assert.equal (git root [ "rev-parse"; "HEAD" ]) (text measurement.["commit"])
+              Assert.isTrue ((text measurement.["plannerVersion"]).Length > 0) "keyed by planner version"
+              Assert.equal 12 (measurement.["executions"].GetValue<int>())
+              let stored = File.ReadAllText store
+
+              // Identical inputs: idempotent.
+              let again = PraxisCli.run root None [ "plan"; "record-error"; "--as-of"; asOf; "--json" ] |> json
+              Assert.equal "already-recorded" (text again.["status"])
+              Assert.equal stored (File.ReadAllText store)
+
+              // A different as-of time is a different measurement, and only what had finished by then counts.
+              let earlier = PraxisCli.run root None [ "plan"; "record-error"; "--as-of"; "2026-09-01T05:00:00.000Z"; "--json" ] |> json
+              Assert.equal "recorded" (text earlier.["status"])
+              Assert.equal 5 (earlier.["measurement"].["executions"].GetValue<int>())
+              Assert.equal 2 (File.ReadAllLines store |> Array.filter (fun line -> line.Trim().Length > 0) |> Array.length)
+
+              // The same key holding different content is refused, never overwritten.
+              let tampered = File.ReadAllText(store).Replace("\"executions\":12", "\"executions\":13")
+              File.WriteAllText(store, tampered)
+              let conflict = PraxisCli.run root None [ "plan"; "record-error"; "--as-of"; asOf; "--json" ]
+              Assert.equal 1 conflict.ExitCode
+              Assert.equal "key-conflict" (text conflict.Json.["status"])
+              Assert.equal tampered (File.ReadAllText store))
+          t "error-history segments error over time and reports measurements beyond the horizon as stale" (fun () ->
+              let root = fixture ()
+              for asOf in [ "2026-09-02T00:00:00.000Z"; "2026-12-30T00:00:00.000Z" ] do
+                  PraxisCli.run root None [ "plan"; "record-error"; "--as-of"; asOf ] |> fun result -> Assert.equal 0 result.ExitCode
+
+              let history = PraxisCli.run root None [ "plan"; "error-history"; "--as-of"; "2027-01-01T00:00:00.000Z"; "--json" ] |> json
+              Assert.equal "estimate-error-history" (text history.["kind"])
+              Assert.equal 90 (history.["horizonDays"].GetValue<int>())
+              let entries = history.["measurements"].AsArray() |> Seq.map (fun entry -> text entry.["asOf"], entry.["stale"].GetValue<bool>()) |> Seq.toList
+              Assert.equal [ "2026-09-02T00:00:00.000Z", true; "2026-12-30T00:00:00.000Z", false ] entries
+              let latest = history.["measurements"].AsArray() |> Seq.last
+              Assert.equal (text latest.["id"]) (text history.["authoritative"])
+
+              let series = history.["series"].AsArray() |> Seq.map (fun entry -> text entry.["dimension"], text entry.["value"]) |> Seq.toList
+              Assert.equal [ "all", "all"; "provider", "provider-a"; "runtime", "runtime-a"; "task-class", "development" ] series
+              Assert.isTrue (history.["series"].AsArray() |> Seq.forall (fun entry -> entry.["points"].AsArray().Count = 2)) "one point per measurement"
+
+              // Everything stale: nothing is authoritative.
+              let later = PraxisCli.run root None [ "plan"; "error-history"; "--as-of"; "2028-01-01T00:00:00.000Z"; "--json" ] |> json
+              Assert.isTrue (isNull later.["authoritative"]) "a stale measurement is never authoritative"
+
+              // The horizon is configuration.
+              let config = Path.Combine(Path.GetTempPath(), $"praxis-plan-{Guid.NewGuid():N}.json")
+              File.WriteAllText(config, "{\"estimateErrorHorizonDays\": 400}")
+              let configured = PraxisCli.run root None [ "plan"; "error-history"; "--as-of"; "2027-01-01T00:00:00.000Z"; "--config"; config; "--json" ] |> json
+              Assert.isTrue (configured.["measurements"].AsArray() |> Seq.forall (fun entry -> not (entry.["stale"].GetValue<bool>()))) "a longer horizon keeps both current"
+              File.WriteAllText(config, "{\"estimateErrorHorizonDays\": 0}")
+              Assert.equal 1 (PraxisCli.run root None [ "plan"; "error-history"; "--config"; config ]).ExitCode
+
+              // Deterministic output for identical inputs (PRX-PLAN-002).
+              let render () = (PraxisCli.run root None [ "plan"; "error-history"; "--as-of"; "2027-01-01T00:00:00.000Z"; "--details" ]).Output
+              Assert.equal (render ()) (render ()))
+          t "validate checks the stored estimate-error history" (fun () ->
+              let root = fixture ()
+              let findings () =
+                  (PraxisCli.run root None [ "validate"; "--json" ]).Json.["findings"].AsArray()
+                  |> Seq.filter (fun finding -> text finding.["path"] = ".ros/planning/estimate-error.jsonl")
+                  |> Seq.map (fun finding -> text finding.["field"])
+                  |> Seq.toList
+
+              PraxisCli.run root None [ "plan"; "record-error"; "--as-of"; "2026-09-02T00:00:00.000Z" ] |> fun result -> Assert.equal 0 result.ExitCode
+              Assert.empty (findings ())
+              let store = Path.Combine(root, ".ros", "planning", "estimate-error.jsonl")
+              let line = File.ReadAllText(store).Trim()
+              File.WriteAllText(store, line.Replace("\"asOf\":\"2026-09-02", "\"asOf\":\"2026-09-03") + "\n" + line + "\n" + "{not json}\n")
+              let reported = findings ()
+              Assert.isTrue (reported |> List.exists (fun field -> field.EndsWith ".id")) $"an id that no longer matches its key is reported: %A{reported}"
+              Assert.isTrue (reported |> List.contains "line 3") $"a malformed line is reported: %A{reported}") ]

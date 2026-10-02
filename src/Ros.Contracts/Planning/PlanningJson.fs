@@ -817,7 +817,12 @@ module PlanningJson =
                         |> Seq.map (fun property -> property.Key, readTexts areas property.Key)
                         |> Seq.toList
                         |> List.sortWith (fun (left, _) (right, _) -> String.CompareOrdinal(left, right))
-                  Grouping = grouping }
+                  Grouping = grouping
+                  EstimateErrorHorizonDays =
+                    match readNumber<int> root "estimateErrorHorizonDays" with
+                    | None -> defaults.EstimateErrorHorizonDays
+                    | Some days when days >= 1 -> days
+                    | Some _ -> fail "estimateErrorHorizonDays must be at least 1" }
         with
         | Malformed message -> Error $"malformed planner configuration: {message}"
         | :? JsonException as error -> Error $"malformed planner configuration: {error.Message}"
@@ -1243,3 +1248,104 @@ module PlanningJson =
         | Malformed message -> Error $"malformed groups document: {message}"
         | :? JsonException as error -> Error $"malformed groups document: {error.Message}"
         | :? InvalidOperationException as error -> Error $"malformed groups document: {error.Message}"
+
+    // ---- estimate-error history (PRX-PLAN-170..173) ---------------------------
+
+    let private errorSegment (segment: ErrorSegment) =
+        record
+            [ "dimension", text segment.Dimension
+              "value", text segment.Value
+              "predictions", integer segment.Predictions
+              "withinRange", integer segment.WithinRange
+              "coverage", optionalNumber segment.Coverage
+              "medianAbsoluteErrorMs", optionalLong segment.MedianAbsoluteErrorMs
+              "medianRelativeError", optionalNumber segment.MedianRelativeError ]
+
+    let private errorMeasurementNode (measurement: ErrorMeasurement) =
+        record
+            [ "id", text measurement.Id
+              "plannerVersion", text measurement.PlannerVersion
+              "commit", text measurement.Commit
+              "asOf", text measurement.AsOf
+              "executions", integer measurement.Executions
+              "segments", measurement.Segments |> List.map errorSegment |> array ]
+
+    let private compact = JsonSerializerOptions(Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping)
+
+    /// One stored line of `.ros/planning/estimate-error.jsonl`.
+    let errorMeasurementLine (measurement: ErrorMeasurement) = (errorMeasurementNode measurement).ToJsonString compact
+
+    let private readDecimal (node: JsonObject) name = readNumber<decimal> node name
+
+    let parseErrorMeasurement (line: string) : Result<ErrorMeasurement, string> =
+        try
+            let root = JsonNode.Parse line |> asObject "measurement"
+
+            Ok
+                { Id = readText root "id"
+                  PlannerVersion = readText root "plannerVersion"
+                  Commit = readText root "commit"
+                  AsOf = readText root "asOf"
+                  Executions = readRequired<int> root "executions"
+                  Segments =
+                    objects root "segments"
+                    |> List.map (fun segment ->
+                        { Dimension = readText segment "dimension"
+                          Value = readText segment "value"
+                          Predictions = readRequired<int> segment "predictions"
+                          WithinRange = readRequired<int> segment "withinRange"
+                          Coverage = readDecimal segment "coverage"
+                          MedianAbsoluteErrorMs = readNumber<int64> segment "medianAbsoluteErrorMs"
+                          MedianRelativeError = readDecimal segment "medianRelativeError" }) }
+        with
+        | Malformed message -> Error $"malformed estimate-error measurement: {message}"
+        | :? JsonException as error -> Error $"malformed estimate-error measurement: {error.Message}"
+        | :? InvalidOperationException as error -> Error $"malformed estimate-error measurement: {error.Message}"
+        | :? FormatException as error -> Error $"malformed estimate-error measurement: {error.Message}"
+
+    let errorRecord (outcome: ErrorRecordOutcome) : JsonNode =
+        let status, measurement =
+            match outcome with
+            | ErrorRecordOutcome.Recorded measurement -> "recorded", measurement
+            | ErrorRecordOutcome.AlreadyRecorded measurement -> "already-recorded", measurement
+            | ErrorRecordOutcome.KeyConflict(_, computed) -> "key-conflict", computed
+
+        record [ "schema", text schema; "kind", text "estimate-error-record"; "status", text status; "measurement", errorMeasurementNode measurement ]
+
+    let errorHistory (view: ErrorHistoryView) : JsonNode =
+        record
+            [ "schema", text schema
+              "kind", text "estimate-error-history"
+              "asOf", text view.AsOf
+              "horizonDays", integer view.HorizonDays
+              "statement", text view.Statement
+              "authoritative", view.Authoritative |> Option.map (fun measurement -> text measurement.Id) |> Option.toObj
+              "measurements",
+              view.Entries
+              |> List.map (fun entry ->
+                  record
+                      [ "id", text entry.Measurement.Id
+                        "asOf", text entry.Measurement.AsOf
+                        "plannerVersion", text entry.Measurement.PlannerVersion
+                        "commit", text entry.Measurement.Commit
+                        "executions", integer entry.Measurement.Executions
+                        "stale", boolean entry.Stale
+                        "segments", entry.Measurement.Segments |> List.map errorSegment |> array ])
+              |> array
+              "series",
+              view.Series
+              |> List.map (fun series ->
+                  record
+                      [ "dimension", text series.Dimension
+                        "value", text series.Value
+                        "points",
+                        series.Points
+                        |> List.map (fun (asOf, segment) ->
+                            record
+                                [ "asOf", text asOf
+                                  "predictions", integer segment.Predictions
+                                  "coverage", optionalNumber segment.Coverage
+                                  "medianAbsoluteErrorMs", optionalLong segment.MedianAbsoluteErrorMs
+                                  "medianRelativeError", optionalNumber segment.MedianRelativeError ])
+                        |> array ])
+              |> array ]
