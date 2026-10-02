@@ -227,6 +227,7 @@
 | WI-0072 | Port provenance follow-ups onto the merged model: collaboration aggregates in provenance audit, producedBy on ordo handoffs, installer event actor | complete | provenance | medium |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |
+| WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | ready | governance, git, agents | high |
 | WORK-CAPTURE-ID-COLLISION | ros add can auto-allocate a WI-NNNN ID that already belongs to a live-context work item | captured | work-protocol, backlog | medium |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |
 | WORKQUEUE-BACKLOG-LAYER | WORKQUEUE-BACKLOG-LAYER | complete |  |  |

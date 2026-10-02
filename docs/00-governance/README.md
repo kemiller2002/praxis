@@ -26,6 +26,16 @@ provenance:
         model: unknown
         runtime: codex
       reason: "Route new agents through the elapsed-time upstream synchronization rule"
+    EXE-20261002T095646730Z-345f9f99:
+      operations: [modified]
+      at: 2026-10-02T09:57:17.000Z
+      actor:
+        kind: agent
+        id: openai/codex
+        provider: openai
+        model: unknown
+        runtime: codex
+      reason: "Route new agents through the elapsed-time upstream synchronization rule"
 ---
 
 # Governance Index

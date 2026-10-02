@@ -28,6 +28,16 @@ provenance:
         model: unknown
         runtime: codex
       reason: "Record DF-GOV-014 for bounded upstream drift based on 30 minutes of elapsed wall time"
+    EXE-20261002T095646730Z-345f9f99:
+      operations: [modified]
+      at: 2026-10-02T09:57:17.000Z
+      actor:
+        kind: agent
+        id: openai/codex
+        provider: openai
+        model: unknown
+        runtime: codex
+      reason: "Record DF-GOV-014 for bounded upstream drift based on 30 minutes of elapsed wall time"
 ---
 
 # Governance Decision Log

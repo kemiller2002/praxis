@@ -32,6 +32,16 @@ provenance:
         model: unknown
         runtime: codex
       reason: "Adopt the 30-minute elapsed-time upstream synchronization rule and safe integration boundaries"
+    EXE-20261002T095646730Z-345f9f99:
+      operations: [modified]
+      at: 2026-10-02T09:57:17.000Z
+      actor:
+        kind: agent
+        id: openai/codex
+        provider: openai
+        model: unknown
+        runtime: codex
+      reason: "Adopt the 30-minute elapsed-time upstream synchronization rule and safe integration boundaries"
 ---
 
 # Agent Startup Guide
