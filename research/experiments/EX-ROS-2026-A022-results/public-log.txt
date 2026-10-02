@@ -1,2 +1,3 @@
 2026-10-02T14:38:10Z  O1-O6 done: readiness pass at setup c9479c8; run branches experiment/a022-run-{98e1,9b87,a41b,bc34} and anchor branches created at baseline f806f81; deviations O-1 (EO is the setup session) and O-2 (anchor branches instead of tags) recorded
 2026-10-02T14:44:21Z  L: all four conditions launched (guards passed for all four sessions)
+2026-10-02T15:25:45Z  M: one independent worker finished; next worker starting
