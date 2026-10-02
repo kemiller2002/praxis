@@ -1,0 +1,155 @@
+Architecture analysis: ATTR-RECONCILE-SYMLINK-SUBMODULE
+=======================================================
+
+- Item: ATTR-RECONCILE-SYMLINK-SUBMODULE (`./praxis work show ATTR-RECONCILE-SYMLINK-SUBMODULE`)
+- Execution repository: kemiller2002/praxis, branch experiment/a022-run-a41b
+- Base commit: 7af1576cbf852a31315090a460ab3db81a513bc2
+
+1. Item and acceptance criteria
+-------------------------------
+
+Obligation (from the backlog description): ReconciliationCoverage compares a
+reconciled path's current working-tree content with the blob recorded in the
+reconciliation event's Git evidence. The current content is computed with
+`git hash-object`, which follows symbolic links and cannot hash submodules, so a
+reconciled symlink or submodule path never matches its recorded blob and always
+fails validation (fail closed). Compare the link target text / gitlink commit
+instead. Follow-up from GH-80 / DF-ROS-2026-A040.
+
+Acceptance criteria:
+  1. A reconciled symbolic-link path whose link target is unchanged matches its
+     recorded blob (compare what Git stores for the link, not the followed file).
+  2. A reconciled submodule path matches when its gitlink commit is unchanged.
+  3. A changed link target or gitlink still fails closed.
+  4. Regular-file behaviour is unchanged.
+  5. Tests use real Git fixtures for both cases.
+  (The description also says the change is not to be merged to main before a
+  repository-owner decision; that is a delivery constraint, not a code criterion.)
+
+Depends on: nothing open. It refines the shipped GH-80 reconciliation feature.
+
+2. Reuse inventory
+------------------
+
+Searches: `grep -rn "ReconciliationCoverage\|hash-object" src --include=*.fs`,
+`grep -rn "readPathStates\|PathContentState" src tests --include=*.fs`,
+`grep -rn "GitFixture" tests`, `grep -rni "symlink\|submodule" docs research/decisions`.
+
+| Existing element | Location | What it does | Reuse / extend / not reused |
+|---|---|---|---|
+| PathContentState (Present blob / Absent / Unreadable) | src/Ros.Domain/Work/Reconciliation.fs:464-469 | Domain value for a path's current content | Reused unchanged. A link's blob and a gitlink's commit id are both "the object id Git stores for the path", which is exactly what `Present` means; no new case is needed. |
+| ReconciliationCoverage.acceptedStates / covered | src/Ros.Domain/Work/Reconciliation.fs:480-516 | Accepted states per path from evidence; covered = current state is one of them | Reused unchanged. Evidence already records the 120000/160000 entry's id as `Blob` (GitDiffTreeParser takes DSTBLOB irrespective of mode). |
+| GitDiffTreeParser.parse | src/Ros.Infrastructure/Git/GitRepository.fs:95-153 | Parses `diff-tree --raw`; Blob = destination object id | Reused unchanged. Verified with a probe repository: diff-tree reports `120000 ... A link` with the id of the link-target text and `160000 ... A libs/sub` with the submodule commit. |
+| ProcessGitRepository.runGit | src/Ros.Infrastructure/Git/GitRepository.fs:201-243 | Runs git -C root with arguments, captures stdout/stderr, maps failures to GitFailure | Extended: it has no standard input. Generalised to an optional input so the link target can be hashed with `git hash-object --stdin` (the only hash-object form that hashes given bytes without a file and without following a link). runGit keeps its signature as the no-input case. |
+| ProcessGitRepository.readPathStatesWithExecutable / readPathStates | src/Ros.Infrastructure/Git/GitRepository.fs:511-538 | Current state per path: hash-object batch for files, Absent, Unreadable for directories | Extended (the defect is here). Classification moves from File.Exists (follows links) to an lstat-style classification that sees the link itself. |
+| RecordedAttribution.attributedPaths | src/Ros.Infrastructure/Work/FileReconciliationRepository.fs:51-60 | Calls readStates for reconciled candidate paths only | Reused unchanged; it is the sole production consumer, via Program.fs:546. |
+| computeWorkAttributionFindings | src/Ros.Cli/Program.fs:518-550 | Wires ProcessGitRepository.readPathStates into validation | Unchanged. |
+| GitFixture (git, write, commitAll, temporaryDirectory) | tests/Ros.Tests/GitDurabilityTests.fs:15-54 | Real-Git test helpers | Reused for the direct readPathStates fixture tests. |
+| WorkReconciliationEffectTests helpers (withRepository, reconcile, workFindings, commitAll) | tests/Ros.Tests/WorkReconciliationEffectTests.fs:131-168 | Real CLI against a temporary repository | Reused: the end-to-end symlink and submodule cases are added to this suite so they use the same config, events and `ROS_BASE_REF` validation path as the existing reconciliation tests. |
+| Domain unit tests for coverage | tests/Ros.Tests/WorkReconciliationTests.fs:360-390 | Pure coverage tests | Not extended: the Domain does not change. |
+| Documentation of the limit | docs/work-protocol.md:415-418 ("Known limits"); research/decisions/DF-ROS-2026-A040...md:123 (Consequences) | States symlinks and submodules fail closed | Both updated to the new behaviour; the decision record change is attributed with `praxis provenance record --operation modified`. |
+
+New abstractions considered: a new PathContentState case (e.g. `Link of target`
+or `Gitlink of commit`). Rejected: the evidence side stores only an object id,
+so a new case would need a parallel change in acceptedStates and would compare
+the same id anyway. An in-process SHA-1 of `blob N\0target` was also rejected:
+it would have to know the repository's object format (sha1/sha256); Git
+already knows it.
+
+3. Design
+---------
+
+Invariants shared with existing code:
+- Content binding (DF-ROS-2026-A040 item 5): a reconciled path is attributed only
+  while its current state equals a recorded state. Equality is on the object id
+  Git would record for the path now.
+- Fail closed: anything that cannot be established exactly (I/O failure, git
+  failure, unexpected output, an uninitialised or non-repository directory) is
+  `Unreadable`, which never matches.
+- Read-only: readPathStates never writes to the repository or the object store
+  (`hash-object` without `-w`).
+
+Contract (unchanged signature):
+  readPathStatesWithExecutable executable root paths : Map<string, PathContentState>
+
+Classification of each distinct path (pure function of an lstat-style read):
+  - symbolic link (FileSystemInfo.LinkTarget is not null; does not follow the
+    link, so it also sees dangling links and links to directories)
+      -> Present(id of the link-target text), computed by
+         `git hash-object --stdin` with the target as UTF-8 input. No path
+         filters apply to symlinks in Git, so --stdin without --path is exact.
+  - regular file -> unchanged: one batched `git hash-object -- paths` (clean
+    filters applied, as before).
+  - directory -> gitlink check: `git -C <dir> rev-parse --show-prefix` must
+    print an empty prefix (the directory is the top level of its own
+    repository: an initialised submodule or nested repository). Then
+    `git -C <dir> rev-parse --verify HEAD^{commit}` is the gitlink commit
+    -> Present(commit). A plain directory (non-empty prefix, because Git walks
+    up to the superproject), an uninitialised submodule (empty directory, same),
+    or a repository with an unborn HEAD -> Unreadable.
+  - nothing there -> Absent.
+  - an exception while classifying -> Unreadable.
+
+Validation rules / error model: no new findings or messages. A mismatch keeps
+producing the existing `work_items` finding for that path. Git failures map to
+Unreadable as before; nothing throws out of readPathStates.
+
+Transaction boundaries: none. This is a read used during validation; no events,
+context, or locks are touched.
+
+Style: the new code is written as small pure functions (classify, a per-kind
+state function) composed with List.map/List.choose; no mutable state.
+
+4. Compatibility
+----------------
+
+- Regular files: same command, same arguments, same batching, same result.
+  Paths that are now classified as symlinks used to be hashed through the link
+  (wrong) and are now hashed as Git stores them. A path that is a regular file
+  in a checkout with core.symlinks=false (Windows) is still a regular file whose
+  content is the target text, so it hashes to the same id as before.
+- Directories that are not repositories: Unreadable as before.
+- Event format, evidence, CLI output and exit codes: unchanged. Existing events
+  are re-evaluated with the corrected current state; a previously failing
+  symlink or submodule reconciliation now passes if the content still matches.
+  Nothing that passed before can start failing except a symlink whose followed
+  file happened to hash to the recorded link blob, which is not a realistic case.
+- No migration.
+
+5. Tests
+--------
+
+Real Git fixtures only (criterion 5):
+- Direct (ProcessGitRepository.readPathStates) in a temporary repository with
+  a regular file, a symlink to a file, a dangling symlink, a symlink to a
+  directory, an initialised submodule, a plain directory and a missing path:
+  each state equals `git rev-parse HEAD:<path>` (what Git stores), the plain
+  directory is Unreadable, the missing path Absent; after retargeting a link and
+  moving the submodule to another commit, those states change and no longer
+  equal the committed ids.
+- End to end (praxis CLI, WorkReconciliationEffectTests style):
+  * symlink: commit a link and its target without a work item, reconcile it,
+    `work validate` is clean; edit the followed file so only the target file is
+    reported, not the link (criterion 1); retarget the link and it is reported
+    again (criterion 3).
+  * submodule: add a submodule from a local fixture repository, commit,
+    reconcile, validation is clean (criterion 2); commit inside the submodule so
+    the gitlink moves and it is reported (criterion 3).
+- Criterion 4: the existing regular-file reconciliation tests (added, modified,
+  deleted, renamed, later edits) must keep passing unchanged.
+- Full F# suite and the Python oracle tests are run before completion.
+
+6. Risks
+--------
+
+- Link targets that are not valid UTF-8 are decoded lossily by .NET, so their
+  hash differs from Git's: fails closed (reported again), never a false match.
+- An uninitialised submodule fails closed even though Git considers it
+  unchanged; acceptable under the fail-closed rule, documented.
+- GIT_DIR/GIT_WORK_TREE inherited from a hook environment would make the nested
+  rev-parse read the superproject; its HEAD cannot equal the recorded submodule
+  commit in practice, so this also fails closed.
+- Submodule tests need `protocol.file.allow=always` for a local-path
+  submodule add on current Git; set per command in the fixture only.
+- Symlink creation needs a platform that supports it; Linux CI does. The test
+  documents the requirement rather than silently skipping.
