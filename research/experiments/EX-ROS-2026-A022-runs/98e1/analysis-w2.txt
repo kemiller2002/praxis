@@ -1,0 +1,231 @@
+Architecture analysis: PRAXIS-CTL-03
+=====================================
+
+Item: PRAXIS-CTL-03 "Control-plane read API for executions, receipts and evidence"
+Branch: experiment/a022-run-98e1, base commit 267a3e5ae6e58b58be5931f45f26089c9de6b66b
+Source of the criteria: ./praxis work show PRAXIS-CTL-03 (backlog description).
+Requirements covered: PRX-CTL-005 (executions, receipts, evidence),
+PRX-CTL-011 and PRX-CTL-012, requirements/EXECUTION-ORCHESTRATION.md:323,
+:422 and :426.
+Builds on: PRAXIS-CTL-02 (commits d253a52..267a3e5), which added the
+versioned work-state contract (src/Ros.Contracts/Work/WorkStateJson.fs) and
+GET /api/v1/work[/ID] to `praxis web serve`.
+
+1. Item and acceptance criteria
+-------------------------------
+
+Obligation: `praxis web serve` exposes work state (CTL-02) but nothing about
+executions, step receipts, evidence, checkpoints or usage. Those exist only as
+CLI output: `execution list|show --json` (src/Ros.Cli/ExecutionCommands.fs:266,
+:301), `work context` (src/Ros.Cli/Program.fs:658), `work checkpoint show`
+(src/Ros.Cli/CheckpointCommands.fs:524) and `telemetry usage`
+(src/Ros.Cli/Program.fs:2564).
+
+Acceptance criteria (numbered as in the description):
+ AC1 Typed, versioned read endpoints list executions (optionally for one work
+     item) and show one execution: role, status, actor, and
+     provider/model/runtime presented as execution-host information, never as
+     the owner of work state.
+ AC2 An execution's steps with expected and observed receipts and their
+     match, mismatch or indeterminate state.
+ AC3 A work item's recorded evidence and durable checkpoints.
+ AC4 Telemetry usage and cost where recorded, and explicitly unknown
+     otherwise.
+ AC5 The data is obtained through the same paths as `praxis execution show
+     --json`, `work context`, `work checkpoint show` and `telemetry usage`,
+     not re-derived.
+ AC6 The endpoints never write; tests.
+
+Which "execution": Praxis has two records named execution. (a) The Ordo
+execution envelope under .ros/executions/<EXE-ID>/ (envelope.json +
+events.jsonl; src/Ros.Infrastructure/Execution/ExecutionStore.fs:18) carries
+role, state, actor, provider/model/runtime and the step ledger with expected
+and observed receipts. (b) The telemetry execution record under
+.ros/telemetry/executions/<EXE-ID>.json carries usage measurements. AC1, AC2
+and AC5 ("execution show --json") name (a); AC4 ("telemetry usage") names (b).
+The API keeps that split: executions and steps come from (a), usage and cost
+from (b), keyed by work item exactly as `telemetry usage ID` keys them.
+
+2. Reuse inventory
+------------------
+
+| Existing element | Location | What it does | Reuse decision |
+|---|---|---|---|
+| ExecutionStore.list / loadEnvelope / readEntries / readRecords / resolvedResources | src/Ros.Infrastructure/Execution/ExecutionStore.fs:42-116 | Pure file reads of envelopes and the append-only ledger | Reused unchanged. |
+| ExecutionCommands private Snapshot, load, readVerification, scopeEffects, workspaceDirectory | src/Ros.Cli/ExecutionCommands.fs:91-137 | The exact loading path behind `execution show` (envelope + ledger -> StepLedger.reconstruct + Git scope effects + last verification + uncommitted flag) | Moved, unchanged in behaviour, to a public Infrastructure module (ExecutionSnapshot, next to ExecutionStore) so `execution show`, `execution list` and the API call one function. WebInterface.fs compiles before ExecutionCommands.fs (src/Ros.Cli/Ros.Cli.fsproj:41,45), so the shared path cannot stay in the CLI module. |
+| ExecutionCommands list filter + qualifyWorkItem | src/Ros.Cli/ExecutionCommands.fs:52, :301-307 | `execution list --work-item ID` qualifies ID to `owner/repo:ID` and filters envelopes | Moved with the snapshot reader (ExecutionSnapshot.qualifyWorkItem / envelopes); ExecutionCommands.qualifyWorkItem stays as a forwarding name (used by Program.fs). |
+| StepLedger.reconstruct, StepView, StepStatus | src/Ros.Domain/Execution/Governance.fs:726-797 | Steps rebuilt from durable entries; each StepView keeps its own entries, so observed receipts and comparison results are available | Reused. A new pure function derives the current attempt's receipt (expected, observed, comparison, state) from StepView.Entries; it does not recompute a comparison (the stored ReceiptResult is reported as recorded). |
+| ExecutionJson.expected / observed / result / scopeEffect | src/Ros.Contracts/Execution/ExecutionJson.fs | Wire shapes of ordo.execution/1 receipts | Reused verbatim inside the new contract, so a receipt reads the same in the API and in the ledger. |
+| ExecutionJson.envelope | same file | Persisted envelope shape; nests provider/model/runtime inside `actor` | Not reused as the API shape: AC1/PRX-CTL-012 require the provider to be presented as host information, not as part of the actor that owns work. The new contract maps the same ExecutionEnvelope value differently. |
+| execution show step status codes | src/Ros.Cli/ExecutionCommands.fs:161-170 | not-started, match, mismatch, indeterminate, reconciled-* | Moved to a public function (ExecutionSnapshot.stepStatusCode) used by both, so codes cannot drift. |
+| FileWorkContextRepository.readContextView | src/Ros.Infrastructure/Work/FileWorkContextRepository.fs:197 | The read behind `work context ID`: the live item with its recorded `evidence` and `requiredEvidenceForCompletion` | Reused as the evidence source (AC3, AC5). It never writes (loadOrCreateContextNode builds an in-memory node when the file is absent). |
+| FileCheckpointRepository.readItem / readHistory / readPolicy, CheckpointCommands.assessItem | src/Ros.Infrastructure/Work/FileCheckpointRepository.fs:99,193,201; src/Ros.Cli/CheckpointCommands.fs:46 | The path behind `work checkpoint show` | The read and assessment are moved out of the CLI into one function returning a typed CheckpointShow (item, assessment, history), in Ros.Application.Work (CheckpointOperations already lives there, src/Ros.Application/Work/Checkpoint.fs:213). `work checkpoint show` and the API both call it. |
+| CheckpointJson.continuity, CheckpointCommands.historyNode | src/Ros.Contracts/Work/CheckpointJson.fs:247; src/Ros.Cli/CheckpointCommands.fs:498 | The continuity and history JSON of `work checkpoint show --json` | continuity reused; historyNode moved into CheckpointJson (public `historyEntry`) so CLI and API render history identically. |
+| ProcessGitDurability.createFor root offline | src/Ros.Infrastructure/Git/GitRepository.fs:886 | Read-only Git port; `offline` skips ls-remote and reports the remote as not observed | Reused. API default matches the CLI default (remote observed); `?offline=true` maps to `--offline`. |
+| FileTelemetryUsageRepository.read + Usage.aggregate | src/Ros.Infrastructure/Work/FileTelemetryUsageRepository.fs:38; src/Ros.Domain/Telemetry/Usage.fs:121 | The path behind `telemetry usage`: additive measurements, groups whose Total is None (unknown) when nobody reported and whose UnavailableExecutions list who did not | Reused; the group JSON built inline in Program.fs:2585-2602 moves to a contract module (TelemetryUsageJson) used by the CLI and the API. |
+| FileMetricRegistryRepository.read | src/Ros.Infrastructure/Work/FileMetricRegistryRepository.fs:14 | The metric registry (telemetry/metrics.json): id, unit, aggregation | Reused to enumerate what usage and cost *could* be recorded (additive metrics with unit `tokens` and `currency`), so a metric no execution recorded is listed as unknown instead of disappearing. |
+| WorkStateJson envelope/error builders, Recorded<'T> availability | src/Ros.Contracts/Work/WorkStateJson.fs; src/Ros.Domain/Work/WorkStateView.fs | CTL-02 contract conventions: contract/version/kind, `{availability: available|unavailable}`, praxis.error bodies | Followed and extended: evidence/checkpoint/telemetry documents are new kinds of praxis.work-state v1 (additive), executions get their own contract id praxis.execution-state v1 with the same envelope and error style. |
+| FileWorkListRepository.readStateSources, WebInterface.isKnown | src/Ros.Infrastructure/Work/FileWorkListRepository.fs:130; src/Ros.Cli/WebInterface.fs:692 | Whether an id is a known work item | Reused for 404 on unknown work items. |
+| WebInterface.route / handle, HttpMessages.jsonNode | src/Ros.Cli/WebInterface.fs:179, :806; src/Ros.Cli/WebHttp.fs:134 | Pure routing, effects in handle | Extended with the new GET routes. |
+| Test harness | tests/Ros.Tests/WebInterfaceTests.fs:16 (ServedProcess), :167 (withServer); tests/Ros.Tests/CheckpointCliTests.fs:107 (installedRepository with a bare remote); tests/Ros.Tests/CliHarness.fs | Real server over a temp repository; repositories with a remote for checkpoints | Reused. |
+
+Searches establishing that no execution or usage read API exists:
+`grep -rn "api/v1" src` -> only the two CTL-02 routes;
+`grep -rn "ExecutionStore\." src/Ros.Cli/WebInterface.fs` -> none.
+
+3. Invariants and shared infrastructure
+---------------------------------------
+
+- One path per datum (AC5): every endpoint calls the function the CLI
+  command calls (ExecutionSnapshot.load / envelopes, readContextView,
+  CheckpointShow read, FileTelemetryUsageRepository.read + Usage.aggregate).
+  Moving code to make that possible must leave every CLI output
+  byte-identical; existing CLI tests pin that.
+- Reads are pure: no lock, no event append, no CLI subprocess. The only
+  subprocesses are Git reads the CLI paths already run (diff, ls-files,
+  status, rev-parse, ls-remote). `git status` may refresh .git/index as an
+  optional lock; those read adapters will run Git with GIT_OPTIONAL_LOCKS=0 so
+  a read cannot rewrite the index (same results, no write).
+- Host is not owner (PRX-CTL-012): provider/model/runtime appear only under
+  `executionHost`, never under `actor`, and the document states that the
+  work state is owned by the repository (`workStateOwner: "repository"`,
+  plus the work item id).
+- Unknown is not zero: an unrecorded host attribute is "unknown"; usage and
+  cost metrics nobody recorded are `availability: "unknown"` with no total;
+  partial coverage lists the executions that did not report.
+- Shared infrastructure touched: ExecutionCommands (load/list moved),
+  CheckpointCommands (show read and history node moved), Program.fs
+  telemetry usage (group rendering moved), Git read adapters (optional
+  locks). All are attributed to this item.
+
+4. Design
+---------
+
+Contract A: Ros.Contracts.Execution.ExecutionStateJson,
+contract "praxis.execution-state", version 1.
+
+  GET /api/v1/executions[?workItem=ID]
+    { contract, version, kind: "execution-list",
+      workItem: <qualified id> | null,
+      items: [ ExecutionSummary ],
+      unreadable: [ { executionId, error } ] }   (envelopes the store holds
+                                                  but cannot parse; the CLI
+                                                  silently skips them)
+  GET /api/v1/executions/EXE-ID
+    { contract, version, kind: "execution", execution: ExecutionDetail }
+
+  ExecutionSummary:
+    executionId, workItem, role, status, statusReason, startedAt,
+    parentExecution, baselineRevision, candidateRevision,
+    actor: { id, kind },
+    executionHost: { provider, model, runtime  ("unknown" when unrecorded),
+                     workspace: {id, mechanism, branch} | null,
+                     containment, securitySandbox },
+    workStateOwner: { kind: "repository", workItem }
+  ExecutionDetail = ExecutionSummary +
+    steps: [ { stepId, sequence, name, dependsOn, attempts,
+               status (execution show's codes),
+               receipt: { state: match|mismatch|indeterminate|not-observed,
+                          attempt, expected (ExecutionJson.expected),
+                          observed (ExecutionJson.observed) | null,
+                          comparison (ExecutionJson.result) | null,
+                          observedAt | null, reason | null },
+               reconciliation: { finding, detail, at } | null } ],
+    scopeEffects (ExecutionJson.scopeEffect), verification | null
+  Legal actions for executions are actor-dependent (`execution actions`,
+  human-only transitions) and are not part of this read contract.
+
+Domain (pure, Ros.Domain.Execution, new StepReceipts module):
+  current attempt = highest Started attempt (0 if none);
+  receipt state: never started -> not-observed; started with an Observed
+  entry for that attempt -> that comparison's outcome; started without one
+  -> indeterminate (effect unknown, the Ordo meaning of a start without a
+  receipt). Latest Reconciled entry is reported separately.
+
+Contract B (additive kinds of praxis.work-state v1):
+  GET /api/v1/work/ID/evidence[?offline=true]
+    { contract, version, kind: "work-evidence", workItemId,
+      evidence:    { availability: "available", source: "work context",
+                     items: [ {type, path} ], requiredForCompletion: [...] }
+                 | { availability: "unavailable", reason },
+      checkpoints: { availability: "available", source: "work checkpoint show",
+                     remoteObserved, continuity (CheckpointJson.continuity),
+                     history: [ CheckpointJson.historyEntry ] }
+                 | { availability: "unavailable", reason } }
+    A backlog-only item (never started) has no context record: both blocks
+    unavailable with that reason. An invalid recorded latestCheckpoint:
+    checkpoints unavailable with the problems, evidence still available.
+  GET /api/v1/work/ID/telemetry
+    { contract, version, kind: "work-telemetry", workItemId,
+      executions: [telemetry execution ids in scope],
+      usage: [ MetricCoverage for registry sum metrics with unit "tokens" ],
+      cost:  [ MetricCoverage for registry sum metrics with unit "currency" ],
+      groups: [ TelemetryUsageJson.group ]   (exactly `telemetry usage ID
+                                              --by execution` groups) }
+    MetricCoverage: { metric, unit,
+                      availability: "recorded" | "partial" | "unknown",
+                      totals: [ {currency, total} ],
+                      reportingExecutions, unavailableExecutions }
+  Domain (pure, Usage.coverage): from registry metrics, the executions in
+  scope and the work-item-dimension groups of Usage.aggregate; no new
+  summing.
+
+Error model (praxis.error v1, as CTL-02): unknown work item -> 404
+work-item-not-found; unknown execution -> 404 execution-not-found;
+unparseable envelope or unreadable state -> 500 execution-unreadable /
+work-state-unreadable.
+
+Stores: none new; no writes. Transaction boundaries: none (reads only, no
+lock taken).
+
+Routes: GET /api/v1/executions, /api/v1/executions/ID,
+/api/v1/work/ID/evidence, /api/v1/work/ID/telemetry. Other methods on these
+paths fall through to the existing /api 404 JSON.
+
+5. Compatibility
+----------------
+
+- Additive routes under /api/v1/; CTL-02 routes and legacy /api/work unchanged.
+- `execution show|list --json`, `work checkpoint show [--json]`,
+  `telemetry usage --json`, `work context` outputs unchanged (moved code, not
+  changed code); existing tests for each stay green.
+- GIT_OPTIONAL_LOCKS=0 on read adapters: Git returns the same answers; only
+  the opportunistic index refresh is skipped.
+- docs/web-interface.md gains the new routes and the two contracts.
+
+6. Tests
+--------
+
+- Pure: StepReceipts state for not-started, started-unobserved,
+  observed match/mismatch/indeterminate, retry after mismatch; Usage.coverage
+  recorded / partial / unknown / no executions, currencies kept apart.
+- Contract: execution document puts provider/model/runtime under
+  executionHost only, "unknown" for unrecorded, workStateOwner present;
+  receipts reuse ExecutionJson shapes; coverage unknown has no total.
+- Routing: the four routes map to the new route cases.
+- HTTP (real server, temp repository): execution started via the CLI, a
+  step declared and run (match) and one run to mismatch -> list (all and
+  filtered by work item), show with receipts; parity with `execution show
+  --json` for shared fields; evidence and checkpoints for a started item with
+  a checkpoint pushed to a bare remote, parity with `work checkpoint show
+  --json`; telemetry with a recorded tokens metric (recorded) and cost not
+  recorded (unknown), parity with `telemetry usage --json`; unknown work item
+  and execution -> structured 404; every repository file (including .git)
+  byte-identical before and after all GETs (AC6).
+
+7. Risks
+--------
+
+- Moving CLI code could alter CLI output: mitigated by keeping renderers
+  identical and running the full suite (CLI tests pin these outputs).
+- Remote observation on each evidence request costs an ls-remote (bounded by
+  ROS_GIT_REMOTE_TIMEOUT_SECONDS); `?offline=true` avoids it, and the
+  document says whether the remote was observed.
+- In this repository no Ordo execution envelopes exist yet (.ros/executions
+  absent), so the execution endpoints are exercised by tests, not by live
+  data; the list answers an empty, truthful list.
+- Two "execution" records with the same id format (EXE-...) may confuse
+  clients; documented: /api/v1/executions are Ordo envelopes, telemetry
+  executions appear in work-telemetry.
+- `scopeEffects` and the uncommitted flag depend on the server's working
+  tree at read time, exactly as `execution show` does.
