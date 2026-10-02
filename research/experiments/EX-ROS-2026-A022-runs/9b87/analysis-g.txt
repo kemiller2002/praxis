@@ -254,3 +254,50 @@ Shared infrastructure attribution (PRX-GRP-043)
 5. Hub /api/v1 repos/work/item/transition delegation; docs (CTL-06).
    Checkpoint M5.
 6. Verification pass per criterion (section 5), completion per item.
+
+
+5. Verification pass (before completing any member)
+---------------------------------------------------
+
+Commands run at commit 8dd1bf5 (all passing):
+- dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll (full suite at
+  5e6b473): 1332 test(s); 1332 passed; 0 failed
+- PRAXIS_TEST_FILTER="control" ...: 13 passed; PRAXIS_TEST_FILTER="serve v1"
+  ...: 6 passed (re-run after 8dd1bf5 added the indeterminate-step check)
+- python3 -m unittest discover -s tests: Ran 7 tests, OK
+- dotnet tests/Site.Tests/bin/Release/net10.0/Site.Tests.dll: 101 passed
+Test names below are from tests/Ros.Tests/ControlPlaneTests.fs unless noted.
+
+| Member | Criterion | Status | Evidence |
+|---|---|---|---|
+| CTL-02 | 1. versioned documented contract (identity, semantic/backlog/live state, legal actions, kernel refusal reasons) | met | src/Ros.Contracts/ControlPlane/ControlPlaneJson.fs (schema praxis.control-plane, schemaVersion 1, workItem/workList); docs/control-plane-api.md; tests "control-plane work: documents carry the source they were derived from", "control plane: backlog actions and refusal reasons are the kernel's own decisions", "control plane: live actions name what they still require, from the kernel's rejections" |
+| CTL-02 | 2. obligations and unknowns, unavailable (not empty) without a source | met | obligations = required/missing completion evidence + checkpoint next action for live items, unavailable for backlog-only items; unknowns always unavailable (Praxis records no per-item unknowns; Ordo handoff unknowns are not per item). Tests "control plane: obligations and unknowns are reported unavailable, never empty, without a source" and the CLI work test |
+| CTL-02 | 3. read endpoints never write | met | "web serve v1: no read endpoint writes any repository file" (whole-tree digest before/after every GET); "control plane: the web and hub hosts call no file-writing API beyond uploads and hub registration" |
+| CTL-02 | 4. unknown item 404 with structured body | met | "web serve v1: typed work documents, a structured 404, and unchanged legacy routes" (404, refusal.category not-found) |
+| CTL-02 | 5. existing /api/work clients keep working | met | same test compares /api/work bytes; the 33 existing "web" tests pass; legacy routes documented as superseded in docs/web-interface.md |
+| CTL-02 | 6. tests | met | above |
+| CTL-03 | 1. list (optionally per item) and show executions: role, status, actor, provider/model/runtime as execution host | met | "control-plane executions: ..." (executions --work-item, role, status, executionHost provider/model); "control plane: an execution's provider, model and runtime are its host, not the work's owner" (workStateOwner: repository) |
+| CTL-03 | 2. steps with expected and observed receipts, match/mismatch/indeterminate | met | same execution test: s1 match, s2 mismatch with observed exitCode 1, s3 indeterminate with no observations |
+| CTL-03 | 3. recorded evidence and durable checkpoints | met | "control-plane evidence: recorded evidence, checkpoints and usage, or why they are unavailable" |
+| CTL-03 | 4. usage/cost where recorded, explicitly unknown otherwise | met | same test: usage unavailable before any metric, then the praxis.telemetry-usage document (groups carry complete=false / total=null for unreported executions) |
+| CTL-03 | 5. same paths as execution show --json, work context, work checkpoint show, telemetry usage | met | ExecutionCommands.snapshotDocument/listEnvelopes, CheckpointCommands.showDocument, TelemetryUsageJson.document, FileWorkContextRepository.readContextView are shared by the commands and the control plane; tests assert steps equal `execution show --json` and usage equals `telemetry usage` byte for byte |
+| CTL-03 | 6. never write; tests | met | no-write read test covers /api/v1/executions and /api/v1/work/ID/evidence |
+| CTL-04 | 1. one transition endpoint for the six actions, through the CLI's path | met | POST /api/v1/work/ID/transitions -> control-plane transition -> ControlPlaneCommands.commandLine runs the CLI command; "control plane: a permitted request runs the CLI's own transition command line"; HTTP tests run ready, start, block, complete; hub test runs start |
+| CTL-04 | 2. success returns resulting typed state | met | "web serve v1: a transition runs the CLI's path, returns the resulting state, and records the host's identity" (data.workItem semanticState active, live.workType feature) |
+| CTL-04 | 3. structured refusal, HTTP status, state byte-for-byte unchanged | met | "web serve v1: a refused transition is structured and leaves Praxis state byte for byte unchanged": illegal-transition 409, invalid-request 400 (twice), missing-argument 422, rejected 422 (durable-checkpoint guard), each with .ros digests compared; not-found 404 |
+| CTL-04 | 4. identity/provenance of the equivalent CLI command, never from the client | met | same identity test: body carries actor/agent/provider "mallory"; recorded identity equals that of `work start` run by the CLI in the host's environment and contains no "mallory" |
+| CTL-04 | 5. per-action routes keep working or documented superseded | met | legacy routes unchanged (existing web tests pass); docs/web-interface.md marks them superseded |
+| CTL-05 | 1. no host workflow state; request-time derivation | met | every /api/v1 response is a new `praxis control-plane` process (WebInterface.handle -> CliProcess.runSelf; HubWeb -> Hub.runControlPlane); no cache |
+| CTL-05 | 2. responses carry fingerprint, repository and commit | met | `source` on every per-repository document (ControlPlaneSource.read); CLI work test checks commit = git HEAD, branch, repository id; hub aggregate entries carry each repository's own document and source |
+| CTL-05 | 3. restart gives identical responses; CLI change seen without restart | met | "web serve v1: a restarted host answers identically, and CLI changes appear without a restart" |
+| CTL-05 | 4. automated check fails on host writes outside the CLI path | met | source check over WebHttp.fs, WebInterface.fs, Hub.fs, ControlPlane.fs with an explicit allowlist (temp uploads, hub registration); dynamic no-write read test |
+| CTL-05 | 5. documented | met | docs/control-plane-api.md "The host holds no state" |
+| CTL-06 | 1. hub endpoints: repositories with availability, per-repository work list and item via the spoke CLI, same contract | met | "hub serve v1: per-repository documents come from each repository's own Praxis; failures stay per repository" (relayed work-item document equals the spoke's own `control-plane work ID` output) |
+| CTL-06 | 2. hub persists only registration data; spoke change appears without the hub | met | same test: hub tree digest unchanged across all requests; spoke CLI transition visible on next hub request |
+| CTL-06 | 3. unreachable/incompatible reported per repository | met | same test: moved spoke unreachable (503 relayed), pre-control-plane launcher incompatible (502), healthy one unaffected, aggregate 200 |
+| CTL-06 | 4. mutations delegated to the owner's transition path | met | same test: POST .../transitions relayed to the spoke's `control-plane transition` (409 refusal and 200 start, start visible in the spoke's work context); existing hub create already runs the spoke's `add` |
+| CTL-06 | 5. docs/project-administration-hub.md updated; tests | met | "Versioned API" section; tests above |
+
+Deviations from the plan: none in scope. The executions endpoints present
+Ordo execution envelopes only; telemetry executions appear in the evidence
+document (ids and usage), as recorded in section 3.
