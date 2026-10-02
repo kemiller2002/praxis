@@ -210,3 +210,35 @@ same example with "\n" appended is rejected; P1 also covers "\r" and
    expected to move.
  - Generated pattern in PathFilter: the `\z` is appended in an
    interpolated string; tested directly through globMatch.
+
+
+8. Verification pass (before completion)
+----------------------------------------
+
+Commits: f29d05d (fix and tests). Build: `dotnet build Ros.slnx
+--configuration Release` -> 0 errors.
+
+Negative control: with src/ reverted to the base (tests kept),
+`PRAXIS_TEST_FILTER=trailing dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll`
+-> 11 new tests FAIL (all of them); the one PASS was a pre-existing,
+unrelated test whose name contains "trailing". With the fix: all 11 PASS.
+
+Full suites with the fix:
+ - `dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll`
+   -> "1324 test(s); 1324 passed; 0 failed"
+ - `python3 -m unittest discover -s tests` -> "Ran 7 tests ... OK"
+ - `./praxis validate` -> "validation passed with 2 warning(s)" (both
+   warnings are pre-existing provenance warnings on research evidence
+   records this item does not touch; no new finding).
+
+Criterion | Status | Evidence
+---|---|---
+AC1 ActorKind.tryParse rejects trailing \n or \r | met | Actor.fs:22 now `^x-[a-z0-9][a-z0-9-]*\z`; test "an actor kind extension with a trailing line break is rejected, the same extension without one is still accepted" (ProvenanceTests) asserts None for "x-agent\n", "x-agent\r", "x-agent\r\n" and an Error from ActorKind.resolve; fails on the base, passes now
+AC2 audit of every whole-value Domain regex | met | Section 3: P1-P18 corrected to \z (3a), already-\z patterns listed (3b), remaining patterns recorded as safe with reasons (3c); search command recorded in section 2
+AC3 a test for each corrected pattern | met | P1 ProvenanceTests "actor kind extension ... line break"; P2 ProvenanceTests "contribution operation extension ..."; P3-P5 ProvenanceTests "contribution keys and timestamps ..."; P6-P7 ArtifactTests "artifact identifiers with a trailing newline ..." (P7 via the legacy file-name rule in ArtifactPolicy.validate); P8 ImplementationLanguagePolicyTests "configuration: an exception decision ..."; P9 TelemetryValidationTests "a cost currency ..."; P10 TelemetryValidationTests "an x- classification extension ..."; P11 TelemetryValidationTests "an execution id with a trailing newline ..."; P12-P13 WorkGroupTests "group and member IDs ..." (isValidGroupId, WorkItemId.isValid, and through WorkGroups.create); P14-P17 EnvelopeReconciliationTests "reconciliation rejects a transaction id, work item, base commit, or currency ..."; P18 PathFilterTests "glob match covers the whole path ..."
+AC4 no accepted valid value changes | met | By construction (section 4 invariant: no audited pattern uses Multiline, so $ and \z differ only before a final "\n"); each new test also asserts the valid value is still accepted; full suite 1324/1324 unchanged; `./praxis validate` on this repository raises no new finding
+
+Not done here, deliberately: the six `$`-anchored candidate lines outside
+src/Ros.Domain (section 5) are outside AC2's scope and were not changed.
+The "Not to be merged to main before EX-ROS-2026-A022 is evaluated"
+condition is respected: no pull request or merge was made.
