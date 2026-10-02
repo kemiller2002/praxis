@@ -4004,6 +4004,30 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-EXP-03",
+      "title": "Record A022 target-gate result and design affinity follow-on experiment",
+      "description": "Preserve the EX-ROS-2026-A022 target-repository gate outcome (no eligible target among the allowlisted repositories plus kemiller2002/signal), record it as evidence without loosening the preregistered gate, set the legal experiment status, and preregister a new blocked multi-repository experiment that tests HY-ROS-2026-A029 with repository as a blocking factor and affinity as a frozen measured variable. No A022 arm is started.",
+      "tags": [
+        "planning",
+        "experiment"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-02T12:23:33.000Z",
+      "updatedAt": "2026-10-02T12:23:33.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "user-request",
+      "sourceReference": null
     }
   ]
 }
