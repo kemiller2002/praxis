@@ -5972,11 +5972,49 @@
         }
       },
       "completedAt": "2026-10-01T12:35:50.000Z"
+    },
+    {
+      "id": "PRAXIS-PLAN-EXP-02",
+      "type": "research",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "research-record",
+          "path": "research/experiments/EX-ROS-2026-A022--affinity-by-execution-mode.md"
+        }
+      ],
+      "updatedAt": "2026-10-01T16:06:20.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261001T160615840Z-adece80d"
+      ],
+      "latestCheckpoint": {
+        "id": "72c59968165a2153e433ae3d",
+        "recordedAt": "2026-10-01T16:06:19.000Z",
+        "executionId": "EXE-20261001T160615840Z-adece80d",
+        "repository": "repository-operating-system",
+        "branch": "research/a022-affinity-falsification",
+        "commit": "00f421e874f97840c68a4b7b7572c855de65de17",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "research/a022-affinity-falsification",
+        "remoteCommit": "00f421e874f97840c68a4b7b7572c855de65de17",
+        "summary": "Preserved the R2 blind bundle as EV-ROS-2026-A070 and pre-registered HY-ROS-2026-A029 / EX-ROS-2026-A022 with source-Praxis provenance.",
+        "nextAction": "Land PR 145 after CI is green.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-01T16:06:20.000Z",
+      "conclusion": "inconclusive"
     }
   ],
   "protocolVersion": "1.0.0",
-  "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-01T12:35:50.000Z",
+  "actor": "openai/chatgpt",
+  "updatedAt": "2026-10-01T16:06:20.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

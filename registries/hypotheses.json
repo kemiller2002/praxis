@@ -299,6 +299,23 @@
             "modified"
           ],
           "reason": "PRAXIS-PLAN-07: merge-conflict resolution combining the completed A021 result (EV-ROS-2026-A064) with the owner's PGEI mechanism (EV-ROS-2026-A063)"
+        },
+        "EXE-20261001T160615840Z-adece80d": {
+          "actor": {
+            "id": "openai/chatgpt",
+            "kind": "agent",
+            "model": "gpt-5.6-sol",
+            "provider": "openai",
+            "runtime": "chatgpt"
+          },
+          "at": "2026-10-01T16:06:16.000Z",
+          "evidence": [
+            "EV-ROS-2026-A070"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "Updated the grouping hypothesis with the R2 replication evidence and the next falsification test."
         }
       }
     },
@@ -307,7 +324,10 @@
       "EX-ROS-2026-A021",
       "EV-ROS-2026-A059",
       "EV-ROS-2026-A063",
-      "EV-ROS-2026-A064"
+      "EV-ROS-2026-A064",
+      "EV-ROS-2026-A070",
+      "EX-ROS-2026-A022",
+      "HY-ROS-2026-A029"
     ],
     "related_theories": [],
     "research_area": "repository-operating-system",
@@ -316,7 +336,8 @@
     "supersedes": [],
     "supporting_evidence": [
       "EV-ROS-2026-A063",
-      "EV-ROS-2026-A064"
+      "EV-ROS-2026-A064",
+      "EV-ROS-2026-A070"
     ],
     "tags": [
       "planning",
@@ -325,5 +346,54 @@
       "experiment"
     ],
     "title": "One shared reasoning context for strongly related work reduces repeated work or improves architectural consistency"
+  },
+  {
+    "confidence": "very-low",
+    "contradicting_evidence": [],
+    "created": "2026-10-01",
+    "id": "HY-ROS-2026-A029",
+    "path": "research/hypotheses/HY-ROS-2026-A029--affinity-moderates-grouping-value.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261001T160615840Z-adece80d": {
+          "actor": {
+            "id": "openai/chatgpt",
+            "kind": "agent",
+            "model": "gpt-5.6-sol",
+            "provider": "openai",
+            "runtime": "chatgpt"
+          },
+          "at": "2026-10-01T16:06:17.000Z",
+          "evidence": [
+            "EV-ROS-2026-A070"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "Created the affinity-moderation hypothesis that distinguishes cohesion effects from generic session setup-cost amortization."
+        }
+      }
+    },
+    "related_documents": [
+      "HY-ROS-2026-A028",
+      "EV-ROS-2026-A064",
+      "EV-ROS-2026-A070",
+      "EX-ROS-2026-A022",
+      "requirements/PLANNING-WORK-GROUPS.md"
+    ],
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "active",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [],
+    "tags": [
+      "planning",
+      "grouping",
+      "affinity",
+      "context",
+      "experiment"
+    ],
+    "title": "Work affinity moderates the value of shared reasoning context"
   }
 ]

@@ -138,5 +138,57 @@
       "HY-ROS-2026-A028"
     ],
     "title": "Grouped versus independent execution of one high-affinity cohort (frozen protocol)"
+  },
+  {
+    "created": "2026-10-01",
+    "id": "EX-ROS-2026-A022",
+    "inputs": [
+      "EV-ROS-2026-A064",
+      "EV-ROS-2026-A070"
+    ],
+    "outputs": [],
+    "path": "research/experiments/EX-ROS-2026-A022--affinity-by-execution-mode.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261001T160615840Z-adece80d": {
+          "actor": {
+            "id": "openai/chatgpt",
+            "kind": "agent",
+            "model": "gpt-5.6-sol",
+            "provider": "openai",
+            "runtime": "chatgpt"
+          },
+          "at": "2026-10-01T16:06:17.000Z",
+          "evidence": [
+            "EV-ROS-2026-A070"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "Created the pre-registered 2x2 high/low-affinity by grouped/independent falsification experiment."
+        }
+      }
+    },
+    "related_documents": [
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "HY-ROS-2026-A028",
+      "HY-ROS-2026-A029"
+    ],
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "proposed",
+    "tags": [
+      "planning",
+      "grouping",
+      "affinity",
+      "experiment",
+      "replication",
+      "falsification"
+    ],
+    "tests_hypotheses": [
+      "HY-ROS-2026-A028",
+      "HY-ROS-2026-A029"
+    ],
+    "title": "Work affinity by execution mode: grouped versus independent 2x2 replication"
   }
 ]

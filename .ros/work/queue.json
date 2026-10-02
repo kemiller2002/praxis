@@ -3956,6 +3956,29 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-EXP-02",
+      "title": "Preserve A021 R2 replication and pre-register the affinity falsification experiment",
+      "description": null,
+      "tags": [
+        "planning,experiment"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-01T16:06:15.091Z",
+      "updatedAt": "2026-10-01T16:06:20.000Z",
+      "createdBy": "openai/chatgpt",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/chatgpt",
+        "provider": "openai",
+        "model": "gpt-5.6-sol",
+        "runtime": "chatgpt"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
