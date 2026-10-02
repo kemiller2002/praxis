@@ -794,15 +794,7 @@ let private runWorkList root (arguments: string list) =
         let tags = optionValues "--tag" arguments
         let status = optionValue "--status" arguments
 
-        let filtered =
-            rows
-            |> List.filter (fun row -> tags |> List.forall (fun tag -> List.contains tag row.Tags))
-            |> List.filter (fun row ->
-                match status with
-                | Some expected -> row.Status = expected
-                | None -> true)
-
-        printf "%s" (renderWorkListRows filtered)
+        printf "%s" (renderWorkListRows (WorkListView.filter tags status rows))
         0
 
 /// Mirrors production `showWork` (`tools/ros_cli.mjs`): the same merged

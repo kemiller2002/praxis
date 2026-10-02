@@ -31,5 +31,6 @@
     <Compile Include="Installation/InstallationJson.fs" />
     <Compile Include="Planning/PlanningJson.fs" />
     <Compile Include="Work/WorkGroupJson.fs" />
+    <Compile Include="Work/WorkStateJson.fs" />
   </ItemGroup>
 </Project>

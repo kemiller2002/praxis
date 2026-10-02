@@ -124,6 +124,27 @@ module FileWorkListRepository =
     let readListView (root: string) : Result<WorkListRow list, string> =
         readContextItems root |> Result.map (fun contextItems -> WorkListView.mergedRows (readQueueItems root) contextItems)
 
+    /// The recorded inputs of the control-plane work-state read model
+    /// (`WorkStateView`): the completion configuration, the backlog queue and
+    /// the live context. Reads files only; an unreadable store is an error.
+    let readStateSources (root: string) : Result<WorkStateConfiguration * QueueItemDetail list * LiveWorkItem list, string> =
+        try
+            let defaultEvidence, byType = FileWorkConfigRepository.readCompletionEvidence root
+
+            let configuration =
+                { DefaultEvidence = defaultEvidence
+                  EvidenceByType = byType
+                  RequireDurableCheckpoint = FileWorkConfigRepository.readRequireDurableCheckpoint root }
+
+            readContextItems root |> Result.map (fun contextItems -> configuration, readQueueItems root, contextItems)
+        with error ->
+            Error $"work state could not be read: {error.Message}"
+
+    /// The detail markdown recorded for `id`, if any.
+    let readDetail (root: string) (id: string) : string option =
+        let path = detailPath root id
+        if File.Exists path then Some(File.ReadAllText path) else None
+
     /// Mirrors production `showWork`: the same merged row for one id, plus
     /// the detail markdown file's content if one exists.
     let readShowView (root: string) (id: string) : Result<WorkListRow * string option, string> =

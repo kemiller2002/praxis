@@ -4,6 +4,7 @@ open System
 open System.IO
 open System.Text.Json
 open System.Text.Json.Nodes
+open Ros.Contracts.Work
 open Ros.Domain.Work
 open Ros.Infrastructure.Work
 
@@ -55,9 +56,18 @@ type RowAction =
     | Resume
     | Complete
 
+/// A read of the versioned control-plane work-state contract
+/// (`Ros.Contracts.Work.WorkStateJson`), answered in-process from the
+/// recorded state without running any command.
+[<RequireQualifiedAccess>]
+type StateQuery =
+    | List of tags: string list * status: string option
+    | Item of id: string
+
 [<RequireQualifiedAccess>]
 type WebRoute =
     | Api of WorkOperation
+    | State of StateQuery
     | ApiDownload of id: string * attachmentId: string
     | ApiError of status: int * message: string
     | Home of query: (string * string) list
@@ -170,6 +180,8 @@ module WebInterface =
         let body () = HttpMessages.parseBody request
 
         match request.Method, request.Segments with
+        | "GET", [ "api"; "v1"; "work" ] -> WebRoute.State(StateQuery.List(queryTags request.Query, queryStatus request.Query))
+        | "GET", [ "api"; "v1"; "work"; id ] -> WebRoute.State(StateQuery.Item id)
         | "GET", [ "api"; "work" ] -> WebRoute.Api(WorkOperation.List(queryTags request.Query, queryStatus request.Query))
         | "GET", [ "api"; "work"; "ready" ] -> WebRoute.Api(WorkOperation.List(queryTags request.Query, Some "ready"))
         | "GET", [ "api"; "work"; id ] -> WebRoute.Api(WorkOperation.Show id)
@@ -654,6 +666,36 @@ module WebInterface =
             (String.concat "\n" [ header status; "<main>"; "<section id=\"validation\"><h2>Validation</h2>"; body; "</section>"; "</main>" ])
 
     // ------------------------------------------------------------------
+    // Pure: recorded state -> versioned work-state response
+    // ------------------------------------------------------------------
+
+    /// The status and body a state query answers with, given the recorded
+    /// sources and a reader for an item's detail markdown.
+    let stateResponse
+        (sources: Result<WorkStateConfiguration * QueueItemDetail list * LiveWorkItem list, string>)
+        (detail: string -> string option)
+        (query: StateQuery)
+        : int * JsonNode =
+        match sources with
+        | Error message -> 500, WorkStateJson.errorDocument "work-state-unreadable" message []
+        | Ok(configuration, queueItems, contextItems) ->
+            match query with
+            | StateQuery.List(tags, status) ->
+                200, WorkStateJson.listDocument (WorkStateView.projectFiltered configuration queueItems contextItems tags status)
+            | StateQuery.Item id ->
+                match WorkStateView.project configuration queueItems contextItems |> List.tryFind (fun item -> item.Id = id) with
+                | Some item -> 200, WorkStateJson.itemDocument item (detail id)
+                | None -> 404, WorkStateJson.workItemNotFound id
+
+    /// Whether the recorded state knows `id`; `None` when it cannot be read
+    /// (the CLI then reports its own error).
+    let isKnown (sources: Result<WorkStateConfiguration * QueueItemDetail list * LiveWorkItem list, string>) (id: string) : bool option =
+        sources
+        |> Result.toOption
+        |> Option.map (fun (_, queueItems, contextItems) ->
+            WorkListView.mergedRows queueItems contextItems |> List.exists (fun row -> row.Id = id))
+
+    // ------------------------------------------------------------------
     // Effects: run the CLI, serve HTTP
     // ------------------------------------------------------------------
 
@@ -763,6 +805,11 @@ module WebInterface =
     /// The HTTP adapter: route, run, render.
     let handle (root: string) (request: HttpRequestData) : HttpResponseData =
         match route request with
+        | WebRoute.State query ->
+            let status, body = stateResponse (FileWorkListRepository.readStateSources root) (FileWorkListRepository.readDetail root) query
+            HttpMessages.jsonNode status body
+        | WebRoute.Api(WorkOperation.Show id) when isKnown (FileWorkListRepository.readStateSources root) id = Some false ->
+            HttpMessages.jsonNode 404 (WorkStateJson.workItemNotFound id)
         | WebRoute.Api operation ->
             match execute root operation with
             | Ok json -> HttpMessages.json 200 json

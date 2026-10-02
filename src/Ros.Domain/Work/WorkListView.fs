@@ -44,7 +44,7 @@ type WorkListRow =
 /// itself renders.
 [<RequireQualifiedAccess>]
 module WorkListView =
-    let private semanticStateCode (state: LiveWorkState) =
+    let stateCode (state: LiveWorkState) =
         match state with
         | LiveWorkState.Ready -> "ready"
         | LiveWorkState.Active -> "active"
@@ -52,7 +52,7 @@ module WorkListView =
         | LiveWorkState.Complete -> "complete"
         | LiveWorkState.Abandoned -> "abandoned"
 
-    let private actionCode (action: WorkAction) =
+    let actionCode (action: WorkAction) =
         match action with
         | WorkAction.Begin -> "begin"
         | WorkAction.Block -> "block"
@@ -109,7 +109,7 @@ module WorkListView =
                 contextItem
                 |> Option.map (fun item ->
                     { State = item.LocalState
-                      SemanticState = semanticStateCode item.SemanticState
+                      SemanticState = stateCode item.SemanticState
                       AllowedActions = WorkTransition.allowedActions item.SemanticState |> List.map actionCode |> List.sort })
 
             { Id = id
@@ -122,3 +122,10 @@ module WorkListView =
               BacklogActions = backlogActions
               Attachments = queueItem |> Option.map (fun item -> item.Attachments) |> Option.defaultValue []
               LiveWorkItem = liveWorkItem })
+
+    /// `work list`'s `--tag`/`--status` filters: every requested tag must be
+    /// present (AND), and a requested status matches a row's status exactly.
+    let filter (tags: string list) (status: string option) (rows: WorkListRow list) : WorkListRow list =
+        rows
+        |> List.filter (fun row -> tags |> List.forall (fun tag -> List.contains tag row.Tags))
+        |> List.filter (fun row -> status |> Option.forall ((=) row.Status))
