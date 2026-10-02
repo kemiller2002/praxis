@@ -120,6 +120,7 @@
     <Compile Include="PostmergeReconciliationTests.fs" />
     <Compile Include="WorkGroupTests.fs" />
     <Compile Include="TelemetryCostUnitTests.fs" />
+    <Compile Include="ValueAnchorTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

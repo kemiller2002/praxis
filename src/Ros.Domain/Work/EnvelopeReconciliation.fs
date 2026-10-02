@@ -122,10 +122,10 @@ type EnvelopeReconciliationDecision =
     | Reject of EnvelopeReconciliationFinding list
 
 module EnvelopeReconciliation =
-    let private sha = Regex("^[0-9a-fA-F]{40}$", RegexOptions.CultureInvariant)
-    let private workItem = Regex("^[A-Za-z0-9][A-Za-z0-9._-]*$", RegexOptions.CultureInvariant)
-    let private transaction = Regex("^[A-Za-z0-9][A-Za-z0-9._-]*$", RegexOptions.CultureInvariant)
-    let private currency = Regex("^[A-Z]{3}$", RegexOptions.CultureInvariant)
+    let private sha = Regex(@"^[0-9a-fA-F]{40}\z", RegexOptions.CultureInvariant)
+    let private workItem = Regex(@"^[A-Za-z0-9][A-Za-z0-9._-]*\z", RegexOptions.CultureInvariant)
+    let private transaction = Regex(@"^[A-Za-z0-9][A-Za-z0-9._-]*\z", RegexOptions.CultureInvariant)
+    let private currency = Regex(@"^[A-Z]{3}\z", RegexOptions.CultureInvariant)
 
     let decide (envelope: EnvelopeReconciliationInput) (observed: EnvelopeReconciliationObservation) =
         if observed.TransactionAlreadyApplied && not observed.TransactionReplayMatches then

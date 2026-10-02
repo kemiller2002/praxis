@@ -98,6 +98,31 @@ module EnvelopeReconciliationTests =
     let tests =
         [ { Name = "reconciliation accepts a legal envelope"
             Run = fun () -> Assert.equal Accept (EnvelopeReconciliation.decide envelope observed) }
+
+          { Name = "envelope identifiers and cost currency reject a trailing line terminator"
+            Run = fun () ->
+                let rejects (candidate: EnvelopeReconciliationInput) (expected: EnvelopeReconciliationFinding -> bool) =
+                    match EnvelopeReconciliation.decide candidate observed with
+                    | Reject findings -> Assert.isTrue (findings |> List.exists expected) $"expected rejection, got %A{findings}"
+                    | value -> failwithf "expected rejection, got %A" value
+
+                for suffix in [ "\n"; "\r"; "\r\n" ] do
+                    rejects { envelope with TransactionId = "tx-1" + suffix } (function InvalidTransactionId _ -> true | _ -> false)
+                    rejects { envelope with WorkItem = "WI-0064" + suffix } (function InvalidWorkItemId _ -> true | _ -> false)
+                    rejects { envelope with BaseCommit = String.replicate 40 "a" + suffix } (function InvalidBaseCommit _ -> true | _ -> false)
+
+                    let cost =
+                        { MeasurementId = "MEAS-COST"; MetricId = "cost.step_total"; Value = Some 0.12; Unit = Some "currency"; Currency = Some("USD" + suffix)
+                          Quality = Some "reported"; Availability = "reported"; RawJson = "{}" }
+
+                    let costed = { stepEnvelope with Execution = Some { stepEnvelope.Execution.Value with Steps = [ { validStep with Measurements = [ cost ] } ] } }
+                    rejects costed (function InvalidStepStructure value -> value.Contains "cost-currency-required" | _ -> false)
+
+                let validCost =
+                    { MeasurementId = "MEAS-COST"; MetricId = "cost.step_total"; Value = Some 0.12; Unit = Some "currency"; Currency = Some "USD"
+                      Quality = Some "reported"; Availability = "reported"; RawJson = "{}" }
+
+                Assert.equal Accept (EnvelopeReconciliation.decide { stepEnvelope with Execution = Some { stepEnvelope.Execution.Value with Steps = [ { validStep with Measurements = [ validCost ] } ] } } observed) }
           { Name = "reconciliation rejects claimed work-item branch mismatch"
             Run = fun () ->
                 match EnvelopeReconciliation.decide { envelope with Branch = "main" } observed with

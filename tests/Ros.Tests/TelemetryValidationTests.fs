@@ -499,4 +499,23 @@ module TelemetryValidationTests =
                   let findings =
                       TelemetryValidation.findings validConfig validRegistry [ { Relative = "bad.json"; Message = "malformed telemetry JSON: boom" } ] [] []
 
-                  Assert.equal [ ({ Path = "bad.json"; Field = ""; Message = "malformed telemetry JSON: boom" }: TelemetryFinding) ] findings } ]
+                  Assert.equal [ ({ Path = "bad.json"; Field = ""; Message = "malformed telemetry JSON: boom" }: TelemetryFinding) ] findings }
+
+          { Name = "whole-value telemetry patterns reject a trailing line terminator (execution id, classification, currency)"
+            Run =
+              fun () ->
+                  for suffix in [ "\n"; "\r"; "\r\n" ] do
+                      let id = "EXE-TEST-0001" + suffix
+
+                      Assert.isTrue
+                          (fieldsOf (runOne { validRecord with ExecutionId = Some id }) |> List.contains "executionId")
+                          $"execution id with suffix {suffix.Length} char(s) was accepted"
+
+                      Assert.equal
+                          [ "classification.types" ]
+                          (fieldsOf (runOne { validRecord with Classification = Some { validClassification with Types = Some [ Some("x-custom/thing" + suffix) ] } }))
+
+                      Assert.isTrue (TelemetryValidation.violatesCostUnit "currency" (Some "currency") (Some("USD" + suffix))) "currency with a line terminator was accepted"
+
+                  Assert.equal [] (runOne { validRecord with Classification = Some { validClassification with Types = Some [ Some "x-custom/thing" ] } })
+                  Assert.isTrue (not (TelemetryValidation.violatesCostUnit "currency" (Some "currency") (Some "USD"))) "a valid currency was rejected" } ]
