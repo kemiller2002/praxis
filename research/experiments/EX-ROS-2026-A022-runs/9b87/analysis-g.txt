@@ -1,0 +1,256 @@
+Architecture analysis: control-plane API (PRAXIS-CTL-02 .. PRAXIS-CTL-06)
+=====================================================================
+
+- Members: PRAXIS-CTL-02, PRAXIS-CTL-03, PRAXIS-CTL-04, PRAXIS-CTL-05, PRAXIS-CTL-06
+- Execution repository: kemiller2002/praxis, branch experiment/a022-run-9b87
+- Base commit: f806f817e4656e00550313d839b59ceea87a682d
+- Requirements: requirements/EXECUTION-ORCHESTRATION.md PRX-CTL-004..008,
+  PRX-CTL-011, PRX-CTL-012, PRX-UI-009, PRX-UI-024, PRX-UI-027
+- Started together: ./praxis work start --id PRAXIS-CTL-02 ... --id PRAXIS-CTL-06 --type feature
+  (work type feature -> required completion evidence implementation, tests;
+  ros.json workProtocol.completionEvidence.default)
+
+
+1. Members
+----------
+
+PRAXIS-CTL-02 Typed control-plane read API for work state and legal actions
+  (PRX-CTL-005, PRX-CTL-011). Depends on: -
+  1. versioned, documented JSON contract in the F# contracts for the work
+     list and one work item: identity, semantic state, recorded backlog and
+     live state, legal next actions, and for refused transitions the
+     kernel's reason where it can say why
+  2. obligations and unknowns where Praxis records them; explicitly
+     unavailable (not empty) when no source exists
+  3. read endpoints never write repository state
+  4. unknown item -> 404 with a structured error body
+  5. existing /api/work clients keep working or the change is documented
+  6. tests
+
+PRAXIS-CTL-03 Read API for executions, receipts and evidence
+  (PRX-CTL-005, PRX-CTL-011, PRX-CTL-012). Depends on: CTL-02 envelope
+  1. typed, versioned endpoints list executions (optionally per work item)
+     and show one: role, status, actor; provider/model/runtime presented as
+     execution-host information, never as owner of work state
+  2. an execution's steps with expected and observed receipts and their
+     match / mismatch / indeterminate state
+  3. a work item's recorded evidence and durable checkpoints
+  4. telemetry usage and cost where recorded, explicitly unknown otherwise
+  5. obtained through the same paths as `execution show --json`,
+     `work context`, `work checkpoint show`, `telemetry usage`; not re-derived
+  6. endpoints never write; tests
+
+PRAXIS-CTL-04 Transition requests with structured refusals
+  (PRX-CTL-006, PRX-UI-024, PRX-UI-027). Depends on: CTL-02 item view
+  1. one transition-request endpoint (ready, block, abandon, start, resume,
+     complete with their arguments) executed through the CLI's own
+     transition path, never reimplementing a rule
+  2. success returns the item's resulting typed state
+  3. refusal -> structured refusal (machine-readable category, kernel's
+     message, requested action), appropriate HTTP status, Praxis state
+     byte-for-byte unchanged (test)
+  4. actor identity / provenance are those of the equivalent CLI command,
+     never inferred from the HTTP client
+  5. existing per-action routes keep working or are documented as
+     superseded; tests
+
+PRAXIS-CTL-05 Host holds no canonical state; reconstructs on restart
+  (PRX-CTL-004, PRX-CTL-008, PRX-UI-009). Depends on: CTL-02..04 endpoints
+  1. no workflow state in the host: every response derived from durable
+     records at request time (or a fingerprint-invalidated cache)
+  2. responses carry the state fingerprint and repository/commit identity
+  3. test: restart (new instance, same repo) -> identical responses; test:
+     CLI changes state while host runs -> change observed without restart
+  4. automated check fails if the host writes repository files other than
+     through the CLI transition path
+  5. documented
+
+PRAXIS-CTL-06 Multi-repository aggregation without a central store
+  (PRX-CTL-007). Depends on: CTL-02 (per-repository contract)
+  1. hub typed read endpoints: registered repositories with availability,
+     each repository's work list and work item, by delegating to that
+     repository's own Praxis CLI with the same per-repository contract
+  2. hub persists only registration data; test shows a state change in a
+     registered repository appearing without hub involvement
+  3. unreachable / incompatible repository reported for that repository,
+     never failing the whole response
+  4. any hub mutation delegated to the owning repository's transition path
+  5. docs/project-administration-hub.md updated; tests
+
+
+2. Reuse inventory
+------------------
+
+Searches: grep -rn "/api/work\|web serve\|hub serve" src tests docs;
+grep -rn "allowedActions\|decide" src/Ros.Domain/Work; grep -rn
+"obligation\|unknowns" src; grep -rn "\"praxis\." src (existing schema ids:
+praxis.describe, praxis.remote, praxis.telemetry-usage; no control-plane
+schema exists).
+
+| Existing element | Location | What it does | Decision |
+|---|---|---|---|
+| WebInterface.route / execute / commandLine | src/Ros.Cli/WebInterface.fs:169, :700, :224 | pure routing to WorkOperation; each operation is exactly one CLI command line run as a child process | reuse: commandLine is THE transition path for CTL-04; new /api/v1 routes added beside the legacy ones (unchanged, CTL-02.5, CTL-04.5) |
+| CliProcess.runSelf / run / failureMessage | src/Ros.Cli/CliProcess.fs:87, :46, :70 | runs this CLI (or a spoke's ./praxis) with an argument vector | reuse for every host read and for the transition child process |
+| HttpMessages (json, jsonNode, jsonError, parseBody) | src/Ros.Cli/WebHttp.fs:131-139, :335 | response/body helpers | reuse; jsonError body stays the legacy `{error}` shape for legacy routes only |
+| HttpHost.serve | src/Ros.Cli/WebHttp.fs:489 | listener; handler is a pure function of the request plus CLI calls | reuse unchanged; it keeps no state between requests already |
+| FileWorkListRepository.readListView / readShowView | src/Ros.Infrastructure/Work/FileWorkListRepository.fs:124, :129 | merged backlog + live rows (`work list`, `work show`) | reuse in-process as the source of identity/backlog/live state |
+| workListRowNode (private) | src/Ros.Cli/Program.fs:726 | renders a WorkListRow as `work show` JSON | not reused directly: the control-plane contract is a new, versioned shape; the legacy shape stays where it is |
+| FileWorkContextRepository.readContextView | src/Ros.Infrastructure/Work/FileWorkContextRepository.fs:197 | `work context [ID]` view incl. evidence, requiredEvidenceForCompletion, allowedActions | reuse in-process: obligations (required completion evidence) and recorded evidence come from here |
+| CheckpointCommands.continuityFor / show | src/Ros.Cli/CheckpointCommands.fs:174, :524 | continuity view; `work checkpoint show --json` document + history | extend: extract the show document into a public function used by both the command and the control plane |
+| ExecutionCommands load / snapshotNode / list | src/Ros.Cli/ExecutionCommands.fs:127, :149, :301 | `execution show --json` / `execution list --json` (envelope, steps, effects, legal actions) | extend: expose the snapshot document publicly and add observed receipts per step (additive) so `execution show --json` and the control plane share one path |
+| ExecutionJson.envelope / expected / observed / result | src/Ros.Contracts/Execution/ExecutionJson.fs:209, :34, :60, :69 | wire shapes for receipts | reuse |
+| runTelemetryUsage (private) + Usage.aggregate + FileTelemetryUsageRepository.read | src/Ros.Cli/Program.fs:2572; src/Ros.Domain/Telemetry/Usage.fs:104; src/Ros.Infrastructure/*/FileTelemetryUsageRepository.fs:38 | `telemetry usage` document (praxis.telemetry-usage/1) | extend: move the document builder into a contract function so the command and the control plane share it |
+| BacklogTransition.allowedActions / decide | src/Ros.Domain/Work/Backlog.fs:95, :101 | backlog legality and rejection (illegal-transition, block-reason-required) | reuse: the kernel's own answer for legal actions and refusal reasons |
+| WorkTransition.allowedActions / decide | src/Ros.Domain/Work/Model.fs:42, :61 | live legality and rejections (incl. missing-evidence) | reuse as above |
+| WorkDecisionContract / BacklogContract rejection codes | src/Ros.Contracts/Work/DecisionJson.fs:24; src/Ros.Contracts/Work/BacklogJson.fs:63 | machine-readable rejection reason codes | reuse the same codes in the control-plane contract |
+| HubRegistry.spokeRepositoryId / resolveLauncher; Hub.runSpoke / listWork | src/Ros.Cli/Hub.fs:101, :125, :323, :378 | spoke identity; runs the spoke's own ./praxis; per-repo error rows | reuse: hub v1 endpoints run the spoke's `./praxis control-plane ...` through runSpoke |
+| Ordo HandoffAuthority (Facts/Unknowns/Obligations) | src/Ros.Domain/Ordo/Model.fs:226 | handoff projection supplied explicitly by a caller (`ordo handoff --unknown`) | not reused: not recorded per work item, so it is no source for per-item unknowns (reported unavailable) |
+| Test helpers ServedProcess, Http, CliHarness.initializedRepository / commitAll / optOutOfDurableCheckpoints | tests/Ros.Tests/WebInterfaceTests.fs:16, :117; tests/Ros.Tests/CliHarness.fs:95, :89, :116 | real `serve` process over a fresh repository | reuse for every HTTP test (restart test = two ServedProcess instances) |
+
+New abstractions and why existing ones do not fit:
+- ControlPlaneJson (contract): no versioned control-plane schema exists
+  (search above). The legacy `work show` row is unversioned and must stay
+  byte-compatible for existing /api/work clients, so it cannot be changed
+  into the new contract.
+- `praxis control-plane ...` (read-only CLI command group + one transition
+  request): needed so that the hub can obtain the same per-repository
+  contract from a spoke by running its own CLI (CTL-06.1); `hub work` only
+  relays raw `work list` rows (Hub.fs:364) and has no envelope/fingerprint.
+- State fingerprint: no existing function hashes Praxis state; Ordo's
+  StateFingerprint (Model.fs:223) is a caller-supplied value of an
+  observation, not a digest of `.ros/`.
+
+
+3. Group-level design
+---------------------
+
+Common architecture and shared invariants
+- One read-only CLI command group is the single producer of every
+  control-plane document:
+    praxis control-plane work [--tag T]* [--status S]   (work list)
+    praxis control-plane work ID                         (one item)
+    praxis control-plane evidence ID                     (evidence + checkpoints + usage)
+    praxis control-plane executions [--work-item ID]     (execution list)
+    praxis control-plane execution EXE-ID                (one execution)
+    praxis control-plane source                          (identity + fingerprint only)
+    praxis control-plane transition --id ID --action A [args]   (the only mutation)
+  It reads through the same in-process functions the corresponding CLI
+  commands use (readShowView, readContextView, checkpoint show document,
+  execution snapshot document, telemetry usage document).
+- The web host (`web serve`) answers /api/v1/... by running
+  `control-plane ...` through CliProcess.runSelf, exactly as the legacy
+  routes already run `work ...`; the hub answers its /api/v1/... by running
+  each spoke's own `./praxis control-plane ...` through Hub.runSpoke.
+  Neither host parses or reshapes the per-repository document beyond
+  wrapping it in the hub's per-repository envelope.
+- Every document is an envelope:
+    { "schema": "praxis.control-plane", "schemaVersion": 1, "kind": K,
+      "source": { repository, commit, branch, stateFingerprint },
+      "data": ... }   or   "refusal"/"error": { category, message, ... }
+  Invariant: data is derived at request time from durable records; no
+  host-held state; no timestamps of the request are embedded (so a restart
+  yields identical bytes).
+- Availability wrapper for optional sources:
+    { "status": "available", "value": ... } |
+    { "status": "unavailable", "reason": "..." }
+  Used for obligations, unknowns, usage, checkpoints of backlog-only items.
+
+Conflicting requirements, and how each is resolved
+- CTL-02.5/CTL-04.5 (keep legacy clients) vs a typed contract: new
+  versioned routes under /api/v1; legacy /api/work routes keep their exact
+  behaviour and are documented as superseded, not removed.
+- CTL-04.1 "same transition path, no rule reimplemented" vs CTL-04.3
+  "structured refusal category": the category is never inferred from
+  stderr text. Before executing, the request is checked against the
+  kernel's own decision functions (BacklogTransition.decide /
+  WorkTransition.decide) over the recorded state -> `illegal-transition`
+  or `missing-argument`, with the kernel's rejection code. A legal request
+  runs the unchanged CLI command line (WebInterface.commandLine) as a
+  child process; if the CLI still refuses (a guard the decision functions
+  do not model, e.g. durable-checkpoint or evidence-file checks) the
+  category is `rejected` and the message is the CLI's own. Unknown id ->
+  `not-found`; unusable request -> `invalid-request`.
+- CTL-04.4 identity vs existing per-action routes accepting `actor` from
+  the body: the v1 transition endpoint takes no identity input; the child
+  CLI resolves identity from the host process environment exactly as the
+  same command typed in that shell would. Legacy routes unchanged.
+- CTL-05.1 "derived at request time" vs response cost: no cache at all
+  (the simplest reading of the criterion); each request is a fresh CLI
+  process, as legacy routes already are.
+- CTL-05.4 "host never writes" vs the hub writing its registry and the web
+  host writing temporary upload files: the check scopes "repository files"
+  to the served repository (web) and to registered spokes (hub); the hub's
+  own registration data under its root is the one permitted hub write
+  (CTL-06.2), uploads go to the OS temp directory.
+- CTL-03.1 "executions" has two recorded notions: Ordo execution envelopes
+  (.ros/executions, carry role and receipts) and telemetry executions
+  (.ros/telemetry/executions, carry usage). Executions endpoints present
+  envelopes (the `execution show --json` path named by CTL-03.5); telemetry
+  executions appear in the evidence document's usage section.
+
+The one design that serves several members
+- Contract module (Ros.Contracts/ControlPlane/ControlPlaneJson.fs): envelope,
+  source identity, availability, refusal/error categories, HTTP status
+  mapping (pure), legal-action view. Serves CTL-02, 03, 04, 05, 06.
+- Error model: one category set {not-found, invalid-request,
+  illegal-transition, missing-argument, rejected, unavailable,
+  incompatible} with one HTTP mapping (404, 400, 409, 422, 422, 503, 502).
+- Transaction boundary: the CLI transition command is the only mutation; a
+  refused request performs no write (pre-check) or is refused by the CLI
+  under its own lock (which already guarantees no partial write).
+- Source identity / fingerprint (CTL-05) computed by the CLI, so the hub
+  obtains a spoke's identity by delegation, not by reading spoke files.
+
+Where one design cannot serve all
+- Hub availability (CTL-06.1/.3) is a hub-only concept (path exists,
+  launcher exists, contract version compatible); it wraps rather than
+  extends the per-repository contract.
+- Execution legal actions are already computed by LegalActions.compute in
+  `execution show`; they are relayed, not unified with work-item actions.
+
+Compatibility constraints and migration implications
+- `execution show --json` gains an additive `observations` array per step;
+  `telemetry usage` output unchanged (builder moved, bytes identical);
+  `work checkpoint show --json` unchanged (builder extracted).
+- Legacy /api/work, /api/work/ID, POST /api/work/ID/ACTION and hub /api/work
+  unchanged. No data migration: nothing new is persisted.
+- An older spoke without `control-plane` exits non-zero with usage text:
+  reported per repository as `incompatible`.
+
+Common tests
+- Contract unit tests (envelope, availability, refusal mapping, legal
+  actions from kernel decisions).
+- CLI tests for each control-plane command over a fresh repository.
+- HTTP tests through ServedProcess: v1 reads, 404 body, transition success
+  and refusals with byte-for-byte .ros comparison, restart identity, live
+  change visibility, no-write check (repository tree digest before/after
+  every read endpoint), hub aggregation with a broken spoke.
+
+Risks of solving each member independently
+- Five different envelopes/error shapes (one per item) and a hub that
+  reshapes a second copy of the per-repository contract (CTL-06 violating
+  "same contract").
+- CTL-04 inventing refusal categories by parsing stderr, diverging from
+  CTL-02's legal-action reasons for the same kernel decision.
+- CTL-05's fingerprint bolted on after the fact, changing CTL-02/03 shapes.
+
+Shared infrastructure attribution (PRX-GRP-043)
+- ControlPlaneJson envelope/availability/source and the `control-plane`
+  command skeleton: attributed to PRAXIS-CTL-02 (first consumer) and named
+  in every commit message of the items it serves.
+- Fingerprint/source identity: PRAXIS-CTL-05.
+
+
+4. Order
+--------
+
+1. Contract + `control-plane work` / `work ID` / `source` + web /api/v1/work
+   routes (CTL-02, with CTL-05.2 source fields). Milestone checkpoint M1.
+2. Execution snapshot / checkpoint-show / usage extraction; `control-plane
+   executions|execution|evidence` + routes (CTL-03). Checkpoint M2.
+3. `control-plane transition` + POST /api/v1/work/ID/transitions (CTL-04).
+   Checkpoint M3.
+4. Restart, live-change and no-write tests; docs (CTL-05). Checkpoint M4.
+5. Hub /api/v1 repos/work/item/transition delegation; docs (CTL-06).
+   Checkpoint M5.
+6. Verification pass per criterion (section 5), completion per item.
