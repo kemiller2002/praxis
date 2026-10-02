@@ -4,3 +4,4 @@
 2026-10-02T15:34:09Z  G: one guard failed on a stale checkout, was repaired and re-verified before any work (deviation recorded)
 2026-10-02T15:40:47Z  M: a second independent worker finished; next worker starting
 2026-10-02T15:41:56Z  G: a second stale-checkout guard failure was repaired and re-verified before any work
+2026-10-02T15:45:31Z  M: one grouped condition finished
