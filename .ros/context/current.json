@@ -5843,38 +5843,52 @@
     {
       "id": "ACTOR-KIND-ANCHOR",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-02T14:57:01.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Provenance/Actor.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ProvenanceTests.fs"
+        },
+        {
+          "type": "analysis",
+          "path": "research/experiments/EX-ROS-2026-A022-runs/a41b/analysis-w1.txt"
+        }
+      ],
+      "updatedAt": "2026-10-02T15:21:54.000Z",
       "telemetryExecutionIds": [
         "EXE-20261002T145702173Z-32f2c5a6"
       ],
       "latestCheckpoint": {
-        "id": "b807049a94596f94484124bf",
-        "recordedAt": "2026-10-02T15:13:46.000Z",
+        "id": "b2315d30c8999ce8baf9db61",
+        "recordedAt": "2026-10-02T15:21:32.000Z",
         "executionId": "EXE-20261002T145702173Z-32f2c5a6",
         "repository": "repository-operating-system",
         "branch": "experiment/a022-run-a41b",
-        "commit": "f29d05d909e593b3770b1b1cb7253fc0e997b781",
+        "commit": "782387a16a95ffdcacc8db2e8384bf2417c3e0c5",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
         "remoteBranch": "experiment/a022-run-a41b",
-        "remoteCommit": "f29d05d909e593b3770b1b1cb7253fc0e997b781",
-        "summary": "All 18 whole-value Domain patterns anchored with \\z; a test per pattern, and each new test fails on the original code",
-        "nextAction": "Finish the full F# suite, verify the acceptance criteria in analysis-w1.txt, record metrics, complete",
+        "remoteCommit": "782387a16a95ffdcacc8db2e8384bf2417c3e0c5",
+        "summary": "Fix, per-pattern tests, criteria verification and metrics pushed; 1324/1324 F# tests, 7/7 Python tests, validate passes",
+        "nextAction": "Complete the item and commit Praxis state",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-02T15:21:54.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-02T14:57:01.000Z",
+  "updatedAt": "2026-10-02T15:21:54.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

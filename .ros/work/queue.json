@@ -2197,10 +2197,10 @@
         "security"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-28T07:59:26.521Z",
-      "updatedAt": "2026-10-01T10:44:37.000Z",
+      "updatedAt": "2026-10-02T15:21:54.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
