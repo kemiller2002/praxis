@@ -3949,10 +3949,10 @@
         "control-plane"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-01T10:44:17.000Z",
-      "updatedAt": "2026-10-01T10:44:17.000Z",
+      "updatedAt": "2026-10-02T15:39:21.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

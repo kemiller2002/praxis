@@ -67,7 +67,7 @@
 | PRAXIS-CONT-11-SEGMENTATION | Effective-current telemetry segmentation and continuity proof gaps | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-12 | work checkpoint attributes every meaningful path since the previous checkpoint to the checkpointing item, regardless of which work item produced it | complete | continuity, gh-90 | medium |
 | PRAXIS-CTL-01 | Control-plane host bind policy and declared listen scope | ready | control-plane | medium |
-| PRAXIS-CTL-02 | Typed control-plane read API for work state and legal actions | ready | control-plane | medium |
+| PRAXIS-CTL-02 | Typed control-plane read API for work state and legal actions | complete | control-plane | medium |
 | PRAXIS-CTL-03 | Control-plane read API for executions, receipts and evidence | ready | control-plane | medium |
 | PRAXIS-CTL-04 | Control-plane transition requests with structured refusals | ready | control-plane | medium |
 | PRAXIS-CTL-05 | Control-plane host holds no canonical state and reconstructs on restart | ready | control-plane | medium |
