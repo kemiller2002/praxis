@@ -170,6 +170,23 @@ module ExecutionCommands =
                 )
 
             step["expected"] <- ExecutionJson.expected v.Expected
+
+            // The observed receipts behind the status, one per observed
+            // attempt, so a reader sees what was expected and what was seen.
+            let observations = JsonArray()
+
+            v.Entries
+            |> List.iter (function
+                | StepEntry.Observed(_, attempt, observed, result, at) ->
+                    let observation = JsonObject()
+                    observation["attempt"] <- JsonValue.Create attempt
+                    observation["observedAt"] <- JsonValue.Create(ExecutionJson.timestamp at)
+                    observation["observed"] <- ExecutionJson.observed observed
+                    observation["result"] <- ExecutionJson.result result
+                    observations.Add observation
+                | _ -> ())
+
+            step["observations"] <- observations
             steps.Add step)
 
         node["steps"] <- steps
@@ -179,6 +196,19 @@ module ExecutionCommands =
         node["verification"] <- (s.Verification |> Option.map (EvaluationOutcome.toWire >> JsonValue.Create >> fun v -> v :> JsonNode) |> Option.toObj)
         node["legalActions"] <- ExecutionJson.legalActions (legal s actor)
         node
+
+    /// The `execution show --json` document for one execution: the one path
+    /// both that command and the control plane read an execution through.
+    let snapshotDocument (root: string) (actor: Actor) (id: string) : Result<JsonNode, string> =
+        load root id |> Result.map (fun s -> snapshotNode s actor)
+
+    /// The `execution list --json` envelopes, optionally for one work item.
+    let listEnvelopes (root: string) (workItem: string option) : ExecutionEnvelope list =
+        let filter = workItem |> Option.map (qualifyWorkItem root)
+
+        ExecutionStore.list root
+        |> List.choose (fun id -> ExecutionStore.loadEnvelope root id |> Result.toOption)
+        |> List.filter (fun e -> filter |> Option.forall (fun w -> e.WorkItem = w))
 
     let private start (root: string) (actor: Actor) (arguments: string list) =
         let now = DateTimeOffset.UtcNow
@@ -299,12 +329,7 @@ module ExecutionCommands =
         | [] -> fail "an execution id is required"
 
     let private list root (arguments: string list) =
-        let filter = optionValue "--work-item" arguments |> Option.map (qualifyWorkItem root)
-
-        let envelopes =
-            ExecutionStore.list root
-            |> List.choose (fun id -> ExecutionStore.loadEnvelope root id |> Result.toOption)
-            |> List.filter (fun e -> filter |> Option.forall (fun w -> e.WorkItem = w))
+        let envelopes = listEnvelopes root (optionValue "--work-item" arguments)
 
         if hasFlag "--json" arguments then
             let a = JsonArray()

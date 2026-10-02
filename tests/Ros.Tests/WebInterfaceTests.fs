@@ -13,7 +13,7 @@ open Ros.Domain.Work
 
 /// Starts a real `praxis ... serve` process on a free loopback port and
 /// drives it over HTTP; `Dispose` always stops the process.
-type ServedProcess(root: string, command: string list) =
+type ServedProcess(root: string, command: string list, environment: (string * string) list) =
     let freePort () =
         let probe = new TcpListener(IPAddress.Loopback, 0)
         probe.Start()
@@ -29,6 +29,7 @@ type ServedProcess(root: string, command: string list) =
         startInfo.RedirectStandardError <- true
         [ CliHarness.cli; "--root"; root ] @ command @ [ "--port"; string port ] |> List.iter startInfo.ArgumentList.Add
         CliHarness.identityVariables |> List.iter (startInfo.Environment.Remove >> ignore)
+        environment |> List.iter (fun (name, value) -> startInfo.Environment[name] <- value)
         let started = new Process(StartInfo = startInfo)
         started.ErrorDataReceived.Add(fun line -> if not (isNull line.Data) then lock errors (fun () -> errors.AppendLine line.Data |> ignore))
         started.Start() |> ignore
@@ -76,6 +77,8 @@ type ServedProcess(root: string, command: string list) =
             | Error(status, stderr) -> failwith $"server exited early with status {status}: {stderr}"
 
         attempt 5
+
+    new(root: string, command: string list) = new ServedProcess(root, command, [])
 
     member _.Client = client
 

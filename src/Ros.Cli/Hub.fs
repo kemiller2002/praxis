@@ -4,6 +4,7 @@ open System
 open System.IO
 open System.Text.Json
 open System.Text.Json.Nodes
+open Ros.Contracts.ControlPlane
 
 /// One registered repository, in `.ros/hub/registry.json`'s own key order.
 type HubRepo =
@@ -336,6 +337,52 @@ module Hub =
                 with error ->
                     Error $"{repo.Id}: unreadable output from ./praxis: {error.Message}"
 
+    let private refused category message : Refusal =
+        { Category = category
+          Code = None
+          Message = message
+          Action = None
+          WorkItemId = None }
+
+    /// Runs the spoke's own `./praxis control-plane ...`. The hub never reads
+    /// a spoke's files: everything it reports comes from this one command.
+    let runControlPlane (repo: HubRepo) (arguments: string list) : Result<ProcessResult, Refusal> =
+        match Directory.Exists repo.Path, HubRegistry.resolveLauncher File.Exists repo.Path with
+        | false, _ -> Error(refused RefusalCategory.Unavailable $"registered path for '{repo.Id}' no longer exists: {repo.Path}")
+        | true, None -> Error(refused RefusalCategory.Unavailable $"'{repo.Id}' no longer has a './praxis' (or legacy './ros') launcher at {repo.Path}")
+        | true, Some executable ->
+            CliProcess.run repo.Path executable ("control-plane" :: arguments)
+            |> Result.mapError (fun message -> refused RefusalCategory.Unavailable $"{repo.Id}: {message}")
+
+    /// The spoke's control-plane document, or why it could not give one:
+    /// unreachable, or a Praxis that does not speak this contract version.
+    let controlPlaneDocument (repo: HubRepo) (arguments: string list) : Result<JsonNode, Refusal> =
+        runControlPlane repo arguments
+        |> Result.bind (fun result ->
+            match (try JsonNode.Parse result.Out |> Option.ofObj with _ -> None) with
+            | Some document when ControlPlaneJson.isCompatible document -> Ok document
+            | Some _ -> Error(refused RefusalCategory.Incompatible $"{repo.Id}: its Praxis answered with a different control-plane contract version")
+            | None -> Error(refused RefusalCategory.Incompatible $"{repo.Id}: its Praxis has no control-plane command ({CliProcess.failureMessage result})"))
+
+    let private entry (repo: HubRepo) (outcome: Result<JsonNode, Refusal>) =
+        ControlPlaneJson.repositoryEntry repo.Id repo.Name repo.Path outcome
+
+    let private entries (repos: HubRepo list) (entryFor: HubRepo -> JsonNode) =
+        let array = JsonArray()
+        repos |> List.iter (entryFor >> array.Add)
+        array :> JsonNode
+
+    /// Every registered repository with its availability and source.
+    let repositoriesDocument (root: string) : Result<JsonNode, string> =
+        listRepos root
+        |> Result.map (fun repos -> ControlPlaneJson.aggregate "hub-repositories" (entries repos (fun repo -> entry repo (controlPlaneDocument repo [ "source" ]))))
+
+    /// Every registered repository's own work-list document; one that cannot
+    /// answer is reported for itself and never fails the whole response.
+    let workDocument (root: string) (arguments: string list) : Result<JsonNode, string> =
+        listRepos root
+        |> Result.map (fun repos -> ControlPlaneJson.aggregate "hub-work" (entries repos (fun repo -> entry repo (controlPlaneDocument repo ("work" :: arguments)))))
+
     let private asObject (repo: HubRepo) (node: JsonNode) =
         match node with
         | :? JsonObject as item -> Ok item
@@ -477,9 +524,19 @@ type HubRoute =
     | ListWork of repo: string option * tags: string list * status: string option
     | CreateWork of repoId: string * RequestBody
 
+/// The hub's versioned API (`/api/v1/...`).
+[<RequireQualifiedAccess>]
+type HubControlPlaneRoute =
+    | Repositories
+    | Work of arguments: string list
+    /// Relayed to one repository's own `./praxis control-plane ARGUMENTS`.
+    | Repository of repoId: string * arguments: string list
+    | Refused of Refusal
+
 [<RequireQualifiedAccess>]
 type HubWebRoute =
     | Api of HubRoute
+    | ControlPlane of HubControlPlaneRoute
     | ApiError of status: int * message: string
     | Home of query: (string * string) list
     | Stylesheet
@@ -498,6 +555,42 @@ module HubWeb =
         queryTags query,
         HttpMessages.field "status" query |> HttpMessages.nonBlank
 
+    let private refusedRoute category message =
+        HubControlPlaneRoute.Refused
+            { Category = category
+              Code = None
+              Message = message
+              Action = None
+              WorkItemId = None }
+
+    /// `/api/v1/...`: aggregate reads, and per-repository requests relayed
+    /// to that repository's own Praxis with the single-repository contract.
+    let controlPlaneRoute (request: HttpRequestData) (rest: string list) : HubControlPlaneRoute =
+        let tags = request.Query |> List.filter (fst >> (=) "tag") |> List.map snd
+        let status = HttpMessages.field "status" request.Query |> HttpMessages.nonBlank
+        let filters = (tags |> List.collect (fun tag -> [ "--tag"; tag ])) @ (status |> Option.map (fun value -> [ "--status"; value ]) |> Option.defaultValue [])
+        let filterValues = tags @ Option.toList status
+
+        let checkedRoute (values: string list) (route: HubControlPlaneRoute) =
+            if values |> List.exists (fun value -> value.StartsWith "--") then
+                refusedRoute RefusalCategory.InvalidRequest "request values may not begin with '--'"
+            else
+                route
+
+        match request.Method, rest with
+        | "GET", [ "repos" ] -> HubControlPlaneRoute.Repositories
+        | "GET", [ "work" ] -> checkedRoute filterValues (HubControlPlaneRoute.Work filters)
+        | "GET", [ "repos"; repoId; "work" ] -> checkedRoute filterValues (HubControlPlaneRoute.Repository(repoId, "work" :: filters))
+        | "GET", [ "repos"; repoId; "work"; id ] -> checkedRoute [ id ] (HubControlPlaneRoute.Repository(repoId, [ "work"; id ]))
+        | "GET", [ "repos"; repoId; "work"; id; "evidence" ] -> checkedRoute [ id ] (HubControlPlaneRoute.Repository(repoId, [ "evidence"; id ]))
+        | "POST", [ "repos"; repoId; "work"; id; "transitions" ] ->
+            match HttpMessages.parseBody request with
+            | Error message -> refusedRoute RefusalCategory.InvalidRequest message
+            | Ok body ->
+                let arguments, values = WebInterface.transitionArguments id body
+                checkedRoute values (HubControlPlaneRoute.Repository(repoId, List.tail arguments))
+        | methodName, _ -> refusedRoute RefusalCategory.NotFound $"""no route for {methodName} /api/v1/{String.Join("/", rest)}"""
+
     let route (request: HttpRequestData) : HubWebRoute =
         let body () = HttpMessages.parseBody request
 
@@ -505,6 +598,7 @@ module HubWeb =
             HubRoute.RegisterRepo(HttpMessages.jsonString "path" parsed |> HttpMessages.nonBlank, HttpMessages.jsonString "name" parsed)
 
         match request.Method, request.Segments with
+        | _, "api" :: "v1" :: rest -> HubWebRoute.ControlPlane(controlPlaneRoute request rest)
         | "GET", [ "api"; "repos" ] -> HubWebRoute.Api HubRoute.ListRepos
         | "POST", [ "api"; "repos" ] ->
             match body () with
@@ -717,6 +811,35 @@ module HubWeb =
             match execute root operation with
             | Ok node -> HttpMessages.jsonNode 200 node
             | Error message -> HttpMessages.jsonError 400 message
+        | HubWebRoute.ControlPlane controlPlane ->
+            let aggregate (result: Result<JsonNode, string>) =
+                match result with
+                | Ok document -> HttpMessages.jsonNode 200 document
+                | Error message ->
+                    WebInterface.refusalResponse
+                        { Category = RefusalCategory.Unavailable
+                          Code = None
+                          Message = message
+                          Action = None
+                          WorkItemId = None }
+
+            match controlPlane with
+            | HubControlPlaneRoute.Repositories -> aggregate (Hub.repositoriesDocument root)
+            | HubControlPlaneRoute.Work arguments -> aggregate (Hub.workDocument root arguments)
+            | HubControlPlaneRoute.Refused refusal -> WebInterface.refusalResponse refusal
+            | HubControlPlaneRoute.Repository(repoId, arguments) ->
+                match Hub.load root |> Result.bind (fun registry -> HubRegistry.find registry repoId) with
+                | Error message ->
+                    WebInterface.refusalResponse
+                        { Category = RefusalCategory.NotFound
+                          Code = None
+                          Message = message
+                          Action = None
+                          WorkItemId = None }
+                | Ok repo ->
+                    match Hub.runControlPlane repo arguments with
+                    | Error refusal -> WebInterface.refusalResponse refusal
+                    | Ok result -> WebInterface.controlPlaneResponse (Ok result)
         | HubWebRoute.ApiError(status, message) -> HttpMessages.jsonError status message
         | HubWebRoute.Home query ->
             let repo, tags, status = filterFrom query

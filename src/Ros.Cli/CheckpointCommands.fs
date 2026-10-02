@@ -521,6 +521,32 @@ module CheckpointCommands =
         node["paths"] <- paths
         node
 
+    /// The `work checkpoint show --json` document: the one path both that
+    /// command and the control plane read an item's checkpoints through.
+    let showDocument (root: string) (offline: bool) (workItemId: string) : Result<JsonObject, string> =
+        match FileCheckpointRepository.readItem root workItemId with
+        | Error message -> Error message
+        | Ok None -> Error $"work item '{workItemId}' is not in repository context"
+        | Ok(Some item) ->
+            let git = ProcessGitDurability.createFor root offline
+            let policy = FileCheckpointRepository.readPolicy root
+
+            match assessItem git policy item with
+            | Error problems -> Error(problems |> List.map (sprintf "latestCheckpoint: %s") |> String.concat "; ")
+            | Ok assessment ->
+                let document = JsonObject()
+                document["command"] <- JsonValue.Create "work checkpoint show"
+                document["schemaVersion"] <- JsonValue.Create 1
+                document["remoteObserved"] <- JsonValue.Create(not offline)
+
+                document["continuity"] <-
+                    CheckpointJson.continuity workItemId (FileCheckpointRepository.stateCode item.State) assessment (RecoveryInstructions.derive assessment)
+
+                let array = JsonArray()
+                FileCheckpointRepository.readHistory root workItemId |> List.iter (fun event -> array.Add(historyNode event: JsonNode))
+                document["history"] <- array
+                Ok document
+
     let show root (arguments: string list) =
         let requested = arguments |> List.tryHead |> Option.filter (fun value -> not (value.StartsWith "--"))
         let offline = List.contains "--offline" arguments
@@ -551,18 +577,9 @@ module CheckpointCommands =
                     1
                 | Ok assessment ->
                     if asJson then
-                        let document = JsonObject()
-                        document["command"] <- JsonValue.Create "work checkpoint show"
-                        document["schemaVersion"] <- JsonValue.Create 1
-                        document["remoteObserved"] <- JsonValue.Create(not offline)
-
-                        document["continuity"] <-
-                            CheckpointJson.continuity workItemId (FileCheckpointRepository.stateCode item.State) assessment (RecoveryInstructions.derive assessment)
-
-                        let array = JsonArray()
-                        history |> List.iter (fun event -> array.Add(historyNode event: JsonNode))
-                        document["history"] <- array
-                        printf "%s" (document.ToJsonString jsonOptions)
+                        match showDocument root offline workItemId with
+                        | Ok document -> printf "%s" (document.ToJsonString jsonOptions)
+                        | Error message -> eprintfn "ERROR %s" message
                     else
                         renderText root item assessment |> List.iter (printfn "%s")
                         printfn ""

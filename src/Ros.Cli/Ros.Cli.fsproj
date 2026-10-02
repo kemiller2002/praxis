@@ -43,6 +43,7 @@
     <Compile Include="CheckpointCommands.fs" />
     <Compile Include="RemoteCommands.fs" />
     <Compile Include="ExecutionCommands.fs" />
+    <Compile Include="ControlPlane.fs" />
     <Compile Include="InstallationCommands.fs" />
     <Compile Include="PlanCommands.fs" />
     <Compile Include="WorkGroupCommands.fs" />

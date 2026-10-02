@@ -59,6 +59,7 @@ let main _ =
     @ ImplementationLanguagePolicyTests.tests
     @ WebInterfaceTests.tests
     @ HubTests.tests
+    @ ControlPlaneTests.tests
     @ WorkDecisionCliTests.tests
     @ WorkTelemetryCliTests.tests
     @ WorkGitPathsCliTests.tests

@@ -4,6 +4,7 @@ open System
 open System.IO
 open System.Text.Json
 open System.Text.Json.Nodes
+open Ros.Contracts.ControlPlane
 open Ros.Domain.Work
 open Ros.Infrastructure.Work
 
@@ -58,6 +59,10 @@ type RowAction =
 [<RequireQualifiedAccess>]
 type WebRoute =
     | Api of WorkOperation
+    /// A versioned control-plane request: the `praxis control-plane`
+    /// arguments that answer it.
+    | ControlPlane of arguments: string list
+    | ControlPlaneRefusal of Refusal
     | ApiDownload of id: string * attachmentId: string
     | ApiError of status: int * message: string
     | Home of query: (string * string) list
@@ -165,11 +170,77 @@ module WebInterface =
 
     let private detailPath (id: string) = $"/work/{Html.segment id}"
 
+    let private v1Refusal category message =
+        WebRoute.ControlPlaneRefusal
+            { Category = category
+              Code = None
+              Message = message
+              Action = None
+              WorkItemId = None }
+
+    /// A request value is passed to the CLI as an option value; one that
+    /// looks like an option could change the command line's meaning.
+    let private safeValues (values: string list) = values |> List.forall (fun value -> not (value.StartsWith "--"))
+
+    let private v1Command (arguments: string list) (values: string list) =
+        if safeValues values then
+            WebRoute.ControlPlane arguments
+        else
+            v1Refusal RefusalCategory.InvalidRequest "request values may not begin with '--'"
+
+    /// `POST /api/v1/work/ID/transitions`: the requested action and its
+    /// arguments. Identity is never read from the request: the CLI resolves
+    /// it exactly as it does for the same command typed on the host.
+    let transitionArguments (id: string) (body: RequestBody) : string list * string list =
+        let evidence = evidenceFrom body |> List.map (fun item -> $"{item.Type}={item.Path}")
+
+        let named =
+            [ "--action", text "action" body
+              "--reason", text "reason" body
+              "--type", text "type" body
+              "--conclusion", text "conclusion" body ]
+            |> List.choose (fun (name, value) -> value |> Option.map (fun present -> name, present))
+
+        let arguments =
+            [ "control-plane"; "transition"; "--id"; id ]
+            @ (named |> List.collect (fun (name, value) -> [ name; value ]))
+            @ (evidence |> List.collect (fun item -> [ "--evidence"; item ]))
+
+        arguments, id :: (named |> List.map snd) @ evidence
+
+    /// The versioned API (`/api/v1/...`): every route is one `praxis
+    /// control-plane` command line.
+    let private v1Route (request: HttpRequestData) (rest: string list) : WebRoute =
+        let tags = request.Query |> List.filter (fst >> (=) "tag") |> List.map snd
+        let status = queryStatus request.Query
+
+        match request.Method, rest with
+        | "GET", [ "source" ] -> WebRoute.ControlPlane [ "control-plane"; "source" ]
+        | "GET", [ "work" ] ->
+            v1Command
+                ([ "control-plane"; "work" ] @ (tags |> List.collect (fun tag -> [ "--tag"; tag ])) @ (status |> Option.map (fun value -> [ "--status"; value ]) |> Option.defaultValue []))
+                (tags @ Option.toList status)
+        | "GET", [ "work"; id ] -> v1Command [ "control-plane"; "work"; id ] [ id ]
+        | "GET", [ "work"; id; "evidence" ] -> v1Command [ "control-plane"; "evidence"; id ] [ id ]
+        | "GET", [ "executions" ] ->
+            match HttpMessages.field "workItem" request.Query |> HttpMessages.nonBlank with
+            | Some workItem -> v1Command [ "control-plane"; "executions"; "--work-item"; workItem ] [ workItem ]
+            | None -> WebRoute.ControlPlane [ "control-plane"; "executions" ]
+        | "GET", [ "executions"; id ] -> v1Command [ "control-plane"; "execution"; id ] [ id ]
+        | "POST", [ "work"; id; "transitions" ] ->
+            match HttpMessages.parseBody request with
+            | Error message -> v1Refusal RefusalCategory.InvalidRequest message
+            | Ok body ->
+                let arguments, values = transitionArguments id body
+                v1Command arguments values
+        | methodName, _ -> v1Refusal RefusalCategory.NotFound $"""no route for {methodName} /api/v1/{String.Join("/", rest)}"""
+
     /// Pure routing: every request maps to exactly one route value.
     let route (request: HttpRequestData) : WebRoute =
         let body () = HttpMessages.parseBody request
 
         match request.Method, request.Segments with
+        | _, "api" :: "v1" :: rest -> v1Route request rest
         | "GET", [ "api"; "work" ] -> WebRoute.Api(WorkOperation.List(queryTags request.Query, queryStatus request.Query))
         | "GET", [ "api"; "work"; "ready" ] -> WebRoute.Api(WorkOperation.List(queryTags request.Query, Some "ready"))
         | "GET", [ "api"; "work"; id ] -> WebRoute.Api(WorkOperation.Show id)
@@ -755,6 +826,33 @@ module WebInterface =
                 [ "Content-Disposition", $"attachment; filename=\"{safeName}\"; filename*=UTF-8''{Uri.EscapeDataString attachment.Name}" ]
               Body = File.ReadAllBytes attachment.FilePath }
 
+    /// Relays one `praxis control-plane` run: its document, with the HTTP
+    /// status its refusal category maps to. A run that produced no
+    /// document is reported as `unavailable` (or `incompatible` when it
+    /// answered with something other than this contract version).
+    let controlPlaneResponse (result: Result<ProcessResult, string>) : HttpResponseData =
+        let failed category message =
+            let refusal =
+                { Category = category
+                  Code = None
+                  Message = message
+                  Action = None
+                  WorkItemId = None }
+
+            HttpMessages.jsonNode (ControlPlaneJson.httpStatus category) (ControlPlaneJson.refusalDocument "error" None refusal)
+
+        match result with
+        | Error message -> failed RefusalCategory.Unavailable message
+        | Ok run ->
+            match (try JsonNode.Parse run.Out |> Option.ofObj with _ -> None) with
+            | Some document when ControlPlaneJson.isCompatible document -> HttpMessages.json (ControlPlaneJson.statusOf document) run.Out
+            | Some _ -> failed RefusalCategory.Incompatible "the Praxis CLI answered with a different control-plane contract version"
+            | None when run.Exit = 0 -> failed RefusalCategory.Incompatible "the Praxis CLI produced no control-plane document"
+            | None -> failed RefusalCategory.Incompatible (CliProcess.failureMessage run)
+
+    let refusalResponse (refusal: Refusal) =
+        HttpMessages.jsonNode (ControlPlaneJson.httpStatus refusal.Category) (ControlPlaneJson.refusalDocument "error" None refusal)
+
     let private statusSummary root =
         execute root WorkOperation.Status |> Result.toOption |> Option.bind parseStatus
 
@@ -767,6 +865,8 @@ module WebInterface =
             match execute root operation with
             | Ok json -> HttpMessages.json 200 json
             | Error message -> HttpMessages.jsonError 400 message
+        | WebRoute.ControlPlane arguments -> controlPlaneResponse (CliProcess.runSelf root arguments)
+        | WebRoute.ControlPlaneRefusal refusal -> refusalResponse refusal
         | WebRoute.ApiDownload(id, attachmentId) -> download root id attachmentId
         | WebRoute.ApiError(status, message) -> HttpMessages.jsonError status message
         | WebRoute.Home query ->

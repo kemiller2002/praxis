@@ -71,6 +71,7 @@
     <Compile Include="ImplementationLanguagePolicyTests.fs" />
     <Compile Include="WebInterfaceTests.fs" />
     <Compile Include="HubTests.fs" />
+    <Compile Include="ControlPlaneTests.fs" />
     <Compile Include="WorkDecisionCliTests.fs" />
     <Compile Include="WorkTelemetryCliTests.fs" />
     <Compile Include="WorkGitPathsCliTests.fs" />
