@@ -3990,10 +3990,10 @@
         "agents"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-02T09:56:29.061Z",
-      "updatedAt": "2026-10-02T09:56:34.000Z",
+      "updatedAt": "2026-10-02T10:26:25.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
