@@ -792,6 +792,20 @@
             "created"
           ],
           "reason": "Architecture decision for post-hoc attribution reconciliation (work item GH-80)"
+        },
+        "EXE-20261002T153817257Z-a12f8b56": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-02T15:44:17.000Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Symbolic links and submodules are now content-matched by what Git stores (work item ATTR-RECONCILE-SYMLINK-SUBMODULE)"
         }
       }
     },
@@ -819,8 +833,8 @@
       "validation"
     ],
     "title": "Post-hoc attribution reconciliation as an append-only, Git-evidenced, content-bound event",
-    "updated": "2026-09-27",
-    "version": "1.0.0"
+    "updated": "2026-10-02",
+    "version": "1.1.0"
   },
   {
     "confidence": "medium",
