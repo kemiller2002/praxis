@@ -24,8 +24,9 @@ tags: [planning, grouping, affinity, experiment, blocked-design, multi-repositor
 provenance:
   contributions:
     EXE-20261002T122339366Z-b15d6ac8:
-      operations: [created]
+      operations: [created, modified]
       at: 2026-10-02T12:36:06.000Z
+      last: 2026-10-02T12:47:36.000Z
       actor:
         kind: agent
         id: anthropic/claude-code
@@ -250,8 +251,8 @@ ordinary test harnesses never count, as in A022.
   explicit relation (A1, hard or coupling) between members; no shared
   invariant (A4) and no shared storage or API boundary (A5); no predicted
   shared production file (A2, generic elements excluded); no common bounded
-  feature; and the planner reports that at least two members are
-  parallel-safe. In addition, `A_b <= 0.1`.
+  feature; and planner evidence that at least two members could safely
+  execute concurrently. In addition, `A_b <= 0.1`.
 - **Medium**: everything else.
 
 ### Known instrument limits (from EV-ROS-2026-A072)

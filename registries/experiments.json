@@ -238,8 +238,10 @@
           "evidence": [
             "EV-ROS-2026-A072"
           ],
+          "last": "2026-10-02T12:47:36.000Z",
           "operations": [
-            "created"
+            "created",
+            "modified"
           ],
           "reason": "Preregistered the blocked multi-repository follow-on to A022: within-repository grouped/independent contrasts, repository as blocking factor, frozen measured affinity, scale classes and a setup-adjusted ratio"
         }

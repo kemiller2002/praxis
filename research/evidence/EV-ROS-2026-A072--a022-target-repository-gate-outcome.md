@@ -25,7 +25,7 @@ provenance:
     EXE-20261002T122339366Z-b15d6ac8:
       operations: [created, modified]
       at: 2026-10-02T12:32:11.000Z
-      last: 2026-10-02T12:36:08.000Z
+      last: 2026-10-02T12:47:35.000Z
       actor:
         kind: agent
         id: anthropic/claude-code
@@ -125,7 +125,7 @@ Signal fails differently. It is analysed next.
 Signal has substantial genuine work: **19 specified backlog items**,
 `WI-0002` to `WI-0020`, migrated from the requirement corpus under
 `input-documents/` (`source: requirements-migration`; captured 2026-08-31
-and 2026-09-22, three to four weeks before A022 existed). Each has a detail
+and 2026-09-22, 31 and 9 days before A022 was preregistered). Each has a detail
 record (`.ros/work/items/WI-*.md`) with five acceptance criteria, a
 reciprocal requirement-group table, an explicit Dependencies section and, for
 most, dated requirement extensions. The work is real. What disqualifies
