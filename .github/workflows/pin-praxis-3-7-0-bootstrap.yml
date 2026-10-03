@@ -1,0 +1,98 @@
+name: Pin Praxis 3.7.0 bootstrap
+
+on:
+  push:
+    branches:
+      - pin/praxis-3.7.0
+    paths:
+      - '.github/workflows/pin-praxis-3-7-0-bootstrap.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pin-praxis-3-7-0-bootstrap
+  cancel-in-progress: false
+
+jobs:
+  pin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PRAXIS_ACTOR_KIND: agent
+      PRAXIS_ACTOR: openai/chatgpt
+      PRAXIS_TELEMETRY_PROVIDER: openai
+      PRAXIS_TELEMETRY_MODEL: gpt-5.6-sol
+      PRAXIS_TELEMETRY_RUNTIME: chatgpt
+      WORK_ITEM: REMOTE-ENABLE-3-7-0
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: pin/praxis-3.7.0
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build current source Praxis
+        run: dotnet build Praxis.slnx --configuration Release
+
+      - name: Begin governed pin update
+        shell: bash
+        run: |
+          set -euo pipefail
+          now() { date -u +%Y-%m-%dT%H:%M:%S.000Z; }
+          BOOTSTRAP_SHA="$(git rev-parse HEAD)"
+
+          ./praxis add "Pin Praxis 3.7.0 for remote execution" --id "$WORK_ITEM" --type mechanical \
+            --description "Bump .echelon/toolchain.json from Praxis 3.6.0 to 3.7.0 after verifying the v3.7.0 native release, so remote agents consume the current work-state and continuation semantics." \
+            --tag remote-execution,release --priority high
+          ./praxis work backlog-transition --action ready --id "$WORK_ITEM" --occurred-at "$(now)"
+          ./praxis work start --id "$WORK_ITEM" --type mechanical --occurred-at "$(now)"
+
+          ./praxis work reconcile --id "$WORK_ITEM" \
+            --reason "The bootstrap workflow commit was necessary because the repository was still pinned to Praxis 3.6.0, whose remote executor rejects the current repository's abandoned semantic work state." \
+            --commit "$BOOTSTRAP_SHA" --occurred-at "$(now)"
+
+      - name: Pin 3.7.0 and remove bootstrap
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          path = ".echelon/toolchain.json"
+          with open(path) as f:
+              data = json.load(f)
+          if data.get("praxis") != "3.6.0":
+              raise SystemExit(f"expected Praxis pin 3.6.0, found {data.get('praxis')}")
+          data["praxis"] = "3.7.0"
+          with open(path, "w") as f:
+              json.dump(data, f, indent=2)
+              f.write("\n")
+          PY
+
+          git config user.name "OpenAI ChatGPT"
+          git config user.email "noreply@openai.com"
+          git rm .github/workflows/pin-praxis-3-7-0-bootstrap.yml
+          git add .echelon/toolchain.json .ros
+          git commit -m "REMOTE-ENABLE-3-7-0: pin Praxis 3.7.0"
+          git push origin HEAD:pin/praxis-3.7.0
+
+      - name: Checkpoint, complete, and validate
+        shell: bash
+        run: |
+          set -euo pipefail
+          now() { date -u +%Y-%m-%dT%H:%M:%S.000Z; }
+
+          ./praxis work checkpoint --id "$WORK_ITEM" --occurred-at "$(now)" \
+            --summary "Pinned Praxis remote execution from 3.6.0 to the published and smoke-tested 3.7.0 release." \
+            --next-action "Merge the pin PR, then run a remote read and mutation proof against repository state containing an abandoned work item."
+
+          ./praxis work complete --id "$WORK_ITEM" --occurred-at "$(now)"
+          ./praxis registry build
+          ./praxis validate
+
+          git add -A
+          git commit -m "REMOTE-ENABLE-3-7-0: final checkpoint and completion"
+          git push origin HEAD:pin/praxis-3.7.0
