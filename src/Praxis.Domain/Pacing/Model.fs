@@ -102,32 +102,32 @@ type PacingDecision =
 
 [<RequireQualifiedAccess>]
 module Pacing =
-    let private almostEqual left right = Math.Abs(left - right) < 0.5
+    let private almostEqual (left: float) (right: float) = Math.Abs(left - right) < 0.5
 
     let isWeekly policy (window: QuotaWindow) =
         almostEqual window.Duration.TotalMinutes policy.WeeklyWindow.TotalMinutes
 
-    let isLive now (window: QuotaWindow) =
+    let isLive (now: DateTimeOffset) (window: QuotaWindow) =
         window.Duration > TimeSpan.Zero
         && window.ResetsAt > now
         && window.UsedPercent >= 0m
         && window.UsedPercent <= 100m
 
-    let idealPercent now (window: QuotaWindow) =
+    let idealPercent (now: DateTimeOffset) (window: QuotaWindow) =
         let remaining = window.ResetsAt - now
         let elapsedMinutes = window.Duration.TotalMinutes - remaining.TotalMinutes
         let percent = 100.0 * elapsedMinutes / window.Duration.TotalMinutes
         decimal (Math.Clamp(percent, 0.0, 100.0))
 
-    let lead now (window: QuotaWindow) =
+    let lead (now: DateTimeOffset) (window: QuotaWindow) =
         let elapsed = window.Duration - (window.ResetsAt - now)
         let consumedMinutes = window.Duration.TotalMinutes * float window.UsedPercent / 100.0
         TimeSpan.FromMinutes(consumedMinutes - elapsed.TotalMinutes)
 
-    let private applicable model window =
+    let private applicable (model: string option) (window: QuotaWindow) =
         QuotaScope.appliesTo model window.Scope
 
-    let private stale freshness =
+    let private stale (freshness: ObservationFreshness) =
         match freshness with
         | ObservationFreshness.Fresh -> false
         | ObservationFreshness.Stale _
@@ -141,13 +141,13 @@ module Pacing =
     let private applicableHold model (hold: PacingHold) =
         QuotaScope.appliesTo model hold.Scope
 
-    let private reason key kind detail resumeAt =
+    let private reason (key: string) (kind: PacingReasonKind) (detail: string) (resumeAt: DateTimeOffset) =
         { WindowKey = key
           Kind = kind
           Detail = detail
           ResumeAt = resumeAt }
 
-    let private binding reasons =
+    let private binding (reasons: PacingReason list) =
         reasons
         |> List.sortWith (fun left right ->
             match compare right.ResumeAt left.ResumeAt with
@@ -160,7 +160,7 @@ module Pacing =
     /// missing observations cannot clear it. Only a fresh weekly observation at
     /// or below the resume threshold releases the latch. Hard-limit observations
     /// remain binding until their reset even when the snapshot later becomes stale.
-    let evaluate policy (request: PacingRequest) =
+    let evaluate (policy: PacingPolicy) (request: PacingRequest) =
         if request.Override then
             { MayProceed = true
               Reasons = []
