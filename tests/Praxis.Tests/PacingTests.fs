@@ -2,6 +2,7 @@ namespace Praxis.Tests
 
 open System
 open Praxis.Domain.Pacing
+open Praxis.Cli
 
 module PacingTests =
     let private t name run = { Name = $"pacing: {name}"; Run = run }
@@ -103,6 +104,25 @@ module PacingTests =
               let fable = weekly "weekly:fable" 9.0 (QuotaScope.Model "Fable")
               let result = evaluate PacingState.empty ObservationFreshness.Fresh [ fable ] None false
               Assert.isTrue (not result.MayProceed) "unknown model must consider every reported scoped limit")
+
+          t "Codex quota response normalizes session and weekly windows" (fun () ->
+              let json = """{"rateLimitsByLimitId":{"codex":{"primary":{"usedPercent":42,"windowDurationMins":300,"resetsAt":1791050400},"secondary":{"usedPercent":55,"windowDurationMins":10080,"resetsAt":1791655200}}}}"""
+
+              match PacingCommands.normalizeCodexResult "codex" now json with
+              | Error message -> failwith message
+              | Ok(windows, complete) ->
+                  Assert.isTrue complete "both reported Codex windows should be complete"
+                  Assert.equal [ 300.0; 10080.0 ] (windows |> List.map (fun window -> window.Duration.TotalMinutes)))
+
+          t "Claude quota response preserves model scope" (fun () ->
+              let json = """{"five_hour":{"utilization":20,"resets_at":"2026-10-03T20:00:00Z"},"seven_day":{"utilization":40,"resets_at":"2026-10-08T17:00:00Z"},"limits":[{"kind":"weekly_scoped","percent":75,"resets_at":"2026-10-08T17:00:00Z","scope":{"model":{"display_name":"Fable"},"surface":null}}]}"""
+
+              match PacingCommands.normalizeClaudeUsage now json with
+              | Error message -> failwith message
+              | Ok(windows, complete) ->
+                  Assert.isTrue complete "global Claude session and weekly windows should make the reading complete"
+                  let scoped = windows |> List.find (fun window -> window.Key = "seven_day:Fable")
+                  Assert.equal (QuotaScope.Model "Fable") scoped.Scope)
 
           t "override bypasses without erasing the latch" (fun () ->
               let triggered = evaluate PacingState.empty ObservationFreshness.Fresh [ weekly "weekly" 9.0 QuotaScope.Global ] None false
