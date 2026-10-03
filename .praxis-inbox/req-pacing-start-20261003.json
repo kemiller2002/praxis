@@ -1,0 +1,23 @@
+{
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.3",
+  "requestId": "req-pacing-start-20261003",
+  "operation": "work.start",
+  "repository": {
+    "ref": "refs/heads/feature/provider-usage-pacing",
+    "expectedSha": "2f7bbe32ee215f9ae6f9fd3f36b1f7febd3765d5"
+  },
+  "actor": {
+    "kind": "agent",
+    "id": "openai/chatgpt",
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "runtime": "chatgpt"
+  },
+  "arguments": {
+    "workItemIds": [
+      "PRAXIS-PACING-01"
+    ],
+    "type": "task"
+  }
+}
