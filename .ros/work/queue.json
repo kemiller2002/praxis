@@ -4076,6 +4076,29 @@
       },
       "source": "PRAXIS-PLAN-EXP-03",
       "sourceReference": null
+    },
+    {
+      "id": "RELEASE-3-7-0",
+      "title": "Release Praxis 3.7.0",
+      "description": "Publish current main as Praxis 3.7.0 so remote agents consume the post-3.6.0 work-state, grouping, rename, and synchronization fixes.",
+      "tags": [
+        "release"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-03T07:38:09.378Z",
+      "updatedAt": "2026-10-03T07:38:09.000Z",
+      "createdBy": "openai/chatgpt",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/chatgpt",
+        "provider": "openai",
+        "model": "gpt-5.6-sol",
+        "runtime": "chatgpt"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
