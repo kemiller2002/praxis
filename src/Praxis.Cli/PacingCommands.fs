@@ -227,24 +227,24 @@ module PacingCommands =
             for argument in arguments do
                 start.ArgumentList.Add argument
 
-            use process = new Process()
-            process.StartInfo <- start
+            use proc = new Process()
+            proc.StartInfo <- start
 
-            if not (process.Start()) then
+            if not (proc.Start()) then
                 Error $"{fileName} did not start"
             else
-                let output = process.StandardOutput.ReadToEndAsync()
-                let error = process.StandardError.ReadToEndAsync()
+                let output = proc.StandardOutput.ReadToEndAsync()
+                let error = proc.StandardError.ReadToEndAsync()
 
-                if process.WaitForExit(int timeout.TotalMilliseconds) then
+                if proc.WaitForExit(int timeout.TotalMilliseconds) then
                     let stdout = output.GetAwaiter().GetResult()
                     let stderr = error.GetAwaiter().GetResult()
 
-                    if process.ExitCode = 0 then Ok stdout
-                    else Error $"{fileName} exited {process.ExitCode}: {stderr.Trim()}"
+                    if proc.ExitCode = 0 then Ok stdout
+                    else Error $"{fileName} exited {proc.ExitCode}: {stderr.Trim()}"
                 else
                     try
-                        process.Kill(true)
+                        proc.Kill(true)
                     with _ ->
                         ()
 
@@ -264,15 +264,15 @@ module PacingCommands =
             start.ArgumentList.Add "app-server"
             start.ArgumentList.Add "--stdio"
 
-            use process = new Process()
-            process.StartInfo <- start
+            use proc = new Process()
+            proc.StartInfo <- start
 
-            if not (process.Start()) then
+            if not (proc.Start()) then
                 Error "codex app-server did not start"
             else
                 let send text =
-                    process.StandardInput.WriteLine text
-                    process.StandardInput.Flush()
+                    proc.StandardInput.WriteLine text
+                    proc.StandardInput.Flush()
 
                 let deadline = DateTimeOffset.UtcNow + TimeSpan.FromSeconds 20.0
                 send """{"id":1,"method":"initialize","params":{"clientInfo":{"name":"praxis_pacing","version":"1.0.0"}}}"""
@@ -284,7 +284,7 @@ module PacingCommands =
 
                     try
                         let line =
-                            process.StandardOutput.ReadLineAsync()
+                            proc.StandardOutput.ReadLineAsync()
                                 .WaitAsync(if remaining > TimeSpan.Zero then remaining else TimeSpan.FromMilliseconds 1.0)
                                 .GetAwaiter()
                                 .GetResult()
@@ -313,8 +313,8 @@ module PacingCommands =
                         result <- Some(Error "Codex quota query timed out")
 
                 try
-                    process.StandardInput.Close()
-                    if not process.HasExited then process.Kill(true)
+                    proc.StandardInput.Close()
+                    if not proc.HasExited then proc.Kill(true)
                 with _ ->
                     ()
 
