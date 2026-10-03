@@ -1,0 +1,98 @@
+name: Release Praxis 3.7.0 bootstrap
+
+on:
+  push:
+    branches:
+      - release/praxis-3.7.0
+    paths:
+      - '.github/workflows/release-praxis-3-7-0-bootstrap.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-praxis-3-7-0-bootstrap
+  cancel-in-progress: false
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PRAXIS_ACTOR_KIND: agent
+      PRAXIS_ACTOR: openai/chatgpt
+      PRAXIS_TELEMETRY_PROVIDER: openai
+      PRAXIS_TELEMETRY_MODEL: gpt-5.6-sol
+      PRAXIS_TELEMETRY_RUNTIME: chatgpt
+      WORK_ITEM: RELEASE-3-7-0
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: release/praxis-3.7.0
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build current source Praxis
+        run: dotnet build Praxis.slnx --configuration Release
+
+      - name: Begin governed release work
+        shell: bash
+        run: |
+          set -euo pipefail
+          now() { date -u +%Y-%m-%dT%H:%M:%S.000Z; }
+          BOOTSTRAP_SHA="$(git rev-parse HEAD)"
+
+          ./praxis add "Release Praxis 3.7.0" --id "$WORK_ITEM" --type mechanical \
+            --description "Publish current main as Praxis 3.7.0 so remote agents consume the post-3.6.0 work-state, grouping, rename, and synchronization fixes." \
+            --tag release --priority high
+          ./praxis work backlog-transition --action ready --id "$WORK_ITEM" --occurred-at "$(now)"
+          ./praxis work start --id "$WORK_ITEM" --type mechanical --occurred-at "$(now)"
+
+          ./praxis work reconcile --id "$WORK_ITEM" \
+            --reason "The bootstrap workflow commit was required to invoke current-source Praxis because the pinned 3.6.0 remote runtime cannot parse the repository's newer abandoned semantic state." \
+            --commit "$BOOTSTRAP_SHA" --occurred-at "$(now)"
+
+      - name: Bump release version and remove bootstrap
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          path = "release.json"
+          with open(path) as f:
+              data = json.load(f)
+          if data.get("version") != "3.6.0":
+              raise SystemExit(f"expected current version 3.6.0, found {data.get('version')}")
+          data["version"] = "3.7.0"
+          with open(path, "w") as f:
+              json.dump(data, f, indent=2)
+              f.write("\n")
+          PY
+
+          git config user.name "OpenAI ChatGPT"
+          git config user.email "noreply@openai.com"
+          git rm .github/workflows/release-praxis-3-7-0-bootstrap.yml
+          git add release.json .ros
+          git commit -m "RELEASE-3-7-0: bump Praxis to 3.7.0"
+          git push origin HEAD:release/praxis-3.7.0
+
+      - name: Checkpoint, complete, and validate release work
+        shell: bash
+        run: |
+          set -euo pipefail
+          now() { date -u +%Y-%m-%dT%H:%M:%S.000Z; }
+
+          ./praxis work checkpoint --id "$WORK_ITEM" --occurred-at "$(now)" \
+            --summary "Prepared Praxis 3.7.0 from current main and removed the temporary source-Praxis bootstrap workflow." \
+            --next-action "Merge the release PR after CI; the normal native-release workflow will publish v3.7.0."
+
+          ./praxis work complete --id "$WORK_ITEM" --occurred-at "$(now)"
+          ./praxis registry build
+          ./praxis validate
+
+          git add -A
+          git commit -m "RELEASE-3-7-0: final checkpoint and completion"
+          git push origin HEAD:release/praxis-3.7.0
