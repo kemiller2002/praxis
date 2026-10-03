@@ -44,7 +44,7 @@
     <Compile Include="Telemetry/Validation.fs" />
     <Compile Include="Telemetry/TelemetryValidation.fs" />
     <Compile Include="Telemetry/Steps.fs" />
-    <Compile Include="Telemetry/Usage.fs" />
+    <Compile Include="Telemetry/Usage.fs" />\n    <Compile Include="Pacing/Model.fs" />
     <Compile Include="Provenance/Actor.fs" />
     <Compile Include="Provenance/ArtifactProvenance.fs" />
     <Compile Include="Provenance/ProvenancePolicy.fs" />

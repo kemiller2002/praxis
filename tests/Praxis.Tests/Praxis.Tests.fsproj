@@ -109,7 +109,7 @@
     <Compile Include="InstallationRegistrationTests.fs" />
     <Compile Include="CommitOwnershipTests.fs" />
     <Compile Include="WorkAbandonTests.fs" />
-    <Compile Include="PlanningTests.fs" />
+    <Compile Include="PlanningTests.fs" />\n    <Compile Include="PacingTests.fs" />
     <Compile Include="PlanningCliTests.fs" />
     <Compile Include="PlanningSessionEvidenceTests.fs" />
     <Compile Include="GroupingTests.fs" />
