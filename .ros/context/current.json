@@ -6130,18 +6130,39 @@
     {
       "id": "REMOTE-ENABLE-3-7-0",
       "type": "mechanical",
-      "state": "active",
-      "semanticState": "active",
+      "state": "complete",
+      "semanticState": "complete",
       "evidence": [],
-      "updatedAt": "2026-10-03T08:02:45.000Z",
+      "updatedAt": "2026-10-03T08:02:49.000Z",
       "telemetryExecutionIds": [
         "EXE-20261003T080246116Z-872ad109"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "6d12ca0a405ac91fcb6d7f7c",
+        "recordedAt": "2026-10-03T08:02:48.000Z",
+        "executionId": "EXE-20261003T080246116Z-872ad109",
+        "repository": "repository-operating-system",
+        "branch": "pin/praxis-3.7.0",
+        "commit": "46727720e5f30b8795ae0e0415b93de9dff1a00d",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "pin/praxis-3.7.0",
+        "remoteCommit": "46727720e5f30b8795ae0e0415b93de9dff1a00d",
+        "summary": "Pinned Praxis remote execution from 3.6.0 to the published and smoke-tested 3.7.0 release.",
+        "nextAction": "Merge the pin PR, then run a remote read and mutation proof against repository state containing an abandoned work item.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-03T08:02:49.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/chatgpt",
-  "updatedAt": "2026-10-03T08:02:45.000Z",
+  "updatedAt": "2026-10-03T08:02:49.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
