@@ -96,7 +96,8 @@ let main _ =
     @ InstallationRegistrationTests.tests
     @ CommitOwnershipTests.tests
     @ WorkAbandonTests.tests
-    @ PlanningTests.tests\n    @ PacingTests.tests
+    @ PlanningTests.tests
+    @ PacingTests.tests
     @ PlanningCliTests.tests
     @ PlanningSessionEvidenceTests.tests
     @ GroupingTests.tests
