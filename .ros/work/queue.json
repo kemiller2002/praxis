@@ -4099,6 +4099,29 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "REMOTE-ENABLE-3-7-0",
+      "title": "Pin Praxis 3.7.0 for remote execution",
+      "description": "Bump .echelon/toolchain.json from Praxis 3.6.0 to 3.7.0 after verifying the v3.7.0 native release, so remote agents consume the current work-state and continuation semantics.",
+      "tags": [
+        "remote-execution,release"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-03T08:02:44.894Z",
+      "updatedAt": "2026-10-03T08:02:45.000Z",
+      "createdBy": "openai/chatgpt",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/chatgpt",
+        "provider": "openai",
+        "model": "gpt-5.6-sol",
+        "runtime": "chatgpt"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
