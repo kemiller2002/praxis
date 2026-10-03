@@ -91,7 +91,7 @@ module PacingCommands =
             | QuotaScope.Model model -> $"7D weekly {model}"
             | QuotaScope.Surface surface -> $"7D weekly {surface}"
         else
-            $"{duration.TotalMinutes.ToString(\"0\", CultureInfo.InvariantCulture)}m allowance"
+            duration.TotalMinutes.ToString("0", CultureInfo.InvariantCulture) + "m allowance"
 
     let normalizeCodexResult (bucket: string) (observedAt: DateTimeOffset) (json: string) : Result<QuotaWindow list * bool, string> =
         try
@@ -750,7 +750,9 @@ module PacingCommands =
     let private writeLog directory text =
         try
             Directory.CreateDirectory directory |> ignore
-            File.AppendAllText(Path.Combine(directory, "pace.log"), $"{DateTimeOffset.Now.ToString(\"O\", CultureInfo.InvariantCulture)} [{Environment.ProcessId}] {text}{Environment.NewLine}")
+            let timestamp = DateTimeOffset.Now.ToString("O", CultureInfo.InvariantCulture)
+            let line = timestamp + " [" + string Environment.ProcessId + "] " + text + Environment.NewLine
+            File.AppendAllText(Path.Combine(directory, "pace.log"), line)
         with _ ->
             ()
 
@@ -813,7 +815,8 @@ module PacingCommands =
                     let identity = $"{PacingReasonKind.code reason.Kind}: {reason.Detail}"
 
                     if lastReason <> Some identity then
-                        writeLog directory $"hold {provider}: {identity}; resume estimate {reason.ResumeAt.ToString(\"O\", CultureInfo.InvariantCulture)}"
+                        let resumeAt = reason.ResumeAt.ToString("O", CultureInfo.InvariantCulture)
+                        writeLog directory ("hold " + provider + ": " + identity + "; resume estimate " + resumeAt)
                         lastReason <- Some identity
 
                     if now - started >= maximum then

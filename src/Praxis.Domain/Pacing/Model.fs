@@ -188,11 +188,14 @@ module Pacing =
             for window in windows do
                 if window.UsedPercent > policy.HardUsagePercent then
                     let prefix = if stale request.Freshness then "last known " else ""
+                    let usedPercent = window.UsedPercent.ToString("0.##", Globalization.CultureInfo.InvariantCulture)
+                    let detail = prefix + window.Label + " " + usedPercent + "% used; wait for reset"
+
                     reasons.Add(
                         reason
                             (stableHoldKey window)
                             PacingReasonKind.HardLimit
-                            $"{prefix}{window.Label} {window.UsedPercent.ToString(\"0.##\", Globalization.CultureInfo.InvariantCulture)}% used; wait for reset"
+                            detail
                             window.ResetsAt)
 
             let weekly = windows |> List.filter (isWeekly policy)
@@ -229,11 +232,14 @@ module Pacing =
                             request.Now + (currentLead - policy.ResumeLead)
                             |> min window.ResetsAt
 
+                        let leadHours = currentLead.TotalHours.ToString("0.0", Globalization.CultureInfo.InvariantCulture)
+                        let detail = window.Label + " is " + leadHours + "h ahead of pace"
+
                         reasons.Add(
                             reason
                                 key
                                 PacingReasonKind.WeeklyLead
-                                $"{window.Label} is {currentLead.TotalHours.ToString(\"0.0\", Globalization.CultureInfo.InvariantCulture)}h ahead of pace"
+                                detail
                                 resumeAt)
                     elif held then
                         holds <- holds.Remove key
