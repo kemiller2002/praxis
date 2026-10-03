@@ -192,7 +192,7 @@ module Pacing =
                         reason
                             (stableHoldKey window)
                             PacingReasonKind.HardLimit
-                            $"{prefix}{window.Label} {window.UsedPercent:0.##}% used; wait for reset"
+                            $"{prefix}{window.Label} {window.UsedPercent.ToString(\"0.##\", Globalization.CultureInfo.InvariantCulture)}% used; wait for reset"
                             window.ResetsAt)
 
             let weekly = windows |> List.filter (isWeekly policy)
@@ -233,7 +233,7 @@ module Pacing =
                             reason
                                 key
                                 PacingReasonKind.WeeklyLead
-                                $"{window.Label} is {currentLead.TotalHours:0.0}h ahead of pace"
+                                $"{window.Label} is {currentLead.TotalHours.ToString(\"0.0\", Globalization.CultureInfo.InvariantCulture)}h ahead of pace"
                                 resumeAt)
                     elif held then
                         holds <- holds.Remove key
