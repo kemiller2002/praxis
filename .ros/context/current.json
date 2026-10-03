@@ -6098,18 +6098,39 @@
     {
       "id": "RELEASE-3-7-0",
       "type": "mechanical",
-      "state": "active",
-      "semanticState": "active",
+      "state": "complete",
+      "semanticState": "complete",
       "evidence": [],
-      "updatedAt": "2026-10-03T07:38:09.000Z",
+      "updatedAt": "2026-10-03T07:38:14.000Z",
       "telemetryExecutionIds": [
         "EXE-20261003T073810575Z-d5aceb78"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "2104020a4f1e86a602e17020",
+        "recordedAt": "2026-10-03T07:38:12.000Z",
+        "executionId": "EXE-20261003T073810575Z-d5aceb78",
+        "repository": "repository-operating-system",
+        "branch": "release/praxis-3.7.0",
+        "commit": "b5b0506597e6a50856f59023e23eca0cba1667f4",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "release/praxis-3.7.0",
+        "remoteCommit": "b5b0506597e6a50856f59023e23eca0cba1667f4",
+        "summary": "Prepared Praxis 3.7.0 from current main and removed the temporary source-Praxis bootstrap workflow.",
+        "nextAction": "Merge the release PR after CI; the normal native-release workflow will publish v3.7.0.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-03T07:38:14.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/chatgpt",
-  "updatedAt": "2026-10-03T07:38:09.000Z",
+  "updatedAt": "2026-10-03T07:38:14.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

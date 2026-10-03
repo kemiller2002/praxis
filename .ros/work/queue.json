@@ -4085,10 +4085,10 @@
         "release"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-03T07:38:09.378Z",
-      "updatedAt": "2026-10-03T07:38:09.000Z",
+      "updatedAt": "2026-10-03T07:38:14.000Z",
       "createdBy": "openai/chatgpt",
       "createdByActor": {
         "kind": "agent",
