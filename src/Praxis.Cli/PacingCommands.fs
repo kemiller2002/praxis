@@ -26,20 +26,20 @@ module PacingCommands =
     let private usageApi = "https://api.anthropic.com/api/oauth/usage"
     let private refreshEvery = TimeSpan.FromSeconds 60.0
 
-    let private tryProperty name (element: JsonElement) =
+    let private tryProperty (name: string) (element: JsonElement) : JsonElement option =
         if element.ValueKind <> JsonValueKind.Object then
             None
         else
             let mutable value = Unchecked.defaultof<JsonElement>
             if element.TryGetProperty(name, &value) then Some value else None
 
-    let private tryString element =
+    let private tryString (element: JsonElement) : string option =
         if element.ValueKind = JsonValueKind.String then
             element.GetString() |> Option.ofObj
         else
             None
 
-    let private tryDecimal element =
+    let private tryDecimal (element: JsonElement) : decimal option =
         if element.ValueKind <> JsonValueKind.Number then
             None
         else
@@ -50,14 +50,14 @@ module PacingCommands =
                 let mutable number = 0.0
                 if element.TryGetDouble(&number) && Double.IsFinite number then Some(decimal number) else None
 
-    let private tryInt element =
+    let private tryInt (element: JsonElement) : int option =
         if element.ValueKind <> JsonValueKind.Number then
             None
         else
             let mutable value = 0
             if element.TryGetInt32(&value) then Some value else None
 
-    let private tryEpoch element =
+    let private tryEpoch (element: JsonElement) : DateTimeOffset option =
         match tryDecimal element with
         | Some value when value > 0m ->
             try
@@ -66,7 +66,7 @@ module PacingCommands =
                 None
         | _ -> None
 
-    let private tryTimestamp element =
+    let private tryTimestamp (element: JsonElement) : DateTimeOffset option =
         match tryString element with
         | Some text ->
             let mutable value = DateTimeOffset.MinValue
@@ -76,13 +76,13 @@ module PacingCommands =
                 None
         | None -> tryEpoch element
 
-    let private readNumber name element =
+    let private readNumber (name: string) (element: JsonElement) : decimal option =
         tryProperty name element |> Option.bind tryDecimal
 
-    let private readReset name element =
+    let private readReset (name: string) (element: JsonElement) : DateTimeOffset option =
         tryProperty name element |> Option.bind tryTimestamp
 
-    let private labelFor duration scope =
+    let private labelFor (duration: TimeSpan) (scope: QuotaScope) : string =
         if Math.Abs(duration.TotalMinutes - 300.0) < 0.5 then
             "5H session"
         elif Math.Abs(duration.TotalMinutes - 10080.0) < 0.5 then
@@ -142,7 +142,7 @@ module PacingCommands =
         with error ->
             Error $"Codex quota response could not be parsed: {error.Message}"
 
-    let private scopeName name (scope: JsonElement) =
+    let private scopeName (name: string) (scope: JsonElement) : string option =
         tryProperty name scope
         |> Option.bind (tryProperty "display_name")
         |> Option.bind tryString
@@ -215,7 +215,7 @@ module PacingCommands =
         with error ->
             Error $"Claude quota response could not be parsed: {error.Message}"
 
-    let private processCapture fileName arguments timeout =
+    let private processCapture (fileName: string) (arguments: string list) (timeout: TimeSpan) : Result<string, string> =
         try
             let start = ProcessStartInfo()
             start.FileName <- fileName
@@ -270,7 +270,7 @@ module PacingCommands =
             if not (proc.Start()) then
                 Error "codex app-server did not start"
             else
-                let send text =
+                let send (text: string) =
                     proc.StandardInput.WriteLine text
                     proc.StandardInput.Flush()
 
@@ -322,7 +322,7 @@ module PacingCommands =
         with error ->
             Error $"Codex app-server unavailable: {error.Message}"
 
-    let private claudeToken now =
+    let private claudeToken (now: DateTimeOffset) : Result<string, string> =
         if not (OperatingSystem.IsMacOS()) then
             Error "Claude pacing requires macOS Keychain access"
         else
@@ -373,7 +373,7 @@ module PacingCommands =
             with error ->
                 Error $"Claude usage query failed: {error.Message}"
 
-    let private stateDirectory arguments =
+    let private stateDirectory (arguments: string list) : string =
         match arguments |> List.tryFindIndex ((=) "--state-dir") with
         | Some index ->
             arguments
@@ -386,32 +386,32 @@ module PacingCommands =
             | "" -> Path.Combine(Environment.GetFolderPath Environment.SpecialFolder.UserProfile, ".praxis", "usage-pacing")
             | value -> Path.GetFullPath value
 
-    let private optionValue name arguments =
+    let private optionValue (name: string) (arguments: string list) : string option =
         arguments
         |> List.tryFindIndex ((=) name)
         |> Option.bind (fun index -> arguments |> List.tryItem (index + 1))
 
-    let private scopeParts scope =
+    let private scopeParts (scope: QuotaScope) : string * string option =
         match scope with
         | QuotaScope.Global -> "global", None
         | QuotaScope.Model name -> "model", Some name
         | QuotaScope.Surface name -> "surface", Some name
 
-    let private scopeFromParts kind name =
+    let private scopeFromParts (kind: string) (name: string option) : QuotaScope =
         match kind, name with
         | "model", Some value -> QuotaScope.Model value
         | "surface", Some value -> QuotaScope.Surface value
         | _ -> QuotaScope.Global
 
-    let private atomicWrite path content =
+    let private atomicWrite (path: string) (content: string) : unit =
         Directory.CreateDirectory(Path.GetDirectoryName path) |> ignore
         let temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp"
         File.WriteAllText(temporary, content)
         File.Move(temporary, path, true)
 
-    let private snapshotPath directory provider = Path.Combine(directory, $"snapshot-{provider}.json")
+    let private snapshotPath (directory: string) (provider: string) : string = Path.Combine(directory, $"snapshot-{provider}.json")
 
-    let private saveSnapshot directory snapshot =
+    let private saveSnapshot (directory: string) (snapshot: ProviderSnapshot) : unit =
         let root = JsonObject()
         root["provider"] <- JsonValue.Create(snapshot.Provider)
         root["observedAt"] <- JsonValue.Create(snapshot.ObservedAt.ToString("O"))
@@ -432,7 +432,7 @@ module PacingCommands =
         root["windows"] <- windows
         atomicWrite (snapshotPath directory snapshot.Provider) (root.ToJsonString())
 
-    let private loadSnapshot directory provider =
+    let private loadSnapshot (directory: string) (provider: string) : ProviderSnapshot option =
         let path = snapshotPath directory provider
 
         if not (File.Exists path) then
@@ -481,7 +481,7 @@ module PacingCommands =
             with _ ->
                 None
 
-    let private mergeMissingHard previous current now =
+    let private mergeMissingHard (previous: QuotaWindow list) (current: QuotaWindow list) (now: DateTimeOffset) : QuotaWindow list =
         let currentKeys = current |> List.map _.Key |> Set.ofList
 
         let retained =
@@ -493,7 +493,7 @@ module PacingCommands =
 
         current @ retained
 
-    let private queryProvider directory provider model =
+    let private queryProvider (directory: string) (provider: string) (model: string option) : ProviderSnapshot =
         Directory.CreateDirectory directory |> ignore
         let observedAt = DateTimeOffset.UtcNow
         let previous = loadSnapshot directory provider |> Option.map _.Windows |> Option.defaultValue []
@@ -540,9 +540,9 @@ module PacingCommands =
                   Windows = []
                   Freshness = ObservationFreshness.Unavailable message }
 
-    let private holdPath directory = Path.Combine(directory, "hold.json")
+    let private holdPath (directory: string) : string = Path.Combine(directory, "hold.json")
 
-    let private loadState directory =
+    let private loadState (directory: string) : PacingState =
         let path = holdPath directory
 
         if not (File.Exists path) then
@@ -578,7 +578,7 @@ module PacingCommands =
             with _ ->
                 PacingState.empty
 
-    let private saveState directory state =
+    let private saveState (directory: string) (state: PacingState) : unit =
         let root = JsonObject()
         let rows = JsonArray()
 
@@ -595,7 +595,7 @@ module PacingCommands =
         root["holds"] <- rows
         atomicWrite (holdPath directory) (root.ToJsonString())
 
-    let private withState directory action =
+    let private withState (directory: string) (action: PacingState -> PacingDecision) : PacingDecision =
         Directory.CreateDirectory directory |> ignore
         let lockPath = Path.Combine(directory, "hold.lock")
 
@@ -612,17 +612,17 @@ module PacingCommands =
         saveState directory decision.State
         decision
 
-    let private overridePath directory = Path.Combine(directory, "override")
+    let private overridePath (directory: string) : string = Path.Combine(directory, "override")
 
-    let private overrideEnabled directory = File.Exists(overridePath directory)
+    let private overrideEnabled (directory: string) : bool = File.Exists(overridePath directory)
 
-    let private freshnessText freshness =
+    let private freshnessText (freshness: ObservationFreshness) : string =
         match freshness with
         | ObservationFreshness.Fresh -> "fresh"
         | ObservationFreshness.Stale reason -> $"stale: {reason}"
         | ObservationFreshness.Unavailable reason -> $"unavailable: {reason}"
 
-    let private evaluate directory provider model snapshot =
+    let private evaluate (directory: string) (provider: string) (model: string option) (snapshot: ProviderSnapshot) : PacingDecision =
         withState directory (fun state ->
             Pacing.evaluate
                 PacingPolicy.defaults
@@ -634,27 +634,7 @@ module PacingCommands =
                   Existing = state
                   Override = overrideEnabled directory })
 
-    let private renderStatusText provider model snapshot decision =
-        printfn "pacing %s%s: %s" provider (model |> Option.map (fun value -> $" ({value})") |> Option.defaultValue "") (freshnessText snapshot.Freshness)
-
-        if snapshot.Windows.IsEmpty then
-            printfn "quota: no usable windows"
-        else
-            for window in snapshot.Windows do
-                let ideal = Pacing.idealPercent DateTimeOffset.UtcNow window
-
-                if Pacing.isWeekly PacingPolicy.defaults window then
-                    let lead = Pacing.lead DateTimeOffset.UtcNow window
-                    printfn "%s: used %.2f%%, pace %.2f%%, lead %+.1fh, reset %s" window.Label (float window.UsedPercent) (float ideal) lead.TotalHours (window.ResetsAt.ToLocalTime().ToString("g"))
-                else
-                    printfn "%s: used %.2f%%, reset %s" window.Label (float window.UsedPercent) (window.ResetsAt.ToLocalTime().ToString("g"))
-
-        match decision.BindingReason with
-        | None -> printfn "gate: proceed%s" (if overrideEnabled (stateDirectory []) then " (override)" else "")
-        | Some reason ->
-            printfn "gate: hold (%s); %s; recheck/resume estimate %s" (PacingReasonKind.code reason.Kind) reason.Detail (reason.ResumeAt.ToLocalTime().ToString("g"))
-
-    let private statusJson provider model snapshot decision =
+    let private statusJson (provider: string) (model: string option) (snapshot: ProviderSnapshot) (decision: PacingDecision) : string =
         let root = JsonObject()
         root["provider"] <- JsonValue.Create(provider)
         model |> Option.iter (fun value -> root["model"] <- JsonValue.Create(value))
@@ -689,7 +669,7 @@ module PacingCommands =
 
         root.ToJsonString(JsonSerializerOptions(WriteIndented = true))
 
-    let private payloadModel provider explicitModel payload =
+    let private payloadModel (provider: string) (explicitModel: string option) (payload: string) : string option =
         match explicitModel with
         | Some _ -> explicitModel
         | None ->
@@ -740,14 +720,14 @@ module PacingCommands =
             with _ ->
                 None
 
-    let private payloadEvent payload =
+    let private payloadEvent (payload: string) : string =
         try
             use document = JsonDocument.Parse payload
             tryProperty "hook_event_name" document.RootElement |> Option.bind tryString |> Option.defaultValue "PreToolUse"
         with _ ->
             "PreToolUse"
 
-    let private writeLog directory text =
+    let private writeLog (directory: string) (text: string) : unit =
         try
             Directory.CreateDirectory directory |> ignore
             let timestamp = DateTimeOffset.Now.ToString("O", CultureInfo.InvariantCulture)
@@ -756,7 +736,7 @@ module PacingCommands =
         with _ ->
             ()
 
-    let private deny provider event detail =
+    let private deny (provider: string) (event: string) (detail: string) : unit =
         let reason = $"Praxis usage pacing hold remains active: {detail}. Retry after quota refresh/reset."
 
         if event = "PreToolUse" then
@@ -778,7 +758,7 @@ module PacingCommands =
             root["reason"] <- JsonValue.Create(reason)
             printf "%s" (root.ToJsonString())
 
-    let private runGate directory provider explicitModel =
+    let private runGate (directory: string) (provider: string) (explicitModel: string option) : int =
         let payload = if Console.IsInputRedirected then Console.In.ReadToEnd() else "{}"
         let model = payloadModel provider explicitModel payload
         let event = payloadEvent payload
@@ -832,7 +812,7 @@ module PacingCommands =
 
         exitCode
 
-    let private runStatus directory provider model asJson =
+    let private runStatus (directory: string) (provider: string) (model: string option) (asJson: bool) : int =
         let snapshot = queryProvider directory provider model
         let decision = evaluate directory provider model snapshot
 
@@ -865,7 +845,7 @@ module PacingCommands =
         | ObservationFreshness.Unavailable _ -> 1
         | _ -> 0
 
-    let run _root arguments =
+    let run (_root: string) (arguments: string list) : int =
         let directory = stateDirectory arguments
         let provider = optionValue "--provider" arguments |> Option.defaultValue "codex" |> fun value -> value.ToLowerInvariant()
         let model = optionValue "--model" arguments
