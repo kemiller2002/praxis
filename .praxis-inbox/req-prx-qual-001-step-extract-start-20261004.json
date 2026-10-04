@@ -1,0 +1,24 @@
+{
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.3",
+  "requestId": "req-prx-qual-001-step-extract-start-20261004",
+  "operation": "step.start",
+  "repository": {
+    "ref": "refs/heads/quality/prx-qual-001-four-tier-pacing",
+    "expectedSha": "40ab6ebbee79162249cdf3b22d4ce653de8d725f"
+  },
+  "actor": {
+    "kind": "agent",
+    "id": "openai/chatgpt",
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "runtime": "chatgpt"
+  },
+  "execution": {
+    "id": "EXE-20261004T141627204Z-7393b780"
+  },
+  "arguments": {
+    "stepId": "pacing-architecture-extraction",
+    "name": "Extract pacing into Application and Infrastructure"
+  }
+}
