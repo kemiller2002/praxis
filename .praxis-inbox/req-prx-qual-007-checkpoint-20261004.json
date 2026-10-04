@@ -1,0 +1,25 @@
+{
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.3",
+  "requestId": "req-prx-qual-007-checkpoint-20261004",
+  "operation": "work.checkpoint",
+  "repository": {
+    "ref": "refs/heads/quality/prx-qual-007-status-contract",
+    "expectedSha": "f9c336bc42ec4c23b3c56d86d8593bf533e873c9"
+  },
+  "actor": {
+    "kind": "agent",
+    "id": "openai/chatgpt",
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "runtime": "chatgpt"
+  },
+  "execution": {
+    "id": "EXE-20261004T135307637Z-297e30bb"
+  },
+  "arguments": {
+    "workItemId": "GH-154",
+    "summary": "Implemented typed pacing status projection and contract tests; JSON now reports actual override and explicit freshness/provider/safety state.",
+    "nextAction": "Complete GH-154 with implementation and test evidence, then merge PR #156 after current PR checks."
+  }
+}
