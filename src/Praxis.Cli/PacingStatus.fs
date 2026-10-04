@@ -184,7 +184,7 @@ module PacingStatus =
     let renderText (status: PacingStatusView) =
         let lines = ResizeArray<string>()
         lines.Add($"state directory: {status.StateDirectory}")
-        lines.Add("override: " + if status.Override then "on" else "off")
+        lines.Add("override: " + (if status.Override then "on" else "off"))
 
         let model = status.Model |> Option.map (fun value -> $" ({value})") |> Option.defaultValue ""
         lines.Add($"pacing {status.Provider}{model}: {freshnessText status.FreshnessState status.FreshnessReason}")
@@ -214,7 +214,7 @@ module PacingStatus =
         match status.Hold with
         | None -> lines.Add("gate: proceed")
         | Some reason ->
-            lines.Add(
-                $"gate: hold ({reason.Kind}); {reason.Detail}; recheck/resume estimate {reason.ResumeAt.ToLocalTime().ToString("g", CultureInfo.CurrentCulture)}")
+            let resume = reason.ResumeAt.ToLocalTime().ToString("g", CultureInfo.CurrentCulture)
+            lines.Add($"gate: hold ({reason.Kind}); {reason.Detail}; recheck/resume estimate {resume}")
 
         String.Join(Environment.NewLine, lines) + Environment.NewLine
