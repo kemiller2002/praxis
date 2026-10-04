@@ -1,0 +1,40 @@
+{
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.3",
+  "requestId": "req-prx-qual-007-complete-20261004",
+  "operation": "work.complete",
+  "repository": {
+    "ref": "refs/heads/quality/prx-qual-007-status-contract",
+    "expectedSha": "3c9df63c0edef90242519ea9ff8d823289103a5c"
+  },
+  "actor": {
+    "kind": "agent",
+    "id": "openai/chatgpt",
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "runtime": "chatgpt"
+  },
+  "execution": {
+    "id": "EXE-20261004T135307637Z-297e30bb"
+  },
+  "arguments": {
+    "workItemIds": [
+      "GH-154"
+    ],
+    "evidence": [
+      {
+        "type": "implementation",
+        "path": "src/Praxis.Cli/PacingStatus.fs"
+      },
+      {
+        "type": "implementation",
+        "path": "src/Praxis.Cli/PacingCommands.fs"
+      },
+      {
+        "type": "tests",
+        "path": "tests/Praxis.Tests/PacingTests.fs"
+      }
+    ],
+    "conclusion": "PRX-QUAL-007 implemented: text and JSON share one typed status projection; override, provider/freshness, safety state, windows, and hold data are machine-readable and covered by regression tests."
+  }
+}
