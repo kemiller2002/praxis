@@ -1482,6 +1482,17 @@
         "name": "ros",
         "mechanism": "work-lifecycle"
       }
+    },
+    {
+      "type": "step.started",
+      "stepId": "pacing-architecture-extraction",
+      "name": "Extract pacing into Application and Infrastructure",
+      "occurredAt": "2026-10-04T14:17:30.513Z",
+      "source": {
+        "type": "ros-clock",
+        "name": "ros",
+        "mechanism": "step-lifecycle"
+      }
     }
   ],
   "repository": {
