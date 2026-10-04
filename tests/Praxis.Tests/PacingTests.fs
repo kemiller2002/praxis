@@ -1,6 +1,7 @@
 namespace Praxis.Tests
 
 open System
+open System.Text.Json
 open Praxis.Domain.Pacing
 open Praxis.Cli
 
@@ -123,6 +124,61 @@ module PacingTests =
                   Assert.isTrue complete "global Claude session and weekly windows should make the reading complete"
                   let scoped = windows |> List.find (fun window -> window.Key = "seven_day:Fable")
                   Assert.equal (QuotaScope.Model "Fable") scoped.Scope)
+
+          t "status JSON reports the actual override and unavailable provider state" (fun () ->
+              let snapshot =
+                  { Provider = "codex"
+                    ObservedAt = now
+                    Windows = []
+                    Freshness = ObservationFreshness.Unavailable "provider offline" }
+
+              let decision = evaluate PacingState.empty snapshot.Freshness [] None true
+              let status = PacingStatus.create now "/tmp/pacing" "codex" None true snapshot decision
+              use document = JsonDocument.Parse(PacingStatus.renderJson status)
+              let root = document.RootElement
+
+              Assert.equal 1 (root.GetProperty("schemaVersion").GetInt32())
+              Assert.isTrue (root.GetProperty("override").GetBoolean()) "JSON must report the real enabled override"
+              Assert.equal "unavailable" (root.GetProperty("freshnessState").GetString())
+              Assert.equal "provider offline" (root.GetProperty("freshnessReason").GetString())
+              Assert.equal "provider offline" (root.GetProperty("providerError").GetString())
+              Assert.equal "indeterminate" (root.GetProperty("safetyState").GetString()))
+
+          t "stale status reports indeterminate safety without losing its reason" (fun () ->
+              let snapshot =
+                  { Provider = "codex"
+                    ObservedAt = now
+                    Windows = [ weekly "weekly" 3.0 QuotaScope.Global ]
+                    Freshness = ObservationFreshness.Stale "refresh failed" }
+
+              let decision = evaluate PacingState.empty snapshot.Freshness snapshot.Windows None false
+              let status = PacingStatus.create now "/tmp/pacing" "codex" None false snapshot decision
+              use document = JsonDocument.Parse(PacingStatus.renderJson status)
+              let root = document.RootElement
+
+              Assert.equal "stale" (root.GetProperty("freshnessState").GetString())
+              Assert.equal "refresh failed" (root.GetProperty("freshnessReason").GetString())
+              Assert.equal "indeterminate" (root.GetProperty("safetyState").GetString()))
+
+          t "status text and JSON are projections of the same held status" (fun () ->
+              let quota = weekly "weekly" 8.4 QuotaScope.Global
+              let snapshot =
+                  { Provider = "codex"
+                    ObservedAt = now
+                    Windows = [ quota ]
+                    Freshness = ObservationFreshness.Fresh }
+
+              let decision = evaluate PacingState.empty snapshot.Freshness snapshot.Windows None false
+              let status = PacingStatus.create now "/tmp/pacing" "codex" None false snapshot decision
+              use document = JsonDocument.Parse(PacingStatus.renderJson status)
+              let root = document.RootElement
+
+              Assert.isTrue (not (root.GetProperty("override").GetBoolean())) "JSON must report a disabled override"
+              Assert.equal "weekly-lead" (root.GetProperty("hold").GetProperty("kind").GetString())
+
+              let text = PacingStatus.renderText status
+              Assert.isTrue (text.Contains("override: off", StringComparison.Ordinal)) "text must project the same override state"
+              Assert.isTrue (text.Contains("gate: hold (weekly-lead)", StringComparison.Ordinal)) "text must project the same binding hold")
 
           t "override bypasses without erasing the latch" (fun () ->
               let triggered = evaluate PacingState.empty ObservationFreshness.Fresh [ weekly "weekly" 9.0 QuotaScope.Global ] None false
