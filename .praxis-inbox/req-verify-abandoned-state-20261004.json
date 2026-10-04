@@ -1,0 +1,19 @@
+{
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.3",
+  "requestId": "req-verify-abandoned-state-20261004",
+  "operation": "work.context",
+  "repository": {
+    "ref": "refs/heads/fix/remote-executor-version-skew"
+  },
+  "actor": {
+    "kind": "agent",
+    "id": "openai/chatgpt",
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "runtime": "chatgpt"
+  },
+  "arguments": {
+    "workItemId": "WI-0003"
+  }
+}
