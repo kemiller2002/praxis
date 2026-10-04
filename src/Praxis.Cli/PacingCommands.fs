@@ -12,12 +12,6 @@ open System.Text.Json.Nodes
 open System.Threading
 open Praxis.Domain.Pacing
 
-type ProviderSnapshot =
-    { Provider: string
-      ObservedAt: DateTimeOffset
-      Windows: QuotaWindow list
-      Freshness: ObservationFreshness }
-
 [<RequireQualifiedAccess>]
 module PacingCommands =
     let usage =
@@ -616,58 +610,27 @@ module PacingCommands =
 
     let private overrideEnabled (directory: string) : bool = File.Exists(overridePath directory)
 
-    let private freshnessText (freshness: ObservationFreshness) : string =
-        match freshness with
-        | ObservationFreshness.Fresh -> "fresh"
-        | ObservationFreshness.Stale reason -> $"stale: {reason}"
-        | ObservationFreshness.Unavailable reason -> $"unavailable: {reason}"
-
-    let private evaluate (directory: string) (provider: string) (model: string option) (snapshot: ProviderSnapshot) : PacingDecision =
+    let private evaluateAt
+        (directory: string)
+        (provider: string)
+        (model: string option)
+        (snapshot: ProviderSnapshot)
+        (now: DateTimeOffset)
+        (overridden: bool)
+        : PacingDecision =
         withState directory (fun state ->
             Pacing.evaluate
                 PacingPolicy.defaults
-                { Now = DateTimeOffset.UtcNow
+                { Now = now
                   Provider = provider
                   Model = model
                   Windows = snapshot.Windows
                   Freshness = snapshot.Freshness
                   Existing = state
-                  Override = overrideEnabled directory })
+                  Override = overridden })
 
-    let private statusJson (provider: string) (model: string option) (snapshot: ProviderSnapshot) (decision: PacingDecision) : string =
-        let root = JsonObject()
-        root["provider"] <- JsonValue.Create(provider)
-        model |> Option.iter (fun value -> root["model"] <- JsonValue.Create(value))
-        root["freshness"] <- JsonValue.Create(freshnessText snapshot.Freshness)
-        root["mayProceed"] <- JsonValue.Create(decision.MayProceed)
-        root["override"] <- JsonValue.Create(false)
-        let windows = JsonArray()
-
-        for window in snapshot.Windows do
-            let row = JsonObject()
-            row["key"] <- JsonValue.Create(window.Key)
-            row["label"] <- JsonValue.Create(window.Label)
-            row["usedPercent"] <- JsonValue.Create(window.UsedPercent)
-            row["durationMinutes"] <- JsonValue.Create(window.Duration.TotalMinutes)
-            row["resetsAt"] <- JsonValue.Create(window.ResetsAt.ToString("O"))
-
-            if Pacing.isWeekly PacingPolicy.defaults window then
-                row["leadHours"] <- JsonValue.Create((Pacing.lead DateTimeOffset.UtcNow window).TotalHours)
-
-            windows.Add row
-
-        root["windows"] <- windows
-
-        match decision.BindingReason with
-        | Some reason ->
-            let hold = JsonObject()
-            hold["kind"] <- JsonValue.Create(PacingReasonKind.code reason.Kind)
-            hold["detail"] <- JsonValue.Create(reason.Detail)
-            hold["resumeAt"] <- JsonValue.Create(reason.ResumeAt.ToString("O"))
-            root["hold"] <- hold
-        | None -> ()
-
-        root.ToJsonString(JsonSerializerOptions(WriteIndented = true))
+    let private evaluate (directory: string) (provider: string) (model: string option) (snapshot: ProviderSnapshot) : PacingDecision =
+        evaluateAt directory provider model snapshot DateTimeOffset.UtcNow (overrideEnabled directory)
 
     let private payloadModel (provider: string) (explicitModel: string option) (payload: string) : string option =
         match explicitModel with
@@ -814,35 +777,18 @@ module PacingCommands =
 
     let private runStatus (directory: string) (provider: string) (model: string option) (asJson: bool) : int =
         let snapshot = queryProvider directory provider model
-        let decision = evaluate directory provider model snapshot
+        let now = DateTimeOffset.UtcNow
+        let overridden = overrideEnabled directory
+        let decision = evaluateAt directory provider model snapshot now overridden
+        let status = PacingStatus.create now directory provider model overridden snapshot decision
 
         if asJson then
-            printf "%s" (statusJson provider model snapshot decision)
+            printf "%s" (PacingStatus.renderJson status)
         else
-            printfn "state directory: %s" directory
-            printfn "override: %s" (if overrideEnabled directory then "on" else "off")
-            printfn "pacing %s%s: %s" provider (model |> Option.map (fun value -> $" ({value})") |> Option.defaultValue "") (freshnessText snapshot.Freshness)
+            printf "%s" (PacingStatus.renderText status)
 
-            if snapshot.Windows.IsEmpty then
-                printfn "quota: no usable windows"
-            else
-                for window in snapshot.Windows do
-                    let now = DateTimeOffset.UtcNow
-                    let ideal = Pacing.idealPercent now window
-
-                    if Pacing.isWeekly PacingPolicy.defaults window then
-                        let lead = Pacing.lead now window
-                        printfn "%s: used %.2f%%, pace %.2f%%, lead %+.1fh, reset %s" window.Label (float window.UsedPercent) (float ideal) lead.TotalHours (window.ResetsAt.ToLocalTime().ToString("g"))
-                    else
-                        printfn "%s: used %.2f%%, reset %s" window.Label (float window.UsedPercent) (window.ResetsAt.ToLocalTime().ToString("g"))
-
-            match decision.BindingReason with
-            | None -> printfn "gate: proceed"
-            | Some reason ->
-                printfn "gate: hold (%s); %s; recheck/resume estimate %s" (PacingReasonKind.code reason.Kind) reason.Detail (reason.ResumeAt.ToLocalTime().ToString("g"))
-
-        match snapshot.Freshness with
-        | ObservationFreshness.Unavailable _ -> 1
+        match status.FreshnessState with
+        | PacingFreshnessState.Unavailable -> 1
         | _ -> 0
 
     let run (_root: string) (arguments: string list) : int =
