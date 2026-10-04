@@ -1,0 +1,17 @@
+{
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.3",
+  "requestId": "req-prx-qual-001-validate-20261004",
+  "operation": "validate",
+  "repository": {
+    "ref": "refs/heads/quality/prx-qual-001-four-tier-pacing",
+    "expectedSha": "bfa20c02ce20dc3a37d930c643d6a2fb5cbc76fe"
+  },
+  "actor": {
+    "kind": "agent",
+    "id": "openai/chatgpt",
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "runtime": "chatgpt"
+  }
+}
