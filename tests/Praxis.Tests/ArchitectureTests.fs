@@ -57,8 +57,58 @@ module ArchitectureTests =
         |> List.map (fun (project, _) -> project, readReferences root project)
         |> Map.ofList
 
+
+    let private pacingBoundaryFindings () =
+        let root = repositoryRoot (DirectoryInfo(Directory.GetCurrentDirectory()))
+        let read relative = File.ReadAllText(Path.Combine(root, relative))
+
+        let cliCommands = read "src/Praxis.Cli/PacingCommands.fs"
+
+        let applicationSources =
+            [ "src/Praxis.Application/Pacing/Contracts.fs"
+              "src/Praxis.Application/Pacing/Status.fs"
+              "src/Praxis.Application/Pacing/Operations.fs" ]
+            |> List.map (fun path -> path, read path)
+
+        let forbiddenCli =
+            [ "System.Net.Http"
+              "HttpClient"
+              "ProcessStartInfo"
+              "File."
+              "Directory."
+              "FileStream"
+              "Thread.Sleep"
+              "find-generic-password"
+              "app-server"
+              "normalizeCodexResult"
+              "normalizeClaudeUsage" ]
+
+        let forbiddenApplication =
+            [ "System.IO"
+              "System.Diagnostics"
+              "System.Net.Http"
+              "HttpClient"
+              "ProcessStartInfo"
+              "File."
+              "Directory."
+              "FileStream"
+              "Thread.Sleep"
+              "find-generic-password"
+              "app-server" ]
+
+        [ for marker in forbiddenCli do
+              if cliCommands.Contains(marker, StringComparison.Ordinal) then
+                  yield $"PacingCommands.fs owns forbidden adapter concern '{marker}'"
+
+          for path, source in applicationSources do
+              for marker in forbiddenApplication do
+                  if source.Contains(marker, StringComparison.Ordinal) then
+                      yield $"{path} owns forbidden adapter concern '{marker}'" ]
+
     let tests =
-        [ { Name = "production project references point inward"
+        [ { Name = "pacing adapters stay outside CLI and Application"
+            Run = fun () -> pacingBoundaryFindings () |> Assert.empty }
+          { Name = "production project references point inward"
             Run = fun () -> productionGraph () |> validateGraph |> Assert.empty }
           { Name = "architecture guard rejects an outward Domain dependency"
             Run =

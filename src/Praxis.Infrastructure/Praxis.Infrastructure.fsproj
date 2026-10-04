@@ -9,6 +9,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Pacing/Json.fs" />
+    <Compile Include="Pacing/Normalization.fs" />
+    <Compile Include="Pacing/Providers.fs" />
+    <Compile Include="Pacing/Persistence.fs" />
+    <Compile Include="Pacing/Context.fs" />
+    <Compile Include="Pacing/Runtime.fs" />
     <Compile Include="Git/GitRepository.fs" />
     <Compile Include="Git/UpstreamSynchronization.fs" />
     <Compile Include="Architecture/FileImplementationPolicyRepository.fs" />

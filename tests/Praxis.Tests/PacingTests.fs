@@ -3,6 +3,8 @@ namespace Praxis.Tests
 open System
 open System.Text.Json
 open Praxis.Domain.Pacing
+open Praxis.Application.Pacing
+open Praxis.Infrastructure.Pacing
 open Praxis.Cli
 
 module PacingTests =
@@ -109,7 +111,7 @@ module PacingTests =
           t "Codex quota response normalizes session and weekly windows" (fun () ->
               let json = """{"rateLimitsByLimitId":{"codex":{"primary":{"usedPercent":42,"windowDurationMins":300,"resetsAt":1791050400},"secondary":{"usedPercent":55,"windowDurationMins":10080,"resetsAt":1791655200}}}}"""
 
-              match PacingCommands.normalizeCodexResult "codex" now json with
+              match PacingNormalization.normalizeCodexResult "codex" now json with
               | Error message -> failwith message
               | Ok(windows, complete) ->
                   Assert.isTrue complete "both reported Codex windows should be complete"
@@ -118,7 +120,7 @@ module PacingTests =
           t "Claude quota response preserves model scope" (fun () ->
               let json = """{"five_hour":{"utilization":20,"resets_at":"2026-10-03T20:00:00Z"},"seven_day":{"utilization":40,"resets_at":"2026-10-08T17:00:00Z"},"limits":[{"kind":"weekly_scoped","percent":75,"resets_at":"2026-10-08T17:00:00Z","scope":{"model":{"display_name":"Fable"},"surface":null}}]}"""
 
-              match PacingCommands.normalizeClaudeUsage now json with
+              match PacingNormalization.normalizeClaudeUsage now json with
               | Error message -> failwith message
               | Ok(windows, complete) ->
                   Assert.isTrue complete "global Claude session and weekly windows should make the reading complete"
@@ -133,7 +135,7 @@ module PacingTests =
                     Freshness = ObservationFreshness.Unavailable "provider offline" }
 
               let decision = evaluate PacingState.empty snapshot.Freshness [] None true
-              let status = PacingStatus.create now "/tmp/pacing" "codex" None true snapshot decision
+              let status = PacingStatusProjection.create now "/tmp/pacing" "codex" None true snapshot decision
               use document = JsonDocument.Parse(PacingStatus.renderJson status)
               let root = document.RootElement
 
@@ -152,7 +154,7 @@ module PacingTests =
                     Freshness = ObservationFreshness.Stale "refresh failed" }
 
               let decision = evaluate PacingState.empty snapshot.Freshness snapshot.Windows None false
-              let status = PacingStatus.create now "/tmp/pacing" "codex" None false snapshot decision
+              let status = PacingStatusProjection.create now "/tmp/pacing" "codex" None false snapshot decision
               use document = JsonDocument.Parse(PacingStatus.renderJson status)
               let root = document.RootElement
 
@@ -169,7 +171,7 @@ module PacingTests =
                     Freshness = ObservationFreshness.Fresh }
 
               let decision = evaluate PacingState.empty snapshot.Freshness snapshot.Windows None false
-              let status = PacingStatus.create now "/tmp/pacing" "codex" None false snapshot decision
+              let status = PacingStatusProjection.create now "/tmp/pacing" "codex" None false snapshot decision
               use document = JsonDocument.Parse(PacingStatus.renderJson status)
               let root = document.RootElement
 
