@@ -144,6 +144,22 @@ module PacingTests =
               Assert.equal "provider offline" (root.GetProperty("providerError").GetString())
               Assert.equal "indeterminate" (root.GetProperty("safetyState").GetString()))
 
+          t "stale status reports indeterminate safety without losing its reason" (fun () ->
+              let snapshot =
+                  { Provider = "codex"
+                    ObservedAt = now
+                    Windows = [ weekly "weekly" 3.0 QuotaScope.Global ]
+                    Freshness = ObservationFreshness.Stale "refresh failed" }
+
+              let decision = evaluate PacingState.empty snapshot.Freshness snapshot.Windows None false
+              let status = PacingStatus.create now "/tmp/pacing" "codex" None false snapshot decision
+              use document = JsonDocument.Parse(PacingStatus.renderJson status)
+              let root = document.RootElement
+
+              Assert.equal "stale" (root.GetProperty("freshnessState").GetString())
+              Assert.equal "refresh failed" (root.GetProperty("freshnessReason").GetString())
+              Assert.equal "indeterminate" (root.GetProperty("safetyState").GetString()))
+
           t "status text and JSON are projections of the same held status" (fun () ->
               let quota = weekly "weekly" 8.4 QuotaScope.Global
               let snapshot =
