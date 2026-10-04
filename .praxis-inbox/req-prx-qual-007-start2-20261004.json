@@ -1,0 +1,24 @@
+{
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.3",
+  "requestId": "req-prx-qual-007-start2-20261004",
+  "operation": "work.start",
+  "repository": {
+    "ref": "refs/heads/quality/prx-qual-007-status-contract",
+    "expectedSha": "60191070cb1955a608dea650b546e129867c40cf"
+  },
+  "actor": {
+    "kind": "agent",
+    "id": "openai/chatgpt",
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "runtime": "chatgpt"
+  },
+  "arguments": {
+    "workItemIds": [
+      "GH-154"
+    ],
+    "type": "task"
+  },
+  "requestedAt": "2026-10-04T13:54:00.000Z"
+}
