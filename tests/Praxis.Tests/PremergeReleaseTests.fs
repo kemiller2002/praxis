@@ -2,6 +2,7 @@ namespace Praxis.Tests
 
 open System.IO
 open System.Text.RegularExpressions
+open System.Text.Json.Nodes
 open System.Xml.Linq
 
 /// Release and packaging behavior main added after PR #92 diverged
@@ -83,4 +84,14 @@ module PremergeReleaseTests =
                   Assert.isTrue (Regex.IsMatch(native, "dotnet pack")) "the native release packs the tool" }
 
           { Name = "fence release: the native release publishes an attested echelon-release.json manifest"
-            Run = fun () -> contains "echelon-release.json" (workflow "native-release.yml") "release manifest" } ]
+            Run = fun () -> contains "echelon-release.json" (workflow "native-release.yml") "release manifest" }
+
+          { Name = "fence release: the self-hosting remote executor pins the repository release version"
+            Run =
+              fun () ->
+                  let release = JsonNode.Parse(readRepositoryFile "release.json")
+                  let toolchain = JsonNode.Parse(readRepositoryFile ".echelon/toolchain.json")
+                  let released = release["version"].GetValue<string>()
+                  let pinned = toolchain["praxis"].GetValue<string>()
+
+                  Assert.equal released pinned } ]
