@@ -42,7 +42,7 @@ module PacingTests =
               Existing = state
               Override = overridden }
 
-    let private held result = result.State.Holds.Count > 0
+    let private held (result: PacingDecision) = result.State.Holds.Count > 0
 
     let tests =
         [ t "on-pace weekly usage proceeds" (fun () ->
