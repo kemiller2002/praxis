@@ -96,8 +96,9 @@ module PacingStatus =
 
         let safetyState =
             match snapshot.Freshness with
+            | ObservationFreshness.Fresh -> PacingSafetyState.Known
+            | ObservationFreshness.Stale _
             | ObservationFreshness.Unavailable _ -> PacingSafetyState.Indeterminate
-            | _ -> PacingSafetyState.Known
 
         let providerError =
             match snapshot.Freshness with
