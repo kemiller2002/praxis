@@ -244,6 +244,30 @@ Acceptance:
 - legacy debt can be baselined/ratcheted rather than forcing unrelated cleanup.
 - unavailable Dokimos evidence is explicit, never treated as pass.
 
+Status (2026-10-05, branch `quality/prx-qual-023-quality-evidence`,
+`DF-ROS-2026-A052`): implemented as an opt-in completion gate.
+- Praxis consumes `dokimos.ratchet` 1.0.0 reports (`--evidence
+  dokimos-ratchet=PATH`) and `ordo.boundary-amplification/1` assessments
+  (`--evidence ordo-boundary=PATH`); it never runs either tool and never
+  recomputes their judgements.
+- Policy: `workProtocol.qualityEvidence` (`dokimos`/`ordoBoundary`:
+  `required|optional|off`, `dokimosBaseline`, `requiredFacets`, `workTypes`).
+  A named Dokimos profile is the pinned accepted baseline (`dokimosBaseline`);
+  the 1.0.0 contract carries no other profile identity.
+- Regression and invalid exceptions block; legacy debt stays accepted through
+  Dokimos's own baseline/ratchet and exceptions; unavailable, malformed and
+  unsupported evidence is recorded and never a pass.
+- Readiness facets (implementation, behaviour, architecture, release) are
+  recorded as `praxis.completion-readiness/1` on the completion event and item.
+
+Tracked debt (migration bridge): the policy is off by default so existing
+repositories keep their behaviour. Retire it, defaulting new repositories to
+`dokimos: required`, once Conditor installs Dokimos by default. Not yet done:
+a digest of each consumed evidence file in the record, and a consumable
+release-readiness contract (`release-ready` is always unavailable when
+required). PRX-QUAL-020, 021 and 022 remain open; readiness facets are the
+hook their obligations will feed.
+
 ## Sequencing
 
 1. PRX-QUAL-007 can be fixed immediately.
