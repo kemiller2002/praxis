@@ -1,0 +1,125 @@
+{
+  "Contract": "dokimos.ratchet",
+  "SchemaVersion": "1.0.0",
+  "DokimosVersion": "0.2.0+b176c53e430afcb3c41ab0253479af8761501e8d",
+  "CheckedAt": "2026-10-05T12:00:00+00:00",
+  "Repository": "kemiller2002/dokimos",
+  "Verdict": "pass",
+  "ExitCode": 0,
+  "Reasons": [],
+  "Baseline": {
+    "Path": "quality/baseline.json",
+    "Digest": "sha256:178e3245df091a8eeeaab3e7b7b69ae64c4aa2e529813a58a799bde2798f4f8b",
+    "SchemaVersion": "1.0.0",
+    "AcceptedAt": "2026-10-05T10:44:49Z"
+  },
+  "Exceptions": {
+    "Path": "quality/exceptions.json",
+    "Digest": "sha256:47541ee02d759c4d760597b2c190f1d56bcb2e04c6f0963e0699306b3b68b82b",
+    "Active": [
+      {
+        "Id": "EXC-0001",
+        "RuleId": "DOK-R004",
+        "Scope": "src/Dokimos.Core/RatchetContract.fs",
+        "Rationale": "Fixture: accepted temporary marker for the Praxis consumer test.",
+        "Owner": "kemiller2002",
+        "Created": "2026-10-01",
+        "Expires": "2026-12-31",
+        "ReviewCondition": null,
+        "Evidence": [
+          "https://github.com/kemiller2002/praxis/issues/167"
+        ],
+        "AllowedValue": 1
+      }
+    ],
+    "Expired": [],
+    "Invalid": [],
+    "Unused": []
+  },
+  "Summary": {
+    "Regressions": 0,
+    "Excepted": 1,
+    "Improvements": 0,
+    "RulesMeasured": 8,
+    "RulesUnavailable": 0,
+    "RulesNotEnforced": 0,
+    "FilesAnalyzed": 92,
+    "GeneratedFilesExcluded": 0
+  },
+  "Rules": [
+    {
+      "RuleId": "DOK-R001",
+      "Name": "compiler-warnings",
+      "State": "measured",
+      "Reason": null
+    },
+    {
+      "RuleId": "DOK-R002",
+      "Name": "warning-suppressions",
+      "State": "measured",
+      "Reason": null
+    },
+    {
+      "RuleId": "DOK-R003",
+      "Name": "skipped-tests",
+      "State": "measured",
+      "Reason": null
+    },
+    {
+      "RuleId": "DOK-R004",
+      "Name": "debt-markers",
+      "State": "measured",
+      "Reason": null
+    },
+    {
+      "RuleId": "DOK-R005",
+      "Name": "large-file-growth",
+      "State": "measured",
+      "Reason": null
+    },
+    {
+      "RuleId": "DOK-R006",
+      "Name": "broad-exception-catches",
+      "State": "measured",
+      "Reason": null
+    },
+    {
+      "RuleId": "DOK-R007",
+      "Name": "package-references",
+      "State": "measured",
+      "Reason": null
+    },
+    {
+      "RuleId": "DOK-R008",
+      "Name": "architecture-violations",
+      "State": "measured",
+      "Reason": null
+    }
+  ],
+  "Generated": {
+    "Globs": [
+      "**/bin/**",
+      "**/obj/**"
+    ],
+    "Files": []
+  },
+  "Findings": [
+    {
+      "RuleId": "DOK-R004",
+      "RuleName": "debt-markers",
+      "Scope": "src/Dokimos.Core/RatchetContract.fs",
+      "Kind": "excepted-regression",
+      "Degraded": "debt-markers at src/Dokimos.Core/RatchetContract.fs increased from 0 to 1.",
+      "Before": 0,
+      "After": 1,
+      "BaselineRecorded": false,
+      "Description": "Unresolved debt markers per file must not exceed the accepted baseline.",
+      "Remediation": "Finish the work, or track it in the work queue and remove the marker.",
+      "ExceptionProcess": "To accept this specific regression, add an entry to quality/exceptions.json with id, ruleId \"DOK-R004\", the exact scope, rationale, owner, created, expires (or reviewCondition), evidence and allowedValue, and have it reviewed in the pull request. An exception never changes the baseline. See docs/quality/RATCHET-RULES.md#exceptions.",
+      "ExceptionId": "EXC-0001",
+      "Evidence": [
+        "src/Dokimos.Core/RatchetContract.fs:382: // TODO: fixture regression introduced for Praxis consumer tests"
+      ]
+    }
+  ]
+}

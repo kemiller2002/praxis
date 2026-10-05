@@ -1,0 +1,107 @@
+{
+  "Contract": "dokimos.ratchet",
+  "SchemaVersion": "1.0.0",
+  "DokimosVersion": "0.2.0+b176c53e430afcb3c41ab0253479af8761501e8d",
+  "CheckedAt": "2026-10-05T10:57:52.5989893+00:00",
+  "Repository": "kemiller2002/dokimos",
+  "Verdict": "unavailable",
+  "ExitCode": 3,
+  "Reasons": [
+    "DOK-R001: no build log supplied (--build-log); compiler warnings were not measured"
+  ],
+  "Baseline": {
+    "Path": "quality/baseline.json",
+    "Digest": "sha256:178e3245df091a8eeeaab3e7b7b69ae64c4aa2e529813a58a799bde2798f4f8b",
+    "SchemaVersion": "1.0.0",
+    "AcceptedAt": "2026-10-05T10:44:49Z"
+  },
+  "Exceptions": {
+    "Path": "quality/exceptions.json",
+    "Digest": "sha256:ee7170d25cf81caa9291e3c1d6f603c5f14e3158f162402a13311e2e9de0512d",
+    "Active": [],
+    "Expired": [],
+    "Invalid": [],
+    "Unused": []
+  },
+  "Summary": {
+    "Regressions": 0,
+    "Excepted": 0,
+    "Improvements": 0,
+    "RulesMeasured": 7,
+    "RulesUnavailable": 1,
+    "RulesNotEnforced": 0,
+    "FilesAnalyzed": 92,
+    "GeneratedFilesExcluded": 12
+  },
+  "Rules": [
+    {
+      "RuleId": "DOK-R001",
+      "Name": "compiler-warnings",
+      "State": "unavailable",
+      "Reason": "no build log supplied (--build-log); compiler warnings were not measured"
+    },
+    {
+      "RuleId": "DOK-R002",
+      "Name": "warning-suppressions",
+      "State": "measured",
+      "Reason": null
+    },
+    {
+      "RuleId": "DOK-R003",
+      "Name": "skipped-tests",
+      "State": "measured",
+      "Reason": null
+    },
+    {
+      "RuleId": "DOK-R004",
+      "Name": "debt-markers",
+      "State": "measured",
+      "Reason": null
+    },
+    {
+      "RuleId": "DOK-R005",
+      "Name": "large-file-growth",
+      "State": "measured",
+      "Reason": null
+    },
+    {
+      "RuleId": "DOK-R006",
+      "Name": "broad-exception-catches",
+      "State": "measured",
+      "Reason": null
+    },
+    {
+      "RuleId": "DOK-R007",
+      "Name": "package-references",
+      "State": "measured",
+      "Reason": null
+    },
+    {
+      "RuleId": "DOK-R008",
+      "Name": "architecture-violations",
+      "State": "measured",
+      "Reason": null
+    }
+  ],
+  "Generated": {
+    "Globs": [
+      "**/bin/**",
+      "**/obj/**"
+    ],
+    "Files": [
+      "src/Dokimos.Cli/obj/Release/net8.0/.NETCoreApp,Version=v8.0.AssemblyAttributes.fs",
+      "src/Dokimos.Cli/obj/Release/net8.0/Dokimos.Cli.AssemblyInfo.fs",
+      "src/Dokimos.Core/obj/Release/net8.0/.NETCoreApp,Version=v8.0.AssemblyAttributes.fs",
+      "src/Dokimos.Core/obj/Release/net8.0/Dokimos.Core.AssemblyInfo.fs",
+      "src/Dokimos.Domain/obj/Release/net8.0/.NETCoreApp,Version=v8.0.AssemblyAttributes.fs",
+      "src/Dokimos.Domain/obj/Release/net8.0/Dokimos.Domain.AssemblyInfo.fs",
+      "tests/Dokimos.Cli.Tests/obj/Release/net8.0/.NETCoreApp,Version=v8.0.AssemblyAttributes.fs",
+      "tests/Dokimos.Cli.Tests/obj/Release/net8.0/Dokimos.Cli.Tests.AssemblyInfo.fs",
+      "tests/Dokimos.Core.Tests/obj/Release/net8.0/.NETCoreApp,Version=v8.0.AssemblyAttributes.fs",
+      "tests/Dokimos.Core.Tests/obj/Release/net8.0/Dokimos.Core.Tests.AssemblyInfo.fs",
+      "tests/Dokimos.Domain.Tests/obj/Release/net8.0/.NETCoreApp,Version=v8.0.AssemblyAttributes.fs",
+      "tests/Dokimos.Domain.Tests/obj/Release/net8.0/Dokimos.Domain.Tests.AssemblyInfo.fs"
+    ]
+  },
+  "Findings": []
+}

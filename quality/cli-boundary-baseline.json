@@ -69,12 +69,16 @@
       "effects": 3
     },
     "Program.fs": {
-      "lines": 3135,
+      "lines": 3115,
       "effects": 23
     },
     "ProvenanceCommands.fs": {
       "lines": 556,
       "effects": 5
+    },
+    "QualityEvidenceCommands.fs": {
+      "lines": 34,
+      "effects": 0
     },
     "ReconciliationCommands.fs": {
       "lines": 196,

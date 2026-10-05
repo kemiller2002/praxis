@@ -6223,11 +6223,61 @@
       },
       "completedAt": "2026-10-04T23:27:19.424Z",
       "conclusion": "Pacing now follows the four-tier architecture: CLI parses/renders, Application orchestrates typed ports, Infrastructure owns concrete provider/persistence/runtime adapters, and Domain remains provider-neutral."
+    },
+    {
+      "id": "GH-167",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Work/CompletionReadiness.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Application/Work/CompletionReadiness.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Work/FileCompletionReadiness.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/QualityEvidenceTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-05T11:55:48.406Z",
+      "telemetryExecutionIds": [
+        "EXE-20261005T105949929Z-9c503655"
+      ],
+      "latestCheckpoint": {
+        "id": "1df906890d071de1e87684cd",
+        "recordedAt": "2026-10-05T11:55:39.499Z",
+        "executionId": "EXE-20261005T105949929Z-9c503655",
+        "repository": "repository-operating-system",
+        "branch": "quality/prx-qual-023-quality-evidence",
+        "commit": "d0c5830b2f3f95f7b03be3dd55931fc9e947adb9",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "quality/prx-qual-023-quality-evidence",
+        "remoteCommit": "d0c5830b2f3f95f7b03be3dd55931fc9e947adb9",
+        "summary": "Quality-evidence completion gate implemented, documented and tested (1421/1421); branch pushed.",
+        "nextAction": "Complete GH-167 with evidence and open the draft PR.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-05T11:55:48.406Z",
+      "conclusion": "Praxis consumes Dokimos ratchet and Ordo boundary evidence at completion through an opt-in workProtocol.qualityEvidence policy; unavailable evidence is never a pass."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/chatgpt",
-  "updatedAt": "2026-10-04T23:27:19.424Z",
+  "updatedAt": "2026-10-05T11:55:48.406Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

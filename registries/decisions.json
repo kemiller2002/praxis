@@ -1551,5 +1551,58 @@
     "title": "Journaled exact-path fallback reconciliation with Git checkpoint",
     "updated": "2026-09-27",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-05",
+    "decision_type": "architecture",
+    "id": "DF-ROS-2026-A052",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A052--consume-quality-evidence-at-completion.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261005T105949929Z-9c503655": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-05T11:14:34.000Z",
+          "evidence": [
+            "https://github.com/kemiller2002/praxis/issues/167"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "Consume Dokimos and Ordo quality evidence at completion (PRX-QUAL-023)"
+        }
+      }
+    },
+    "related_documents": [
+      "requirements/CODE-QUALITY-HARDENING.md",
+      "docs/work-protocol.md",
+      "schemas/praxis-completion-readiness.schema.json",
+      "schemas/work-protocol.schema.json"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [],
+    "tags": [
+      "architecture",
+      "work-protocol",
+      "completion",
+      "quality",
+      "dokimos",
+      "ordo"
+    ],
+    "title": "Consume Dokimos and Ordo quality evidence at work completion",
+    "updated": "2026-10-05",
+    "version": "1.0.0"
   }
 ]

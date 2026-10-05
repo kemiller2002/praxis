@@ -60,6 +60,110 @@ delivery that never happened.
 - `--reason` is required, and completed or already abandoned work cannot be
   abandoned.
 
+## Quality evidence at completion
+
+Praxis owns the work lifecycle; it does not measure code quality. A repository
+can make completion depend on quality evidence that other tools produce
+(PRX-QUAL-023; Praxis decision `DF-ROS-2026-A052`):
+
+| Evidence type | Contract | Produced by |
+|---|---|---|
+| `dokimos-ratchet` | `dokimos.ratchet` 1.0.0 | `dokimos ratchet check --build-log LOG --json > FILE` |
+| `ordo-boundary` | `ordo.boundary-amplification/1` | `ordo boundary assess --map ... --expected ... --changed ... --json > FILE` |
+
+Praxis consumes these files; it never runs Dokimos or Ordo, never recomputes a
+Dokimos verdict, and never re-derives an Ordo recommendation. Supply them like
+any other evidence:
+
+```bash
+./praxis work complete --id FEAT-142 --occurred-at TIMESTAMP \
+  --evidence implementation=src/feature.fs --evidence tests=tests/FeatureTests.fs \
+  --evidence dokimos-ratchet=artifacts/ratchet.json \
+  --evidence ordo-boundary=artifacts/boundary.json
+```
+
+### Policy
+
+The gate is opt-in through `workProtocol.qualityEvidence` in `ros.json`
+(schema: `schemas/work-protocol.schema.json`):
+
+```json
+"qualityEvidence": {
+  "version": "1.0.0",
+  "dokimos": "required",
+  "dokimosBaseline": "quality/baseline.json",
+  "ordoBoundary": "optional",
+  "requiredFacets": ["behavior-verified"],
+  "workTypes": ["feature", "task"]
+}
+```
+
+- `dokimos`, `ordoBoundary`: `required` (absent, malformed, unsupported or
+  unavailable evidence blocks), `optional` (failing evidence blocks; absent or
+  unavailable evidence is recorded but does not block), or `off` (default).
+- `dokimosBaseline` pins the Dokimos profile: a report measured against any
+  other accepted baseline is unavailable, not a pass.
+- `requiredFacets` additionally requires `implementation-complete`,
+  `behavior-verified`, `architecture-verified` or `release-ready`.
+- `workTypes` limits the policy to those work types (default: every type).
+- A present but invalid policy (an unknown member or value) fails closed:
+  completion is refused rather than silently ungated.
+
+**Migration bridge.** Without `qualityEvidence`, completion behaves exactly as
+before: nothing is evaluated, recorded, or printed. This default is tracked
+debt; it is retired, and newly initialized repositories default to
+`dokimos: required`, once Conditor installs Dokimos by default.
+
+### Readiness facets
+
+Completion readiness has four independent facets, each `satisfied`,
+`not-satisfied`, `unavailable` or `not-required`:
+
+- `implementation-complete` / `behavior-verified`: the `implementation` /
+  `tests` evidence was supplied (an attestation, not a proof).
+- `architecture-verified`: satisfied only when Dokimos reports `pass` (a
+  regression fully covered by valid exceptions is already a `pass` in
+  Dokimos's own verdict) and Ordo does not recommend `require-design-review`
+  without `full` exception coverage. `regression` and `invalid-exceptions` are
+  not satisfied. A Dokimos `unavailable` verdict, a verdict that contradicts
+  its exit code, an Ordo assessment of a different work item, or two reports
+  of the same type are unavailable. It is required whenever a source is
+  `required`.
+- `release-ready`: no release evidence contract is consumed yet, so requiring
+  it is always unavailable.
+
+A not-satisfied facet always blocks; an unavailable facet blocks when it is
+required. **Unavailable evidence is never treated as a pass.**
+
+### What is recorded
+
+A refused `work complete` changes no state, prints
+`{"outcome": "refused", "completionReadiness": [...]}` on stdout, one
+`ERROR completion readiness refused for 'ID': ...` line per blocking facet on
+stderr, and exits `3` (verification failed). An invalid policy also exits `3`.
+
+A ready completion writes a `praxis.completion-readiness/1` record
+(`schemas/praxis-completion-readiness.schema.json`) as `completionReadiness`
+on its `work.completed` event and on the completed item in
+`.ros/context/current.json`, so `work context ID` shows it. The record names
+the policy, every facet's status, reasons and evidence, and the consumed
+fields of each source (Dokimos verdict, exit code, baseline path and digest;
+Ordo risk, recommendation and exception coverage). Both additions are
+additive: events and items of repositories without a policy are unchanged.
+While the item is still open, `work context ID` lists the policy under
+`qualityEvidenceForCompletion`, including `requiredEvidenceTypes`. The
+runtime-free envelope path (`praxis reconcile --envelope`) applies the same
+gate and fails with `completion-readiness-refused:REASONS`.
+
+In the Praxis source repository, the fixtures in
+`tests/fixtures/quality-evidence/` are real reports: the
+Dokimos ones were produced by `dokimos ratchet check --json` (Dokimos
+`0.2.0+b176c53`, whose tree is Dokimos `main` at `7d29c4b`) against the
+Dokimos repository and a copy with an added debt marker and an exception; the
+Ordo ones by `ordo boundary assess --json` (Ordo 1.4.0, `main` at `a716fb0`)
+on Ordo's boundary-amplification fixtures. Each validates against its tool's
+published schema.
+
 ## Upstream synchronization and bounded drift
 
 Upstream synchronization is a fetch-only elapsed-time guard (`DF-GOV-014`).

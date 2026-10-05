@@ -35,6 +35,7 @@
     <Compile Include="Artifacts/RegistryTransaction.fs" />
     <Compile Include="Artifacts/FileArtifactRepository.fs" />
     <Compile Include="Json/CanonicalJson.fs" />
+    <Compile Include="Work/FileCompletionReadiness.fs" />
     <Compile Include="Work/FileWorkContextRepository.fs" />
     <Compile Include="Work/FileMetricRegistryRepository.fs" />
     <Compile Include="Work/FileEnvelopeExecutionRepository.fs" />

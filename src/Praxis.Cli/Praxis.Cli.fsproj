@@ -41,6 +41,7 @@
     <Compile Include="WebInterface.fs" />
     <Compile Include="Hub.fs" />
     <Compile Include="CheckpointCommands.fs" />
+    <Compile Include="QualityEvidenceCommands.fs" />
     <Compile Include="RemoteCommands.fs" />
     <Compile Include="ExecutionCommands.fs" />
     <Compile Include="InstallationCommands.fs" />
