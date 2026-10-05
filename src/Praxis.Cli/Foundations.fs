@@ -5,6 +5,8 @@ open System.IO
 open System.Text.Json
 open System.Text.Json.Nodes
 open System.Text.RegularExpressions
+open Praxis.Domain.Foundations
+open Praxis.Infrastructure.Foundations
 
 [<RequireQualifiedAccess>]
 module Foundations =
@@ -339,24 +341,17 @@ module Foundations =
         installed, pinned, used, used, [ $"dependency: {dependencyDetail}" ]
 
     let private verifyLimen (root: string) (rule: CapabilityRule) =
-        let spec = tryPackageSpec root "@echelon-foundry/typescript-wasm-kernel"
+        let spec = LimenPin.packageNames |> List.tryPick (tryPackageSpec root)
         let manifest =
-            [ ".echelon/limen.json"; "limen.config.json" ]
+            [ LimenManifestReader.RelativePath; "limen.config.json" ]
             |> List.tryFind (fun relative ->
                 File.Exists(Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar))))
 
         let installed = spec.IsSome || manifest.IsSome
-        let pinned = npmPinned rule.Version rule.SourceCommit spec || (manifest.IsSome && rule.Version.IsNone)
-
-        let used =
-            manifest.IsSome
-            || anySourceContains
-                root
-                [ "@echelon-foundry/typescript-wasm-kernel"
-                  "Limen"
-                  "limen"
-                  "WebAssembly" ]
-
+        let npmEvidence = spec |> Option.map (Some >> npmPinned rule.Version rule.SourceCommit)
+        let manifestEvidence = LimenPin.manifestEvidence rule.Version manifest.IsSome (LimenManifestReader.tryRead root)
+        let pinned = LimenPin.isPinned npmEvidence manifestEvidence
+        let used = manifest.IsSome || anySourceContains root (LimenPin.packageNames @ [ "Limen"; "limen"; "WebAssembly" ])
         let manifestDetail = manifest |> Option.defaultValue "missing"
         installed, pinned, used, manifest.IsSome, [ $"manifest: {manifestDetail}" ]
 

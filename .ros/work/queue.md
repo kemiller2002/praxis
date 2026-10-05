@@ -19,6 +19,9 @@
 | FSHARP-ONLY-MAIN-MERGE | After merging main (GH-90 remote execution): port its Node tests to F# and renumber the colliding DF/RQ records | complete | fsharp, node-removal, follow-up | high |
 | FSHARP-ONLY-REPOSITORY | Remove repository-owned Node/JavaScript/TypeScript code and tooling; make Praxis F#/.NET only and enforce it | complete | fsharp, architecture, tooling, node-removal | high |
 | GH-113 | GH-113 | complete |  |  |
+| GH-154 | GH-154 | complete |  |  |
+| GH-155 | GH-155 | complete |  |  |
+| GH-167 | GH-167 | complete |  |  |
 | GH-80 | Support auditable post-commit work-item attribution reconciliation (#80) | complete | attribution, reconciliation, provenance | high |
 | GH-84 | GH-84 | abandoned |  |  |
 | GH-90 | Make remote/cloud-agent Praxis execution a first-class capability (#90) | abandoned | remote-execution, gh-90 | high |
@@ -228,6 +231,7 @@
 | WI-0065 | Implement first-class step-level execution telemetry | complete | telemetry, execution | high |
 | WI-0066 | Retire the Python artifact-validator oracle: add the missing F# supersession-reciprocity test, delete tools/ros_cli.py, tools/__init__.py and tests/test_ros_cli.py, and drop the oracle CI step and docs | complete |  | medium |
 | WI-0067 | Remove the uncalled legacy Python layout generator setup_ros_layout.py (superseded by praxis init) and its SDE-MAP row | complete |  | medium |
+| WI-0068 | Recognize Limen 0.7.0 package @echelon-foundry/limen in foundations verify and Echelon doctor fixtures | complete | limen | medium |
 | WI-0072 | Port provenance follow-ups onto the merged model: collaboration aggregates in provenance audit, producedBy on ordo handoffs, installer event actor | complete | provenance | medium |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |

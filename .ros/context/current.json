@@ -6273,11 +6273,56 @@
       },
       "completedAt": "2026-10-05T11:55:48.406Z",
       "conclusion": "Praxis consumes Dokimos ratchet and Ordo boundary evidence at completion through an opt-in workProtocol.qualityEvidence policy; unavailable evidence is never a pass."
+    },
+    {
+      "id": "WI-0068",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Foundations/LimenPin.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Cli/Foundations.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/FoundationsTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-05T17:44:23.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261005T170406863Z-85cf65de"
+      ],
+      "latestCheckpoint": {
+        "id": "f8f631f67974f250bb730d92",
+        "recordedAt": "2026-10-05T17:44:18.000Z",
+        "executionId": "EXE-20261005T170406863Z-85cf65de",
+        "repository": "repository-operating-system",
+        "branch": "fix/foundations-limen-package",
+        "commit": "fcedc91ef9de1b19ff61bcb0fcd7982c89d7b3fe",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "fix/foundations-limen-package",
+        "remoteCommit": "fcedc91ef9de1b19ff61bcb0fcd7982c89d7b3fe",
+        "summary": "foundations verify recognizes @echelon-foundry/limen and pins from .echelon/limen.json; tests pass",
+        "nextAction": "complete WI-0068 and open the PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-05T17:44:23.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/chatgpt",
-  "updatedAt": "2026-10-05T11:55:48.406Z",
+  "updatedAt": "2026-10-05T17:44:23.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
