@@ -18,15 +18,15 @@ module PacingStatusProjection =
         (model: string option)
         (overridden: bool)
         (snapshot: ProviderSnapshot)
+        (integrity: StateIntegrity)
         (decision: PacingDecision)
         : PacingStatusView =
         let freshnessState, freshnessReason = freshnessParts snapshot.Freshness
 
         let safetyState =
-            match snapshot.Freshness with
-            | ObservationFreshness.Fresh -> PacingSafetyState.Known
-            | ObservationFreshness.Stale _
-            | ObservationFreshness.Unavailable _ -> PacingSafetyState.Indeterminate
+            match snapshot.Freshness, integrity with
+            | ObservationFreshness.Fresh, StateIntegrity.Intact -> PacingSafetyState.Known
+            | _ -> PacingSafetyState.Indeterminate
 
         let providerError =
             match snapshot.Freshness with
@@ -56,6 +56,17 @@ module PacingStatusProjection =
                   Detail = reason.Detail
                   ResumeAt = reason.ResumeAt })
 
+        let coverage =
+            snapshot.Coverage
+            |> List.map (fun observation ->
+                { Key = observation.Key
+                  Status = WindowObservation.statusCode observation
+                  Reason =
+                    match observation.Status with
+                    | WindowStatus.Invalid reason -> Some reason
+                    | WindowStatus.Observed
+                    | WindowStatus.Missing -> None })
+
         { SchemaVersion = 1
           Provider = provider
           Model = model
@@ -68,4 +79,6 @@ module PacingStatusProjection =
           MayProceed = decision.MayProceed
           Override = overridden
           Windows = windows
+          Coverage = coverage
+          StateIntegrity = integrity
           Hold = hold }

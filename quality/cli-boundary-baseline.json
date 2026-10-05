@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "description": "Ratchet for the Praxis CLI adapter boundary (PRX-ARCH-001/002). The CLI parses input, invokes application services, renders output and selects exit codes. Values may only decrease; an improvement must be locked in by lowering the entry. Exceeding an entry requires an owned, expiring exception below. Enforced by tests/Praxis.Tests/CliBoundaryRatchetTests.fs.",
+  "scope": "src/Praxis.Cli",
+  "effectMarkers": [
+    "HttpClient",
+    "ProcessStartInfo",
+    "File.",
+    "Directory.",
+    "FileStream",
+    "Thread.Sleep",
+    "Task.Delay",
+    "Guid.NewGuid",
+    "DateTimeOffset.UtcNow",
+    "DateTimeOffset.Now",
+    "DateTime.Now",
+    "DateTime.UtcNow",
+    "Environment.GetEnvironmentVariable"
+  ],
+  "newFileLineBudget": 250,
+  "lineTightenTolerance": 25,
+  "files": {
+    "ArchitectureCommands.fs": {
+      "lines": 58,
+      "effects": 0
+    },
+    "CheckpointCommands.fs": {
+      "lines": 925,
+      "effects": 0
+    },
+    "CliProcess.fs": {
+      "lines": 89,
+      "effects": 1
+    },
+    "EnvelopeReconciliationCommands.fs": {
+      "lines": 121,
+      "effects": 5
+    },
+    "ExecutionCommands.fs": {
+      "lines": 613,
+      "effects": 12
+    },
+    "Foundations.fs": {
+      "lines": 568,
+      "effects": 13
+    },
+    "Hub.fs": {
+      "lines": 747,
+      "effects": 12
+    },
+    "InstallationCommands.fs": {
+      "lines": 217,
+      "effects": 1
+    },
+    "Lifecycle.fs": {
+      "lines": 626,
+      "effects": 1
+    },
+    "PacingCommands.fs": {
+      "lines": 175,
+      "effects": 1
+    },
+    "PacingStatus.fs": {
+      "lines": 129,
+      "effects": 0
+    },
+    "PlanCommands.fs": {
+      "lines": 582,
+      "effects": 3
+    },
+    "Program.fs": {
+      "lines": 3135,
+      "effects": 23
+    },
+    "ProvenanceCommands.fs": {
+      "lines": 556,
+      "effects": 5
+    },
+    "ReconciliationCommands.fs": {
+      "lines": 196,
+      "effects": 0
+    },
+    "RemoteCommands.fs": {
+      "lines": 835,
+      "effects": 7
+    },
+    "StepCommands.fs": {
+      "lines": 292,
+      "effects": 0
+    },
+    "SyncCommands.fs": {
+      "lines": 57,
+      "effects": 0
+    },
+    "WebHttp.fs": {
+      "lines": 535,
+      "effects": 0
+    },
+    "WebInterface.fs": {
+      "lines": 826,
+      "effects": 8
+    },
+    "WorkGroupCommands.fs": {
+      "lines": 634,
+      "effects": 3
+    }
+  },
+  "exceptions": []
+}

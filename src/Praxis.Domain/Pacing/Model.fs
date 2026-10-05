@@ -52,11 +52,34 @@ module PacingPolicy =
           FreshFor = TimeSpan.FromSeconds 90.0
           PollInterval = TimeSpan.FromSeconds 5.0 }
 
+/// Why a hold exists. Each basis carries the evidence that bounds it, so a
+/// hold can be released only by evidence about the same quota window.
+[<RequireQualifiedAccess>]
+type HoldBasis =
+    /// Weekly pacing latch. `resetsAt` is the quota window's reset identity;
+    /// `None` is a legacy (schema 1) hold whose window identity was never recorded.
+    | WeeklyLead of resetsAt: DateTimeOffset option
+    /// Exhausted (> hard threshold) window. Binding until its reset unless a
+    /// fresh reading of the same window proves capacity returned.
+    | HardLimit of usedPercent: decimal * resetsAt: DateTimeOffset
+
 type PacingHold =
     { Key: string
       Provider: string
       Scope: QuotaScope
-      Since: DateTimeOffset }
+      Since: DateTimeOffset
+      Basis: HoldBasis }
+
+[<RequireQualifiedAccess>]
+module PacingHold =
+    let basisCode hold =
+        match hold.Basis with
+        | HoldBasis.WeeklyLead _ -> "weekly-lead"
+        | HoldBasis.HardLimit _ -> "hard-limit"
+
+    /// Identity within persisted state. A window may carry both a weekly latch
+    /// and a hard-limit hold, so the basis is part of the identity.
+    let id hold = basisCode hold + "|" + hold.Key
 
 type PacingState = { Holds: Map<string, PacingHold> }
 
@@ -64,11 +87,23 @@ type PacingState = { Holds: Map<string, PacingHold> }
 module PacingState =
     let empty = { Holds = Map.empty }
 
+    let ofHolds (holds: PacingHold seq) =
+        { Holds = holds |> Seq.map (fun hold -> PacingHold.id hold, hold) |> Map.ofSeq }
+
+/// Whether the persisted safety state could be trusted. Persistence failures
+/// are never converted into empty state: an indeterminate state blocks work
+/// until an operator overrides or explicitly recovers it.
+[<RequireQualifiedAccess>]
+type StateIntegrity =
+    | Intact
+    | Indeterminate of reason: string
+
 [<RequireQualifiedAccess>]
 type PacingReasonKind =
     | HardLimit
     | WeeklyLead
     | WeeklyLeadUnverified
+    | StateIndeterminate
 
 [<RequireQualifiedAccess>]
 module PacingReasonKind =
@@ -77,6 +112,7 @@ module PacingReasonKind =
         | PacingReasonKind.HardLimit -> "hard-limit"
         | PacingReasonKind.WeeklyLead -> "weekly-lead"
         | PacingReasonKind.WeeklyLeadUnverified -> "weekly-lead-unverified"
+        | PacingReasonKind.StateIndeterminate -> "state-indeterminate"
 
 type PacingReason =
     { WindowKey: string
@@ -91,6 +127,7 @@ type PacingRequest =
       Windows: QuotaWindow list
       Freshness: ObservationFreshness
       Existing: PacingState
+      StateIntegrity: StateIntegrity
       Override: bool }
 
 type PacingDecision =
@@ -103,6 +140,10 @@ type PacingDecision =
 [<RequireQualifiedAccess>]
 module Pacing =
     let private almostEqual (left: float) (right: float) = Math.Abs(left - right) < 0.5
+
+    /// Two reset timestamps identify the same quota window when they differ by
+    /// less than this tolerance (providers round reset times differently).
+    let private sameWindowTolerance = TimeSpan.FromHours 1.0
 
     let isWeekly policy (window: QuotaWindow) =
         almostEqual window.Duration.TotalMinutes policy.WeeklyWindow.TotalMinutes
@@ -124,28 +165,31 @@ module Pacing =
         let consumedMinutes = window.Duration.TotalMinutes * float window.UsedPercent / 100.0
         TimeSpan.FromMinutes(consumedMinutes - elapsed.TotalMinutes)
 
-    let private applicable (model: string option) (window: QuotaWindow) =
-        QuotaScope.appliesTo model window.Scope
-
-    let private stale (freshness: ObservationFreshness) =
+    let private isFresh (freshness: ObservationFreshness) =
         match freshness with
-        | ObservationFreshness.Fresh -> false
+        | ObservationFreshness.Fresh -> true
         | ObservationFreshness.Stale _
-        | ObservationFreshness.Unavailable _ -> true
+        | ObservationFreshness.Unavailable _ -> false
 
     let private stableHoldKey (window: QuotaWindow) = $"{window.Provider}/{window.Key}"
 
-    let private sameProvider provider (hold: PacingHold) =
-        String.Equals(hold.Provider, provider, StringComparison.OrdinalIgnoreCase)
+    let private relevant (request: PacingRequest) (hold: PacingHold) =
+        String.Equals(hold.Provider, request.Provider, StringComparison.OrdinalIgnoreCase)
+        && QuotaScope.appliesTo request.Model hold.Scope
 
-    let private applicableHold model (hold: PacingHold) =
-        QuotaScope.appliesTo model hold.Scope
+    let private sameWindow (resetsAt: DateTimeOffset option) (window: QuotaWindow) =
+        match resetsAt with
+        | None -> true
+        | Some known -> (known - window.ResetsAt).Duration() < sameWindowTolerance
 
-    let private reason (key: string) (kind: PacingReasonKind) (detail: string) (resumeAt: DateTimeOffset) =
+    let private reason key kind detail resumeAt =
         { WindowKey = key
           Kind = kind
           Detail = detail
           ResumeAt = resumeAt }
+
+    let private percentText (value: decimal) =
+        value.ToString("0.##", Globalization.CultureInfo.InvariantCulture)
 
     let private binding (reasons: PacingReason list) =
         reasons
@@ -155,115 +199,169 @@ module Pacing =
             | order -> order)
         |> List.tryHead
 
+    let private decide (state: PacingState) (leads: Map<string, TimeSpan>) (reasons: PacingReason list) =
+        { MayProceed = reasons.IsEmpty
+          Reasons = reasons
+          BindingReason = binding reasons
+          State = state
+          LeadByWindow = leads }
+
+    /// Hard limits: an observed exhausted window creates or refreshes a durable
+    /// hold. A persisted hard hold survives provider outage, partial responses
+    /// and restarts; it ends only at its reset time or when a fresh reading of
+    /// the same window shows usage at or below the threshold.
+    let private hardHolds policy (request: PacingRequest) (observed: Map<string, QuotaWindow>) =
+        let fresh = isFresh request.Freshness
+
+        let existingHard =
+            request.Existing.Holds.Values
+            |> Seq.filter (relevant request)
+            |> Seq.choose (fun hold ->
+                match hold.Basis with
+                | HoldBasis.HardLimit(used, resetsAt) -> Some(hold, used, resetsAt)
+                | HoldBasis.WeeklyLead _ -> None)
+            |> Seq.toList
+
+        let sinceOf key =
+            existingHard
+            |> List.tryFind (fun (hold, _, _) -> hold.Key = key)
+            |> Option.map (fun (hold, _, _) -> hold.Since)
+            |> Option.defaultValue request.Now
+
+        let observedExhausted =
+            observed
+            |> Map.toList
+            |> List.filter (fun (_, window) -> window.UsedPercent > policy.HardUsagePercent)
+            |> List.map (fun (key, window) ->
+                let hold =
+                    { Key = key
+                      Provider = window.Provider
+                      Scope = window.Scope
+                      Since = sinceOf key
+                      Basis = HoldBasis.HardLimit(window.UsedPercent, window.ResetsAt) }
+
+                let prefix = if fresh then "" else "last known "
+                let detail = $"{prefix}{window.Label} {percentText window.UsedPercent}%% used; wait for reset"
+                hold, reason key PacingReasonKind.HardLimit detail window.ResetsAt)
+
+        let refreshedKeys = observedExhausted |> List.map (fun (hold, _) -> hold.Key) |> Set.ofList
+
+        let releasedByFreshEvidence key =
+            fresh
+            && (observed
+                |> Map.tryFind key
+                |> Option.exists (fun window -> window.UsedPercent <= policy.HardUsagePercent))
+
+        let retained =
+            existingHard
+            |> List.filter (fun (hold, _, resetsAt) ->
+                resetsAt > request.Now
+                && not (refreshedKeys.Contains hold.Key)
+                && not (releasedByFreshEvidence hold.Key))
+            |> List.map (fun (hold, used, resetsAt) ->
+                let detail =
+                    $"persisted hard limit {hold.Key} at {percentText used}%% used remains binding until reset"
+
+                hold, reason hold.Key PacingReasonKind.HardLimit detail resetsAt)
+
+        observedExhausted @ retained
+
+    /// Weekly pacing latch with hysteresis. Uncertainty never creates a latch
+    /// and never releases one; a latch is bound to its window's reset identity,
+    /// so a new quota window never inherits the previous window's latch.
+    let private weeklyHolds policy (request: PacingRequest) (observed: Map<string, QuotaWindow>) (leads: Map<string, TimeSpan>) =
+        let existingWeekly =
+            request.Existing.Holds.Values
+            |> Seq.filter (relevant request)
+            |> Seq.choose (fun hold ->
+                match hold.Basis with
+                | HoldBasis.WeeklyLead resetsAt -> Some(hold, resetsAt)
+                | HoldBasis.HardLimit _ -> None)
+            |> Seq.toList
+
+        let unverified (hold: PacingHold) detail =
+            hold, reason hold.Key PacingReasonKind.WeeklyLeadUnverified detail (request.Now + policy.PollInterval)
+
+        if not (isFresh request.Freshness) then
+            existingWeekly
+            |> List.map (fun (hold, _) ->
+                unverified hold "weekly pacing hold is awaiting a fresh reading at or below the resume threshold")
+        else
+            let latchFor key (window: QuotaWindow) =
+                existingWeekly
+                |> List.tryFind (fun (hold, resetsAt) -> hold.Key = key && sameWindow resetsAt window)
+                |> Option.map fst
+
+            let evaluated =
+                observed
+                |> Map.toList
+                |> List.filter (fun (_, window) -> isWeekly policy window)
+                |> List.choose (fun (key, window) ->
+                    let currentLead = leads[key]
+                    let latch = latchFor key window
+
+                    if currentLead >= policy.TriggerLead || (latch.IsSome && currentLead > policy.ResumeLead) then
+                        let hold =
+                            { Key = key
+                              Provider = window.Provider
+                              Scope = window.Scope
+                              Since = latch |> Option.map _.Since |> Option.defaultValue request.Now
+                              Basis = HoldBasis.WeeklyLead(Some window.ResetsAt) }
+
+                        let resumeAt = request.Now + (currentLead - policy.ResumeLead) |> min window.ResetsAt
+                        let leadHours = currentLead.TotalHours.ToString("0.0", Globalization.CultureInfo.InvariantCulture)
+                        Some(hold, reason key PacingReasonKind.WeeklyLead $"{window.Label} is {leadHours}h ahead of pace" resumeAt)
+                    else
+                        None)
+
+            // A fresh response that omits a latched weekly window is not
+            // positive evidence that capacity returned.
+            let omitted =
+                existingWeekly
+                |> List.filter (fun (hold, _) -> not (observed.ContainsKey hold.Key))
+                |> List.map (fun (hold, _) ->
+                    unverified hold "latched weekly window was not present in the fresh response; awaiting an explicit release reading")
+
+            evaluated @ omitted
+
+    let private evaluateIntact (policy: PacingPolicy) (request: PacingRequest) =
+        let observed =
+            request.Windows
+            |> List.filter (fun window ->
+                String.Equals(window.Provider, request.Provider, StringComparison.OrdinalIgnoreCase)
+                && QuotaScope.appliesTo request.Model window.Scope
+                && isLive request.Now window)
+            |> List.map (fun window -> stableHoldKey window, window)
+            |> Map.ofList
+
+        let leads =
+            observed
+            |> Map.filter (fun _ window -> isWeekly policy window)
+            |> Map.map (fun _ window -> lead request.Now window)
+
+        let held = hardHolds policy request observed @ weeklyHolds policy request observed leads
+
+        // Holds for other providers, models or scopes are carried unchanged.
+        let untouched =
+            request.Existing.Holds.Values
+            |> Seq.filter (fun hold -> not (relevant request hold))
+            |> Seq.toList
+
+        let state = PacingState.ofHolds (untouched @ (held |> List.map fst))
+        decide state leads (held |> List.map snd)
+
     /// Provider-neutral pacing policy. The weekly latch follows the conservative
     /// Codex policy from jpwinans/usage-auto-pause: once established, stale or
-    /// missing observations cannot clear it. Only a fresh weekly observation at
-    /// or below the resume threshold releases the latch. Hard-limit observations
-    /// remain binding until their reset even when the snapshot later becomes stale.
+    /// missing observations cannot clear it. Only a fresh weekly observation of
+    /// the same window at or below the resume threshold releases the latch.
+    /// Hard-limit holds are durable until reset. Indeterminate persisted state
+    /// fails closed; only an explicit operator override proceeds past it.
     let evaluate (policy: PacingPolicy) (request: PacingRequest) =
         if request.Override then
-            { MayProceed = true
-              Reasons = []
-              BindingReason = None
-              State = request.Existing
-              LeadByWindow = Map.empty }
+            decide request.Existing Map.empty []
         else
-            let windows =
-                request.Windows
-                |> List.filter (fun window ->
-                    String.Equals(window.Provider, request.Provider, StringComparison.OrdinalIgnoreCase)
-                    && applicable request.Model window
-                    && isLive request.Now window)
-
-            let leads =
-                windows
-                |> List.filter (isWeekly policy)
-                |> List.map (fun window -> stableHoldKey window, lead request.Now window)
-                |> Map.ofList
-
-            let mutable holds = request.Existing.Holds
-            let reasons = ResizeArray<PacingReason>()
-
-            // A last-known exhausted window remains a hard stop until reset.
-            for window in windows do
-                if window.UsedPercent > policy.HardUsagePercent then
-                    let prefix = if stale request.Freshness then "last known " else ""
-                    let usedPercent = window.UsedPercent.ToString("0.##", Globalization.CultureInfo.InvariantCulture)
-                    let detail = prefix + window.Label + " " + usedPercent + "% used; wait for reset"
-
-                    reasons.Add(
-                        reason
-                            (stableHoldKey window)
-                            PacingReasonKind.HardLimit
-                            detail
-                            window.ResetsAt)
-
-            let weekly = windows |> List.filter (isWeekly policy)
-            let observedHoldKeys = weekly |> List.map stableHoldKey |> Set.ofList
-
-            if stale request.Freshness then
-                // Uncertainty never creates a weekly latch, but it also never
-                // authorizes release of one that fresh evidence already created.
-                for hold in holds.Values do
-                    if sameProvider request.Provider hold && applicableHold request.Model hold then
-                        reasons.Add(
-                            reason
-                                hold.Key
-                                PacingReasonKind.WeeklyLeadUnverified
-                                "weekly pacing hold is awaiting a fresh reading at or below the resume threshold"
-                                (request.Now + policy.PollInterval))
-            else
-                for window in weekly do
-                    let key = stableHoldKey window
-                    let currentLead = leads[key]
-                    let held = holds.ContainsKey key
-
-                    if currentLead >= policy.TriggerLead || (held && currentLead > policy.ResumeLead) then
-                        if not held then
-                            holds <-
-                                holds.Add(
-                                    key,
-                                    { Key = key
-                                      Provider = window.Provider
-                                      Scope = window.Scope
-                                      Since = request.Now })
-
-                        let resumeAt =
-                            request.Now + (currentLead - policy.ResumeLead)
-                            |> min window.ResetsAt
-
-                        let leadHours = currentLead.TotalHours.ToString("0.0", Globalization.CultureInfo.InvariantCulture)
-                        let detail = window.Label + " is " + leadHours + "h ahead of pace"
-
-                        reasons.Add(
-                            reason
-                                key
-                                PacingReasonKind.WeeklyLead
-                                detail
-                                resumeAt)
-                    elif held then
-                        holds <- holds.Remove key
-
-                // A fresh provider response that omits a latched weekly window is
-                // not positive evidence that capacity returned. Preserve the hold
-                // until a weekly reading can explicitly release it.
-                for hold in request.Existing.Holds.Values do
-                    if sameProvider request.Provider hold
-                       && applicableHold request.Model hold
-                       && not (observedHoldKeys.Contains hold.Key)
-                       && holds.ContainsKey hold.Key then
-                        reasons.Add(
-                            reason
-                                hold.Key
-                                PacingReasonKind.WeeklyLeadUnverified
-                                "latched weekly window was not present in the fresh response; awaiting an explicit release reading"
-                                (request.Now + policy.PollInterval))
-
-            let state = { Holds = holds }
-            let allReasons = reasons |> Seq.toList
-
-            { MayProceed = allReasons.IsEmpty
-              Reasons = allReasons
-              BindingReason = binding allReasons
-              State = state
-              LeadByWindow = leads }
+            match request.StateIntegrity with
+            | StateIntegrity.Indeterminate cause ->
+                let detail = $"pacing safety state is indeterminate ({cause}); repair it with 'praxis pacing state quarantine' or enable the override"
+                decide request.Existing Map.empty [ reason "state" PacingReasonKind.StateIndeterminate detail (request.Now + policy.PollInterval) ]
+            | StateIntegrity.Intact -> evaluateIntact policy request

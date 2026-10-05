@@ -40,6 +40,7 @@ module PacingTests =
               Windows = windows
               Freshness = freshness
               Existing = state
+              StateIntegrity = StateIntegrity.Intact
               Override = overridden }
 
     let private held (result: PacingDecision) = result.State.Holds.Count > 0
@@ -113,18 +114,18 @@ module PacingTests =
 
               match PacingNormalization.normalizeCodexResult "codex" now json with
               | Error message -> failwith message
-              | Ok(windows, complete) ->
-                  Assert.isTrue complete "both reported Codex windows should be complete"
-                  Assert.equal [ 300.0; 10080.0 ] (windows |> List.map (fun window -> window.Duration.TotalMinutes)))
+              | Ok reading ->
+                  Assert.isTrue (WindowObservation.isComplete reading.Coverage) "both reported Codex windows should be complete"
+                  Assert.equal [ 300.0; 10080.0 ] (reading.Windows |> List.map (fun window -> window.Duration.TotalMinutes)))
 
           t "Claude quota response preserves model scope" (fun () ->
               let json = """{"five_hour":{"utilization":20,"resets_at":"2026-10-03T20:00:00Z"},"seven_day":{"utilization":40,"resets_at":"2026-10-08T17:00:00Z"},"limits":[{"kind":"weekly_scoped","percent":75,"resets_at":"2026-10-08T17:00:00Z","scope":{"model":{"display_name":"Fable"},"surface":null}}]}"""
 
-              match PacingNormalization.normalizeClaudeUsage now json with
+              match PacingNormalization.normalizeClaudeUsage now [] json with
               | Error message -> failwith message
-              | Ok(windows, complete) ->
-                  Assert.isTrue complete "global Claude session and weekly windows should make the reading complete"
-                  let scoped = windows |> List.find (fun window -> window.Key = "seven_day:Fable")
+              | Ok reading ->
+                  Assert.isTrue (WindowObservation.isComplete reading.Coverage) "global Claude session and weekly windows should make the reading complete"
+                  let scoped = reading.Windows |> List.find (fun window -> window.Key = "seven_day:Fable")
                   Assert.equal (QuotaScope.Model "Fable") scoped.Scope)
 
           t "status JSON reports the actual override and unavailable provider state" (fun () ->
@@ -132,10 +133,11 @@ module PacingTests =
                   { Provider = "codex"
                     ObservedAt = now
                     Windows = []
+                    Coverage = []
                     Freshness = ObservationFreshness.Unavailable "provider offline" }
 
               let decision = evaluate PacingState.empty snapshot.Freshness [] None true
-              let status = PacingStatusProjection.create now "/tmp/pacing" "codex" None true snapshot decision
+              let status = PacingStatusProjection.create now "/tmp/pacing" "codex" None true snapshot StateIntegrity.Intact decision
               use document = JsonDocument.Parse(PacingStatus.renderJson status)
               let root = document.RootElement
 
@@ -151,10 +153,11 @@ module PacingTests =
                   { Provider = "codex"
                     ObservedAt = now
                     Windows = [ weekly "weekly" 3.0 QuotaScope.Global ]
+                    Coverage = []
                     Freshness = ObservationFreshness.Stale "refresh failed" }
 
               let decision = evaluate PacingState.empty snapshot.Freshness snapshot.Windows None false
-              let status = PacingStatusProjection.create now "/tmp/pacing" "codex" None false snapshot decision
+              let status = PacingStatusProjection.create now "/tmp/pacing" "codex" None false snapshot StateIntegrity.Intact decision
               use document = JsonDocument.Parse(PacingStatus.renderJson status)
               let root = document.RootElement
 
@@ -168,10 +171,11 @@ module PacingTests =
                   { Provider = "codex"
                     ObservedAt = now
                     Windows = [ quota ]
+                    Coverage = []
                     Freshness = ObservationFreshness.Fresh }
 
               let decision = evaluate PacingState.empty snapshot.Freshness snapshot.Windows None false
-              let status = PacingStatusProjection.create now "/tmp/pacing" "codex" None false snapshot decision
+              let status = PacingStatusProjection.create now "/tmp/pacing" "codex" None false snapshot StateIntegrity.Intact decision
               use document = JsonDocument.Parse(PacingStatus.renderJson status)
               let root = document.RootElement
 
