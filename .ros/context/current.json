@@ -6273,11 +6273,22 @@
       },
       "completedAt": "2026-10-05T11:55:48.406Z",
       "conclusion": "Praxis consumes Dokimos ratchet and Ordo boundary evidence at completion through an opt-in workProtocol.qualityEvidence policy; unavailable evidence is never a pass."
+    },
+    {
+      "id": "WI-0068",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-05T17:04:05.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261005T170406863Z-85cf65de"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/chatgpt",
-  "updatedAt": "2026-10-05T11:55:48.406Z",
+  "updatedAt": "2026-10-05T17:04:05.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

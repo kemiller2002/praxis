@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 68,
+  "nextSeq": 69,
   "items": [
     {
       "id": "WI-0001",
@@ -4096,6 +4096,29 @@
         "provider": "openai",
         "model": "gpt-5.6-sol",
         "runtime": "chatgpt"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0068",
+      "title": "Recognize Limen 0.7.0 package @echelon-foundry/limen in foundations verify and Echelon doctor fixtures",
+      "description": null,
+      "tags": [
+        "limen"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-05T17:02:56.480Z",
+      "updatedAt": "2026-10-05T17:04:05.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
       },
       "source": "manual",
       "sourceReference": null
