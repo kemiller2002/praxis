@@ -232,7 +232,7 @@
 | WI-0066 | Retire the Python artifact-validator oracle: add the missing F# supersession-reciprocity test, delete tools/ros_cli.py, tools/__init__.py and tests/test_ros_cli.py, and drop the oracle CI step and docs | complete |  | medium |
 | WI-0067 | Remove the uncalled legacy Python layout generator setup_ros_layout.py (superseded by praxis init) and its SDE-MAP row | complete |  | medium |
 | WI-0068 | Recognize Limen 0.7.0 package @echelon-foundry/limen in foundations verify and Echelon doctor fixtures | complete | limen | medium |
-| WI-0069 | Doctor smoke fixtures name the Limen package by its 0.7.0 name @echelon-foundry/limen | ready | limen | medium |
+| WI-0069 | Doctor smoke fixtures name the Limen package by its 0.7.0 name @echelon-foundry/limen | complete | limen | medium |
 | WI-0072 | Port provenance follow-ups onto the merged model: collaboration aggregates in provenance audit, producedBy on ordo handoffs, installer event actor | complete | provenance | medium |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |

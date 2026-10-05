@@ -6322,18 +6322,48 @@
     {
       "id": "WI-0069",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-05T17:45:06.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/native-release.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/EchelonDoctorTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-05T17:55:29.000Z",
       "telemetryExecutionIds": [
         "EXE-20261005T174507311Z-80aed530"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "b9f4381473037a6a44c1ed8a",
+        "recordedAt": "2026-10-05T17:55:28.000Z",
+        "executionId": "EXE-20261005T174507311Z-80aed530",
+        "repository": "repository-operating-system",
+        "branch": "chore/limen-0.7.0",
+        "commit": "40122ef51e84d150c8ad8c010306978c23596887",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "chore/limen-0.7.0",
+        "remoteCommit": "40122ef51e84d150c8ad8c010306978c23596887",
+        "summary": "doctor smoke fixtures renamed to @echelon-foundry/limen 0.7.0",
+        "nextAction": "complete WI-0069 and open the stacked PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-05T17:55:29.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/chatgpt",
-  "updatedAt": "2026-10-05T17:45:06.000Z",
+  "updatedAt": "2026-10-05T17:55:29.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
