@@ -59,12 +59,12 @@ module EchelonDoctorTests =
         CliHarness.write
             project
             ".echelon/limen.json"
-            (CliPort.indented """{"schemaVersion":1,"tool":"limen","package":"@echelon-foundry/typescript-wasm-kernel","installedVersion":"0.6.2"}""" + "\n")
+            (CliPort.indented """{"schemaVersion":1,"tool":"limen","package":"@echelon-foundry/limen","installedVersion":"0.7.0"}""" + "\n")
 
         CliHarness.write
             project
-            "node_modules/@echelon-foundry/typescript-wasm-kernel/package.json"
-            (CliPort.indented """{"name":"@echelon-foundry/typescript-wasm-kernel","version":"0.6.2"}""" + "\n")
+            "node_modules/@echelon-foundry/limen/package.json"
+            (CliPort.indented """{"name":"@echelon-foundry/limen","version":"0.7.0"}""" + "\n")
 
         CliHarness.git project [ "init"; "-q" ] |> ignore
         let basePath = Environment.GetEnvironmentVariable "PATH" |> Option.ofObj |> Option.defaultValue ""
@@ -114,7 +114,7 @@ module EchelonDoctorTests =
                     for pattern in
                         [ "Echelon Doctor"; @"ordo active\s+1\.4\.0"; @"praxis active\s+3\.4\.0"; @"Other installed tools\s+limen \(0\.9\.0\)"
                           @"Ordo requirement\s+1\.4\.0"; @"Praxis requirement\s+3\.4\.0"; "Repository components"; @"visual-engineering\s+1\.0\.0"
-                          @"limen\s+0\.6\.2"; "Installed Echelon npm packages"; @"@echelon-foundry/typescript-wasm-kernel\s+0\.6\.2"
+                          @"limen\s+0\.7\.0"; "Installed Echelon npm packages"; @"@echelon-foundry/limen\s+0\.7\.0"
                           @"Errors:\s+0"; @"Warnings:\s+0"; @"Environment healthy\." ] do
                         CliPort.matches pattern out) }
           { Name = "echelon doctor: a binary directory missing from PATH is a warning, not an error"
@@ -202,8 +202,8 @@ module EchelonDoctorTests =
                     Assert.isTrue (CliPort.items (praxis["installedVersions"]) |> List.exists (fun version -> CliPort.text version = "3.4.0")) "3.4.0 is installed"
 
                     Assert.equal "1.0.0" (CliPort.text ((find (report["repository"]["components"]) "tool" "visual-engineering")["installedVersion"]))
-                    Assert.equal "0.6.2" (CliPort.text ((find (report["repository"]["components"]) "tool" "limen")["installedVersion"]))
-                    Assert.equal "0.6.2" (CliPort.text ((find (report["repository"]["npmPackages"]) "package" "@echelon-foundry/typescript-wasm-kernel")["version"]))) }
+                    Assert.equal "0.7.0" (CliPort.text ((find (report["repository"]["components"]) "tool" "limen")["installedVersion"]))
+                    Assert.equal "0.7.0" (CliPort.text ((find (report["repository"]["npmPackages"]) "package" "@echelon-foundry/limen")["version"]))) }
           { Name = "echelon doctor: --json carries stable finding codes for warnings and errors"
             Run = fun () ->
                 withEnvironment "3.4.0" false (fun environment ->
@@ -262,14 +262,14 @@ module EchelonDoctorTests =
                     let out = echelon environment [ "inventory" ] |> succeeded 0
                     CliPort.contains "Echelon Inventory" out
                     CliPort.matches @"visual-engineering\s+1\.0\.0" out
-                    CliPort.matches @"@echelon-foundry/typescript-wasm-kernel\s+0\.6\.2" out
+                    CliPort.matches @"@echelon-foundry/limen\s+0\.7\.0" out
 
                     let report = echelon environment [ "inventory"; "--json" ] |> succeeded 0 |> CliPort.parse
                     Assert.equal 1.0 (CliPort.number (report["schemaVersion"]))
                     Assert.equal "inventory" (CliPort.text (report["command"]))
                     find (report["nativeTools"]) "name" "ordo" |> ignore
                     find (report["repository"]["components"]) "tool" "limen" |> ignore
-                    find (report["repository"]["npmPackages"]) "package" "@echelon-foundry/typescript-wasm-kernel" |> ignore) }
+                    find (report["repository"]["npmPackages"]) "package" "@echelon-foundry/limen" |> ignore) }
           { Name = "echelon doctor and inventory: the JSON schemas are versioned and shipped from schemas/"
             Run = fun () ->
                 let schema name = CliPort.readJson CliPort.repositoryRoot.Value $"schemas/{name}"
