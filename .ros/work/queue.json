@@ -4108,10 +4108,10 @@
         "limen"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-05T17:02:56.480Z",
-      "updatedAt": "2026-10-05T17:04:05.000Z",
+      "updatedAt": "2026-10-05T17:44:23.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
