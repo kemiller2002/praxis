@@ -26,6 +26,20 @@
           "properties": {"requireDurableCheckpoint": {"type": "boolean"}},
           "additionalProperties": true
         },
+        "qualityEvidence": {
+          "description": "Completion readiness from consumed quality evidence (PRX-QUAL-023). Absent: legacy behaviour, nothing is evaluated or recorded (a migration bridge, retired when Conditor installs Dokimos by default). dokimos/ordoBoundary: required (absent, malformed, unsupported or unavailable evidence blocks), optional (failing evidence blocks; absent or unavailable evidence is recorded only), off (default). Evidence is supplied as work complete --evidence dokimos-ratchet=PATH (dokimos.ratchet 1.0.0) and ordo-boundary=PATH (ordo.boundary-amplification/1). A present but invalid policy fails closed.",
+          "type": "object",
+          "properties": {
+            "version": {"const": "1.0.0"},
+            "description": {"type": "string"},
+            "dokimos": {"enum": ["required", "optional", "off"]},
+            "dokimosBaseline": {"type": "string", "minLength": 1, "description": "Pins the Dokimos profile: the accepted baseline path the report must have been measured against."},
+            "ordoBoundary": {"enum": ["required", "optional", "off"]},
+            "requiredFacets": {"type": "array", "items": {"enum": ["implementation-complete", "behavior-verified", "architecture-verified", "release-ready"]}, "uniqueItems": true},
+            "workTypes": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+          },
+          "additionalProperties": false
+        },
         "upstreamSync": {
           "description": "Elapsed-time upstream synchronization policy (DF-GOV-014). The clock is measured from the last successful fetch; failed checks do not reset it. Checks fetch only and never merge, rebase, pull, stash, reset, or alter working files.",
           "type": "object",

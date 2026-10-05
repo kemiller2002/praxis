@@ -1499,31 +1499,15 @@ let private runWorkResume root arguments (eventActor: Actor) =
         eprintfn "ERROR work resume requires valid --id and --occurred-at"
         2
 
-/// Mirrors production `transition(root, "complete", ids, options)`
-/// (`tools/ros_cli.mjs`) -- the effect behind `./praxis work complete`.
-/// Live-work only, like `resume`: an id absent from context is rejected.
-/// Git is always observed (production's own `observedGitPaths` gate is
-/// `action === "complete" || ...`), and required completion evidence
-/// comes from `ros.json`'s `workProtocol.completionEvidence`
-/// (`FileWorkConfigRepository.readCompletionEvidence`), verified against
-/// the real filesystem via `WorkOperations.planVerifiedContext`/
-/// `FileEvidenceRepository` -- matching production's own `fs.existsSync`
-/// check on every provided evidence path, not just the required evidence
-/// *types* the frozen decision layer already rejects on. When telemetry
-/// is enabled, finalizes every currently active telemetry execution for
-/// each completing id (`FileTelemetryFinalizationRepository.
-/// finalizeWorkExecutions`, production's own unconditional
-/// `finalizeWorkExecutions` call) before committing -- the shared
-/// `resolveContextTelemetryWithCreation`/`TelemetryPlanResolution`
-/// pipeline discards the `FinalizeExecutions` intent signal, so this is
-/// called directly rather than threaded through it. A research-type
-/// item's `--conclusion` (defaulting to `"inconclusive"`, matching
-/// production) and any other item's explicitly supplied `--conclusion`
-/// (PRAXIS-REMOTE-16) are written via `FileWorkContextRepository.
-/// applyContextPlanWithConclusions`. Deliberately excludes
-/// `options.input`/adapter-ingestion (unreachable from any CLI path) and
-/// explicit `--identity-*`/`--execution-id` overrides, matching every
-/// prior increment.
+/// `./praxis work complete`: live-work only (an id absent from context is
+/// rejected). Required completion evidence comes from `ros.json`'s
+/// `workProtocol.completionEvidence` and every evidence path is verified
+/// (`WorkOperations.planVerifiedContext`). Before any lock or state change,
+/// the completion-readiness gate (PRX-QUAL-023) judges supplied Dokimos and
+/// Ordo evidence under `workProtocol.qualityEvidence`; a refusal exits 3 and
+/// a ready record is written additively onto the event and the item. Active
+/// telemetry is finalized before committing, and a research item (or any
+/// item given `--conclusion`) records its conclusion (PRAXIS-REMOTE-16).
 let private runWorkComplete root arguments (eventActor: Actor) =
     let ids = optionValues "--id" arguments
     let occurredAt = optionValue "--occurred-at" arguments
@@ -1531,6 +1515,9 @@ let private runWorkComplete root arguments (eventActor: Actor) =
 
     match ids, occurredAt with
     | (_ :: _), Some timestamp when providedEvidence |> List.forall Option.isSome ->
+        match QualityEvidenceCommands.completionGate root ids (List.choose id providedEvidence) with
+        | Error exitCode -> exitCode
+        | Ok readinessRecords ->
         match RegistryLock.acquire root "work-protocol" RegistryLock.defaultSettings with
         | Error failure ->
             eprintfn "ERROR %s" failure.Message
@@ -1628,14 +1615,7 @@ let private runWorkComplete root arguments (eventActor: Actor) =
                                                         | _, None -> None)
                                                     |> Map.ofList
 
-                                                match
-                                                    FileWorkContextRepository.applyContextPlanWithConclusions
-                                                        root
-                                                        repositoryId
-                                                        conclusions
-                                                        eventActor
-                                                        resolvedPlan
-                                                with
+                                                match FileWorkContextRepository.applyContextPlanWithRecords root repositoryId conclusions readinessRecords readinessRecords eventActor resolvedPlan with
                                                 | Error message -> Error message
                                                 | Ok(writtenItems, eventIds) ->
                                                     match readWorkContext root with

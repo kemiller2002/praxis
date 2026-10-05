@@ -202,16 +202,29 @@ module FileEnvelopeReconciliationDispatcher =
                             []
                       ObservedGitPaths = paths
                       TelemetryEnabled = false }
-                match WorkOperations.planVerifiedContext (FileEvidenceRepository.create realRoot) planRequest with
-                | VerifiedWorkContextPlanOutcome.ContextRejected rejection -> Error(rejectionMessage rejection)
-                | VerifiedWorkContextPlanOutcome.EvidenceRejected issues ->
+                // PRX-QUAL-023: the same completion-readiness gate as `work complete`.
+                let readiness =
+                    if requestedAction <> WorkAction.Complete then
+                        CompletionGateOutcome.NotApplicable
+                    else
+                        context.WorkItems
+                        |> List.filter (fun item -> item.Id = envelope.WorkItem && item.SemanticState = LiveWorkState.Active)
+                        |> List.map (fun item -> item.Id, item.WorkType)
+                        |> fun items -> FileCompletionReadiness.evaluateItems realRoot items request.Evidence
+                let readinessRecords = FileCompletionReadiness.extensions readiness
+                match readiness, WorkOperations.planVerifiedContext (FileEvidenceRepository.create realRoot) planRequest with
+                | CompletionGateOutcome.PolicyInvalid reason, _ -> Error $"quality-evidence-policy-invalid:{reason}"
+                | CompletionGateOutcome.Refused items, _ ->
+                    Error("completion-readiness-refused:" + (items |> List.collect CompletionReadiness.blockingReasons |> String.concat "; "))
+                | _, VerifiedWorkContextPlanOutcome.ContextRejected rejection -> Error(rejectionMessage rejection)
+                | _, VerifiedWorkContextPlanOutcome.EvidenceRejected issues ->
                     let codes =
                         issues
                         |> List.map (function
                             | EvidenceIssue.Missing evidence -> $"missing-evidence-path:{evidence.Path}"
                             | EvidenceIssue.Unavailable(evidence, _) -> $"unavailable-evidence-path:{evidence.Path}")
                     Error(String.concat "," codes)
-                | VerifiedWorkContextPlanOutcome.Planned plan ->
+                | _, VerifiedWorkContextPlanOutcome.Planned plan ->
                     let linked = executionId |> Option.map (fun id -> attachExecution id envelope.WorkItem plan) |> Option.defaultValue plan
                     let conclusions =
                         if requestedAction = WorkAction.Complete then
@@ -221,7 +234,7 @@ module FileEnvelopeReconciliationDispatcher =
                             |> Map.ofList
                         else
                             Map.empty
-                    FileWorkContextRepository.applyContextPlanWithConclusions stagingRoot repositoryId conclusions eventActor linked
+                    FileWorkContextRepository.applyContextPlanWithRecords stagingRoot repositoryId conclusions readinessRecords readinessRecords eventActor linked
                     |> Result.bind (fun _ ->
                         if requestedAction <> WorkAction.Complete then
                             Ok()

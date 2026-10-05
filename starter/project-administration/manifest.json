@@ -199,6 +199,11 @@
       "template": false
     },
     {
+      "source": "schemas/praxis-completion-readiness.schema.json",
+      "destination": "schemas/praxis-completion-readiness.schema.json",
+      "template": false
+    },
+    {
       "source": "schemas/execution-telemetry.schema.json",
       "destination": "schemas/execution-telemetry.schema.json",
       "template": false

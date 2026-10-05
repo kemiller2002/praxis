@@ -467,6 +467,36 @@ module EnvelopeReconciliationTests =
                     Assert.equal "supported" (item["conclusion"].GetValue<string>())
                     Assert.equal "complete" (queueItem["status"].GetValue<string>())) }
 
+          { Name = "dispatcher applies the completion-readiness gate: a required Dokimos report must be supplied (PRX-QUAL-023)"
+            Run = fun () ->
+                withGitRepository (fun root _ ->
+                    File.WriteAllText(
+                        Path.Combine(root, "ros.json"),
+                        """{"repository":"test-repository","protocolVersion":"1.0.0","telemetry":{"enabled":true},"workProtocol":{"completionEvidence":{"default":[],"research":[]},"qualityEvidence":{"dokimos":"required"}}}""")
+                    runGit root [ "commit"; "-qam"; "require dokimos evidence" ] |> ignore
+                    let baseCommit = runGit root [ "rev-parse"; "HEAD" ]
+                    let input = Path.Combine(root, "fallback.json")
+                    File.WriteAllText(input, "input")
+                    let runtimeActor = { actor with Model = Some "unknown"; Runtime = Some "codex" }
+                    let startedAt = DateTimeOffset.Parse("2026-09-26T10:00:00Z")
+                    let completedAt = DateTimeOffset.Parse("2026-09-26T10:02:00Z")
+                    let value =
+                        { envelope with
+                            BaseCommit = baseCommit
+                            Agent = runtimeActor
+                            Timeline =
+                                [ { Sequence = 1; Timestamp = startedAt; Action = "start" }
+                                  { Sequence = 2; Timestamp = completedAt; Action = "complete" } ]
+                            Requests =
+                                [ { envelope.Requests.Head with OccurredAt = Some startedAt; WorkType = Some "task" }
+                                  { RequestType = "work.complete"; OccurredAt = Some completedAt; WorkType = None; Reason = None; Conclusion = None; Evidence = [] } ] }
+                    match FileEnvelopeReconciliationDispatcher.apply root input "hash" baseCommit (fun () -> DateTimeOffset.Parse("2026-09-26T10:03:00Z")) value with
+                    | Error(EnvelopeApplyFailure.Invalid [ code ]) ->
+                        Assert.isTrue (code.StartsWith "completion-readiness-refused:") code
+                        Assert.isTrue (code.Contains "no dokimos-ratchet evidence was supplied") code
+                    | outcome -> failwithf "expected a readiness refusal, got %A" outcome
+                    Assert.isTrue (File.Exists input) "refused input was removed by the dispatcher") }
+
           { Name = "prepared reconciliation transaction recovers without duplicating its canonical event"
             Run = fun () ->
                 withGitRepository (fun root _ ->

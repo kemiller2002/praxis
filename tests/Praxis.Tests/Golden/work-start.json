@@ -122,6 +122,7 @@
         "schemas/hypothesis.schema.json",
         "schemas/journal.schema.json",
         "schemas/mission.schema.json",
+        "schemas/praxis-completion-readiness.schema.json",
         "schemas/praxis-remote-request.schema.json",
         "schemas/praxis-remote-response.schema.json",
         "schemas/rep.schema.json",

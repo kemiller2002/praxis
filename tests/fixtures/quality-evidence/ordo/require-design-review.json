@@ -1,0 +1,293 @@
+{
+  "schema": "ordo.boundary-amplification/1",
+  "workItem": "PRX-USAGE-AUTOPAUSE",
+  "requirement": "Pause agent work automatically when provider usage approaches its limit",
+  "policy": {
+    "source": "default",
+    "maxBoundaries": 3,
+    "maxModules": 4,
+    "moduleDepth": 2,
+    "coreLayers": [
+      "cli",
+      "persistence",
+      "provider",
+      "domain",
+      "rendering"
+    ],
+    "coreLayerSpan": 3,
+    "hotspotWorkItems": 3,
+    "orchestrationChurn": 3,
+    "concentrationBoundaries": 2,
+    "maxExpansionRatio": 2,
+    "elevatedScore": 2,
+    "highScore": 4
+  },
+  "expected": [
+    "cli",
+    "domain"
+  ],
+  "observed": [
+    {
+      "boundary": "cli",
+      "layer": "cli",
+      "sources": [
+        {
+          "kind": "path",
+          "path": "src/Praxis.Cli/PacingCommands.fs"
+        },
+        {
+          "kind": "path",
+          "path": "src/Praxis.Cli/Program.fs"
+        }
+      ]
+    },
+    {
+      "boundary": "concurrency",
+      "layer": "infrastructure",
+      "sources": [
+        {
+          "kind": "import",
+          "path": "src/Praxis.Cli/PacingCommands.fs",
+          "import": "System.Threading"
+        }
+      ]
+    },
+    {
+      "boundary": "domain",
+      "layer": "domain",
+      "sources": [
+        {
+          "kind": "path",
+          "path": "src/Praxis.Domain/Pacing/Model.fs"
+        }
+      ]
+    },
+    {
+      "boundary": "persistence",
+      "layer": "persistence",
+      "sources": [
+        {
+          "kind": "import",
+          "path": "src/Praxis.Cli/PacingCommands.fs",
+          "import": "System.IO"
+        }
+      ]
+    },
+    {
+      "boundary": "process",
+      "layer": "infrastructure",
+      "sources": [
+        {
+          "kind": "import",
+          "path": "src/Praxis.Cli/PacingCommands.fs",
+          "import": "System.Diagnostics"
+        }
+      ]
+    },
+    {
+      "boundary": "provider",
+      "layer": "provider",
+      "sources": [
+        {
+          "kind": "import",
+          "path": "src/Praxis.Cli/PacingCommands.fs",
+          "import": "System.Net.Http"
+        },
+        {
+          "kind": "import",
+          "path": "src/Praxis.Cli/PacingCommands.fs",
+          "import": "System.Net.Http.Headers"
+        }
+      ]
+    },
+    {
+      "boundary": "rendering",
+      "layer": "rendering",
+      "sources": [
+        {
+          "kind": "path",
+          "path": "src/Praxis.Cli/PacingStatus.fs"
+        }
+      ]
+    }
+  ],
+  "supporting": [
+    {
+      "boundary": "build",
+      "layer": "build",
+      "sources": [
+        {
+          "kind": "path",
+          "path": "src/Praxis.Cli/Praxis.Cli.fsproj"
+        }
+      ]
+    },
+    {
+      "boundary": "docs",
+      "layer": "documentation",
+      "sources": [
+        {
+          "kind": "path",
+          "path": "docs/usage-pacing.md"
+        }
+      ]
+    },
+    {
+      "boundary": "tests",
+      "layer": "tests",
+      "sources": [
+        {
+          "kind": "path",
+          "path": "tests/Praxis.Tests/PacingTests.fs"
+        }
+      ]
+    }
+  ],
+  "unclassified": [],
+  "unexpectedCrossings": [
+    "concurrency",
+    "persistence",
+    "process",
+    "provider",
+    "rendering"
+  ],
+  "unexercised": [],
+  "amplificationRatio": 3.5,
+  "signals": [
+    {
+      "id": "ORDO-BA-001",
+      "name": "unexpected-boundary-crossing",
+      "strength": "strong",
+      "weight": 2,
+      "description": "changed boundaries that were not declared: concurrency, persistence, process, provider, rendering",
+      "evidence": {
+        "boundaries": [
+          "concurrency",
+          "persistence",
+          "process",
+          "provider",
+          "rendering"
+        ]
+      }
+    },
+    {
+      "id": "ORDO-BA-002",
+      "name": "boundary-breadth",
+      "strength": "weak",
+      "weight": 1,
+      "description": "7 architectural boundaries crossed (threshold 3): cli, concurrency, domain, persistence, process, provider, rendering",
+      "evidence": {
+        "boundaries": [
+          "cli",
+          "concurrency",
+          "domain",
+          "persistence",
+          "process",
+          "provider",
+          "rendering"
+        ],
+        "count": 7,
+        "threshold": 3
+      }
+    },
+    {
+      "id": "ORDO-BA-004",
+      "name": "core-layer-span",
+      "strength": "strong",
+      "weight": 2,
+      "description": "one change spans 5 core layers (threshold 3): cli, persistence, provider, domain, rendering",
+      "evidence": {
+        "layers": [
+          "cli",
+          "persistence",
+          "provider",
+          "domain",
+          "rendering"
+        ],
+        "count": 5,
+        "threshold": 3
+      }
+    },
+    {
+      "id": "ORDO-BA-006",
+      "name": "orchestration-churn",
+      "strength": "strong",
+      "weight": 2,
+      "description": "orchestration file src/Praxis.Cli/PacingCommands.fs modified 6 times in this change (threshold 3)",
+      "evidence": {
+        "path": "src/Praxis.Cli/PacingCommands.fs",
+        "changes": 6,
+        "threshold": 3
+      }
+    },
+    {
+      "id": "ORDO-BA-007",
+      "name": "responsibility-concentration",
+      "strength": "strong",
+      "weight": 2,
+      "description": "src/Praxis.Cli/PacingCommands.fs (in cli) hosts responsibilities of 4 other boundaries (threshold 2): concurrency, persistence, process, provider",
+      "evidence": {
+        "path": "src/Praxis.Cli/PacingCommands.fs",
+        "home": "cli",
+        "hosted": [
+          "concurrency",
+          "persistence",
+          "process",
+          "provider"
+        ],
+        "threshold": 2
+      }
+    },
+    {
+      "id": "ORDO-BA-008",
+      "name": "scope-expansion-ratio",
+      "strength": "weak",
+      "weight": 1,
+      "description": "observed/expected boundary ratio 3.5 exceeds 2",
+      "evidence": {
+        "ratio": 3.5,
+        "threshold": 2
+      }
+    }
+  ],
+  "risk": {
+    "level": "high",
+    "score": 10,
+    "evidence": [
+      "ORDO-BA-001",
+      "ORDO-BA-002",
+      "ORDO-BA-004",
+      "ORDO-BA-006",
+      "ORDO-BA-007",
+      "ORDO-BA-008"
+    ]
+  },
+  "recommendation": {
+    "kind": "require-design-review",
+    "splitAlong": [
+      "concurrency",
+      "persistence",
+      "process",
+      "provider",
+      "rendering"
+    ]
+  },
+  "exception": {
+    "coverage": "none",
+    "applied": [],
+    "rejected": [],
+    "approvedCrossings": [],
+    "unapprovedCrossings": [
+      "concurrency",
+      "persistence",
+      "process",
+      "provider",
+      "rendering"
+    ],
+    "downgradedFrom": null
+  },
+  "generator": {
+    "tool": "ordo",
+    "version": "1.4.0"
+  }
+}

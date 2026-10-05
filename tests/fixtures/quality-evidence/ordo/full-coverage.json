@@ -1,0 +1,221 @@
+{
+  "schema": "ordo.boundary-amplification/1",
+  "workItem": "PRX-CORRELATION-ID",
+  "requirement": "Propagate one request correlation id through every tier so a failure can be traced end to end",
+  "policy": {
+    "source": "default",
+    "maxBoundaries": 3,
+    "maxModules": 4,
+    "moduleDepth": 2,
+    "coreLayers": [
+      "cli",
+      "persistence",
+      "provider",
+      "domain",
+      "rendering"
+    ],
+    "coreLayerSpan": 3,
+    "hotspotWorkItems": 3,
+    "orchestrationChurn": 3,
+    "concentrationBoundaries": 2,
+    "maxExpansionRatio": 2,
+    "elevatedScore": 2,
+    "highScore": 4
+  },
+  "expected": [
+    "application"
+  ],
+  "observed": [
+    {
+      "boundary": "application",
+      "layer": "application",
+      "sources": [
+        {
+          "kind": "path",
+          "path": "src/Praxis.Application/Correlation.fs"
+        }
+      ]
+    },
+    {
+      "boundary": "cli",
+      "layer": "cli",
+      "sources": [
+        {
+          "kind": "path",
+          "path": "src/Praxis.Cli/Program.fs"
+        }
+      ]
+    },
+    {
+      "boundary": "persistence",
+      "layer": "persistence",
+      "sources": [
+        {
+          "kind": "path",
+          "path": "src/Praxis.Infrastructure/Persistence/EventStore.fs"
+        }
+      ]
+    },
+    {
+      "boundary": "provider",
+      "layer": "provider",
+      "sources": [
+        {
+          "kind": "path",
+          "path": "src/Praxis.Infrastructure/Providers/HttpProvider.fs"
+        }
+      ]
+    }
+  ],
+  "supporting": [
+    {
+      "boundary": "docs",
+      "layer": "documentation",
+      "sources": [
+        {
+          "kind": "path",
+          "path": "docs/correlation.md"
+        }
+      ]
+    },
+    {
+      "boundary": "tests",
+      "layer": "tests",
+      "sources": [
+        {
+          "kind": "path",
+          "path": "tests/Praxis.Tests/CorrelationTests.fs"
+        }
+      ]
+    }
+  ],
+  "unclassified": [],
+  "unexpectedCrossings": [
+    "cli",
+    "persistence",
+    "provider"
+  ],
+  "unexercised": [],
+  "amplificationRatio": 4,
+  "signals": [
+    {
+      "id": "ORDO-BA-001",
+      "name": "unexpected-boundary-crossing",
+      "strength": "strong",
+      "weight": 2,
+      "description": "changed boundaries that were not declared: cli, persistence, provider",
+      "evidence": {
+        "boundaries": [
+          "cli",
+          "persistence",
+          "provider"
+        ]
+      }
+    },
+    {
+      "id": "ORDO-BA-002",
+      "name": "boundary-breadth",
+      "strength": "weak",
+      "weight": 1,
+      "description": "4 architectural boundaries crossed (threshold 3): application, cli, persistence, provider",
+      "evidence": {
+        "boundaries": [
+          "application",
+          "cli",
+          "persistence",
+          "provider"
+        ],
+        "count": 4,
+        "threshold": 3
+      }
+    },
+    {
+      "id": "ORDO-BA-004",
+      "name": "core-layer-span",
+      "strength": "strong",
+      "weight": 2,
+      "description": "one change spans 3 core layers (threshold 3): cli, persistence, provider",
+      "evidence": {
+        "layers": [
+          "cli",
+          "persistence",
+          "provider"
+        ],
+        "count": 3,
+        "threshold": 3
+      }
+    },
+    {
+      "id": "ORDO-BA-008",
+      "name": "scope-expansion-ratio",
+      "strength": "weak",
+      "weight": 1,
+      "description": "observed/expected boundary ratio 4 exceeds 2",
+      "evidence": {
+        "ratio": 4,
+        "threshold": 2
+      }
+    }
+  ],
+  "risk": {
+    "level": "high",
+    "score": 6,
+    "evidence": [
+      "ORDO-BA-001",
+      "ORDO-BA-002",
+      "ORDO-BA-004",
+      "ORDO-BA-008"
+    ]
+  },
+  "recommendation": {
+    "kind": "consider-split-along",
+    "splitAlong": [
+      "cli",
+      "persistence",
+      "provider"
+    ]
+  },
+  "exception": {
+    "coverage": "full",
+    "applied": [
+      {
+        "expansionId": "EXP-CORRELATION-001",
+        "addedBoundaries": [
+          "cli",
+          "persistence",
+          "provider"
+        ],
+        "justification": "Correlation is cross-cutting by definition: each tier must accept and forward the id. Each edit is a single parameter thread-through with no new responsibility.",
+        "authorizedBy": "architecture-owner"
+      }
+    ],
+    "rejected": [],
+    "approvedCrossings": [
+      {
+        "boundary": "cli",
+        "expansionId": "EXP-CORRELATION-001"
+      },
+      {
+        "boundary": "persistence",
+        "expansionId": "EXP-CORRELATION-001"
+      },
+      {
+        "boundary": "provider",
+        "expansionId": "EXP-CORRELATION-001"
+      }
+    ],
+    "unapprovedCrossings": [],
+    "downgradedFrom": {
+      "kind": "require-design-review",
+      "splitAlong": [
+        "cli",
+        "persistence",
+        "provider"
+      ]
+    }
+  },
+  "generator": {
+    "tool": "ordo",
+    "version": "1.4.0"
+  }
+}

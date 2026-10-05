@@ -99,7 +99,13 @@ module FileWorkContextRepository =
     /// `telemetryExecutionIds` only when non-empty (production itself never
     /// sets the field at all when telemetry is disabled). Every other field
     /// already on an existing item is left untouched.
-    let private applyItem (conclusions: Map<string, string>) (items: JsonArray) (item: LiveWorkItem) (reason: string option) : unit =
+    let private applyItem
+        (conclusions: Map<string, string>)
+        (itemExtensions: Map<string, JsonObject>)
+        (items: JsonArray)
+        (item: LiveWorkItem)
+        (reason: string option)
+        : unit =
         let existing =
             items
             |> Seq.choose (fun node ->
@@ -144,6 +150,14 @@ module FileWorkContextRepository =
 
         if not item.TelemetryExecutionIds.IsEmpty then
             node["telemetryExecutionIds"] <- stringArrayNode item.TelemetryExecutionIds
+
+        // An additive, per-item record (PRX-QUAL-023: `completionReadiness`),
+        // written only when a repository's quality-evidence policy applied.
+        itemExtensions
+        |> Map.tryFind item.Id
+        |> Option.iter (fun extension ->
+            for property in extension do
+                node[property.Key] <- property.Value.DeepClone())
 
     /// The existing `actor` value on `.ros/context/current.json`, the last
     /// link in production's own `options.actor ?? env.ROS_ACTOR ??
@@ -214,6 +228,7 @@ module FileWorkContextRepository =
             | Some id when items.IsEmpty -> Error $"work item '{id}' is not in repository context"
             | _ ->
                 let defaultEvidence, evidenceByType = FileWorkConfigRepository.readCompletionEvidence root
+                let qualityPolicy = FileCompletionReadiness.readPolicy root
 
                 let augmented =
                     items
@@ -236,6 +251,18 @@ module FileWorkContextRepository =
                             evidenceByType |> Map.tryFind evidenceType |> Option.defaultValue defaultEvidence |> Set.toList |> List.sort
 
                         node["requiredEvidenceForCompletion"] <- stringArrayNode requiredEvidence
+
+                        // PRX-QUAL-023: only when the repository opted in, and
+                        // only for an item still to be completed.
+                        match qualityPolicy with
+                        | Ok policy when
+                            QualityEvidencePolicies.appliesTo policy evidenceType
+                            && stringField item "semanticState" <> Some "complete"
+                            && stringField item "semanticState" <> Some "abandoned"
+                            ->
+                            node["qualityEvidenceForCompletion"] <- FileCompletionReadiness.contextRequirement policy
+                        | Error reason -> node["qualityEvidenceForCompletion"] <- JsonValue.Create $"invalid policy: {reason}"
+                        | Ok _ -> ()
 
                         node)
 
@@ -348,11 +375,12 @@ module FileWorkContextRepository =
     /// matching production's own returned `events` list, this includes an
     /// id even when the event line itself turned out to already be present
     /// in the log (recorded once, reported every time it is produced).
-    let applyContextPlanWithExtensions
+    let applyContextPlanWithRecords
         (root: string)
         (repositoryId: string)
         (conclusions: Map<string, string>)
         (extensions: Map<string, JsonObject>)
+        (itemExtensions: Map<string, JsonObject>)
         (eventActor: Actor)
         (plan: WorkContextPlan)
         : Result<JsonArray * string list, string> =
@@ -362,7 +390,7 @@ module FileWorkContextRepository =
             | Ok contextNode ->
                 match contextNode["workItems"] with
                 | :? JsonArray as items ->
-                    plan.ItemPlans |> List.iter (fun itemPlan -> applyItem conclusions items itemPlan.Item itemPlan.Event.Reason)
+                    plan.ItemPlans |> List.iter (fun itemPlan -> applyItem conclusions itemExtensions items itemPlan.Item itemPlan.Event.Reason)
 
                     contextNode["protocolVersion"] <- JsonValue.Create plan.ProtocolVersion
                     contextNode["repository"] <- JsonValue.Create plan.Repository
@@ -396,6 +424,18 @@ module FileWorkContextRepository =
                 | _ -> Error "context/current.json 'workItems' must be an array"
         with error ->
             Error error.Message
+
+    /// `applyContextPlanWithRecords` with event extensions only (a block's
+    /// `continuity` record lives on the event alone).
+    let applyContextPlanWithExtensions
+        (root: string)
+        (repositoryId: string)
+        (conclusions: Map<string, string>)
+        (extensions: Map<string, JsonObject>)
+        (eventActor: Actor)
+        (plan: WorkContextPlan)
+        : Result<JsonArray * string list, string> =
+        applyContextPlanWithRecords root repositoryId conclusions extensions Map.empty eventActor plan
 
     let applyContextPlanWithConclusions
         (root: string)
