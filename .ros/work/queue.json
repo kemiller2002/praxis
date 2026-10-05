@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 69,
+  "nextSeq": 70,
   "items": [
     {
       "id": "WI-0001",
@@ -4112,6 +4112,29 @@
       "attachments": [],
       "createdAt": "2026-10-05T17:02:56.480Z",
       "updatedAt": "2026-10-05T17:44:23.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0069",
+      "title": "Doctor smoke fixtures name the Limen package by its 0.7.0 name @echelon-foundry/limen",
+      "description": null,
+      "tags": [
+        "limen"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-05T17:45:02.628Z",
+      "updatedAt": "2026-10-05T17:55:29.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

@@ -357,12 +357,12 @@ jobs:
             Set-Content -Encoding Ascii (Join-Path $project ".echelon\toolchain.json")
           '{"schemaVersion":1,"tool":"visual-engineering","installedVersion":"1.0.0"}' |
             Set-Content -Encoding Ascii (Join-Path $project ".echelon\visual-engineering.json")
-          '{"schemaVersion":1,"tool":"limen","installedVersion":"0.6.2"}' |
+          '{"schemaVersion":1,"tool":"limen","package":"@echelon-foundry/limen","installedVersion":"0.7.0"}' |
             Set-Content -Encoding Ascii (Join-Path $project ".echelon\limen.json")
 
-          $npmLimen = Join-Path $project "node_modules\@echelon-foundry\typescript-wasm-kernel"
+          $npmLimen = Join-Path $project "node_modules\@echelon-foundry\limen"
           New-Item -ItemType Directory -Force -Path $npmLimen | Out-Null
-          '{"name":"@echelon-foundry/typescript-wasm-kernel","version":"0.6.2"}' |
+          '{"name":"@echelon-foundry/limen","version":"0.7.0"}' |
             Set-Content -Encoding Ascii (Join-Path $npmLimen "package.json")
 
           git -C $project init -q
@@ -389,7 +389,7 @@ jobs:
             if ($doctorReport.repository.components.tool -notcontains "visual-engineering") {
               throw "Doctor JSON did not discover Visual Engineering."
             }
-            if ($doctorReport.repository.npmPackages.package -notcontains "@echelon-foundry/typescript-wasm-kernel") {
+            if ($doctorReport.repository.npmPackages.package -notcontains "@echelon-foundry/limen") {
               throw "Doctor JSON did not discover the installed Limen npm package."
             }
             if (-not $doctorReport.updates.ordo.available -or $doctorReport.updates.praxis.available) {
