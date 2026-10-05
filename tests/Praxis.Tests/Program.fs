@@ -98,6 +98,7 @@ let main _ =
     @ WorkAbandonTests.tests
     @ PlanningTests.tests
     @ PacingTests.tests
+    @ PacingSafetyTests.tests
     @ PlanningCliTests.tests
     @ PlanningSessionEvidenceTests.tests
     @ GroupingTests.tests

@@ -5,6 +5,7 @@ open System.Globalization
 open System.Text.Json
 open System.Text.Json.Nodes
 open Praxis.Application.Pacing
+open Praxis.Domain.Pacing
 
 [<RequireQualifiedAccess>]
 module PacingStatus =
@@ -46,6 +47,23 @@ module PacingStatus =
 
         root["windows"] <- windows
 
+        let coverage = JsonArray()
+
+        for observation in status.Coverage do
+            let row = JsonObject()
+            row["key"] <- JsonValue.Create(observation.Key)
+            row["status"] <- JsonValue.Create(observation.Status)
+            observation.Reason |> Option.iter (fun value -> row["reason"] <- JsonValue.Create(value))
+            coverage.Add row
+
+        root["coverage"] <- coverage
+
+        match status.StateIntegrity with
+        | StateIntegrity.Intact -> root["stateIntegrity"] <- JsonValue.Create("intact")
+        | StateIntegrity.Indeterminate reason ->
+            root["stateIntegrity"] <- JsonValue.Create("indeterminate")
+            root["stateIntegrityReason"] <- JsonValue.Create(reason)
+
         status.Hold
         |> Option.iter (fun reason ->
             let hold = JsonObject()
@@ -67,6 +85,16 @@ module PacingStatus =
             |> Option.defaultValue ""
 
         lines.Add($"pacing {status.Provider}{model}: {freshnessText status.FreshnessState status.FreshnessReason}")
+
+        match status.StateIntegrity with
+        | StateIntegrity.Intact -> ()
+        | StateIntegrity.Indeterminate reason -> lines.Add($"state: INDETERMINATE ({reason})")
+
+        status.Coverage
+        |> List.filter (fun observation -> observation.Status <> "observed")
+        |> List.iter (fun observation ->
+            let reason = observation.Reason |> Option.map (fun value -> $" ({value})") |> Option.defaultValue ""
+            lines.Add($"coverage: {observation.Key} {observation.Status}{reason}"))
 
         if status.Windows.IsEmpty then
             lines.Add("quota: no usable windows")

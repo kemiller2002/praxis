@@ -25,79 +25,107 @@ module PacingAdapters =
 
         current @ retained
 
-    let private observe
-        (directory: string)
-        (observedAt: DateTimeOffset)
-        (provider: string)
-        (model: string option)
-        : ProviderSnapshot =
-        Directory.CreateDirectory directory |> ignore
-
-        let previous =
-            PacingPersistence.loadSnapshot directory provider
-            |> Option.map _.Windows
-            |> Option.defaultValue []
-
-        let result =
-            match provider with
-            | "codex" ->
-                let bucket =
-                    match model with
-                    | Some value when value.Contains("spark", StringComparison.OrdinalIgnoreCase) ->
-                        "codex_bengalfox"
-                    | _ ->
-                        "codex"
-
-                PacingProviders.queryCodex ()
-                |> Result.bind (PacingNormalization.normalizeCodexResult bucket observedAt)
-            | "claude" ->
-                PacingProviders.queryClaude observedAt
-                |> Result.bind (PacingNormalization.normalizeClaudeUsage observedAt)
-            | other ->
-                Error $"unknown pacing provider '{other}'"
-
-        match result with
-        | Ok(windows, true) ->
-            let snapshot =
-                { Provider = provider
-                  ObservedAt = observedAt
-                  Windows = windows
-                  Freshness = ObservationFreshness.Fresh }
-
-            PacingPersistence.saveSnapshot directory snapshot
-            snapshot
-        | Ok(windows, false) ->
-            let combined = mergeMissingHard previous windows observedAt
-
-            let snapshot =
-                { Provider = provider
-                  ObservedAt = observedAt
-                  Windows = combined
-                  Freshness = ObservationFreshness.Stale "provider quota response was incomplete" }
-
-            if not combined.IsEmpty then
-                PacingPersistence.saveSnapshot directory snapshot
-
-            snapshot
-        | Error message ->
-            match PacingPersistence.loadSnapshot directory provider with
-            | Some cached ->
-                { cached with
-                    Freshness = ObservationFreshness.Stale message }
-            | None ->
-                { Provider = provider
-                  ObservedAt = observedAt
-                  Windows = []
-                  Freshness = ObservationFreshness.Unavailable message }
-
+    /// Human diagnostics only (`pace.log`), never safety evidence. An
+    /// unwritable log must not change a gate decision, so only filesystem
+    /// failures are tolerated here. Typed pacing telemetry replaces this
+    /// channel under PRX-QUAL-008 (kemiller2002/praxis#160).
     let private writeLog (directory: string) (text: string) : unit =
         try
             Directory.CreateDirectory directory |> ignore
             let timestamp = DateTimeOffset.Now.ToString("O", CultureInfo.InvariantCulture)
             let line = timestamp + " [" + string Environment.ProcessId + "] " + text + Environment.NewLine
             File.AppendAllText(Path.Combine(directory, "pace.log"), line)
-        with _ ->
-            ()
+        with
+        | :? IOException
+        | :? UnauthorizedAccessException -> ()
+
+    /// Scoped windows the previous reading saw whose window has not reset:
+    /// their disappearance is missing evidence, not proof of capacity.
+    let private expectedScoped (previous: QuotaWindow list) (now: DateTimeOffset) =
+        previous
+        |> List.filter (fun window ->
+            window.ResetsAt > now
+            && match window.Scope with
+               | QuotaScope.Global -> false
+               | QuotaScope.Model _
+               | QuotaScope.Surface _ -> true)
+        |> List.map _.Key
+
+    let private observe
+        (directory: string)
+        (observedAt: DateTimeOffset)
+        (provider: string)
+        (model: string option)
+        : ProviderSnapshot =
+        let cached = PacingPersistence.loadSnapshot directory provider
+
+        let previous =
+            match cached with
+            | Ok(Some snapshot) -> snapshot.Windows
+            | Ok None
+            | Error _ -> []
+
+        let cacheNote =
+            match cached with
+            | Error message -> $"; {message}"
+            | Ok _ -> ""
+
+        let result =
+            match provider with
+            | "codex" ->
+                let bucket =
+                    match model with
+                    | Some value when value.Contains("spark", StringComparison.OrdinalIgnoreCase) -> "codex_bengalfox"
+                    | _ -> "codex"
+
+                PacingProviders.queryCodex ()
+                |> Result.bind (PacingNormalization.normalizeCodexResult bucket observedAt)
+            | "claude" ->
+                PacingProviders.queryClaude observedAt
+                |> Result.bind (PacingNormalization.normalizeClaudeUsage observedAt (expectedScoped previous observedAt))
+            | other -> Error $"unknown pacing provider '{other}'"
+
+        // The snapshot is a display/merge cache; hard holds live in hold state,
+        // so a cache write failure does not change safety. It is still visible.
+        let persist snapshot =
+            match PacingPersistence.saveSnapshot directory snapshot with
+            | Ok() -> ()
+            | Error message -> writeLog directory $"diagnostic: snapshot cache write failed: {message}"
+
+            snapshot
+
+        match result with
+        | Ok reading when WindowObservation.isComplete reading.Coverage ->
+            persist
+                { Provider = provider
+                  ObservedAt = observedAt
+                  Windows = reading.Windows
+                  Coverage = reading.Coverage
+                  Freshness = ObservationFreshness.Fresh }
+        | Ok reading ->
+            let combined = mergeMissingHard previous reading.Windows observedAt
+
+            persist
+                { Provider = provider
+                  ObservedAt = observedAt
+                  Windows = combined
+                  Coverage = reading.Coverage
+                  Freshness =
+                    ObservationFreshness.Stale(
+                        $"provider quota response was incomplete: {WindowObservation.incompleteness reading.Coverage}"
+                    ) }
+        | Error message ->
+            match cached with
+            | Ok(Some snapshot) ->
+                { snapshot with
+                    Freshness = ObservationFreshness.Stale message }
+            | Ok None
+            | Error _ ->
+                { Provider = provider
+                  ObservedAt = observedAt
+                  Windows = []
+                  Coverage = []
+                  Freshness = ObservationFreshness.Unavailable(message + cacheNote) }
 
     let create (directory: string) : PacingRuntime =
         { Observer =

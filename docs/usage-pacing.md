@@ -20,7 +20,16 @@ The default policy is deliberately simple and shared across providers:
 - a fresh reading at or below +4 hours releases it;
 - stale or missing quota data never creates a weekly hold, but it also cannot
   clear a hold already established from fresh evidence;
-- a last-known >98% window remains binding until reset;
+- a >98% window becomes a durable hard-limit hold that survives provider
+  outage, partial responses and restarts; it ends at its reset time or when a
+  fresh reading of the same window shows usage at or below 98%;
+- a weekly latch is bound to its quota window's reset identity, so a new
+  weekly window never inherits the previous window's latch;
+- completeness is tracked per expected window (`observed`, `missing`,
+  `invalid`): a missing Codex weekly window or a previously reported Claude
+  scoped window that disappears makes the reading stale, never fresh;
+- unreadable, partially valid or newer-schema safety state is
+  `indeterminate` and blocks work (see "Safety state and failure behaviour");
 - the longest active hold is the binding reason;
 - an override bypasses gating without deleting the latch.
 
@@ -39,6 +48,11 @@ Enable or disable the emergency bypass:
 
     praxis pacing override on
     praxis pacing override off
+
+Recover from unreadable or newer-schema safety state (moves it aside as
+evidence; readable state is never quarantined):
+
+    praxis pacing state quarantine
 
 Live state is local, not repository state. By default it is stored under
 `~/.praxis/usage-pacing`. Set `PRAXIS_PACING_DIR` or pass `--state-dir`
@@ -100,6 +114,38 @@ session/subagent transcript. Codex uses the hook payload model and maps model
 names containing `spark` to the `codex_bengalfox` quota bucket; other models
 use `codex`.
 
-The pacing state machine lives in `Praxis.Domain.Pacing`; provider calls,
-credential access, cache files, locking, hook payload parsing, and terminal
-rendering stay at the CLI boundary.
+## Safety state and failure behaviour
+
+`hold.json` is schema-versioned (`schemaVersion` 2, with a monotonically
+increasing `revision`). Each hold records its basis: `weekly-lead` with the
+window's `resetsAt`, or `hard-limit` with `usedPercent` and `resetsAt`.
+Schema 1 documents (no `schemaVersion`) are migrated on read; their latches
+adopt the next fresh reading's window identity.
+
+A persistence failure never becomes permission to continue:
+
+- corrupt, truncated or partially valid state, and state written by a newer
+  Praxis, are reported as `stateIntegrity: indeterminate`; the gate denies
+  immediately and the document is preserved, not overwritten;
+- lock contention (`PRAXIS-PACING-STATE-LOCK`) and write failures
+  (`PRAXIS-PACING-STATE-WRITE`) are typed faults; the gate renders them as an
+  explicit deny rather than crashing, because agent runtimes treat a crashed
+  hook as a non-blocking error;
+- `praxis pacing status` exits `3` when safety state is indeterminate or
+  cannot be read, and `1` when the provider is unavailable;
+- the only ways past indeterminate state are the explicit override or
+  `praxis pacing state quarantine`.
+
+`snapshot-<provider>.json` is a display and merge cache only. Losing or
+corrupting it cannot release a hold, because hard and weekly holds live in
+`hold.json`.
+
+## Architecture
+
+The pacing state machine is pure and lives in `Praxis.Domain.Pacing`.
+Orchestration, typed ports and the integrity/transaction decisions live in
+`Praxis.Application.Pacing`. Provider calls, credential access, normalization,
+cache and state files, locking and diagnostics live in
+`Praxis.Infrastructure.Pacing`. `PacingCommands.fs` only parses arguments,
+renders hook output and status, and selects exit codes; architecture tests
+enforce that split.

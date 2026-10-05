@@ -10,7 +10,7 @@ open Praxis.Infrastructure.Pacing
 [<RequireQualifiedAccess>]
 module PacingCommands =
     let usage =
-        "pacing status [--provider codex|claude] [--model MODEL] [--json] [--state-dir PATH] | pacing gate [--provider codex|claude] [--model MODEL] [--state-dir PATH] | pacing override {on|off} [--state-dir PATH]"
+        "pacing status [--provider codex|claude] [--model MODEL] [--json] [--state-dir PATH] | pacing gate [--provider codex|claude] [--model MODEL] [--state-dir PATH] | pacing override {on|off} [--state-dir PATH] | pacing state quarantine [--state-dir PATH]"
 
     let private stateDirectory (arguments: string list) : string =
         match arguments |> List.tryFindIndex ((=) "--state-dir") with
@@ -93,10 +93,16 @@ module PacingCommands =
         let model = PacingOperations.resolveModel runtime provider explicitModel payload
         let event = payloadEvent payload
 
+        // A hook that crashes is treated by agent runtimes as a non-blocking
+        // error, i.e. permission to continue. Every non-proceed outcome is
+        // therefore rendered as an explicit deny: the gate fails closed.
         match PacingOperations.gate runtime provider model with
         | PacingGateOutcome.Proceed -> 0
         | PacingGateOutcome.Denied reason ->
             deny provider event reason.Detail
+            0
+        | PacingGateOutcome.Faulted fault ->
+            deny provider event $"pacing safety state is unavailable [{PacingStoreFault.code fault}] {PacingStoreFault.message fault}"
             0
 
     let private runStatus
@@ -106,16 +112,29 @@ module PacingCommands =
         (model: string option)
         (asJson: bool)
         : int =
-        let status = PacingOperations.status runtime directory provider model
+        match PacingOperations.status runtime directory provider model with
+        | Error fault ->
+            eprintfn "ERROR [%s] %s" (PacingStoreFault.code fault) (PacingStoreFault.message fault)
+            3
+        | Ok status ->
+            if asJson then
+                printf "%s" (PacingStatus.renderJson status)
+            else
+                printf "%s" (PacingStatus.renderText status)
 
-        if asJson then
-            printf "%s" (PacingStatus.renderJson status)
-        else
-            printf "%s" (PacingStatus.renderText status)
+            match status.FreshnessState, status.StateIntegrity with
+            | _, Praxis.Domain.Pacing.StateIntegrity.Indeterminate _ -> 3
+            | PacingFreshnessState.Unavailable, _ -> 1
+            | _ -> 0
 
-        match status.FreshnessState with
-        | PacingFreshnessState.Unavailable -> 1
-        | _ -> 0
+    let private reportOverride enabled (result: Result<unit, string>) =
+        match result with
+        | Ok() ->
+            printfn "Pacing override %s" (if enabled then "on" else "off")
+            0
+        | Error message ->
+            eprintfn "ERROR pacing override could not be turned %s: %s" (if enabled then "on" else "off") message
+            6
 
     let run (_root: string) (arguments: string list) : int =
         let directory = stateDirectory arguments
@@ -135,14 +154,22 @@ module PacingCommands =
             runGate runtime provider model
         | [ "override"; "on" ]
         | [ "override"; "on"; "--state-dir"; _ ] ->
-            PacingOperations.setOverride runtime true
-            printfn "Pacing override on"
-            0
+            PacingOperations.setOverride runtime true |> reportOverride true
         | [ "override"; "off" ]
         | [ "override"; "off"; "--state-dir"; _ ] ->
-            PacingOperations.setOverride runtime false
-            printfn "Pacing override off"
-            0
+            PacingOperations.setOverride runtime false |> reportOverride false
+        | [ "state"; "quarantine" ]
+        | [ "state"; "quarantine"; "--state-dir"; _ ] ->
+            match PacingOperations.quarantineState runtime with
+            | Ok(Some path) ->
+                printfn "Pacing state quarantined to %s; pacing restarts from empty state" path
+                0
+            | Ok None ->
+                printfn "No pacing state to quarantine"
+                0
+            | Error message ->
+                eprintfn "ERROR %s" message
+                5
         | _ ->
             eprintfn "ERROR expected %s" usage
             2
