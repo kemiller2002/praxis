@@ -794,7 +794,27 @@ module PlanningJson =
                             repositories
                             |> Seq.map (fun property -> property.Key, readText repositories property.Key)
                             |> Seq.toList
-                            |> List.sortWith (fun (left, _) (right, _) -> String.CompareOrdinal(left, right)) }
+                            |> List.sortWith (fun (left, _) (right, _) -> String.CompareOrdinal(left, right))
+                      CrossRepository =
+                        match optionalObj node "crossRepository" with
+                        | None -> fallback.CrossRepository
+                        | Some cross ->
+                            { MaxObservationAgeMinutes =
+                                readNumber<int> cross "maxObservationAgeMinutes"
+                                |> Option.defaultValue fallback.CrossRepository.MaxObservationAgeMinutes
+                              Sources =
+                                match optionalObj cross "repositories" with
+                                | None -> []
+                                | Some repositories ->
+                                    repositories
+                                    |> Seq.map (fun property ->
+                                        let source = repositories[property.Key] |> asObject $"crossRepository.repositories.{property.Key}"
+
+                                        { Repository = property.Key
+                                          Path = readText source "path"
+                                          Ref = readOptionalText source "ref" })
+                                    |> Seq.toList
+                                    |> List.sortWith (fun left right -> String.CompareOrdinal(left.Repository, right.Repository)) } }
 
             Ok
                 { MaxConcurrency = orDefault (fun () -> readNumber<int> root "maxConcurrency") defaults.MaxConcurrency

@@ -4311,10 +4311,10 @@
         "grouping"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T19:48:35.208Z",
-      "updatedAt": "2026-10-06T20:09:53.000Z",
+      "updatedAt": "2026-10-06T21:49:23.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
