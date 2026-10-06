@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 70,
+  "nextSeq": 72,
   "items": [
     {
       "id": "WI-0001",
@@ -4141,6 +4141,54 @@
         "id": "anthropic/claude-code",
         "provider": "anthropic",
         "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0070",
+      "title": "Derive the seeded .echelon/toolchain.json Praxis pin from the running release instead of a hard-coded 3.4.0",
+      "description": "praxis init/upgrade seed .echelon/toolchain.json from templates/echelon-toolchain.json, which hard-codes praxis 3.4.0 (still at 3.6.0, 3.7.0 and main), so echelon doctor reports ECHELON-DOC-034 and echelon setup installs the wrong Praxis. Template the pin from the release version, reconcile an existing pin on init/upgrade, and guard the template against literal versions.",
+      "tags": [
+        "toolchain",
+        "lifecycle"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T11:04:32.113Z",
+      "updatedAt": "2026-10-06T11:17:34.000Z",
+      "createdBy": "anthropic/claude-code",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0071",
+      "title": "Step commands record the caller's discovered identity instead of the owning execution's, so validate rejects the step",
+      "description": "Reproduced 2026-10-06 on WI-0070: 'work start' with --agent/--model flags, then 'step begin' without them, recorded the step with identity.agentId and model null (environment discovery) while the execution carried the declared values. FileStepRepository writes request.Identity/request.Actor after ownership passes via evidentlySameRun; docs/development-telemetry.md says each step snapshots the execution actor. Validate then fails with 'step ... identity.model does not match its execution', and no command can repair the recorded step. Fix: snapshot the owning execution's actor and identity.",
+      "tags": [
+        "telemetry",
+        "provenance"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T11:04:40.586Z",
+      "updatedAt": "2026-10-06T11:04:40.586Z",
+      "createdBy": "anthropic/claude-code",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
         "runtime": "claude-code"
       },
       "source": "manual",

@@ -94,4 +94,13 @@ module PremergeReleaseTests =
                   let released = release["version"].GetValue<string>()
                   let pinned = toolchain["praxis"].GetValue<string>()
 
-                  Assert.equal released pinned } ]
+                  Assert.equal released pinned }
+
+          { Name = "fence release: the one-click version bump moves the self-hosting toolchain pin with release.json"
+            Run =
+              fun () ->
+                  // Otherwise the bump commits a release.json the pin no longer
+                  // matches and the dispatched native release fails the check above.
+                  let bump = readRepositoryFile "scripts/praxis-release-bump.sh"
+                  contains "\".echelon/toolchain.json\"" bump "version bump rewrites the pin"
+                  contains "git add release.json .echelon/toolchain.json .ros" bump "version bump commits the pin" } ]
