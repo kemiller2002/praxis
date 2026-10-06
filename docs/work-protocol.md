@@ -624,13 +624,12 @@ worked, example-heavy walkthrough of every command, see
 
 Tests and manual smoke tests of mutating commands (`add`, `work begin`,
 `work block`, ...) run against a scratch root (`praxis init` in a temporary
-directory, or `--root DIR`), never against the repository whose `.ros/` state
-is canonical. Fixture items committed to canonical state become live work for
-everyone: `WI-READY` and `WI-ACTIVE`, replayed from a differential test's
-fixture commands in this repository and committed with its state, were
-reported as active and blocked work by the planner for weeks until they were
-abandoned (`PRAXIS-HYG-01`). In this repository, CI fails when the F# test
-suite changes a tracked file or leaves an untracked one.
+directory, or `--root DIR`), never against a repository whose `.ros/` state
+is canonical: fixture items committed there become live work that the
+planner and `status` report to everyone. A CI step that fails when the test
+suite changes the checkout (`git status --porcelain --untracked-files=all`
+is not empty after the tests) catches a test that writes into the
+repository.
 
 ## Adapter contract
 
