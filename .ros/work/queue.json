@@ -4018,10 +4018,10 @@
         "control-plane"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-01T10:44:19.000Z",
-      "updatedAt": "2026-10-01T10:44:19.000Z",
+      "updatedAt": "2026-10-06T15:42:51.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

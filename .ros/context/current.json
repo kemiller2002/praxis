@@ -5983,18 +5983,48 @@
     {
       "id": "PRAXIS-CTL-05",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-06T15:00:14.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/ControlPlaneSource.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ControlPlaneHostTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-06T15:42:51.000Z",
       "telemetryExecutionIds": [
         "EXE-20261006T150015134Z-2064a420"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "c29e6339c6a06d57c84a45ea",
+        "recordedAt": "2026-10-06T15:42:49.000Z",
+        "executionId": "EXE-20261006T150015134Z-2064a420",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a022-run-98e1",
+        "commit": "2d099f3ef650c8e57ba79660d3001e036713d373",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a022-run-98e1",
+        "remoteCommit": "2d099f3ef650c8e57ba79660d3001e036713d373",
+        "summary": "Stateless web and hub hosts with source identity headers, praxis state identity, hub registry through the CLI, host source check, restart and live-change tests, docs; all five criteria verified met",
+        "nextAction": "Complete PRAXIS-CTL-05",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-06T15:42:51.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-06T15:00:14.000Z",
+  "updatedAt": "2026-10-06T15:42:51.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
