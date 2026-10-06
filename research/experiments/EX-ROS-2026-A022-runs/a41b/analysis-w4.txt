@@ -196,3 +196,26 @@ store and passes a good one.
   key, ordering).
 - Provenance (actor) of a measurement is not recorded in the entry; the
   repository commit and Git history attribute it. Noted as a limitation.
+
+8. Verification pass (before completion)
+----------------------------------------
+
+Implementation commit: 7dfeacc (checkpoint state aedb733). Build:
+`dotnet build Ros.slnx --configuration Release --no-restore` -> 0 warnings,
+0 errors. Full F# suite: `dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll`
+-> "1345 test(s); 1345 passed; 0 failed". Planning subset (PRAXIS_TEST_FILTER=planning)
+after the final rebuild -> "75 test(s); 75 passed; 0 failed". Python oracle:
+`python3 -m unittest discover -s tests` -> "Ran 12 tests ... OK".
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| 1. Explicit opt-in command records a replay's error summary durably; other plan commands stay read-only; keyed by planner version, commit, as-of; idempotent | met | `plan record-error` (src/Ros.Cli/PlanCommands.fs, "record-error" case) -> ErrorHistory.measure/record -> FileErrorHistoryRepository.transact. Test "planning cli: record-error persists estimate error once and writes nothing else": first run `recorded`, only `.ros/planning/error-history.json` added (whole-tree fingerprint diff), second identical run `unchanged` with byte-identical store, `--dry-run` -> `would-record`, store unchanged. Test "planning cli: 30 no plan command mutates repository state" (now also covering `error-history` and `record-error --dry-run`) passes. Domain test "recording is idempotent and never overwrites a different measurement": same key + different content -> Error. Scratch clone of this repository: two runs at `--as-of 2026-10-06T00:00:00Z` -> `recorded` then `unchanged`, store sha256 0a773a0c... both times; `git status` shows only `.ros/planning/`. Key = (plannerVersion, commit, asOf): ErrorHistory.key. |
+| 2. Read view of error over time, segmented by task class and, where recorded, provider/model/runtime; no hard-coded provider claims | met | `plan error-history` -> ErrorHistory.view; series `overall`, `task-class`, `provider`, `runtime`, `model`. Domain test "segments by task class and recorded provider, runtime and model only" (unknown provider/runtime and absent model produce no segment; class totals equal overall). CLI test "error-history reports error over time with stale measurements marked": series contain overall=all, task-class=development, provider=provider-a, runtime=runtime-a, and no model (none recorded). `grep -n "provider-" src/Ros.Domain/Planning/ErrorHistory.fs` -> no provider name in code; the statement says segments are measurements only. |
+| 3. Measurements older than a configured horizon reported stale and not authoritative | met | `errorHistory.horizonDays` (default 90) in PlannerConfiguration / parseConfiguration; domain test "measurements beyond the horizon are stale and never authoritative" (stale flags [true; false], authoritative = newest fresh, all-stale -> no authoritative and no series `latest`); domain test "the horizon is configured" (30 parsed; 0 and 1.5 refused); CLI test with `--config` horizonDays 30: stale [true; false], authoritative as-of 2026-09-02, later as-of -> authoritative null. Scratch clone: as of 2027-02-01 -> "All 1 measurement(s) are older than the 90-day horizon; none is authoritative". |
+| 4. Deterministic output (PRX-PLAN-002) | met | No clock below the CLI (`--as-of` pins both commands); canonical store order; fixed JSON field order. Domain test "rendering is deterministic and round-trips" (store and view render byte-identically twice; store round-trips through readErrorHistoryStore); CLI test compares two `error-history --json` runs byte for byte; record idempotence shows identical store bytes. |
+| 5. `praxis validate` checks the stored history | met | Program.computeUnifiedFindings includes PlanCommands.errorHistoryFindings (ErrorHistory.findings + per-entry parse errors + schemaVersion). CLI test "validate checks the stored error history": clean store -> no findings; corrupted withinRange -> finding, and `praxis validate` output names error-history.json; schemaVersion 2 -> finding. Domain test "findings catch inconsistent stored measurements" (withinRange, as-of format, duplicate key, order). `./praxis validate` on this repository and on the scratch clone with a recorded store -> "validation passed with 2 warning(s)" (both warnings pre-existing provenance warnings on EV-ROS-2026-A063/A067, unrelated). |
+| 6. Tests and the docs/planning.md status row updated | met | 7 domain tests in tests/Ros.Tests/PlanningTests.fs, 3 new CLI tests plus test 30 extended in tests/Ros.Tests/PlanningCliTests.fs; docs/planning.md row 170-173 now "Met ... (`PRAXIS-PLAN-ERROR-HISTORY`)", row 001-004 names the one opt-in writer, plus the "Estimate error over time" section, commands, configuration and JSON kinds; docs/cli.md updated. |
+
+Deviations from the design: none material. The `--dry-run` flag is accepted
+(and ignored) by the other plan subcommands, like `--groups`. Measurement
+provenance (actor) is not stored in the entry, as noted under risks.

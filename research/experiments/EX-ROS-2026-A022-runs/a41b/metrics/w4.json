@@ -1,0 +1,55 @@
+{
+  "schema": "ex-ros-2026-a021.session-metrics/1",
+  "label": "w4",
+  "sessionId": "d02ac6c3-30b5-5292-8bd2-a00021d6300d",
+  "transcript": "d02ac6c3-30b5-5292-8bd2-a00021d6300d.jsonl",
+  "models": [
+    "claude-opus-5-5"
+  ],
+  "startedAt": "2026-10-06T16:22:48.415000+00:00",
+  "endedAt": "2026-10-06T16:56:24.101000+00:00",
+  "wallMs": 2015686,
+  "msToFirstCodeMutation": 709470,
+  "modelRequests": 91,
+  "tokens": {
+    "input": 186,
+    "output": 60963,
+    "cacheRead": 14091585,
+    "cacheCreation": 184980
+  },
+  "costUsd": null,
+  "toolCalls": {
+    "Bash": 87,
+    "Edit": 2,
+    "ReadNotifications": 2,
+    "Write": 3,
+    "mcp__claude-code-remote__get_session": 1
+  },
+  "toolErrors": 0,
+  "fileReads": 44,
+  "distinctFilesRead": 24,
+  "repeatedReads": {
+    "/tmp/claude-0/build.log": 2,
+    "/tmp/claude-0/restore.log": 2,
+    "/tmp/claude-0/tests.log": 2,
+    "AGENTS.md": 2,
+    "docs/planning.md": 5,
+    "requirements/PLANNING-OPTIMIZATION.md": 2,
+    "src/Ros.Cli/PlanCommands.fs": 3,
+    "src/Ros.Contracts/Planning/PlanningJson.fs": 5,
+    "tests/Ros.Tests/PlanningCliTests.fs": 3,
+    "tests/Ros.Tests/PlanningTests.fs": 4
+  },
+  "governanceReads": {
+    "AGENTS.md": 2,
+    "docs/cli.md": 1,
+    "docs/planning.md": 5
+  },
+  "searches": 55,
+  "fileWrites": 23,
+  "distinctFilesEdited": 3,
+  "builds": 10,
+  "testRuns": 5,
+  "compactions": 0,
+  "notes": "reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate"
+}
