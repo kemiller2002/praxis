@@ -5,3 +5,4 @@
 2026-10-02T15:40:47Z  M: a second independent worker finished; next worker starting
 2026-10-02T15:41:56Z  G: a second stale-checkout guard failure was repaired and re-verified before any work
 2026-10-02T15:45:31Z  M: one grouped condition finished
+2026-10-06T14:08:10Z  Platform usage-limit pause 2026-10-02..06 recorded; interrupted sessions resumed in place; next independent worker starting
