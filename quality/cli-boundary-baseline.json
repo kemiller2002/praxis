@@ -109,8 +109,12 @@
       "effects": 8
     },
     "WorkGroupCommands.fs": {
-      "lines": 634,
-      "effects": 3
+      "lines": 597,
+      "effects": 0
+    },
+    "WorkGroupListCommands.fs": {
+      "lines": 81,
+      "effects": 0
     }
   },
   "exceptions": []

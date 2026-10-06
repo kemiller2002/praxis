@@ -62,6 +62,7 @@
     <Compile Include="Identity/FileInstanceProjection.fs" />
     <Compile Include="Work/FileWorkGroupRepository.fs" />
     <Compile Include="Planning/FilePlanningRepository.fs" />
+    <Compile Include="Planning/FileWorkGroupFacts.fs" />
     <Compile Include="Foundations/LimenManifestReader.fs" />
   </ItemGroup>
 

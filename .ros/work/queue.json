@@ -4288,10 +4288,10 @@
         "grouping"
       ],
       "priority": "high",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T19:48:34.872Z",
-      "updatedAt": "2026-10-06T19:48:34.872Z",
+      "updatedAt": "2026-10-06T20:44:18.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4311,10 +4311,10 @@
         "grouping"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-10-06T19:48:35.208Z",
-      "updatedAt": "2026-10-06T19:48:35.208Z",
+      "updatedAt": "2026-10-06T20:09:53.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4334,10 +4334,10 @@
         "grouping"
       ],
       "priority": "high",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-10-06T19:48:35.533Z",
-      "updatedAt": "2026-10-06T19:48:35.533Z",
+      "updatedAt": "2026-10-06T20:09:54.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4357,10 +4357,10 @@
         "grouping"
       ],
       "priority": "high",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-10-06T19:48:35.870Z",
-      "updatedAt": "2026-10-06T19:48:35.870Z",
+      "updatedAt": "2026-10-06T20:09:54.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4380,10 +4380,10 @@
         "grouping"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-10-06T19:48:36.196Z",
-      "updatedAt": "2026-10-06T19:48:36.196Z",
+      "updatedAt": "2026-10-06T20:09:54.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4407,6 +4407,154 @@
       "attachments": [],
       "createdAt": "2026-10-06T19:48:36.530Z",
       "updatedAt": "2026-10-06T19:48:36.530Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-FND-01",
+      "title": "ORDO-CORE-PACKAGE: consume Ordo.Core as a pinned released package for execution roles, capabilities, mutation-boundary and evaluator semantics (PRX-EXEC-002, PRX-ARCH-001)",
+      "description": "Gap (audit 2026-10-06, rank 7): src/Praxis.Domain/Execution/Governance.fs re-implements Ordo's execution-governance semantics (RoleAuthority.defaultFor, mutation-boundary classification, evaluator fingerprint) and names a backlog item ORDO-CORE-PACKAGE that never existed. Covers PRX-EXEC-002 and PRX-ARCH-001. Prerequisite outside this repository: Ordo publishes Ordo.Core as an immutable release artifact (EchelonFoundry.Ordo.Core nupkg on the Ordo GitHub release, checksummed) through its own PR and workflow_dispatch release. Acceptance criteria: 1. Ordo releases a version whose GitHub release carries the Ordo.Core package with a published sha256. 2. Praxis references that exact version, restored from an immutable, checksum-verified artifact (no floating version, no copied source). 3. Role capability sets come from Ordo.Core (RoleAuthority.defaultFor delegates to Ordo), and no role-to-capability table remains in Praxis. 4. Mutation-boundary classification and evaluator fingerprinting delegate to Ordo.Core. 5. A test fails if the Praxis capability vocabulary and Ordo's diverge, and a test fails if the vendored package does not match its pinned sha256. 6. .echelon/foundations.json and praxis foundations verify evidence the Ordo.Core package pin. 7. Governance.fs header and docs/execution-runtime.md updated; requirement status recorded.",
+      "tags": [
+        "ordo",
+        "group:GROUP-FND-ORDO"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:38:09.000Z",
+      "updatedAt": "2026-10-06T20:39:26.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-FND-02",
+      "title": "Accept the mutation boundary and evaluator closure from the governing Ordo execution contract (PRX-BND-001, PRX-SEQ-003, PRX-VER-010)",
+      "description": "Gap: execution start takes the boundary from --scope/--allow and the evaluator from --evaluator CLI flags, not from an Ordo execution contract. Covers PRX-BND-001, PRX-SEQ-003, PRX-VER-010. Depends on PRAXIS-FND-01 (the contract parser is Ordo's). Acceptance criteria: 1. praxis execution start accepts --contract FILE, an ordo.execution-contract/1 document parsed and validated by Ordo.Core, that supplies the role, the semantic mutation boundary (scopes, projections, evaluator references) and the evaluator closure. 2. The envelope records the contract's source path and sha256 so the boundary and evaluator are traceable to the authority that supplied them. 3. Flags that would contradict a supplied contract are refused (exit 2) rather than merged. 4. Without --contract the flags are assembled into the same Ordo contract shape and validated by Ordo, and the envelope records that the operator supplied it. 5. Tests cover contract acceptance, digest recording, invalid contract refusal and flag conflict. 6. docs/execution-runtime.md and requirement status updated.",
+      "tags": [
+        "ordo",
+        "execution",
+        "group:GROUP-FND-ORDO"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:38:10.000Z",
+      "updatedAt": "2026-10-06T20:39:26.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-FND-03",
+      "title": "Declare Praxis's own shared foundations and make foundations verify evidence them (SAF-DEP-1, SAF-DEP-2)",
+      "description": "Gap: Praxis has no .echelon/foundations.json, so praxis foundations verify cannot evidence its own Aegis, Forma or Ordo use, and the verifier recognises Forma only through package.json (Praxis owns no npm). Covers SAF-DEP-1, SAF-DEP-2. Acceptance criteria: 1. .echelon/foundations.json declares aegis, forma and ordo with their pinned versions, limen and folio as not applicable with the reason recorded in docs/application-foundations.md. 2. aegis-boundaries.json declares every Praxis Aegis boundary code. 3. The verifier accepts a checksum-pinned Forma release-tarball lock and an EchelonFoundry.Ordo.Core PackageReference as pins. 4. A test runs foundations verify against this repository and fails on any finding (systemic guard). 5. requirements status recorded.",
+      "tags": [
+        "foundations",
+        "group:GROUP-FND-FOUNDATIONS"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:38:10.000Z",
+      "updatedAt": "2026-10-06T20:39:27.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-FND-04",
+      "title": "Classify operational failures with Aegis at Praxis's Git, process, filesystem, network and web boundaries, with redaction and sink tests (SAF-AEGIS-1, SAF-AEGIS-5, SAF-AEGIS-6)",
+      "description": "Gap: Aegis is used only as one top-level capture with PRAXIS.CLI.UNHANDLED and an empty scope context (src/Praxis.Cli/Program.fs). Covers SAF-AEGIS-1, 5, 6. Acceptance criteria: 1. One Praxis Aegis boundary module classifies an escaped failure into stable codes per boundary (git, process, filesystem, network, state, web request, unexpected), declared in aegis-boundaries.json and asserted equal by test. 2. The web and hub request handlers capture per request with Aegis and answer 500 with a safe message and reference rather than dropping the connection. 3. Redaction rules extend Aegis defaults for repository URLs, work content, prompts, descriptions and attachment names; a test proves a secret, a token and work content never reach a sink. 4. Tests drive the boundary with a replaceable collector sink: success and refusals record nothing; each boundary code is recorded; programming defects and cancellation are not disguised. 5. Expected outcomes stay typed exit codes (SAF-AEGIS-2 unchanged). 6. Aegis package pin remains a released version.",
+      "tags": [
+        "foundations",
+        "aegis",
+        "group:GROUP-FND-FOUNDATIONS"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:38:11.000Z",
+      "updatedAt": "2026-10-06T20:39:27.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-FND-05",
+      "title": "Present praxis web serve and hub serve with a pinned Forma release instead of local CSS (SAF-FORMA-1, 2, 5, 6; PRX-UI-030, PRX-UI-031)",
+      "description": "Gap: web/styles.css and web-hub/styles.css are Praxis-local presentation; no Forma release is consumed. Covers SAF-FORMA-1, SAF-FORMA-2, SAF-FORMA-5, SAF-FORMA-6, PRX-UI-030 and the PRX-UI-031 Limen decision. Acceptance criteria: 1. A forma lock pins the immutable Forma release tarball by version, URL and sha256; the tarball is the unmodified release artifact and a test fails if its digest differs. 2. Web and hub serve Forma's dist/all.css from that tarball at a versioned path, and pages link it; local web/styles.css and web-hub/styles.css are removed (no Praxis-local equivalents of Forma presentation). 3. Markup uses Forma classes and patterns (skip link, navigation shell, data/work tables, fields, buttons, status lozenges, alert/fault banners) with native HTML semantics kept. 4. Operational faults and errors render with Forma fault/alert presentation. 5. Tests assert the pinned stylesheet is served, every page links it, no local stylesheet route remains, and key Forma classes are present. 6. PRX-UI-031: record that the script-free server-rendered architecture has no browser runtime for Limen and declare limen not applicable with that reason. 7. docs/web-interface.md and requirement status updated.",
+      "tags": [
+        "foundations",
+        "forma",
+        "web",
+        "group:GROUP-FND-FOUNDATIONS"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:38:11.000Z",
+      "updatedAt": "2026-10-06T20:39:27.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-FND-06",
+      "title": "Ingest Tutela security assessments and query security metrics over time with repository, ref and time provenance (TUT-1, TUT-2, TUT-3)",
+      "description": "Gap: Praxis.Domain.Telemetry.Tutela/TutelaTrend are domain-only; nothing ingests or queries them; resolved unknown effects, evidence age and staleness, time-to-expiry, hotspots, boundary/capability changes, remediation lead time and transitions are missing; snapshots have no ref. Covers TUT-1, TUT-2, TUT-3 (TUT-4/5 preserved). Acceptance criteria: 1. praxis tutela ingest --input FILE accepts a Tutela security assessment (schemaVersion 1) and stores an append-only snapshot with repository, ref (the assessment's subject ref, resolved to a commit when it is one), collectedAt and source digest. 2. praxis tutela metrics [--json] projects every listed metric per snapshot and over time: invariant state counts and transitions, unknown effects created and resolved, evidence age and stale evidence, exceptions created/expired and time-to-expiry, recurring/reopened findings, security-sensitive churn and hotspots between snapshot refs, boundary/capability changes, remediation lead time, independent-verification coverage. 3. No single score is produced; output says the metrics are decision support, not certification. 4. A measurement that cannot be derived is reported as unknown, never zero. 5. Tests cover ingest, provenance, each derived metric and missing-as-unknown. 6. docs and requirement status updated.",
+      "tags": [
+        "tutela",
+        "telemetry"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:38:11.000Z",
+      "updatedAt": "2026-10-06T20:39:28.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
