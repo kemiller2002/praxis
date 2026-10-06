@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "groups": [
+    {
+      "id": "GROUP-PRAXIS-EXEC-001",
+      "members": [
+        "PRAXIS-EXEC-02",
+        "PRAXIS-EXEC-04",
+        "PRAXIS-EXEC-03",
+        "PRAXIS-EXEC-01",
+        "PRAXIS-EXEC-05",
+        "PRAXIS-EXEC-06",
+        "PRAXIS-EXEC-07"
+      ],
+      "kind": "shared-architecture",
+      "origin": "human-declared",
+      "sharedContext": [
+        "praxis execution runtime: Governance.fs domain, ExecutionStore, ExecutionCommands, web serve"
+      ],
+      "executionRepository": "repository-operating-system",
+      "crossRepository": false,
+      "architectureNotes": [
+        "one Application-tier execution service consumed by CLI, work-transition binding and the web control plane; legality only from LegalActions"
+      ],
+      "createdAt": "2026-10-06T20:36:34.000Z",
+      "createdBy": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "history": [
+        {
+          "operation": "created",
+          "member": null,
+          "at": "2026-10-06T20:36:34.000Z",
+          "actor": {
+            "kind": "agent",
+            "id": "anthropic/claude-code",
+            "provider": "anthropic",
+            "model": "unknown",
+            "runtime": "claude-code"
+          },
+          "reason": "audit 2026-10-06 gaps 4, 5 and 13 share the execution envelope, legal-action computation and store"
+        }
+      ],
+      "checkpoints": []
+    }
+  ]
+}

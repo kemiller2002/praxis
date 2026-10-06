@@ -4417,6 +4417,198 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-EXEC-01",
+      "title": "Bind an execution envelope to every governed work execution (PRX-EXEC-030, 014, 055, 026, 053, 041)",
+      "description": "Requirements: PRX-EXEC-030, PRX-EXEC-014, PRX-EXEC-055, PRX-EXEC-026, PRX-EXEC-053, PRX-EXEC-041 (requirements/EXECUTION-ORCHESTRATION.md); audit gap 4. Acceptance criteria: (1) work begin/start (also when run by remote execute, and when run in-process by plan execute-group, PRAXIS-GROUP-09) persists .ros/executions/<id>/envelope.json for each begun item, sharing the telemetry execution ID when telemetry is enabled, recording actor, role (default implementation, --role ROLE), baseline HEAD, the current checkout and branch as workspace, and a containment profile; it never creates a branch or worktree. (2) work block/resume/complete/abandon mirror the envelope state with an append-only transition record; complete records the candidate HEAD and the commits baseline..candidate. (3) work resume re-verifies the bound workspace (recorded branch, baseline ancestor of HEAD, recorded candidate ancestor of HEAD) and refuses with exit 3 and no state change on divergence unless --rebind-reason TEXT, which records a rebind event. (4) work complete refuses with exit 3 and no state change while a bound envelope has a mismatched or unknown-effect step receipt or a failed or stale verification. (5) work continue marks the predecessor envelope interrupted and binds the successor with parentExecution. (6) runtime-free fallback reconciliation of work.begin binds an envelope with origin fallback. (7) .ros/executions/** is always-ignored Praxis bookkeeping for attribution. (8) Tests cover each criterion.",
+      "tags": [
+        "execution",
+        "binding"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:36:22.000Z",
+      "updatedAt": "2026-10-06T20:36:31.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-EXEC-02",
+      "title": "Governed evaluation runner and attributed receipts (PRX-VER-001, 002, PRX-EXEC-024, PRX-REC-007)",
+      "description": "Requirements: PRX-VER-001, PRX-VER-002, PRX-EXEC-024, PRX-REC-007; audit doc discrepancy 'every mutation checks legal actions'. Acceptance criteria: (1) execution start accepts --evaluator-command CMD; execution evaluate runs only the declared command (a different --command is refused, exit 3) and only when the legal action execution.evaluate is available (role holds evaluator.invoke, execution not terminal, evaluator declared). (2) The verification record holds actor id and kind, command identity, candidate commit, evaluator fingerprint, exit code or unknown outcome, and produced evidence references (--evidence PATH). (3) A verification recorded for a different candidate than the workspace HEAD blocks execution.complete as stale. (4) Every step ledger entry Praxis appends carries an attribution (actor/observer id and kind, role, evaluator fingerprint, workspace revision). (5) Every praxis execution mutation is gated by LegalActions; tests cover refusal paths.",
+      "tags": [
+        "execution",
+        "evaluation"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:36:23.000Z",
+      "updatedAt": "2026-10-06T20:36:32.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-EXEC-03",
+      "title": "Role-specific launchers and repository execution policy (PRX-EXEC-005, 040, 041, 042, 010)",
+      "description": "Requirements: PRX-EXEC-005, PRX-EXEC-040, PRX-EXEC-041, PRX-EXEC-042, PRX-EXEC-010, PRX-UI-025. Acceptance criteria: (1) ros.json execution.launchers maps roles (optionally a transition) to a configured launcher command; Praxis never selects a provider itself. (2) praxis execution launch EXE-ID [--dry-run] requires the legal action execution.launch, runs the configured launcher for the envelope's role in the workspace with PRAXIS_EXECUTION_ID, PRAXIS_EXECUTION_ROLE, PRAXIS_EXECUTION_ENVELOPE, PRAXIS_WORK_ITEM and the effective capabilities in its environment, and records launcher id, command, exit code and actor. (3) execution start --launch accepts the start first, then launches (UI-025). (4) Separate roles are launchable independently with distinct execution identities; a verification launcher receives only the verification capability set. (5) ros.json execution.worktree (required for listed roles) makes execution start create the worktree automatically. (6) Tests cover each criterion including no-launcher-configured refusal.",
+      "tags": [
+        "execution",
+        "launchers"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:36:23.000Z",
+      "updatedAt": "2026-10-06T20:36:32.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-EXEC-04",
+      "title": "Host containment profile and enforcement evidence (PRX-SEC-001, 003, 010, 011, 013, 014)",
+      "description": "Requirements: PRX-SEC-001, PRX-SEC-003, PRX-SEC-010, PRX-SEC-011, PRX-SEC-013, PRX-SEC-014, PRX-SEC-012 kept. Acceptance criteria: (1) Every envelope carries a containment profile listing filesystem, process, network, credential and environment restrictions, each enforced, unavailable, unrestricted or unknown, with mechanism and evidence; anything the host did not report stays unknown and nothing is inferred from a worktree, branch, directory, prompt or provider permission mode. (2) A host or launcher supplies evidence as praxis.containment-evidence/1 via --containment-evidence FILE or PRAXIS_CONTAINMENT_EVIDENCE; Praxis records its source as host-reported. (3) Containment is host-enforced only when at least one restriction is enforced with evidence; otherwise semantic-only or unknown. (4) Repository policy execution.containment.<role>.require lists restrictions that must be enforced; start and launch refuse (exit 3) when the evidence does not show them. (5) praxis execution containment EXE-ID --json emits the profile in a stable schema documented for Tutela. (6) Tests cover each criterion.",
+      "tags": [
+        "execution",
+        "containment"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:36:23.000Z",
+      "updatedAt": "2026-10-06T20:36:32.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-EXEC-05",
+      "title": "Local control-plane execution API in web serve (PRX-CTL-001, 003, 005, 006, 011, 012, PRX-UI-008)",
+      "description": "Requirements: PRX-CTL-001, PRX-CTL-003, PRX-CTL-005, PRX-CTL-006, PRX-CTL-011, PRX-CTL-012, PRX-UI-008, PRX-UI-009. Acceptance criteria: (1) GET /api/executions[?workItem=ID] and GET /api/executions/ID return the CLI's own execution JSON (envelope, actor, role, steps with receipt status, scope effects, verification, containment, legalActions with reasons and actorRequirement). (2) POST /api/executions/ID/transitions runs the CLI's own execution transition and returns a structured refusal on an illegal one with state unchanged. (3) GET /api/control-plane declares the bind host, port and whether it is loopback-only. (4) Provider/model/runtime appear only as execution-host attributes of the actor. (5) The host keeps no state and adds no rule: every route shells out to the CLI. (6) Tests cover each route.",
+      "tags": [
+        "execution",
+        "control-plane"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:36:24.000Z",
+      "updatedAt": "2026-10-06T20:36:33.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-EXEC-06",
+      "title": "Operator UI execution views with legal actions and human-required boundaries (PRX-UI-001, 004, 007, 020, 021, 026)",
+      "description": "Requirements: PRX-UI-001, PRX-UI-004, PRX-UI-007, PRX-UI-020, PRX-UI-021, PRX-UI-026, PRX-UI-027. Acceptance criteria: (1) The work detail page lists the item's executions with state, role, actor, evaluator and containment. (2) An execution page shows steps with receipt status (match, mismatch, indeterminate, reconciled), unresolved scope effects as obligations, unknown effects, blocked state and verification, each labelled distinctly rather than as a generic failure. (3) Legal actions render with availability, the engine's reasons when unavailable, and a visible human-required marker in text, not color alone. (4) A human-required transition is offered only through a form that records the operator as a human actor with normal provenance; agent/any transitions are separate. (5) The UI computes no legality and has no script. (6) Tests cover each criterion.",
+      "tags": [
+        "execution",
+        "operator-ui"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:36:24.000Z",
+      "updatedAt": "2026-10-06T20:36:33.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-EXEC-07",
+      "title": "Execution runtime docs and requirement status per row (EXECUTION-ORCHESTRATION status, docs/execution-runtime.md)",
+      "description": "Fix audit documentation discrepancies: docs/execution-runtime.md 'Not yet implemented' points at completed EXEC-INSTALL-109 and claims every mutation checks legal actions; requirements/EXECUTION-ORCHESTRATION.md says Status: Proposed. Acceptance criteria: (1) requirements/EXECUTION-ORCHESTRATION.md carries an accurate status per requirement row (implemented, partial, not implemented, with the work item that covers each gap). (2) docs/execution-runtime.md documents work-transition binding, evaluation runner, launchers, containment evidence, the control-plane API and operator UI, and names open work items for what remains. (3) Untested implemented rows (PRX-EXEC-033, 043, 044, 045, 054) gain tests. (4) A test fails when the requirement status table omits an EXECUTION-ORCHESTRATION requirement ID.",
+      "tags": [
+        "execution",
+        "docs"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:36:24.000Z",
+      "updatedAt": "2026-10-06T20:36:33.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-EXEC-08",
+      "title": "Consume the Ordo execution contract instead of a local copy of role, boundary and evaluator semantics (PRX-EXEC-002, PRX-ARCH-001, PRX-VER-010, PRX-BND-001, PRX-SEQ-003)",
+      "description": "Gap 7 of the 2026-10-06 audit: src/Praxis.Domain/Execution/Governance.fs copies Ordo's RoleAuthority.defaultFor and evaluator algorithm and refers to a backlog item ORDO-CORE-PACKAGE that does not exist. Acceptance criteria: (1) Praxis takes role capability sets, mutation boundaries and evaluator closure from the governing Ordo execution contract (package or ordo.execution/1 document) rather than CLI flags and a hard-coded matrix. (2) The conformance vectors stay byte-identical. (3) Requirement status rows updated. Depends on Ordo publishing Ordo.Core or an execution-contract document.",
+      "tags": [
+        "execution",
+        "ordo"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:36:25.000Z",
+      "updatedAt": "2026-10-06T20:36:25.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
