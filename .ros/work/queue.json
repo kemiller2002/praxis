@@ -3972,10 +3972,10 @@
         "control-plane"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-01T10:44:17.000Z",
-      "updatedAt": "2026-10-01T10:44:18.000Z",
+      "updatedAt": "2026-10-06T09:52:20.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
