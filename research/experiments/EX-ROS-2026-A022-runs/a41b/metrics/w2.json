@@ -1,0 +1,58 @@
+{
+  "schema": "ex-ros-2026-a021.session-metrics/1",
+  "label": "w2",
+  "sessionId": "e4417186-ccd2-5eb4-8d51-799238ececd0",
+  "transcript": "e4417186-ccd2-5eb4-8d51-799238ececd0.jsonl",
+  "models": [
+    "<synthetic>",
+    "claude-opus-5-5"
+  ],
+  "startedAt": "2026-10-02T15:32:57.922000+00:00",
+  "endedAt": "2026-10-06T14:22:12.304000+00:00",
+  "wallMs": 341354382,
+  "msToFirstCodeMutation": 478630,
+  "modelRequests": 71,
+  "tokens": {
+    "input": 142,
+    "output": 36212,
+    "cacheRead": 8577525,
+    "cacheCreation": 256814
+  },
+  "costUsd": {
+    "value": 3.0870132000000003,
+    "source": "runtime cost-state (estimate; last record)"
+  },
+  "toolCalls": {
+    "Bash": 41,
+    "Edit": 9,
+    "Monitor": 1,
+    "Read": 9,
+    "ReadNotifications": 3,
+    "ToolSearch": 1,
+    "Write": 1,
+    "mcp__claude-code-remote__get_session": 1,
+    "mcp__claude-code-remote__send_message": 2
+  },
+  "toolErrors": 0,
+  "fileReads": 27,
+  "distinctFilesRead": 17,
+  "repeatedReads": {
+    "/tmp/build.log": 2,
+    "/tmp/restore.log": 2,
+    "docs/work-protocol.md": 3,
+    "research/decisions/DF-ROS-2026-A040--post-hoc-attribution-reconciliation.md": 3,
+    "src/Ros.Infrastructure/Git/GitRepository.fs": 4,
+    "tests/Ros.Tests/Program.fs": 2
+  },
+  "governanceReads": {
+    "AGENTS.md": 1,
+    "docs/work-protocol.md": 3
+  },
+  "searches": 26,
+  "fileWrites": 12,
+  "distinctFilesEdited": 4,
+  "builds": 6,
+  "testRuns": 4,
+  "compactions": 0,
+  "notes": "reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate"
+}
