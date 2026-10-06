@@ -161,3 +161,19 @@ Treat its V1 release gate as the first merge/use milestone. Reuse WI-0064 and th
 Dynamic affinity, automatic replanning, sophisticated budget optimization, causal-learning automation, task-scale normalization and automatic policy rollback are follow-on work unless a correctness dependency is discovered.
 
 Do not optimize the implementation for minimum first-pass cost. The operational success measures are cost-to-accepted-state, time-to-accepted-state and accepted quality.
+
+
+## V1 rollout sequence (finalized)
+
+Requirements are now implementation-ready. Do not continue expanding scope unless implementation exposes a correctness, safety, or governance gap.
+
+After the V1 release gate:
+1. run recommendation-only/shadow mode and preserve decision receipts;
+2. verify that recommendations and operator choices are being recorded correctly;
+3. enable conservative automatic grouping only for clearly high-affinity/high-confidence cohorts within the configured automatic cohort-size ceiling;
+4. retain the global kill switch and recommendation-only circuit breaker;
+5. never silently change topology after selection: use a governed replan/override;
+6. dogfood suitable remaining Praxis work;
+7. evaluate outcomes using cost-to-accepted-state, time-to-accepted-state, accepted quality, repair/rework, and integration evidence.
+
+A shadow recommendation is not a counterfactual outcome. Do not invent savings or quality for an execution topology that did not run.
