@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "groups": [
+    {
+      "id": "GROUP-PRAXIS-COMPLETION-001",
+      "members": [
+        "PRAXIS-QUAL-07",
+        "PRAXIS-QUAL-08",
+        "PRAXIS-QUAL-09",
+        "PRAXIS-QUAL-10"
+      ],
+      "kind": "shared-architecture",
+      "origin": "human-declared",
+      "sharedContext": [
+        "completion-readiness facets (DF-ROS-2026-A052: Domain/Work/CompletionReadiness.fs, Application/Work/CompletionReadiness.fs, Contracts/Work/QualityEvidenceJson.fs)"
+      ],
+      "executionRepository": "repository-operating-system",
+      "crossRepository": false,
+      "architectureNotes": [
+        "PRX-QUAL-020..023: risk metadata feeds design-debt and verification-matrix facets; evidence digests and release-readiness use the same evidence reader"
+      ],
+      "createdAt": "2026-10-06T20:35:02.976Z",
+      "createdBy": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "history": [
+        {
+          "operation": "created",
+          "member": null,
+          "at": "2026-10-06T20:35:02.976Z",
+          "actor": {
+            "kind": "agent",
+            "id": "anthropic/claude-code",
+            "provider": "anthropic",
+            "model": "unknown",
+            "runtime": "claude-code"
+          },
+          "reason": "one completion-readiness mechanism, executed together by one agent"
+        }
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "GROUP-PRAXIS-PACING-001",
+      "members": [
+        "PRAXIS-QUAL-01",
+        "PRAXIS-QUAL-02",
+        "PRAXIS-QUAL-03",
+        "PRAXIS-QUAL-04"
+      ],
+      "kind": "shared-architecture",
+      "origin": "human-declared",
+      "sharedContext": [
+        "pacing domain (Domain/Pacing/Model.fs), application ports (Application/Pacing) and provider adapters (Infrastructure/Pacing)"
+      ],
+      "executionRepository": "repository-operating-system",
+      "crossRepository": false,
+      "architectureNotes": [
+        "PRX-QUAL-003/004/005/008/011 pacing hardening; order 01, 02, 03, 04"
+      ],
+      "createdAt": "2026-10-06T20:35:02.559Z",
+      "createdBy": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "history": [
+        {
+          "operation": "created",
+          "member": null,
+          "at": "2026-10-06T20:35:02.559Z",
+          "actor": {
+            "kind": "agent",
+            "id": "anthropic/claude-code",
+            "provider": "anthropic",
+            "model": "unknown",
+            "runtime": "claude-code"
+          },
+          "reason": "one pacing boundary, executed together by one agent"
+        }
+      ],
+      "checkpoints": []
+    }
+  ]
+}
