@@ -1487,6 +1487,23 @@
         "name": "step",
         "mechanism": "step-lifecycle"
       }
+    },
+    {
+      "type": "step.completed",
+      "occurredAt": "2026-10-06T15:42:38.000Z",
+      "stepId": "STEP-20261006T150401000Z-57946c3a",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
     }
   ],
   "repository": {
@@ -1535,12 +1552,12 @@
       "name": "Stateless control-plane hosts with source identity",
       "description": null,
       "classification": [],
-      "status": "active",
+      "status": "completed",
       "plannedAt": "2026-10-06T15:04:01.000Z",
       "startedAt": "2026-10-06T15:04:01.000Z",
-      "completedAt": null,
-      "endedAt": null,
-      "updatedAt": "2026-10-06T15:04:01.000Z",
+      "completedAt": "2026-10-06T15:42:38.000Z",
+      "endedAt": "2026-10-06T15:42:38.000Z",
+      "updatedAt": "2026-10-06T15:42:38.000Z",
       "actor": {
         "kind": "agent",
         "id": "anthropic/claude-code",
@@ -1839,6 +1856,19 @@
           "from": null,
           "to": "active",
           "occurredAt": "2026-10-06T15:04:01.000Z",
+          "reason": null,
+          "actor": {
+            "kind": "agent",
+            "id": "anthropic/claude-code",
+            "provider": "anthropic",
+            "model": "unknown",
+            "runtime": "claude-code"
+          }
+        },
+        {
+          "from": "active",
+          "to": "completed",
+          "occurredAt": "2026-10-06T15:42:38.000Z",
           "reason": null,
           "actor": {
             "kind": "agent",

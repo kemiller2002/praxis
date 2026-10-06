@@ -1,0 +1,57 @@
+{
+  "schema": "ex-ros-2026-a021.session-metrics/1",
+  "label": "w4",
+  "sessionId": "6446109b-eb0e-569c-9fa8-ec6b76c21d7a",
+  "transcript": "6446109b-eb0e-569c-9fa8-ec6b76c21d7a.jsonl",
+  "models": [
+    "claude-opus-5-5"
+  ],
+  "startedAt": "2026-10-06T14:52:57.637000+00:00",
+  "endedAt": "2026-10-06T15:42:43.186000+00:00",
+  "wallMs": 2985549,
+  "msToFirstCodeMutation": 679305,
+  "modelRequests": 93,
+  "tokens": {
+    "input": 191,
+    "output": 77834,
+    "cacheRead": 17834082,
+    "cacheCreation": 252057
+  },
+  "costUsd": null,
+  "toolCalls": {
+    "Bash": 80,
+    "Edit": 4,
+    "Read": 3,
+    "ReadNotifications": 2,
+    "ToolSearch": 1,
+    "Write": 6,
+    "mcp__claude-code-remote__send_message": 2
+  },
+  "toolErrors": 0,
+  "fileReads": 47,
+  "distinctFilesRead": 33,
+  "repeatedReads": {
+    "/tmp/build.log": 2,
+    "/tmp/restore.log": 2,
+    "/tmp/tests1.log": 2,
+    "/tmp/tests2.log": 3,
+    "docs/project-administration-hub.md": 2,
+    "docs/web-interface.md": 2,
+    "src/Ros.Cli/Program.fs": 2,
+    "src/Ros.Contracts/Work/WorkStateJson.fs": 2,
+    "src/Ros.Infrastructure/Git/GitRepository.fs": 3,
+    "tests/Ros.Tests/ControlPlaneHostTests.fs": 3,
+    "tests/Ros.Tests/WebInterfaceTests.fs": 2
+  },
+  "governanceReads": {
+    "AGENTS.md": 1,
+    "docs/cli.md": 1
+  },
+  "searches": 64,
+  "fileWrites": 26,
+  "distinctFilesEdited": 7,
+  "builds": 10,
+  "testRuns": 8,
+  "compactions": 0,
+  "notes": "reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate"
+}

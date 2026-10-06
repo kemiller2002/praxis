@@ -207,3 +207,30 @@ Python oracle tests re-run.
  - Moving HubWeb to its own file touches compile order; covered by build.
 </content>
 </invoke>
+
+8. Verification pass (before completing PRAXIS-CTL-05)
+------------------------------------------------------
+
+Build: `dotnet build Ros.slnx --configuration Release --no-restore` -> 0 errors, 0 warnings.
+Full F# suite: `dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll`
+  -> "1364 test(s); 1364 passed; 0 failed" (before this item: 1347).
+  The last change (percent-encoding non-ASCII header values in
+  ControlPlaneSource.attribute) was re-verified on the final build with
+  PRAXIS_TEST_FILTER "web serve" (33 passed), "hub serve" (6), "web:" (11),
+  "state identity" (6), "control-plane source" (2), "host source check" (2).
+Python oracle: `python3 -m unittest discover -s tests` -> "Ran 7 tests ... OK".
+`./praxis architecture check` -> passed. `./praxis validate` -> passed with
+  2 warnings on unrelated research evidence records (EV-ROS-2026-A063/A067).
+
+Deviation from the design in section 4: none of substance. The persistence-
+call scan matches lower-case function names only (type names such as
+`FileTelemetryUsageRepository.Scope` are not calls); header values that are
+not printable ASCII are percent-encoded.
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| 1. No workflow state of its own; every response derived from durable records at request time (no cache) | met | Both hosts answer from records per request through `ControlPlaneSource.serve` (src/Ros.Cli/ControlPlaneSource.fs) wrapping the unchanged handlers; no cache was introduced. Structural: "host source check: the web and hub hosts write repository files only through the CLI and keep no state" (no module-level mutable, Dictionary/ConcurrentDictionary/MemoryCache/Lazy in WebHttp.fs, WebInterface.fs, HubWeb.fs, ControlPlaneSource.fs) -> PASS. Behavioural: the restart and live-change tests of criterion 3 -> PASS. |
+| 2. Responses carry state fingerprint, repository and commit identity | met | Headers Praxis-State-Fingerprint / Praxis-Repository / Praxis-Commit / Praxis-State-Stable on every response of both hosts; `source` object on versioned documents; hub rows carry `repoSource` from the spoke's own `./praxis state identity --json`. Tests "web serve: every response carries the repository, commit and state fingerprint it was derived from" (values equal `praxis state identity --json`, including after a transition), "hub serve: a restarted hub answers identically, and work rows carry their spoke's state identity", "control-plane source: versioned documents gain source..." -> PASS. |
+| 3. Restart test with identical responses; CLI change observed by a running host without restart | met | "web serve: a restarted host on the same repository answers every route identically" (10 routes: v1 work/item/evidence/telemetry/executions, legacy API, HTML; status, Praxis headers and body equal), "hub serve: a restarted hub answers identically..." (/api/repos, /api/work, /), "web serve: a change made through the CLI while the host runs is served without a restart" (capture and start via CLI, fingerprint changes), "hub serve: changes made through a spoke's CLI and the hub's CLI while the hub runs are served without a restart" -> PASS. |
+| 4. Automated check fails if the host writes repository files other than through the CLI transition path | met | ControlPlaneHostTests.findings scans the host sources and fails on direct file-system write APIs, retained state, and any persistence call outside an allow-list of reads and the CLI child process; "host source check: a direct write, a retained cache or a non-read persistence call is reported" proves it fails on seeded violations -> PASS. The hub's in-process registry write was removed (registry changes now run `praxis hub register|unregister`: "hub serve: registering over HTTP is done by the praxis hub command, and reads change no file" -> PASS). Dynamic companion: "web serve: answering every read route leaves every repository file byte-for-byte unchanged" -> PASS. Limitation (documented in section 7): a write hidden behind an allow-listed function or in a module outside the scanned host files would not be caught by the static scan. |
+| 5. Documented | met | docs/web-interface.md "State, restart and source identity" and Tests; docs/project-administration-hub.md (registry through the CLI, no state, headers, `repoSource`); docs/cli.md `state identity`. |
