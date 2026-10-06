@@ -189,3 +189,28 @@ Full suites: dotnet Ros.Tests, python unittest; ./praxis registry check and
   - Telemetry/provenance code paths keyed by prefix (ProvenancePolicy
     requireOriginator) are unaffected; CN/GL get warning-level originator
     findings like other non-RQ kinds.
+
+
+7. Verification pass (before completing the item)
+-------------------------------------------------
+
+Implementation commit: 3325502 (PRAXIS-CN-GL-KINDS: govern concept and
+glossary artifact kinds). Build: `dotnet build Ros.slnx --configuration
+Release` -> 0 warnings, 0 errors.
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| AC1 kinds with documented root directory, statuses, identifier/filename rules | met | Model.fs ArtifactKind.Concept/Glossary + configurations (research/concepts, research/glossary, optional registries); Policy.fs CN/GL status sets = research lifecycle; identifier regex and `<ID>--` filename rule apply unchanged. Documented: framework/standards/IDENTIFIERS.md "Artifact kinds" table (v1.1.0), framework/protocols/ARTIFACT-LIFECYCLE.md (v1.1.0), docs/features/artifact-management/manifest.md. Tests: "concept and glossary are artifact kinds with their own root directory and optional registry", "concept and glossary statuses follow the research artifact lifecycle" -> PASS |
+| AC2 registry build generates their registries; registry check detects staleness | met | Tests "concept and glossary records are discovered, validated and projected into their registries", "registry check reports a stale or missing concept or glossary registry once records exist", "a repository without concept or glossary records needs no concept or glossary registry" -> PASS; CLI end-to-end "validate and registry commands govern concept and glossary records like other artifact kinds" (praxis registry check exits non-zero naming both registries, praxis registry build writes them, check then exits 0) -> PASS |
+| AC3 validate applies identifier, filename, status, reference and provenance checks | met | Test "concept and glossary records get the identifier, filename, status, reference and supersession checks" (invalid id, filename, duplicate, missing title, status, broken reference, non-reciprocal supersession) -> PASS; CLI test above asserts `praxis validate --json` reports status, broken reference and "records no provenance" findings on a CN record in an initialized repository -> PASS |
+| AC4 starter scaffolds and Python oracle agree with the F# model where they enumerate kinds | met | F# test "starter scaffolds agree with the artifact kinds they enumerate" (both profiles: scaffolded registries = non-optional kinds' registries; every research/<dir>/.gitkeep is a kind directory; starter/greenfield/registries files = non-optional registries) -> PASS. tools/ros_cli.py now enumerates RQ, CN, GL with the optional-registry rule; Python tests OracleAgreementTests (KIND_CONFIG + optional flags, ALLOWED_STATUS and ID_RE prefixes equal those parsed from Model.fs/Policy.fs) and ConceptAndGlossaryTests -> PASS. On this repository `python3 tools/ros_cli.py registry check` -> "registries are current" (its RQ registry is byte-identical to the F# one) and `python3 tools/ros_cli.py validate` -> "validation passed" |
+| AC5 tests; standards and tooling no longer disagree | met | 8 new F# tests, 5 new Python tests. Full suites: `dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll` -> 1335 test(s); 1335 passed; 0 failed. `python3 -m unittest discover -s tests` -> Ran 12 tests, OK. `./praxis registry check` -> registries are current; `./praxis validate` -> validation passed with 2 pre-existing provenance warnings on files this item does not touch. IDENTIFIERS.md prefix list and kinds table now match ArtifactKinds.configurations and allowedStatuses (RQ added to the prefix list, as the tooling already accepted it) |
+
+Notes:
+  - Baseline run before the change (same command, base 43d5935): 1327
+    tests, 1 failure ("lifecycle cli: --package-root installs the same
+    managed artifacts as the embedded scaffold"); that test passed in the
+    final run on the changed tree, so it is not attributable to this item.
+  - Remaining out-of-scope differences noted in section 6 (Python legacy
+    3-digit RP/REP filename rule; schemas/artifact-metadata.schema.json lacks
+    RQ) were not changed.
