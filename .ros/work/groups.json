@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "groups": [
+    {
+      "id": "GROUP-PRAXIS-HYG",
+      "members": [
+        "PRAXIS-HYG-01",
+        "PRAXIS-HYG-02",
+        "PRAXIS-HYG-03",
+        "PRAXIS-HYG-04"
+      ],
+      "kind": "shared-data-model",
+      "origin": "human-declared",
+      "sharedContext": [
+        "canonical .ros backlog/context state and praxis validate"
+      ],
+      "executionRepository": "repository-operating-system",
+      "crossRepository": false,
+      "architectureNotes": [
+        "validation rules stay pure domain decisions in Praxis.Domain/Work; effects reuse FileBacklogQueueRepository's journaled commit"
+      ],
+      "createdAt": "2026-10-06T20:34:51.000Z",
+      "createdBy": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "history": [
+        {
+          "operation": "created",
+          "member": null,
+          "at": "2026-10-06T20:34:51.000Z",
+          "actor": {
+            "kind": "agent",
+            "id": "anthropic/claude-code",
+            "provider": "anthropic",
+            "model": "unknown",
+            "runtime": "claude-code"
+          },
+          "reason": "Audit track: state and documentation hygiene"
+        }
+      ],
+      "checkpoints": []
+    }
+  ]
+}

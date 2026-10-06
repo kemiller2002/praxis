@@ -620,6 +620,18 @@ authority (that boundary belongs to the external system; see below). For a
 worked, example-heavy walkthrough of every command, see
 [`work-backlog-guide.md`](https://github.com/kemiller2002/repository-operating-system/blob/main/docs/work-backlog-guide.md).
 
+### Fixtures stay out of canonical state
+
+Tests and manual smoke tests of mutating commands (`add`, `work begin`,
+`work block`, ...) run against a scratch root (`praxis init` in a temporary
+directory, or `--root DIR`), never against the repository whose `.ros/` state
+is canonical. Fixture items committed to canonical state become live work for
+everyone: `WI-READY` and `WI-ACTIVE`, replayed from a differential test's
+fixture commands in this repository and committed with its state, were
+reported as active and blocked work by the planner for weeks until they were
+abandoned (`PRAXIS-HYG-01`). In this repository, CI fails when the F# test
+suite changes a tracked file or leaves an untracked one.
+
 ## Adapter contract
 
 The stable executable interface is `getWorkItem`, `transitionWorkItem`, and `publishRepositoryEvent`. Protocol 1.0 implements a file-backed adapter for conformance tests:

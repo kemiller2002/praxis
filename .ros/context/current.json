@@ -1570,25 +1570,29 @@
     {
       "id": "WI-READY",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
+      "state": "abandoned",
+      "semanticState": "abandoned",
       "evidence": [],
-      "updatedAt": "2026-09-10T20:34:40.136Z",
+      "updatedAt": "2026-10-06T20:35:43.000Z",
       "telemetryExecutionIds": [
         "EXE-20260910T203440154Z-b25c0cf1"
-      ]
+      ],
+      "abandonedAt": "2026-10-06T20:35:43.000Z",
+      "abandonedReason": "Test fixtures, not repository work: commit 71be41f6 (PR #33) committed state from a manual smoke test that replayed tests/work-context-fsharp-differential.test.mjs's fixture commands in the canonical repository instead of a scratch root (PRAXIS-HYG-01)"
     },
     {
       "id": "WI-ACTIVE",
       "type": "task",
-      "state": "blocked",
-      "semanticState": "blocked",
+      "state": "abandoned",
+      "semanticState": "abandoned",
       "evidence": [],
-      "updatedAt": "2026-09-10T20:34:40.579Z",
+      "updatedAt": "2026-10-06T20:35:43.000Z",
       "telemetryExecutionIds": [
         "EXE-20260910T203440452Z-5ea56a27"
       ],
-      "blockReason": "waiting"
+      "blockReason": "waiting",
+      "abandonedAt": "2026-10-06T20:35:43.000Z",
+      "abandonedReason": "Test fixtures, not repository work: commit 71be41f6 (PR #33) committed state from a manual smoke test that replayed tests/work-context-fsharp-differential.test.mjs's fixture commands in the canonical repository instead of a scratch root (PRAXIS-HYG-01)"
     },
     {
       "id": "WI-0040",
@@ -6590,11 +6594,22 @@
         }
       },
       "completedAt": "2026-10-06T19:50:10.000Z"
+    },
+    {
+      "id": "PRAXIS-HYG-01",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-06T20:35:35.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T203536205Z-a7af8db1"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-06T19:50:10.000Z",
+  "updatedAt": "2026-10-06T20:35:43.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

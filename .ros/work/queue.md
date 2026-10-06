@@ -79,6 +79,10 @@
 | PRAXIS-GROUP-08 | Group command surface: work group list, idempotent mutations, append-only audit, versioned contracts, derived completion (PRX-GRP-110..116) | captured | grouping | high |
 | PRAXIS-GROUP-09 | plan execute-group and grouped execution by default for qualifying high-affinity groups (PRX-GRP-117, 130..132, 136..137) | captured | grouping | high |
 | PRAXIS-GROUP-10 | Grouped-execution completion gates: machine-checkable reuse inventory and per-criterion verification (PRX-GRP-133..135, 040, 045) | captured | grouping | high |
+| PRAXIS-HYG-01 | Retire the leaked test-fixture work items WI-READY and WI-ACTIVE and keep tests out of canonical state | active | state-hygiene, work-protocol | high |
+| PRAXIS-HYG-02 | validate fails when a backlog row's terminal status contradicts its live work item; repair WI-0061 with a typed re-identification | ready | state-hygiene, backlog | high |
+| PRAXIS-HYG-03 | Record the missing created provenance of EV-ROS-2026-A063 and EV-ROS-2026-A067 truthfully | blocked | provenance | medium |
+| PRAXIS-HYG-04 | Correct docs/planning.md work-group replication status and guard requirement status tables against dangling citations | ready | docs, state-hygiene | medium |
 | PRAXIS-INTERNAL-NAMESPACES | Migrate internal Ros.* projects, namespaces, assemblies and Ros.slnx to Praxis.* (deferred from PRAXIS-CLI-RENAME, DF-ROS-2026-A043) | complete | rename, follow-up | low |
 | PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | abandoned | rename, gh-90 | low |
 | PRAXIS-PLAN-01 | Deterministic shadow planner: praxis plan analyze/simulate/compare/explain (PRX-PLAN-001..182) | complete | planning, architecture, cli | high |
@@ -246,8 +250,8 @@
 | WI-0071 | Step commands record the caller's discovered identity instead of the owning execution's, so validate rejects the step | captured | telemetry, provenance | medium |
 | WI-0072 | Port provenance follow-ups onto the merged model: collaboration aggregates in provenance audit, producedBy on ordo handoffs, installer event actor | complete | provenance | medium |
 | WI-0073 | Fix 3.7.1 sweep findings: work-item ID reuse, consumer doc links, upgrade hygiene, launcher EOL | complete |  | high |
-| WI-ACTIVE | Active item | blocked |  | medium |
-| WI-READY | Ready item | active |  | medium |
+| WI-ACTIVE | Active item | abandoned |  | medium |
+| WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |
 | WORK-CAPTURE-ID-COLLISION | ros add can auto-allocate a WI-NNNN ID that already belongs to a live-context work item | captured | work-protocol, backlog | medium |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |
