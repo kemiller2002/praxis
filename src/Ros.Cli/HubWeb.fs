@@ -3,6 +3,7 @@ namespace Ros.Cli
 open System
 open System.Text.Json
 open System.Text.Json.Nodes
+open Ros.Contracts.Work
 open Ros.Infrastructure.Work
 
 /// The hub's HTTP adapter: server-rendered pages with plain form posts, plus
@@ -15,9 +16,20 @@ type HubRoute =
     | ListWork of repo: string option * tags: string list * status: string option
     | CreateWork of repoId: string * RequestBody
 
+/// A `praxis.hub-state` request (`/api/v1`): every answer is a registered
+/// repository's own `praxis work state|transition`, read or run on request.
+[<RequireQualifiedAccess>]
+type HubStateRoute =
+    | Repositories
+    | RepositoryWork of repo: string * tags: string list * status: string option
+    | RepositoryWorkItem of repo: string * item: string
+    | Work of repo: string option * tags: string list * status: string option
+    | Transition of repo: string * item: string * request: Result<JsonObject, string>
+
 [<RequireQualifiedAccess>]
 type HubWebRoute =
     | Api of HubRoute
+    | State of HubStateRoute
     | ApiError of status: int * message: string
     | Home of query: (string * string) list
     | Stylesheet
@@ -42,7 +54,21 @@ module HubWeb =
         let register (parsed: RequestBody) =
             HubRoute.RegisterRepo(HttpMessages.jsonString "path" parsed |> HttpMessages.nonBlank, HttpMessages.jsonString "name" parsed)
 
+        let transitionRequest () =
+            match body () with
+            | Ok(JsonBody(:? JsonObject as node)) -> Ok node
+            | Ok _ -> Error "a transition request is a JSON object body"
+            | Error message -> Error message
+
         match request.Method, request.Segments with
+        | "GET", [ "api"; "v1"; "repos" ] -> HubWebRoute.State HubStateRoute.Repositories
+        | "GET", [ "api"; "v1"; "repos"; id; "work" ] ->
+            let _, tags, status = filterFrom request.Query
+            HubWebRoute.State(HubStateRoute.RepositoryWork(id, tags, status))
+        | "GET", [ "api"; "v1"; "repos"; id; "work"; item ] -> HubWebRoute.State(HubStateRoute.RepositoryWorkItem(id, item))
+        | "GET", [ "api"; "v1"; "work" ] -> HubWebRoute.State(HubStateRoute.Work(filterFrom request.Query))
+        | "POST", [ "api"; "v1"; "repos"; id; "work"; item; "transitions" ] ->
+            HubWebRoute.State(HubStateRoute.Transition(id, item, transitionRequest ()))
         | "GET", [ "api"; "repos" ] -> HubWebRoute.Api HubRoute.ListRepos
         | "POST", [ "api"; "repos" ] ->
             match body () with
@@ -133,6 +159,23 @@ module HubWeb =
             TempUploads.withFiles "ros-hub-upload" (HttpMessages.uploads body) (fun written ->
                 let files = written |> List.map (fun (path, name) -> { SourcePath = path; Name = Some name })
                 Hub.createWork root repoId (createInput body files) |> Result.map (fun item -> item :> JsonNode))
+
+    /// Answers one `praxis.hub-state` request; the hub's own registry being
+    /// unreadable is the only failure of the whole response.
+    let state (root: string) (route: HubStateRoute) : HubAnswer =
+        let answer =
+            match route with
+            | HubStateRoute.Repositories -> Hub.repositoryStates root
+            | HubStateRoute.RepositoryWork(repo, tags, status) -> Hub.repositoryWork root repo tags status
+            | HubStateRoute.RepositoryWorkItem(repo, item) -> Hub.repositoryWorkItem root repo item
+            | HubStateRoute.Work(repo, tags, status) -> Hub.workState root repo tags status
+            | HubStateRoute.Transition(_, _, Error message) -> Ok { Status = 400; Document = HubStateJson.invalidRequest message }
+            | HubStateRoute.Transition(repo, item, Ok request) -> Hub.requestTransition root repo item request
+
+        answer
+        |> Result.defaultWith (fun message ->
+            { Status = 500
+              Document = WorkStateJson.errorDocument "hub-registry-unreadable" message [] })
 
     // ------------------------------------------------------------------
     // Pure: HTML rendering
@@ -276,6 +319,9 @@ module HubWeb =
 
     let handle (root: string) (request: HttpRequestData) : HttpResponseData =
         match route request with
+        | HubWebRoute.State query ->
+            let answer = state root query
+            HttpMessages.jsonNode answer.Status answer.Document
         | HubWebRoute.Api operation ->
             match execute root operation with
             | Ok node -> HttpMessages.jsonNode 200 node

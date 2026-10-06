@@ -275,7 +275,9 @@ praxis adapter <call|publish>
 praxis provenance <identity|record|show|audit>
 praxis plan <analyze|simulate|compare|explain|replay|freshness|groups|explain-group>
 praxis state identity [--json]
+praxis work state [ID] [--tag T]* [--status S] | work transition --id ID --request JSON
 praxis web serve | hub serve
+praxis hub state [--repo ID [--item ID]] [--tag T]* [--status S]
 ```
 
 Run `praxis --help` for the full argument list, and see
@@ -307,6 +309,22 @@ file under `.ros/` except `.ros/locks/`), the identity `praxis web serve` and
 `praxis hub serve` attach to every response. `--json` prints a
 `praxis.state-identity` version 1 document. It only reads. See "State,
 restart and source identity" in [`web-interface.md`](web-interface.md).
+
+### `work state`, `work transition`
+
+The versioned control-plane work-state contract on the command line.
+`work state` prints the `praxis.work-state` version 1 `work-list` document
+(`--tag`/`--status` filter exactly as `work list`) and `work state ID` the
+`work-item` document; they are the bodies `praxis web serve` answers on
+`GET /api/v1/work` and `GET /api/v1/work/ID`, from the same function, without
+the `source` the server adds. An unknown ID prints the `praxis.error`
+`work-item-not-found` document and exits `1`. `work transition --id ID
+--request JSON` takes the JSON body of `POST /api/v1/work/ID/transitions`
+and runs the transition the same way: it prints the `work-transition`
+document (exit `0`) or the structured refusal (exit `1`; `2` for an invalid
+request). Identity is this process's, as for any transition command. The
+hub reads and changes registered repositories through these two commands
+(see [`project-administration-hub.md`](project-administration-hub.md)).
 
 ### `plan`
 

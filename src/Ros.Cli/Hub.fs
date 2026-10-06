@@ -20,6 +20,10 @@ type HubRegistry =
 
 type HubFile = { SourcePath: string; Name: string option }
 
+/// A `praxis.hub-state` answer: the HTTP status it is served with (the CLI
+/// exits 0 for 200) and its document.
+type HubAnswer = { Status: int; Document: JsonNode }
+
 type HubCreateInput =
     { Title: string
       Tags: string list
@@ -236,6 +240,57 @@ module HubRegistry =
         node
 
     // ------------------------------------------------------------------
+    // The versioned per-repository contract (pure)
+    // ------------------------------------------------------------------
+
+    let stateCommand = "work state"
+    let transitionCommand = "work transition"
+
+    /// The spoke's own `praxis work state [ITEM] [--tag T]* [--status S]`.
+    let stateArguments (item: string option) (tags: string list) (status: string option) : string list =
+        [ "work"; "state" ]
+        @ Option.toList item
+        @ tagFlags tags
+        @ (status |> Option.map (fun value -> [ "--status"; value ]) |> Option.defaultValue [])
+
+    /// The spoke's own `praxis work transition`, given the request body
+    /// unchanged.
+    let transitionArguments (item: string) (request: JsonObject) : string list =
+        [ "work"; "transition"; "--id"; item; "--request"; request.ToJsonString() ]
+
+    let private contractString (name: string) (document: JsonObject) =
+        match document[name] with
+        | :? JsonValue as value when value.GetValueKind() = JsonValueKind.String -> Some(value.GetValue<string>())
+        | _ -> None
+
+    /// The status a repository's own document is relayed with: the status
+    /// the single-repository API gives it (`praxis.error` codes through
+    /// `WebInterface.refusalStatus`), 502 for a code that API does not use.
+    let relayedStatus (document: JsonObject option) : int =
+        match document with
+        | Some answer when contractString "contract" answer = Some WorkStateJson.errorContract ->
+            contractString "code" answer
+            |> Option.bind WebInterface.refusalCategoryOf
+            |> Option.map WebInterface.refusalStatus
+            |> Option.defaultValue 502
+        | _ -> 200
+
+    /// One repository's answer on a single-repository route: its own
+    /// document, or `repository-unavailable` when it could not answer.
+    let repositoryAnswer (kind: string) (repository: JsonObject) (answer: SpokeAnswer) : HubAnswer =
+        match answer.Availability, answer.Document with
+        | SpokeAvailability.Available, document
+        | SpokeAvailability.Unreadable _, (Some _ as document) ->
+            { Status = relayedStatus document
+              Document = HubStateJson.repositoryDocument kind repository document }
+        | availability, _ ->
+            { Status = 502
+              Document =
+                HubStateJson.repositoryUnavailable
+                    repository
+                    (SpokeAvailability.reason availability |> Option.defaultValue "the repository did not answer") }
+
+    // ------------------------------------------------------------------
     // `praxis hub` argument parsing (pure)
     // ------------------------------------------------------------------
 
@@ -284,7 +339,7 @@ module Hub =
     let defaultPort = 4320
 
     let usage =
-        "Usage: praxis [--root PATH] hub register PATH [--name NAME] | hub unregister ID | hub repos | hub create REPO-ID \"title\" [--tag T] [--priority P] [--description D] [--id ID] [--actor NAME] [--file PATH[=NAME]] | hub work [--repo ID] [--tag T] [--status S] | hub serve [--port N] [--host H]"
+        "Usage: praxis [--root PATH] hub register PATH [--name NAME] | hub unregister ID | hub repos | hub create REPO-ID \"title\" [--tag T] [--priority P] [--description D] [--id ID] [--actor NAME] [--file PATH[=NAME]] | hub work [--repo ID] [--tag T] [--status S] | hub state [--repo ID [--item ID]] [--tag T] [--status S] | hub serve [--port N] [--host H]"
 
     let private registryPath root = Path.Combine(root, ".ros", "hub", "registry.json")
     let private registryMarkdownPath root = Path.Combine(root, ".ros", "hub", "registry.md")
@@ -332,16 +387,21 @@ module Hub =
     let private findRepo root id = load root |> Result.bind (fun registry -> HubRegistry.find registry id)
 
     /// Runs the spoke's own `./praxis` (or, for a spoke installed before the
-    /// rename, its `./ros`) from its own directory and parses its JSON.
-    let runSpoke (repo: HubRepo) (arguments: string list) : Result<JsonNode, string> =
+    /// rename, its `./ros`) from its own directory, whatever its exit status;
+    /// `Error` says why the spoke could not be run at all.
+    let invokeSpoke (repo: HubRepo) (arguments: string list) : Result<ProcessResult, string> =
         match Directory.Exists repo.Path, HubRegistry.resolveLauncher File.Exists repo.Path with
         | false, _ -> Error $"registered path for '{repo.Id}' no longer exists: {repo.Path}"
         | true, None -> Error $"'{repo.Id}' no longer has a './praxis' (or legacy './ros') launcher at {repo.Path}"
-        | true, Some executable ->
-            match CliProcess.run repo.Path executable arguments with
-            | Error message -> Error $"{repo.Id}: {message}"
-            | Ok result when result.Exit <> 0 -> Error $"{repo.Id}: {CliProcess.failureMessage result}"
-            | Ok result ->
+        | true, Some executable -> CliProcess.run repo.Path executable arguments |> Result.mapError (fun message -> $"{repo.Id}: {message}")
+
+    /// Runs the spoke's own launcher and parses its JSON; a non-zero exit is
+    /// an error.
+    let runSpoke (repo: HubRepo) (arguments: string list) : Result<JsonNode, string> =
+        match invokeSpoke repo arguments with
+        | Error message -> Error message
+        | Ok result when result.Exit <> 0 -> Error $"{repo.Id}: {CliProcess.failureMessage result}"
+        | Ok result ->
                 try
                     match JsonNode.Parse result.Out with
                     | null -> Error $"{repo.Id}: empty output from ./praxis"
@@ -382,19 +442,22 @@ module Hub =
     /// One spoke's rows, each carrying `repoSource`: the spoke state identity
     /// observed before and after its `work list` (re-read while they differ),
     /// or `{"unavailable": reason}` when the spoke cannot report one.
+    /// `read` attributed to the spoke's own state identity, observed before
+    /// and after it (re-read while they differ), or `{"unavailable": reason}`
+    /// when the spoke cannot report one.
+    let private attributed (repo: HubRepo) (read: unit -> 'T) : 'T * JsonObject =
+        match spokeIdentity repo with
+        | Error reason -> read (), HubRegistry.unavailableSource reason
+        | Ok _ ->
+            let identify () =
+                spokeIdentity repo
+                |> Result.defaultWith (fun reason -> { Repository = repo.Id; Commit = None; Branch = None; Fingerprint = Error reason })
+
+            let observed = StateIdentity.stable identify read ControlPlaneSource.readAttempts
+            observed.Value, StateIdentityJson.sourceNode observed.Identity observed.Stable
+
     let private listWorkIn (repo: HubRepo) (tags: string list) (status: string option) : JsonObject list =
-        let list () = runSpoke repo (HubRegistry.listArguments tags status)
-
-        let listed, source =
-            match spokeIdentity repo with
-            | Error reason -> list (), HubRegistry.unavailableSource reason
-            | Ok _ ->
-                let identify () =
-                    spokeIdentity repo
-                    |> Result.defaultWith (fun reason -> { Repository = repo.Id; Commit = None; Branch = None; Fingerprint = Error reason })
-
-                let attributed = StateIdentity.stable identify list ControlPlaneSource.readAttempts
-                attributed.Value, StateIdentityJson.sourceNode attributed.Identity attributed.Stable
+        let listed, source = attributed repo (fun () -> runSpoke repo (HubRegistry.listArguments tags status))
 
         match listed with
         | Ok(:? JsonArray as rows) ->
@@ -416,6 +479,89 @@ module Hub =
             | None -> listRepos root
 
         repos |> Result.map (List.collect (fun repo -> listWorkIn repo tags status))
+
+    // ------------------------------------------------------------------
+    // The versioned per-repository contract (PRX-CTL-007): every document
+    // is the spoke's own `praxis work state|transition` answer, read at
+    // request time; the hub stores none of it.
+    // ------------------------------------------------------------------
+
+    /// What `praxis COMMAND` answered in the spoke.
+    let private answerOf (repo: HubRepo) (command: string) (kinds: string list) (arguments: string list) : SpokeAnswer =
+        match invokeSpoke repo arguments with
+        | Error reason ->
+            { Availability = SpokeAvailability.Unreachable reason
+              Document = None }
+        | Ok result -> HubStateJson.classify command kinds result.Exit result.Out (CliProcess.failureMessage result)
+
+    /// One spoke's `work state` read, with its repository node.
+    let private readState (repo: HubRepo) (kind: string) (arguments: string list) : JsonObject * SpokeAnswer =
+        let answer, source = attributed repo (fun () -> answerOf repo HubRegistry.stateCommand [ kind ] arguments)
+        HubStateJson.repositoryNode (HubRegistry.repoNode repo) answer.Availability source, answer
+
+    let private registered (root: string) (id: string) (answer: HubRepo -> HubAnswer) : Result<HubAnswer, string> =
+        load root
+        |> Result.map (fun registry ->
+            match registry.Repos |> List.tryFind (fun repo -> repo.Id = id) with
+            | Some repo -> answer repo
+            | None ->
+                { Status = 404
+                  Document = HubStateJson.repositoryNotRegistered id })
+
+    let private answered (document: JsonNode) = { Status = 200; Document = document }
+
+    /// Every registered repository with its availability: whether its own
+    /// Praxis answers `work state` with the contract this hub reads.
+    let repositoryStates (root: string) : Result<HubAnswer, string> =
+        listRepos root
+        |> Result.map (
+            List.map (fun repo -> readState repo "work-list" (HubRegistry.stateArguments None [] None) |> fst)
+            >> HubStateJson.repositoryListDocument
+            >> answered
+        )
+
+    /// One repository's own work list.
+    let repositoryWork (root: string) (id: string) (tags: string list) (status: string option) : Result<HubAnswer, string> =
+        registered root id (fun repo ->
+            readState repo "work-list" (HubRegistry.stateArguments None tags status)
+            ||> HubRegistry.repositoryAnswer HubStateJson.repositoryWorkListKind)
+
+    /// One repository's own work item (its `work-item-not-found` relayed as 404).
+    let repositoryWorkItem (root: string) (id: string) (item: string) : Result<HubAnswer, string> =
+        registered root id (fun repo ->
+            readState repo "work-item" (HubRegistry.stateArguments (Some item) [] None)
+            ||> HubRegistry.repositoryAnswer HubStateJson.repositoryWorkItemKind)
+
+    /// Every requested repository's own work list, each read on its own: a
+    /// repository that cannot answer is reported in its entry and never
+    /// fails the response.
+    let workState (root: string) (repoId: string option) (tags: string list) (status: string option) : Result<HubAnswer, string> =
+        let document (repos: HubRepo list) =
+            repos
+            |> List.map (fun repo ->
+                let repository, answer = readState repo "work-list" (HubRegistry.stateArguments None tags status)
+                repository, answer.Document)
+            |> HubStateJson.workListDocument
+            |> answered
+
+        match repoId with
+        | Some id -> registered root id (List.singleton >> document)
+        | None -> listRepos root |> Result.map document
+
+    /// A transition requested of one repository's work item, run by that
+    /// repository's own `praxis work transition` exactly once: the owning
+    /// repository decides it and records it; the hub relays the answer.
+    let requestTransition (root: string) (id: string) (item: string) (request: JsonObject) : Result<HubAnswer, string> =
+        registered root id (fun repo ->
+            let answer =
+                answerOf repo HubRegistry.transitionCommand [ "work-transition" ] (HubRegistry.transitionArguments item request)
+
+            let _, source = attributed repo ignore
+
+            HubRegistry.repositoryAnswer
+                HubStateJson.repositoryWorkTransitionKind
+                (HubStateJson.repositoryNode (HubRegistry.repoNode repo) answer.Availability source)
+                answer)
 
     let private print (node: JsonNode) = printfn "%s" (HttpMessages.renderJson node)
 
@@ -481,6 +627,29 @@ module Hub =
         | "create" :: _ ->
             eprintfn "ERROR create requires a repository ID and title, e.g. praxis hub create REPO-ID \"Title\""
             1
+        | "state" :: rest ->
+            let answer =
+                result {
+                    let! repoId = HubRegistry.option "--repo" rest
+                    let! item = HubRegistry.option "--item" rest
+                    let! status = HubRegistry.option "--status" rest
+                    let! tags = HubRegistry.tagOptions rest
+
+                    return!
+                        match repoId, item with
+                        | None, Some _ -> Error "--item requires --repo"
+                        | Some id, Some itemId -> repositoryWorkItem root id itemId
+                        | Some id, None -> repositoryWork root id tags status
+                        | None, None -> workState root None tags status
+                }
+
+            match answer with
+            | Ok answered ->
+                print answered.Document
+                if answered.Status = 200 then 0 else 1
+            | Error message ->
+                eprintfn "ERROR %s" message
+                1
         | "work" :: rest ->
             report (
                 result {

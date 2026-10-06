@@ -266,6 +266,20 @@ module WebInterface =
         | RefusalCategory.StateUnreadable -> "work-state-unreadable"
         | RefusalCategory.ExecutionFailed -> "execution-failed"
 
+    let refusalCategories =
+        [ RefusalCategory.InvalidRequest
+          RefusalCategory.WorkItemNotFound
+          RefusalCategory.IllegalTransition
+          RefusalCategory.ReasonRequired
+          RefusalCategory.EvidenceRequired
+          RefusalCategory.TransitionRefused
+          RefusalCategory.StateUnreadable
+          RefusalCategory.ExecutionFailed ]
+
+    /// The category a `praxis.error` code names (`refusalCode`'s inverse).
+    let refusalCategoryOf (code: string) =
+        refusalCategories |> List.tryFind (refusalCode >> (=) code)
+
     let refusalStatus (category: RefusalCategory) =
         match category with
         | RefusalCategory.InvalidRequest -> 400

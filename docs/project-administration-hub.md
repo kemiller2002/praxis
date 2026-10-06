@@ -75,6 +75,8 @@ for `./praxis hub ARGS`; `./ros-hub` and `./ros` remain compatibility aliases):
 ./praxis hub create REPO-ID "Title" --tag a,b --priority high --description "..." --file PATH[=NAME]
 ./praxis hub work                    # aggregated, every registered repo
 ./praxis hub work --repo REPO-ID --status ready
+./praxis hub state                   # praxis.hub-state: every repo's own work-state document
+./praxis hub state --repo REPO-ID [--item ITEM-ID] [--tag T] [--status S]
 ```
 
 Each command prints JSON (the registered entry, the removed entry, the
@@ -139,11 +141,82 @@ path has moved, or whose Praxis installation is too old to support a command,
 surfaces as a single error entry for that repository rather than failing
 the whole view.
 
+## Versioned control-plane API (`/api/v1`, `praxis.hub-state`)
+
+The hub aggregates repositories for discovery and navigation without
+becoming a store of their work (PRX-CTL-007). Its versioned routes answer
+with each registered repository's **own** versioned work-state documents --
+the `praxis.work-state` version 1 contract of `praxis web serve`'s
+`/api/v1/work` (see `docs/web-interface.md`) -- obtained by running that
+repository's own `./praxis work state` (and `./praxis work transition` for a
+transition; see `docs/cli.md`). The hub nests each document unchanged in a
+`praxis.hub-state` version 1 envelope that says which repository it came
+from and whether that repository could answer.
+
+| Method | Path | Answer (`kind`) |
+|---|---|---|
+| `GET` | `/api/v1/repos` | `repository-list`: every registered repository with its `availability` and `repositorySource` |
+| `GET` | `/api/v1/repos/:id/work?tag=&status=` | `repository-work-list`: `{repository, document}`, `document` the repository's own `work-list` |
+| `GET` | `/api/v1/repos/:id/work/:item` | `repository-work-item`: `document` the repository's own `work-item` (its `work-item-not-found` is relayed with `404`) |
+| `GET` | `/api/v1/work?repo=&tag=&status=` | `work-list`: `{repositories: [{repository, document}]}`, one entry per requested repository |
+| `POST` | `/api/v1/repos/:id/work/:item/transitions` | `repository-work-transition`: the body of `POST /api/v1/work/:id/transitions` (`{action, reason?, type?, actor?, evidence?, conclusion?}`), run by the repository's own `praxis work transition`; `document` is its `work-transition` document or its structured refusal |
+
+A `repository` node is the registry entry (`id`, `name`, `path`,
+`registeredAt`) plus:
+
+- `availability` `{status, reason}`, `status` one of `available` (its Praxis
+  answered with the contract), `unreachable` (the registered path or its
+  `./praxis` is gone, or it could not be started), `incompatible` (its Praxis
+  ran but does not provide `praxis work state` -- an installation that
+  predates it -- or speaks another contract version), or `unreadable` (it
+  reported that its own recorded state could not be read);
+- `repositorySource` `{repository, commit, branch, stateFingerprint, stable}`:
+  the repository's own `./praxis state identity --json` read before and after
+  the answer, or `{"unavailable": "..."}`.
+
+The envelope's own `source` (added to every hub response, as on every
+control-plane host) is the hub repository's identity -- its registry -- not
+a registered repository's; use `repository.repositorySource` for that.
+
+Statuses: the aggregated `work-list` and `repository-list` are always `200`;
+a repository that cannot answer is reported in its own entry (`document` is
+`null`) and never fails the response. A single-repository route answers
+with the status `praxis web serve` gives the repository's document (`200`,
+or the refusal's `404`/`409`/`422`/...); `502` with `praxis.error`
+`repository-unavailable` (carrying the `repository` node) when that
+repository could not answer; `404` with `repository-not-registered` for an
+unknown repository id; `400` with `invalid-request` for a transition body
+that is not a JSON object.
+
+What this guarantees:
+
+- **No central copy.** The hub persists only `.ros/hub/registry.json` and
+  its `registry.md` projection. Every document is read from the repository
+  at request time, so a change made in a repository by any means -- its own
+  `./praxis`, its own `web serve`, another hub -- is served on the next
+  request with no hub involvement, and nothing the hub answers can drift
+  from what the repository itself reports.
+- **Mutations belong to the owning repository.** The only mutations the hub
+  offers -- creating a work item (`praxis add`/`work attach`) and requesting
+  a transition (`praxis work transition`) -- are run by the owning
+  repository's own Praxis, which applies its own rules and records its own
+  events. The hub adds no rule, step or write before or after them. Identity
+  and provenance are those of the repository's command running in the hub's
+  environment, never taken from the HTTP client.
+- **One contract.** A repository's document is the same JSON document its own
+  `praxis work state` prints, so a client that reads one repository's
+  `/api/v1/work` reads the hub's per-repository documents unchanged.
+
+Each request runs a few processes per repository (`state identity` before
+and after, plus the read), which suits a local hub over a handful of
+repositories; it is not a bulk reporting interface.
+
 ## What this deliberately does not do
 
 - No authentication, no multi-user access control, no audit log beyond
   what each spoke repository's own event log already records.
-- No portfolio database, no reporting/analytics beyond the raw aggregated
+- No portfolio database and no cached copy of any repository's work
+  state, no reporting/analytics beyond the raw aggregated
   table — building those is exactly the kind of "central project-management
   framework" Praxis's own architecture asks to be introduced only when a
   concrete need demonstrates it, not preemptively.

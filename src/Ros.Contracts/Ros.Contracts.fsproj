@@ -34,6 +34,7 @@
     <Compile Include="Work/WorkGroupJson.fs" />
     <Compile Include="Work/WorkStateJson.fs" />
     <Compile Include="Work/StateIdentityJson.fs" />
+    <Compile Include="Work/HubStateJson.fs" />
     <Compile Include="Execution/ExecutionStateJson.fs" />
   </ItemGroup>
 </Project>

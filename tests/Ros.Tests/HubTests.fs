@@ -4,6 +4,8 @@ open System
 open System.IO
 open System.Text.Json.Nodes
 open Ros.Cli
+open Ros.Contracts.Work
+open Ros.Domain.Work
 
 [<RequireQualifiedAccess>]
 module HubTests =
@@ -425,4 +427,333 @@ module HubTests =
                       Http.contains "notice=Unregistered" (Http.location unregistered)
                       Assert.equal 0 ((hubOk hubRoot [ "repos" ]).AsArray().Count)) } ]
 
-    let tests = unitTests @ cliTests @ scaffoldTests @ serverTests
+    // ------------------------------------------------------------------
+    // Versioned multi-repository aggregation (PRX-CTL-007)
+    // ------------------------------------------------------------------
+
+    let private document (text: string) = JsonNode.Parse(text).AsObject()
+
+    let private workState kind = $"""{{"contract":"praxis.work-state","version":1,"kind":"{kind}"}}"""
+
+    /// Every file under `root` except Git's own, as `path:sha256` lines.
+    let private snapshot (root: string) =
+        let gitDirectory = Path.Combine(root, ".git") + string Path.DirectorySeparatorChar
+
+        Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
+        |> Seq.filter (fun path -> not (path.StartsWith(gitDirectory, StringComparison.Ordinal)))
+        |> Seq.map (fun path ->
+            let hash = Convert.ToHexString(Security.Cryptography.SHA256.HashData(File.ReadAllBytes path))
+            $"{Path.GetRelativePath(root, path)}:{hash}")
+        |> Seq.sort
+        |> Seq.toList
+
+    let private capture (root: string) (id: string) (title: string) =
+        CliHarness.rosOk root [ "work"; "capture"; "--title"; title; "--id"; id; "--occurred-at"; CliHarness.now () ] |> ignore
+
+    let private stateOf (root: string) (arguments: string list) = JsonNode.Parse((CliHarness.rosOk root ("work" :: "state" :: arguments)).Out)
+
+    /// A spoke whose launcher behaves like a Praxis that predates `work state`.
+    let private makeOlderPraxis (root: string) =
+        File.WriteAllText(Path.Combine(root, "praxis"), "#!/bin/sh\necho 'Usage: praxis [--root PATH] version | work list'\nexit 2\n")
+
+    let private availability (repository: JsonNode) = Http.text repository["availability"] "status"
+
+    /// The node at `names` under `node` (null when absent).
+    let private nodeAt (names: string list) (node: JsonNode) =
+        names |> List.fold (fun (current: JsonNode) (name: string) -> if isNull current then null else current[name]) node
+
+    let private repositoriesOf (node: JsonNode) = node["repositories"].AsArray() |> Seq.toList
+
+    /// The work rows of an aggregated entry's own work-list document.
+    let private itemsOf (entry: JsonNode) =
+        let document = entry["document"]
+        document["items"].AsArray() |> Seq.toList
+
+    let private aggregationUnitTests =
+        [ { Name = "hub state: a repository's answer is classified by contract, never altered"
+            Run =
+              fun () ->
+                  let listed = HubStateJson.classify "work state" [ "work-list" ] 0 (workState "work-list") ""
+                  Assert.equal SpokeAvailability.Available listed.Availability
+                  Assert.equal (workState "work-list") (listed.Document.Value.ToJsonString())
+
+                  let notFound =
+                      HubStateJson.classify "work state" [ "work-item" ] 1 """{"contract":"praxis.error","version":1,"code":"work-item-not-found","error":"x"}""" ""
+
+                  Assert.equal SpokeAvailability.Available notFound.Availability
+                  Assert.isTrue notFound.Document.IsSome "the repository's own error document is relayed"
+
+                  let unreadable =
+                      HubStateJson.classify "work state" [ "work-list" ] 1 """{"contract":"praxis.error","version":1,"code":"work-state-unreadable","error":"queue.json is broken"}""" ""
+
+                  Assert.equal (SpokeAvailability.Unreadable "queue.json is broken") unreadable.Availability
+
+                  match (HubStateJson.classify "work state" [ "work-list" ] 0 """{"contract":"praxis.work-state","version":2,"kind":"work-list"}""" "").Availability with
+                  | SpokeAvailability.Incompatible reason -> Http.contains "version 2; this hub reads version 1" reason
+                  | other -> failwith $"expected incompatible, got {other}"
+
+                  match (HubStateJson.classify "work state" [ "work-list" ] 2 "Usage: praxis version | work list" "Usage: praxis").Availability with
+                  | SpokeAvailability.Incompatible reason -> Http.contains "does not provide `praxis work state`" reason
+                  | other -> failwith $"expected incompatible, got {other}"
+
+                  match (HubStateJson.classify "work state" [ "work-list" ] 0 (workState "work-item") "").Availability with
+                  | SpokeAvailability.Incompatible _ -> ()
+                  | other -> failwith $"a document of the wrong kind is incompatible, got {other}" }
+
+          { Name = "hub state: a relayed error keeps the single-repository API's status"
+            Run =
+              fun () ->
+                  let error code = Some(document $"""{{"contract":"praxis.error","version":1,"code":"{code}"}}""")
+                  Assert.equal 200 (HubRegistry.relayedStatus (Some(document (workState "work-item"))))
+                  Assert.equal 404 (HubRegistry.relayedStatus (error "work-item-not-found"))
+                  Assert.equal 409 (HubRegistry.relayedStatus (error "illegal-transition"))
+                  Assert.equal 422 (HubRegistry.relayedStatus (error "reason-required"))
+                  Assert.equal 502 (HubRegistry.relayedStatus (error "something-new"))
+
+                  let unreachable =
+                      HubRegistry.repositoryAnswer
+                          HubStateJson.repositoryWorkListKind
+                          (JsonObject())
+                          { Availability = SpokeAvailability.Unreachable "gone"
+                            Document = None }
+
+                  Assert.equal 502 unreachable.Status
+                  Assert.equal "repository-unavailable" (Http.text unreachable.Document "code") }
+
+          { Name = "hub state: the v1 routes and the spoke command lines they delegate to"
+            Run =
+              fun () ->
+                  let request methodName path query body =
+                      { Method = methodName
+                        Segments = HttpMessages.pathSegments path
+                        Query = query
+                        ContentType = Some "application/json"
+                        Body = Text.Encoding.UTF8.GetBytes(body: string) }
+
+                  Assert.equal (HubWebRoute.State HubStateRoute.Repositories) (HubWeb.route (request "GET" "/api/v1/repos" [] ""))
+
+                  Assert.equal
+                      (HubWebRoute.State(HubStateRoute.RepositoryWork("alpha", [ "x" ], Some "ready")))
+                      (HubWeb.route (request "GET" "/api/v1/repos/alpha/work" [ "tag", "x"; "status", "ready" ] ""))
+
+                  Assert.equal
+                      (HubWebRoute.State(HubStateRoute.RepositoryWorkItem("alpha", "WI-1")))
+                      (HubWeb.route (request "GET" "/api/v1/repos/alpha/work/WI-1" [] ""))
+
+                  Assert.equal (HubWebRoute.State(HubStateRoute.Work(Some "alpha", [], None))) (HubWeb.route (request "GET" "/api/v1/work" [ "repo", "alpha" ] ""))
+
+                  match HubWeb.route (request "POST" "/api/v1/repos/alpha/work/WI-1/transitions" [] """{"action":"ready"}""") with
+                  | HubWebRoute.State(HubStateRoute.Transition("alpha", "WI-1", Ok body)) -> Assert.equal "ready" (Http.text body "action")
+                  | other -> failwith $"unexpected route {other}"
+
+                  Assert.equal [ "work"; "state"; "WI-1" ] (HubRegistry.stateArguments (Some "WI-1") [] None)
+                  Assert.equal [ "work"; "state"; "--tag"; "x"; "--status"; "ready" ] (HubRegistry.stateArguments None [ "x" ] (Some "ready"))
+
+                  Assert.equal
+                      [ "work"; "transition"; "--id"; "WI-1"; "--request"; """{"action":"ready"}""" ]
+                      (HubRegistry.transitionArguments "WI-1" (document """{"action":"ready"}"""))
+
+                  Assert.equal (Ok(StateQuery.List([ "a"; "b" ], Some "ready"))) (WorkStateCommands.stateQuery [ "--tag"; "a,b"; "--status"; "ready"; "--json" ])
+                  Assert.equal (Ok(StateQuery.Item "WI-1")) (WorkStateCommands.stateQuery [ "WI-1" ])
+                  Assert.isTrue (WorkStateCommands.stateQuery [ "WI-1"; "--status"; "ready" ] |> Result.isError) "an item read takes no list filter"
+                  Assert.equal (Some RefusalCategory.IllegalTransition) (WebInterface.refusalCategoryOf "illegal-transition") } ]
+
+    let private aggregationCliTests =
+        [ { Name = "work state prints the same praxis.work-state documents web serve answers; work transition runs the API's transition path"
+            Run =
+              fun () ->
+                  withRepositories 1 (fun _ spokes ->
+                      let root = spokes[0]
+                      capture root "WI-S1" "State contract item"
+
+                      using (new ServedProcess(root, [ "web"; "serve" ])) (fun server ->
+                          let served (path: string) =
+                              let body = (Http.json (server.Get path)).AsObject()
+                              body.Remove "source" |> ignore
+                              body.ToJsonString()
+
+                          Assert.equal (served "/api/v1/work") ((stateOf root []).ToJsonString())
+                          Assert.equal (served "/api/v1/work/WI-S1") ((stateOf root [ "WI-S1" ]).ToJsonString()))
+
+                      let missing = CliHarness.ros root [ "work"; "state"; "WI-NOPE" ]
+                      Assert.equal 1 missing.Exit
+                      Assert.equal "work-item-not-found" (Http.text (JsonNode.Parse missing.Out) "code")
+
+                      let before = snapshot root
+                      let refused = CliHarness.ros root [ "work"; "transition"; "--id"; "WI-S1"; "--request"; """{"action":"resume"}""" ]
+                      Assert.equal 1 refused.Exit
+                      Assert.equal "illegal-transition" (Http.text (JsonNode.Parse refused.Out) "code")
+                      Assert.equal before (snapshot root)
+
+                      let accepted = CliHarness.ros root [ "work"; "transition"; "--id"; "WI-S1"; "--request"; """{"action":"ready"}""" ]
+                      Assert.equal 0 accepted.Exit
+                      let transitioned = JsonNode.Parse accepted.Out
+                      Assert.equal "work-transition" (Http.text transitioned "kind")
+                      Assert.equal "ready" (transitioned |> nodeAt [ "item"; "backlog" ] |> fun backlog -> Http.text backlog "status")
+
+                      let malformed = CliHarness.ros root [ "work"; "transition"; "--id"; "WI-S1"; "--request"; "{" ]
+                      Assert.equal 2 malformed.Exit
+                      Assert.equal "invalid-request" (Http.text (JsonNode.Parse malformed.Out) "code")
+                      Assert.equal 2 (CliHarness.ros root [ "work"; "transition"; "--request"; "{}" ]).Exit) }
+
+          { Name = "hub state prints a repository's own documents and reports an unregistered repository"
+            Run =
+              fun () ->
+                  withRepositories 1 (fun hubRoot spokes ->
+                      let id = Http.text (hubOk hubRoot [ "register"; spokes[0] ]) "id"
+                      capture spokes[0] "WI-C1" "Read through the hub CLI"
+                      let item = hubOk hubRoot [ "state"; "--repo"; id; "--item"; "WI-C1" ]
+                      Assert.equal "praxis.hub-state" (Http.text item "contract")
+                      Assert.equal "repository-work-item" (Http.text item "kind")
+                      Assert.equal ((stateOf (List.item 0 spokes) [ "WI-C1" ]).ToJsonString()) (item["document"].ToJsonString())
+                      Assert.equal "work-list" (Http.text (hubOk hubRoot [ "state" ]) "kind")
+                      let unknown = hub hubRoot [ "state"; "--repo"; "nope" ]
+                      Assert.equal 1 unknown.Exit
+                      Assert.equal "repository-not-registered" (Http.text (JsonNode.Parse unknown.Out) "code")) } ]
+
+    let private aggregationServerTests =
+        [ { Name = "hub serve v1: repositories with availability, and each repository's own work list and item, by delegation"
+            Run =
+              fun () ->
+                  withRepositories 2 (fun hubRoot spokes ->
+                      let idA = Http.text (hubOk hubRoot [ "register"; spokes[0] ]) "id"
+                      let idB = Http.text (hubOk hubRoot [ "register"; spokes[1] ]) "id"
+                      capture spokes[0] "WI-A1" "Alpha item"
+                      capture spokes[1] "WI-B1" "Beta item"
+                      use server = new ServedProcess(hubRoot, [ "hub"; "serve" ])
+
+                      let repositories = Http.json (server.Get "/api/v1/repos")
+                      Assert.equal "repository-list" (Http.text repositories "kind")
+                      let listed = repositories["repositories"].AsArray() |> Seq.toList
+                      Assert.equal [ idA; idB ] (listed |> List.map (fun repository -> Http.text repository "id"))
+                      Assert.isTrue (listed |> List.forall (fun repository -> availability repository = "available")) "both repositories answer"
+                      Assert.equal idA (List.head listed |> nodeAt [ "repositorySource" ] |> fun source -> Http.text source "repository")
+
+                      let work = server.Get $"/api/v1/repos/{idA}/work"
+                      Assert.equal 200 (Http.status work)
+                      let workBody = Http.json work
+                      Assert.equal "repository-work-list" (Http.text workBody "kind")
+                      Assert.equal ((stateOf (List.item 0 spokes) []).ToJsonString()) (workBody["document"].ToJsonString())
+
+                      let item = Http.json (server.Get $"/api/v1/repos/{idB}/work/WI-B1")
+                      Assert.equal ((stateOf (List.item 1 spokes) [ "WI-B1" ]).ToJsonString()) (item["document"].ToJsonString())
+
+                      let missing = server.Get $"/api/v1/repos/{idB}/work/WI-NOPE"
+                      Assert.equal 404 (Http.status missing)
+                      Assert.equal "work-item-not-found" (Http.json missing |> nodeAt [ "document" ] |> fun found -> Http.text found "code")
+
+                      let unregistered = server.Get "/api/v1/repos/nope/work"
+                      Assert.equal 404 (Http.status unregistered)
+                      Assert.equal "repository-not-registered" (Http.text (Http.json unregistered) "code")
+
+                      let aggregated = Http.json (server.Get "/api/v1/work")
+                      let entries = aggregated["repositories"].AsArray() |> Seq.toList
+                      let titlesIn (entry: JsonNode) = itemsOf entry |> List.map (fun row -> Http.text row "title")
+                      let titles = entries |> List.collect titlesIn
+                      Assert.isTrue (List.contains "Alpha item" titles && List.contains "Beta item" titles) $"both repositories' own items are listed: {titles}") }
+
+          { Name = "hub serve v1: the hub stores only its registry, and a repository's own change is served without the hub"
+            Run =
+              fun () ->
+                  withRepositories 1 (fun hubRoot spokes ->
+                      CliHarness.optOutOfDurableCheckpoints spokes[0]
+                      CliHarness.commitAll spokes[0] "pre-continuity completion semantics"
+                      let id = Http.text (hubOk hubRoot [ "register"; spokes[0] ]) "id"
+                      let title = "Uniquely titled spoke item 7f3e"
+                      capture spokes[0] "WI-D1" title
+                      CliHarness.rosOk spokes[0] [ "work"; "backlog-transition"; "--id"; "WI-D1"; "--action"; "ready"; "--occurred-at"; CliHarness.now () ] |> ignore
+                      CliHarness.commitAll hubRoot "registered"
+                      use server = new ServedProcess(hubRoot, [ "hub"; "serve" ])
+                      let hubBefore = snapshot hubRoot
+                      let semanticState () = Http.json (server.Get $"/api/v1/repos/{id}/work/WI-D1") |> nodeAt [ "document"; "item" ] |> fun item -> Http.text item "semanticState"
+                      let before = semanticState ()
+
+                      // Changed in the repository itself; the hub is not involved.
+                      CliHarness.rosOk spokes[0] [ "work"; "start"; "--id"; "WI-D1"; "--occurred-at"; CliHarness.now () ] |> ignore
+                      let after = semanticState ()
+                      Assert.isTrue (before <> after) $"the repository's change is served: {before} -> {after}"
+                      Assert.equal (stateOf (List.item 0 spokes) [ "WI-D1" ] |> nodeAt [ "item" ] |> fun item -> Http.text item "semanticState") after
+                      server.Get "/api/v1/work" |> ignore
+                      server.Get "/api/v1/repos" |> ignore
+
+                      Assert.equal hubBefore (snapshot hubRoot)
+                      Assert.equal [ "registry.json"; "registry.md" ] (Directory.GetFiles(Path.Combine(hubRoot, ".ros", "hub")) |> Array.map Path.GetFileName |> Array.sort |> Array.toList)
+
+                      let copies =
+                          Directory.EnumerateFiles(hubRoot, "*", SearchOption.AllDirectories)
+                          |> Seq.filter (fun path -> not (path.Contains(string Path.DirectorySeparatorChar + ".git" + string Path.DirectorySeparatorChar)))
+                          |> Seq.filter (fun path -> (File.ReadAllText path).Contains title)
+                          |> Seq.toList
+
+                      Assert.empty copies) }
+
+          { Name = "hub serve v1: an unreachable or incompatible repository is reported for itself and the response still succeeds"
+            Run =
+              fun () ->
+                  withRepositories 3 (fun hubRoot spokes ->
+                      let ids = spokes |> List.map (fun spokeRoot -> Http.text (hubOk hubRoot [ "register"; spokeRoot ]) "id")
+                      capture spokes[0] "WI-H1" "Healthy item"
+                      makeOlderPraxis spokes[2]
+                      let moved = spokes[1] + "-moved"
+                      Directory.Move(spokes[1], moved)
+
+                      try
+                          use server = new ServedProcess(hubRoot, [ "hub"; "serve" ])
+                          let aggregated = server.Get "/api/v1/work"
+                          Assert.equal 200 (Http.status aggregated)
+                          let entries = Http.json aggregated |> repositoriesOf
+                          let entry id = entries |> List.find (fun item -> Http.text item["repository"] "id" = id)
+                          Assert.equal "available" (entry ids[0] |> nodeAt [ "repository" ] |> availability)
+                          Assert.isTrue (itemsOf (entry ids[0]) |> List.exists (fun row -> Http.text row "title" = "Healthy item")) "the healthy repository's work is listed"
+                          Assert.equal "unreachable" (entry ids[1] |> nodeAt [ "repository" ] |> availability)
+                          Http.contains "no longer exists" (entry ids[1] |> nodeAt [ "repository"; "availability" ] |> fun found -> Http.text found "reason")
+                          Assert.isTrue (entry ids[1] |> nodeAt [ "document" ] |> isNull) "an unreachable repository has no document"
+                          Assert.equal "incompatible" (entry ids[2] |> nodeAt [ "repository" ] |> availability)
+                          Http.contains "does not provide `praxis work state`" (entry ids[2] |> nodeAt [ "repository"; "availability" ] |> fun found -> Http.text found "reason")
+
+                          let repositories = Http.json (server.Get "/api/v1/repos") |> repositoriesOf |> List.map availability
+                          Assert.equal [ "available"; "unreachable"; "incompatible" ] repositories
+
+                          let single = server.Get $"/api/v1/repos/{ids[2]}/work"
+                          Assert.equal 502 (Http.status single)
+                          Assert.equal "repository-unavailable" (Http.text (Http.json single) "code")
+                      finally
+                          CliHarness.removeDirectory moved) }
+
+          { Name = "hub serve v1: a transition is run by the owning repository's own transition path"
+            Run =
+              fun () ->
+                  withRepositories 1 (fun hubRoot spokes ->
+                      let id = Http.text (hubOk hubRoot [ "register"; spokes[0] ]) "id"
+                      capture spokes[0] "WI-T1" "Transitioned through the hub"
+                      use server = new ServedProcess(hubRoot, [ "hub"; "serve" ])
+                      let path = $"/api/v1/repos/{id}/work/WI-T1/transitions"
+                      let spokeBefore = snapshot spokes[0]
+                      let registryBefore = CliHarness.read hubRoot ".ros/hub/registry.json"
+
+                      let refused = server.PostJson(path, """{"action":"resume"}""")
+                      Assert.equal 409 (Http.status refused)
+                      let refusal = (Http.json refused)["document"]
+                      Assert.equal "illegal-transition" (Http.text refusal "code")
+                      Assert.equal "resume" (Http.text refusal "requestedAction")
+                      Assert.equal spokeBefore (snapshot spokes[0])
+
+                      let accepted = server.PostJson(path, """{"action":"ready"}""")
+                      Assert.equal 200 (Http.status accepted)
+                      let body = Http.json accepted
+                      Assert.equal "repository-work-transition" (Http.text body "kind")
+                      Assert.equal "work-transition" (Http.text body["document"] "kind")
+                      Assert.equal "ready" (stateOf (List.item 0 spokes) [ "WI-T1" ] |> nodeAt [ "item"; "backlog" ] |> fun backlog -> Http.text backlog "status")
+                      Assert.equal registryBefore (CliHarness.read hubRoot ".ros/hub/registry.json")
+
+                      Assert.equal 400 (Http.status (server.PostJson(path, "[1]")))
+                      Assert.equal 404 (Http.status (server.PostJson("/api/v1/repos/nope/work/WI-T1/transitions", """{"action":"ready"}""")))) } ]
+
+    let tests =
+        unitTests
+        @ cliTests
+        @ scaffoldTests
+        @ serverTests
+        @ aggregationUnitTests
+        @ aggregationCliTests
+        @ aggregationServerTests

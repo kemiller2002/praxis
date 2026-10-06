@@ -73,5 +73,6 @@
     <Compile Include="Planning/Grouping.fs" />
     <Compile Include="Work/WorkGroups.fs" />
     <Compile Include="Work/StateIdentity.fs" />
+    <Compile Include="Work/SpokeAvailability.fs" />
   </ItemGroup>
 </Project>

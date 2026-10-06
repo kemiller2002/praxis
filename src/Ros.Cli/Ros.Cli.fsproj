@@ -41,6 +41,7 @@
     <Compile Include="TempUploads.fs" />
     <Compile Include="ControlPlaneSource.fs" />
     <Compile Include="WebInterface.fs" />
+    <Compile Include="WorkStateCommands.fs" />
     <Compile Include="Hub.fs" />
     <Compile Include="HubWeb.fs" />
     <Compile Include="CheckpointCommands.fs" />
