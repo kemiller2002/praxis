@@ -108,11 +108,27 @@ execution or a Forma/Limen UI must consume the same list and never compute
 legality itself. `--human-only execution.complete` makes a transition
 human-required: an agent cannot satisfy it by reporting approval.
 
+## Ordo.Core
+
+Praxis consumes Ordo's execution semantics from the released Ordo.Core
+package rather than a copy (ORDO-CORE-PACKAGE, PRAXIS-FND-01; PRX-ARCH-001,
+PRX-EXEC-002). `EchelonFoundry.Ordo.Core` is the `ordo-core.nupkg` asset of
+the Ordo release named in `vendor/nuget/ordo-core.lock`, vendored unmodified
+with its sha256 and restored only from that folder (`NuGet.config` package
+source mapping). Role capability sets (`RoleAuthority.defaultFor`), the
+evaluator fingerprint, glob matching, mutation-boundary classification and
+scope expansion are Ordo.Core's; `Praxis.Domain.Execution` keeps Praxis's
+persisted wire shapes and translates by wire name. Tests fail when the
+vocabularies diverge, when the vendored package's digest differs from the
+lock, or when Governance.fs re-implements an Ordo rule. To move to a new Ordo
+release, replace the package, the lock and the `PackageReference` version
+together.
+
 ## Not yet implemented
 
 The local control-plane API server (CTL-001..008), the operator UI, host
-enforcement evidence (SEC-*), remote-execution binding of envelopes, and
-consuming Ordo.Core as a package. See work item EXEC-INSTALL-109.
+enforcement evidence (SEC-*) and remote-execution binding of envelopes. See
+work item EXEC-INSTALL-109.
 
 ## Attribution of execution state
 
