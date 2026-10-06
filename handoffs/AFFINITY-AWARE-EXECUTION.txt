@@ -1,0 +1,78 @@
+# Affinity-aware execution implementation handoff
+
+## Objective
+
+Implement the proposed requirements in `requirements/AFFINITY-AWARE-EXECUTION.md`.
+
+The goal is to operationalize the A021/A021-R2 evidence for high-affinity work without overgeneralizing it to unrelated work. Treat the requirements document as the implementation contract and preserve the evidence-calibrated policy.
+
+## Start here
+
+1. Read `AGENTS.md` and follow the current work protocol.
+2. Read `requirements/AFFINITY-AWARE-EXECUTION.md`.
+3. Read the existing related surfaces before designing:
+   - `requirements/EXECUTION-ORCHESTRATION.md`
+   - `requirements/PLANNING-WORK-GROUPS.md`
+   - `docs/group-analysis-template.md`
+   - `docs/development-telemetry.md`
+   - `docs/work-protocol.md`
+4. Read the A021/A021-R2 evidence and HY-ROS-2026-A028/HY-ROS-2026-A029 records that exist on the current mainline. Do not reinterpret the 58.7% R2 cost observation as a guaranteed future saving.
+5. Inventory existing F# implementation and tests for planning, work groups, orchestration, telemetry, continuity/checkpoints, and quality evidence before adding new abstractions.
+
+## Implementation strategy
+
+Implement in four coherent slices unless current architecture gives a stronger reason to combine them:
+
+### Slice 1: affinity analysis and clustering
+
+Implement PRX-AFF-010..015 and PRX-AFF-PLAN-001..004.
+
+Prefer typed domain models and deterministic, inspectable evidence. Do not make an opaque numeric score the authority. Keep dependency and affinity separate.
+
+### Slice 2: topology policy and execution
+
+Implement PRX-AFF-EXEC-001..005, PRX-AFF-POL-001..006, PRX-AFF-GRP-001..005, and PRX-AFF-CONT-001..003.
+
+Reuse existing work-group and orchestration state. Do not create a second lifecycle store. Grouped execution must preserve member acceptance/lifecycle boundaries. Independent workers require the predecessor-SHA start guard.
+
+### Slice 3: execution-plan optimization
+
+Implement PRX-AFF-XPLAN-001..007, PRX-AFF-CTX-001..006, and PRX-AFF-DYN-001..005.
+
+Treat grouped versus independent as one decision inside an execution plan. Model cohort/context limits, critical path, safe parallelism, integration contention, negative affinity, dynamic affinity, controlled replanning, operator override, and versioned/rollback-capable policy. A replacement context must be recorded as a real context boundary.
+
+### Slice 4: economics, quality, evidence, and learning
+
+Implement PRX-AFF-MET-001..006, PRX-AFF-ECO-001..007, PRX-AFF-CMP-001..005, PRX-AFF-CAUSAL-001..004, PRX-AFF-QUAL-001..004, PRX-AFF-EV-001..004, and PRX-AFF-LEARN-001..004.
+
+Reuse existing telemetry and quality-evidence contracts. Make cost-to-accepted-state, time-to-accepted-state, and accepted quality the primary operational outcomes. Include verification, integration, and repair when attributable. Unknown metrics remain unknown, never zero. Keep historical observation, prediction, current-run measurement, and controlled experimental evidence semantically distinct. Preserve provider/model/runtime and task-scale dimensions.
+
+## Agent execution rules
+
+- Do not hand-edit `.ros/`.
+- Establish or select a legitimate work item through the Praxis work protocol before meaningful mutation.
+- If these requirements are not already represented by an appropriate ready work item, capture the implementation obligation through the supported Praxis command/remote protocol rather than editing backlog state directly.
+- Use substantial steps rather than command-level telemetry noise.
+- Commit and push at coherent recovery boundaries and create durable checkpoints.
+- Follow the repository's upstream-sync rule.
+- Prefer existing F# modules and abstractions; Praxis remains F#/.NET only.
+- Add tests before or with behavioral changes, especially around classification boundaries, start guards, continuity, context splitting/replacement, dynamic replanning, negative affinity, integration contention, operator override, unknown telemetry, cost-to-accepted-state, causal-evidence distinctions, and policy version/rollback persistence.
+- In-progress work may follow current branch policy, but do not declare ready-to-merge until required validation passes.
+- Do not change HY-ROS-2026-A029 confidence merely because this feature is implemented. Research confidence changes only from evidence.
+
+## Required completion report
+
+Report:
+
+- work item ID(s);
+- branch and final SHA;
+- requirements implemented and deferred;
+- architecture/reuse decisions;
+- tests and validation actually run;
+- telemetry available/unavailable;
+- any migration or compatibility impact;
+- durable checkpoint/handoff state;
+- unresolved risks;
+- recommended next action.
+
+A successor must be able to continue solely from repository and Praxis state.
