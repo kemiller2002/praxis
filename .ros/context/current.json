@@ -5939,7 +5939,27 @@
       "updatedAt": "2026-10-06T14:55:50.000Z",
       "telemetryExecutionIds": [
         "EXE-20261006T145551283Z-6fa4001e"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "338769a8c7e9d19655a2cb3c",
+        "recordedAt": "2026-10-06T15:04:09.000Z",
+        "executionId": "EXE-20261006T145551283Z-6fa4001e",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a022-run-a41b",
+        "commit": "3325502c21b4242d488821257d479d64294c9911",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a022-run-a41b",
+        "remoteCommit": "3325502c21b4242d488821257d479d64294c9911",
+        "summary": "CN and GL artifact kinds added to the F# model, policy, Python oracle, standards and tests; new tests pass",
+        "nextAction": "Run full F# and Python suites, registry build/validate, verify acceptance criteria",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     }
   ],
   "protocolVersion": "1.0.0",
