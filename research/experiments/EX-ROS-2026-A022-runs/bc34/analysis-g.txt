@@ -178,3 +178,74 @@ Shared infrastructure attribution
 4. PRAXIS-STATE-MERGE-01 merge engine + driver + docs.       checkpoint (milestone: engine)
 5. PRAXIS-PLAN-ERROR-HISTORY store (JSONL covered by 4), commands, validate.  checkpoint
 6. Verification pass per item, completion, registry build, validate.
+
+
+5. Verification pass (before completing any member)
+----------------------------------------------------
+
+Full runs on HEAD 3373769 (Release build):
+  dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll -> 1340 test(s); 1340 passed; 0 failed
+  python3 -m unittest discover -s tests                     -> Ran 9 tests ... OK
+  ./praxis validate                                         -> validation passed with 2 warning(s) (pre-existing provenance warnings on two older evidence records, not touched)
+  ./praxis architecture check                               -> passed
+Test names below can be run alone with PRAXIS_TEST_FILTER="<name fragment>".
+
+ACTOR-KIND-ANCHOR
+| 1. tryParse rejects trailing LF/CR | met | ValueAnchorTests "actor kind rejects an extension with a trailing newline or carriage return" (x-agent\n, x-agent\r -> None) |
+| 2. whole-value Domain regexes audited; $ corrected or recorded safe | met | audit list below; grep -rna 'Regex' src/Ros.Domain shows no remaining $-anchored whole-value validator |
+| 3. a test per corrected pattern | met | ValueAnchorTests (5 tests), TelemetryValidationTests "whole-value telemetry patterns reject a trailing line terminator", EnvelopeReconciliationTests "envelope identifiers and cost currency reject a trailing line terminator" |
+| 4. no accepted valid value changes | met | each of those tests also asserts the previously valid values are still accepted; full suite green (1340/1340) |
+  Audit list (src/Ros.Domain, every Regex):
+  Corrected to \z (whole-value validators):
+    Provenance/Actor.fs ActorKind extension; Provenance/ArtifactProvenance.fs operation extension,
+    EXE- execution id, CTB- key, timestamp; Artifacts/Policy.fs identifier and legacy package id;
+    Architecture/ImplementationLanguagePolicy.fs DF- decision; Telemetry/TelemetryValidation.fs
+    currency, classification extension, EXE- id; Work/WorkGroups.fs GROUP- id; Work/PathFilter.fs
+    glob (generated ^...\z); Work/Identity.fs work-item id; Work/EnvelopeReconciliation.fs sha,
+    work item, transaction, currency.
+  Already \z: Remote/Protocol.fs request patterns and version; Git/Durability.fs CommitId;
+    Telemetry/Steps.fs step id.
+  Recorded safe ($ kept), not whole-value validators:
+    Telemetry/SessionTranscript.fs pathToken - applied to tokens split on space/tab/LF, so a token
+      never contains LF, and $ does not match before CR.
+    Telemetry/ChangeSummary.fs testDirectory/testSuffix/readme/docExtension - classify changed
+      paths for a summary heuristic; they validate nothing.
+    Planning/Graph.fs familySuffix and Planning/Grouping.fs SharedRequirement Replace - derive a
+      family stem from already-validated ids.
+    Planning/Inventory.fs clauseBoundary - splits free text into clauses.
+    Provenance/ProvenancePolicy.fs datePattern - prefix match by design (no end anchor).
+    Other Inventory/Grouping/SessionTranscript patterns - unanchored searches in free text.
+
+ATTR-RECONCILE-SYMLINK-SUBMODULE
+| 1. unchanged symlink matches its recorded blob (link text, not followed file) | met | WorkReconciliationEffectTests "a reconciled symbolic link matches while its target text is unchanged, not the file it points to" (findings empty; editing the target file reports only that file) |
+| 2. submodule matches while gitlink commit unchanged | met | "a reconciled submodule matches while its gitlink commit is unchanged and fails closed otherwise" |
+| 3. changed link target / gitlink fails closed | met | same two tests: retargeted link -> src/link.fs finding; submodule checked out at another commit -> vendor/lib finding |
+| 4. regular-file behaviour unchanged | met | regular files still go through git hash-object (GitRepository.fs fileStates); the existing 21 reconcile tests pass; blob-id test matches git hash-object |
+| 5. real Git fixtures for both | met | both tests create real repositories (symlink mode 120000, submodule mode 160000 asserted with git ls-files -s); both failed against the previous implementation and pass now |
+
+PRAXIS-CN-GL-KINDS
+| 1. kinds with documented root, statuses, id/filename rules | met | Model.fs (research/concepts, research/glossary, optional registries), Policy.fs statuses; framework/standards/IDENTIFIERS.md "Governed kinds" table; ArtifactTests "concept and glossary kinds have documented roots..." |
+| 2. registry build generates registries; check detects staleness | met | ArtifactTests "concept and glossary records are discovered, registered, checked for staleness and validated like other kinds" |
+| 3. identifier, filename, status, reference, provenance checks | met | same test (invalid id, filename, status, broken reference findings); ArtifactTests "concept and glossary records are subject to the provenance policy" |
+| 4. starter and Python oracle agree with the F# model | met | ArtifactTests "the Python artifact oracle enumerates the same kinds, directories, registries and statuses as the F# model"; greenfield manifest scaffolds research/concepts, research/glossary (and research/requirements); tests/test_ros_cli.py ConceptAndGlossaryKindTests |
+| 5. tests; standards and tooling agree | met | tests above; IDENTIFIERS.md lists exactly the governed kinds |
+
+PRAXIS-STATE-MERGE-01
+| 1. supported documented path, no hand edits | met | `praxis state merge-driver install` + `praxis state merge-file` (Git merge driver); StateMergeTests "branches that started, blocked and completed different items merge and validate" (unassisted merge conflicts in events.jsonl/current.json; with the driver the merge completes clean) |
+| 2. events once in deterministic order; id-keyed three-way | met | StateMergeTests "append-only events keep every event once, in one order whichever side is ours", "id-keyed items merge three-way...", "context bookkeeping follows the latest write..." |
+| 3. conflicting changes fail closed naming the item | met | StateMergeTests "one item changed differently on both sides is refused and named"; e2e "the same item changed on both branches fails closed and names the item" (CONFLICT .ros/work/queue.json: items 'WI-0001', conflict markers kept, file stays unmerged) |
+| 4. praxis validate passes on the merged result reproducing the pattern | met | e2e merge test asserts empty `praxis validate --json` findings after merging |
+| 5. every single-document state file covered or listed | met | StateMergeJson.rules (events, estimate-error, context, queue.json, queue.md, groups, publications, every kind registry); docs/work-protocol.md "Not covered, and why" lists the rest |
+| 6. docs/work-protocol.md documents it; tests | met | docs/work-protocol.md "Merging Praxis state from parallel branches"; 10 StateMergeTests |
+  Note: self-merge of every real state file in this repository is byte-identical (checked with
+  `praxis state merge-file` on events, context, queue.json, queue.md and four registries).
+
+PRAXIS-PLAN-ERROR-HISTORY
+| 1. opt-in command records keyed, idempotent; others read-only | met | PlanningCliTests "record-error stores a keyed replay summary once and only when asked" (keyed by planner version, commit, as-of; already-recorded; key-conflict refused); "30 no plan command mutates repository state" now also runs error-history |
+| 2. read view over time, by task class and recorded provider/model/runtime, no provider claims | met | "error-history segments error over time..." (series all/provider/runtime/task-class; model absent because unrecorded); segments come only from telemetry values |
+| 3. older than configured horizon -> stale, not authoritative | met | same test: 90-day default marks the older one stale; all-stale -> authoritative null; estimateErrorHorizonDays 400 keeps both; 0 refused |
+| 4. deterministic output | met | same test renders twice with --as-of and compares byte-for-byte |
+| 5. praxis validate checks stored history | met | PlanningCliTests "validate checks the stored estimate-error history" (id/key mismatch and malformed line reported) |
+| 6. tests and docs/planning.md status row | met | tests above; docs/planning.md row 170-173 "Met ..." plus commands, configuration, "Error over time" |
+
+All criteria of all five members are met; no member is blocked.

@@ -5942,7 +5942,27 @@
       "updatedAt": "2026-10-02T14:58:22.000Z",
       "telemetryExecutionIds": [
         "EXE-20261002T145825399Z-7a87163a"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "b9a2d0bfda9b98d085e138f4",
+        "recordedAt": "2026-10-02T15:45:16.000Z",
+        "executionId": "EXE-20261002T145825399Z-7a87163a",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a022-run-bc34",
+        "commit": "3373769d72590ea46be2dc26114ccf09f870714f",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a022-run-bc34",
+        "remoteCommit": "3373769d72590ea46be2dc26114ccf09f870714f",
+        "summary": "PRAXIS-PLAN-ERROR-HISTORY implemented and pushed: record-error, error-history, horizon config, validation, docs, tests. All five items implemented; remaining: full test run, per-criterion verification, completion.",
+        "nextAction": "Run the full suite, verify each criterion per item in analysis-g.txt, complete items.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     },
     {
       "id": "PRAXIS-STATE-MERGE-01",

@@ -1,0 +1,77 @@
+{
+  "schema": "ex-ros-2026-a021.session-metrics/1",
+  "label": "g",
+  "sessionId": "0f6ee712-b084-5adf-848f-92d0d8ab9eae",
+  "transcript": "0f6ee712-b084-5adf-848f-92d0d8ab9eae.jsonl",
+  "models": [
+    "<synthetic>",
+    "claude-opus-5-5"
+  ],
+  "startedAt": "2026-10-02T14:42:04.898000+00:00",
+  "endedAt": "2026-10-06T14:08:13.050000+00:00",
+  "wallMs": 343568152,
+  "msToFirstCodeMutation": 1193770,
+  "modelRequests": 184,
+  "tokens": {
+    "input": 366,
+    "output": 157022,
+    "cacheRead": 43393239,
+    "cacheCreation": 721926
+  },
+  "costUsd": {
+    "value": 14.309511,
+    "source": "runtime cost-state (estimate; last record)"
+  },
+  "toolCalls": {
+    "Bash": 174,
+    "Edit": 1,
+    "Monitor": 1,
+    "ReadNotifications": 2,
+    "ToolSearch": 2,
+    "Write": 6,
+    "mcp__claude-code-remote__send_message": 1
+  },
+  "toolErrors": 2,
+  "fileReads": 115,
+  "distinctFilesRead": 70,
+  "repeatedReads": {
+    "/tmp/claude-0/-home-user-praxis/0f6ee712-b084-5adf-848f-92d0d8ab9eae/tasks/b97k07j4i.output": 4,
+    "/tmp/claude-0/build.log": 2,
+    "docs/planning.md": 6,
+    "framework/standards/IDENTIFIERS.md": 3,
+    "research/decisions/DF-ROS-2026-A040--post-hoc-attribution-reconciliation.md": 2,
+    "src/Ros.Cli/CliProcess.fs": 2,
+    "src/Ros.Cli/PlanCommands.fs": 2,
+    "src/Ros.Contracts/Planning/PlanningJson.fs": 5,
+    "src/Ros.Domain/Artifacts/Policy.fs": 2,
+    "src/Ros.Domain/Git/Model.fs": 2,
+    "src/Ros.Domain/Planning/Model.fs": 3,
+    "src/Ros.Domain/Provenance/ArtifactProvenance.fs": 2,
+    "src/Ros.Domain/Provenance/ProvenancePolicy.fs": 2,
+    "src/Ros.Domain/Telemetry/TelemetryValidation.fs": 3,
+    "src/Ros.Domain/Work/EnvelopeReconciliation.fs": 2,
+    "src/Ros.Infrastructure/Artifacts/FileArtifactRepository.fs": 2,
+    "src/Ros.Infrastructure/Git/GitRepository.fs": 2,
+    "tests/Ros.Tests/ArtifactTests.fs": 4,
+    "tests/Ros.Tests/EnvelopeReconciliationTests.fs": 3,
+    "tests/Ros.Tests/PlanningCliTests.fs": 4,
+    "tests/Ros.Tests/Program.fs": 2,
+    "tests/Ros.Tests/TelemetryValidationTests.fs": 3,
+    "tests/Ros.Tests/WorkReconciliationEffectTests.fs": 4,
+    "tests/test_ros_cli.py": 2,
+    "tools/ros_cli.py": 2
+  },
+  "governanceReads": {
+    "AGENTS.md": 1,
+    "docs/00-governance/AI-Repository-Operating-System.md": 1,
+    "docs/planning.md": 6,
+    "docs/work-protocol.md": 1
+  },
+  "searches": 138,
+  "fileWrites": 45,
+  "distinctFilesEdited": 7,
+  "builds": 19,
+  "testRuns": 20,
+  "compactions": 0,
+  "notes": "reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate"
+}
