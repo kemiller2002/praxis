@@ -17,6 +17,7 @@
     <Compile Include="Work/QueueValidationJson.fs" />
     <Compile Include="Work/BacklogTransitionJson.fs" />
     <Compile Include="Work/TelemetryValidationJson.fs" />
+    <Compile Include="Work/TelemetryUsageJson.fs" />
     <Compile Include="Artifacts/RegistryJson.fs" />
     <Compile Include="Cli/FindingJson.fs" />
     <Compile Include="Provenance/ActorJson.fs" />
@@ -32,5 +33,6 @@
     <Compile Include="Planning/PlanningJson.fs" />
     <Compile Include="Work/WorkGroupJson.fs" />
     <Compile Include="Work/WorkStateJson.fs" />
+    <Compile Include="Execution/ExecutionStateJson.fs" />
   </ItemGroup>
 </Project>

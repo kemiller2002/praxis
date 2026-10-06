@@ -140,6 +140,33 @@ module CheckpointJson =
             | None, _ -> Error [ "execution is required" ]
             | _, None -> Error [ "checkpoint is required" ] }
 
+    /// One `work checkpoint show` history entry.
+    let historyEntry (event: EventRead) : JsonObject =
+        let node = JsonObject()
+        node["id"] <- JsonValue.Create event.EventId
+        node["recordedAt"] <- JsonValue.Create event.OccurredAt
+
+        match event.Checkpoint with
+        | Ok checkpoint ->
+            let git = DurableLocation.git checkpoint.Location
+            node["executionId"] <- JsonValue.Create checkpoint.ExecutionId
+            checkpoint.StepId |> Option.iter (fun step -> node["stepId"] <- JsonValue.Create step)
+            node["branch"] <- JsonValue.Create git.Branch
+            node["commit"] <- JsonValue.Create git.LocalCommit.Value
+            node["remote"] <- JsonValue.Create git.Remote.Name
+            node["remoteBranch"] <- JsonValue.Create git.RemoteBranch
+            node["summary"] <- JsonValue.Create checkpoint.Summary
+            node["nextAction"] <- JsonValue.Create checkpoint.NextAction
+        | Error problems ->
+            let array = JsonArray()
+            problems |> List.iter (fun problem -> array.Add(JsonValue.Create problem: JsonNode))
+            node["invalid"] <- array
+
+        let paths = JsonArray()
+        event.Paths |> List.iter (fun path -> paths.Add(JsonValue.Create path: JsonNode))
+        node["paths"] <- paths
+        node
+
     // ---- the continuity read model ----
 
     let private recoverabilityNode (value: CurrentRecoverability) =

@@ -44,8 +44,7 @@ module CheckpointCommands =
 
     /// One item's assessment with the repository as it is now.
     let assessItem (git: GitDurability) (policy: ContinuityPolicy) (item: ContinuityItem) : Result<CheckpointAssessment, string list> =
-        item.LatestCheckpoint
-        |> Result.map (fun checkpoint -> CheckpointOperations.assess git policy item.WorkItemId item.State checkpoint)
+        CheckpointShowReads.assessItem git policy item
 
     let private invalidNode (item: ContinuityItem) (problems: string list) =
         let node = JsonObject()
@@ -495,32 +494,6 @@ module CheckpointCommands =
 
     // ---- work checkpoint show ----
 
-    let private historyNode (event: CheckpointJson.EventRead) =
-        let node = JsonObject()
-        node["id"] <- JsonValue.Create event.EventId
-        node["recordedAt"] <- JsonValue.Create event.OccurredAt
-
-        match event.Checkpoint with
-        | Ok checkpoint ->
-            let git = DurableLocation.git checkpoint.Location
-            node["executionId"] <- JsonValue.Create checkpoint.ExecutionId
-            checkpoint.StepId |> Option.iter (fun step -> node["stepId"] <- JsonValue.Create step)
-            node["branch"] <- JsonValue.Create git.Branch
-            node["commit"] <- JsonValue.Create git.LocalCommit.Value
-            node["remote"] <- JsonValue.Create git.Remote.Name
-            node["remoteBranch"] <- JsonValue.Create git.RemoteBranch
-            node["summary"] <- JsonValue.Create checkpoint.Summary
-            node["nextAction"] <- JsonValue.Create checkpoint.NextAction
-        | Error problems ->
-            let array = JsonArray()
-            problems |> List.iter (fun problem -> array.Add(JsonValue.Create problem: JsonNode))
-            node["invalid"] <- array
-
-        let paths = JsonArray()
-        event.Paths |> List.iter (fun path -> paths.Add(JsonValue.Create path: JsonNode))
-        node["paths"] <- paths
-        node
-
     let show root (arguments: string list) =
         let requested = arguments |> List.tryHead |> Option.filter (fun value -> not (value.StartsWith "--"))
         let offline = List.contains "--offline" arguments
@@ -531,50 +504,39 @@ module CheckpointCommands =
             eprintfn "ERROR work checkpoint show requires a work-item ID"
             2
         | Some workItemId ->
-            match FileCheckpointRepository.readItem root workItemId with
-            | Error message ->
+            match CheckpointShowReads.read root offline workItemId with
+            | Error(CheckpointShowFailure.Unreadable message) ->
                 eprintfn "ERROR %s" message
                 1
-            | Ok None ->
+            | Error(CheckpointShowFailure.NotInContext _) ->
                 eprintfn "ERROR work item '%s' is not in repository context" workItemId
                 1
-            | Ok(Some item) ->
-                let git = ProcessGitDurability.createFor root offline
-                let policy = FileCheckpointRepository.readPolicy root
-                let history = FileCheckpointRepository.readHistory root workItemId
+            | Error(CheckpointShowFailure.InvalidCheckpoint problems) ->
+                for problem in problems do
+                    eprintfn "ERROR latestCheckpoint: %s" problem
 
-                match assessItem git policy item with
-                | Error problems ->
-                    for problem in problems do
-                        eprintfn "ERROR latestCheckpoint: %s" problem
+                1
+            | Ok shown ->
+                if asJson then
+                    let document = JsonObject()
+                    document["command"] <- JsonValue.Create "work checkpoint show"
+                    document["schemaVersion"] <- JsonValue.Create 1
+                    document["remoteObserved"] <- JsonValue.Create shown.RemoteObserved
+                    document["continuity"] <- CheckpointShowReads.continuity shown
+                    document["history"] <- CheckpointShowReads.history shown
+                    printf "%s" (document.ToJsonString jsonOptions)
+                else
+                    renderText root shown.Item shown.Assessment |> List.iter (printfn "%s")
+                    printfn ""
+                    printfn "CHECKPOINT HISTORY (%d, oldest first; never rewritten)" shown.History.Length
 
-                    1
-                | Ok assessment ->
-                    if asJson then
-                        let document = JsonObject()
-                        document["command"] <- JsonValue.Create "work checkpoint show"
-                        document["schemaVersion"] <- JsonValue.Create 1
-                        document["remoteObserved"] <- JsonValue.Create(not offline)
+                    for event in shown.History do
+                        match event.Checkpoint with
+                        | Ok checkpoint ->
+                            printfn "  %s  %s  %s  %s  %s" event.OccurredAt event.EventId (CommitId.short checkpoint.Commit) checkpoint.ExecutionId checkpoint.Summary
+                        | Error problems -> printfn "  %s  %s  INVALID: %s" event.OccurredAt event.EventId (String.concat "; " problems)
 
-                        document["continuity"] <-
-                            CheckpointJson.continuity workItemId (FileCheckpointRepository.stateCode item.State) assessment (RecoveryInstructions.derive assessment)
-
-                        let array = JsonArray()
-                        history |> List.iter (fun event -> array.Add(historyNode event: JsonNode))
-                        document["history"] <- array
-                        printf "%s" (document.ToJsonString jsonOptions)
-                    else
-                        renderText root item assessment |> List.iter (printfn "%s")
-                        printfn ""
-                        printfn "CHECKPOINT HISTORY (%d, oldest first; never rewritten)" history.Length
-
-                        for event in history do
-                            match event.Checkpoint with
-                            | Ok checkpoint ->
-                                printfn "  %s  %s  %s  %s  %s" event.OccurredAt event.EventId (CommitId.short checkpoint.Commit) checkpoint.ExecutionId checkpoint.Summary
-                            | Error problems -> printfn "  %s  %s  INVALID: %s" event.OccurredAt event.EventId (String.concat "; " problems)
-
-                    0
+                0
 
     // ---- lifecycle guards (PRAXIS-CONT-05) ----
 

@@ -59,6 +59,7 @@
     <Compile Include="Architecture/ImplementationLanguagePolicy.fs" />
     <Compile Include="Naming/EnvironmentAliases.fs" />
     <Compile Include="Execution/Governance.fs" />
+    <Compile Include="Execution/ReadModel.fs" />
     <Compile Include="Installation/Registration.fs" />
     <Compile Include="Planning/Model.fs" />
     <Compile Include="Planning/History.fs" />

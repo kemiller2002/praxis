@@ -130,3 +130,41 @@ module WorkStateJson =
 
     let workItemNotFound (id: string) : JsonNode =
         errorDocument "work-item-not-found" $"work item '{id}' was not found" [ "workItemId", text id ]
+
+    // ---- evidence, checkpoints and telemetry of one work item ----
+
+    /// A block that has no source: `{availability: "unavailable", reason}`.
+    let unavailable (reason: string) : JsonNode =
+        record [ "availability", text "unavailable"; "reason", text reason ]
+
+    /// Recorded evidence exactly as `work context` reports it.
+    let recordedEvidence (items: JsonNode list) (requiredForCompletion: string list) : JsonNode =
+        record
+            [ "availability", text "available"
+              "source", text "work context"
+              "items", array items
+              "requiredForCompletion", texts requiredForCompletion ]
+
+    /// Durable checkpoints exactly as `work checkpoint show --json` reports
+    /// them.
+    let recordedCheckpoints (remoteObserved: bool) (continuity: JsonNode) (history: JsonNode) : JsonNode =
+        record
+            [ "availability", text "available"
+              "source", text "work checkpoint show"
+              "remoteObserved", boolean remoteObserved
+              "continuity", continuity
+              "history", history ]
+
+    let evidenceDocument (workItemId: string) (evidence: JsonNode) (checkpoints: JsonNode) : JsonNode =
+        envelope "work-evidence" [ "workItemId", text workItemId; "evidence", evidence; "checkpoints", checkpoints ]
+
+    /// Usage and cost coverage plus the `telemetry usage --by execution`
+    /// groups, all from the same aggregation.
+    let telemetryDocument (workItemId: string) (executions: string list) (usage: JsonNode list) (cost: JsonNode list) (groups: JsonNode) : JsonNode =
+        envelope
+            "work-telemetry"
+            [ "workItemId", text workItemId
+              "executions", texts executions
+              "usage", array usage
+              "cost", array cost
+              "groups", groups ]

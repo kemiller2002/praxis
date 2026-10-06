@@ -112,6 +112,11 @@ module FileTelemetryUsageRepository =
         { ExecutionsByKey = executionsByKey
           Measurements = measurements }
 
+    /// The groups `telemetry usage` reports: `read`, then `Usage.aggregate`.
+    let aggregate (root: string) (workItemId: string option) (dimension: UsageDimension) : Scope * UsageGroup list =
+        let scope = read root workItemId dimension
+        scope, Usage.aggregate dimension scope.ExecutionsByKey scope.Measurements
+
     /// How one execution's telemetry is segmented, and where each of its
     /// recorded measurements belongs relative to step adoption.
     type ExecutionSegmentation =

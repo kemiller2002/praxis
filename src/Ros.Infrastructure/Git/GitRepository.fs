@@ -205,6 +205,8 @@ module ProcessGitRepository =
             startInfo.UseShellExecute <- false
             startInfo.RedirectStandardOutput <- true
             startInfo.RedirectStandardError <- true
+            // Reads never take Git's optional locks (no index refresh).
+            startInfo.Environment["GIT_OPTIONAL_LOCKS"] <- "0"
             startInfo.ArgumentList.Add "-C"
             startInfo.ArgumentList.Add root
 
@@ -635,6 +637,7 @@ module ProcessGitDurability =
             startInfo.Environment["GCM_INTERACTIVE"] <- "never"
             startInfo.Environment["GIT_ASKPASS"] <- ""
             startInfo.Environment["SSH_ASKPASS"] <- ""
+            startInfo.Environment["GIT_OPTIONAL_LOCKS"] <- "0"
             startInfo.ArgumentList.Add "-C"
             startInfo.ArgumentList.Add root
             arguments |> List.iter startInfo.ArgumentList.Add

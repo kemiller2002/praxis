@@ -192,6 +192,104 @@ Adding a field is not a breaking change. Removing or renaming a field, or
 changing a field's meaning, increments `version` and is served under a new
 `/api/vN/` path.
 
+## Executions, receipts, evidence and telemetry (`/api/v1`)
+
+Four more read routes cover executions, step receipts, evidence, durable
+checkpoints and telemetry (PRX-CTL-005, PRX-CTL-011, PRX-CTL-012). Each one
+reads through the same code as the CLI command named below, so the API and
+the CLI cannot disagree:
+
+| Method | Path | Answers | Same read path as |
+|---|---|---|---|
+| `GET` | `/api/v1/executions?workItem=ID` | `praxis.execution-state` `execution-list` | `praxis execution list [--work-item ID] --json` |
+| `GET` | `/api/v1/executions/:id` | `praxis.execution-state` `execution` | `praxis execution show ID --json` |
+| `GET` | `/api/v1/work/:id/evidence?offline=true` | `praxis.work-state` `work-evidence` | `praxis work context ID` and `praxis work checkpoint show ID --json [--offline]` |
+| `GET` | `/api/v1/work/:id/telemetry` | `praxis.work-state` `work-telemetry` | `praxis telemetry usage ID [--by work-item]` |
+
+None of these routes run a command, take a lock or write anything. Git is
+read the way the CLI reads it (`diff`, `ls-files`, `status`, and `ls-remote`
+for checkpoints), and Praxis's Git reads set `GIT_OPTIONAL_LOCKS=0`, so even
+`git status` does not refresh the index.
+
+### Executions (`praxis.execution-state`, version 1)
+
+The executions here are the Ordo execution envelopes under
+`.ros/executions/` (`execution start`), defined in
+`src/Ros.Contracts/Execution/ExecutionStateJson.fs`. Telemetry execution
+records (`.ros/telemetry/executions/`) are a different record with the same
+`EXE-` id format; they appear under `/api/v1/work/:id/telemetry`.
+
+`execution-list`: `{contract, version, kind, workItem, items, unreadable}`.
+`workItem` is the filter, qualified as `execution start` qualifies it
+(`owner/repo:ID` when the origin remote names a repository), or `null`.
+`unreadable` lists stored executions whose envelope cannot be parsed
+(`{executionId, error}`); `execution list` skips those silently.
+
+Each item, and the `execution` of an `execution` document, carries:
+
+| Field | Meaning |
+|---|---|
+| `executionId`, `workItem`, `role`, `status`, `statusReason`, `startedAt`, `parentExecution`, `baselineRevision`, `candidateRevision` | From the envelope. |
+| `actor` | `{id, kind}`: who performs the execution. |
+| `executionHost` | `{provider, model, runtime, workspace, containment, securitySandbox}`. Provider, model and runtime are host information and read `"unknown"` when not recorded. They are never part of `actor`. |
+| `workStateOwner` | `{kind: "repository", workItem}`: the repository's Praxis records own the work state, not the host or provider. |
+
+An `execution` document also carries `steps`, `scopeEffects` (as
+`execution boundary`) and `verification`. Each step has `stepId`, `sequence`,
+`name`, `dependsOn`, `attempts`, `status` (the codes of `execution show`),
+`receipt` and `reconciliation`. `receipt` describes the step's current attempt
+(the latest one started):
+
+| `receipt` field | Meaning |
+|---|---|
+| `state` | `match`, `mismatch` or `indeterminate`: the comparison recorded for the attempt. `indeterminate` also covers an attempt that started with no receipt observed (its effect is unknown). `not-observed` means no attempt has started. |
+| `attempt` | The current attempt (`0` before any start). |
+| `expected`, `observed`, `comparison` | The expected receipt, the observed receipt and the recorded comparison, in the `ordo.execution/1` shapes of the ledger; `observed`/`comparison` are `null` when nothing was observed. |
+| `observedAt`, `reason` | When the receipt was observed, and the comparison's reason. |
+
+`reconciliation` is the step's latest reconciliation
+(`{attempt, finding, detail, at}`) or `null`. Execution legal actions depend
+on the acting actor (`execution actions`) and are not part of this contract.
+
+An unknown execution is `404` with code `execution-not-found` (field
+`executionId`). An envelope that cannot be read is `500` with
+`execution-unreadable`.
+
+### Evidence and durable checkpoints (`work-evidence`)
+
+`{contract: "praxis.work-state", version: 1, kind: "work-evidence", workItemId, evidence, checkpoints}`:
+
+- `evidence`: `{availability: "available", source: "work context", items, requiredForCompletion}`,
+  where `items` is the item's recorded evidence exactly as `work context`
+  reports it.
+- `checkpoints`: `{availability: "available", source: "work checkpoint show", remoteObserved, continuity, history}`,
+  where `continuity` and `history` are exactly those of
+  `work checkpoint show --json`. The remote is observed by default, as the CLI
+  does; `?offline=true` does not contact it and reports it as not observed.
+
+A work item that was never started has no live record, so both blocks are
+`{availability: "unavailable", reason}`. When the recorded `latestCheckpoint`
+is invalid, `checkpoints` is unavailable and the reason names the problems.
+
+### Telemetry usage and cost (`work-telemetry`)
+
+`{contract: "praxis.work-state", version: 1, kind: "work-telemetry", workItemId, executions, usage, cost, groups}`:
+
+- `executions`: the item's telemetry execution ids.
+- `usage` and `cost`: one entry for every additive metric in the metric
+  registry with unit `tokens` (usage) or `currency` (cost):
+  `{metric, unit, availability, totals, reportingExecutions, unavailableExecutions}`.
+  `availability` is `recorded` (every execution reported it), `partial` (some
+  did; the total is a lower bound) or `unknown` (none did, or there are no
+  executions). An unknown metric has no total, never `0`. `totals` holds one
+  `{unit, currency, total}` per recorded unit and currency, from the
+  `telemetry usage --by work-item` aggregation.
+- `groups`: exactly the `groups` of `telemetry usage ID` (`--by execution`).
+
+Both work-item routes answer an unknown item with `404`
+`work-item-not-found`. The evidence and telemetry kinds are additive to
+`praxis.work-state` version 1.
+
 ## Tests
 
 `tests/Ros.Tests/WebInterfaceTests.fs` unit-tests the pure pieces (escaping,
@@ -211,3 +309,14 @@ legal action reports, obligations and unknowns (available and unavailable),
 agreement with `work list`, the rendered JSON, routing, and over HTTP the
 versioned routes, the structured `404` on both item routes, the legacy shapes,
 and that every repository file is byte-identical after the read routes run.
+
+`tests/Ros.Tests/ControlPlaneReadTests.fs` covers executions, receipts,
+evidence and telemetry: the receipt state of a step's current attempt
+(including retries and reconciliation), usage and cost coverage (recorded,
+partial, unknown, one total per currency), host information kept out of the
+actor, routing and the pure responses. Over HTTP, against a repository with a
+bare remote, it checks the execution list and show against
+`execution show --json`, evidence and checkpoints against `work context` and
+`work checkpoint show --json`, telemetry groups against `telemetry usage`, the
+structured `404`s, and that every repository file, `.git` included, is
+byte-identical after all the routes run.

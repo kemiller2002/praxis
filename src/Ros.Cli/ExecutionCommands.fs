@@ -49,13 +49,7 @@ module ExecutionCommands =
 
     /// A globally unambiguous work identity: `<owner/repo>:<WORK-ID>` when the
     /// repository identity is known.
-    let qualifyWorkItem (root: string) (raw: string) =
-        if raw.Contains ':' || raw.Contains '#' then
-            raw
-        else
-            match GitWorkspace.remoteUrl root |> Option.bind Ros.Domain.Installation.Target.repositoryFromRemote with
-            | Some repo -> repo + ":" + raw
-            | None -> raw
+    let qualifyWorkItem (root: string) (raw: string) = ExecutionReads.qualifyWorkItem root raw
 
     let private localWorkId (workItem: string) =
         let local = match workItem.LastIndexOfAny [| ':'; '#' |] with -1 -> workItem | i -> workItem.Substring(i + 1)
@@ -88,53 +82,11 @@ module ExecutionCommands =
         | Some bad -> Error $"'{bad}' is not a semantic scope (feature:|cluster:|authority:|capability:<id>)"
         | None -> Ok { Scopes = scopes; Projections = projections; EvaluatorReferences = [] }
 
-    let private workspaceDirectory (root: string) (envelope: ExecutionEnvelope) =
-        match envelope.Workspace |> Option.bind _.Path with
-        | Some relative -> Path.GetFullPath(Path.Combine(root, relative))
-        | None -> root
+    let private workspaceDirectory root envelope = ExecutionReads.workspaceDirectory root envelope
 
-    let private readVerification root id =
-        ExecutionStore.readRecords root id "verification"
-        |> List.tryLast
-        |> Option.bind (fun node ->
-            match ExecutionStore.recordField "outcome" node, ExecutionStore.recordField "evaluator" node, ExecutionStore.recordField "current" node with
-            | Some "passed", Some fp, _ -> Some(EvaluationOutcome.Passed fp)
-            | Some "failed", Some fp, _ -> Some(EvaluationOutcome.Failed(fp, ExecutionStore.recordField "reason" node |> Option.defaultValue ""))
-            | Some "evaluator-changed", Some fp, Some current -> Some(EvaluationOutcome.EvaluatorChanged(fp, current, []))
-            | Some "evaluator-unavailable", _, _ -> Some(EvaluationOutcome.EvaluatorUnavailable(ExecutionStore.recordField "reason" node |> Option.defaultValue ""))
-            | _ -> None)
+    type private Snapshot = ExecutionSnapshot
 
-    /// Unresolved out-of-boundary mutations, observed from Git.
-    let private scopeEffects root (envelope: ExecutionEnvelope) =
-        match GitWorkspace.changedPaths (workspaceDirectory root envelope) envelope.BaselineRevision with
-        | Error _ -> []
-        | Ok paths ->
-            let resolved = ExecutionStore.resolvedResources root envelope.ExecutionId
-
-            paths
-            |> List.filter (fun p -> not (p.StartsWith(".ros/", StringComparison.Ordinal)) && not (resolved.Contains p))
-            |> List.map (fun p -> p, None)
-            |> MutationBoundary.scopeEffects envelope.Boundary
-
-    type private Snapshot =
-        { Envelope: ExecutionEnvelope
-          Entries: StepEntry list
-          Steps: StepView list
-          Effects: ScopeEffect list
-          Verification: EvaluationOutcome option
-          Uncommitted: bool }
-
-    let private load root id =
-        ExecutionStore.loadEnvelope root id
-        |> Result.bind (fun envelope ->
-            ExecutionStore.readEntries root id
-            |> Result.map (fun entries ->
-                { Envelope = envelope
-                  Entries = entries
-                  Steps = StepLedger.reconstruct entries
-                  Effects = scopeEffects root envelope
-                  Verification = readVerification root id
-                  Uncommitted = GitWorkspace.hasUncommittedChanges (workspaceDirectory root envelope) }))
+    let private load root id = ExecutionReads.load root id
 
     let private legal (snapshot: Snapshot) (actor: Actor) =
         LegalActions.compute snapshot.Envelope snapshot.Steps snapshot.Effects snapshot.Verification snapshot.Uncommitted (ActorKind.code actor.Kind)
@@ -158,17 +110,7 @@ module ExecutionCommands =
             step["name"] <- JsonValue.Create v.Name
             step["attempts"] <- JsonValue.Create v.Attempts
 
-            step["status"] <-
-                JsonValue.Create(
-                    match v.Status with
-                    | StepStatus.NotStarted -> "not-started"
-                    | StepStatus.Satisfied -> "match"
-                    | StepStatus.Mismatched -> "mismatch"
-                    | StepStatus.EffectUnknown -> "indeterminate"
-                    | StepStatus.ReconciledNotOccurred -> "reconciled-not-occurred"
-                    | StepStatus.ReconciledOccurred -> "reconciled-occurred"
-                )
-
+            step["status"] <- JsonValue.Create(StepStatus.toWire v.Status)
             step["expected"] <- ExecutionJson.expected v.Expected
             steps.Add step)
 
@@ -299,12 +241,7 @@ module ExecutionCommands =
         | [] -> fail "an execution id is required"
 
     let private list root (arguments: string list) =
-        let filter = optionValue "--work-item" arguments |> Option.map (qualifyWorkItem root)
-
-        let envelopes =
-            ExecutionStore.list root
-            |> List.choose (fun id -> ExecutionStore.loadEnvelope root id |> Result.toOption)
-            |> List.filter (fun e -> filter |> Option.forall (fun w -> e.WorkItem = w))
+        let envelopes = ExecutionReads.readableFor root (optionValue "--work-item" arguments)
 
         if hasFlag "--json" arguments then
             let a = JsonArray()

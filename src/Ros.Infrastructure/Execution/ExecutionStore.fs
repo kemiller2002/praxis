@@ -125,6 +125,9 @@ module GitWorkspace =
         info.RedirectStandardOutput <- true
         info.RedirectStandardError <- true
         info.UseShellExecute <- false
+        // A read never takes Git's optional locks, so `git status` cannot
+        // rewrite the index while a read-only view is observing the workspace.
+        info.Environment["GIT_OPTIONAL_LOCKS"] <- "0"
 
         try
             use p = Process.Start info
@@ -178,3 +181,100 @@ module GitWorkspace =
 
     let relativeTo (root: string) (path: string) =
         Path.GetRelativePath(root, path).Replace('\\', '/')
+
+/// One execution as `execution show` reads it: the envelope, the ledger and
+/// its reconstructed steps, the Git-observed scope effects, the latest
+/// verification and whether the workspace has uncommitted changes.
+type ExecutionSnapshot =
+    { Envelope: ExecutionEnvelope
+      Entries: StepEntry list
+      Steps: StepView list
+      Effects: ScopeEffect list
+      Verification: EvaluationOutcome option
+      Uncommitted: bool }
+
+/// Why an execution could not be read.
+[<RequireQualifiedAccess>]
+type ExecutionReadFailure =
+    | NotFound of executionId: string
+    | Unreadable of executionId: string * reason: string
+
+/// The single read path behind `execution show|list` and the control-plane
+/// execution API (PRX-CTL-006): both call these functions, so neither
+/// derives execution state on its own. Reads only.
+[<RequireQualifiedAccess>]
+module ExecutionReads =
+    /// A globally unambiguous work identity: `<owner/repo>:<WORK-ID>` when the
+    /// repository identity is known.
+    let qualifyWorkItem (root: string) (raw: string) =
+        if raw.Contains ':' || raw.Contains '#' then
+            raw
+        else
+            match GitWorkspace.remoteUrl root |> Option.bind Ros.Domain.Installation.Target.repositoryFromRemote with
+            | Some repo -> repo + ":" + raw
+            | None -> raw
+
+    let workspaceDirectory (root: string) (envelope: ExecutionEnvelope) =
+        match envelope.Workspace |> Option.bind _.Path with
+        | Some relative -> Path.GetFullPath(Path.Combine(root, relative))
+        | None -> root
+
+    let private readVerification root id =
+        ExecutionStore.readRecords root id "verification"
+        |> List.tryLast
+        |> Option.bind (fun node ->
+            match ExecutionStore.recordField "outcome" node, ExecutionStore.recordField "evaluator" node, ExecutionStore.recordField "current" node with
+            | Some "passed", Some fp, _ -> Some(EvaluationOutcome.Passed fp)
+            | Some "failed", Some fp, _ -> Some(EvaluationOutcome.Failed(fp, ExecutionStore.recordField "reason" node |> Option.defaultValue ""))
+            | Some "evaluator-changed", Some fp, Some current -> Some(EvaluationOutcome.EvaluatorChanged(fp, current, []))
+            | Some "evaluator-unavailable", _, _ -> Some(EvaluationOutcome.EvaluatorUnavailable(ExecutionStore.recordField "reason" node |> Option.defaultValue ""))
+            | _ -> None)
+
+    /// Unresolved out-of-boundary mutations, observed from Git.
+    let scopeEffects root (envelope: ExecutionEnvelope) =
+        match GitWorkspace.changedPaths (workspaceDirectory root envelope) envelope.BaselineRevision with
+        | Error _ -> []
+        | Ok paths ->
+            let resolved = ExecutionStore.resolvedResources root envelope.ExecutionId
+
+            paths
+            |> List.filter (fun p -> not (p.StartsWith(".ros/", StringComparison.Ordinal)) && not (resolved.Contains p))
+            |> List.map (fun p -> p, None)
+            |> MutationBoundary.scopeEffects envelope.Boundary
+
+    let load root id : Result<ExecutionSnapshot, string> =
+        ExecutionStore.loadEnvelope root id
+        |> Result.bind (fun envelope ->
+            ExecutionStore.readEntries root id
+            |> Result.map (fun entries ->
+                { Envelope = envelope
+                  Entries = entries
+                  Steps = StepLedger.reconstruct entries
+                  Effects = scopeEffects root envelope
+                  Verification = readVerification root id
+                  Uncommitted = GitWorkspace.hasUncommittedChanges (workspaceDirectory root envelope) }))
+
+    /// `load`, telling an execution the store does not hold from one it holds
+    /// but cannot read.
+    let tryLoad root id : Result<ExecutionSnapshot, ExecutionReadFailure> =
+        if ExecutionStore.exists root id then
+            load root id |> Result.mapError (fun reason -> ExecutionReadFailure.Unreadable(id, reason))
+        else
+            Error(ExecutionReadFailure.NotFound id)
+
+    /// Every stored envelope in id order, each read or the reason it could
+    /// not be.
+    let envelopes root : (string * Result<ExecutionEnvelope, string>) list =
+        ExecutionStore.list root |> List.map (fun id -> id, ExecutionStore.loadEnvelope root id)
+
+    /// The readable envelopes of `read`, optionally only those of one
+    /// (already qualified) work item.
+    let selectReadable (qualifiedWorkItem: string option) (read: (string * Result<ExecutionEnvelope, string>) list) : ExecutionEnvelope list =
+        read
+        |> List.choose (snd >> Result.toOption)
+        |> List.filter (fun envelope -> qualifiedWorkItem |> Option.forall (fun w -> envelope.WorkItem = w))
+
+    /// The readable envelopes, optionally only those of one work item (`raw`
+    /// is qualified as `execution start` qualifies it).
+    let readableFor root (workItem: string option) : ExecutionEnvelope list =
+        envelopes root |> selectReadable (workItem |> Option.map (qualifyWorkItem root))

@@ -4,8 +4,11 @@ open System
 open System.IO
 open System.Text.Json
 open System.Text.Json.Nodes
+open Ros.Contracts.Execution
 open Ros.Contracts.Work
+open Ros.Domain.Execution
 open Ros.Domain.Work
+open Ros.Infrastructure.Execution
 open Ros.Infrastructure.Work
 
 type EvidenceInput = { Type: string; Path: string }
@@ -64,10 +67,23 @@ type StateQuery =
     | List of tags: string list * status: string option
     | Item of id: string
 
+/// A read of executions, receipts, evidence, checkpoints or telemetry
+/// (`praxis.execution-state` and the evidence/telemetry kinds of
+/// `praxis.work-state`), answered in-process through the same read paths as
+/// `execution show|list`, `work context`, `work checkpoint show` and
+/// `telemetry usage`.
+[<RequireQualifiedAccess>]
+type ControlQuery =
+    | Executions of workItem: string option
+    | Execution of id: string
+    | Evidence of workItemId: string * offline: bool
+    | Telemetry of workItemId: string
+
 [<RequireQualifiedAccess>]
 type WebRoute =
     | Api of WorkOperation
     | State of StateQuery
+    | Control of ControlQuery
     | ApiDownload of id: string * attachmentId: string
     | ApiError of status: int * message: string
     | Home of query: (string * string) list
@@ -102,6 +118,13 @@ module WebInterface =
 
     let private queryStatus (query: (string * string) list) =
         HttpMessages.field "status" query |> HttpMessages.nonBlank
+
+    /// `offline=true` (or `1`) reads checkpoints without contacting the remote,
+    /// as `work checkpoint show --offline` does.
+    let private queryOffline (query: (string * string) list) =
+        match HttpMessages.field "offline" query with
+        | Some("true" | "1") -> true
+        | _ -> false
 
     let private text name body =
         HttpMessages.jsonString name body |> HttpMessages.nonBlank
@@ -182,6 +205,10 @@ module WebInterface =
         match request.Method, request.Segments with
         | "GET", [ "api"; "v1"; "work" ] -> WebRoute.State(StateQuery.List(queryTags request.Query, queryStatus request.Query))
         | "GET", [ "api"; "v1"; "work"; id ] -> WebRoute.State(StateQuery.Item id)
+        | "GET", [ "api"; "v1"; "work"; id; "evidence" ] -> WebRoute.Control(ControlQuery.Evidence(id, queryOffline request.Query))
+        | "GET", [ "api"; "v1"; "work"; id; "telemetry" ] -> WebRoute.Control(ControlQuery.Telemetry id)
+        | "GET", [ "api"; "v1"; "executions" ] -> WebRoute.Control(ControlQuery.Executions(HttpMessages.field "workItem" request.Query |> HttpMessages.nonBlank))
+        | "GET", [ "api"; "v1"; "executions"; id ] -> WebRoute.Control(ControlQuery.Execution id)
         | "GET", [ "api"; "work" ] -> WebRoute.Api(WorkOperation.List(queryTags request.Query, queryStatus request.Query))
         | "GET", [ "api"; "work"; "ready" ] -> WebRoute.Api(WorkOperation.List(queryTags request.Query, Some "ready"))
         | "GET", [ "api"; "work"; id ] -> WebRoute.Api(WorkOperation.Show id)
@@ -695,6 +722,107 @@ module WebInterface =
         |> Option.map (fun (_, queueItems, contextItems) ->
             WorkListView.mergedRows queueItems contextItems |> List.exists (fun row -> row.Id = id))
 
+    /// The execution list: the readable envelopes of the (qualified) work
+    /// item, and every stored envelope that could not be read.
+    let executionsResponse (qualifiedWorkItem: string option) (envelopes: (string * Result<ExecutionEnvelope, string>) list) : int * JsonNode =
+        let unreadable =
+            envelopes
+            |> List.choose (fun (id, read) ->
+                match read with
+                | Error reason -> Some(id, reason)
+                | Ok _ -> None)
+
+        200, ExecutionStateJson.listDocument qualifiedWorkItem (ExecutionReads.selectReadable qualifiedWorkItem envelopes) unreadable
+
+    let executionResponse (snapshot: Result<ExecutionSnapshot, ExecutionReadFailure>) : int * JsonNode =
+        match snapshot with
+        | Ok s -> 200, ExecutionStateJson.executionDocument s.Envelope s.Steps s.Effects s.Verification
+        | Error(ExecutionReadFailure.NotFound id) -> 404, ExecutionStateJson.executionNotFound id
+        | Error(ExecutionReadFailure.Unreadable(id, reason)) -> 500, ExecutionStateJson.executionUnreadable id reason
+
+    let private contextItem (view: JsonObject) =
+        match view["workItems"] with
+        | :? JsonArray as items -> items |> Seq.tryHead |> Option.bind (function :? JsonObject as item -> Some item | _ -> None)
+        | _ -> None
+
+    let private nodesOf (item: JsonObject) (name: string) : JsonNode list =
+        match item[name] with
+        | :? JsonArray as values -> values |> Seq.choose Option.ofObj |> Seq.map _.DeepClone() |> Seq.toList
+        | _ -> []
+
+    let private stringsOf (item: JsonObject) (name: string) : string list =
+        nodesOf item name
+        |> List.choose (function
+            | :? JsonValue as value ->
+                match value.TryGetValue<string>() with
+                | true, text -> Some text
+                | _ -> None
+            | _ -> None)
+
+    /// A work item's recorded evidence (from the `work context` view) and its
+    /// durable checkpoints (from the `work checkpoint show` read). A known
+    /// item with no live context record has never started: neither exists.
+    let evidenceResponse
+        (id: string)
+        (known: bool option)
+        (context: unit -> Result<JsonObject, string>)
+        (checkpoints: unit -> Result<CheckpointShow, CheckpointShowFailure>)
+        : int * JsonNode =
+        match known with
+        | None -> 500, WorkStateJson.errorDocument "work-state-unreadable" "the recorded work state could not be read" [ "workItemId", JsonValue.Create id ]
+        | Some false -> 404, WorkStateJson.workItemNotFound id
+        | Some true ->
+            match checkpoints () with
+            | Error(CheckpointShowFailure.NotInContext _) ->
+                let reason = $"work item '{id}' has not been started; evidence and durable checkpoints are recorded on live work"
+                200, WorkStateJson.evidenceDocument id (WorkStateJson.unavailable reason) (WorkStateJson.unavailable reason)
+            | Error(CheckpointShowFailure.Unreadable message) -> 500, WorkStateJson.errorDocument "work-state-unreadable" message [ "workItemId", JsonValue.Create id ]
+            | shown ->
+                match context () |> Result.map contextItem with
+                | Error message -> 500, WorkStateJson.errorDocument "work-state-unreadable" message [ "workItemId", JsonValue.Create id ]
+                | Ok None -> 500, WorkStateJson.errorDocument "work-state-unreadable" $"work item '{id}' is not in repository context" [ "workItemId", JsonValue.Create id ]
+                | Ok(Some item) ->
+                    let evidence = WorkStateJson.recordedEvidence (nodesOf item "evidence") (stringsOf item "requiredEvidenceForCompletion")
+
+                    let checkpointBlock =
+                        match shown with
+                        | Ok show -> WorkStateJson.recordedCheckpoints show.RemoteObserved (CheckpointShowReads.continuity show) (CheckpointShowReads.history show)
+                        | Error(CheckpointShowFailure.InvalidCheckpoint problems) ->
+                            WorkStateJson.unavailable ("the recorded latestCheckpoint is invalid: " + String.concat "; " problems)
+                        | Error _ -> WorkStateJson.unavailable "durable checkpoints could not be read"
+
+                    200, WorkStateJson.evidenceDocument id evidence checkpointBlock
+
+    /// Usage and cost coverage over the work item's telemetry executions,
+    /// from the same aggregation as `telemetry usage`, plus its
+    /// `--by execution` groups.
+    let telemetryResponse
+        (id: string)
+        (known: bool option)
+        (registry: unit -> Ros.Domain.Telemetry.MetricDefinition list)
+        (byWorkItem: unit -> FileTelemetryUsageRepository.Scope * Ros.Domain.Telemetry.UsageGroup list)
+        (byExecution: unit -> Ros.Domain.Telemetry.UsageGroup list)
+        : int * JsonNode =
+        match known with
+        | None -> 500, WorkStateJson.errorDocument "work-state-unreadable" "the recorded work state could not be read" [ "workItemId", JsonValue.Create id ]
+        | Some false -> 404, WorkStateJson.workItemNotFound id
+        | Some true ->
+            let scope, groups = byWorkItem ()
+            let executions = scope.ExecutionsByKey |> Map.toList |> List.collect snd |> List.filter ((<>) "") |> List.distinct |> List.sort
+            let definitions = registry ()
+
+            let coverage unit =
+                Ros.Domain.Telemetry.UsageCoverage.coverage (Ros.Domain.Telemetry.UsageCoverage.metricsWithUnit unit definitions) executions groups
+                |> List.map (fun value -> TelemetryUsageJson.coverage value :> JsonNode)
+
+            200,
+            WorkStateJson.telemetryDocument
+                id
+                executions
+                (coverage Ros.Domain.Telemetry.UsageCoverage.usageUnit)
+                (coverage Ros.Domain.Telemetry.UsageCoverage.costUnit)
+                (TelemetryUsageJson.groups (byExecution ()))
+
     // ------------------------------------------------------------------
     // Effects: run the CLI, serve HTTP
     // ------------------------------------------------------------------
@@ -807,6 +935,25 @@ module WebInterface =
         match route request with
         | WebRoute.State query ->
             let status, body = stateResponse (FileWorkListRepository.readStateSources root) (FileWorkListRepository.readDetail root) query
+            HttpMessages.jsonNode status body
+        | WebRoute.Control query ->
+            let known id = isKnown (FileWorkListRepository.readStateSources root) id
+
+            let status, body =
+                match query with
+                | ControlQuery.Executions workItem ->
+                    executionsResponse (workItem |> Option.map (ExecutionReads.qualifyWorkItem root)) (ExecutionReads.envelopes root)
+                | ControlQuery.Execution id -> executionResponse (ExecutionReads.tryLoad root id)
+                | ControlQuery.Evidence(id, offline) ->
+                    evidenceResponse id (known id) (fun () -> FileWorkContextRepository.readContextView root (Some id)) (fun () -> CheckpointShowReads.read root offline id)
+                | ControlQuery.Telemetry id ->
+                    telemetryResponse
+                        id
+                        (known id)
+                        (fun () -> FileMetricRegistryRepository.read root)
+                        (fun () -> FileTelemetryUsageRepository.aggregate root (Some id) Ros.Domain.Telemetry.UsageDimension.WorkItem)
+                        (fun () -> FileTelemetryUsageRepository.aggregate root (Some id) Ros.Domain.Telemetry.UsageDimension.Execution |> snd)
+
             HttpMessages.jsonNode status body
         | WebRoute.Api(WorkOperation.Show id) when isKnown (FileWorkListRepository.readStateSources root) id = Some false ->
             HttpMessages.jsonNode 404 (WorkStateJson.workItemNotFound id)

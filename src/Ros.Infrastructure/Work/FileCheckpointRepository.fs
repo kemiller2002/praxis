@@ -5,6 +5,7 @@ open System.IO
 open System.Text.Encodings.Web
 open System.Text.Json
 open System.Text.Json.Nodes
+open Ros.Application.Git
 open Ros.Application.Work
 open Ros.Contracts.Provenance
 open Ros.Contracts.Work
@@ -564,3 +565,56 @@ module FileCheckpointRepository =
                 others |> List.map _.ExecutionId,
                 executions |> List.tryLast |> Option.map _.ExecutionId
             )
+
+/// What `work checkpoint show` reads for one item: the item, its continuity
+/// assessment against the repository as it is now, and its history.
+type CheckpointShow =
+    { Item: ContinuityItem
+      Assessment: CheckpointAssessment
+      History: CheckpointJson.EventRead list
+      RemoteObserved: bool }
+
+[<RequireQualifiedAccess>]
+type CheckpointShowFailure =
+    | Unreadable of reason: string
+    | NotInContext of workItemId: string
+    | InvalidCheckpoint of problems: string list
+
+/// The single read path behind `work checkpoint show` and the control-plane
+/// evidence API. Reads only; with `offline` the remote is not contacted.
+[<RequireQualifiedAccess>]
+module CheckpointShowReads =
+    /// One item's assessment with the repository as it is now.
+    let assessItem (git: GitDurability) (policy: ContinuityPolicy) (item: ContinuityItem) : Result<CheckpointAssessment, string list> =
+        item.LatestCheckpoint
+        |> Result.map (fun checkpoint -> CheckpointOperations.assess git policy item.WorkItemId item.State checkpoint)
+
+    let read (root: string) (offline: bool) (workItemId: string) : Result<CheckpointShow, CheckpointShowFailure> =
+        match FileCheckpointRepository.readItem root workItemId with
+        | Error message -> Error(CheckpointShowFailure.Unreadable message)
+        | Ok None -> Error(CheckpointShowFailure.NotInContext workItemId)
+        | Ok(Some item) ->
+            let git = Ros.Infrastructure.Git.ProcessGitDurability.createFor root offline
+            let policy = FileCheckpointRepository.readPolicy root
+
+            assessItem git policy item
+            |> Result.mapError CheckpointShowFailure.InvalidCheckpoint
+            |> Result.map (fun assessment ->
+                { Item = item
+                  Assessment = assessment
+                  History = FileCheckpointRepository.readHistory root workItemId
+                  RemoteObserved = not offline })
+
+    /// `work checkpoint show --json`'s `continuity` block.
+    let continuity (show: CheckpointShow) : JsonObject =
+        CheckpointJson.continuity
+            show.Item.WorkItemId
+            (FileCheckpointRepository.stateCode show.Item.State)
+            show.Assessment
+            (RecoveryInstructions.derive show.Assessment)
+
+    /// `work checkpoint show --json`'s `history` block, oldest first.
+    let history (show: CheckpointShow) : JsonArray =
+        let array = JsonArray()
+        show.History |> List.iter (fun event -> array.Add(CheckpointJson.historyEntry event: JsonNode))
+        array

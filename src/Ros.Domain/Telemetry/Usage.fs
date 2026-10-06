@@ -160,3 +160,74 @@ module Usage =
             match String.CompareOrdinal(left.Key, right.Key) with
             | 0 -> String.CompareOrdinal(left.MetricId, right.MetricId)
             | order -> order)
+
+/// Whether a metric is recorded for every execution in scope, for some of
+/// them, or for none: unknown is reported as unknown, never as zero.
+[<RequireQualifiedAccess>]
+type CoverageAvailability =
+    | Recorded
+    | Partial
+    | Unknown
+
+[<RequireQualifiedAccess>]
+module CoverageAvailability =
+    let code availability =
+        match availability with
+        | CoverageAvailability.Recorded -> "recorded"
+        | CoverageAvailability.Partial -> "partial"
+        | CoverageAvailability.Unknown -> "unknown"
+
+type UsageTotal =
+    { Unit: string
+      Currency: string option
+      Total: float }
+
+/// One metric's coverage over a work item's executions (PRX-CTL-011
+/// "telemetry/cost where available").
+type MetricCoverage =
+    { MetricId: string
+      Unit: string
+      Availability: CoverageAvailability
+      Totals: UsageTotal list
+      ReportingExecutions: string list
+      UnavailableExecutions: string list }
+
+[<RequireQualifiedAccess>]
+module UsageCoverage =
+    /// Registry units that make a metric usage or cost.
+    let usageUnit = "tokens"
+    let costUnit = "currency"
+
+    /// The additive registry metrics with `unit`, in registry order.
+    let metricsWithUnit (unit: string) (definitions: MetricDefinition list) =
+        definitions |> List.filter (fun definition -> definition.Aggregation = "sum" && definition.Unit = unit)
+
+    /// Coverage of each metric from the groups `Usage.aggregate` produced;
+    /// totals are the groups' own (one per unit and currency), never summed
+    /// again here.
+    let coverage (definitions: MetricDefinition list) (executions: string list) (groups: UsageGroup list) : MetricCoverage list =
+        let inScope = executions |> List.distinct |> List.sort
+
+        definitions
+        |> List.map (fun definition ->
+            let recorded = groups |> List.filter (fun group -> group.MetricId = definition.Id && group.Total.IsSome)
+            let reporting = recorded |> List.collect _.ReportingExecutions |> List.distinct |> List.sort
+            let unavailable = inScope |> List.filter (fun execution -> not (List.contains execution reporting))
+
+            { MetricId = definition.Id
+              Unit = definition.Unit
+              Availability =
+                match reporting, unavailable with
+                | [], _ -> CoverageAvailability.Unknown
+                | _, [] -> CoverageAvailability.Recorded
+                | _ -> CoverageAvailability.Partial
+              Totals =
+                recorded
+                |> List.choose (fun group ->
+                    group.Total
+                    |> Option.map (fun total ->
+                        { Unit = group.Unit
+                          Currency = group.Currency
+                          Total = total }))
+              ReportingExecutions = reporting
+              UnavailableExecutions = unavailable })

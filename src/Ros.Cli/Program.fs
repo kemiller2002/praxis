@@ -2569,37 +2569,8 @@ let private runTelemetryUsage root (arguments: string list) =
         eprintfn "ERROR --by must be one of: %s" (UsageDimension.all |> List.map UsageDimension.code |> String.concat ", ")
         2
     | Some dimension ->
-        let scope = FileTelemetryUsageRepository.read root workItemId dimension
-        let groups = Usage.aggregate dimension scope.ExecutionsByKey scope.Measurements
-        let output = JsonObject()
-        output["schema"] <- JsonValue.Create "praxis.telemetry-usage"
-        output["schemaVersion"] <- JsonValue.Create 1
-        output["workItemId"] <- (match workItemId with Some id -> JsonValue.Create id | None -> null)
-        output["by"] <- JsonValue.Create(UsageDimension.code dimension)
-        let groupsNode = JsonArray()
-
-        groups
-        |> List.iter (fun group ->
-            let node = JsonObject()
-            node["key"] <- JsonValue.Create group.Key
-            node["metric"] <- JsonValue.Create group.MetricId
-            node["unit"] <- JsonValue.Create group.Unit
-            node["currency"] <- (match group.Currency with Some value -> JsonValue.Create value | None -> null)
-            node["total"] <- (match group.Total with Some total -> JsonValue.Create total | None -> null)
-            node["complete"] <- JsonValue.Create group.UnavailableExecutions.IsEmpty
-            node["measurements"] <- JsonValue.Create group.Measurements
-            let strings (values: string list) =
-                let array = JsonArray()
-                values |> List.iter (fun value -> array.Add(JsonValue.Create value: JsonNode))
-                array
-            node["reportingExecutions"] <- strings group.ReportingExecutions
-            node["unavailableExecutions"] <- strings group.UnavailableExecutions
-            let qualities = JsonObject()
-            group.Qualities |> List.iter (fun (quality, count) -> qualities[quality] <- JsonValue.Create count)
-            node["evidenceQuality"] <- qualities
-            groupsNode.Add(node: JsonNode))
-
-        output["groups"] <- groupsNode
+        let _, groups = FileTelemetryUsageRepository.aggregate root workItemId dimension
+        let output = TelemetryUsageJson.document workItemId dimension groups
         printfn "%s" (output.ToJsonString(JsonSerializerOptions(WriteIndented = true)))
         0
 
