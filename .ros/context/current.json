@@ -5888,18 +5888,52 @@
     {
       "id": "ATTR-RECONCILE-SYMLINK-SUBMODULE",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-02T15:38:16.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Git/GitRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkReconciliationEffectTests.fs"
+        },
+        {
+          "type": "analysis",
+          "path": "research/experiments/EX-ROS-2026-A022-runs/a41b/analysis-w2.txt"
+        }
+      ],
+      "updatedAt": "2026-10-06T14:22:33.000Z",
       "telemetryExecutionIds": [
         "EXE-20261002T153817257Z-a12f8b56"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "63333d981ba719831ed2b9be",
+        "recordedAt": "2026-10-06T14:22:19.000Z",
+        "executionId": "EXE-20261002T153817257Z-a12f8b56",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a022-run-a41b",
+        "commit": "89875170a39db75f86423c6beac83af40b633057",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a022-run-a41b",
+        "remoteCommit": "89875170a39db75f86423c6beac83af40b633057",
+        "summary": "Symbolic links and submodules are content-matched for reconciled attribution; tests, docs and decision record updated; all criteria verified",
+        "nextAction": "Complete the work item and commit the Praxis state",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-06T14:22:33.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-02T15:38:16.000Z",
+  "updatedAt": "2026-10-06T14:22:33.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

@@ -1189,10 +1189,10 @@
         "reconciliation"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-27T02:00:52.000Z",
-      "updatedAt": "2026-10-01T10:44:36.000Z",
+      "updatedAt": "2026-10-06T14:22:33.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

@@ -4,7 +4,7 @@
 |---|---|---|---|---|
 | ACTOR-KIND-ANCHOR | ActorKind extension pattern accepts a trailing newline ($ anchor) | complete | provenance, security | low |
 | ATTR-COMPLETE-BASE-REF-SWEEP | Stop work complete from sweeping ROS_BASE_REF committed-range paths into its completion event | captured | attribution, reconciliation | medium |
-| ATTR-RECONCILE-SYMLINK-SUBMODULE | Content-match symbolic links and submodules for reconciled attribution | ready | attribution, reconciliation | low |
+| ATTR-RECONCILE-SYMLINK-SUBMODULE | Content-match symbolic links and submodules for reconciled attribution | complete | attribution, reconciliation | low |
 | BOOTSTRAP-ADOPTION-FIX | BOOTSTRAP-ADOPTION-FIX | complete |  |  |
 | BUG-WORK-ID-COLLISION | Reject auto-generated backlog IDs already present in work context | captured | bug, work-protocol | medium |
 | CI-BASE-REF-FIX | CI-BASE-REF-FIX | complete |  |  |
