@@ -10,7 +10,8 @@
 # before the Praxis state is committed and pushed. Nothing is published here.
 #
 # Requires: a clean checkout of a branch with an upstream, a built ./praxis
-# (dotnet build Praxis.slnx --configuration Release), python3, and a Git
+# (dotnet build Praxis.slnx --configuration Release), the .NET SDK (for
+# scripts/praxis-tooling.fsx), GNU date, and a Git
 # identity. Prints `version=`,
 # `base=` and `head=` lines (append them to $GITHUB_OUTPUT in Actions).
 set -euo pipefail
@@ -18,7 +19,7 @@ set -euo pipefail
 usage() { echo "usage: $0 patch|minor|major|X.Y.Z" >&2; exit 2; }
 # Millisecond precision: a whole-second timestamp can predate the execution
 # that `work start` opened moments earlier, which validation rejects.
-now() { python3 -c 'from datetime import datetime, timezone; print(datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"))'; }
+now() { date -u +%Y-%m-%dT%H:%M:%S.%3NZ; }
 fail() { echo "ERROR $*" >&2; exit 1; }
 
 [ "$#" -eq 1 ] || usage
@@ -26,39 +27,19 @@ bump="$1"
 
 cd "$(git rev-parse --show-toplevel)"
 
+# Repository JSON and version arithmetic are F# (RQ-ROS-2026-A024).
+tooling() { dotnet fsi scripts/praxis-tooling.fsx "$@"; }
+
 # The next version, derived without mutating anything.
-next_version() {
-  python3 - "$1" "$2" <<'PY'
-import re, sys
-current, bump = sys.argv[1], sys.argv[2]
-core = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
-parts = core.match(current)
-if not parts:
-    sys.exit(f"current version {current} is not X.Y.Z")
-major, minor, patch = map(int, parts.groups())
-nxt = {"major": f"{major + 1}.0.0", "minor": f"{major}.{minor + 1}.0", "patch": f"{major}.{minor}.{patch + 1}"}.get(bump, bump)
-if not core.match(nxt):
-    sys.exit(f'"{bump}" is not patch, minor, major or X.Y.Z')
-if tuple(map(int, nxt.split("."))) <= (major, minor, patch):
-    sys.exit(f"{nxt} is not newer than {current}")
-sys.stdout.write(nxt)
-PY
-}
+next_version() { tooling semver-next "$1" "$2"; }
 
 # release.json is the single version source (Directory.Build.props). The
 # self-hosting repository's own .echelon/toolchain.json pins the same release
 # for its remote executor (PremergeReleaseTests), so it moves in the same
 # commit; only its praxis property changes.
 set_version() {
-  python3 - "$1" <<'PY'
-import json, sys
-for path in ("release.json", ".echelon/toolchain.json"):
-    with open(path) as source:
-        document = json.load(source)
-    document["version" if path == "release.json" else "praxis"] = sys.argv[1]
-    with open(path, "w") as target:
-        target.write(json.dumps(document, indent=2) + "\n")
-PY
+  tooling json-set release.json version "$1"
+  tooling json-set ".echelon/toolchain.json" praxis "$1"
 }
 
 branch="$(git symbolic-ref --quiet --short HEAD)" || fail "HEAD is detached; check out the release branch"
@@ -68,7 +49,7 @@ git fetch --quiet origin "$branch"
 [ "$(git rev-parse HEAD)" = "$(git rev-parse '@{upstream}')" ] || fail "'$branch' is not at its upstream head; pull or push first"
 
 base="$(git rev-parse HEAD)"
-current="$(python3 -c 'import json; print(json.load(open("release.json"))["version"])')"
+current="$(tooling json-get release.json version)"
 version="$(next_version "$current" "$bump")"
 id="RELEASE-${version//./-}"
 echo "releasing ${current} -> ${version} as ${id}" >&2

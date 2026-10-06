@@ -4743,10 +4743,10 @@
         "tooling"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-10-06T20:37:10.203Z",
-      "updatedAt": "2026-10-06T20:37:10.203Z",
+      "updatedAt": "2026-10-06T21:37:17.283Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4771,6 +4771,30 @@
       "attachments": [],
       "createdAt": "2026-10-06T20:37:10.513Z",
       "updatedAt": "2026-10-06T21:11:14.359Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-MISC-10",
+      "title": "Remote adapter without Python: F# commands in the pinned release, then switch the scripts (RQ-ROS-2026-A024, DF-ROS-2026-A054)",
+      "description": "Follow-up of PRAXIS-MISC-08. scripts/praxis-remote-persist.sh, scripts/praxis-remote-inbox.sh, .github/actions/praxis-remote/action.yml and .github/workflows/praxis-remote.yml still run inline python3 under the time-boxed DF-ROS-2026-A054 exception, because they run on runners with only the pinned native Praxis release and no .NET. Plan: (1) add praxis commands that do their JSON work (adapter result document, persistence facts from a response, the outcome report to GITHUB_OUTPUT/step summary/log with stop-commands, the classification's mutating flag, inbox routing decisions) with tests mirroring RemotePersistScriptTests and PremergeRemoteScriptTests; (2) ship them in a release and pin it in .echelon/toolchain.json; (3) switch the four files to the commands, remove their ros.json exceptions and the Python note in README, and keep every existing adapter and inbox test passing. Acceptance: the four exceptions are gone, ./praxis architecture check passes, and the remote adapter and inbox tests pass unchanged in intent.",
+      "tags": [
+        "implementation-policy",
+        "remote"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T21:37:21.145Z",
+      "updatedAt": "2026-10-06T21:37:21.145Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

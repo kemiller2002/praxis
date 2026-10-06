@@ -160,7 +160,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="$(python3 -c 'import json; print(json.load(open("release.json"))["version"])')"
+          VERSION="$(dotnet fsi scripts/praxis-tooling.fsx json-get release.json version)"
           {
             printf '{\n  "schema": "echelon.release/v1",\n  "systemId": "praxis",\n  "version": "%s",\n' "$VERSION"
             printf '  "repository": "%s",\n  "tag": "v%s",\n  "commit": "%s",\n' "$GITHUB_REPOSITORY" "$VERSION" "$GITHUB_SHA"
@@ -177,7 +177,7 @@ jobs:
             done < dist/native/native-checksums.txt
             printf '\n  ]\n}\n'
           } > dist/native/echelon-release.json
-          python3 -m json.tool dist/native/echelon-release.json
+          dotnet fsi scripts/praxis-tooling.fsx json-validate dist/native/echelon-release.json
 
       - name: Smoke test native installer and installed Praxis
         shell: bash
@@ -271,7 +271,7 @@ jobs:
         run: |
           set -euo pipefail
           if curl -fsS https://api.nuget.org/v3-flatcontainer/echelonfoundry.praxis/index.json 2>/dev/null \
-              | python3 -c 'import json, sys; sys.exit(0 if sys.argv[1] in json.load(sys.stdin)["versions"] else 1)' "$VERSION"; then
+              | dotnet fsi scripts/praxis-tooling.fsx json-array-contains versions "$VERSION"; then
             echo "EchelonFoundry.Praxis ${VERSION} is already on NuGet."
             echo "publish=false" >> "$GITHUB_OUTPUT"
           else

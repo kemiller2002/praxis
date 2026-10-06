@@ -1417,6 +1417,23 @@
             "modified"
           ],
           "reason": "PRAXIS-MISC-09: fix the tests/Praxis.Tests path and correct the status to accepted while Python automation remains (PRAXIS-MISC-08)"
+        },
+        "EXE-20261006T213719240Z-8ddc5e25": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T21:37:46.958Z",
+          "evidence": [
+            "DF-ROS-2026-A054"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-08: Python acceptance criterion added; status implemented with recorded exceptions"
         }
       }
     },
@@ -1426,7 +1443,7 @@
       "requirements/SHARED-APPLICATION-FOUNDATIONS.md"
     ],
     "research_area": "repository-operating-system",
-    "status": "accepted",
+    "status": "implemented",
     "tags": [
       "architecture",
       "fsharp",
@@ -1437,7 +1454,7 @@
     ],
     "title": "Repository-owned implementation and automation are F#/.NET only",
     "updated": "2026-10-06",
-    "version": "1.0.2"
+    "version": "1.1.0"
   },
   {
     "created": "2026-09-28",

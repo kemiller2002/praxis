@@ -93,8 +93,9 @@
 | PRAXIS-MISC-05 | Planner: compare a saved plan's recommendations with what happened (PRX-PLAN-162) | captured | planning, planner-evidence | low |
 | PRAXIS-MISC-06 | Planner: persist estimate-error history over time (PRX-PLAN-170) | captured | planning, planner-evidence | low |
 | PRAXIS-MISC-07 | Record the cross-provider continuation proof on main (RQ-ROS-2026-A023 acceptance, PRAXIS-XPROVIDER-PROOF-01) | complete | remote, continuity | medium |
-| PRAXIS-MISC-08 | F#/.NET-only automation: port tracked Python and inline python3 (RQ-ROS-2026-A024) | captured | implementation-policy, tooling | medium |
+| PRAXIS-MISC-08 | F#/.NET-only automation: port tracked Python and inline python3 (RQ-ROS-2026-A024) | active | implementation-policy, tooling | medium |
 | PRAXIS-MISC-09 | Fix stale requirement citations: deleted Node tests and test paths in RQ-ROS-2026-A021..A024 | complete | documentation, requirements | medium |
+| PRAXIS-MISC-10 | Remote adapter without Python: F# commands in the pinned release, then switch the scripts (RQ-ROS-2026-A024, DF-ROS-2026-A054) | captured | implementation-policy, remote | medium |
 | PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | abandoned | rename, gh-90 | low |
 | PRAXIS-PLAN-01 | Deterministic shadow planner: praxis plan analyze/simulate/compare/explain (PRX-PLAN-001..182) | complete | planning, architecture, cli | high |
 | PRAXIS-PLAN-02 | Accept planner decision DF-ROS-2026-A046 on the owner's approval | complete | planning, governance | medium |
