@@ -9,3 +9,4 @@
 2026-10-06T14:23:01Z  M: second grouped condition finished; independent workers continuing
 2026-10-06T14:52:33Z  D worker 2 complete (P1-P5 pass); D worker 3 guard pass; owner-message deviation recorded
 2026-10-06T14:56:24Z  B worker 3 complete (P1-P5 pass); B worker 4 stale checkout repaired, guard pass
+2026-10-06T16:14:54Z  D worker 3 and B worker 4 complete (P1-P5 pass); D worker 4 stale checkout, repair pending; B worker 5 guard sent
