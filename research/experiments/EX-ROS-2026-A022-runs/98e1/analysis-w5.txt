@@ -198,3 +198,27 @@ repository's availability or its own relayed document.
   the single-repository API.
 - ControlPlaneSource adds the hub's `source` to hub envelopes; clients must
   use `repository.repositorySource` for the spoke's identity. Documented.
+
+
+8. Verification pass (before completing PRAXIS-CTL-06)
+-------------------------------------------------------
+
+Implementation commit: abbb8c9e. Local runs on that commit:
+- `dotnet build Ros.slnx --configuration Release --no-restore` (with the local
+  FSharp.Core toolchain property, not committed): 0 warnings, 0 errors.
+- `dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll`:
+  1373 test(s); 1373 passed; 0 failed (baseline before the change on ed4101be
+  + work start: 1364 passed, 0 failed; the 9 new tests are listed below).
+- `python3 -m unittest discover -s tests`: Ran 7 tests, OK.
+- `./praxis architecture check`: passed. `./praxis validate`: passed with 2
+  warnings, both on existing evidence records not touched by this item.
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | Typed read endpoints: registered repositories with availability, each repository's work list and work item, by delegating to that repository's own Praxis CLI, same per-repository contract as the single-repository API | met | Routes src/Ros.Cli/HubWeb.fs:64-70 (GET /api/v1/repos, /api/v1/repos/:id/work, /api/v1/repos/:id/work/:item, /api/v1/work); effects src/Ros.Cli/Hub.fs:515-551 call only invokeSpoke (Hub.fs:392) with the spoke's own `praxis work state` (WorkStateCommands.fs:70, which calls the same WebInterface.stateResponse as web serve). Tests: "work state prints the same praxis.work-state documents web serve answers..." (CLI document == web serve /api/v1/work and /api/v1/work/ID body minus `source`); "hub serve v1: repositories with availability, and each repository's own work list and item, by delegation" (repository-list with availability "available" and repositorySource; nested documents equal the spoke's own `work state` output; unknown item 404 relaying the spoke's work-item-not-found; unknown repository 404); "hub state prints a repository's own documents..." (CLI parity). All PASS. |
+| 2 | Hub persists only registration data, never a copy of work state; a test shows a state change in a registered repository appearing without hub involvement | met | No new persisted field or file (Hub.save unchanged; v1 functions only read via spoke CLI). Test "hub serve v1: the hub stores only its registry, and a repository's own change is served without the hub": item read through the running hub, then `work start` run in the spoke's own CLI (no hub call), next hub read shows the new semanticState equal to the spoke's own `work state`; hub root snapshot (all non-.git files, SHA-256) identical before and after; .ros/hub holds only registry.json and registry.md; no hub file contains the item's title. Host source check (ControlPlaneHostTests "host source check...") still passes with the new Hub functions added to the read/CLI allowlist. PASS. |
+| 3 | An unreachable or incompatible repository is reported for that repository and does not fail the whole response | met | Classification HubStateJson.classify (src/Ros.Contracts/Work/HubStateJson.fs:72) + SpokeAvailability (src/Ros.Domain/Work/SpokeAvailability.fs). Test "hub serve v1: an unreachable or incompatible repository is reported for itself and the response still succeeds": three spokes, one moved away (unreachable, reason "no longer exists"), one whose launcher behaves like a Praxis without `work state` (incompatible, reason names `praxis work state`); GET /api/v1/work is 200 with the healthy repository's document present and the others' document null; GET /api/v1/repos reports [available; unreachable; incompatible]; a single-repository route for the incompatible one answers 502 repository-unavailable. Unit test "hub state: a repository's answer is classified by contract, never altered" covers version mismatch, unreadable state and wrong kind. PASS. |
+| 4 | Any mutation offered through the hub is delegated to the owning repository's transition path | met | Mutations the hub offers: create (existing; spoke's own `praxis add` / `work attach`, Hub.createWork, unchanged and still covered by "hub serve: register, create (JSON and multipart with a file)..." PASS) and the new transition request (Hub.requestTransition, Hub.fs:554 -> spoke `praxis work transition` -> WebInterface.transition, the same path as the spoke's POST /api/v1/work/ID/transitions). Registry register/unregister change only the hub's own registry through `praxis hub` (unchanged). Test "hub serve v1: a transition is run by the owning repository's own transition path": refused `resume` relayed as 409 illegal-transition with requestedAction and the spoke byte-for-byte unchanged; accepted `ready` relayed as repository-work-transition and visible in the spoke's own `work state`; the hub registry unchanged; non-object body 400; unknown repository 404. PASS. |
+| 5 | docs/project-administration-hub.md updated; tests | met | docs/project-administration-hub.md section "Versioned control-plane API (/api/v1, praxis.hub-state)" (line 144) plus CLI listing and "does not do" list; docs/cli.md `work state`, `work transition`, `hub state`. Tests: 9 new in tests/Ros.Tests/HubTests.fs (lines 473-723), all PASS in the full run above. |
+
+All five criteria are met; the item can be completed.
