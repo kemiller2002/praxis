@@ -67,6 +67,7 @@ let main _ =
     @ WorkValidateCliTests.tests
     @ WorkBacklogCliTests.tests
     @ BacklogReidentificationTests.tests
+    @ StatusTableCitationTests.tests
     @ WorkLifecycleCliTests.tests
     @ WorkViewCliTests.tests
     @ StatusValidateCliTests.tests
