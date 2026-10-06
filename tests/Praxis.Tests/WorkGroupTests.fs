@@ -57,11 +57,12 @@ module WorkGroupTests =
           ArchitectureNotes = []
           OccurredAt = "2026-09-30T12:00:00.000Z"
           Actor = human
-          Reason = Some "they share one API surface" }
+          Reason = Some "they share one API surface"
+          ExecutionId = None }
 
     let private created (groupId: string) (members: string list) =
         match WorkGroups.create (context []) (request groupId members) with
-        | Ok group -> group
+        | Ok change -> change.Group
         | Error rejections -> failwith $"unexpected rejection: {rejections}"
 
     let private codes (result: Result<'a, GroupRejection list>) =
@@ -232,10 +233,10 @@ module WorkGroupTests =
 
               let facts =
                   Map.ofList
-                      [ "ITEM-1", { State = Some "complete"; PlanningState = Some "complete"; WaitsOn = [] }
-                        "ITEM-2", { State = Some "blocked"; PlanningState = Some "blocked"; WaitsOn = [] }
-                        "ITEM-3", { State = Some "ready"; PlanningState = Some "waiting-on-dependency"; WaitsOn = [ "ITEM-2" ] }
-                        "ITEM-4", { State = None; PlanningState = None; WaitsOn = [ "ITEM-2" ] } ]
+                      [ "ITEM-1", { State = Some "complete"; PlanningState = Some "complete"; WaitsOn = []; WaitsOnBlocked = [] }
+                        "ITEM-2", { State = Some "blocked"; PlanningState = Some "blocked"; WaitsOn = []; WaitsOnBlocked = [] }
+                        "ITEM-3", { State = Some "ready"; PlanningState = Some "waiting-on-dependency"; WaitsOn = [ "ITEM-2" ]; WaitsOnBlocked = [ "ITEM-2" ] }
+                        "ITEM-4", { State = None; PlanningState = None; WaitsOn = [ "ITEM-2" ]; WaitsOnBlocked = [ "ITEM-2" ] } ]
 
               let progress = WorkGroups.progress group (fun id -> facts[id])
               Assert.equal [ "ITEM-1" ] progress.Completed
@@ -293,12 +294,16 @@ module WorkGroupTests =
                     OccurredAt = "2026-09-30T13:00:00.000Z"
                     Actor = human
                     Reason = Some "same module"
-                    AllowEmpty = false }
+                    AllowEmpty = false
+                    ExecutionId = Some "EXE-CALLER" }
 
               let add groups id groupId = WorkGroups.add (context groups) (change id groupId)
               Assert.equal [ "unknown-group" ] (codes (add [ group ] "ITEM-2" "GROUP-AREA-404"))
               Assert.equal [ "invalid-group-id" ] (codes (add [ group ] "ITEM-2" "nope"))
-              Assert.equal [ "already-member" ] (codes (add [ group ] "ITEM-1" "GROUP-AREA-001"))
+              // A current member is an end state that already holds (PRX-GRP-114).
+              match add [ group ] "ITEM-1" "GROUP-AREA-001" with
+              | Ok change -> Assert.equal (false, group) (change.Changed, change.Group)
+              | Error rejections -> failwith $"{rejections}"
               Assert.equal [ "unknown-member" ] (codes (add [ group ] "NOPE-1" "GROUP-AREA-001"))
               Assert.equal [ "terminal-member" ] (codes (add [ group ] "DONE-1" "GROUP-AREA-001"))
               Assert.equal [ "repository-mismatch" ] (codes (add [ group ] "ELSE-1" "GROUP-AREA-001"))
@@ -310,12 +315,16 @@ module WorkGroupTests =
 
               match add [ group ] "ITEM-2" "GROUP-AREA-001" with
               | Error rejections -> failwith $"{rejections}"
-              | Ok updated ->
+              | Ok change ->
+                  let updated = change.Group
+                  Assert.isTrue change.Changed "the add did not change the group"
                   Assert.equal [ "ITEM-1"; "ITEM-2" ] updated.Declaration.Members
                   let entry = List.last updated.History
                   Assert.equal GroupOperation.MemberAdded entry.Operation
                   Assert.equal (Some "ITEM-2") entry.Member
                   Assert.equal human entry.Actor
+                  Assert.equal (Some "EXE-CALLER") entry.ExecutionId
+                  Assert.equal (Some "active") entry.MemberState
                   Assert.equal group.History (updated.History |> List.truncate 1))
 
           t "cli add records the member and who added it, leaves lifecycle files untouched, and the planner sees the new member" (fun () ->
@@ -339,7 +348,7 @@ module WorkGroupTests =
                   let explained = run clone None [ "plan"; "explain-group"; "GROUP-FIXTURE-001"; "--json" ] |> ok
                   Assert.isTrue (explained.Output.Contains "\"ITEM-2\"") "the planner does not see the added member"
 
-                  for id, code in [ "ITEM-2", "already-member"; "DONE-1", "terminal-member"; "GONE-1", "terminal-member"; "NOPE-1", "unknown-member" ] do
+                  for id, code in [ "DONE-1", "terminal-member"; "GONE-1", "terminal-member"; "NOPE-1", "unknown-member" ] do
                       let refused = add [ "--member"; id ]
                       Assert.equal 1 refused.ExitCode
                       Assert.equal [ code ] (rejectionCodes refused)
@@ -371,7 +380,8 @@ module WorkGroupTests =
                     OccurredAt = "2026-09-30T13:00:00.000Z"
                     Actor = human
                     Reason = Some "not part of this design"
-                    AllowEmpty = allowEmpty }
+                    AllowEmpty = allowEmpty
+                    ExecutionId = None }
 
               let remove (target: StoredWorkGroup) id allowEmpty = WorkGroups.remove (context [ target ]) (change id allowEmpty)
               Assert.equal [ "not-member" ] (codes (remove group "ITEM-2" false))
@@ -379,7 +389,7 @@ module WorkGroupTests =
 
               let withoutDone =
                   match remove group "DONE-1" false with
-                  | Ok updated -> updated
+                  | Ok change -> change.Group
                   | Error rejections -> failwith $"{rejections}"
 
               Assert.equal [ "ITEM-1" ] withoutDone.Declaration.Members
@@ -389,7 +399,7 @@ module WorkGroupTests =
 
               match remove withoutDone "ITEM-1" true with
               | Error rejections -> failwith $"{rejections}"
-              | Ok empty ->
+              | Ok { Group = empty } ->
                   Assert.equal [] empty.Declaration.Members
                   Assert.isTrue (List.last empty.History).ExplicitEmpty "the empty removal is not explicit"
                   Assert.empty (WorkGroups.findings (context [ empty ])))
@@ -544,6 +554,231 @@ module WorkGroupTests =
                   run clone None [ "validate" ] |> ok |> ignore
                   Assert.equal 2 (cli clone [ "work"; "group"; "checkpoint"; "--group"; "GROUP-FIXTURE-001"; "--occurred-at"; now () ]).ExitCode
                   Assert.equal 1 (cli clone [ "work"; "group"; "checkpoint"; "--group"; "GROUP-FIXTURE-404"; "--occurred-at"; now (); "--summary"; "s"; "--next-action"; "n" ]).ExitCode))
+
+          // ---- PRX-GRP-110..116 (PRAXIS-GROUP-08; PRX-GRP-190 cases 27-32) ----
+
+          t "derived status follows the PRX-GRP-103 precedence and no stored field sets it" (fun () ->
+              let group = created "GROUP-AREA-001" [ "ITEM-1"; "ITEM-2" ]
+
+              let statusOf (states: (string option * string list) list) =
+                  let facts =
+                      List.zip [ "ITEM-1"; "ITEM-2" ] states
+                      |> List.map (fun (id, (state, waitsOnBlocked)) -> id, { State = state; PlanningState = None; WaitsOn = waitsOnBlocked; WaitsOnBlocked = waitsOnBlocked })
+                      |> Map.ofList
+
+                  GroupStatus.code (WorkGroups.summarize group (fun id -> facts[id])).Status
+
+              Assert.equal "complete" (statusOf [ Some "complete", []; Some "complete", [] ])
+              Assert.equal "unknown" (statusOf [ Some "complete", []; None, [] ])
+              Assert.equal "partially-complete" (statusOf [ Some "complete", []; Some "blocked", [] ])
+              Assert.equal "partially-complete" (statusOf [ Some "complete", []; Some "abandoned", [] ])
+              Assert.equal "blocked" (statusOf [ Some "blocked", []; Some "ready", [ "OUTSIDE-1" ] ])
+              Assert.equal "active" (statusOf [ Some "blocked", []; Some "active", [] ])
+              Assert.equal "not-started" (statusOf [ Some "ready", []; Some "captured", [] ])
+              let empty = { group with Declaration = { group.Declaration with Members = [] } }
+              Assert.equal GroupStatus.NotStarted (WorkGroups.summarize empty (fun _ -> failwith "no member")).Status
+              let stored = (WorkGroupJson.groupNode group).ToJsonString()
+              Assert.isTrue (not (stored.Contains "groupStatus") && not (stored.Contains "\"status\"")) "a status was stored in the group record")
+
+          t "removed-open members are reported with their removal reason; a member removed after completing is not" (fun () ->
+              // DONE-1 completed after it joined.
+              let joined = created "GROUP-AREA-001" [ "ITEM-1"; "ITEM-2" ]
+              let group = { joined with Declaration = { joined.Declaration with Members = [ "ITEM-1"; "ITEM-2"; "DONE-1" ] } }
+
+              let change (id: string) : GroupMemberRequest =
+                  { GroupId = "GROUP-AREA-001"
+                    WorkItemId = id
+                    OccurredAt = "2026-09-30T13:00:00.000Z"
+                    Actor = human
+                    Reason = Some $"{id} moved elsewhere"
+                    AllowEmpty = false
+                    ExecutionId = None }
+
+              let removeFrom (target: StoredWorkGroup) id =
+                  match WorkGroups.remove (context [ target ]) (change id) with
+                  | Ok change -> change.Group
+                  | Error rejections -> failwith $"{rejections}"
+
+              let after = removeFrom (removeFrom group "ITEM-2") "DONE-1"
+              let removed = WorkGroups.removedOpen after (fun id -> MemberStanding.state ((context []).Standing id))
+              Assert.equal [ "ITEM-2" ] (removed |> List.map (fun row -> row.WorkItemId))
+              Assert.equal (Some "ITEM-2 moved elsewhere") removed.Head.Reason
+              Assert.equal (Some "active") removed.Head.StateAtRemoval
+              let node = WorkGroupJson.summaryNode (WorkGroups.summarize after (MemberFacts.ofStanding (fun id -> (context []).Standing id)))
+              Assert.equal "ITEM-2" (text node["removedOpen"].[0].["workItemId"]))
+
+          t "repeated identical create, add and remove are unchanged and append nothing; conflicting requests are refused" (fun () ->
+              let group = created "GROUP-AREA-001" [ "ITEM-1"; "ITEM-2" ]
+
+              match WorkGroups.create (context [ group ]) (request "GROUP-AREA-001" [ "ITEM-1"; "ITEM-2" ]) with
+              | Ok change -> Assert.equal (false, group) (change.Changed, change.Group)
+              | Error rejections -> failwith $"{rejections}"
+
+              Assert.equal [ "duplicate-group" ] (codes (WorkGroups.create (context [ group ]) (request "GROUP-AREA-001" [ "ITEM-1" ])))
+              Assert.equal [ "duplicate-group" ] (codes (WorkGroups.create (context [ group ]) { request "GROUP-AREA-001" [ "ITEM-1"; "ITEM-2" ] with Origin = GroupOrigin.ArchitectureDeclared }))
+
+              let removal: GroupMemberRequest =
+                  { GroupId = "GROUP-AREA-001"; WorkItemId = "ITEM-2"; OccurredAt = "2026-09-30T13:00:00.000Z"; Actor = human; Reason = None; AllowEmpty = false; ExecutionId = None }
+
+              let once =
+                  match WorkGroups.remove (context [ group ]) removal with
+                  | Ok change -> change.Group
+                  | Error rejections -> failwith $"{rejections}"
+
+              match WorkGroups.remove (context [ once ]) removal with
+              | Ok change -> Assert.equal (false, once.History.Length) (change.Changed, change.Group.History.Length)
+              | Error rejections -> failwith $"{rejections}"
+
+              Assert.equal [ "not-member" ] (codes (WorkGroups.remove (context [ once ]) { removal with WorkItemId = "ITEM-3" })))
+
+          t "history is append-only: a truncated, reordered or rewritten history or a vanished group is reported" (fun () ->
+              let group = created "GROUP-AREA-001" [ "ITEM-1" ]
+
+              let added =
+                  match WorkGroups.add (context [ group ]) { GroupId = "GROUP-AREA-001"; WorkItemId = "ITEM-2"; OccurredAt = "2026-09-30T13:00:00.000Z"; Actor = human; Reason = None; AllowEmpty = false; ExecutionId = None } with
+                  | Ok change -> change.Group
+                  | Error rejections -> failwith $"{rejections}"
+
+              Assert.empty (WorkGroups.historyFindings "HEAD" [ group ] [ added ])
+              Assert.empty (WorkGroups.historyFindings "HEAD" [ added ] [ added ])
+              let messages committed current = WorkGroups.historyFindings "HEAD" committed current |> List.map (fun (_, _, message) -> message)
+              Assert.isTrue ((messages [ added ] [ group ]).Head.Contains "truncated") "truncation was not reported"
+              let reordered = { added with History = List.rev added.History }
+              Assert.isTrue ((messages [ added ] [ reordered ]).Head.Contains "rewritten or reordered") "reordering was not reported"
+              let rewritten = { added with History = added.History |> List.map (fun entry -> { entry with Reason = Some "edited" }) }
+              Assert.isTrue ((messages [ added ] [ rewritten ]).Head.Contains "rewritten") "a rewrite was not reported"
+              Assert.isTrue ((messages [ added ] []).Head.Contains "no longer in the store") "a vanished group was not reported")
+
+          t "a version-1 store reads unchanged and is written as version 2 only by a mutation, history intact; list rows round-trip" (fun () ->
+              let v1 =
+                  """{"schemaVersion":1,"groups":[{"id":"GROUP-A-001","members":["ITEM-1"],"kind":null,"origin":"human-declared","sharedContext":[],"executionRepository":"this-repository","crossRepository":false,"architectureNotes":[],"createdAt":"2026-09-30T12:00:00.000Z","createdBy":{"kind":"human","id":"owner"},"history":[{"operation":"created","member":null,"at":"2026-09-30T12:00:00.000Z","actor":{"kind":"human","id":"owner"},"reason":null}],"checkpoints":[]}]}"""
+
+              match WorkGroupJson.readStore v1 with
+              | Error message -> failwith message
+              | Ok groups ->
+                  let entry = Assert.single groups.Head.History
+                  Assert.equal (None, None) (entry.ExecutionId, entry.MemberState)
+                  let rewritten = WorkGroupJson.renderStore groups
+                  Assert.isTrue (rewritten.Contains "\"schemaVersion\": 2") rewritten
+                  Assert.equal (Ok groups) (WorkGroupJson.readStore rewritten)
+                  Assert.empty (WorkGroups.historyFindings "HEAD" groups (Result.defaultValue [] (WorkGroupJson.readStore rewritten)))
+
+              Assert.isTrue (WorkGroupJson.readStore """{"schemaVersion":3,"groups":[]}""" |> Result.isError) "an unknown store version was read"
+              let joined = created "GROUP-AREA-001" [ "ITEM-1" ]
+              let withDone = { joined with Declaration = { joined.Declaration with Members = [ "ITEM-1"; "DONE-1" ] } }
+              let summary = WorkGroups.summarize withDone (MemberFacts.ofStanding (context []).Standing)
+              let node = (WorkGroupJson.summaryNode summary).AsObject()
+
+              match WorkGroupJson.readSummary node with
+              | Error problems -> failwith $"{problems}"
+              | Ok read ->
+                  Assert.equal ("GROUP-AREA-001", GroupStatus.PartiallyComplete, [ "DONE-1" ], 2, None) (read.Id, read.GroupStatus, read.Completed, read.MemberCount, read.ExecutionMode)
+                  Assert.equal (Some "this-repository") read.HomeRepository)
+
+          t "cli list is read-only, sorted by ID, reports derived status and progress, and filters by status, member and repository" (fun () ->
+              withRepository (fun clone ->
+                  createGroup clone "GROUP-FIXTURE-002" [ "ITEM-2"; "ITEM-3" ] [] |> ok |> ignore
+                  createGroup clone "GROUP-FIXTURE-001" [ "ITEM-1" ] [ "--kind"; "shared-files" ] |> ok |> ignore
+                  cli clone [ "work"; "start"; "--id"; "ITEM-2"; "--type"; "feature"; "--occurred-at"; now () ] |> ok |> ignore
+                  let before = lifecycle clone, File.ReadAllText(groupsFile clone), GitFixture.git clone [ "status"; "--porcelain"; "--untracked-files=all" ]
+                  let list extra = run clone None ([ "work"; "group"; "list"; "--json" ] @ extra) |> ok
+                  let ids (result: Result) = result.Json["groups"].AsArray() |> Seq.map (fun node -> text node["id"]) |> Seq.toList
+
+                  let all = list []
+                  Assert.equal "work group list" (text all.Json["command"])
+                  Assert.equal "listed" (text all.Json["status"])
+                  Assert.equal [ "GROUP-FIXTURE-001"; "GROUP-FIXTURE-002" ] (ids all)
+                  let second = all.Json["groups"].[1]
+                  Assert.equal "active" (text second["groupStatus"])
+                  Assert.equal 2 (second["memberCount"].GetValue<int>())
+                  Assert.equal "shared-files" (text all.Json["groups"].[0].["kind"])
+                  Assert.isTrue (isNull second["executionMode"] && isNull second["latestCheckpointAt"]) "an unknown value was not null"
+                  Assert.equal [ "GROUP-FIXTURE-002" ] (ids (list [ "--status"; "active" ]))
+                  Assert.equal [ "GROUP-FIXTURE-001" ] (ids (list [ "--status"; "not-started" ]))
+                  Assert.equal [ "GROUP-FIXTURE-002" ] (ids (list [ "--member"; "ITEM-3" ]))
+                  Assert.equal [] (ids (list [ "--repository"; "elsewhere" ]))
+                  Assert.equal 2 (ids (list [ "--repository"; text second["executionRepository"] ])).Length
+                  let textView = run clone None [ "work"; "group"; "list" ] |> ok
+                  Assert.isTrue (textView.Output.Contains "GROUP-FIXTURE-002" && textView.Output.Contains "0 of 2 complete") textView.Output
+                  Assert.equal 2 (run clone None [ "work"; "group"; "list"; "--status"; "finished" ]).ExitCode
+                  Assert.equal before (lifecycle clone, File.ReadAllText(groupsFile clone), GitFixture.git clone [ "status"; "--porcelain"; "--untracked-files=all" ])))
+
+          t "cli repeats are idempotent (changed:false, exit 0, no history) and record the caller's execution; conflicts exit 1" (fun () ->
+              withRepository (fun clone ->
+                  cli clone [ "work"; "backlog-transition"; "--id"; "ITEM-4"; "--action"; "ready"; "--occurred-at"; now () ] |> ok |> ignore
+                  cli clone [ "work"; "start"; "--id"; "ITEM-4"; "--type"; "feature"; "--occurred-at"; now () ] |> ok |> ignore
+                  let first = createGroup clone "GROUP-FIXTURE-001" [ "ITEM-1"; "ITEM-2" ] [] |> ok
+                  Assert.equal true (first.Json["changed"].GetValue<bool>())
+                  let execution = text first.Json["group"].["history"].[0].["executionId"]
+                  Assert.isTrue (execution.StartsWith "EXE-") $"no caller execution recorded: {execution}"
+                  let stored () = File.ReadAllText(groupsFile clone)
+                  let afterCreate = stored ()
+
+                  let again = createGroup clone "GROUP-FIXTURE-001" [ "ITEM-1"; "ITEM-2" ] [] |> ok
+                  Assert.equal ("unchanged", false) (text again.Json["status"], again.Json["changed"].GetValue<bool>())
+                  Assert.equal afterCreate (stored ())
+
+                  let member' verb id extra = cli clone ([ "work"; "group"; verb; "--group"; "GROUP-FIXTURE-001"; "--member"; id; "--occurred-at"; now (); "--json" ] @ extra)
+                  let repeatAdd = member' "add" "ITEM-1" [] |> ok
+                  Assert.equal false (repeatAdd.Json["changed"].GetValue<bool>())
+                  Assert.equal afterCreate (stored ())
+                  member' "remove" "ITEM-2" [ "--reason"; "split out" ] |> ok |> ignore
+                  let afterRemove = stored ()
+                  let repeatRemove = member' "remove" "ITEM-2" [] |> ok
+                  Assert.equal false (repeatRemove.Json["changed"].GetValue<bool>())
+                  Assert.equal afterRemove (stored ())
+                  let removedOpen = run clone None [ "work"; "group"; "show"; "GROUP-FIXTURE-001"; "--json" ] |> ok
+                  Assert.equal "ITEM-2" (text removedOpen.Json["removedOpen"].[0].["workItemId"])
+                  Assert.equal "split out" (text removedOpen.Json["removedOpen"].[0].["reason"])
+
+                  let conflict = createGroup clone "GROUP-FIXTURE-001" [ "ITEM-3" ] []
+                  Assert.equal 1 conflict.ExitCode
+                  Assert.equal [ "duplicate-group" ] (rejectionCodes conflict)
+                  Assert.equal 1 (member' "remove" "ITEM-3" []).ExitCode
+                  Assert.equal afterRemove (stored ())))
+
+          t "cli no group command alters a member's lifecycle; there is no group completion transition" (fun () ->
+              withRepository (fun clone ->
+                  let before = lifecycle clone
+                  createGroup clone "GROUP-FIXTURE-001" [ "ITEM-1"; "ITEM-2" ] [] |> ok |> ignore
+                  cli clone [ "work"; "group"; "add"; "--group"; "GROUP-FIXTURE-001"; "--member"; "ITEM-3"; "--occurred-at"; now () ] |> ok |> ignore
+                  cli clone [ "work"; "group"; "add"; "--group"; "GROUP-FIXTURE-001"; "--member"; "ITEM-3"; "--occurred-at"; now () ] |> ok |> ignore
+                  cli clone [ "work"; "group"; "remove"; "--group"; "GROUP-FIXTURE-001"; "--member"; "ITEM-3"; "--occurred-at"; now (); "--dry-run" ] |> ok |> ignore
+                  cli clone [ "work"; "group"; "remove"; "--group"; "GROUP-FIXTURE-001"; "--member"; "ITEM-3"; "--occurred-at"; now () ] |> ok |> ignore
+                  run clone None [ "work"; "group"; "show"; "GROUP-FIXTURE-001" ] |> ok |> ignore
+                  run clone None [ "work"; "group"; "list" ] |> ok |> ignore
+                  cli clone [ "work"; "group"; "checkpoint"; "--group"; "GROUP-FIXTURE-001"; "--occurred-at"; now (); "--summary"; "s"; "--next-action"; "n" ] |> ignore
+                  Assert.equal before (lifecycle clone)
+                  let stored = File.ReadAllText(groupsFile clone)
+
+                  for verb in [ "complete"; "done"; "finish" ] do
+                      let refused = cli clone [ "work"; "group"; verb; "--group"; "GROUP-FIXTURE-001"; "--occurred-at"; now () ]
+                      Assert.isTrue (refused.ExitCode <> 0) $"work group {verb} was accepted"
+
+                  Assert.equal (before, stored) (lifecycle clone, File.ReadAllText(groupsFile clone))))
+
+          t "cli validate refuses a group history rewritten or truncated relative to the committed store" (fun () ->
+              withRepository (fun clone ->
+                  createGroup clone "GROUP-FIXTURE-001" [ "ITEM-1" ] [] |> ok |> ignore
+                  cli clone [ "work"; "group"; "add"; "--group"; "GROUP-FIXTURE-001"; "--member"; "ITEM-2"; "--occurred-at"; now (); "--reason"; "same module" ] |> ok |> ignore
+                  pushAll clone "record the group" |> ignore
+                  run clone None [ "validate" ] |> ok |> ignore
+                  let file = groupsFile clone
+                  let committed = File.ReadAllText file
+                  File.WriteAllText(file, committed.Replace("same module", "rewritten reason"))
+                  let rewritten = run clone None [ "validate" ]
+                  Assert.equal 1 rewritten.ExitCode
+                  Assert.isTrue (rewritten.Error.Contains "append-only") rewritten.Error
+                  let node = JsonNode.Parse(committed)
+                  let history = node["groups"].[0].["history"].AsArray()
+                  history.RemoveAt(history.Count - 1)
+                  node["groups"].[0].["members"].AsArray().RemoveAt(1)
+                  File.WriteAllText(file, node.ToJsonString())
+                  let truncated = run clone None [ "validate" ]
+                  Assert.equal 1 truncated.ExitCode
+                  Assert.isTrue (truncated.Error.Contains "truncated") truncated.Error
+                  File.WriteAllText(file, committed)
+                  run clone None [ "validate" ] |> ok |> ignore))
 
           t "cli validate reports a stored group whose member is not a recorded work item" (fun () ->
               withRepository (fun clone ->
