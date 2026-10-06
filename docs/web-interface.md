@@ -192,6 +192,78 @@ Adding a field is not a breaking change. Removing or renaming a field, or
 changing a field's meaning, increments `version` and is served under a new
 `/api/vN/` path.
 
+## Transition requests (`POST /api/v1/work/:id/transitions`)
+
+One endpoint requests any work transition and answers with typed state or a
+structured refusal (PRX-CTL-006, PRX-UI-024, PRX-UI-027). The body names the
+`action` and carries the same argument fields as the per-action routes:
+
+```json
+{ "action": "ready|block|abandon|start|resume|complete",
+  "reason": "...", "type": "feature", "actor": "...",
+  "evidence": [{ "type": "tests", "path": "tests/X.fs" }], "conclusion": "..." }
+```
+
+The request runs exactly one CLI command, chosen by the kernel that governs
+the item (`WebInterface.transitionOperation`), so no transition rule lives in
+the web layer:
+
+| `action` | Backlog item | Live work |
+|---|---|---|
+| `ready` | `work backlog-transition --action ready` | same (refused by the CLI) |
+| `block` | `work block --reason R` | `work block --reason R` |
+| `abandon` | `work backlog-transition --action abandon` | `work abandon --reason R [--actor A]` |
+| `start` | `work start [--type T] [--actor A]` | same (refused by the CLI) |
+| `resume` | `work resume [--actor A]` | `work resume [--actor A]` |
+| `complete` | `work complete --evidence TYPE=PATH ... [--conclusion C] [--actor A]` | same |
+
+Success is `200` with the item's state as recorded after the transition:
+
+```json
+{ "contract": "praxis.work-state", "version": 1, "kind": "work-transition",
+  "action": "start", "item": { "...": "WorkItemState, as GET /api/v1/work/:id" } }
+```
+
+A refusal is a `praxis.error` document. `code` is the machine-readable
+category, `message` (also `error`) is the CLI's own `ERROR` text, and
+`requestedAction` is the action asked for (`null` when the body named none):
+
+```json
+{ "contract": "praxis.error", "version": 1, "code": "illegal-transition",
+  "error": "cannot start backlog item 'WI-1' from 'captured'; mark it ready first",
+  "message": "cannot start backlog item 'WI-1' from 'captured'; mark it ready first",
+  "requestedAction": "start", "workItemId": "WI-1" }
+```
+
+| `code` | Status | When |
+|---|---|---|
+| `invalid-request` | `400` | unreadable body, missing or unknown `action`, or the CLI rejected the arguments (exit `2`) |
+| `work-item-not-found` | `404` | Praxis does not know the id (no command runs) |
+| `illegal-transition` | `409` | the governing kernel does not offer the action in the item's state |
+| `reason-required` | `422` | the action needs a reason and none was given |
+| `evidence-required` | `422` | `complete` without evidence of every required type |
+| `transition-refused` | `409` | any other refusal by the CLI (e.g. evidence path or durable-checkpoint guard) |
+| `work-state-unreadable` | `500` | the recorded state could not be read |
+| `execution-failed` | `500` | the CLI could not be started |
+
+The category is read from the kernels' own action projection (the `actions`
+of `GET /api/v1/work/:id`) as it stood before the request; it labels the
+refusal and never decides it. Whether the transition happens, and its
+message, are the CLI's. A refused transition writes nothing: every file of
+the repository is byte-identical afterwards.
+
+**Identity.** The command runs with the server's environment, exactly as
+the same command typed in that shell, so the recorded actor, telemetry
+identity and provenance sources are those of the equivalent CLI command.
+Request headers and the client address are never read for identity; an
+explicit `actor` field is passed as the command's own `--actor`.
+
+**Per-action routes.** `POST /api/work/:id/{ready,block,abandon,start,resume,complete}`
+keep working unchanged (`400 {"error": "..."}` on refusal, the `work show`
+row on success) and the HTML forms still use them. For programs they are
+superseded by the transition endpoint, which adds the typed result, the
+structured refusal, and live-work `abandon`.
+
 ## Executions, receipts, evidence and telemetry (`/api/v1`)
 
 Four more read routes cover executions, step receipts, evidence, durable
@@ -309,6 +381,15 @@ legal action reports, obligations and unknowns (available and unavailable),
 agreement with `work list`, the rendered JSON, routing, and over HTTP the
 versioned routes, the structured `404` on both item routes, the legacy shapes,
 and that every repository file is byte-identical after the read routes run.
+
+`tests/Ros.Tests/TransitionRequestTests.fs` covers transition requests:
+routing and argument parsing, the command chosen per kernel, refusal
+categories and statuses, and over HTTP the full lifecycle with typed results,
+backlog and live `abandon`, every refusal category with every repository file
+(outside `.git`) byte-identical afterwards, an API `start` sent with
+identity-like headers recording the same actor, telemetry identity and
+provenance sources as the same `work start` on the CLI, and the per-action
+routes still working.
 
 `tests/Ros.Tests/ControlPlaneReadTests.fs` covers executions, receipts,
 evidence and telemetry: the receipt state of a step's current attempt
