@@ -8,3 +8,4 @@
 2026-10-06T14:08:10Z  Platform usage-limit pause 2026-10-02..06 recorded; interrupted sessions resumed in place; next independent worker starting
 2026-10-06T14:23:01Z  M: second grouped condition finished; independent workers continuing
 2026-10-06T14:52:33Z  D worker 2 complete (P1-P5 pass); D worker 3 guard pass; owner-message deviation recorded
+2026-10-06T14:56:24Z  B worker 3 complete (P1-P5 pass); B worker 4 stale checkout repaired, guard pass
