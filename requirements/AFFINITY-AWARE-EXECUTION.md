@@ -109,12 +109,93 @@ The capability is complete when:
 14. Existing workflows remain backward compatible unless an explicit migration is documented.
 15. Documentation explains both the evidence supporting grouped execution and the current limits of that evidence.
 
+
+## Execution-plan model
+
+Grouped versus independent execution is one decision inside a larger execution plan. Praxis SHOULD plan the work graph, clustering, ordering, parallelism, context boundaries, integration points, and economic constraints together.
+
+- **PRX-AFF-XPLAN-001** Praxis SHOULD represent a durable execution plan containing the selected work set, dependency graph, affinity clusters, incompatibilities/conflicts, topology per cluster, ordering constraints, permitted parallelism, integration points, policy/model versions, uncertainty, and relevant budget constraints.
+- **PRX-AFF-XPLAN-002** The execution plan MUST distinguish observed facts, predictions, policy decisions, and operator overrides.
+- **PRX-AFF-XPLAN-003** Planning SHOULD identify the critical path and SHOULD avoid serializing independent clusters when safe parallel execution can reduce time-to-accepted-state.
+- **PRX-AFF-XPLAN-004** Parallelism decisions MUST consider integration contention in addition to logical dependency. Predicted overlap in production files, schemas, migrations, generated artifacts, shared state, or evaluator surfaces SHOULD be represented as merge/integration risk.
+- **PRX-AFF-XPLAN-005** Praxis SHOULD be capable of selecting an execution plan under configured economic constraints such as maximum cost, elapsed-time target, concurrency limit, or context budget without weakening acceptance or quality gates.
+- **PRX-AFF-XPLAN-006** An operator MUST be able to override a recommended topology, cluster, or scheduling choice. The override, actor, reason, affected plan decision, and resulting policy deviation MUST be recorded rather than hidden.
+- **PRX-AFF-XPLAN-007** Execution-plan policy MUST be versioned and rollback-capable. Changing or rolling back policy MUST NOT rewrite historical plans or execution outcomes.
+
+## Cohort size and context pressure
+
+- **PRX-AFF-CTX-001** Strong affinity alone MUST NOT imply an unbounded grouped cohort.
+- **PRX-AFF-CTX-002** Group planning MUST consider cohort size, estimated reasoning/context load, requirement volume, implementation surface, and provider/model context constraints.
+- **PRX-AFF-CTX-003** When a cohesive cohort is too large for one reliable reasoning context, Praxis SHOULD partition it into the smallest defensible subclusters that preserve important shared invariants and ordering.
+- **PRX-AFF-CTX-004** Context exhaustion, compaction pressure, or provider session termination MUST trigger a durable recovery boundary before continuation where possible.
+- **PRX-AFF-CTX-005** Continuing grouped work in a replacement reasoning context MUST be represented truthfully as a continuation with a context boundary, not as uninterrupted single-context execution. Research telemetry MUST preserve the distinction.
+- **PRX-AFF-CTX-006** Context-budget thresholds and cohort-size limits MUST be configurable/versioned rather than embedded as undocumented constants.
+
+## Predicted, observed, and negative affinity
+
+- **PRX-AFF-DYN-001** Praxis MUST distinguish pre-execution predicted affinity from relationships observed during implementation.
+- **PRX-AFF-DYN-002** Discovery of materially stronger, weaker, or different coupling MAY trigger a controlled replan. The original prediction, new evidence, replan reason, and resulting execution-plan change MUST remain durable.
+- **PRX-AFF-DYN-003** Replanning MUST NOT rewrite the original affinity evidence or make a prediction appear retrospectively correct.
+- **PRX-AFF-DYN-004** Praxis SHOULD represent negative affinity or execution incompatibility separately from weak affinity. Examples include mutually exclusive approaches, conflicting migrations, incompatible evaluator changes, or changes that should not share a mutation window.
+- **PRX-AFF-DYN-005** Negative-affinity/conflict evidence MAY prohibit grouping or parallel execution even when other affinity signals are strong.
+
+## Economics to accepted state
+
+- **PRX-AFF-ECO-001** The primary economic outcome SHOULD be cost-to-accepted-state, not cost of the initial implementation session alone.
+- **PRX-AFF-ECO-002** The primary schedule outcome SHOULD be time-to-accepted-state, not first-agent elapsed time alone.
+- **PRX-AFF-ECO-003** Cost-to-accepted-state SHOULD include observable implementation, verification, integration, conflict resolution, repair/rework, required reruns, and orchestration cost attributable to reaching accepted state.
+- **PRX-AFF-ECO-004** Time-to-accepted-state SHOULD include the same lifecycle through the first accepted/release-ready state while separately reporting active execution time and external waiting time where observable.
+- **PRX-AFF-ECO-005** Integration and reconciliation work caused by an execution topology SHOULD be attributable to that plan where evidence supports attribution; Praxis MUST NOT make arbitrary attribution when causality is unknown.
+- **PRX-AFF-ECO-006** A low-cost initial implementation followed by substantial repair MUST NOT be reported as cheaper than an alternative using only first-pass execution cost.
+- **PRX-AFF-ECO-007** Accepted quality is a co-primary outcome with cost-to-accepted-state and time-to-accepted-state. An execution policy MUST NOT optimize either economic measure by weakening acceptance criteria or required quality evidence.
+
+## Complexity and comparison normalization
+
+- **PRX-AFF-CMP-001** Execution observations SHOULD retain pre-execution task-scale indicators sufficient to avoid comparing materially different work as though it were equivalent.
+- **PRX-AFF-CMP-002** Indicators MAY include cohort/member count, acceptance-criterion count, dependency structure, requirement volume, predicted implementation surfaces, affected subsystems, test/evaluator scope, and other deterministic repository-derived measures.
+- **PRX-AFF-CMP-003** No single complexity proxy, including acceptance-criterion count or LOC, SHALL be treated as a complete measure of task size.
+- **PRX-AFF-CMP-004** Historical policy comparisons SHOULD stratify or otherwise account for repository, task scale, affinity, model/provider/runtime, and environment when those factors are available.
+- **PRX-AFF-CMP-005** Praxis MUST preserve provider/model/runtime identity for outcome analysis because execution-topology effects MAY vary by provider or model.
+
+## Observational versus experimental evidence
+
+- **PRX-AFF-CAUSAL-001** Praxis MUST distinguish controlled experimental evidence from observational production evidence.
+- **PRX-AFF-CAUSAL-002** A normal production execution reveals the outcome of the selected plan but MUST NOT fabricate or infer an unobserved counterfactual cost for a topology that did not run.
+- **PRX-AFF-CAUSAL-003** Predictions MAY use historical observational data, but their provenance, uncertainty, and non-experimental status MUST remain visible.
+- **PRX-AFF-CAUSAL-004** Claims that one topology causes lower cost, faster completion, or better quality SHOULD rely on controlled comparisons or an explicitly documented causal design rather than production telemetry alone.
+
+## Policy safety and learning
+
+- **PRX-AFF-LEARN-001** New execution-policy versions SHOULD be evaluated against prior policy using cost-to-accepted-state, time-to-accepted-state, and accepted quality rather than token reduction alone.
+- **PRX-AFF-LEARN-002** Praxis SHOULD support a configured rollback trigger or operator decision when a policy version materially worsens accepted outcomes.
+- **PRX-AFF-LEARN-003** Rollback MUST affect future planning only and MUST preserve historical policy/version attribution.
+- **PRX-AFF-LEARN-004** Provider-specific evidence MAY inform provider-specific planning, but Praxis MUST NOT silently generalize a measured topology effect from one provider/model to all providers/models.
+
+## Additional implementation acceptance
+
+The capability is not complete until the execution-planning layer also demonstrates that:
+
+1. cohort size/context pressure can limit or split otherwise high-affinity groups;
+2. context replacement is recorded as a boundary rather than hidden;
+3. predicted affinity and observed affinity are independently retained;
+4. controlled replanning preserves the original plan and evidence;
+5. negative affinity/incompatibility can prevent unsafe grouping or parallelism;
+6. critical-path and integration-contention information can influence scheduling;
+7. operator overrides are durable and attributable;
+8. cost-to-accepted-state and time-to-accepted-state can be represented without collapsing unavailable data to zero;
+9. verification, repair, and integration cost can be included when attributable;
+10. task-scale indicators accompany comparable execution observations;
+11. provider/model/runtime remain comparison dimensions;
+12. observational evidence is distinguishable from controlled experimental evidence;
+13. execution-plan policy can be versioned and rolled back prospectively;
+14. planning can represent configured budget/time/concurrency/context constraints without weakening acceptance quality.
+
 ## Suggested implementation slices
 
 The requirements are intentionally separable:
 
 1. **Affinity analysis and clustering**: PRX-AFF-010..015 and PRX-AFF-PLAN-001..004.
 2. **Topology selection and orchestration**: PRX-AFF-EXEC-001..005, PRX-AFF-POL-001..006, PRX-AFF-GRP-001..005, PRX-AFF-CONT-001..003.
-3. **Telemetry and feedback**: PRX-AFF-MET-001..006, PRX-AFF-QUAL-001..004, PRX-AFF-EV-001..004.
+3. **Execution-plan optimization**: PRX-AFF-XPLAN-001..007, PRX-AFF-CTX-001..006, PRX-AFF-DYN-001..005.\n4. **Economics, comparison, and learning**: PRX-AFF-MET-001..006, PRX-AFF-ECO-001..007, PRX-AFF-CMP-001..005, PRX-AFF-CAUSAL-001..004, PRX-AFF-QUAL-001..004, PRX-AFF-EV-001..004, PRX-AFF-LEARN-001..004.
 
 An implementing agent SHOULD first inventory existing planning, work-group, orchestration, telemetry, and quality-gate capabilities and reuse them rather than introducing parallel state or duplicate abstractions.
