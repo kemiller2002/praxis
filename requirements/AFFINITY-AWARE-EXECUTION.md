@@ -10,6 +10,46 @@ Evidence basis:
 
 These requirements operationalize the observed result that strongly related work executed in one shared reasoning context can materially reduce cost and elapsed time without an observed acceptance-quality penalty. The approximately 58.7% cost reduction and 61.1% elapsed-time reduction observed in A021-R2 are experimental observations, not guaranteed savings. Until broader replication exists, automatic policy is deliberately conservative.
 
+
+## Immediate Operational V1
+
+The first production increment MUST optimize for time-to-benefit. The complete execution-plan optimizer is not a prerequisite for using the experimentally supported high-affinity path.
+
+- **PRX-AFF-V1-001** Operational V1 MUST reuse the existing WI-0064 grouping planner and existing work-group machinery. It MUST NOT introduce a second affinity engine merely to satisfy these requirements.
+- **PRX-AFF-V1-002** V1 MUST provide an executable policy for clearly high-affinity, high-confidence cohorts. Such cohorts SHOULD use grouped execution with one reasoning owner unless a hard dependency, incompatibility, context limit, repository boundary, or operator override requires another topology.
+- **PRX-AFF-V1-003** V1 MUST remain conservative for weak, mixed, or uncertain affinity. Those cases MAY continue through existing independent execution or explicit operator choice until later optimization slices are available.
+- **PRX-AFF-V1-004** Before a V1 grouped executor performs substantive product mutation, it MUST commit the cohort architecture/reuse analysis required by PRX-AFF-GRP-001..003.
+- **PRX-AFF-V1-005** Every grouped member MUST retain its own acceptance criteria and lifecycle. A group MUST NOT be declared successfully complete until every member has received the per-member acceptance verification required by the work-group contract.
+- **PRX-AFF-V1-006** Independent sequential workers MUST use the predecessor-SHA start guard in V1. The R2 stale-checkout deviation MUST NOT remain an accepted operating mode.
+- **PRX-AFF-V1-007** V1 MUST record an execution-policy identifier, initially `affinity-execution-v1`, with the execution so results remain attributable after policy evolution.
+- **PRX-AFF-V1-008** V1 MUST provide an explicit operator topology choice or override for grouped, independent, or planner-recommended execution, and MUST preserve the override/provenance rather than silently changing the recommendation.
+- **PRX-AFF-V1-009** V1 MUST record context/session boundaries. A replacement reasoning context is a continuation boundary and MUST NOT be reported as one uninterrupted shared context.
+- **PRX-AFF-V1-010** V1 telemetry MUST capture enough information, when observable, to compute or reconstruct cost-to-accepted-state and time-to-accepted-state. At minimum preserve provider/model/runtime, topology/policy version, cohort/member identity, start/end timing, platform cost and token usage when available, verification/repair/integration executions, context boundaries, and final accepted/blocked state. Missing values remain unknown.
+- **PRX-AFF-V1-011** Verification, repair, reconciliation, and integration work performed before acceptance MUST be included in the accepted-state execution history where attributable. First-pass implementation cost MUST NOT be presented as total cost when later work was required for acceptance.
+- **PRX-AFF-V1-012** V1 MUST preserve accepted quality as a co-primary outcome. Cost or elapsed-time improvement MUST NOT weaken tests, acceptance criteria, required validation, or merge gates.
+- **PRX-AFF-V1-013** V1 MUST be usable on ordinary governed Praxis work immediately after its own acceptance. Production observations MUST be labelled observational evidence and MUST NOT be represented as controlled counterfactual experiments.
+- **PRX-AFF-V1-014** Advanced features including dynamic affinity, automatic replanning, budget optimization, causal-learning automation, task-scale normalization, and automatic policy rollback MAY ship after V1 unless needed to preserve correctness or governance.
+- **PRX-AFF-V1-015** The V1 implementation SHOULD minimize new state and new abstractions. Prefer extending the existing grouping, execution, checkpoint, telemetry, and planning contracts.
+- **PRX-AFF-V1-016** V1 rollout MUST be reversible by configuration/policy selection without deleting or rewriting execution history.
+- **PRX-AFF-V1-017** Documentation MUST state that the A021-R2 savings are motivating evidence, not a promised savings percentage.
+
+### V1 release gate
+
+Operational V1 is ready for use when all of the following are demonstrated:
+
+1. an existing high-confidence planner group can be selected for grouped execution;
+2. the executor produces and commits architecture/reuse analysis before substantive implementation;
+3. grouped member identities, lifecycle, acceptance criteria, evidence, and checkpoints remain distinct;
+4. independent sequential execution refuses a stale predecessor SHA;
+5. an operator can select/override grouped, independent, or planner-recommended topology with durable provenance;
+6. execution records identify `affinity-execution-v1`, provider/model/runtime, topology, and context boundaries;
+7. accepted-state history includes attributable verification/repair/integration work rather than stopping at first implementation;
+8. every member receives individual acceptance verification;
+9. required tests and repository validation pass before merge-ready status;
+10. disabling or replacing the policy affects future planning without rewriting prior observations.
+
+Once this gate passes, Praxis SHOULD begin using V1 for clearly high-affinity ordinary work while the remaining optimization requirements continue incrementally.
+
 ## Execution topology
 
 - **PRX-AFF-EXEC-001** Praxis MUST represent grouped execution, independent execution, and affinity-clustered execution as distinct execution topologies.
