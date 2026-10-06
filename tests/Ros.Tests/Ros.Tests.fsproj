@@ -123,6 +123,7 @@
     <Compile Include="WorkGroupTests.fs" />
     <Compile Include="TelemetryCostUnitTests.fs" />
     <Compile Include="ControlPlaneReadTests.fs" />
+    <Compile Include="ControlPlaneHostTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

@@ -362,6 +362,60 @@ Both work-item routes answer an unknown item with `404`
 `work-item-not-found`. The evidence and telemetry kinds are additive to
 `praxis.work-state` version 1.
 
+## State, restart and source identity
+
+`praxis web serve` and `praxis hub serve` are views over durable records,
+never a second workflow database (PRX-CTL-004, PRX-CTL-008, PRX-UI-009).
+
+- **No state of its own.** The host keeps nothing between requests: no
+  cache, no session, no module-level mutable value. Every response is
+  derived at request time from the repository's durable records (`.ros/`,
+  `ros.json`, the configured metric registry, Git), so a restarted host (a
+  new process on the same repository) answers every route identically, and
+  a change made through the CLI while the host runs is served on the next
+  request without a restart.
+- **Source identity on every response.** Each response carries the state it
+  was derived from:
+
+  | Header | Value |
+  |---|---|
+  | `Praxis-State-Fingerprint` | `sha256:...` over the durable Praxis records (below), or `unavailable` |
+  | `Praxis-Repository` | `ros.json` `repository.id` (else `name`, else the directory name) |
+  | `Praxis-Commit` | `HEAD`'s commit, or `unknown` outside a Git work tree |
+  | `Praxis-State-Stable` | `true` when the identity read before and after the response agreed |
+  | `Praxis-State-Error` | only when the records could not be read: why |
+
+  Every versioned JSON document (`praxis.work-state`, `praxis.execution-state`,
+  `praxis.error`) also gains an additive `source` object
+  `{repository, commit, branch, stateFingerprint, stable}`. Unversioned
+  routes (`/api/work...`, HTML pages) keep their exact bodies and carry the
+  headers only. A client detects staleness by comparing the fingerprint and
+  commit of what it holds with those of a fresh response, or with
+  `praxis state identity --json`, which prints the same identity as a
+  `praxis.state-identity` version 1 document.
+- **What the fingerprint covers.** `ros.json`, the configured telemetry
+  metric registry, and every file under `.ros/` except the transient
+  `.ros/locks/`, each as its repository-relative path and the SHA-256 of
+  its bytes, combined in ordinal path order. Other repository files (the
+  records `validate` reads, product files) are identified by the commit.
+- **Consistent reads.** A `GET` reads the identity, answers, and reads the
+  identity again; if a CLI write landed in between, it answers again (at
+  most three times) and otherwise reports `stable: false` with the identity
+  observed after it. A mutating request runs once (through the CLI) and is
+  attributed to the identity after the command.
+- **Writes only through the CLI.** The hosts write no repository file
+  themselves: every change is one CLI command run as a child process
+  (`work ...` for the web host, `hub register|unregister` for the hub's own
+  registry, the spoke's own `./praxis` for spokes). Uploaded bytes are
+  written only under the system temporary directory (`Ros.Cli.TempUploads`)
+  for the CLI's `work attach` to copy. `tests/Ros.Tests/ControlPlaneHostTests.fs`
+  enforces this: it scans the host sources (`WebHttp.fs`, `WebInterface.fs`,
+  `HubWeb.fs`, `ControlPlaneSource.fs`) and fails on any direct file-system
+  write, any state retained between requests, or any call into persistence
+  other than an allow-listed read or the CLI child process; and it checks
+  that answering every read route leaves every repository file
+  byte-identical.
+
 ## Tests
 
 `tests/Ros.Tests/WebInterfaceTests.fs` unit-tests the pure pieces (escaping,
@@ -401,3 +455,11 @@ bare remote, it checks the execution list and show against
 `work checkpoint show --json`, telemetry groups against `telemetry usage`, the
 structured `404`s, and that every repository file, `.git` included, is
 byte-identical after all the routes run.
+
+`tests/Ros.Tests/ControlPlaneHostTests.fs` covers state and identity: the
+fingerprint's inputs and canonical form, the consistent-read rule, the
+`source` field and headers, `praxis state identity`, a restarted web host
+and hub answering identically, CLI changes served by a running host and hub
+without a restart, responses attributed to `praxis state identity`'s values,
+read routes leaving every file byte-identical, and the host source check
+(with a seeded violation it must report).

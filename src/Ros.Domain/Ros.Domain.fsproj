@@ -72,5 +72,6 @@
     <Compile Include="Planning/Planner.fs" />
     <Compile Include="Planning/Grouping.fs" />
     <Compile Include="Work/WorkGroups.fs" />
+    <Compile Include="Work/StateIdentity.fs" />
   </ItemGroup>
 </Project>

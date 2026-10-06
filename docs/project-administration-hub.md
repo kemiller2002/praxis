@@ -106,6 +106,21 @@ styles the page (a built-in copy is used when it is absent).
 The pages and the JSON API below call the same functions as `praxis hub`
 (`Ros.Cli.Hub`); uploaded files touch disk only as short-lived temp files
 passed to the spoke's own `work attach`, and are deleted afterwards.
+Registering and unregistering over HTTP run this CLI's own
+`praxis hub register|unregister` against the hub root, so the server process
+never writes the registry itself.
+
+The hub keeps no state between requests: the registry and every spoke are
+read again on each request, so a restarted hub answers identically and
+changes made through `praxis hub` or a spoke's own `./praxis` are served
+without a restart. Every response carries the hub repository's
+`Praxis-State-Fingerprint`, `Praxis-Repository`, `Praxis-Commit` and
+`Praxis-State-Stable` headers (see "State, restart and source identity" in
+`docs/web-interface.md`). Each aggregated work row (over HTTP and from `praxis hub work`) also carries
+`repoSource` `{repository, commit, branch, stateFingerprint, stable}`: the
+spoke's own `./praxis state identity --json` read before and after its
+`work list`, or `{"unavailable": "..."}` when the spoke's Praxis is too old
+to report one.
 
 ### API
 

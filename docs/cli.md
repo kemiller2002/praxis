@@ -274,6 +274,8 @@ praxis inbox list
 praxis adapter <call|publish>
 praxis provenance <identity|record|show|audit>
 praxis plan <analyze|simulate|compare|explain|replay|freshness|groups|explain-group>
+praxis state identity [--json]
+praxis web serve | hub serve
 ```
 
 Run `praxis --help` for the full argument list, and see
@@ -296,6 +298,15 @@ record ID --metric cost.execution_total --value N --currency USD --quality
 observed`; `praxis plan` reads both (see
 [`development-telemetry.md`](development-telemetry.md) and
 [`planning.md`](planning.md)).
+
+### `state identity`
+
+Prints the repository, `HEAD` commit, branch and the fingerprint of the
+durable Praxis records (`ros.json`, the configured metric registry, every
+file under `.ros/` except `.ros/locks/`), the identity `praxis web serve` and
+`praxis hub serve` attach to every response. `--json` prints a
+`praxis.state-identity` version 1 document. It only reads. See "State,
+restart and source identity" in [`web-interface.md`](web-interface.md).
 
 ### `plan`
 

@@ -61,6 +61,7 @@ let main _ =
     @ TransitionRequestTests.tests
     @ WorkStateViewTests.tests
     @ ControlPlaneReadTests.tests
+    @ ControlPlaneHostTests.tests
     @ HubTests.tests
     @ WorkDecisionCliTests.tests
     @ WorkTelemetryCliTests.tests

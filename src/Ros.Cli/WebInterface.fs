@@ -981,27 +981,6 @@ module WebInterface =
     let private timestamp () =
         DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", Globalization.CultureInfo.InvariantCulture)
 
-    /// Writes uploads to a private temporary directory for the duration of
-    /// `action`, as `(path, display name)`; the directory is always removed.
-    let withTempUploads (prefix: string) (uploads: Upload list) (action: (string * string) list -> 'T) : 'T =
-        let directory = Path.Combine(Path.GetTempPath(), $"{prefix}-{Guid.NewGuid():N}")
-        Directory.CreateDirectory directory |> ignore
-
-        try
-            let files =
-                uploads
-                |> List.mapi (fun index upload ->
-                    let path = Path.Combine(directory, $"upload-{index}")
-                    File.WriteAllBytes(path, upload.Data)
-                    path, upload.Name)
-
-            action files
-        finally
-            try
-                Directory.Delete(directory, true)
-            with _ ->
-                ()
-
     let private runCli (root: string) (arguments: string list) : Result<string, string> =
         match CliProcess.runSelf root arguments with
         | Error message -> Error message
@@ -1042,12 +1021,12 @@ module WebInterface =
                 | None -> Error "capture did not report the new work item's id"
                 | Some id when uploads.IsEmpty -> show id
                 | Some id ->
-                    withTempUploads "ros-web-upload" uploads (fun files ->
+                    TempUploads.withFiles "ros-web-upload" uploads (fun files ->
                         runCli root (commandLine now files (WorkOperation.Attach(id, uploads))))
                     |> Result.bind (fun _ -> show id)
         | WorkOperation.Attach(_, []) -> Error "attachments requires at least one uploaded file"
         | WorkOperation.Attach(id, uploads) ->
-            withTempUploads "ros-web-upload" uploads (fun files -> runCli root (commandLine now files operation))
+            TempUploads.withFiles "ros-web-upload" uploads (fun files -> runCli root (commandLine now files operation))
             |> Result.bind (fun _ -> show id)
         | _ ->
             match subjectId operation with
@@ -1204,4 +1183,4 @@ module WebInterface =
                 port
                 [ $"Praxis web interface: http://{host}:{port} (repository root: {root})"
                   "Bound to localhost by default; this server has no authentication -- do not expose it beyond your own machine without adding one." ]
-                (handle root)
+                (ControlPlaneSource.serve (fun () -> FileStateIdentityRepository.read root) (handle root))
