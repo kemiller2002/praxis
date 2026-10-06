@@ -1,0 +1,209 @@
+Architecture analysis: PRAXIS-CTL-05
+=====================================
+
+Item:            PRAXIS-CTL-05 "Control-plane host holds no canonical state and reconstructs on restart"
+                 (`./praxis work show PRAXIS-CTL-05`)
+Repository:      kemiller2002/praxis, branch experiment/a022-run-98e1
+Base commit:     68d3c0d (PRAXIS-CTL-04: record checkpoint and completion)
+Requirements:    PRX-CTL-004, PRX-CTL-008 (requirements/EXECUTION-ORCHESTRATION.md:321-334),
+                 PRX-UI-009 (requirements/EXECUTION-ORCHESTRATION.md:133-135)
+Hosts in scope:  `praxis web serve` (src/Ros.Cli/WebInterface.fs) and
+                 `praxis hub serve` (src/Ros.Cli/Hub.fs, module HubWeb)
+
+1. Item and acceptance criteria
+-------------------------------
+
+Obligation: show, and keep enforced, that the two HTTP hosts are stateless
+views over durable repository/Praxis records: no second workflow database,
+state reconstructed from records on restart, clients able to detect stale
+responses, and no host-side writes except through the CLI's transition path.
+
+Acceptance criteria (numbered as in the backlog item):
+ 1. The host keeps no workflow state of its own: every response is derived
+    from durable repository and Praxis records at request time, or from a
+    cache invalidated by a state fingerprint.
+ 2. Responses carry the state fingerprint and the repository and commit
+    identity they were derived from, so a client can detect staleness.
+ 3. A test restarts the host (a new instance on the same repository) and
+    obtains identical responses, and a test changes Praxis state through the
+    CLI while the host runs and observes the change without a restart.
+ 4. An automated check fails if the host writes repository files other than
+    through the CLI transition path.
+ 5. Documented.
+
+Depends on: PRAXIS-CTL-03 (/api/v1 read routes) and PRAXIS-CTL-04
+(transition endpoint), both already on this branch.
+
+2. Reuse inventory
+------------------
+
+Searches used: `grep -rn -i fingerprint src --include=*.fs`,
+`grep -rn "SHA256" src --include=*.fs`, `grep -n "Path.Combine"` over the
+repositories the web host reads, `grep -n "| \"[a-z-]*\" ::" src/Ros.Cli/Program.fs`
+(command names; no `state` command exists), reading WebInterface.fs, Hub.fs,
+WebHttp.fs, CliProcess.fs, WebInterfaceTests.fs, HubTests.fs,
+ArchitectureTests.fs, ControlPlaneReadTests.fs.
+
+| Existing element | Location | What it does | Reuse decision |
+|---|---|---|---|
+| `WebInterface.handle` | src/Ros.Cli/WebInterface.fs:1114-1180 | Per request: reads `FileWorkListRepository.readStateSources`, execution store, checkpoint/telemetry reads, or runs the CLI | Reuse unchanged as the body producer. It already holds no state between requests (no module-level mutable, cache or dictionary); this item wraps it to attach the source identity. |
+| `WebInterface.transition`, `execute`, `runCli` | WebInterface.fs:1005-1084 | Every web mutation runs one CLI command via `CliProcess.runSelf` | Reuse; this is "the CLI transition path" criterion 4 protects. |
+| `WebInterface.withTempUploads` | WebInterface.fs:986-1003 | Writes uploads under `Path.GetTempPath()` for the CLI's `work attach` to copy, then deletes them | Reuse; move to its own small module (`TempUploads.fs`) so the write check can scan the host modules with no exception inside them. Its writes are outside the repository. |
+| `Hub.registerRepo` / `unregisterRepo` / `save` | src/Ros.Cli/Hub.fs:286-315 | Writes `.ros/hub/registry.json` and `registry.md` | Reused by the `praxis hub register|unregister` CLI only. `HubWeb.execute` currently calls them IN-PROCESS (Hub.fs:558-560): the one place a host writes repository files itself. Change: the hub host runs `praxis hub register|unregister` through `CliProcess.runSelf`, as the web host does for work operations. |
+| `Hub.runSpoke` | Hub.fs:323-337 | Runs a spoke's own `./praxis` and parses its JSON | Reuse to ask each spoke for its source identity (`./praxis state identity --json`). |
+| `CliProcess.runSelf` / `failureMessage` | src/Ros.Cli/CliProcess.fs:69-89 | Runs this CLI as a child with `--root` | Reuse for hub register/unregister. |
+| `FileWorkConfigRepository.readRepositoryId` | src/Ros.Infrastructure/Work/FileWorkConfigRepository.fs:252 | `ros.json` `repository.id`, else `name`, else directory name | Reuse as the repository identity. |
+| `FileWorkConfigRepository.readTelemetryMetricRegistryPath` | FileWorkConfigRepository.fs (used by FileMetricRegistryRepository.fs:15) | Configured metric registry path, read by the telemetry route | Reuse: that file is a fingerprint input. |
+| `ProcessGitRepository.readBranchAndCommit` | src/Ros.Infrastructure/Git/GitRepository.fs:319-323 | `git branch --show-current`, `git rev-parse HEAD`, `GIT_OPTIONAL_LOCKS=0`, folded to None on failure | Reuse as the commit/branch identity (no Git write). |
+| SHA-256 hex hashing idiom | src/Ros.Infrastructure/Work/WorkStateTransaction.fs:27-32 (`hashText`) | Lower-case hex SHA-256 | Reuse the idiom (bytes, not text, since records are hashed as stored). |
+| Planning `WorkStateFingerprint` | src/Ros.Domain/Planning/Snapshot.fs:183-199 | Hash over planner item digests | Not reused: it is computed from the planner's analysis of a `PlanningInput` (dependencies, estimates), not from the records the host reads, and needs the whole planning pipeline per request. A byte-level fingerprint of the records themselves is both cheaper and exactly what "derived from" means. |
+| Ordo `StateFingerprint` | src/Ros.Domain/Ordo/Model.fs:59 | A fingerprint supplied by an observation provider | Not reused: a stored value, not a computation. |
+| `WorkStateJson` / `ExecutionStateJson` envelopes | src/Ros.Contracts/Work/WorkStateJson.fs:115-150; src/Ros.Contracts/Execution/ExecutionStateJson.fs | Versioned `praxis.*` documents; adding fields is non-breaking (WorkStateJson.fs:8-11) | Extend additively: versioned object documents gain a `source` object. Unversioned legacy routes (`/api/work...`, arrays) are left byte-compatible and get the identity as headers only. |
+| `HttpResponseData.Headers` | src/Ros.Cli/WebHttp.fs:23-27, 433-444 | Extra response headers | Reuse to carry the identity on every response (JSON, HTML, legacy arrays). |
+| `ServedProcess`, `Http`, `withServer` | tests/Ros.Tests/WebInterfaceTests.fs:14-185 | Real `serve` process on a free port over a fresh repository | Reuse for restart and live-change tests (two successive instances on one root). |
+| Hub fixtures `spoke`, `withRepositories` | tests/Ros.Tests/HubTests.fs:10-56 | Real spokes whose `./praxis` runs this build | Reuse for hub restart/live-change tests. |
+| `ArchitectureTests.repositoryRoot` source-scan pattern | tests/Ros.Tests/ArchitectureTests.fs:33-40 | Tests that read production source to enforce structure | Reuse the pattern for the write/no-state check (criterion 4, and the structural half of 1). |
+| CTL-04 byte-for-byte repository hash in tests | tests/Ros.Tests/TransitionRequestTests.fs | Hashes every file outside .git before/after | Reuse the idea for "a read-only request sweep leaves the repository byte-identical". |
+
+New abstractions and why existing ones do not fit:
+ - `StateIdentity` (Ros.Domain, pure): canonical fingerprint over
+   (relative path, content hash) pairs, and a `stable` combinator that
+   re-reads until the fingerprint before and after a read agree. No existing
+   type describes "which records, at which commit, a response came from"
+   (searched: fingerprint, StateHash, contentHash).
+ - `FileStateIdentityRepository` (Ros.Infrastructure): enumerates and hashes
+   the fingerprint inputs; reads only.
+ - `StateIdentityJson` (Ros.Contracts): the `source` object and the
+   `praxis.state-identity` document.
+ - `praxis state identity [--json]` (CLI): the spoke-side read the hub needs,
+   because the hub may only touch another repository through its own
+   `./praxis` (docs/project-administration-hub.md; Hub.fs:267-268). The web
+   host calls the same Infrastructure function in-process.
+ - `ControlPlaneSource` (Ros.Cli): pure response decoration (headers,
+   `source` field) shared by both hosts.
+
+3. Invariants and shared infrastructure
+---------------------------------------
+
+ - PRX-CTL-004 / PRX-UI-009: durable records (`.ros/**`, `ros.json`, the
+   configured metric registry, Git) are the only state. Hosts hold no
+   module-level mutable value, cache, dictionary or lazy value; the only
+   per-process values are configuration (root, host, port).
+ - PRX-CTL-008: since nothing is kept, a new host instance computes every
+   response from the same records: same body, same fingerprint.
+ - Writes: web host -> only `CliProcess.runSelf` (and temp uploads outside
+   the repository); hub host -> only `CliProcess.runSelf` for its own
+   registry and `Hub.runSpoke` (the spoke's `./praxis`) for spokes.
+ - Shared with existing code: the Git read path (no optional locks), the
+   repository-id rule, the CLI child-process path, the versioned contract
+   envelopes. Shared by the two hosts: `ControlPlaneSource`, the
+   `StateIdentity` read, the check in criterion 4.
+
+4. Design
+---------
+
+Fingerprint (contract):
+  inputs  = `ros.json` (if present), the configured metric registry file
+            (if present and outside .ros), every regular file under `.ros/`
+            except `.ros/locks/**` (transient, gitignored lock files).
+  canonical form = for each input in ordinal order of its repository-relative
+            '/'-separated path: `path \0 sha256(bytes) \n`.
+  value   = "sha256:" + lower-hex SHA-256 of the canonical form.
+  Absence of every input is still a value (hash of the empty form).
+
+Source identity = { repository (readRepositoryId), commit (HEAD or null),
+  branch (or null), stateFingerprint }.
+
+Consistency: `StateIdentity.stable identify read attempts` computes identity,
+runs the read, recomputes identity; equal -> the response is attributed to
+that identity (`stable = true`); different (a CLI write landed mid-read) ->
+re-read, up to 3 attempts; still different -> answer with the last read and
+the identity observed after it, marked `stable = false`. Only GET requests
+are re-read (they are side-effect free). For POST (mutations through the
+CLI), identity is read once after the command: the state the answer
+describes.
+
+HTTP surface (both hosts, every response):
+  `Praxis-State-Fingerprint: sha256:...`
+  `Praxis-Repository: <id>`
+  `Praxis-Commit: <sha>` or `unknown`
+  `Praxis-State-Stable: true|false`
+  `ETag: "<fingerprint>"` is NOT added (the commit is part of the identity
+  and a weak validator would mislead; a client compares the headers).
+Body surface: a versioned JSON object document (has `contract`) gains
+  `"source": {"repository", "commit", "branch", "stateFingerprint", "stable"}`.
+  Legacy unversioned JSON and HTML bodies are unchanged.
+Hub: headers describe the hub root (its registry is its state). Each row of
+  `GET /api/work` gains `repoSource`, the spoke's own
+  `./praxis state identity --json` read before and after its `work list`
+  (same `stable` rule); a spoke whose Praxis has no `state identity` gets
+  `repoSource: {"unavailable": "<reason>"}`, never a guessed value.
+CLI: `praxis state identity [--json]` prints the `praxis.state-identity`
+  v1 document (or text); exit 0; reads only.
+
+Validation rules: none new for workflow; the fingerprint is computed, never
+  stored or compared by the host.
+Error model: an identity that cannot be read (I/O error) yields
+  `stateFingerprint` "unavailable" with the reason in `Praxis-State-Error`;
+  the body is still served (the read path reports its own errors).
+Transaction boundaries: unchanged; the CLI command (lock + journal) is the
+  only transaction. Identity reads take no lock and tolerate concurrent
+  writes through the stable-read rule.
+
+Criterion 4 check: a test (ControlPlaneHostTests) reads the host source files
+(WebHttp.fs, WebInterface.fs, HubWeb.fs, ControlPlaneSource.fs) and fails on
+any file-system write API (File.Write*, File.Append*, File.Create, File.Copy,
+File.Move, File.Delete, File.Open*, FileStream, StreamWriter,
+Directory.CreateDirectory/Delete/Move, Hub.registerRepo/unregisterRepo, save)
+or module-level retained state (`let mutable` at module level,
+ConcurrentDictionary, Dictionary, MemoryCache, Lazy/lazy). Hub's HTTP
+adapter moves from Hub.fs to HubWeb.fs so the file boundary is the module
+boundary. A dynamic companion test sweeps every read route of both hosts and
+asserts every repository file outside .git is byte-identical afterwards.
+
+5. Compatibility
+----------------
+
+Additive only: new headers, a new `source` field on versioned documents, a
+new `repoSource` field on hub rows, a new CLI command. Legacy route bodies
+unchanged. Hub register/unregister over HTTP produce the same registry
+files (now written by the CLI child); the response bodies are the CLI's
+`repoNode` JSON, identical to today's. No `.ros` schema change.
+
+6. Tests
+--------
+
+Unit: fingerprint canonical form (order independence of enumeration,
+  content and path sensitivity, empty input); `stable` combinator (agree,
+  disagree then agree, never agree); header/`source` decoration of
+  versioned vs legacy bodies; `state identity` JSON shape.
+Integration (real processes):
+  - web restart: start host A, GET a fixed route set, stop; start host B on
+    the same root, GET again: identical status, body and identity headers.
+  - web live change: host running; `work capture`/`work start` through the
+    CLI (not the host); the next GET shows the item and a new fingerprint.
+  - hub restart and live change: same, through a spoke's own CLI.
+  - read sweep leaves files byte-identical (web and hub).
+  - source check (criterion 4) passes on the tree and fails on a seeded
+    violation (the scanner is a pure function tested on sample text).
+  - existing WebInterface/Hub/TransitionRequest/ControlPlaneRead tests stay
+    green (hub register/unregister through the CLI child).
+Python oracle tests re-run.
+
+7. Risks
+--------
+
+ - Cost: hashing `.ros/` twice per GET. This repository's `.ros` is ~15 MB
+   (242 files); acceptable for a local control plane; a metadata-keyed
+   memo would be a cache and must then be invalidated by the fingerprint
+   (criterion 1 allows it) - not added now.
+ - The fingerprint covers Praxis records, not every repository file; the
+   HTML validation page reads more. Mitigated by reporting the commit;
+   documented as the boundary.
+ - Hub `repoSource` costs two extra spoke processes per spoke per list.
+ - Static source checks can be evaded by indirection (a helper in another
+   module). The check also forbids calling the known writing functions;
+   the dynamic sweep catches read-route writes. Documented limitation.
+ - Moving HubWeb to its own file touches compile order; covered by build.
+</content>
+</invoke>
