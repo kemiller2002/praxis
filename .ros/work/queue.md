@@ -2,9 +2,9 @@
 
 | ID | Work | Status | Tags | Priority |
 |---|---|---|---|---|
-| ACTOR-KIND-ANCHOR | ActorKind extension pattern accepts a trailing newline ($ anchor) | ready | provenance, security | low |
+| ACTOR-KIND-ANCHOR | ActorKind extension pattern accepts a trailing newline ($ anchor) | complete | provenance, security | low |
 | ATTR-COMPLETE-BASE-REF-SWEEP | Stop work complete from sweeping ROS_BASE_REF committed-range paths into its completion event | captured | attribution, reconciliation | medium |
-| ATTR-RECONCILE-SYMLINK-SUBMODULE | Content-match symbolic links and submodules for reconciled attribution | ready | attribution, reconciliation | low |
+| ATTR-RECONCILE-SYMLINK-SUBMODULE | Content-match symbolic links and submodules for reconciled attribution | complete | attribution, reconciliation | low |
 | BOOTSTRAP-ADOPTION-FIX | BOOTSTRAP-ADOPTION-FIX | complete |  |  |
 | BUG-WORK-ID-COLLISION | Reject auto-generated backlog IDs already present in work context | captured | bug, work-protocol | medium |
 | CI-BASE-REF-FIX | CI-BASE-REF-FIX | complete |  |  |
@@ -52,7 +52,7 @@
 | PR79-MAIN-INTEGRATION-2 | Integrate latest main into PR 79 after CI race | complete |  | medium |
 | PRAXIS-A021-EVAL-KIT | EX-ROS-2026-A021 blind evaluation kit | complete | experiment | medium |
 | PRAXIS-CLI-RENAME | Finish the ROS to Praxis product/CLI rename: praxis canonical, ros only as compatibility alias, persisted state or history | complete | rename, praxis, cli | high |
-| PRAXIS-CN-GL-KINDS | Govern the CN (concept) and GL (glossary) artifact kinds the standards define | ready | artifacts, standards | medium |
+| PRAXIS-CN-GL-KINDS | Govern the CN (concept) and GL (glossary) artifact kinds the standards define | complete | artifacts, standards | medium |
 | PRAXIS-CONT-00 | Durable work checkpoints and agent continuity (umbrella) | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-01-DOMAIN | Durable checkpoint domain model and invariants | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-02-GIT | Git remote/upstream/durability observations | complete | continuity, durable-checkpoints | high |
@@ -89,7 +89,7 @@
 | PRAXIS-PLAN-06 | Renumber the EX-ROS-2026-A021 results record to avoid an evidence ID collision and relate it to the parallel evaluation kit | complete | planning, governance | high |
 | PRAXIS-PLAN-07 | Reconcile PR #130 (PGEI) with main after the A021 results | complete | planning, grouping | medium |
 | PRAXIS-PLAN-08 | Land the EX-ROS-2026-A021 evaluation kit and second blind evaluation on main | complete | planning, grouping | medium |
-| PRAXIS-PLAN-ERROR-HISTORY | Persist planner estimate error over time | ready | planning | medium |
+| PRAXIS-PLAN-ERROR-HISTORY | Persist planner estimate error over time | complete | planning | medium |
 | PRAXIS-PLAN-EXP-01 | Run grouping experiment EX-ROS-2026-A021: control arm, grouped arm, blind evaluation, telemetry comparison | complete | planning, experiment | medium |
 | PRAXIS-PR92-ID-RENUMBER | Renumber PR #92's DF/RQ records that collide with main's (A042/A043, RQ A022/A023) | complete | pr92, decision | high |
 | PRAXIS-PR92-POSTMERGE-FENCE | On the reconciled branch, write post-merge tests P1-P7 from EV-ROS-2026-A060 section 6 and re-point PraxisCli to praxis.dll | complete | pr92, testing | high |
@@ -149,7 +149,7 @@
 | PRAXIS-SITE-25 | Adversarial claim audit | complete | gh-84, public-site | high |
 | PRAXIS-SITE-26 | Final verification and evidence | complete | gh-84, public-site | high |
 | PRAXIS-SITE-27 | Align Pages deployment workflow with echelon-foundry deploy-pages.yml | complete | gh-84, public-site | medium |
-| PRAXIS-STATE-MERGE-01 | Parallel work items conflict in single-document Praxis state files | ready | work-protocol | high |
+| PRAXIS-STATE-MERGE-01 | Parallel work items conflict in single-document Praxis state files | complete | work-protocol | high |
 | PRAXIS-TELEMETRY-CLASSIFY-VOCAB | telemetry classify accepts classifications that validate rejects | ready | telemetry | medium |
 | PRAXIS-TELEMETRY-COST-UNIT | telemetry record accepts a cost metric with a non-'currency' unit (e.g. --unit USD) that validate then rejects | complete | telemetry, bug | medium |
 | PRAXIS-WORK-ABANDON-01 | work abandon: cancel live (ready/active/blocked) work items truthfully | complete | work-protocol, cli | high |

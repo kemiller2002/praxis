@@ -5843,162 +5843,256 @@
     {
       "id": "ACTOR-KIND-ANCHOR",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-02T14:58:22.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Provenance/Actor.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ValueAnchorTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/experiments/EX-ROS-2026-A022-runs/bc34/analysis-g.txt"
+        }
+      ],
+      "updatedAt": "2026-10-06T14:08:42.000Z",
       "telemetryExecutionIds": [
         "EXE-20261002T145823283Z-f067e226"
       ],
       "latestCheckpoint": {
-        "id": "f9854068466c350c4242e3e4",
-        "recordedAt": "2026-10-02T15:05:15.000Z",
+        "id": "85c873d3ea2d11a4717effbb",
+        "recordedAt": "2026-10-06T14:08:27.000Z",
         "executionId": "EXE-20261002T145823283Z-f067e226",
         "repository": "repository-operating-system",
         "branch": "experiment/a022-run-bc34",
-        "commit": "234779d8d6bbce45c0d22961ed353991e3b0013d",
+        "commit": "0f00aa168151a6b0b01fd37310fd9e060b388e96",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
         "remoteBranch": "experiment/a022-run-bc34",
-        "remoteCommit": "234779d8d6bbce45c0d22961ed353991e3b0013d",
-        "summary": "ACTOR-KIND-ANCHOR implementation pushed (234779d): all whole-value Domain validators anchored with \\z, tests added. Remaining items: ATTR-RECONCILE-SYMLINK-SUBMODULE, PRAXIS-CN-GL-KINDS, PRAXIS-STATE-MERGE-01, PRAXIS-PLAN-ERROR-HISTORY.",
-        "nextAction": "Implement ATTR-RECONCILE-SYMLINK-SUBMODULE; verify ACTOR-KIND-ANCHOR criteria after full test run.",
+        "remoteCommit": "0f00aa168151a6b0b01fd37310fd9e060b388e96",
+        "summary": "All five items implemented, verified per criterion (analysis-g.txt section 5) and pushed at 0f00aa1; full suite 1340/1340, Python oracle OK, validate passes. Completed: none yet; remaining: completion of all five.",
+        "nextAction": "Complete ACTOR-KIND-ANCHOR with its evidence, then registry build, validate, commit and push Praxis state.",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-06T14:08:42.000Z"
     },
     {
       "id": "ATTR-RECONCILE-SYMLINK-SUBMODULE",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-02T14:58:22.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Git/GitRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkReconciliationEffectTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/work-protocol.md"
+        },
+        {
+          "type": "verification",
+          "path": "research/experiments/EX-ROS-2026-A022-runs/bc34/analysis-g.txt"
+        }
+      ],
+      "updatedAt": "2026-10-06T14:08:44.000Z",
       "telemetryExecutionIds": [
         "EXE-20261002T145824028Z-c9baf025"
       ],
       "latestCheckpoint": {
-        "id": "cb90343aa55db97281de8ed9",
-        "recordedAt": "2026-10-02T15:11:27.000Z",
+        "id": "67211f174156d3e5653bc7f8",
+        "recordedAt": "2026-10-06T14:08:35.000Z",
         "executionId": "EXE-20261002T145824028Z-c9baf025",
         "repository": "repository-operating-system",
         "branch": "experiment/a022-run-bc34",
-        "commit": "95cbe1b8618865f87ea251cfd0709ddc8ed01168",
+        "commit": "0f00aa168151a6b0b01fd37310fd9e060b388e96",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
         "remoteBranch": "experiment/a022-run-bc34",
-        "remoteCommit": "95cbe1b8618865f87ea251cfd0709ddc8ed01168",
-        "summary": "ATTR-RECONCILE-SYMLINK-SUBMODULE implemented and pushed: symlink/gitlink content matching with real Git fixture tests; docs and DF-ROS-2026-A040 amended. Done: ACTOR-KIND-ANCHOR (implementation), ATTR. Remaining: PRAXIS-CN-GL-KINDS, PRAXIS-STATE-MERGE-01, PRAXIS-PLAN-ERROR-HISTORY.",
-        "nextAction": "Implement PRAXIS-CN-GL-KINDS.",
+        "remoteCommit": "0f00aa168151a6b0b01fd37310fd9e060b388e96",
+        "summary": "All five items implemented, verified per criterion (analysis-g.txt section 5) and pushed at 0f00aa1; full suite 1340/1340, Python oracle OK, validate passes. Completed: none yet; remaining: completion of all five.",
+        "nextAction": "Complete ATTR-RECONCILE-SYMLINK-SUBMODULE with its evidence, then registry build, validate, commit and push Praxis state.",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-06T14:08:44.000Z"
     },
     {
       "id": "PRAXIS-CN-GL-KINDS",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-02T14:58:22.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Artifacts/Model.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/ArtifactTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/test_ros_cli.py"
+        },
+        {
+          "type": "documentation",
+          "path": "framework/standards/IDENTIFIERS.md"
+        },
+        {
+          "type": "verification",
+          "path": "research/experiments/EX-ROS-2026-A022-runs/bc34/analysis-g.txt"
+        }
+      ],
+      "updatedAt": "2026-10-06T14:08:47.000Z",
       "telemetryExecutionIds": [
         "EXE-20261002T145824828Z-b14ba23a"
       ],
       "latestCheckpoint": {
-        "id": "106f84b40a4dd3360bca5bb9",
-        "recordedAt": "2026-10-02T15:16:45.000Z",
+        "id": "3171e42c91a299021a890ecd",
+        "recordedAt": "2026-10-06T14:08:37.000Z",
         "executionId": "EXE-20261002T145824828Z-b14ba23a",
         "repository": "repository-operating-system",
         "branch": "experiment/a022-run-bc34",
-        "commit": "93a41b9ea77f716c8a91620d9d5536cbc6163b16",
+        "commit": "0f00aa168151a6b0b01fd37310fd9e060b388e96",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
         "remoteBranch": "experiment/a022-run-bc34",
-        "remoteCommit": "93a41b9ea77f716c8a91620d9d5536cbc6163b16",
-        "summary": "PRAXIS-CN-GL-KINDS implemented and pushed (93a41b9): CN/GL kinds, optional registries, statuses, oracle and starter parity, standard documented, tests. Done: ACTOR-KIND-ANCHOR, ATTR-RECONCILE-SYMLINK-SUBMODULE, PRAXIS-CN-GL-KINDS (implementation). Remaining: PRAXIS-STATE-MERGE-01, PRAXIS-PLAN-ERROR-HISTORY.",
-        "nextAction": "Build the Praxis state merge engine and driver (PRAXIS-STATE-MERGE-01).",
+        "remoteCommit": "0f00aa168151a6b0b01fd37310fd9e060b388e96",
+        "summary": "All five items implemented, verified per criterion (analysis-g.txt section 5) and pushed at 0f00aa1; full suite 1340/1340, Python oracle OK, validate passes. Completed: none yet; remaining: completion of all five.",
+        "nextAction": "Complete PRAXIS-CN-GL-KINDS with its evidence, then registry build, validate, commit and push Praxis state.",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-06T14:08:47.000Z"
     },
     {
       "id": "PRAXIS-PLAN-ERROR-HISTORY",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-02T14:58:22.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/ErrorHistory.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PlanningCliTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/planning.md"
+        },
+        {
+          "type": "verification",
+          "path": "research/experiments/EX-ROS-2026-A022-runs/bc34/analysis-g.txt"
+        }
+      ],
+      "updatedAt": "2026-10-06T14:08:49.000Z",
       "telemetryExecutionIds": [
         "EXE-20261002T145825399Z-7a87163a"
       ],
       "latestCheckpoint": {
-        "id": "b9a2d0bfda9b98d085e138f4",
-        "recordedAt": "2026-10-02T15:45:16.000Z",
+        "id": "90f3bbc68d8138b1b57cc95f",
+        "recordedAt": "2026-10-06T14:08:39.000Z",
         "executionId": "EXE-20261002T145825399Z-7a87163a",
         "repository": "repository-operating-system",
         "branch": "experiment/a022-run-bc34",
-        "commit": "3373769d72590ea46be2dc26114ccf09f870714f",
+        "commit": "0f00aa168151a6b0b01fd37310fd9e060b388e96",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
         "remoteBranch": "experiment/a022-run-bc34",
-        "remoteCommit": "3373769d72590ea46be2dc26114ccf09f870714f",
-        "summary": "PRAXIS-PLAN-ERROR-HISTORY implemented and pushed: record-error, error-history, horizon config, validation, docs, tests. All five items implemented; remaining: full test run, per-criterion verification, completion.",
-        "nextAction": "Run the full suite, verify each criterion per item in analysis-g.txt, complete items.",
+        "remoteCommit": "0f00aa168151a6b0b01fd37310fd9e060b388e96",
+        "summary": "All five items implemented, verified per criterion (analysis-g.txt section 5) and pushed at 0f00aa1; full suite 1340/1340, Python oracle OK, validate passes. Completed: none yet; remaining: completion of all five.",
+        "nextAction": "Complete PRAXIS-PLAN-ERROR-HISTORY with its evidence, then registry build, validate, commit and push Praxis state.",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-06T14:08:49.000Z"
     },
     {
       "id": "PRAXIS-STATE-MERGE-01",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-02T14:58:22.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Contracts/Work/StateMergeJson.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/StateMergeCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/StateMergeTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/work-protocol.md"
+        },
+        {
+          "type": "verification",
+          "path": "research/experiments/EX-ROS-2026-A022-runs/bc34/analysis-g.txt"
+        }
+      ],
+      "updatedAt": "2026-10-06T14:08:51.000Z",
       "telemetryExecutionIds": [
         "EXE-20261002T145826078Z-d36d4a90"
       ],
       "latestCheckpoint": {
-        "id": "edaf4d77736b3419d7880972",
-        "recordedAt": "2026-10-02T15:30:17.000Z",
+        "id": "b1a74f309eef709dac602507",
+        "recordedAt": "2026-10-06T14:08:41.000Z",
         "executionId": "EXE-20261002T145826078Z-d36d4a90",
         "repository": "repository-operating-system",
         "branch": "experiment/a022-run-bc34",
-        "commit": "5d791784c1cba4fcf4982e4c05672b542dc3fbf0",
+        "commit": "0f00aa168151a6b0b01fd37310fd9e060b388e96",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
         "remoteBranch": "experiment/a022-run-bc34",
-        "remoteCommit": "5d791784c1cba4fcf4982e4c05672b542dc3fbf0",
-        "summary": "Milestone: state merge engine, installed driver, docs and tests pushed. Done (implementation): ACTOR-KIND-ANCHOR, ATTR-RECONCILE-SYMLINK-SUBMODULE, PRAXIS-CN-GL-KINDS, PRAXIS-STATE-MERGE-01. Remaining: PRAXIS-PLAN-ERROR-HISTORY.",
-        "nextAction": "Implement PRAXIS-PLAN-ERROR-HISTORY on the append-only JSONL store the merge driver covers.",
+        "remoteCommit": "0f00aa168151a6b0b01fd37310fd9e060b388e96",
+        "summary": "All five items implemented, verified per criterion (analysis-g.txt section 5) and pushed at 0f00aa1; full suite 1340/1340, Python oracle OK, validate passes. Completed: none yet; remaining: completion of all five.",
+        "nextAction": "Complete PRAXIS-STATE-MERGE-01 with its evidence, then registry build, validate, commit and push Praxis state.",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-06T14:08:51.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-02T14:58:22.000Z",
+  "updatedAt": "2026-10-06T14:08:51.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
