@@ -76,3 +76,66 @@ Report:
 - recommended next action.
 
 A successor must be able to continue solely from repository and Praxis state.
+
+
+## Current implementation state (2026-10-06)
+
+### Canonical branch and baseline
+
+The active implementation branch is `work/affinity-aware-execution`. It was created from current `main` after discovering that the earlier requirements branch had fallen behind main.
+
+The branch `requirements/affinity-aware-execution` is superseded for implementation. Do not implement from it. Its requirements and this handoff were carried onto the current-main-based work branch.
+
+At the time this state was recorded:
+- requirements commit: `1d7f23f1ebb5e762e78b8670463d1166285c7952`
+- handoff commit before this status update: `405239f96b872366d998a6f0551d029796c81f73`
+
+Always re-read the branch head before forming a mutation request.
+
+### Existing capability discovered
+
+Do not implement Slice 1 from scratch. Main already contains the read-only work-group planner implemented by `WI-0064` (notably commit `2dcc8f647e764555aca9c05969b5f73b6bcbcd9a`).
+
+The existing grouping capability already includes substantial foundations needed by the affinity requirements:
+- typed, deterministic, explainable affinity signals;
+- explicit/derived/inferred evidence;
+- separation of context affinity, dependency, collision risk, and parallel safety;
+- human- and architecture-declared grouping;
+- deterministic clustering with cohesion rules;
+- configurable preferred/maximum group sizes;
+- context-pressure-based splitting and architecture-based merging;
+- repository-aware grouping;
+- group dependency derivation and cycle detection;
+- grouped scheduling and grouped-versus-independent comparison;
+- planner commands for groups, explanation, simulation, and comparison;
+- tests for the existing grouping behavior.
+
+The implementation should first map PRX-AFF Slice 1 requirements against this existing behavior, add only missing semantics/tests, and reuse `Ros.Domain.Planning.Grouping`, planning contracts, CLI surfaces, and existing tests rather than creating a parallel affinity subsystem.
+
+### Praxis governance/start status
+
+The remote-agent contract supports commit-based requests through `.praxis-inbox/` when the agent cannot dispatch Actions directly.
+
+A start request was submitted for work item `PRAXIS-AFFINITY-EXECUTION-01` against `work/affinity-aware-execution`:
+- request ID: `req-openai-affinity-start-20261006-02`
+- requested operation: `work.start`
+- requested type: `feature`
+- requested classifications: `code`, `architecture`, `execution`
+- bound expected SHA: `405239f96b872366d998a6f0551d029796c81f73`
+
+At the last check, `.ros/remote/requests/req-openai-affinity-start-20261006-02.json` had NOT yet appeared on the target branch. Therefore the start request must be treated as pending/unknown, not successful.
+
+Before substantive implementation:
+1. Check the request journal or `request.status`.
+2. If it succeeded, use the returned execution identity and continue under it.
+3. If it failed, follow its retry guidance.
+4. If the intended work item does not exist or cannot be started, create/capture the obligation only through a supported Praxis operation/workflow. Never hand-edit `.ros/`.
+5. Do not make meaningful implementation mutations until work attribution is legitimate.
+
+An earlier start request targeted the superseded requirements branch. It is not authority for implementation on the current work branch.
+
+### Immediate continuation point
+
+Once Praxis attribution is established, begin with a requirements-to-existing-capability matrix for Slice 1. Then implement only the uncovered behavior. Next, proceed to topology selection/orchestration, execution-plan optimization, and accepted-state economics/learning in the four slices above.
+
+The key architectural rule is extension, not duplication: reuse the existing planner/grouping/work/telemetry/continuity models wherever their semantics fit, and introduce a new abstraction only when the existing one cannot represent a requirement cleanly.
