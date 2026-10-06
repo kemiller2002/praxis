@@ -4417,6 +4417,222 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-MISC-01",
+      "title": "Input-document inbox: crash-safe claim/process lifecycle with provenance-preserving derivation (DER-09, DER-10)",
+      "description": "Covers requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md items 9 and 10 (DER-09, DER-10) and its acceptance criterion 'Inbox claim/retry/reconcile tests prove no source is lost'. Today only 'praxis inbox list' exists and .praxis/processing is unused. Acceptance criteria: (1) 'praxis inbox claim PATH' moves an input from .praxis/inbox/documents (or legacy input-documents) into .praxis/processing/<claim-id>/ with a praxis.inbox-claim/1 record holding the source path, SHA-256 digest, size, claimant identity, execution and claim time; the source bytes are never modified. (2) Claiming is crash-safe and idempotent: the claim record is written before the source moves, a repeated claim of the same digest returns the existing claim, and a claim interrupted at any step is detected and completed or rolled back by 'praxis inbox recover' without losing or duplicating the source. (3) 'praxis inbox derive CLAIM-ID --kind requirement|decision|constraint|evidence|risk|question|reference --id ID|--path PATH --summary TEXT' records each derived canonical artifact with provenance back to the input (claim ID, source path and digest, excerpt locator); classification stays advisory. (4) 'praxis inbox complete CLAIM-ID' refuses while any derived artifact is missing from the working tree or not committed in HEAD (not durably reconciled), and only then archives the input with its provenance record; 'praxis inbox release CLAIM-ID --reason' returns an unfinished claim to the inbox. (5) Rejected inputs move to .praxis/rejected with a machine-readable reason. (6) 'inbox list' reports pending, claimed and rejected inputs and still works without a runtime by reading the directories. (7) Tests: claim/derive/complete happy path; crash after claim record but before move, after move but before completion, and during completion, each recovered with no source lost or duplicated; idempotent repeated claim; completion refused before commit; release; reject. (8) docs/fallback-reconciliation.md, the inbox README and docs/cli.md describe the lifecycle; the DER status in docs is updated.",
+      "tags": [
+        "inbox",
+        "reconciliation"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:07.952Z",
+      "updatedAt": "2026-10-06T20:37:07.952Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-MISC-02",
+      "title": "Planner: observe CI status for checkpoints that wait on CI (PRX-PLAN-020)",
+      "description": "Covers PRX-PLAN-020 (and PLAN-021's labelling). Merged PRs and release tags are already Git-observed; CI is only taken from a supplied --observations file. Advisory group GROUP-PRAXIS-PLANNING-002 (research/groups/GROUP-PRAXIS-PLANNING-002/group-analysis.json); grouped-mode commands are not on main yet, so the grouping is recorded here and in that file. Coordinate with PRAXIS-PLAN-10, which also changes planner inputs: add observations through the existing Observation model and ports only. Acceptance criteria: (1) an opt-in planner flag (--observe-ci) queries a CI observation port for the checkpoint commits of items with a ContinuousIntegration dependency and adds ContinuousIntegrationPassed/Failed observations labelled with their source; (2) the default stays offline and deterministic, and an unavailable CI source is reported as unavailable, never as failure or success; (3) observations stay separate from recorded state (PLAN-021) and never rewrite it; (4) the observation inputs are included in the plan's input fingerprint; (5) tests cover passed, failed, pending and unavailable CI through a fake port, and a CLI test proves the default issues no CI query; (6) docs/planning.md status for 020 is updated.",
+      "tags": [
+        "planning",
+        "planner-evidence"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:08.278Z",
+      "updatedAt": "2026-10-06T20:37:08.278Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-MISC-03",
+      "title": "Planner: historical merge-conflict evidence in the collision graph (PRX-PLAN-081)",
+      "description": "Covers PRX-PLAN-081 (collision graph includes historical merge conflicts and file-level evidence). Advisory group GROUP-PRAXIS-PLANNING-002 (research/groups/GROUP-PRAXIS-PLANNING-002/group-analysis.json); grouped-mode commands are not on main yet, so the grouping is recorded here and in that file. Acceptance criteria: (1) a read-only Git query finds merge commits on the integration branch whose parents both changed the same path, and records the conflict-prone paths as historical evidence with provenance; (2) a pair of items whose declared areas or checkpoint-changed paths touch a historically conflicting path gets an 'elevated' collision reason naming the evidence, never 'safe'; (3) the evidence is part of the collision-graph fingerprint; (4) a domain test and a Git-fixture test cover it; (5) docs/planning.md 'Collisions' and status for 080-084 are updated.",
+      "tags": [
+        "planning",
+        "planner-evidence"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:08.589Z",
+      "updatedAt": "2026-10-06T20:37:08.589Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-MISC-04",
+      "title": "Planner replay: compare predicted and observed cost (PRX-PLAN-152)",
+      "description": "Covers PRX-PLAN-152 (replay compares predicted and observed cost where available). Advisory group GROUP-PRAXIS-PLANNING-002 (research/groups/GROUP-PRAXIS-PLANNING-002/group-analysis.json); grouped-mode commands are not on main yet, so the grouping is recorded here and in that file. Acceptance criteria: (1) replay predicts each finalized execution's cost from executions finalized strictly before it started, only when enough earlier cost samples in one currency exist; (2) it reports observed cost, predicted range, within-range and absolute error per execution and a summary, and 'unavailable' with the reason otherwise; (3) no later outcome is used (PLAN-151); (4) tests with and without cost evidence; (5) docs/planning.md status for 150-152 updated.",
+      "tags": [
+        "planning",
+        "planner-evidence"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:08.911Z",
+      "updatedAt": "2026-10-06T20:37:08.911Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-MISC-05",
+      "title": "Planner: compare a saved plan's recommendations with what happened (PRX-PLAN-162)",
+      "description": "Covers PRX-PLAN-162 (compare recommendations with what happened, without claiming causation). 'freshness' lists per-item outcomes; no summary compares recommendations to outcomes. Advisory group GROUP-PRAXIS-PLANNING-002 (research/groups/GROUP-PRAXIS-PLANNING-002/group-analysis.json); grouped-mode commands are not on main yet, so the grouping is recorded here and in that file. Acceptance criteria: (1) 'plan freshness --plan FILE' adds a recommendation-outcome summary: per recommended item whether it was started, completed, blocked or untouched since the plan, whether the start order followed the recommended wave order, and the observed versus predicted duration for completed items; (2) the output states that it is an observation and not the planner's effect; (3) tests cover followed and not-followed orders; (4) docs/planning.md status for 162 updated.",
+      "tags": [
+        "planning",
+        "planner-evidence"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:09.220Z",
+      "updatedAt": "2026-10-06T20:37:09.220Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-MISC-06",
+      "title": "Planner: persist estimate-error history over time (PRX-PLAN-170)",
+      "description": "Covers PRX-PLAN-170 (track estimate error over time). Replay computes error but nothing persists it. Advisory group GROUP-PRAXIS-PLANNING-002 (research/groups/GROUP-PRAXIS-PLANNING-002/group-analysis.json); grouped-mode commands are not on main yet, so the grouping is recorded here and in that file. Acceptance criteria: (1) 'plan replay --record' appends one praxis.plan-calibration/1 entry per run (planner version, as-of, work-state fingerprint, sample count, within-range rate, median absolute and relative error, per class) to a committed history file under .ros/planning/; plain replay stays read-only (PLAN-001, PLAN-161); (2) a repeated record for the same fingerprint and planner version is idempotent; (3) 'plan replay' reports the trend from the recorded history; (4) tests cover append, idempotency, read-only default and trend; (5) docs/planning.md status for 170-173 updated.",
+      "tags": [
+        "planning",
+        "planner-evidence"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:09.556Z",
+      "updatedAt": "2026-10-06T20:37:09.556Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-MISC-07",
+      "title": "Record the cross-provider continuation proof on main (RQ-ROS-2026-A023 acceptance, PRAXIS-XPROVIDER-PROOF-01)",
+      "description": "Covers RQ-ROS-2026-A023 acceptance 'Continuation completes' (and RQ-ROS-2026-A022's cross-provider continuity). Work item PRAXIS-XPROVIDER-PROOF-01 was executed on branch proof/chatgpt-continuation (head b2becae0): a Claude Code predecessor checkpointed part 1, and an OpenAI/ChatGPT successor continued it through the inbox branch praxis-inbox/chatgpt-xprovider-proof-01 (work.continue journal req-chatgpt-xprovider-continue-01) and completed it, but none of that state reached main and RQ-A023 still says Open. Acceptance criteria: (1) an evidence record on main cites the branch, commits, journals, workflow runs and events, verified with git and the GitHub API, and states what is asserted (requester identity) versus observed (executor); (2) it shows the successor's own identity, the successor execution's parent and the predecessor's interrupted disposition as recorded by Praxis; (3) RQ-A023's status table and DF-ROS-2026-A045 cite that evidence; (4) the proof branch's Praxis state is not hand-copied into main's .ros state.",
+      "tags": [
+        "remote",
+        "continuity"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:09.880Z",
+      "updatedAt": "2026-10-06T20:37:09.880Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-MISC-08",
+      "title": "F#/.NET-only automation: port tracked Python and inline python3 (RQ-ROS-2026-A024)",
+      "description": "Covers RQ-ROS-2026-A024's normative rule that build tooling and executable automation are F#/.NET. Python remains in research/experiments/**/*.py, scripts/praxis-release-bump.sh, praxis-remote-enable.sh, praxis-remote-persist.sh, praxis-remote-inbox.sh, praxis-bootstrap.sh, research/experiments/EX-ROS-2026-A021-evaluation-kit/prepare-blind-bundle.sh, .github/actions/praxis-remote/action.yml and the native-release, praxis-remote, ros-fs-assets and praxis-validation workflows. Acceptance criteria: (1) each Python use is ported to F#/.NET, or listed as an exact-path exception in ros.json implementationPolicy.exceptions citing an accepted DF decision that records the owner's approval and the follow-up work item; (2) './praxis architecture check' (and validate when the policy is enabled) fails on a tracked *.py file or a python/python3 invocation in a tracked script, workflow or action that no exception covers; (3) tests cover the new rule and the exceptions; (4) workflows no longer set up Python unless an exception needs it; (5) RQ-A024 states the real status.",
+      "tags": [
+        "implementation-policy",
+        "tooling"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:10.203Z",
+      "updatedAt": "2026-10-06T20:37:10.203Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-MISC-09",
+      "title": "Fix stale requirement citations: deleted Node tests and test paths in RQ-ROS-2026-A021..A024",
+      "description": "RQ-ROS-2026-A021 cites tests/praxis-remote-adapter.test.mjs and 'npm run test:all'; A022 cites tests/remote-checkpoint.test.mjs; A023 cites tests/praxis-remote-inbox.test.mjs; A024 cites tests/Ros.Tests/ImplementationLanguagePolicyTests.fs and claims status implemented although Python remains. Acceptance criteria: (1) each citation names the F# tests that cover the behaviour now (RemotePersistScriptTests, RemoteExecuteCliTests, RemoteProtocolTests, PremergeRemoteScriptTests 'fence inbox' tests, tests/Praxis.Tests/ImplementationLanguagePolicyTests.fs), with the historical Node result kept as history; (2) A024's status reflects the remaining Python (until PRAXIS-MISC-08 lands); (3) A021 notes that issue #90 now also defines PRX-REMOTE-045..050 and that PRAXIS-NPM-BIN was abandoned; (4) a test fails if a requirement record under research/requirements cites a tests/ path that does not exist, unless the citation is marked historical; (5) provenance recorded for each modified record and validate passes.",
+      "tags": [
+        "documentation",
+        "requirements"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:10.513Z",
+      "updatedAt": "2026-10-06T20:38:15.502Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

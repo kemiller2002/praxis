@@ -80,6 +80,15 @@
 | PRAXIS-GROUP-09 | plan execute-group and grouped execution by default for qualifying high-affinity groups (PRX-GRP-117, 130..132, 136..137) | captured | grouping | high |
 | PRAXIS-GROUP-10 | Grouped-execution completion gates: machine-checkable reuse inventory and per-criterion verification (PRX-GRP-133..135, 040, 045) | captured | grouping | high |
 | PRAXIS-INTERNAL-NAMESPACES | Migrate internal Ros.* projects, namespaces, assemblies and Ros.slnx to Praxis.* (deferred from PRAXIS-CLI-RENAME, DF-ROS-2026-A043) | complete | rename, follow-up | low |
+| PRAXIS-MISC-01 | Input-document inbox: crash-safe claim/process lifecycle with provenance-preserving derivation (DER-09, DER-10) | captured | inbox, reconciliation | high |
+| PRAXIS-MISC-02 | Planner: observe CI status for checkpoints that wait on CI (PRX-PLAN-020) | captured | planning, planner-evidence | medium |
+| PRAXIS-MISC-03 | Planner: historical merge-conflict evidence in the collision graph (PRX-PLAN-081) | captured | planning, planner-evidence | low |
+| PRAXIS-MISC-04 | Planner replay: compare predicted and observed cost (PRX-PLAN-152) | captured | planning, planner-evidence | low |
+| PRAXIS-MISC-05 | Planner: compare a saved plan's recommendations with what happened (PRX-PLAN-162) | captured | planning, planner-evidence | low |
+| PRAXIS-MISC-06 | Planner: persist estimate-error history over time (PRX-PLAN-170) | captured | planning, planner-evidence | low |
+| PRAXIS-MISC-07 | Record the cross-provider continuation proof on main (RQ-ROS-2026-A023 acceptance, PRAXIS-XPROVIDER-PROOF-01) | captured | remote, continuity | medium |
+| PRAXIS-MISC-08 | F#/.NET-only automation: port tracked Python and inline python3 (RQ-ROS-2026-A024) | captured | implementation-policy, tooling | medium |
+| PRAXIS-MISC-09 | Fix stale requirement citations: deleted Node tests and test paths in RQ-ROS-2026-A021..A024 | ready | documentation, requirements | medium |
 | PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | abandoned | rename, gh-90 | low |
 | PRAXIS-PLAN-01 | Deterministic shadow planner: praxis plan analyze/simulate/compare/explain (PRX-PLAN-001..182) | complete | planning, architecture, cli | high |
 | PRAXIS-PLAN-02 | Accept planner decision DF-ROS-2026-A046 on the owner's approval | complete | planning, governance | medium |
