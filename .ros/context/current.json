@@ -6594,18 +6594,56 @@
     {
       "id": "PRAXIS-GROUP-08",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-06T20:10:03.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Cli/WorkGroupListCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/WorkGroupTests.fs"
+        },
+        {
+          "type": "group-analysis",
+          "path": "research/groups/GROUP-PRAXIS-GROUPING-001/group-analysis.json"
+        },
+        {
+          "type": "group-verification",
+          "path": "research/groups/GROUP-PRAXIS-GROUPING-001/group-verification-PRAXIS-GROUP-08.json"
+        }
+      ],
+      "updatedAt": "2026-10-06T20:44:18.000Z",
       "telemetryExecutionIds": [
         "EXE-20261006T201004081Z-5d1f4933"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "17cdad5fda9c0779effb3997",
+        "recordedAt": "2026-10-06T20:44:11.000Z",
+        "executionId": "EXE-20261006T201004081Z-5d1f4933",
+        "repository": "repository-operating-system",
+        "branch": "group/08-command-surface",
+        "commit": "162e029143df71d3ca30dbd7ecb52e31f98d3f46",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "group/08-command-surface",
+        "remoteCommit": "162e029143df71d3ca30dbd7ecb52e31f98d3f46",
+        "summary": "PRAXIS-GROUP-08 implemented and verified (full suite 1463/1463)",
+        "nextAction": "Complete PRAXIS-GROUP-08; merge PR #178; continue with PRAXIS-GROUP-07",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-06T20:44:18.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-06T20:10:03.000Z",
+  "updatedAt": "2026-10-06T20:44:18.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
