@@ -4493,7 +4493,7 @@
     {
       "id": "PRAXIS-EXEC-04",
       "title": "Host containment profile and enforcement evidence (PRX-SEC-001, 003, 010, 011, 013, 014)",
-      "description": "Requirements: PRX-SEC-001, PRX-SEC-003, PRX-SEC-010, PRX-SEC-011, PRX-SEC-013, PRX-SEC-014, PRX-SEC-012 kept. Acceptance criteria: (1) Every envelope carries a containment profile listing filesystem, process, network, credential and environment restrictions, each enforced, unavailable, unrestricted or unknown, with mechanism and evidence; anything the host did not report stays unknown and nothing is inferred from a worktree, branch, directory, prompt or provider permission mode. (2) A host or launcher supplies evidence as praxis.containment-evidence/1 via --containment-evidence FILE or PRAXIS_CONTAINMENT_EVIDENCE; Praxis records its source as host-reported. (3) Containment is host-enforced only when at least one restriction is enforced with evidence; otherwise semantic-only or unknown. (4) Repository policy execution.containment.<role>.require lists restrictions that must be enforced; start and launch refuse (exit 3) when the evidence does not show them. (5) praxis execution containment EXE-ID --json emits the profile in a stable schema documented for Tutela. (6) Tests cover each criterion.",
+      "description": "Requirements: PRX-SEC-001, PRX-SEC-003, PRX-SEC-010, PRX-SEC-011, PRX-SEC-013, PRX-SEC-014, PRX-SEC-012 kept. Acceptance criteria: (1) Every envelope carries a containment profile listing filesystem, process, network, credential and environment restrictions, each enforced, unavailable, unrestricted or unknown, with mechanism and evidence; anything the host did not report stays unknown and nothing is inferred from a worktree, branch, directory, prompt or provider permission mode. (2) A host or launcher supplies evidence as praxis.containment-evidence/1 via --containment-evidence FILE or PRAXIS_CONTAINMENT_EVIDENCE; Praxis records its source as host-reported. (3) Containment is host-enforced only when at least one restriction is enforced with evidence; otherwise semantic-only or unknown. (4) Repository policy execution.containment.<role>.require lists restrictions that must be enforced; execution launch refuses (exit 3) when the evidence does not show them (decision 2026-10-06: the restrictions belong to the host that runs the worker, the launcher; a start runs no process, so start does not refuse). (5) praxis execution containment EXE-ID --json emits the profile in a stable schema documented for Tutela. (6) Tests cover each criterion.",
       "tags": [
         "execution",
         "containment"
@@ -4502,7 +4502,7 @@
       "status": "ready",
       "attachments": [],
       "createdAt": "2026-10-06T20:36:23.000Z",
-      "updatedAt": "2026-10-06T20:36:32.000Z",
+      "updatedAt": "2026-10-06T21:22:51.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4595,10 +4595,35 @@
         "ordo"
       ],
       "priority": "low",
-      "status": "captured",
+      "status": "abandoned",
       "attachments": [],
       "createdAt": "2026-10-06T20:36:25.000Z",
-      "updatedAt": "2026-10-06T20:36:25.000Z",
+      "updatedAt": "2026-10-06T21:30:37.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null,
+      "abandonedReason": "duplicate of PRAXIS-FND-01 and PRAXIS-FND-02 (captured on main by the shared-foundations track, PR #181)"
+    },
+    {
+      "id": "PRAXIS-EXEC-09",
+      "title": "Link execution step ledger to telemetry and analyse cost and reliability by role (PRX-STEP-006, PRX-STEP-008)",
+      "description": "Requirements: PRX-STEP-006, PRX-STEP-008. Work-bound execution envelopes share the telemetry execution ID and record the role (PRAXIS-EXEC-01), but execution ledger steps and telemetry steps remain separate models and no command analyses cost, retries or reliability by role. Acceptance criteria: (1) an execution step can reference the telemetry step(s) it spans, and its view accumulates their usage, cost, duration and retries when available (unavailable stays unavailable). (2) praxis telemetry usage --by role (and by execution step) attributes per-execution totals to the envelope's role without merging separate executions. (3) Tests.",
+      "tags": [
+        "execution",
+        "telemetry"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:59:34.000Z",
+      "updatedAt": "2026-10-06T20:59:34.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

@@ -22,5 +22,6 @@
     <Compile Include="Ordo/Operations.fs" />
     <Compile Include="Lifecycle/Operations.fs" />
     <Compile Include="Planning/Operations.fs" />
+    <Compile Include="Execution/Operations.fs" />
   </ItemGroup>
 </Project>

@@ -94,6 +94,9 @@ let main _ =
     @ TelemetrySegmentationTests.tests
     @ RecoveryProofTests.tests
     @ ExecutionGovernanceTests.tests
+    @ ExecutionRuntimeTests.tests
+    @ ExecutionBindingTests.tests
+    @ WebExecutionTests.tests
     @ InstallationRegistrationTests.tests
     @ CommitOwnershipTests.tests
     @ WorkAbandonTests.tests

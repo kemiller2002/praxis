@@ -6601,11 +6601,77 @@
       "telemetryExecutionIds": [
         "EXE-20261006T203734506Z-a99c3fac"
       ]
+    },
+    {
+      "id": "PRAXIS-EXEC-04",
+      "type": "feature",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-06T20:58:11.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T205811865Z-60b85946"
+      ]
+    },
+    {
+      "id": "PRAXIS-EXEC-03",
+      "type": "feature",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-06T20:58:11.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T205812741Z-6e1a1335"
+      ]
+    },
+    {
+      "id": "PRAXIS-EXEC-07",
+      "type": "feature",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-06T20:58:11.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T205813346Z-9ac5539d"
+      ]
+    },
+    {
+      "id": "PRAXIS-EXEC-01",
+      "type": "feature",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-06T21:26:58.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T212700684Z-83463e94"
+      ]
+    },
+    {
+      "id": "PRAXIS-EXEC-05",
+      "type": "feature",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-06T21:29:36.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T212937740Z-f46a94f0"
+      ]
+    },
+    {
+      "id": "PRAXIS-EXEC-06",
+      "type": "feature",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-06T21:29:36.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T212939127Z-798ef60b"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-06T20:37:33.000Z",
+  "updatedAt": "2026-10-06T21:29:36.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

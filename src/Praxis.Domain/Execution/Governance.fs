@@ -608,6 +608,127 @@ module Containment =
         | Containment.HostEnforced _ -> true
         | _ -> false
 
+/// What the host actually did about one class of restriction (PRX-SEC-003,
+/// PRX-SEC-011). `Unknown` is the default and is never upgraded by
+/// inference from a worktree, branch, directory, prompt or provider
+/// permission mode (PRX-SEC-012).
+[<RequireQualifiedAccess>]
+type RestrictionStatus =
+    | Enforced
+    | Unavailable
+    | Unrestricted
+    | Unknown
+
+[<RequireQualifiedAccess>]
+module RestrictionStatus =
+    let all = [ RestrictionStatus.Enforced; RestrictionStatus.Unavailable; RestrictionStatus.Unrestricted; RestrictionStatus.Unknown ]
+
+    let toWire status =
+        match status with
+        | RestrictionStatus.Enforced -> "enforced"
+        | RestrictionStatus.Unavailable -> "unavailable"
+        | RestrictionStatus.Unrestricted -> "unrestricted"
+        | RestrictionStatus.Unknown -> "unknown"
+
+    let tryParse (raw: string) = all |> List.tryFind (fun s -> toWire s = raw.Trim().ToLowerInvariant())
+
+type ContainmentRestriction =
+    { Dimension: string
+      Status: RestrictionStatus
+      Mechanism: string option
+      Evidence: string option }
+
+/// The execution-containment profile (PRX-SEC-010): one entry per
+/// restriction dimension. `Source` names the host that reported it; `None`
+/// means no host reported anything, so every dimension is unknown.
+type ContainmentProfile =
+    { Source: string option
+      Restrictions: ContainmentRestriction list }
+
+[<RequireQualifiedAccess>]
+module ContainmentProfile =
+    let dimensions = [ "filesystem"; "process"; "network"; "credential"; "environment" ]
+
+    let private unknownFor dimension =
+        { Dimension = dimension
+          Status = RestrictionStatus.Unknown
+          Mechanism = None
+          Evidence = None }
+
+    let unknown =
+        { Source = None
+          Restrictions = dimensions |> List.map unknownFor }
+
+    /// A host's report, validated: known dimensions only, each at most once,
+    /// and an enforced restriction must carry its evidence. Dimensions the
+    /// host did not report stay unknown.
+    let fromReport (host: string) (reported: ContainmentRestriction list) : Result<ContainmentProfile, string> =
+        let duplicates = reported |> List.countBy _.Dimension |> List.filter (fun (_, n) -> n > 1) |> List.map fst
+
+        if String.IsNullOrWhiteSpace host then
+            Error "containment evidence must name the host that enforced it"
+        else
+            match reported |> List.tryFind (fun r -> not (List.contains r.Dimension dimensions)) with
+            | Some r -> Error($"unknown containment dimension '{r.Dimension}'; expected one of " + String.concat ", " dimensions)
+            | None when not duplicates.IsEmpty -> Error("containment dimension reported twice: " + String.concat ", " duplicates)
+            | None ->
+                match reported |> List.tryFind (fun r -> r.Status = RestrictionStatus.Enforced && (r.Evidence |> Option.forall String.IsNullOrWhiteSpace)) with
+                | Some r -> Error $"the enforced '{r.Dimension}' restriction has no evidence; report it as unknown instead"
+                | None ->
+                    Ok
+                        { Source = Some host
+                          Restrictions =
+                            dimensions
+                            |> List.map (fun d -> reported |> List.tryFind (fun r -> r.Dimension = d) |> Option.defaultValue (unknownFor d)) }
+
+    let enforced (profile: ContainmentProfile) =
+        profile.Restrictions |> List.filter (fun r -> r.Status = RestrictionStatus.Enforced) |> List.map _.Dimension
+
+    /// Required restrictions the profile does not show as enforced.
+    let shortfall (required: string list) (profile: ContainmentProfile) =
+        let held = enforced profile
+        required |> List.filter (fun r -> not (List.contains r held))
+
+    /// The containment an envelope may claim: host-enforced only with
+    /// enforcement evidence; otherwise the semantic mechanism it already has.
+    let containment (semantic: Containment) (profile: ContainmentProfile) =
+        match profile.Restrictions |> List.filter (fun r -> r.Status = RestrictionStatus.Enforced) with
+        | [] -> semantic
+        | held ->
+            Containment.HostEnforced(
+                profile.Source |> Option.defaultValue "unknown",
+                held |> List.map _.Dimension,
+                held |> List.choose _.Evidence
+            )
+
+/// How an execution came to exist. Only an explicit `execution start`
+/// declares a mutation boundary; executions bound to a work transition,
+/// a remote request or a fallback envelope have no declared boundary, so
+/// no scope effect is computed for them.
+[<RequireQualifiedAccess>]
+type ExecutionOrigin =
+    | Explicit
+    | WorkTransition of transition: string
+    | Remote of executor: string
+    | Fallback of transaction: string
+
+[<RequireQualifiedAccess>]
+module ExecutionOrigin =
+    let toWire origin =
+        match origin with
+        | ExecutionOrigin.Explicit -> "explicit", None
+        | ExecutionOrigin.WorkTransition t -> "work-transition", Some t
+        | ExecutionOrigin.Remote e -> "remote", Some e
+        | ExecutionOrigin.Fallback t -> "fallback", Some t
+
+    let tryParse (kind: string) (reference: string option) =
+        match kind, reference with
+        | "explicit", _ -> Some ExecutionOrigin.Explicit
+        | "work-transition", Some t -> Some(ExecutionOrigin.WorkTransition t)
+        | "remote", Some e -> Some(ExecutionOrigin.Remote e)
+        | "fallback", Some t -> Some(ExecutionOrigin.Fallback t)
+        | _ -> None
+
 /// Where an execution stands.
 [<RequireQualifiedAccess>]
 type ExecutionState =
@@ -666,7 +787,11 @@ type ExecutionEnvelope =
       HumanOnlyTransitions: string list
       Parent: string option
       StartedAt: DateTimeOffset
-      State: ExecutionState }
+      State: ExecutionState
+      Origin: ExecutionOrigin
+      ContainmentProfile: ContainmentProfile
+      /// The one verification command a runner may execute (PRX-VER-001).
+      EvaluatorCommand: string option }
 
 [<RequireQualifiedAccess>]
 module ExecutionEnvelope =
@@ -704,7 +829,15 @@ module ExecutionEnvelope =
                   HumanOnlyTransitions = []
                   Parent = None
                   StartedAt = startedAt
-                  State = ExecutionState.Active }
+                  State = ExecutionState.Active
+                  Origin = ExecutionOrigin.Explicit
+                  ContainmentProfile = ContainmentProfile.unknown
+                  EvaluatorCommand = None }
+
+    /// Whether this execution declared a mutation boundary to compare
+    /// observed mutations against.
+    let declaresBoundary (envelope: ExecutionEnvelope) =
+        envelope.Origin = ExecutionOrigin.Explicit || not envelope.Boundary.Scopes.IsEmpty
 
 /// Reconciliation findings (ORD-EXEC-113).
 [<RequireQualifiedAccess>]
@@ -850,6 +983,114 @@ module StepLedger =
         | Some(view, _) when view.Status = StepStatus.EffectUnknown -> Ok(StepEntry.Reconciled(step, view.Attempts, finding, at))
         | Some _ -> Error $"step {step} has no unknown effect to reconcile"
 
+/// One recorded verification (PRX-VER-002): the command identity, the
+/// candidate commit it judged, the evaluator outcome, the exit code when the
+/// host observed one, who ran it, and the evidence it produced.
+type VerificationRecord =
+    { Outcome: EvaluationOutcome
+      Command: string
+      Candidate: string option
+      ExitCode: int option
+      ActorId: string
+      ActorKind: string
+      Evidence: string list
+      At: DateTimeOffset }
+
+/// Who appended a ledger entry and under which authority/version identity
+/// (PRX-EXEC-024, PRX-REC-007). Kept beside the entry, never inside it, so
+/// receipt comparison is unchanged.
+type EntryAttribution =
+    { ActorId: string
+      ActorKind: string
+      Role: ExecutionRole
+      Revision: string option
+      Evaluator: string option }
+
+/// What the host observes about a bound workspace when the execution is
+/// re-entered (PRX-EXEC-014, PRX-EXEC-055). `None` means the observation
+/// could not be made, which is not a divergence.
+type WorkspaceObservation =
+    { Present: bool
+      Branch: string option
+      Head: string option
+      BaselineIsAncestor: bool option
+      CandidateIsAncestor: bool option }
+
+[<RequireQualifiedAccess>]
+module WorkspaceBinding =
+    let private short (sha: string) = if sha.Length > 12 then sha.Substring(0, 12) else sha
+
+    /// Every way the workspace differs from the one the execution is bound
+    /// to. Empty means the execution may rebind to it silently.
+    let divergence (envelope: ExecutionEnvelope) (observed: WorkspaceObservation) =
+        if not observed.Present then
+            [ "the bound workspace no longer exists" ]
+        else
+            [ match envelope.Workspace |> Option.bind _.Branch, observed.Branch with
+              | Some expected, Some actual when expected <> actual -> yield $"the workspace is on branch {actual}, but the execution is bound to {expected}"
+              | Some expected, None -> yield $"the workspace has a detached HEAD, but the execution is bound to branch {expected}"
+              | _ -> ()
+              match observed.BaselineIsAncestor with
+              | Some false -> yield $"baseline {short envelope.BaselineRevision} is no longer an ancestor of HEAD"
+              | _ -> ()
+              match envelope.CandidateRevision, observed.CandidateIsAncestor with
+              | Some candidate, Some false -> yield $"recorded candidate {short candidate} is no longer an ancestor of HEAD"
+              | _ -> () ]
+
+    /// An explicit, recorded rebind to the observed branch.
+    let rebind (envelope: ExecutionEnvelope) (observed: WorkspaceObservation) =
+        { envelope with Workspace = envelope.Workspace |> Option.map (fun w -> { w with Branch = observed.Branch }) }
+
+/// A configured role launcher (PRX-EXEC-040). Praxis runs the command the
+/// repository configured; it never selects a provider or model itself.
+type Launcher =
+    { Id: string
+      Command: string
+      /// A host-written `praxis.containment-evidence/1` file describing the
+      /// restrictions this launcher's host enforces (PRX-SEC-013).
+      ContainmentEvidence: string option }
+
+/// The repository's `ros.json` `execution` policy.
+type ExecutionPolicy =
+    { Launchers: Map<ExecutionRole, Launcher>
+      WorktreeRequired: Set<ExecutionRole>
+      RequiredRestrictions: Map<ExecutionRole, string list> }
+
+[<RequireQualifiedAccess>]
+module ExecutionPolicy =
+    let empty =
+        { Launchers = Map.empty
+          WorktreeRequired = Set.empty
+          RequiredRestrictions = Map.empty }
+
+    let launcherFor role (policy: ExecutionPolicy) = policy.Launchers |> Map.tryFind role
+    let requiresWorktree role (policy: ExecutionPolicy) = policy.WorktreeRequired.Contains role
+    let requiredRestrictions role (policy: ExecutionPolicy) = policy.RequiredRestrictions |> Map.tryFind role |> Option.defaultValue []
+
+/// Everything observed about an execution besides its envelope: the input
+/// of the one legal-action computation.
+type ExecutionObservation =
+    { Steps: StepView list
+      Effects: ScopeEffect list
+      Verification: VerificationRecord option
+      Uncommitted: bool
+      Head: string option
+      Divergence: string list
+      Launcher: Launcher option
+      ContainmentShortfall: string list }
+
+[<RequireQualifiedAccess>]
+module ExecutionObservation =
+    let empty =
+        { Steps = []
+          Effects = []
+          Verification = None
+          Uncommitted = false
+          Head = None
+          Divergence = []
+          Launcher = None
+          ContainmentShortfall = [] }
+
 /// A legal action with its availability and the reasons it is unavailable
 /// (ORD-EXEC-020/021). Every presentation consumes this list.
 type LegalAction =
@@ -859,12 +1100,41 @@ type LegalAction =
       Reasons: string list
       ActorRequirement: string }
 
+/// An execution as every presentation shows it: envelope, ledger, what was
+/// observed, and the legal actions for the asking actor.
+type ExecutionSnapshot =
+    { Envelope: ExecutionEnvelope
+      Entries: StepEntry list
+      Observation: ExecutionObservation
+      Attributions: (string * EntryAttribution) list
+      LegalActions: LegalAction list }
+
 [<RequireQualifiedAccess>]
 module LegalActions =
-    /// `uncommitted` is the host's observation that the workspace holds
-    /// changes no commit captures; completing then would record a candidate
-    /// revision that does not contain the execution's output.
-    let compute (envelope: ExecutionEnvelope) (steps: StepView list) (effects: ScopeEffect list) (verification: EvaluationOutcome option) (uncommitted: bool) (actorKind: string) =
+    let private short (sha: string) = if sha.Length > 12 then sha.Substring(0, 12) else sha
+
+    /// What recorded receipts and verification say about completion
+    /// (PRX-EXEC-026): the reasons completion may not rely on an agent's
+    /// claim. Shared by `execution.complete` and `work complete`.
+    let receiptBlockers (envelope: ExecutionEnvelope) (observed: ExecutionObservation) =
+        [ if observed.Steps |> List.exists (fun s -> s.Status <> StepStatus.Satisfied) then
+              yield "not every step receipt matches"
+          if observed.Steps |> List.exists (fun s -> s.Status = StepStatus.EffectUnknown) then
+              yield "unknown effects require reconciliation"
+          if not observed.Effects.IsEmpty then
+              yield "out-of-boundary mutations are unresolved"
+          match envelope.Evaluator, observed.Verification with
+          | Some current, Some v when not (EvaluationOutcome.isCurrent current v.Outcome) -> yield "verification is stale or its evaluator changed"
+          | Some _, Some { Outcome = EvaluationOutcome.Failed(_, reason) } -> yield "verification failed: " + reason
+          | _ -> ()
+          match observed.Verification |> Option.bind _.Candidate, observed.Head with
+          | Some judged, Some head when judged <> head ->
+              yield $"verification judged candidate {short judged}, not the workspace HEAD {short head}; evaluate again"
+          | _ -> () ]
+
+    /// The single legal-action computation (ORD-EXEC-020/021).
+    let evaluate (envelope: ExecutionEnvelope) (observed: ExecutionObservation) (actorKind: string) =
+        let steps = observed.Steps
         let requirement transition = if List.contains transition envelope.HumanOnlyTransitions then "human-required" else "any"
 
         let action transition target blockers =
@@ -884,6 +1154,8 @@ module LegalActions =
             | ExecutionState.Blocked reason -> [ "execution is blocked: " + reason ]
             | s -> [ "execution is " + ExecutionState.toWire s ]
 
+        let role = ExecutionRole.toWire envelope.Authority.Role
+
         let stepActions =
             steps
             |> List.choose (fun s ->
@@ -896,40 +1168,77 @@ module LegalActions =
                 | StepAction.ResolveMismatch -> Some(action "step.start" (Some s.StepId) (stateBlockers @ [ "receipt mismatch must be resolved by governed rework" ]))
                 | StepAction.Reuse -> None)
 
+        // An attempt whose effect is not yet observed may be observed.
+        let observable =
+            steps
+            |> List.filter (fun s -> s.Status = StepStatus.EffectUnknown && s.Attempts > 0)
+            |> List.map (fun s -> action "step.observe" (Some s.StepId) stateBlockers)
+
         let completion =
-            [ if steps |> List.exists (fun s -> s.Status <> StepStatus.Satisfied) then
-                  yield "not every step receipt matches"
-              if steps |> List.exists (fun s -> s.Status = StepStatus.EffectUnknown) then
-                  yield "unknown effects require reconciliation"
-              if not effects.IsEmpty then
-                  yield "out-of-boundary mutations are unresolved"
-              if uncommitted then
-                  yield "the workspace has uncommitted changes; commit them so the candidate revision captures the execution's output"
-              match envelope.Evaluator, verification with
-              | Some current, Some outcome when not (EvaluationOutcome.isCurrent current outcome) ->
-                  yield "verification is stale or its evaluator changed"
-              | Some _, Some(EvaluationOutcome.Failed(_, reason)) -> yield "verification failed: " + reason
-              | _ -> () ]
+            receiptBlockers envelope observed
+            @ [ if observed.Uncommitted then
+                    yield "the workspace has uncommitted changes; commit them so the candidate revision captures the execution's output" ]
+            @ observed.Divergence
 
         let expandBlockers =
             if envelope.Authority.Prohibits |> Set.contains Capability.ExpandMutationBoundary then
-                [ $"role {ExecutionRole.toWire envelope.Authority.Role} may not expand its mutation boundary" ]
+                [ $"role {role} may not expand its mutation boundary" ]
             else
                 []
 
+        let evaluateBlockers =
+            [ if envelope.Evaluator.IsNone then yield "this execution declares no evaluator"
+              if envelope.EvaluatorCommand.IsNone then yield "this execution declares no evaluator command (execution start --evaluator-command CMD)"
+              if not (RoleAuthority.allows Capability.InvokeEvaluator envelope.Authority) then yield $"role {role} may not invoke the evaluator" ]
+
+        let launchBlockers =
+            [ if observed.Launcher.IsNone then yield $"no launcher is configured for role {role} (ros.json execution.launchers)"
+              for missing in observed.ContainmentShortfall do
+                  yield $"policy requires the '{missing}' restriction to be host-enforced for role {role}, and no evidence shows it" ]
+
         let lifecycle =
-            [ if not (ExecutionState.isTerminal envelope.State) then
+            [ yield action "step.declare" None stateBlockers
+              if not (ExecutionState.isTerminal envelope.State) then
                   yield action "execution.checkpoint" None []
                   yield action "scope.expand" None (stateBlockers @ expandBlockers)
+                  yield action "execution.evaluate" None (stateBlockers @ evaluateBlockers @ observed.Divergence)
+                  yield action "execution.launch" None (stateBlockers @ launchBlockers @ observed.Divergence)
                   yield action "execution.complete" None (stateBlockers @ completion)
                   yield action "execution.abandon" None []
+                  if not observed.Divergence.IsEmpty then
+                      yield action "execution.rebind" None []
               match envelope.State with
-              | ExecutionState.Blocked _ -> yield action "execution.resume" None []
+              | ExecutionState.Blocked _ -> yield action "execution.resume" None observed.Divergence
               | ExecutionState.Active -> yield action "execution.block" None []
               | _ -> ()
               if ExecutionState.isTerminal envelope.State && envelope.Workspace |> Option.exists (fun w -> w.Path.IsSome) then
                   yield action "workspace.cleanup" None [] ]
 
         stepActions
-        @ (effects |> List.map (fun e -> action "scope.resolve" (Some e.Resource) stateBlockers))
+        @ observable
+        @ (observed.Effects |> List.map (fun e -> action "scope.resolve" (Some e.Resource) stateBlockers))
         @ lifecycle
+
+    /// The original signature, for callers that observe only steps,
+    /// effects, verification outcome and uncommitted state.
+    let compute (envelope: ExecutionEnvelope) (steps: StepView list) (effects: ScopeEffect list) (verification: EvaluationOutcome option) (uncommitted: bool) (actorKind: string) =
+        let record =
+            verification
+            |> Option.map (fun outcome ->
+                { Outcome = outcome
+                  Command = ""
+                  Candidate = None
+                  ExitCode = None
+                  ActorId = ""
+                  ActorKind = ""
+                  Evidence = []
+                  At = envelope.StartedAt })
+
+        evaluate
+            envelope
+            { ExecutionObservation.empty with
+                Steps = steps
+                Effects = effects
+                Verification = record
+                Uncommitted = uncommitted }
+            actorKind

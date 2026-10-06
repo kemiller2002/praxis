@@ -64,7 +64,12 @@ module PathFilter =
     /// the first `praxis init`/`praxis upgrade` in such a repository would make its
     /// next `validate` demand work-item attribution for the tool's own
     /// installation manifest.
-    let private alwaysIgnoredPatterns = [ ".echelon/**" ]
+    ///
+    /// Execution envelopes and ledgers (`.ros/executions/**`) are the same
+    /// kind of bookkeeping: every `work begin` now writes one, so a
+    /// repository whose `ignoredPaths` predate them must not need attribution
+    /// for them either.
+    let private alwaysIgnoredPatterns = [ ".echelon/**"; ".ros/executions/**" ]
 
     let isMeaningful (config: PathFilterConfig) (path: string) =
         (config.MeaningfulPatterns |> List.exists (fun pattern -> globMatch pattern path))

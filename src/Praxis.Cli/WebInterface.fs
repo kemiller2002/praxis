@@ -780,7 +780,7 @@ module WebInterface =
             | Ok json ->
                 match (try JsonNode.Parse json with _ -> null) with
                 | :? JsonObject as node ->
-                    HttpMessages.html 200 (renderDetail (statusSummary root) (parseRow node) (field node "detail") json query)
+                    HttpMessages.html 200 ((renderDetail (statusSummary root) (parseRow node) (field node "detail") json query).Replace("</main>", WebExecutions.workSection (CliProcess.runSelf root) id + "\n</main>"))
                 | _ -> HttpMessages.html 500 (renderMissing None "work show returned an unreadable record")
         | WebRoute.ValidationPage ->
             HttpMessages.html 200 (renderValidation (statusSummary root) (execute root WorkOperation.Validate))
@@ -822,5 +822,5 @@ module WebInterface =
                 host
                 port
                 [ $"Praxis web interface: http://{host}:{port} (repository root: {root})"
-                  "Bound to localhost by default; this server has no authentication -- do not expose it beyond your own machine without adding one." ]
-                (handle root)
+                  "Bound to localhost by default; this server has no authentication -- do not expose it beyond your own machine without adding one. Listen scope: GET /api/control-plane." ]
+                (fun request -> WebExecutions.tryHandle { Host = host; Port = port } (CliProcess.runSelf root) request |> Option.defaultWith (fun () -> handle root request))

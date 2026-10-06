@@ -259,7 +259,7 @@ module ExecutionGovernanceTests =
             Run =
               fun () ->
                   let root = repository ()
-                  let id, node = start root [ "--worktree" ]
+                  let id, node = start root [ "--worktree"; "--evaluator-command"; "sh tests/gate.sh" ]
                   let workspace = Path.Combine(root, textAt node [ "workspaceBinding"; "path" ])
                   Assert.equal 0 (capture (fun () -> ExecutionCommands.run root agent [ "evaluate"; id; "--command"; "sh tests/gate.sh" ]) |> fst)
                   File.WriteAllText(Path.Combine(workspace, "tests", "gate.sh"), "exit 0 # weakened\n")

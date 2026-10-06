@@ -63,7 +63,12 @@ module ExecutionStore =
         Directory.CreateDirectory(Path.GetDirectoryName path |> Option.ofObj |> Option.defaultValue ".") |> ignore
         File.AppendAllText(path, node.ToJsonString ExecutionJson.compact + "\n")
 
-    let appendEntry root id (entry: StepEntry) = appendLine root id (ExecutionJson.entry entry)
+    /// A step entry with who appended it and under which identities
+    /// (PRX-EXEC-024).
+    let appendEntry root id (entry: StepEntry) (attribution: EntryAttribution) =
+        appendLine root id (ExecutionJson.attributedEntry entry attribution)
+
+    let envelopeFile root id = envelopePath root id
 
     let appendRecord root id (kind: string) (fields: (string * string option) list) (at: DateTimeOffset) =
         let node = JsonObject()
@@ -115,6 +120,21 @@ module ExecutionStore =
 
     let recordField = field
 
+    let appendVerification root id (record: VerificationRecord) = appendLine root id (ExecutionJson.verification record)
+
+    let readVerification root id =
+        readRecords root id "verification" |> List.tryLast |> Option.bind ExecutionJson.readVerification
+
+    /// Each attributed step entry's step and attribution, in append order.
+    let attributions root id =
+        lines root id
+        |> List.choose parseLine
+        |> List.filter (fun n -> List.contains (kindOf n) [ "declared"; "started"; "observed"; "reconciled" ])
+        |> List.choose (fun n ->
+            match field "step" n, Option.ofObj n["attribution"] |> Option.bind ExecutionJson.readAttribution with
+            | Some step, Some a -> Some(step, a)
+            | _ -> None)
+
 /// Git adapter for workspace binding and boundary observation. A worktree is
 /// an isolation *mechanism*, never a security sandbox (ORD-EXEC-032).
 [<RequireQualifiedAccess>]
@@ -136,6 +156,40 @@ module GitWorkspace =
             Error ex.Message
 
     let head cwd = run cwd [ "rev-parse"; "HEAD" ]
+
+    /// The checked-out branch; `None` for a detached HEAD or no repository.
+    let branch cwd =
+        match run cwd [ "rev-parse"; "--abbrev-ref"; "HEAD" ] with
+        | Ok "HEAD"
+        | Error _ -> None
+        | Ok name -> Some name
+
+    /// `Some true/false` from `git merge-base --is-ancestor`; `None` when Git
+    /// could not answer (an unknown revision, no repository).
+    let isAncestor cwd (ancestor: string) (descendant: string) =
+        let info = ProcessStartInfo("git", [ "merge-base"; "--is-ancestor"; ancestor; descendant ])
+        info.WorkingDirectory <- cwd
+        info.RedirectStandardOutput <- true
+        info.RedirectStandardError <- true
+        info.UseShellExecute <- false
+
+        try
+            use p = Process.Start info
+            p.StandardOutput.ReadToEnd() |> ignore
+            p.StandardError.ReadToEnd() |> ignore
+            p.WaitForExit()
+
+            match p.ExitCode with
+            | 0 -> Some true
+            | 1 -> Some false
+            | _ -> None
+        with :? ComponentModel.Win32Exception ->
+            None
+
+    /// Commits reachable from `candidate` but not `baseline`, oldest first.
+    let commits cwd (baseline: string) (candidate: string) =
+        run cwd [ "rev-list"; "--reverse"; baseline + ".." + candidate ]
+        |> Result.map (fun out -> out.Split('\n') |> Array.map _.Trim() |> Array.filter (fun l -> l.Length > 0) |> Array.toList)
     let resolve cwd (revision: string) = run cwd [ "rev-parse"; "--verify"; revision + "^{commit}" ]
     let remoteUrl cwd = run cwd [ "remote"; "get-url"; "origin" ] |> Result.toOption
 

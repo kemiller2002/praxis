@@ -206,6 +206,25 @@ module ExecutionJson =
         | Containment.SemanticOnly m -> obj [ "mechanism", str m; "restrictions", arr []; "evidence", arr [] ]
         | Containment.Unknown -> null
 
+    /// `praxis.containment/1`: the per-restriction profile, stable for
+    /// security analysis (Tutela) without redefining execution semantics
+    /// (PRX-SEC-014).
+    let containmentProfile (p: ContainmentProfile) : JsonNode =
+        obj
+            [ "schema", str "praxis.containment/1"
+              "source", opt p.Source
+              "hostEnforced", JsonValue.Create(not (ContainmentProfile.enforced p).IsEmpty)
+              "restrictions",
+              arr (
+                  p.Restrictions
+                  |> List.map (fun r ->
+                      obj
+                          [ "dimension", str r.Dimension
+                            "status", str (RestrictionStatus.toWire r.Status)
+                            "mechanism", opt r.Mechanism
+                            "evidence", opt r.Evidence ])
+              ) ]
+
     let envelope (e: ExecutionEnvelope) : JsonNode =
         let reason =
             match e.State with
@@ -244,12 +263,41 @@ module ExecutionJson =
               "parentExecution", opt e.Parent
               "startedAt", str (timestamp e.StartedAt)
               "state", str (ExecutionState.toWire e.State)
-              "stateReason", opt reason ]
+              "stateReason", opt reason
+              "origin", (let kind, reference = ExecutionOrigin.toWire e.Origin in obj [ "kind", str kind; "reference", opt reference ])
+              "containmentProfile", containmentProfile e.ContainmentProfile
+              "evaluatorCommand", opt e.EvaluatorCommand ]
 
     let private parseTime (raw: string) =
         match DateTimeOffset.TryParse(raw, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind) with
         | true, t -> Ok t
         | _ -> Error $"'{raw}' is not a timestamp"
+
+    let private readRestrictions (node: JsonNode) =
+        items "restrictions" node
+        |> traverse (fun r ->
+            both (text "dimension" r) (text "status" r)
+            |> Result.bind (fun (d, s) ->
+                match RestrictionStatus.tryParse s with
+                | None -> Error $"unknown restriction status '{s}' (enforced, unavailable, unrestricted, unknown)"
+                | Some status ->
+                    Ok
+                        { Dimension = d
+                          Status = status
+                          Mechanism = optionalText "mechanism" r
+                          Evidence = optionalText "evidence" r }))
+
+    let private readProfile (node: JsonNode) : Result<ContainmentProfile, string> =
+        match optionalText "source" node with
+        | None -> Ok ContainmentProfile.unknown
+        | Some host -> readRestrictions node |> Result.bind (ContainmentProfile.fromReport host)
+
+    /// A host's `praxis.containment-evidence/1` report (PRX-SEC-001/013).
+    let readContainmentEvidence (node: JsonNode) : Result<ContainmentProfile, string> =
+        match optionalText "schema" node with
+        | Some "praxis.containment-evidence/1" -> text "host" node |> Result.bind (fun host -> readRestrictions node |> Result.bind (ContainmentProfile.fromReport host))
+        | Some other -> Error $"unsupported containment evidence schema '{other}'; expected praxis.containment-evidence/1"
+        | None -> Error "containment evidence needs schema praxis.containment-evidence/1"
 
     let readEnvelope (node: JsonNode) : Result<ExecutionEnvelope, string> =
         let actorNode = member' "actor" node |> Option.toObj
@@ -332,7 +380,16 @@ module ExecutionJson =
                   HumanOnlyTransitions = strings "humanOnlyTransitions" node
                   Parent = optionalText "parentExecution" node
                   StartedAt = started
-                  State = st }))
+                  State = st
+                  Origin =
+                    member' "origin" node
+                    |> Option.bind (fun o -> optionalText "kind" o |> Option.bind (fun k -> ExecutionOrigin.tryParse k (optionalText "reference" o)))
+                    |> Option.defaultValue ExecutionOrigin.Explicit
+                  ContainmentProfile =
+                    member' "containmentProfile" node
+                    |> Option.bind (fun p -> readProfile p |> Result.toOption)
+                    |> Option.defaultValue ContainmentProfile.unknown
+                  EvaluatorCommand = optionalText "evaluatorCommand" node }))
 
     // ---- ledger entries ----
 
@@ -426,3 +483,183 @@ module ExecutionJson =
             | MutationClass.EvaluatorAuthority -> "evaluator-authority"
 
         obj [ "resource", str e.Resource; "classification", str classification; "explanation", opt e.Explanation ]
+
+    // ---- verification records and entry attribution ----
+
+    let private outcomeFields (o: EvaluationOutcome) =
+        match o with
+        | EvaluationOutcome.Passed fp -> fp, None, None
+        | EvaluationOutcome.Failed(fp, r) -> fp, None, Some r
+        | EvaluationOutcome.EvaluatorChanged(fp, current, changed) -> fp, Some current, Some("changed: " + String.concat ", " changed)
+        | EvaluationOutcome.EvaluatorUnavailable r -> "", None, Some r
+
+    /// A `verification` ledger record (PRX-VER-002).
+    let verification (v: VerificationRecord) : JsonNode =
+        let evaluator, current, reason = outcomeFields v.Outcome
+
+        obj
+            [ "entry", str "verification"
+              "outcome", str (EvaluationOutcome.toWire v.Outcome)
+              "evaluator", (if evaluator = "" then null else str evaluator)
+              "current", opt current
+              "command", str v.Command
+              "candidate", opt v.Candidate
+              "exitCode", (v.ExitCode |> Option.map (fun c -> JsonValue.Create c :> JsonNode) |> Option.toObj)
+              "actor", obj [ "id", str v.ActorId; "kind", str v.ActorKind ]
+              "evidence", arr (v.Evidence |> List.map str)
+              "reason", opt reason
+              "at", str (timestamp v.At) ]
+
+    let readVerification (node: JsonNode) : VerificationRecord option =
+        let reason = optionalText "reason" node |> Option.defaultValue ""
+
+        let outcome =
+            match optionalText "outcome" node, optionalText "evaluator" node, optionalText "current" node with
+            | Some "passed", Some fp, _ -> Some(EvaluationOutcome.Passed fp)
+            | Some "failed", Some fp, _ -> Some(EvaluationOutcome.Failed(fp, reason))
+            | Some "evaluator-changed", Some fp, Some current -> Some(EvaluationOutcome.EvaluatorChanged(fp, current, []))
+            | Some "evaluator-unavailable", _, _ -> Some(EvaluationOutcome.EvaluatorUnavailable reason)
+            | _ -> None
+
+        let actor = member' "actor" node
+
+        outcome
+        |> Option.map (fun o ->
+            { Outcome = o
+              Command = optionalText "command" node |> Option.defaultValue ""
+              Candidate = optionalText "candidate" node
+              ExitCode =
+                match member' "exitCode" node with
+                | Some(:? JsonValue as v) -> (match v.TryGetValue<int>() with | true, n -> Some n | _ -> None)
+                | _ -> None
+              ActorId = actor |> Option.bind (optionalText "id") |> Option.defaultValue "unknown"
+              ActorKind = actor |> Option.bind (optionalText "kind") |> Option.defaultValue "unknown"
+              Evidence = items "evidence" node |> List.choose (fun x -> match x with :? JsonValue as v -> (match v.TryGetValue<string>() with | true, s -> Some s | _ -> None) | _ -> None)
+              At = optionalText "at" node |> Option.bind (parseTime >> Result.toOption) |> Option.defaultValue DateTimeOffset.MinValue })
+
+    let attribution (a: EntryAttribution) : JsonNode =
+        obj
+            [ "actor", obj [ "id", str a.ActorId; "kind", str a.ActorKind ]
+              "role", str (ExecutionRole.toWire a.Role)
+              "revision", opt a.Revision
+              "evaluator", opt a.Evaluator ]
+
+    let readAttribution (node: JsonNode) : EntryAttribution option =
+        let actor = member' "actor" node
+
+        match actor |> Option.bind (optionalText "id"), optionalText "role" node |> Option.bind ExecutionRole.tryParse with
+        | Some id, Some role ->
+            Some
+                { ActorId = id
+                  ActorKind = actor |> Option.bind (optionalText "kind") |> Option.defaultValue "unknown"
+                  Role = role
+                  Revision = optionalText "revision" node
+                  Evaluator = optionalText "evaluator" node }
+        | _ -> None
+
+    /// A ledger entry with its attribution beside it.
+    let attributedEntry (e: StepEntry) (a: EntryAttribution) : JsonNode =
+        let node = entry e
+        node["attribution"] <- attribution a
+        node
+
+    // ---- repository execution policy (ros.json `execution`) ----
+
+    /// Reads `ros.json` `execution` (PRX-EXEC-010/040, PRX-SEC-013). An
+    /// absent section is the empty policy; a malformed one is an error.
+    let readPolicy (section: JsonNode option) : Result<ExecutionPolicy, string> =
+        let roleKeyed name (node: JsonNode) =
+            match member' name node with
+            | Some(:? JsonObject as o) ->
+                o
+                |> Seq.map (fun kv ->
+                    match ExecutionRole.tryParse kv.Key, Option.ofObj kv.Value with
+                    | Some role, Some v -> Ok(role, v)
+                    | None, _ -> Error $"execution.{name}: unknown role '{kv.Key}'"
+                    | _, None -> Error $"execution.{name}.{kv.Key} is empty")
+                |> Seq.toList
+                |> traverse id
+            | Some _ -> Error $"execution.{name} must be an object keyed by role"
+            | None -> Ok []
+
+        let strings (n: JsonNode) name =
+            items name n |> List.choose (fun x -> match x with :? JsonValue as v -> (match v.TryGetValue<string>() with | true, s -> Some s | _ -> None) | _ -> None)
+
+        match section with
+        | None -> Ok ExecutionPolicy.empty
+        | Some node ->
+            let launchers =
+                roleKeyed "launchers" node
+                |> Result.bind (
+                    traverse (fun (role, l) ->
+                        text "command" l
+                        |> Result.mapError (fun e -> $"execution.launchers.{ExecutionRole.toWire role}: {e}")
+                        |> Result.map (fun command ->
+                            role,
+                            { Id = optionalText "id" l |> Option.defaultValue (ExecutionRole.toWire role)
+                              Command = command
+                              ContainmentEvidence = optionalText "containmentEvidence" l }))
+                )
+
+            let worktree =
+                match member' "worktree" node with
+                | Some w ->
+                    strings w "required"
+                    |> traverse (fun r -> ExecutionRole.tryParse r |> Option.map Ok |> Option.defaultValue (Error $"execution.worktree.required: unknown role '{r}'"))
+                | None -> Ok []
+
+            let containment =
+                roleKeyed "containment" node
+                |> Result.bind (
+                    traverse (fun (role, c) ->
+                        let required = strings c "require"
+
+                        match required |> List.tryFind (fun d -> not (List.contains d ContainmentProfile.dimensions)) with
+                        | Some d -> Error $"execution.containment.{ExecutionRole.toWire role}.require: unknown dimension '{d}'"
+                        | None -> Ok(role, required))
+                )
+
+            both (both launchers worktree) containment
+            |> Result.map (fun ((l, w), c) ->
+                { Launchers = Map.ofList l
+                  WorktreeRequired = Set.ofList w
+                  RequiredRestrictions = Map.ofList c })
+
+    // ---- the snapshot every presentation reads ----
+
+    let private stepStatus (s: StepStatus) =
+        match s with
+        | StepStatus.NotStarted -> "not-started"
+        | StepStatus.Satisfied -> "match"
+        | StepStatus.Mismatched -> "mismatch"
+        | StepStatus.EffectUnknown -> "indeterminate"
+        | StepStatus.ReconciledNotOccurred -> "reconciled-not-occurred"
+        | StepStatus.ReconciledOccurred -> "reconciled-occurred"
+
+    /// `execution show --json`: the envelope plus steps (with receipt state
+    /// and who observed them), scope effects, verification, divergence and
+    /// the legal actions. The local control plane serves exactly this.
+    let snapshot (s: ExecutionSnapshot) : JsonNode =
+        let node = envelope s.Envelope
+
+        node["steps"] <-
+            arr (
+                s.Observation.Steps
+                |> List.map (fun v ->
+                    obj
+                        [ "stepId", str v.StepId
+                          "sequence", JsonValue.Create v.Sequence
+                          "name", str v.Name
+                          "attempts", JsonValue.Create v.Attempts
+                          "status", str (stepStatus v.Status)
+                          "expected", expected v.Expected
+                          "attributions",
+                          arr (s.Attributions |> List.filter (fun (step, _) -> step = v.StepId) |> List.map (snd >> attribution)) ])
+            )
+
+        node["scopeEffects"] <- arr (s.Observation.Effects |> List.map scopeEffect)
+        node["verification"] <- (s.Observation.Verification |> Option.map verification |> Option.toObj)
+        node["divergence"] <- arr (s.Observation.Divergence |> List.map str)
+        node["launcher"] <- (s.Observation.Launcher |> Option.map (fun l -> obj [ "id", str l.Id; "command", str l.Command ]) |> Option.toObj)
+        node["legalActions"] <- legalActions s.LegalActions
+        node
