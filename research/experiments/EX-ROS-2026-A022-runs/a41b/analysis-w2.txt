@@ -153,3 +153,24 @@ Real Git fixtures only (criterion 5):
   submodule add on current Git; set per command in the fixture only.
 - Symlink creation needs a platform that supports it; Linux CI does. The test
   documents the requirement rather than silently skipping.
+
+7. Verification pass (before completion)
+----------------------------------------
+
+Build: `dotnet build Ros.slnx --configuration Release --no-restore` -> 0 errors, 0 warnings.
+Full F# suite: `dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll` -> "1327 test(s); 1327 passed; 0 failed".
+Python oracle tests: `python3 -m unittest discover -s tests` -> "Ran 7 tests ... OK".
+(A first full run showed 2 failures caused by this change's documentation and
+decision edits being newer than the build/registry: registries/decisions.json
+stale -> fixed by `praxis registry build` in 8528e32; the embedded scaffold copy
+of docs/work-protocol.md -> fixed by rebuilding. The rerun above is clean.)
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| 1. Reconciled symlink with unchanged target matches its recorded blob (Git's stored link, not the followed file) | met | Test "reconcile: a reconciled symbolic link matches while its target is unchanged and fails once retargeted": after reconcile `work validate` has no finding; editing the followed file reports only docs/target.txt, not src/link. Test "reconcile: current path states are the ids Git stores ...": state of src/link, src/dangling, src/folder-link equals `git rev-parse HEAD:<path>`, and src/link keeps that id after the followed file changes. Code: src/Ros.Infrastructure/Git/GitRepository.fs linkState (hash-object --stdin of the link target). |
+| 2. Reconciled submodule matches while its gitlink commit is unchanged | met | Test "reconcile: a reconciled submodule matches while its gitlink commit is unchanged and fails once moved": after reconciling .gitmodules + libs/sub, `work validate` has no finding; checking the original commit out again is clean again. Direct test: state of libs/sub equals `git rev-parse HEAD:libs/sub` (= the checked-out commit). Code: gitlinkState. |
+| 3. Changed link target or gitlink still fails closed | met | Same tests: retargeting src/link -> finding ("src/link", "work_items"); moving the submodule to another commit -> finding ("libs/sub", "work_items"); a retargeted dangling link changes state; a deinitialized submodule and a plain directory are Unreadable (never match). |
+| 4. Regular-file behaviour unchanged | met | Regular files still go through one batched `git hash-object -- paths` (fileStates). Existing tests pass unchanged: "added, modified, deleted, and renamed files are all attributed ...", "reconciling a change never pre-authorizes a later change ...", "an edited reconciliation event attributes nothing ...", all other reconcile tests; direct test asserts src/file.fs equals `git rev-parse HEAD:src/file.fs`. |
+| 5. Tests use real Git fixtures for both cases | met | tests/Ros.Tests/WorkReconciliationEffectTests.fs: temporary repositories created with `git init`, real symlinks (File.CreateSymbolicLink), a real submodule added with `git submodule add` from a second temporary repository; validation through the real praxis CLI. |
+
+All criteria met; the item can be completed.
