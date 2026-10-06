@@ -65,7 +65,7 @@ module TelemetryCliTests =
 
     let private volatileKeys =
         set
-            [ "executionId"; "startedAt"; "discoveredAt"; "lastAssessedAt"; "recordedAt"; "collectedAt"
+            [ "executionId"; "instanceId"; "startedAt"; "discoveredAt"; "lastAssessedAt"; "recordedAt"; "collectedAt"
               "measurementId"; "commit"; "branch"; "dirtyPaths"; "dirty"; "commits"; "occurredAt"
               "eventId"; "updatedAt"; "telemetryExecutionIds"; "telemetryExecutions"; "completedAt"
               "createdAt"; "finalizedAt"; "startCommit"; "endCommit"; "sessionId" ]

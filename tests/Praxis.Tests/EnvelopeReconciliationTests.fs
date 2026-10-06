@@ -74,7 +74,7 @@ module EnvelopeReconciliationTests =
                Evidence = [] }] }
 
     let private observed =
-        { ActualBranch = "WI-0064"; HeadCommit = String.replicate 40 "b"; BaseCommitExists = true; BaseCommitIsAncestor = true; TransactionAlreadyApplied = false; TransactionReplayMatches = true; LocalPraxisInstanceId = None }
+        { ActualBranch = "WI-0064"; HeadCommit = String.replicate 40 "b"; BaseCommitExists = true; BaseCommitIsAncestor = true; TransactionAlreadyApplied = false; TransactionReplayMatches = true; LocalInstance = Praxis.Domain.Identity.LocalInstance.Missing }
 
     let private validStep =
         { StepId = "STEP-1"; ExecutionId = "EXE-FALLBACK"; WorkItemId = "WI-0064"; Sequence = 1; ParentStepId = None; Name = "test"; Description = None; Classifications = [ "testing" ]
@@ -179,7 +179,14 @@ module EnvelopeReconciliationTests =
           { Name = "reconciliation rejects a claimed Praxis instance mismatch"
             Run = fun () ->
                 let changed = { envelope with PraxisInstanceId = Some "PRAXIS-REMOTE" }
-                let observedWithInstance = { observed with LocalPraxisInstanceId = Some "PRAXIS-LOCAL" }
+                let record: Praxis.Domain.Identity.InstanceRecord =
+                    { InstanceId = (Praxis.Domain.Identity.InstanceId.tryCreate "PRAXIS-LOCAL").Value
+                      CreatedAt = None
+                      CreatedWith = "test"
+                      Repository = None
+                      Predecessors = [] }
+                let observedWithInstance =
+                    { observed with LocalInstance = Praxis.Domain.Identity.LocalInstance.Present(record, Praxis.Domain.Identity.InstanceBinding.Bound) }
                 match EnvelopeReconciliation.decide changed observedWithInstance with
                 | Reject findings -> Assert.isTrue (List.contains (InstanceIdentityMismatch("PRAXIS-REMOTE", "PRAXIS-LOCAL")) findings) "missing instance mismatch"
                 | value -> failwithf "expected rejection, got %A" value }

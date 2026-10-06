@@ -131,7 +131,7 @@ module RemoteExecuteCliTests =
 
     let private volatileFields =
         HashSet<string>(
-            [ "executionId"; "startedAt"; "discoveredAt"; "lastAssessedAt"; "recordedAt"; "collectedAt"; "measurementId"
+            [ "executionId"; "instanceId"; "startedAt"; "discoveredAt"; "lastAssessedAt"; "recordedAt"; "collectedAt"; "measurementId"
               "commit"; "branch"; "dirtyPaths"; "dirty"; "commits"; "occurredAt"; "eventId"; "updatedAt"; "completedAt"
               "telemetryExecutionIds"; "telemetryExecutions"; "repository" ]
         )
