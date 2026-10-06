@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 72,
+  "nextSeq": 74,
   "items": [
     {
       "id": "WI-0001",
@@ -4211,6 +4211,27 @@
         "provider": "github",
         "model": "unknown",
         "runtime": "github-actions"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0073",
+      "title": "Fix 3.7.1 sweep findings: work-item ID reuse, consumer doc links, upgrade hygiene, launcher EOL",
+      "description": "praxis add reused completed WI ids (helix-note-application); shipped docs had links resolving only in the Praxis repo; init/upgrade did not ensure .ros/locks/ in .gitignore, the praxis.cmd/ros.cmd CRLF attributes, or the foundations.json praxis pin; the release bump wrote whole-second timestamps.",
+      "tags": [],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T14:44:51.382Z",
+      "updatedAt": "2026-10-06T14:45:28.370Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
       },
       "source": "manual",
       "sourceReference": null

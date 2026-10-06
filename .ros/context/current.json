@@ -6444,11 +6444,80 @@
         }
       },
       "completedAt": "2026-10-06T11:32:05.000Z"
+    },
+    {
+      "id": "WI-0073",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Work/Capture.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Lifecycle/ConsumerLinks.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Lifecycle/RequiredLines.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Lifecycle/Payload.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "scripts/praxis-release-bump.sh"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/WorkCaptureTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/LifecycleCliTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ConsumerLinksTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/PremergeReleaseTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-06T14:45:28.370Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T144500660Z-1b140ff5"
+      ],
+      "latestCheckpoint": {
+        "id": "03400cd3cf1d2de2f69d1ceb",
+        "recordedAt": "2026-10-06T14:45:26.966Z",
+        "executionId": "EXE-20261006T144500660Z-1b140ff5",
+        "repository": "repository-operating-system",
+        "branch": "fix/sweep-3-7-2",
+        "commit": "41f3b718d08fd55e48579b969f82a93d4713b059",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "fix/sweep-3-7-2",
+        "remoteCommit": "41f3b718d08fd55e48579b969f82a93d4713b059",
+        "summary": "Fixes, failing-first tests and docs committed and pushed (41f3b718)",
+        "nextAction": "Complete WI-0073, open PR, merge when green, then release 3.7.2",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-06T14:45:28.370Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-06T11:32:05.000Z",
+  "updatedAt": "2026-10-06T14:45:28.370Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
