@@ -11,6 +11,9 @@ type WorkCaptureRequest =
       SourceReference: string option
       ExistingQueueIds: Set<string>
       ExistingContextIds: Set<string>
+      /// Every work-item id named anywhere in the repository's event history,
+      /// including items that have since left the queue and the live context.
+      ExistingHistoryIds: Set<string>
       NextSeq: int
       OccurredAt: string }
 
@@ -48,18 +51,33 @@ type WorkCaptureOutcome =
 /// excluding `--file` attachment (a separate, larger effect this slice does
 /// not attempt): title/priority validation, explicit-id validation against
 /// both the queue and the live context, and collision-avoiding sequential ID
-/// generation over the queue's own ids only (matching production, which
-/// never checks the live context for an auto-generated id).
+/// generation. A generated id is never reused: it is allocated after the
+/// highest `WI-NNNN` id known anywhere (queue, live context including
+/// completed items, and event history), or at the persisted `nextSeq` when
+/// that is already further ahead, and still skips any exact collision.
 [<RequireQualifiedAccess>]
 module WorkCapture =
     let private priorityValues = set [ "high"; "medium"; "low" ]
 
-    let private nextId (existingQueueIds: Set<string>) (nextSeq: int) =
+    let private generatedSequence (id: string) =
+        let digits = if id.StartsWith "WI-" then id.Substring 3 else ""
+
+        match digits <> "" && Seq.forall System.Char.IsAsciiDigit digits, System.Int32.TryParse digits with
+        | true, (true, seq) -> Some seq
+        | _ -> None
+
+    let private nextId (knownIds: Set<string>) (nextSeq: int) =
+        let start =
+            knownIds
+            |> Seq.choose generatedSequence
+            |> Seq.fold max 0
+            |> fun highest -> max nextSeq (highest + 1)
+
         let rec loop seq =
             let candidate = sprintf "WI-%04d" seq
-            if existingQueueIds.Contains candidate then loop (seq + 1) else candidate, seq + 1
+            if knownIds.Contains candidate then loop (seq + 1) else candidate, seq + 1
 
-        loop nextSeq
+        loop start
 
     let plan (request: WorkCaptureRequest) : WorkCaptureOutcome =
         let trimmedTitle = request.Title.Trim()
@@ -81,7 +99,10 @@ module WorkCapture =
                     let id, newNextSeq =
                         match explicitId with
                         | Some id -> id, request.NextSeq
-                        | None -> nextId request.ExistingQueueIds request.NextSeq
+                        | None ->
+                            nextId
+                                (Set.unionMany [ request.ExistingQueueIds; request.ExistingContextIds; request.ExistingHistoryIds ])
+                                request.NextSeq
 
                     let trimmedDescription =
                         request.Description

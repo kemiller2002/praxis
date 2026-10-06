@@ -15,7 +15,8 @@ module LifecycleTests =
           Executable = false
           Integration = None
           Replaces = []
-          MergedFromRepository = false }
+          MergedFromRepository = false
+          Recorded = true }
 
     let private observed files recorded =
         { ObservedRepository.empty with
@@ -509,6 +510,40 @@ module LifecycleTests =
 
                   for unusable in [ "[]"; "\"9.8.7\""; "{ not json"; "// comment\n{\"praxis\":\"1.0.0\"}" ] do
                       Assert.equal Praxis.Infrastructure.Lifecycle.PinReconciliation.Unrecognised (reconcile unusable) }
+
+          { Name = "a foundations pin replaces only the praxis capability's version string, byte for byte elsewhere"
+            Run =
+              fun () ->
+                  let bytes (text: string) = System.Text.Encoding.UTF8.GetBytes text
+                  let reconcile = Praxis.Infrastructure.Lifecycle.Payload.reconcileFoundationsPin "9.8.7"
+
+                  let document version =
+                      "{\"praxis\":{\"version\":\"0.0.0\"},\"capabilities\":{\"limen\":{\"version\":\"0.6.1\"},\r\n\"praxis\" : { \"version\" :\""
+                      + version
+                      + "\", \"required\": true }}}"
+
+                  match reconcile (Array.append (System.Text.Encoding.UTF8.Preamble.ToArray()) (bytes (document "3.1.4"))) with
+                  | Praxis.Infrastructure.Lifecycle.PinReconciliation.Repinned content ->
+                      Assert.equal ("\uFEFF" + document "9.8.7") content
+                  | other -> failwith $"Expected a re-pin, got {other}"
+
+                  Assert.equal Praxis.Infrastructure.Lifecycle.PinReconciliation.Current (reconcile (bytes (document "9.8.7")))
+
+                  for unusable in
+                      [ "{\"capabilities\":{\"limen\":{\"version\":\"1.0.0\"}}}"
+                        "{\"capabilities\":{\"praxis\":{\"required\":true}}}"
+                        "{\"capabilities\":{\"praxis\":\"3.1.4\"}}"
+                        "{ not json" ] do
+                      Assert.equal Praxis.Infrastructure.Lifecycle.PinReconciliation.Unrecognised (reconcile (bytes unusable)) }
+
+          { Name = "a .gitignore gains a missing required pattern once, in its own line endings"
+            Run =
+              fun () ->
+                  Assert.equal (Some "a\r\nb\r\n.ros/locks/\r\n") (RequiredLines.ensure [ ".ros/locks/" ] "a\r\nb")
+                  Assert.equal (Some ".ros/locks/\n") (RequiredLines.ensure [ ".ros/locks/" ] "")
+                  Assert.equal None (RequiredLines.ensure [ ".ros/locks/" ] "x\n  /.ros/locks  \n")
+                  // A comment or a negation does not ignore the locks.
+                  Assert.equal (Some "# .ros/locks/\n!.ros/locks/\n.ros/locks/\n") (RequiredLines.ensure [ ".ros/locks/" ] "# .ros/locks/\n!.ros/locks/\n") }
 
           // Every release up to 3.7.0 seeded `"praxis": "3.4.0"` because this
           // template hard-coded it, so `echelon doctor` failed and `echelon

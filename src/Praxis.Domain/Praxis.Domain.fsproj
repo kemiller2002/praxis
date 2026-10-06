@@ -56,6 +56,8 @@
     <Compile Include="Work/Reconciliation.fs" />
     <Compile Include="Ordo/Model.fs" />
     <Compile Include="Lifecycle/Model.fs" />
+    <Compile Include="Lifecycle/ConsumerLinks.fs" />
+    <Compile Include="Lifecycle/RequiredLines.fs" />
     <Compile Include="Lifecycle/Migration.fs" />
     <Compile Include="Lifecycle/Planning.fs" />
     <Compile Include="Architecture/ImplementationLanguagePolicy.fs" />

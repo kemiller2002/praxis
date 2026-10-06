@@ -85,6 +85,24 @@ Exactly what `init` does, governed by the same ownership rules documented in
   changes. A stale pin left by an earlier release (every release up to 3.7.0
   seeded `3.4.0`) is corrected this way. See
   [the toolchain manifest](toolchain-manifest.md).
+- the user-owned `.gitignore` gains `.ros/locks/` when it does not already
+  ignore it (in any equivalent spelling, such as `/.ros/locks`). The line is
+  appended once, in the file's own line endings; nothing else changes.
+- the user-owned `.gitattributes` gains `praxis.cmd text eol=crlf` and
+  `ros.cmd text eol=crlf` when it lacks them. The Windows launchers ship with
+  CRLF line endings and `verify` compares them byte for byte, so without these
+  rules a fresh clone of a repository whose own attributes normalise text to
+  LF fails `praxis verify --strict` on both launchers.
+- where the repository has `.echelon/foundations.json`, only the string value
+  of `capabilities.praxis.version` is set to the release performing the
+  upgrade, in place. Formatting, order and every other capability are left
+  byte for byte, and the file is never created or recorded as a managed
+  artifact. A file without a `praxis` entry, or that is not valid JSON, is
+  left alone.
+- Markdown that Praxis ships has its relative links rewritten so that each
+  one resolves inside your repository: to the installed copy when every
+  install carries it, otherwise to an absolute GitHub URL pinned to the
+  installing release's tag.
 
 The `preserved` array in `upgrade --dry-run --json` is the authoritative answer
 to "what will you leave alone", and it is worth reading before a large upgrade.

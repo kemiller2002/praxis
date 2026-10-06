@@ -48,13 +48,15 @@
       "source": "starter/greenfield/gitattributes.template",
       "destination": ".gitattributes",
       "template": false,
-      "policy": "preserve-existing"
+      "policy": "preserve-existing",
+      "ensureLines": ["praxis.cmd text eol=crlf", "ros.cmd text eol=crlf"]
     },
     {
       "source": "starter/project-administration/gitignore.template",
       "destination": ".gitignore",
       "template": false,
-      "policy": "preserve-existing"
+      "policy": "preserve-existing",
+      "ensureLines": [".ros/locks/"]
     },
     {
       "source": "starter/greenfield/praxis",

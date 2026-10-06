@@ -103,4 +103,36 @@ module PremergeReleaseTests =
                   // matches and the dispatched native release fails the check above.
                   let bump = readRepositoryFile "scripts/praxis-release-bump.sh"
                   contains "\".echelon/toolchain.json\"" bump "version bump rewrites the pin"
-                  contains "git add release.json .echelon/toolchain.json .ros" bump "version bump commits the pin" } ]
+                  contains "git add release.json .echelon/toolchain.json .ros" bump "version bump commits the pin" }
+
+          { Name = "fence release: the version bump and remote enablement stamp work transitions with real millisecond timestamps"
+            Run =
+              fun () ->
+                  // A whole-second stamp can predate the execution `work start`
+                  // opened moments earlier in the same second, and validation
+                  // then rejects the checkpoint as dated before its execution
+                  // started (ordo#54).
+                  for script in [ "scripts/praxis-release-bump.sh"; "scripts/praxis-remote-enable.sh" ] do
+                      let definition =
+                          (readRepositoryFile script).Split '\n'
+                          |> Array.tryFind (fun line -> line.StartsWith "now()")
+                          |> Option.defaultWith (fun () -> failwith $"no now() in {script}")
+
+                      let info = System.Diagnostics.ProcessStartInfo("bash", RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false)
+                      info.ArgumentList.Add "-c"
+                      info.ArgumentList.Add(definition + "\nfor _ in 1 2 3 4; do now; sleep 0.02; done")
+                      use proc = System.Diagnostics.Process.Start info
+                      let output = proc.StandardOutput.ReadToEnd()
+                      proc.WaitForExit()
+                      Assert.equal 0 proc.ExitCode
+
+                      let stamps = output.Split('\n', System.StringSplitOptions.RemoveEmptyEntries) |> List.ofArray
+                      Assert.equal 4 stamps.Length
+
+                      for stamp in stamps do
+                          Assert.isTrue (Regex.IsMatch(stamp, @"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$")) $"not a millisecond UTC timestamp: {stamp}"
+
+                      // Calls 20ms apart must be distinct and ordered, which a
+                      // whole-second clock padded with .000 cannot be.
+                      for earlier, later in List.pairwise stamps do
+                          Assert.isTrue (System.String.CompareOrdinal(earlier, later) < 0) $"timestamps must strictly increase: {earlier} then {later}" } ]

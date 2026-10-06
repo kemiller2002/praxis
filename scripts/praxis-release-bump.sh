@@ -16,7 +16,9 @@
 set -euo pipefail
 
 usage() { echo "usage: $0 patch|minor|major|X.Y.Z" >&2; exit 2; }
-now() { date -u +%Y-%m-%dT%H:%M:%S.000Z; }
+# Millisecond precision: a whole-second timestamp can predate the execution
+# that `work start` opened moments earlier, which validation rejects.
+now() { python3 -c 'from datetime import datetime, timezone; print(datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"))'; }
 fail() { echo "ERROR $*" >&2; exit 1; }
 
 [ "$#" -eq 1 ] || usage

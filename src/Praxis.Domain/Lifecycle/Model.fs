@@ -81,7 +81,12 @@ type PayloadEntry =
       /// other byte the repository chose. Such content may replace a shared
       /// file that diverges from the seed, because it carries the
       /// repository's edits with it.
-      MergedFromRepository: bool }
+      MergedFromRepository: bool
+      /// False for a file the installation does not own and never records,
+      /// of which the tool keeps only one field current when the repository
+      /// has it (today: the `praxis` entry of `.echelon/foundations.json`).
+      /// It is planned and written like any other merged file.
+      Recorded: bool }
 
 /// One file a previous installation recorded in `.echelon/ros.json`.
 type RecordedArtifact =

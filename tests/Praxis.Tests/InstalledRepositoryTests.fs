@@ -67,7 +67,9 @@ module InstalledRepositoryTests =
                     CliHarness.write root "AGENTS.md" "user work\n"
                     init root [ "--project"; "Communication Engineering" ]
                     Assert.equal "existing project readme\n" (CliHarness.read root "README.md")
-                    Assert.equal "* text=auto\n" (CliHarness.read root ".gitattributes")
+                    // The repository's own attributes are kept; only the rules
+                    // the byte-verified CRLF launchers need are appended.
+                    Assert.equal "* text=auto\npraxis.cmd text eol=crlf\nros.cmd text eol=crlf\n" (CliHarness.read root ".gitattributes")
                     Assert.equal "user work\n" (CliHarness.read root "AGENTS.md")
 
                     let readme =

@@ -251,7 +251,7 @@ module Installation =
 
         let files = JsonArray()
 
-        for file in payload.Files do
+        for file in payload.Files |> List.filter (fun file -> file.Entry.Recorded) do
             let preexisting = Map.tryFind file.Entry.Path observed.Files
             let preserved = file.Entry.Ownership = Ownership.UserOwned && preexisting.IsSome
             let entry = JsonObject()
@@ -294,7 +294,7 @@ module Installation =
         let workItem = $"""ROS-INSTALL-{payload.PackageVersion.Replace(".", "-")}"""
 
         let paths =
-            (Planning.LegacyManifestPath :: (payload.Files |> List.map (fun file -> file.Entry.Path)))
+            (Planning.LegacyManifestPath :: (payload.Files |> List.filter (fun file -> file.Entry.Recorded) |> List.map (fun file -> file.Entry.Path)))
             |> List.sortWith (fun a b -> String.CompareOrdinal(a, b))
 
         let evidence =
