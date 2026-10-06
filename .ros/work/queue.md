@@ -70,23 +70,29 @@
 | PRAXIS-CONT-12 | work checkpoint attributes every meaningful path since the previous checkpoint to the checkpointing item, regardless of which work item produced it | complete | continuity, gh-90 | medium |
 | PRAXIS-DIST-NATIVE-DOTNET-TOOL | Retire npm distribution; ship native bundles and a .NET global tool | complete | distribution | high |
 | PRAXIS-EXEC-01 | Bind an execution envelope to every governed work execution (PRX-EXEC-030, 014, 055, 026, 053, 041) | ready | execution, binding | high |
-| PRAXIS-EXEC-02 | Governed evaluation runner and attributed receipts (PRX-VER-001, 002, PRX-EXEC-024, PRX-REC-007) | ready | execution, evaluation | high |
+| PRAXIS-EXEC-02 | Governed evaluation runner and attributed receipts (PRX-VER-001, 002, PRX-EXEC-024, PRX-REC-007) | active | execution, evaluation | high |
 | PRAXIS-EXEC-03 | Role-specific launchers and repository execution policy (PRX-EXEC-005, 040, 041, 042, 010) | ready | execution, launchers | medium |
 | PRAXIS-EXEC-04 | Host containment profile and enforcement evidence (PRX-SEC-001, 003, 010, 011, 013, 014) | ready | execution, containment | medium |
 | PRAXIS-EXEC-05 | Local control-plane execution API in web serve (PRX-CTL-001, 003, 005, 006, 011, 012, PRX-UI-008) | ready | execution, control-plane | high |
 | PRAXIS-EXEC-06 | Operator UI execution views with legal actions and human-required boundaries (PRX-UI-001, 004, 007, 020, 021, 026) | ready | execution, operator-ui | high |
 | PRAXIS-EXEC-07 | Execution runtime docs and requirement status per row (EXECUTION-ORCHESTRATION status, docs/execution-runtime.md) | ready | execution, docs | medium |
 | PRAXIS-EXEC-08 | Consume the Ordo execution contract instead of a local copy of role, boundary and evaluator semantics (PRX-EXEC-002, PRX-ARCH-001, PRX-VER-010, PRX-BND-001, PRX-SEQ-003) | captured | execution, ordo | low |
+| PRAXIS-FND-01 | ORDO-CORE-PACKAGE: consume Ordo.Core as a pinned released package for execution roles, capabilities, mutation-boundary and evaluator semantics (PRX-EXEC-002, PRX-ARCH-001) | active | ordo, group:GROUP-FND-ORDO | high |
+| PRAXIS-FND-02 | Accept the mutation boundary and evaluator closure from the governing Ordo execution contract (PRX-BND-001, PRX-SEQ-003, PRX-VER-010) | ready | ordo, execution, group:GROUP-FND-ORDO | high |
+| PRAXIS-FND-03 | Declare Praxis's own shared foundations and make foundations verify evidence them (SAF-DEP-1, SAF-DEP-2) | ready | foundations, group:GROUP-FND-FOUNDATIONS | high |
+| PRAXIS-FND-04 | Classify operational failures with Aegis at Praxis's Git, process, filesystem, network and web boundaries, with redaction and sink tests (SAF-AEGIS-1, SAF-AEGIS-5, SAF-AEGIS-6) | active | foundations, aegis, group:GROUP-FND-FOUNDATIONS | high |
+| PRAXIS-FND-05 | Present praxis web serve and hub serve with a pinned Forma release instead of local CSS (SAF-FORMA-1, 2, 5, 6; PRX-UI-030, PRX-UI-031) | ready | foundations, forma, web, group:GROUP-FND-FOUNDATIONS | high |
+| PRAXIS-FND-06 | Ingest Tutela security assessments and query security metrics over time with repository, ref and time provenance (TUT-1, TUT-2, TUT-3) | ready | tutela, telemetry | medium |
 | PRAXIS-GROUP-01 | praxis work group create: durable human-declared execution group | complete | work-group, cli | low |
 | PRAXIS-GROUP-02 | praxis work group show: a declared group with member states and progress | complete | work-group, cli | low |
 | PRAXIS-GROUP-03 | praxis work group add: add a member to a declared group | complete | work-group, cli | low |
 | PRAXIS-GROUP-04 | praxis work group remove: remove a member from a declared group | complete | work-group, cli | low |
 | PRAXIS-GROUP-05 | praxis work group checkpoint: a group checkpoint over members' own checkpoints | complete | work-group, cli | low |
 | PRAXIS-GROUP-06 | Phase-two work groups: grouped arm as base with the control arm's strengths ported | complete | work-group, cli | low |
-| PRAXIS-GROUP-07 | First-class cross-repository groups: GROUP-ECHELON IDs, home record, member references, derived status, cross-repo order (PRX-GRP-100..109) | captured | grouping | medium |
-| PRAXIS-GROUP-08 | Group command surface: work group list, idempotent mutations, append-only audit, versioned contracts, derived completion (PRX-GRP-110..116) | captured | grouping | high |
-| PRAXIS-GROUP-09 | plan execute-group and grouped execution by default for qualifying high-affinity groups (PRX-GRP-117, 130..132, 136..137) | captured | grouping | high |
-| PRAXIS-GROUP-10 | Grouped-execution completion gates: machine-checkable reuse inventory and per-criterion verification (PRX-GRP-133..135, 040, 045) | captured | grouping | high |
+| PRAXIS-GROUP-07 | First-class cross-repository groups: GROUP-ECHELON IDs, home record, member references, derived status, cross-repo order (PRX-GRP-100..109) | ready | grouping | medium |
+| PRAXIS-GROUP-08 | Group command surface: work group list, idempotent mutations, append-only audit, versioned contracts, derived completion (PRX-GRP-110..116) | complete | grouping | high |
+| PRAXIS-GROUP-09 | plan execute-group and grouped execution by default for qualifying high-affinity groups (PRX-GRP-117, 130..132, 136..137) | ready | grouping | high |
+| PRAXIS-GROUP-10 | Grouped-execution completion gates: machine-checkable reuse inventory and per-criterion verification (PRX-GRP-133..135, 040, 045) | ready | grouping | high |
 | PRAXIS-INTERNAL-NAMESPACES | Migrate internal Ros.* projects, namespaces, assemblies and Ros.slnx to Praxis.* (deferred from PRAXIS-CLI-RENAME, DF-ROS-2026-A043) | complete | rename, follow-up | low |
 | PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | abandoned | rename, gh-90 | low |
 | PRAXIS-PLAN-01 | Deterministic shadow planner: praxis plan analyze/simulate/compare/explain (PRX-PLAN-001..182) | complete | planning, architecture, cli | high |
@@ -98,7 +104,7 @@
 | PRAXIS-PLAN-07 | Reconcile PR #130 (PGEI) with main after the A021 results | complete | planning, grouping | medium |
 | PRAXIS-PLAN-08 | Land the EX-ROS-2026-A021 evaluation kit and second blind evaluation on main | complete | planning, grouping | medium |
 | PRAXIS-PLAN-09 | Grouped-work requirements v2: cross-repository groups, mutation commands, grouped-by-default execution, context and cost measurement (DF-ROS-2026-A053) | complete | planning,grouping,requirements | high |
-| PRAXIS-PLAN-10 | Measure context reuse and cost for grouped work and price it in the planner (PRX-GRP-150..158) | captured | grouping | medium |
+| PRAXIS-PLAN-10 | Measure context reuse and cost for grouped work and price it in the planner (PRX-GRP-150..158) | ready | grouping | medium |
 | PRAXIS-PLAN-11 | Review grouped-by-default at its trigger and roll back if a threshold is crossed (PRX-GRP-138) | captured | grouping | low |
 | PRAXIS-PLAN-EXP-01 | Run grouping experiment EX-ROS-2026-A021: control arm, grouped arm, blind evaluation, telemetry comparison | complete | planning, experiment | medium |
 | PRAXIS-PLAN-EXP-02 | Preserve A021 R2 replication and pre-register the affinity falsification experiment | complete | planning,experiment | medium |

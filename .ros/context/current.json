@@ -6592,6 +6592,117 @@
       "completedAt": "2026-10-06T19:50:10.000Z"
     },
     {
+      "id": "PRAXIS-FND-01",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-06T20:39:28.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T203928979Z-8000c1f2"
+      ],
+      "latestCheckpoint": {
+        "id": "63732bcf8fcf20dccaae3004",
+        "recordedAt": "2026-10-06T20:39:43.000Z",
+        "executionId": "EXE-20261006T203928979Z-8000c1f2",
+        "repository": "repository-operating-system",
+        "branch": "fnd/work-items",
+        "commit": "8e2a3cbd7cc7fe308e1ca35043258b928769bbd9",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "fnd/work-items",
+        "remoteCommit": "8e2a3cbd7cc7fe308e1ca35043258b928769bbd9",
+        "summary": "Captured PRAXIS-FND-01..06 and committed the group analyses",
+        "nextAction": "Implement per docs/groups order",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
+    },
+    {
+      "id": "PRAXIS-FND-04",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-06T20:39:28.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T203929690Z-5e05ecd4"
+      ],
+      "latestCheckpoint": {
+        "id": "e652c2643e30c98917a3be0a",
+        "recordedAt": "2026-10-06T20:39:46.000Z",
+        "executionId": "EXE-20261006T203929690Z-5e05ecd4",
+        "repository": "repository-operating-system",
+        "branch": "fnd/work-items",
+        "commit": "8e2a3cbd7cc7fe308e1ca35043258b928769bbd9",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "fnd/work-items",
+        "remoteCommit": "8e2a3cbd7cc7fe308e1ca35043258b928769bbd9",
+        "summary": "Captured PRAXIS-FND-01..06 and committed the group analyses",
+        "nextAction": "Implement per docs/groups order",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
+    },
+    {
+      "id": "PRAXIS-GROUP-08",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Cli/WorkGroupListCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/WorkGroupTests.fs"
+        },
+        {
+          "type": "group-analysis",
+          "path": "research/groups/GROUP-PRAXIS-GROUPING-001/group-analysis.json"
+        },
+        {
+          "type": "group-verification",
+          "path": "research/groups/GROUP-PRAXIS-GROUPING-001/group-verification-PRAXIS-GROUP-08.json"
+        }
+      ],
+      "updatedAt": "2026-10-06T20:44:18.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T201004081Z-5d1f4933"
+      ],
+      "latestCheckpoint": {
+        "id": "17cdad5fda9c0779effb3997",
+        "recordedAt": "2026-10-06T20:44:11.000Z",
+        "executionId": "EXE-20261006T201004081Z-5d1f4933",
+        "repository": "repository-operating-system",
+        "branch": "group/08-command-surface",
+        "commit": "162e029143df71d3ca30dbd7ecb52e31f98d3f46",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "group/08-command-surface",
+        "remoteCommit": "162e029143df71d3ca30dbd7ecb52e31f98d3f46",
+        "summary": "PRAXIS-GROUP-08 implemented and verified (full suite 1463/1463)",
+        "nextAction": "Complete PRAXIS-GROUP-08; merge PR #178; continue with PRAXIS-GROUP-07",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-06T20:44:18.000Z"
+    },
+    {
       "id": "PRAXIS-EXEC-02",
       "type": "feature",
       "state": "active",
@@ -6605,7 +6716,7 @@
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-06T20:37:33.000Z",
+  "updatedAt": "2026-10-06T20:44:18.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
