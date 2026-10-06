@@ -44,7 +44,9 @@ module ArtifactPolicy =
               "MS", Set.ofList [ "proposed"; "approved"; "active"; "blocked"; "completed"; "cancelled"; "archived" ]
               "RP", Set.ofList [ "draft"; "review"; "accepted"; "canonical"; "deprecated"; "archived"; "superseded"; "withdrawn" ]
               "TH", Set.ofList [ "candidate"; "supported"; "established"; "challenged"; "superseded"; "rejected" ]
-              "RQ", Set.ofList [ "draft"; "proposed"; "accepted"; "implemented"; "verified"; "deprecated"; "superseded"; "rejected" ] ]
+              "RQ", Set.ofList [ "draft"; "proposed"; "accepted"; "implemented"; "verified"; "deprecated"; "superseded"; "rejected" ]
+              "CN", Set.ofList [ "draft"; "review"; "accepted"; "superseded"; "withdrawn" ]
+              "GL", Set.ofList [ "draft"; "review"; "accepted"; "superseded"; "withdrawn" ] ]
 
     let private confidenceLabels =
         Set.ofList [ "very-low"; "low"; "medium"; "medium-high"; "high"; "very-high" ]

@@ -34,10 +34,13 @@ replaceable projections.
 - Inbound: artifact front matter, `./praxis validate [--json]`, and
   `./praxis registry build|check`.
 - Outbound: findings on stdout/stderr, process exit status, eight managed
-  registry JSON files, and the optional `registries/requirements.json` for
-  requirement records (`RQ-`, `research/requirements/`). That registry is
-  written only once a requirement exists, so upgraded repositories are not
-  made stale. Artifact `provenance` blocks are owned by
+  registry JSON files, and the optional registries
+  `registries/requirements.json` (`RQ-`, `research/requirements/`),
+  `registries/concepts.json` (`CN-`, `research/concepts/`) and
+  `registries/glossary.json` (`GL-`, `research/glossary/`). An optional
+  registry is written only once a record of its kind exists, so upgraded
+  repositories are not made stale. The kinds, root directories and lifecycles
+  are listed in `framework/standards/IDENTIFIERS.md`. Artifact `provenance` blocks are owned by
   `docs/features/agent-provenance/manifest.md`.
 
 ## Tests and verification

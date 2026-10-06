@@ -1,7 +1,7 @@
 # Artifact Lifecycle Protocol
 
 **Status:** Canonical  
-**Version:** 1.0.0
+**Version:** 1.1.0
 
 ## Purpose
 
@@ -10,7 +10,8 @@ completion, and publication tier.
 
 ## Research artifacts
 
-Research artifacts use:
+Research artifacts — Decision Records (`DF-`), Evidence (`EV-`), Concepts
+(`CN-`) and Glossary entries (`GL-`) — use:
 
 ```text
 draft -> review -> accepted -> superseded | withdrawn

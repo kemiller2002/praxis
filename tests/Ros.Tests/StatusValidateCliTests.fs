@@ -219,6 +219,42 @@ module StatusValidateCliTests =
                       let text = validate root []
                       Assert.equal (expected.["textStatus"].GetValue<int>()) text.Exit
                       Assert.equal (expected.["textStdout"].GetValue<string>()) text.Out
-                      Assert.equal (expected.["textStderr"].GetValue<string>()) text.Err) } ]
+                      Assert.equal (expected.["textStderr"].GetValue<string>()) text.Err) }
+
+          { Name = "validate and registry commands govern concept and glossary records like other artifact kinds"
+            Run =
+              fun () ->
+                  withValidateRepository (fun root ->
+                      let conceptPath = "research/concepts/CN-TEST-2026-A001--term-boundary.md"
+                      let glossaryPath = "research/glossary/GL-TEST-2026-A002--glossary-entry.md"
+
+                      CliHarness.write
+                          root
+                          conceptPath
+                          "---\nid: CN-TEST-2026-A001\ntitle: Term boundary\nstatus: established\ncreated: 2026-10-01\nrelated_documents: [GL-TEST-2026-FFFF]\n---\nBody.\n"
+
+                      CliHarness.write root glossaryPath "---\nid: GL-TEST-2026-A002\ntitle: Glossary entry\nstatus: draft\n---\nBody.\n"
+
+                      let findingsAt path =
+                          CliGolden.items (validateJson root).["findings"]
+                          |> List.filter (fun finding -> finding.["path"].GetValue<string>() = path)
+                          |> List.map (fun finding -> finding.["field"].GetValue<string>(), finding.["message"].GetValue<string>())
+
+                      let concept = findingsAt conceptPath
+                      let has field (fragment: string) = concept |> List.exists (fun (actual, message) -> actual = field && message.Contains(fragment, StringComparison.Ordinal))
+                      Assert.isTrue (has "status" "'established' is not allowed for CN") $"status finding missing: {concept}"
+                      Assert.isTrue (has "related_documents" "broken reference 'GL-TEST-2026-FFFF'") $"reference finding missing: {concept}"
+                      Assert.isTrue (has "provenance" "records no provenance") $"provenance finding missing: {concept}"
+
+                      let registry = CliHarness.ros root [ "registry"; "check" ]
+                      Assert.isTrue (registry.Exit <> 0) "registry check must report the missing concept and glossary registries"
+                      CliGolden.contains "registries/concepts.json" (registry.Out + registry.Err)
+                      CliGolden.contains "registries/glossary.json" (registry.Out + registry.Err)
+
+                      CliGolden.expectExit 0 (CliHarness.ros root [ "registry"; "build" ])
+                      Assert.isTrue (File.Exists(Path.Combine(root, "registries", "concepts.json"))) "concept registry written"
+                      Assert.isTrue (File.Exists(Path.Combine(root, "registries", "glossary.json"))) "glossary registry written"
+                      CliGolden.expectExit 0 (CliHarness.ros root [ "registry"; "check" ])
+                      CliGolden.contains "GL-TEST-2026-A002" (File.ReadAllText(Path.Combine(root, "registries", "glossary.json")))) } ]
 
     let tests = statusTests @ validateTests

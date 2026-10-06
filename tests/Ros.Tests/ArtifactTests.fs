@@ -101,6 +101,62 @@ module ArtifactTests =
                     [ "id", ArtifactValue.Text "REP-NHEA-2026-001"
                       "title", ArtifactValue.Text "Legacy non-human evidence package" ] } ]
 
+    /// Runs `operation` against an empty temporary repository holding the
+    /// given `(relativePath, content)` files, and always removes it.
+    let private withRepository (files: (string * string) list) operation =
+        let temporary = Path.Combine(Path.GetTempPath(), $"ros-fsharp-{Guid.NewGuid():N}")
+
+        try
+            files
+            |> List.iter (fun (relativePath, content) ->
+                let file = Path.Combine(temporary, relativePath)
+                Directory.CreateDirectory(Path.GetDirectoryName file) |> ignore
+                File.WriteAllText(file, content))
+
+            operation temporary
+        finally
+            if Directory.Exists temporary then Directory.Delete(temporary, true)
+
+    let private artifactText (fields: (string * string) list) =
+        let lines = fields |> List.map (fun (field, value) -> $"{field}: {value}") |> String.concat "\n"
+        $"---\n{lines}\n---\n\n# Body\n"
+
+    let private conceptPath = "research/concepts/CN-TEST-2026-A001--registry-projection.md"
+    let private glossaryPath = "research/glossary/GL-TEST-2026-A002--canonical-record.md"
+
+    let private conceptAndGlossary =
+        [ conceptPath,
+          artifactText
+              [ "id", "CN-TEST-2026-A001"
+                "title", "Registry projection"
+                "status", "accepted"
+                "related_documents", "[GL-TEST-2026-A002]" ]
+          glossaryPath,
+          artifactText [ "id", "GL-TEST-2026-A002"; "title", "Canonical record"; "status", "draft" ] ]
+
+    let private configurationFor prefix =
+        ArtifactKinds.configurations |> List.find (fun configuration -> configuration.IdentifierPrefix = prefix)
+
+    let private completedBuild repository =
+        match ArtifactOperations.buildRegistries false repository with
+        | RegistryBuildOutcome.Completed changes -> changes
+        | outcome -> failwith $"Expected completed build, received {outcome}"
+
+    let private registryCheck repository =
+        match ArtifactOperations.checkRegistries repository with
+        | RegistryCheckOutcome.Completed findings -> findings
+        | outcome -> failwith $"Expected completed check, received {outcome}"
+
+    let private findingsAt path (findings: ArtifactFinding list) =
+        findings |> List.filter (fun finding -> finding.Path = path) |> List.map (fun finding -> finding.Field, finding.Message)
+
+    let private starterManifestDestinations profile =
+        use document = JsonDocument.Parse(File.ReadAllText(Path.Combine(root (), "starter", profile, "manifest.json")))
+
+        document.RootElement.GetProperty("files").EnumerateArray()
+        |> Seq.map (fun entry -> entry.GetProperty("destination").GetString())
+        |> Seq.toList
+
     let tests =
         [ { Name = "legacy research-package identifiers remain valid without widening other artifact kinds"
             Run = fun () ->
@@ -125,6 +181,149 @@ module ArtifactTests =
                 let messages = ArtifactPolicy.validate [] [ lineBroken ] |> List.map (fun finding -> finding.Message)
                 Assert.isTrue (messages |> List.contains "invalid identifier 'RP-EDF-2026-002\n'") "expected the identifier finding"
                 Assert.isTrue (messages |> List.contains "filename must start with 'RP-EDF-2026-002\n--'") "the legacy name rule must not apply" }
+          { Name = "concept and glossary are artifact kinds with their own root directory and optional registry"
+            Run = fun () ->
+                let concept = configurationFor "CN"
+                let glossary = configurationFor "GL"
+                Assert.equal (ArtifactKind.Concept, "research/concepts", "registries/concepts.json", true)
+                    (concept.Kind, concept.SourceDirectory, concept.RegistryPath, concept.OptionalRegistry)
+                Assert.equal (ArtifactKind.Glossary, "research/glossary", "registries/glossary.json", true)
+                    (glossary.Kind, glossary.SourceDirectory, glossary.RegistryPath, glossary.OptionalRegistry)
+                Assert.equal (Some ArtifactKind.Concept) (ArtifactKinds.tryFindByIdentifier "CN-TEST-2026-A001" |> Option.map _.Kind)
+                Assert.equal (Some ArtifactKind.Glossary) (ArtifactKinds.tryFindByIdentifier "GL-TEST-2026-A002" |> Option.map _.Kind)
+
+                let distinct project = ArtifactKinds.configurations |> List.map project |> List.distinct |> List.length
+                let count = ArtifactKinds.configurations.Length
+                Assert.equal (count, count, count) (distinct _.IdentifierPrefix, distinct _.SourceDirectory, distinct _.RegistryPath) }
+          { Name = "concept and glossary records are discovered, validated and projected into their registries"
+            Run = fun () ->
+                withRepository conceptAndGlossary (fun repository ->
+                    let artifacts = FileArtifactRepository.create repository
+                    artifactFindings artifacts |> Assert.empty
+
+                    let written = completedBuild artifacts |> List.map _.Path |> List.sort
+                    Assert.equal [ "registries/concepts.json"; "registries/glossary.json" ] (written |> List.filter (fun path -> path.Contains "concepts" || path.Contains "glossary"))
+
+                    let registry name = JsonDocument.Parse(File.ReadAllText(Path.Combine(repository, "registries", name)))
+                    use concepts = registry "concepts.json"
+                    use glossary = registry "glossary.json"
+
+                    let entries (document: JsonDocument) =
+                        document.RootElement.EnumerateArray()
+                        |> Seq.map (fun entry -> entry.GetProperty("id").GetString(), entry.GetProperty("path").GetString())
+                        |> Seq.toList
+
+                    Assert.equal [ "CN-TEST-2026-A001", conceptPath ] (entries concepts)
+                    Assert.equal [ "GL-TEST-2026-A002", glossaryPath ] (entries glossary)
+                    Assert.equal 0 (completedBuild artifacts).Length
+                    registryCheck artifacts |> Assert.empty) }
+          { Name = "registry check reports a stale or missing concept or glossary registry once records exist"
+            Run = fun () ->
+                withRepository conceptAndGlossary (fun repository ->
+                    let artifacts = FileArtifactRepository.create repository
+                    completedBuild artifacts |> ignore
+                    File.WriteAllText(Path.Combine(repository, "registries", "concepts.json"), "[]\n")
+                    File.Delete(Path.Combine(repository, "registries", "glossary.json"))
+
+                    let stale = registryCheck artifacts |> List.map (fun finding -> finding.Path, finding.Message)
+
+                    Assert.equal
+                        [ "registries/concepts.json", "registry is stale; run 'praxis registry build'"
+                          "registries/glossary.json", "registry is stale; run 'praxis registry build'" ]
+                        stale) }
+          { Name = "a repository without concept or glossary records needs no concept or glossary registry"
+            Run = fun () ->
+                withRepository [ validDocument.RelativePath, artifactText [ "id", "EV-TEST-2026-A001"; "title", "Example"; "status", "accepted" ] ] (fun repository ->
+                    let artifacts = FileArtifactRepository.create repository
+                    let written = completedBuild artifacts |> List.map _.Path
+                    Assert.isTrue (not (written |> List.exists (fun path -> path.Contains "concepts" || path.Contains "glossary"))) $"unexpected registries: {written}"
+                    registryCheck artifacts |> Assert.empty) }
+          { Name = "concept and glossary records get the identifier, filename, status, reference and supersession checks"
+            Run = fun () ->
+                let files =
+                    [ "research/concepts/CN-TEST-2026-B001--bad-status.md",
+                      artifactText [ "id", "CN-TEST-2026-B001"; "title", "Bad status"; "status", "established"; "supports", "[GL-TEST-2026-FFFF]" ]
+                      "research/concepts/wrong-name.md", artifactText [ "id", "CN-TEST-2026-B002"; "title", "Wrong name" ]
+                      "research/glossary/GL-TEST-2026-B003--one.md", artifactText [ "id", "GL-TEST-2026-B003"; "title", "One"; "status", "withdrawn" ]
+                      "research/glossary/GL-TEST-2026-B003--two.md", artifactText [ "id", "GL-TEST-2026-B003"; "title", "Two" ]
+                      "research/glossary/GL-bad--term.md", artifactText [ "id", "GL-bad"; "title", "Bad identifier" ]
+                      "research/glossary/GL-TEST-2026-B004--no-title.md", artifactText [ "id", "GL-TEST-2026-B004"; "status", "review" ]
+                      "research/glossary/GL-TEST-2026-B005--newer.md",
+                      artifactText [ "id", "GL-TEST-2026-B005"; "title", "Newer"; "status", "accepted"; "supersedes", "[GL-TEST-2026-B006]" ]
+                      "research/glossary/GL-TEST-2026-B006--older.md",
+                      artifactText [ "id", "GL-TEST-2026-B006"; "title", "Older"; "status", "superseded" ] ]
+
+                withRepository files (fun repository ->
+                    let findings = FileArtifactRepository.create repository |> artifactFindings
+                    let duplicate = "duplicate 'GL-TEST-2026-B003' also in research/glossary/GL-TEST-2026-B003--one.md, research/glossary/GL-TEST-2026-B003--two.md"
+
+                    Assert.equal
+                        [ "status", "'established' is not allowed for CN"; "supports", "broken reference 'GL-TEST-2026-FFFF'" ]
+                        (findingsAt "research/concepts/CN-TEST-2026-B001--bad-status.md" findings)
+                    Assert.equal [ "id", "filename must start with 'CN-TEST-2026-B002--'" ] (findingsAt "research/concepts/wrong-name.md" findings)
+                    Assert.equal [ "id", duplicate ] (findingsAt "research/glossary/GL-TEST-2026-B003--one.md" findings)
+                    Assert.equal [ "id", duplicate ] (findingsAt "research/glossary/GL-TEST-2026-B003--two.md" findings)
+                    Assert.equal [ "id", "invalid identifier 'GL-bad'" ] (findingsAt "research/glossary/GL-bad--term.md" findings)
+                    Assert.equal [ "title", "required field is missing" ] (findingsAt "research/glossary/GL-TEST-2026-B004--no-title.md" findings)
+                    Assert.equal [ "supersedes", "'GL-TEST-2026-B006' is not reciprocal" ] (findingsAt "research/glossary/GL-TEST-2026-B005--newer.md" findings)
+                    Assert.empty (findingsAt "research/glossary/GL-TEST-2026-B006--older.md" findings)) }
+          { Name = "concept and glossary statuses follow the research artifact lifecycle"
+            Run = fun () ->
+                let lifecycle = [ "draft"; "review"; "accepted"; "superseded"; "withdrawn" ]
+
+                let statusFindings prefix status =
+                    { RelativePath = $"research/x/{prefix}-TEST-2026-A001--x.md"
+                      FileName = $"{prefix}-TEST-2026-A001--x.md"
+                      Metadata =
+                        Map.ofList
+                            [ "id", ArtifactValue.Text $"{prefix}-TEST-2026-A001"
+                              "title", ArtifactValue.Text "X"
+                              "status", ArtifactValue.Text status ] }
+                    |> List.singleton
+                    |> ArtifactPolicy.validate []
+
+                [ "CN"; "GL" ]
+                |> List.iter (fun prefix ->
+                    lifecycle |> List.iter (fun status -> statusFindings prefix status |> Assert.empty)
+
+                    Assert.equal
+                        [ $"'proposed' is not allowed for {prefix}" ]
+                        (statusFindings prefix "proposed" |> List.map _.Message)) }
+          { Name = "starter scaffolds agree with the artifact kinds they enumerate"
+            Run = fun () ->
+                let mandatoryRegistries =
+                    ArtifactKinds.configurations
+                    |> List.filter (fun configuration -> not configuration.OptionalRegistry)
+                    |> List.map _.RegistryPath
+                    |> Set.ofList
+
+                let kindDirectories = ArtifactKinds.configurations |> List.map _.SourceDirectory |> Set.ofList
+
+                [ "greenfield"; "project-administration" ]
+                |> List.iter (fun profile ->
+                    let destinations = starterManifestDestinations profile
+
+                    let registries =
+                        destinations
+                        |> List.filter (fun destination -> destination.StartsWith("registries/", StringComparison.Ordinal))
+                        |> Set.ofList
+
+                    Assert.equal mandatoryRegistries registries
+
+                    let scaffolded =
+                        destinations
+                        |> List.filter (fun destination -> destination.StartsWith("research/", StringComparison.Ordinal) && destination.EndsWith("/.gitkeep", StringComparison.Ordinal))
+                        |> List.map (fun destination -> destination[.. destination.Length - "/.gitkeep".Length - 1])
+                        |> Set.ofList
+
+                    Assert.isTrue (Set.isSubset scaffolded kindDirectories) $"{profile} scaffolds non-kind directories: {Set.difference scaffolded kindDirectories}")
+
+                let starterRegistryFiles =
+                    Directory.EnumerateFiles(Path.Combine(root (), "starter", "greenfield", "registries"), "*.json")
+                    |> Seq.map (fun file -> $"registries/{Path.GetFileName file}")
+                    |> Set.ofSeq
+
+                Assert.equal mandatoryRegistries starterRegistryFiles }
           { Name = "valid fixture passes typed artifact validation"
             Run = fun () ->
                 withFixture "valid-all-kinds" (fun fixture ->

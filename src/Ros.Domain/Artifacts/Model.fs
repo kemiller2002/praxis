@@ -50,6 +50,8 @@ type ArtifactKind =
     | ResearchPackage
     | Theory
     | Requirement
+    | Concept
+    | Glossary
 
 type ArtifactKindConfiguration =
     { Kind: ArtifactKind
@@ -118,6 +120,18 @@ module ArtifactKinds =
             SourceDirectory = "research/requirements"
             RegistryPath = "registries/requirements.json"
             IdentifierPrefix = "RQ"
+            OptionalRegistry = true }
+          { Kind = ArtifactKind.Concept
+            Name = "concepts"
+            SourceDirectory = "research/concepts"
+            RegistryPath = "registries/concepts.json"
+            IdentifierPrefix = "CN"
+            OptionalRegistry = true }
+          { Kind = ArtifactKind.Glossary
+            Name = "glossary"
+            SourceDirectory = "research/glossary"
+            RegistryPath = "registries/glossary.json"
+            IdentifierPrefix = "GL"
             OptionalRegistry = true } ]
 
     let identifierPrefix (identifier: string) =
