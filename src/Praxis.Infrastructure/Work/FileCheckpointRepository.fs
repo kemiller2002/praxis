@@ -262,6 +262,26 @@ module FileCheckpointRepository =
                 | [ view ] -> ExecutionObservation.Resolved(view.ExecutionId, steps view.ExecutionId)
                 | many -> ExecutionObservation.Ambiguous(many |> List.map _.ExecutionId)
 
+    /// The caller's own active execution of any work item, selected by the
+    /// same evidence `resolveExecution` requires for an implicit choice.
+    /// Group history records it when there is exactly one (PRX-GRP-113).
+    let resolveCallerExecution (root: string) (overrides: IdentityInputs) : ExecutionObservation =
+        match FileTelemetryExecutionRepository.resolveIdentity overrides with
+        | Error message -> ExecutionObservation.Refused message
+        | Ok(actor, _, _) when not (ActorResolution.isDeclared actor) -> ExecutionObservation.NoneActive
+        | Ok(actor, identity, _) ->
+            let candidates =
+                FileProvenanceRepository.readExecutions root
+                |> List.filter (fun view -> view.Status = "active")
+                |> List.filter (fun view ->
+                    ActorResolution.mayContinue actor identity view.Actor view.Identity
+                    && ActorResolution.evidentlySameRun actor identity view.Actor view.Identity)
+
+            match candidates with
+            | [] -> ExecutionObservation.NoneActive
+            | [ view ] -> ExecutionObservation.Resolved(view.ExecutionId, [])
+            | many -> ExecutionObservation.Ambiguous(many |> List.map _.ExecutionId |> List.sort)
+
     /// The content-addressed event, built exactly like every other work
     /// event: the hash covers every field before `eventId`.
     let eventNode
