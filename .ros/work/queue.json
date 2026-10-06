@@ -4155,10 +4155,10 @@
         "lifecycle"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T11:04:32.113Z",
-      "updatedAt": "2026-10-06T11:04:32.000Z",
+      "updatedAt": "2026-10-06T11:17:34.000Z",
       "createdBy": "anthropic/claude-code",
       "createdByActor": {
         "kind": "agent",
