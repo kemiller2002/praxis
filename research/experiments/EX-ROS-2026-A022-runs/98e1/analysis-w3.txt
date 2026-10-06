@@ -173,3 +173,21 @@ Python oracle tests (`python3 -m unittest discover -s tests`) re-run.
    policy is enabled: surfaces as `transition-refused` with the kernel text.
  - Abandon semantics differ by kernel (reason mandatory for live abandon);
    preserved by delegating to the CLI.
+
+8. Verification pass (before completing PRAXIS-CTL-04)
+------------------------------------------------------
+
+Build: `dotnet build Ros.slnx --configuration Release --no-restore` -> 0 errors.
+Full F# suite: `dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll`
+  -> "1347 test(s); 1347 passed; 0 failed".
+Python oracle: `python3 -m unittest discover -s tests` -> "Ran 7 tests ... OK".
+`./praxis validate` -> passed (2 pre-existing warnings on unrelated records);
+`./praxis architecture check` -> passed.
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| 1. One endpoint, all six actions with arguments, through the CLI's transition path, no rule reimplemented | met | Route `POST /api/v1/work/:id/transitions` (src/Ros.Cli/WebInterface.fs `route`, `transitionIntent`); arguments parsed by the existing `itemOperation`; executed only via `CliProcess.runSelf` with `commandLine` (`transition`). Tests: "transition request: the route reads the action and the per-action arguments", "...the governing kernel picks the one CLI command", "web serve: transition requests run the CLI's transitions and return the resulting typed state" (ready, start, block, resume, complete), "web serve: abandon goes to the backlog for backlog items and to work abandon for live work" -> PASS. |
+| 2. Success returns the resulting typed state | met | `WorkStateJson.transitionDocument` (kind `work-transition`, `item` = WorkItemState read after the command). Test "web serve: transition requests run the CLI's transitions and return the resulting typed state" asserts semanticState/governedBy/live fields after each action and equality with GET /api/v1/work/:id -> PASS. |
+| 3. Structured refusal (category, kernel message, requested action), HTTP status, state byte-for-byte unchanged, shown by a test | met | `refusalCategory`, `refusalStatus`, `WorkStateJson.transitionRefusal`. Test "web serve: a refused transition is a structured refusal and leaves every file byte-for-byte unchanged" exercises illegal-transition (409), reason-required (422, backlog and live), evidence-required (422), work-item-not-found (404), invalid-request (400), hashing every file outside .git before/after each request -> PASS. Unit tests "a refusal is categorized..." and "a refusal document carries category, message and requested action with its status" -> PASS. |
+| 4. Actor identity and provenance equal to the equivalent CLI command, never inferred from the HTTP client | met | `transition` passes no request data except the explicit `actor` field (as `--actor`); the child inherits the server environment. Test "web serve: an API transition records the CLI's actor and provenance, never one inferred from the HTTP client": API start sent with User-Agent/X-Praxis-Actor/X-Forwarded-For/From headers vs `work start` on the CLI with the same environment -> identical event `actor`, telemetry `identity` and `provenance.sources`; no recorded file under .ros contains the header text -> PASS. |
+| 5. Existing per-action routes keep working or are documented as superseded; tests | met | Per-action routes unchanged; docs/web-interface.md "Transition requests" documents them as superseded for programs. Test "web serve: the per-action routes keep working beside the transition endpoint" and all existing WebInterfaceTests -> PASS. |

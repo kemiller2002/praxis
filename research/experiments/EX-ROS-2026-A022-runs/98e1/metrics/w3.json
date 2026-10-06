@@ -1,0 +1,56 @@
+{
+  "schema": "ex-ros-2026-a021.session-metrics/1",
+  "label": "w3",
+  "sessionId": "fc06b9e6-7813-537e-8319-c5084916373f",
+  "transcript": "fc06b9e6-7813-537e-8319-c5084916373f.jsonl",
+  "models": [
+    "<synthetic>",
+    "claude-opus-5-5"
+  ],
+  "startedAt": "2026-10-06T14:08:00.593000+00:00",
+  "endedAt": "2026-10-06T14:50:06.148000+00:00",
+  "wallMs": 2525555,
+  "msToFirstCodeMutation": 1398507,
+  "modelRequests": 64,
+  "tokens": {
+    "input": 130,
+    "output": 48959,
+    "cacheRead": 9476938,
+    "cacheCreation": 205252
+  },
+  "costUsd": {
+    "value": 0.3537174,
+    "source": "runtime cost-state (estimate; last record)"
+  },
+  "toolCalls": {
+    "Bash": 54,
+    "Edit": 12,
+    "ReadNotifications": 1,
+    "ToolSearch": 1,
+    "Write": 2,
+    "mcp__claude-code-remote__send_message": 2
+  },
+  "toolErrors": 3,
+  "fileReads": 35,
+  "distinctFilesRead": 18,
+  "repeatedReads": {
+    "/tmp/claude-0/build.log": 2,
+    "/tmp/claude-0/fs-tests.log": 2,
+    "/tmp/claude-0/restore.log": 2,
+    "docs/web-interface.md": 4,
+    "src/Ros.Cli/Program.fs": 3,
+    "src/Ros.Cli/WebInterface.fs": 3,
+    "tests/Ros.Tests/Program.fs": 3,
+    "tests/Ros.Tests/WebInterfaceTests.fs": 6
+  },
+  "governanceReads": {
+    "AGENTS.md": 1
+  },
+  "searches": 30,
+  "fileWrites": 22,
+  "distinctFilesEdited": 4,
+  "builds": 8,
+  "testRuns": 5,
+  "compactions": 0,
+  "notes": "reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate"
+}
