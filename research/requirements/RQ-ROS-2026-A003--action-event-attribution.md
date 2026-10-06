@@ -45,6 +45,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Decision reference renumbered to DF-ROS-2026-A049 after merging main (work item FSHARP-ONLY-MAIN-MERGE)"
+    EXE-20261006T203816433Z-d8de3cb4:
+      operations: [modified]
+      at: 2026-10-06T20:40:40.826Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-MISC-09: cited test paths moved from tests/Ros.Tests to tests/Praxis.Tests; content unchanged"
 ---
 
 # Requirement
@@ -63,5 +73,5 @@ Git authorship and free-text actor strings cannot say who performed an action or
 
 ## Verification
 
-- tests/Ros.Tests/WorkLifecycleCliTests.fs and tests/Ros.Tests/WorkBacklogCliTests.fs (work start, resume, block, capture golden masters)
+- tests/Praxis.Tests/WorkLifecycleCliTests.fs and tests/Praxis.Tests/WorkBacklogCliTests.fs (work start, resume, block, capture golden masters)
 - ProvenanceTests: events: legacy events without actors are informational; malformed actors are errors

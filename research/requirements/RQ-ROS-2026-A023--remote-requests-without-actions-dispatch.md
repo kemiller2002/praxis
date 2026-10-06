@@ -31,6 +31,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "PRAXIS-REMOTE-INBOX-01: capture the cross-provider continuation gap and its remedy (re-landed from claude/remote-inbox-relay-v3)"
+    EXE-20261006T203816433Z-d8de3cb4:
+      operations: [modified]
+      at: 2026-10-06T20:40:44.700Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-MISC-09: replace citations of deleted Node tests with the F# tests that cover the behaviour; keep the Node result as history"
 ---
 
 # Requirement
@@ -93,4 +103,4 @@ but it cannot continue it (`EV-ROS-2026-A057`).
 |---|---|
 | Live channel test | Met. See the verification in `DF-ROS-2026-A045`: relay run `36571870365` dispatched the Praxis remote run `36571886619`. |
 | Continuation completes | Open. It needs an actual OpenAI or ChatGPT execution to continue `PRAXIS-XPROVIDER-PROOF-01` through the inbox. It cannot be met on that executor's behalf. |
-| No bypass | Met, by `tests/praxis-remote-inbox.test.mjs`. |
+| No bypass | Met. Originally shown by the Node test `tests/praxis-remote-inbox.test.mjs` (historical; deleted with the Node suites, `RQ-ROS-2026-A024`); now covered by the F# `PremergeRemoteScriptTests` "fence inbox: ..." tests (byte-for-byte relay, refusal of unroutable files without dispatch, no pull-request or fork trigger). |
