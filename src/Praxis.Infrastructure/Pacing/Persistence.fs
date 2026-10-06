@@ -12,7 +12,10 @@ open Praxis.Domain.Pacing
 ///
 /// Schema 2: `{ "schemaVersion": 2, "revision": n, "holds": [ ... ] }` where each
 /// hold records its basis (`weekly-lead` with the window's `resetsAt`, or
-/// `hard-limit` with `usedPercent` and `resetsAt`). Schema 1 (no
+/// `hard-limit` with `usedPercent` and `resetsAt`) and, additively, the
+/// reading that created it (`evidence: { observedAt, reference }`, PRX-QUAL-003).
+/// A hold without `evidence` (written before it was recorded, or by an older
+/// Praxis) reads as `Unrecorded`; older readers ignore the additive field. Schema 1 (no
 /// `schemaVersion`; weekly holds only, no reset identity) is migrated on read.
 /// Any malformed document or row is `Unreadable` — partial state is never
 /// silently accepted — and a newer schema is `Unsupported`.
@@ -24,13 +27,16 @@ module PacingStateDocument =
     let private scopeParts (scope: QuotaScope) : string * string option =
         match scope with
         | QuotaScope.Global -> "global", None
-        | QuotaScope.Model name -> "model", Some name
+        | QuotaScope.Model family -> "model", Some(ModelFamily.value family)
         | QuotaScope.Surface name -> "surface", Some name
 
     let private scopeFromParts (kind: string) (name: string option) : Result<QuotaScope, string> =
         match kind, name with
         | "global", _ -> Ok QuotaScope.Global
-        | "model", Some value -> Ok(QuotaScope.Model value)
+        | "model", Some value ->
+            match ModelFamily.tryCreate value with
+            | Some family -> Ok(QuotaScope.Model family)
+            | None -> Error $"model scope '{value}' is not a model family"
         | "surface", Some value -> Ok(QuotaScope.Surface value)
         | other, _ -> Error $"unknown scope '{other}'"
 
@@ -67,22 +73,43 @@ module PacingStateDocument =
             | Some other -> Error $"unknown hold basis '{other}'"
             | None -> Error "hold is missing its basis"
 
+    let private parseEvidence row : Result<HoldEvidence, string> =
+        match PacingJson.tryProperty "evidence" row with
+        | None -> Ok HoldEvidence.Unrecorded
+        | Some element ->
+            match
+                PacingJson.tryProperty "observedAt" element |> Option.bind PacingJson.tryTimestamp,
+                PacingJson.tryProperty "reference" element |> Option.bind PacingJson.tryString
+            with
+            | Some observedAt, Some reference when reference <> "" -> Ok(HoldEvidence.Observed(observedAt, reference))
+            | _ -> Error "hold has invalid creation 'evidence'"
+
+    let private parseProvider row : Result<ProviderId, string> =
+        required "provider" row PacingJson.tryString
+        |> Result.bind (fun value ->
+            match ProviderId.tryParse value with
+            | Some provider -> Ok provider
+            | None -> Error $"unknown provider '{value}'")
+
     let private parseHold (schema: int) (row: JsonElement) : Result<PacingHold, string> =
         required "key" row PacingJson.tryString
         |> Result.bind (fun key ->
-            required "provider" row PacingJson.tryString
+            parseProvider row
             |> Result.bind (fun provider ->
                 required "since" row PacingJson.tryTimestamp
                 |> Result.bind (fun since ->
                     parseScope row
                     |> Result.bind (fun scope ->
                         parseBasis schema row
-                        |> Result.map (fun basis ->
-                            { Key = key
-                              Provider = provider
-                              Scope = scope
-                              Since = since
-                              Basis = basis })))))
+                        |> Result.bind (fun basis ->
+                            parseEvidence row
+                            |> Result.map (fun evidence ->
+                                { Key = key
+                                  Provider = provider
+                                  Scope = scope
+                                  Since = since
+                                  Basis = basis
+                                  Evidence = evidence }))))))
 
     let private parseHolds (schema: int) (root: JsonElement) : Result<PacingState, string> =
         match PacingJson.tryProperty "holds" root with
@@ -139,7 +166,7 @@ module PacingStateDocument =
         let row = JsonObject()
         let scopeKind, scopeName = scopeParts hold.Scope
         row["key"] <- JsonValue.Create(hold.Key)
-        row["provider"] <- JsonValue.Create(hold.Provider)
+        row["provider"] <- JsonValue.Create(ProviderId.code hold.Provider)
         row["scopeKind"] <- JsonValue.Create(scopeKind)
         scopeName |> Option.iter (fun name -> row["scopeName"] <- JsonValue.Create(name))
         row["since"] <- JsonValue.Create(hold.Since.ToString("O"))
@@ -154,6 +181,14 @@ module PacingStateDocument =
         | HoldBasis.HardLimit(used, resetsAt) ->
             row["usedPercent"] <- JsonValue.Create(used)
             row["resetsAt"] <- JsonValue.Create(resetsAt.ToString("O"))
+
+        match hold.Evidence with
+        | HoldEvidence.Observed(observedAt, reference) ->
+            let evidence = JsonObject()
+            evidence["observedAt"] <- JsonValue.Create(observedAt.ToString("O"))
+            evidence["reference"] <- JsonValue.Create(reference)
+            row["evidence"] <- evidence
+        | HoldEvidence.Unrecorded -> ()
 
         row
 
@@ -178,14 +213,14 @@ module PacingPersistence =
         File.WriteAllText(temporary, content)
         File.Move(temporary, path, true)
 
-    let private snapshotPath (directory: string) (provider: string) : string =
-        Path.Combine(directory, $"snapshot-{provider}.json")
+    let private snapshotPath (directory: string) (provider: ProviderId) : string =
+        Path.Combine(directory, $"snapshot-{ProviderId.code provider}.json")
 
     /// The snapshot is a display/merge cache, not safety state: hard holds are
     /// persisted in `hold.json`. A failed cache write is reported, not fatal.
     let saveSnapshot (directory: string) (snapshot: ProviderSnapshot) : Result<unit, string> =
         let root = JsonObject()
-        root["provider"] <- JsonValue.Create(snapshot.Provider)
+        root["provider"] <- JsonValue.Create(ProviderId.code snapshot.Provider)
         root["observedAt"] <- JsonValue.Create(snapshot.ObservedAt.ToString("O"))
         let windows = JsonArray()
 
@@ -195,7 +230,7 @@ module PacingPersistence =
             let scopeKind, scopeName =
                 match window.Scope with
                 | QuotaScope.Global -> "global", None
-                | QuotaScope.Model name -> "model", Some name
+                | QuotaScope.Model family -> "model", Some(ModelFamily.value family)
                 | QuotaScope.Surface name -> "surface", Some name
 
             row["key"] <- JsonValue.Create(window.Key)
@@ -215,7 +250,9 @@ module PacingPersistence =
         | :? IOException as error -> Error error.Message
         | :? UnauthorizedAccessException as error -> Error error.Message
 
-    let loadSnapshot (directory: string) (provider: string) : Result<ProviderSnapshot option, string> =
+    /// The cached reading. Its windows are display/merge evidence only: they
+    /// are re-labelled `Stale` by the runtime whenever they are carried.
+    let loadSnapshot (directory: string) (provider: ProviderId) (adapter: PacingAdapterInfo) : Result<ProviderSnapshot option, string> =
         let path = snapshotPath directory provider
 
         if not (File.Exists path) then
@@ -232,9 +269,10 @@ module PacingPersistence =
 
                 let scopeOf kind name =
                     match kind, name with
-                    | "model", Some value -> QuotaScope.Model value
-                    | "surface", Some value -> QuotaScope.Surface value
-                    | _ -> QuotaScope.Global
+                    | "model", Some value -> ModelFamily.tryCreate value |> Option.map QuotaScope.Model
+                    | "surface", Some value -> Some(QuotaScope.Surface value)
+                    | "global", _ -> Some QuotaScope.Global
+                    | _ -> None
 
                 let windows =
                     match PacingJson.tryProperty "windows" root with
@@ -246,19 +284,19 @@ module PacingPersistence =
                                 PacingJson.tryProperty "label" row |> Option.bind PacingJson.tryString,
                                 PacingJson.readNumber "usedPercent" row,
                                 PacingJson.readNumber "durationMinutes" row,
-                                PacingJson.readReset "resetsAt" row
+                                PacingJson.readReset "resetsAt" row,
+                                scopeOf
+                                    (PacingJson.tryProperty "scopeKind" row
+                                     |> Option.bind PacingJson.tryString
+                                     |> Option.defaultValue "global")
+                                    (PacingJson.tryProperty "scopeName" row |> Option.bind PacingJson.tryString)
                             with
-                            | Some key, Some label, Some used, Some minutes, Some reset ->
+                            | Some key, Some label, Some used, Some minutes, Some reset, Some scope ->
                                 Some
                                     { Provider = provider
                                       Key = key
                                       Label = label
-                                      Scope =
-                                        scopeOf
-                                            (PacingJson.tryProperty "scopeKind" row
-                                             |> Option.bind PacingJson.tryString
-                                             |> Option.defaultValue "global")
-                                            (PacingJson.tryProperty "scopeName" row |> Option.bind PacingJson.tryString)
+                                      Scope = scope
                                       UsedPercent = used
                                       Duration = TimeSpan.FromMinutes(float minutes)
                                       ResetsAt = reset
@@ -270,6 +308,7 @@ module PacingPersistence =
                 Ok(
                     Some
                         { Provider = provider
+                          Adapter = adapter
                           ObservedAt = observed
                           Windows = windows
                           Coverage = []

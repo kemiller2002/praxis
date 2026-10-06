@@ -100,6 +100,7 @@ let main _ =
     @ PlanningTests.tests
     @ PacingTests.tests
     @ PacingSafetyTests.tests
+    @ PacingHardeningTests.tests
     @ CliBoundaryRatchetTests.tests
     @ PlanningCliTests.tests
     @ PlanningSessionEvidenceTests.tests

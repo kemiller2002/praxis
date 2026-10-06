@@ -4421,7 +4421,7 @@
     {
       "id": "PRAXIS-QUAL-01",
       "title": "Per-window Stale/Unsupported pacing observation states and hard-hold creation evidence (PRX-QUAL-003, PRX-QUAL-004)",
-      "description": "Covers PRX-QUAL-004 (Stale, Unsupported window states) and the PRX-QUAL-003 creation-evidence gap. Acceptance: 1. WindowStatus has Observed, Missing, Invalid, Stale and Unsupported, each with a stable code in status JSON coverage. 2. A window carried from a cached reading (not in the current response) is Stale, never Observed; a window kind the adapter does not support (unknown Claude limit kind, unknown Codex slot) is Unsupported with a diagnostic, never silently dropped. 3. Stale and Unsupported expected windows make the reading incomplete (freshness stale), with response-shape drift reported as an explicit diagnostic. 4. Hard-limit holds persist creation evidence (observedAt of the triggering reading and the provider snapshot reference) in hold.json schema 3; schema 2 holds migrate with the evidence marked unrecorded, never invented. 5. Tests cover each state and the migration.",
+      "description": "Covers PRX-QUAL-004 (Stale, Unsupported window states) and the PRX-QUAL-003 creation-evidence gap. Acceptance: 1. WindowStatus has Observed, Missing, Invalid, Stale and Unsupported, each with a stable code in status JSON coverage. 2. A window carried from a cached reading (not in the current response) is Stale, never Observed; a window kind the adapter does not support (unknown Claude limit kind, unknown Codex slot) is Unsupported with a diagnostic, never silently dropped. 3. Stale and Unsupported expected windows make the reading incomplete (freshness stale), with response-shape drift reported as an explicit diagnostic. 4. Hard-limit holds persist creation evidence (observedAt of the triggering reading and the provider window reference) in hold.json as an additive schema-2 field that older readers ignore; holds without it read as unrecorded, never invented. 5. Tests cover each state and the migration.",
       "tags": [
         "quality",
         "pacing"
@@ -4430,7 +4430,7 @@
       "status": "ready",
       "attachments": [],
       "createdAt": "2026-10-06T20:34:45.942Z",
-      "updatedAt": "2026-10-06T20:37:10.423Z",
+      "updatedAt": "2026-10-06T20:59:31.424Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

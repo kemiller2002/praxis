@@ -11,6 +11,12 @@ module PacingTests =
     let private t name run = { Name = $"pacing: {name}"; Run = run }
 
     let private now = DateTimeOffset(2026, 10, 3, 17, 0, 0, TimeSpan.Zero)
+    let private fable = (ModelFamily.tryCreate "Fable").Value
+    let private opus = (ModelFamily.tryCreate "opus").Value
+
+    /// A model resolved the way the application resolves it: against the
+    /// adapter's families and those named by scoped windows.
+    let private modelOf (model: string option) = ModelIdentity.resolve [ fable; opus ] model
     let private week = TimeSpan.FromDays 7.0
 
     let private usedForLead hours =
@@ -19,7 +25,7 @@ module PacingTests =
         decimal ((elapsed.TotalHours + hours) / week.TotalHours * 100.0)
 
     let private window key used duration reset scope =
-        { Provider = "codex"
+        { Provider = ProviderId.Codex
           Key = key
           Label = key
           Scope = scope
@@ -35,8 +41,8 @@ module PacingTests =
         Pacing.evaluate
             PacingPolicy.defaults
             { Now = now
-              Provider = "codex"
-              Model = model
+              Provider = ProviderId.Codex
+              Model = modelOf model
               Windows = windows
               Freshness = freshness
               Existing = state
@@ -97,7 +103,7 @@ module PacingTests =
               Assert.equal PacingReasonKind.HardLimit stale.BindingReason.Value.Kind)
 
           t "model-scoped holds do not stop unrelated models" (fun () ->
-              let fable = weekly "weekly:fable" 9.0 (QuotaScope.Model "Fable")
+              let fable = weekly "weekly:fable" 9.0 (QuotaScope.Model fable)
               let triggered = evaluate PacingState.empty ObservationFreshness.Fresh [ fable ] (Some "claude-fable-5-1") false
               Assert.isTrue (not triggered.MayProceed) "Fable should trigger its scoped hold"
               let opus = evaluate triggered.State ObservationFreshness.Fresh [ fable ] (Some "claude-opus-5") false
@@ -105,14 +111,14 @@ module PacingTests =
               Assert.equal 1 opus.State.Holds.Count)
 
           t "unknown model checks scoped windows conservatively" (fun () ->
-              let fable = weekly "weekly:fable" 9.0 (QuotaScope.Model "Fable")
+              let fable = weekly "weekly:fable" 9.0 (QuotaScope.Model fable)
               let result = evaluate PacingState.empty ObservationFreshness.Fresh [ fable ] None false
               Assert.isTrue (not result.MayProceed) "unknown model must consider every reported scoped limit")
 
           t "Codex quota response normalizes session and weekly windows" (fun () ->
               let json = """{"rateLimitsByLimitId":{"codex":{"primary":{"usedPercent":42,"windowDurationMins":300,"resetsAt":1791050400},"secondary":{"usedPercent":55,"windowDurationMins":10080,"resetsAt":1791655200}}}}"""
 
-              match PacingNormalization.normalizeCodexResult "codex" now json with
+              match PacingNormalization.normalizeCodexResult (QuotaBucket "codex") now json with
               | Error message -> failwith message
               | Ok reading ->
                   Assert.isTrue (WindowObservation.isComplete reading.Coverage) "both reported Codex windows should be complete"
@@ -126,19 +132,20 @@ module PacingTests =
               | Ok reading ->
                   Assert.isTrue (WindowObservation.isComplete reading.Coverage) "global Claude session and weekly windows should make the reading complete"
                   let scoped = reading.Windows |> List.find (fun window -> window.Key = "seven_day:Fable")
-                  Assert.equal (QuotaScope.Model "Fable") scoped.Scope)
+                  Assert.equal (QuotaScope.Model fable) scoped.Scope)
 
           t "status JSON reports the actual override and unavailable provider state" (fun () ->
               let snapshot =
-                  { Provider = "codex"
+                  { Provider = ProviderId.Codex
+                    Adapter = PacingAdapterRules.codexInfo (QuotaBucket "codex")
                     ObservedAt = now
                     Windows = []
                     Coverage = []
                     Freshness = ObservationFreshness.Unavailable "provider offline" }
 
               let decision = evaluate PacingState.empty snapshot.Freshness [] None true
-              let status = PacingStatusProjection.create now "/tmp/pacing" "codex" None true snapshot StateIntegrity.Intact decision
-              use document = JsonDocument.Parse(PacingStatus.renderJson status)
+              let status = PacingStatusProjection.create now "/tmp/pacing" ProviderId.Codex ModelIdentity.Unspecified true snapshot StateIntegrity.Intact decision None
+              use document = JsonDocument.Parse(PacingStatusDocument.renderJson status)
               let root = document.RootElement
 
               Assert.equal 1 (root.GetProperty("schemaVersion").GetInt32())
@@ -150,15 +157,16 @@ module PacingTests =
 
           t "stale status reports indeterminate safety without losing its reason" (fun () ->
               let snapshot =
-                  { Provider = "codex"
+                  { Provider = ProviderId.Codex
+                    Adapter = PacingAdapterRules.codexInfo (QuotaBucket "codex")
                     ObservedAt = now
                     Windows = [ weekly "weekly" 3.0 QuotaScope.Global ]
                     Coverage = []
                     Freshness = ObservationFreshness.Stale "refresh failed" }
 
               let decision = evaluate PacingState.empty snapshot.Freshness snapshot.Windows None false
-              let status = PacingStatusProjection.create now "/tmp/pacing" "codex" None false snapshot StateIntegrity.Intact decision
-              use document = JsonDocument.Parse(PacingStatus.renderJson status)
+              let status = PacingStatusProjection.create now "/tmp/pacing" ProviderId.Codex ModelIdentity.Unspecified false snapshot StateIntegrity.Intact decision None
+              use document = JsonDocument.Parse(PacingStatusDocument.renderJson status)
               let root = document.RootElement
 
               Assert.equal "stale" (root.GetProperty("freshnessState").GetString())
@@ -168,21 +176,22 @@ module PacingTests =
           t "status text and JSON are projections of the same held status" (fun () ->
               let quota = weekly "weekly" 8.4 QuotaScope.Global
               let snapshot =
-                  { Provider = "codex"
+                  { Provider = ProviderId.Codex
+                    Adapter = PacingAdapterRules.codexInfo (QuotaBucket "codex")
                     ObservedAt = now
                     Windows = [ quota ]
                     Coverage = []
                     Freshness = ObservationFreshness.Fresh }
 
               let decision = evaluate PacingState.empty snapshot.Freshness snapshot.Windows None false
-              let status = PacingStatusProjection.create now "/tmp/pacing" "codex" None false snapshot StateIntegrity.Intact decision
-              use document = JsonDocument.Parse(PacingStatus.renderJson status)
+              let status = PacingStatusProjection.create now "/tmp/pacing" ProviderId.Codex ModelIdentity.Unspecified false snapshot StateIntegrity.Intact decision None
+              use document = JsonDocument.Parse(PacingStatusDocument.renderJson status)
               let root = document.RootElement
 
               Assert.isTrue (not (root.GetProperty("override").GetBoolean())) "JSON must report a disabled override"
               Assert.equal "weekly-lead" (root.GetProperty("hold").GetProperty("kind").GetString())
 
-              let text = PacingStatus.renderText status
+              let text = PacingStatusDocument.renderText status
               Assert.isTrue (text.Contains("override: off", StringComparison.Ordinal)) "text must project the same override state"
               Assert.isTrue (text.Contains("gate: hold (weekly-lead)", StringComparison.Ordinal)) "text must project the same binding hold")
 
