@@ -52,7 +52,7 @@
 | PR79-MAIN-INTEGRATION-2 | Integrate latest main into PR 79 after CI race | complete |  | medium |
 | PRAXIS-A021-EVAL-KIT | EX-ROS-2026-A021 blind evaluation kit | complete | experiment | medium |
 | PRAXIS-CLI-RENAME | Finish the ROS to Praxis product/CLI rename: praxis canonical, ros only as compatibility alias, persisted state or history | complete | rename, praxis, cli | high |
-| PRAXIS-CN-GL-KINDS | Govern the CN (concept) and GL (glossary) artifact kinds the standards define | ready | artifacts, standards | medium |
+| PRAXIS-CN-GL-KINDS | Govern the CN (concept) and GL (glossary) artifact kinds the standards define | complete | artifacts, standards | medium |
 | PRAXIS-CONT-00 | Durable work checkpoints and agent continuity (umbrella) | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-01-DOMAIN | Durable checkpoint domain model and invariants | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-02-GIT | Git remote/upstream/durability observations | complete | continuity, durable-checkpoints | high |
