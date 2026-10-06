@@ -2,6 +2,52 @@
   "schemaVersion": 1,
   "groups": [
     {
+      "id": "GROUP-PRAXIS-GROUPING-001",
+      "members": [
+        "PRAXIS-GROUP-08",
+        "PRAXIS-GROUP-07",
+        "PRAXIS-GROUP-10",
+        "PRAXIS-GROUP-09",
+        "PRAXIS-PLAN-10"
+      ],
+      "kind": "shared-architecture",
+      "origin": "human-declared",
+      "sharedContext": [
+        "one group store (.ros/work/groups.json, WorkGroupJson) and one domain module (WorkGroups)",
+        "completion-readiness facets (DF-ROS-2026-A052)",
+        "planner grouping (Grouping.fs) and history/cost model (History.fs)"
+      ],
+      "executionRepository": "repository-operating-system",
+      "crossRepository": false,
+      "architectureNotes": [
+        "DF-ROS-2026-A053: PRX-GRP-100..158 implemented in dependency order 08, 07, 10, 09, PLAN-10"
+      ],
+      "createdAt": "2026-10-06T20:09:55.000Z",
+      "createdBy": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "history": [
+        {
+          "operation": "created",
+          "member": null,
+          "at": "2026-10-06T20:09:55.000Z",
+          "actor": {
+            "kind": "agent",
+            "id": "anthropic/claude-code",
+            "provider": "anthropic",
+            "model": "unknown",
+            "runtime": "claude-code"
+          },
+          "reason": "DF-ROS-2026-A053 follow-on work: one group store, one domain module, one requirement family; executed as one grouped execution by one agent"
+        }
+      ],
+      "checkpoints": []
+    },
+    {
       "id": "GROUP-PRAXIS-HYG",
       "members": [
         "PRAXIS-HYG-01",
