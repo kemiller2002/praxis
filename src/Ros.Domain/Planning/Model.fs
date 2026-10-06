@@ -681,7 +681,10 @@ type PlannerConfiguration =
       Dependencies: DeclaredDependency list
       Conflicts: DeclaredConflict list
       Areas: (string * string list) list
-      Grouping: GroupingConfiguration }
+      Grouping: GroupingConfiguration
+      /// Days after which a recorded estimate-error measurement is stale and
+      /// no longer authoritative (PRX-PLAN-173).
+      ErrorHistoryHorizonDays: int }
 
 [<RequireQualifiedAccess>]
 module PlannerConfiguration =
@@ -709,7 +712,8 @@ module PlannerConfiguration =
           Dependencies = []
           Conflicts = []
           Areas = []
-          Grouping = GroupingConfiguration.defaults }
+          Grouping = GroupingConfiguration.defaults
+          ErrorHistoryHorizonDays = 90 }
 
 /// Everything a plan is computed from. Identical inputs produce identical
 /// plans (PRX-PLAN-002).

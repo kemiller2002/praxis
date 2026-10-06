@@ -306,6 +306,8 @@ praxis plan simulate  [--for baseline|speed|balanced|cost|max-parallel] [--max-c
 praxis plan compare   [--max-concurrency N] [--json]
 praxis plan explain   ID [--json]
 praxis plan replay    [--details] [--json]
+praxis plan record-error [--dry-run] [--json]
+praxis plan error-history [--json]
 praxis plan freshness --plan FILE [--json]
 praxis plan groups    [--json]
 praxis plan explain-group GROUP-ID [--json]
@@ -315,7 +317,11 @@ praxis plan compare  --groups [--max-concurrency N] [--json]
 ```
 
 The advisory planner: read-only, deterministic, and never changes work state
-(`DF-ROS-2026-A046`). It classifies every queue and live-context item, finds
+(`DF-ROS-2026-A046`). The one exception is the explicit, opt-in
+`record-error`, which records the replay's estimate error in
+`.ros/planning/error-history.json` and writes nothing else; `error-history`
+reads that history over time, marking measurements older than the configured
+horizon as stale. It classifies every queue and live-context item, finds
 stale state from Git and supplied evidence, and recommends execution waves
 under an explicit strategy and risk policy, with a reason for every entry.
 Unknown durations and costs stay unknown; without cost telemetry the `cost`

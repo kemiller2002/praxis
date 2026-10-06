@@ -12,16 +12,19 @@ open Ros.Infrastructure.Planning
 /// `praxis plan ...`: the advisory, read-only planner
 /// (requirements/PLANNING-OPTIMIZATION.md). This module parses, delegates to
 /// the Application/Domain planner over a read-only port, and renders. No
-/// plan command writes anything: output goes to stdout only.
+/// plan command writes anything, output goes to stdout only, except the
+/// explicit, opt-in `record-error`, which writes only the estimate-error
+/// history (PRX-PLAN-170).
 [<RequireQualifiedAccess>]
 module PlanCommands =
     let usage =
-        "plan analyze|simulate [--groups]|compare [--groups]|explain ID|groups|explain-group GROUP-ID|replay|freshness --plan FILE [--for {baseline|speed|balanced|cost|max-parallel}] [--max-concurrency N] [--budget AMOUNT [--currency CODE]] [--deadline DURATION] [--observations FILE] [--config FILE] [--as-of TIMESTAMP] [--details] [--json]"
+        "plan analyze|simulate [--groups]|compare [--groups]|explain ID|groups|explain-group GROUP-ID|replay|record-error [--dry-run]|error-history|freshness --plan FILE [--for {baseline|speed|balanced|cost|max-parallel}] [--max-concurrency N] [--budget AMOUNT [--currency CODE]] [--deadline DURATION] [--observations FILE] [--config FILE] [--as-of TIMESTAMP] [--details] [--json]"
 
     type private Options =
         { Json: bool
           Details: bool
           Groups: bool
+          DryRun: bool
           Objective: string option
           MaxConcurrency: string option
           Budget: string option
@@ -38,6 +41,7 @@ module PlanCommands =
         { Json = false
           Details = false
           Groups = false
+          DryRun = false
           Objective = None
           MaxConcurrency = None
           Budget = None
@@ -56,6 +60,7 @@ module PlanCommands =
         | "--json" :: rest -> parse { options with Json = true } rest
         | "--details" :: rest -> parse { options with Details = true } rest
         | "--groups" :: rest -> parse { options with Groups = true } rest
+        | "--dry-run" :: rest -> parse { options with DryRun = true } rest
         | flag :: value :: rest when flag.StartsWith "--" && not (value.StartsWith "--") ->
             let next =
                 match flag with
@@ -126,26 +131,39 @@ module PlanCommands =
             | true, _ -> Ok value
             | _ -> Error $"--as-of '{value}' is not a timestamp"
 
+    let private timestampOf (value: string) =
+        match DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind) with
+        | true, parsed -> Some parsed
+        | _ -> None
+
     let private fail (code: int) (message: string) =
         eprintfn "ERROR %s" message
         code
 
     let private resolve (root: string) (path: string) = if Path.IsPathRooted path then path else Path.GetFullPath(Path.Combine(root, path))
 
-    /// Parses, then gathers input through the read-only port.
-    let private withAnalysis (root: string) (version: string) (options: Options) (run: PlanningInput -> PlanningAnalysis -> int) =
+    /// Rejects unexpected arguments and resolves the planning timestamp.
+    let private withTimestamp (options: Options) (run: string -> int) =
         match options.Unexpected @ options.Positional, plannedAt options with
         | unexpected, _ when not unexpected.IsEmpty ->
             let names = String.concat " " unexpected
             fail 2 $"unexpected argument(s): {names}"
         | _, Error message -> fail 2 message
-        | _, Ok timestamp ->
-            let port =
-                FilePlanningRepository.create root (options.Observations |> Option.map (resolve root)) (options.Configuration |> Option.map (resolve root))
+        | _, Ok timestamp -> run timestamp
 
-            match PlanningOperations.analyze port timestamp version with
+    let private port (root: string) (options: Options) =
+        FilePlanningRepository.create root (options.Observations |> Option.map (resolve root)) (options.Configuration |> Option.map (resolve root))
+
+    /// Parses, then gathers input through the read-only port.
+    let private withInput (root: string) (version: string) (options: Options) (run: PlanningInput -> int) =
+        withTimestamp options (fun timestamp ->
+            match PlanningOperations.gather (port root options) timestamp version with
             | Error message -> fail 1 message
-            | Ok(input, analysis) -> run input analysis
+            | Ok input -> run input)
+
+    /// Parses, then gathers input through the read-only port and analyzes it.
+    let private withAnalysis (root: string) (version: string) (options: Options) (run: PlanningInput -> PlanningAnalysis -> int) =
+        withInput root version options (fun input -> run input (Planner.analyze input))
 
     // ---- text rendering ---------------------------------------------------------
 
@@ -477,6 +495,32 @@ module PlanCommands =
           yield ""
           yield comparison.Statement ]
 
+    let private errorSummaryText (summary: ErrorSummary) =
+        let absolute = summary.MedianAbsoluteErrorMs |> Option.map (fun ms -> $"{ms / 60_000L} min") |> Option.defaultValue "unknown"
+        let relative = summary.MedianRelativeError |> Option.map (fun value -> value.ToString(CultureInfo.InvariantCulture)) |> Option.defaultValue "unknown"
+        $"{summary.WithinRange}/{summary.Predictions} within range; median absolute error {absolute}; median relative error {relative}"
+
+    let private measurementLines (measurement: ErrorMeasurement) =
+        [ yield $"Measurement: {ErrorHistory.describeKey measurement}; {measurement.Executions} finalized executions in the window"
+          yield $"  overall: {errorSummaryText measurement.Overall}"
+          yield! measurement.Segments |> List.map (fun segment -> $"  {segment.Dimension} {segment.Value}: {errorSummaryText segment.Summary}") ]
+
+    let private errorRecordText (outcome: string) (measurement: ErrorMeasurement) =
+        [ yield $"Estimate error {outcome} in {FileErrorHistoryRepository.relativePath}"
+          yield! measurementLines measurement ]
+
+    let private errorHistoryText (view: ErrorHistoryView) =
+        [ yield $"Estimate error over time as of {view.AsOf} (horizon {view.HorizonDays} days)"
+          yield view.Statement
+          if view.Future > 0 then yield $"{view.Future} measurement(s) dated after {view.AsOf} were not read."
+          for series in view.Series |> List.filter (fun series -> not series.Points.IsEmpty) do
+              yield ""
+              yield $"{series.Dimension} {series.Value}:"
+
+              for point in series.Points do
+                  let stale = if point.Stale then " [stale]" else ""
+                  yield $"  {point.AsOf} planner {point.PlannerVersion} commit {point.Commit.Substring(0, min 12 point.Commit.Length)}{stale}: {errorSummaryText point.Summary}" ]
+
     let private emit (options: Options) (json: unit -> Text.Json.Nodes.JsonNode) (lines: unit -> string list) =
         if options.Json then printf "%s" (PlanningJson.render (json ()))
         else lines () |> List.iter (printfn "%s")
@@ -561,6 +605,41 @@ module PlanCommands =
             withAnalysis root version options (fun input _ ->
                 let report = Replay.replay input.Configuration input.Queue input.Executions
                 emit options (fun () -> PlanningJson.replay report) (fun () -> replayText options.Details report))
+        | "record-error" :: rest ->
+            let options = parse empty rest
+
+            withInput root version options (fun input ->
+                match input.Commit, timestampOf input.PlannedAt with
+                | None, _ -> fail 1 "plan record-error keys each measurement by repository commit, and no Git commit is available"
+                | _, None -> fail 2 $"--as-of '{input.PlannedAt}' is not a timestamp"
+                | Some commit, Some asOf ->
+                    let measurement = ErrorHistory.measure input.Configuration version commit asOf input.Executions
+
+                    match FileErrorHistoryRepository.transact root options.DryRun (fun existing -> ErrorHistory.record existing measurement) with
+                    | Error message -> fail 1 message
+                    | Ok outcome ->
+                        let outcome =
+                            match outcome with
+                            | ErrorRecordOutcome.Recorded when options.DryRun -> "would-record"
+                            | _ -> ErrorRecordOutcome.code outcome
+
+                        emit
+                            options
+                            (fun () -> PlanningJson.errorRecord outcome FileErrorHistoryRepository.relativePath measurement)
+                            (fun () -> errorRecordText outcome measurement))
+        | "error-history" :: rest ->
+            let options = parse empty rest
+
+            withTimestamp options (fun timestamp ->
+                match timestampOf timestamp, FilePlanningRepository.readConfiguration root (options.Configuration |> Option.map (resolve root)) with
+                | None, _ -> fail 2 $"--as-of '{timestamp}' is not a timestamp"
+                | _, Error message -> fail 1 message
+                | Some asOf, Ok configuration ->
+                    match FileErrorHistoryRepository.read root with
+                    | Error message -> fail 1 message
+                    | Ok measurements ->
+                        let view = ErrorHistory.view configuration.ErrorHistoryHorizonDays asOf measurements
+                        emit options (fun () -> PlanningJson.errorHistory view) (fun () -> errorHistoryText view))
         | "freshness" :: rest ->
             let options = parse empty rest
 
@@ -580,3 +659,22 @@ module PlanCommands =
                             emit options (fun () -> PlanningJson.review analysis.Snapshot review) (fun () -> reviewText review) |> ignore
                             if review.Freshness.Stale then 3 else 0)
         | _ -> fail 2 $"usage: {usage}"
+
+    /// `praxis validate` findings over the stored estimate-error history, as
+    /// (path, field, message).
+    let errorHistoryFindings (root: string) : (string * string * string) list =
+        let path = FileErrorHistoryRepository.relativePath
+
+        match FileErrorHistoryRepository.parse root with
+        | None -> []
+        | Some(Error message) -> [ path, "measurements", message ]
+        | Some(Ok entries) ->
+            let malformed =
+                entries
+                |> List.choose (fun (index, entry) ->
+                    match entry with
+                    | Error message -> Some(path, $"measurements[{index}]", message)
+                    | Ok _ -> None)
+
+            let measurements = entries |> List.choose (snd >> Result.toOption)
+            malformed @ (ErrorHistory.findings measurements |> List.map (fun (field, message) -> path, field, message))

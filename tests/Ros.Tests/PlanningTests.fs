@@ -525,4 +525,111 @@ module PlanningTests =
               | Error message -> failwith message
               | Ok observations -> Assert.equal 2 observations.Length
 
-              Assert.isTrue (Result.isError (PlanningJson.parseObservations "bad.json" """{"observations":[{"kind":"guess"}]}""")) "unknown kinds are refused") ]
+              Assert.isTrue (Result.isError (PlanningJson.parseObservations "bad.json" """{"observations":[{"kind":"guess"}]}""")) "unknown kinds are refused")
+
+          t "error history: a measurement uses only executions finalized by its as-of time" (fun () ->
+              // history: execution i starts at hour i and runs 10 + i minutes.
+              let asOf = DateTimeOffset(2026, 9, 1, 12, 0, 0, TimeSpan.Zero)
+              let measurement = ErrorHistory.measure PlannerConfiguration.defaults "test" "abc123" asOf history
+              let window = history |> List.filter (fun execution -> (DateTimeOffset.Parse execution.FinalizedAt.Value) <= asOf)
+              Assert.equal window.Length measurement.Executions
+              Assert.equal "2026-09-01T12:00:00.000Z" measurement.AsOf
+              Assert.equal (Replay.replay PlannerConfiguration.defaults [] window).Predicted measurement.Overall.Predictions
+              let later = ErrorHistory.measure PlannerConfiguration.defaults "test" "abc123" (asOf.AddDays 2.0) history
+              Assert.equal history.Length later.Executions
+              Assert.isTrue (later.InputFingerprint <> measurement.InputFingerprint) "a different evidence window has a different fingerprint")
+
+          t "error history: segments by task class and recorded provider, runtime and model only" (fun () ->
+              let mixedIdentity =
+                  history
+                  |> List.mapi (fun index execution ->
+                      if index % 2 = 0 then { execution with Provider = "provider-b"; Model = Some "model-x"; Classes = [ "maintenance" ] }
+                      else { execution with Provider = "unknown"; Runtime = "unknown" })
+
+              let measurement = ErrorHistory.measure PlannerConfiguration.defaults "test" "abc123" (DateTimeOffset(2026, 12, 1, 0, 0, 0, TimeSpan.Zero)) mixedIdentity
+              let values dimension = measurement.Segments |> List.filter (fun segment -> segment.Dimension = dimension) |> List.map (fun segment -> segment.Value)
+              Assert.equal [ "development"; "maintenance" ] (values "task-class")
+              Assert.equal [ "provider-b" ] (values "provider")
+              Assert.equal [ "runtime-a" ] (values "runtime")
+              Assert.equal [ "model-x" ] (values "model")
+
+              let classTotal =
+                  measurement.Segments |> List.filter (fun segment -> segment.Dimension = "task-class") |> List.sumBy (fun segment -> segment.Summary.Predictions)
+
+              Assert.equal measurement.Overall.Predictions classTotal)
+
+          t "error history: recording is idempotent and never overwrites a different measurement" (fun () ->
+              let asOf = DateTimeOffset(2026, 9, 2, 0, 0, 0, TimeSpan.Zero)
+              let first = ErrorHistory.measure PlannerConfiguration.defaults "test" "abc123" asOf history
+              let earlier = ErrorHistory.measure PlannerConfiguration.defaults "test" "abc123" (asOf.AddHours -6.0) history
+
+              match ErrorHistory.record [] first with
+              | Error message -> failwith message
+              | Ok(stored, outcome) ->
+                  Assert.equal ErrorRecordOutcome.Recorded outcome
+
+                  match ErrorHistory.record stored first with
+                  | Ok(unchanged, ErrorRecordOutcome.Unchanged) -> Assert.equal stored unchanged
+                  | other -> failwith $"expected unchanged, got {other}"
+
+                  let conflicting = { first with Executions = first.Executions + 1 }
+                  Assert.isTrue (Result.isError (ErrorHistory.record stored conflicting)) "same key, different content is refused"
+
+                  match ErrorHistory.record stored earlier with
+                  | Ok(both, ErrorRecordOutcome.Recorded) -> Assert.equal [ earlier.AsOf; first.AsOf ] (both |> List.map (fun measurement -> measurement.AsOf))
+                  | other -> failwith $"expected recorded, got {other}")
+
+          t "error history: measurements beyond the horizon are stale and never authoritative" (fun () ->
+              let at (day: int) = DateTimeOffset(2026, 9, day, 0, 0, 0, TimeSpan.Zero)
+              let old = ErrorHistory.measure PlannerConfiguration.defaults "test" "aaa" (at 2) history
+              let recent = ErrorHistory.measure PlannerConfiguration.defaults "test" "bbb" (at 20) history
+              let future = ErrorHistory.measure PlannerConfiguration.defaults "test" "ccc" (at 29) history
+              let stored = ErrorHistory.canonical [ recent; future; old ]
+
+              let view = ErrorHistory.view 10 (at 25) stored
+              Assert.equal [ true; false ] (view.Entries |> List.map (fun entry -> entry.Stale))
+              Assert.equal 1 view.Future
+              Assert.equal (Some recent) view.Authoritative
+              let overall = view.Series |> List.head
+              Assert.equal "overall" overall.Dimension
+              Assert.equal (Some recent.Overall) overall.Latest
+
+              let allStale = ErrorHistory.view 1 (at 25) stored
+              Assert.equal None allStale.Authoritative
+              Assert.isTrue (allStale.Series |> List.forall (fun series -> series.Latest.IsNone)) "no stale point is authoritative"
+              Assert.isTrue (allStale.Statement.Contains "none is authoritative") allStale.Statement
+
+              Assert.equal None (ErrorHistory.view 10 (at 25) []).Authoritative)
+
+          t "error history: rendering is deterministic and round-trips" (fun () ->
+              let at (day: int) = DateTimeOffset(2026, 9, day, 0, 0, 0, TimeSpan.Zero)
+              let measure () =
+                  [ ErrorHistory.measure PlannerConfiguration.defaults "test" "aaa" (at 2) history
+                    ErrorHistory.measure PlannerConfiguration.defaults "test" "bbb" (at 20) history ]
+
+              let rendered = PlanningJson.renderErrorHistoryStore (measure ())
+              Assert.equal rendered (PlanningJson.renderErrorHistoryStore (measure ()))
+              Assert.equal (Ok(measure ())) (PlanningJson.readErrorHistoryStore rendered)
+              let view () = ErrorHistory.view 10 (at 25) (measure ()) |> PlanningJson.errorHistory |> PlanningJson.render
+              Assert.equal (view ()) (view ()))
+
+          t "error history: findings catch inconsistent stored measurements" (fun () ->
+              let measurement = ErrorHistory.measure PlannerConfiguration.defaults "test" "aaa" (DateTimeOffset(2026, 9, 2, 0, 0, 0, TimeSpan.Zero)) history
+              Assert.empty (ErrorHistory.findings [ measurement ])
+              let broken = { measurement with Overall = { measurement.Overall with WithinRange = measurement.Overall.Predictions + 1 }; AsOf = "2026-09-02" }
+              let messages = ErrorHistory.findings [ broken; measurement ] |> List.map snd
+              Assert.isTrue (messages |> List.exists (fun message -> message.Contains "withinRange")) "within-range count checked"
+              Assert.isTrue (messages |> List.exists (fun message -> message.Contains "millisecond precision")) "as-of format checked"
+              Assert.isTrue (ErrorHistory.findings [ measurement; measurement ] |> List.exists (fun (_, message) -> message.Contains "share the key")) "duplicate keys checked"
+              let later = { measurement with AsOf = "2026-09-03T00:00:00.000Z" }
+              Assert.isTrue (ErrorHistory.findings [ later; measurement ] |> List.exists (fun (_, message) -> message.Contains "ordered")) "order checked")
+
+          t "error history: the horizon is configured" (fun () ->
+              Assert.equal 90 PlannerConfiguration.defaults.ErrorHistoryHorizonDays
+
+              match PlanningJson.parseConfiguration """{"errorHistory":{"horizonDays":30}}""" with
+              | Error message -> failwith message
+              | Ok parsed -> Assert.equal 30 parsed.ErrorHistoryHorizonDays
+
+              Assert.isTrue (Result.isError (PlanningJson.parseConfiguration """{"errorHistory":{"horizonDays":0}}""")) "zero days is refused"
+              Assert.isTrue (Result.isError (PlanningJson.parseConfiguration """{"errorHistory":{"horizonDays":1.5}}""")) "fractional days are refused") ]

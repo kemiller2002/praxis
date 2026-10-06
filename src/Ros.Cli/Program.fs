@@ -2090,6 +2090,9 @@ let private computeUnifiedFindings root : Result<ArtifactFinding list, string> =
                 let workGroupFindings =
                     WorkGroupCommands.validationFindings root |> List.map (fun (path, field, message) -> convert path field message)
 
+                let errorHistoryFindings =
+                    PlanCommands.errorHistoryFindings root |> List.map (fun (path, field, message) -> convert path field message)
+
                 match ProvenanceCommands.findingsOf FindingSeverity.Error root, ArchitectureCommands.findings root with
                 | Error message, _
                 | _, Error message -> Error message
@@ -2103,6 +2106,7 @@ let private computeUnifiedFindings root : Result<ArtifactFinding list, string> =
                     @ checkpointFindings
                     @ stepReferenceFindings
                     @ workGroupFindings
+                    @ errorHistoryFindings
                     @ (provenanceErrors |> List.map ProvenanceCommands.toArtifactFinding)
                     |> List.sortWith (fun a b -> System.String.CompareOrdinal($"{a.Path}\000{a.Field}\000{a.Message}", $"{b.Path}\000{b.Field}\000{b.Message}"))
                     |> Ok

@@ -203,8 +203,82 @@ module PlanningCliTests =
                     [ "plan"; "explain-group"; groupId root ]
                     [ "plan"; "explain-group"; groupId root; "--json" ]
                     [ "plan"; "simulate"; "--groups" ]
-                    [ "plan"; "compare"; "--groups"; "--json" ] ] do
+                    [ "plan"; "compare"; "--groups"; "--json" ]
+                    [ "plan"; "error-history" ]
+                    [ "plan"; "error-history"; "--json" ]
+                    [ "plan"; "record-error"; "--dry-run"; "--as-of"; "2026-09-02T00:00:00Z" ] ] do
                   let result = PraxisCli.run root None arguments
                   Assert.isTrue (result.ExitCode = 0 || result.ExitCode = 3) $"{String.Join(' ', arguments)} failed: {result.Error}"
 
-              Assert.equal before (fingerprint root)) ]
+              Assert.equal before (fingerprint root))
+
+          t "record-error persists estimate error once and writes nothing else" (fun () ->
+              let root = fixture ()
+              let before = fingerprint root
+              let store = Path.Combine(root, ".ros", "planning", "error-history.json")
+              let record () = PraxisCli.run root None [ "plan"; "record-error"; "--as-of"; "2026-09-02T00:00:00Z"; "--json" ] |> json
+
+              let first = record ()
+              Assert.equal "error-record" (text (first["kind"]))
+              Assert.equal "recorded" (text (first["outcome"]))
+              let measurement = first["measurement"]
+              Assert.equal "2026-09-02T00:00:00.000Z" (text (measurement["asOf"]))
+              Assert.equal (git root [ "rev-parse"; "HEAD" ]) (text (measurement["commit"]))
+              let predictions = (measurement["overall"]["predictions"]).GetValue<int>()
+              Assert.isTrue (predictions > 0) "the replay made predictions"
+              let stored = File.ReadAllText store
+
+              let changed =
+                  let files, _, _ = fingerprint root
+                  let original, _, _ = before
+                  Set.difference (Set.ofArray (files.Split '\n')) (Set.ofArray (original.Split '\n')) |> Set.map (fun line -> line.Substring(0, line.LastIndexOf ':'))
+
+              Assert.equal (set [ Path.Combine(".ros", "planning", "error-history.json") ]) changed
+
+              let second = record ()
+              Assert.equal "unchanged" (text (second["outcome"]))
+              Assert.equal stored (File.ReadAllText store)
+
+              let other = PraxisCli.run root None [ "plan"; "record-error"; "--as-of"; "2026-09-03T00:00:00Z"; "--dry-run"; "--json" ] |> json
+              Assert.equal "would-record" (text (other["outcome"]))
+              Assert.equal stored (File.ReadAllText store))
+
+          t "error-history reports error over time with stale measurements marked" (fun () ->
+              let root = fixture ()
+
+              for asOf in [ "2026-09-01T06:00:00Z"; "2026-09-02T00:00:00Z" ] do
+                  PraxisCli.run root None [ "plan"; "record-error"; "--as-of"; asOf; "--json" ] |> json |> ignore
+
+              let configuration = Path.Combine(root, "planner.json")
+              File.WriteAllText(configuration, """{"errorHistory":{"horizonDays":30}}""")
+              let view = PraxisCli.run root None [ "plan"; "error-history"; "--as-of"; "2026-10-01T12:00:00Z"; "--config"; configuration; "--json" ] |> json
+              Assert.equal "error-history" (text (view["kind"]))
+              let horizon = (view["horizonDays"]).GetValue<int>()
+              Assert.equal 30 horizon
+              let stale = view["measurements"].AsArray() |> Seq.map (fun entry -> (entry["stale"]).GetValue<bool>()) |> Seq.toList
+              Assert.equal [ true; false ] stale
+              Assert.equal "2026-09-02T00:00:00.000Z" (text (view["authoritative"]["asOf"]))
+              let series = view["series"].AsArray() |> Seq.map (fun entry -> text (entry["dimension"]) + "=" + text (entry["value"])) |> Seq.toList
+              Assert.isTrue (List.contains "overall=all" series) "overall series"
+              Assert.isTrue (List.contains "task-class=development" series) "task-class series"
+              Assert.isTrue (List.contains "provider=provider-a" series) "provider series, as recorded"
+              Assert.isTrue (List.contains "runtime=runtime-a" series) "runtime series, as recorded"
+              Assert.isTrue (not (series |> List.exists (fun entry -> entry.StartsWith "model="))) "no model was recorded"
+              let again = PraxisCli.run root None [ "plan"; "error-history"; "--as-of"; "2026-10-01T12:00:00Z"; "--config"; configuration; "--json" ]
+              Assert.equal (view.ToJsonString()) (again.Json.ToJsonString())
+
+              let later = PraxisCli.run root None [ "plan"; "error-history"; "--as-of"; "2026-12-01T00:00:00Z"; "--config"; configuration; "--json" ] |> json
+              Assert.isTrue (isNull (later["authoritative"])) "every measurement is stale")
+
+          t "validate checks the stored error history" (fun () ->
+              let root = fixture ()
+              PraxisCli.run root None [ "plan"; "record-error"; "--as-of"; "2026-09-02T00:00:00Z" ] |> ignore
+              Assert.empty (Ros.Cli.PlanCommands.errorHistoryFindings root)
+              let store = Path.Combine(root, ".ros", "planning", "error-history.json")
+              File.WriteAllText(store, File.ReadAllText(store).Replace("\"withinRange\": ", "\"withinRange\": 1000"))
+              let findings = Ros.Cli.PlanCommands.errorHistoryFindings root
+              Assert.isTrue (findings |> List.exists (fun (_, _, message) -> message.Contains "withinRange")) $"%A{findings}"
+              let validate = PraxisCli.run root None [ "validate" ]
+              Assert.isTrue ((validate.Output + validate.Error).Contains "error-history.json") "validate reports the store"
+              File.WriteAllText(store, "{\"schemaVersion\": 2, \"measurements\": []}")
+              Assert.isTrue (Ros.Cli.PlanCommands.errorHistoryFindings root |> List.exists (fun (_, _, message) -> message.Contains "schemaVersion")) "schema version checked") ]

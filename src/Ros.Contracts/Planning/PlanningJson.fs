@@ -817,7 +817,12 @@ module PlanningJson =
                         |> Seq.map (fun property -> property.Key, readTexts areas property.Key)
                         |> Seq.toList
                         |> List.sortWith (fun (left, _) (right, _) -> String.CompareOrdinal(left, right))
-                  Grouping = grouping }
+                  Grouping = grouping
+                  ErrorHistoryHorizonDays =
+                    match optionalObj root "errorHistory" |> Option.bind (fun node -> readNumber<decimal> node "horizonDays") with
+                    | None -> defaults.ErrorHistoryHorizonDays
+                    | Some days when days >= 1m && days = Math.Floor days && days <= 36500m -> int days
+                    | Some days -> fail $"errorHistory.horizonDays must be a whole number of days from 1 to 36500, not {days}" }
         with
         | Malformed message -> Error $"malformed planner configuration: {message}"
         | :? JsonException as error -> Error $"malformed planner configuration: {error.Message}"
@@ -1243,3 +1248,137 @@ module PlanningJson =
         | Malformed message -> Error $"malformed groups document: {message}"
         | :? JsonException as error -> Error $"malformed groups document: {error.Message}"
         | :? InvalidOperationException as error -> Error $"malformed groups document: {error.Message}"
+
+    // ---- estimate-error history (PRX-PLAN-170..173) -----------------------------
+
+    /// Version of the stored history at `.ros/planning/error-history.json`.
+    let errorHistoryStoreVersion = 1
+
+    let private errorSummaryFields (summary: ErrorSummary) =
+        [ "predictions", integer summary.Predictions
+          "withinRange", integer summary.WithinRange
+          "medianAbsoluteErrorMs", optionalLong summary.MedianAbsoluteErrorMs
+          "medianRelativeError", optionalNumber summary.MedianRelativeError ]
+
+    let private errorMeasurement (measurement: ErrorMeasurement) =
+        record
+            [ "plannerVersion", text measurement.PlannerVersion
+              "commit", text measurement.Commit
+              "asOf", text measurement.AsOf
+              "executions", integer measurement.Executions
+              "inputFingerprint", text measurement.InputFingerprint
+              "overall", record (errorSummaryFields measurement.Overall)
+              "segments",
+              measurement.Segments
+              |> List.map (fun segment -> record ([ "dimension", text segment.Dimension; "value", text segment.Value ] @ errorSummaryFields segment.Summary))
+              |> array ]
+
+    let renderErrorHistoryStore (measurements: ErrorMeasurement list) =
+        record
+            [ "schemaVersion", integer errorHistoryStoreVersion
+              "measurements", measurements |> List.map errorMeasurement |> array ]
+        |> render
+
+    /// The `error-record` document: what `plan record-error` did.
+    let errorRecord (outcome: string) (storePath: string) (measurement: ErrorMeasurement) : JsonNode =
+        record
+            [ "schema", text schema
+              "kind", text "error-record"
+              "outcome", text outcome
+              "store", text storePath
+              "measurement", errorMeasurement measurement ]
+
+    /// The `error-history` document: estimate error over time.
+    let errorHistory (value: ErrorHistoryView) : JsonNode =
+        record
+            [ "schema", text schema
+              "kind", text "error-history"
+              "asOf", text value.AsOf
+              "horizonDays", integer value.HorizonDays
+              "statement", text value.Statement
+              "authoritative", value.Authoritative |> Option.map errorMeasurement |> Option.toObj
+              "futureMeasurementsExcluded", integer value.Future
+              "measurements",
+              value.Entries
+              |> List.map (fun entry ->
+                  record
+                      [ "plannerVersion", text entry.Measurement.PlannerVersion
+                        "commit", text entry.Measurement.Commit
+                        "asOf", text entry.Measurement.AsOf
+                        "ageDays", number entry.AgeDays
+                        "stale", boolean entry.Stale ])
+              |> array
+              "series",
+              value.Series
+              |> List.map (fun series ->
+                  record
+                      [ "dimension", text series.Dimension
+                        "value", text series.Value
+                        "latest", series.Latest |> Option.map (errorSummaryFields >> record) |> Option.toObj
+                        "points",
+                        series.Points
+                        |> List.map (fun point ->
+                            record (
+                                [ "asOf", text point.AsOf
+                                  "plannerVersion", text point.PlannerVersion
+                                  "commit", text point.Commit
+                                  "stale", boolean point.Stale ]
+                                @ errorSummaryFields point.Summary
+                            ))
+                        |> array ])
+              |> array ]
+
+    let private readErrorSummary (node: JsonObject) : ErrorSummary =
+        { Predictions = readRequired<int> node "predictions"
+          WithinRange = readRequired<int> node "withinRange"
+          MedianAbsoluteErrorMs = readNumber<int64> node "medianAbsoluteErrorMs"
+          MedianRelativeError = readNumber<decimal> node "medianRelativeError" }
+
+    let private readErrorMeasurement (node: JsonObject) : ErrorMeasurement =
+        { PlannerVersion = readText node "plannerVersion"
+          Commit = readText node "commit"
+          AsOf = readText node "asOf"
+          Executions = readRequired<int> node "executions"
+          InputFingerprint = readText node "inputFingerprint"
+          Overall = obj node "overall" |> readErrorSummary
+          Segments =
+            objects node "segments"
+            |> List.map (fun segment ->
+                { Dimension = readText segment "dimension"
+                  Value = readText segment "value"
+                  Summary = readErrorSummary segment }) }
+
+    let private guarded (read: unit -> 'a) : Result<'a, string> =
+        try
+            Ok(read ())
+        with
+        | Malformed message -> Error message
+        | :? JsonException as error -> Error error.Message
+        | :? InvalidOperationException as error -> Error error.Message
+        | :? FormatException as error -> Error error.Message
+
+    /// The stored history read entry by entry, so validation can report each
+    /// malformed measurement: (index, parsed measurement or problem).
+    let parseErrorHistoryStore (json: string) : Result<(int * Result<ErrorMeasurement, string>) list, string> =
+        guarded (fun () ->
+            let root = JsonNode.Parse json |> asObject "error history"
+
+            match readNumber<decimal> root "schemaVersion" with
+            | Some version when version = decimal errorHistoryStoreVersion -> ()
+            | _ -> fail $"schemaVersion must be {errorHistoryStoreVersion}"
+
+            items root "measurements")
+        |> Result.map (List.mapi (fun index node -> index, guarded (fun () -> node |> asObject "measurement" |> readErrorMeasurement)))
+
+    /// Every stored measurement; the first malformed one fails the read.
+    let readErrorHistoryStore (json: string) : Result<ErrorMeasurement list, string> =
+        parseErrorHistoryStore json
+        |> Result.bind (fun entries ->
+            entries
+            |> List.fold
+                (fun state (index, entry) ->
+                    match state, entry with
+                    | Error _, _ -> state
+                    | Ok read, Ok measurement -> Ok(read @ [ measurement ])
+                    | Ok _, Error message -> Error $"measurements[{index}]: {message}")
+                (Ok []))
