@@ -4242,10 +4242,10 @@
       "description": "Bump release.json and the self-hosting .echelon/toolchain.json pin from 3.7.1 to 3.7.2 so native-release.yml releases it.",
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T15:01:49.758Z",
-      "updatedAt": "2026-10-06T15:01:49.900Z",
+      "updatedAt": "2026-10-06T15:01:53.453Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "automation",
