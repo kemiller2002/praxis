@@ -1,0 +1,198 @@
+Architecture analysis: PRAXIS-PLAN-ERROR-HISTORY
+================================================
+
+- Item: PRAXIS-PLAN-ERROR-HISTORY "Persist planner estimate error over time"
+  (`./praxis work show PRAXIS-PLAN-ERROR-HISTORY`)
+- Execution repository: kemiller2002/praxis
+- Base commit: 90e7938ace353af88cdd95f2dcf0db20444947a2 (branch experiment/a022-run-a41b)
+
+1. Item and acceptance criteria
+-------------------------------
+
+Obligation: PRX-PLAN-170..173 (requirements/PLANNING-OPTIMIZATION.md:228-233).
+docs/planning.md:368 records 170-173 as "Met in replay and drift; error is
+not yet persisted over time". The remaining scope is persistence and a
+read view over time.
+
+Acceptance criteria (from the backlog description):
+  1. An explicit, opt-in planner command records a replay's estimate-error
+     summary durably (all other plan commands stay read-only), keyed by
+     planner version, repository commit and as-of time, and idempotent for
+     identical inputs.
+  2. A read view reports error over time, segmented by task class and, where
+     recorded, by provider/model/runtime, with no hard-coded provider
+     performance claims.
+  3. Measurements older than a configured horizon are reported as stale and
+     not used as authoritative.
+  4. Output is deterministic (PRX-PLAN-002).
+  5. `praxis validate` checks the stored history.
+  6. Tests and the docs/planning.md status row updated.
+
+Depends on: nothing open. Builds on `plan replay` (Replay.fs).
+
+2. Reuse inventory
+------------------
+
+Searches: `grep -rn "Replay\|History\." src`, `grep -rln "FileWorkGroupRepository" src`,
+`grep -rn "validationFindings" src/Ros.Cli`, `grep -rn "SHA256" src/Ros.Domain/Planning`,
+`grep -rn "MaxConcurrency = " src tests`.
+
+| Existing element | Location | What it does | Reuse decision |
+|---|---|---|---|
+| Replay.replay / Replay.predict | src/Ros.Domain/Planning/Replay.fs:62,157 | No-hindsight prediction of each finalized execution from executions finalized before it started; per-prediction absolute/relative error; per-class accuracy | REUSE unchanged: the recorded measurement is computed from `Replay.replay`'s predictions. No second error computation. |
+| ReplayPrediction / ReplayClassAccuracy | Replay.fs:5-21 | Prediction and class accuracy records | REUSE: class summaries of a measurement are exactly the replay's `ByClass` shape (TaskClass, Predictions, WithinRange, median abs/rel error). |
+| Replay.medianOf (private) | Replay.fs:51 | lower-median of a list | Same lower-median rule reused (re-stated privately in the new module; it is a three-line private helper, exposing it would widen Replay's API for no other caller). |
+| History.samples / DurationSample | src/Ros.Domain/Planning/History.fs:11-63 | Finalized executions as samples, carrying Provider, Runtime, Model | REUSE to join predictions (by ExecutionId) to provider/runtime/model for segmentation. |
+| History.segments | History.fs:338-356 | Duration segments by provider/runtime/model ("measurements only") | EXTEND the convention, not the function: same dimension names ("provider", "runtime", "model") and same rule that segments are measurements, never claims. It segments durations, not errors, so error segments need their own fold. |
+| History.drift / recentWindow | History.fs:358-388 | Drift of recent vs earlier durations | NOT REUSED for staleness: drift compares samples; staleness here is age of a stored measurement against a configured horizon. Both coexist (173: "detect drift; old measurements MUST NOT stay authoritative"). |
+| Text.ordinal / tryTimestamp / sortOrdinal | src/Ros.Domain/Planning/Model.fs:1302-1312 | Ordinal ordering, timestamp parse | REUSE for deterministic ordering and as-of parsing. |
+| Snapshot.hash | src/Ros.Domain/Planning/Snapshot.fs:49 | SHA-256 over canonical text | REUSE for the measurement's input fingerprint and content digest. |
+| PlannerConfiguration + parseConfiguration | Model.fs:674-712; src/Ros.Contracts/Planning/PlanningJson.fs:731-822 | Optional planner config file, all fields defaulted | EXTEND with an `errorHistory.horizonDays` setting (the "configured horizon"). Only two record literals exist (Model.fs:703, PlanningJson.fs:800). |
+| PlanningJson render helpers (record/array/optionalLong/...) | PlanningJson.fs:19-45 | Fixed-order JSON rendering, `schema` + `kind` | REUSE for the new `error-record` and `error-history` documents; new kinds under the existing `praxis.plan/1.0.0` contract (adding kinds is additive). |
+| PlanningJson.replay | PlanningJson.fs:413-462 | replay JSON (byClass fields) | REUSE field names (`predictions`, `withinRange`, `medianAbsoluteErrorMs`, `medianRelativeError`) so a stored class summary reads like a replay class row. |
+| FilePlanningRepository.create / PlanningReadPort | src/Ros.Infrastructure/Planning/FilePlanningRepository.fs:285; src/Ros.Application/Planning/Operations.fs:12 | Read-only planner port | REUSE for reading inputs. NOT extended with a write: the port's documented invariant is "no write operation at all" (Operations.fs:9-11). The store is a separate repository module. |
+| FileWorkGroupRepository (path, parse, read, writeAtomic, transact) | src/Ros.Infrastructure/Work/FileWorkGroupRepository.fs:14-75 | Durable `.ros/work/groups.json` store, atomic temp+move write under a RegistryLock lease, `parse` for validation | MIRROR the pattern for `.ros/planning/error-history.json` (lock resource `planning-error-history`). Not generalized: groups' transact is typed over StoredWorkGroup; a generic store helper would touch working code outside scope. |
+| RegistryLock.acquire / defaultSettings | src/Ros.Infrastructure/Artifacts/RegistryLock.fs:22,114 | Cross-process lock lease | REUSE for the record transaction. |
+| WorkGroupJson store schema (schemaVersion int, parseStore -> StoreRead) | src/Ros.Contracts/Work/WorkGroupJson.fs:17,105,324-346 | Versioned store, raw read for validation | MIRROR: integer `schemaVersion`, per-entry parse results so validation can report each malformed entry. |
+| WorkGroupCommands.validationFindings + Program.computeUnifiedFindings | src/Ros.Cli/WorkGroupCommands.fs:602; src/Ros.Cli/Program.fs:2090-2105 | Store findings folded into `praxis validate` | REUSE the hook: add `PlanCommands.errorHistoryFindings root` beside `workGroupFindings`. |
+| PlanCommands.parse / plannedAt / withAnalysis / emit | src/Ros.Cli/PlanCommands.fs:52,120,135,441 | Option parsing, `--as-of`, gather via port, JSON/text output | REUSE for both new subcommands; add `--dry-run` flag to the parser. |
+| PlanningCliTests fixture + test 30 fingerprint | tests/Ros.Tests/PlanningCliTests.fs:62-93,181-210 | Git fixture with 12 finalized executions; read-only assertion over every plan command | REUSE fixture; add `plan error-history` to test 30's list (it must stay read-only); new tests for record. |
+| PlanningFixtures.executed / history | tests/Ros.Tests/PlanningTests.fs:41-61 | Domain execution fixtures | REUSE for domain tests. |
+
+New abstractions and the existing ones considered:
+- `ErrorHistory` domain module (measure/record/view/findings). Considered:
+  extending `Replay` (would mix a persisted-history concept into the
+  stateless replay) and `History` (duration evidence, not error over time).
+  A separate module keeps Replay unchanged and is placed after Replay.fs.
+- `FileErrorHistoryRepository`. Considered: `FilePlanningRepository` (read-only
+  by contract) and `FileWorkGroupRepository` (different store). New module,
+  same pattern.
+
+3. Invariants and shared infrastructure
+---------------------------------------
+
+- PRX-PLAN-001 (read-only planner): every existing `plan` command stays
+  read-only; the read port gains no write. The single writer is the new
+  explicit `plan record-error` command, documented as the opt-in exception
+  (criterion 1). Test 30 keeps asserting the others, plus `error-history`.
+- PRX-PLAN-002 determinism: no clock below the CLI (`--as-of` pins it), ordinal
+  ordering, fixed JSON field order; stored entries sorted by
+  (asOf, plannerVersion, commit). Staleness depends on the view's as-of, which
+  is an explicit input, so identical inputs give identical bytes.
+- PRX-PLAN-150/151 no hindsight: a measurement as of T uses only executions
+  finalized at or before T, so the key (version, commit, as-of) determines the
+  evidence window; the replay itself already predicts each execution only
+  from earlier ones.
+- PRX-PLAN-172: segments by provider/model/runtime are computed from what the
+  telemetry recorded; an unrecorded value ("unknown" provider/runtime, absent
+  model) is not a segment. No provider names or performance constants in code.
+- Shared infrastructure: `.ros/` Praxis state directory (new file
+  `.ros/planning/error-history.json`), RegistryLock, `praxis validate`
+  aggregation, PlannerConfiguration. All attributed to this item.
+
+4. Design
+---------
+
+Domain (src/Ros.Domain/Planning/ErrorHistory.fs, new; types in the same file):
+- `ErrorSummary` = { Predictions; WithinRange; MedianAbsoluteErrorMs option;
+  MedianRelativeError option } (the replay's aggregate shape).
+- `ErrorSegment` = { Dimension ("task-class"|"provider"|"runtime"|"model");
+  Value; Summary }.
+- `ErrorMeasurement` = { PlannerVersion; Commit; AsOf; Executions (samples in
+  window); InputFingerprint (SHA-256 of canonical sample list); Overall:
+  ErrorSummary; Segments: ErrorSegment list }.
+- `ErrorHistory.measure plannerVersion commit asOf configuration queue executions`
+  : filters executions finalized <= asOf, runs `Replay.replay`, summarizes the
+  predicted rows overall and per segment. Pure.
+- `ErrorHistory.record existing measurement : Result<ErrorMeasurement list *
+  RecordOutcome, RecordConflict>`: same key and same content -> Unchanged
+  (idempotent, store not rewritten); same key, different content ->
+  Error conflict (refuse; a measurement is never silently overwritten);
+  new key -> Recorded, inserted in canonical order.
+- `ErrorHistory.view horizonDays asOf entries : ErrorHistoryView`: every entry
+  with ageDays and `stale` (asOf - entry.AsOf > horizon); `authoritative` =
+  newest non-stale entry (None when all stale, with a statement saying so);
+  per-segment series over time (points carry `stale`); a statement. No entry
+  dated after the view's as-of is used (reported as `future`, excluded).
+- `ErrorHistory.findings entries`: duplicate key; unparseable as-of; negative
+  counts; withinRange > predictions; unknown dimension; unsorted store;
+  segment duplicates. Clock-free (validate stays deterministic; staleness is
+  a view concern, not invalidity).
+
+Configuration: `PlannerConfiguration.ErrorHistoryHorizonDays` (default 90),
+parsed from `{"errorHistory": {"horizonDays": N}}`; N must be a positive
+integer (malformed configuration error otherwise).
+
+Contracts (PlanningJson):
+- Store: `{ "schemaVersion": 1, "measurements": [ ... ] }`, entry fields in
+  fixed order: plannerVersion, commit, asOf, executions, inputFingerprint,
+  overall{predictions, withinRange, medianAbsoluteErrorMs,
+  medianRelativeError}, segments[{dimension, value, ...summary}].
+  `renderErrorHistoryStore`, `parseErrorHistoryStore` (per-entry results for
+  validation), `readErrorHistoryStore`.
+- Documents: kind `error-record` (outcome recorded|unchanged|would-record,
+  storePath, measurement) and kind `error-history` (asOf, horizonDays,
+  authoritative, entries, series, statement).
+
+Infrastructure: `FileErrorHistoryRepository` (src/Ros.Infrastructure/Planning/):
+relativePath `.ros/planning/error-history.json`, `parse`, `read`,
+`transact root dryRun decide` = lock + read + decide + atomic write; an
+Unchanged outcome does not write.
+
+CLI (PlanCommands):
+- `plan record-error [--as-of T] [--config F] [--observations F] [--dry-run] [--json]`
+  - requires a repository commit (exit 1 otherwise), exit 0 on recorded or
+    unchanged, exit 1 on conflict or store error, 2 on bad arguments.
+- `plan error-history [--as-of T] [--config F] [--json]` - read-only; no
+  store means an empty history with a statement, exit 0; a malformed store
+  is exit 1.
+- `praxis validate`: `PlanCommands.errorHistoryFindings root` folded into
+  `computeUnifiedFindings` (Program.fs) next to work-group findings.
+
+Error model: Result<_, string> through the CLI with documented exit codes
+(0/1/2), as elsewhere in PlanCommands. Conflict message names the key and
+says the existing measurement is kept.
+
+Transaction boundary: one lock lease around read-decide-write of the store
+file; temp file + atomic move; nothing else in `.ros/` is touched (no events,
+no context, no queue).
+
+5. Compatibility
+----------------
+- Additive: new kinds under `praxis.plan/1.0.0`; existing documents unchanged.
+- Old configuration files remain valid (new field optional).
+- Repositories without the store: validate reports nothing; view is empty.
+- docs/planning.md statement "every command prints to stdout only" amended to
+  name `record-error` as the one opt-in writer.
+- Store schema versioned (`schemaVersion: 1`); a different version is a
+  validation finding, never silently read.
+
+6. Tests
+--------
+Domain (PlanningTests): measurement uses only executions finalized by as-of;
+segmentation by class and recorded provider/runtime/model, unknown values
+excluded; record idempotent / conflict / ordering; view marks stale beyond
+horizon and picks newest fresh as authoritative, none when all stale;
+determinism (rendering twice identical); findings for duplicate key and
+inconsistent counts; configuration parses horizonDays and rejects 0.
+CLI (PlanningCliTests): record-error writes only `.ros/planning/error-history.json`;
+second identical run is `unchanged` and byte-identical store; `--dry-run`
+writes nothing; error-history JSON reports entries/stale/authoritative;
+`error-history` added to test 30 (read-only); validate reports a corrupted
+store and passes a good one.
+
+7. Risks
+--------
+- Writing `.ros/` from a planner command relaxes PRX-PLAN-001's letter; scoped
+  to one explicit command and one file, documented, and tested to touch only
+  that file.
+- As-of defaults to the wall clock: idempotency holds for identical inputs,
+  which in practice means a pinned `--as-of`. Documented.
+- Uncommitted telemetry changes make the same (version, commit, as-of) key
+  carry different inputs; the input fingerprint makes that a refused conflict
+  instead of a silent overwrite.
+- Concurrent writers on different branches can both append; merge conflicts
+  in the store are resolved by Git and then checked by validate (duplicate
+  key, ordering).
+- Provenance (actor) of a measurement is not recorded in the entry; the
+  repository commit and Git history attribute it. Noted as a limitation.
