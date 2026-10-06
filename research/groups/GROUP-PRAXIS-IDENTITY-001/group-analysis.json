@@ -1,0 +1,212 @@
+{
+  "schema": "praxis.group-analysis/1",
+  "groupId": "GROUP-PRAXIS-IDENTITY-001",
+  "groupExecutionId": null,
+  "repository": "kemiller2002/praxis",
+  "baseCommit": "f242aae664b4601e106b6e33ebce2b95bedfae35",
+  "members": [
+    {
+      "workItemId": "PRAXIS-ID-01",
+      "repository": null,
+      "obligation": "Typed repository identity and canonical work-item identity (PRX-REMOTE-045, 046, 048, 049, 050)",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "the domain has typed RepositoryIdentity (provider, stable provider ID, owner/repo locator) and WorkItemIdentity (repository + local ID) values; the display form owner/repo:ID is derived and never parsed to establish identity",
+        "the same local ID in two repositories, and two repositories with the same name under different owners, are distinct identities; a rename or transfer (same provider ID, new locator) keeps the identity",
+        "an unqualified ID resolves only inside one repository context, and an unqualified lookup across several repositories that is ambiguous fails closed",
+        "duplicate or conflicting canonical identities (one provider ID with two locators in one observation, one locator claimed by two provider IDs) fail closed",
+        "ros.json gains a versioned repository.identity {provider, providerId, locator}; the legacy repository.id name is kept, read, and reported explicitly as legacy; 'praxis repository identity' shows and sets it, verifies it against the hosting platform's observed ID (GITHUB_REPOSITORY_ID) when available, and validate reports a missing identity as a warning and a contradicted one as an error; the migration rule is documented",
+        "work capture reports the canonical identity, or states that it is incomplete because the repository identity is not established",
+        "the structured reference {repositoryId, repository, localId} round-trips through JSON without parsing the display string",
+        "tests cover every PRX-REMOTE-050 case"
+      ]
+    },
+    {
+      "workItemId": "PRAXIS-ID-02",
+      "repository": null,
+      "obligation": "Remote protocol 1.4: structured canonical work-item references with explicit old-peer compatibility (PRX-REMOTE-047, implementation-order amendment)",
+      "dependsOn": [
+        "PRAXIS-ID-01"
+      ],
+      "acceptanceCriteria": [
+        "protocol 1.4 accepts {repositoryId, repository, localId} objects wherever a work-item ID is accepted, including batch constituents",
+        "a bare ID stays valid and means the executing repository",
+        "a structured reference naming another repository, or one whose provider ID and locator contradict the executing repository, is refused fail-closed with invalid-request and changes nothing",
+        "a structured reference in a 1.0-1.3 request is refused as invalid; a 1.4 request to a 1.3 executor is refused as unsupported-protocol by the existing rule; 1.0-1.3 requests behave and fingerprint exactly as before, so recorded replays still match",
+        "praxis.describe advertises the executing repository's identity and the reference shape; responses carry the canonical identity of the work items they acted on",
+        "docs/remote-protocol.md and docs/remote-agent-contract.md document the shape, compatibility and refusal rules",
+        "tests cover each case"
+      ]
+    },
+    {
+      "workItemId": "PRAXIS-ID-03",
+      "repository": null,
+      "obligation": "Telemetry and planner schemas carry canonical work-item identity; correct identity status docs (PRX-REMOTE-047, PRX-PLAN-182)",
+      "dependsOn": [
+        "PRAXIS-ID-01"
+      ],
+      "acceptanceCriteria": [
+        "new execution telemetry records carry workItem {repositoryId, repository, localId} next to the legacy workItemId, and records without it stay valid (legacy rule documented)",
+        "every praxis.plan document carries the repository identity it was computed in and each work item carries its structured canonical reference, with no competing identity scheme (PRX-PLAN-182); parsers read documents without them",
+        "docs/planning.md no longer reports PRX-PLAN-182 as met on the grounds that no identity scheme exists",
+        "RQ-ROS-2026-A021 names PRX-REMOTE-001..050, no longer defers the npm bin to the abandoned PRAXIS-NPM-BIN and no longer cites deleted Node test files",
+        "tests cover the round-trips"
+      ]
+    },
+    {
+      "workItemId": "PRAXIS-ID-04",
+      "repository": null,
+      "obligation": "Generate and govern the Praxis instance identity (DER-16, 17, 22, 23, 24)",
+      "dependsOn": [
+        "PRAXIS-ID-01"
+      ],
+      "acceptanceCriteria": [
+        "praxis init, praxis upgrade and an explicit 'praxis instance init' create .praxis/instance.json (schema praxis.instance/1, a random instance ID, createdAt, the Praxis version and the repository it was created for) before any registration is attempted, and never replace an existing one",
+        "an upgrade preserves the instance ID",
+        "a clone of the same repository keeps the identity; a copy into another repository (template or fork, detected from the stable provider ID) is reported as foreign, is never stamped into new telemetry and is refused by envelope reconciliation until 'praxis instance init --reinitialize --reason TEXT' creates a new identity that records its predecessor; a rename or transfer keeps it",
+        "new telemetry executions and envelope receipts carry the local instance ID",
+        "envelope reconciliation rejects a claimed instance ID that differs from the generated local one, proved end to end with an instance file created by the generator",
+        "the instance reader reports a malformed file as a typed failure instead of swallowing the exception",
+        "validate reports a missing or foreign instance identity",
+        "this repository gets its own instance identity"
+      ]
+    },
+    {
+      "workItemId": "PRAXIS-ID-05",
+      "repository": null,
+      "obligation": "Praxis instance registration projection (DER-19, 20, 25, 26)",
+      "dependsOn": [
+        "PRAXIS-ID-04"
+      ],
+      "acceptanceCriteria": [
+        "'praxis instance projection [--json]' renders a praxis.instance-projection/1 document with the instance ID, repository/provider coordinates, Praxis version, reconciliation and remote protocol versions, supported capabilities and the availability state of each optional Echelon integration, where unknown and unavailable are representable and are not failures",
+        "it works with no Echelon component, network or credentials",
+        "'praxis instance register' sends the projection through the existing installation registration client with a deterministic operation ID, so a retry is idempotent and never creates a second identity; an unavailable registry exits 0 and changes nothing local",
+        "the projection is built from an allow-list and contains no credentials, secrets, local paths or agent-private data, proved by a test that seeds secrets in the environment and configuration"
+      ]
+    },
+    {
+      "workItemId": "PRAXIS-ID-06",
+      "repository": null,
+      "obligation": "Policy-gated validate rule: meaningful work runs on a branch named for its work item (DER-01)",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "ros.json workProtocol.branchPolicy 'work-item-id' enables the rule; it is off by default and the setting is validated",
+        "with the policy on, praxis validate reports an error when meaningful changes (working tree plus ROS_BASE_REF range) exist on a branch whose name is not the ID of a work item recorded in the work context",
+        "the branch is read from GITHUB_HEAD_REF in pull-request CI and from Git otherwise; an unknown or detached branch with meaningful work is an error, not a pass",
+        "no meaningful changes, or the policy off, produce no finding",
+        "the decision is a pure domain rule with unit tests, and an integration test runs validate on a real repository for both outcomes",
+        "docs/work-protocol.md documents the setting"
+      ]
+    }
+  ],
+  "reuseInventory": [
+    {
+      "element": "Target.repositoryFromRemote, Target.validRepository",
+      "location": "src/Praxis.Domain/Installation/Registration.fs:53,67",
+      "disposition": "reused",
+      "reason": "reused: the observed locator of a repository comes from it"
+    },
+    {
+      "element": "ExecutionCommands.qualifyWorkItem",
+      "location": "src/Praxis.Cli/ExecutionCommands.fs:52",
+      "disposition": "extended",
+      "reason": "extended: it becomes a rendering of the typed identity instead of string concatenation in the CLI"
+    },
+    {
+      "element": "GitWorkspace.remoteUrl",
+      "location": "src/Praxis.Infrastructure/Execution/ExecutionStore.fs:140",
+      "disposition": "reused for the locator observation",
+      "reason": "reused for the locator observation"
+    },
+    {
+      "element": "FileWorkConfigRepository.readRepositoryId",
+      "location": "src/Praxis.Infrastructure/Work/FileWorkConfigRepository.fs:252",
+      "disposition": "extended",
+      "reason": "extended: kept as the legacy name; `repository.identity` is read beside it"
+    },
+    {
+      "element": "GitHubActionsExecutor executor facts",
+      "location": "src/Praxis.Infrastructure/Remote/GitHubActionsExecutor.fs:28",
+      "disposition": "extended with `GITHUB_REPOSITORY_ID` as the observed provider ID",
+      "reason": "extended with `GITHUB_REPOSITORY_ID` as the observed provider ID"
+    },
+    {
+      "element": "PRAXIS-GROUP-07 MemberReference (owner/repo:WORK-ID, in progress, uncommitted in praxis-g07)",
+      "location": "src/Praxis.Domain/Work/WorkGroups.fs (working tree of group/07-cross-repository)",
+      "disposition": "not-reused",
+      "reason": "aligned, not duplicated: the identity module uses the same display grammar (`LastIndexOf ':'`, `owner/repo` prefix) so GROUP-07 can switch its parser to it; group members stay GROUP-07's"
+    },
+    {
+      "element": "RemoteJson.parseRequest, Operation.arguments, ProtocolVersion.isSupportedBy",
+      "location": "src/Praxis.Contracts/Remote/RemoteJson.fs:430, src/Praxis.Domain/Remote/Protocol.fs:146,212",
+      "disposition": "extended",
+      "reason": "extended: 1.4 structured references are normalised before the existing argument parser; the old-peer rule is the existing minor-version gate"
+    },
+    {
+      "element": "EnvelopeReconciliation.decide (InstanceIdentityMismatch, WorkItemBranchMismatch)",
+      "location": "src/Praxis.Domain/Work/EnvelopeReconciliation.fs:130,141,148",
+      "disposition": "extended",
+      "reason": "extended: a foreign local instance is a new finding; the mismatch rule is reused unchanged and made reachable"
+    },
+    {
+      "element": "localInstanceId / localPraxisInstanceId (two copies, both swallow exceptions)",
+      "location": "src/Praxis.Cli/EnvelopeReconciliationCommands.fs:16, src/Praxis.Infrastructure/Work/FileTelemetryExecutionRepository.fs:40",
+      "disposition": "not-reused",
+      "reason": "replaced by one Infrastructure store with typed failures"
+    },
+    {
+      "element": "AdministrationClient.send, RegistrationRequest.operationIdFor",
+      "location": "src/Praxis.Infrastructure/Installation/*.fs:69, src/Praxis.Domain/Installation/Registration.fs:156",
+      "disposition": "reused for instance registration; no second client",
+      "reason": "reused for instance registration; no second client"
+    },
+    {
+      "element": "PathFilter.meaningfulPaths, realObservedGitPaths, ProcessGitRepository.readBranchAndCommit",
+      "location": "src/Praxis.Domain/Work/PathFilter.fs:74, src/Praxis.Cli/Program.fs:354, src/Praxis.Infrastructure/Git/GitRepository.fs:321",
+      "disposition": "reused by the DER-01 rule",
+      "reason": "reused by the DER-01 rule"
+    },
+    {
+      "element": "computeUnifiedFindings",
+      "location": "src/Praxis.Cli/Program.fs:2029",
+      "disposition": "extended with the identity contributors",
+      "reason": "extended with the identity contributors"
+    },
+    {
+      "element": "Lifecycle.initialize, Lifecycle.performUpgrade",
+      "location": "src/Praxis.Cli/Lifecycle.fs:497,524",
+      "disposition": "extended",
+      "reason": "extended: the instance identity is ensured after a successful apply"
+    }
+  ],
+  "searches": [
+    "grep -rn \"instance.json\\|praxisInstanceId\\|instanceId\" src",
+    "grep -rn \"repositoryFromRemote\\|owner/repo\" src",
+    "grep -rn \"workItemId\" src/Praxis.Domain/Remote src/Praxis.Contracts/Remote",
+    "grep -rn \"ROS_BASE_REF\\|enforceAttribution\" src",
+    "git -C ../praxis-g07 diff (PRAXIS-GROUP-07 in progress)"
+  ],
+  "newAbstractions": [
+    {
+      "name": "Praxis.Domain.Identity.RepositoryIdentity / WorkItemIdentity / WorkItemReference",
+      "consideredExisting": "Praxis.Domain.Installation.Target; PRAXIS-GROUP-07 MemberReference (uncommitted)",
+      "whyNotReused": "Neither carries a stable provider ID or an explicit legacy state, and both belong to other bounded contexts; GROUP-07 can adopt the identity module because it uses the same owner/repo:ID display grammar."
+    },
+    {
+      "name": "Praxis.Domain.Identity.InstanceIdentity",
+      "consideredExisting": "EnvelopeReconciliationInput.PraxisInstanceId (a string field)",
+      "whyNotReused": "Nothing models an instance, its repository binding or its lineage; only the field is read."
+    },
+    {
+      "name": "FileInstanceIdentityStore",
+      "consideredExisting": "EnvelopeReconciliationCommands.localInstanceId and FileTelemetryExecutionRepository.localPraxisInstanceId",
+      "whyNotReused": "They are duplicated, read-only and swallow exceptions; they are replaced by the store."
+    },
+    {
+      "name": "Praxis.Domain.Identity.BranchPolicy",
+      "consideredExisting": "EnvelopeReconciliationFinding.WorkItemBranchMismatch",
+      "whyNotReused": "That rule compares two strings inside an envelope; validate needs policy, meaningful-change and work-context inputs."
+    }
+  ]
+}

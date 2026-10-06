@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "groups": [
+    {
+      "id": "GROUP-PRAXIS-IDENTITY-001",
+      "members": [
+        "PRAXIS-ID-01",
+        "PRAXIS-ID-02",
+        "PRAXIS-ID-03",
+        "PRAXIS-ID-04",
+        "PRAXIS-ID-05",
+        "PRAXIS-ID-06"
+      ],
+      "kind": "shared-data-model",
+      "origin": "human-declared",
+      "sharedContext": [
+        "Repository, work-item and Praxis instance identity: one identity model shared by remote, telemetry, planner, reconciliation and validation"
+      ],
+      "executionRepository": "repository-operating-system",
+      "crossRepository": false,
+      "architectureNotes": [],
+      "createdAt": "2026-10-06T20:37:38.039Z",
+      "createdBy": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "history": [
+        {
+          "operation": "created",
+          "member": null,
+          "at": "2026-10-06T20:37:38.039Z",
+          "actor": {
+            "kind": "agent",
+            "id": "anthropic/claude-code",
+            "provider": "anthropic",
+            "model": "unknown",
+            "runtime": "claude-code"
+          },
+          "reason": "Gap-closure track IDENTITY (audit 2026-10-06): the members share the repository-identity observation, the .praxis identity store and validate findings"
+        }
+      ],
+      "checkpoints": []
+    }
+  ]
+}

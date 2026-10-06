@@ -6590,11 +6590,55 @@
         }
       },
       "completedAt": "2026-10-06T19:50:10.000Z"
+    },
+    {
+      "id": "PRAXIS-ID-01",
+      "type": "implementation",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-06T20:38:52.986Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T203853526Z-363f79dc"
+      ]
+    },
+    {
+      "id": "PRAXIS-ID-04",
+      "type": "implementation",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-06T20:38:52.986Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T203854332Z-26bca76f"
+      ]
+    },
+    {
+      "id": "PRAXIS-ID-05",
+      "type": "implementation",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-06T20:38:52.986Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T203855460Z-423c35d8"
+      ]
+    },
+    {
+      "id": "PRAXIS-ID-06",
+      "type": "implementation",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-06T20:38:52.986Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T203856653Z-5e2b411d"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-06T19:50:10.000Z",
+  "updatedAt": "2026-10-06T20:38:52.986Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
