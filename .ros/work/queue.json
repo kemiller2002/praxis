@@ -4193,6 +4193,27 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "RELEASE-3-7-1",
+      "title": "Release Praxis 3.7.1",
+      "description": "Bump release.json and the self-hosting .echelon/toolchain.json pin from 3.7.0 to 3.7.1 so native-release.yml releases it.",
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T11:32:01.480Z",
+      "updatedAt": "2026-10-06T11:32:01.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "automation",
+        "id": "github/github-actions",
+        "provider": "github",
+        "model": "unknown",
+        "runtime": "github-actions"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
