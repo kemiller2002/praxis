@@ -139,3 +139,25 @@ An earlier start request targeted the superseded requirements branch. It is not 
 Once Praxis attribution is established, begin with a requirements-to-existing-capability matrix for Slice 1. Then implement only the uncovered behavior. Next, proceed to topology selection/orchestration, execution-plan optimization, and accepted-state economics/learning in the four slices above.
 
 The key architectural rule is extension, not duplication: reuse the existing planner/grouping/work/telemetry/continuity models wherever their semantics fit, and introduce a new abstraction only when the existing one cannot represent a requirement cleanly.
+
+
+## Delivery priority: Operational V1 first
+
+Do not wait for all four long-term slices before delivering value. The next implementation target is the `Immediate Operational V1` section of `requirements/AFFINITY-AWARE-EXECUTION.md`.
+
+Treat its V1 release gate as the first merge/use milestone. Reuse WI-0064 and the existing work-group implementation rather than redesigning affinity. The minimum useful path is:
+
+1. select a clearly high-affinity/high-confidence existing planner group;
+2. turn that recommendation into a governed grouped execution with one reasoning owner;
+3. require and commit the architecture/reuse analysis before product mutation;
+4. preserve member-level lifecycle, checkpoints, evidence, and acceptance verification;
+5. add/enforce the predecessor-SHA guard for sequential independent workers;
+6. record `affinity-execution-v1`, topology, provider/model/runtime and context boundaries;
+7. support a durable operator override among grouped, independent and planner-recommended execution;
+8. carry verification, repair and integration through cost/time-to-accepted-state;
+9. pass the V1 release gate;
+10. begin using V1 on clearly high-affinity ordinary work immediately.
+
+Dynamic affinity, automatic replanning, sophisticated budget optimization, causal-learning automation, task-scale normalization and automatic policy rollback are follow-on work unless a correctness dependency is discovered.
+
+Do not optimize the implementation for minimum first-pass cost. The operational success measures are cost-to-accepted-state, time-to-accepted-state and accepted quality.
