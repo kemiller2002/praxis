@@ -75,6 +75,17 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "PRAXIS-MISC-09: replace citations of deleted Node tests with the F# tests that cover the behaviour; keep the Node result as history"
+    EXE-20261006T204120763Z-b0001e2e:
+      operations: [modified]
+      at: 2026-10-06T20:42:24.471Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-MISC-07: cite the completed cross-provider continuation proof (EV-ROS-2026-A073)"
+      evidence: [EV-ROS-2026-A073]
 ---
 
 # Requirement
@@ -330,3 +341,6 @@ recorded in `EV-ROS-2026-A055`.
 
 **Remaining.** Protocol 1.3 has not run live through GitHub Actions. That
 needs a release containing it, pinned in `.echelon/toolchain.json`.
+(Update 2026-10-06: protocol 1.3 `work.continue` and `work.checkpoint` ran
+live through GitHub Actions with Praxis 3.6.0 in the cross-provider proof,
+runs `36605336068` and `36677659037`; see `EV-ROS-2026-A073`.)

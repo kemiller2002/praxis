@@ -41,6 +41,17 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "PRAXIS-MISC-09: replace citations of deleted Node tests with the F# tests that cover the behaviour; keep the Node result as history"
+    EXE-20261006T204120763Z-b0001e2e:
+      operations: [modified]
+      at: 2026-10-06T20:42:23.740Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-MISC-07: cite the completed cross-provider continuation proof (EV-ROS-2026-A073)"
+      evidence: [EV-ROS-2026-A073]
 ---
 
 # Requirement
@@ -102,5 +113,5 @@ but it cannot continue it (`EV-ROS-2026-A057`).
 | Criterion | Status |
 |---|---|
 | Live channel test | Met. See the verification in `DF-ROS-2026-A045`: relay run `36571870365` dispatched the Praxis remote run `36571886619`. |
-| Continuation completes | Open. It needs an actual OpenAI or ChatGPT execution to continue `PRAXIS-XPROVIDER-PROOF-01` through the inbox. It cannot be met on that executor's behalf. |
+| Continuation completes | Met (2026-09-30, recorded on `main` 2026-10-06 by `PRAXIS-MISC-07`). An OpenAI/ChatGPT successor continued `PRAXIS-XPROVIDER-PROOF-01` through inbox branch `praxis-inbox/chatgpt-xprovider-proof-01` and completed it on branch `proof/chatgpt-continuation`; Praxis recorded its own identity (asserted by the request), its execution's parent and the predecessor's `interrupted` disposition. See `EV-ROS-2026-A073`. |
 | No bypass | Met. Originally shown by the Node test `tests/praxis-remote-inbox.test.mjs` (historical; deleted with the Node suites, `RQ-ROS-2026-A024`); now covered by the F# `PremergeRemoteScriptTests` "fence inbox: ..." tests (byte-for-byte relay, refusal of unroutable files without dispatch, no pull-request or fork trigger). |
