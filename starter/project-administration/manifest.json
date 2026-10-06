@@ -34,8 +34,9 @@
     {
       "source": "templates/echelon-toolchain.json",
       "destination": ".echelon/toolchain.json",
-      "template": false,
-      "ownership": "shared"
+      "template": true,
+      "ownership": "shared",
+      "versionPin": "praxis"
     },
     {
       "source": "starter/greenfield/editorconfig.template",

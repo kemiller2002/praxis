@@ -387,6 +387,8 @@ module LifecycleCliTests =
                     CliPort.exitCode 0 (run [ "init"; "--project"; "Standalone Service" ])
                     Assert.isTrue (File.Exists(Path.Combine(project, ".echelon", "ros.json"))) "the manifest must be written"
                     Assert.isTrue (File.Exists(Path.Combine(project, "framework", "REP-SPECIFICATION.md"))) "the scaffold must be installed"
+                    // The embedded scaffold pins the release this binary is.
+                    Assert.equal (version ()) (CliPort.text ((CliPort.readJson project ".echelon/toolchain.json")["praxis"]))
 
                     let again = run [ "init" ]
                     CliPort.exitCode 0 again
@@ -420,4 +422,103 @@ module LifecycleCliTests =
                         Assert.equal (artifacts embeddedProject) (artifacts directoryProject)
                         CliPort.exitCode 0 (standalone assembly directoryProject [ "--package-root"; CliPort.repositoryRoot.Value; "verify"; "--strict" ]))) } ]
 
-    let tests = commandTests @ installTests @ upgradeTests @ payloadTests
+    let private toolchainPath = ".echelon/toolchain.json"
+
+    let private pinOf root =
+        CliPort.text ((CliPort.readJson root toolchainPath)["praxis"])
+
+    let private planned (plan: JsonNode) (path: string) =
+        CliPort.items (plan["changes"]) |> List.exists (fun change -> CliPort.stringOf change "path" = Some path)
+
+    /// A repository an earlier release installed and then left with an
+    /// outdated pin -- the state every release up to 3.7.0 produced, because
+    /// the seed hard-coded 3.4.0. `recordAsSeeded` makes the installation
+    /// record the stale file as what it seeded (folio, percepta); otherwise
+    /// the record keeps this release's seed and the stale file reads as a
+    /// local edit (a hand-corrected pin that has since gone out of date).
+    let private outdatedPin (content: string) (recordAsSeeded: bool) (run: string -> unit) =
+        installed "ros-lifecycle-outdated-pin" (fun root ->
+            CliHarness.write root toolchainPath content
+            let record = manifest root
+            record["installedVersion"] <- JsonValue.Create "3.6.0"
+
+            if recordAsSeeded then
+                (artifact record toolchainPath)["sha256"] <- JsonValue.Create(CliPort.sha256Text content)
+
+            CliPort.writeJson root ".echelon/ros.json" record
+            run root)
+
+    let private pinTests =
+        [ { Name = "lifecycle cli: init pins .echelon/toolchain.json to the release performing it"
+            Run = fun () ->
+                installed "ros-lifecycle-pin-init" (fun root ->
+                    let written = CliHarness.read root toolchainPath
+                    Assert.equal (version ()) (pinOf root)
+                    Assert.isTrue (not (written.Contains "{{")) $"the pin must be rendered, not a placeholder: {written}"
+                    Assert.equal 1.0 (CliPort.number ((CliPort.readJson root toolchainPath)["schemaVersion"]))
+                    exit 0 root [ "verify"; "--strict" ]
+                    exit 0 root [ "init"; "--check" ]) }
+          { Name = "lifecycle cli: upgrade re-pins a stale seeded toolchain pin and keeps every other field"
+            Run = fun () ->
+                let stale =
+                    "{\n  \"schemaVersion\": 1,\n  \"ordo\": \"1.4.0\",\n  \"praxis\": \"3.4.0\",\n  \"future\": { \"kept\": true }\n}\n"
+
+                outdatedPin stale true (fun root ->
+                    let dryResult, dry = json root [ "upgrade"; "--dry-run"; "--json" ]
+                    CliPort.exitCode 0 dryResult
+                    Assert.isTrue (planned dry toolchainPath) "the dry run must show the re-pin"
+                    CliPort.deepEqual "[]" (dry["conflicts"])
+                    Assert.equal stale (CliHarness.read root toolchainPath)
+
+                    exit 0 root [ "upgrade" ]
+
+                    // Only the pin moved: the Ordo pin, the unknown field, and
+                    // every property's position are the repository's own.
+                    let expected =
+                        CliPort.fill
+                            [ "VERSION", version () ]
+                            "{\n  \"schemaVersion\": 1,\n  \"ordo\": \"1.4.0\",\n  \"praxis\": \"{{VERSION}}\",\n  \"future\": {\n    \"kept\": true\n  }\n}\n"
+
+                    Assert.equal expected (CliHarness.read root toolchainPath)
+                    let recorded = artifact (manifest root) toolchainPath
+                    Assert.equal "shared" (CliPort.text (recorded["ownership"]))
+                    Assert.equal (CliPort.sha256Text expected) (CliPort.text (recorded["sha256"]))
+                    exit 0 root [ "verify"; "--strict" ]
+
+                    let again = ros root [ "init" ]
+                    CliPort.exitCode 0 again
+                    CliPort.contains "no changes needed" again.Out
+                    exit 0 root [ "upgrade"; "--check" ]) }
+          { Name = "lifecycle cli: upgrade re-pins a hand-corrected pin that a newer release has outdated"
+            Run = fun () ->
+                let corrected = "{\"schemaVersion\":1,\"ordo\":\"1.4.0\",\"praxis\":\"3.6.0\"}\n"
+
+                outdatedPin corrected false (fun root ->
+                    exit 0 root [ "upgrade" ]
+                    Assert.equal (version ()) (pinOf root)
+                    Assert.equal "1.4.0" (CliPort.text ((CliPort.readJson root toolchainPath)["ordo"]))
+                    exit 0 root [ "verify"; "--strict" ]
+                    exit 0 root [ "init"; "--check" ]) }
+          { Name = "lifecycle cli: a toolchain manifest already pinned to this release is left byte for byte"
+            Run = fun () ->
+                installed "ros-lifecycle-pin-current" (fun root ->
+                    let own =
+                        CliPort.fill [ "VERSION", version () ] "{ \"praxis\": \"{{VERSION}}\", \"schemaVersion\": 1, \"ordo\": \"1.4.0\" }\n"
+
+                    CliHarness.write root toolchainPath own
+                    let result = ros root [ "init" ]
+                    CliPort.exitCode 0 result
+                    Assert.equal own (CliHarness.read root toolchainPath)
+                    let second = ros root [ "init" ]
+                    CliPort.contains "no changes needed" second.Out) }
+          { Name = "lifecycle cli: a toolchain manifest that is not a plain JSON object is preserved, never overwritten"
+            Run = fun () ->
+                installed "ros-lifecycle-pin-unreadable" (fun root ->
+                    let commented = "// pinned by hand\n{ \"schemaVersion\": 1, \"praxis\": \"3.4.0\" }\n"
+                    CliHarness.write root toolchainPath commented
+                    let _, plan = json root [ "init"; "--dry-run"; "--json" ]
+                    Assert.isTrue (not (planned plan toolchainPath)) "an unreadable pin file must not be planned for rewrite"
+                    exit 0 root [ "init" ]
+                    Assert.equal commented (CliHarness.read root toolchainPath)) } ]
+
+    let tests = commandTests @ installTests @ upgradeTests @ payloadTests @ pinTests

@@ -101,6 +101,11 @@ module Planning =
             // The repository owns these outright; a divergence is the normal
             // case, not a problem to repair.
             | Ownership.UserOwned -> Choice3Of3 entry.Path
+            // Seeded once, then edited by the repository. The payload already
+            // carries the repository's copy with only the tool's own field
+            // brought up to date, so writing it loses nothing.
+            | Ownership.Shared when entry.MergedFromRepository ->
+                Choice1Of3(PlannedChange.UpdateManagedFile(entry.Path, diskSha, entry.Sha256))
             // Seeded once, then edited by the repository. Only a migration
             // that explicitly targets the file may rewrite it.
             | Ownership.Shared -> Choice3Of3 entry.Path
@@ -120,9 +125,11 @@ module Planning =
     /// What the manifest would record for one payload entry once the plan has
     /// run. A preserved file is recorded at the hash it actually has, so that
     /// a later `verify` never reports drift the tool itself chose to accept.
+    /// A file merged from the repository's own copy is recorded at the merged
+    /// content, which is exactly what the plan writes (or already finds).
     let private artifactRecord (observed: ObservedRepository) (movedAsIs: Map<string, string>) (entry: PayloadEntry) : RecordedArtifact =
         let sha =
-            if Ownership.integrityChecked entry.Ownership then
+            if Ownership.integrityChecked entry.Ownership || entry.MergedFromRepository then
                 entry.Sha256
             else
                 Map.tryFind entry.Path observed.Files

@@ -18,7 +18,10 @@ type Ownership =
     /// Controlled by the repository. Seeded once if absent, never rewritten.
     | UserOwned
     /// Seeded by the tool and then edited by the repository. Only a declared
-    /// migration may change it, and only when it is unmodified.
+    /// migration may change it, and only when it is unmodified -- except for
+    /// a field the tool itself owns inside it (the Praxis version pin), which
+    /// the payload re-derives from the repository's own copy; see
+    /// `PayloadEntry.MergedFromRepository`.
     | Shared
 
 [<RequireQualifiedAccess>]
@@ -71,7 +74,14 @@ type PayloadEntry =
       /// Earlier destinations of this same file (a renamed scaffold file). An
       /// upgrade moves a recorded earlier file here instead of leaving it
       /// behind next to a new copy.
-      Replaces: string list }
+      Replaces: string list
+      /// True when this entry's content was computed from the repository's
+      /// own copy of the file, changing only a field this tool owns (today:
+      /// the `praxis` pin in `.echelon/toolchain.json`) and keeping every
+      /// other byte the repository chose. Such content may replace a shared
+      /// file that diverges from the seed, because it carries the
+      /// repository's edits with it.
+      MergedFromRepository: bool }
 
 /// One file a previous installation recorded in `.echelon/ros.json`.
 type RecordedArtifact =

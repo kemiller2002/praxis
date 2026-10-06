@@ -14,7 +14,8 @@ module LifecycleTests =
           Sha256 = sha
           Executable = false
           Integration = None
-          Replaces = [] }
+          Replaces = []
+          MergedFromRepository = false }
 
     let private observed files recorded =
         { ObservedRepository.empty with
@@ -38,6 +39,16 @@ module LifecycleTests =
         { Path = path
           Ownership = ownership
           Sha256 = sha }
+
+    /// The checkout this test binary was built from (`release.json` above it).
+    let private repositoryRoot () =
+        let rec walk (directory: System.IO.DirectoryInfo) =
+            match directory with
+            | null -> failwith "Could not locate the repository root (no release.json above the test binary)"
+            | current when System.IO.File.Exists(System.IO.Path.Combine(current.FullName, "release.json")) -> current.FullName
+            | current -> walk current.Parent
+
+        walk (System.IO.DirectoryInfo System.AppContext.BaseDirectory)
 
     let private planFor payload state =
         (Planning.initialize "greenfield" "pkg" "1.0.0" payload state).Plan
@@ -454,6 +465,87 @@ module LifecycleTests =
 
                   Assert.empty missing
                   Assert.empty extra }
+
+          { Name = "a shared file merged from the repository's own copy is rewritten and recorded at the merged content"
+            Run =
+              fun () ->
+                  let merged = { entry ".echelon/toolchain.json" Ownership.Shared "repinned" with MergedFromRepository = true }
+                  let state = observed [ ".echelon/toolchain.json", "stale" ] (Some [ recordedArtifact ".echelon/toolchain.json" Ownership.Shared "stale" ])
+
+                  match changesFor [ merged ] state |> Assert.single with
+                  | PlannedChange.UpdateManagedFile(".echelon/toolchain.json", "stale", "repinned") -> ()
+                  | other -> failwith $"Expected the merged file to be updated, got {other}"
+
+                  let installation = Planning.initialize "greenfield" "pkg" "1.0.0" [ merged ] state
+                  Assert.equal "repinned" (installation.Manifest.ManagedArtifacts |> Assert.single).Sha256
+                  Assert.empty installation.Plan.Conflicts
+
+                  // Already current: nothing to write, and the record is unchanged.
+                  let current = observed [ ".echelon/toolchain.json", "repinned" ] (Some [ recordedArtifact ".echelon/toolchain.json" Ownership.Shared "repinned" ])
+                  Assert.empty (changesFor [ merged ] current)
+
+                  // The same divergence without a merge is a repository edit, preserved.
+                  let seeded = { merged with MergedFromRepository = false }
+                  Assert.empty (changesFor [ seeded ] state)
+                  Assert.equal "stale" ((Planning.initialize "greenfield" "pkg" "1.0.0" [ seeded ] state).Manifest.ManagedArtifacts |> Assert.single).Sha256 }
+
+          { Name = "a version pin changes only the pinned property and keeps everything else in place"
+            Run =
+              fun () ->
+                  let reconcile = Praxis.Infrastructure.Lifecycle.Payload.reconcilePin "praxis" "9.8.7"
+
+                  match reconcile "{\n  \"schemaVersion\": 1,\n  \"ordo\": \"1.4.0\",\n  \"praxis\": \"3.4.0\"\n}\n" with
+                  | Praxis.Infrastructure.Lifecycle.PinReconciliation.Repinned content ->
+                      Assert.equal "{\n  \"schemaVersion\": 1,\n  \"ordo\": \"1.4.0\",\n  \"praxis\": \"9.8.7\"\n}\n" content
+                  | other -> failwith $"Expected a re-pin, got {other}"
+
+                  // A missing pin is added after the repository's own fields.
+                  match reconcile "{\"schemaVersion\":1,\"note\":\"é\"}" with
+                  | Praxis.Infrastructure.Lifecycle.PinReconciliation.Repinned content ->
+                      Assert.equal "{\n  \"schemaVersion\": 1,\n  \"note\": \"é\",\n  \"praxis\": \"9.8.7\"\n}\n" content
+                  | other -> failwith $"Expected the pin to be added, got {other}"
+
+                  Assert.equal Praxis.Infrastructure.Lifecycle.PinReconciliation.Current (reconcile "{\"praxis\":\"9.8.7\"}")
+
+                  for unusable in [ "[]"; "\"9.8.7\""; "{ not json"; "// comment\n{\"praxis\":\"1.0.0\"}" ] do
+                      Assert.equal Praxis.Infrastructure.Lifecycle.PinReconciliation.Unrecognised (reconcile unusable) }
+
+          // Every release up to 3.7.0 seeded `"praxis": "3.4.0"` because this
+          // template hard-coded it, so `echelon doctor` failed and `echelon
+          // setup` installed the wrong Praxis in every repository it reached.
+          // The pin must come from the release performing the install; a
+          // literal version in the template, the repository copy or the copy
+          // compiled into the binary is that defect returning.
+          { Name = "the toolchain template pins the installing release and carries no literal version"
+            Run =
+              fun () ->
+                  let template = "templates/echelon-toolchain.json"
+                  let literalVersion = System.Text.RegularExpressions.Regex(@"\d+\.\d+\.\d+")
+
+                  let copies =
+                      [ "repository", System.IO.File.ReadAllText(System.IO.Path.Combine(repositoryRoot (), template))
+                        "embedded",
+                        (match Praxis.Infrastructure.Lifecycle.Payload.embeddedText template with
+                         | Some text -> text
+                         | None -> failwith $"{template} is not embedded") ]
+
+                  for copy, text in copies do
+                      Assert.isTrue (not (literalVersion.IsMatch text)) $"the {copy} {template} hard-codes a version: {text}"
+                      Assert.isTrue (text.Contains "\"praxis\": \"{{PRAXIS_VERSION}}\"") $"the {copy} {template} must pin {{{{PRAXIS_VERSION}}}}: {text}"
+
+                  for profile in [ "greenfield"; "project-administration" ] do
+                      let manifest = System.IO.Path.Combine(repositoryRoot (), "starter", profile, "manifest.json")
+                      use document = System.Text.Json.JsonDocument.Parse(System.IO.File.ReadAllText manifest)
+
+                      let toolchain =
+                          document.RootElement.GetProperty("files").EnumerateArray()
+                          |> Seq.filter (fun item -> item.GetProperty("destination").GetString() = ".echelon/toolchain.json")
+                          |> List.ofSeq
+                          |> Assert.single
+
+                      Assert.equal template (toolchain.GetProperty("source").GetString())
+                      Assert.isTrue (toolchain.GetProperty("template").GetBoolean()) $"{profile}: the toolchain seed must be rendered"
+                      Assert.equal "praxis" (toolchain.GetProperty("versionPin").GetString()) }
 
           { Name = "every exit code has exactly one documented meaning"
             Run =

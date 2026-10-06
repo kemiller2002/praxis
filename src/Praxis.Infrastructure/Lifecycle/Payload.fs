@@ -4,14 +4,34 @@ open System
 open System.IO
 open System.Security.Cryptography
 open System.Text
+open System.Text.Encodings.Web
 open System.Text.Json
+open System.Text.Json.Nodes
 open System.Text.RegularExpressions
 open Praxis.Domain.Lifecycle
 
 /// One payload file, rendered and ready to write.
 type PayloadFile =
     { Entry: PayloadEntry
-      Content: byte array }
+      Content: byte array
+      /// The JSON property, when there is one, through which this file pins
+      /// the Praxis release that installed it (the manifest's `versionPin`).
+      /// `init` and `upgrade` keep that property equal to the release
+      /// performing them, in a new file and in the repository's existing copy.
+      VersionPin: string option }
+
+/// How a repository's existing copy of a version-pinned file relates to the
+/// release that is installing it.
+[<RequireQualifiedAccess>]
+type PinReconciliation =
+    /// The pin already names this release; the file is left byte for byte.
+    | Current
+    /// The file with only the pinned property set to this release.
+    | Repinned of content: string
+    /// Not a JSON object this tool can rewrite without losing something (for
+    /// example, it is malformed or carries comments). The repository's copy
+    /// is preserved untouched, as for any other shared file.
+    | Unrecognised
 
 /// The scaffold this package installs, plus the metadata `init` records about
 /// it. Loaded from the package's own `starter/<profile>/manifest.json`, so the
@@ -114,6 +134,50 @@ module Payload =
             |> Seq.choose (fun item -> if item.ValueKind = JsonValueKind.String then Some(item.GetString()) else None)
             |> List.ofSeq
         | _ -> []
+
+    let private pinWriteOptions =
+        JsonSerializerOptions(WriteIndented = true, NewLine = "\n", Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping)
+
+    /// Decide what a version-pinned JSON file must contain for `version`.
+    /// Only the property `key` is ever changed; every other property keeps its
+    /// value and its position, so fields owned by the repository or by other
+    /// Echelon tools (for example `ordo`) survive. A missing pin is added last.
+    let reconcilePin (key: string) (version: string) (existing: string) : PinReconciliation =
+        let parsed =
+            try
+                Some(JsonNode.Parse existing)
+            with :? JsonException ->
+                None
+
+        match parsed with
+        | Some(:? JsonObject as current) ->
+            let pinned =
+                match current[key] with
+                | :? JsonValue as value when value.GetValueKind() = JsonValueKind.String -> Some(value.GetValue<string>())
+                | _ -> None
+
+            if pinned = Some version then
+                PinReconciliation.Current
+            else
+                let pin = JsonValue.Create version :> JsonNode
+
+                let copy (node: JsonNode) =
+                    match node with
+                    | null -> null
+                    | value -> value.DeepClone()
+
+                let properties =
+                    [ for property in current ->
+                          property.Key, (if property.Key = key then pin else copy property.Value) ]
+
+                let properties =
+                    if current.ContainsKey key then properties else properties @ [ key, pin ]
+
+                let rewritten =
+                    JsonObject(properties |> List.map (fun (name, value) -> Collections.Generic.KeyValuePair(name, value)))
+
+                PinReconciliation.Repinned(rewritten.ToJsonString pinWriteOptions + "\n")
+        | _ -> PinReconciliation.Unrecognised
 
     let sha256Hex (content: byte array) =
         content |> SHA256.HashData |> Convert.ToHexString |> _.ToLowerInvariant()
@@ -340,7 +404,10 @@ module Payload =
                         [ "PROJECT_NAME", projectName
                           "PROJECT_SLUG", slugify projectName
                           "CREATED_DATE", DateTime.UtcNow.ToString("yyyy-MM-dd")
-                          "ROS_VERSION", targetVersion ]
+                          "ROS_VERSION", targetVersion
+                          // The release performing this init or upgrade, never a
+                          // literal: `.echelon/toolchain.json` pins it.
+                          "PRAXIS_VERSION", targetVersion ]
 
                 use document = JsonDocument.Parse(manifestText, jsonOptions)
 
@@ -370,8 +437,10 @@ module Payload =
                                       Sha256 = sha256Hex content
                                       Executable = boolProperty entry "executable"
                                       Integration = stringProperty entry "integration"
-                                      Replaces = stringsProperty entry "replaces" }
-                                  Content = content })
+                                      Replaces = stringsProperty entry "replaces"
+                                      MergedFromRepository = false }
+                                  Content = content
+                                  VersionPin = stringProperty entry "versionPin" })
 
                 let entries =
                     document.RootElement.GetProperty("files").EnumerateArray() |> Seq.map readEntry |> List.ofSeq
@@ -386,3 +455,36 @@ module Payload =
                           TargetVersion = targetVersion
                           ProjectName = projectName
                           Files = entries |> List.choose (function Ok file -> Some file | Error _ -> None) }))
+
+    /// The payload as it applies to one repository. A version-pinned file the
+    /// repository already has is replaced by its own copy with only the pin
+    /// set to this release (`reconcilePin`), so `init` and `upgrade` correct a
+    /// stale pin without discarding anything else the repository recorded
+    /// there. Every other file, and a pinned file that is absent, keeps the
+    /// rendered scaffold content. Read-only.
+    let forRepository (root: string) (payload: Payload) : Payload =
+        let reconcile (file: PayloadFile) =
+            let existing =
+                file.VersionPin
+                |> Option.bind (fun key ->
+                    match resolveWithin root file.Entry.Path with
+                    | Ok absolute when File.Exists absolute -> Some(key, File.ReadAllBytes absolute)
+                    | _ -> None)
+
+            let merged content =
+                { file with
+                    Content = content
+                    Entry =
+                        { file.Entry with
+                            Sha256 = sha256Hex content
+                            MergedFromRepository = true } }
+
+            match existing with
+            | None -> file
+            | Some(key, bytes) ->
+                match reconcilePin key payload.TargetVersion (Encoding.UTF8.GetString bytes) with
+                | PinReconciliation.Current -> merged bytes
+                | PinReconciliation.Repinned content -> merged (Encoding.UTF8.GetBytes content)
+                | PinReconciliation.Unrecognised -> file
+
+        { payload with Files = payload.Files |> List.map reconcile }
