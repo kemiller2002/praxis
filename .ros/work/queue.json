@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 71,
+  "nextSeq": 70,
   "items": [
     {
       "id": "WI-0001",
@@ -4135,30 +4135,6 @@
       "attachments": [],
       "createdAt": "2026-10-05T17:45:02.628Z",
       "updatedAt": "2026-10-05T17:55:29.000Z",
-      "createdBy": "unknown",
-      "createdByActor": {
-        "kind": "agent",
-        "id": "anthropic/claude-code",
-        "provider": "anthropic",
-        "model": "unknown",
-        "runtime": "claude-code"
-      },
-      "source": "manual",
-      "sourceReference": null
-    },
-    {
-      "id": "WI-0070",
-      "title": "Derive the seeded .echelon/toolchain.json Praxis pin from the running release instead of a hard-coded 3.4.0",
-      "description": "praxis init/upgrade seed .echelon/toolchain.json from templates/echelon-toolchain.json, which hard-codes praxis 3.4.0 (still at 3.6.0, 3.7.0 and main), so echelon doctor reports ECHELON-DOC-034 and echelon setup installs the wrong Praxis. Template the pin from the release version, reconcile an existing pin on init/upgrade, and guard the template against literal versions.",
-      "tags": [
-        "toolchain",
-        "lifecycle"
-      ],
-      "priority": "high",
-      "status": "ready",
-      "attachments": [],
-      "createdAt": "2026-10-06T10:25:46.831Z",
-      "updatedAt": "2026-10-06T10:25:55.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
