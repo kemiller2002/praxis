@@ -80,7 +80,7 @@
 | PRAXIS-GROUP-09 | plan execute-group and grouped execution by default for qualifying high-affinity groups (PRX-GRP-117, 130..132, 136..137) | captured | grouping | high |
 | PRAXIS-GROUP-10 | Grouped-execution completion gates: machine-checkable reuse inventory and per-criterion verification (PRX-GRP-133..135, 040, 045) | captured | grouping | high |
 | PRAXIS-HYG-01 | Retire the leaked test-fixture work items WI-READY and WI-ACTIVE and keep tests out of canonical state | active | state-hygiene, work-protocol | high |
-| PRAXIS-HYG-02 | validate fails when a backlog row's terminal status contradicts its live work item; repair WI-0061 with a typed re-identification | ready | state-hygiene, backlog | high |
+| PRAXIS-HYG-02 | validate fails when a backlog row's terminal status contradicts its live work item; repair WI-0061 with a typed re-identification | active | state-hygiene, backlog | high |
 | PRAXIS-HYG-03 | Record the missing created provenance of EV-ROS-2026-A063 and EV-ROS-2026-A067 truthfully | blocked | provenance | medium |
 | PRAXIS-HYG-04 | Correct docs/planning.md work-group replication status and guard requirement status tables against dangling citations | ready | docs, state-hygiene | medium |
 | PRAXIS-INTERNAL-NAMESPACES | Migrate internal Ros.* projects, namespaces, assemblies and Ros.slnx to Praxis.* (deferred from PRAXIS-CLI-RENAME, DF-ROS-2026-A043) | complete | rename, follow-up | low |
@@ -237,7 +237,8 @@
 | WI-0058 | Release 3.0.0: version bump plus refreshed README and instructions | complete |  | high |
 | WI-0059 | Classify registries/theories.json as generated in both starter manifests | complete |  | high |
 | WI-0060 | Bump npm package version to 3.0.3 | complete | release, npm | medium |
-| WI-0061 | Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict | complete | remote-execution, gh-90 | medium |
+| WI-0061 | WI-0061 | complete |  |  |
+| WI-0061-REUSED | Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict | abandoned | remote-execution, gh-90 | medium |
 | WI-0062 | Triage SDE 1.3.0 structural review findings | complete | sde, structural-review | high |
 | WI-0063 | Implement ROS next-pass Ordo observation and structured handoff (#63) | complete | ordo,next-pass | high |
 | WI-0064 | Evidence-based work groups for the advisory planner (plan groups/explain-group) and the frozen grouping A/B experiment protocol | complete | planning, architecture, cli | high |

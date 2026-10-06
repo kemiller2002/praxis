@@ -78,6 +78,7 @@
     <Compile Include="WorkGitPathsCliTests.fs" />
     <Compile Include="WorkValidateCliTests.fs" />
     <Compile Include="WorkBacklogCliTests.fs" />
+    <Compile Include="BacklogReidentificationTests.fs" />
     <Compile Include="WorkLifecycleCliTests.fs" />
     <Compile Include="QualityEvidenceTests.fs" />
     <Compile Include="WorkViewCliTests.fs" />

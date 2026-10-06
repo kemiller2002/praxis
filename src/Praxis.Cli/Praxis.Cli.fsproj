@@ -47,6 +47,7 @@
     <Compile Include="InstallationCommands.fs" />
     <Compile Include="PlanCommands.fs" />
     <Compile Include="WorkGroupCommands.fs" />
+    <Compile Include="BacklogQueueCommands.fs" />
     <Compile Include="PacingStatus.fs" />
     <Compile Include="PacingCommands.fs" />
     <Compile Include="SyncCommands.fs" />

@@ -477,6 +477,57 @@ module FileBacklogQueueRepository =
         with error ->
             Error error.Message
 
+    /// Applies a decided `BacklogReidentification` plan: the first row with
+    /// the old ID takes the new one and records `reidentifiedFrom` and
+    /// `reidentifiedReason`; every other item and field is preserved, and
+    /// both queue files are committed through the `backlog-state` journal.
+    /// A row with attachments is refused, because its stored files live
+    /// under `.ros/work/attachments/{id}/` and would no longer match.
+    let applyReidentification
+        (root: string)
+        (plan: BacklogReidentificationPlan)
+        (occurredAt: string)
+        (contextItems: LiveWorkItem list)
+        : Result<BacklogQueueRow, string> =
+        let path = queuePath root
+
+        if not (File.Exists path) then
+            Error $"'{plan.Id}' is not a captured local work item"
+        else
+            try
+                match JsonNode.Parse(File.ReadAllText path) with
+                | :? JsonObject as queueNode ->
+                    match queueNode["items"] with
+                    | :? JsonArray as items ->
+                        let target =
+                            items
+                            |> Seq.choose (fun node ->
+                                match node with
+                                | :? JsonObject as item when stringField item "id" = Some plan.Id -> Some item
+                                | _ -> None)
+                            |> Seq.tryHead
+
+                        match target with
+                        | None -> Error $"'{plan.Id}' is not a captured local work item"
+                        | Some item ->
+                            match item["attachments"] with
+                            | :? JsonArray as attachments when attachments.Count > 0 ->
+                                Error $"'{plan.Id}' has attachments; reidentifying a row with attachments is not supported"
+                            | _ ->
+                                item["id"] <- JsonValue.Create plan.NewId
+                                item["reidentifiedFrom"] <- JsonValue.Create plan.Id
+                                item["reidentifiedReason"] <- JsonValue.Create plan.Reason
+                                item["updatedAt"] <- JsonValue.Create occurredAt
+
+                                commitQueue root queueNode items contextItems (fun rows ->
+                                    match rows |> List.tryFind (fun row -> row.Id = plan.NewId) with
+                                    | Some row -> Ok row
+                                    | None -> Error $"'{plan.NewId}' vanished during reidentification")
+                    | _ -> Error "queue.json 'items' must be an array"
+                | _ -> Error "queue.json must contain a JSON object"
+            with error ->
+                Error error.Message
+
     /// Mirrors production `attachFileUnlocked`/`findOrCreateQueueEntry`
     /// (`tools/ros_cli.mjs`): writes the attachment bytes to
     /// `.ros/work/attachments/{id}/{storedFile}` first, as a plain
