@@ -5974,38 +5974,57 @@
     {
       "id": "PRAXIS-PLAN-ERROR-HISTORY",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-06T16:30:41.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/ErrorHistory.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PlanningCliTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/PlanningTests.fs"
+        },
+        {
+          "type": "analysis",
+          "path": "research/experiments/EX-ROS-2026-A022-runs/a41b/analysis-w4.txt"
+        }
+      ],
+      "updatedAt": "2026-10-06T16:56:41.000Z",
       "telemetryExecutionIds": [
         "EXE-20261006T163041697Z-77537386"
       ],
       "latestCheckpoint": {
-        "id": "4a361a9e1ca95d6c513585f1",
-        "recordedAt": "2026-10-06T16:52:51.000Z",
+        "id": "5f968d67354b9a7633134a1c",
+        "recordedAt": "2026-10-06T16:56:31.000Z",
         "executionId": "EXE-20261006T163041697Z-77537386",
         "repository": "repository-operating-system",
         "branch": "experiment/a022-run-a41b",
-        "commit": "7dfeaccdf00f9e3576939108fd71e037fa0210ba",
+        "commit": "0075efef452654e524d87c837454166100572663",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
         "remoteBranch": "experiment/a022-run-a41b",
-        "remoteCommit": "7dfeaccdf00f9e3576939108fd71e037fa0210ba",
-        "summary": "record-error and error-history implemented with domain, contract, store, validation, tests and docs",
-        "nextAction": "Finish full test run, verify each acceptance criterion, record metrics, complete",
+        "remoteCommit": "0075efef452654e524d87c837454166100572663",
+        "summary": "implemented, all six acceptance criteria verified as met, full suite 1345/1345, metrics recorded",
+        "nextAction": "Complete the item, build the registry, validate, commit Praxis state",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-06T16:56:41.000Z",
+      "conclusion": "Planner estimate error is persisted over time (plan record-error) and read with staleness (plan error-history); validate checks the store; all acceptance criteria met."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-06T16:30:41.000Z",
+  "updatedAt": "2026-10-06T16:56:41.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
