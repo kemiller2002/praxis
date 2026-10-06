@@ -131,6 +131,21 @@ module WorkStateJson =
     let workItemNotFound (id: string) : JsonNode =
         errorDocument "work-item-not-found" $"work item '{id}' was not found" [ "workItemId", text id ]
 
+    // ---- transition requests (PRX-CTL-006, PRX-UI-024) ----
+
+    /// An accepted transition: the requested action and the item's state
+    /// as recorded after it.
+    let transitionDocument (action: string) (item: WorkItemState) (detail: string option) : JsonNode =
+        let node = itemNode item
+        node["detail"] <- optionalText detail
+        envelope "work-transition" [ "action", text action; "item", node ]
+
+    /// A refused transition: `code` is the machine-readable category,
+    /// `message` the kernel's own text, `requestedAction` what was asked
+    /// (null when the request named no action).
+    let transitionRefusal (code: string) (message: string) (requestedAction: string option) (workItemId: string) : JsonNode =
+        errorDocument code message [ "message", text message; "requestedAction", optionalText requestedAction; "workItemId", text workItemId ]
+
     // ---- evidence, checkpoints and telemetry of one work item ----
 
     /// A block that has no source: `{availability: "unavailable", reason}`.

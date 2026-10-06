@@ -40,6 +40,8 @@ type WorkOperation =
     | Ready of id: string
     | Block of id: string * reason: string option
     | Abandon of id: string * reason: string option
+    /// `work abandon`: the one CLI path that abandons live work.
+    | AbandonWork of id: string * reason: string option * actor: string option
     | Update of id: string * UpdateInput
     | Attach of id: string * Upload list
     | Start of id: string * workType: string option * actor: string option
@@ -58,6 +60,42 @@ type RowAction =
     | Abandon
     | Resume
     | Complete
+
+/// The actions `POST /api/v1/work/ID/transitions` accepts.
+[<RequireQualifiedAccess>]
+type TransitionAction =
+    | Ready
+    | Block
+    | Abandon
+    | Start
+    | Resume
+    | Complete
+
+/// A transition request: the action, the operation its arguments describe
+/// (`WebInterface.itemOperation`), and the explicit `actor` argument, if any.
+type TransitionIntent =
+    { Id: string
+      Action: TransitionAction
+      Operation: WorkOperation
+      Actor: string option }
+
+/// Why a transition request was refused, as a machine-readable category.
+[<RequireQualifiedAccess>]
+type RefusalCategory =
+    | InvalidRequest
+    | WorkItemNotFound
+    | IllegalTransition
+    | ReasonRequired
+    | EvidenceRequired
+    | TransitionRefused
+    | StateUnreadable
+    | ExecutionFailed
+
+type TransitionRefusal =
+    { Category: RefusalCategory
+      Message: string
+      RequestedAction: string option
+      WorkItemId: string }
 
 /// A read of the versioned control-plane work-state contract
 /// (`Ros.Contracts.Work.WorkStateJson`), answered in-process from the
@@ -84,6 +122,7 @@ type WebRoute =
     | Api of WorkOperation
     | State of StateQuery
     | Control of ControlQuery
+    | Transition of Result<TransitionIntent, TransitionRefusal>
     | ApiDownload of id: string * attachmentId: string
     | ApiError of status: int * message: string
     | Home of query: (string * string) list
@@ -196,6 +235,109 @@ module WebInterface =
         | "complete" -> Some(WorkOperation.Complete(id, evidenceFrom body, text "conclusion" body, text "actor" body))
         | _ -> None
 
+    let transitionActions =
+        [ TransitionAction.Ready
+          TransitionAction.Block
+          TransitionAction.Abandon
+          TransitionAction.Start
+          TransitionAction.Resume
+          TransitionAction.Complete ]
+
+    let transitionCode (action: TransitionAction) =
+        match action with
+        | TransitionAction.Ready -> "ready"
+        | TransitionAction.Block -> "block"
+        | TransitionAction.Abandon -> "abandon"
+        | TransitionAction.Start -> "start"
+        | TransitionAction.Resume -> "resume"
+        | TransitionAction.Complete -> "complete"
+
+    let parseTransitionAction (text: string) =
+        transitionActions |> List.tryFind (transitionCode >> (=) text)
+
+    let refusalCode (category: RefusalCategory) =
+        match category with
+        | RefusalCategory.InvalidRequest -> "invalid-request"
+        | RefusalCategory.WorkItemNotFound -> "work-item-not-found"
+        | RefusalCategory.IllegalTransition -> "illegal-transition"
+        | RefusalCategory.ReasonRequired -> "reason-required"
+        | RefusalCategory.EvidenceRequired -> "evidence-required"
+        | RefusalCategory.TransitionRefused -> "transition-refused"
+        | RefusalCategory.StateUnreadable -> "work-state-unreadable"
+        | RefusalCategory.ExecutionFailed -> "execution-failed"
+
+    let refusalStatus (category: RefusalCategory) =
+        match category with
+        | RefusalCategory.InvalidRequest -> 400
+        | RefusalCategory.WorkItemNotFound -> 404
+        | RefusalCategory.IllegalTransition
+        | RefusalCategory.TransitionRefused -> 409
+        | RefusalCategory.ReasonRequired
+        | RefusalCategory.EvidenceRequired -> 422
+        | RefusalCategory.StateUnreadable
+        | RefusalCategory.ExecutionFailed -> 500
+
+    /// The transition a `POST /api/v1/work/ID/transitions` body requests:
+    /// `action` plus the same argument fields as the per-action routes.
+    let transitionIntent (id: string) (body: RequestBody) : Result<TransitionIntent, TransitionRefusal> =
+        let requested = text "action" body
+        let refuse message = Error { Category = RefusalCategory.InvalidRequest; Message = message; RequestedAction = requested; WorkItemId = id }
+        let expected = transitionActions |> List.map transitionCode |> String.concat ", "
+
+        match requested with
+        | None -> refuse $"a transition request requires an action (one of {expected})"
+        | Some actionText ->
+            match parseTransitionAction actionText, itemOperation id actionText body with
+            | Some action, Some operation -> Ok { Id = id; Action = action; Operation = operation; Actor = text "actor" body }
+            | _ -> refuse $"unknown action '{actionText}' (expected one of {expected})"
+
+    /// The one CLI command a transition runs under the governing kernel:
+    /// live work is abandoned by `work abandon`, backlog items by the
+    /// backlog transition; every other action has a single command.
+    let transitionOperation (kernel: GoverningKernel) (intent: TransitionIntent) : WorkOperation =
+        match kernel, intent.Operation with
+        | GoverningKernel.Live, WorkOperation.Abandon(id, reason) -> WorkOperation.AbandonWork(id, reason, intent.Actor)
+        | _, operation -> operation
+
+    /// The code the governing kernel's projection uses for an action (the
+    /// live kernel calls `start` `begin`).
+    let kernelActionCode (kernel: GoverningKernel) (action: TransitionAction) =
+        match kernel, action with
+        | GoverningKernel.Live, TransitionAction.Start -> "begin"
+        | _ -> transitionCode action
+
+    let private suppliedReason (operation: WorkOperation) =
+        match operation with
+        | WorkOperation.Block(_, reason)
+        | WorkOperation.Abandon(_, reason)
+        | WorkOperation.AbandonWork(_, reason, _) -> reason
+        | _ -> None
+
+    let private suppliedEvidence (operation: WorkOperation) =
+        match operation with
+        | WorkOperation.Complete(_, evidence, _, _) -> evidence |> List.map _.Type |> Set.ofList
+        | _ -> Set.empty
+
+    /// Categorizes a transition the CLI refused (exit status `exit`), from
+    /// what the kernels' own projection said of the action before the
+    /// request. It never decides whether the transition happens.
+    let refusalCategory (item: WorkItemState) (intent: TransitionIntent) (exit: int) : RefusalCategory =
+        let code = kernelActionCode item.GovernedBy intent.Action
+
+        match item.Actions |> List.tryFind (fun state -> state.Action = code) |> Option.map _.Availability with
+        | None
+        | Some(ActionAvailability.Refused _) -> RefusalCategory.IllegalTransition
+        | Some(ActionAvailability.Legal requirements) when requirements.Reason && (suppliedReason intent.Operation).IsNone ->
+            RefusalCategory.ReasonRequired
+        | Some(ActionAvailability.Legal requirements) when not (Set.isSubset (Set.ofList requirements.EvidenceTypes) (suppliedEvidence intent.Operation)) ->
+            RefusalCategory.EvidenceRequired
+        | Some _ when exit = 2 -> RefusalCategory.InvalidRequest
+        | Some _ -> RefusalCategory.TransitionRefused
+
+    let refusalResponse (refusal: TransitionRefusal) : int * JsonNode =
+        refusalStatus refusal.Category,
+        WorkStateJson.transitionRefusal (refusalCode refusal.Category) refusal.Message refusal.RequestedAction refusal.WorkItemId
+
     let private detailPath (id: string) = $"/work/{Html.segment id}"
 
     /// Pure routing: every request maps to exactly one route value.
@@ -209,6 +351,11 @@ module WebInterface =
         | "GET", [ "api"; "v1"; "work"; id; "telemetry" ] -> WebRoute.Control(ControlQuery.Telemetry id)
         | "GET", [ "api"; "v1"; "executions" ] -> WebRoute.Control(ControlQuery.Executions(HttpMessages.field "workItem" request.Query |> HttpMessages.nonBlank))
         | "GET", [ "api"; "v1"; "executions"; id ] -> WebRoute.Control(ControlQuery.Execution id)
+        | "POST", [ "api"; "v1"; "work"; id; "transitions" ] ->
+            match body () with
+            | Error message ->
+                WebRoute.Transition(Error { Category = RefusalCategory.InvalidRequest; Message = message; RequestedAction = None; WorkItemId = id })
+            | Ok parsed -> WebRoute.Transition(transitionIntent id parsed)
         | "GET", [ "api"; "work" ] -> WebRoute.Api(WorkOperation.List(queryTags request.Query, queryStatus request.Query))
         | "GET", [ "api"; "work"; "ready" ] -> WebRoute.Api(WorkOperation.List(queryTags request.Query, Some "ready"))
         | "GET", [ "api"; "work"; id ] -> WebRoute.Api(WorkOperation.Show id)
@@ -278,6 +425,8 @@ module WebInterface =
         | WorkOperation.Abandon(id, reason) ->
             [ "work"; "backlog-transition"; "--id"; id; "--action"; "abandon"; "--occurred-at"; now ]
             @ flag "--reason" reason
+        | WorkOperation.AbandonWork(id, reason, actor) ->
+            [ "work"; "abandon"; "--id"; id; "--occurred-at"; now ] @ flag "--reason" reason @ flag "--actor" actor
         | WorkOperation.Update(id, input) ->
             // `work update` changes tags whenever `--tag` is present; a bare
             // trailing `--tag` (no value) is its "set tags to none".
@@ -313,6 +462,7 @@ module WebInterface =
         | WorkOperation.Ready id
         | WorkOperation.Block(id, _)
         | WorkOperation.Abandon(id, _)
+        | WorkOperation.AbandonWork(id, _, _)
         | WorkOperation.Update(id, _)
         | WorkOperation.Attach(id, _)
         | WorkOperation.Start(id, _, _)
@@ -326,7 +476,8 @@ module WebInterface =
         | WorkOperation.Capture _ -> $"Captured {id}."
         | WorkOperation.Ready _ -> $"Marked {id} ready."
         | WorkOperation.Block _ -> $"Blocked {id}."
-        | WorkOperation.Abandon _ -> $"Abandoned {id}."
+        | WorkOperation.Abandon _
+        | WorkOperation.AbandonWork _ -> $"Abandoned {id}."
         | WorkOperation.Update _ -> $"Updated {id}."
         | WorkOperation.Attach _ -> $"Attached files to {id}."
         | WorkOperation.Start _ -> $"Started {id}."
@@ -903,6 +1054,35 @@ module WebInterface =
             | None -> runCli root (commandLine now [] operation)
             | Some id -> runCli root (commandLine now [] operation) |> Result.bind (fun _ -> show id)
 
+    /// The item's typed state as recorded now.
+    let private currentItem (root: string) (id: string) : Result<WorkItemState option, string> =
+        FileWorkListRepository.readStateSources root
+        |> Result.map (fun (configuration, queueItems, contextItems) ->
+            WorkStateView.project configuration queueItems contextItems |> List.tryFind (fun item -> item.Id = id))
+
+    /// Runs a transition request through the CLI command for it and answers
+    /// with the item's resulting typed state, or a structured refusal whose
+    /// message is the CLI's own. The request's headers and peer never reach
+    /// the command: identity is the server environment's, as for the CLI.
+    let transition (root: string) (intent: TransitionIntent) : int * JsonNode =
+        let action = transitionCode intent.Action
+
+        let refuse category message =
+            refusalResponse { Category = category; Message = message; RequestedAction = Some action; WorkItemId = intent.Id }
+
+        match currentItem root intent.Id with
+        | Error message -> refuse RefusalCategory.StateUnreadable message
+        | Ok None -> refuse RefusalCategory.WorkItemNotFound $"work item '{intent.Id}' was not found"
+        | Ok(Some before) ->
+            match CliProcess.runSelf root (commandLine (timestamp ()) [] (transitionOperation before.GovernedBy intent)) with
+            | Error message -> refuse RefusalCategory.ExecutionFailed message
+            | Ok result when result.Exit <> 0 -> refuse (refusalCategory before intent result.Exit) (CliProcess.failureMessage result)
+            | Ok _ ->
+                match currentItem root intent.Id with
+                | Ok(Some after) -> 200, WorkStateJson.transitionDocument action after (FileWorkListRepository.readDetail root intent.Id)
+                | Ok None -> refuse RefusalCategory.StateUnreadable $"work item '{intent.Id}' is not in the recorded state after '{action}'"
+                | Error message -> refuse RefusalCategory.StateUnreadable message
+
     /// The stylesheet: the repository's own `web/styles.css` when present
     /// (so a project can restyle it), else the copy compiled into this CLI.
     let stylesheet (root: string) (relative: string) =
@@ -953,6 +1133,13 @@ module WebInterface =
                         (fun () -> FileMetricRegistryRepository.read root)
                         (fun () -> FileTelemetryUsageRepository.aggregate root (Some id) Ros.Domain.Telemetry.UsageDimension.WorkItem)
                         (fun () -> FileTelemetryUsageRepository.aggregate root (Some id) Ros.Domain.Telemetry.UsageDimension.Execution |> snd)
+
+            HttpMessages.jsonNode status body
+        | WebRoute.Transition request ->
+            let status, body =
+                match request with
+                | Ok intent -> transition root intent
+                | Error refusal -> refusalResponse refusal
 
             HttpMessages.jsonNode status body
         | WebRoute.Api(WorkOperation.Show id) when isKnown (FileWorkListRepository.readStateSources root) id = Some false ->

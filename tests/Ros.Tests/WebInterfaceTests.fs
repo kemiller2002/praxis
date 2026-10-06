@@ -12,8 +12,9 @@ open Ros.Cli
 open Ros.Domain.Work
 
 /// Starts a real `praxis ... serve` process on a free loopback port and
-/// drives it over HTTP; `Dispose` always stops the process.
-type ServedProcess(root: string, command: string list) =
+/// drives it over HTTP; `Dispose` always stops the process. `environment`
+/// entries are applied after the identity variables are removed.
+type ServedProcess(root: string, command: string list, ?environment: (string * string) list) =
     let freePort () =
         let probe = new TcpListener(IPAddress.Loopback, 0)
         probe.Start()
@@ -29,6 +30,7 @@ type ServedProcess(root: string, command: string list) =
         startInfo.RedirectStandardError <- true
         [ CliHarness.cli; "--root"; root ] @ command @ [ "--port"; string port ] |> List.iter startInfo.ArgumentList.Add
         CliHarness.identityVariables |> List.iter (startInfo.Environment.Remove >> ignore)
+        defaultArg environment [] |> List.iter (fun (name, value) -> startInfo.Environment[name] <- value)
         let started = new Process(StartInfo = startInfo)
         started.ErrorDataReceived.Add(fun line -> if not (isNull line.Data) then lock errors (fun () -> errors.AppendLine line.Data |> ignore))
         started.Start() |> ignore
@@ -84,6 +86,13 @@ type ServedProcess(root: string, command: string list) =
     member _.PostJson(path: string, json: string) =
         use content = new StringContent(json, Encoding.UTF8, "application/json")
         client.PostAsync(path, content).Result
+
+    /// A JSON post carrying extra request headers.
+    member _.PostJsonWithHeaders(path: string, json: string, headers: (string * string) list) =
+        use message = new HttpRequestMessage(HttpMethod.Post, path)
+        message.Content <- new StringContent(json, Encoding.UTF8, "application/json")
+        headers |> List.iter (fun (name, value) -> message.Headers.TryAddWithoutValidation(name, value) |> ignore)
+        client.SendAsync(message).Result
 
     member _.PostForm(path: string, fields: (string * string) list) =
         use content = new FormUrlEncodedContent(fields |> List.map (fun (key, value) -> Collections.Generic.KeyValuePair(key, value)))
