@@ -1,6 +1,6 @@
 # Affinity-aware AI execution requirements
 
-Status: **Proposed**
+Status: **Implementation-ready**
 
 Evidence basis:
 - EX-ROS-2026-A021
@@ -32,6 +32,22 @@ The first production increment MUST optimize for time-to-benefit. The complete e
 - **PRX-AFF-V1-015** The V1 implementation SHOULD minimize new state and new abstractions. Prefer extending the existing grouping, execution, checkpoint, telemetry, and planning contracts.
 - **PRX-AFF-V1-016** V1 rollout MUST be reversible by configuration/policy selection without deleting or rewriting execution history.
 - **PRX-AFF-V1-017** Documentation MUST state that the A021-R2 savings are motivating evidence, not a promised savings percentage.
+
+
+### V1 rollout safeguards
+
+These are the final pre-implementation safeguards. After they are incorporated, requirement expansion SHOULD stop unless implementation discovers a correctness, safety, or governance gap.
+
+- **PRX-AFF-V1-018** V1 SHOULD support a shadow/recommendation-only rollout mode in which Praxis records the topology the policy would select without automatically changing execution. The actual operator-selected topology and the shadow recommendation MUST remain distinguishable.
+- **PRX-AFF-V1-019** V1 MUST provide a global policy kill switch that disables automatic affinity-based topology selection and falls back to the established execution behavior without requiring code rollback or rewriting historical records.
+- **PRX-AFF-V1-020** Automatic grouped selection MUST begin with a conservative, configurable maximum cohort size. Groups above the automatic limit MAY be executed together only through explicit operator approval. The limit and policy version MUST be recorded with the decision.
+- **PRX-AFF-V1-021** Praxis MUST NOT silently fall back from grouped execution to independent execution, or vice versa, after an execution decision is recorded. If the selected topology cannot start or continue, Praxis MUST record the failure/reason and require an explicit governed replan or override so outcome telemetry remains attributable to the topology actually used.
+- **PRX-AFF-V1-022** Every V1 topology decision MUST produce a durable decision receipt containing, where applicable: candidate work/cohort, selected topology, policy version, affinity evidence/classification, material exclusions or conflicts, expected predecessor SHA, provider/model/runtime constraints known at decision time, operator override and reason, shadow recommendation if enabled, and the resulting execution/group identity.
+- **PRX-AFF-V1-023** Once the V1 release gate passes, Praxis SHOULD dogfood the capability on suitable remaining Praxis work. Dogfood executions remain ordinary observational production evidence unless separately preregistered as controlled experiments.
+- **PRX-AFF-V1-024** V1 MUST support a conservative circuit-breaker state that disables automatic selection and returns the policy to recommendation-only mode when configured accepted-state quality or rework/integration indicators materially regress, or when an operator invokes the breaker.
+- **PRX-AFF-V1-025** Circuit-breaker activation MUST be durable and attributable, MUST affect future topology decisions only, and MUST NOT relabel or delete prior outcomes. Automatic re-enablement MUST NOT occur without an explicit configured rule backed by sufficient observations or an operator decision.
+- **PRX-AFF-V1-026** Shadow-mode observations MUST NOT be treated as counterfactual outcomes: they record what the policy would have selected, not what that unexecuted topology would have cost or how it would have performed.
+- **PRX-AFF-V1-027** The first production rollout SHOULD proceed recommendation-only/shadow first, then conservative automatic grouping for clearly high-affinity cohorts after the release gate and initial decision receipts demonstrate correct policy behavior. Explicit operator grouping remains available throughout.
 
 ### V1 release gate
 
