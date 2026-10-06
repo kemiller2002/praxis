@@ -1,0 +1,191 @@
+Architecture analysis: PRAXIS-CN-GL-KINDS
+=========================================
+
+Item:            PRAXIS-CN-GL-KINDS (GitHub issue #56)
+Title:           Govern the CN (concept) and GL (glossary) artifact kinds the
+                 standards define
+Branch:          experiment/a022-run-a41b
+Base commit:     43d5935189d6d800468b3616e55a1f193aaf7558
+Source:          ./praxis work show PRAXIS-CN-GL-KINDS
+
+
+1. Item and acceptance criteria
+-------------------------------
+
+Obligation: framework/standards/IDENTIFIERS.md:14 lists CN and GL among the
+identifier prefixes, but the F# artifact model (src/Ros.Domain/Artifacts/
+Model.fs:44-55 ArtifactKind, :66-120 ArtifactKinds.configurations) defines no
+such kinds, so CN/GL records are never enumerated by the loader, never
+projected into a registry and never validated. Direction: add the kinds.
+
+Acceptance criteria (verbatim intent, numbered as in the description):
+
+  AC1  CN and GL are artifact kinds with a documented root directory, allowed
+       statuses and identifier/filename rules consistent with the standards.
+  AC2  `praxis registry build` generates their registries and
+       `praxis registry check` detects staleness.
+  AC3  `praxis validate` applies to them the same identifier, filename,
+       status, reference and provenance checks as other kinds.
+  AC4  The starter scaffolds and the Python artifact-validator oracle
+       (tools/ros_cli.py) agree with the F# model wherever they enumerate
+       kinds.
+  AC5  Tests; afterwards the standards and the tooling no longer disagree.
+
+Depends on: nothing. No other backlog item is touched.
+
+
+2. Reuse inventory
+------------------
+
+Searches used: `grep -rn "configurations\|SourceDirectory" src`,
+`grep -rn "OptionalRegistry\|\"RQ\"\|research/requirements" ...`,
+`grep -rnI "research/theories\|research/hypotheses" ...`,
+`grep -rnI "CN-\|GL-\|glossary" framework docs`, and
+`git show --stat a718546` (the commit that added the RQ kind, the most recent
+precedent for adding a kind).
+
+| Existing element | Location | What it does | Reuse / extend / not reused |
+|---|---|---|---|
+| ArtifactKind union | src/Ros.Domain/Artifacts/Model.fs:44-55 | closed set of kinds | EXTEND: add Concept, Glossary cases |
+| ArtifactKinds.configurations | Model.fs:66-120 | single source of truth: name, source dir, registry path, prefix, OptionalRegistry | EXTEND: two entries; every consumer below derives from it |
+| OptionalRegistry flag | Model.fs:57-64, Operations.fs:67-73 | kind added after installations exist: no registry file while it has no documents, but an existing file is kept current | REUSE unchanged, set true for CN and GL (same reason as RQ) |
+| ArtifactKinds.identifierPrefix / tryFindByIdentifier | Model.fs:122-128 | prefix routing | REUSE unchanged |
+| FileArtifactRepository.enumerateArtifacts | src/Ros.Infrastructure/Artifacts/FileArtifactRepository.fs:19-40 | walks every configuration's SourceDirectory for *.md | REUSE unchanged (discovery follows the configuration) |
+| ArtifactProjection.plan | src/Ros.Domain/Artifacts/Projection.fs:10-20 | one registry projection per configuration, by prefix | REUSE unchanged |
+| RegistryTransaction.expectedPaths | src/Ros.Infrastructure/Artifacts/RegistryTransaction.fs:21-24 | allow-list of registry paths a pending transaction may write | REUSE unchanged (derived from configurations) |
+| ArtifactOperations.validate / checkRegistries / buildRegistries | src/Ros.Application/Artifacts/Operations.fs:96-175 | command pipelines for validate, registry check, registry build | REUSE unchanged |
+| ArtifactPolicy.identifierPattern | src/Ros.Domain/Artifacts/Policy.fs:8-12 | already accepts CN and GL prefixes | REUSE unchanged |
+| ArtifactPolicy.allowedStatuses | Policy.fs:39-48 | per-prefix status sets; a prefix with no entry is unchecked (as JR today) | EXTEND: CN and GL entries |
+| ArtifactPolicy.validate (title, filename `<ID>--`, duplicates, references, reciprocal supersession, confidence) | Policy.fs:76-166 | generic over every loaded document | REUSE unchanged; CN/GL inherit once loaded |
+| Provenance validation | src/Ros.Domain/Provenance/ProvenancePolicy.fs:126-160, loaded through FileArtifactRepository (src/Ros.Infrastructure/Provenance/FileProvenanceRepository.fs:255) | provenance policy over every canonical artifact | REUSE unchanged; CN/GL inherit once loaded |
+| Unified `praxis validate` | src/Ros.Cli/Program.fs:2093-2107 | composes artifact, stale-registry and provenance findings | REUSE unchanged |
+| Research lifecycle | framework/protocols/ARTIFACT-LIFECYCLE.md "Research artifacts" | draft -> review -> accepted -> superseded / withdrawn | REUSE as the CN/GL status set (identical to DF and EV, Policy.fs:41-42) |
+| Python oracle KIND_CONFIG / ALLOWED_STATUS / ID_RE | tools/ros_cli.py:15-56 | independent dependency-free validator and registry generator | EXTEND: it lacks RQ entirely (ID_RE, status, kind config) and has no optional-registry notion; add RQ, CN, GL and the optional rule |
+| Python oracle registry functions | tools/ros_cli.py:233-270 | rendered_registries / registry_findings / build_registries | EXTEND: skip a missing registry for an empty optional kind, as Operations.fs:67-91 |
+| Starter registries | starter/greenfield/registries/*.json, starter/*/manifest.json registry entries | scaffold the eight non-optional registries | REUSE unchanged: optional kinds are deliberately not scaffolded (RQ precedent); the agreement is "starter registries = non-optional kinds", which a new test pins |
+| Starter research dirs | starter/greenfield/manifest.json:164-198 (`research/<dir>/.gitkeep`) | scaffold kind source directories | NOT CHANGED: adding .gitkeep entries would alter install goldens (tests/Ros.Tests/Golden/work.json:245ff) and upgrade ownership for no behavioural gain; RQ (research/requirements) is likewise not scaffolded. A test pins that every scaffolded research/<dir>/.gitkeep is a kind source directory |
+| Artifact test helpers | tests/Ros.Tests/ArtifactTests.fs:13-71 (repositoryRoot, withFixture, artifactFindings, registryNames) | fixture copy + validation | REUSE; new tests build a temporary repository rather than editing the frozen fixtures (tests/fixtures/artifacts/manifest.json is frozen with preregistered hashes) |
+| Partial-write test | ArtifactTests.fs:199-232 (`Assert.equal 7 pending.Length`) | counts non-optional projections | UNCHANGED BEHAVIOUR expected: CN/GL optional + empty -> skipped |
+| Python test helpers | tests/test_ros_cli.py:10-21 (write_artifact, root) | temp repo | REUSE for new oracle tests |
+| Kind documentation | docs/features/artifact-management/manifest.md:36-40; framework/standards/IDENTIFIERS.md | registry outputs / prefixes | EXTEND with the CN/GL rows |
+
+New abstraction considered: none. A separate "kind table" for Python was
+considered and rejected; the existing KIND_CONFIG tuple is extended with an
+optional flag. No new store, pipeline or error type is introduced.
+
+
+3. Design
+---------
+
+Invariants and shared infrastructure
+  - ArtifactKinds.configurations is the single source of truth. Loader,
+    projection, registry transaction allow-list, stale check and build all
+    derive from it, so adding two entries makes CN/GL discovered, registered,
+    checked and transactionally written with no pipeline change.
+  - Validation is generic per document; the only per-kind data in policy is
+    the status table. Identifier regex already contains CN|GL.
+  - Provenance is generic over loaded documents.
+  - Registry bytes for the existing eight kinds must not change (frozen
+    fixture hashes, ArtifactTests "frozen valid fixture ...").
+
+Contracts
+  - Concept:   prefix CN, name "concepts", SourceDirectory
+               "research/concepts", RegistryPath "registries/concepts.json",
+               OptionalRegistry = true.
+  - Glossary:  prefix GL, name "glossary", SourceDirectory
+               "research/glossary", RegistryPath "registries/glossary.json",
+               OptionalRegistry = true.
+  - Statuses (both): draft, review, accepted, superseded, withdrawn — the
+    canonical research-artifact lifecycle (ARTIFACT-LIFECYCLE.md); DF/EV use
+    the same set.
+  - Identifier: <CN|GL>-<AREA>-<YYYY>-<TOKEN> (IDENTIFIERS.md), filename
+    <ID>--<short-kebab-title>.md; no legacy filename exception (the legacy
+    rule is research-package only, README.md:100).
+
+Why optional registries: existing installations have no CN/GL registry file;
+making the registries mandatory would make every installed repository's
+`registry check` / `validate` report two stale registries on upgrade. This is
+exactly the RQ rationale (Model.fs:58-61).
+
+Validation rules: unchanged code; new status entries only.
+
+Error model: unchanged (ArtifactFinding path/field/message; stale message
+"registry is stale; run 'praxis registry build'").
+
+Transaction boundaries: unchanged; registry writes for CN/GL go through the
+existing RegistryWriteLease and RegistryTransaction, whose allow-list is
+derived from configurations.
+
+Python oracle (tools/ros_cli.py), kept dependency-free:
+  - ID_RE gains RQ (and keeps CN, GL) so its prefix set equals the F# one.
+  - ALLOWED_STATUS gains RQ, CN, GL with the F# sets.
+  - KIND_CONFIG gains requirements, concepts, glossary, each with an
+    optional flag; rendered registries are skipped for an optional kind
+    with no artifacts and no existing file (mirrors Operations.fs:67-91).
+  - Written as pure functions/comprehensions.
+
+Documentation:
+  - framework/standards/IDENTIFIERS.md: kind table (prefix, kind, root
+    directory, registry, lifecycle) including CN and GL; minor version bump.
+  - framework/protocols/ARTIFACT-LIFECYCLE.md: name CN and GL as research
+    artifacts under the research lifecycle; minor version bump.
+  - docs/features/artifact-management/manifest.md: optional registries list.
+
+
+4. Compatibility
+----------------
+
+  - Existing repositories: no CN/GL files -> no registries required, no new
+    findings. Repositories that already keep CN-/GL- records under
+    research/concepts or research/glossary will now have them validated and
+    registered; findings there are the intended effect.
+  - A CN/GL record kept in another directory is still not discovered (same
+    as any kind outside its source directory); documented.
+  - Frozen fixtures and golden registry bytes unchanged.
+  - Starter and install goldens unchanged.
+  - Python oracle output for existing kinds unchanged; it newly registers RQ
+    (previously ignored), aligning it with F#.
+
+
+5. Tests
+--------
+
+F# (tests/Ros.Tests/ArtifactTests.fs):
+  - configurations contain CN -> research/concepts, registries/concepts.json
+    and GL -> research/glossary, registries/glossary.json, optional.
+  - a temporary repository with valid CN and GL records: validate clean,
+    registry build writes concepts.json and glossary.json containing them,
+    second build idempotent, tampering makes registry check report stale.
+  - an empty repository: no CN/GL registry is written or required.
+  - CN/GL records get identifier, filename, status, duplicate, broken
+    reference and reciprocal-supersession findings.
+  - provenance: a new CN record after the policy date without provenance is
+    reported (ProvenancePolicy through the loaded document set).
+  - starter agreement: starter registries equal the non-optional kinds'
+    registry files; every scaffolded research/<dir>/.gitkeep is a kind
+    source directory.
+Python (tests/test_ros_cli.py):
+  - oracle KIND_CONFIG/ALLOWED_STATUS/ID_RE prefixes agree with the F#
+    configurations parsed from Model.fs/Policy.fs.
+  - CN/GL valid set builds registries and passes; status violation reported;
+    optional registries absent for empty kinds.
+Full suites: dotnet Ros.Tests, python unittest; ./praxis registry check and
+./praxis validate on this repository.
+
+
+6. Risks
+--------
+
+  - Directory naming ("glossary" singular vs plural kinds): chosen to match
+    the existing uncountable "evidence"; the standards did not name
+    directories, so this analysis and IDENTIFIERS.md now do.
+  - Status set choice is a policy decision the standards only imply via the
+    research lifecycle; documented in the lifecycle protocol.
+  - The Python oracle's legacy research-package filename rule and ID_RE do
+    not accept the 3-digit RP/REP legacy form F# accepts (Policy.fs:10-17);
+    that is not a kind enumeration and is out of scope; noted, not changed.
+  - schemas/artifact-metadata.schema.json prefix pattern lacks RQ (CN/GL are
+    present); out of this item's CN/GL scope, noted.
+  - Telemetry/provenance code paths keyed by prefix (ProvenancePolicy
+    requireOriginator) are unaffected; CN/GL get warning-level originator
+    findings like other non-RQ kinds.
