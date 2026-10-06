@@ -70,12 +70,16 @@ module CompletionReadinessOperations =
         (provided: WorkEvidence list)
         (dokimos: SourceObservation<DokimosRatchetEvidence>)
         (ordo: SourceObservation<OrdoBoundaryEvidence>)
+        (group: FacetStatus option)
         : ItemReadiness =
         let dokimosJudgement = CompletionReadiness.judgeDokimos policy.Dokimos policy.DokimosBaseline dokimos
         let ordoJudgement = CompletionReadiness.judgeOrdo policy.OrdoBoundary workItemId ordo
 
         let facet kind =
-            let required = QualityEvidencePolicies.facetRequired policy kind
+            let required =
+                match kind with
+                | CompletionFacet.GroupVerified -> group.IsSome
+                | _ -> QualityEvidencePolicies.facetRequired policy kind
 
             let status =
                 match kind with
@@ -84,6 +88,9 @@ module CompletionReadinessOperations =
                 | CompletionFacet.ArchitectureVerified ->
                     CompletionReadiness.architectureFacet required [ policy.Dokimos, dokimosJudgement; policy.OrdoBoundary, ordoJudgement ]
                 | CompletionFacet.ReleaseReady -> CompletionReadiness.releaseFacet required
+                // Fails closed (PRX-GRP-135): judged only for a grouped-mode
+                // member, and then always required.
+                | CompletionFacet.GroupVerified -> group |> Option.defaultValue FacetStatus.NotRequired
 
             { Facet = kind
               Required = required
@@ -107,26 +114,37 @@ module CompletionReadinessOperations =
         | items -> CompletionGateOutcome.Refused items
 
     /// observe -> decide. `policy` is the already-read repository policy;
-    /// items outside the policy's work types are not evaluated. Evidence
-    /// files are read only when some item is in scope.
+    /// items outside the policy's work types are not evaluated unless they
+    /// are members of a grouped-mode group execution: `group` gives such a
+    /// member's `group-verified` facet, which the policy cannot switch off
+    /// (PRX-GRP-135). Evidence files are read only when some item is in scope.
     let gate
         (sources: QualityEvidenceSources)
         (policy: Result<QualityEvidencePolicy, string>)
         (items: (string * string) list)
         (provided: WorkEvidence list)
+        (group: string -> FacetStatus option)
         : CompletionGateOutcome =
+        let grouped = items |> List.map (fun (id, _) -> id, group id) |> Map.ofList
+
         match policy with
         | Error reason -> CompletionGateOutcome.PolicyInvalid reason
         | Ok policy ->
-            match items |> List.filter (fun (_, workType) -> QualityEvidencePolicies.appliesTo policy workType) with
+            let inPolicy (_, workType) = QualityEvidencePolicies.appliesTo policy workType
+            let isGrouped (id, _) = grouped[id].IsSome
+
+            match items |> List.filter (fun item -> inPolicy item || isGrouped item) with
             | [] -> CompletionGateOutcome.NotApplicable
             | inScope ->
+                let anyPolicy = inScope |> List.exists inPolicy
+                let effective item = if inPolicy item then policy else QualityEvidencePolicies.legacyDefault
+
                 let dokimos =
-                    if policy.Dokimos = EvidenceRequirement.Off then SourceObservation.NotSupplied
+                    if not anyPolicy || policy.Dokimos = EvidenceRequirement.Off then SourceObservation.NotSupplied
                     else observe sources.ReadDokimos QualityEvidenceTypes.dokimosRatchet provided
 
                 let ordo =
-                    if policy.OrdoBoundary = EvidenceRequirement.Off then SourceObservation.NotSupplied
+                    if not anyPolicy || policy.OrdoBoundary = EvidenceRequirement.Off then SourceObservation.NotSupplied
                     else observe sources.ReadOrdo QualityEvidenceTypes.ordoBoundary provided
 
-                inScope |> List.map (fun item -> assess policy item provided dokimos ordo) |> decide
+                inScope |> List.map (fun ((id, _) as item) -> assess (effective item) item provided dokimos ordo grouped[id]) |> decide

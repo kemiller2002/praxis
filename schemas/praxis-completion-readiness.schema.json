@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://repository-operating-system.local/schemas/praxis-completion-readiness.schema.json",
   "title": "praxis.completion-readiness/1",
-  "description": "Completion readiness (PRX-QUAL-023), recorded additively as `completionReadiness` on a `work.completed` event and on the completed work-context item when workProtocol.qualityEvidence applies, and printed (outcome: refused) by a refused `work complete`. Praxis consumes Dokimos and Ordo evidence; it never recomputes their verdicts. Unavailable evidence is never a pass.",
+  "description": "Completion readiness (PRX-QUAL-023), recorded additively as `completionReadiness` on a `work.completed` event and on the completed work-context item when workProtocol.qualityEvidence applies, and printed (outcome: refused) by a refused `work complete`. Praxis consumes Dokimos and Ordo evidence; it never recomputes their verdicts. Unavailable evidence is never a pass. A member of a grouped-mode group execution is always judged for the `group-verified` facet (PRX-GRP-135).",
   "type": "object",
   "required": ["schema", "workItem", "decision", "policy", "facets", "sources", "blockingReasons"],
   "properties": {
@@ -28,7 +28,8 @@
         "implementationComplete": {"$ref": "#/$defs/facet"},
         "behaviorVerified": {"$ref": "#/$defs/facet"},
         "architectureVerified": {"$ref": "#/$defs/facet"},
-        "releaseReady": {"$ref": "#/$defs/facet"}
+        "releaseReady": {"$ref": "#/$defs/facet"},
+        "groupVerified": {"$ref": "#/$defs/facet", "description": "PRX-GRP-133..135: required only for a member of a grouped-mode group execution (judged whatever the policy); otherwise not-required. Absent in records written before it existed."}
       },
       "additionalProperties": false
     },

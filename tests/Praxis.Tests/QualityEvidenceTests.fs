@@ -91,7 +91,7 @@ module QualityEvidenceTests =
         readiness.Facets |> List.find (fun facet -> facet.Facet = CompletionFacet.ArchitectureVerified)
 
     let private assess p dokimosObservation ordoObservation =
-        CompletionReadinessOperations.assess p ("WI-1", "task") [] dokimosObservation ordoObservation
+        CompletionReadinessOperations.assess p ("WI-1", "task") [] dokimosObservation ordoObservation None
 
     let private isSatisfied =
         function
@@ -246,7 +246,7 @@ module QualityEvidenceTests =
                       RequiredFacets = set [ CompletionFacet.ImplementationComplete; CompletionFacet.BehaviorVerified; CompletionFacet.ReleaseReady ] }
 
               let readiness =
-                  CompletionReadinessOperations.assess p ("WI-1", "task") [ { Type = "implementation"; Path = "src/a.fs" } ] SourceObservation.NotSupplied SourceObservation.NotSupplied
+                  CompletionReadinessOperations.assess p ("WI-1", "task") [ { Type = "implementation"; Path = "src/a.fs" } ] SourceObservation.NotSupplied SourceObservation.NotSupplied None
 
               let status facet = (readiness.Facets |> List.find (fun entry -> entry.Facet = facet)).Status
               Assert.isTrue (isSatisfied (status CompletionFacet.ImplementationComplete)) "implementation"
@@ -271,6 +271,7 @@ module QualityEvidenceTests =
                       (Ok QualityEvidencePolicies.legacyDefault)
                       [ "WI-1", "task" ]
                       [ { Type = "dokimos-ratchet"; Path = "x.json" } ]
+                      (fun _ -> None)
 
               Assert.equal CompletionGateOutcome.NotApplicable outcome)
 
@@ -279,10 +280,10 @@ module QualityEvidenceTests =
                   { policy EvidenceRequirement.Required EvidenceRequirement.Off with
                       WorkTypes = Some(set [ "feature" ]) }
 
-              Assert.equal CompletionGateOutcome.NotApplicable (CompletionReadinessOperations.gate failingSources (Ok p) [ "WI-1", "mechanical" ] []))
+              Assert.equal CompletionGateOutcome.NotApplicable (CompletionReadinessOperations.gate failingSources (Ok p) [ "WI-1", "mechanical" ] [] (fun _ -> None)))
 
           t "an invalid policy fails closed" (fun () ->
-              Assert.equal (CompletionGateOutcome.PolicyInvalid "bad") (CompletionReadinessOperations.gate failingSources (Error "bad") [ "WI-1", "task" ] []))
+              Assert.equal (CompletionGateOutcome.PolicyInvalid "bad") (CompletionReadinessOperations.gate failingSources (Error "bad") [ "WI-1", "task" ] [] (fun _ -> None)))
 
           t "more than one report of a type is ambiguous" (fun () ->
               let sources =
@@ -291,7 +292,7 @@ module QualityEvidenceTests =
 
               let provided = [ { Type = "dokimos-ratchet"; Path = "a.json" }; { Type = "dokimos-ratchet"; Path = "b.json" } ]
 
-              match CompletionReadinessOperations.gate sources (Ok(policy EvidenceRequirement.Required EvidenceRequirement.Off)) [ "WI-1", "task" ] provided with
+              match CompletionReadinessOperations.gate sources (Ok(policy EvidenceRequirement.Required EvidenceRequirement.Off)) [ "WI-1", "task" ] provided (fun _ -> None) with
               | CompletionGateOutcome.Refused [ readiness ] -> Assert.equal (SourceObservation.Ambiguous [ "a.json"; "b.json" ]) readiness.Dokimos
               | other -> failwith $"{other}")
 
@@ -345,7 +346,7 @@ module QualityEvidenceTests =
 
           t "real reports drive the expected decisions" (fun () ->
               let required = policy EvidenceRequirement.Required EvidenceRequirement.Required
-              let decide item dok ord = CompletionReadinessOperations.assess required (item, "task") [] (supplied dok) (supplied ord) |> CompletionReadiness.isReady
+              let decide item dok ord = CompletionReadinessOperations.assess required (item, "task") [] (supplied dok) (supplied ord) None |> CompletionReadiness.isReady
               Assert.isTrue (decide "WI-QUALITY" (dokimos "pass") (ordo "low-no-action")) "pass + no-action"
               Assert.isTrue (decide "PRX-CORRELATION-ID" (dokimos "excepted-pass") (ordo "full-coverage")) "excepted pass + approved"
               Assert.isTrue (not (decide "WI-QUALITY" (dokimos "regression") (ordo "low-no-action"))) "regression"

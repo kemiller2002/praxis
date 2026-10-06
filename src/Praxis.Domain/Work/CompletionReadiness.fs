@@ -31,6 +31,9 @@ type CompletionFacet =
     | BehaviorVerified
     | ArchitectureVerified
     | ReleaseReady
+    /// A member of a grouped-mode group execution carries a committed group
+    /// analysis and a per-criterion verification (PRX-GRP-133..135).
+    | GroupVerified
 
 /// One facet's state. `Unavailable` is distinct from `NotSatisfied`: the
 /// evidence could not establish the facet either way. It is never a pass.
@@ -159,6 +162,10 @@ module QualityEvidenceTypes =
     let dokimosRatchet = "dokimos-ratchet"
     /// `work complete --evidence ordo-boundary=PATH`: an `ordo.boundary-amplification/1` assessment.
     let ordoBoundary = "ordo-boundary"
+    /// `work complete --evidence group-analysis=PATH`: a `praxis.group-analysis/1` document.
+    let groupAnalysis = "group-analysis"
+    /// `work complete --evidence group-verification=PATH`: a `praxis.group-verification/1` document.
+    let groupVerification = "group-verification"
     let implementation = "implementation"
     let tests = "tests"
 
@@ -170,6 +177,7 @@ module CompletionReadiness =
         | CompletionFacet.BehaviorVerified -> "behavior-verified"
         | CompletionFacet.ArchitectureVerified -> "architecture-verified"
         | CompletionFacet.ReleaseReady -> "release-ready"
+        | CompletionFacet.GroupVerified -> "group-verified"
 
     let parseFacet =
         function
@@ -183,7 +191,8 @@ module CompletionReadiness =
         [ CompletionFacet.ImplementationComplete
           CompletionFacet.BehaviorVerified
           CompletionFacet.ArchitectureVerified
-          CompletionFacet.ReleaseReady ]
+          CompletionFacet.ReleaseReady
+          CompletionFacet.GroupVerified ]
 
     let requirementCode =
         function

@@ -289,6 +289,69 @@ type GroupCheckpoint =
       MemberObservations: MemberObservation list
       Location: GitDurableLocation }
 
+/// How a member of a group execution runs (PRX-GRP-130): in the group's
+/// one shared execution context, or in its own fresh context.
+[<RequireQualifiedAccess>]
+type ExecutionMode =
+    | Grouped
+    | Independent
+
+[<RequireQualifiedAccess>]
+module ExecutionMode =
+    let code mode =
+        match mode with
+        | ExecutionMode.Grouped -> "grouped"
+        | ExecutionMode.Independent -> "independent"
+
+    let tryParse value =
+        match value with
+        | "grouped" -> Some ExecutionMode.Grouped
+        | "independent" -> Some ExecutionMode.Independent
+        | _ -> None
+
+/// A member begun inside a group execution, linked to its own execution
+/// (PRX-GRP-117, PRX-GRP-041): each member keeps its own.
+type GroupExecutionMember =
+    { WorkItemId: string
+      ExecutionId: string
+      BegunAt: string
+      Mode: ExecutionMode }
+
+/// A member that executes in its own fresh context (PRX-GRP-132).
+type MemberOptOut =
+    { WorkItemId: string
+      Reason: string
+      Actor: Actor
+      At: string }
+
+/// Why a group execution stopped beginning members in grouped mode
+/// (PRX-GRP-136).
+type GroupFallback =
+    { Signal: string
+      Evidence: string list
+      At: string }
+
+/// One run of `plan execute-group` over a group (PRX-GRP-117): a
+/// `GEX-<timestamp>-<suffix>` record in the group record. It never holds a
+/// member's lifecycle state.
+type GroupExecutionRecord =
+    { Id: string
+      GroupId: string
+      Actor: Actor
+      StartedAt: string
+      Repository: string
+      /// The required member order at start.
+      Order: string list
+      Mode: ExecutionMode
+      /// Why this mode: the qualification result or the explicit request.
+      Basis: string list
+      OptOuts: MemberOptOut list
+      Members: GroupExecutionMember list
+      Fallback: GroupFallback option
+      EndedAt: string option
+      /// Successor executions recorded by takeover (`work continue`).
+      Successors: (string * string) list }
+
 /// A declared group as Praxis state records it.
 type StoredWorkGroup =
     { Declaration: DeclaredGroup
@@ -304,7 +367,9 @@ type StoredWorkGroup =
       CreatedAt: string
       CreatedBy: Actor
       History: GroupHistoryEntry list
-      Checkpoints: GroupCheckpoint list }
+      Checkpoints: GroupCheckpoint list
+      /// Group executions (PRX-GRP-117), oldest first.
+      Executions: GroupExecutionRecord list }
 
 /// Everything `.ros/work/groups.json` holds: the groups this repository is
 /// home to, and the references its own items carry to groups recorded
@@ -823,6 +888,17 @@ module WorkGroups =
     let tryFind (groups: StoredWorkGroup list) (groupId: string) =
         groups |> List.tryFind (fun group -> group.Declaration.Id = groupId)
 
+    /// The group execution that began a member under an execution, with
+    /// the mode it runs in (PRX-GRP-135): the gates apply to `Grouped`.
+    let executionOf (groups: StoredWorkGroup list) (workItemId: string) (executionId: string) : (StoredWorkGroup * GroupExecutionRecord * GroupExecutionMember) option =
+        groups
+        |> List.tryPick (fun group ->
+            group.Executions
+            |> List.tryPick (fun execution ->
+                execution.Members
+                |> List.tryFind (fun begun -> begun.WorkItemId = workItemId && begun.ExecutionId = executionId)
+                |> Option.map (fun begun -> group, execution, begun)))
+
     /// Groups are kept ordered by ID so the same state always serializes to
     /// the same bytes (PRX-GRP-075).
     let upsert (groups: StoredWorkGroup list) (group: StoredWorkGroup) =
@@ -999,7 +1075,8 @@ module WorkGroups =
                       CreatedAt = request.OccurredAt
                       CreatedBy = request.Actor
                       History = [ entry GroupOperation.Created None request.OccurredAt request.Actor request.Reason false request.ExecutionId None ]
-                      Checkpoints = [] }
+                      Checkpoints = []
+                      Executions = [] }
                     warnings
             | rejections -> Error rejections
 
