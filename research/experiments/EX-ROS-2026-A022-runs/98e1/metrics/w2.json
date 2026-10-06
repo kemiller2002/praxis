@@ -1,0 +1,64 @@
+{
+  "schema": "ex-ros-2026-a021.session-metrics/1",
+  "label": "w2",
+  "sessionId": "a9c47448-a5db-52f6-b0ab-d9a389b5a337",
+  "transcript": "a9c47448-a5db-52f6-b0ab-d9a389b5a337.jsonl",
+  "models": [
+    "<synthetic>",
+    "claude-opus-5-5"
+  ],
+  "startedAt": "2026-10-02T15:40:44.719000+00:00",
+  "endedAt": "2026-10-06T09:52:11.718000+00:00",
+  "wallMs": 324686999,
+  "msToFirstCodeMutation": 640849,
+  "modelRequests": 106,
+  "tokens": {
+    "input": 214,
+    "output": 92103,
+    "cacheRead": 20807716,
+    "cacheCreation": 444038
+  },
+  "costUsd": {
+    "value": 3.6630531999999993,
+    "source": "runtime cost-state (estimate; last record)"
+  },
+  "toolCalls": {
+    "Bash": 92,
+    "Read": 1,
+    "ReadNotifications": 2,
+    "ToolSearch": 1,
+    "Write": 3,
+    "mcp__claude-code-remote__send_message": 2
+  },
+  "toolErrors": 2,
+  "fileReads": 61,
+  "distinctFilesRead": 34,
+  "repeatedReads": {
+    "/tmp/claude-0/build.log": 2,
+    "/tmp/claude-0/restore.log": 2,
+    "/tmp/claude-0/tests1.log": 4,
+    "src/Ros.Cli/CheckpointCommands.fs": 3,
+    "src/Ros.Cli/ExecutionCommands.fs": 2,
+    "src/Ros.Cli/Program.fs": 2,
+    "src/Ros.Cli/WebInterface.fs": 2,
+    "src/Ros.Contracts/Work/CheckpointJson.fs": 2,
+    "src/Ros.Domain/Execution/Governance.fs": 4,
+    "src/Ros.Domain/Telemetry/Usage.fs": 3,
+    "src/Ros.Infrastructure/Execution/ExecutionStore.fs": 4,
+    "src/Ros.Infrastructure/Git/GitRepository.fs": 2,
+    "src/Ros.Infrastructure/Work/FileCheckpointRepository.fs": 4,
+    "tests/Ros.Tests/CheckpointCliTests.fs": 2,
+    "tests/Ros.Tests/CliHarness.fs": 2,
+    "tests/Ros.Tests/WorkStateViewTests.fs": 3
+  },
+  "governanceReads": {
+    "AGENTS.md": 1
+  },
+  "searches": 55,
+  "fileWrites": 22,
+  "distinctFilesEdited": 3,
+  "builds": 10,
+  "testRuns": 6,
+  "compactions": 0,
+  "notes": "reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate"
+}

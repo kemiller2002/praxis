@@ -229,3 +229,31 @@ paths fall through to the existing /api 404 JSON.
   executions appear in work-telemetry.
 - `scopeEffects` and the uncommitted flag depend on the server's working
   tree at read time, exactly as `execution show` does.
+
+8. Verification pass (before completing)
+----------------------------------------
+
+Commits: 9311cb6 (implementation and docs), f501956 (tests).
+Build: dotnet build Ros.slnx --configuration Release --no-restore -> 0 errors, 0 warnings.
+Full F# suite before the new tests (after the code moves): "1326 test(s); 1326 passed; 0 failed"
+  (the CLI outputs of execution show/list, work checkpoint show, work context
+  and telemetry usage are pinned by existing tests, all passing).
+Full F# suite with the new tests: dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll ->
+  "1337 test(s); 1337 passed; 0 failed" (11 new tests in tests/Ros.Tests/ControlPlaneReadTests.fs).
+Python oracle tests: python3 -m unittest discover -s tests -> "Ran 7 tests ... OK".
+./praxis architecture check -> passed.
+Manual: ./praxis web serve against this repository; GET /api/v1/executions,
+  /api/v1/executions?workItem=PRAXIS-CTL-03, /api/v1/executions/EXE-nope (404),
+  /api/v1/work/PRAXIS-CTL-02/evidence?offline=true, /api/v1/work/PRAXIS-CTL-02/telemetry,
+  /api/v1/work/NOPE/telemetry (404) returned the documented shapes.
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| AC1 typed, versioned endpoints list executions (all / per work item) and show one: role, status, actor, provider/model/runtime as execution-host information, never owner of work state | met | Contract praxis.execution-state v1 (src/Ros.Contracts/Execution/ExecutionStateJson.fs), routes GET /api/v1/executions[?workItem=ID] and /api/v1/executions/ID (src/Ros.Cli/WebInterface.fs). provider/model/runtime only under executionHost ("unknown" when unrecorded), actor is {id, kind}, workStateOwner {kind: "repository", workItem}. Tests PASS: "execution contract: provider, model and runtime are execution-host information, never part of the actor or the work-state owner"; "web serve: executions are listed (all and per work item) and shown with role, status, actor, host and step receipts as execution show reads them" (also asserts actor has no provider). |
+| AC2 an execution's steps with expected and observed receipts and match/mismatch/indeterminate state | met | Each step carries receipt {state, attempt, expected, observed, comparison, observedAt, reason} for its current attempt (StepReceipt.current, src/Ros.Domain/Execution/ReadModel.fs), in ordo.execution/1 shapes; reconciliation reported. Tests PASS: "control plane: a step's receipt is not-observed, indeterminate, or the recorded comparison of its current attempt" (incl. retry); "execution contract: a step carries its expected and observed receipts in the ordo.execution/1 shapes"; the HTTP execution test drives real steps to match, mismatch, indeterminate (started, unobserved) and not-observed. |
+| AC3 a work item's recorded evidence and durable checkpoints | met | GET /api/v1/work/ID/evidence (kind work-evidence): evidence items + requiredForCompletion; checkpoints continuity + history; unavailable (with reason) for never-started items. Test PASS: "web serve: a work item's evidence and durable checkpoints are those of work context and work checkpoint show" (completed item with a checkpoint pushed to a bare remote; backlog-only item unavailable; unknown item 404). |
+| AC4 telemetry usage and cost where recorded, explicitly unknown otherwise | met | GET /api/v1/work/ID/telemetry (kind work-telemetry): every registry tokens/currency metric with availability recorded|partial|unknown, unknown has no total; plus telemetry usage groups. Tests PASS: "control plane: usage and cost coverage is recorded, partial or unknown, never zero-filled"; "control plane: cost recorded in two currencies keeps one total per currency"; "web serve: telemetry reports recorded usage, unknown cost, and the telemetry usage groups" (tokens.input recorded 1200, tokens.output unknown, all cost unknown with no totals). |
+| AC5 data obtained through the same paths as execution show --json, work context, work checkpoint show and telemetry usage | met | Shared functions called by both CLI and API: ExecutionReads.load/envelopes/selectReadable/qualifyWorkItem (src/Ros.Infrastructure/Execution/ExecutionStore.fs, used by ExecutionCommands show/list); CheckpointShowReads.read/continuity/history (src/Ros.Infrastructure/Work/FileCheckpointRepository.fs, used by CheckpointCommands.show); FileWorkContextRepository.readContextView (work context); FileTelemetryUsageRepository.aggregate + TelemetryUsageJson (used by runTelemetryUsage). HTTP tests compare against the CLI output: steps/status/expected vs `execution show --json`; evidence items vs `work context`; continuity and history JSON identical to `work checkpoint show --json`; groups JSON identical to `telemetry usage`. |
+| AC6 the endpoints never write; tests | met | Routes read in-process; no lock, command or event append; Git read adapters set GIT_OPTIONAL_LOCKS=0. Test PASS: "web serve: the control-plane read endpoints leave every repository file byte-identical" (hashes every file incl. .git before/after all nine GETs, including online checkpoint observation). Tests: 11 new in tests/Ros.Tests/ControlPlaneReadTests.fs, registered in tests/Ros.Tests/Program.fs; all pass. |
+
+All criteria met; the item can be completed.
