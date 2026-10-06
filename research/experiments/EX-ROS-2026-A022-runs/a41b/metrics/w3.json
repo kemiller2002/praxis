@@ -1,0 +1,50 @@
+{
+  "schema": "ex-ros-2026-a021.session-metrics/1",
+  "label": "w3",
+  "sessionId": "b08fdb7b-5826-5d32-91b4-b725f533a562",
+  "transcript": "b08fdb7b-5826-5d32-91b4-b725f533a562.jsonl",
+  "models": [
+    "claude-opus-5-5"
+  ],
+  "startedAt": "2026-10-06T14:50:25.378000+00:00",
+  "endedAt": "2026-10-06T15:29:47.121000+00:00",
+  "wallMs": 2361743,
+  "msToFirstCodeMutation": 765504,
+  "modelRequests": 83,
+  "tokens": {
+    "input": 174,
+    "output": 45649,
+    "cacheRead": 11807740,
+    "cacheCreation": 155315
+  },
+  "costUsd": null,
+  "toolCalls": {
+    "Bash": 73,
+    "ReadNotifications": 1,
+    "ToolSearch": 2,
+    "Write": 1,
+    "mcp__claude-code-remote__send_message": 1
+  },
+  "toolErrors": 0,
+  "fileReads": 41,
+  "distinctFilesRead": 33,
+  "repeatedReads": {
+    "/tmp/claude-0/baseline-py.log": 3,
+    "/tmp/claude-0/build.log": 2,
+    "/tmp/claude-0/restore.log": 2,
+    "tests/Ros.Tests/ArtifactTests.fs": 2,
+    "tests/test_ros_cli.py": 3,
+    "tools/ros_cli.py": 2
+  },
+  "governanceReads": {
+    "AGENTS.md": 1,
+    "docs/00-governance/AI-Repository-Operating-System.md": 1
+  },
+  "searches": 43,
+  "fileWrites": 3,
+  "distinctFilesEdited": 1,
+  "builds": 6,
+  "testRuns": 5,
+  "compactions": 0,
+  "notes": "reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate"
+}
