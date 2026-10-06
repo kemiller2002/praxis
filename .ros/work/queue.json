@@ -4719,10 +4719,10 @@
         "continuity"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:37:09.880Z",
-      "updatedAt": "2026-10-06T20:41:19.407Z",
+      "updatedAt": "2026-10-06T21:11:25.284Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4767,10 +4767,10 @@
         "requirements"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:37:10.513Z",
-      "updatedAt": "2026-10-06T20:38:15.502Z",
+      "updatedAt": "2026-10-06T21:11:14.359Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

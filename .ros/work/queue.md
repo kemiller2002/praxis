@@ -69,10 +69,10 @@
 | PRAXIS-CONT-11-SEGMENTATION | Effective-current telemetry segmentation and continuity proof gaps | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-12 | work checkpoint attributes every meaningful path since the previous checkpoint to the checkpointing item, regardless of which work item produced it | complete | continuity, gh-90 | medium |
 | PRAXIS-DIST-NATIVE-DOTNET-TOOL | Retire npm distribution; ship native bundles and a .NET global tool | complete | distribution | high |
-| PRAXIS-FND-01 | ORDO-CORE-PACKAGE: consume Ordo.Core as a pinned released package for execution roles, capabilities, mutation-boundary and evaluator semantics (PRX-EXEC-002, PRX-ARCH-001) | ready | ordo, group:GROUP-FND-ORDO | high |
+| PRAXIS-FND-01 | ORDO-CORE-PACKAGE: consume Ordo.Core as a pinned released package for execution roles, capabilities, mutation-boundary and evaluator semantics (PRX-EXEC-002, PRX-ARCH-001) | active | ordo, group:GROUP-FND-ORDO | high |
 | PRAXIS-FND-02 | Accept the mutation boundary and evaluator closure from the governing Ordo execution contract (PRX-BND-001, PRX-SEQ-003, PRX-VER-010) | ready | ordo, execution, group:GROUP-FND-ORDO | high |
 | PRAXIS-FND-03 | Declare Praxis's own shared foundations and make foundations verify evidence them (SAF-DEP-1, SAF-DEP-2) | ready | foundations, group:GROUP-FND-FOUNDATIONS | high |
-| PRAXIS-FND-04 | Classify operational failures with Aegis at Praxis's Git, process, filesystem, network and web boundaries, with redaction and sink tests (SAF-AEGIS-1, SAF-AEGIS-5, SAF-AEGIS-6) | ready | foundations, aegis, group:GROUP-FND-FOUNDATIONS | high |
+| PRAXIS-FND-04 | Classify operational failures with Aegis at Praxis's Git, process, filesystem, network and web boundaries, with redaction and sink tests (SAF-AEGIS-1, SAF-AEGIS-5, SAF-AEGIS-6) | active | foundations, aegis, group:GROUP-FND-FOUNDATIONS | high |
 | PRAXIS-FND-05 | Present praxis web serve and hub serve with a pinned Forma release instead of local CSS (SAF-FORMA-1, 2, 5, 6; PRX-UI-030, PRX-UI-031) | ready | foundations, forma, web, group:GROUP-FND-FOUNDATIONS | high |
 | PRAXIS-FND-06 | Ingest Tutela security assessments and query security metrics over time with repository, ref and time provenance (TUT-1, TUT-2, TUT-3) | ready | tutela, telemetry | medium |
 | PRAXIS-GROUP-01 | praxis work group create: durable human-declared execution group | complete | work-group, cli | low |
@@ -92,9 +92,9 @@
 | PRAXIS-MISC-04 | Planner replay: compare predicted and observed cost (PRX-PLAN-152) | captured | planning, planner-evidence | low |
 | PRAXIS-MISC-05 | Planner: compare a saved plan's recommendations with what happened (PRX-PLAN-162) | captured | planning, planner-evidence | low |
 | PRAXIS-MISC-06 | Planner: persist estimate-error history over time (PRX-PLAN-170) | captured | planning, planner-evidence | low |
-| PRAXIS-MISC-07 | Record the cross-provider continuation proof on main (RQ-ROS-2026-A023 acceptance, PRAXIS-XPROVIDER-PROOF-01) | ready | remote, continuity | medium |
+| PRAXIS-MISC-07 | Record the cross-provider continuation proof on main (RQ-ROS-2026-A023 acceptance, PRAXIS-XPROVIDER-PROOF-01) | complete | remote, continuity | medium |
 | PRAXIS-MISC-08 | F#/.NET-only automation: port tracked Python and inline python3 (RQ-ROS-2026-A024) | captured | implementation-policy, tooling | medium |
-| PRAXIS-MISC-09 | Fix stale requirement citations: deleted Node tests and test paths in RQ-ROS-2026-A021..A024 | active | documentation, requirements | medium |
+| PRAXIS-MISC-09 | Fix stale requirement citations: deleted Node tests and test paths in RQ-ROS-2026-A021..A024 | complete | documentation, requirements | medium |
 | PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | abandoned | rename, gh-90 | low |
 | PRAXIS-PLAN-01 | Deterministic shadow planner: praxis plan analyze/simulate/compare/explain (PRX-PLAN-001..182) | complete | planning, architecture, cli | high |
 | PRAXIS-PLAN-02 | Accept planner decision DF-ROS-2026-A046 on the owner's approval | complete | planning, governance | medium |
