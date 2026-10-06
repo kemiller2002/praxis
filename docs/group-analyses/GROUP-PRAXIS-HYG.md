@@ -76,7 +76,16 @@ Group checkpoint after step 2.
 
 ## 5. Verification pass
 
-Completed before each member's completion; see the table below.
+Completed before each member's completion. PRAXIS-HYG-03 is not completed:
+it stays blocked (see its block reason).
 
 | Member | Criterion | Status | Evidence |
 |---|---|---|---|
+| PRAXIS-HYG-01 | 1. Fixtures leave live work via `work abandon` | met | `./praxis work abandon --id WI-READY --id WI-ACTIVE ... --reason ...` exit 0; queue and context both `abandoned`; `./praxis plan analyze --json` lists both as `lifecycleState: abandoned` and no other live item but CI-LATEST-ON-VERSION-BUMP and the HYG items |
+| PRAXIS-HYG-01 | 2. CI fails when tests change the checkout | met | `.github/workflows/praxis-validation.yml` step "F# tests leave the checkout unchanged"; a local full run (`dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll`) left `git status --porcelain --untracked-files=all` empty |
+| PRAXIS-HYG-01 | 3. Scratch-root guidance | met | `docs/work-protocol.md` "Fixtures stay out of canonical state" |
+| PRAXIS-HYG-02 | 1. Disagreement rule in `validate` and `work backlog-validate`, tested | met | `BacklogQueueValidation.contextDisagreements` (`src/Praxis.Domain/Work/QueueValidation.fs`); `PRAXIS_TEST_FILTER="status agreement"` 5/5 pass (agreement, pre-promotion, no live item, abandoned-vs-complete, complete-vs-active); before the repair `./praxis validate` failed with exactly one `status_agreement` finding (WI-0061) |
+| PRAXIS-HYG-02 | 2. `work reidentify` with refusals, lock and journal, tested | met | `BacklogReidentification.plan`, `FileBacklogQueueRepository.applyReidentification`, `BacklogQueueCommands.reidentify`; `PRAXIS_TEST_FILTER="reidentify"` 9/9 pass (plan, each refusal, attachments refusal, CLI repair leaves the live context byte-identical and `backlog-validate` passing) |
+| PRAXIS-HYG-02 | 3. WI-0061 repaired; validate passes | met | `./praxis work reidentify --id WI-0061 --new-id WI-0061-REUSED ...` exit 0; `./praxis validate` -> "validation passed with 2 warning(s)" (the PRAXIS-HYG-03 provenance warnings) |
+| PRAXIS-HYG-04 | 1. GRP-080..088 row cites EV-ROS-2026-A070 | met | `docs/planning.md` "Work-group requirement status" |
+| PRAXIS-HYG-04 | 2. Status-table citation test | met | `tests/Praxis.Tests/StatusTableCitationTests.fs` 4/4 pass; mutation check: citing `PRAXIS-GROUP-77` and `EV-ROS-2026-A999` in the planning table made the repository case fail with both named, then reverted |

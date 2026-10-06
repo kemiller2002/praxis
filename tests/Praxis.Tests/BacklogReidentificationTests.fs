@@ -192,6 +192,18 @@ module BacklogReidentificationTests =
                           [ "--id"; "WI-0001"; "--new-id"; "WI-0002"; "--reason"; "x" ]
                           "backlog item 'WI-0001' agrees with its live work item (or has none); only a row whose terminal status contradicts the live item with the same ID can be reidentified"
 
-                      CliGolden.expectExit 2 (reidentify root [ "--id"; installId ])) } ]
+                      CliGolden.expectExit 2 (reidentify root [ "--id"; installId ])) }
+          { Name = "work reidentify: a row with attachments is refused, since its stored files are keyed by the old ID"
+            Run =
+              fun () ->
+                  withCollision (fun root installId ->
+                      CliGolden.updateJson root CliGolden.queuePath (fun queue ->
+                          (CliGolden.find queue.["items"] installId).["attachments"] <- JsonNode.Parse """[{ "id": "att-1" }]""")
+
+                      let queueBefore = CliHarness.read root CliGolden.queuePath
+                      let result = reidentify root [ "--id"; installId; "--new-id"; "WI-0002"; "--reason"; "x" ]
+                      CliGolden.expectExit 1 result
+                      Assert.equal $"ERROR '{installId}' has attachments; reidentifying a row with attachments is not supported" (result.Err.Trim())
+                      Assert.equal queueBefore (CliHarness.read root CliGolden.queuePath)) } ]
 
     let tests = disagreement @ planning @ cli
