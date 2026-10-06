@@ -394,10 +394,7 @@ let environment: LifecycleEnvironment<Payload> =
 
                 match projectName with
                 | Error message -> Some(Error message)
-                | Ok name ->
-                    // Read-only: a version-pinned file the repository already
-                    // has is reconciled against its own copy (Payload.forRepository).
-                    Some(Payload.load payloadSource request.Profile name |> Result.map (Payload.forRepository request.Root))
+                | Ok name -> Some(Payload.load payloadSource request.Profile name |> Result.map (Payload.forRepository request.Root))
       PayloadEntries = fun payload -> payload.Files |> List.map (fun file -> file.Entry)
       PayloadProfile = fun payload -> payload.Profile
       PayloadPackageName = fun payload -> payload.PackageName

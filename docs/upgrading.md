@@ -80,6 +80,11 @@ Exactly what `init` does, governed by the same ownership rules documented in
   nothing.
 - **user-owned**, **shared** and **generated** files are preserved. They appear
   in the plan's `preserved` list so "untouched" is visible rather than implied.
+- one exception: the `praxis` pin in the shared `.echelon/toolchain.json` is
+  set to the release performing the upgrade, and nothing else in that file
+  changes. A stale pin left by an earlier release (every release up to 3.7.0
+  seeded `3.4.0`) is corrected this way. See
+  [the toolchain manifest](toolchain-manifest.md).
 
 The `preserved` array in `upgrade --dry-run --json` is the authoritative answer
 to "what will you leave alone", and it is worth reading before a large upgrade.
