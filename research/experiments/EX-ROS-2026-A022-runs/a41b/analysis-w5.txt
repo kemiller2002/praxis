@@ -1,0 +1,242 @@
+Architecture analysis: PRAXIS-STATE-MERGE-01
+============================================
+
+Item: PRAXIS-STATE-MERGE-01 (`./praxis work show PRAXIS-STATE-MERGE-01`)
+Title: Parallel work items conflict in single-document Praxis state files
+Base commit: 344c7fff8e2e5481550867516162b73de7ba7564 (branch experiment/a022-run-a41b)
+
+
+1. Item and acceptance criteria
+-------------------------------
+
+Obligation: branches whose Praxis state moved independently (different work
+items started, checkpointed, completed) conflict in .ros/context/current.json,
+.ros/work/queue.json and .ros/events/events.jsonl. Today the only remedies are
+hand edits of .ros state (forbidden by AGENTS.md "Do not work around a missing
+runtime by hand-editing .ros/ state") or re-recording state. Praxis needs a
+supported merge path.
+
+Acceptance criteria (verbatim intent):
+  AC1  A supported, documented path merges two branches whose Praxis state
+       changed independently, with no hand edit of .ros state (CLI-owned merge,
+       Praxis-installed Git merge driver, or a non-conflicting layout).
+  AC2  Append-only event history keeps every event exactly once in a
+       deterministic order; id-keyed items merge three-way.
+  AC3  Genuinely conflicting changes to the same item fail closed with a report
+       naming the item, never silently picking a side.
+  AC4  `praxis validate` passes on the merged result in a test reproducing the
+       conflict pattern.
+  AC5  Every single-document Praxis state file that ordinary parallel work
+       modifies is covered, or listed as not covered with the reason.
+  AC6  docs/work-protocol.md documents the path; tests.
+Depends on: none.
+
+Why these files conflict (observed, not assumed):
+  - `work start` appends a new object at the end of current.json's `workItems`
+    array (FileWorkContextRepository.applyContextPlanWithExtensions,
+    src/Ros.Infrastructure/Work/FileWorkContextRepository.fs:351) and rewrites
+    top-level `actor`/`updatedAt` (same function, lines 369-370). Two branches
+    each appending a different item touch the same trailing lines plus the same
+    `updatedAt` line, so Git's line merge conflicts even though the items are
+    disjoint. `git log --stat -- .ros` shows every lifecycle commit touching
+    current.json + events.jsonl, and completion also touching queue.json/queue.md.
+  - events.jsonl: appendEvents (FileWorkContextRepository.fs:323) appends lines
+    at EOF; two branches appending different lines conflict at EOF.
+  - queue.json: `markComplete` (FileBacklogQueueRepository.fs:319) rewrites an
+    item's status/updatedAt; `captureItem` (line 377) appends an item and bumps
+    `nextSeq`. Two captures bump the same `nextSeq` line.
+  - queue.md: regenerated from queue.json + current.json on every backlog write
+    (commitQueue, FileBacklogQueueRepository.fs:272; QueuePresentation.mergedRows
+    / renderMarkdown, src/Ros.Domain/Work/QueuePresentation.fs:35,62). It is a
+    pure projection: rows ordinal-sorted by id, each row a function of that id's
+    queue item and live item only.
+
+
+2. Reuse inventory
+------------------
+
+| Existing element | Location | What it does | Reuse? |
+|---|---|---|---|
+| CanonicalJson.stabilize / serializeCompact | src/Ros.Infrastructure/Json/CanonicalJson.fs:53,27 | key-sorted deep clone, compact JS-compatible text | Reuse pattern for item equality (compare stabilized compact text). The merge core needs it in Contracts (Infrastructure is above Contracts); a small private equivalent is written in the Contracts merge module rather than moving CanonicalJson (moving it would touch every digest caller). |
+| FileWorkContextRepository serializerOptions | FileWorkContextRepository.fs:28 | indent 2, relaxed escaping, trailing "\n" | Reuse exactly the same options so a merged current.json is byte-shaped like a CLI-written one. |
+| compactSerializerOptions + appendEvents | FileWorkContextRepository.fs:36,323 | one compact JSON object per line, dedupe by eventId | Reuse semantics: identity of an event is its `eventId`; lines without eventId are identified by their exact text. |
+| FileBacklogQueueRepository serializerOptions / rowOf | FileBacklogQueueRepository.fs:18,123 | queue.json formatting; queue row extraction | Extend: expose a public projection function that renders queue.md from queue.json text + context text (so merge regeneration uses the same rowOf and renderer, never a copy). |
+| QueuePresentation.mergedRows / renderMarkdown | src/Ros.Domain/Work/QueuePresentation.fs:35,62 | queue.md projection | Reuse unchanged for regeneration. |
+| WorkContextPlanContract.parseJson | src/Ros.Contracts (used at FileWorkListRepository.fs:36) | typed LiveWorkItem parse of current.json | Reuse to get context items for queue.md regeneration. |
+| WorkGroupJson.storeNode | src/Ros.Contracts/Work/WorkGroupJson.fs:104 | groups.json = {schemaVersion, groups:[{id,...}]} | Covered by the same id-keyed merge (key "id"). |
+| WorkStateTransaction / BacklogStateTransaction | src/Ros.Infrastructure/Work/WorkStateTransaction.fs:134,185; BacklogStateTransaction.fs:141,192 | crash-recoverable multi-file writes for CLI mutations | Not reused for merge output: during a Git merge the files are Git's own merge stages / working tree; Git is the transaction (unmerged index entries stay until `git add`). Running the recovery journal there would conflict with an in-progress merge. Documented as a deliberate non-reuse. |
+| CheckpointValidation chronology/duplicate findings | src/Ros.Domain/Work/CheckpointValidation.fs:107,122 | validate requires per-item checkpoint events chronological and recorded once | Constraint on the event merge order: merged new events must keep each side's relative order and never duplicate an eventId. |
+| ProcessGitRepository / runGit | src/Ros.Infrastructure/Git/GitRepository.fs:203,258 | private Git process runner | Not reused (private, typed to GitFailure for status). The state-merge Git effect needs `ls-files -u`, `show :N:path`, `add`, `config`; a small process helper is written in the new infrastructure module, mirroring runGitWithInput's ProcessStartInfo use. |
+| FindingContract.renderJson / repair | src/Ros.Contracts/Cli (FindingContract) | shared finding output | Not used for conflicts: a merge conflict is not a repository-validation finding; its report is its own small JSON/text contract. |
+| ArchitectureCommands module shape | src/Ros.Cli/ArchitectureCommands.fs | small command module with `usage` and `run` | Reuse as the shape for a new StateCommands module wired from Program.fs repositoryDispatch (Program.fs:2958). |
+| CliHarness / PraxisCli / GitFixture | tests/Ros.Tests/CliHarness.fs, CheckpointCliTests.fs:11, GitDurabilityTests.fs:15 | real-CLI runs against disposable Git repos, identity env scrubbed | Reuse for the end-to-end conflict reproduction test. |
+
+Searches establishing absence of an existing merge facility:
+  `grep -rni "merge-driver\|mergedriver\|merge=" src .gitattributes` -> nothing;
+  `grep -rn "ls-files -u\|:1:\|diff-filter=U" src` -> nothing. No three-way
+  merge code exists; QueuePresentation.mergedRows is a projection join, not a
+  three-way merge.
+
+
+3. Invariants and shared infrastructure
+---------------------------------------
+
+  I1  .ros state is written only by the CLI. The merge is a CLI command; Git
+      invokes it (driver) or the user runs it (resolve). No manual edit.
+  I2  events.jsonl is append-only. Each side's file must start with the base's
+      events in base order; otherwise history was rewritten -> fail closed.
+  I3  An eventId occurs at most once (CheckpointValidation.fs:122); per work
+      item, checkpoint events stay chronological (CheckpointValidation.fs:107).
+  I4  queue.md is a projection: after a merge it must equal
+      renderMarkdown(mergedRows(queue.json, current.json)).
+  I5  Output formatting equals the CLI writers' (indent 2, relaxed escaping,
+      trailing newline; events compact one per line) so the next CLI write
+      produces no spurious diff.
+  I6  Never pick a side for a genuinely conflicting change.
+
+Shared infrastructure: the JSON serializer options and queue projection are
+shared with the work/backlog writers; the merge reuses them rather than
+duplicating them (queue projection function made public in
+FileBacklogQueueRepository).
+
+
+4. Design
+---------
+
+Chosen path: BOTH a Git merge driver installed by Praxis and a CLI-owned
+resolve command, sharing one pure merge core.
+
+  a) `praxis state merge-driver BASE OURS THEIRS PATH` - Git's merge-driver
+     contract (%O %A %B %P). Writes the merged document into OURS, exits 0; on
+     a genuine conflict writes a report to stderr naming file and item, leaves
+     OURS as it was, exits 1 (Git then records the path as conflicted).
+  b) `praxis state install-merge-driver` - idempotently sets
+     `merge.praxis-state.name/driver` in the repository's local Git config and
+     ensures .gitattributes routes the covered paths to `merge=praxis-state`.
+     (Git config is not versioned, so each clone runs this once; without it
+     Git falls back to its text merge and (c) still works.)
+  c) `praxis state resolve [--json]` - after any `git merge`/`git pull` that
+     left covered .ros paths unmerged, reads stages :1/:2/:3 from the index,
+     merges each with the same core, writes the result, regenerates queue.md
+     from the merged JSON, and `git add`s exactly the paths it resolved. Any
+     genuine conflict: nothing is written or staged for that path, report names
+     file and item, exit 1. Paths it does not cover are left untouched.
+
+Pure core (Ros.Domain/Work/StateMerge.fs), generic and JSON-free:
+  - `keyed`: three-way merge of id-keyed items. Per id: unchanged on one side
+    -> take the other; identical on both -> take it; deleted on one side and
+    unchanged on the other -> delete; otherwise conflict naming the id
+    (modified differently on both sides, delete/modify, added on both sides
+    with different content). Order: ours' order, then theirs-only additions
+    in theirs' order. Duplicate ids within one side -> conflict.
+  - `appendOnly`: union of event logs. Check I2 for both sides; new events per
+    side = suffix after base; drop from theirs those whose identity is already
+    in ours (identical text) or conflict (same identity, different text);
+    interleave the two new sequences with a stable two-way merge on
+    (occurredAt instant, identity ordinal) that never reorders within a side.
+    Deterministic for given inputs; each event exactly once.
+  - `scalar`: three-way value merge (same rule as one keyed item).
+  - Conflict = { File; Subject; Reason }.
+
+Contracts (Ros.Contracts/Work/StateMergeJson.fs): per covered file, a policy:
+  - .ros/context/current.json: collection `workItems` keyed by `id`;
+    `updatedAt` -> the later instant of ours/theirs; `actor` -> follows the side
+    whose `updatedAt` is later (it is "who wrote last", the same pairing the
+    writer uses, FileWorkContextRepository.fs:369-370), three-way when tied;
+    every other top-level field three-way.
+  - .ros/work/queue.json: collection `items` keyed by `id`; `nextSeq` -> max of
+    the three (never reuses a sequence either side consumed); other fields
+    three-way. Two branches capturing the same auto id with different content
+    is a real id collision -> conflict on that id (fail closed).
+  - .ros/work/groups.json: collection `groups` keyed by `id`; others three-way.
+  - .ros/events/events.jsonl: appendOnly, identity = eventId (else exact line).
+  - .ros/work/queue.md: driver: row-keyed three-way merge of table rows keyed by
+    the first cell, re-sorted ordinally (exactly the renderer's order); resolve:
+    always regenerated from the merged queue.json + current.json (I4), which
+    also clears any projection-only row conflict the driver could not decide.
+  Object key order of a merged object: ours' keys, then theirs-only keys.
+  Item equality: stabilized (key-sorted) compact JSON text.
+
+Error model: parse failure of any stage -> error naming the file (exit 1, fail
+closed, nothing written). Missing base stage (added on both sides) -> empty
+base. Missing ours/theirs stage (deleted on one side) -> not handled by
+resolve (reported, left for the user; Praxis never deletes state files).
+
+Transaction boundaries: driver - single file write into Git's temporary %A.
+resolve - per-path: compute all merges first; if any covered path conflicts,
+write nothing at all (all-or-nothing across the state files, since they are
+mutually dependent: current.json/queue.json/queue.md); otherwise write every
+merged file, regenerate queue.md, then `git add` them.
+
+
+5. Compatibility
+----------------
+
+No change to any state schema or writer; existing repositories need no
+migration. The .gitattributes lines are inert without the Git config (Git
+falls back to text merge for an undefined driver). Formatting of merged files
+matches the CLI writers. New commands only; no existing command surface
+changes. F#-only (RQ-ROS-2026-A024): no scripts.
+
+
+6. Coverage (AC5)
+-----------------
+
+Covered: .ros/context/current.json, .ros/events/events.jsonl,
+.ros/work/queue.json, .ros/work/queue.md, .ros/work/groups.json.
+Not covered, with reason:
+  - .ros/telemetry/executions/<id>.json, .ros/executions/<id>/*: one file per
+    execution, written only by that execution's branch; both sides changing the
+    same execution is a genuine conflict, which Git's text merge already
+    reports (fail closed).
+  - .ros/remote/requests/*, .ros/work/attachments/*, .ros/work/items/<id>.md:
+    per-id files; same reasoning.
+  - .ros/planning/error-history.json: written only by the explicit opt-in
+    `plan record-error`, not by ordinary parallel work; its keys are refused
+    when reused with other evidence, so a union would need that rule's
+    semantics - left to Git's text merge (conflicts fail closed).
+  - .ros/publications.json: adapter publication receipts, written by
+    `adapter publish`, not by ordinary work lifecycle.
+  - .ros/hub/registry.json/.md: machine-local hub registry, not repository work.
+  - .ros/transactions/*, .ros/locks/*: transient, never committed.
+  - registries/* (generated by `praxis registry build`): projections of
+    canonical records, regenerated deterministically by `praxis registry
+    build` after a merge; not .ros state.
+
+
+7. Tests
+--------
+
+Domain unit tests (pure): keyed merge (disjoint adds, one-side modify,
+identical change, both-modified conflict, delete/modify conflict, add/add
+conflict, order), appendOnly (union exactly once, deterministic interleaving,
+side order preserved, rewritten-history conflict, same id different text
+conflict), scalar.
+Contracts tests: current.json merge (updatedAt/actor policy, conflict names
+the work item), queue.json nextSeq max and id collision, events, queue.md rows.
+End-to-end (real CLI + Git): two branches of one installed repository start
+and checkpoint/complete different work items -> `git merge` conflicts in the
+three files -> `praxis state resolve` -> no conflicts left, `praxis validate`
+exits 0, both items present, every event once. Same scenario with the driver
+installed: `git merge` succeeds directly and validate passes. Conflict case:
+both branches change the same item differently -> resolve exits 1 naming the
+item, nothing staged.
+
+
+8. Risks
+--------
+
+  R1  Git invokes merge drivers from the work-tree top; the driver command is
+      `./praxis` in a source checkout and `praxis` elsewhere. Mitigation:
+      install-merge-driver takes `--command` (default `./praxis` when that
+      launcher exists, else `praxis`).
+  R2  Interleaving by occurredAt assumes each side's own log is chronological;
+      if not, the stable merge still never reorders within a side, so per-item
+      chronology validated by CheckpointValidation is preserved.
+  R3  queue.md row conflicts in the driver are possible for projection-only
+      reasons; resolve regenerates queue.md, so the documented path always ends
+      consistent.
+  R4  Top-level `startedAt`/`baselineDirtyPaths` are three-way: if both sides
+      re-established context differently, resolve fails closed instead of
+      guessing - acceptable, as that is a genuine conflict.
+  R5  Telemetry execution JSON is large and per-execution; not merged (see 6).
