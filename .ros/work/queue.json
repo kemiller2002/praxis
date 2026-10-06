@@ -4256,6 +4256,167 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-09",
+      "title": "Grouped-work requirements v2: cross-repository groups, mutation commands, grouped-by-default execution, context and cost measurement (DF-ROS-2026-A053)",
+      "description": "Requirements-only update of requirements/PLANNING-WORK-GROUPS.md on the repository owner's four accepted decisions (session https://claude.ai/code/session_01CmPhre2cFonbHerxVSsmrL): (1) first-class cross-repository groups, (2) group mutation commands and completion semantics, (3) grouped execution as the default for high-affinity groups with enforced reuse-inventory and per-criterion verification gates, (4) context-reuse and cost measurement consumed by the planner. Record decision DF-ROS-2026-A053 amending DF-ROS-2026-A047 (citing EV-ROS-2026-A064, EV-ROS-2026-A070); update docs/planning.md work-group status and required tests; capture follow-on implementation items. Acceptance: new requirement IDs traceable to the decisions; existing IDs stable and amended in place; validate, registry check and tests green; no implementation.",
+      "tags": [
+        "planning,grouping,requirements"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T19:43:07.472Z",
+      "updatedAt": "2026-10-06T19:50:10.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-GROUP-08",
+      "title": "Group command surface: work group list, idempotent mutations, append-only audit, versioned contracts, derived completion (PRX-GRP-110..116)",
+      "description": "Implement PRX-GRP-110..116 (DF-ROS-2026-A053 decision 2; requirements/PLANNING-WORK-GROUPS.md). Add read-only 'work group list' (filters --status/--member/--repository, sorted); idempotent repeats with changed:false and no history (changes AlreadyMember/NotMember/DuplicateGroup exit 1 -> 0); history entries record the caller's execution ID; validate refuses rewritten/reordered/truncated history; optional work.group.* events; store schemaVersion 2 additive with v1 read unchanged; derived group status vocabulary and removed-open reporting; no group completion transition. Tests: PRX-GRP-190 cases 27-32. Do first: PRAXIS-GROUP-07/09/10 build on it.",
+      "tags": [
+        "grouping"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T19:48:34.872Z",
+      "updatedAt": "2026-10-06T19:48:34.872Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-GROUP-07",
+      "title": "First-class cross-repository groups: GROUP-ECHELON IDs, home record, member references, derived status, cross-repo order (PRX-GRP-100..109)",
+      "description": "Implement PRX-GRP-100..109 and 111's cross-repository rules (DF-ROS-2026-A053 decision 1). Reserved GROUP-ECHELON- prefix; owner/repo:WORK-ID members; homeRepository; 'work group link' writing only an immutable group reference on the member's own item; read-only dated observations of member repositories (fetched ref or remote read) with stale/unknown handling; derived group status; complete/merged/released cross-repo dependency edges and cross-repo cycle detection; per-repository progress; group plan and checkpoints listing per-member repository, branch, checkpoint, PR, observedAt; never write or schedule another repository. Motivating case: portfolio sweeps (one brief, per-repo PRs, consolidated table). Tests: PRX-GRP-190 cases 21-26. After PRAXIS-GROUP-08.",
+      "tags": [
+        "grouping"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T19:48:35.208Z",
+      "updatedAt": "2026-10-06T19:48:35.208Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-GROUP-10",
+      "title": "Grouped-execution completion gates: machine-checkable reuse inventory and per-criterion verification (PRX-GRP-133..135, 040, 045)",
+      "description": "Implement PRX-GRP-133..135 (DF-ROS-2026-A053 decision 3). Schemas praxis.group-analysis/1 (members with enumerated criteria, reuseInventory, searches, newAbstractions) and praxis.group-verification/1 (per member per criterion status and evidence, deferredTo); consumed as work complete --evidence group-analysis=PATH / group-verification=PATH through the DF-ROS-2026-A052 completion-readiness mechanism as a group-verified facet; fail closed, exit 3, no state change; analysis must be committed in an ancestor of the member's first attributed commit; location references must exist. Update docs/group-analysis-template.md with the JSON companion. Tests: PRX-GRP-190 cases 36-37. Must land before PRAXIS-GROUP-09 turns the default on.",
+      "tags": [
+        "grouping"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T19:48:35.533Z",
+      "updatedAt": "2026-10-06T19:48:35.533Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-GROUP-09",
+      "title": "plan execute-group and grouped execution by default for qualifying high-affinity groups (PRX-GRP-117, 130..132, 136..137)",
+      "description": "Implement PRX-GRP-117, 130..132, 136, 137 (DF-ROS-2026-A053 decisions 2-3). plan execute-group records a GEX group execution, begins members in required order via the existing work begin transition with a groupExecution link, never launches agents/branches/providers, idempotent per member, this checkout only. Qualification thresholds under grouping.groupedExecution (high affinity, no none/unknown pair, 2..6 runnable members, same checkout, no limiting context pressure, none captured), shown by plan groups/explain-group; per-group and per-item opt-out with recorded reason; deterministic context-pressure fallback to independent execution. The default takes effect only after PRAXIS-GROUP-10. Tests: PRX-GRP-190 cases 33-35, 38-39, 44. After PRAXIS-GROUP-08 and PRAXIS-GROUP-10.",
+      "tags": [
+        "grouping"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T19:48:35.870Z",
+      "updatedAt": "2026-10-06T19:48:35.870Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-10",
+      "title": "Measure context reuse and cost for grouped work and price it in the planner (PRX-GRP-150..158)",
+      "description": "Implement PRX-GRP-150..158 (DF-ROS-2026-A053 decision 4). Provider-neutral context metric capabilities across adapters; time.first_productive_change_ms over configured meaningful paths; context.peak_tokens/window_tokens when exposed; adapter-recorded cost.execution_total where the runtime exposes it and a completion warning when a grouped member lacks cost and capability state; ingest a group execution's shared session once into the GEX; deterministic shared-cost apportionment (direct by member window, group-shared remainder, equal-share 'allocated'); planner pricing of grouped vs independent from >=3 measured samples, else unknown; frozen predicted-vs-observed per GEX. Tests: PRX-GRP-190 cases 40-43. Metric/adapter parts can start now; GEX parts (153, 154, 158) need PRAXIS-GROUP-09.",
+      "tags": [
+        "grouping"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T19:48:36.196Z",
+      "updatedAt": "2026-10-06T19:48:36.196Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-PLAN-11",
+      "title": "Review grouped-by-default at its trigger and roll back if a threshold is crossed (PRX-GRP-138)",
+      "description": "Per PRX-GRP-138 and DF-ROS-2026-A053: after the first 10 grouped-mode executions or 90 days after the default takes effect (whichever first), write an evidence record comparing grouped and independent executions (cost and active time per member, first-pass verification rate, context-pressure fallbacks, 30-day rework) and a decision review. Revert the default to advisory by configuration and a decision record if any rollback trigger holds (grouped median cost per member not lower with >=5 samples each; first-pass verification failure >10 points worse; >1/3 fallbacks; a confirmed attribution-laundering incident caused by grouped mode). Not actionable until PRAXIS-GROUP-09 and PRAXIS-PLAN-10 are complete.",
+      "tags": [
+        "grouping"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T19:48:36.530Z",
+      "updatedAt": "2026-10-06T19:48:36.530Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
