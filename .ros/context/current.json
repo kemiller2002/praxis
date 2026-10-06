@@ -6024,18 +6024,56 @@
     {
       "id": "PRAXIS-CTL-06",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-06T16:29:56.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/Hub.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkStateCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/HubTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/project-administration-hub.md"
+        }
+      ],
+      "updatedAt": "2026-10-06T16:58:07.000Z",
       "telemetryExecutionIds": [
         "EXE-20261006T162957134Z-31de2469"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "320121d65b2a9e24bf67f024",
+        "recordedAt": "2026-10-06T16:58:00.000Z",
+        "executionId": "EXE-20261006T162957134Z-31de2469",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a022-run-98e1",
+        "commit": "ca98991bf1518d8ca5b66525ae635ac885476528",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a022-run-98e1",
+        "remoteCommit": "ca98991bf1518d8ca5b66525ae635ac885476528",
+        "summary": "Hub /api/v1 (praxis.hub-state v1) lists registered repositories with availability and serves each repository's own praxis.work-state work list/item via its own 'praxis work state'; transitions delegated to the repository's 'praxis work transition'; unreachable/incompatible repositories reported per repository; docs and 9 tests; full suite 1373/1373 passing",
+        "nextAction": "Complete PRAXIS-CTL-06, rebuild the registry, validate and push the Praxis state",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-06T16:58:07.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-06T16:29:56.000Z",
+  "updatedAt": "2026-10-06T16:58:07.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
