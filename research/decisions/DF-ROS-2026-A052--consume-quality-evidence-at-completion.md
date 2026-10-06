@@ -2,10 +2,10 @@
 id: DF-ROS-2026-A052
 title: Consume Dokimos and Ordo quality evidence at work completion
 status: accepted
-version: 1.0.0
+version: 1.1.0
 owners: [repository-governance]
 created: 2026-10-05
-updated: 2026-10-05
+updated: 2026-10-06
 research_area: repository-operating-system
 decision_type: architecture
 supports: []
@@ -31,6 +31,16 @@ provenance:
         runtime: claude-code
       reason: "Consume Dokimos and Ordo quality evidence at completion (PRX-QUAL-023)"
       evidence: [https://github.com/kemiller2002/praxis/issues/167]
+    EXE-20261006T215449549Z-494ad502:
+      operations: [modified]
+      at: 2026-10-06T21:55:13.063Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Amend with risk obligations, evidence digests and release readiness (PRX-QUAL-020..023, PRAXIS-QUAL-07..10)"
 ---
 
 # Decision
@@ -107,7 +117,8 @@ kemiller2002/praxis#167).
 - A named Dokimos *profile* is represented by its accepted baseline path
   (`dokimosBaseline`); the `dokimos.ratchet` 1.0.0 contract carries no other
   profile identity.
-- The record does not yet include a digest of the consumed evidence file.
+- The record does not yet include a digest of the consumed evidence file
+  (resolved by the 2026-10-06 amendment).
 
 # Revisit when
 
@@ -115,3 +126,36 @@ kemiller2002/praxis#167).
 - Release-readiness or verification-matrix evidence (PRX-QUAL-022) gets a
   consumable contract.
 - Conditor installs Dokimos by default (retire the bridge).
+
+# Amendment (2026-10-06): risk obligations, digests and release readiness
+
+Implements PRX-QUAL-020..022 and the PRX-QUAL-023 leftovers through the same
+facet mechanism (PRAXIS-QUAL-07..10, `GROUP-PRAXIS-COMPLETION-001`).
+
+- **Risk metadata** (`praxis.work-risk/1`, set by `work update`) is declared
+  by the work item, not inferred. Praxis derives completion obligations from
+  it with one pure rule (`WorkRisk.obligations`): high or critical work owes a
+  design-debt declaration; stateful control-plane, persistence,
+  release/bootstrap, security or remote-execution work, or work declaring
+  state, protocol or security impact, owes a verification matrix.
+- **Two facets join the record:** `design-debt-declared` and
+  `verification-matrix-satisfied`. Grouped-execution facets (PRX-GRP-133..135,
+  `group-verified`) follow the same pattern.
+- **Obligations bind without the policy.** An item whose risk carries
+  obligations is gated even when `qualityEvidence` is off; this does not
+  change any repository that declares no risk, so the migration bridge
+  still holds for them.
+- **Praxis-owned contracts** (`praxis.design-debt/1`,
+  `praxis.verification-matrix/1`, `praxis.release-readiness/1`) are consumed
+  like Dokimos and Ordo evidence: Praxis checks their consistency and never
+  re-runs the verification they describe. Compilation or unit tests alone
+  never satisfy a matrix.
+- **Digests.** Every consumed evidence file is recorded with the SHA-256 of
+  the bytes decoded, so the decision is reproducible from committed evidence.
+- **Release readiness** is no longer always unavailable: a consistent
+  `ready` document whose checks all passed satisfies it.
+
+Alternatives rejected: inferring risk from changed paths (a guess, and Ordo
+already owns boundary assessment); requiring a matrix for every change (it
+would make low-risk work ceremonial and push executors to write empty
+matrices).

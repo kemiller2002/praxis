@@ -14,6 +14,7 @@
     <Compile Include="Work/EnvelopeReconciliationReceipt.fs" />
     <Compile Include="Work/Model.fs" />
     <Compile Include="Work/Plan.fs" />
+    <Compile Include="Work/WorkRisk.fs" />
     <Compile Include="Work/CompletionReadiness.fs" />
     <Compile Include="Work/EnvelopeReconciliation.fs" />
     <Compile Include="Work/ContextPlan.fs" />

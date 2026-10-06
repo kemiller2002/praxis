@@ -31,6 +31,7 @@
   <ItemGroup>
     <Compile Include="Lifecycle.fs" />
     <Compile Include="Foundations.fs" />
+    <Compile Include="WorkRiskArguments.fs" />
     <Compile Include="ProvenanceCommands.fs" />
     <Compile Include="StepCommands.fs" />
     <Compile Include="ReconciliationCommands.fs" />
