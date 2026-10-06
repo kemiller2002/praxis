@@ -64,3 +64,9 @@ The physical layout MAY evolve only if the same lifecycle and discoverability gu
 - Validation rejects meaningful work on a branch other than its work-item ID.
 - Successful reconciliation leaves no transient accepted envelope and leaves durable provenance plus a checkpoint.
 - Documentation includes a runtime-free agent bootstrap example.
+
+## Implementation status (inbox, 2026-10-06)
+
+- Items 8-11 and the inbox acceptance criterion ("Inbox claim/retry/reconcile tests prove no source is lost") are implemented by `PRAXIS-MISC-01`: `praxis inbox list|show|claim|derive|complete|release|reject|recover`, the `praxis.inbox-claim/1` record and the crash-safe write-ahead transfer, tested by `tests/Praxis.Tests/InputInboxTests.fs` (crash at every step of claim, complete, release and reject, then recovery). See `docs/fallback-reconciliation.md` ("Input documents"). The layout adds `.praxis/processed/` and `.praxis/rejected/documents/` with the same discoverability guarantees.
+- Processing itself is the agent's judgement: the commands record what was derived, with provenance to the input, and refuse completion until it is durably reconciled; they do not extract requirements automatically.
+

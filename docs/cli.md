@@ -271,7 +271,7 @@ praxis add "..."
 praxis step <plan|begin|resume|complete|block|abandon|record|availability|checkpoint|link|list|show>
 praxis telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
 praxis reconcile --envelope FILE
-praxis inbox list
+praxis inbox <list|show|claim|derive|complete|release|reject|recover>
 praxis adapter <call|publish>
 praxis provenance <identity|record|show|audit>
 praxis plan <analyze|simulate|compare|explain|replay|freshness|groups|explain-group>
@@ -313,6 +313,8 @@ synchronization and bounded drift](work-protocol.md#upstream-synchronization-and
 ### `reconcile --envelope`
 
 Validates one runtime-free envelope, dispatches its ordered work requests through the native work/evidence rules, imports optional execution steps into canonical telemetry, commits only the resulting canonical paths, and creates `praxis-reconcile/<transaction-id>`. Exit `0` means applied or an already-checkpointed replay, `1` means an interrupted transaction remains pending and is safe to retry, and `2` means the envelope was rejected without canonical mutation. `inbox list` inventories pending envelope/document inputs. See [`fallback-reconciliation.md`](fallback-reconciliation.md).
+
+`praxis inbox` runs the input-document lifecycle (DER-08..10): `list [--json]` reports pending inputs and every claim; `claim PATH` moves a pending input into `.praxis/processing/<claim-id>/`; `derive CLAIM-ID --kind {requirement|decision|constraint|evidence|risk|question|reference} (--id ARTIFACT-ID|--path PATH) --summary TEXT [--locator TEXT]` records what the input yielded; `complete CLAIM-ID [--no-derivations REASON]` archives it to `.praxis/processed/` only once every derived change is committed in HEAD (and every derived artifact names the claim in `derived_from`); `release CLAIM-ID --reason TEXT` returns it to the inbox; `reject PATH|CLAIM-ID --reason TEXT` moves it to `.praxis/rejected/documents/`; `recover` finishes any interrupted operation (every mutating command runs it first). Exit `0` success, `2` refused, `1` storage failure that is safe to retry. See [`fallback-reconciliation.md`](fallback-reconciliation.md) ("Input documents").
 
 `praxis telemetry adapters` lists the ingest adapters. Besides production's
 catalog it includes the F#-only `anthropic-claude-session`, which derives

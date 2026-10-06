@@ -86,7 +86,7 @@
 | PRAXIS-GROUP-09 | plan execute-group and grouped execution by default for qualifying high-affinity groups (PRX-GRP-117, 130..132, 136..137) | captured | grouping | high |
 | PRAXIS-GROUP-10 | Grouped-execution completion gates: machine-checkable reuse inventory and per-criterion verification (PRX-GRP-133..135, 040, 045) | captured | grouping | high |
 | PRAXIS-INTERNAL-NAMESPACES | Migrate internal Ros.* projects, namespaces, assemblies and Ros.slnx to Praxis.* (deferred from PRAXIS-CLI-RENAME, DF-ROS-2026-A043) | complete | rename, follow-up | low |
-| PRAXIS-MISC-01 | Input-document inbox: crash-safe claim/process lifecycle with provenance-preserving derivation (DER-09, DER-10) | captured | inbox, reconciliation | high |
+| PRAXIS-MISC-01 | Input-document inbox: crash-safe claim/process lifecycle with provenance-preserving derivation (DER-09, DER-10) | ready | inbox, reconciliation | high |
 | PRAXIS-MISC-02 | Planner: observe CI status for checkpoints that wait on CI (PRX-PLAN-020) | captured | planning, planner-evidence | medium |
 | PRAXIS-MISC-03 | Planner: historical merge-conflict evidence in the collision graph (PRX-PLAN-081) | captured | planning, planner-evidence | low |
 | PRAXIS-MISC-04 | Planner replay: compare predicted and observed cost (PRX-PLAN-152) | captured | planning, planner-evidence | low |

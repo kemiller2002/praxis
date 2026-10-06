@@ -112,10 +112,3 @@ module EnvelopeReconciliationCommands =
                 eprintfn "PENDING %s" failure.Message
                 1
             | _ -> result
-
-    let inbox root =
-        let inputs = InputDocuments.inventory root
-        for relative, path in inputs do
-            printfn "%s\t%s" relative (Path.GetRelativePath(root, path))
-        if inputs.IsEmpty then printfn "No pending input documents."
-        0

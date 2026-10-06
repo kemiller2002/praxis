@@ -33,7 +33,7 @@ let private usageBase =
 
 let private usage =
     usageBase
-    + " | step {plan|begin|resume|complete|block|abandon|record|availability|checkpoint|link|list|show} [options] | reconcile --envelope FILE | inbox list"
+    + " | step {plan|begin|resume|complete|block|abandon|record|availability|checkpoint|link|list|show} [options] | reconcile --envelope FILE | " + InputInboxCommands.usage
 
 /// Removes one global `--name VALUE` option from the argument list wherever
 /// it appears, so the command parsers below only ever see their own flags.
@@ -2949,7 +2949,7 @@ let private repositoryDispatch root packageRoot arguments =
         0
     | "validate" :: rest -> runValidateUnified root rest
     | [ "reconcile"; "--envelope"; envelope ] -> EnvelopeReconciliationCommands.reconcile root envelope
-    | [ "inbox"; "list" ] -> EnvelopeReconciliationCommands.inbox root
+    | "inbox" :: rest -> InputInboxCommands.run root rest
     | "foundations" :: "verify" :: rest when rest |> List.forall ((=) "--json") ->
         Foundations.run root (rest |> List.contains "--json")
     | "status" :: rest when rest |> List.forall (fun value -> value = "--json" || value = "--verbose" || value = "--offline") ->
