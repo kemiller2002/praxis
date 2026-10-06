@@ -1,0 +1,175 @@
+Architecture analysis: PRAXIS-CTL-04
+=====================================
+
+Item:            PRAXIS-CTL-04 "Control-plane transition requests with structured refusals"
+                 (`./praxis work show PRAXIS-CTL-04`)
+Repository:      kemiller2002/praxis, branch experiment/a022-run-98e1
+Base commit:     71a2f6e (PRAXIS-CTL-03: record checkpoint and completion)
+Requirements:    PRX-CTL-006, PRX-UI-024, PRX-UI-027 (requirements/EXECUTION-ORCHESTRATION.md:300-328)
+
+1. Item and acceptance criteria
+-------------------------------
+
+Obligation: give `praxis web serve` one transition-request endpoint whose
+refusals are structured, at API level. Today `POST /api/work/ID/ACTION`
+answers a refused transition with `400 {"error": "<CLI stderr text>"}`
+(src/Ros.Cli/WebInterface.fs:978-981, `HttpMessages.jsonError 400 message`).
+
+Acceptance criteria (verbatim intent, numbered as in the backlog item):
+ 1. One transition-request endpoint accepts a requested action for a work
+    item (ready, block, abandon, start, resume, complete, with their
+    arguments) and executes it through the same transition path as the CLI,
+    never reimplementing a rule.
+ 2. Success returns the item's resulting typed state.
+ 3. A refused transition returns a structured refusal (machine-readable
+    category, the kernel's message, the requested action) with an
+    appropriate HTTP status, and leaves Praxis state byte-for-byte
+    unchanged, shown by a test.
+ 4. The actor identity and provenance recorded for an API transition are
+    those of the equivalent CLI command and are never inferred from the
+    HTTP client.
+ 5. The existing per-action routes keep working or are documented as
+    superseded; tests.
+
+Depends on: PRAXIS-CTL-03 (already on this branch: /api/v1 read routes,
+`WorkStateJson`, `WorkStateView`).
+
+2. Reuse inventory
+------------------
+
+Searches used: `grep -rn "api/work" src`, `grep -n "eprintfn \"ERROR" src/Ros.Cli/Program.fs`,
+`grep -rn "WorkStateJson" src`, `grep -n "actionCode" src/Ros.Domain/Work/WorkListView.fs`,
+reading tests/Ros.Tests/WebInterfaceTests.fs and CliHarness.fs.
+
+| Existing element | Location | What it does | Reuse decision |
+|---|---|---|---|
+| `WorkOperation` union | src/Ros.Cli/WebInterface.fs:34-48 | Every web operation; each is exactly one CLI command line | Reuse. Add one case `AbandonWork` (live abandon = `work abandon`), because the existing `Abandon` maps only to the backlog-only `work backlog-transition --action abandon`. |
+| `WebInterface.itemOperation` | WebInterface.fs:180-198 | Parses `POST .../ID/ACTION` body into a `WorkOperation` (reason, type, actor, evidence, conclusion) | Reuse unchanged as the argument parser for the new endpoint (the request body carries `action` plus the same argument fields). |
+| `WebInterface.commandLine` | WebInterface.fs:255-298 | Pure operation -> CLI argument vector | Reuse; extend with `AbandonWork` -> `work abandon --id ID --occurred-at T --reason R [--actor A]`. |
+| `WebInterface.execute` / `runCli` / `CliProcess.runSelf` | WebInterface.fs:854-906; src/Ros.Cli/CliProcess.fs | Runs this same CLI as a child process; the child inherits the server's environment only | Reuse as THE transition path (criterion 1, PRX-CTL-006). Need the exit code as well as the message, so add a small variant returning `ProcessResult` instead of collapsing it to a string. |
+| `CliProcess.failureMessage` | CliProcess.fs:69-84 | The CLI's own `ERROR ...` stderr text | Reuse verbatim as the refusal "message" (the kernel's message). |
+| CLI exit-code contract | AGENTS.md "Lifecycle commands"; Program.fs e.g. :644, :1365-1371, :1875-1881 | `2` invalid arguments; `1` refused/failed transition | Reuse to separate `invalid-request` (exit 2) from kernel refusals (exit 1). |
+| `WorkStateView.project` / `ActionState` / `ActionAvailability.Refused("illegal-transition", ...)` / `Legal {Reason; EvidenceTypes}` | src/Ros.Domain/Work/WorkStateView.fs:1-200 | Asks the kernels' own `decide` (`WorkTransition.decide`, `BacklogTransition.decide`) which actions are legal in the item's state and what they require | Reuse to classify a refusal (category) from the state read BEFORE the request. No second transition table. |
+| `WorkListView.actionCode` | src/Ros.Domain/Work/WorkListView.fs:55-61 | Live action codes (`begin`, not `start`) | Reuse; requested `start` maps to live `begin` when the live kernel governs. |
+| `FileWorkListRepository.readStateSources` / `readDetail` | used at WebInterface.fs:937 | Reads configuration, queue and live context for the projection | Reuse for the pre-read (classification) and post-read (typed result). |
+| `WebInterface.stateResponse` (StateQuery.Item) | WebInterface.fs:701-715 | `praxis.work-state` `work-item` document | Reuse to produce the success body (criterion 2). |
+| `WorkStateJson.errorDocument` / `itemNode` / envelope / `workItemNotFound` | src/Ros.Contracts/Work/WorkStateJson.fs:103-135 | `praxis.error` document with `code` + legacy `error`; work-item document | Extend with `transitionDocument` (kind `work-transition`) and `transitionRefusal` (a `praxis.error` with `code`=category, `message`, `requestedAction`, `workItemId`). Additive only. |
+| `WebInterface.isKnown` | WebInterface.fs:719-724 | Whether recorded state knows an id | Reuse for `work-item-not-found` (404) without running the CLI. |
+| `HttpMessages.jsonNode` / `parseBody` / `jsonString` | src/Ros.Cli/WebHttp.fs | JSON response, body parsing | Reuse. |
+| Identity resolution `ProvenanceCommands.withResolvedActor`, env discovery | Program.fs:2972-2975 | CLI resolves actor from flags and environment only | Reused implicitly by running the CLI; the HTTP layer passes no header-derived value. |
+| Test helpers `ServedProcess`, `Http`, `withServer`, `CliHarness.*` | tests/Ros.Tests/WebInterfaceTests.fs:14-170; tests/Ros.Tests/CliHarness.fs | Real server process over a fresh repo, CLI runs with identity variables stripped | Reuse; extend `ServedProcess` with an optional environment so the identity test can give the server and a CLI run the same declared identity. |
+
+New abstractions and why existing ones do not fit:
+ - `TransitionRefusal` category type (pure, Ros.Cli): no existing type maps
+   "CLI outcome + pre-read action availability" to an HTTP status and code.
+   `ActionAvailability.Refused` covers only illegal-in-state; a legal action
+   can still be refused by the kernel (missing reason, missing evidence,
+   durable-checkpoint guard), and invalid arguments come from exit 2.
+ - `WorkOperation.AbandonWork`: the only CLI path that abandons LIVE work is
+   `work abandon` (Program.fs:1868-2010); `WorkOperation.Abandon` deliberately
+   mirrors the backlog-only route and must not change (criterion 5).
+
+3. Invariants and shared infrastructure
+---------------------------------------
+
+ - PRX-CTL-006: the HTTP layer adds no rule. It (a) parses arguments,
+   (b) picks the one CLI command line, (c) runs it, (d) classifies the
+   outcome for the client using the kernel's own projected availability.
+   Classification never decides whether a transition happens.
+ - Mutations go only through the CLI child process, which holds the
+   `work-protocol` lock and the recovery journals (Program.fs:597-640,
+   1275-1360). The web process writes nothing under .ros/.
+ - Identity: the child inherits the server process's environment;
+   request headers and the peer address are never read for identity.
+   An explicit `actor` field is passed as `--actor`, exactly as the
+   equivalent CLI command's `--actor` flag (same as the per-action routes).
+ - The per-action routes, `/api/v1` read routes and form posts share
+   `itemOperation`, `commandLine` and `execute`; none of their behaviour
+   changes.
+
+4. Design
+---------
+
+Contract: `POST /api/v1/work/:id/transitions`
+  Body (JSON or form): `{"action": "ready|block|abandon|start|resume|complete",
+  "reason"?, "type"?, "actor"?, "evidence"?: [{type, path}], "conclusion"?}`.
+
+Pipeline (pure where possible):
+  1. route: parse body; missing/unknown action -> refusal `invalid-request`
+     (400) without touching state.
+  2. pre-read: `readStateSources` + `WorkStateView.project`; unreadable ->
+     `work-state-unreadable` (500); unknown id -> `work-item-not-found` (404).
+  3. operation: `TransitionRequest.operation` picks the CLI command:
+     ready -> backlog-transition ready; block -> work block; abandon ->
+     backlog-transition abandon (backlog-governed) or work abandon
+     (live-governed); start -> work start; resume -> work resume;
+     complete -> work complete. Arguments via `itemOperation`.
+  4. execute through `CliProcess.runSelf` (the CLI path).
+  5. outcome:
+     exit 0 -> 200 `{contract: praxis.work-state, version 1, kind:
+       "work-transition", action, item: WorkItemState + detail}` read
+       in-process after the transition.
+     exit 2 -> 400 `invalid-request`.
+     other  -> category from the pre-read availability of the requested
+       action under the governing kernel:
+         not offered / `Refused("illegal-transition")` -> 409 `illegal-transition`
+         Legal{Reason=true} and no reason supplied      -> 422 `reason-required`
+         Legal{EvidenceTypes<>[]} and refused           -> 422 `evidence-required`
+                                                           only if supplied evidence types do not cover them
+         otherwise                                      -> 409 `transition-refused`
+       Message is always the CLI's own text (`CliProcess.failureMessage`).
+     child could not start -> 500 `execution-failed`.
+  Refusal body: `praxis.error` v1 `{code: category, error: message,
+  message, category, requestedAction, workItemId}` (`error` kept for
+  clients of the older shape).
+
+Validation rules: none new; all from the kernel via the CLI.
+Error model: the categories above; HTTP 400/404/409/422/500.
+Transaction boundary: the CLI command (lock + journal). The pre-read and
+the CLI run are not atomic; the category reflects the pre-read state while
+the decision and message are the CLI's. A race can only mislabel a category
+(e.g. `transition-refused` instead of `illegal-transition`), never apply a
+refused transition or change state.
+
+5. Compatibility
+----------------
+
+Additive: new route, new `kind` value, new `praxis.error` codes, new
+`WorkOperation` case. Existing per-action routes (`/api/work/:id/ACTION`)
+and form posts keep working unchanged and are documented as superseded by
+the transition endpoint for programmatic clients in docs/web-interface.md.
+No .ros/ schema change, no CLI change.
+
+6. Tests
+--------
+
+Unit (pure): route of the new endpoint (action + args, missing/unknown
+action); operation selection by kernel (abandon live vs backlog, start);
+refusal classification table; `commandLine` for `AbandonWork`; refusal and
+transition document shapes.
+Integration (real `web serve` process, tests/Ros.Tests/WebInterfaceTests.fs):
+ - success returns `work-transition` with the resulting typed state for
+   ready/start/block/resume/complete/abandon;
+ - illegal transition -> 409 `illegal-transition`, requested action, CLI
+   message; reason missing -> 422; evidence missing -> 422; unknown item ->
+   404; bad action -> 400; each refusal hashes every file of the repository
+   (excluding .git) before and after: byte-for-byte equal;
+ - identity: server and a CLI run share a declared identity; an API start
+   sent with hostile identity-like headers records the same event actor and
+   telemetry identity/provenance sources as the CLI start;
+ - existing per-action route tests stay green.
+Python oracle tests (`python3 -m unittest discover -s tests`) re-run.
+
+7. Risks
+--------
+
+ - Refusal paths of the CLI might write (lock file, recovery journal,
+   telemetry) before refusing; the byte-for-byte test is the guard. If a
+   path writes, the endpoint must not paper over it; report it.
+ - Category drift if kernels add rejection kinds; unknown cases fall to
+   `transition-refused`, never to success.
+ - Pre-read/execute race (section 4); accepted, documented.
+ - `work block` on live work may require a durable checkpoint when the
+   policy is enabled: surfaces as `transition-refused` with the kernel text.
+ - Abandon semantics differ by kernel (reason mandatory for live abandon);
+   preserved by delegating to the CLI.
