@@ -883,11 +883,9 @@ let private runWorkCapture root arguments (createdByActor: Actor) =
                                       Actor = actor
                                       Source = optionValue "--source" arguments
                                       SourceReference = optionValue "--source-reference" arguments
-                                      ExistingQueueIds =
-                                        FileBacklogQueueRepository.readItems root
-                                        |> List.map (fun item -> item.Id)
-                                        |> Set.ofList
+                                      ExistingQueueIds = FileBacklogQueueRepository.readItems root |> List.map (fun item -> item.Id) |> Set.ofList
                                       ExistingContextIds = context.WorkItems |> List.map (fun item -> item.Id) |> Set.ofList
+                                      ExistingHistoryIds = FileEventLogRepository.readWorkItemIds root
                                       NextSeq = FileBacklogQueueRepository.readNextSeq root
                                       OccurredAt = timestamp }
 

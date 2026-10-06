@@ -29,3 +29,23 @@ module FileEventLogRepository =
             |> Array.filter (fun line -> line.Trim().Length > 0)
             |> Array.collect (eventPaths >> List.toArray)
             |> Set.ofArray
+
+    let private eventWorkItem (line: string) =
+        use document = JsonDocument.Parse line
+
+        match document.RootElement.TryGetProperty "workItem" with
+        | true, value when value.ValueKind = JsonValueKind.String -> Some(value.GetString())
+        | _ -> None
+
+    /// Every work-item id any event in the log names, so an id that has left
+    /// the queue and the live context is still known and never reallocated.
+    let readWorkItemIds (root: string) : Set<string> =
+        let path = Path.Combine(root, ".ros", "events", "events.jsonl")
+
+        if not (File.Exists path) then
+            Set.empty
+        else
+            File.ReadAllLines path
+            |> Array.filter (fun line -> line.Trim().Length > 0)
+            |> Array.choose eventWorkItem
+            |> Set.ofArray

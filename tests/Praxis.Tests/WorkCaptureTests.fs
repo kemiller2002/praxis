@@ -15,6 +15,7 @@ module WorkCaptureTests =
           SourceReference = None
           ExistingQueueIds = Set.empty
           ExistingContextIds = Set.empty
+          ExistingHistoryIds = Set.empty
           NextSeq = 1
           OccurredAt = "2026-09-09T00:00:00.000Z" }
 
@@ -85,13 +86,48 @@ module WorkCaptureTests =
 
                   Assert.equal "WI-0005" plan.Item.Id
                   Assert.equal 6 plan.NextSeq }
-          { Name = "a generated id never checks the live context, only the queue"
+          { Name = "a generated id never reuses an id already held by a completed item in the live context"
             Run =
               fun () ->
                   let plan =
-                      planned (WorkCapture.plan { request with NextSeq = 1; ExistingContextIds = Set.ofList [ "WI-0001" ] })
+                      planned (
+                          WorkCapture.plan
+                              { request with
+                                  NextSeq = 1
+                                  ExistingContextIds = Set.ofList [ "WI-0001"; "WI-0002"; "WI-0003" ] }
+                      )
 
-                  Assert.equal "WI-0001" plan.Item.Id }
+                  Assert.equal "WI-0004" plan.Item.Id
+                  Assert.equal 5 plan.NextSeq }
+          { Name = "a generated id is allocated after the highest known id and never fills a gap"
+            Run =
+              fun () ->
+                  let plan =
+                      planned (
+                          WorkCapture.plan
+                              { request with
+                                  NextSeq = 2
+                                  ExistingQueueIds = Set.ofList [ "WI-0001"; "WI-0005" ]
+                                  ExistingContextIds = Set.ofList [ "TASK-OTHER"; "WI-0004" ] }
+                      )
+
+                  Assert.equal "WI-0006" plan.Item.Id
+                  Assert.equal 7 plan.NextSeq }
+          { Name = "a generated id never reuses an id that survives only in the event history"
+            Run =
+              fun () ->
+                  let plan =
+                      planned (WorkCapture.plan { request with NextSeq = 1; ExistingHistoryIds = Set.ofList [ "WI-0007" ] })
+
+                  Assert.equal "WI-0008" plan.Item.Id }
+          { Name = "a generated id keeps a persisted nextSeq that is already ahead of every known id"
+            Run =
+              fun () ->
+                  let plan =
+                      planned (WorkCapture.plan { request with NextSeq = 10; ExistingContextIds = Set.ofList [ "WI-0003" ] })
+
+                  Assert.equal "WI-0010" plan.Item.Id
+                  Assert.equal 11 plan.NextSeq }
           { Name = "an empty or whitespace-only description is stored as absent, matching production's falsy check"
             Run =
               fun () ->

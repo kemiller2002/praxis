@@ -48,6 +48,30 @@ module LifecycleCliTests =
             Assert.isTrue (File.Exists(Path.Combine(root, ".ros", "installation.json"))) "a legacy install keeps its snapshot"
             run root)
 
+    /// Every relative Markdown link, in every Markdown file an install wrote,
+    /// whose target does not exist inside the consumer repository. Fenced code
+    /// blocks are skipped: they show syntax, they are not links.
+    let private brokenConsumerLinks (root: string) =
+        let unfenced (text: string) = Regex.Replace(text, @"(?ms)^\s*```.*?^\s*```", "")
+
+        Directory.EnumerateFiles(root, "*.md", SearchOption.AllDirectories)
+        |> Seq.filter (fun path -> not (Path.GetRelativePath(root, path).Replace('\\', '/').StartsWith ".git/"))
+        |> Seq.collect (fun document ->
+            Regex.Matches(unfenced (File.ReadAllText document), @"\[[^\]]*\]\(([^)\s]+)")
+            |> Seq.map (fun m -> (m.Groups[1]).Value)
+            |> Seq.filter (fun target -> not (Regex.IsMatch(target, "^(?:[a-z][a-z0-9+.-]*:|#)", RegexOptions.IgnoreCase)))
+            |> Seq.map (fun target -> target.Split('#', 2)[0])
+            |> Seq.filter (fun target -> target <> "")
+            |> Seq.filter (fun target ->
+                let resolved =
+                    if target.StartsWith "/" then Path.GetFullPath(Path.Combine(root, target.TrimStart '/'))
+                    else Path.GetFullPath(Path.Combine(Path.GetDirectoryName document, target))
+
+                not (File.Exists resolved || Directory.Exists resolved))
+            |> Seq.map (fun target -> $"{Path.GetRelativePath(root, document)} -> {target}"))
+        |> Seq.sort
+        |> Seq.toList
+
     let private commandTests =
         [ { Name = "lifecycle cli: --version reports the release version and --help documents every command"
             Run = fun () ->
@@ -126,6 +150,13 @@ module LifecycleCliTests =
                         |> Seq.toList
 
                     Assert.equal [] broken) }
+          { Name = "lifecycle cli: every relative link in every installed Markdown file resolves inside a greenfield consumer"
+            Run = fun () -> installed "ros-lifecycle-consumer-links" (fun root -> Assert.equal [] (brokenConsumerLinks root)) }
+          { Name = "lifecycle cli: every relative link in every installed Markdown file resolves inside a project-administration consumer"
+            Run = fun () ->
+                CliPort.withDirectory "ros-lifecycle-consumer-links-hub" (fun root ->
+                    exit 0 root [ "init"; "--profile"; "project-administration"; "--project"; "Project Administration" ]
+                    Assert.equal [] (brokenConsumerLinks root)) }
           { Name = "lifecycle cli: status, verify and doctor agree on a fresh install and never write"
             Run = fun () ->
                 installed "ros-lifecycle-healthy" (fun root ->
@@ -521,4 +552,71 @@ module LifecycleCliTests =
                     exit 0 root [ "init" ]
                     Assert.equal commented (CliHarness.read root toolchainPath)) } ]
 
-    let tests = commandTests @ installTests @ upgradeTests @ payloadTests @ pinTests
+    let private hygieneTests =
+        [ { Name = "lifecycle cli: init and upgrade add .ros/locks/ to an existing .gitignore once, keeping the rest of it"
+            Run = fun () ->
+                CliPort.withDirectory "ros-lifecycle-gitignore" (fun root ->
+                    let own = "# the repository's own rules\r\nbin/\r\n!keep.me"
+                    CliHarness.write root ".gitignore" own
+                    exit 0 root [ "init" ]
+                    let expected = own + "\r\n.ros/locks/\r\n"
+                    Assert.equal expected (CliHarness.read root ".gitignore")
+                    exit 0 root [ "verify"; "--strict" ]
+                    exit 0 root [ "init"; "--check" ]
+                    exit 0 root [ "upgrade" ]
+                    Assert.equal expected (CliHarness.read root ".gitignore")
+
+                    // A repository that already ignores the locks, in any
+                    // equivalent spelling, is left byte for byte.
+                    let spelled = "node_modules/\n/.ros/locks\n"
+                    CliHarness.write root ".gitignore" spelled
+                    exit 0 root [ "upgrade" ]
+                    Assert.equal spelled (CliHarness.read root ".gitignore")
+                    exit 0 root [ "upgrade"; "--check" ]
+
+                    CliHarness.write root ".gitignore" "dist/\n"
+                    exit 3 root [ "upgrade"; "--check" ]
+                    exit 0 root [ "upgrade" ]
+                    Assert.equal "dist/\n.ros/locks/\n" (CliHarness.read root ".gitignore")) }
+          { Name = "lifecycle cli: a fresh clone of a repository with its own .gitattributes still verifies its CRLF launchers"
+            Run = fun () ->
+                CliPort.withDirectory "ros-lifecycle-eol" (fun root ->
+                    let origin = Path.Combine(root, "origin")
+                    let clone = Path.Combine(root, "clone")
+                    Directory.CreateDirectory origin |> ignore
+                    CliHarness.git origin [ "init"; "-q"; "-b"; "main" ] |> ignore
+                    // The repository's own attributes predate Praxis and say
+                    // nothing about the Windows launchers.
+                    CliHarness.write origin ".gitattributes" "* text=auto\n"
+                    exit 0 origin [ "init" ]
+                    Assert.equal "* text=auto\npraxis.cmd text eol=crlf\nros.cmd text eol=crlf\n" (CliHarness.read origin ".gitattributes")
+                    CliHarness.commitAll origin "install praxis"
+                    CliHarness.git root [ "-c"; "core.autocrlf=false"; "clone"; "-q"; origin; clone ] |> ignore
+                    exit 0 clone [ "verify"; "--strict" ]
+                    exit 0 origin [ "init"; "--check" ]) }
+          { Name = "lifecycle cli: upgrade moves only the praxis entry of .echelon/foundations.json to this release"
+            Run = fun () ->
+                installed "ros-lifecycle-foundations" (fun root ->
+                    let foundations version =
+                        "{\n  \"schemaVersion\": 1,\n  \"application\": \"app\",\n  \"capabilities\": {\n"
+                        + "    \"ordo\": { \"required\": true, \"version\": \"1.4.0\" },\n"
+                        + "    \"praxis\": {\n      \"required\": true,\n      \"version\":   \""
+                        + version
+                        + "\",\n      \"note\": \"version 3.0.0\"\n    },\n    \"zeta\": { \"version\": \"3.0.0\" }\n  }\n}"
+
+                    CliHarness.write root ".echelon/foundations.json" (foundations "3.0.0")
+                    let _, dry = json root [ "upgrade"; "--dry-run"; "--json" ]
+                    Assert.isTrue (planned dry ".echelon/foundations.json") "the dry run must show the foundations re-pin"
+                    Assert.equal (foundations "3.0.0") (CliHarness.read root ".echelon/foundations.json")
+                    exit 0 root [ "upgrade" ]
+                    Assert.equal (foundations (version ())) (CliHarness.read root ".echelon/foundations.json")
+                    exit 0 root [ "verify"; "--strict" ]
+                    exit 0 root [ "upgrade"; "--check" ]
+                    exit 0 root [ "init"; "--check" ]) }
+          { Name = "lifecycle cli: a repository without .echelon/foundations.json is never given one"
+            Run = fun () ->
+                installed "ros-lifecycle-no-foundations" (fun root ->
+                    exit 0 root [ "upgrade" ]
+                    Assert.isTrue (not (File.Exists(Path.Combine(root, ".echelon", "foundations.json")))) "no foundations file may be created") } ]
+
+    let tests = commandTests @ installTests @ upgradeTests @ payloadTests @ pinTests @ hygieneTests

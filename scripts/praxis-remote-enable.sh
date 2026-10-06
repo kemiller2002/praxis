@@ -101,7 +101,9 @@ export PRAXIS_ACTOR="${PRAXIS_ACTOR:-${ROS_ACTOR:-$(gh api user -q .login)}}"
 export ROS_ACTOR_KIND="$PRAXIS_ACTOR_KIND" ROS_ACTOR="$PRAXIS_ACTOR"
 echo "repository: $TARGET_SLUG   actor: $PRAXIS_ACTOR_KIND:$PRAXIS_ACTOR   praxis: ${PRAXIS_CMD[*]}   dry-run: $DRY_RUN"
 
-now() { date -u +%Y-%m-%dT%H:%M:%S.000Z; }
+# Millisecond precision: a whole-second timestamp can predate the execution
+# that `work start` opened moments earlier, which validation rejects.
+now() { python3 -c 'from datetime import datetime, timezone; print(datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"))'; }
 
 # Begins a mechanical work item (no completion evidence required) so every
 # change below is attributed; `finish_item` completes it and validates.

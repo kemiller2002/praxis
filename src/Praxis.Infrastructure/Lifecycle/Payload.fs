@@ -18,7 +18,12 @@ type PayloadFile =
       /// the Praxis release that installed it (the manifest's `versionPin`).
       /// `init` and `upgrade` keep that property equal to the release
       /// performing them, in a new file and in the repository's existing copy.
-      VersionPin: string option }
+      VersionPin: string option
+      /// Lines (the manifest's `ensureLines`: `.ros/locks/` in `.gitignore`,
+      /// the CRLF rule for the Windows launchers in `.gitattributes`) that
+      /// `init` and `upgrade` add to the repository's own copy when it lacks
+      /// them, keeping every other line it has.
+      EnsureLines: string list }
 
 /// How a repository's existing copy of a version-pinned file relates to the
 /// release that is installing it.
@@ -178,6 +183,67 @@ module Payload =
 
                 PinReconciliation.Repinned(rewritten.ToJsonString pinWriteOptions + "\n")
         | _ -> PinReconciliation.Unrecognised
+
+    /// The byte range of `capabilities.praxis.version`'s string token, when
+    /// the document has one.
+    let private foundationsPinToken (bytes: byte array) =
+        let mutable reader =
+            Utf8JsonReader(ReadOnlySpan bytes, JsonReaderOptions(CommentHandling = JsonCommentHandling.Skip))
+
+        let mutable containers: string list = []
+        let mutable property: string option = None
+        let mutable found = None
+
+        while found.IsNone && reader.Read() do
+            match reader.TokenType with
+            | JsonTokenType.PropertyName -> property <- Some(reader.GetString())
+            | JsonTokenType.StartObject
+            | JsonTokenType.StartArray ->
+                containers <- (property |> Option.defaultValue "") :: containers
+                property <- None
+            | JsonTokenType.EndObject
+            | JsonTokenType.EndArray -> containers <- List.tail containers
+            | JsonTokenType.String when property = Some "version" && containers = [ "praxis"; "capabilities"; "" ] ->
+                found <- Some(int reader.TokenStartIndex, int reader.BytesConsumed, reader.GetString())
+            | _ -> property <- None
+
+        found
+
+    /// Decide what `.echelon/foundations.json` must contain for `version`.
+    /// Only the string value of `capabilities.praxis.version` is replaced, in
+    /// place, so every other byte -- formatting, order, other capabilities --
+    /// is the repository's own. A file without that entry, or that is not
+    /// valid JSON, is left alone.
+    let reconcileFoundationsPin (version: string) (existing: byte array) : PinReconciliation =
+        let preamble = Text.Encoding.UTF8.Preamble.ToArray()
+
+        let offset =
+            if existing.Length >= preamble.Length && existing.AsSpan(0, preamble.Length).SequenceEqual(ReadOnlySpan preamble) then
+                preamble.Length
+            else
+                0
+
+        let body = existing[offset..]
+
+        let token =
+            try
+                use _ = JsonDocument.Parse(body, jsonOptions)
+                foundationsPinToken body
+            with :? JsonException ->
+                None
+
+        match token with
+        | None -> PinReconciliation.Unrecognised
+        | Some(_, _, pinned) when pinned = version -> PinReconciliation.Current
+        | Some(start, finish, _) ->
+            let replacement = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(version, pinWriteOptions))
+
+            Array.concat [ existing[.. offset + start - 1]; replacement; existing[offset + finish ..] ]
+            |> Encoding.UTF8.GetString
+            |> PinReconciliation.Repinned
+
+    [<Literal>]
+    let FoundationsPath = ".echelon/foundations.json"
 
     let sha256Hex (content: byte array) =
         content |> SHA256.HashData |> Convert.ToHexString |> _.ToLowerInvariant()
@@ -380,6 +446,37 @@ module Payload =
 
     /// Read, render and hash the whole scaffold for one profile. Nothing is
     /// written; the result is the desired state the planner compares against.
+    [<Literal>]
+    let private RepositoryUrl = "https://github.com/kemiller2002/praxis"
+
+    /// Every shipped Markdown file with its relative links rewritten so they
+    /// resolve in a consumer repository (`ConsumerLinks`): to the installed
+    /// copy when every install carries it, otherwise to this release's tag.
+    let private withConsumerLinks (targetVersion: string) (files: (string * PayloadFile) list) =
+        let context: ConsumerLinks.Context =
+            { RepositoryUrl = RepositoryUrl
+              Tag = $"v{targetVersion}"
+              Installed =
+                files
+                |> List.filter (fun (_, file) -> file.Entry.Integration.IsNone)
+                |> List.map (fun (source, file) -> source, file.Entry.Path)
+                |> Map.ofList
+              RepositoryLocal = [ ".ros" ] }
+
+        files
+        |> List.map (fun (source, file) ->
+            if file.Entry.Path.EndsWith(".md", StringComparison.OrdinalIgnoreCase) then
+                let content =
+                    Encoding.UTF8.GetString file.Content
+                    |> ConsumerLinks.rewrite context source file.Entry.Path
+                    |> Encoding.UTF8.GetBytes
+
+                { file with
+                    Content = content
+                    Entry = { file.Entry with Sha256 = sha256Hex content } }
+            else
+                file)
+
     let load (payloadSource: PayloadSource) (profile: string) (projectName: string) : Result<Payload, string> =
         let manifestRelative = $"starter/{profile}/manifest.json"
 
@@ -431,6 +528,7 @@ module Payload =
 
                             content
                             |> Result.map (fun content ->
+                                sourcePath,
                                 { Entry =
                                     { Path = destination
                                       Ownership = ownership
@@ -438,9 +536,11 @@ module Payload =
                                       Executable = boolProperty entry "executable"
                                       Integration = stringProperty entry "integration"
                                       Replaces = stringsProperty entry "replaces"
-                                      MergedFromRepository = false }
+                                      MergedFromRepository = false
+                                      Recorded = true }
                                   Content = content
-                                  VersionPin = stringProperty entry "versionPin" })
+                                  VersionPin = stringProperty entry "versionPin"
+                                  EnsureLines = stringsProperty entry "ensureLines" })
 
                 let entries =
                     document.RootElement.GetProperty("files").EnumerateArray() |> Seq.map readEntry |> List.ofSeq
@@ -454,37 +554,70 @@ module Payload =
                           PackageVersion = packageVersion
                           TargetVersion = targetVersion
                           ProjectName = projectName
-                          Files = entries |> List.choose (function Ok file -> Some file | Error _ -> None) }))
+                          Files =
+                            entries
+                            |> List.choose (function Ok file -> Some file | Error _ -> None)
+                            |> withConsumerLinks targetVersion }))
 
     /// The payload as it applies to one repository. A version-pinned file the
     /// repository already has is replaced by its own copy with only the pin
     /// set to this release (`reconcilePin`), so `init` and `upgrade` correct a
     /// stale pin without discarding anything else the repository recorded
     /// there. Every other file, and a pinned file that is absent, keeps the
-    /// rendered scaffold content. Read-only.
+    /// rendered scaffold content. A file declaring `ensureLines` that the
+    /// repository already has is likewise its own copy with only the missing
+    /// lines added (`RequiredLines.ensure`). An existing
+    /// `.echelon/foundations.json` joins the payload, unrecorded, with only
+    /// its `praxis` entry set to this release. Read-only.
     let forRepository (root: string) (payload: Payload) : Payload =
+        let existingBytes (relative: string) =
+            match resolveWithin root relative with
+            | Ok absolute when File.Exists absolute -> Some(File.ReadAllBytes absolute)
+            | _ -> None
+
+        let merged (file: PayloadFile) content =
+            { file with
+                Content = content
+                Entry =
+                    { file.Entry with
+                        Sha256 = sha256Hex content
+                        MergedFromRepository = true } }
+
+        let fromPin (file: PayloadFile) (bytes: byte array) reconciliation =
+            match reconciliation with
+            | PinReconciliation.Current -> Some(merged file bytes)
+            | PinReconciliation.Repinned content -> Some(merged file (Encoding.UTF8.GetBytes content))
+            | PinReconciliation.Unrecognised -> None
+
         let reconcile (file: PayloadFile) =
-            let existing =
-                file.VersionPin
-                |> Option.bind (fun key ->
-                    match resolveWithin root file.Entry.Path with
-                    | Ok absolute when File.Exists absolute -> Some(key, File.ReadAllBytes absolute)
-                    | _ -> None)
+            match file.VersionPin, file.EnsureLines, existingBytes file.Entry.Path with
+            | Some key, _, Some bytes ->
+                fromPin file bytes (reconcilePin key payload.TargetVersion (Encoding.UTF8.GetString bytes))
+                |> Option.defaultValue file
+            | None, (_ :: _ as lines), Some bytes ->
+                match RequiredLines.ensure lines (Encoding.UTF8.GetString bytes) with
+                | None -> merged file bytes
+                | Some content -> merged file (Encoding.UTF8.GetBytes content)
+            | _ -> file
 
-            let merged content =
-                { file with
-                    Content = content
-                    Entry =
-                        { file.Entry with
-                            Sha256 = sha256Hex content
-                            MergedFromRepository = true } }
+        let foundations =
+            existingBytes FoundationsPath
+            |> Option.bind (fun bytes ->
+                let file =
+                    { Entry =
+                        { Path = FoundationsPath
+                          Ownership = Ownership.UserOwned
+                          Sha256 = sha256Hex bytes
+                          Executable = false
+                          Integration = None
+                          Replaces = []
+                          MergedFromRepository = false
+                          Recorded = false }
+                      Content = bytes
+                      VersionPin = None
+                      EnsureLines = [] }
 
-            match existing with
-            | None -> file
-            | Some(key, bytes) ->
-                match reconcilePin key payload.TargetVersion (Encoding.UTF8.GetString bytes) with
-                | PinReconciliation.Current -> merged bytes
-                | PinReconciliation.Repinned content -> merged (Encoding.UTF8.GetBytes content)
-                | PinReconciliation.Unrecognised -> file
+                fromPin file bytes (reconcileFoundationsPin payload.TargetVersion bytes))
+            |> Option.toList
 
-        { payload with Files = payload.Files |> List.map reconcile }
+        { payload with Files = (payload.Files |> List.map reconcile) @ foundations }

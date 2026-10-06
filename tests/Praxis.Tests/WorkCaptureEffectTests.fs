@@ -38,7 +38,24 @@ module WorkCaptureEffectTests =
           NextSeq = 2 }
 
     let tests =
-        [ { Name = "readNextSeq defaults to 1 when the file is absent, matching production's loadQueue default"
+        [ { Name = "event history: every work-item id named in the event log is known, so it is never reallocated"
+            Run =
+              fun () ->
+                  withTemporaryRoot (fun root ->
+                      Assert.equal Set.empty (FileEventLogRepository.readWorkItemIds root)
+                      let eventsDirectory = Path.Combine(root, ".ros", "events")
+                      Directory.CreateDirectory eventsDirectory |> ignore
+
+                      File.WriteAllLines(
+                          Path.Combine(eventsDirectory, "events.jsonl"),
+                          [ """{"type":"work.started","workItem":"WI-0002"}"""
+                            ""
+                            """{"type":"work.completed","workItem":"WI-0003"}"""
+                            """{"type":"artifact.contributed"}""" ]
+                      )
+
+                      Assert.equal (set [ "WI-0002"; "WI-0003" ]) (FileEventLogRepository.readWorkItemIds root)) }
+          { Name = "readNextSeq defaults to 1 when the file is absent, matching production's loadQueue default"
             Run = fun () -> withTemporaryRoot (fun root -> Assert.equal 1 (FileBacklogQueueRepository.readNextSeq root)) }
           { Name = "readNextSeq reads the persisted value"
             Run =

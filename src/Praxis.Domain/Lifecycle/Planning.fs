@@ -100,6 +100,11 @@ module Planning =
             match entry.Ownership with
             // The repository owns these outright; a divergence is the normal
             // case, not a problem to repair.
+            // The payload carries the repository's own copy with only lines
+            // or a field this tool owns added (`.ros/locks/` in `.gitignore`,
+            // the `praxis` foundations pin), so writing it loses nothing.
+            | Ownership.UserOwned when entry.MergedFromRepository ->
+                Choice1Of3(PlannedChange.UpdateManagedFile(entry.Path, diskSha, entry.Sha256))
             | Ownership.UserOwned -> Choice3Of3 entry.Path
             // Seeded once, then edited by the repository. The payload already
             // carries the repository's copy with only the tool's own field
@@ -203,7 +208,10 @@ module Planning =
             |> Map.ofList
 
         let manifest =
-            payload |> List.map (artifactRecord observed movedAsIs) |> manifestFor profile packageName version
+            payload
+            |> List.filter (fun entry -> entry.Recorded)
+            |> List.map (artifactRecord observed movedAsIs)
+            |> manifestFor profile packageName version
 
         let manifestChange =
             if observed.Manifest = Some manifest then

@@ -21,6 +21,7 @@ let main _ =
     @ QueuePresentationTests.tests
     @ BacklogTransitionEffectTests.tests
     @ WorkCaptureTests.tests
+    @ ConsumerLinksTests.tests
     @ WorkCaptureEffectTests.tests
     @ WorkUpdateTests.tests
     @ WorkUpdateEffectTests.tests
