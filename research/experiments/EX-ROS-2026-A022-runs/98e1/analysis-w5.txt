@@ -1,0 +1,200 @@
+Architecture analysis: PRAXIS-CTL-06
+=====================================
+
+Item: PRAXIS-CTL-06 "Multi-repository control-plane aggregation without a
+central store" (./praxis work show PRAXIS-CTL-06)
+Requirement: PRX-CTL-007 (requirements/EXECUTION-ORCHESTRATION.md:329) --
+"A local control plane MAY aggregate multiple repositories for discovery and
+navigation, but aggregation MUST NOT silently move canonical repository work
+state into a central proprietary store."
+Depends on: PRAXIS-CTL-02 (complete) -- its per-repository contract
+`praxis.work-state` v1.
+Base commit: ed4101be (PRAXIS-CTL-05 completed on this branch).
+
+
+1. Item and acceptance criteria
+-------------------------------
+
+| # | Criterion (from the backlog description) |
+|---|---|
+| 1 | The hub exposes typed read endpoints listing registered repositories with their availability, and each repository's work list and work item, by delegating to that repository's own Praxis CLI and using the same per-repository contract as the single-repository API. |
+| 2 | The hub persists only registration data, never a copy of any repository's work state; a test shows a state change in a registered repository appearing without hub involvement. |
+| 3 | An unreachable or incompatible repository is reported for that repository and does not fail the whole response. |
+| 4 | Any mutation offered through the hub is delegated to the owning repository's transition path. |
+| 5 | docs/project-administration-hub.md updated; tests. |
+
+
+2. Reuse inventory
+------------------
+
+Searches: `grep -rn "listDocument\|itemDocument" src` (only WebInterface.fs
+uses the work-state documents, in-process), `grep -n '"work" ::' src/Ros.Cli/Program.fs`
+(no `work state`/`work transition` command exists), `./praxis work state`
+(today: exit 2, usage text on stdout -- this is exactly what an older spoke
+answers).
+
+| Existing element | Location | What it does | Reuse decision |
+|---|---|---|---|
+| `praxis.work-state` v1 contract | src/Ros.Contracts/Work/WorkStateJson.fs:13-150 | listDocument, itemDocument, errorDocument, workItemNotFound, transitionDocument, transitionRefusal | Reused unchanged: the hub relays these documents byte-for-byte as the spoke printed them. It is the "same per-repository contract". |
+| WebInterface.stateResponse | src/Ros.Cli/WebInterface.fs:852 | Pure: recorded sources + query -> (status, praxis.work-state doc) for GET /api/v1/work[/ID] | Reused by the new spoke-side `work state` CLI command, so the CLI and `web serve` produce one document from one function. |
+| FileWorkListRepository.readStateSources / readDetail | src/Ros.Infrastructure/Work/FileWorkListRepository.fs:130,144 | Reads queue + context for the state projection | Reused (same arguments as web serve). |
+| WebInterface.transitionIntent | src/Ros.Cli/WebInterface.fs:282 | Parses a transition request body {action, reason, type, actor, evidence[], conclusion} | Reused by the new `work transition` CLI command: the CLI accepts the very same JSON body (`--request JSON`), so there is one request grammar. |
+| WebInterface.transition | src/Ros.Cli/WebInterface.fs:1046 | Runs the transition through this CLI's own command (CliProcess.runSelf), categorizes refusals, returns transition doc or refusal | Reused by `work transition`: the spoke executes the transition exactly as its own `POST /api/v1/work/ID/transitions` does. Never reimplemented in the hub. |
+| WebInterface.refusalCode / refusalStatus | src/Ros.Cli/WebInterface.fs:258,269 | category -> code, category -> HTTP status | Extended with the inverse (code -> category) so the hub maps a relayed refusal to the same HTTP status as the single-repository API. |
+| Hub.runSpoke | src/Ros.Cli/Hub.fs:336 | Resolves the spoke launcher (praxis, legacy ros) and runs it with an argument vector; exit != 0 collapses to an error string | Split: the launcher/path resolution becomes `invokeSpoke` (returns the raw ProcessResult or an unreachable reason) and runSpoke is re-expressed on top of it, so existing callers (create, legacy `hub work`) are unchanged. The new reads need stdout of non-zero exits (praxis.error documents), which runSpoke discards. |
+| Hub.spokeIdentity + listWorkIn | src/Ros.Cli/Hub.fs:379,385 | Spoke `state identity --json` before/after a read, via StateIdentity.stable | Reused pattern and functions: every new per-repository read carries `repositorySource` attributed the same way. |
+| StateIdentity.stable / StateIdentityJson.sourceNode | src/Ros.Domain/Work/StateIdentity.fs:61; src/Ros.Contracts/Work/StateIdentityJson.fs:35 | Stable attribution of a read to the identity around it | Reused. |
+| HubRegistry (parse/render/find) | src/Ros.Cli/Hub.fs:36-160 | The registry model; the only thing the hub persists (.ros/hub/registry.json + .md) | Reused unchanged; no new persisted field. |
+| HubWeb.route / execute / handle | src/Ros.Cli/HubWeb.fs:39,117,277 | Hub HTTP routing; legacy /api/repos, /api/work, create | Extended with /api/v1 routes; legacy routes untouched. |
+| ControlPlaneSource.serve | src/Ros.Cli/ControlPlaneSource.fs:63 | Adds hub `source` + Praxis-* headers to every response; re-reads GETs while state changes | Reused unchanged. Consequence: the hub's own `source` (the hub repository) is added to the hub envelope; the spoke document is nested, so its identity travels separately as `repositorySource` and is not overwritten. |
+| CliProcess.run | src/Ros.Cli/CliProcess.fs:46 | Argument-vector child process (no shell) | Reused via invokeSpoke. |
+| Host source check | tests/Ros.Tests/ControlPlaneHostTests.fs:27-90 | Fails if HubWeb.fs etc. write files, keep state, or call persistence outside an allowlist | Reused as the guard for criterion 2/4; the new Hub read/delegate functions are added to `allowedCalls` because each only runs a spoke's own CLI. |
+| HubTests spoke fixture | tests/Ros.Tests/HubTests.fs:12-41 | Real initialized spokes whose ./praxis runs this build | Reused for every new end-to-end test. |
+| ServedProcess / Http helpers | tests/Ros.Tests (CliPortSupport.fs, used by HubTests serverTests) | Starts `hub serve` on a free port, GET/POST helpers | Reused. |
+| ControlPlaneHostTests snapshot | tests/Ros.Tests/ControlPlaneHostTests.fs (private `snapshot`) | Path -> SHA-256 of every non-.git file | Same technique re-stated in HubTests (it is private there) for "hub persists only registration data". |
+
+New abstractions and why existing ones do not fit:
+- `SpokeAvailability` (available | unreachable | incompatible | unreadable):
+  the legacy aggregation reports a free-text `error` row (Hub.fs:231) and
+  `repoSource.unavailable` (Hub.fs:226); neither distinguishes "cannot run
+  its Praxis" from "runs a Praxis that does not speak praxis.work-state v1",
+  which criterion 3 names separately. Searched `grep -rn "Unreachable\|Incompatible" src`:
+  only installation/remote concepts, unrelated.
+- `praxis.hub-state` v1 envelope: the hub must say which repository a
+  document came from, that repository's availability and source identity,
+  and must not alter the spoke document. Adding fields into the spoke's
+  `praxis.work-state` document would make it no longer the spoke's
+  document, and ControlPlaneSource would overwrite its `source`. A
+  wrapper envelope keeps the per-repository document intact.
+- CLI `work state [ID] [--tag T]* [--status S]` and
+  `work transition --id ID --request JSON`: today the work-state contract
+  exists only inside `web serve`, so a hub could only obtain it by
+  starting an HTTP server in every spoke or by reading spoke files (both
+  forbidden by the hub's one rule). These commands are thin wrappers over
+  the existing pure functions above.
+
+
+3. Invariants and shared infrastructure
+---------------------------------------
+
+- The hub never reads or writes a registered repository's files; every
+  spoke interaction is that repository's own launcher (docs/project-administration-hub.md
+  "The one rule"). New code goes through invokeSpoke only.
+- The hub host writes nothing; registry mutation stays `praxis hub
+  register|unregister` (HubWeb.fs:95-114). Enforced by the host source check.
+- The hub keeps no state between requests (PRAXIS-CTL-05). Every v1 hub
+  response is computed from the registry and the spokes at request time.
+- One per-repository contract: what the hub returns as a repository's work
+  list/item is exactly what that repository's `GET /api/v1/work[/ID]`
+  returns (same pure stateResponse, same version).
+- Transition rules live only in the owning repository (WebInterface.transition
+  in the spoke's own CLI process).
+- Identity/provenance of a transition is that of the spoke CLI run in the
+  hub's environment, never inferred from the HTTP client (same as
+  PRAXIS-CTL-04's single-repository rule).
+Shared infrastructure touched: CliProcess, ControlPlaneSource (unchanged),
+WebInterface (one pure inverse function added), Program.fs dispatch/usage.
+
+
+4. Design
+---------
+
+4.1 Spoke CLI (contract producers, in every repository's own Praxis)
+- `praxis work state [--tag T]* [--status S]` -> praxis.work-state
+  `work-list` (stdout, exit 0).
+- `praxis work state ID` -> `work-item` (exit 0) or praxis.error
+  `work-item-not-found` (stdout, exit 1); unreadable state -> praxis.error
+  `work-state-unreadable` (exit 1). Invalid arguments -> exit 2.
+- `praxis work transition --id ID --request JSON` -> the JSON body of
+  POST /api/v1/work/ID/transitions; prints `work-transition` (exit 0) or the
+  structured refusal (exit 1). Invalid arguments/unparsable JSON -> refusal
+  `invalid-request` (exit 2).
+File: src/Ros.Cli/WorkStateCommands.fs (after WebInterface.fs).
+
+4.2 Domain/contract
+- src/Ros.Domain/Work/SpokeAvailability.fs: DU + `code`, `reason`.
+- src/Ros.Contracts/Work/HubStateJson.fs: contract `praxis.hub-state` v1.
+  * `classify expectedKinds exit stdout failure` (pure): the spoke answer
+    -> {Availability; Document}. praxis.work-state v1 of an expected kind
+    with exit 0 -> available + document; praxis.error with exit != 0 ->
+    available + error document, except `work-state-unreadable` ->
+    unreadable; praxis.work-state of another version -> incompatible
+    ("speaks version N; this hub reads version 1"); anything else (older
+    Praxis: usage text, exit 2) -> incompatible, naming the command.
+  * Renderers: repositoryNode (id, name, path, registeredAt, availability
+    {status, reason?}, repositorySource), `repository-list`,
+    `repository-work-list`, `repository-work-item`,
+    `repository-work-transition` (each {repository, document}), aggregated
+    `work-list` ({repositories: [{repository, document|null}]}), and
+    errors `repository-not-registered` (404) and `repository-unavailable`
+    (502, carrying the repository node).
+
+4.3 Hub effects (src/Ros.Cli/Hub.fs, module Hub)
+- invokeSpoke repo args : Result<ProcessResult, string> (unreachable reason).
+- readSpoke repo args kinds : SpokeRead {Repo; Answer; Source} -- attributed
+  with StateIdentity.stable over the spoke's `state identity --json`.
+- repositories root, repositoryWork root id tags status, workItem root id
+  itemId, aggregatedWork root repo tags status, transition root id itemId
+  requestJson. Unknown repo -> Error (not registered). Each aggregated
+  repository is read independently; a failure is that repository's
+  availability, never an Error of the whole call.
+
+4.4 Hub HTTP (src/Ros.Cli/HubWeb.fs)
+| GET  | /api/v1/repos | repository-list (availability per repository) |
+| GET  | /api/v1/repos/:id/work?tag=&status= | repository-work-list |
+| GET  | /api/v1/repos/:id/work/:item | repository-work-item |
+| GET  | /api/v1/work?repo=&tag=&status= | aggregated work-list |
+| POST | /api/v1/repos/:id/work/:item/transitions | repository-work-transition (delegated) |
+Status: 200 for documents; a relayed praxis.error gets the status the
+single-repository API gives that code (work-item-not-found 404, refusals via
+refusalStatus); unknown repository 404; an unavailable repository on a
+single-repository route 502 with the repository node; the aggregated and
+repository-list routes are always 200 with per-repository availability.
+Transaction boundary: one transition = one spoke CLI process; the hub adds
+no step before or after it that writes anything.
+
+4.5 CLI parity: `praxis hub state [--repo ID] [--item ID] [--tag T]* [--status S]`
+prints the same documents (aggregated, repository or item).
+
+Error model: hub-level problems (unregistered id, bad request) are
+praxis.error documents with a hub code; repository-level problems are the
+repository's availability or its own relayed document.
+
+
+5. Compatibility
+----------------
+- Legacy /api/repos, /api/work, POST /api/repos/:id/work and `praxis hub
+  work|repos|create` keep their exact shapes (tests unchanged).
+- registry.json format unchanged; nothing new persisted.
+- Older spokes keep working on legacy routes and are reported `incompatible`
+  on v1 routes (they lack `work state`), with the reason.
+- New CLI commands are additive; usage text gains them (docs/cli.md).
+
+
+6. Tests (tests/Ros.Tests/HubTests.fs, plus allowlist in ControlPlaneHostTests.fs)
+- Unit: classify (available, error document, unreadable, version mismatch,
+  older Praxis usage text); route table for the v1 routes; inverse refusal code.
+- CLI: `work state` list/item/not-found equals `web serve` /api/v1/work output
+  semantics; `work transition` accepted and refused (state unchanged).
+- Served hub: repository list with availability; per-repository list and item
+  equal the spoke's own `work state` output; aggregated list across two
+  spokes with one moved (unreachable) and one fake older Praxis (incompatible)
+  still 200; state change made via a spoke's CLI visible without any hub
+  action, hub root snapshot unchanged and holding only registry files;
+  transition through the hub changes the spoke and a refused one leaves the
+  spoke byte-for-byte unchanged; unknown repository 404.
+- Host source check stays green.
+
+
+7. Risks
+--------
+- Cost: each v1 read spawns several spoke processes (identity before/after
+  plus the read). Acceptable for a local hub; documented.
+- Old spoke incompatibility is detected by output shape, not version
+  negotiation; a future v2 contract is reported as incompatible with an
+  explicit version reason rather than misparsed.
+- `work transition` runs the transition in a child of the spoke CLI (same as
+  web serve); identity comes from the hub's environment -- documented, as for
+  the single-repository API.
+- ControlPlaneSource adds the hub's `source` to hub envelopes; clients must
+  use `repository.repositorySource` for the spoke's identity. Documented.
