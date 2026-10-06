@@ -5937,18 +5937,53 @@
     {
       "id": "PRAXIS-CTL-04",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-06T14:28:09.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WebInterface.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/TransitionRequestTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/web-interface.md"
+        }
+      ],
+      "updatedAt": "2026-10-06T14:50:18.000Z",
       "telemetryExecutionIds": [
         "EXE-20261006T142809785Z-1ee9971c"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "73305e3031f9e3ba55ab256c",
+        "recordedAt": "2026-10-06T14:50:13.000Z",
+        "executionId": "EXE-20261006T142809785Z-1ee9971c",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a022-run-98e1",
+        "commit": "b8cb757e9de43e295fcd6b90587bcc7b4c3f95e9",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a022-run-98e1",
+        "remoteCommit": "b8cb757e9de43e295fcd6b90587bcc7b4c3f95e9",
+        "summary": "Transition-request endpoint POST /api/v1/work/ID/transitions with structured refusals, tests and docs; all acceptance criteria verified met; full suite 1347/1347 passing",
+        "nextAction": "Complete PRAXIS-CTL-04 and commit Praxis state",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-06T14:50:18.000Z",
+      "conclusion": "Transition-request endpoint with structured refusals delivered; all five acceptance criteria verified met"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-06T14:28:09.000Z",
+  "updatedAt": "2026-10-06T14:50:18.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

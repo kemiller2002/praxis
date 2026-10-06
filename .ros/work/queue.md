@@ -69,7 +69,7 @@
 | PRAXIS-CTL-01 | Control-plane host bind policy and declared listen scope | ready | control-plane | medium |
 | PRAXIS-CTL-02 | Typed control-plane read API for work state and legal actions | complete | control-plane | medium |
 | PRAXIS-CTL-03 | Control-plane read API for executions, receipts and evidence | complete | control-plane | medium |
-| PRAXIS-CTL-04 | Control-plane transition requests with structured refusals | ready | control-plane | medium |
+| PRAXIS-CTL-04 | Control-plane transition requests with structured refusals | complete | control-plane | medium |
 | PRAXIS-CTL-05 | Control-plane host holds no canonical state and reconstructs on restart | ready | control-plane | medium |
 | PRAXIS-CTL-06 | Multi-repository control-plane aggregation without a central store | ready | control-plane, hub | medium |
 | PRAXIS-DIST-NATIVE-DOTNET-TOOL | Retire npm distribution; ship native bundles and a .NET global tool | complete | distribution | high |
