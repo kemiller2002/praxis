@@ -2,11 +2,11 @@
 id: DF-ROS-2026-A047
 title: Work groups are advisory, evidence-based recommendations over unchanged work items; grouped execution waits for experimental evidence
 status: accepted
-version: 1.0.0
+version: 1.1.0
 owners:
   - repository-governance
 created: 2026-09-30
-updated: 2026-09-30
+updated: 2026-10-06
 research_area: repository-operating-system
 decision_type: architecture
 supporting_evidence: [EV-ROS-2026-A059]
@@ -16,6 +16,7 @@ related_documents:
   - requirements/PLANNING-WORK-GROUPS.md
   - DF-ROS-2026-A046
   - docs/planning.md
+  - DF-ROS-2026-A053
 supersedes: []
 superseded_by: []
 tags: [planning, grouping, determinism, attribution]
@@ -42,7 +43,23 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "PRAXIS-PLAN-03: status review -> accepted on the repository owner's explicit approval of all PR #126 recommendations (the owner approved; this agent only recorded it)"
+    EXE-20261006T194308568Z-5a1b95e5:
+      operations: [modified]
+      at: 2026-10-06T19:48:13.000Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-PLAN-09: mark points 6 and the title clause as amended by DF-ROS-2026-A053"
 ---
+
+> **Amended by `DF-ROS-2026-A053` (2026-10-06).** Point 6 and the title's
+> "grouped execution waits for experimental evidence" are superseded:
+> cross-repository groups are first class, the group mutation surface is
+> completed, and grouped execution is the default for qualifying
+> high-affinity groups behind enforced gates. Points 1 to 5 and 7 stand.
 
 # Context
 

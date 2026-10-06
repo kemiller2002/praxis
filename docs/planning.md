@@ -225,8 +225,12 @@ identical inputs renders byte-identically, which a test asserts.
 ## Work groups
 
 Requirements: [`requirements/PLANNING-WORK-GROUPS.md`](../requirements/PLANNING-WORK-GROUPS.md).
-Decision: `DF-ROS-2026-A047`. Baseline and experiment: `EV-ROS-2026-A059`,
-`EX-ROS-2026-A021`.
+Decisions: `DF-ROS-2026-A047`, amended by `DF-ROS-2026-A053` (cross-repository
+groups, the full mutation surface, grouped execution as the default for
+high-affinity groups behind enforced gates, and measured context reuse and
+cost; accepted, **not yet implemented**). Baseline and experiment:
+`EV-ROS-2026-A059`, `EX-ROS-2026-A021`, results `EV-ROS-2026-A064` and
+`EV-ROS-2026-A070`.
 
 A **work item** is the governed unit; a **planning group** is an advisory
 recommendation that several items share enough context to be reasoned about
@@ -376,17 +380,25 @@ No external dependency was added (PRX-PLAN-004).
 | GRP-010..011 | Met with the typed model in `Grouping`; recommended IDs stable for identical input only. |
 | GRP-020..022 | Met for tags, declared paths, branches, dependencies, requirement/decision references, declarations, ID families and titles. Historical co-change, test overlap and deployment boundaries are not observable yet. |
 | GRP-030..031 | Met (tests 2, 18). |
-| GRP-040, 044 | GRP-040 is guidance for executors (`EX-ROS-2026-A021` requires the group analysis). GRP-044: `work group checkpoint` records durable group checkpoints over members' own; architecture notes and the latest group checkpoint are shown by `work group show` (`PRAXIS-GROUP-05`). |
-| GRP-045 (and GRP-040's reuse inventory) | Guidance for executors, not enforced by tooling: the group analysis names existing parsers, rules and stores to reuse, and a per-member, per-criterion verification pass precedes each completion (`docs/group-analysis-template.md`; `PRAXIS-PLAN-04`, from `EV-ROS-2026-A064`). |
+| GRP-040, 044 | GRP-040 is guidance for executors until PRX-GRP-133 is implemented (amended by `DF-ROS-2026-A053`: enforced for grouped-mode members) (`EX-ROS-2026-A021` requires the group analysis). GRP-044: `work group checkpoint` records durable group checkpoints over members' own; architecture notes and the latest group checkpoint are shown by `work group show` (`PRAXIS-GROUP-05`). |
+| GRP-045 (and GRP-040's reuse inventory) | Guidance for executors, not yet enforced by tooling (amended by `DF-ROS-2026-A053`: becomes the PRX-GRP-133..135 completion gate, `PRAXIS-GROUP-10`): the group analysis names existing parsers, rules and stores to reuse, and a per-member, per-criterion verification pass precedes each completion (`docs/group-analysis-template.md`; `PRAXIS-PLAN-04`, from `EV-ROS-2026-A064`). |
 | GRP-041..043 | Met by construction (tests 9, 10); per-item attribution in a grouped execution is enforced by the existing work protocol. |
-| GRP-050..052 | Met for dependencies and cycles (dependency test) and repositories (tests 5, 5b); cross-repository orchestration is future work. |
-| GRP-060..063 | Met; context cost is counted, and the cold start is priced from session metrics once measured (`PRAXIS-PLAN-05`). |
+| GRP-050..051 | Met for dependencies and cycles (dependency test) and repositories (tests 5, 5b). |
+| GRP-052 | Superseded by GRP-100..109 (`DF-ROS-2026-A053`). |
+| GRP-060..063 | Met; context cost is counted, and the cold start is priced from session metrics once measured (`PRAXIS-PLAN-05`). GRP-061 amended: pricing per member is GRP-155. |
 | GRP-070..072 | Met. |
-| GRP-073 | Declarations from configuration and from Praxis state (`work group create`, `PRAXIS-GROUP-01`; `work group show`, `PRAXIS-GROUP-02`; `work group add`, `PRAXIS-GROUP-03`; `work group remove`, `PRAXIS-GROUP-04`; `work group checkpoint`, `PRAXIS-GROUP-05`). `plan execute-group` and automatic grouped execution are not implemented. Phase two was built on the grouped arm of `EX-ROS-2026-A021` with the control arm's shared `grouping.groups` parser, `executionLocation` join rule and checkpoint ownership and re-validation ported (`PRAXIS-GROUP-06`, `EV-ROS-2026-A064`). |
+| GRP-073 | Declarations from configuration and from Praxis state (`work group create`, `PRAXIS-GROUP-01`; `work group show`, `PRAXIS-GROUP-02`; `work group add`, `PRAXIS-GROUP-03`; `work group remove`, `PRAXIS-GROUP-04`; `work group checkpoint`, `PRAXIS-GROUP-05`). `plan execute-group`, `work group list` and grouped execution by default are accepted by `DF-ROS-2026-A053` (GRP-110..117, 130..138) and not implemented. Phase two was built on the grouped arm of `EX-ROS-2026-A021` with the control arm's shared `grouping.groups` parser, `executionLocation` join rule and checkpoint ownership and re-validation ported (`PRAXIS-GROUP-06`, `EV-ROS-2026-A064`). |
 | GRP-074 | Size and context-pressure splits and architecture merges met (tests 18, 19, merge test); splitting by independent chain or external blockage is not implemented. |
 | GRP-075 | Met (test 15). |
 | GRP-080..088 | Met for one cohort: baseline and predictions frozen (`EV-ROS-2026-A059`), both arms run and blindly evaluated (`EX-ROS-2026-A021`), results and classification in `EV-ROS-2026-A064`. One run; replication pending. |
 | GRP-090 | All 20 cases in `tests/Praxis.Tests/GroupingTests.fs`; case 20 in `PlanningCliTests`. |
+| GRP-100..109 | Accepted (`DF-ROS-2026-A053`), not implemented: first-class cross-repository groups with one home record, member references, derived status and cross-repository order (`PRAXIS-GROUP-07`). Existing: the ID grammar admits `GROUP-ECHELON-...`, the `crossRepository` flag and the planner's execution-location rule. |
+| GRP-110..116 | Accepted, partly existing: `create`, `show`, `add`, `remove`, `checkpoint`, validation, history and the store lock exist. `list`, `link`, idempotent repeats, append-only history validation, versioned output for new commands and `removed-open` reporting are not implemented (`PRAXIS-GROUP-08`). |
+| GRP-117, 130..132, 136..137 | Accepted, not implemented: `plan execute-group`, group executions, qualification thresholds, opt-outs and context-pressure fallback (`PRAXIS-GROUP-09`). The default takes effect only after GRP-133..135. |
+| GRP-133..135 | Accepted, not implemented: reuse-inventory and per-criterion verification completion gates (`PRAXIS-GROUP-10`). |
+| GRP-138 | Accepted; review and rollback triggers tracked by `PRAXIS-PLAN-11`. |
+| GRP-150..158 | Accepted, partly existing: the `anthropic-claude-session` adapter, its context metrics and `cost.execution_total` recording exist. Provider-neutral capability, `time.first_productive_change_ms`, peak context, group-execution ingestion, shared-cost allocation and per-member pricing are not implemented (`PRAXIS-PLAN-10`). |
+| GRP-190 | Accepted; cases 21..44 are written with the implementing items. |
 
 ## Known limitations and next steps
 
@@ -412,3 +424,10 @@ No external dependency was added (PRX-PLAN-004).
   `cost.execution_total`, and implementation durations are down-weighted
   until sessions are measured); replicate with a loosely related cohort; consider requiring an
   admitted member to reach the group's typical affinity (`EV-ROS-2026-A059`).
+- Grouped work v2 (`DF-ROS-2026-A053`, `PRAXIS-PLAN-09`): requirements only.
+  Implementation order: `PRAXIS-GROUP-08` (command surface) first; then
+  `PRAXIS-GROUP-07` (cross-repository groups) and `PRAXIS-GROUP-10` (gates);
+  `PRAXIS-GROUP-09` (execution by default) only after the gates;
+  `PRAXIS-PLAN-10` (measurement) can start at once, but its group-execution
+  parts (GRP-153, 154) need `PRAXIS-GROUP-09`; `PRAXIS-PLAN-11` reviews
+  the default at its trigger.

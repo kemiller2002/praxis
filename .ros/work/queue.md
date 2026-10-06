@@ -75,6 +75,10 @@
 | PRAXIS-GROUP-04 | praxis work group remove: remove a member from a declared group | complete | work-group, cli | low |
 | PRAXIS-GROUP-05 | praxis work group checkpoint: a group checkpoint over members' own checkpoints | complete | work-group, cli | low |
 | PRAXIS-GROUP-06 | Phase-two work groups: grouped arm as base with the control arm's strengths ported | complete | work-group, cli | low |
+| PRAXIS-GROUP-07 | First-class cross-repository groups: GROUP-ECHELON IDs, home record, member references, derived status, cross-repo order (PRX-GRP-100..109) | captured | grouping | medium |
+| PRAXIS-GROUP-08 | Group command surface: work group list, idempotent mutations, append-only audit, versioned contracts, derived completion (PRX-GRP-110..116) | captured | grouping | high |
+| PRAXIS-GROUP-09 | plan execute-group and grouped execution by default for qualifying high-affinity groups (PRX-GRP-117, 130..132, 136..137) | captured | grouping | high |
+| PRAXIS-GROUP-10 | Grouped-execution completion gates: machine-checkable reuse inventory and per-criterion verification (PRX-GRP-133..135, 040, 045) | captured | grouping | high |
 | PRAXIS-INTERNAL-NAMESPACES | Migrate internal Ros.* projects, namespaces, assemblies and Ros.slnx to Praxis.* (deferred from PRAXIS-CLI-RENAME, DF-ROS-2026-A043) | complete | rename, follow-up | low |
 | PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | abandoned | rename, gh-90 | low |
 | PRAXIS-PLAN-01 | Deterministic shadow planner: praxis plan analyze/simulate/compare/explain (PRX-PLAN-001..182) | complete | planning, architecture, cli | high |
@@ -85,6 +89,9 @@
 | PRAXIS-PLAN-06 | Renumber the EX-ROS-2026-A021 results record to avoid an evidence ID collision and relate it to the parallel evaluation kit | complete | planning, governance | high |
 | PRAXIS-PLAN-07 | Reconcile PR #130 (PGEI) with main after the A021 results | complete | planning, grouping | medium |
 | PRAXIS-PLAN-08 | Land the EX-ROS-2026-A021 evaluation kit and second blind evaluation on main | complete | planning, grouping | medium |
+| PRAXIS-PLAN-09 | Grouped-work requirements v2: cross-repository groups, mutation commands, grouped-by-default execution, context and cost measurement (DF-ROS-2026-A053) | active | planning,grouping,requirements | high |
+| PRAXIS-PLAN-10 | Measure context reuse and cost for grouped work and price it in the planner (PRX-GRP-150..158) | captured | grouping | medium |
+| PRAXIS-PLAN-11 | Review grouped-by-default at its trigger and roll back if a threshold is crossed (PRX-GRP-138) | captured | grouping | low |
 | PRAXIS-PLAN-EXP-01 | Run grouping experiment EX-ROS-2026-A021: control arm, grouped arm, blind evaluation, telemetry comparison | complete | planning, experiment | medium |
 | PRAXIS-PLAN-EXP-02 | Preserve A021 R2 replication and pre-register the affinity falsification experiment | complete | planning,experiment | medium |
 | PRAXIS-PLAN-EXP-03 | Record A022 target-gate result and design affinity follow-on experiment | complete | planning, experiment | medium |

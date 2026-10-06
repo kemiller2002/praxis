@@ -1265,6 +1265,20 @@
             "modified"
           ],
           "reason": "PRAXIS-PLAN-03: status review -> accepted on the repository owner's explicit approval of all PR #126 recommendations (the owner approved; this agent only recorded it)"
+        },
+        "EXE-20261006T194308568Z-5a1b95e5": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T19:48:13.000Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-PLAN-09: mark points 6 and the title clause as amended by DF-ROS-2026-A053"
         }
       }
     },
@@ -1273,7 +1287,8 @@
       "EX-ROS-2026-A021",
       "requirements/PLANNING-WORK-GROUPS.md",
       "DF-ROS-2026-A046",
-      "docs/planning.md"
+      "docs/planning.md",
+      "DF-ROS-2026-A053"
     ],
     "research_area": "repository-operating-system",
     "status": "accepted",
@@ -1289,8 +1304,8 @@
       "attribution"
     ],
     "title": "Work groups are advisory, evidence-based recommendations over unchanged work items; grouped execution waits for experimental evidence",
-    "updated": "2026-09-30",
-    "version": "1.0.0"
+    "updated": "2026-10-06",
+    "version": "1.1.0"
   },
   {
     "confidence": "high",
@@ -1603,6 +1618,73 @@
     ],
     "title": "Consume Dokimos and Ordo quality evidence at work completion",
     "updated": "2026-10-05",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "low",
+    "created": "2026-10-06",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A047"
+    ],
+    "id": "DF-ROS-2026-A053",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A053--grouped-work-cross-repository-and-default-execution.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261006T194308568Z-5a1b95e5": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T19:48:13.000Z",
+          "evidence": [
+            "EV-ROS-2026-A064",
+            "EV-ROS-2026-A070"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-PLAN-09: record the repository owner's four accepted grouped-work decisions (the owner approved; this agent only recorded them)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A047",
+      "DF-ROS-2026-A046",
+      "DF-ROS-2026-A052",
+      "EV-ROS-2026-A064",
+      "EV-ROS-2026-A070",
+      "EX-ROS-2026-A021",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "requirements/PLANNING-OPTIMIZATION.md",
+      "docs/planning.md",
+      "docs/development-telemetry.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A064",
+      "EV-ROS-2026-A070"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "cross-repository",
+      "execution",
+      "telemetry",
+      "cost",
+      "attribution"
+    ],
+    "title": "Grouped work v2 - first-class cross-repository groups, the full group command surface, grouped execution by default for high-affinity groups behind enforced gates, and measured context reuse and cost",
+    "updated": "2026-10-06",
     "version": "1.0.0"
   }
 ]
