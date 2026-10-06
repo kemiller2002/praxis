@@ -53,3 +53,50 @@ preserves the difference between "not applicable" and "implemented correctly."
 
 The JSON schema is `schemas/echelon-foundations-v1.schema.json`, and a starting
 manifest is `templates/application-foundations.json`.
+
+## Praxis's own foundations
+
+Praxis is itself an Echelon application and is bound by
+[`requirements/SHARED-APPLICATION-FOUNDATIONS.md`](../requirements/SHARED-APPLICATION-FOUNDATIONS.md).
+
+### Aegis (SAF-AEGIS-1..6)
+
+- One boundary module, `src/Praxis.Infrastructure/Boundary/AegisBoundary.fs`,
+  configures Aegis (released `EchelonFoundry.Aegis.Core` 1.0.0, blocking
+  delivery, standard-error sink) and classifies every escaped failure.
+- The command line runs each command inside one capture. A failure is
+  attributed to the boundary that raised it: thrown inside
+  `Praxis.Infrastructure.Git` is `PRAXIS.GIT.FAILURE`; network, process,
+  filesystem and repository-state failures are classified by type; anything
+  else is `PRAXIS.CLI.UNEXPECTED`.
+- `praxis web serve` and `praxis hub serve` capture each request and each
+  connection (`PRAXIS.WEB.FAILURE` when nothing more specific applies) and
+  answer HTTP 500 with the safe message and an `AG-` reference. The
+  exception text never reaches the browser.
+- Expected outcomes (refused transitions, failed verification, policy
+  refusals) stay typed results with documented exit codes (SAF-AEGIS-2).
+  Programming defects and cancellation are re-raised, not disguised.
+- Redaction (SAF-AEGIS-5): Aegis's credential rules plus
+  `praxis-repository-data` and `praxis-work-content` key rules; credentials
+  in exception text (URL user-info, GitHub tokens, bearer/basic headers,
+  `token=`/`password=`/`secret=` values) are replaced before the fault is
+  recorded; only command words are public context and the repository root is
+  masked.
+- [`aegis-boundaries.json`](../aegis-boundaries.json) declares the codes;
+  `tests/Praxis.Tests/AegisBoundaryTests.fs` drives the boundary with a
+  replaceable collector sink and asserts the manifest equals the module
+  (SAF-AEGIS-6).
+
+### Requirement status
+
+| Requirement | Status | Evidence or open item |
+|---|---|---|
+| SAF-AEGIS-1 | Met | Boundary module; CLI, web and hub captures; `AegisBoundaryTests` |
+| SAF-AEGIS-2 | Met | Typed exit codes unchanged; "a completed command keeps its exit code and records nothing" |
+| SAF-AEGIS-3 | Met | Shell launchers return non-zero diagnostics (no JavaScript edges, RQ-ROS-2026-A024) |
+| SAF-AEGIS-4 | Met | Idempotent remote and reconcile paths (RemoteProtocolTests, WorkReconciliationTests) |
+| SAF-AEGIS-5 | Met | Redaction rules and scrubber; "credentials, repository data and work content never reach a sink" |
+| SAF-AEGIS-6 | Met | Released 1.0.0 pin; collector-sink tests |
+| SAF-FORMA-1..6, PRX-UI-030/031 | Open | PRAXIS-FND-05 |
+| SAF-FOLIO-1..3 | Not applicable | No printable or PDF surface exists (conditional requirement) |
+| SAF-DEP-1, SAF-DEP-2 | Open | PRAXIS-FND-03 |

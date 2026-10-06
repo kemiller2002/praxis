@@ -8,7 +8,12 @@
     <ProjectReference Include="../Praxis.Application/Praxis.Application.fsproj" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Released, pinned Aegis (SAF-AEGIS-6); the boundary lives here so the CLI, web and hub share it. -->
+    <PackageReference Include="EchelonFoundry.Aegis.Core" Version="1.0.0" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Boundary/AegisBoundary.fs" />
     <Compile Include="Pacing/Json.fs" />
     <Compile Include="Pacing/Normalization.fs" />
     <Compile Include="Pacing/Providers.fs" />

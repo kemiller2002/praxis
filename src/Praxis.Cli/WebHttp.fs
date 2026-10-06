@@ -9,6 +9,7 @@ open System.Text.Json
 open System.Text.Json.Nodes
 open System.Threading
 open System.Threading.Tasks
+open Praxis.Infrastructure.Boundary
 
 /// A request as the web adapters see it: already read off the wire, so every
 /// routing and parsing decision below is a pure function of this value.
@@ -95,6 +96,8 @@ module Html =
         |> List.choose id
         |> String.concat "\n"
 
+    /// An operational fault: the safe message and its reference only.
+    let fault (message: string) (reference: string) = $"<main><h1>Something went wrong</h1><p role=\"alert\">{escape message}</p><p>Reference <code>{escape reference}</code></p></main>"
     let page (title: string) (body: string) =
         String.concat
             "\n"
@@ -443,32 +446,26 @@ module HttpHost =
         output.OutputStream.Write(response.Body, 0, response.Body.Length)
         output.Close()
 
-    let private handle (handler: HttpRequestData -> HttpResponseData) (context: HttpListenerContext) =
-        try
-            let request = context.Request
+    /// One request's answer; an unexpected failure is recorded at the web
+    /// boundary (SAF-AEGIS-1) and answered with a safe message and reference.
+    let respond (aegis: Aegis.AegisConfig) (handler: HttpRequestData -> HttpResponseData) (data: HttpRequestData) =
+        match AegisBoundary.capture aegis OperationalBoundary.WebRequest $"web.{data.Method.ToLowerInvariant()}" None "could not answer the request" (fun () -> handler data) with
+        | Ok response -> response
+        | Error fault -> HttpMessages.html 500 (Html.page "Error" (Html.fault fault.UserMessage (Aegis.Presentation.reference fault)))
+    let private handle (aegis: Aegis.AegisConfig) (handler: HttpRequestData -> HttpResponseData) (context: HttpListenerContext) =
+        let request = context.Request
+        let answer () =
+            match readBody request with
+            | Error(status, message) -> HttpMessages.text status message
+            | Ok body ->
+                { Method = request.HttpMethod.ToUpperInvariant(); Segments = HttpMessages.pathSegments request.Url.AbsolutePath
+                  Query = HttpMessages.parseUrlEncoded request.Url.Query; ContentType = request.ContentType |> Option.ofObj; Body = body }
+                |> respond aegis handler
 
-            let response =
-                match readBody request with
-                | Error(status, message) -> HttpMessages.text status message
-                | Ok body ->
-                    let data =
-                        { Method = request.HttpMethod.ToUpperInvariant()
-                          Segments = HttpMessages.pathSegments request.Url.AbsolutePath
-                          Query = HttpMessages.parseUrlEncoded request.Url.Query
-                          ContentType = request.ContentType |> Option.ofObj
-                          Body = body }
-
-                    try
-                        handler data
-                    with error ->
-                        HttpMessages.text 500 $"internal error: {error.Message}"
-
-            write context response
-        with _ ->
-            try
-                context.Response.Abort()
-            with _ ->
-                ()
+        // A disconnecting client is a recorded web fault; the connection is aborted.
+        match AegisBoundary.capture aegis OperationalBoundary.WebRequest "web.connection" None "could not complete the connection" (fun () -> write context (answer ())) with
+        | Ok() -> ()
+        | Error _ -> context.Response.Abort()
 
     /// The listener prefixes for a host. A loopback bind answers to both
     /// `127.0.0.1` and `localhost`, since the listener matches on the Host
@@ -487,49 +484,52 @@ module HttpHost =
     /// Requests are handled concurrently; every state change the handlers
     /// make goes through the CLI's own locking.
     let serve (host: string) (port: int) (banner: string list) (handler: HttpRequestData -> HttpResponseData) : int =
-        use listener = new HttpListener()
-        prefixes host port |> List.iter listener.Prefixes.Add
+        match AegisBoundary.configure None [ Aegis.Sinks.console ] with
+        | Error problems -> problems |> List.iter (eprintfn "ERROR Aegis configuration: %s"); 1
+        | Ok aegis ->
+            use listener = new HttpListener()
+            prefixes host port |> List.iter listener.Prefixes.Add
 
-        match
-            (try
-                listener.Start()
-                Ok()
-             with error ->
-                 Error error.Message)
-        with
-        | Error message ->
-            eprintfn "ERROR cannot listen on %s:%d: %s" host port message
-            1
-        | Ok() ->
-            banner |> List.iter (printfn "%s")
-            Console.Out.Flush()
-            use stopped = new ManualResetEventSlim(false)
+            match
+                (try
+                    listener.Start()
+                    Ok()
+                 with error ->
+                     Error error.Message)
+            with
+            | Error message ->
+                eprintfn "ERROR cannot listen on %s:%d: %s" host port message
+                1
+            | Ok() ->
+                banner |> List.iter (printfn "%s")
+                Console.Out.Flush()
+                use stopped = new ManualResetEventSlim(false)
 
-            let stop () =
-                if not stopped.IsSet then
-                    stopped.Set()
+                let stop () =
+                    if not stopped.IsSet then
+                        stopped.Set()
 
+                        try
+                            listener.Stop()
+                        with _ ->
+                            ()
+
+                use _cancel =
+                    Console.CancelKeyPress.Subscribe(fun args ->
+                        args.Cancel <- true
+                        stop ())
+
+                use _terminate = System.Runtime.InteropServices.PosixSignalRegistration.Create(
+                                     System.Runtime.InteropServices.PosixSignal.SIGTERM,
+                                     fun context ->
+                                         context.Cancel <- true
+                                         stop ())
+
+                while not stopped.IsSet do
                     try
-                        listener.Stop()
-                    with _ ->
+                        let context = listener.GetContext()
+                        Task.Run(fun () -> handle aegis handler context) |> ignore
+                    with _ when stopped.IsSet ->
                         ()
 
-            use _cancel =
-                Console.CancelKeyPress.Subscribe(fun args ->
-                    args.Cancel <- true
-                    stop ())
-
-            use _terminate = System.Runtime.InteropServices.PosixSignalRegistration.Create(
-                                 System.Runtime.InteropServices.PosixSignal.SIGTERM,
-                                 fun context ->
-                                     context.Cancel <- true
-                                     stop ())
-
-            while not stopped.IsSet do
-                try
-                    let context = listener.GetContext()
-                    Task.Run(fun () -> handle handler context) |> ignore
-                with _ when stopped.IsSet ->
-                    ()
-
-            0
+                0
