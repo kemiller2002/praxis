@@ -1,0 +1,320 @@
+{
+  "schema": "praxis.group-analysis/1",
+  "groupId": "GROUP-PRAXIS-GROUPING-001",
+  "groupExecutionId": null,
+  "repository": "kemiller2002/praxis",
+  "baseCommit": "f242aae664b4601e106b6e33ebce2b95bedfae35",
+  "members": [
+    {
+      "workItemId": "PRAXIS-GROUP-08",
+      "repository": null,
+      "obligation": "Group command surface: list, idempotency, append-only audit, store v2, derived completion (PRX-GRP-110..116)",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "work group list is read-only and reports each group's ID, kind, origin, home, crossRepository, member count, derived status, progress, execution mode and latest checkpoint time, sorted by ID and filterable by --status, --member and --repository (PRX-GRP-110)",
+        "every group command prints exactly one {command, schemaVersion, status, ...} JSON document with --json, list uses the same envelope, and each document kind round-trips through its parser (PRX-GRP-112)",
+        "the store is written as schemaVersion 2 with additive fields and a version-1 store is read without rewriting its history (PRX-GRP-112)",
+        "a repeated request whose end state already holds succeeds with changed:false, exits 0 and appends no history; a conflicting request is refused with exit 1 (PRX-GRP-114)",
+        "every mutation appends one history entry recording operation, member, time, actor, reason, explicit-empty and the caller's active execution ID when it has one (PRX-GRP-113)",
+        "validate refuses a group history that was rewritten, reordered or truncated relative to the committed store (PRX-GRP-113)",
+        "group commands write only the group store and the lifecycle-hash no-mutation test covers every group command (PRX-GRP-115)",
+        "there is no group completion transition; group status is derived (complete, unknown, partially-complete, blocked, active, not-started), removed-open members are reported with their removal reason and abandoned members are reported abandoned (PRX-GRP-116)",
+        "the existing validation rules are kept: ID grammar, recorded non-terminal members named once, the executionLocation join rule, unknown groups refused, --allow-empty for the last member, all problems reported together and nothing written (PRX-GRP-111)"
+      ]
+    },
+    {
+      "workItemId": "PRAXIS-GROUP-07",
+      "repository": null,
+      "obligation": "First-class cross-repository groups (PRX-GRP-100..109)",
+      "dependsOn": [
+        "PRAXIS-GROUP-08"
+      ],
+      "acceptanceCriteria": [
+        "a cross-repository group must use GROUP-ECHELON-<AREA>-<SEQUENCE>, a repository-local group must not, and members outside the home are named owner/repo:WORK-ID while a bare ID means the home (PRX-GRP-100, PRX-GRP-111)",
+        "the group record holds homeRepository (owner/repo) set where work group create ran, and no command changes it implicitly (PRX-GRP-101)",
+        "work group link run in a member repository writes only an immutable group reference (group ID and home), is idempotent, and refuses a conflicting reference (PRX-GRP-102)",
+        "a reference without matching home membership, or a membership without a matching reference, is reported unlinked by work group show and as a validate warning (PRX-GRP-102)",
+        "each cross-repository member's state is derived read-only from that repository's own Praxis state at a fetched Git ref, each observation records repository, commit, observedAt and method, and no command or flag sets a group's status (PRX-GRP-103)",
+        "an observation older than grouping.crossRepository.maxObservationAgeMinutes (default 1440) is reported stale and an unobservable member is unknown, never complete (PRX-GRP-103)",
+        "member dependencies may name qualified IDs with a complete, merged or released producer milestone; an unmet consumer is waiting, an unobservable producer leaves it unknown, and cycles are detected across repositories (PRX-GRP-105)",
+        "progress is reported per repository and overall as k of n complete, and removed-open members are reported (PRX-GRP-106)",
+        "a group checkpoint records, per cross-repository member, the repository, branch, latest member checkpoint ID and commit, pull request when observed and observedAt, labelled as observations (PRX-GRP-107)",
+        "no group command writes another repository's state or working tree, and the planner never schedules another repository's member into this checkout (PRX-GRP-104, PRX-GRP-108)",
+        "an unreachable repository, missing Praxis, unsupported state schema or denied access makes the member unknown with the reason while the rest of the view renders; an unreachable member added is recorded verified:false with a warning and an observed-terminal member is refused (PRX-GRP-109, PRX-GRP-111)"
+      ]
+    },
+    {
+      "workItemId": "PRAXIS-GROUP-10",
+      "repository": null,
+      "obligation": "Grouped-execution completion gates (PRX-GRP-133..135)",
+      "dependsOn": [
+        "PRAXIS-GROUP-08"
+      ],
+      "acceptanceCriteria": [
+        "praxis.group-analysis/1 is a documented schema holding the group and group execution IDs, members with enumerated acceptance criteria, reuseInventory, searches (required when the inventory is empty) and newAbstractions, and it is parsed by one decoder (PRX-GRP-133)",
+        "praxis.group-verification/1 is a documented schema with one row per member criterion carrying status, evidence {kind, reference, result} and optional deferredTo, parsed by one decoder (PRX-GRP-134)",
+        "a member of a grouped-mode group execution completes only with --evidence group-analysis=PATH and --evidence group-verification=PATH, judged as a group-verified facet of the completion-readiness record (PRX-GRP-135)",
+        "completion is refused with exit 3, the refusal document and no state change when evidence is missing, malformed or names another group or execution, a new abstraction names no considered element, the analysis was not committed in an ancestor of the member's first attributed commit, the criteria differ from the analysis, a non-met row has no deferredTo naming a recorded non-terminal item, or a location reference does not exist at the completion commit (PRX-GRP-133..135)",
+        "a member that executes independently or was opted out completes under the normal policy without the group gates (PRX-GRP-135)",
+        "docs/group-analysis-template.md documents the JSON companion forms (PRX-GRP-040, PRX-GRP-045)"
+      ]
+    },
+    {
+      "workItemId": "PRAXIS-GROUP-09",
+      "repository": null,
+      "obligation": "plan execute-group and grouped execution by default (PRX-GRP-117, 130..132, 136, 137)",
+      "dependsOn": [
+        "PRAXIS-GROUP-08",
+        "PRAXIS-GROUP-10"
+      ],
+      "acceptanceCriteria": [
+        "plan execute-group records a group execution GEX-<timestamp>-<suffix> in the group record with group ID, actor, start time, execution repository, required member order, mode and its basis, and opt-outs (PRX-GRP-117)",
+        "it begins the next runnable member in required order, or --member, through the existing work begin transition, links the member's execution to the group execution, and is idempotent per member (PRX-GRP-117)",
+        "it refuses with exit 1 an unknown group, an unresolved dependency cycle, no member runnable in this checkout, or a caller who already owns an open group execution of another group (PRX-GRP-117)",
+        "it never launches an agent, creates a branch, selects a provider or model, or changes priorities or dependencies, and every other plan verb stays read-only (PRX-GRP-117)",
+        "qualification thresholds under grouping.groupedExecution (high affinity with no none or unknown pair, minimumSize..maximumSize runnable members with defaults 2 and 6, all runnable here, no limiting context pressure, none captured) are shown with every failed reason by plan groups and plan explain-group (PRX-GRP-131)",
+        "a qualifying group defaults to grouped mode and a non-qualifying one to independent, where grouped mode needs --mode grouped --reason (PRX-GRP-130)",
+        "per-group and per-item opt-outs require a non-empty reason, are recorded with actor and time in the group history, are shown by show, list and explain-group, and apply only to executions not yet begun (PRX-GRP-132)",
+        "a context-pressure signal recorded for the group execution makes execute-group record fallback: independent with the signal and evidence, deterministically, without changing completed or active members (PRX-GRP-136, PRX-GRP-137)",
+        "the default reverts to advisory by setting grouping.groupedExecution.default to advisory, with no code change (PRX-GRP-138)"
+      ]
+    },
+    {
+      "workItemId": "PRAXIS-PLAN-10",
+      "repository": null,
+      "obligation": "Context-reuse and cost measurement for grouped work (PRX-GRP-150..158)",
+      "dependsOn": [
+        "PRAXIS-GROUP-09"
+      ],
+      "acceptanceCriteria": [
+        "the context metric IDs are provider-neutral registry entries, every adapter declares a capability for each, and a metric an adapter cannot observe is supported-unavailable or unsupported, never 0 (PRX-GRP-150)",
+        "time.first_productive_change_ms is measured against the repository's configured meaningful paths, keeping time.first_code_change_ms (PRX-GRP-151)",
+        "context.peak_tokens and context.window_tokens are recorded when the runtime exposes them, and context.repeated_file_reads_distinct counts distinct files read more than once (PRX-GRP-151)",
+        "completing a member of a group execution without cost.execution_total and without a recorded capability state for it produces a completion warning, not a refusal (PRX-GRP-152)",
+        "a session carrying a group execution is ingested once into the group execution and its snapshot ID prevents any double count (PRX-GRP-153)",
+        "shared group-execution totals are apportioned deterministically into direct, group-shared and equal-share allocated lines labelled allocated, summing exactly to the group total with rounding residue on the group-shared line (PRX-GRP-154)",
+        "the planner prices grouped versus independent cost and time only from at least three measured samples, else unknown, and reports basis and sample counts in plan groups, explain-group and compare --groups (PRX-GRP-155)",
+        "missing metrics stay unknown, currencies are never summed across, and every aggregate states its coverage (PRX-GRP-156)",
+        "group-execution telemetry stores no prompt, message, tool input or output, or command text (PRX-GRP-157)",
+        "the planner's prediction at execute-group time is frozen in the group execution and compared with the observed outcome at its end (PRX-GRP-158)"
+      ]
+    }
+  ],
+  "order": [
+    {
+      "consumer": "PRAXIS-GROUP-07",
+      "producer": "PRAXIS-GROUP-08",
+      "milestone": "merged"
+    },
+    {
+      "consumer": "PRAXIS-GROUP-10",
+      "producer": "PRAXIS-GROUP-08",
+      "milestone": "merged"
+    },
+    {
+      "consumer": "PRAXIS-GROUP-09",
+      "producer": "PRAXIS-GROUP-10",
+      "milestone": "merged"
+    },
+    {
+      "consumer": "PRAXIS-PLAN-10",
+      "producer": "PRAXIS-GROUP-09",
+      "milestone": "merged"
+    }
+  ],
+  "reuseInventory": [
+    {
+      "element": "WorkGroups decisions",
+      "location": "src/Praxis.Domain/Work/WorkGroups.fs:367",
+      "disposition": "extended",
+      "reason": "the one pure decision module for groups; new decisions are added beside create/add/remove so every rule stays in one place"
+    },
+    {
+      "element": "WorkGroupJson store reader and writer",
+      "location": "src/Praxis.Contracts/Work/WorkGroupJson.fs:327",
+      "disposition": "extended",
+      "reason": "the one parser of .ros/work/groups.json; schemaVersion 2 fields are additive and version 1 is still read"
+    },
+    {
+      "element": "PlanningJson.parseDeclaredGroup",
+      "location": "src/Praxis.Contracts/Planning/PlanningJson.fs:723",
+      "disposition": "reused",
+      "reason": "declarations stay readable by the planner exactly as grouping.groups"
+    },
+    {
+      "element": "FileWorkGroupRepository.transact",
+      "location": "src/Praxis.Infrastructure/Work/FileWorkGroupRepository.fs:61",
+      "disposition": "reused",
+      "reason": "the locked read-decide-write cycle for every new mutation"
+    },
+    {
+      "element": "WorkGroupCommands.parse and envelope",
+      "location": "src/Praxis.Cli/WorkGroupCommands.fs:59",
+      "disposition": "reused",
+      "reason": "argument parsing and the JSON envelope shared by new verbs"
+    },
+    {
+      "element": "Grouping.executionLocation",
+      "location": "src/Praxis.Domain/Planning/Grouping.fs:551",
+      "disposition": "reused",
+      "reason": "the planner's execution-location rule decides locality and runnable-here"
+    },
+    {
+      "element": "Grouping.stronglyConnected",
+      "location": "src/Praxis.Domain/Planning/Grouping.fs:688",
+      "disposition": "extended",
+      "reason": "exposed so cross-repository edges use the planner's cycle algorithm"
+    },
+    {
+      "element": "Graph.cycles",
+      "location": "src/Praxis.Domain/Planning/Graph.fs:41",
+      "disposition": "reused",
+      "reason": "item dependency cycles feed the execute-group cycle refusal"
+    },
+    {
+      "element": "MemberStanding.lookup",
+      "location": "src/Praxis.Domain/Work/WorkGroups.fs:96",
+      "disposition": "reused",
+      "reason": "member lifecycle state from queue and live context, for local and observed members"
+    },
+    {
+      "element": "FilePlanningRepository.readQueue and readLive",
+      "location": "src/Praxis.Infrastructure/Planning/FilePlanningRepository.fs:62",
+      "disposition": "extended",
+      "reason": "content-based variants parse an observed Git ref with the same code"
+    },
+    {
+      "element": "FilePlanningRepository.readRepositoryObservations",
+      "location": "src/Praxis.Infrastructure/Planning/FilePlanningRepository.fs:208",
+      "disposition": "reused",
+      "reason": "the tag and merged-commit observation pattern for released and merged milestones"
+    },
+    {
+      "element": "CheckpointVerification.verifyLocation",
+      "location": "src/Praxis.Domain/Work/Checkpoint.fs:435",
+      "disposition": "reused",
+      "reason": "group checkpoint durability is unchanged"
+    },
+    {
+      "element": "FileCheckpointRepository.resolveExecution",
+      "location": "src/Praxis.Infrastructure/Work/FileCheckpointRepository.fs:227",
+      "disposition": "extended",
+      "reason": "an any-item variant resolves the caller's execution for history and GEX ownership"
+    },
+    {
+      "element": "CompletionReadiness facets",
+      "location": "src/Praxis.Domain/Work/CompletionReadiness.fs:29",
+      "disposition": "extended",
+      "reason": "group-verified is a new facet of the existing readiness record"
+    },
+    {
+      "element": "CompletionReadinessOperations.gate",
+      "location": "src/Praxis.Application/Work/CompletionReadiness.fs:112",
+      "disposition": "extended",
+      "reason": "the group gate is evaluated by the same gate and refusal path"
+    },
+    {
+      "element": "FileCompletionReadiness.evaluate",
+      "location": "src/Praxis.Infrastructure/Work/FileCompletionReadiness.fs:58",
+      "disposition": "extended",
+      "reason": "reads group evidence documents at the same edge"
+    },
+    {
+      "element": "QualityEvidenceJson readiness record",
+      "location": "src/Praxis.Contracts/Work/QualityEvidenceJson.fs:429",
+      "disposition": "extended",
+      "reason": "renders the group-verified facet in the existing record"
+    },
+    {
+      "element": "runWorkStart",
+      "location": "src/Praxis.Cli/Program.fs:1276",
+      "disposition": "reused",
+      "reason": "execute-group begins members through the existing work begin transition"
+    },
+    {
+      "element": "SessionTranscript metrics",
+      "location": "src/Praxis.Domain/Telemetry/SessionTranscript.fs:281",
+      "disposition": "extended",
+      "reason": "adds distinct re-read files, peak tokens and first productive change"
+    },
+    {
+      "element": "History context-reuse and cost model",
+      "location": "src/Praxis.Domain/Planning/History.fs:285",
+      "disposition": "extended",
+      "reason": "grouped-versus-independent pricing uses the same three-sample threshold"
+    },
+    {
+      "element": "telemetry/metrics.json",
+      "location": "telemetry/metrics.json:1",
+      "disposition": "extended",
+      "reason": "new provider-neutral metric IDs are registered"
+    },
+    {
+      "element": "quality/cli-boundary-baseline.json",
+      "location": "quality/cli-boundary-baseline.json:1",
+      "disposition": "reused",
+      "reason": "the CLI ratchet is respected; behaviour goes below the CLI"
+    }
+  ],
+  "searches": [
+    {
+      "command": "grep -rn \"WorkGroup\" src --include=*.fs -l",
+      "finding": "WorkGroups.fs, WorkGroupJson.fs, FileWorkGroupRepository.fs, WorkGroupCommands.fs, Grouping.fs, PlanningJson.fs, FilePlanningRepository.fs, PlanCommands.fs, Program.fs: one store and one decision module exist"
+    },
+    {
+      "command": "grep -rn \"stronglyConnected\\|let cycles\" src/Praxis.Domain/Planning",
+      "finding": "Graph.cycles and Grouping.stronglyConnected: cycle detection exists; no second detector is added"
+    },
+    {
+      "command": "grep -rn \"CompletionFacet\\|presenceFacet\" src",
+      "finding": "the A052 readiness facets and gate exist; the group gate is a new facet, not a new mechanism"
+    },
+    {
+      "command": "grep -rn \"repeated_file_reads\\|first_code_change\" src",
+      "finding": "SessionTranscript.fs, History.fs, FilePlanningRepository.fs: session metrics and context-reuse history exist"
+    },
+    {
+      "command": "grep -rn \"ROS_BASE_REF\" src",
+      "finding": "Program.fs and ProvenanceCommands.fs read the base ref; the append-only check uses the same convention"
+    },
+    {
+      "command": "grep -rn \"git show\\|ProcessGitRepository\" src/Praxis.Infrastructure",
+      "finding": "Git process adapters exist in Praxis.Infrastructure.Git; cross-repository observation reuses them"
+    }
+  ],
+  "newAbstractions": [
+    {
+      "name": "GroupStatus (derived status vocabulary)",
+      "consideredExisting": "WorkGroups.MemberCategory and GroupProgress",
+      "whyNotReused": "MemberCategory classifies one member; PRX-GRP-103 needs a group-level status with precedence, which composes MemberCategory rather than replacing it"
+    },
+    {
+      "name": "MemberObservation (dated cross-repository observation)",
+      "consideredExisting": "Planning Observation (Model.fs ObservationKind)",
+      "whyNotReused": "planner observations are external facts about local items without repository, commit and observedAt per member; the group observation needs those fields and is stored in the group record"
+    },
+    {
+      "name": "GroupReference (member-side immutable reference)",
+      "consideredExisting": "StoredWorkGroup",
+      "whyNotReused": "a member repository must not hold a copy of the group record (PRX-GRP-101); the reference is a separate minimal entry in the same store"
+    },
+    {
+      "name": "GroupAnalysis and GroupVerification documents",
+      "consideredExisting": "DokimosRatchetEvidence and OrdoBoundaryEvidence decoders",
+      "whyNotReused": "the existing decoders are for other tools' contracts; the group documents follow the same EvidenceReading pattern and readiness facet"
+    },
+    {
+      "name": "GroupExecution (GEX) record",
+      "consideredExisting": "the telemetry execution record (EXE-*)",
+      "whyNotReused": "an EXE belongs to one work item; a GEX spans members, so it is a group-record entry linking member EXEs, not a new execution store"
+    },
+    {
+      "name": "Shared-cost apportionment",
+      "consideredExisting": "History.executionCost",
+      "whyNotReused": "executionCost totals one execution; apportionment splits one group total into lines and needs exact-sum rounding"
+    }
+  ],
+  "decisions": [
+    "PRX-GRP-115 (MUST: group commands write only the group store) outranks the PRX-GRP-113 SHOULD to append work.group.* events; the group history is the audit trail"
+  ]
+}

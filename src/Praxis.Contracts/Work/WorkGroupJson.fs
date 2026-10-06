@@ -14,7 +14,11 @@ open Praxis.Domain.Work
 /// `grouping.groups` in planner configuration.
 [<RequireQualifiedAccess>]
 module WorkGroupJson =
-    let schemaVersion = 1
+    /// Version 2 (PRX-GRP-112) adds fields; version 1 is still read, and a
+    /// version-1 store is rewritten only by a mutation, history intact.
+    let schemaVersion = 2
+
+    let readableVersions = set [ 1; 2 ]
 
     let private options =
         JsonSerializerOptions(WriteIndented = true, IndentSize = 2, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping)
@@ -58,7 +62,9 @@ module WorkGroupJson =
               yield "actor", (ActorJson.node entry.Actor :> JsonNode)
               yield "reason", optionalText entry.Reason
               if entry.ExplicitEmpty then
-                  yield "explicitEmpty", boolean true ]
+                  yield "explicitEmpty", boolean true
+              yield "executionId", optionalText entry.ExecutionId
+              yield "memberState", optionalText entry.MemberState ]
 
     let locationNode (location: GitDurableLocation) : JsonNode =
         record
@@ -180,8 +186,10 @@ module WorkGroupJson =
         let who = actor node "actor"
         let reason = optionalString node "reason"
         let explicitEmpty = flag node "explicitEmpty"
+        let executionId = optionalString node "executionId"
+        let memberState = optionalString node "memberState"
 
-        match errorsOf [ boxed operation; boxed memberId; boxed at; boxed who; boxed reason; boxed explicitEmpty ] with
+        match errorsOf [ boxed operation; boxed memberId; boxed at; boxed who; boxed reason; boxed explicitEmpty; boxed executionId; boxed memberState ] with
         | [] ->
             Ok
                 { Operation = value operation
@@ -189,7 +197,9 @@ module WorkGroupJson =
                   At = value at
                   Actor = value who
                   Reason = value reason
-                  ExplicitEmpty = value explicitEmpty }
+                  ExplicitEmpty = value explicitEmpty
+                  ExecutionId = value executionId
+                  MemberState = value memberState }
         | errors -> Error errors
 
     let private objects (node: JsonObject) (name: string) : Result<JsonObject list, string> =
@@ -329,7 +339,7 @@ module WorkGroupJson =
             match JsonNode.Parse json with
             | :? JsonObject as root ->
                 match field root "schemaVersion" with
-                | Some(:? JsonValue as version) when version.GetValueKind() = JsonValueKind.Number && version.GetValue<int>() = schemaVersion ->
+                | Some(:? JsonValue as version) when version.GetValueKind() = JsonValueKind.Number && readableVersions.Contains(version.GetValue<int>()) ->
                     match objects root "groups" with
                     | Error message -> Error message
                     | Ok groups ->
@@ -337,7 +347,7 @@ module WorkGroupJson =
                             { Groups =
                                 groups
                                 |> List.mapi (fun index node -> index, field node "id" |> Option.bind stringValue, readGroup node) }
-                | _ -> Error $"schemaVersion must be {schemaVersion}"
+                | _ -> Error "schemaVersion must be 1 or 2"
             | _ -> Error "the document must be a JSON object"
         with error ->
             Error $"not valid JSON: {error.Message}"
@@ -365,6 +375,7 @@ module WorkGroupJson =
               "state", optionalText row.State
               "planningState", optionalText row.PlanningState
               "waitsOn", texts row.WaitsOn
+              "waitsOnBlocked", texts row.WaitsOnBlocked
               "gates", texts row.Gates ]
 
     /// The partial-completion view (PRX-GRP-042). `complete` is true only
@@ -383,3 +394,89 @@ module WorkGroupJson =
 
     let checkpointRejectionNode (rejection: GroupCheckpointRejection) : JsonNode =
         record [ "code", text (GroupCheckpointRejection.code rejection); "message", text (GroupCheckpointRejection.message rejection) ]
+
+    let removedOpenNode (removed: RemovedOpenMember) : JsonNode =
+        record
+            [ "workItemId", text removed.WorkItemId
+              "removedAt", text removed.RemovedAt
+              "reason", optionalText removed.Reason
+              "stateAtRemoval", optionalText removed.StateAtRemoval ]
+
+    /// One `work group list` row (PRX-GRP-110). `groupStatus` is derived,
+    /// never stored; an unknown value is `null`, never `0`.
+    let summaryNode (summary: GroupSummary) : JsonNode =
+        record
+            [ "id", text summary.GroupId
+              "kind", summary.Kind |> Option.map GroupKind.code |> optionalText
+              "origin", text (GroupOrigin.code summary.Origin)
+              "homeRepository", optionalText summary.Home
+              "executionRepository", optionalText summary.ExecutionRepository
+              "crossRepository", boolean summary.CrossRepository
+              "memberCount", integer summary.MemberCount
+              "groupStatus", text (GroupStatus.code summary.Status)
+              "progress", progressNode summary.Progress
+              "removedOpen", summary.RemovedOpen |> List.map removedOpenNode |> array
+              "executionMode", optionalText summary.ExecutionMode
+              "latestCheckpointAt", optionalText summary.LatestCheckpointAt ]
+
+    /// A list row as a reader consumes it: the round-trip partner of
+    /// `summaryNode` for the fields it reports directly.
+    type SummaryRead =
+        { Id: string
+          Kind: string option
+          Origin: string
+          HomeRepository: string option
+          ExecutionRepository: string option
+          CrossRepository: bool
+          MemberCount: int
+          GroupStatus: GroupStatus
+          Completed: string list
+          RemovedOpen: string list
+          ExecutionMode: string option
+          LatestCheckpointAt: string option }
+
+    let readSummary (node: JsonObject) : Result<SummaryRead, string list> =
+        let id = requiredText node "id"
+        let kind = optionalString node "kind"
+        let origin = requiredText node "origin"
+        let home = optionalString node "homeRepository"
+        let execution = optionalString node "executionRepository"
+        let cross = flag node "crossRepository"
+
+        let count =
+            match field node "memberCount" with
+            | Some(:? JsonValue as number) when number.GetValueKind() = JsonValueKind.Number -> Ok(number.GetValue<int>())
+            | _ -> Error "memberCount must be a number"
+
+        let status =
+            requiredText node "groupStatus"
+            |> Result.bind (fun raw -> GroupStatus.tryParse raw |> Option.map Ok |> Option.defaultValue (Error $"groupStatus '{raw}' is not recognized"))
+
+        let completed = child node "progress" |> Result.bind (fun progress -> stringList progress "completed")
+
+        let removed =
+            objects node "removedOpen"
+            |> Result.bind (fun entries ->
+                entries
+                |> List.map (fun entry -> requiredText entry "workItemId")
+                |> List.fold (fun state next -> match state, next with | Ok values, Ok value -> Ok(values @ [ value ]) | Error message, _ | _, Error message -> Error message) (Ok []))
+
+        let mode = optionalString node "executionMode"
+        let latest = optionalString node "latestCheckpointAt"
+
+        match errorsOf [ boxed id; boxed kind; boxed origin; boxed home; boxed execution; boxed cross; boxed count; boxed status; boxed completed; boxed removed; boxed mode; boxed latest ] with
+        | [] ->
+            Ok
+                { Id = value id
+                  Kind = value kind
+                  Origin = value origin
+                  HomeRepository = value home
+                  ExecutionRepository = value execution
+                  CrossRepository = value cross
+                  MemberCount = value count
+                  GroupStatus = value status
+                  Completed = value completed
+                  RemovedOpen = value removed
+                  ExecutionMode = value mode
+                  LatestCheckpointAt = value latest }
+        | errors -> Error errors
