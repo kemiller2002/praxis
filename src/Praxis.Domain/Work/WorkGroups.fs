@@ -40,7 +40,14 @@ type GroupHistoryEntry =
       Actor: Actor
       Reason: string option
       /// A removal that deliberately left the group empty (never implicit).
-      ExplicitEmpty: bool }
+      ExplicitEmpty: bool
+      /// The caller's active execution when the mutation ran (PRX-GRP-113).
+      /// `None` when it had none, or the entry predates store version 2.
+      ExecutionId: string option
+      /// The member's recorded lifecycle state when it joined or left, so a
+      /// member removed while open stays reported (PRX-GRP-116). `None` for
+      /// the creation entry and for entries that predate store version 2.
+      MemberState: string option }
 
 /// A member's own latest durable checkpoint, referenced (never copied or
 /// replaced) by a group checkpoint.
@@ -120,7 +127,6 @@ type GroupRejection =
     | RepeatedMember of workItemId: string
     | UnknownMember of workItemId: string
     | TerminalMember of workItemId: string * state: string
-    | AlreadyMember of workItemId: string * groupId: string
     | NotMember of workItemId: string * groupId: string
     | RepositoryMismatch of workItemId: string * itemLocation: ExecutionLocation * groupRepository: string
     | LastMember of workItemId: string * groupId: string
@@ -137,7 +143,6 @@ module GroupRejection =
         | GroupRejection.RepeatedMember _ -> "repeated-member"
         | GroupRejection.UnknownMember _ -> "unknown-member"
         | GroupRejection.TerminalMember _ -> "terminal-member"
-        | GroupRejection.AlreadyMember _ -> "already-member"
         | GroupRejection.NotMember _ -> "not-member"
         | GroupRejection.RepositoryMismatch _ -> "repository-mismatch"
         | GroupRejection.LastMember _ -> "last-member"
@@ -146,14 +151,13 @@ module GroupRejection =
         match rejection with
         | GroupRejection.InvalidGroupId id -> $"'{id}' is not a group ID; use GROUP-<AREA>-<SEQUENCE> in upper case (PRX-GRP-010)"
         | GroupRejection.InvalidMemberId id -> $"'{id}' is not a valid work-item ID"
-        | GroupRejection.DuplicateGroup id -> $"group {id} already exists"
+        | GroupRejection.DuplicateGroup id -> $"group {id} already exists with a different declaration; an identical repeat is accepted unchanged (PRX-GRP-114)"
         | GroupRejection.UnknownGroup id -> $"group {id} is not recorded"
         | GroupRejection.NoMembers -> "a group needs at least one member"
         | GroupRejection.RepeatedMember id -> $"{id} is named more than once"
         | GroupRejection.UnknownMember id -> $"{id} is not a recorded work item (not in the backlog queue or the live context)"
         | GroupRejection.TerminalMember(id, state) -> $"{id} is {state}; a terminal item cannot join a group"
-        | GroupRejection.AlreadyMember(id, group) -> $"{id} is already a member of {group}"
-        | GroupRejection.NotMember(id, group) -> $"{id} is not a member of {group}"
+        | GroupRejection.NotMember(id, group) -> $"{id} is not a member of {group} and its removal was never recorded"
         | GroupRejection.RepositoryMismatch(id, item, group) ->
             $"{id} executes in {ExecutionLocation.describe item} but the group executes in {group}; declare the group cross-repository or split it (PRX-GRP-051)"
         | GroupRejection.LastMember(id, group) -> $"{id} is the last member of {group}; removing it would leave the group empty"
@@ -187,7 +191,14 @@ type GroupCreateRequest =
       ArchitectureNotes: string list
       OccurredAt: string
       Actor: Actor
-      Reason: string option }
+      Reason: string option
+      /// The caller's active execution, when it has one (PRX-GRP-113).
+      ExecutionId: string option }
+
+/// What a mutation did (PRX-GRP-114): the resulting group, and whether the
+/// request changed it. A repeat whose end state already holds is accepted
+/// with `Changed = false` and appends no history.
+type GroupChange = { Group: StoredWorkGroup; Changed: bool }
 
 /// Where a member stands inside its group (PRX-GRP-042): each member
 /// completes, or not, on its own.
@@ -225,7 +236,10 @@ module MemberCategory =
 type MemberFacts =
     { State: string option
       PlanningState: string option
-      WaitsOn: string list }
+      WaitsOn: string list
+      /// The prerequisites this member waits on that are themselves blocked
+      /// (PRX-GRP-103: "waits on a blocked prerequisite").
+      WaitsOnBlocked: string list }
 
 [<RequireQualifiedAccess>]
 module MemberFacts =
@@ -233,7 +247,38 @@ module MemberFacts =
     let ofStanding (standing: string -> MemberStanding) (id: string) =
         { State = MemberStanding.state (standing id)
           PlanningState = None
-          WaitsOn = [] }
+          WaitsOn = []
+          WaitsOnBlocked = [] }
+
+    let private blockedStates =
+        set [ PlanningWorkState.Blocked; PlanningWorkState.AwaitingEvidence; PlanningWorkState.AwaitingHuman ]
+
+    /// Facts per member from the planner's read-only analysis: recorded
+    /// state, planning state, the work items it still waits on, and which of
+    /// those are blocked. An item the analysis does not know falls back to
+    /// its recorded standing.
+    let ofAnalysis (analysis: PlanningAnalysis) (standing: string -> MemberStanding) : string -> MemberFacts =
+        let byId = analysis.Items |> List.map (fun item -> item.Id, item) |> Map.ofList
+
+        fun id ->
+            match byId.TryFind id with
+            | None -> ofStanding standing id
+            | Some item ->
+                let waitsOn =
+                    item.Dependencies
+                    |> List.filter (fun resolved -> resolved.Status <> DependencyStatus.Satisfied)
+                    |> List.choose (fun resolved ->
+                        match resolved.Dependency.Target with
+                        | DependencyTarget.WorkItem target -> Some target
+                        | _ -> None)
+                    |> List.distinct
+
+                { State = Some item.LifecycleState
+                  PlanningState = Some(PlanningWorkState.code item.PlanningState)
+                  WaitsOn = waitsOn
+                  WaitsOnBlocked =
+                    waitsOn
+                    |> List.filter (fun target -> byId.TryFind target |> Option.exists (fun prerequisite -> blockedStates.Contains prerequisite.PlanningState)) }
 
 type MemberProgress =
     { WorkItemId: string
@@ -242,6 +287,8 @@ type MemberProgress =
       PlanningState: string option
       /// Work items this member still waits on.
       WaitsOn: string list
+      /// Prerequisites it waits on that are themselves blocked.
+      WaitsOnBlocked: string list
       /// Open members of the same group that wait on this member.
       Gates: string list }
 
@@ -263,6 +310,102 @@ module GroupProgress =
 
         $"{count progress.Completed} of {progress.Members.Length} complete ({count progress.Active} active, {count progress.Blocked} blocked, {count progress.Remaining} remaining, {count progress.Abandoned} abandoned, {count progress.Unknown} unknown)"
 
+/// A group's status, always derived from its members' own states and never
+/// stored or set by any command (PRX-GRP-103, PRX-GRP-116). Listed in the
+/// order of precedence the derivation applies.
+[<RequireQualifiedAccess>]
+type GroupStatus =
+    /// Every current member completed on its own evidence.
+    | Complete
+    /// At least one member's state is not known, and so the group's is not.
+    | Unknown
+    /// At least one current member completed and at least one did not.
+    | PartiallyComplete
+    /// Every open member is blocked or waits on a blocked prerequisite.
+    | Blocked
+    /// At least one member is active.
+    | Active
+    | NotStarted
+
+[<RequireQualifiedAccess>]
+module GroupStatus =
+    let all =
+        [ GroupStatus.Complete
+          GroupStatus.Unknown
+          GroupStatus.PartiallyComplete
+          GroupStatus.Blocked
+          GroupStatus.Active
+          GroupStatus.NotStarted ]
+
+    let code status =
+        match status with
+        | GroupStatus.Complete -> "complete"
+        | GroupStatus.Unknown -> "unknown"
+        | GroupStatus.PartiallyComplete -> "partially-complete"
+        | GroupStatus.Blocked -> "blocked"
+        | GroupStatus.Active -> "active"
+        | GroupStatus.NotStarted -> "not-started"
+
+    let tryParse value = all |> List.tryFind (fun status -> code status = value)
+
+    /// The PRX-GRP-103 precedence over the members' own standings. An empty
+    /// group has no member that completed, so it is never `Complete`.
+    let derive (progress: GroupProgress) : GroupStatus =
+        let rows = progress.Members
+        let isIn category (row: MemberProgress) = row.Category = category
+
+        let blockedMembers =
+            rows |> List.filter (isIn MemberCategory.Blocked) |> List.map (fun row -> row.WorkItemId) |> Set.ofList
+
+        let open' =
+            rows |> List.filter (fun row -> not (isIn MemberCategory.Completed row || isIn MemberCategory.Abandoned row))
+
+        let effectivelyBlocked (row: MemberProgress) =
+            isIn MemberCategory.Blocked row
+            || not row.WaitsOnBlocked.IsEmpty
+            || row.WaitsOn |> List.exists blockedMembers.Contains
+
+        if not rows.IsEmpty && rows |> List.forall (isIn MemberCategory.Completed) then GroupStatus.Complete
+        elif rows |> List.exists (isIn MemberCategory.Unknown) then GroupStatus.Unknown
+        elif rows |> List.exists (isIn MemberCategory.Completed) then GroupStatus.PartiallyComplete
+        elif not open'.IsEmpty && open' |> List.forall effectivelyBlocked then GroupStatus.Blocked
+        elif rows |> List.exists (isIn MemberCategory.Active) then GroupStatus.Active
+        else GroupStatus.NotStarted
+
+/// A member that left the group while it was still open (PRX-GRP-116): the
+/// group must never read as if every member succeeded.
+type RemovedOpenMember =
+    { WorkItemId: string
+      RemovedAt: string
+      Reason: string option
+      /// Its state when it was removed; `None` for a removal recorded before
+      /// store version 2, judged then by its current state.
+      StateAtRemoval: string option }
+
+/// One row of `work group list` (PRX-GRP-110): what a reader needs to find
+/// a group, never a stored status.
+type GroupSummary =
+    { GroupId: string
+      Kind: GroupKind option
+      Origin: GroupOrigin
+      /// The repository holding the group record (PRX-GRP-101).
+      Home: string option
+      ExecutionRepository: string option
+      CrossRepository: bool
+      MemberCount: int
+      Status: GroupStatus
+      Progress: GroupProgress
+      RemovedOpen: RemovedOpenMember list
+      /// The group's execution mode (PRX-GRP-130); `None` while unknown.
+      ExecutionMode: string option
+      LatestCheckpointAt: string option }
+
+/// `work group list` filters; every given filter must hold.
+type GroupListFilter =
+    { Status: GroupStatus option
+      Member: string option
+      Repository: string option }
+
 /// One membership change (`work group add`, `work group remove`).
 type GroupMemberRequest =
     { GroupId: string
@@ -271,7 +414,9 @@ type GroupMemberRequest =
       Actor: Actor
       Reason: string option
       /// Removal only: deliberately allow leaving the group empty.
-      AllowEmpty: bool }
+      AllowEmpty: bool
+      /// The caller's active execution, when it has one (PRX-GRP-113).
+      ExecutionId: string option }
 
 type GroupCheckpointRequest =
     { GroupId: string
@@ -355,16 +500,21 @@ module WorkGroups =
                   | location -> yield GroupRejection.RepositoryMismatch(workItemId, location, repository)
               | _ -> () ]
 
-    let private entry operation memberId (at: string) (actor: Actor) (reason: string option) explicitEmpty =
+    let private entry operation memberId (at: string) (actor: Actor) (reason: string option) explicitEmpty executionId memberState =
         { Operation = operation
           Member = memberId
           At = at
           Actor = actor
           Reason = reason
-          ExplicitEmpty = explicitEmpty }
+          ExplicitEmpty = explicitEmpty
+          ExecutionId = executionId
+          MemberState = memberState }
+
+    let private changed group = Ok { Group = group; Changed = true }
+    let private unchanged group = Ok { Group = group; Changed = false }
 
     /// `work group create`: a new declared group, or every reason it cannot be.
-    let create (context: GroupContext) (request: GroupCreateRequest) : Result<StoredWorkGroup, GroupRejection list> =
+    let create (context: GroupContext) (request: GroupCreateRequest) : Result<GroupChange, GroupRejection list> =
         let declaration =
             { Id = request.GroupId
               Members = request.Members
@@ -375,25 +525,35 @@ module WorkGroups =
               CrossRepository = request.CrossRepository
               ArchitectureNotes = request.ArchitectureNotes }
 
-        let rejections =
+        let argumentRejections =
             [ if not (isValidGroupId request.GroupId) then
                   yield GroupRejection.InvalidGroupId request.GroupId
-              elif (tryFind context.Groups request.GroupId).IsSome then
-                  yield GroupRejection.DuplicateGroup request.GroupId
               if request.Members.IsEmpty then
                   yield GroupRejection.NoMembers
-              yield! repeated request.Members |> List.map GroupRejection.RepeatedMember
-              yield! request.Members |> List.distinct |> List.collect (eligibility context declaration) ]
+              yield! repeated request.Members |> List.map GroupRejection.RepeatedMember ]
 
-        match rejections with
-        | [] ->
-            Ok
-                { Declaration = declaration
-                  CreatedAt = request.OccurredAt
-                  CreatedBy = request.Actor
-                  History = [ entry GroupOperation.Created None request.OccurredAt request.Actor request.Reason false ]
-                  Checkpoints = [] }
-        | rejections -> Error rejections
+        match argumentRejections, tryFind context.Groups request.GroupId with
+        // An identical declaration already holds: accepted, nothing appended
+        // (PRX-GRP-114). Eligibility is not re-judged: members may have
+        // completed since the group was created.
+        | [], Some existing when existing.Declaration = declaration -> unchanged existing
+        | rejections, existing ->
+            let all =
+                [ yield! rejections |> List.filter (function GroupRejection.InvalidGroupId _ -> true | _ -> false)
+                  if existing.IsSome && isValidGroupId request.GroupId then
+                      yield GroupRejection.DuplicateGroup request.GroupId
+                  yield! rejections |> List.filter (function GroupRejection.InvalidGroupId _ -> false | _ -> true)
+                  yield! request.Members |> List.distinct |> List.collect (eligibility context declaration) ]
+
+            match all with
+            | [] ->
+                changed
+                    { Declaration = declaration
+                      CreatedAt = request.OccurredAt
+                      CreatedBy = request.Actor
+                      History = [ entry GroupOperation.Created None request.OccurredAt request.Actor request.Reason false request.ExecutionId None ]
+                      Checkpoints = [] }
+            | rejections -> Error rejections
 
     /// The group a membership change names, or why it cannot be found.
     let private existing (context: GroupContext) (groupId: string) : Result<StoredWorkGroup, GroupRejection list> =
@@ -403,42 +563,67 @@ module WorkGroups =
     /// `work group add`: one more member, joining by the same rule as at
     /// creation, recorded with who added it. The member's own record is
     /// not touched.
-    let add (context: GroupContext) (request: GroupMemberRequest) : Result<StoredWorkGroup, GroupRejection list> =
+    let add (context: GroupContext) (request: GroupMemberRequest) : Result<GroupChange, GroupRejection list> =
         existing context request.GroupId
         |> Result.bind (fun group ->
             let declaration = group.Declaration
 
-            let rejections =
-                if declaration.Members |> List.contains request.WorkItemId then [ GroupRejection.AlreadyMember(request.WorkItemId, declaration.Id) ]
-                else eligibility context declaration request.WorkItemId
+            if declaration.Members |> List.contains request.WorkItemId then
+                unchanged group
+            else
+                match eligibility context declaration request.WorkItemId with
+                | [] ->
+                    changed
+                        { group with
+                            Declaration = { declaration with Members = declaration.Members @ [ request.WorkItemId ] }
+                            History =
+                                group.History
+                                @ [ entry
+                                        GroupOperation.MemberAdded
+                                        (Some request.WorkItemId)
+                                        request.OccurredAt
+                                        request.Actor
+                                        request.Reason
+                                        false
+                                        request.ExecutionId
+                                        (MemberStanding.state (context.Standing request.WorkItemId)) ] }
+                | rejections -> Error rejections)
 
-            match rejections with
-            | [] ->
-                Ok
-                    { group with
-                        Declaration = { declaration with Members = declaration.Members @ [ request.WorkItemId ] }
-                        History = group.History @ [ entry GroupOperation.MemberAdded (Some request.WorkItemId) request.OccurredAt request.Actor request.Reason false ] }
-            | rejections -> Error rejections)
+    /// The latest history entry that names a member, if any.
+    let private lastEntryFor (group: StoredWorkGroup) (workItemId: string) =
+        group.History |> List.filter (fun entry -> entry.Member = Some workItemId) |> List.tryLast
 
     /// `work group remove`: one member leaves. Any member may leave,
     /// whatever its state; its lifecycle, evidence and attribution are not
     /// touched. The last member leaves only with `AllowEmpty`, which the
     /// history records.
-    let remove (context: GroupContext) (request: GroupMemberRequest) : Result<StoredWorkGroup, GroupRejection list> =
+    let remove (context: GroupContext) (request: GroupMemberRequest) : Result<GroupChange, GroupRejection list> =
         existing context request.GroupId
         |> Result.bind (fun group ->
             let declaration = group.Declaration
 
             match declaration.Members |> List.contains request.WorkItemId, declaration.Members.Length with
-            | false, _ -> Error [ GroupRejection.NotMember(request.WorkItemId, declaration.Id) ]
+            | false, _ ->
+                // Already removed: the end state holds (PRX-GRP-114).
+                match lastEntryFor group request.WorkItemId with
+                | Some last when last.Operation = GroupOperation.MemberRemoved -> unchanged group
+                | _ -> Error [ GroupRejection.NotMember(request.WorkItemId, declaration.Id) ]
             | true, 1 when not request.AllowEmpty -> Error [ GroupRejection.LastMember(request.WorkItemId, declaration.Id) ]
             | true, remaining ->
-                Ok
+                changed
                     { group with
                         Declaration = { declaration with Members = declaration.Members |> List.filter ((<>) request.WorkItemId) }
                         History =
                             group.History
-                            @ [ entry GroupOperation.MemberRemoved (Some request.WorkItemId) request.OccurredAt request.Actor request.Reason (remaining = 1) ] })
+                            @ [ entry
+                                    GroupOperation.MemberRemoved
+                                    (Some request.WorkItemId)
+                                    request.OccurredAt
+                                    request.Actor
+                                    request.Reason
+                                    (remaining = 1)
+                                    request.ExecutionId
+                                    (MemberStanding.state (context.Standing request.WorkItemId)) ] })
 
     /// The declarations the planner reads: every configured group, then every
     /// stored group whose ID the configuration does not already declare (an
@@ -551,6 +736,7 @@ module WorkGroups =
                   State = fact.State
                   PlanningState = fact.PlanningState
                   WaitsOn = fact.WaitsOn
+                  WaitsOnBlocked = fact.WaitsOnBlocked
                   Gates = members |> List.filter (fun other -> other <> id && open' other && known[other].WaitsOn |> List.contains id) })
 
         let inCategory category =
@@ -563,6 +749,78 @@ module WorkGroups =
           Blocked = inCategory MemberCategory.Blocked
           Remaining = inCategory MemberCategory.Remaining
           Unknown = inCategory MemberCategory.Unknown }
+
+    /// Members removed while open, each with its latest removal reason
+    /// (PRX-GRP-116). A member that rejoined is current again and is not
+    /// listed. `currentState` judges removals recorded before store version 2.
+    let removedOpen (group: StoredWorkGroup) (currentState: string -> string option) : RemovedOpenMember list =
+        let current = Set.ofList group.Declaration.Members
+        let terminal (state: string option) = state = Some "complete" || state = Some "abandoned"
+
+        group.History
+        |> List.choose (fun entry -> entry.Member)
+        |> List.distinct
+        |> List.filter (fun id -> not (current.Contains id))
+        |> List.choose (fun id ->
+            match lastEntryFor group id with
+            | Some last when last.Operation = GroupOperation.MemberRemoved ->
+                let state = last.MemberState |> Option.orElse (currentState id)
+
+                if terminal state then None
+                else
+                    Some
+                        { WorkItemId = id
+                          RemovedAt = last.At
+                          Reason = last.Reason
+                          StateAtRemoval = last.MemberState }
+            | _ -> None)
+
+    /// PRX-GRP-113: history is append-only. Every group in the committed
+    /// store must still exist, and its committed history must be an exact
+    /// prefix of the current one: nothing rewritten, reordered or truncated.
+    /// `source` names the committed revision in the messages.
+    let historyFindings (source: string) (committed: StoredWorkGroup list) (current: StoredWorkGroup list) : (string * string * string) list =
+        [ for before in committed do
+              let id = before.Declaration.Id
+
+              match tryFind current id with
+              | None -> yield id, "history", $"group {id} is recorded in {source} but no longer in the store; groups and their history are append-only"
+              | Some after ->
+                  let kept = before.History.Length
+
+                  if after.History.Length < kept then
+                      yield id, "history", $"group {id}'s history has {after.History.Length} entries but {source} records {kept}; history is append-only and was truncated"
+                  elif after.History |> List.truncate kept <> before.History then
+                      yield id, "history", $"group {id}'s history differs from {source} in its first {kept} entries; history is append-only and was rewritten or reordered" ]
+
+    /// One `work group list` row, derived from the members' own facts.
+    let summarize (group: StoredWorkGroup) (facts: string -> MemberFacts) : GroupSummary =
+        let declaration = group.Declaration
+        let standing = progress group facts
+
+        { GroupId = declaration.Id
+          Kind = declaration.Kind
+          Origin = declaration.Origin
+          Home = declaration.ExecutionRepository
+          ExecutionRepository = declaration.ExecutionRepository
+          CrossRepository = declaration.CrossRepository
+          MemberCount = declaration.Members.Length
+          Status = GroupStatus.derive standing
+          Progress = standing
+          RemovedOpen = removedOpen group (fun id -> (facts id).State)
+          ExecutionMode = None
+          LatestCheckpointAt = group.Checkpoints |> List.tryLast |> Option.map (fun checkpoint -> checkpoint.RecordedAt) }
+
+    /// `work group list`: read-only, every filter applied, sorted by ID.
+    let list (filter: GroupListFilter) (summaries: GroupSummary list) : GroupSummary list =
+        let matches (summary: GroupSummary) =
+            filter.Status |> Option.forall ((=) summary.Status)
+            && filter.Member |> Option.forall (fun id -> summary.Progress.Members |> List.exists (fun row -> row.WorkItemId = id))
+            && filter.Repository |> Option.forall (fun repository -> summary.Home = Some repository || summary.ExecutionRepository = Some repository)
+
+        summaries
+        |> List.filter matches
+        |> List.sortWith (fun left right -> String.CompareOrdinal(left.GroupId, right.GroupId))
 
     /// The ownership half of `work checkpoint`'s rule, over the group: at
     /// least one member is active, and at least one active member's
