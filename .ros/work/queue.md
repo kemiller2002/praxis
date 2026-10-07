@@ -285,7 +285,12 @@
 | WI-0071 | Step commands record the caller's discovered identity instead of the owning execution's, so validate rejects the step | captured | telemetry, provenance | medium |
 | WI-0072 | Port provenance follow-ups onto the merged model: collaboration aggregates in provenance audit, producedBy on ordo handoffs, installer event actor | complete | provenance | medium |
 | WI-0073 | Fix 3.7.1 sweep findings: work-item ID reuse, consumer doc links, upgrade hygiene, launcher EOL | complete |  | high |
-| WI-0074 | PRAXIS-PUB-A021: A021 grouped-execution publication package (evidence audit, manuscript, anonymous artifact, readiness decision) | ready |  | medium |
+| WI-0074 | PRAXIS-PUB-A021: A021 grouped-execution publication package (evidence audit, manuscript, anonymous artifact, readiness decision) | active |  | medium |
+| WI-0075 | A021-PUB-IRR: independent human second coding of the 8-dimension architecture rubric with agreement statistics | captured | research, a021-publication | high |
+| WI-0076 | A021-PUB-REFS: verify all 57 references against authoritative records | captured | research, a021-publication | high |
+| WI-0077 | A021-PUB-VENUE: confirm SANER 2027 / MSR 2027 submission facts on official pages | captured | research, a021-publication | high |
+| WI-0078 | EXP-A024: three-arm execution-granularity experiment separating retained context from mandated cross-item analysis | captured | research, a021-publication | medium |
+| WI-0079 | EXP-A022-UNBLOCK: find or create a gate-satisfying target for the A022 affinity falsification | captured | research, a021-publication | medium |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |
