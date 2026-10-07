@@ -4872,18 +4872,54 @@
     {
       "id": "PRAXIS-GROUP-03",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-07T17:29:47.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/WorkGroups.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/GroupCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-07T17:36:07.000Z",
       "telemetryExecutionIds": [
         "EXE-20261007T172947664Z-f28384cb"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "de6d6f30ddf27c9aabc7d65c",
+        "recordedAt": "2026-10-07T17:36:05.000Z",
+        "executionId": "EXE-20261007T172947664Z-f28384cb",
+        "stepId": "add",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a024-arm-1",
+        "commit": "25438e1bf58bf702167ba96b1acdb78ee6094da7",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a024-arm-1",
+        "remoteCommit": "25438e1bf58bf702167ba96b1acdb78ee6094da7",
+        "summary": "work group add implemented (WorkGroups.add with provenance and history, refusals, --execution-repository); 3 tests; build clean, 810/810 F# tests, validate passed",
+        "nextAction": "Complete PRAXIS-GROUP-03, then start PRAXIS-GROUP-04 (work group remove)",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T17:36:07.000Z",
+      "conclusion": "work group add adds one member with provenance, refusing unknown/terminal/present items and cross-repository mixing. Verification: npm run build:fsharp (FSharpCoreImplicitPackageVersion=10.1.400) 0 warnings 0 errors; dotnet Ros.Tests.dll 810 test(s), 810 passed, 0 failed; ./ros validate: validation passed."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T17:29:47.000Z",
+  "updatedAt": "2026-10-07T17:36:07.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
