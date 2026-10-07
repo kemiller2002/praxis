@@ -310,6 +310,19 @@ the latest successfully fetched snapshot within the configured window, not a
 guarantee that the remote cannot move after the check. See [Upstream
 synchronization and bounded drift](work-protocol.md#upstream-synchronization-and-bounded-drift).
 
+### `repository identity`, `instance`
+
+`praxis repository identity [set ...]` shows or records the repository's
+stable identity (`ros.json` `repository.identity`: provider, provider
+repository ID, `owner/repo` locator), from which canonical work-item
+identities (`owner/repo:ID`, structurally `{repositoryId, repository,
+localId}`) are derived. `praxis instance [show|init|projection|register]`
+shows, creates, projects and optionally registers the Praxis instance
+identity (`.praxis/instance.json`); `init` and `upgrade` create it when it is
+missing. See [`identity.md`](identity.md) for the verification states, the
+clone/template rules, the legacy migration rule and the `workProtocol.branchPolicy`
+setting.
+
 ### `reconcile --envelope`
 
 Validates one runtime-free envelope, dispatches its ordered work requests through the native work/evidence rules, imports optional execution steps into canonical telemetry, commits only the resulting canonical paths, and creates `praxis-reconcile/<transaction-id>`. Exit `0` means applied or an already-checkpointed replay, `1` means an interrupted transaction remains pending and is safe to retry, and `2` means the envelope was rejected without canonical mutation. `inbox list` inventories pending envelope/document inputs. See [`fallback-reconciliation.md`](fallback-reconciliation.md).
