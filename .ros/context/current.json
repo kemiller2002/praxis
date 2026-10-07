@@ -4778,18 +4778,57 @@
     {
       "id": "PRAXIS-GROUP-01",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-07T17:07:18.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/GroupDeclaration.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/planning.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T17:21:56.000Z",
       "telemetryExecutionIds": [
         "EXE-20261007T170719199Z-aa80d418"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "8b0836821c8f472cbd1d8e32",
+        "recordedAt": "2026-10-07T17:21:40.000Z",
+        "executionId": "EXE-20261007T170719199Z-aa80d418",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a024-arm-2",
+        "commit": "bd8acd38f490cc29d7b6bca6d17204e1594d6a2d",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a024-arm-2",
+        "remoteCommit": "bd8acd38f490cc29d7b6bca6d17204e1594d6a2d",
+        "summary": "work group create implemented (domain decision, group store contract, planner merge, validate findings, CLI, docs); build clean; 808/808 F# tests pass; ./ros validate passes",
+        "nextAction": "complete PRAXIS-GROUP-01 with build/test/validate evidence and push Praxis state",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T17:21:56.000Z",
+      "conclusion": "Verification: npm run build:fsharp (with the harness FSharpCore property, not committed) built with 0 errors/0 warnings; full F# suite dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll: 808 tests, 808 passed, 0 failed (16 new work-group tests); ./ros validate: validation passed. Acceptance: unknown/terminal members and duplicate IDs refused; lifecycle files untouched (tested byte-for-byte); planner merges stored groups into grouping.groups (tested equal to configuration); --dry-run and --json supported; validate checks stored groups. Not merged (experiment branch only)."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T17:07:18.000Z",
+  "updatedAt": "2026-10-07T17:21:56.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
