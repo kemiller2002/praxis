@@ -3135,10 +3135,10 @@
         "cli"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T11:00:33.019Z",
-      "updatedAt": "2026-09-30T11:34:15.000Z",
+      "updatedAt": "2026-10-07T18:45:22.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
