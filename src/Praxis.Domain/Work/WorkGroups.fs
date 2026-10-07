@@ -58,9 +58,10 @@ type MemberReference =
 
 [<RequireQualifiedAccess>]
 module RepositoryName =
-    let private pattern = Regex("^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$", RegexOptions.CultureInvariant)
-
-    let isValid (value: string) = pattern.IsMatch value && not (value.EndsWith ".git")
+    /// The `owner/repo` grammar is the repository-identity module's
+    /// (`RepositoryLocator`, PRX-REMOTE-046), so group members and canonical
+    /// work-item identities accept exactly the same locators.
+    let isValid (value: string) = Praxis.Domain.Identity.RepositoryLocator.isValid value
 
     /// `owner/repo` from a remote URL (`https://host/owner/repo(.git)`,
     /// `git@host:owner/repo(.git)`, `ssh://...`), or `None`.
