@@ -6772,6 +6772,93 @@
       "telemetryExecutionIds": [
         "EXE-20261006T235601611Z-b5b6f4e0"
       ]
+    },
+    {
+      "id": "PRAXIS-MISC-09",
+      "type": "maintenance",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/requirements/RQ-ROS-2026-A024--fsharp-dotnet-only-repository.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/RequirementCitationTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/verification/PRAXIS-MISC-09.verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-06T21:11:14.359Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T203816433Z-d8de3cb4"
+      ],
+      "latestCheckpoint": {
+        "id": "1b760d71c4b34a15f4df02b4",
+        "recordedAt": "2026-10-06T21:11:07.679Z",
+        "executionId": "EXE-20261006T203816433Z-d8de3cb4",
+        "repository": "repository-operating-system",
+        "branch": "misc/work-items",
+        "commit": "a185089dd26713e0cccd7346c955fcaf306fc6ef",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "misc/work-items",
+        "remoteCommit": "a185089dd26713e0cccd7346c955fcaf306fc6ef",
+        "summary": "Stale test citations fixed in RQ-A001..A025; RQ-A024 status corrected; RequirementCitationTests guard added; verification pass recorded",
+        "nextAction": "Complete PRAXIS-MISC-09",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-06T21:11:14.359Z"
+    },
+    {
+      "id": "PRAXIS-MISC-07",
+      "type": "research",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "research-record",
+          "path": "research/evidence/EV-ROS-2026-A073--cross-provider-continuation-completed-through-the-inbox.md"
+        },
+        {
+          "type": "verification",
+          "path": "research/verification/PRAXIS-MISC-07.verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-06T21:11:25.284Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T204120763Z-b0001e2e"
+      ],
+      "latestCheckpoint": {
+        "id": "b308ec70e9eb3cebbfd9fcab",
+        "recordedAt": "2026-10-06T21:11:11.048Z",
+        "executionId": "EXE-20261006T204120763Z-b0001e2e",
+        "repository": "repository-operating-system",
+        "branch": "misc/work-items",
+        "commit": "a185089dd26713e0cccd7346c955fcaf306fc6ef",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "misc/work-items",
+        "remoteCommit": "a185089dd26713e0cccd7346c955fcaf306fc6ef",
+        "summary": "EV-ROS-2026-A073 records the completed cross-provider proof; RQ-A023, RQ-A022 and DF-A045 cite it; verification pass recorded",
+        "nextAction": "Complete PRAXIS-MISC-07",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-06T21:11:25.284Z",
+      "conclusion": "inconclusive"
     }
   ],
   "protocolVersion": "1.0.0",
