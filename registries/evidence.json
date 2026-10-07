@@ -2085,5 +2085,61 @@
     "title": "EX-ROS-2026-A022 target-repository gate outcome",
     "updated": "2026-10-02",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-06",
+    "derived_from": [
+      "EV-ROS-2026-A057"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A073",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A073--cross-provider-continuation-completed-through-the-inbox.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261006T204120763Z-b0001e2e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:42:22.721Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-MISC-07: record the completed cross-provider continuation proof from branch proof/chatgpt-continuation"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A022",
+      "RQ-ROS-2026-A023",
+      "DF-ROS-2026-A045",
+      "EV-ROS-2026-A057",
+      "docs/remote-agent-contract.md",
+      ".github/workflows/praxis-remote-inbox.yml",
+      ".github/workflows/praxis-remote.yml"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A023",
+      "RQ-ROS-2026-A022"
+    ],
+    "tags": [
+      "continuity",
+      "cross-provider",
+      "remote-execution",
+      "inbox",
+      "openai"
+    ],
+    "title": "Cross-provider continuation attempt 2: an OpenAI/ChatGPT successor continued and completed PRAXIS-XPROVIDER-PROOF-01 through the remote inbox",
+    "updated": "2026-10-06",
+    "version": "1.0.0"
   }
 ]

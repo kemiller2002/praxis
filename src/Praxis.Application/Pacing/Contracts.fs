@@ -11,6 +11,12 @@ type WindowStatus =
     | Observed
     | Missing
     | Invalid of reason: string
+    /// Carried from an earlier reading, or reported by the provider for a
+    /// window that has already reset: not evidence about the current window.
+    | Stale of reason: string
+    /// Reported in a shape or kind this adapter does not support (response
+    /// drift). Never silently dropped and never treated as observed.
+    | Unsupported of reason: string
 
 type WindowObservation = { Key: string; Status: WindowStatus }
 
@@ -21,6 +27,16 @@ module WindowObservation =
         | WindowStatus.Observed -> "observed"
         | WindowStatus.Missing -> "missing"
         | WindowStatus.Invalid _ -> "invalid"
+        | WindowStatus.Stale _ -> "stale"
+        | WindowStatus.Unsupported _ -> "unsupported"
+
+    let reason observation =
+        match observation.Status with
+        | WindowStatus.Observed
+        | WindowStatus.Missing -> None
+        | WindowStatus.Invalid reason
+        | WindowStatus.Stale reason
+        | WindowStatus.Unsupported reason -> Some reason
 
     let isComplete (coverage: WindowObservation list) =
         coverage |> List.forall (fun observation -> observation.Status = WindowStatus.Observed)
@@ -32,7 +48,9 @@ module WindowObservation =
             match observation.Status with
             | WindowStatus.Observed -> None
             | WindowStatus.Missing -> Some $"{observation.Key} missing"
-            | WindowStatus.Invalid reason -> Some $"{observation.Key} invalid ({reason})")
+            | WindowStatus.Invalid reason -> Some $"{observation.Key} invalid ({reason})"
+            | WindowStatus.Stale reason -> Some $"{observation.Key} stale ({reason})"
+            | WindowStatus.Unsupported reason -> Some $"{observation.Key} unsupported ({reason})")
         |> String.concat "; "
 
 /// A normalized provider response: the windows it justified plus the status of
@@ -41,8 +59,19 @@ type QuotaReading =
     { Windows: QuotaWindow list
       Coverage: WindowObservation list }
 
+/// The adapter that produced a reading, observable in status (PRX-QUAL-005):
+/// its identity, the version of its mapping rules, what it can observe, the
+/// model families its rules recognize, and the quota bucket it selected.
+type PacingAdapterInfo =
+    { AdapterId: string
+      RulesVersion: string
+      Capabilities: string list
+      ModelFamilies: ModelFamily list
+      Bucket: QuotaBucket option }
+
 type ProviderSnapshot =
-    { Provider: string
+    { Provider: ProviderId
+      Adapter: PacingAdapterInfo
       ObservedAt: DateTimeOffset
       Windows: QuotaWindow list
       Coverage: WindowObservation list
@@ -77,16 +106,46 @@ module PacingStoreFault =
         | PacingStoreFault.LockUnavailable reason -> $"pacing state lock unavailable: {reason}"
         | PacingStoreFault.WriteFailed reason -> $"pacing state could not be persisted: {reason}"
 
+/// Stable codes of pacing telemetry events (PRX-QUAL-008).
+[<RequireQualifiedAccess>]
+type PacingEventCode =
+    | HoldStarted
+    | HoldRetained
+    | HoldReleased
+    | HardLimit
+    | ProviderUnavailable
+    | OverrideEnabled
+    | OverrideDisabled
+    | StateFault
+
+/// One typed pacing transition. Carries provider, scope, reason and reset
+/// identity only: never credentials, tokens or raw provider payloads.
+type PacingEvent =
+    { Code: PacingEventCode
+      OccurredAt: DateTimeOffset
+      Provider: ProviderId option
+      WindowKey: string option
+      Reason: PacingReasonKind option
+      Detail: string
+      ResetsAt: DateTimeOffset option
+      ObservedAt: DateTimeOffset option }
+
 /// What a state transaction decided: the decision, and the state to persist.
 /// `Write = None` leaves persisted state untouched (used for indeterminate
 /// state, which must be preserved as evidence rather than overwritten).
 type PacingTransaction =
     { Decision: PacingDecision
       Integrity: StateIntegrity
-      Write: PacingState option }
+      Write: PacingState option
+      /// The request's model as resolved against the adapter's and the
+      /// observed scoped windows' families.
+      Model: ModelIdentity
+      /// Hold transitions between the state read and the state written
+      /// (hold-started, hard-limit, hold-released). Empty when nothing is written.
+      Events: PacingEvent list }
 
 type QuotaObserver =
-    { Observe: DateTimeOffset -> string -> string option -> ProviderSnapshot }
+    { Observe: DateTimeOffset -> ProviderId -> string option -> ProviderSnapshot }
 
 type PacingStateStore =
     { Transact: (PacingStateRead -> PacingTransaction) -> Result<PacingTransaction, PacingStoreFault>
@@ -102,11 +161,14 @@ type PacingClock =
     { Now: unit -> DateTimeOffset
       Sleep: TimeSpan -> unit }
 
+/// Typed event sink. `Last` returns the most recently recorded event, so a
+/// new process does not repeat a transition another process already recorded.
 type PacingEventSink =
-    { Write: string -> unit }
+    { Record: PacingEvent -> unit
+      Last: unit -> PacingEvent option }
 
 type PacingContextResolver =
-    { ResolveModel: string -> string option -> string -> string option }
+    { ResolveModel: ProviderId -> string option -> string -> string option }
 
 type PacingRuntime =
     { Observer: QuotaObserver
@@ -115,7 +177,7 @@ type PacingRuntime =
       Clock: PacingClock
       Events: PacingEventSink
       Context: PacingContextResolver
-      MaxGateWait: string -> TimeSpan }
+      MaxGateWait: ProviderId -> TimeSpan }
 
 [<RequireQualifiedAccess>]
 type PacingFreshnessState =
@@ -161,8 +223,9 @@ type PacingStatusCoverage = { Key: string; Status: string; Reason: string option
 
 type PacingStatusView =
     { SchemaVersion: int
-      Provider: string
-      Model: string option
+      Provider: ProviderId
+      Model: ModelIdentity
+      Adapter: PacingAdapterInfo
       StateDirectory: string
       ObservedAt: DateTimeOffset
       FreshnessState: PacingFreshnessState
@@ -174,7 +237,8 @@ type PacingStatusView =
       Windows: PacingStatusWindow list
       Coverage: PacingStatusCoverage list
       StateIntegrity: StateIntegrity
-      Hold: PacingStatusHold option }
+      Hold: PacingStatusHold option
+      LastEvent: PacingEvent option }
 
 [<RequireQualifiedAccess>]
 type PacingGateOutcome =

@@ -46,18 +46,19 @@ PY
 }
 
 # release.json is the single version source (Directory.Build.props). The
-# self-hosting repository's own .echelon/toolchain.json pins the same release
-# for its remote executor (PremergeReleaseTests), so it moves in the same
-# commit; only its praxis property changes.
+# self-hosting .echelon/toolchain.json pin does NOT move here: source may
+# advance to a release that is not published yet, and the pin may only name
+# a published release whose assets and attestation verify and whose declared
+# state compatibility covers the repository's state (PRX-QUAL-010). After the
+# native release, advance it with scripts/praxis-remote-enable.sh --skip-release.
 set_version() {
   python3 - "$1" <<'PY'
 import json, sys
-for path in ("release.json", ".echelon/toolchain.json"):
-    with open(path) as source:
-        document = json.load(source)
-    document["version" if path == "release.json" else "praxis"] = sys.argv[1]
-    with open(path, "w") as target:
-        target.write(json.dumps(document, indent=2) + "\n")
+with open("release.json") as source:
+    document = json.load(source)
+document["version"] = sys.argv[1]
+with open("release.json", "w") as target:
+    target.write(json.dumps(document, indent=2) + "\n")
 PY
 }
 
@@ -75,12 +76,12 @@ echo "releasing ${current} -> ${version} as ${id}" >&2
 
 # Begin the work item before mutating anything.
 ./praxis add "Release Praxis ${version}" --id "$id" --type mechanical \
-  --description "Bump release.json and the self-hosting .echelon/toolchain.json pin from ${current} to ${version} so native-release.yml releases it." >/dev/null
+  --description "Bump release.json from ${current} to ${version} so native-release.yml releases it; the self-hosting pin advances after the release is published and verified." >/dev/null
 ./praxis work backlog-transition --action ready --id "$id" --occurred-at "$(now)" >/dev/null
 ./praxis work start --id "$id" --type mechanical --occurred-at "$(now)" >/dev/null
 
 set_version "$version"
-git add release.json .echelon/toolchain.json .ros
+git add release.json .ros
 git commit --quiet -m "${id}: release Praxis ${version}"
 git push --quiet origin "HEAD:${branch}"
 

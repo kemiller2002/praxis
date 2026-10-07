@@ -56,6 +56,18 @@ module ExecuteGroupTests =
             entry.Substring(entry.IndexOf ' ').Trim())
         |> Array.toList
 
+    /// Each fixture item's priority and description (where its dependencies
+    /// are declared), to show execute-group changes neither (PRX-GRP-117).
+    let private planningFields (clone: string) =
+        let queue = JsonNode.Parse(File.ReadAllText(Path.Combine(clone, ".ros", "work", "queue.json")))
+
+        queue["items"].AsArray()
+        |> Seq.filter (fun item -> (text item["id"]).StartsWith "ITEM-")
+        |> Seq.map (fun item ->
+            let field (name: string) = item[name] |> Option.ofObj |> Option.map _.ToJsonString()
+            text item["id"], field "priority", field "description")
+        |> Seq.toList
+
     let private config clone (json: string) =
         let path = Path.Combine(clone, "..", "planner.json")
         File.WriteAllText(path, json)
@@ -69,6 +81,8 @@ module ExecuteGroupTests =
                   Assert.equal ("grouped", "grouped") (text qualified["recommended"], text qualified["executeGroupDefault"])
                   let explained = run clone None [ "plan"; "explain-group"; groupId ] |> ok
                   Assert.isTrue (explained.Output.Contains "grouped execution: qualifies") explained.Output
+                  let listed = (run clone None [ "plan"; "groups"; "--json" ] |> ok).Json["groups"].AsArray() |> Seq.find (fun group -> text group["id"] = groupId)
+                  Assert.equal (qualified.ToJsonString()) (listed["groupedExecution"].ToJsonString())
 
                   let small = explain clone (config clone """{"grouping":{"groupedExecution":{"maximumSize":2}}}""")
                   Assert.equal false (small["qualifies"].GetValue<bool>())
@@ -92,6 +106,7 @@ module ExecuteGroupTests =
               withGroup [ "ITEM-1"; "ITEM-2"; "ITEM-3" ] [] (fun clone ->
                   let branch = GitFixture.git clone [ "rev-parse"; "--abbrev-ref"; "HEAD" ]
                   let head = GitFixture.git clone [ "rev-parse"; "HEAD" ]
+                  let fieldsBefore = planningFields clone
                   let dryRun = execute clone [ "--dry-run" ] |> ok
                   Assert.equal "dry-run" (text dryRun.Json["status"])
                   Assert.equal [] (changedPaths clone)
@@ -103,6 +118,10 @@ module ExecuteGroupTests =
                   let execution = text first.Json["memberExecution"]
                   let recorded = (store clone).["executions"].[0]
                   Assert.equal (gex, "ITEM-1", execution) (text recorded["id"], text recorded["members"].[0].["workItemId"], text recorded["members"].[0].["executionId"])
+                  Assert.equal (groupId, "example/agent-a", "grouped") (text recorded["groupId"], text recorded["actor"].["id"], text recorded["mode"])
+                  Assert.equal [ "ITEM-1"; "ITEM-2"; "ITEM-3" ] (recorded["order"].AsArray() |> Seq.map text |> Seq.toList)
+                  Assert.isTrue (text recorded["startedAt"] <> "" && text recorded["repository"] <> "") (recorded.ToJsonString())
+                  Assert.isTrue (recorded["basis"].AsArray().Count > 0 && not (isNull recorded["optOuts"])) (recorded.ToJsonString())
                   let context = JsonNode.Parse(File.ReadAllText(Path.Combine(clone, ".ros", "context", "current.json")))
                   Assert.equal "active" (text (context["workItems"].AsArray() |> Seq.find (fun node -> text node["id"] = "ITEM-1")).["semanticState"])
 
@@ -123,7 +142,8 @@ module ExecuteGroupTests =
                   Assert.equal 1 refused.ExitCode
                   Assert.equal "member-not-runnable" (text refused.Json["rejections"].[0].["code"])
                   let history = (store clone).["history"].AsArray() |> Seq.map (fun entry -> text entry["operation"]) |> Seq.toList
-                  Assert.equal [ "created"; "execution-started"; "member-begun"; "member-begun" ] history))
+                  Assert.equal [ "created"; "execution-started"; "member-begun"; "member-begun" ] history
+                  Assert.equal fieldsBefore (planningFields clone)))
 
           t "cli execute-group refuses an unknown group, a group with nothing runnable here, and a caller who owns another open group execution" (fun () ->
               withGroup [ "ITEM-1"; "ITEM-3" ] [] (fun clone ->
@@ -141,6 +161,15 @@ module ExecuteGroupTests =
                   Assert.equal "owns-other-group-execution" (text owns.Json["rejections"].[0].["code"])
                   Assert.equal 2 (cli clone [ "plan"; "execute-group"; groupId ]).ExitCode))
 
+          t "cli execute-group refuses a group whose members depend on each other in a cycle, and records nothing" (fun () ->
+              withGroup [ "ITEM-1"; "ITEM-2" ] [] (fun clone ->
+                  cli clone [ "work"; "update"; "--id"; "ITEM-1"; "--occurred-at"; now (); "--description"; "Needs the second. Depends on: ITEM-2." ] |> ok |> ignore
+                  let storeBefore = File.ReadAllText(Path.Combine(clone, ".ros", "work", "groups.json"))
+                  let refused = execute clone []
+                  Assert.equal 1 refused.ExitCode
+                  Assert.equal "dependency-cycle" (text refused.Json["rejections"].[0].["code"])
+                  Assert.equal storeBefore (File.ReadAllText(Path.Combine(clone, ".ros", "work", "groups.json")))))
+
           t "cli opt-outs need a reason, are recorded in history with actor and time, and are honoured" (fun () ->
               withGroup [ "ITEM-1"; "ITEM-3" ] [] (fun clone ->
                   Assert.equal 2 (execute clone [ "--independent-member"; "ITEM-3" ]).ExitCode
@@ -149,11 +178,18 @@ module ExecuteGroupTests =
                   cli clone [ "work"; "group"; "add"; "--group"; groupId; "--member"; "ITEM-3"; "--independent-member"; "ITEM-3"; "--reason"; "touches another subsystem"; "--occurred-at"; now () ] |> ok |> ignore
                   let optedOut = (store clone).["history"].AsArray() |> Seq.last
                   Assert.equal ("opted-out", "ITEM-3", "touches another subsystem", "example/agent-a") (text optedOut["operation"], text optedOut["member"], text optedOut["reason"], text optedOut["actor"].["id"])
+                  Assert.isTrue (text optedOut["at"] <> "") (optedOut.ToJsonString())
+                  let shown = run clone None [ "work"; "group"; "show"; groupId; "--json" ] |> ok
+                  Assert.isTrue (shown.Output.Contains "\"independentMembers\"" && shown.Output.Contains "touches another subsystem") shown.Output
                   let independents = (explain clone [])["independentMembers"]
                   Assert.equal "ITEM-3" (text independents[0].["workItem"])
                   execute clone [] |> ok |> ignore
                   let third = execute clone [] |> ok
-                  Assert.equal ("ITEM-3", "independent") (text third.Json["member"], text third.Json["mode"])))
+                  Assert.equal ("ITEM-3", "independent") (text third.Json["member"], text third.Json["mode"])
+                  // An opt-out applies only to executions not yet begun (PRX-GRP-132).
+                  cli clone [ "work"; "group"; "add"; "--group"; groupId; "--member"; "ITEM-1"; "--independent-member"; "ITEM-1"; "--reason"; "late opt-out"; "--occurred-at"; now () ] |> ok |> ignore
+                  let begun = (store clone).["executions"].[0].["members"].AsArray() |> Seq.find (fun entry -> text entry["workItemId"] = "ITEM-1")
+                  Assert.equal "grouped" (text begun["mode"])))
 
           t "cli a per-group opt-out makes the recommendation advisory and execute-group independent" (fun () ->
               withGroup [ "ITEM-1"; "ITEM-3" ] [ "--execution-mode"; "independent"; "--reason"; "unrelated designs" ] (fun clone ->

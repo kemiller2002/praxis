@@ -2,24 +2,132 @@ namespace Praxis.Domain.Pacing
 
 open System
 
+/// A pacing provider (PRX-QUAL-005). Provider identity is typed at the
+/// domain boundary; adapters map their wire names onto it.
+[<RequireQualifiedAccess>]
+type ProviderId =
+    | Codex
+    | Claude
+
+[<RequireQualifiedAccess>]
+module ProviderId =
+    let all = [ ProviderId.Codex; ProviderId.Claude ]
+
+    let code provider =
+        match provider with
+        | ProviderId.Codex -> "codex"
+        | ProviderId.Claude -> "claude"
+
+    /// Exact, case-insensitive code match; anything else is not a provider.
+    let tryParse (value: string) =
+        all |> List.tryFind (fun provider -> String.Equals(code provider, value, StringComparison.OrdinalIgnoreCase))
+
+/// A provider quota bucket (for example Codex's `codex` and
+/// `codex_bengalfox`). Selected by an explicit adapter rule, never inferred.
+type QuotaBucket = QuotaBucket of string
+
+[<RequireQualifiedAccess>]
+module QuotaBucket =
+    let value (QuotaBucket bucket) = bucket
+
+/// A model family that a provider scopes quota to (for example `opus`). It is
+/// a normalized identifier, compared by equality only.
+type ModelFamily =
+    private
+    | ModelFamily of string
+
+    member this.Value =
+        let (ModelFamily value) = this
+        value
+
+    override this.ToString() = this.Value
+
+[<RequireQualifiedAccess>]
+module ModelFamily =
+    let private separators = [| '-'; '_'; '.'; ' '; '/'; ':'; '['; ']'; '@' |]
+
+    /// The lowercase tokens of a model identifier (`claude-opus-5[1m]` is
+    /// `claude`, `opus`, `5`, `1m`). Families match whole tokens only.
+    let tokens (model: string) =
+        model.ToLowerInvariant().Split(separators, StringSplitOptions.RemoveEmptyEntries) |> Set.ofArray
+
+    /// A family is one non-empty token (a provider display name such as
+    /// `Fable` normalizes to `fable`); anything else is not a family.
+    let tryCreate (name: string) =
+        match tokens name |> Set.toList with
+        | [ single ] -> Some(ModelFamily single)
+        | _ -> None
+
+    let value (family: ModelFamily) = family.Value
+
+/// What a request's model is, for quota scoping. Resolution is explicit: a
+/// model is `Recognized` only when exactly one known family is one of its
+/// tokens. An unknown, ambiguous or absent model is evaluated conservatively
+/// against every scoped window (PRX-QUAL-005).
+[<RequireQualifiedAccess>]
+type ModelIdentity =
+    | Unspecified
+    | Recognized of model: string * family: ModelFamily
+    | Unrecognized of model: string
+
+[<RequireQualifiedAccess>]
+module ModelIdentity =
+    let resolve (families: ModelFamily seq) (model: string option) =
+        match model |> Option.map (fun value -> value.Trim()) with
+        | None
+        | Some "" -> ModelIdentity.Unspecified
+        | Some value ->
+            let tokens = ModelFamily.tokens value
+
+            match families |> Seq.distinct |> Seq.filter (fun family -> tokens.Contains family.Value) |> Seq.toList with
+            | [ family ] -> ModelIdentity.Recognized(value, family)
+            | _ -> ModelIdentity.Unrecognized value
+
+    let code identity =
+        match identity with
+        | ModelIdentity.Unspecified -> "unspecified"
+        | ModelIdentity.Recognized _ -> "recognized"
+        | ModelIdentity.Unrecognized _ -> "unrecognized"
+
+    let model identity =
+        match identity with
+        | ModelIdentity.Unspecified -> None
+        | ModelIdentity.Recognized(model, _)
+        | ModelIdentity.Unrecognized model -> Some model
+
+    let family identity =
+        match identity with
+        | ModelIdentity.Recognized(_, family) -> Some family
+        | ModelIdentity.Unspecified
+        | ModelIdentity.Unrecognized _ -> None
+
 [<RequireQualifiedAccess>]
 type QuotaScope =
     | Global
-    | Model of name: string
+    | Model of family: ModelFamily
     | Surface of name: string
 
 [<RequireQualifiedAccess>]
 module QuotaScope =
-    let appliesTo (model: string option) scope =
+    /// Global and surface windows always apply. A model-scoped window applies
+    /// to its own recognized family and, conservatively, to any model whose
+    /// family is not recognized. No substring heuristics.
+    let appliesTo (model: ModelIdentity) scope =
         match scope, model with
         | QuotaScope.Global, _
         | QuotaScope.Surface _, _ -> true
-        | QuotaScope.Model _, None -> true
-        | QuotaScope.Model expected, Some actual ->
-            actual.Contains(expected, StringComparison.OrdinalIgnoreCase)
+        | QuotaScope.Model expected, ModelIdentity.Recognized(_, actual) -> expected = actual
+        | QuotaScope.Model _, ModelIdentity.Unspecified
+        | QuotaScope.Model _, ModelIdentity.Unrecognized _ -> true
+
+    let family scope =
+        match scope with
+        | QuotaScope.Model family -> Some family
+        | QuotaScope.Global
+        | QuotaScope.Surface _ -> None
 
 type QuotaWindow =
-    { Provider: string
+    { Provider: ProviderId
       Key: string
       Label: string
       Scope: QuotaScope
@@ -27,6 +135,14 @@ type QuotaWindow =
       Duration: TimeSpan
       ResetsAt: DateTimeOffset
       ObservedAt: DateTimeOffset }
+
+[<RequireQualifiedAccess>]
+module QuotaWindow =
+    /// The reference recorded as a hold's creation evidence: which provider
+    /// window, and the reading it came from.
+    let reference (window: QuotaWindow) =
+        let observed = window.ObservedAt.ToString("O", Globalization.CultureInfo.InvariantCulture)
+        $"{ProviderId.code window.Provider}/{window.Key}@{observed}"
 
 [<RequireQualifiedAccess>]
 type ObservationFreshness =
@@ -63,12 +179,21 @@ type HoldBasis =
     /// fresh reading of the same window proves capacity returned.
     | HardLimit of usedPercent: decimal * resetsAt: DateTimeOffset
 
+/// The reading that created a hold (PRX-QUAL-003). Holds persisted before
+/// creation evidence was recorded read as `Unrecorded`; evidence is never
+/// invented for them.
+[<RequireQualifiedAccess>]
+type HoldEvidence =
+    | Observed of observedAt: DateTimeOffset * reference: string
+    | Unrecorded
+
 type PacingHold =
     { Key: string
-      Provider: string
+      Provider: ProviderId
       Scope: QuotaScope
       Since: DateTimeOffset
-      Basis: HoldBasis }
+      Basis: HoldBasis
+      Evidence: HoldEvidence }
 
 [<RequireQualifiedAccess>]
 module PacingHold =
@@ -122,8 +247,8 @@ type PacingReason =
 
 type PacingRequest =
     { Now: DateTimeOffset
-      Provider: string
-      Model: string option
+      Provider: ProviderId
+      Model: ModelIdentity
       Windows: QuotaWindow list
       Freshness: ObservationFreshness
       Existing: PacingState
@@ -171,11 +296,12 @@ module Pacing =
         | ObservationFreshness.Stale _
         | ObservationFreshness.Unavailable _ -> false
 
-    let private stableHoldKey (window: QuotaWindow) = $"{window.Provider}/{window.Key}"
+    let private stableHoldKey (window: QuotaWindow) = $"{ProviderId.code window.Provider}/{window.Key}"
 
     let private relevant (request: PacingRequest) (hold: PacingHold) =
-        String.Equals(hold.Provider, request.Provider, StringComparison.OrdinalIgnoreCase)
-        && QuotaScope.appliesTo request.Model hold.Scope
+        hold.Provider = request.Provider && QuotaScope.appliesTo request.Model hold.Scope
+
+    let private evidenceOf (window: QuotaWindow) = HoldEvidence.Observed(window.ObservedAt, QuotaWindow.reference window)
 
     let private sameWindow (resetsAt: DateTimeOffset option) (window: QuotaWindow) =
         match resetsAt with
@@ -222,23 +348,24 @@ module Pacing =
                 | HoldBasis.WeeklyLead _ -> None)
             |> Seq.toList
 
-        let sinceOf key =
-            existingHard
-            |> List.tryFind (fun (hold, _, _) -> hold.Key = key)
-            |> Option.map (fun (hold, _, _) -> hold.Since)
-            |> Option.defaultValue request.Now
+        let existingOf key =
+            existingHard |> List.tryFind (fun (hold, _, _) -> hold.Key = key) |> Option.map (fun (hold, _, _) -> hold)
 
         let observedExhausted =
             observed
             |> Map.toList
             |> List.filter (fun (_, window) -> window.UsedPercent > policy.HardUsagePercent)
             |> List.map (fun (key, window) ->
+                let existing = existingOf key
+
+                // A refreshed hold keeps its original creation evidence.
                 let hold =
                     { Key = key
                       Provider = window.Provider
                       Scope = window.Scope
-                      Since = sinceOf key
-                      Basis = HoldBasis.HardLimit(window.UsedPercent, window.ResetsAt) }
+                      Since = existing |> Option.map _.Since |> Option.defaultValue request.Now
+                      Basis = HoldBasis.HardLimit(window.UsedPercent, window.ResetsAt)
+                      Evidence = existing |> Option.map _.Evidence |> Option.defaultValue (evidenceOf window) }
 
                 let prefix = if fresh then "" else "last known "
                 let detail = $"{prefix}{window.Label} {percentText window.UsedPercent}%% used; wait for reset"
@@ -306,7 +433,8 @@ module Pacing =
                               Provider = window.Provider
                               Scope = window.Scope
                               Since = latch |> Option.map _.Since |> Option.defaultValue request.Now
-                              Basis = HoldBasis.WeeklyLead(Some window.ResetsAt) }
+                              Basis = HoldBasis.WeeklyLead(Some window.ResetsAt)
+                              Evidence = latch |> Option.map _.Evidence |> Option.defaultValue (evidenceOf window) }
 
                         let resumeAt = request.Now + (currentLead - policy.ResumeLead) |> min window.ResetsAt
                         let leadHours = currentLead.TotalHours.ToString("0.0", Globalization.CultureInfo.InvariantCulture)
@@ -328,7 +456,7 @@ module Pacing =
         let observed =
             request.Windows
             |> List.filter (fun window ->
-                String.Equals(window.Provider, request.Provider, StringComparison.OrdinalIgnoreCase)
+                window.Provider = request.Provider
                 && QuotaScope.appliesTo request.Model window.Scope
                 && isLive request.Now window)
             |> List.map (fun window -> stableHoldKey window, window)

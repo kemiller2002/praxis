@@ -104,9 +104,18 @@ jobs:
           ls dist/nuget
           tool_root="$(mktemp -d)"
           project_root="$(mktemp -d)"
-          trap 'rm -rf "$tool_root" "$project_root"' EXIT
+          trap 'rm -rf "$tool_root" "$tool_root.nuget.config" "$project_root"' EXIT
+          # Install as a consumer would, with its own NuGet configuration: the
+          # repository's NuGet.config maps EchelonFoundry.Ordo.Core to the
+          # vendored source (package source mapping), which --add-source cannot
+          # be combined with. The tool package carries Ordo.Core itself.
+          tool_config="$tool_root.nuget.config"
+          printf '%s\n' '<?xml version="1.0" encoding="utf-8"?>' '<configuration><packageSources><clear />' \
+            "<add key=\"release\" value=\"$PWD/dist/nuget\" />" \
+            '<add key="nuget.org" value="https://api.nuget.org/v3/index.json" protocolVersion="3" />' \
+            '</packageSources></configuration>' > "$tool_config"
           dotnet tool install EchelonFoundry.Praxis --version "$VERSION" \
-            --add-source dist/nuget --tool-path "$tool_root"
+            --configfile "$tool_config" --tool-path "$tool_root"
           [ "$("$tool_root/praxis" --version)" = "praxis ${VERSION}" ]
           (
             cd "$project_root"

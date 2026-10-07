@@ -199,6 +199,61 @@ module ExecutionGovernanceTests =
         let node = JsonNode.Parse out
         textAt node [ "executionId" ], node
 
+    let private contractJson =
+        """{ "schema": "ordo.execution-contract/1", "role": "verification",
+  "boundary": { "scopes": ["feature:a"], "projections": [{ "scope": "feature:a", "patterns": ["src/**"] }], "evaluatorReferences": [] },
+  "evaluator": [{ "kind": "gate-code", "reference": "tests/gate.sh" }],
+  "humanOnly": ["execution.complete"] }"""
+
+    let private records root id kind =
+        File.ReadAllLines(Path.Combine(root, ".ros", "executions", id, "events.jsonl"))
+        |> Array.map JsonNode.Parse
+        |> Array.filter (fun n -> n["entry"].GetValue<string>() = kind)
+        |> List.ofArray
+
+    /// PRAXIS-FND-02 (PRX-BND-001, PRX-SEQ-003, PRX-VER-010).
+    let contract =
+        [ { Name = "execution contract: a contract file supplies role, boundary, evaluator and human-only transitions"
+            Run =
+              fun () ->
+                  let root = repository ()
+                  File.WriteAllText(Path.Combine(root, "contract.json"), contractJson)
+                  let code, out = capture (fun () -> ExecutionCommands.run root agent [ "start"; "--work-item"; "WI-9"; "--contract"; "contract.json"; "--json" ])
+                  Assert.equal 0 code
+                  let node = JsonNode.Parse out
+                  Assert.equal "verification" (textAt node [ "role" ])
+                  Assert.equal "feature:a" (textAt node [ "mutationBoundary"; "scopes"; "#0" ])
+                  Assert.equal "execution.complete" (textAt node [ "humanOnlyTransitions"; "#0" ])
+                  // PRX-VER-010: the evaluator Ordo's contract names is resolved and recorded at start.
+                  Assert.isTrue ((textAt node [ "evaluator"; "fingerprint" ]).StartsWith "sha256:") "evaluator identity recorded"
+                  let id = textAt node [ "executionId" ]
+                  let record = records root id "contract" |> List.exactlyOne
+                  Assert.equal "contract-file:contract.json" (record["source"].GetValue<string>())
+                  let digest = "sha256:" + Convert.ToHexString(Security.Cryptography.SHA256.HashData(Text.Encoding.UTF8.GetBytes contractJson)).ToLowerInvariant()
+                  Assert.equal digest (record["sha256"].GetValue<string>()) }
+          { Name = "execution contract: flags that contradict a contract are refused, and invalid contracts are Ordo's refusals"
+            Run =
+              fun () ->
+                  let root = repository ()
+                  File.WriteAllText(Path.Combine(root, "contract.json"), contractJson)
+                  let run args = capture (fun () -> ExecutionCommands.run root agent ([ "start"; "--work-item"; "WI-9" ] @ args)) |> fst
+                  Assert.equal 2 (run [ "--contract"; "contract.json"; "--role"; "implementation" ])
+                  Assert.equal 2 (run [ "--contract"; "contract.json"; "--scope"; "feature:b" ])
+                  File.WriteAllText(Path.Combine(root, "bad.json"), contractJson.Replace("\"patterns\": [\"src/**\"] }", "\"patterns\": [] }").Replace("\"scope\": \"feature:a\"", "\"scope\": \"feature:z\""))
+                  Assert.equal 2 (run [ "--contract"; "bad.json" ])
+                  Assert.equal 2 (run [ "--contract"; "missing.json" ])
+                  Assert.isTrue (not (Directory.Exists(Path.Combine(root, ".ros", "executions")))) "a refused start records nothing" }
+          { Name = "execution contract: operator flags are assembled into the Ordo contract and recorded as such"
+            Run =
+              fun () ->
+                  let root = repository ()
+                  let id, _ = start root []
+                  let record = records root id "contract" |> List.exactlyOne
+                  Assert.equal "operator-flags" (record["source"].GetValue<string>())
+                  Assert.isTrue ((record["sha256"].GetValue<string>()).StartsWith "sha256:") "digest recorded"
+                  let code, _ = capture (fun () -> ExecutionCommands.run root agent [ "start"; "--work-item"; "WI-1"; "--role"; "implementation"; "--scope"; "a" ])
+                  Assert.equal 2 code } ]
+
     let cli =
         [ { Name = "execution: worktree-per-execution with repository-qualified work identity"
             Run =
@@ -279,4 +334,89 @@ module ExecutionGovernanceTests =
                   let vid = textAt (JsonNode.Parse out) [ "executionId" ]
                   Assert.equal 3 (run agent [ "expand-scope"; vid; "--scope"; "feature:docs"; "--justification"; "x" ]) } ]
 
-    let tests = domain @ cli
+    let rec private repositoryRoot (directory: DirectoryInfo) =
+        if File.Exists(Path.Combine(directory.FullName, "release.json")) && Directory.Exists(Path.Combine(directory.FullName, "vendor")) then
+            directory.FullName
+        else
+            match directory.Parent with
+            | null -> failwith "repository root not found"
+            | parent -> repositoryRoot parent
+
+    let private lockValue (text: string) (key: string) =
+        text.Split('\n')
+        |> Array.map _.Trim()
+        |> Array.tryPick (fun line -> if line.StartsWith(key + " ") then Some(line.Substring(key.Length + 1).Trim()) else None)
+        |> Option.defaultWith (fun () -> failwith $"ordo-core.lock has no {key}")
+
+    /// ORDO-CORE-PACKAGE (PRAXIS-FND-01; PRX-ARCH-001, PRX-EXEC-002): Ordo's
+    /// semantics are consumed from the pinned package, never copied.
+    let ordoPackage =
+        [ { Name = "ordo core: the Praxis and Ordo capability and role vocabularies are one-to-one"
+            Run =
+              fun () ->
+                  Assert.equal (Set.ofList (OrdoSemantics.ordoCapabilities ())) (Capability.all |> List.map Capability.toWire |> Set.ofList)
+                  Assert.equal (Capability.all.Length) (OrdoSemantics.ordoCapabilities ()).Length
+
+                  for role in ExecutionRole.all do
+                      Assert.equal (ExecutionRole.toWire role) (Ordo.Core.ExecutionRole.ExecutionRole.toWire (OrdoSemantics.role role))
+
+                  Assert.equal [ "gate-code"; "configuration"; "test-selection"; "schema"; "fixture"; "generated-input"; "policy"; "dependency" ] EvaluatorIdentity.kinds }
+          { Name = "ordo core: every role's capability set is Ordo.Core's role authority"
+            Run =
+              fun () ->
+                  for role in ExecutionRole.all do
+                      let ordo = Ordo.Core.ExecutionRole.RoleAuthority.defaultFor (OrdoSemantics.role role)
+                      let praxis = RoleAuthority.defaultFor role
+                      let wire (caps: Set<Capability>) = caps |> Set.map Capability.toWire
+                      Assert.equal (ordo.Grants |> Set.map Ordo.Core.ExecutionRole.ExecutionCapability.toWire) (wire praxis.Grants)
+                      Assert.equal (ordo.Prohibits |> Set.map Ordo.Core.ExecutionRole.ExecutionCapability.toWire) (wire praxis.Prohibits) }
+          { Name = "ordo core: boundary classification and expansion are Ordo.Core's"
+            Run =
+              fun () ->
+                  let ordoBoundary: Ordo.Core.MutationBoundary.MutationBoundary =
+                      { Scopes = [ Ordo.Core.MutationBoundary.Feature "installation" ]
+                        Projections = [ { Scope = Ordo.Core.MutationBoundary.Feature "installation"; Patterns = [ "src/Installation/**" ] } ]
+                        EvaluatorReferences = [ "tests/Installation.Gate.fs" ] }
+
+                  for resource in [ "src/Installation/a.fs"; "tests/Installation.Gate.fs"; "README.md" ] do
+                      let expected =
+                          match Ordo.Core.MutationBoundary.MutationBoundary.classify ordoBoundary resource with
+                          | Ordo.Core.MutationBoundary.WithinBoundary _ -> "within"
+                          | Ordo.Core.MutationBoundary.OutsideBoundary -> "outside"
+                          | Ordo.Core.MutationBoundary.EvaluatorAuthorityMutation -> "evaluator"
+
+                      let actual =
+                          match MutationBoundary.classify boundary resource with
+                          | MutationClass.Within _ -> "within"
+                          | MutationClass.Outside -> "outside"
+                          | MutationClass.EvaluatorAuthority -> "evaluator"
+
+                      Assert.equal expected actual }
+          { Name = "ordo core: the package is the pinned, checksum-verified Ordo release artifact"
+            Run =
+              fun () ->
+                  let root = repositoryRoot (DirectoryInfo AppContext.BaseDirectory)
+                  let lock = File.ReadAllText(Path.Combine(root, "vendor", "nuget", "ordo-core.lock"))
+                  let version = lockValue lock "ordo"
+                  let package = Path.Combine(root, "vendor", "nuget", $"echelonfoundry.ordo.core.{version}.nupkg")
+                  let digest = Convert.ToHexString(Security.Cryptography.SHA256.HashData(File.ReadAllBytes package)).ToLowerInvariant()
+                  Assert.equal (lockValue lock "sha256") digest
+                  Assert.equal $"https://github.com/kemiller2002/ordo/releases/download/v{version}/ordo-core.nupkg" (lockValue lock "url")
+                  let domain = File.ReadAllText(Path.Combine(root, "src", "Praxis.Domain", "Praxis.Domain.fsproj"))
+                  Assert.isTrue (domain.Contains $"<PackageReference Include=\"EchelonFoundry.Ordo.Core\" Version=\"{version}\" />") "Praxis.Domain pins the locked version"
+                  let config = File.ReadAllText(Path.Combine(root, "NuGet.config"))
+                  Assert.isTrue (config.Contains "<package pattern=\"EchelonFoundry.Ordo.Core\" />") "the package restores only from the vendored source"
+                  Assert.equal [ $"echelonfoundry.ordo.core.{version}.nupkg"; "ordo-core.lock" ] (Directory.GetFiles(Path.Combine(root, "vendor", "nuget")) |> Array.map Path.GetFileName |> Array.sort |> List.ofArray) }
+          { Name = "ordo core: Praxis keeps no copy of Ordo's role matrix, fingerprint or glob rules"
+            Run =
+              fun () ->
+                  let root = repositoryRoot (DirectoryInfo AppContext.BaseDirectory)
+                  let governance = File.ReadAllText(Path.Combine(root, "src", "Praxis.Domain", "Execution", "Governance.fs"))
+
+                  for forbidden in [ "SHA256.HashData"; "StringBuilder"; "| ExecutionRole.Specification ->\n            make"; "let rec private segment" ] do
+                      Assert.isTrue (not (governance.Contains forbidden)) $"Governance.fs re-implements Ordo: {forbidden}"
+
+                  Assert.isTrue (governance.Contains "Ordo.Core.ExecutionRole.RoleAuthority.defaultFor") "role authority comes from Ordo.Core"
+                  Assert.isTrue (not (governance.Contains "ORDO-CORE-PACKAGE).") || governance.Contains "consumes it from the released") "header names the consumed package" } ]
+
+    let tests = domain @ ordoPackage @ cli @ contract

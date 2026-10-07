@@ -1,0 +1,16 @@
+{
+  "schema": "praxis.group-verification/1",
+  "groupId": null,
+  "rows": [
+    { "member": "PRAXIS-MISC-09", "criterion": "each citation names the F# tests that cover the behaviour now, with the historical Node result kept as history", "status": "met",
+      "evidence": { "kind": "location", "reference": "research/requirements/RQ-ROS-2026-A021--remote-execution-first-class-capability.md:144", "result": "A021, A022 (CONT-060/061 row) and A023 (No bypass row) name RemotePersistScriptTests, RemoteExecuteCliTests, RemoteProtocolTests and PremergeRemoteScriptTests 'fence inbox' tests; Node results labelled historical" } },
+    { "member": "PRAXIS-MISC-09", "criterion": "A024's status reflects the remaining Python (until PRAXIS-MISC-08 lands)", "status": "met",
+      "evidence": { "kind": "location", "reference": "research/requirements/RQ-ROS-2026-A024--fsharp-dotnet-only-repository.md:4", "result": "status: accepted, with a 'Status (2026-10-06)' section naming the remaining Python and PRAXIS-MISC-08" } },
+    { "member": "PRAXIS-MISC-09", "criterion": "A021 notes that issue #90 now also defines PRX-REMOTE-045..050 and that PRAXIS-NPM-BIN was abandoned", "status": "met",
+      "evidence": { "kind": "location", "reference": "research/requirements/RQ-ROS-2026-A021--remote-execution-first-class-capability.md:80", "result": "note on 045..050 and on PRAXIS-NPM-BIN present" } },
+    { "member": "PRAXIS-MISC-09", "criterion": "a test fails if a requirement record under research/requirements cites a tests/ path that does not exist, unless the citation is marked historical", "status": "met",
+      "evidence": { "kind": "test", "reference": "RequirementCitationTests: 'requirement citations: a cited test path must exist unless the line marks it historical' and 'every requirement record in this repository cites only existing tests'", "result": "2 passed; first run failed on the unmarked A021 line, then passed after the fix" } },
+    { "member": "PRAXIS-MISC-09", "criterion": "provenance recorded for each modified record and validate passes", "status": "met",
+      "evidence": { "kind": "command", "reference": "./praxis provenance record --id RQ-ROS-2026-A0xx --operation modified (A001, A002, A003, A020, A021, A022, A023, A024, A025); ./praxis validate", "result": "recorded; validation passed with 2 pre-existing warnings (EV-A063, EV-A067)" } }
+  ]
+}

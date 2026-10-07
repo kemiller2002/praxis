@@ -344,8 +344,21 @@ module PraxisNamingTests =
                       Assert.equal "ros" (CliPort.text (CliPort.readJson root ".echelon/ros.json").["tool"])
                       Assert.equal (version ()) (CliPort.text (CliPort.readJson root "ros.json").["rosVersion"])
 
-                      for renamed in [ ".praxis"; "praxis.json"; ".echelon/praxis.json" ] do
+                      for renamed in [ "praxis.json"; ".echelon/praxis.json" ] do
                           Assert.isTrue (not (exists root renamed || Directory.Exists(Path.Combine(root, renamed)))) $"{renamed} must not appear"
+
+                      // `.praxis/` holds only the dual-entry layout and the instance
+                      // identity (requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md);
+                      // the state that lives in `.ros/` never moves there.
+                      let praxisDirectory = Path.Combine(root, ".praxis")
+
+                      if Directory.Exists praxisDirectory then
+                          let entries =
+                              Directory.EnumerateFileSystemEntries(praxisDirectory, "*", SearchOption.AllDirectories)
+                              |> Seq.map (fun path -> Path.GetRelativePath(root, path).Replace('\\', '/'))
+                              |> Seq.toList
+
+                          Assert.equal [ ".praxis/instance.json" ] entries
 
                       let events = CliHarness.read root ".ros/events/events.jsonl"
                       Assert.isTrue (events.Contains("ROS-INSTALL-" + version().Replace(".", "-"))) "the install work item keeps its ROS-INSTALL-* id"

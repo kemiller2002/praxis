@@ -303,14 +303,17 @@ module Foundations =
 
     let private verifyForma (root: string) (rule: CapabilityRule) =
         let spec = tryPackageSpec root "@echelon-foundry/design-system"
-        let installed = spec.IsSome
-        let pinned = npmPinned rule.Version rule.SourceCommit spec
-
+        // A repository without npm pins the release tarball (vendor/forma/forma.lock), verified against its digest.
+        let lock = FormaRelease.repositoryLock root
+        let lockPinned = lock |> Option.exists (Result.exists (fun l -> rule.Version |> Option.forall ((=) l.Version)))
+        let installed = spec.IsSome || lock.IsSome
+        let pinned = (spec.IsSome && npmPinned rule.Version rule.SourceCommit spec) || lockPinned
         let used =
             anySourceContains
                 root
                 [ "@echelon-foundry/design-system"
                   "design-system/all.css"
+                  "class=\\\"ef-"
                   "<ef-button"
                   "<ef-input"
                   "<ef-field"
@@ -321,7 +324,7 @@ module Foundations =
                   "<ef-checkbox"
                   "<ef-toggle" ]
 
-        let dependencyDetail = spec |> Option.defaultValue "missing"
+        let dependencyDetail = spec |> Option.orElse (lock |> Option.map (function Ok l -> $"{FormaRelease.LockPath} {l.Version}" | Error e -> e)) |> Option.defaultValue "missing"
         installed, pinned, used, used, [ $"dependency: {dependencyDetail}" ]
 
     let private verifyFolio (root: string) (rule: CapabilityRule) =
@@ -357,10 +360,11 @@ module Foundations =
 
     let private verifyOrdo (root: string) (rule: CapabilityRule) =
         let manifestInstalled, manifestPinned = manifestVersionMatches root ".echelon/sde.json" rule.Version
-        let directoryInstalled = Directory.Exists(Path.Combine(root, ".sde"))
-        let installed = manifestInstalled || directoryInstalled
-        let pinned = if rule.Version.IsSome then manifestPinned else installed
-        installed, pinned, installed, manifestInstalled, [ "manifest: .echelon/sde.json"; "state: .sde/" ]
+        let packageInstalled, packagePinned = projectDependencyStatus root "EchelonFoundry.Ordo.Core" rule.Version
+        let lifecycle = manifestInstalled || Directory.Exists(Path.Combine(root, ".sde"))
+        let used = lifecycle || (packageInstalled && anySourceContains root [ "Ordo.Core." ])
+        let pinned = if rule.Version.IsSome then manifestPinned || packagePinned else lifecycle || packageInstalled
+        lifecycle || packageInstalled, pinned, used, manifestInstalled || packagePinned, [ "manifest: .echelon/sde.json"; "state: .sde/"; "package: EchelonFoundry.Ordo.Core" ]
 
     let private verifyPraxis (root: string) (rule: CapabilityRule) =
         let manifestInstalled, manifestPinned = manifestVersionMatches root ".echelon/ros.json" rule.Version

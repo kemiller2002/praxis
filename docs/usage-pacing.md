@@ -26,8 +26,11 @@ The default policy is deliberately simple and shared across providers:
 - a weekly latch is bound to its quota window's reset identity, so a new
   weekly window never inherits the previous window's latch;
 - completeness is tracked per expected window (`observed`, `missing`,
-  `invalid`): a missing Codex weekly window or a previously reported Claude
-  scoped window that disappears makes the reading stale, never fresh;
+  `invalid`, `stale`, `unsupported`): a missing Codex weekly window or a
+  previously reported Claude scoped window that disappears makes the reading
+  stale, never fresh; a window carried from the cache, or one the provider
+  reports after its reset, is `stale`; a window kind the adapter rules do not
+  map is `unsupported` (response drift) and is reported, never dropped;
 - unreadable, partially valid or newer-schema safety state is
   `indeterminate` and blocks work (see "Safety state and failure behaviour");
 - the longest active hold is the binding reason;
@@ -107,18 +110,52 @@ shell process, an in-flight model response, a remote client that does not pass
 through the hook, or concurrent clients between checks. Claude's first model
 response can occur before its `PreToolUse` gate.
 
-Model-scoped Claude weekly limits apply only to matching models. When model
-identity is unavailable, Praxis conservatively evaluates all reported scoped
-limits. For Claude tool hooks, Praxis can recover the calling model from the
-session/subagent transcript. Codex uses the hook payload model and maps model
-names containing `spark` to the `codex_bengalfox` quota bucket; other models
-use `codex`.
+Model-scoped Claude weekly limits apply only to matching models. Provider,
+model family, quota bucket and scope are typed values: a model is
+*recognized* only when exactly one known model family (from the adapter's
+rule table, or named by a reported scoped window) is one of its whole tokens
+(`claude-opus-5[1m]` is `opus`; `claude-fablesque-1` is not `fable`). An
+absent, unrecognized or ambiguous model is evaluated conservatively against
+every reported scoped limit. For Claude tool hooks, Praxis can recover the
+calling model from the session/subagent transcript. Codex uses the hook
+payload model; a model whose identifier has the token `spark` uses the
+`codex_bengalfox` quota bucket and every other model uses `codex`.
+
+The provider mappings live in one versioned rule table per adapter
+(`Praxis.Infrastructure.Pacing.PacingAdapterRules`: `codex-rules/1`,
+`claude-rules/1`). `pacing status` reports the adapter id, rules version,
+capabilities, recognized model families, the selected quota bucket and the
+model identity (`unspecified`, `recognized`, `unrecognized`) in text and JSON
+(`adapter`, `modelIdentity`, `modelFamily`).
+
+## Telemetry
+
+Pacing records typed `praxis.pacing-event/1` events, one JSON document per
+line, in `events.jsonl` in the pacing state directory. Each event has a stable
+`code`: `hold-started` (weekly latch), `hard-limit` (exhausted window),
+`hold-retained` (a gate held by a hold that already existed),
+`hold-released`, `provider-unavailable`, `override-enabled`,
+`override-disabled` and `state-fault`. Events carry provider, window, reason
+kind, reset time and the observation time only; credentials, tokens and raw
+provider payloads are never recorded (diagnostic text is redacted and
+bounded). Hold transitions are derived from the persisted state under its
+lock, so they are recorded once whichever process caused them; the gate
+records `hold-retained`, `provider-unavailable` and `state-fault` once per
+invocation and never repeats the last recorded transition, so polling does
+not produce duplicates. `pace.log` is the human-readable rendering of the
+same events plus non-transition diagnostics (for example a cache write
+failure); `pacing status` reports the last event (`lastEvent`).
 
 ## Safety state and failure behaviour
 
 `hold.json` is schema-versioned (`schemaVersion` 2, with a monotonically
 increasing `revision`). Each hold records its basis: `weekly-lead` with the
-window's `resetsAt`, or `hard-limit` with `usedPercent` and `resetsAt`.
+window's `resetsAt`, or `hard-limit` with `usedPercent` and `resetsAt`, and
+the reading that created it (`evidence`: `observedAt` and a
+`provider/window@observedAt` reference). `evidence` is additive: older Praxis
+releases ignore it, and a hold written without it reads as unrecorded
+evidence, never invented evidence. A malformed `evidence` object makes the
+document unreadable.
 Schema 1 documents (no `schemaVersion`) are migrated on read; their latches
 adopt the next fresh reading's window identity.
 

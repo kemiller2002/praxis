@@ -2,6 +2,54 @@
   "schemaVersion": 2,
   "groups": [
     {
+      "id": "GROUP-PRAXIS-COMPLETION-001",
+      "members": [
+        "PRAXIS-QUAL-07",
+        "PRAXIS-QUAL-08",
+        "PRAXIS-QUAL-09",
+        "PRAXIS-QUAL-10"
+      ],
+      "kind": "shared-architecture",
+      "origin": "human-declared",
+      "sharedContext": [
+        "completion-readiness facets (DF-ROS-2026-A052: Domain/Work/CompletionReadiness.fs, Application/Work/CompletionReadiness.fs, Contracts/Work/QualityEvidenceJson.fs)"
+      ],
+      "executionRepository": "repository-operating-system",
+      "crossRepository": false,
+      "architectureNotes": [
+        "PRX-QUAL-020..023: risk metadata feeds design-debt and verification-matrix facets; evidence digests and release-readiness use the same evidence reader"
+      ],
+      "homeRepository": "kemiller2002/praxis",
+      "dependencies": [],
+      "verifications": [],
+      "createdAt": "2026-10-06T23:55:59.437Z",
+      "createdBy": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "history": [
+        {
+          "operation": "created",
+          "member": null,
+          "at": "2026-10-06T23:55:59.437Z",
+          "actor": {
+            "kind": "agent",
+            "id": "anthropic/claude-code",
+            "provider": "anthropic",
+            "model": "unknown",
+            "runtime": "claude-code"
+          },
+          "reason": "one completion-readiness mechanism, executed together by one agent",
+          "executionId": null,
+          "memberState": null
+        }
+      ],
+      "checkpoints": []
+    },
+    {
       "id": "GROUP-PRAXIS-EXEC-001",
       "members": [
         "PRAXIS-EXEC-02",
@@ -22,6 +70,9 @@
       "architectureNotes": [
         "one Application-tier execution service consumed by CLI, work-transition binding and the web control plane; legality only from LegalActions"
       ],
+      "homeRepository": null,
+      "dependencies": [],
+      "verifications": [],
       "createdAt": "2026-10-06T20:36:34.000Z",
       "createdBy": {
         "kind": "agent",
@@ -42,7 +93,9 @@
             "model": "unknown",
             "runtime": "claude-code"
           },
-          "reason": "audit 2026-10-06 gaps 4, 5 and 13 share the execution envelope, legal-action computation and store"
+          "reason": "audit 2026-10-06 gaps 4, 5 and 13 share the execution envelope, legal-action computation and store",
+          "executionId": null,
+          "memberState": null
         }
       ],
       "checkpoints": []
@@ -152,6 +205,97 @@
           }
         }
       ]
+    },
+    {
+      "id": "GROUP-PRAXIS-PACING-001",
+      "members": [
+        "PRAXIS-QUAL-01",
+        "PRAXIS-QUAL-02",
+        "PRAXIS-QUAL-03",
+        "PRAXIS-QUAL-04"
+      ],
+      "kind": "shared-architecture",
+      "origin": "human-declared",
+      "sharedContext": [
+        "pacing domain (Domain/Pacing/Model.fs), application ports (Application/Pacing) and provider adapters (Infrastructure/Pacing)"
+      ],
+      "executionRepository": "repository-operating-system",
+      "crossRepository": false,
+      "architectureNotes": [
+        "PRX-QUAL-003/004/005/008/011 pacing hardening; order 01, 02, 03, 04"
+      ],
+      "homeRepository": "kemiller2002/praxis",
+      "dependencies": [],
+      "verifications": [],
+      "createdAt": "2026-10-06T23:55:58.388Z",
+      "createdBy": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "history": [
+        {
+          "operation": "created",
+          "member": null,
+          "at": "2026-10-06T23:55:58.388Z",
+          "actor": {
+            "kind": "agent",
+            "id": "anthropic/claude-code",
+            "provider": "anthropic",
+            "model": "unknown",
+            "runtime": "claude-code"
+          },
+          "reason": "one pacing boundary, executed together by one agent",
+          "executionId": null,
+          "memberState": null
+        }
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "GROUP-PRAXIS-IDENTITY-001",
+      "members": [
+        "PRAXIS-ID-01",
+        "PRAXIS-ID-02",
+        "PRAXIS-ID-03",
+        "PRAXIS-ID-04",
+        "PRAXIS-ID-05",
+        "PRAXIS-ID-06"
+      ],
+      "kind": "shared-data-model",
+      "origin": "human-declared",
+      "sharedContext": [
+        "Repository, work-item and Praxis instance identity: one identity model shared by remote, telemetry, planner, reconciliation and validation"
+      ],
+      "executionRepository": "repository-operating-system",
+      "crossRepository": false,
+      "architectureNotes": [],
+      "createdAt": "2026-10-06T20:37:38.039Z",
+      "createdBy": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "history": [
+        {
+          "operation": "created",
+          "member": null,
+          "at": "2026-10-06T20:37:38.039Z",
+          "actor": {
+            "kind": "agent",
+            "id": "anthropic/claude-code",
+            "provider": "anthropic",
+            "model": "unknown",
+            "runtime": "claude-code"
+          },
+          "reason": "Gap-closure track IDENTITY (audit 2026-10-06): the members share the repository-identity observation, the .praxis identity store and validate findings"
+        }
+      ],
+      "checkpoints": []
     }
   ],
   "references": []

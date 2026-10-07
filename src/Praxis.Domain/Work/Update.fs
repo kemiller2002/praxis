@@ -1,5 +1,12 @@
 namespace Praxis.Domain.Work
 
+/// Risk metadata named on a `work update` (PRX-QUAL-020).
+[<RequireQualifiedAccess>]
+type WorkRiskInput =
+    | NotGiven
+    | Given of WorkRisk
+    | Invalid of reason: string
+
 type WorkUpdateRequest =
     { Id: string
       QueueContainsId: bool
@@ -8,6 +15,7 @@ type WorkUpdateRequest =
       Description: string option
       Tags: string list option
       Priority: string option
+      Risk: WorkRiskInput
       OccurredAt: string }
 
 [<RequireQualifiedAccess>]
@@ -30,12 +38,18 @@ type WorkPriorityChange =
     | Keep
     | Set of priority: string
 
+[<RequireQualifiedAccess>]
+type WorkRiskChange =
+    | Keep
+    | Set of risk: WorkRisk
+
 type WorkUpdatePlan =
     { UpsertNew: bool
       Title: WorkTitleChange
       Description: WorkDescriptionChange
       Tags: WorkTagsChange
       Priority: WorkPriorityChange
+      Risk: WorkRiskChange
       UpdatedAt: string }
 
 [<RequireQualifiedAccess>]
@@ -44,6 +58,7 @@ type WorkUpdateRejection =
     | NotFound of id: string
     | EmptyTitle
     | InvalidPriority of priority: string
+    | InvalidRisk of reason: string
 
 [<RequireQualifiedAccess>]
 type WorkUpdateOutcome =
@@ -66,9 +81,10 @@ module WorkUpdate =
             match request.Title with
             | Some title when title.Trim() = "" -> WorkUpdateOutcome.Rejected WorkUpdateRejection.EmptyTitle
             | _ ->
-                match request.Priority with
-                | Some priority when not (priorityValues.Contains priority) ->
+                match request.Priority, request.Risk with
+                | Some priority, _ when not (priorityValues.Contains priority) ->
                     WorkUpdateOutcome.Rejected(WorkUpdateRejection.InvalidPriority priority)
+                | _, WorkRiskInput.Invalid reason -> WorkUpdateOutcome.Rejected(WorkUpdateRejection.InvalidRisk reason)
                 | _ ->
                     let descriptionChange =
                         request.Description
@@ -83,6 +99,11 @@ module WorkUpdate =
                           Description = descriptionChange
                           Tags = request.Tags |> Option.map WorkTagsChange.Set |> Option.defaultValue WorkTagsChange.Keep
                           Priority = request.Priority |> Option.map WorkPriorityChange.Set |> Option.defaultValue WorkPriorityChange.Keep
+                          Risk =
+                            match request.Risk with
+                            | WorkRiskInput.Given risk -> WorkRiskChange.Set risk
+                            | WorkRiskInput.NotGiven
+                            | WorkRiskInput.Invalid _ -> WorkRiskChange.Keep
                           UpdatedAt = request.OccurredAt }
 
         if request.QueueContainsId then

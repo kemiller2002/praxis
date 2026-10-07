@@ -66,7 +66,7 @@ type CriterionEvidence =
       Reference: string
       Result: string }
 
-type VerificationRow =
+type CriterionVerificationRow =
     { Member: string
       Criterion: string
       Status: CriterionStatus
@@ -78,7 +78,7 @@ type VerificationRow =
 type GroupVerification =
     { GroupId: string
       GroupExecutionId: string option
-      Rows: VerificationRow list }
+      Rows: CriterionVerificationRow list }
 
 /// The completing member and the group execution it ran in.
 type GateSubject =

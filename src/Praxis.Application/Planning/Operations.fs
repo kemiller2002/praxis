@@ -20,6 +20,9 @@ type PlanningReadPort =
       RepositoryObservations: PlanningLiveItem list -> Observation list
       /// Evidence a caller supplied (CI, GitHub), if any.
       SuppliedObservations: unit -> Result<Observation list, string>
+      /// Provider capacity (PRX-QUAL-009), provider-neutral. Empty when no
+      /// capacity was observed: unknown, never zero.
+      Capacity: unit -> Result<ProviderCapacity list, string>
       Configuration: unit -> Result<PlannerConfiguration, string>
       /// Ended group executions, for grouped-versus-independent pricing.
       GroupSamples: unit -> GroupedSample list }
@@ -36,6 +39,8 @@ module PlanningOperations =
             |> bind (fun live ->
                 port.SuppliedObservations()
                 |> bind (fun supplied ->
+                  port.Capacity()
+                  |> bind (fun capacity ->
                     port.Configuration()
                     |> Result.map (fun configuration ->
                         let repository = port.Repository()
@@ -49,8 +54,9 @@ module PlanningOperations =
                           Live = live
                           Executions = port.Executions()
                           Observations = port.RepositoryObservations live @ supplied
+                          Capacity = capacity
                           Configuration = configuration
-                          GroupSamples = port.GroupSamples() }))))
+                          GroupSamples = port.GroupSamples() })))))
 
     let analyze port plannedAt plannerVersion =
         gather port plannedAt plannerVersion |> Result.map (fun input -> input, Planner.analyze input)

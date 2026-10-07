@@ -310,6 +310,19 @@ the latest successfully fetched snapshot within the configured window, not a
 guarantee that the remote cannot move after the check. See [Upstream
 synchronization and bounded drift](work-protocol.md#upstream-synchronization-and-bounded-drift).
 
+### `repository identity`, `instance`
+
+`praxis repository identity [set ...]` shows or records the repository's
+stable identity (`ros.json` `repository.identity`: provider, provider
+repository ID, `owner/repo` locator), from which canonical work-item
+identities (`owner/repo:ID`, structurally `{repositoryId, repository,
+localId}`) are derived. `praxis instance [show|init|projection|register]`
+shows, creates, projects and optionally registers the Praxis instance
+identity (`.praxis/instance.json`); `init` and `upgrade` create it when it is
+missing. See [`identity.md`](identity.md) for the verification states, the
+clone/template rules, the legacy migration rule and the `workProtocol.branchPolicy`
+setting.
+
 ### `reconcile --envelope`
 
 Validates one runtime-free envelope, dispatches its ordered work requests through the native work/evidence rules, imports optional execution steps into canonical telemetry, commits only the resulting canonical paths, and creates `praxis-reconcile/<transaction-id>`. Exit `0` means applied or an already-checkpointed replay, `1` means an interrupted transaction remains pending and is safe to retry, and `2` means the envelope was rejected without canonical mutation. `inbox list` inventories pending envelope/document inputs. See [`fallback-reconciliation.md`](fallback-reconciliation.md).
@@ -669,6 +682,22 @@ ends when no runnable member remains.
 rewritten only by a mutation, its history intact. Every group command prints
 exactly one `{command, schemaVersion, status, ...}` document with `--json`;
 unknown values are `null`, never `0`.
+
+### `tutela ingest`, `tutela metrics`
+
+```
+praxis tutela ingest --input FILE [--collected-at TIMESTAMP] [--json]
+praxis tutela metrics [--repository NAME] [--json]
+```
+
+`tutela ingest` records a Tutela security assessment (`schemaVersion` 1) as
+an append-only observation in `.ros/telemetry/tutela/observations.jsonl`,
+with its repository, ref (resolved to a commit when this repository has it),
+collection time and source sha256. Re-ingesting the same document is a no-op.
+`tutela metrics` derives security metrics per observation and over time
+(`praxis.tutela-metrics/1`). Missing measurements are `unknown` with a reason,
+never zero, and there is no single score. See
+[`tutela-security-metrics.md`](tutela-security-metrics.md).
 
 ### `remote execute`
 

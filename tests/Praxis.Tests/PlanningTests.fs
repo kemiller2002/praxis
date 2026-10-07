@@ -73,6 +73,7 @@ module PlanningFixtures =
           Live = liveItems
           Executions = executions
           Observations = observations
+          Capacity = []
           Configuration = configuration
           GroupSamples = [] }
 

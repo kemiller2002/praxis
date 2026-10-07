@@ -1,0 +1,10 @@
+# Ordo.Core pin (ORDO-CORE-PACKAGE, PRAXIS-FND-01; PRX-ARCH-001, PRX-EXEC-002).
+# The .nupkg beside this file is the unmodified `ordo-core.nupkg` asset of the
+# Ordo release named here; its sha256 is the one in that release's
+# native-checksums.txt. NuGet restores EchelonFoundry.Ordo.Core only from this
+# folder (NuGet.config package source mapping). Upgrade by replacing the
+# package and this lock together with the PackageReference version.
+ordo 1.5.0
+package EchelonFoundry.Ordo.Core
+url https://github.com/kemiller2002/ordo/releases/download/v1.5.0/ordo-core.nupkg
+sha256 091d847298ba45cf227346b960051489a5fac54db47de767c300c481fb021d3e

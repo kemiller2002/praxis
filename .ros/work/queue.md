@@ -77,12 +77,12 @@
 | PRAXIS-EXEC-06 | Operator UI execution views with legal actions and human-required boundaries (PRX-UI-001, 004, 007, 020, 021, 026) | ready | execution, operator-ui | high |
 | PRAXIS-EXEC-07 | Execution runtime docs and requirement status per row (EXECUTION-ORCHESTRATION status, docs/execution-runtime.md) | ready | execution, docs | medium |
 | PRAXIS-EXEC-08 | Consume the Ordo execution contract instead of a local copy of role, boundary and evaluator semantics (PRX-EXEC-002, PRX-ARCH-001, PRX-VER-010, PRX-BND-001, PRX-SEQ-003) | captured | execution, ordo | low |
-| PRAXIS-FND-01 | ORDO-CORE-PACKAGE: consume Ordo.Core as a pinned released package for execution roles, capabilities, mutation-boundary and evaluator semantics (PRX-EXEC-002, PRX-ARCH-001) | active | ordo, group:GROUP-FND-ORDO | high |
-| PRAXIS-FND-02 | Accept the mutation boundary and evaluator closure from the governing Ordo execution contract (PRX-BND-001, PRX-SEQ-003, PRX-VER-010) | ready | ordo, execution, group:GROUP-FND-ORDO | high |
-| PRAXIS-FND-03 | Declare Praxis's own shared foundations and make foundations verify evidence them (SAF-DEP-1, SAF-DEP-2) | ready | foundations, group:GROUP-FND-FOUNDATIONS | high |
-| PRAXIS-FND-04 | Classify operational failures with Aegis at Praxis's Git, process, filesystem, network and web boundaries, with redaction and sink tests (SAF-AEGIS-1, SAF-AEGIS-5, SAF-AEGIS-6) | active | foundations, aegis, group:GROUP-FND-FOUNDATIONS | high |
-| PRAXIS-FND-05 | Present praxis web serve and hub serve with a pinned Forma release instead of local CSS (SAF-FORMA-1, 2, 5, 6; PRX-UI-030, PRX-UI-031) | ready | foundations, forma, web, group:GROUP-FND-FOUNDATIONS | high |
-| PRAXIS-FND-06 | Ingest Tutela security assessments and query security metrics over time with repository, ref and time provenance (TUT-1, TUT-2, TUT-3) | ready | tutela, telemetry | medium |
+| PRAXIS-FND-01 | ORDO-CORE-PACKAGE: consume Ordo.Core as a pinned released package for execution roles, capabilities, mutation-boundary and evaluator semantics (PRX-EXEC-002, PRX-ARCH-001) | complete | ordo, group:GROUP-FND-ORDO | high |
+| PRAXIS-FND-02 | Accept the mutation boundary and evaluator closure from the governing Ordo execution contract (PRX-BND-001, PRX-SEQ-003, PRX-VER-010) | complete | ordo, execution, group:GROUP-FND-ORDO | high |
+| PRAXIS-FND-03 | Declare Praxis's own shared foundations and make foundations verify evidence them (SAF-DEP-1, SAF-DEP-2) | complete | foundations, group:GROUP-FND-FOUNDATIONS | high |
+| PRAXIS-FND-04 | Classify operational failures with Aegis at Praxis's Git, process, filesystem, network and web boundaries, with redaction and sink tests (SAF-AEGIS-1, SAF-AEGIS-5, SAF-AEGIS-6) | complete | foundations, aegis, group:GROUP-FND-FOUNDATIONS | high |
+| PRAXIS-FND-05 | Present praxis web serve and hub serve with a pinned Forma release instead of local CSS (SAF-FORMA-1, 2, 5, 6; PRX-UI-030, PRX-UI-031) | complete | foundations, forma, web, group:GROUP-FND-FOUNDATIONS | high |
+| PRAXIS-FND-06 | Ingest Tutela security assessments and query security metrics over time with repository, ref and time provenance (TUT-1, TUT-2, TUT-3) | complete | tutela, telemetry | medium |
 | PRAXIS-GROUP-01 | praxis work group create: durable human-declared execution group | complete | work-group, cli | low |
 | PRAXIS-GROUP-02 | praxis work group show: a declared group with member states and progress | complete | work-group, cli | low |
 | PRAXIS-GROUP-03 | praxis work group add: add a member to a declared group | complete | work-group, cli | low |
@@ -91,9 +91,24 @@
 | PRAXIS-GROUP-06 | Phase-two work groups: grouped arm as base with the control arm's strengths ported | complete | work-group, cli | low |
 | PRAXIS-GROUP-07 | First-class cross-repository groups: GROUP-ECHELON IDs, home record, member references, derived status, cross-repo order (PRX-GRP-100..109) | complete | grouping | medium |
 | PRAXIS-GROUP-08 | Group command surface: work group list, idempotent mutations, append-only audit, versioned contracts, derived completion (PRX-GRP-110..116) | complete | grouping | high |
-| PRAXIS-GROUP-09 | plan execute-group and grouped execution by default for qualifying high-affinity groups (PRX-GRP-117, 130..132, 136..137) | ready | grouping | high |
-| PRAXIS-GROUP-10 | Grouped-execution completion gates: machine-checkable reuse inventory and per-criterion verification (PRX-GRP-133..135, 040, 045) | ready | grouping | high |
+| PRAXIS-GROUP-09 | plan execute-group and grouped execution by default for qualifying high-affinity groups (PRX-GRP-117, 130..132, 136..137) | complete | grouping | high |
+| PRAXIS-GROUP-10 | Grouped-execution completion gates: machine-checkable reuse inventory and per-criterion verification (PRX-GRP-133..135, 040, 045) | complete | grouping | high |
+| PRAXIS-ID-01 | Typed repository identity and canonical work-item identity (PRX-REMOTE-045, 046, 048, 049, 050) | complete | identity | high |
+| PRAXIS-ID-02 | Remote protocol 1.4: structured canonical work-item references with explicit old-peer compatibility (PRX-REMOTE-047, implementation-order amendment) | complete | identity | high |
+| PRAXIS-ID-03 | Telemetry and planner schemas carry canonical work-item identity; correct identity status docs (PRX-REMOTE-047, PRX-PLAN-182) | complete | identity, planning | medium |
+| PRAXIS-ID-04 | Generate and govern the Praxis instance identity (DER-16, 17, 22, 23, 24) | complete | identity | high |
+| PRAXIS-ID-05 | Praxis instance registration projection (DER-19, 20, 25, 26) | complete | identity | medium |
+| PRAXIS-ID-06 | Policy-gated validate rule: meaningful work runs on a branch named for its work item (DER-01) | complete | identity | medium |
 | PRAXIS-INTERNAL-NAMESPACES | Migrate internal Ros.* projects, namespaces, assemblies and Ros.slnx to Praxis.* (deferred from PRAXIS-CLI-RENAME, DF-ROS-2026-A043) | complete | rename, follow-up | low |
+| PRAXIS-MISC-01 | Input-document inbox: crash-safe claim/process lifecycle with provenance-preserving derivation (DER-09, DER-10) | captured | inbox, reconciliation | high |
+| PRAXIS-MISC-02 | Planner: observe CI status for checkpoints that wait on CI (PRX-PLAN-020) | captured | planning, planner-evidence | medium |
+| PRAXIS-MISC-03 | Planner: historical merge-conflict evidence in the collision graph (PRX-PLAN-081) | captured | planning, planner-evidence | low |
+| PRAXIS-MISC-04 | Planner replay: compare predicted and observed cost (PRX-PLAN-152) | captured | planning, planner-evidence | low |
+| PRAXIS-MISC-05 | Planner: compare a saved plan's recommendations with what happened (PRX-PLAN-162) | captured | planning, planner-evidence | low |
+| PRAXIS-MISC-06 | Planner: persist estimate-error history over time (PRX-PLAN-170) | captured | planning, planner-evidence | low |
+| PRAXIS-MISC-07 | Record the cross-provider continuation proof on main (RQ-ROS-2026-A023 acceptance, PRAXIS-XPROVIDER-PROOF-01) | complete | remote, continuity | medium |
+| PRAXIS-MISC-08 | F#/.NET-only automation: port tracked Python and inline python3 (RQ-ROS-2026-A024) | captured | implementation-policy, tooling | medium |
+| PRAXIS-MISC-09 | Fix stale requirement citations: deleted Node tests and test paths in RQ-ROS-2026-A021..A024 | complete | documentation, requirements | medium |
 | PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | abandoned | rename, gh-90 | low |
 | PRAXIS-PLAN-01 | Deterministic shadow planner: praxis plan analyze/simulate/compare/explain (PRX-PLAN-001..182) | complete | planning, architecture, cli | high |
 | PRAXIS-PLAN-02 | Accept planner decision DF-ROS-2026-A046 on the owner's approval | complete | planning, governance | medium |
@@ -104,7 +119,7 @@
 | PRAXIS-PLAN-07 | Reconcile PR #130 (PGEI) with main after the A021 results | complete | planning, grouping | medium |
 | PRAXIS-PLAN-08 | Land the EX-ROS-2026-A021 evaluation kit and second blind evaluation on main | complete | planning, grouping | medium |
 | PRAXIS-PLAN-09 | Grouped-work requirements v2: cross-repository groups, mutation commands, grouped-by-default execution, context and cost measurement (DF-ROS-2026-A053) | complete | planning,grouping,requirements | high |
-| PRAXIS-PLAN-10 | Measure context reuse and cost for grouped work and price it in the planner (PRX-GRP-150..158) | ready | grouping | medium |
+| PRAXIS-PLAN-10 | Measure context reuse and cost for grouped work and price it in the planner (PRX-GRP-150..158) | active | grouping | medium |
 | PRAXIS-PLAN-11 | Review grouped-by-default at its trigger and roll back if a threshold is crossed (PRX-GRP-138) | captured | grouping | low |
 | PRAXIS-PLAN-EXP-01 | Run grouping experiment EX-ROS-2026-A021: control arm, grouped arm, blind evaluation, telemetry comparison | complete | planning, experiment | medium |
 | PRAXIS-PLAN-EXP-02 | Preserve A021 R2 replication and pre-register the affinity falsification experiment | complete | planning,experiment | medium |
@@ -115,6 +130,16 @@
 | PRAXIS-PR92-PREMERGE-REGRESSION-FENCE | Regression fence before reconciling PR #92 with main | complete | testing, pr92 | high |
 | PRAXIS-PR92-PREMERGE-RENAME-FENCE | Harden Praxis rename invariants on PR #92 before main is reconciled | complete | testing, pr92 | high |
 | PRAXIS-PR92-RECONCILE | Reconcile PR #92 (F#-only cleanup, Praxis rename) with current main | complete | pr92 | high |
+| PRAXIS-QUAL-01 | Per-window Stale/Unsupported pacing observation states and hard-hold creation evidence (PRX-QUAL-003, PRX-QUAL-004) | complete | quality, pacing | high |
+| PRAXIS-QUAL-02 | Typed provider, model, quota-bucket and scope identities for pacing (PRX-QUAL-005) | complete | quality, pacing | high |
+| PRAXIS-QUAL-03 | Typed pacing telemetry events with stable codes replacing free-text pace.log (PRX-QUAL-008) | complete | quality, pacing | medium |
+| PRAXIS-QUAL-04 | Adversarial pacing adapter tests: Keychain, HTTP errors and redirects, provider process timeout/EOF, live hook fixtures (PRX-QUAL-011) | complete | quality, pacing | high |
+| PRAXIS-QUAL-05 | Provider-neutral capacity port consumed by the planner (PRX-QUAL-009) | complete | quality, planning | medium |
+| PRAXIS-QUAL-06 | Declared protocol and state-schema compatibility instead of the release.json == toolchain pin fence (PRX-QUAL-010) | complete | quality, release | high |
+| PRAXIS-QUAL-07 | Engineering-risk metadata on work items (PRX-QUAL-020) | complete | quality, completion | high |
+| PRAXIS-QUAL-08 | Design-debt declaration as a completion-readiness facet (PRX-QUAL-021) | complete | quality, completion | high |
+| PRAXIS-QUAL-09 | Verification-matrix obligation as a completion-readiness facet (PRX-QUAL-022) | complete | quality, completion | high |
+| PRAXIS-QUAL-10 | Evidence-file digests and a release-readiness evidence contract (PRX-QUAL-023 leftovers) | complete | quality, completion | medium |
 | PRAXIS-QUEUE-MD-LIVE-STATE | queue.md shows the pre-promotion backlog status after work start/complete until the next backlog write | captured | work, backlog | low |
 | PRAXIS-RELEASE-BUMP-WORKFLOW | Release workflow: one-click version bump that publishes | complete | release | high |
 | PRAXIS-REMOTE-01 | Remote protocol v1 contract: schemas, typed domain model, validation, fingerprint, decision order | complete | remote-execution, gh-90 | high |
