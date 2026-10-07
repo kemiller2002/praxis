@@ -204,7 +204,17 @@
         "START_SHA": "c85eb3e6e7f96d376613a18e9bdf8256bd92b870"
       },
       "attempt": 2,
-      "status": "running"
+      "status": "running",
+      "events": [
+        {
+          "at": "2026-10-07T18:07:48Z",
+          "event": "stale checkout at ddda837; frozen start check stopped the session before any change"
+        },
+        {
+          "at": "2026-10-07T18:10:30Z",
+          "event": "orchestrator resync note sent (deviations.md D2)"
+        }
+      ]
     },
     {
       "label": "arm-2-02r",
@@ -223,7 +233,17 @@
         "START_SHA": "3e535f3a16e0b538806e1c63cbdb9122bd5b1a6a"
       },
       "attempt": 2,
-      "status": "running"
+      "status": "running",
+      "events": [
+        {
+          "at": "2026-10-07T18:07:48Z",
+          "event": "stale checkout at ddda837; frozen start check stopped the session before any change"
+        },
+        {
+          "at": "2026-10-07T18:10:30Z",
+          "event": "orchestrator resync note sent (deviations.md D2)"
+        }
+      ]
     }
   ]
 }

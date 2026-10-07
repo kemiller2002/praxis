@@ -28,3 +28,32 @@ treatments, thresholds, blinding or stop rules.
   branch name resolves to the recorded head (a checkout probe, or a wait of
   at least 10 minutes after the predecessor's final push). It applies to both
   arms equally.
+
+## D2 — the retries were also stale; completed in-session with a fixed resync note
+
+- `arm-3-02r` (session_013vdcLRvYsQEftregZxjGvF) and `arm-2-02r`
+  (session_01K6sr5PX2ffRa4bP7fzgUNm), created about 45 minutes after the
+  predecessor pushes, were again checked out at `ddda837`, and both stopped at
+  the frozen start check without changing anything. A probe that set no
+  outcome branch resolved correctly, so the stale base is systematic when
+  `create_session` is given an `outcome_branch`: the platform appears to start
+  the outcome branch from the branch's first-seen head. It is not propagation
+  lag.
+- A third session for the item-02 slot would exceed "retried once". The single
+  permitted retry was therefore completed inside the same retry sessions. At
+  18:10Z the orchestrator sent each the same fixed, treatment-neutral message
+  (only the branch and SHA differ): "Orchestrator note (experiment harness,
+  not part of the task): the platform checked out a stale copy of your branch.
+  Run `git fetch origin BRANCH && git checkout -B BRANCH origin/BRANCH`,
+  confirm that `git rev-parse HEAD` prints SHA, and then carry out your
+  original task exactly as instructed, from the beginning. Nothing else has
+  changed."
+- Uniform procedure for every later B/C session: launch as frozen. If, and
+  only if, the session reports the stale-checkout mismatch before changing
+  anything, send this exact note once. Every use is recorded in
+  `sessions.json`. The note carries no treatment information and is
+  identical for B and C.
+- Measurement consequence: the stale-start turn and the resync add a small,
+  recorded overhead to the affected sessions' requests and tokens. Analysis
+  reports it, and a sensitivity check can exclude the pre-resync turn using
+  per-request timestamps.
