@@ -697,6 +697,79 @@ module PlanningJson =
 
     /// The optional planner configuration file. Every field is optional and
     /// defaults to `PlannerConfiguration.defaults`.
+    /// One `grouping.groups` entry. Stored groups (`.ros/work/groups.json`)
+    /// use this same reader, so the planner reads both identically.
+    let private readDeclaredGroup (group: JsonObject) : DeclaredGroup =
+        let optionalTexts name = if isNull (field group name) then [] else readTexts group name
+
+        { Id = readText group "id"
+          Members = readTexts group "members"
+          Kind = readOptionalText group "kind" |> Option.map (parsed "group kind" GroupKind.tryParse)
+          Origin = readOptionalText group "origin" |> Option.map (parsed "group origin" GroupOrigin.tryParse) |> Option.defaultValue GroupOrigin.HumanDeclared
+          SharedContext = optionalTexts "sharedContext"
+          ExecutionRepository = readOptionalText group "executionRepository"
+          CrossRepository = if isNull (field group "crossRepository") then false else readBool group "crossRepository"
+          ArchitectureNotes = optionalTexts "architectureNotes" }
+
+    /// The `grouping.groups` entry form of a declaration, in a fixed field
+    /// order. `parseConfiguration` reads it back unchanged.
+    let declaredGroupFields (group: DeclaredGroup) : (string * JsonNode) list =
+        [ "id", text group.Id
+          "members", texts group.Members
+          "kind", group.Kind |> Option.map (GroupKind.code >> text) |> Option.toObj
+          "origin", text (GroupOrigin.code group.Origin)
+          "sharedContext", texts group.SharedContext
+          "executionRepository", optionalText group.ExecutionRepository
+          "crossRepository", boolean group.CrossRepository
+          "architectureNotes", texts group.ArchitectureNotes ]
+
+    let private storedGroupNode (stored: StoredGroup) : JsonNode =
+        record (
+            declaredGroupFields stored.Declaration
+            @ [ "declaredAt", text stored.DeclaredAt
+                "declaredBy", stored.DeclaredBy |> Option.map (fun actor -> Ros.Contracts.Provenance.ActorJson.node actor :> JsonNode) |> Option.toObj ]
+        )
+
+    /// `.ros/work/groups.json`: `{schema, groups: [entry + declaredAt, declaredBy]}`.
+    let renderGroupStore (store: GroupStore) =
+        record [ "schema", text GroupStore.Schema; "groups", store.Groups |> List.map storedGroupNode |> array ] |> render
+
+    let parseGroupStore (json: string) : Result<GroupStore, string> =
+        try
+            let root = JsonNode.Parse json |> asObject "group store"
+
+            match readOptionalText root "schema" with
+            | Some value when value <> GroupStore.Schema -> Error $"unsupported group store schema '{value}' (expected {GroupStore.Schema})"
+            | None -> Error "group store schema is required"
+            | Some _ ->
+                objects root "groups"
+                |> List.map (fun node ->
+                    { Declaration = readDeclaredGroup node
+                      DeclaredAt = readOptionalText node "declaredAt" |> Option.defaultValue ""
+                      DeclaredBy =
+                        match Ros.Contracts.Provenance.ActorJson.tryParse (field node "declaredBy") with
+                        | Ok actor -> actor
+                        | Error message -> fail $"declaredBy: {message}" })
+                |> fun groups -> Ok { Groups = groups }
+        with
+        | Malformed message -> Error $"malformed group store: {message}"
+        | :? JsonException as error -> Error $"malformed group store: {error.Message}"
+
+    /// The `--json` result of `work group create`.
+    let renderGroupCreated (dryRun: bool) (stored: StoredGroup) (memberStates: (string * string) list) =
+        record
+            [ "schema", text GroupStore.Schema
+              "kind", text "group-created"
+              "dryRun", boolean dryRun
+              "recorded", boolean (not dryRun)
+              "group", storedGroupNode stored
+              "members", memberStates |> List.map (fun (id, state) -> record [ "id", text id; "state", text state ]) |> array ]
+        |> render
+
+    let renderGroupRejected (id: string) (messages: string list) =
+        record [ "schema", text GroupStore.Schema; "kind", text "group-rejected"; "id", text id; "recorded", boolean false; "errors", texts messages ]
+        |> render
+
     let parseConfiguration (json: string) : Result<PlannerConfiguration, string> =
         try
             let root = JsonNode.Parse json |> asObject "configuration"
@@ -749,18 +822,7 @@ module PlanningJson =
                         readOptionalText node "minimumAffinity"
                         |> Option.map (parsed "affinity" ContextAffinity.tryParse)
                         |> Option.defaultValue fallback.MinimumAffinity
-                      Groups =
-                        optionalList "groups" (fun group ->
-                            let optionalTexts name = if isNull (field group name) then [] else readTexts group name
-
-                            { Id = readText group "id"
-                              Members = readTexts group "members"
-                              Kind = readOptionalText group "kind" |> Option.map (parsed "group kind" GroupKind.tryParse)
-                              Origin = readOptionalText group "origin" |> Option.map (parsed "group origin" GroupOrigin.tryParse) |> Option.defaultValue GroupOrigin.HumanDeclared
-                              SharedContext = optionalTexts "sharedContext"
-                              ExecutionRepository = readOptionalText group "executionRepository"
-                              CrossRepository = if isNull (field group "crossRepository") then false else readBool group "crossRepository"
-                              ArchitectureNotes = optionalTexts "architectureNotes" })
+                      Groups = optionalList "groups" readDeclaredGroup
                       Architecture =
                         optionalList "architecture" (fun decision ->
                             { Decision = readText decision "decision"

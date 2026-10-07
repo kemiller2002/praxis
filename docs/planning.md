@@ -272,6 +272,11 @@ concurrently under the `accept-elevated` policy.
     "executionRepositories": { "PRAXIS-REMOTE-12": "conditor" } } }
 ```
 
+Groups recorded with `work group create` (see [`cli.md`](cli.md)) live in
+`.ros/work/groups.json` as the same entries plus `declaredAt`/`declaredBy`;
+the planner appends them after configured groups, skipping a stored ID the
+configuration also declares.
+
 An item whose description says "External repository" and that has no
 `executionRepositories` entry is never grouped into this checkout.
 
@@ -307,11 +312,11 @@ new identity scheme is introduced (PRX-PLAN-182).
 
 | Tier | Module |
 | --- | --- |
-| Domain | `Ros.Domain.Planning`: `Model`, `History`, `Inventory`, `Graph`, `Snapshot`, `Scheduling`, `Comparison`, `Replay`, `Planner`, `Grouping` |
+| Domain | `Ros.Domain.Planning`: `Model`, `History`, `Inventory`, `Graph`, `Snapshot`, `Scheduling`, `Comparison`, `Replay`, `Planner`, `Grouping`, `GroupDeclaration` |
 | Contracts | `Ros.Contracts.Planning.PlanningJson` (render, parse, config and observation inputs) |
-| Application | `Ros.Application.Planning`: `PlanningReadPort`, `PlanningOperations.gather/analyze` |
-| Infrastructure | `Ros.Infrastructure.Planning.FilePlanningRepository` (files, read-only Git) |
-| CLI | `Ros.Cli.PlanCommands` |
+| Application | `Ros.Application.Planning`: `PlanningReadPort`, `PlanningOperations.gather/analyze`, `WorkGroupPort`, `WorkGroupOperations` |
+| Infrastructure | `Ros.Infrastructure.Planning.FilePlanningRepository` (files, read-only Git), `FileWorkGroupStore`, `FileWorkGroupRepository` |
+| CLI | `Ros.Cli.PlanCommands`, `Ros.Cli.WorkGroupCommands` |
 
 No external dependency was added (PRX-PLAN-004).
 
@@ -352,7 +357,7 @@ No external dependency was added (PRX-PLAN-004).
 | GRP-050..052 | Met for dependencies and cycles (dependency test) and repositories (tests 5, 5b); cross-repository orchestration is future work. |
 | GRP-060..063 | Met; context cost is counted, not priced (unmeasured). |
 | GRP-070..072 | Met. |
-| GRP-073 | Declarations from configuration; mutation commands captured as `PRAXIS-GROUP-01..05`, deferred. |
+| GRP-073 | Declarations from configuration and from `work group create` (`PRAXIS-GROUP-01`, stored in `.ros/work/groups.json`, read exactly as `grouping.groups`); `show`, `add`, `remove`, `checkpoint` remain `PRAXIS-GROUP-02..05`. |
 | GRP-074 | Size and context-pressure splits and architecture merges met (tests 18, 19, merge test); splitting by independent chain or external blockage is not implemented. |
 | GRP-075 | Met (test 15). |
 | GRP-080..088 | Baseline, cohort, protocol and predictions frozen (`EV-ROS-2026-A059`, `EX-ROS-2026-A021`); the arms have not run. |

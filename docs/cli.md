@@ -306,6 +306,26 @@ execution for each) without changing any item; `explain-group` answers why a
 group exists and what would change it (`DF-ROS-2026-A047`). See
 [`planning.md`](planning.md).
 
+### `work group create`
+
+```
+ros work group create --id GROUP-ID --member ITEM [--member ITEM]* --occurred-at TIMESTAMP
+    [--kind KIND] [--origin ORIGIN] [--shared-context TEXT]* [--execution-repository NAME]
+    [--cross-repository] [--architecture-note TEXT]* [--dry-run] [--json] [IDENTITY]
+```
+
+Records a human-declared execution group in `.ros/work/groups.json`
+(PRX-GRP-073 phase two). Each stored entry has exactly the shape of a planner
+`grouping.groups` entry plus `declaredAt` and `declaredBy`, and the planner
+reads stored groups as it reads configured ones (a configured group with the
+same ID wins). It refuses an invalid or already-declared group ID, no members,
+a repeated member, an unknown member, a terminal (complete or abandoned)
+member, and `--cross-repository` without `--execution-repository`; a refusal
+exits `1` and writes nothing. It never changes any member's lifecycle state,
+evidence or attribution. `--dry-run` validates and writes nothing. `validate`
+checks the stored groups (duplicate IDs, unknown members, malformed entries);
+a member that became terminal later is partial completion, not a finding.
+
 ### `work reconcile`
 
 ```

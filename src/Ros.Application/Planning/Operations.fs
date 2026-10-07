@@ -20,7 +20,10 @@ type PlanningReadPort =
       RepositoryObservations: PlanningLiveItem list -> Observation list
       /// Evidence a caller supplied (CI, GitHub), if any.
       SuppliedObservations: unit -> Result<Observation list, string>
-      Configuration: unit -> Result<PlannerConfiguration, string> }
+      Configuration: unit -> Result<PlannerConfiguration, string>
+      /// Groups recorded with `work group create`; read exactly as
+      /// `grouping.groups` entries (PRX-GRP-073).
+      DeclaredGroups: unit -> Result<DeclaredGroup list, string> }
 
 [<RequireQualifiedAccess>]
 module PlanningOperations =
@@ -35,6 +38,9 @@ module PlanningOperations =
                 port.SuppliedObservations()
                 |> bind (fun supplied ->
                     port.Configuration()
+                    |> Result.bind (fun configured ->
+                        port.DeclaredGroups()
+                        |> Result.map (fun stored -> { configured with Grouping = GroupDeclaration.mergeInto configured.Grouping stored }))
                     |> Result.map (fun configuration ->
                         let repository = port.Repository()
 
