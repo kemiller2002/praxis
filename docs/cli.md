@@ -601,6 +601,67 @@ queue entry, executions, evidence, checkpoints, pull request and completion.
   qualified member as `executes-elsewhere` with the repository to act in and
   never schedules it into this checkout (PRX-GRP-108).
 
+**Grouped execution** (PRX-GRP-117, 130..132, 136..138).
+
+```
+ros plan execute-group GROUP-ID --occurred-at TIMESTAMP [--member ID]
+                       [--mode grouped|independent --reason TEXT]
+                       [--independent-member ID --reason TEXT]* [--type TYPE]
+                       [--config FILE] [--dry-run] [--json] [IDENTITY]
+```
+
+`plan execute-group` is the only `plan` verb that mutates, and only Praxis
+state: it begins the next runnable member of the group in its required order
+(or `--member`) through the existing `work begin` transition and records a
+**group execution** (`GEX-<timestamp>-<suffix>`) in the group record, with the
+actor, start time, repository, member order, mode and its basis, opt-outs, and
+each member it began linked to that member's own execution. One execution
+context carries the members one after another; each member keeps its own
+execution, evidence, checkpoints and completion. It never launches an agent,
+creates a branch, selects a provider or model, or changes priorities or
+dependencies. A member already begun in the open group execution is
+`unchanged`; a member that waits on an unsatisfied prerequisite, is not
+`ready`, or belongs to another repository is not begun here (the reason is
+given). It refuses (exit `1`) an unknown group, a dependency cycle among
+members, a group with nothing runnable in this checkout, and a caller who
+already owns an open group execution of another group. A group execution
+ends when no runnable member remains.
+
+- **Default.** `plan groups` and `plan explain-group` report each group's
+  `groupedExecution` qualification: affinity `high` with no `none`/`unknown`
+  member pair, `minimumSize`..`maximumSize` runnable members (default 2..6),
+  every runnable member in this checkout, no limiting context pressure, and no
+  `captured` member; every failed threshold is explained. A qualifying group
+  is recommended `grouped` and `execute-group` defaults to grouped mode; any
+  other defaults to `independent`, and grouped mode then needs
+  `--mode grouped --reason TEXT`. Settings live under
+  `grouping.groupedExecution` (`default`, `minimumSize`, `maximumSize`,
+  `compactionLimit` 1, `repeatedReadLimit` 25, `elapsedFactor` 1.5). Setting
+  `default` to `advisory` is the rollback (PRX-GRP-138): a configuration change
+  only.
+- **Gates.** A member begun in grouped mode completes only with committed
+  `group-analysis` and `group-verification` evidence (see
+  `docs/group-analysis-template.md`); members that execute independently
+  complete under the normal policy.
+- **Opt-outs** (PRX-GRP-132) need a non-empty `--reason`, are recorded with the
+  actor and time in the group history (`opted-out`), are shown by `show`,
+  `list` and `explain-group`, and apply only to executions not yet begun. Per
+  group: `work group create|add --execution-mode independent --reason TEXT` or
+  `execute-group --mode independent --reason TEXT`. Per item:
+  `work group create --independent-member ID --reason TEXT`,
+  `work group add --member ID --independent-member ID --reason TEXT`, or
+  `execute-group --independent-member ID --reason TEXT`: the member stays a
+  member but executes in its own fresh context.
+- **Fallback** (PRX-GRP-136). When a member begun in grouped mode records
+  `context.compactions` of at least `compactionLimit`, `context.repeated_file_reads`
+  above `repeatedReadLimit`, elapsed time above `elapsedFactor` times its upper
+  estimate, or an explicit `context-pressure` observation names it,
+  `execute-group` records `fallback: independent` with the signal and its
+  evidence, ends the group execution, and recommends a fresh independent
+  execution (or a split) for each remaining member; the next group execution
+  runs independently. Members already active or complete are unchanged. A
+  metric that was never recorded never triggers it (unknown is not zero).
+
 **Store and documents** (PRX-GRP-112). `.ros/work/groups.json` is written as
 `schemaVersion` 2 (additive fields); a version-1 store is read as-is and is
 rewritten only by a mutation, its history intact. Every group command prints

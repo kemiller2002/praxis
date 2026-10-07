@@ -31,7 +31,7 @@ module WorkGroupCommands =
         "work group remove --group GROUP-ID --member ID --occurred-at TIMESTAMP [--allow-empty] [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
 
     let addUsage =
-        "work group add --group GROUP-ID --member ID|OWNER/REPO:ID --occurred-at TIMESTAMP [--dependency CONSUMER=PRODUCER[@MILESTONE] ...] [--config FILE] [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
+        "work group add --group GROUP-ID --member ID|OWNER/REPO:ID --occurred-at TIMESTAMP [--dependency CONSUMER=PRODUCER[@MILESTONE] ...] [--execution-mode independent] [--independent-member ID] [--config FILE] [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
 
     let usage =
         showUsage
@@ -41,7 +41,7 @@ module WorkGroupCommands =
         + removeUsage
         + " | "
         + checkpointUsage
-        + " | work group create --group GROUP-ID --member ID [--member ID ...] --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--shared-context TEXT ...] [--architecture-note TEXT ...] [--execution-repository NAME] [--cross-repository] [--home-repository OWNER/REPO] [--dependency CONSUMER=PRODUCER[@complete|merged|released:TAG] ...] [--config FILE] [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
+        + " | work group create --group GROUP-ID --member ID [--member ID ...] --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--shared-context TEXT ...] [--architecture-note TEXT ...] [--execution-repository NAME] [--cross-repository] [--home-repository OWNER/REPO] [--dependency CONSUMER=PRODUCER[@complete|merged|released:TAG] ...] [--execution-mode independent --reason TEXT] [--independent-member ID ...] [--config FILE] [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
 
     // ---- argument parsing (shared by the family) ----
 
@@ -72,9 +72,9 @@ module WorkGroupCommands =
 
         walk arguments { Values = Map.empty; Switches = Set.empty; Positional = []; Unexpected = [] }
 
-    let private all (arguments: Arguments) (flag: string) = arguments.Values |> Map.tryFind flag |> Option.defaultValue []
+    let all (arguments: Arguments) (flag: string) = arguments.Values |> Map.tryFind flag |> Option.defaultValue []
 
-    let private single (arguments: Arguments) (flag: string) =
+    let single (arguments: Arguments) (flag: string) =
         match all arguments flag with
         | [ value ] -> Some value
         | _ -> None
@@ -82,19 +82,19 @@ module WorkGroupCommands =
     let private isTimestamp (value: string) =
         DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind) |> fst
 
-    let private commonErrors (command: string) (arguments: Arguments) (singles: string list) =
+    let commonErrors (command: string) (arguments: Arguments) (singles: string list) =
         [ yield! arguments.Unexpected |> List.map (fun token -> $"unexpected argument '{token}'")
           for flag in singles do
               if (all arguments flag).Length > 1 then
                   yield $"{command} accepts {flag} once" ]
 
-    let private occurredAtErrors (command: string) (arguments: Arguments) =
+    let occurredAtErrors (command: string) (arguments: Arguments) =
         match all arguments "--occurred-at" with
         | [ value ] when isTimestamp value -> []
         | [ value ] -> [ $"--occurred-at '{value}' is not a timestamp" ]
         | _ -> [ $"{command} requires exactly one --occurred-at TIMESTAMP (the real current time)" ]
 
-    let private groupErrors (command: string) (arguments: Arguments) =
+    let groupErrors (command: string) (arguments: Arguments) =
         match all arguments "--group" with
         | [ _ ] -> []
         | [] -> [ $"{command} requires --group GROUP-ID" ]
@@ -104,7 +104,7 @@ module WorkGroupCommands =
 
     let standing (root: string) = FileWorkGroupFacts.standing root
 
-    let private contextFor (root: string) (configurationFile: string option) (groupId: string) (groups: StoredWorkGroup list) =
+    let contextFor (root: string) (configurationFile: string option) (groupId: string) (groups: StoredWorkGroup list) =
         FileWorkGroupFacts.contextFor root configurationFile (Some groupId) groups
 
     // ---- rendering (shared by the family) ----
@@ -202,10 +202,20 @@ module WorkGroupCommands =
             | None -> Some $"--dependency '{raw}' is not CONSUMER=PRODUCER[@complete|merged|released:TAG]"
             | Some _ -> None)
 
+    /// `--execution-mode independent|grouped` (PRX-GRP-132).
+    let private independentGroup (arguments: Arguments) = single arguments "--execution-mode" = Some "independent"
+
+    let private executionModeErrors (arguments: Arguments) =
+        [ match all arguments "--execution-mode" with
+          | []
+          | [ "independent" ]
+          | [ "grouped" ] -> ()
+          | values -> yield $"""--execution-mode takes once one of grouped, independent (got {String.concat ", " values})""" ]
+
     // ---- work group create ----
 
     let private createValues =
-        [ "--group"; "--member"; "--occurred-at"; "--kind"; "--origin"; "--shared-context"; "--architecture-note"; "--execution-repository"; "--home-repository"; "--dependency"; "--config"; "--reason" ]
+        [ "--group"; "--member"; "--occurred-at"; "--kind"; "--origin"; "--shared-context"; "--architecture-note"; "--execution-repository"; "--home-repository"; "--dependency"; "--config"; "--reason"; "--execution-mode"; "--independent-member" ]
 
     let private callerExecution (root: string) (rawArguments: string list) =
         FileWorkGroupFacts.callerExecution root (ProvenanceCommands.identityOverridesFrom rawArguments)
@@ -229,7 +239,8 @@ module WorkGroupCommands =
               | _ -> ()
               match origin with
               | Some(value, None) -> yield $"--origin '{value}' is not a group origin (human-declared, architecture-declared, dependency-derived, planner-recommended)"
-              | _ -> () ]
+              | _ -> ()
+              yield! executionModeErrors arguments ]
 
         match errors with
         | _ :: _ -> reportArgumentErrors command usage errors
@@ -254,7 +265,9 @@ module WorkGroupCommands =
                       Reason = single arguments "--reason"
                       ExecutionId = callerExecution root rawArguments
                       HomeRepository = single arguments "--home-repository" |> Option.orElse (FileWorkGroupFacts.thisRepository root)
-                      Dependencies = dependencies arguments |> List.choose snd }
+                      Dependencies = dependencies arguments |> List.choose snd
+                      IndependentReason = (if independentGroup arguments then single arguments "--reason" |> Option.orElse (Some "") else None)
+                      IndependentMembers = all arguments "--independent-member" |> List.map (fun id -> id, single arguments "--reason" |> Option.defaultValue "") }
 
             let describe (group: StoredWorkGroup) =
                 let declaration = group.Declaration
@@ -270,11 +283,14 @@ module WorkGroupCommands =
 
     // ---- membership changes (add, remove) ----
 
-    let private memberValues = [ "--group"; "--member"; "--occurred-at"; "--config"; "--reason"; "--dependency" ]
+    let private memberValues = [ "--group"; "--member"; "--occurred-at"; "--config"; "--reason"; "--dependency"; "--execution-mode"; "--independent-member" ]
 
     let private memberErrors (command: string) (arguments: Arguments) =
         [ yield! commonErrors command arguments [ "--config"; "--reason" ]
           yield! dependencyErrors arguments
+          yield! executionModeErrors arguments
+          if not (List.forall (fun id -> Some id = single arguments "--member") (all arguments "--independent-member")) then
+              yield $"{command} --independent-member must name the --member it changes"
           yield! arguments.Positional |> List.map (fun token -> $"unexpected argument '{token}'")
           yield! groupErrors command arguments
           yield! occurredAtErrors command arguments
@@ -291,7 +307,9 @@ module WorkGroupCommands =
           Reason = single arguments "--reason"
           AllowEmpty = arguments.Switches.Contains "--allow-empty"
           ExecutionId = callerExecution root rawArguments
-          Dependencies = dependencies arguments |> List.choose snd }
+          Dependencies = dependencies arguments |> List.choose snd
+          GroupIndependent = independentGroup arguments
+          MemberIndependent = not (all arguments "--independent-member").IsEmpty }
 
     let private changeLines (verb: string) (request: GroupMemberRequest) (group: StoredWorkGroup) =
         let members = match group.Declaration.Members with [] -> "(none)" | ids -> String.concat ", " ids
@@ -318,143 +336,6 @@ module WorkGroupCommands =
         | [] ->
             let request = memberRequest root rawArguments arguments actor
             mutate root command arguments request.GroupId (fun context -> WorkGroups.remove context request) (changeLines "removed from" request)
-
-    // ---- work group checkpoint ----
-
-    /// Each member's own latest checkpoint that re-verifies as durable, as
-    /// the planner reads it from the live context.
-    let private memberCheckpoints (root: string) : Result<string -> MemberCheckpointReference option, string> =
-        FilePlanningRepository.readLive root
-        |> Result.map (fun live ->
-            let byId =
-                live
-                |> List.choose (fun item ->
-                    item.Checkpoint
-                    |> Option.map (fun checkpoint ->
-                        item.Id,
-                        { WorkItemId = item.Id
-                          CheckpointId = checkpoint.CheckpointId
-                          Commit = checkpoint.Commit }))
-                |> Map.ofList
-
-            byId.TryFind)
-
-    /// The caller's own execution for each active member, resolved exactly as
-    /// `work checkpoint` resolves it; any other member has none.
-    let private ownExecution (root: string) (rawArguments: string list) : Result<string -> ExecutionObservation, string> =
-        FileCheckpointRepository.readItems root
-        |> Result.map (fun items ->
-            let overrides = ProvenanceCommands.identityOverridesFrom rawArguments
-
-            let active =
-                items |> List.filter (fun item -> item.State = LiveWorkState.Active) |> List.map (fun item -> item.WorkItemId) |> Set.ofList
-
-            fun id ->
-                if active.Contains id then FileCheckpointRepository.resolveExecution root id overrides None
-                else ExecutionObservation.NoneActive)
-
-    /// The same Git durability rule as `work checkpoint`, observed now.
-    let private durableLocation (root: string) =
-        let git = ProcessGitDurability.create root
-        let policy = FileCheckpointRepository.readPolicy root
-
-        CheckpointObservation.candidate git policy None ExecutionObservation.NoneActive
-        |> CheckpointVerification.verifyLocation (FileWorkConfigRepository.readRepositoryId root)
-
-    let checkpoint (root: string) (rawArguments: string list) (actor: Actor) =
-        let command = "work group checkpoint"
-        let arguments = parse [ "--group"; "--occurred-at"; "--summary"; "--next-action"; "--decision" ] [ "--dry-run" ] rawArguments
-        let asJson = arguments.Switches.Contains "--json"
-        let dryRun = arguments.Switches.Contains "--dry-run"
-
-        let errors =
-            [ yield! commonErrors command arguments [ "--summary"; "--next-action" ]
-              yield! arguments.Positional |> List.map (fun token -> $"unexpected argument '{token}'")
-              yield! groupErrors command arguments
-              yield! occurredAtErrors command arguments
-              if (all arguments "--summary").Length <> 1 then
-                  yield $"{command} requires one --summary TEXT describing the milestone"
-              if (all arguments "--next-action").Length <> 1 then
-                  yield $"{command} requires one --next-action TEXT naming the next intended step" ]
-
-        match errors with
-        | _ :: _ -> reportArgumentErrors command checkpointUsage errors
-        | [] ->
-            let groupId = (single arguments "--group").Value
-            let occurredAt = (single arguments "--occurred-at").Value
-            let location = durableLocation root
-
-            let checkpointId =
-                let commit = location |> Result.map (fun git -> git.LocalCommit.Value) |> Result.defaultValue ""
-                "gcp-" + CanonicalJson.sha256HexPrefix 24 (String.concat "\u0000" [ groupId; occurredAt; commit; (single arguments "--summary").Value ])
-
-            let request =
-                { GroupId = groupId
-                  CheckpointId = checkpointId
-                  Summary = (single arguments "--summary").Value
-                  NextAction = (single arguments "--next-action").Value
-                  Decisions = all arguments "--decision"
-                  OccurredAt = occurredAt
-                  Actor = actor }
-
-            let outcome =
-                FileWorkGroupRepository.transact root dryRun (fun groups ->
-                    match contextFor root None groupId groups, memberCheckpoints root, ownExecution root rawArguments with
-                    | Error message, _, _
-                    | _, Error message, _
-                    | _, _, Error message -> Error(Choice1Of2 message)
-                    | Ok(_, context), Ok references, Ok execution ->
-                        WorkGroups.checkpoint context request (MemberFacts.ofStanding context.Standing) execution references location
-                        |> Result.mapError Choice2Of2
-                        |> Result.map (fun (group, recorded) -> WorkGroups.upsert groups group, (group, recorded)))
-
-            match outcome with
-            | Error message
-            | Ok(Error(Choice1Of2 message)) -> reportFailure asJson command message
-            | Ok(Error(Choice2Of2 rejections)) ->
-                if asJson then
-                    printJson (envelope command "rejected" [ "groupId", WorkGroupJson.text groupId; "rejections", rejections |> List.map WorkGroupJson.checkpointRejectionNode |> WorkGroupJson.array ])
-                else
-                    for rejection in rejections do
-                        eprintfn "ERROR [%s] %s" (GroupCheckpointRejection.code rejection) (GroupCheckpointRejection.message rejection)
-
-                    eprintfn "group checkpoint refused; nothing was recorded"
-
-                if rejections |> List.forall GroupCheckpointRejection.isArgumentError then 2 else 1
-            | Ok(Ok(group, recorded)) ->
-                let status = if dryRun then "dry-run" else "recorded"
-
-                if asJson then
-                    printJson (envelope command status [ "dryRun", WorkGroupJson.boolean dryRun; "groupId", WorkGroupJson.text groupId; "checkpoint", WorkGroupJson.checkpointNode recorded ])
-                else
-                    let listed (values: string list) = match values with [] -> "(none)" | values -> String.concat ", " values
-                    let git = recorded.Location
-                    printfn "durable group checkpoint %s for %s" recorded.CheckpointId group.Declaration.Id
-                    printfn "  commit:        %s on %s" git.LocalCommit.Value git.Branch
-                    printfn "  verified at:   %s/%s == local HEAD (read from the remote itself)" git.Remote.Name git.RemoteBranch
-                    printfn "  completed:     %s" (listed recorded.Completed)
-                    printfn "  active:        %s" (listed recorded.Active)
-                    printfn "  blocked:       %s" (listed recorded.Blocked)
-                    printfn "  remaining:     %s" (listed recorded.Remaining)
-
-                    if not recorded.Abandoned.IsEmpty then
-                        printfn "  abandoned:     %s" (listed recorded.Abandoned)
-
-                    recorded.Decisions |> List.iter (printfn "  decision:      %s")
-
-                    recorded.MemberCheckpoints
-                    |> List.iter (fun reference -> printfn "  member checkpoint: %s %s @ %s" reference.WorkItemId reference.CheckpointId reference.Commit)
-
-                    printfn "  summary:       %s" recorded.Summary
-                    printfn "  next action:   %s" recorded.NextAction
-                    printfn "Members' own checkpoints are referenced, not replaced; no paths or executions are claimed."
-
-                    if dryRun then printfn "dry run: nothing was written"
-                    else printfn "Praxis state changed in %s; commit and push it." FileWorkGroupRepository.relativePath
-
-                0
-
-    // ---- work group show ----
 
     // ---- validate ----
 

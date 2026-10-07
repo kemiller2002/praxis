@@ -717,7 +717,24 @@ module PlanningJson =
           SharedContext = optionalTexts "sharedContext"
           ExecutionRepository = readOptionalText group "executionRepository"
           CrossRepository = if isNull (field group "crossRepository") then false else readBool group "crossRepository"
-          ArchitectureNotes = optionalTexts "architectureNotes" }
+          ArchitectureNotes = optionalTexts "architectureNotes"
+          IndependentReason =
+            match readOptionalText group "executionMode" with
+            | None
+            | Some "grouped" -> None
+            | Some "independent" ->
+                match readOptionalText group "executionModeReason" with
+                | Some reason when not (String.IsNullOrWhiteSpace reason) -> Some reason
+                | _ -> raise (Malformed "executionMode independent needs a non-empty executionModeReason (PRX-GRP-132)")
+            | Some other -> raise (Malformed $"executionMode '{other}' is not grouped or independent")
+          IndependentMembers =
+            if isNull (field group "independentMembers") then []
+            else
+                objects group "independentMembers"
+                |> List.map (fun entry ->
+                    let reason = readText entry "reason"
+                    if String.IsNullOrWhiteSpace reason then raise (Malformed "an independent member needs a non-empty reason (PRX-GRP-132)")
+                    readText entry "workItem", reason) }
 
     /// Parses one declared group from its `grouping.groups` object form.
     let parseDeclaredGroup (node: JsonObject) : Result<DeclaredGroup, string> =
@@ -814,7 +831,24 @@ module PlanningJson =
                                           Path = readText source "path"
                                           Ref = readOptionalText source "ref" })
                                     |> Seq.toList
-                                    |> List.sortWith (fun left right -> String.CompareOrdinal(left.Repository, right.Repository)) } }
+                                    |> List.sortWith (fun left right -> String.CompareOrdinal(left.Repository, right.Repository)) }
+                      GroupedExecution =
+                        match optionalObj node "groupedExecution" with
+                        | None -> fallback.GroupedExecution
+                        | Some grouped ->
+                            let defaults = fallback.GroupedExecution
+
+                            { Default =
+                                match readOptionalText grouped "default" with
+                                | None -> defaults.Default
+                                | Some "grouped" -> GroupedDefault.Grouped
+                                | Some "advisory" -> GroupedDefault.Advisory
+                                | Some other -> raise (Malformed $"groupedExecution.default '{other}' is not grouped or advisory")
+                              MinimumSize = readNumber<int> grouped "minimumSize" |> Option.defaultValue defaults.MinimumSize
+                              MaximumSize = readNumber<int> grouped "maximumSize" |> Option.defaultValue defaults.MaximumSize
+                              CompactionLimit = readNumber<int> grouped "compactionLimit" |> Option.defaultValue defaults.CompactionLimit
+                              RepeatedReadLimit = readNumber<int> grouped "repeatedReadLimit" |> Option.defaultValue defaults.RepeatedReadLimit
+                              ElapsedFactor = readNumber<decimal> grouped "elapsedFactor" |> Option.defaultValue defaults.ElapsedFactor } }
 
             Ok
                 { MaxConcurrency = orDefault (fun () -> readNumber<int> root "maxConcurrency") defaults.MaxConcurrency
@@ -970,7 +1004,20 @@ module PlanningJson =
                     "notRunnable", integer value.Progress.NotRunnable
                     "statement", text value.Progress.Statement ]
               "architectureNotes", texts value.ArchitectureNotes
-              "notes", value.Notes |> List.map groupNote |> array ]
+              "notes", value.Notes |> List.map groupNote |> array
+              "groupedExecution",
+              record
+                  [ "qualifies", boolean value.GroupedExecution.Qualifies
+                    "failures", texts value.GroupedExecution.Failures
+                    "default", text value.GroupedExecution.Default
+                    "recommended", text value.GroupedExecution.Recommended
+                    "executeGroupDefault", text value.GroupedExecution.ExecuteGroupDefault
+                    "optOut", (value.GroupedExecution.OptOut |> Option.map text |> Option.toObj)
+                    "independentMembers",
+                    value.GroupedExecution.IndependentMembers
+                    |> List.map (fun (memberId, reason) -> record [ "workItem", text memberId; "reason", text reason ])
+                    |> array
+                    "statement", text value.GroupedExecution.Statement ] ]
 
     let private endpoint (value: GroupEndpoint) =
         record [ "kind", text (GroupEndpoint.kindCode value); "value", text (GroupEndpoint.value value) ]
@@ -1189,7 +1236,28 @@ module PlanningJson =
             |> List.map (fun entry ->
                 { Code = readText entry "code" |> parsed "group note" GroupNoteCode.tryParse
                   Severity = readText entry "severity" |> parsed "severity" FindingSeverity.tryParse
-                  Message = readText entry "message" }) }
+                  Message = readText entry "message" })
+          GroupedExecution =
+            match optionalObj node "groupedExecution" with
+            // Documents written before PRX-GRP-131 carry no qualification.
+            | None ->
+                { Qualifies = false
+                  Failures = [ "not recorded: the document predates grouped-execution qualification" ]
+                  Default = "advisory"
+                  Recommended = "advisory"
+                  ExecuteGroupDefault = "independent"
+                  OptOut = None
+                  IndependentMembers = []
+                  Statement = "grouped execution: not recorded" }
+            | Some grouped ->
+                { Qualifies = readBool grouped "qualifies"
+                  Failures = readTexts grouped "failures"
+                  Default = readText grouped "default"
+                  Recommended = readText grouped "recommended"
+                  ExecuteGroupDefault = readText grouped "executeGroupDefault"
+                  OptOut = readOptionalText grouped "optOut"
+                  IndependentMembers = objects grouped "independentMembers" |> List.map (fun entry -> readText entry "workItem", readText entry "reason")
+                  Statement = readText grouped "statement" } }
 
     /// Reads a document written by `groups`; refuses another schema or kind.
     let parseGroups (json: string) : Result<PlanSnapshot * GroupingReport, string> =

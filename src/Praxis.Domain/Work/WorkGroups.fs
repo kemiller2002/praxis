@@ -18,16 +18,36 @@ type GroupOperation =
     | Created
     | MemberAdded
     | MemberRemoved
+    /// An opt-out from grouped mode (PRX-GRP-132): the whole group when no
+    /// member is named, else that member.
+    | OptedOut
+    /// A group execution began (PRX-GRP-117).
+    | ExecutionStarted
+    /// A member was begun inside a group execution.
+    | MemberBegun
+    /// A group execution fell back to independent execution (PRX-GRP-136).
+    | FellBack
 
 [<RequireQualifiedAccess>]
 module GroupOperation =
-    let all = [ GroupOperation.Created; GroupOperation.MemberAdded; GroupOperation.MemberRemoved ]
+    let all =
+        [ GroupOperation.Created
+          GroupOperation.MemberAdded
+          GroupOperation.MemberRemoved
+          GroupOperation.OptedOut
+          GroupOperation.ExecutionStarted
+          GroupOperation.MemberBegun
+          GroupOperation.FellBack ]
 
     let code operation =
         match operation with
         | GroupOperation.Created -> "created"
         | GroupOperation.MemberAdded -> "member-added"
         | GroupOperation.MemberRemoved -> "member-removed"
+        | GroupOperation.OptedOut -> "opted-out"
+        | GroupOperation.ExecutionStarted -> "execution-started"
+        | GroupOperation.MemberBegun -> "member-begun"
+        | GroupOperation.FellBack -> "fell-back"
 
     let tryParse value = all |> List.tryFind (fun operation -> code operation = value)
 
@@ -441,6 +461,10 @@ type GroupRejection =
     | ConflictingReference of groupId: string * workItemId: string * recordedHome: string
     /// `link`: a reference names this repository itself as the home.
     | HomeIsThisRepository of groupId: string
+    /// An opt-out from grouped mode needs a recorded reason (PRX-GRP-132).
+    | OptOutWithoutReason of target: string
+    /// A per-item opt-out names a non-member.
+    | OptOutNotMember of workItemId: string
 
 [<RequireQualifiedAccess>]
 module GroupRejection =
@@ -454,6 +478,8 @@ module GroupRejection =
         | GroupRejection.DependencyCycle _ -> "dependency-cycle"
         | GroupRejection.ConflictingReference _ -> "conflicting-reference"
         | GroupRejection.HomeIsThisRepository _ -> "home-is-this-repository"
+        | GroupRejection.OptOutWithoutReason _ -> "opt-out-without-reason"
+        | GroupRejection.OptOutNotMember _ -> "opt-out-not-member"
         | GroupRejection.InvalidGroupId _ -> "invalid-group-id"
         | GroupRejection.InvalidMemberId _ -> "invalid-member-id"
         | GroupRejection.DuplicateGroup _ -> "duplicate-group"
@@ -476,6 +502,8 @@ module GroupRejection =
         | GroupRejection.DependencyCycle members -> $"""dependencies form a cycle: {String.concat " -> " members} (PRX-GRP-105)"""
         | GroupRejection.ConflictingReference(group, item, home) -> $"{item} already references {group} with home {home}; a reference is immutable (PRX-GRP-102)"
         | GroupRejection.HomeIsThisRepository id -> $"this repository is the home named for {id}; add the item with work group add instead of linking it"
+        | GroupRejection.OptOutWithoutReason target -> $"opting {target} out of grouped execution needs --reason TEXT (PRX-GRP-132)"
+        | GroupRejection.OptOutNotMember id -> $"{id} is not a member, so it cannot be opted out of the group's execution"
         | GroupRejection.InvalidGroupId id -> $"'{id}' is not a group ID; use GROUP-<AREA>-<SEQUENCE> in upper case (PRX-GRP-010)"
         | GroupRejection.InvalidMemberId id -> $"'{id}' is not a valid work-item ID"
         | GroupRejection.DuplicateGroup id -> $"group {id} already exists with a different declaration; an identical repeat is accepted unchanged (PRX-GRP-114)"
@@ -495,7 +523,8 @@ module GroupRejection =
         | GroupRejection.InvalidGroupId _
         | GroupRejection.InvalidMemberId _
         | GroupRejection.NoMembers
-        | GroupRejection.RepeatedMember _ -> true
+        | GroupRejection.RepeatedMember _
+        | GroupRejection.OptOutWithoutReason _ -> true
         | _ -> false
 
     /// The reserved cross-repository area (PRX-GRP-100).
@@ -531,7 +560,11 @@ type GroupCreateRequest =
       ExecutionId: string option
       /// `--home-repository`, else this checkout's `owner/repo`.
       HomeRepository: string option
-      Dependencies: MemberDependency list }
+      Dependencies: MemberDependency list
+      /// `--execution-mode independent --reason` (PRX-GRP-132).
+      IndependentReason: string option
+      /// `--independent-member ID --reason` (PRX-GRP-132).
+      IndependentMembers: (string * string) list }
 
 /// What a mutation did (PRX-GRP-114): the resulting group, and whether the
 /// request changed it. A repeat whose end state already holds is accepted
@@ -830,7 +863,13 @@ type GroupMemberRequest =
       /// The caller's active execution, when it has one (PRX-GRP-113).
       ExecutionId: string option
       /// `add` only: order edges for the joining member (PRX-GRP-105).
-      Dependencies: MemberDependency list }
+      Dependencies: MemberDependency list
+      /// `add` only: `--execution-mode independent`, the group opts out
+      /// with `Reason` (PRX-GRP-132).
+      GroupIndependent: bool
+      /// `add` only: `--independent-member`, the named member executes in
+      /// its own fresh context, for `Reason`.
+      MemberIndependent: bool }
 
 type GroupCheckpointRequest =
     { GroupId: string
@@ -1031,7 +1070,9 @@ module WorkGroups =
               SharedContext = request.SharedContext
               ExecutionRepository = Some request.ExecutionRepository
               CrossRepository = request.CrossRepository
-              ArchitectureNotes = request.ArchitectureNotes }
+              ArchitectureNotes = request.ArchitectureNotes
+              IndependentReason = request.IndependentReason
+              IndependentMembers = request.IndependentMembers |> List.map (fun (memberId, reason) -> MemberReference.normalize home memberId, reason) }
 
         let argumentRejections =
             [ if not (isValidGroupId request.GroupId) then
@@ -1063,7 +1104,13 @@ module WorkGroups =
                       yield GroupRejection.HomeUnknown request.GroupId
                   yield! rejections |> List.filter (function GroupRejection.InvalidGroupId _ -> false | _ -> true)
                   yield! admitted
-                  yield! dependencyRejections members dependencies ]
+                  yield! dependencyRejections members dependencies
+                  match request.IndependentReason with
+                  | Some reason when String.IsNullOrWhiteSpace reason -> yield GroupRejection.OptOutWithoutReason request.GroupId
+                  | _ -> ()
+                  for memberId, reason in declaration.IndependentMembers do
+                      if String.IsNullOrWhiteSpace reason then yield GroupRejection.OptOutWithoutReason memberId
+                      if not (members |> List.contains memberId) then yield GroupRejection.OptOutNotMember memberId ]
 
             match all with
             | [] ->
@@ -1103,8 +1150,30 @@ module WorkGroups =
                         Producer = MemberReference.normalize home dependency.Producer })
 
             let newEdges = dependencies |> List.filter (fun edge -> not (group.Dependencies |> List.contains edge))
+            let reason = request.Reason |> Option.filter (String.IsNullOrWhiteSpace >> not)
+            let groupOptOut = request.GroupIndependent && declaration.IndependentReason.IsNone
+            let memberOptOut = request.MemberIndependent && not (declaration.IndependentMembers |> List.exists (fun (id, _) -> id = memberId))
 
-            if declaration.Members |> List.contains memberId && newEdges.IsEmpty then
+            let optOutRejections =
+                [ if (request.GroupIndependent || request.MemberIndependent) && reason.IsNone then
+                      yield GroupRejection.OptOutWithoutReason(if request.MemberIndependent then memberId else declaration.Id) ]
+
+            let optOutEntries =
+                [ if groupOptOut then
+                      yield entry GroupOperation.OptedOut None request.OccurredAt request.Actor reason false request.ExecutionId None
+                  if memberOptOut then
+                      yield entry GroupOperation.OptedOut (Some memberId) request.OccurredAt request.Actor reason false request.ExecutionId None ]
+
+            let withOptOuts (declared: DeclaredGroup) =
+                { declared with
+                    IndependentReason = (if groupOptOut then reason else declared.IndependentReason)
+                    IndependentMembers =
+                        if memberOptOut then declared.IndependentMembers @ [ memberId, reason |> Option.defaultValue "" ]
+                        else declared.IndependentMembers }
+
+            if not optOutRejections.IsEmpty then
+                Error optOutRejections
+            elif declaration.Members |> List.contains memberId && newEdges.IsEmpty && not groupOptOut && not memberOptOut then
                 unchanged group
             else
                 let joining = not (declaration.Members |> List.contains memberId)
@@ -1115,29 +1184,31 @@ module WorkGroups =
 
                 let edgeRejections = dependencyRejections members (group.Dependencies @ newEdges)
 
+                let joinEntry (observation: MemberObservation option) =
+                    [ if joining then
+                          entry
+                              GroupOperation.MemberAdded
+                              (Some memberId)
+                              request.OccurredAt
+                              request.Actor
+                              request.Reason
+                              false
+                              request.ExecutionId
+                              (match observation with
+                               | Some observed ->
+                                   match observed.Outcome with
+                                   | ObservedMember.Read state -> state
+                                   | ObservedMember.Unobservable _ -> None
+                               | None -> MemberStanding.state (context.Standing memberId)) ]
+
                 match admitted, edgeRejections with
                 | Ok(observation, warnings), [] ->
                     changed
                         { group with
-                            Declaration = { declaration with Members = members }
+                            Declaration = withOptOuts { declaration with Members = members }
                             Dependencies = group.Dependencies @ newEdges
                             Verifications = group.Verifications @ Option.toList observation
-                            History =
-                                group.History
-                                @ [ entry
-                                        GroupOperation.MemberAdded
-                                        (Some memberId)
-                                        request.OccurredAt
-                                        request.Actor
-                                        request.Reason
-                                        false
-                                        request.ExecutionId
-                                        (match observation with
-                                         | Some observed ->
-                                             match observed.Outcome with
-                                             | ObservedMember.Read state -> state
-                                             | ObservedMember.Unobservable _ -> None
-                                         | None -> MemberStanding.state (context.Standing memberId)) ] }
+                            History = group.History @ joinEntry observation @ optOutEntries }
                         warnings
                 | Error rejections, others -> Error(rejections @ others)
                 | Ok _, rejections -> Error rejections)
@@ -1238,7 +1309,14 @@ module WorkGroups =
               if group.History |> List.skip (min 1 group.History.Length) |> List.exists (fun entry -> entry.Operation = GroupOperation.Created) then
                   yield id, "history", $"group {id} records more than one creation"
               for entry in group.History do
-                  if entry.Operation <> GroupOperation.Created && entry.Member.IsNone then
+                  let namesMember =
+                      match entry.Operation with
+                      | GroupOperation.MemberAdded
+                      | GroupOperation.MemberRemoved
+                      | GroupOperation.MemberBegun -> true
+                      | _ -> false
+
+                  if namesMember && entry.Member.IsNone then
                       yield id, "history", $"a {GroupOperation.code entry.Operation} entry of {id} names no member" ]
 
     /// Re-validates every stored group checkpoint offline: it was durable
@@ -1384,7 +1462,12 @@ module WorkGroups =
           Status = GroupStatus.derive standing
           Progress = standing
           RemovedOpen = removedOpen group (fun id -> (facts id).State)
-          ExecutionMode = None
+          ExecutionMode =
+            match group.Executions |> List.tryLast, declaration.IndependentReason with
+            | Some execution, _ when execution.EndedAt.IsNone -> Some(ExecutionMode.code execution.Mode)
+            | _, Some _ -> Some "independent"
+            | Some execution, None -> Some(ExecutionMode.code execution.Mode)
+            | None, None -> None
           LatestCheckpointAt = group.Checkpoints |> List.tryLast |> Option.map (fun checkpoint -> checkpoint.RecordedAt) }
 
     /// `work group list`: read-only, every filter applied, sorted by ID.

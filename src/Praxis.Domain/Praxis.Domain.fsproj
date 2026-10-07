@@ -76,6 +76,7 @@
     <Compile Include="Planning/Grouping.fs" />
     <Compile Include="Work/WorkGroups.fs" />
     <Compile Include="Work/GroupGates.fs" />
+    <Compile Include="Work/GroupExecutions.fs" />
     <Compile Include="Foundations/LimenPin.fs" />
   </ItemGroup>
 </Project>

@@ -640,7 +640,13 @@ type DeclaredGroup =
       SharedContext: string list
       ExecutionRepository: string option
       CrossRepository: bool
-      ArchitectureNotes: string list }
+      ArchitectureNotes: string list
+      /// Per-group opt-out (PRX-GRP-132): the group executes independently,
+      /// for this recorded reason.
+      IndependentReason: string option
+      /// Per-item opt-outs (PRX-GRP-132): (member, reason). The member stays
+      /// a member but executes in its own fresh context.
+      IndependentMembers: (string * string) list }
 
 /// An accepted architecture decision that materially affects several items
 /// (PRX-GRP-020, PRX-GRP-074 merging).
@@ -657,6 +663,37 @@ type RepositorySource =
       Path: string
       /// The ref to read; `None` reads the clone's `origin/HEAD`.
       Ref: string option }
+
+/// What the planner recommends for a qualifying group (PRX-GRP-130, 138):
+/// `Grouped` makes grouped execution the default; `Advisory` is the
+/// rollback, a configuration change only.
+[<RequireQualifiedAccess>]
+type GroupedDefault =
+    | Grouped
+    | Advisory
+
+/// `grouping.groupedExecution` (PRX-GRP-131, PRX-GRP-136).
+type GroupedExecutionConfiguration =
+    { Default: GroupedDefault
+      MinimumSize: int
+      MaximumSize: int
+      /// Fallback when a member's `context.compactions` reaches this.
+      CompactionLimit: int
+      /// Fallback when a member's `context.repeated_file_reads` exceeds this.
+      RepeatedReadLimit: int
+      /// Fallback when a member's elapsed time exceeds this factor of its
+      /// upper duration estimate.
+      ElapsedFactor: decimal }
+
+[<RequireQualifiedAccess>]
+module GroupedExecutionConfiguration =
+    let defaults =
+        { Default = GroupedDefault.Grouped
+          MinimumSize = 2
+          MaximumSize = 6
+          CompactionLimit = 1
+          RepeatedReadLimit = 25
+          ElapsedFactor = 1.5m }
 
 /// `grouping.crossRepository` (PRX-GRP-103, PRX-GRP-109).
 type CrossRepositoryConfiguration =
@@ -677,7 +714,8 @@ type GroupingConfiguration =
       Groups: DeclaredGroup list
       Architecture: DeclaredArchitecture list
       ExecutionRepositories: (string * string) list
-      CrossRepository: CrossRepositoryConfiguration }
+      CrossRepository: CrossRepositoryConfiguration
+      GroupedExecution: GroupedExecutionConfiguration }
 
 [<RequireQualifiedAccess>]
 module GroupingConfiguration =
@@ -689,7 +727,8 @@ module GroupingConfiguration =
           Groups = []
           Architecture = []
           ExecutionRepositories = []
-          CrossRepository = CrossRepositoryConfiguration.defaults }
+          CrossRepository = CrossRepositoryConfiguration.defaults
+          GroupedExecution = GroupedExecutionConfiguration.defaults }
 
 type PlannerConfiguration =
     { MaxConcurrency: int
