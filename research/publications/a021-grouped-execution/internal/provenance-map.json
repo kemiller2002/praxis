@@ -223,12 +223,20 @@
       "worktree": "research/publications/a021-grouped-execution/scripts/build_anonymous_artifact.py",
       "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
     },
+    "analysis/build_architecture_table.py": {
+      "worktree": "research/publications/a021-grouped-execution/scripts/build_architecture_table.py",
+      "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+    },
     "analysis/build_tables.py": {
       "worktree": "research/publications/a021-grouped-execution/scripts/build_tables.py",
       "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
     },
     "analysis/check_architecture_findings.py": {
       "worktree": "research/publications/a021-grouped-execution/scripts/check_architecture_findings.py",
+      "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+    },
+    "analysis/check_manuscript.py": {
+      "worktree": "research/publications/a021-grouped-execution/scripts/check_manuscript.py",
       "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
     },
     "analysis/extract_metrics.py": {

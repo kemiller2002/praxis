@@ -130,7 +130,7 @@ Evidence that redaction does not alter behavior on the evaluated surface (run 20
 
 - The original baseline (`git archive 8b4ffa3`) and the redacted `baseline/source/` both build with 0 errors.
 - Both pass 792/792 F# tests, with identical per-test result sets.
-- All four arm patches apply to the redacted baseline (`git apply --check`; enforced by the verifier). Each arm also builds and passes its tests on it: ARM_RESULTS_PLACEHOLDER
+- All four arm patches apply to the redacted baseline (`git apply --check`; enforced by the verifier). Each arm also builds and passes its tests on it: A021 arm-x 811/811, A021 arm-y 829/829, R2 arm-M 839/839, R2 arm-N 819/819. The R2 counts equal the counts the R2 blind evaluator recorded from the original blind branches (839 and 819). This is a scratch run in `/tmp`. It is not part of the verifier, because a full build and test cycle takes about 15 minutes.
 
 ## Identifying content that could not be removed
 

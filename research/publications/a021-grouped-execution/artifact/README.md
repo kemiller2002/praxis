@@ -118,7 +118,9 @@ identifiers and links.
   by `owner`, which has the same length). `baseline/FILES.tsv` marks every
   redacted file. The redaction is behaviour-neutral for the evaluated surface:
   the F# test suite gives the same per-test results on the original and the
-  redacted baseline (792 of 792 passing in both), and the arm patches contain
+  redacted baseline (792 of 792 passing in both); each arm patch applied to the
+  redacted baseline builds and passes its suite (A021 arm-x 811, arm-y 829;
+  R2 arm-M 839 and arm-N 819, the counts the R2 evaluator recorded); and the arm patches contain
   no person identifiers and ship byte-identical to their pinned sources.
 * **Agent-session identifiers** and transcript/tool UUIDs in the study records
   are replaced by stable pseudonyms (`agent-session-NNN`, `uuid-NNN`) that are

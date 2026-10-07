@@ -47,8 +47,8 @@
       "path": "README.md",
       "status": "included",
       "profile": "authored",
-      "sha256": "a8b0ecac766fb033b4d044e99c30dc387a3a4ce1ba133482ff33b99609d850ed",
-      "bytes": 8685
+      "sha256": "4f4117bc9654fb445928affcbf514b1ae35bbd53a87bf8f57112148204f76435",
+      "bytes": 8860
     },
     {
       "path": "a021/arm-x.patch",
@@ -459,11 +459,24 @@
       }
     },
     {
+      "path": "analysis/build_architecture_table.py",
+      "status": "included",
+      "profile": "record",
+      "sha256": "808a4d903ec8a9fc8c8780ee599a8f04c5a2dd15f28062aff0be85d69f4065df",
+      "bytes": 17555,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/scripts/build_architecture_table.py",
+        "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+      }
+    },
+    {
       "path": "analysis/build_tables.py",
       "status": "included",
       "profile": "record",
-      "sha256": "fe4238164cb591722c2db74670257cc5cde89a7996dc24197da06a5bdb99cad7",
-      "bytes": 22509,
+      "sha256": "e57750c50c3ef04534911bbcfbcd83787520432e6875feb3ee54944274061abc",
+      "bytes": 24136,
       "redactions": {},
       "transform": "none",
       "origin": {
@@ -481,6 +494,19 @@
       "transform": "none",
       "origin": {
         "worktree": "research/publications/a021-grouped-execution/scripts/check_architecture_findings.py",
+        "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+      }
+    },
+    {
+      "path": "analysis/check_manuscript.py",
+      "status": "included",
+      "profile": "record",
+      "sha256": "abd7155706f7bcd478fa47a7ae2bed4b2ed75230a9aafdbf5a971fac2e4e771b",
+      "bytes": 8886,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/scripts/check_manuscript.py",
         "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
       }
     },
