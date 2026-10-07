@@ -366,6 +366,25 @@
         "session_context_model": "claude-opus-5-5"
       },
       "note": "corrected launcher; start check passed"
+    },
+    {
+      "label": "arm-2-04",
+      "arm": "B",
+      "condition": "code-only",
+      "items": [
+        "PRAXIS-GROUP-04"
+      ],
+      "session": "session_0185s7SMdqWBCXszWPsiaieV",
+      "createdAt": "2026-10-07T21:02:02.393457Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-2",
+      "startCommit": "5d33bb52a638a29244f697c985142cb2f1f06f50",
+      "prompt": "prompts/arm-2-04.txt",
+      "promptSubstitution": {
+        "START_SHA": "5d33bb52a638a29244f697c985142cb2f1f06f50"
+      },
+      "attempt": 1,
+      "status": "running"
     }
   ],
   "status": "active: resumed under owner amendment A1"
