@@ -57,6 +57,16 @@ provenance:
         runtime: claude-code
       reason: "PRX-REMOTE-001/011/029/042 demonstrated live (PRAXIS-REMOTE-11); gaps recorded as PRAXIS-REMOTE-15 and PRAXIS-REMOTE-16"
       evidence: [EV-ROS-2026-A054]
+    EXE-20261006T203816433Z-d8de3cb4:
+      operations: [modified]
+      at: 2026-10-06T20:40:43.202Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-MISC-09: replace citations of deleted Node tests with the F# tests that cover the behaviour; keep the Node result as history"
     EXE-20261007T053405002Z-37591719:
       operations: [modified]
       at: 2026-10-07T05:34:26.023Z
@@ -90,7 +100,11 @@ implementation-order amendment were added to the issue after this record
 was first written), which this record adopts by reference rather than
 copying. Their reconciliation against the implementation, with the gap for
 each, is `EV-ROS-2026-A053`; the design and decomposition is
-`DF-ROS-2026-A041`.
+`DF-ROS-2026-A041`. (Note 2026-10-06: issue #90 has since been amended with
+`PRX-REMOTE-045` through `PRX-REMOTE-050`, global work-item and repository
+identity, and an implementation-order amendment. This record's adoption
+scope and status are unchanged by this note; those IDs are tracked by the
+repository-identity work, not by the increments listed below.)
 
 ## Invariants every implementation increment preserves
 
@@ -148,14 +162,16 @@ This section is a status snapshot. `EV-ROS-2026-A053` remains the baseline
 as of `59b4e03`. Each entry below is backed by the named work item's
 completion evidence and tests.
 
-**Local verification.** Everything below ran locally on 2026-09-28. The
-Node and Python suites it names have since been deleted with the npm
-distribution (`DF-ROS-2026-A044`); the same behaviour is covered by the F#
-suite (`RemoteProtocolTests`, `RemoteExecutionTests`, `RemoteExecuteCliTests`,
-`RemotePersistScriptTests`, `PremergeRemoteTests`, `PremergeRemoteScriptTests`):
+**Local verification.** Everything below ran locally:
 
-- then: node 104 passed, python 7 passed, F# 579 passed, and the F#/Node
-  differential and remote suites 237 passed.
+- `npm run test:all`: node 104 passed, python 7 passed, F# 579 passed, and
+  the F#/Node differential and remote suites 237 passed. (Historical: the
+  Node suites, including `tests/praxis-remote-adapter.test.mjs` (historical),
+  were removed when the repository became F#/.NET only, `RQ-ROS-2026-A024`.
+  The remote adapter is now covered by the F# `RemotePersistScriptTests`
+  ("praxis remote adapter: ..."), `RemoteExecuteCliTests` and
+  `RemoteProtocolTests`, run by
+  `dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll`.)
 - The site suite: 99 passed.
 - `praxis validate`: passed.
 
@@ -216,8 +232,10 @@ work" below.
   reports any other refused push or pull request as
   `repository-write-failed`, and a lost race as `concurrency-conflict`.
 - **039.** Remote execution is opt-in, and existing state stays readable.
-  The npm `praxis` bin clause is moot: npm is no longer a distribution
-  channel (`DF-ROS-2026-A044`), and PRAXIS-NPM-BIN was abandoned.
+  The npm `praxis` bin is deferred to PRAXIS-NPM-BIN, because the public
+  site's audited copy must change with it. (Update 2026-10-06: npm is no
+  longer a distribution channel, `DF-ROS-2026-A044`, and PRAXIS-NPM-BIN was
+  abandoned, so this clause is moot.)
 - **045-050 and the implementation-order amendment (global work-item
   identity).** Implemented by `GROUP-PRAXIS-IDENTITY-001`
   ([`docs/identity.md`](../../docs/identity.md)):

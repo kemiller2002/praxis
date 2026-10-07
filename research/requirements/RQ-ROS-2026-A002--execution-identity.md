@@ -35,6 +35,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Verification references moved from removed Node tests to their F# ports (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+    EXE-20261006T203816433Z-d8de3cb4:
+      operations: [modified]
+      at: 2026-10-06T20:40:40.078Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-MISC-09: cited test paths moved from tests/Ros.Tests to tests/Praxis.Tests; content unchanged"
 ---
 
 # Requirement
@@ -54,4 +64,4 @@ Separating the stable actor from the individual run lets analysis attribute work
 ## Verification
 
 - ProvenanceTests: two executions of the same agent share a stable identity but remain distinct contributions; legacy execution records without actorKind project from their recorded discovery mechanism
-- tests/Ros.Tests/WorkLifecycleCliTests.fs and tests/Ros.Tests/TelemetryCliTests.fs (identity.actorKind)
+- tests/Praxis.Tests/WorkLifecycleCliTests.fs and tests/Praxis.Tests/TelemetryCliTests.fs (identity.actorKind)
