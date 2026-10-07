@@ -5528,10 +5528,10 @@
       "description": null,
       "tags": [],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-07T20:52:42.452Z",
-      "updatedAt": "2026-10-07T20:52:46.349Z",
+      "updatedAt": "2026-10-07T20:54:37.397Z",
       "createdBy": "anthropic/claude-code",
       "createdByActor": {
         "kind": "agent",

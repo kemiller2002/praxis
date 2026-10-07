@@ -8735,18 +8735,39 @@
     {
       "id": "REMOTE-ENABLE-3-8-0",
       "type": "mechanical",
-      "state": "active",
-      "semanticState": "active",
+      "state": "complete",
+      "semanticState": "complete",
       "evidence": [],
-      "updatedAt": "2026-10-07T20:52:47.222Z",
+      "updatedAt": "2026-10-07T20:54:37.397Z",
       "telemetryExecutionIds": [
         "EXE-20261007T205252260Z-ff2c8869"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "f14d7685952a2986ea3c4483",
+        "recordedAt": "2026-10-07T20:54:33.495Z",
+        "executionId": "EXE-20261007T205252260Z-ff2c8869",
+        "repository": "repository-operating-system",
+        "branch": "remote-enable/3.8.0",
+        "commit": "f26e6b7e47d1f5ac44edfd0a3551405e58646930",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "remote-enable/3.8.0",
+        "remoteCommit": "f26e6b7e47d1f5ac44edfd0a3551405e58646930",
+        "summary": "Pinned Praxis 3.8.0 (checksum and attestation verified), recorded its compatibility, retired QX-COMPAT-1",
+        "nextAction": "complete REMOTE-ENABLE-3-8-0 and land through a PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T20:54:37.397Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T20:52:47.222Z",
+  "updatedAt": "2026-10-07T20:54:37.397Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
