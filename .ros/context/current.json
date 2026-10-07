@@ -8699,11 +8699,22 @@
         }
       },
       "completedAt": "2026-10-07T19:24:00.000Z"
+    },
+    {
+      "id": "RELEASE-3-8-0",
+      "type": "mechanical",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-07T19:44:50.475Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T194451429Z-d217b77d"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T19:24:00.000Z",
+  "updatedAt": "2026-10-07T19:44:50.475Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

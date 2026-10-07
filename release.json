@@ -1,13 +1,34 @@
 {
   "name": "@echelon-foundry/repository-operating-system",
-  "version": "3.7.2",
+  "version": "3.8.0",
   "compatibility": {
     "remoteProtocol": "1.4",
     "stateSchemas": {
-      "work-queue": { "reads": ["1.0.0"], "writes": "1.0.0" },
-      "work-context": { "reads": ["1.0.0"], "writes": "1.0.0" },
-      "work-groups": { "reads": ["1", "2"], "writes": "2" },
-      "work-events": { "reads": ["1.0.0"], "writes": "1.0.0" }
+      "work-queue": {
+        "reads": [
+          "1.0.0"
+        ],
+        "writes": "1.0.0"
+      },
+      "work-context": {
+        "reads": [
+          "1.0.0"
+        ],
+        "writes": "1.0.0"
+      },
+      "work-groups": {
+        "reads": [
+          "1",
+          "2"
+        ],
+        "writes": "2"
+      },
+      "work-events": {
+        "reads": [
+          "1.0.0"
+        ],
+        "writes": "1.0.0"
+      }
     }
   }
 }
