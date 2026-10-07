@@ -5,6 +5,7 @@ open System.IO
 open System.Text.Json
 open System.Text.Json.Nodes
 open Praxis.Application.Pacing
+open Praxis.Domain.Pacing
 open Praxis.Infrastructure.Pacing
 
 [<RequireQualifiedAccess>]
@@ -42,7 +43,7 @@ module PacingCommands =
         |> List.tryFindIndex ((=) name)
         |> Option.bind (fun index -> arguments |> List.tryItem (index + 1))
 
-    let private payloadEvent (payload: string) : string =
+    let payloadEvent (payload: string) : string =
         try
             use document = JsonDocument.Parse payload
             let mutable value = Unchecked.defaultof<JsonElement>
@@ -53,35 +54,27 @@ module PacingCommands =
                 value.GetString() |> Option.ofObj |> Option.defaultValue "PreToolUse"
             else
                 "PreToolUse"
-        with _ ->
+        with :? JsonException ->
             "PreToolUse"
 
-    let private deny (provider: string) (event: string) (detail: string) : unit =
-        let reason =
-            $"Praxis usage pacing hold remains active: {detail}. Retry after quota refresh/reset."
+    /// One hook invocation: resolve the model from the payload, run the gate
+    /// and return the denial document, or `None` to let the call proceed.
+    /// A hook that crashes is treated by agent runtimes as a non-blocking
+    /// error, i.e. permission to continue. Every non-proceed outcome is
+    /// therefore rendered as an explicit deny: the gate fails closed.
+    let gateHook (runtime: PacingRuntime) (provider: ProviderId) (explicitModel: string option) (payload: string) : string option =
+        let model = PacingOperations.resolveModel runtime provider explicitModel payload
+        let event = payloadEvent payload
 
-        if event = "PreToolUse" then
-            let root = JsonObject()
-            let output = JsonObject()
-            output["hookEventName"] <- JsonValue.Create(event)
-            output["permissionDecision"] <- JsonValue.Create("deny")
-            output["permissionDecisionReason"] <- JsonValue.Create(reason)
-            root["hookSpecificOutput"] <- output
-            printf "%s" (root.ToJsonString())
-        elif provider = "codex" then
-            let root = JsonObject()
-            root["continue"] <- JsonValue.Create(false)
-            root["stopReason"] <- JsonValue.Create(reason)
-            printf "%s" (root.ToJsonString())
-        else
-            let root = JsonObject()
-            root["decision"] <- JsonValue.Create("block")
-            root["reason"] <- JsonValue.Create(reason)
-            printf "%s" (root.ToJsonString())
+        match PacingOperations.gate runtime provider model with
+        | PacingGateOutcome.Proceed -> None
+        | PacingGateOutcome.Denied reason -> Some(PacingHookContract.denyOutput provider event reason.Detail)
+        | PacingGateOutcome.Faulted fault ->
+            Some(PacingHookContract.denyOutput provider event $"pacing safety state is unavailable [{PacingStoreFault.code fault}] {PacingStoreFault.message fault}")
 
     let private runGate
         (runtime: PacingRuntime)
-        (provider: string)
+        (provider: ProviderId)
         (explicitModel: string option)
         : int =
         let payload =
@@ -90,25 +83,13 @@ module PacingCommands =
             else
                 "{}"
 
-        let model = PacingOperations.resolveModel runtime provider explicitModel payload
-        let event = payloadEvent payload
-
-        // A hook that crashes is treated by agent runtimes as a non-blocking
-        // error, i.e. permission to continue. Every non-proceed outcome is
-        // therefore rendered as an explicit deny: the gate fails closed.
-        match PacingOperations.gate runtime provider model with
-        | PacingGateOutcome.Proceed -> 0
-        | PacingGateOutcome.Denied reason ->
-            deny provider event reason.Detail
-            0
-        | PacingGateOutcome.Faulted fault ->
-            deny provider event $"pacing safety state is unavailable [{PacingStoreFault.code fault}] {PacingStoreFault.message fault}"
-            0
+        gateHook runtime provider explicitModel payload |> Option.iter (printf "%s")
+        0
 
     let private runStatus
         (runtime: PacingRuntime)
         (directory: string)
-        (provider: string)
+        (provider: ProviderId)
         (model: string option)
         (asJson: bool)
         : int =
@@ -118,9 +99,9 @@ module PacingCommands =
             3
         | Ok status ->
             if asJson then
-                printf "%s" (PacingStatus.renderJson status)
+                printf "%s" (PacingStatusDocument.renderJson status)
             else
-                printf "%s" (PacingStatus.renderText status)
+                printf "%s" (PacingStatusDocument.renderText status)
 
             match status.FreshnessState, status.StateIntegrity with
             | _, Praxis.Domain.Pacing.StateIntegrity.Indeterminate _ -> 3
@@ -142,16 +123,16 @@ module PacingCommands =
         let provider =
             optionValue "--provider" arguments
             |> Option.defaultValue "codex"
-            |> fun value -> value.ToLowerInvariant()
+            |> ProviderId.tryParse
 
         let model = optionValue "--model" arguments
         let runtime = PacingAdapters.create directory
 
         match arguments |> List.filter (fun value -> value <> "--json") with
-        | "status" :: _ when provider = "codex" || provider = "claude" ->
-            runStatus runtime directory provider model (arguments |> List.contains "--json")
-        | "gate" :: _ when provider = "codex" || provider = "claude" ->
-            runGate runtime provider model
+        | "status" :: _ when provider.IsSome ->
+            runStatus runtime directory provider.Value model (arguments |> List.contains "--json")
+        | "gate" :: _ when provider.IsSome ->
+            runGate runtime provider.Value model
         | [ "override"; "on" ]
         | [ "override"; "on"; "--state-dir"; _ ] ->
             PacingOperations.setOverride runtime true |> reportOverride true

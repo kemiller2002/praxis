@@ -4,11 +4,12 @@ open System
 open System.IO
 open System.Text.Json
 open Praxis.Application.Pacing
+open Praxis.Domain.Pacing
 
 [<RequireQualifiedAccess>]
 module PacingContext =
     let private resolveModel
-        (provider: string)
+        (provider: ProviderId)
         (explicitModel: string option)
         (payload: string)
         : string option =
@@ -21,7 +22,7 @@ module PacingContext =
 
                 match PacingJson.tryProperty "model" root |> Option.bind PacingJson.tryString with
                 | Some model -> Some model
-                | None when provider = "claude" ->
+                | None when provider = ProviderId.Claude ->
                     let transcript =
                         PacingJson.tryProperty "transcript_path" root
                         |> Option.bind PacingJson.tryString
@@ -70,11 +71,16 @@ module PacingContext =
                                         not (value.StartsWith("<", StringComparison.Ordinal)))
                                 else
                                     None
-                            with _ ->
+                            with :? JsonException ->
                                 None)
                 | None -> None
-            with _ ->
-                None
+            with
+            // An unreadable payload or transcript leaves the model unknown,
+            // which pacing evaluates conservatively.
+            | :? JsonException -> None
+            | :? IOException -> None
+            | :? UnauthorizedAccessException -> None
+            | :? ArgumentException -> None
 
     let resolver : PacingContextResolver =
         { ResolveModel = resolveModel }

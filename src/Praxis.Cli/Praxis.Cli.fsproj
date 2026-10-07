@@ -51,7 +51,6 @@
     <Compile Include="WorkGroupListCommands.fs" />
     <Compile Include="WorkGroupShowCommands.fs" />
     <Compile Include="WorkGroupLinkCommands.fs" />
-    <Compile Include="PacingStatus.fs" />
     <Compile Include="PacingCommands.fs" />
     <Compile Include="SyncCommands.fs" />
     <Compile Include="TutelaCommands.fs" />
