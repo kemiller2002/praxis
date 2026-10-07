@@ -3,7 +3,10 @@ namespace Praxis.Contracts.Remote
 open System
 open System.Globalization
 open System.Text.Json
+open System.Text.Json.Nodes
 open Praxis.Contracts
+open Praxis.Contracts.Identity
+open Praxis.Domain.Identity
 open Praxis.Domain.Provenance
 open Praxis.Domain.Remote
 
@@ -406,6 +409,124 @@ module RemoteJson =
             parseArgumentsOf operation element
             |> withProblems (unknownFields "arguments" (argumentFields operation) element)
 
+    /// Structured work-item references (protocol 1.4, PRX-REMOTE-047): every
+    /// `workItemId`/`workItemIds` value, including inside batch
+    /// constituents, may be `{repositoryId, repository, localId}` instead of
+    /// a bare ID. The reference is checked structurally here -- never by
+    /// parsing a display string -- and replaced by its local ID, so the
+    /// argument parser and the commands stay unchanged; the repositories
+    /// named are returned as scopes for the executor to verify. A request of
+    /// an earlier version may not use the structured form.
+    let private normalizeReferences (version: ProtocolVersion) (root: JsonElement) : JsonElement * WorkItemScope list * Problem list =
+        let document = JsonNode.Parse(root.GetRawText())
+        let scopes = Collections.Generic.List<WorkItemScope>()
+        let problems = Collections.Generic.List<Problem>()
+
+        let resolve (field: string) (node: JsonNode) : JsonNode =
+            match node with
+            | :? JsonObject when version.Minor < ProtocolVersion.StructuredReferences ->
+                problems.Add(problem field "is a structured work-item reference, which needs protocol 1.4 or later")
+                node
+            | :? JsonObject ->
+                match IdentityJson.parseWorkItemReference None node with
+                | Error message ->
+                    problems.Add(problem field message)
+                    node
+                | Ok(WorkItemReference.Unqualified id) -> JsonValue.Create(LocalWorkItemId.value id)
+                | Ok(WorkItemReference.Qualified identity) ->
+                    scopes.Add { Field = field; Repository = identity.Repository }
+                    JsonValue.Create(LocalWorkItemId.value identity.LocalId)
+            | other -> other
+
+        let rec visit (prefix: string) (arguments: JsonObject) =
+            match arguments["workItemId"] with
+            | null -> ()
+            | value -> arguments["workItemId"] <- (resolve $"{prefix}.workItemId" value).DeepClone()
+
+            match arguments["workItemIds"] with
+            | :? JsonArray as ids ->
+                for index in 0 .. ids.Count - 1 do
+                    match ids[index] with
+                    | null -> ()
+                    | value -> ids[index] <- (resolve $"{prefix}.workItemIds[{index}]" value).DeepClone()
+            | _ -> ()
+
+            match arguments["requests"] with
+            | :? JsonArray as requests ->
+                requests
+                |> Seq.iteri (fun index item ->
+                    match item with
+                    | :? JsonObject as entry ->
+                        match entry["arguments"] with
+                        | :? JsonObject as nested -> visit $"{prefix}.requests[{index}].arguments" nested
+                        | _ -> ()
+                    | _ -> ())
+            | _ -> ()
+
+        match document with
+        | :? JsonObject as top ->
+            match top["arguments"] with
+            | :? JsonObject as arguments -> visit "arguments" arguments
+            | _ -> ()
+        | _ -> ()
+
+        use normalized = JsonDocument.Parse(document.ToJsonString())
+        normalized.RootElement.Clone(), List.ofSeq scopes, List.ofSeq problems
+
+    /// The work items of a `status --json` document that are not complete,
+    /// as raw JSON; `None` when the text is not such a document.
+    let openWorkOf (statusJson: string) : string list option =
+        try
+            use document = JsonDocument.Parse statusJson
+
+            match document.RootElement.TryGetProperty "workItems" with
+            | true, items when items.ValueKind = JsonValueKind.Array ->
+                items.EnumerateArray()
+                |> Seq.filter (fun item ->
+                    match item.TryGetProperty "semanticState" with
+                    | true, state -> state.ValueKind <> JsonValueKind.String || state.GetString() <> "complete"
+                    | _ -> true)
+                |> Seq.map (fun item -> item.GetRawText())
+                |> Seq.toList
+                |> Some
+            | _ -> None
+        with :? JsonException ->
+            None
+
+    /// `(id, title, priority)` of each `work ready` entry; `None` when the
+    /// text is not a JSON array.
+    let readyWorkOf (readyJson: string) : (string option * string option * string option) list option =
+        try
+            use document = JsonDocument.Parse readyJson
+
+            if document.RootElement.ValueKind = JsonValueKind.Array then
+                document.RootElement.EnumerateArray()
+                |> Seq.map (fun item ->
+                    let text (name: string) =
+                        match item.TryGetProperty name with
+                        | true, value when value.ValueKind = JsonValueKind.String -> Some(value.GetString())
+                        | _ -> None
+
+                    text "id", text "title", text "priority")
+                |> Seq.toList
+                |> Some
+            else
+                None
+        with :? JsonException ->
+            None
+
+    /// `praxis.describe` (protocol 1.4): the governed repository's identity
+    /// and the structured reference shape.
+    let writeIdentityDiscovery (writer: Utf8JsonWriter) (identity: RepositoryIdentity option) =
+        writer.WritePropertyName("repositoryIdentity")
+        writer.WriteRawValue(IdentityJson.renderOptionalRepository identity |> Option.ofObj |> Option.map (fun node -> node.ToJsonString()) |> Option.defaultValue "null")
+        writer.WriteStartObject("workItemReference")
+        writer.WriteString("introducedIn", ProtocolVersion.code { ProtocolVersion.current with Minor = ProtocolVersion.StructuredReferences })
+        writer.WriteString("fields", "workItemId, workItemIds (also inside batch constituents)")
+        writer.WriteString("shape", "a bare local ID, or {\"repositoryId\": \"PROVIDER:ID\", \"repository\": \"OWNER/REPO\", \"localId\": \"ID\"}")
+        writer.WriteString("rule", "a reference must name the repository this executor governs; any other repository is refused as invalid-request")
+        writer.WriteEndObject()
+
     let private topLevelFields =
         set [ "protocol"; "protocolVersion"; "requestId"; "operation"; "repository"; "actor"; "execution"; "arguments"; "requestedAt" ]
 
@@ -484,7 +605,9 @@ module RemoteJson =
                                     let repository, repositoryProblems = parseRepository root
                                     let actor, actorProblems = parseActor root
                                     let execution, executionProblems = parseExecution root
-                                    let arguments, argumentProblems = parseArguments operation root
+                                    let normalizedRoot, scopes, referenceProblems = normalizeReferences version root
+                                    let arguments, argumentProblems = parseArguments operation normalizedRoot
+                                    let argumentProblems = referenceProblems @ argumentProblems
                                     let requestedAt, requestedAtProblems = parseRequestedAt root
 
                                     let problems =
@@ -501,7 +624,8 @@ module RemoteJson =
                                               Actor = actor
                                               ExecutionId = execution
                                               Arguments = arguments
-                                              RequestedAt = requestedAt }
+                                              RequestedAt = requestedAt
+                                              WorkItemScopes = scopes }
                                     | _ -> reject (Some root) (Some version) FailureCode.InvalidRequest "the request is invalid" problems
                                 | _ ->
                                     reject
@@ -549,7 +673,27 @@ module RemoteJson =
             writeOptionalString writer "ref" response.Repository.Ref
             writeOptionalString writer "expectedSha" response.Repository.ExpectedSha
             writeOptionalString writer "observedSha" response.ObservedSha
+
+            // Protocol 1.4: the governed repository's identity, so a caller can
+            // qualify every bare ID it sent (PRX-REMOTE-047). Earlier versions
+            // keep their exact response shape.
+            let structured = response.ProtocolVersion.Minor >= ProtocolVersion.StructuredReferences
+
+            if structured then
+                writer.WritePropertyName("identity")
+                (IdentityJson.renderOptionalRepository response.RepositoryIdentity |> Option.ofObj |> Option.map (fun node -> node.ToJsonString()) |> Option.defaultValue "null")
+                |> writer.WriteRawValue
+
             writer.WriteEndObject()
+
+            if structured then
+                writer.WriteStartArray("workItems")
+
+                for id in response.WorkItemIds do
+                    writer.WriteRawValue((IdentityJson.renderLocalWorkItem response.RepositoryIdentity id).ToJsonString())
+
+                writer.WriteEndArray()
+
             writer.WriteString("praxisVersion", response.PraxisVersion)
 
             match response.Executor with

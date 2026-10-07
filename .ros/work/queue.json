@@ -4427,10 +4427,10 @@
         "group:GROUP-FND-ORDO"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:38:09.000Z",
-      "updatedAt": "2026-10-06T20:39:26.000Z",
+      "updatedAt": "2026-10-07T04:56:36.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4452,10 +4452,10 @@
         "group:GROUP-FND-ORDO"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:38:10.000Z",
-      "updatedAt": "2026-10-06T20:39:26.000Z",
+      "updatedAt": "2026-10-07T04:56:40.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4476,10 +4476,10 @@
         "group:GROUP-FND-FOUNDATIONS"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:38:10.000Z",
-      "updatedAt": "2026-10-06T20:39:27.000Z",
+      "updatedAt": "2026-10-07T06:24:45.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4501,10 +4501,10 @@
         "group:GROUP-FND-FOUNDATIONS"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:38:11.000Z",
-      "updatedAt": "2026-10-06T20:39:27.000Z",
+      "updatedAt": "2026-10-07T01:04:43.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4527,10 +4527,10 @@
         "group:GROUP-FND-FOUNDATIONS"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:38:11.000Z",
-      "updatedAt": "2026-10-06T20:39:27.000Z",
+      "updatedAt": "2026-10-07T06:24:43.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4551,10 +4551,10 @@
         "telemetry"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:38:11.000Z",
-      "updatedAt": "2026-10-06T20:39:28.000Z",
+      "updatedAt": "2026-10-07T05:20:51.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4987,6 +4987,361 @@
       "attachments": [],
       "createdAt": "2026-10-06T23:55:43.349Z",
       "updatedAt": "2026-10-06T23:55:57.981Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-MISC-01",
+      "title": "Input-document inbox: crash-safe claim/process lifecycle with provenance-preserving derivation (DER-09, DER-10)",
+      "description": "Covers requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md items 9 and 10 (DER-09, DER-10) and its acceptance criterion 'Inbox claim/retry/reconcile tests prove no source is lost'. Today only 'praxis inbox list' exists and .praxis/processing is unused. Acceptance criteria: (1) 'praxis inbox claim PATH' moves an input from .praxis/inbox/documents (or legacy input-documents) into .praxis/processing/<claim-id>/ with a praxis.inbox-claim/1 record holding the source path, SHA-256 digest, size, claimant identity, execution and claim time; the source bytes are never modified. (2) Claiming is crash-safe and idempotent: the claim record is written before the source moves, a repeated claim of the same digest returns the existing claim, and a claim interrupted at any step is detected and completed or rolled back by 'praxis inbox recover' without losing or duplicating the source. (3) 'praxis inbox derive CLAIM-ID --kind requirement|decision|constraint|evidence|risk|question|reference --id ID|--path PATH --summary TEXT' records each derived canonical artifact with provenance back to the input (claim ID, source path and digest, excerpt locator); classification stays advisory. (4) 'praxis inbox complete CLAIM-ID' refuses while any derived artifact is missing from the working tree or not committed in HEAD (not durably reconciled), and only then archives the input with its provenance record; 'praxis inbox release CLAIM-ID --reason' returns an unfinished claim to the inbox. (5) Rejected inputs move to .praxis/rejected with a machine-readable reason. (6) 'inbox list' reports pending, claimed and rejected inputs and still works without a runtime by reading the directories. (7) Tests: claim/derive/complete happy path; crash after claim record but before move, after move but before completion, and during completion, each recovered with no source lost or duplicated; idempotent repeated claim; completion refused before commit; release; reject. (8) docs/fallback-reconciliation.md, the inbox README and docs/cli.md describe the lifecycle; the DER status in docs is updated.",
+      "tags": [
+        "inbox",
+        "reconciliation"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:07.952Z",
+      "updatedAt": "2026-10-06T20:37:07.952Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-MISC-02",
+      "title": "Planner: observe CI status for checkpoints that wait on CI (PRX-PLAN-020)",
+      "description": "Covers PRX-PLAN-020 (and PLAN-021's labelling). Merged PRs and release tags are already Git-observed; CI is only taken from a supplied --observations file. Advisory group GROUP-PRAXIS-PLANNING-002 (research/groups/GROUP-PRAXIS-PLANNING-002/group-analysis.json); grouped-mode commands are not on main yet, so the grouping is recorded here and in that file. Coordinate with PRAXIS-PLAN-10, which also changes planner inputs: add observations through the existing Observation model and ports only. Acceptance criteria: (1) an opt-in planner flag (--observe-ci) queries a CI observation port for the checkpoint commits of items with a ContinuousIntegration dependency and adds ContinuousIntegrationPassed/Failed observations labelled with their source; (2) the default stays offline and deterministic, and an unavailable CI source is reported as unavailable, never as failure or success; (3) observations stay separate from recorded state (PLAN-021) and never rewrite it; (4) the observation inputs are included in the plan's input fingerprint; (5) tests cover passed, failed, pending and unavailable CI through a fake port, and a CLI test proves the default issues no CI query; (6) docs/planning.md status for 020 is updated.",
+      "tags": [
+        "planning",
+        "planner-evidence"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:08.278Z",
+      "updatedAt": "2026-10-06T20:37:08.278Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-MISC-03",
+      "title": "Planner: historical merge-conflict evidence in the collision graph (PRX-PLAN-081)",
+      "description": "Covers PRX-PLAN-081 (collision graph includes historical merge conflicts and file-level evidence). Advisory group GROUP-PRAXIS-PLANNING-002 (research/groups/GROUP-PRAXIS-PLANNING-002/group-analysis.json); grouped-mode commands are not on main yet, so the grouping is recorded here and in that file. Acceptance criteria: (1) a read-only Git query finds merge commits on the integration branch whose parents both changed the same path, and records the conflict-prone paths as historical evidence with provenance; (2) a pair of items whose declared areas or checkpoint-changed paths touch a historically conflicting path gets an 'elevated' collision reason naming the evidence, never 'safe'; (3) the evidence is part of the collision-graph fingerprint; (4) a domain test and a Git-fixture test cover it; (5) docs/planning.md 'Collisions' and status for 080-084 are updated.",
+      "tags": [
+        "planning",
+        "planner-evidence"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:08.589Z",
+      "updatedAt": "2026-10-06T20:37:08.589Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-MISC-04",
+      "title": "Planner replay: compare predicted and observed cost (PRX-PLAN-152)",
+      "description": "Covers PRX-PLAN-152 (replay compares predicted and observed cost where available). Advisory group GROUP-PRAXIS-PLANNING-002 (research/groups/GROUP-PRAXIS-PLANNING-002/group-analysis.json); grouped-mode commands are not on main yet, so the grouping is recorded here and in that file. Acceptance criteria: (1) replay predicts each finalized execution's cost from executions finalized strictly before it started, only when enough earlier cost samples in one currency exist; (2) it reports observed cost, predicted range, within-range and absolute error per execution and a summary, and 'unavailable' with the reason otherwise; (3) no later outcome is used (PLAN-151); (4) tests with and without cost evidence; (5) docs/planning.md status for 150-152 updated.",
+      "tags": [
+        "planning",
+        "planner-evidence"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:08.911Z",
+      "updatedAt": "2026-10-06T20:37:08.911Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-MISC-05",
+      "title": "Planner: compare a saved plan's recommendations with what happened (PRX-PLAN-162)",
+      "description": "Covers PRX-PLAN-162 (compare recommendations with what happened, without claiming causation). 'freshness' lists per-item outcomes; no summary compares recommendations to outcomes. Advisory group GROUP-PRAXIS-PLANNING-002 (research/groups/GROUP-PRAXIS-PLANNING-002/group-analysis.json); grouped-mode commands are not on main yet, so the grouping is recorded here and in that file. Acceptance criteria: (1) 'plan freshness --plan FILE' adds a recommendation-outcome summary: per recommended item whether it was started, completed, blocked or untouched since the plan, whether the start order followed the recommended wave order, and the observed versus predicted duration for completed items; (2) the output states that it is an observation and not the planner's effect; (3) tests cover followed and not-followed orders; (4) docs/planning.md status for 162 updated.",
+      "tags": [
+        "planning",
+        "planner-evidence"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:09.220Z",
+      "updatedAt": "2026-10-06T20:37:09.220Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-MISC-06",
+      "title": "Planner: persist estimate-error history over time (PRX-PLAN-170)",
+      "description": "Covers PRX-PLAN-170 (track estimate error over time). Replay computes error but nothing persists it. Advisory group GROUP-PRAXIS-PLANNING-002 (research/groups/GROUP-PRAXIS-PLANNING-002/group-analysis.json); grouped-mode commands are not on main yet, so the grouping is recorded here and in that file. Acceptance criteria: (1) 'plan replay --record' appends one praxis.plan-calibration/1 entry per run (planner version, as-of, work-state fingerprint, sample count, within-range rate, median absolute and relative error, per class) to a committed history file under .ros/planning/; plain replay stays read-only (PLAN-001, PLAN-161); (2) a repeated record for the same fingerprint and planner version is idempotent; (3) 'plan replay' reports the trend from the recorded history; (4) tests cover append, idempotency, read-only default and trend; (5) docs/planning.md status for 170-173 updated.",
+      "tags": [
+        "planning",
+        "planner-evidence"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:09.556Z",
+      "updatedAt": "2026-10-06T20:37:09.556Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-MISC-07",
+      "title": "Record the cross-provider continuation proof on main (RQ-ROS-2026-A023 acceptance, PRAXIS-XPROVIDER-PROOF-01)",
+      "description": "Covers RQ-ROS-2026-A023 acceptance 'Continuation completes' (and RQ-ROS-2026-A022's cross-provider continuity). Work item PRAXIS-XPROVIDER-PROOF-01 was executed on branch proof/chatgpt-continuation (head b2becae0): a Claude Code predecessor checkpointed part 1, and an OpenAI/ChatGPT successor continued it through the inbox branch praxis-inbox/chatgpt-xprovider-proof-01 (work.continue journal req-chatgpt-xprovider-continue-01) and completed it, but none of that state reached main and RQ-A023 still says Open. Acceptance criteria: (1) an evidence record on main cites the branch, commits, journals, workflow runs and events, verified with git and the GitHub API, and states what is asserted (requester identity) versus observed (executor); (2) it shows the successor's own identity, the successor execution's parent and the predecessor's interrupted disposition as recorded by Praxis; (3) RQ-A023's status table and DF-ROS-2026-A045 cite that evidence; (4) the proof branch's Praxis state is not hand-copied into main's .ros state.",
+      "tags": [
+        "remote",
+        "continuity"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:09.880Z",
+      "updatedAt": "2026-10-06T21:11:25.284Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-MISC-08",
+      "title": "F#/.NET-only automation: port tracked Python and inline python3 (RQ-ROS-2026-A024)",
+      "description": "Covers RQ-ROS-2026-A024's normative rule that build tooling and executable automation are F#/.NET. Python remains in research/experiments/**/*.py, scripts/praxis-release-bump.sh, praxis-remote-enable.sh, praxis-remote-persist.sh, praxis-remote-inbox.sh, praxis-bootstrap.sh, research/experiments/EX-ROS-2026-A021-evaluation-kit/prepare-blind-bundle.sh, .github/actions/praxis-remote/action.yml and the native-release, praxis-remote, ros-fs-assets and praxis-validation workflows. Acceptance criteria: (1) each Python use is ported to F#/.NET, or listed as an exact-path exception in ros.json implementationPolicy.exceptions citing an accepted DF decision that records the owner's approval and the follow-up work item; (2) './praxis architecture check' (and validate when the policy is enabled) fails on a tracked *.py file or a python/python3 invocation in a tracked script, workflow or action that no exception covers; (3) tests cover the new rule and the exceptions; (4) workflows no longer set up Python unless an exception needs it; (5) RQ-A024 states the real status.",
+      "tags": [
+        "implementation-policy",
+        "tooling"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:10.203Z",
+      "updatedAt": "2026-10-06T20:37:10.203Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-MISC-09",
+      "title": "Fix stale requirement citations: deleted Node tests and test paths in RQ-ROS-2026-A021..A024",
+      "description": "RQ-ROS-2026-A021 cites tests/praxis-remote-adapter.test.mjs and 'npm run test:all'; A022 cites tests/remote-checkpoint.test.mjs; A023 cites tests/praxis-remote-inbox.test.mjs; A024 cites tests/Ros.Tests/ImplementationLanguagePolicyTests.fs and claims status implemented although Python remains. Acceptance criteria: (1) each citation names the F# tests that cover the behaviour now (RemotePersistScriptTests, RemoteExecuteCliTests, RemoteProtocolTests, PremergeRemoteScriptTests 'fence inbox' tests, tests/Praxis.Tests/ImplementationLanguagePolicyTests.fs), with the historical Node result kept as history; (2) A024's status reflects the remaining Python (until PRAXIS-MISC-08 lands); (3) A021 notes that issue #90 now also defines PRX-REMOTE-045..050 and that PRAXIS-NPM-BIN was abandoned; (4) a test fails if a requirement record under research/requirements cites a tests/ path that does not exist, unless the citation is marked historical; (5) provenance recorded for each modified record and validate passes.",
+      "tags": [
+        "documentation",
+        "requirements"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:10.513Z",
+      "updatedAt": "2026-10-06T21:11:14.359Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-ID-01",
+      "title": "Typed repository identity and canonical work-item identity (PRX-REMOTE-045, 046, 048, 049, 050)",
+      "description": "Close PRX-REMOTE-045, 046, 048, 049 and 050 (GitHub issue #90, adopted by RQ-ROS-2026-A021) and the Contradicted rule that ros.json repository.id is only a name. Acceptance criteria: (1) the domain has typed RepositoryIdentity (provider, stable provider ID, owner/repo locator) and WorkItemIdentity (repository + local ID) values; the display form owner/repo:ID is derived and never parsed to establish identity; (2) the same local ID in two repositories, and two repositories with the same name under different owners, are distinct identities; a rename or transfer (same provider ID, new locator) keeps the identity; (3) an unqualified ID resolves only inside one repository context, and an unqualified lookup across several repositories that is ambiguous fails closed; (4) duplicate or conflicting canonical identities (one provider ID with two locators in one observation, one locator claimed by two provider IDs) fail closed; (5) ros.json gains a versioned repository.identity {provider, providerId, locator}; the legacy repository.id name is kept, read, and reported explicitly as legacy; 'praxis repository identity' shows and sets it and verifies it against the hosting platform's observed ID (GITHUB_REPOSITORY_ID) when available; validate reports a legacy or locator-changed identity as a warning and a contradicted one as an error, while a never-adopted identity is reported by 'praxis repository identity' and 'work capture' rather than as a validate warning on every repository (decision recorded in the group verification); the migration rule is documented; (6) work capture reports the canonical identity, or states that it is incomplete because the repository identity is not established; (7) the structured reference {repositoryId, repository, localId} round-trips through JSON without parsing the display string; (8) tests cover every PRX-REMOTE-050 case. Reuse: Target.repositoryFromRemote (Domain/Installation/Registration.fs) and the owner/repo:ID grammar used by PRAXIS-GROUP-07 member references.",
+      "tags": [
+        "identity"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:26.996Z",
+      "updatedAt": "2026-10-07T05:04:54.726Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-ID-02",
+      "title": "Remote protocol 1.4: structured canonical work-item references with explicit old-peer compatibility (PRX-REMOTE-047, implementation-order amendment)",
+      "description": "The remote protocol must consume the canonical identity model of PRAXIS-ID-01 instead of bare workItemId/workItemIds strings (PRX-REMOTE-047 and the issue #90 implementation-order amendment). Acceptance criteria: (1) protocol 1.4 accepts {repositoryId, repository, localId} objects wherever a work-item ID is accepted, including batch constituents; (2) a bare ID stays valid and means the executing repository; (3) a structured reference naming another repository, or one whose provider ID and locator contradict the executing repository, is refused fail-closed with invalid-request and changes nothing; (4) a structured reference in a 1.0-1.3 request is refused as invalid; a 1.4 request to a 1.3 executor is refused as unsupported-protocol by the existing rule; 1.0-1.3 requests behave and fingerprint exactly as before, so recorded replays still match; (5) praxis.describe advertises the executing repository's identity and the reference shape; responses carry the canonical identity of the work items they acted on; (6) docs/remote-protocol.md and docs/remote-agent-contract.md document the shape, compatibility and refusal rules; (7) tests cover each case. Depends on PRAXIS-ID-01.",
+      "tags": [
+        "identity"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:27.375Z",
+      "updatedAt": "2026-10-07T05:54:46.469Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-ID-03",
+      "title": "Telemetry and planner schemas carry canonical work-item identity; correct identity status docs (PRX-REMOTE-047, PRX-PLAN-182)",
+      "description": "Carry the canonical work-item identity structurally in execution telemetry and planner documents and correct the documentation that overstates identity. Acceptance criteria: (1) new execution telemetry records carry workItem {repositoryId, repository, localId} next to the legacy workItemId, and records without it stay valid (legacy rule documented); (2) every praxis.plan document carries the repository identity it was computed in, so each work-item ID in it is the local ID of a canonical identity in that repository, with no competing identity scheme (PRX-PLAN-182); parsers read documents without it (per-item references were not added: the document-level identity qualifies every local ID and keeps the plan schema the grouped-work track is extending stable); (3) docs/planning.md no longer reports PRX-PLAN-182 as met on the grounds that no identity scheme exists; (4) RQ-ROS-2026-A021 names PRX-REMOTE-001..050, no longer defers the npm bin to the abandoned PRAXIS-NPM-BIN and no longer cites deleted Node test files; (5) tests cover the round-trips. Depends on PRAXIS-ID-01.",
+      "tags": [
+        "identity",
+        "planning"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:27.755Z",
+      "updatedAt": "2026-10-07T05:54:48.741Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-ID-04",
+      "title": "Generate and govern the Praxis instance identity (DER-16, 17, 22, 23, 24)",
+      "description": "requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md items 16, 17, 22, 23 and 24 (audit IDs DER-16/17/22/23/24): no code generates .praxis/instance.json, so instance-mismatch rejection is inert. Acceptance criteria: (1) praxis init, praxis upgrade and an explicit 'praxis instance init' create .praxis/instance.json (schema praxis.instance/1, a random instance ID, createdAt, the Praxis version and the repository it was created for) before any registration is attempted, and never replace an existing one; (2) an upgrade preserves the instance ID; (3) a clone of the same repository keeps the identity; a copy into another repository (template or fork, detected from the stable provider ID) is reported as foreign, is never stamped into new telemetry and is refused by envelope reconciliation until 'praxis instance init --reinitialize --reason TEXT' creates a new identity that records its predecessor; a rename or transfer keeps it; (4) new telemetry executions and envelope receipts carry the local instance ID; (5) envelope reconciliation rejects a claimed instance ID that differs from the generated local one, proved end to end with an instance file created by the generator; (6) the instance reader reports a malformed file as a typed failure instead of swallowing the exception; (7) validate reports a missing or foreign instance identity; (8) this repository gets its own instance identity. Tests prove each criterion.",
+      "tags": [
+        "identity"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:28.106Z",
+      "updatedAt": "2026-10-07T05:04:57.698Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-ID-05",
+      "title": "Praxis instance registration projection (DER-19, 20, 25, 26)",
+      "description": "requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md items 19, 20, 25 and 26: installation register records system installations, not an instance identity projection. Acceptance criteria: (1) 'praxis instance projection [--json]' renders a praxis.instance-projection/1 document with the instance ID, repository/provider coordinates, Praxis version, reconciliation and remote protocol versions, supported capabilities and the availability state of each optional Echelon integration, where unknown and unavailable are representable and are not failures; (2) it works with no Echelon component, network or credentials; (3) 'praxis instance register' sends the projection through the existing installation registration client with a deterministic operation ID, so a retry is idempotent and never creates a second identity; an unavailable registry exits 0 and changes nothing local; (4) the projection is built from an allow-list and contains no credentials, secrets, local paths or agent-private data, proved by a test that seeds secrets in the environment and configuration. Depends on PRAXIS-ID-04.",
+      "tags": [
+        "identity"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:28.429Z",
+      "updatedAt": "2026-10-07T05:05:00.522Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-ID-06",
+      "title": "Policy-gated validate rule: meaningful work runs on a branch named for its work item (DER-01)",
+      "description": "requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md item 1 and its acceptance criterion 'Validation rejects meaningful work on a branch other than its work-item ID'. Today only the envelope path enforces it. Acceptance criteria: (1) ros.json workProtocol.branchPolicy 'work-item-id' enables the rule; it is off by default and the setting is validated; (2) with the policy on, praxis validate reports an error when meaningful changes (working tree plus ROS_BASE_REF range) exist on a branch whose name is not the ID of a work item recorded in the work context; (3) the branch is read from GITHUB_HEAD_REF in pull-request CI and from Git otherwise; an unknown or detached branch with meaningful work is an error, not a pass; (4) no meaningful changes, or the policy off, produce no finding; (5) the decision is a pure domain rule with unit tests, and an integration test runs validate on a real repository for both outcomes; (6) docs/work-protocol.md documents the setting.",
+      "tags": [
+        "identity"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:28.753Z",
+      "updatedAt": "2026-10-07T05:05:03.598Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

@@ -64,26 +64,12 @@ module Target =
 
     /// Stable `owner/repository` identity from a Git remote URL. Only the
     /// remote's repository path is used; no local path is ever part of it.
+    /// The URL grammar is the repository-identity module's
+    /// (`RepositoryLocator.ofRemoteUrl`); a target additionally needs the
+    /// stricter owner grammar above.
     let repositoryFromRemote (remoteUrl: string) =
-        let trimmed = remoteUrl.Trim()
-
-        let path =
-            if trimmed.StartsWith("git@", StringComparison.Ordinal) then
-                match trimmed.IndexOf ':' with
-                | -1 -> None
-                | i -> Some(trimmed.Substring(i + 1))
-            else
-                match Uri.TryCreate(trimmed, UriKind.Absolute) with
-                | true, uri when uri.Scheme = "https" || uri.Scheme = "http" || uri.Scheme = "ssh" -> Some(uri.AbsolutePath.TrimStart('/'))
-                | _ -> None
-
-        path
-        |> Option.map (fun p -> if p.EndsWith(".git", StringComparison.Ordinal) then p.Substring(0, p.Length - 4) else p)
-        |> Option.map (fun p ->
-            // A proxied remote such as http://host/git/owner/repo keeps the
-            // last two segments.
-            let parts = p.Split('/', StringSplitOptions.RemoveEmptyEntries)
-            if parts.Length >= 2 then parts[parts.Length - 2] + "/" + parts[parts.Length - 1] else p)
+        Praxis.Domain.Identity.RepositoryLocator.ofRemoteUrl remoteUrl
+        |> Option.map Praxis.Domain.Identity.RepositoryLocator.value
         |> Option.filter validRepository
 
     /// Resolve the target. A repository target may be inferred from the Git

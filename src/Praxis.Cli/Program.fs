@@ -29,7 +29,7 @@ open Aegis
 let Version = Lifecycle.Version
 
 let private usageBase =
-    "Usage: praxis [--root PATH] version | " + PacingCommands.usage + " | " + ExecutionCommands.usage + " | " + InstallationCommands.usage + " | " + PlanCommands.usage + " | " + SyncCommands.usage + " | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--unrecoverable-reason TEXT] [--actor NAME] | work abandon --id ID [--id ID]* --occurred-at TIMESTAMP --reason TEXT [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | " + ReconciliationCommands.usage + " | " + CheckpointCommands.usage + " | " + CheckpointCommands.continueUsage + " | " + WorkGroupCommands.usage + " | " + WorkGroupListCommands.usage + " | " + WorkGroupLinkCommands.usage + " | work context [ID] [--text] [--offline] | status [--json] [--verbose] [--offline] | " + RemoteCommands.usage + " | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--step STEP-ID] [--quiet] | telemetry step start|complete|fail [TARGET] --step STEP-ID [--name TEXT] [--reason TEXT] [--occurred-at TIMESTAMP] | telemetry usage [WORKITEM] [--by work-item|execution|step|provider|model|day] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | foundations verify [--json] | adapter publish --target FILE | ordo ingest --input FILE | ordo assess --input FILE | ordo observe-search --input FILE | ordo observe-effect --input FILE | ordo current | ordo handoff --revision REV --source SOURCE [--fact TEXT]* [--assumption TEXT]* [--unknown TEXT]* [--obligation TEXT]* [--next-action TEXT]* | " + ArchitectureCommands.usage + " | provenance identity [--json] [IDENTITY] | provenance record (--path PATH|--id ID) --operation {created|modified|reviewed|approved|superseded|migrated} [--reason TEXT] [--evidence REF]* [--derived-from REF]* [--execution EXE-ID] [--occurred-at TIMESTAMP] [--json] | provenance show ID|PATH [--json] | provenance audit [--json] | web serve [--port N (default 4310)] [--host H (default 127.0.0.1)] | hub register PATH [--name NAME] | hub unregister ID | hub repos | hub create REPO-ID TITLE [--tag T]* [--priority P] [--description D] [--id ID] [--actor NAME] [--file PATH[=NAME]]* | hub work [--repo ID] [--tag T]* [--status S] | hub serve [--port N (default 4320)] [--host H (default 127.0.0.1)]; IDENTITY (work start/resume/block/complete, add, telemetry start): [--actor-kind {agent|human|automation|unknown|x-...}] [--agent ID|--actor ID] [--provider P] [--model M] [--runtime R] ..."
+    "Usage: praxis [--root PATH] version | " + PacingCommands.usage + " | " + ExecutionCommands.usage + " | " + InstallationCommands.usage + " | " + IdentityCommands.usage + " | " + PlanCommands.usage + " | " + SyncCommands.usage + " | " + TutelaCommands.usage + " | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--unrecoverable-reason TEXT] [--actor NAME] | work abandon --id ID [--id ID]* --occurred-at TIMESTAMP --reason TEXT [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | " + ReconciliationCommands.usage + " | " + CheckpointCommands.usage + " | " + CheckpointCommands.continueUsage + " | " + WorkGroupCommands.usage + " | " + WorkGroupListCommands.usage + " | " + WorkGroupLinkCommands.usage + " | work context [ID] [--text] [--offline] | status [--json] [--verbose] [--offline] | " + RemoteCommands.usage + " | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--step STEP-ID] [--quiet] | telemetry step start|complete|fail [TARGET] --step STEP-ID [--name TEXT] [--reason TEXT] [--occurred-at TIMESTAMP] | telemetry usage [WORKITEM] [--by work-item|execution|step|provider|model|day] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | foundations verify [--json] | adapter publish --target FILE | ordo ingest --input FILE | ordo assess --input FILE | ordo observe-search --input FILE | ordo observe-effect --input FILE | ordo current | ordo handoff --revision REV --source SOURCE [--fact TEXT]* [--assumption TEXT]* [--unknown TEXT]* [--obligation TEXT]* [--next-action TEXT]* | " + ArchitectureCommands.usage + " | provenance identity [--json] [IDENTITY] | provenance record (--path PATH|--id ID) --operation {created|modified|reviewed|approved|superseded|migrated} [--reason TEXT] [--evidence REF]* [--derived-from REF]* [--execution EXE-ID] [--occurred-at TIMESTAMP] [--json] | provenance show ID|PATH [--json] | provenance audit [--json] | web serve [--port N (default 4310)] [--host H (default 127.0.0.1)] | hub register PATH [--name NAME] | hub unregister ID | hub repos | hub create REPO-ID TITLE [--tag T]* [--priority P] [--description D] [--id ID] [--actor NAME] [--file PATH[=NAME]]* | hub work [--repo ID] [--tag T]* [--status S] | hub serve [--port N (default 4320)] [--host H (default 127.0.0.1)]; IDENTITY (work start/resume/block/complete, add, telemetry start): [--actor-kind {agent|human|automation|unknown|x-...}] [--agent ID|--actor ID] [--provider P] [--model M] [--runtime R] ..."
 
 let private usage =
     usageBase
@@ -346,33 +346,8 @@ let private runWorkPlan root arguments =
         eprintfn "ERROR work plan requires valid --id, --type, --state, --action, --occurred-at, and TYPE=PATH evidence"
         2
 
-/// Mirrors production `gitPaths` (`tools/ros_cli.mjs`): real working-tree
-/// changed paths plus, when `$ROS_BASE_REF` resolves to an existing commit,
-/// its committed-range diff against `HEAD` — deduped and ordinally sorted.
-/// A non-repository directory yields no paths (greenfield compatibility); any
-/// other Git or base-ref-diff failure is an error, never a silent empty list.
-let private realObservedGitPaths root : Result<string list, GitFailure> =
-    let workingTreePaths =
-        match GitOperations.observe (ProcessGitRepository.create root) with
-        | GitStatusObservation.Clean -> Ok []
-        | GitStatusObservation.Changed changes -> Ok(changes |> List.map _.Path)
-        | GitStatusObservation.Unavailable failure when failure.Reason = GitUnavailableReason.NotRepository -> Ok []
-        | GitStatusObservation.Unavailable failure -> Error failure
-
-    workingTreePaths
-    |> Result.bind (fun paths ->
-        let baseRef =
-            match Environment.GetEnvironmentVariable "ROS_BASE_REF" with
-            | null
-            | "" -> None
-            | value -> Some value
-
-        match GitOperations.compareBase (ProcessGitRepository.createBaseComparison root) baseRef with
-        | GitBaseComparisonOutcome.NotConfigured
-        | GitBaseComparisonOutcome.RefUnavailable -> Ok paths
-        | GitBaseComparisonOutcome.Committed committedPaths -> Ok(paths @ committedPaths)
-        | GitBaseComparisonOutcome.Unavailable failure -> Error failure)
-    |> Result.map (fun paths -> paths |> List.distinct |> List.sortWith (fun left right -> String.CompareOrdinal(left, right)))
+/// Working-tree plus `$ROS_BASE_REF` committed-range paths (`ObservedGitPaths.observe`).
+let private realObservedGitPaths root = ObservedGitPaths.observe root
 
 let private formatGitFailure (failure: GitFailure) = $"{failure.Operation} unavailable: {failure.Message}"
 
@@ -508,6 +483,7 @@ let private readWorkContext root : Result<WorkContextPlanningView, string> =
         Ok { WorkItems = []; StartedAt = None; BaselineDirtyPaths = [] }
     else
         WorkContextPlanContract.parseJson (File.ReadAllText path)
+let private identityValidation root = IdentityCommands.validation root (fun () -> realObservedGitPaths root |> Result.mapError formatGitFailure) (PathFilter.meaningfulPaths (FileWorkConfigRepository.readPathFilterConfig root)) (fun () -> match readWorkContext root with Ok context -> context.WorkItems |> List.map _.Id | Error _ -> [])
 
 /// Mirrors production `workFindings` (`tools/ros_cli.mjs`): when attribution
 /// enforcement is off, no Git observation is ever attempted. Otherwise a
@@ -916,7 +892,7 @@ let private runWorkCapture root arguments (createdByActor: Actor) =
                 1
             | Ok(), Ok row ->
                 printf "%s" (BacklogTransitionEffectContract.renderJson row)
-                0
+                IdentityCommands.reportCanonical root row.Id
     | _ ->
         eprintfn "ERROR work capture requires valid --title and --occurred-at"
         2
@@ -2065,8 +2041,7 @@ let private computeUnifiedFindings root : Result<ArtifactFinding list, string> =
                 let stepReferenceFindings =
                     FileTelemetryUsageRepository.stepReferenceFindings root |> List.map (fun (path, field, message) -> convert path field message)
 
-                let workGroupFindings =
-                    WorkGroupCommands.validationFindings root |> List.map (fun (path, field, message) -> convert path field message)
+                let workGroupFindings = (WorkGroupCommands.validationFindings root |> List.map (fun (path, field, message) -> convert path field message)) @ fst (identityValidation root)
 
                 match ProvenanceCommands.findingsOf FindingSeverity.Error root, ArchitectureCommands.findings root with
                 | Error message, _
@@ -2096,7 +2071,7 @@ let private runValidateUnified root arguments =
             eprintfn "ERROR %s" message
             1
         | Ok all, Ok provenanceWarnings ->
-            let warnings = (provenanceWarnings |> List.map ProvenanceCommands.toArtifactFinding) @ (WorkGroupCommands.validationWarnings root |> List.map (fun (path, field, message) -> { Path = path; Field = field; Message = message }))
+            let warnings = (provenanceWarnings |> List.map ProvenanceCommands.toArtifactFinding) @ (WorkGroupCommands.validationWarnings root |> List.map (fun (path, field, message) -> { Path = path; Field = field; Message = message })) @ (identityValidation root |> snd)
 
             if arguments |> List.contains "--json" then
                 printf "%s" (FindingContract.renderJsonWithWarnings all warnings)
@@ -2962,7 +2937,7 @@ let private repositoryDispatch root packageRoot arguments =
     | "git" :: "status" :: rest when rest |> List.forall ((=) "--json") ->
         runGitStatus (rest |> List.contains "--json") gitRepository
     | "pacing" :: rest -> PacingCommands.run root rest
-    | "sync" :: rest -> SyncCommands.run root rest
+    | ("sync" | "tutela") as command :: rest -> (if command = "sync" then SyncCommands.run else TutelaCommands.run) root rest
     | "work" :: "decide" :: rest -> runWorkDecision rest
     | "work" :: "plan" :: rest -> runWorkPlan root rest
     | "work" :: "context-plan" :: rest -> runWorkContextPlan root rest
@@ -3032,6 +3007,7 @@ let private repositoryDispatch root packageRoot arguments =
     | "execution" :: rest -> ProvenanceCommands.withResolvedActor rest (fun actor -> ExecutionCommands.run root actor rest)
     | "installation" :: ("list" | "status" | "history") :: _ -> InstallationCommands.runQuery root (List.tail arguments)
     | "installation" :: rest -> ProvenanceCommands.withResolvedActor rest (fun actor -> InstallationCommands.run root actor rest)
+    | family :: rest when family = "repository" || family = "instance" -> IdentityCommands.run root Version (ProvenanceCommands.withResolvedActor rest) family rest
     | "plan" :: rest -> PlanCommands.run root Version rest
     | "adapter" :: "call" :: rest -> runAdapterCall root rest
     | "adapter" :: "publish" :: rest -> runAdapterPublish root rest
@@ -3083,33 +3059,16 @@ let main arguments =
         |> Option.ofObj
         |> Option.map string
 
-    let config = Aegis.configure "Praxis.Cli" version [ Sinks.console ]
-
-    match Bootstrap.validate None config with
+    match Praxis.Infrastructure.Boundary.AegisBoundary.configure version [ Sinks.console ] with
     | Result.Error problems ->
-        for problem in problems do
-            let _, message = Bootstrap.describe problem
-            eprintfn "ERROR Aegis configuration: %s" message
-
+        problems |> List.iter (eprintfn "ERROR Aegis configuration: %s")
         1
-    | Ok validated ->
-        let scope = Aegis.scope validated "Praxis.Cli.Main" Map.empty
+    | Ok aegis ->
+        let boundary = Praxis.Infrastructure.Boundary.AegisBoundary.capture
+        let operation = Praxis.Infrastructure.Boundary.AegisBoundary.operationOf (List.ofArray arguments)
 
-        let classify scope ex =
-            Aegis.faultOf
-                validated
-                scope
-                (FaultCode "PRAXIS.CLI.UNHANDLED")
-                UnknownFailure
-                FaultSeverity.Error
-                DegradedApplication
-                RequiresIntervention
-                ManualIntervention
-                "Praxis encountered an unexpected operational failure."
-                ex
-
-        match Aegis.capture validated scope classify (fun () -> execute arguments) with
+        match boundary aegis Praxis.Infrastructure.Boundary.OperationalBoundary.Unexpected operation None "could not complete the command" (fun () -> execute arguments) with
         | Ok exitCode -> exitCode
         | Result.Error fault ->
-            eprintfn "ERROR %s Reference %s" fault.UserMessage fault.Id.Value
+            eprintfn "ERROR %s" (Praxis.Infrastructure.Boundary.AegisBoundary.describe fault)
             1
