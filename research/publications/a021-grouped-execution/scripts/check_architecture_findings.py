@@ -8,9 +8,13 @@ Checks, without changing anything:
   * that the file is in its canonical form (sorted keys, 2-space indent);
   * that every cited commit exists (`git cat-file -e`);
   * that every cited path exists in its commit and that every cited symbol is
-    present inside the cited line range of that blob.
+    present inside the cited line range of that blob (evidence and spec_refs);
+  * that every probe claim (probe_claims) matches the recorded probe output in
+    data/probes/<implementation>.json, and names findings that exist.
 
-Usage: check_architecture_findings.py [PATH] [--repo DIR]
+Usage: check_architecture_findings.py [PATH] [--repo DIR] [--probes DIR] [--no-git]
+--no-git skips the commit/blob checks (for the anonymous bundle, which ships
+no Git history); every other check still runs.
 Exit status 0 when every check passes, 1 otherwise.
 """
 import json
@@ -21,6 +25,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_PATH = HERE.parent / "data" / "architecture-findings.json"
+DEFAULT_PROBES = HERE.parent / "data" / "probes"
 
 CATEGORIES = frozenset({"unified", "duplicated-compatible", "divergent", "missing", "not-assessable"})
 DIRECTIONS = frozenset({"grouped_more_unified", "independent_more_unified", "equivalent", "mixed", "not_assessable"})
@@ -129,9 +134,57 @@ def evidence_errors(repo, doc):
 
     return (
         [error for f in doc.get("findings", []) for item in f.get("evidence", []) for error in check(f"finding {f.get('id')}", item)]
+        + [error for f in doc.get("findings", []) for item in f.get("spec_refs", []) for error in check(f"finding {f.get('id')} spec", item)]
+        + [error for c in doc.get("comparisons", []) for item in c.get("spec_refs", [])
+           for error in check(f"comparison {c.get('study')}/{c.get('dimension')} spec", item)]
         + [error for f in doc.get("findings", []) for c in f.get("introducing_commits", []) for error in commit_check(f"finding {f.get('id')}", c)]
         + [error for impl in doc.get("implementations", []) for error in commit_check(f"implementation {impl.get('id')}", impl.get("head_commit", ""))]
     )
+
+
+def is_json(text):
+    try:
+        json.loads(text)
+        return True
+    except ValueError:
+        return False
+
+
+def probe_claim_errors(doc, probes_dir):
+    finding_ids = {f.get("id") for f in doc.get("findings", [])}
+
+    @lru_cache(maxsize=None)
+    def recorded(impl):
+        path = probes_dir / f"{impl}.json"
+        return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+
+    def outcome_errors(where, expect, probe):
+        checks = (
+            ("exit_code", lambda want: probe["exit_code"] == want, lambda want: f"exit {probe['exit_code']}, expected {want}"),
+            ("stdout_contains", lambda want: want in probe["stdout"], lambda want: f"stdout lacks {want!r}"),
+            ("stdout_is_json", lambda want: is_json(probe["stdout"]) == want, lambda want: f"stdout_is_json is {not want}, expected {want}"),
+        )
+        return [f"{where}: {describe(expect[key])}" for key, holds, describe in checks if key in expect and not holds(expect[key])]
+
+    def concurrency_errors(where, expect, concurrency):
+        lost = concurrency["totals"]["lost_updates"]
+        return (([f"{where}: total lost updates {lost} < {expect['lost_updates_total_min']}"]
+                 if "lost_updates_total_min" in expect and lost < expect["lost_updates_total_min"] else [])
+                + ([f"{where}: total lost updates {lost} > {expect['lost_updates_total_max']}"]
+                   if "lost_updates_total_max" in expect and lost > expect["lost_updates_total_max"] else []))
+
+    def claim_errors(claim):
+        where = f"probe claim {claim.get('id')} ({claim.get('implementation')} {claim.get('probe')})"
+        data = recorded(claim.get("implementation"))
+        unknown = [f"{where}: supports unknown finding {fid}" for fid in claim.get("supports", []) if fid not in finding_ids]
+        if data is None:
+            return unknown + [f"{where}: no probe data at {probes_dir / (str(claim.get('implementation')) + '.json')}"]
+        if claim.get("probe") == "CC":
+            return unknown + concurrency_errors(where, claim.get("expect", {}), data["concurrency"])
+        probe = next((p for p in data["probes"] if p["id"] == claim.get("probe")), None)
+        return unknown + ([f"{where}: probe not recorded"] if probe is None else outcome_errors(where, claim.get("expect", {}), probe))
+
+    return [error for claim in doc.get("probe_claims", []) for error in claim_errors(claim)]
 
 
 def canonical_errors(path, doc):
@@ -141,13 +194,20 @@ def canonical_errors(path, doc):
 
 def main(argv):
     args = argv[1:]
-    repo = Path(args[args.index("--repo") + 1]) if "--repo" in args else HERE.parents[3]
-    positional = [a for i, a in enumerate(args) if a != "--repo" and (i == 0 or args[i - 1] != "--repo")]
+    valued = ("--repo", "--probes")
+    option = lambda name, default: Path(args[args.index(name) + 1]) if name in args else default
+    repo = option("--repo", HERE.parents[3])
+    probes_dir = option("--probes", DEFAULT_PROBES)
+    use_git = "--no-git" not in args
+    positional = [a for i, a in enumerate(args) if not a.startswith("--") and (i == 0 or args[i - 1] not in valued)]
     path = Path(positional[0]) if positional else DEFAULT_PATH
     doc = json.loads(path.read_text(encoding="utf-8"))
-    errors = canonical_errors(path, doc) + shape_errors(doc) + evidence_errors(repo, doc)
-    evidence_count = sum(len(f.get("evidence", [])) for f in doc.get("findings", []))
-    print("\n".join(errors) if errors else f"OK: {len(doc['findings'])} findings, {len(doc['comparisons'])} comparisons, {evidence_count} evidence citations verified")
+    errors = (canonical_errors(path, doc) + shape_errors(doc) + (evidence_errors(repo, doc) if use_git else [])
+              + probe_claim_errors(doc, probes_dir))
+    evidence_count = sum(len(f.get("evidence", [])) + len(f.get("spec_refs", [])) for f in doc.get("findings", []))
+    git_note = f"{evidence_count} citations verified against Git" if use_git else "Git checks skipped (--no-git)"
+    print("\n".join(errors) if errors else
+          f"OK: {len(doc['findings'])} findings, {len(doc['comparisons'])} comparisons, {git_note}, {len(doc.get('probe_claims', []))} probe claims verified")
     return 1 if errors else 0
 
 

@@ -270,7 +270,7 @@ def replication_matrix(arch: Mapping[str, Any], metrics: Mapping[str, Any]) -> s
         f"\\multicolumn{{4}}{{@{{}}l}}{{\\textit{{{fam}}}}} \\\\\n" +
         "\n".join(f"{r.outcome} & {r.a021} & {r.r2} & {r.status} \\\\" for r in reps if r.family == fam)
         for fam in families)
-    notes = ("G grouped; I independent. Direction only: a recurred direction in two correlated single "
+    notes = ("G cohort arm; I per-item arm. Direction only: a recurred direction in two correlated single "
              "executions of one setup is not a replication of an effect size. Resource rows: worker-only "
              "platform figures, I/G ratio to one decimal. Repeated-context rows: both arms' script counts are "
              "lower bounds, so the direction is listed but not counted as recurred evidence. Architecture rows: "

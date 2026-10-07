@@ -201,8 +201,8 @@ A021_NOTES = ("G: one session. I: five item sessions plus two extra item-4 sessi
               "prompt; a third session did the bookkeeping); the shared orchestrator and the evaluator are excluded. "
               "Platform figures are whole-session usage records. ``Script'' figures come from each session's own "
               "metrics script, run before its final steps; there are none for attempts 1 and 2, so the independent "
-              "counts miss the session that implemented item 4. I/G is the independent/grouped ratio; Red.\\ is "
-              "(independent$-$grouped)/independent, whole percent. No contrast is computed for lower bounds "
+              "counts miss the session that implemented item 4. I/G is the ratio of the per-item to the cohort arm; Red.\\ is "
+              "(I$-$G)/I, whole percent. Volume rows: git diff against the baseline over src, tests and docs. No contrast is computed for lower bounds "
               "($\\geq$), wall-clock spans, orientation time (one onset versus five) or uncached input. Active time "
               "ends a blocked session at the block; the wall-clock span includes orchestration gaps and the block. "
               "End-of-session context approximates the peak (no compactions).")

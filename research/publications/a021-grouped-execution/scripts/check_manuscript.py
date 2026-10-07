@@ -177,8 +177,8 @@ def check_forbidden(name: str, text: str, terms: Iterable[tuple[str, str]]) -> t
 # I/O edge
 # --------------------------------------------------------------------------
 
-def pdf_geometry(pdf: Path) -> Optional[tuple[int, int, float, float, float]]:
-    """(pages, reference-heading page, heading x, heading y, page width) or None."""
+def pdf_geometry(pdf: Path) -> Optional[tuple[int, int, float, float, float, float]]:
+    """(pages, reference-heading page, heading x, heading y, page width, last-page fill) or None."""
     r = subprocess.run(["pdftotext", "-bbox", str(pdf), "-"], capture_output=True, text=True)
     if r.returncode != 0:
         return None
@@ -187,15 +187,27 @@ def pdf_geometry(pdf: Path) -> Optional[tuple[int, int, float, float, float]]:
         m = re.search(r'xMin="([\d.]+)" yMin="([\d.]+)"[^>]*>EFERENCES<', page)
         w = re.search(r'width="([\d.]+)"', page)
         return None if m is None or w is None else (n, float(m.group(1)), float(m.group(2)), float(w.group(1)))
+    def fill(page: str, width: float) -> float:
+        """Fraction of a two-column page that carries text (per-column lowest word)."""
+        words = tuple((float(x), float(y)) for x, y in re.findall(r'xMin="([\d.]+)" yMin="[\d.]+" xMax="[\d.]+" yMax="([\d.]+)"', page))
+        def col(left: bool) -> float:
+            ys = tuple(y for x, y in words if (x < width / 2) == left)
+            return 0.0 if not ys else min(1.0, max(0.0, (max(ys) - TEXT_TOP) / (TEXT_BOTTOM - TEXT_TOP)))
+        return (col(True) + col(False)) / 2
     hits = tuple(h for n, pg in enumerate(pages, 1) for h in [heading(n, pg)] if h is not None)
-    return None if not hits else (len(pages), *hits[-1])
+    if not hits:
+        return None
+    n, x, y, width = hits[-1]
+    return (len(pages), n, x, y, width, fill(pages[-1], width))
 
 
-def reference_pages(total: int, page: int, x: float, y: float, width: float) -> float:
-    """Pages occupied by the reference list, counting the remainder of the heading's page."""
+def reference_pages(total: int, page: int, x: float, y: float, width: float, last_fill: float) -> float:
+    """Pages occupied by the reference list: rest of the heading's page, full middle pages, filled part of the last."""
     column = max(0.0, (TEXT_BOTTOM - y) / (TEXT_BOTTOM - TEXT_TOP)) / 2
     remainder = column + (0.5 if x < width / 2 else 0.0)
-    return round(remainder + (total - page), 2)
+    if total == page:
+        return round(max(0.0, remainder - (1.0 - last_fill)), 2)
+    return round(remainder + (total - page - 1) + last_fill, 2)
 
 
 def page_limits() -> tuple[tuple[Problem, ...], tuple[str, ...]]:
@@ -204,8 +216,8 @@ def page_limits() -> tuple[tuple[Problem, ...], tuple[str, ...]]:
         geo = pdf_geometry(pdf) if pdf.exists() else None
         if geo is None:
             return (Problem("pages", f"{name}: missing or unreadable (run scripts/build_paper.sh)"),), f"{name}: n/a"
-        total, page, x, y, width = geo
-        refs = reference_pages(total, page, x, y, width)
+        total, page, x, y, width, last_fill = geo
+        refs = reference_pages(total, page, x, y, width, last_fill)
         problems = ((Problem("pages", f"{name}: {total} pages > {total_max}"),) if total > total_max else ()) + \
                    ((Problem("pages", f"{name}: body runs to page {page} > {body_max}"),) if page > body_max else ()) + \
                    ((Problem("pages", f"{name}: references fill about {refs} pages > {refs_max}"),) if refs > refs_max else ())

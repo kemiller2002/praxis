@@ -6,7 +6,7 @@ evidence behind architecture-findings.json (D2, D5, D6 and the local
 correctness items). This script makes them repeatable:
 
   run_probes.py --impl A021-grouped --cli PATH/ros-fs.dll --source ARM_CHECKOUT \
-                --scratch DIR --out data/probes/A021-grouped.json [--group-flag --group] \
+                --scratch DIR --out data/probes/A021-grouped.json [--group-flag=--group] \
                 [--head SHA] [--concurrency-runs 5] [--processes 8]
 
 --source is a checkout (for example a detached worktree) of the arm's head; it

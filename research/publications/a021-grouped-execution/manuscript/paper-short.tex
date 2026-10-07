@@ -27,8 +27,8 @@
 \begin{abstract}
 Coding agents usually get one work item per fresh session, even when items share design decisions. We executed five coupled work items of an F\#/.NET command-line tool in two ways: \G, one session that first writes and commits a mandated cross-item analysis and then implements all items; and \I, five fresh sessions run serially on one branch, whose prompts neither frame the items as a cohort nor request cross-item analysis. % CLAIM: C01
 The arms differ in retained context and in the instructed analysis, and every session's repository contained the study's hypothesis and cohort labels. % CLAIM: C02 C52
-In an original study and an internal, non-preregistered re-execution (one execution per arm each), \I{} used about \AcostRatio$\times$ and \RtwoCostRatio$\times$ the worker-only platform cost of \G, a gap that includes per-session overhead and that single runs cannot separate from run-to-run variation. % CLAIM: C11 C13 C60 C61
-On a post hoc rubric coded by one AI auditor, \G{} applied one rule where \I{} diverged on member admission, the error and exit-code contract and write locking in both studies, although \I's admission difference follows the acceptance criteria; \I{} validated checkpoint ownership better. Both arms had defects. We report these as hypotheses for a preregistered three-arm study. % CLAIM: C21 C22 C53 C23 C34
+In an original study and an internal, non-preregistered re-execution (one execution per arm each), \I{} used about \AcostRatio$\times$ and \RtwoCostRatio$\times$ the worker-only platform cost of \G, but also inserted about \AinsLinesRatio$\times$ and \RtwoInsLinesRatio$\times$ as many lines (about \AcostPerLineRatio$\times$ and \RtwoCostPerLineRatio$\times$ the cost per line); the gap includes per-session overhead, and single runs cannot separate it from run-to-run variation. % CLAIM: C11 C13 C60 C61 C62
+On a post hoc rubric coded by one AI auditor, \G{} applied one rule where \I{} diverged on member admission, the error and exit-code contract and write locking in both studies, although \G's shared admission rule is weaker than the planner's for external items; \I{} validated checkpoint ownership better (in the original study only through an item that started from a stale checkout). Classification and duplicate-definition differences did not recur. Both arms had defects. We report these as hypotheses for a preregistered three-arm study. % CLAIM: C21 C22 C53 C23 C34
 \end{abstract}
 
 % ======================================================================
@@ -42,7 +42,7 @@ Issue-resolution benchmarks and common practice give an agent one work item per 
 \section{Study Design}
 
 \textbf{Subject and cohort.} The subject is an F\#/.NET command-line tool that governs repository work items and includes a planner that rates item affinity from explicit shared signals (paths, tags, dependencies). Five items add a \texttt{work group} command family: create (1), show (2), add (3), remove (4), checkpoint (5). The planner rated them high affinity and mutually conflicting, so \I's sessions ran serially. % CLAIM: C05
-Their acceptance criteria require the execution-repository check at add but not at create. % CLAIM: C53
+Every item cites a shared requirements document that requires the execution-repository invariant for every group; item 3's criteria repeat it for add. % CLAIM: C53
 The items were written by AI agents of the product that designed and ran the study. % CLAIM: C41
 
 \textbf{Treatments.} All arms branch from one baseline commit (Fig.~\ref{fig:design}). All implementation sessions ran a Claude Opus-family model in the Claude Code remote runtime. % CLAIM: C03 C10
@@ -71,21 +71,22 @@ We report no statistics: one execution per arm, dependent items.
 
 \textbf{Resources.} \I{} used about \AcostRatio$\times$ (A021) and \RtwoCostRatio$\times$ (R2) the worker-only cost of \G{} and about \AactiveRatio$\times$ and \RtwoActiveRatio$\times$ the summed session time (Table~\ref{tab:resources-compact}). % CLAIM: C11 C13 C12 C14
 Without A021's stalled attempt the cost ratio is about \AcostExclStalledRatio$\times$. % CLAIM: C17
+\I{} also wrote more code: \AinsLinesIndep{} versus \AinsLinesGrouped{} inserted lines in A021 and \RtwoInsLinesIndep{} versus \RtwoInsLinesGrouped{} in R2, so per inserted line the cost ratio is only about \AcostPerLineRatio$\times$ and \RtwoCostPerLineRatio$\times$, a normalization, not a quality measure. Part of the extra code is the duplication counted against \I{} below, part its extra tests and checkpoint validation. % CLAIM: C62
 Part of the gap is per-session overhead (each fresh session installed the toolchain and read the instructions), and agent token use varies widely across identical runs~\cite{bai2026tokens}, so these are observations, not effect estimates. % CLAIM: C60 C61
 The lower-bound counts of requests, reads and searches were smaller for \G{} in both studies; no session compacted. % CLAIM: C18 C20
 
 \input{tables/architecture-matrix.tex}
 
-\textbf{Cross-item consistency.} In both studies \G{} used one admission rule for create and add, one coded error and exit-code contract, and serialized writes; \I{} checked the repository only at add (as the criteria specify), mixed error shapes and exit codes, and lost updates under concurrent creates while every process reported success (Table~\ref{tab:architecture}). % CLAIM: C21 C22 C25 C53
-\G's consistency is not correctness: its shared admission rule accepted an item the planner treats as external, and some of its concurrent creates failed under lock contention. % CLAIM: C24 C54
+\textbf{Cross-item consistency.} In both studies \G{} used one admission rule for create and add, one coded error and exit-code contract, and serialized writes; \I{} checked the repository only at add (R2's blind evaluator counted the missing create-time check as a confirmed defect), mixed error shapes and exit codes, and lost updates under concurrent creates while every process reported success (Table~\ref{tab:architecture}). % CLAIM: C21 C22 C25 C53
+\G's consistency is not full correctness: its shared rule ignores the planner's external-repository inference, so it added an item the planner treats as external (at create, every arm accepted such an item), and some of its concurrent creates failed under lock contention. % CLAIM: C24 C54
 Show/checkpoint classification and duplicate definitions differed only in A021, the former from code reading and both from an \I{} item that started from a stale checkout. % CLAIM: C21 C26
 
-\textbf{Correctness and reuse.} \I{} validated checkpoint ownership as item 5's criteria require, in both studies (in A021 only through the stale-start item); \G{} did not, and did not reject blank decisions. \I{} reused more existing baseline rules. % CLAIM: C23 C24 C33
+\textbf{Correctness and reuse.} \I{} validated checkpoint ownership as item 5's criteria require, in both studies (in A021 only through the stale-start item); \G{} did not, and did not reject blank decisions. Shared abstractions and baseline-rule reuse (D7) was coded \ArchDSevenA{} (A021) and \ArchDSevenRtwo{} (R2): \I{} reused more existing baseline rules, \G{} had more shared helpers inside the feature. % CLAIM: C23 C24 C33
 \I{} added \AtestsAddedIndep{} and \RtwoTestsAddedIndep{} net tests against \AtestsAddedGrouped{} and \RtwoTestsAddedGrouped{} for \G, a count, not quality. R2's blind evaluator confirmed \RtwoDefectsGrouped{} acceptance defects in each arm. We cannot rank the arms on local correctness. % CLAIM: C30 C31 C34
 
 \input{tables/replication-matrix.tex}
 
-\textbf{Recurrence.} The resource direction and the admission, error-contract and write-locking differences recurred in R2; so did \I's checkpoint advantage. The classification difference did not. R2's designer knew A021's results and its analysis anticipated the scored dimensions, so recurrence in two correlated single executions shows stability of one setup, not an effect size. % CLAIM: C35 C48
+\textbf{Recurrence.} The resource direction and the admission, error-contract and write-locking differences recurred in R2; so did \I's checkpoint advantage. The classification and duplicate-definition differences did not. R2's designer knew A021's results and its analysis anticipated the scored dimensions, so recurrence in two correlated single executions shows stability of one setup, not an effect size. % CLAIM: C35 C48
 
 % ======================================================================
 \section{Threats and Outlook}
@@ -100,7 +101,7 @@ Next is a preregistered three-arm study (cohort session; shared analysis then pe
 
 % ======================================================================
 \section*{Data Availability}
-An anonymous artifact (link withheld for review) contains the baseline snapshot, criteria, protocol, A021 prompts, blinded patches, evaluation outputs, per-session metrics, datasets and the scripts that generate every table and in-text number; it lacks transcripts and R2 prompts. % CLAIM: C51
+An anonymous artifact (link withheld for review) contains the baseline snapshot, criteria, protocol, A021 prompts, blinded patches, evaluation outputs, per-session metrics, datasets and the scripts that generate every table and in-text number; the table generators run from the bundle, while metric extraction needs the full repository history. It lacks transcripts and R2 prompts. % CLAIM: C51
 
 \section*{Acknowledgment of AI-Generated Content}
 Claude Code (Anthropic) was used for authoring the work items, orchestration, implementation (the study's subjects), the original evaluation, data extraction, auditing, related-work search and drafting this paper and its scripts; R2's evaluation used OpenAI ChatGPT. The human authors are responsible for the content. Most references were checked only against search-engine records of their authoritative pages.

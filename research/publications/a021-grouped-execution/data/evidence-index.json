@@ -41,7 +41,8 @@
         "Abstract",
         "I",
         "V-A",
-        "XI"
+        "XI",
+        "X"
       ],
       "source_artifacts": [
         {
@@ -88,7 +89,7 @@
           "path": "research/experiments/EX-ROS-2026-A021--grouped-versus-independent-execution.md"
         },
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "baseline_commit",
           "path": "research/publications/a021-grouped-execution/data/metrics.json"
         }
@@ -299,7 +300,7 @@
       ]
     },
     {
-      "caveats": "Single execution; includes two failed attempts (see C17); platform/runtime-specific pricing.",
+      "caveats": "Single execution; includes the stalled item-4 attempt (see C17); platform/runtime-specific pricing; I also wrote about 1.8x the lines (C62).",
       "claim_id": "C11",
       "claim_text": "A021 worker-only platform cost G vs I (AcostGrouped/AcostIndep) and ratio about AcostRatio.",
       "classification": "observed",
@@ -312,7 +313,7 @@
       ],
       "source_artifacts": [
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "rows: A021 agg:workers cost_usd_platform; derived",
           "path": "research/publications/a021-grouped-execution/data/metrics.json"
         },
@@ -342,12 +343,12 @@
       ],
       "source_artifacts": [
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "rows: A021 agg:workers active_session_sum_s",
           "path": "research/publications/a021-grouped-execution/data/metrics.json"
         },
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "CF-03",
           "path": "research/publications/a021-grouped-execution/data/metric-conflicts.json"
         },
@@ -372,7 +373,7 @@
       ],
       "source_artifacts": [
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "rows: R2 agg:workers cost_usd_platform; derived",
           "path": "research/publications/a021-grouped-execution/data/metrics.json"
         },
@@ -382,7 +383,7 @@
           "path": "research/experiments/EX-ROS-2026-A021-R2-run.txt"
         },
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "CF-05",
           "path": "research/publications/a021-grouped-execution/data/metric-conflicts.json"
         },
@@ -406,12 +407,12 @@
       ],
       "source_artifacts": [
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "rows: R2 agg:workers active_session_sum_s",
           "path": "research/publications/a021-grouped-execution/data/metrics.json"
         },
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "CF-06",
           "path": "research/publications/a021-grouped-execution/data/metric-conflicts.json"
         },
@@ -425,7 +426,7 @@
     {
       "caveats": "A021 transcript-token totals (lower) are not used as platform totals (erratum E2).",
       "claim_id": "C15",
-      "claim_text": "Grouped used fewer platform output and cache-read tokens in both studies (worker-only).",
+      "claim_text": "G used fewer platform output and cache-read tokens in both studies (worker-only), though its A021 end-of-session context was larger (318.8k vs 262.8k).",
       "classification": "observed",
       "confidence": "high",
       "extraction_method": "platform usage sums",
@@ -435,12 +436,12 @@
       ],
       "source_artifacts": [
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "A021/R2 agg:workers output_tokens_platform, cache_read_tokens_platform",
           "path": "research/publications/a021-grouped-execution/data/metrics.json"
         },
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "CF-01",
           "path": "research/publications/a021-grouped-execution/data/metric-conflicts.json"
         },
@@ -465,12 +466,12 @@
       ],
       "source_artifacts": [
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "R2 agg:workers+orchestration; A021 wall_clock_span_s, blocked_time_s",
           "path": "research/publications/a021-grouped-execution/data/metrics.json"
         },
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "CF-05, CF-06",
           "path": "research/publications/a021-grouped-execution/data/metric-conflicts.json"
         },
@@ -495,11 +496,12 @@
       "extraction_method": "build_tables.py excluded-sessions macro",
       "manuscript_sections": [
         "VIII-A",
-        "XI"
+        "XI",
+        "X"
       ],
       "source_artifacts": [
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "A021 control-04-attempt-1/-2 cost_usd_platform, session_duration_s",
           "path": "research/publications/a021-grouped-execution/data/metrics.json"
         },
@@ -529,12 +531,12 @@
       ],
       "source_artifacts": [
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "*_transcript rows (completeness lower_bound)",
           "path": "research/publications/a021-grouped-execution/data/metrics.json"
         },
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "CF-01, CF-08",
           "path": "research/publications/a021-grouped-execution/data/metric-conflicts.json"
         },
@@ -581,7 +583,7 @@
       ],
       "source_artifacts": [
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "compactions_transcript",
           "path": "research/publications/a021-grouped-execution/data/metrics.json"
         },
@@ -595,7 +597,7 @@
     {
       "caveats": "Rubric applied post-unblinding by one AI auditor; no inter-rater reliability; D3/D8 depend on stale item 5.",
       "claim_id": "C21",
-      "claim_text": "A021: G applied one rule where I behaved inconsistently on admission (D2, probe), error/exit contract (D5, probe) and write locking (D6, probe); show/checkpoint classification (D3) differs by code reading only; D1 and D8 differ in organization only.",
+      "claim_text": "A021: G applied one rule where I behaved inconsistently on admission (D2, probes P9/P10), error/exit contract (D5, probes) and write locking (D6, probe); D3 differs by code reading only; D1 and D8 organization only.",
       "classification": "evaluated",
       "confidence": "medium",
       "extraction_method": "rubric coding with code citations and runtime probes (check_architecture_findings.py verifies citations)",
@@ -691,7 +693,7 @@
     {
       "caveats": "The R2 evaluator missed this in the grouped arm.",
       "claim_id": "C24",
-      "claim_text": "Baseline-rule reuse (D7) was mixed in both studies; both grouped arms re-derived the execution-location rule and accepted an external-by-description item into a local group (probe P2).",
+      "claim_text": "D7 (shared abstractions and baseline-rule reuse) coded mixed in both studies (macro from architecture-findings.json): I reused more baseline rules; both G arms re-derived the location rule and added an external-by-description item (probe P2, add only); at create all four arms accept it (P3).",
       "classification": "observed",
       "confidence": "high",
       "extraction_method": "runtime probe P2 and code citations",
@@ -750,7 +752,8 @@
       "confidence": "high",
       "extraction_method": "commit ancestry of introducing commits",
       "manuscript_sections": [
-        "VIII-B"
+        "VIII-B",
+        "X"
       ],
       "source_artifacts": [
         {
@@ -773,7 +776,8 @@
       "confidence": "medium",
       "extraction_method": "commit ancestry",
       "manuscript_sections": [
-        "IX"
+        "IX",
+        "X"
       ],
       "source_artifacts": [
         {
@@ -853,7 +857,7 @@
       ],
       "source_artifacts": [
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "tests_added, fsharp_tests_net_added, fsharp_tests_passed_final",
           "path": "research/publications/a021-grouped-execution/data/metrics.json"
         },
@@ -924,7 +928,7 @@
           "path": "research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json"
         },
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "findings_defect_kit, acceptance_rows_partially_met_eval1",
           "path": "research/publications/a021-grouped-execution/data/metrics.json"
         },
@@ -967,7 +971,7 @@
     {
       "caveats": "No weighting of defects was defined in advance; no composite score.",
       "claim_id": "C34",
-      "claim_text": "The arms cannot be ranked on local correctness: confirmed defects of different kinds in both, no agreed weighting; no 'beneficial' classification.",
+      "claim_text": "The arms cannot be ranked on local correctness: confirmed defects of different kinds in both (including I's missing create-time repository check, R2 M-D2), no agreed weighting; no favorable classification.",
       "classification": "inferred",
       "confidence": "medium",
       "extraction_method": "synthesis of C23, C24, C30-C33",
@@ -1004,7 +1008,7 @@
     {
       "caveats": "Status rule is ours; two correlated executions of one setup.",
       "claim_id": "C35",
-      "claim_text": "Recurrence matrix (direction only): resource direction, admission/error-contract/write-locking differences, D1 organization, I's D4 advantage, I's higher test counts, G's blank-decision handling and lock-contention failures recurred; D3 and D8 did not; D7 mixed in both; repeated-context counts lower bounds; defect counts not comparable.",
+      "claim_text": "Recurrence matrix (direction only): worker-only resource direction and I's higher test and line counts recurred; admission, error-contract, write-locking, store-organization and D4 directions recurred but carry little independent weight (R2 analysis anticipated them); D3 and D8 did not recur; D7 mixed in both; repeated-context rows lower bounds only; defect counts not comparable.",
       "classification": "evaluated",
       "confidence": "medium",
       "extraction_method": "status rule applied by script",
@@ -1364,12 +1368,12 @@
       ],
       "source_artifacts": [
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "whole script",
           "path": "research/publications/a021-grouped-execution/scripts/extract_metrics.py"
         },
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "whole script",
           "path": "research/publications/a021-grouped-execution/scripts/verify_metrics.py"
         },
@@ -1407,7 +1411,7 @@
           "path": "research/evidence/EV-ROS-2026-A074--a021-r2-evidence-errata.md"
         },
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "CF-01, CF-02, CF-05, CF-06, CF-07",
           "path": "research/publications/a021-grouped-execution/data/metric-conflicts.json"
         }
@@ -1416,7 +1420,7 @@
     {
       "caveats": "Artifact is being finalised by another agent; contents must be re-checked before submission.",
       "claim_id": "C51",
-      "claim_text": "The anonymous artifact contains baseline snapshot, criteria, protocol, A021 prompts, blinded patches, evaluator briefs and outputs, per-session metrics, mappings, datasets and scripts with checksums; it lacks transcripts and R2 prompts; extraction scripts need the full repository history.",
+      "claim_text": "The anonymous artifact contains baseline snapshot, criteria, protocol, A021 prompts (without the extra harness line text), blinded patches, evaluator outputs, per-session metrics, mappings, datasets and scripts; table generators run from the bundle and reproduce the tables byte-identically; extraction needs the full history; transcripts and R2 prompts absent.",
       "classification": "observed",
       "confidence": "medium",
       "extraction_method": "artifact layout",
@@ -1432,8 +1436,8 @@
         },
         {
           "commit": null,
-          "locator": "Bundle layout section",
-          "path": "research/publications/a021-grouped-execution/artifact/README.md"
+          "locator": "Layout (git-ignored build output)",
+          "path": "research/publications/a021-grouped-execution/build/anonymous-artifact/README.md"
         }
       ]
     },
@@ -1465,9 +1469,9 @@
           "path": "research/experiments/EX-ROS-2026-A021--grouped-versus-independent-execution.md"
         },
         {
-          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "commit": null,
           "locator": "PRAXIS-GROUP-01..05 descriptions (generated from the baseline backlog at 8b4ffa392e93b19bf39f6672a608954c934cb815)",
-          "path": ".ros/work/queue.json"
+          "path": "build/anonymous-artifact/acceptance-criteria.txt"
         },
         {
           "commit": "bc5a8d8e99306264c77436d313c5d0caba1d9f32",
@@ -1482,9 +1486,9 @@
       ]
     },
     {
-      "caveats": "Rubric scores D2 as consistency, not conformance or correctness.",
+      "caveats": "Earlier drafts wrongly said I followed the criteria literally (adjudication AD-10..13 reversal).",
       "claim_id": "C53",
-      "claim_text": "The acceptance criteria require the execution-repository check at add (item 3) but not at create (item 1); I's create/add asymmetry follows them literally; G generalized the rule, and its shared rule ignores the planner's external inference (probe P2).",
+      "claim_text": "Every item cites a shared requirements document whose PRX-GRP-051 requires the execution-repository invariant for every group (item 3 repeats it for add); I's missing create-time check violates it (R2 confirmed defect M-D2); G applied it at both verbs through one rule that ignores the planner's external inference (P2).",
       "classification": "observed",
       "confidence": "high",
       "extraction_method": "criteria text and probes",
@@ -1497,9 +1501,9 @@
       ],
       "source_artifacts": [
         {
-          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "commit": null,
           "locator": "PRAXIS-GROUP-01..05 descriptions (generated from the baseline backlog at 8b4ffa392e93b19bf39f6672a608954c934cb815)",
-          "path": ".ros/work/queue.json"
+          "path": "build/anonymous-artifact/acceptance-criteria.txt"
         },
         {
           "commit": "8a2da6830057bc2d68e3fe7312b6d32158be3565",
@@ -1613,7 +1617,7 @@
       ],
       "source_artifacts": [
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "CF-07",
           "path": "research/publications/a021-grouped-execution/data/metric-conflicts.json"
         },
@@ -1687,7 +1691,7 @@
     {
       "caveats": "Size of the overhead unknown (no transcripts).",
       "claim_id": "C60",
-      "claim_text": "Part of the resource gap is per-session overhead (toolchain installation, mandated instruction reads) repeated in each fresh session; it could not be separated.",
+      "claim_text": "Part of the resource gap is per-session overhead (toolchain installation, mandated instruction reads); neither it nor stale-start sessions' resources can be subtracted because only whole-session usage exists (no transcripts or per-step timings).",
       "classification": "inferred",
       "confidence": "high",
       "extraction_method": "harness note and prompts",
@@ -1735,9 +1739,35 @@
           "path": "research/publications/a021-grouped-execution/references.bib"
         },
         {
-          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
           "locator": "A021 independent per-session cost_usd_platform rows",
           "path": "research/publications/a021-grouped-execution/data/metrics.json"
+        }
+      ]
+    },
+    {
+      "caveats": "Inserted lines include duplication counted against I in RQ2 and I's extra tests and validation.",
+      "claim_id": "C62",
+      "claim_text": "Work volume: I inserted about 1.8x (A021) and 1.4x (R2) the lines of G over src, tests and docs (more tests too); worker cost per inserted line is about 1.3x and 1.5x for I; a normalization, not a quality measure.",
+      "classification": "observed",
+      "confidence": "high",
+      "extraction_method": "git diff --shortstat at pinned arm heads (extract_metrics.py); per-line ratio computed in build_tables.py",
+      "manuscript_sections": [
+        "Abstract",
+        "VIII-A",
+        "IX",
+        "X"
+      ],
+      "source_artifacts": [
+        {
+          "commit": "673a406fbfd57aba3d723f26bfe31192d8b141da",
+          "locator": "A021/R2 agg:arm diff_insertions, diff_insertions_tests, diff_deletions, diff_files_changed (git diff --shortstat vs baseline)",
+          "path": "research/publications/a021-grouped-execution/data/metrics.json"
+        },
+        {
+          "commit": null,
+          "locator": "generated by scripts/build_tables.py: AinsLinesGrouped, AinsLinesIndep, AinsTestLinesGrouped, AinsTestLinesIndep, AinsLinesRatio, AcostPerKLineGrouped, AcostPerKLineIndep, AcostPerLineRatio, RtwoInsLinesGrouped, RtwoInsLinesIndep, RtwoInsLinesRatio, RtwoCostPerLineRatio",
+          "path": "research/publications/a021-grouped-execution/manuscript/tables/macros.tex"
         }
       ]
     }
