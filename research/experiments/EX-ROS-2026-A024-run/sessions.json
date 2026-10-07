@@ -500,7 +500,22 @@
         "START_SHA": "53bb1d19f721b14b70f6fdc3084ab8b3220a5071"
       },
       "attempt": 1,
-      "status": "running"
+      "status": "completed",
+      "headAfter": "de9f39e81b26aae03da84e90d726df04367e61b5",
+      "terminalAt": "2026-10-07T21:55:32.114999Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 5.1942826,
+        "input_tokens": 142,
+        "output_tokens": 55243,
+        "cache_read_tokens": 12379433,
+        "cache_write_tokens": 201621,
+        "context_used_tokens": 245386,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.293",
+        "session_context_model": "claude-opus-5-5"
+      },
+      "note": "handoff PRAXIS-GROUP-05 valid (sha256 95296a9f...); audit 0; arm C terminal"
     },
     {
       "label": "arm-2-05",
