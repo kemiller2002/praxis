@@ -1,0 +1,10 @@
+Experiment harness note (identical for every implementation session of EX-ROS-2026-A024; it is instrumentation, not part of the task):
+
+1. Toolchain. If `dotnet` is missing, run `apt-get update && apt-get install -y dotnet-sdk-10.0` (Microsoft's download host is blocked here). That SDK bundles an older FSharp.Core, so build with `npm run build:fsharp -- -p:FSharpCoreImplicitPackageVersion=10.1.400` and run the F# tests with `dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll`. Never commit that property.
+2. Time. Pass the real current time (`date -u +%Y-%m-%dT%H:%M:%S.000Z`) to every --occurred-at.
+3. Required verification, identical for every item: before completing an item, build as above, run the full F# test suite and `./ros validate`, and record the results in the item's completion evidence. Add tests for the behaviour you implement.
+4. Git scope. Work only on the branch named in your task, which is already checked out. The only remote operations you may perform are `git push origin <your branch>` and, if you need it, `git fetch origin <your branch>`. Never fetch, list, read, check out, diff or merge any other branch, tag or remote ref (including main), never use GitHub search, the GitHub API or web pages to look at this repository, and never read another session's telemetry. Use only the files in your checkout.
+5. Telemetry. Immediately before the final `./ros work checkpoint` of your session, run
+   `python3 research/experiments/EX-ROS-2026-A024-harness/session_telemetry.py --label LABEL --branch BRANCH`
+   with the LABEL and BRANCH given in your task. It summarizes this session's own transcript and pushes the result to its own telemetry ref; it does not touch your working tree. Run it exactly once. If it fails, do not edit it or work around it: state the failure in your final message and continue.
+6. Autonomy. No human will answer questions. Do not open a pull request and do not merge anything. When a step fails, record it truthfully and continue where you safely can.
