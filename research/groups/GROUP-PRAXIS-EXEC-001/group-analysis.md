@@ -2,7 +2,7 @@
 
 - Group: `GROUP-PRAXIS-EXEC-001` (`./praxis work group show GROUP-PRAXIS-EXEC-001`)
 - Members: `PRAXIS-EXEC-02`, `PRAXIS-EXEC-04`, `PRAXIS-EXEC-03`, `PRAXIS-EXEC-01`, `PRAXIS-EXEC-05`,
-  `PRAXIS-EXEC-06`, `PRAXIS-EXEC-07` (`PRAXIS-EXEC-08` stays captured: it needs an Ordo execution-contract
+  `PRAXIS-EXEC-06`, `PRAXIS-EXEC-07` (`PRAXIS-EXEC-08` was abandoned as a duplicate of `PRAXIS-FND-01`/`PRAXIS-FND-02`, the shared-foundations track's items for consuming the Ordo execution contract; it needed an Ordo execution-contract
   package that does not exist yet)
 - Execution repository: `kemiller2002/praxis`; every member executes here
 - Base commit: `f242aae664b4` (main after PR #177)

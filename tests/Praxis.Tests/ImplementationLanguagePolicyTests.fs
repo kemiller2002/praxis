@@ -10,6 +10,12 @@ open Praxis.Domain.Architecture
 module ImplementationLanguagePolicyTests =
     let private enforced =
         { ProhibitNodeArtifacts = true
+          ProhibitPythonAutomation = false
+          Exceptions = [] }
+
+    let private pythonEnforced =
+        { ProhibitNodeArtifacts = false
+          ProhibitPythonAutomation = true
           Exceptions = [] }
 
     let private prohibitedSamples =
@@ -244,7 +250,68 @@ module ImplementationLanguagePolicyTests =
                       finally
                           CliHarness.removeDirectory root) }
 
-          { Name = "architecture check: this repository contains no repository-owned Node/JavaScript/TypeScript"
+          { Name = "python policy: invocations are found by command word, never in comments, versions or longer words"
+            Run =
+              fun () ->
+                  let text =
+                      String.concat
+                          "\n"
+                          [ "#!/usr/bin/env sh"
+                            "# python3 is mentioned in a comment"
+                            "VERSION=\"$(python3 -c 'print(1)')\""
+                            "  python - \"$file\" <<'PY'"
+                            "echo pythonic python-version: 3.11"
+                            "      - uses: actions/setup-python@v5"
+                            "cat x | python3.11"
+                            "run: python3" ]
+
+                  Assert.equal [ 3; 4; 6; 7; 8 ] (ImplementationLanguagePolicy.pythonInvocations text) }
+
+          { Name = "python policy: tracked .py files and Python in automation are violations unless an exact exception covers them"
+            Run =
+              fun () ->
+                  let policy =
+                      { pythonEnforced with
+                          Exceptions = [ { Path = "research/keep.py"; Decision = "DF-ROS-2026-A999" }; { Path = "scripts/keep.sh"; Decision = "DF-ROS-2026-A999" } ] }
+
+                  let paths = [ "tools/a.py"; "research/keep.py"; "src/A.fs"; "scripts/x.sh"; "scripts/keep.sh"; "docs/a.md" ]
+                  Assert.equal [ "tools/a.py" ] (ImplementationLanguagePolicy.violations policy paths |> List.map (fun violation -> violation.Path))
+                  Assert.isTrue (ImplementationLanguagePolicy.scansContent policy "scripts/x.sh") "scripts are scanned"
+                  Assert.isTrue (ImplementationLanguagePolicy.scansContent policy ".github/workflows/w.yml") "workflows are scanned"
+                  Assert.isTrue (not (ImplementationLanguagePolicy.scansContent policy "scripts/keep.sh")) "an excepted script is not scanned"
+                  Assert.isTrue (not (ImplementationLanguagePolicy.scansContent policy "docs/a.md")) "documentation is not scanned"
+
+                  let found =
+                      ImplementationLanguagePolicy.contentViolations policy [ "scripts/x.sh", "echo\npython3 -c 1\n"; "docs/a.md", "python3 x" ]
+
+                  Assert.equal [ { Path = "scripts/x.sh"; Artifact = ProhibitedArtifact.PythonInvocation 2 } ] found
+                  Assert.empty (ImplementationLanguagePolicy.violations ImplementationLanguagePolicy.disabled paths) }
+
+          { Name = "architecture check: Python automation fails an opted-in repository with path and line, and an exception passes it"
+            Run =
+              fun () ->
+                  let root =
+                      repositoryWith
+                          (Some """{ "prohibitPythonAutomation": true, "exceptions": [] }""")
+                          [ "scripts/build.sh", "#!/bin/sh\npython3 -c 'print(1)'\n"; "tools/gen.py", "print(1)" ]
+
+                  try
+                      let failed = CliHarness.ros root [ "architecture"; "check" ]
+                      Assert.equal 1 failed.Exit
+                      Assert.isTrue (failed.Err.Contains "ERROR scripts/build.sh:implementation_language: line 2 runs Python") failed.Err
+                      Assert.isTrue (failed.Err.Contains "ERROR tools/gen.py:implementation_language:") failed.Err
+
+                      CliHarness.write
+                          root
+                          "ros.json"
+                          (policyJson """{ "prohibitPythonAutomation": true, "exceptions": [ { "path": "scripts/build.sh", "decision": "DF-ROS-2026-A999" }, { "path": "tools/gen.py", "decision": "DF-ROS-2026-A999" } ] }""")
+
+                      let passed = CliHarness.ros root [ "architecture"; "check" ]
+                      Assert.equal 0 passed.Exit
+                  finally
+                      CliHarness.removeDirectory root }
+
+          { Name = "architecture check: this repository contains no repository-owned Node/JavaScript/TypeScript and no unexcepted Python automation"
             Run =
               fun () ->
                   let root = repositoryRoot (DirectoryInfo(System.AppContext.BaseDirectory))

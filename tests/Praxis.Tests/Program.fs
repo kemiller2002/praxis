@@ -61,6 +61,7 @@ let main _ =
     @ WorkReconciliationEffectTests.tests
     @ ImplementationLanguagePolicyTests.tests
     @ RequirementCitationTests.tests
+    @ InputInboxTests.tests
     @ WebInterfaceTests.tests
     @ HubTests.tests
     @ WorkDecisionCliTests.tests
@@ -68,6 +69,8 @@ let main _ =
     @ WorkGitPathsCliTests.tests
     @ WorkValidateCliTests.tests
     @ WorkBacklogCliTests.tests
+    @ BacklogReidentificationTests.tests
+    @ StatusTableCitationTests.tests
     @ WorkLifecycleCliTests.tests
     @ WorkViewCliTests.tests
     @ StatusValidateCliTests.tests
@@ -96,6 +99,9 @@ let main _ =
     @ TelemetrySegmentationTests.tests
     @ RecoveryProofTests.tests
     @ ExecutionGovernanceTests.tests
+    @ ExecutionRuntimeTests.tests
+    @ ExecutionBindingTests.tests
+    @ WebExecutionTests.tests
     @ InstallationRegistrationTests.tests
     @ CommitOwnershipTests.tests
     @ WorkAbandonTests.tests
@@ -107,6 +113,7 @@ let main _ =
     @ CliBoundaryRatchetTests.tests
     @ PlanningCliTests.tests
     @ PlanningSessionEvidenceTests.tests
+    @ PlanningEvidenceTests.tests
     @ GroupingTests.tests
     @ PremergeCommandSurfaceTests.tests
     @ PremergeRemoteTests.tests
@@ -114,6 +121,9 @@ let main _ =
     @ PremergeReleaseTests.tests
     @ PostmergeReconciliationTests.tests
     @ WorkGroupTests.tests
+    @ GroupGateTests.tests
+    @ ExecuteGroupTests.tests
+    @ GroupMeasurementTests.tests
     @ InternalNamingGuardTests.tests
     @ InternalNamingTests.tests
     @ TelemetryCostUnitTests.tests
@@ -122,4 +132,5 @@ let main _ =
     @ AegisBoundaryTests.tests
     @ IdentityTests.tests
     @ CompletionObligationsTests.tests
+    @ ProvenanceAcknowledgementTests.tests
     |> TestRunner.run

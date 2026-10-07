@@ -85,7 +85,9 @@ module WorkGroupTests =
           Reason = Some "they share one API surface"
           ExecutionId = None
           HomeRepository = None
-          Dependencies = [] }
+          Dependencies = []
+          IndependentReason = None
+          IndependentMembers = [] }
 
     let private created (groupId: string) (members: string list) =
         match WorkGroups.create (context []) (request groupId members) with
@@ -323,7 +325,9 @@ module WorkGroupTests =
                     Reason = Some "same module"
                     AllowEmpty = false
                     ExecutionId = Some "EXE-CALLER"
-                    Dependencies = [] }
+                    Dependencies = []
+                    GroupIndependent = false
+                    MemberIndependent = false }
 
               let add groups id groupId = WorkGroups.add (context groups) (change id groupId)
               Assert.equal [ "unknown-group" ] (codes (add [ group ] "ITEM-2" "GROUP-AREA-404"))
@@ -410,7 +414,9 @@ module WorkGroupTests =
                     Reason = Some "not part of this design"
                     AllowEmpty = allowEmpty
                     ExecutionId = None
-                    Dependencies = [] }
+                    Dependencies = []
+                    GroupIndependent = false
+                    MemberIndependent = false }
 
               let remove (target: StoredWorkGroup) id allowEmpty = WorkGroups.remove (context [ target ]) (change id allowEmpty)
               Assert.equal [ "not-member" ] (codes (remove group "ITEM-2" false))
@@ -622,7 +628,9 @@ module WorkGroupTests =
                     Reason = Some $"{id} moved elsewhere"
                     AllowEmpty = false
                     ExecutionId = None
-                    Dependencies = [] }
+                    Dependencies = []
+                    GroupIndependent = false
+                    MemberIndependent = false }
 
               let removeFrom (target: StoredWorkGroup) id =
                   match WorkGroups.remove (context [ target ]) (change id) with
@@ -648,7 +656,7 @@ module WorkGroupTests =
               Assert.equal [ "duplicate-group" ] (codes (WorkGroups.create (context [ group ]) { request "GROUP-AREA-001" [ "ITEM-1"; "ITEM-2" ] with Origin = GroupOrigin.ArchitectureDeclared }))
 
               let removal: GroupMemberRequest =
-                  { GroupId = "GROUP-AREA-001"; WorkItemId = "ITEM-2"; OccurredAt = "2026-09-30T13:00:00.000Z"; Actor = human; Reason = None; AllowEmpty = false; ExecutionId = None; Dependencies = [] }
+                  { GroupId = "GROUP-AREA-001"; WorkItemId = "ITEM-2"; OccurredAt = "2026-09-30T13:00:00.000Z"; Actor = human; Reason = None; AllowEmpty = false; ExecutionId = None; Dependencies = []; GroupIndependent = false; MemberIndependent = false }
 
               let once =
                   match WorkGroups.remove (context [ group ]) removal with
@@ -665,7 +673,7 @@ module WorkGroupTests =
               let group = created "GROUP-AREA-001" [ "ITEM-1" ]
 
               let added =
-                  match WorkGroups.add (context [ group ]) { GroupId = "GROUP-AREA-001"; WorkItemId = "ITEM-2"; OccurredAt = "2026-09-30T13:00:00.000Z"; Actor = human; Reason = None; AllowEmpty = false; ExecutionId = None; Dependencies = [] } with
+                  match WorkGroups.add (context [ group ]) { GroupId = "GROUP-AREA-001"; WorkItemId = "ITEM-2"; OccurredAt = "2026-09-30T13:00:00.000Z"; Actor = human; Reason = None; AllowEmpty = false; ExecutionId = None; Dependencies = []; GroupIndependent = false; MemberIndependent = false } with
                   | Ok change -> change.Group
                   | Error rejections -> failwith $"{rejections}"
 

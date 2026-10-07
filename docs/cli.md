@@ -271,7 +271,7 @@ praxis add "..."
 praxis step <plan|begin|resume|complete|block|abandon|record|availability|checkpoint|link|list|show>
 praxis telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
 praxis reconcile --envelope FILE
-praxis inbox list
+praxis inbox <list|show|claim|derive|complete|release|reject|recover>
 praxis adapter <call|publish>
 praxis provenance <identity|record|show|audit>
 praxis plan <analyze|simulate|compare|explain|replay|freshness|groups|explain-group>
@@ -327,6 +327,8 @@ setting.
 
 Validates one runtime-free envelope, dispatches its ordered work requests through the native work/evidence rules, imports optional execution steps into canonical telemetry, commits only the resulting canonical paths, and creates `praxis-reconcile/<transaction-id>`. Exit `0` means applied or an already-checkpointed replay, `1` means an interrupted transaction remains pending and is safe to retry, and `2` means the envelope was rejected without canonical mutation. `inbox list` inventories pending envelope/document inputs. See [`fallback-reconciliation.md`](fallback-reconciliation.md).
 
+`praxis inbox` runs the input-document lifecycle (DER-08..10): `list [--json]` reports pending inputs and every claim; `claim PATH` moves a pending input into `.praxis/processing/<claim-id>/`; `derive CLAIM-ID --kind {requirement|decision|constraint|evidence|risk|question|reference} (--id ARTIFACT-ID|--path PATH) --summary TEXT [--locator TEXT]` records what the input yielded; `complete CLAIM-ID [--no-derivations REASON]` archives it to `.praxis/processed/` only once every derived change is committed in HEAD (and every derived artifact names the claim in `derived_from`); `release CLAIM-ID --reason TEXT` returns it to the inbox; `reject PATH|CLAIM-ID --reason TEXT` moves it to `.praxis/rejected/documents/`; `recover` finishes any interrupted operation (every mutating command runs it first). Exit `0` success, `2` refused, `1` storage failure that is safe to retry. See [`fallback-reconciliation.md`](fallback-reconciliation.md) ("Input documents").
+
 `praxis telemetry adapters` lists the ingest adapters. Besides production's
 catalog it includes the F#-only `anthropic-claude-session`, which derives
 session metrics (repeated and governance reads, time to first code change,
@@ -346,13 +348,13 @@ praxis plan simulate  [--for baseline|speed|balanced|cost|max-parallel] [--max-c
                       [--budget AMOUNT [--currency CODE]] [--deadline 4h|90m] [--details] [--json]
 praxis plan compare   [--max-concurrency N] [--json]
 praxis plan explain   ID [--json]
-praxis plan replay    [--details] [--json]
+praxis plan replay    [--record] [--details] [--json]
 praxis plan freshness --plan FILE [--json]
 praxis plan groups    [--json]
 praxis plan explain-group GROUP-ID [--json]
 praxis plan simulate --groups [--max-concurrency N] [--json]
 praxis plan compare  --groups [--max-concurrency N] [--json]
-     common: [--observations FILE] [--config FILE] [--as-of TIMESTAMP]
+     common: [--observations FILE] [--observe-ci] [--config FILE] [--as-of TIMESTAMP]
 ```
 
 The advisory planner: read-only, deterministic, and never changes work state
@@ -365,8 +367,12 @@ use the versioned `praxis.plan/1.0.0` schema. `freshness` exits `3` when the
 saved plan is stale. `groups` recommends evidence-based work groups (items to
 reason about together, with the evidence, collision risk and recommended
 execution for each) without changing any item; `explain-group` answers why a
-group exists and what would change it (`DF-ROS-2026-A047`). See
-[`planning.md`](planning.md).
+group exists and what would change it (`DF-ROS-2026-A047`). `--observe-ci`
+reads GitHub check runs (through `gh`) for checkpoints that wait on CI; it is
+the only network read and is off by default, and a source it cannot read is
+reported unavailable. `replay --record` appends the replay result to
+`.ros/planning/calibration.jsonl` (once per work state and planner version);
+it is the only planning write. See [`planning.md`](planning.md).
 
 ### `work reconcile`
 
@@ -444,6 +450,8 @@ See "Durable checkpoints and continuity" in [`work-protocol.md`](work-protocol.m
 ### `work group`
 
 ```
+ros work group cost GROUP-ID [--json]
+ros telemetry ingest GEX-ID --input FILE [--adapter NAME] [--json]
 ros work group list [--status STATUS] [--member ID] [--repository NAME] [--config FILE] [--json]
 ros work group show GROUP-ID [--config FILE] [--json]
 ros work group add    --group GROUP-ID --member ID --occurred-at TIMESTAMP [--config FILE]
@@ -614,6 +622,67 @@ queue entry, executions, evidence, checkpoints, pull request and completion.
   qualified member as `executes-elsewhere` with the repository to act in and
   never schedules it into this checkout (PRX-GRP-108).
 
+**Grouped execution** (PRX-GRP-117, 130..132, 136..138).
+
+```
+ros plan execute-group GROUP-ID --occurred-at TIMESTAMP [--member ID]
+                       [--mode grouped|independent --reason TEXT]
+                       [--independent-member ID --reason TEXT]* [--type TYPE]
+                       [--config FILE] [--dry-run] [--json] [IDENTITY]
+```
+
+`plan execute-group` is the only `plan` verb that mutates, and only Praxis
+state: it begins the next runnable member of the group in its required order
+(or `--member`) through the existing `work begin` transition and records a
+**group execution** (`GEX-<timestamp>-<suffix>`) in the group record, with the
+actor, start time, repository, member order, mode and its basis, opt-outs, and
+each member it began linked to that member's own execution. One execution
+context carries the members one after another; each member keeps its own
+execution, evidence, checkpoints and completion. It never launches an agent,
+creates a branch, selects a provider or model, or changes priorities or
+dependencies. A member already begun in the open group execution is
+`unchanged`; a member that waits on an unsatisfied prerequisite, is not
+`ready`, or belongs to another repository is not begun here (the reason is
+given). It refuses (exit `1`) an unknown group, a dependency cycle among
+members, a group with nothing runnable in this checkout, and a caller who
+already owns an open group execution of another group. A group execution
+ends when no runnable member remains.
+
+- **Default.** `plan groups` and `plan explain-group` report each group's
+  `groupedExecution` qualification: affinity `high` with no `none`/`unknown`
+  member pair, `minimumSize`..`maximumSize` runnable members (default 2..6),
+  every runnable member in this checkout, no limiting context pressure, and no
+  `captured` member; every failed threshold is explained. A qualifying group
+  is recommended `grouped` and `execute-group` defaults to grouped mode; any
+  other defaults to `independent`, and grouped mode then needs
+  `--mode grouped --reason TEXT`. Settings live under
+  `grouping.groupedExecution` (`default`, `minimumSize`, `maximumSize`,
+  `compactionLimit` 1, `repeatedReadLimit` 25, `elapsedFactor` 1.5). Setting
+  `default` to `advisory` is the rollback (PRX-GRP-138): a configuration change
+  only.
+- **Gates.** A member begun in grouped mode completes only with committed
+  `group-analysis` and `group-verification` evidence (see
+  `docs/group-analysis-template.md`); members that execute independently
+  complete under the normal policy.
+- **Opt-outs** (PRX-GRP-132) need a non-empty `--reason`, are recorded with the
+  actor and time in the group history (`opted-out`), are shown by `show`,
+  `list` and `explain-group`, and apply only to executions not yet begun. Per
+  group: `work group create|add --execution-mode independent --reason TEXT` or
+  `execute-group --mode independent --reason TEXT`. Per item:
+  `work group create --independent-member ID --reason TEXT`,
+  `work group add --member ID --independent-member ID --reason TEXT`, or
+  `execute-group --independent-member ID --reason TEXT`: the member stays a
+  member but executes in its own fresh context.
+- **Fallback** (PRX-GRP-136). When a member begun in grouped mode records
+  `context.compactions` of at least `compactionLimit`, `context.repeated_file_reads`
+  above `repeatedReadLimit`, elapsed time above `elapsedFactor` times its upper
+  estimate, or an explicit `context-pressure` observation names it,
+  `execute-group` records `fallback: independent` with the signal and its
+  evidence, ends the group execution, and recommends a fresh independent
+  execution (or a split) for each remaining member; the next group execution
+  runs independently. Members already active or complete are unchanged. A
+  metric that was never recorded never triggers it (unknown is not zero).
+
 **Store and documents** (PRX-GRP-112). `.ros/work/groups.json` is written as
 `schemaVersion` 2 (additive fields); a version-1 store is read as-is and is
 rewritten only by a mutation, its history intact. Every group command prints
@@ -684,6 +753,7 @@ wins when both are set. An invalid `--actor-kind` is an argument error (exit `2`
 | `provenance identity [--json]` | who this process is recorded as, how that was determined, and the active executions |
 | `provenance record --path PATH\|--id ID --operation OP [--reason T] [--evidence REF]* [--derived-from REF]* [--execution EXE] [--occurred-at TS] [--json]` | attribute a contribution to an artifact's front matter and append an `artifact.contributed` event; identity is inherited from the active execution; idempotent |
 | `provenance show ID\|PATH [--json]` | contributors, involvement label, lineage (sources and derivatives), legacy-declared authors, and events |
+| `provenance acknowledge-unrecorded --path PATH --reason T [--execution EXE] [--occurred-at TS] [--json]` | acknowledge that no Praxis execution recorded the artifact's creation (DF-ROS-2026-A055): records an `origin-unrecorded` contribution under the acknowledging actor, naming no creator; refused when `created` exists; `validate` reports it as a `NOTE` |
 | `provenance audit [--json]` | coverage, per-actor summaries, flattened contribution facts for metrics, and every finding including informational ones; exits `1` on errors |
 | `step plan --name NAME --occurred-at TS [--description TEXT] [--classification TYPE]* [--parent STEP] [--execution EXE] [--json]` | add a planned step to the current execution |
 | `step begin --name NAME --occurred-at TS [...]` | create and activate a step; use `--parent` for a nested child |

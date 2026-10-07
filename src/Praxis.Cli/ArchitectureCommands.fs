@@ -39,7 +39,7 @@ let private check (root: string) (asJson: bool) =
         if all.IsEmpty then 0 else 1
     | Ok policy, Ok [] ->
         if policy.ProhibitNodeArtifacts then
-            printfn "architecture check passed: no repository-owned Node/JavaScript/TypeScript artifacts"
+            printfn "architecture check passed: no prohibited repository-owned Node/JavaScript/TypeScript or Python automation"
         else
             printfn "architecture check: ros.json declares no implementationPolicy; nothing is enforced"
 

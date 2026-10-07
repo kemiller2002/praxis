@@ -775,13 +775,14 @@
       "description": null,
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "abandoned",
       "attachments": [],
       "createdAt": "2026-09-10T20:34:39.993Z",
-      "updatedAt": "2026-09-10T20:34:40.063Z",
+      "updatedAt": "2026-10-06T20:35:43.000Z",
       "createdBy": "unknown",
       "source": "manual",
-      "sourceReference": null
+      "sourceReference": null,
+      "abandonedReason": "Test fixtures, not repository work: commit 71be41f6 (PR #33) committed state from a manual smoke test that replayed tests/work-context-fsharp-differential.test.mjs's fixture commands in the canonical repository instead of a scratch root (PRAXIS-HYG-01)"
     },
     {
       "id": "WI-ACTIVE",
@@ -789,13 +790,14 @@
       "description": null,
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "abandoned",
       "attachments": [],
       "createdAt": "2026-09-10T20:34:40.288Z",
-      "updatedAt": "2026-09-10T20:34:40.361Z",
+      "updatedAt": "2026-10-06T20:35:43.000Z",
       "createdBy": "unknown",
       "source": "manual",
-      "sourceReference": null
+      "sourceReference": null,
+      "abandonedReason": "Test fixtures, not repository work: commit 71be41f6 (PR #33) committed state from a manual smoke test that replayed tests/work-context-fsharp-differential.test.mjs's fixture commands in the canonical repository instead of a scratch root (PRAXIS-HYG-01)"
     },
     {
       "id": "WI-0040",
@@ -2310,31 +2312,6 @@
       "sourceReference": "RQ-ROS-2026-A021"
     },
     {
-      "id": "WI-0061",
-      "title": "Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict",
-      "description": "Found in PRAXIS-REMOTE-13. In persistence: pull-request mode, scripts/praxis-remote-persist.sh pushes praxis/remote/<digest(requestId)> before gh pr create. If PR creation then fails (rate-limited or repository-write-failed, both advising same-request retry), the retry runs on a fresh checkout, produces a different commit, and pushing it to the existing per-request branch is non-fast-forward, so the adapter reports concurrency-conflict/after-refresh, contradicting the same-request advice. Decide how a retry recognizes and reuses its own existing state branch (e.g. open the PR for it) without force-pushing.",
-      "tags": [
-        "remote-execution",
-        "gh-90"
-      ],
-      "priority": "medium",
-      "status": "abandoned",
-      "attachments": [],
-      "createdAt": "2026-09-28T20:03:07.959Z",
-      "updatedAt": "2026-09-29T01:12:39.000Z",
-      "createdBy": "unknown",
-      "createdByActor": {
-        "kind": "agent",
-        "id": "anthropic/claude-code",
-        "provider": "anthropic",
-        "model": "unknown",
-        "runtime": "claude-code"
-      },
-      "source": "manual",
-      "sourceReference": null,
-      "abandonedReason": "Allocated by 'ros add' with an ID that collides with the completed work item WI-0061 in the live context (generated IDs are checked against the queue only). The obligation is re-captured as PRAXIS-REMOTE-14; the allocator defect as WORK-CAPTURE-ID-COLLISION."
-    },
-    {
       "id": "PRAXIS-REMOTE-14",
       "title": "Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict",
       "description": "Child of GH-90, found in PRAXIS-REMOTE-13 (supersedes the abandoned, ID-colliding WI-0061 backlog entry). In persistence: pull-request mode, scripts/praxis-remote-persist.sh pushes praxis/remote/<digest(requestId)> before gh pr create. If PR creation then fails (rate-limited or repository-write-failed, both advising same-request retry), the retry runs on a fresh checkout, produces a different commit, and pushing it to the existing per-request branch is non-fast-forward, so the adapter reports concurrency-conflict/after-refresh, contradicting the same-request advice. Decide how a retry recognizes and reuses its own existing state branch without force-pushing. Depends on: PRAXIS-REMOTE-06.",
@@ -2367,10 +2344,10 @@
         "backlog"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-29T01:12:52.000Z",
-      "updatedAt": "2026-09-29T01:12:52.000Z",
+      "updatedAt": "2026-10-07T05:07:06.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4334,10 +4311,10 @@
         "grouping"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T19:48:35.533Z",
-      "updatedAt": "2026-10-06T20:09:54.000Z",
+      "updatedAt": "2026-10-07T15:05:09.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4357,10 +4334,10 @@
         "grouping"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T19:48:35.870Z",
-      "updatedAt": "2026-10-06T20:09:54.000Z",
+      "updatedAt": "2026-10-07T16:00:42.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4380,10 +4357,10 @@
         "grouping"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T19:48:36.196Z",
-      "updatedAt": "2026-10-06T20:09:54.000Z",
+      "updatedAt": "2026-10-07T16:27:28.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4575,10 +4552,10 @@
         "binding"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:36:22.000Z",
-      "updatedAt": "2026-10-06T20:36:31.000Z",
+      "updatedAt": "2026-10-07T04:56:04.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4599,10 +4576,10 @@
         "evaluation"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:36:23.000Z",
-      "updatedAt": "2026-10-06T20:36:32.000Z",
+      "updatedAt": "2026-10-07T04:55:50.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4623,10 +4600,10 @@
         "launchers"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:36:23.000Z",
-      "updatedAt": "2026-10-06T20:36:32.000Z",
+      "updatedAt": "2026-10-07T04:56:00.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4641,16 +4618,16 @@
     {
       "id": "PRAXIS-EXEC-04",
       "title": "Host containment profile and enforcement evidence (PRX-SEC-001, 003, 010, 011, 013, 014)",
-      "description": "Requirements: PRX-SEC-001, PRX-SEC-003, PRX-SEC-010, PRX-SEC-011, PRX-SEC-013, PRX-SEC-014, PRX-SEC-012 kept. Acceptance criteria: (1) Every envelope carries a containment profile listing filesystem, process, network, credential and environment restrictions, each enforced, unavailable, unrestricted or unknown, with mechanism and evidence; anything the host did not report stays unknown and nothing is inferred from a worktree, branch, directory, prompt or provider permission mode. (2) A host or launcher supplies evidence as praxis.containment-evidence/1 via --containment-evidence FILE or PRAXIS_CONTAINMENT_EVIDENCE; Praxis records its source as host-reported. (3) Containment is host-enforced only when at least one restriction is enforced with evidence; otherwise semantic-only or unknown. (4) Repository policy execution.containment.<role>.require lists restrictions that must be enforced; start and launch refuse (exit 3) when the evidence does not show them. (5) praxis execution containment EXE-ID --json emits the profile in a stable schema documented for Tutela. (6) Tests cover each criterion.",
+      "description": "Requirements: PRX-SEC-001, PRX-SEC-003, PRX-SEC-010, PRX-SEC-011, PRX-SEC-013, PRX-SEC-014, PRX-SEC-012 kept. Acceptance criteria: (1) Every envelope carries a containment profile listing filesystem, process, network, credential and environment restrictions, each enforced, unavailable, unrestricted or unknown, with mechanism and evidence; anything the host did not report stays unknown and nothing is inferred from a worktree, branch, directory, prompt or provider permission mode. (2) A host or launcher supplies evidence as praxis.containment-evidence/1 via --containment-evidence FILE or PRAXIS_CONTAINMENT_EVIDENCE; Praxis records its source as host-reported. (3) Containment is host-enforced only when at least one restriction is enforced with evidence; otherwise semantic-only or unknown. (4) Repository policy execution.containment.<role>.require lists restrictions that must be enforced; execution launch refuses (exit 3) when the evidence does not show them (decision 2026-10-06: the restrictions belong to the host that runs the worker, the launcher; a start runs no process, so start does not refuse). (5) praxis execution containment EXE-ID --json emits the profile in a stable schema documented for Tutela. (6) Tests cover each criterion.",
       "tags": [
         "execution",
         "containment"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:36:23.000Z",
-      "updatedAt": "2026-10-06T20:36:32.000Z",
+      "updatedAt": "2026-10-07T04:55:56.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4671,10 +4648,10 @@
         "control-plane"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:36:24.000Z",
-      "updatedAt": "2026-10-06T20:36:33.000Z",
+      "updatedAt": "2026-10-07T04:56:08.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4695,10 +4672,10 @@
         "operator-ui"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:36:24.000Z",
-      "updatedAt": "2026-10-06T20:36:33.000Z",
+      "updatedAt": "2026-10-07T04:56:12.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4719,10 +4696,10 @@
         "docs"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:36:24.000Z",
-      "updatedAt": "2026-10-06T20:36:33.000Z",
+      "updatedAt": "2026-10-07T04:56:16.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4743,10 +4720,10 @@
         "ordo"
       ],
       "priority": "low",
-      "status": "captured",
+      "status": "abandoned",
       "attachments": [],
       "createdAt": "2026-10-06T20:36:25.000Z",
-      "updatedAt": "2026-10-06T21:31:23.000Z",
+      "updatedAt": "2026-10-07T00:36:20.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4756,7 +4733,8 @@
         "runtime": "claude-code"
       },
       "source": "manual",
-      "sourceReference": null
+      "sourceReference": null,
+      "abandonedReason": "duplicate of PRAXIS-FND-01 and PRAXIS-FND-02 (shared-foundations track, PR #181)"
     },
     {
       "id": "PRAXIS-QUAL-01",
@@ -5007,10 +4985,10 @@
         "reconciliation"
       ],
       "priority": "high",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:37:07.952Z",
-      "updatedAt": "2026-10-06T20:37:07.952Z",
+      "updatedAt": "2026-10-07T08:32:40.469Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -5031,10 +5009,10 @@
         "planner-evidence"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:37:08.278Z",
-      "updatedAt": "2026-10-06T20:37:08.278Z",
+      "updatedAt": "2026-10-07T09:05:51.213Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -5055,10 +5033,10 @@
         "planner-evidence"
       ],
       "priority": "low",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:37:08.589Z",
-      "updatedAt": "2026-10-06T20:37:08.589Z",
+      "updatedAt": "2026-10-07T09:05:53.508Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -5079,10 +5057,10 @@
         "planner-evidence"
       ],
       "priority": "low",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:37:08.911Z",
-      "updatedAt": "2026-10-06T20:37:08.911Z",
+      "updatedAt": "2026-10-07T09:05:55.428Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -5103,10 +5081,10 @@
         "planner-evidence"
       ],
       "priority": "low",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:37:09.220Z",
-      "updatedAt": "2026-10-06T20:37:09.220Z",
+      "updatedAt": "2026-10-07T09:05:57.179Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -5127,10 +5105,10 @@
         "planner-evidence"
       ],
       "priority": "low",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:37:09.556Z",
-      "updatedAt": "2026-10-06T20:37:09.556Z",
+      "updatedAt": "2026-10-07T09:05:58.938Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -5175,10 +5153,10 @@
         "tooling"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:37:10.203Z",
-      "updatedAt": "2026-10-06T20:37:10.203Z",
+      "updatedAt": "2026-10-07T08:49:15.917Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -5213,6 +5191,57 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-MISC-10",
+      "title": "Remote adapter without Python: F# commands in the pinned release, then switch the scripts (RQ-ROS-2026-A024, DF-ROS-2026-A054)",
+      "description": "Follow-up of PRAXIS-MISC-08. scripts/praxis-remote-persist.sh, scripts/praxis-remote-inbox.sh, .github/actions/praxis-remote/action.yml and .github/workflows/praxis-remote.yml still run inline python3 under the time-boxed DF-ROS-2026-A054 exception, because they run on runners with only the pinned native Praxis release and no .NET. Plan: (1) add praxis commands that do their JSON work (adapter result document, persistence facts from a response, the outcome report to GITHUB_OUTPUT/step summary/log with stop-commands, the classification's mutating flag, inbox routing decisions) with tests mirroring RemotePersistScriptTests and PremergeRemoteScriptTests; (2) ship them in a release and pin it in .echelon/toolchain.json; (3) switch the four files to the commands, remove their ros.json exceptions and the Python note in README, and keep every existing adapter and inbox test passing. Acceptance: the four exceptions are gone, ./praxis architecture check passes, and the remote adapter and inbox tests pass unchanged in intent.",
+      "tags": [
+        "implementation-policy",
+        "remote"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T21:37:21.145Z",
+      "updatedAt": "2026-10-06T21:37:21.145Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0061-REUSED",
+      "title": "Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict",
+      "description": "Found in PRAXIS-REMOTE-13. In persistence: pull-request mode, scripts/praxis-remote-persist.sh pushes praxis/remote/<digest(requestId)> before gh pr create. If PR creation then fails (rate-limited or repository-write-failed, both advising same-request retry), the retry runs on a fresh checkout, produces a different commit, and pushing it to the existing per-request branch is non-fast-forward, so the adapter reports concurrency-conflict/after-refresh, contradicting the same-request advice. Decide how a retry recognizes and reuses its own existing state branch (e.g. open the PR for it) without force-pushing.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "medium",
+      "status": "abandoned",
+      "attachments": [],
+      "createdAt": "2026-09-28T20:03:07.959Z",
+      "updatedAt": "2026-10-06T21:15:24.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null,
+      "abandonedReason": "Allocated by 'ros add' with an ID that collides with the completed work item WI-0061 in the live context (generated IDs are checked against the queue only). The obligation is re-captured as PRAXIS-REMOTE-14; the allocator defect as WORK-CAPTURE-ID-COLLISION.",
+      "reidentifiedFrom": "WI-0061",
+      "reidentifiedReason": "ros add allocated WI-0061 on 2026-09-28 for a new obligation although WI-0061 was already a completed live work item; this row is that other obligation (abandoned, re-captured as PRAXIS-REMOTE-14), not the completed WI-0061 (PRAXIS-HYG-02)"
     },
     {
       "id": "PRAXIS-ID-01",
@@ -5342,6 +5371,125 @@
       "attachments": [],
       "createdAt": "2026-10-06T20:37:28.753Z",
       "updatedAt": "2026-10-07T05:05:03.598Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-EXEC-09",
+      "title": "Link execution step ledger to telemetry and analyse cost and reliability by role (PRX-STEP-006, PRX-STEP-008)",
+      "description": "Requirements: PRX-STEP-006, PRX-STEP-008. Work-bound execution envelopes share the telemetry execution ID and record the role (PRAXIS-EXEC-01), but execution ledger steps and telemetry steps remain separate models and no command analyses cost, retries or reliability by role. Acceptance criteria: (1) an execution step can reference the telemetry step(s) it spans, and its view accumulates their usage, cost, duration and retries when available (unavailable stays unavailable). (2) praxis telemetry usage --by role (and by execution step) attributes per-execution totals to the envelope's role without merging separate executions. (3) Tests.",
+      "tags": [
+        "execution",
+        "telemetry"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:59:34.000Z",
+      "updatedAt": "2026-10-06T20:59:34.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-HYG-01",
+      "title": "Retire the leaked test-fixture work items WI-READY and WI-ACTIVE and keep tests out of canonical state",
+      "description": "Covers: canonical state hygiene (audit, docs-vs-code), work protocol (RQ-ROS-2026-A003 event attribution integrity). Root cause: commit 71be41f6 (PR #33) committed .ros state from a manual smoke test that replayed tests/work-context-fsharp-differential.test.mjs's fixture commands (add/ready/start/block WI-READY, WI-ACTIVE) in the canonical repository instead of a scratch root. Acceptance: (1) WI-READY and WI-ACTIVE leave live work via praxis work abandon with a stated reason (no hand edits); planner no longer reports them as active or blocked. (2) CI fails when the F# test suite changes any tracked file or leaves untracked files in the checkout (tests must use isolated state). (3) docs/work-protocol.md says smoke tests of mutating commands run against a scratch root, never the canonical repository. Decision: no validate rule for fixture-shaped IDs: WorkItemId admits any shape and test literals legitimately name real IDs (GH-84, WI-0003...), so such a rule is unsound. Group: GROUP-PRAXIS-HYG (state hygiene).",
+      "tags": [
+        "state-hygiene",
+        "work-protocol"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:33:54.033Z",
+      "updatedAt": "2026-10-07T05:06:50.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-HYG-02",
+      "title": "validate fails when a backlog row's terminal status contradicts its live work item; repair WI-0061 with a typed re-identification",
+      "description": "Covers: canonical state hygiene (queue/context disagreement, audit), WORK-CAPTURE-ID-COLLISION (validation half; the allocator half is already fixed in WorkCapture.nextId). Cause: on 2026-09-28 ros add allocated WI-0061 for a new obligation although WI-0061 was a completed live work item; the backlog row was abandoned (obligation re-captured as PRAXIS-REMOTE-14) but keeps the colliding ID, so queue says abandoned while context says complete. Acceptance: (1) a pure domain rule reports every backlog row whose status is terminal (complete or abandoned) while the live context holds the same ID in a different state, as an error in praxis validate and work validate-queue output; tests cover agreement, both disagreement directions and non-terminal rows. (2) a typed command praxis work reidentify --id OLD --new-id NEW --reason TEXT --occurred-at T renames only a backlog row whose ID collides with a live work item, refuses invalid or already-used new IDs and missing reasons, records reidentifiedFrom/reidentifiedReason, under the work-protocol lock and backlog journal; tests cover each rejection and the effect. (3) WI-0061's backlog row is repaired with that command and praxis validate passes. Group: GROUP-PRAXIS-HYG.",
+      "tags": [
+        "state-hygiene",
+        "backlog"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:33:54.506Z",
+      "updatedAt": "2026-10-07T05:06:52.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-HYG-03",
+      "title": "Record the missing created provenance of EV-ROS-2026-A063 and EV-ROS-2026-A067 truthfully",
+      "description": "Covers: RQ-ROS-2026-A004 contribution history, RQ-ROS-2026-A007 provenance validation (validate warns that neither records a created contribution). A063 was authored by the repository owner in commit 3aef2bd with no provenance; A067 (originally EV-ROS-2026-A062, commit f3bad01c) was written by a blinded evaluator session that had no Praxis execution. An agent cannot record either creation: provenance resolves identity only from the current process, Praxis never infers authorship from Git metadata, and a created contribution cannot follow the existing migrated ones. Acceptance: the true originator records the creation (the owner for A063 with a human CTB contribution at its creation time), or an accepted decision defines an explicit origin-unrecorded acknowledgement that validate honours; praxis validate then reports no originator warning for either. Group: GROUP-PRAXIS-HYG.",
+      "tags": [
+        "provenance"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:33:54.880Z",
+      "updatedAt": "2026-10-07T19:24:00.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-HYG-04",
+      "title": "Correct docs/planning.md work-group replication status and guard requirement status tables against dangling citations",
+      "description": "Covers: PRX-GRP-080..088 status row (docs/planning.md says replication pending although EV-ROS-2026-A070 records the R2 replication). Acceptance: (1) the GRP-080..088 row cites EV-ROS-2026-A070 and no longer says replication is pending. (2) a repository test fails when a row of a status table (a Markdown table under a heading containing 'status') in docs/ or requirements/ cites, in backticks, a research record ID that does not exist, a tests/ or src/ path that does not exist, or a work-item ID absent from the backlog and live context. Decision: semantic checks (e.g. 'not implemented' while the cited item is complete) are not added; rows legitimately mix complete and open items, so such a rule is unsound. Group: GROUP-PRAXIS-HYG.",
+      "tags": [
+        "docs",
+        "state-hygiene"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:33:55.254Z",
+      "updatedAt": "2026-10-07T05:06:55.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

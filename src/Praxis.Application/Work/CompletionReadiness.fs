@@ -107,6 +107,7 @@ module CompletionReadinessOperations =
         (ordo: SourceObservation<OrdoBoundaryEvidence>)
         (observations: ObligationObservations)
         (consumed: ConsumedEvidence list)
+        (group: FacetStatus option)
         : ItemReadiness =
         let risk = facts.Risk workItemId
         let obligations = WorkRisk.obligations risk
@@ -133,7 +134,10 @@ module CompletionReadinessOperations =
         let releaseJudgement = judgeWhen CompletionFacet.ReleaseReady observations.ReleaseReadiness CompletionReadiness.judgeRelease
 
         let facet kind =
-            let isRequired = required kind
+            let isRequired =
+                match kind with
+                | CompletionFacet.GroupVerified -> group.IsSome
+                | _ -> required kind
 
             let status =
                 match kind with
@@ -145,6 +149,9 @@ module CompletionReadinessOperations =
                 | CompletionFacet.DesignDebtDeclared -> CompletionReadiness.judgedFacet isRequired "design-debt-declared" debtJudgement
                 | CompletionFacet.VerificationMatrixSatisfied ->
                     CompletionReadiness.judgedFacet isRequired "verification-matrix-satisfied" matrixJudgement
+                // Fails closed (PRX-GRP-135): judged only for a grouped-mode
+                // member, and then always required.
+                | CompletionFacet.GroupVerified -> group |> Option.defaultValue FacetStatus.NotRequired
 
             { Facet = kind
               Required = isRequired
@@ -176,42 +183,53 @@ module CompletionReadinessOperations =
 
     /// observe -> decide. `policy` is the already-read repository policy.
     /// An item is evaluated when the policy applies to its work type, when
-    /// its risk metadata carries obligations, or when obligation evidence was
-    /// supplied; any other item keeps legacy behaviour. Evidence files are
-    /// read only when some item is in scope, and each file read is recorded
-    /// with its digest.
+    /// its risk metadata carries obligations, when obligation evidence was
+    /// supplied, or when it is a member of a grouped-mode group execution:
+    /// `group` gives such a member's `group-verified` facet, which the policy
+    /// cannot switch off (PRX-GRP-135); a member in scope only for that reason
+    /// is otherwise judged under the legacy default. Any other item keeps
+    /// legacy behaviour. Evidence files are read only when some item is in
+    /// scope, and each file read is recorded with its digest.
     let gate
         (sources: QualityEvidenceSources)
         (facts: CompletionFacts)
         (policy: Result<QualityEvidencePolicy, string>)
         (items: (string * string) list)
         (provided: WorkEvidence list)
+        (group: string -> FacetStatus option)
         : CompletionGateOutcome =
+        let grouped = items |> List.map (fun (id, _) -> id, group id) |> Map.ofList
+
         match policy with
         | Error reason -> CompletionGateOutcome.PolicyInvalid reason
         | Ok policy ->
             let obligationSupplied =
                 provided |> List.exists (fun evidence -> List.contains evidence.Type QualityEvidencePolicies.obligationEvidenceTypes)
 
-            let inScope (id, workType) =
+            let inPolicy (id, workType) =
                 QualityEvidencePolicies.appliesTo policy workType
                 || WorkRisk.hasObligations (WorkRisk.obligations (facts.Risk id))
                 || obligationSupplied
 
-            match items |> List.filter inScope with
+            let isGrouped (id, _) = grouped[id].IsSome
+
+            match items |> List.filter (fun item -> inPolicy item || isGrouped item) with
             | [] -> CompletionGateOutcome.NotApplicable
             | inScope ->
+                let anyPolicy = inScope |> List.exists inPolicy
+                let effective item = if inPolicy item then policy else QualityEvidencePolicies.legacyDefault
+
                 let consumedTypes =
-                    [ if policy.Dokimos <> EvidenceRequirement.Off then QualityEvidenceTypes.dokimosRatchet
-                      if policy.OrdoBoundary <> EvidenceRequirement.Off then QualityEvidenceTypes.ordoBoundary
+                    [ if anyPolicy && policy.Dokimos <> EvidenceRequirement.Off then QualityEvidenceTypes.dokimosRatchet
+                      if anyPolicy && policy.OrdoBoundary <> EvidenceRequirement.Off then QualityEvidenceTypes.ordoBoundary
                       yield! QualityEvidencePolicies.obligationEvidenceTypes ]
 
                 let dokimos =
-                    if policy.Dokimos = EvidenceRequirement.Off then SourceObservation.NotSupplied
+                    if not anyPolicy || policy.Dokimos = EvidenceRequirement.Off then SourceObservation.NotSupplied
                     else observe sources.ReadDokimos QualityEvidenceTypes.dokimosRatchet provided
 
                 let ordo =
-                    if policy.OrdoBoundary = EvidenceRequirement.Off then SourceObservation.NotSupplied
+                    if not anyPolicy || policy.OrdoBoundary = EvidenceRequirement.Off then SourceObservation.NotSupplied
                     else observe sources.ReadOrdo QualityEvidenceTypes.ordoBoundary provided
 
                 let observations =
@@ -228,5 +246,6 @@ module CompletionReadinessOperations =
                           Sha256 = sources.Digest evidence.Path })
 
                 inScope
-                |> List.map (fun item -> assess policy facts sources.LocationExists item provided dokimos ordo observations consumed)
+                |> List.map (fun ((id, _) as item) ->
+                    assess (effective item) facts sources.LocationExists item provided dokimos ordo observations consumed grouped[id])
                 |> decide

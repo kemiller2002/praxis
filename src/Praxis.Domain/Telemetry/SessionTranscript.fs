@@ -46,6 +46,12 @@ type SessionSummary =
       ActiveMs: int64 option
       IdleGapsExcluded: int
       MsToFirstCodeChange: int64 option
+      /// To the first change under the repository's configured meaningful
+      /// paths (PRX-GRP-151), instead of the fixed `src/` and `tests/`.
+      MsToFirstProductiveChange: int64 option
+      /// The largest context one request carried: its input plus cache
+      /// read and cache creation tokens (PRX-GRP-151).
+      PeakContextTokens: int64 option
       ModelRequests: int
       Tokens: TranscriptUsage option
       CostUsd: decimal option
@@ -158,7 +164,9 @@ module SessionTranscript =
           Build: bool
           Test: bool
           Shell: bool
-          CodeChange: bool }
+          CodeChange: bool
+          /// Paths the call wrote, when known (edit tools).
+          Written: string option }
 
     let private toolFacts (cwd: string option) (tool: TranscriptToolUse) : ToolFacts =
         let none =
@@ -169,7 +177,8 @@ module SessionTranscript =
               Build = false
               Test = false
               Shell = false
-              CodeChange = false }
+              CodeChange = false
+              Written = None }
 
         let path = tool.FilePath |> Option.map (relative cwd)
 
@@ -178,7 +187,7 @@ module SessionTranscript =
         | name when searchTools.Contains name -> { none with Searches = 1 }
         | name when editTools.Contains name ->
             let written = path |> Option.defaultValue ""
-            { none with Writes = [ written ]; CodeChange = isCodePath written }
+            { none with Writes = [ written ]; CodeChange = isCodePath written; Written = Some written }
         | "Bash" ->
             let command = tool.Command |> Option.defaultValue ""
             let shellWrite = writeCommand.IsMatch command
@@ -205,7 +214,10 @@ module SessionTranscript =
     let private counts (values: string list) =
         values |> List.countBy id |> List.sortWith (fun (left, _) (right, _) -> String.CompareOrdinal(left, right))
 
-    let summarize (entries: TranscriptEntry list) : SessionSummary =
+    /// `isProductive` judges a written path against the repository's
+    /// meaningful-path configuration; a shell write counts when it names a
+    /// code directory, as for the first code change.
+    let summarizeWith (isProductive: string -> bool) (entries: TranscriptEntry list) : SessionSummary =
         let firstSome selector = entries |> List.tryPick selector
         let cwd = firstSome (fun entry -> entry.Cwd)
         let stamps = entries |> List.choose (fun entry -> entry.Timestamp)
@@ -236,6 +248,17 @@ module SessionTranscript =
             calls
             |> List.tryPick (fun (at, _, fact) -> if fact.CodeChange then at else None)
 
+        let firstProductiveChange =
+            calls
+            |> List.tryPick (fun (at, _, fact) ->
+                match fact.Written with
+                | Some path when not (String.IsNullOrEmpty path) && isProductive path -> at
+                | Some _ -> None
+                | None -> if fact.CodeChange then at else None)
+
+        let elapsedTo (moment: DateTimeOffset option) =
+            Option.map2 (fun (started: DateTimeOffset) (changed: DateTimeOffset) -> int64 (changed - started).TotalMilliseconds) startedAt moment
+
         let sumTokens (values: TranscriptUsage list) =
             values
             |> List.fold
@@ -254,7 +277,11 @@ module SessionTranscript =
           SpanMs = span
           ActiveMs = span |> Option.map (fun _ -> active)
           IdleGapsExcluded = idle
-          MsToFirstCodeChange = Option.map2 (fun (started: DateTimeOffset) (changed: DateTimeOffset) -> int64 (changed - started).TotalMilliseconds) startedAt firstCodeChange
+          MsToFirstCodeChange = elapsedTo firstCodeChange
+          MsToFirstProductiveChange = elapsedTo firstProductiveChange
+          PeakContextTokens =
+            if usage.IsEmpty then None
+            else usage |> Map.toList |> List.map (fun (_, value) -> value.Input + value.CacheRead + value.CacheCreation) |> List.max |> Some
           ModelRequests = usage.Count
           Tokens = if usage.IsEmpty then None else Some(usage |> Map.toList |> List.map snd |> sumTokens)
           CostUsd = entries |> List.choose (fun entry -> entry.CostUsd) |> List.tryLast
@@ -275,6 +302,9 @@ module SessionTranscript =
                 entry.IsCompactSummary
                 || (entry.Kind = "system" && entry.Subtype |> Option.exists (fun subtype -> subtype.Contains("compact", StringComparison.Ordinal))))
             |> List.length }
+
+    /// The default judgement: code under `src/` or `tests/`.
+    let summarize (entries: TranscriptEntry list) : SessionSummary = summarizeWith isCodePath entries
 
     /// Reads beyond the first of each file: the repeated context a later
     /// read re-acquires.
@@ -312,8 +342,11 @@ module SessionTranscript =
           count "tool.test_executions" "derived" summary.TestRuns
           count "context.compactions" "observed" summary.Compactions
           count "context.repeated_file_reads" "derived" (repeatedReadCount summary)
+          count "context.repeated_file_reads_distinct" "derived" summary.RepeatedReads.Length
+          measured "context.peak_tokens" "observed" (summary.PeakContextTokens |> Option.map decimal)
           count "context.governance_reads" "derived" (summary.GovernanceReads |> List.sumBy snd)
           measured "time.first_code_change_ms" "derived" (summary.MsToFirstCodeChange |> Option.map decimal)
+          measured "time.first_productive_change_ms" "derived" (summary.MsToFirstProductiveChange |> Option.map decimal)
           measured "time.active_ms" "derived" (summary.ActiveMs |> Option.map decimal)
           { MetricId = "cost.session_cumulative"
             Value = summary.CostUsd

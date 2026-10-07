@@ -157,7 +157,12 @@ checkpoint that waits on it; a blocker whose named prerequisites are now
 satisfied (all: medium confidence; some: low, listing what is still open or
 unobservable). Stale items go to the state-cleanup section and a serial
 **wave 0** of `reconcile` recommendations, and the plan reports that its
-confidence is limited.
+confidence is limited. CI is observed either from a supplied observation or,
+with `--observe-ci`, from the GitHub check runs of the checkpoint commit
+(`gh api .../commits/SHA/check-runs`): any failing run is `ci-failed`, all
+runs finished and passing is `ci-passed`, otherwise `ci-pending`; a source
+that cannot be read is `ci-unavailable` with the reason. Pending and
+unavailable leave the dependency undetermined and say why.
 
 **Durations** (PRX-PLAN-060..063, 171..173). Each finalized execution
 contributes productive time = `time.wall_ms - time.blocked_ms`, or its
@@ -208,7 +213,12 @@ is **unavailable** with the "N of M executions" statement, and a `--budget`
 is `cannot-evaluate`. Every plan still reports known contributors: executions,
 continuations, context acquisitions, peak concurrency, accepted-risk pairs.
 
-**Collisions** (PRX-PLAN-080..084). Every pair of runnable items gets a risk:
+**Collisions** (PRX-PLAN-080..084). Git adds file-level evidence: the paths
+each unmerged checkpoint changed against the integration branch (Praxis state
+files excluded; two items changing one path are a `conflict`), and the paths
+both sides of one of the last 50 integration merges changed (historical
+merge-conflict hotspots; two items touching the same hotspot's directory are
+`elevated`). Every pair of runnable items gets a risk:
 `conflict` (same checkpoint branch, overlapping declared paths, declared
 conflict), `unknown` (either item has no scope evidence: no non-generic tag,
 declared area or checkpoint branch), `elevated` (shared non-generic tag;
@@ -256,7 +266,12 @@ from executions finalized strictly before it started, then compared with its
 actual productive time (within range, absolute and relative error, by class).
 It also reports observed execution overlap against the baseline's modeled
 concurrency of one, how often backlog creation order matched actual start
-order, and cost evidence.
+order, and cost evidence. Each execution with a monetary total is also
+predicted from the costed executions finalized before it started (the same
+`minimumCostSamples` rule), with within-range and absolute error. `--record`
+appends the result to `.ros/planning/calibration.jsonl`
+(`praxis.plan-calibration/1`; a repeat for the same work-state fingerprint and
+planner version adds nothing), and every replay reports the recorded trend.
 
 **Determinism** (PRX-PLAN-002). All ordering is ordinal with explicit
 tie-breaks; no clock is read below the CLI (`--as-of` pins it); JSON field
@@ -402,22 +417,22 @@ No external dependency was added (PRX-PLAN-004).
 | --- | --- |
 | 001-004 | Met. Read-only port; test 30 hashes every file and Git state before and after every command. |
 | 010-013 | Met. |
-| 020-022 | Met for Git-observable evidence and supplied observations. The planner does not query GitHub or CI itself. |
+| 020-022 | Met. Git evidence (merged PRs, tags, merged checkpoints) and supplied observations always; CI check runs of checkpoints that wait on CI with `--observe-ci` (opt-in, `gh`), reported passed, failed, still running or unavailable (`PRAXIS-MISC-02`). |
 | 030-033 | Met; remaining fractions are an explicit configurable assumption, not yet calibrated. |
 | 040-046 | Met. Soft dependencies are modelled but only structured config can declare them. |
 | 050-053 | Met. Per-component cost modelling (053) is limited to what `cost.*` metrics carry. |
 | 060-063 | Met. |
 | 070-072 | Met as recommendations; context acquisition is counted, not priced. |
-| 080-084 | Met. File-level overlap is known only from declared `areas`. |
+| 080-084 | Met. File-level overlap comes from declared `areas` and from the paths each unmerged checkpoint changed; historical merge-conflict hotspots (paths both sides of one of the last 50 integration merges changed) raise a pair touching the same hotspot directory to `elevated` (`PRAXIS-MISC-03`). |
 | 090-094 | Met. |
 | 100-102 | Met. |
 | 110-112 | Met. |
 | 120-124, 130-131 | Met. |
 | 140-142 | Met. |
-| 150-152 | Met, except predicted-vs-actual cost (no cost evidence exists yet). |
+| 150-152 | Met. Replay also predicts each costed execution's cost from earlier costed executions and reports within-range and absolute error, or why it cannot (`PRAXIS-MISC-04`). |
 | 160-161 | Met; see `EV-ROS-2026-A058`. |
-| 162 | Mechanism met (`freshness` outcomes); the comparison itself needs time to pass. |
-| 170-173 | Met in replay and drift; error is not yet persisted over time. |
+| 162 | Met. `freshness` reports each recommended item's outcome and a follow-up: items started and completed since the plan, how many started pairs from different waves followed the recommended order, and observed against predicted duration for completed items, stated as observation (`PRAXIS-MISC-05`). |
+| 170-173 | Met. `plan replay --record` persists each replay's error in `.ros/planning/calibration.jsonl` (`praxis.plan-calibration/1`, once per work state and planner version) and `plan replay` reports the trend (`PRAXIS-MISC-06`). |
 | 180-181 | Met. |
 | 182 | Met. Documents carry the repository identity their local IDs are qualified by (`PlanningJson.withRepository`; `IdentityTests` "planner documents carry the repository..."). Items are not repeated as per-item structured references. |
 
@@ -430,7 +445,7 @@ No external dependency was added (PRX-PLAN-004).
 | GRP-020..022 | Met for tags, declared paths, branches, dependencies, requirement/decision references, declarations, ID families and titles. Historical co-change, test overlap and deployment boundaries are not observable yet. |
 | GRP-030..031 | Met (tests 2, 18). |
 | GRP-040, 044 | GRP-040 is guidance for executors until PRX-GRP-133 is implemented (amended by `DF-ROS-2026-A053`: enforced for grouped-mode members) (`EX-ROS-2026-A021` requires the group analysis). GRP-044: `work group checkpoint` records durable group checkpoints over members' own; architecture notes and the latest group checkpoint are shown by `work group show` (`PRAXIS-GROUP-05`). |
-| GRP-045 (and GRP-040's reuse inventory) | Guidance for executors, not yet enforced by tooling (amended by `DF-ROS-2026-A053`: becomes the PRX-GRP-133..135 completion gate, `PRAXIS-GROUP-10`): the group analysis names existing parsers, rules and stores to reuse, and a per-member, per-criterion verification pass precedes each completion (`docs/group-analysis-template.md`; `PRAXIS-PLAN-04`, from `EV-ROS-2026-A064`). |
+| GRP-045 (and GRP-040's reuse inventory) | Guidance for members that do not execute in grouped mode (`docs/group-analysis-template.md`; `PRAXIS-PLAN-04`, `EV-ROS-2026-A064`). For grouped-mode members it is enforced by the GRP-133..135 gates (`PRAXIS-GROUP-10`). |
 | GRP-041..043 | Met by construction (tests 9, 10); per-item attribution in a grouped execution is enforced by the existing work protocol. |
 | GRP-050..051 | Met for dependencies and cycles (dependency test) and repositories (tests 5, 5b). |
 | GRP-052 | Superseded by GRP-100..109 (`DF-ROS-2026-A053`). |
@@ -439,14 +454,14 @@ No external dependency was added (PRX-PLAN-004).
 | GRP-073 | Declarations from configuration and from Praxis state (`work group create`, `PRAXIS-GROUP-01`; `work group show`, `PRAXIS-GROUP-02`; `work group add`, `PRAXIS-GROUP-03`; `work group remove`, `PRAXIS-GROUP-04`; `work group checkpoint`, `PRAXIS-GROUP-05`). `plan execute-group`, `work group list` and grouped execution by default are accepted by `DF-ROS-2026-A053` (GRP-110..117, 130..138) and not implemented. Phase two was built on the grouped arm of `EX-ROS-2026-A021` with the control arm's shared `grouping.groups` parser, `executionLocation` join rule and checkpoint ownership and re-validation ported (`PRAXIS-GROUP-06`, `EV-ROS-2026-A064`). |
 | GRP-074 | Size and context-pressure splits and architecture merges met (tests 18, 19, merge test); splitting by independent chain or external blockage is not implemented. |
 | GRP-075 | Met (test 15). |
-| GRP-080..088 | Met for one cohort: baseline and predictions frozen (`EV-ROS-2026-A059`), both arms run and blindly evaluated (`EX-ROS-2026-A021`), results and classification in `EV-ROS-2026-A064`. One run; replication pending. |
+| GRP-080..088 | Met for one cohort in two runs: baseline and predictions frozen (`EV-ROS-2026-A059`), both arms run and blindly evaluated (`EX-ROS-2026-A021`), results and classification in `EV-ROS-2026-A064`; the replication (R2) was blindly evaluated and compared in `EV-ROS-2026-A070` (confidence low). |
 | GRP-090 | All 20 cases in `tests/Praxis.Tests/GroupingTests.fs`; case 20 in `PlanningCliTests`. |
 | GRP-100..109 | Met (`PRAXIS-GROUP-07`): reserved `GROUP-ECHELON-` area, `owner/repo:ID` members, `homeRepository`, `work group link` references, read-only dated observations from a configured clone's fetched ref (`grouping.crossRepository`), stale and unknown handling, derived status, `complete`/`merged`/`released:TAG` order edges with cross-repository cycle detection, per-repository progress, member observations in group checkpoints, `unlinked` warnings, and `executes-elsewhere` planner notes. Remote-protocol reads (GRP-103's second method) are not implemented; such members are `unknown` (`unreachable`) until a clone is configured. Pull-request numbers in observations are `null` (not observed). |
 | GRP-110..116 | Met (`link`: `PRAXIS-GROUP-07`) except `execute-group` (GRP-117, `PRAXIS-GROUP-09`) (`PRAXIS-GROUP-08`): `work group list`; idempotent repeats (`changed: false`); history entries with the caller's execution and the member's state; append-only history checked by `validate` against `HEAD` and `$ROS_BASE_REF`; store `schemaVersion` 2 with version 1 still read; derived `groupStatus` and `removed-open`; no group completion transition. The GRP-113 SHOULD (`work.group.*` events) is deliberately not done: GRP-115 restricts group commands to the group store. |
-| GRP-117, 130..132, 136..137 | Accepted, not implemented: `plan execute-group`, group executions, qualification thresholds, opt-outs and context-pressure fallback (`PRAXIS-GROUP-09`). The default takes effect only after GRP-133..135. |
-| GRP-133..135 | Accepted, not implemented: reuse-inventory and per-criterion verification completion gates (`PRAXIS-GROUP-10`). |
+| GRP-133..135 | Met (`PRAXIS-GROUP-10`): `praxis.group-analysis/1` and `praxis.group-verification/1` (schemas shipped), the `group-verified` completion-readiness facet, judged for every member begun in grouped mode by a group execution whatever the quality-evidence policy, from documents committed at `HEAD`; refused with exit 3 and no state change; the runtime-free envelope path refuses grouped-mode members because it cannot judge the gates. |
+| GRP-117, 130..132, 136..137 | Met (`PRAXIS-GROUP-09`): `plan execute-group` with group-execution records begun through the existing `work begin`; qualification thresholds under `grouping.groupedExecution`, shown with every failed reason by `plan groups` and `explain-group`; grouped by default for qualifying groups, effective because GRP-133..135 are in place; per-group and per-item opt-outs with recorded reasons; deterministic context-pressure fallback from recorded metrics, elapsed time and observations. A takeover (`work continue`) of a begun member is recorded as a successor of the group execution by the next `execute-group` that begins, ends or falls back. |
 | GRP-138 | Accepted; review and rollback triggers tracked by `PRAXIS-PLAN-11`. |
-| GRP-150..158 | Accepted, partly existing: the `anthropic-claude-session` adapter, its context metrics and `cost.execution_total` recording exist. Provider-neutral capability, `time.first_productive_change_ms`, peak context, group-execution ingestion, shared-cost allocation and per-member pricing are not implemented (`PRAXIS-PLAN-10`). |
+| GRP-150..158 | Met (`PRAXIS-PLAN-10`): provider-neutral context metric IDs with each adapter's declared capability; `time.first_productive_change_ms` over configured meaningful paths, `context.peak_tokens`, `context.repeated_file_reads_distinct` (`context.window_tokens` declared unsupported by the transcript adapter); a completion warning for a group-execution member without cost; shared sessions ingested once into a group execution (`telemetry ingest GEX-ID`); deterministic `equal-share` apportionment (`work group cost`); grouped-versus-independent pricing from at least three measured samples with coverage in `plan groups`, `explain-group` and `compare --groups`; the planner's prediction frozen at `execute-group` and compared with the outcome when the group execution ends. Direct usage is each member's own recorded `cost.execution_total`; splitting one shared transcript by member windows is not derived. |
 | GRP-190 | Accepted; cases 21..44 are written with the implementing items. |
 
 ## Known limitations and next steps

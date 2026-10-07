@@ -1,0 +1,118 @@
+{
+  "schema": "praxis.group-verification/1",
+  "groupId": "GROUP-PRAXIS-GROUPING-001",
+  "groupExecutionId": null,
+  "member": "PRAXIS-PLAN-10",
+  "rows": [
+    {
+      "member": "PRAXIS-PLAN-10",
+      "criterion": "the context metric IDs are provider-neutral registry entries, every adapter declares a capability for each, and a metric an adapter cannot observe is supported-unavailable or unsupported, never 0 (PRX-GRP-150)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "group measurement: every adapter declares a capability for every context metric, and the registry defines each",
+        "result": "passed: every ContextMetrics id is in telemetry/metrics.json and every adapter declares observes or unsupported for it; 'session metrics: ...' shows unseen values stay unavailable (no value), never 0"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-PLAN-10",
+      "criterion": "time.first_productive_change_ms is measured against the repository's configured meaningful paths, keeping time.first_code_change_ms (PRX-GRP-151)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "claude session adapter: first productive change follows the repository's configured meaningful paths and keeps first code change",
+        "result": "passed: through ingest, the default paths give time.first_productive_change_ms 300000 and workProtocol.meaningfulPaths [docs/**] gives none, while time.first_code_change_ms stays 300000"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-PLAN-10",
+      "criterion": "context.peak_tokens and context.window_tokens are recorded when the runtime exposes them, and context.repeated_file_reads_distinct counts distinct files read more than once (PRX-GRP-151)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "group measurement: session metrics: first productive change follows the configured paths, peak tokens and distinct re-reads are measured, unseen values stay unavailable",
+        "result": "passed: peak context tokens 1220, context.repeated_file_reads_distinct 2 (of 3 repeated reads), no peak without usage; context.window_tokens is declared unsupported by the Claude session adapter, so it is never recorded as 0"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-PLAN-10",
+      "criterion": "completing a member of a group execution without cost.execution_total and without a recorded capability state for it produces a completion warning, not a refusal (PRX-GRP-152)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "group measurement: cli completing a group-execution member without cost or an explained capability state warns and still completes",
+        "result": "passed: exit 0 with a warning naming the execution that records no cost.execution_total"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-PLAN-10",
+      "criterion": "a session carrying a group execution is ingested once into the group execution and its snapshot ID prevents any double count (PRX-GRP-153)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "group measurement: cli a shared session is ingested once into the group execution and never counted twice",
+        "result": "passed: a repeat ingest is changed:false, the same snapshot is refused for a member execution ('counted once') and a member's snapshot is refused for the group execution"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-PLAN-10",
+      "criterion": "shared group-execution totals are apportioned deterministically into direct, group-shared and equal-share allocated lines labelled allocated, summing exactly to the group total with rounding residue on the group-shared line (PRX-GRP-154)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "group measurement: shared cost is apportioned deterministically; allocations sum exactly to the total and are labelled allocated",
+        "result": "passed: direct, group-shared and equal-share allocated lines; allocations plus the group-shared line sum exactly to 10 with the 0.000001 residue on group-shared; repeat apportionment is identical"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-PLAN-10",
+      "criterion": "the planner prices grouped versus independent cost and time only from at least three measured samples, else unknown, and reports basis and sample counts in plan groups, explain-group and compare --groups (PRX-GRP-155)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "group measurement: cli plan groups, explain-group and compare --groups report pricing with its basis and sample counts",
+        "result": "passed: plan groups and explain-group carry the same pricing (samples, costSamples, coverage, statement unknown below three samples) and compare --groups states the basis and sample coverage; 'the planner prices grouping only from at least three measured samples, otherwise unknown, never across currencies' passed"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-PLAN-10",
+      "criterion": "missing metrics stay unknown, currencies are never summed across, and every aggregate states its coverage (PRX-GRP-156)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "group measurement: the planner prices grouping only from at least three measured samples, otherwise unknown, never across currencies",
+        "result": "passed: two samples price as unknown, mixed USD/EUR samples give no cost with coverage 'currencies differ', and each arm states its coverage ('3 of 3 independent executions carry cost.execution_total'); an unknown total apportions to unknown lines"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-PLAN-10",
+      "criterion": "group-execution telemetry stores no prompt, message, tool input or output, or command text (PRX-GRP-157)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "group measurement: cli a shared session is ingested once into the group execution and never counted twice",
+        "result": "passed: the group store holds no raw payload and none of the prompt, message, tool input or command text supplied in the ingested session"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-PLAN-10",
+      "criterion": "the planner's prediction at execute-group time is frozen in the group execution and compared with the observed outcome at its end (PRX-GRP-158)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "group measurement: cli the prediction is frozen when a group execution starts and compared with the outcome when it ends",
+        "result": "passed: the prediction recorded at start is unchanged after the execution finishes, and the outcome records membersBegun 2 with a PRX-GRP-158 statement"
+      },
+      "deferredTo": null
+    }
+  ]
+}

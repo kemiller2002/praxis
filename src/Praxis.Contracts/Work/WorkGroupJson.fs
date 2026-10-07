@@ -52,7 +52,15 @@ module WorkGroupJson =
           "sharedContext", texts declaration.SharedContext
           "executionRepository", optionalText declaration.ExecutionRepository
           "crossRepository", boolean declaration.CrossRepository
-          "architectureNotes", texts declaration.ArchitectureNotes ]
+          "architectureNotes", texts declaration.ArchitectureNotes
+          if declaration.IndependentReason.IsSome then
+              "executionMode", text "independent"
+              "executionModeReason", text declaration.IndependentReason.Value
+          if not declaration.IndependentMembers.IsEmpty then
+              "independentMembers",
+              declaration.IndependentMembers
+              |> List.map (fun (memberId, reason) -> record [ "workItem", text memberId; "reason", text reason ] :> JsonNode)
+              |> array ]
 
     let historyNode (entry: GroupHistoryEntry) : JsonNode =
         record
@@ -145,6 +153,92 @@ module WorkGroupJson =
               "location", locationNode checkpoint.Location
               "verification", (record [ "status", text "verified"; "mechanism", text "git-remote-observation" ] :> JsonNode) ]
 
+    let private decimalNode (value: decimal option) : JsonNode = value |> Option.map (fun amount -> JsonValue.Create amount :> JsonNode) |> Option.toObj
+
+    let private rangeNode (range: PredictedRange) : JsonNode =
+        record [ "lower", decimalNode range.Lower; "upper", decimalNode range.Upper; "basis", text range.Basis ]
+
+    let predictionNode (prediction: GroupPrediction) : JsonNode =
+        record
+            [ "mode", text (ExecutionMode.code prediction.Mode)
+              "members", texts prediction.Members
+              "cost", rangeNode prediction.Cost
+              "currency", optionalText prediction.Currency
+              "durationMs", rangeNode prediction.DurationMs ]
+
+    let outcomeNode (outcome: GroupOutcome) : JsonNode =
+        let flagNode (value: bool option) : JsonNode = value |> Option.map boolean |> Option.toObj
+
+        record
+            [ "endedAt", text outcome.EndedAt
+              "membersBegun", integer outcome.MembersBegun
+              "cost", decimalNode outcome.Cost
+              "currency", optionalText outcome.Currency
+              "durationMs", (outcome.DurationMs |> Option.map (fun ms -> JsonValue.Create ms :> JsonNode) |> Option.toObj)
+              "costWithinPrediction", flagNode outcome.CostWithinPrediction
+              "durationWithinPrediction", flagNode outcome.DurationWithinPrediction
+              "statement", text outcome.Statement ]
+
+    let executionNode (execution: GroupExecutionRecord) : JsonNode =
+        record
+            [ "id", text execution.Id
+              "groupId", text execution.GroupId
+              "actor", (ActorJson.node execution.Actor :> JsonNode)
+              "startedAt", text execution.StartedAt
+              "repository", text execution.Repository
+              "order", texts execution.Order
+              "mode", text (ExecutionMode.code execution.Mode)
+              "basis", texts execution.Basis
+              "optOuts",
+              execution.OptOuts
+              |> List.map (fun optOut ->
+                  record
+                      [ "workItemId", text optOut.WorkItemId
+                        "reason", text optOut.Reason
+                        "actor", (ActorJson.node optOut.Actor :> JsonNode)
+                        "at", text optOut.At ]
+                  :> JsonNode)
+              |> array
+              "members",
+              execution.Members
+              |> List.map (fun begun ->
+                  record
+                      [ "workItemId", text begun.WorkItemId
+                        "executionId", text begun.ExecutionId
+                        "begunAt", text begun.BegunAt
+                        "mode", text (ExecutionMode.code begun.Mode) ]
+                  :> JsonNode)
+              |> array
+              "fallback",
+              (match execution.Fallback with
+               | Some fallback -> record [ "mode", text "independent"; "signal", text fallback.Signal; "evidence", texts fallback.Evidence; "at", text fallback.At ] :> JsonNode
+               | None -> null)
+              "endedAt", optionalText execution.EndedAt
+              "successors",
+              execution.Successors |> List.map (fun (memberId, successor) -> record [ "workItemId", text memberId; "executionId", text successor ] :> JsonNode) |> array
+              "telemetry",
+              execution.Telemetry
+              |> List.map (fun snapshot ->
+                  record
+                      [ "snapshotId", text snapshot.SnapshotId
+                        "adapter", text snapshot.Adapter
+                        "collectedAt", text snapshot.CollectedAt
+                        "metrics",
+                        snapshot.Metrics
+                        |> List.map (fun metric ->
+                            record
+                                [ "id", text metric.MetricId
+                                  "value", (JsonValue.Create metric.Value :> JsonNode)
+                                  "unit", optionalText metric.Unit
+                                  "currency", optionalText metric.Currency
+                                  "quality", text metric.Quality ]
+                            :> JsonNode)
+                        |> array ]
+                  :> JsonNode)
+              |> array
+              "prediction", (execution.Prediction |> Option.map predictionNode |> Option.toObj)
+              "outcome", (execution.Outcome |> Option.map outcomeNode |> Option.toObj) ]
+
     let groupNode (group: StoredWorkGroup) : JsonObject =
         record
             [ yield! declarationFields group.Declaration
@@ -154,7 +248,8 @@ module WorkGroupJson =
               yield "createdAt", text group.CreatedAt
               yield "createdBy", (ActorJson.node group.CreatedBy :> JsonNode)
               yield "history", group.History |> List.map historyNode |> array
-              yield "checkpoints", group.Checkpoints |> List.map checkpointNode |> array ]
+              yield "checkpoints", group.Checkpoints |> List.map checkpointNode |> array
+              yield "executions", group.Executions |> List.map executionNode |> array ]
 
     let groupStoreNode (store: GroupStore) : JsonNode =
         record
@@ -394,6 +489,141 @@ module WorkGroupJson =
                   ExecutionId = value executionId }
         | errors -> Error errors
 
+    let readExecution (node: JsonObject) : Result<GroupExecutionRecord, string list> =
+        let id = requiredText node "id"
+        let groupId = requiredText node "groupId"
+        let who = actor node "actor"
+        let startedAt = requiredText node "startedAt"
+        let repository = requiredText node "repository"
+        let order = stringList node "order"
+        let mode = requiredText node "mode" |> Result.bind (fun raw -> parsedWith "mode" ExecutionMode.tryParse (Some raw) |> Result.map Option.get)
+        let basis = stringList node "basis"
+
+        let optOuts =
+            listOf node "optOuts" (fun entry ->
+                match requiredText entry "workItemId", requiredText entry "reason", actor entry "actor", requiredText entry "at" with
+                | Ok workItemId, Ok reason, Ok who, Ok at -> Ok { WorkItemId = workItemId; Reason = reason; Actor = who; At = at }
+                | a, b, c, d -> Error(errorsOf [ boxed a; boxed b; boxed c; boxed d ]))
+
+        let members =
+            listOf node "members" (fun entry ->
+                let mode = requiredText entry "mode" |> Result.bind (fun raw -> parsedWith "mode" ExecutionMode.tryParse (Some raw) |> Result.map Option.get)
+
+                match requiredText entry "workItemId", requiredText entry "executionId", requiredText entry "begunAt", mode with
+                | Ok workItemId, Ok executionId, Ok begunAt, Ok mode -> Ok { WorkItemId = workItemId; ExecutionId = executionId; BegunAt = begunAt; Mode = mode }
+                | a, b, c, d -> Error(errorsOf [ boxed a; boxed b; boxed c; boxed d ]))
+
+        let fallback =
+            match field node "fallback" with
+            | None -> Ok None
+            | Some(:? JsonObject as entry) ->
+                match requiredText entry "signal", stringList entry "evidence", requiredText entry "at" with
+                | Ok signal, Ok evidence, Ok at -> Ok(Some { Signal = signal; Evidence = evidence; At = at })
+                | a, b, c -> Error(String.concat "; " (errorsOf [ boxed a; boxed b; boxed c ]))
+            | Some _ -> Error "fallback must be an object or null"
+
+        let endedAt = optionalString node "endedAt"
+
+        let successors =
+            listOf node "successors" (fun entry ->
+                match requiredText entry "workItemId", requiredText entry "executionId" with
+                | Ok memberId, Ok successor -> Ok(memberId, successor)
+                | a, b -> Error(errorsOf [ boxed a; boxed b ]))
+
+        let number (entry: JsonObject) (name: string) : decimal option =
+            match field entry name with
+            | Some(:? JsonValue as value) when value.GetValueKind() = JsonValueKind.Number -> Some(value.GetValue<decimal>())
+            | _ -> None
+
+        let flagOf (entry: JsonObject) (name: string) : bool option =
+            match field entry name with
+            | Some(:? JsonValue as value) when value.GetValueKind() = JsonValueKind.True -> Some true
+            | Some(:? JsonValue as value) when value.GetValueKind() = JsonValueKind.False -> Some false
+            | _ -> None
+
+        let telemetry =
+            listOf node "telemetry" (fun entry ->
+                let metrics =
+                    listOf entry "metrics" (fun metric ->
+                        match requiredText metric "id", number metric "value", requiredText metric "quality" with
+                        | Ok id, Some amount, Ok quality ->
+                            Ok
+                                { MetricId = id
+                                  Value = amount
+                                  Unit = optionalString metric "unit" |> Result.defaultValue None
+                                  Currency = optionalString metric "currency" |> Result.defaultValue None
+                                  Quality = quality }
+                        | _ -> Error [ "telemetry metrics need id, value and quality" ])
+
+                match requiredText entry "snapshotId", requiredText entry "adapter", requiredText entry "collectedAt", metrics with
+                | Ok snapshotId, Ok adapter, Ok collectedAt, Ok metrics -> Ok { SnapshotId = snapshotId; Adapter = adapter; CollectedAt = collectedAt; Metrics = metrics }
+                | _ -> Error [ "telemetry snapshots need snapshotId, adapter, collectedAt and metrics" ])
+
+        let range (entry: JsonObject) : PredictedRange =
+            { Lower = number entry "lower"
+              Upper = number entry "upper"
+              Basis = requiredText entry "basis" |> Result.defaultValue "" }
+
+        let prediction =
+            match field node "prediction" with
+            | Some(:? JsonObject as entry) ->
+                match requiredText entry "mode" |> Result.bind (fun raw -> parsedWith "mode" ExecutionMode.tryParse (Some raw)), child entry "cost", child entry "durationMs" with
+                | Ok(Some mode), Ok cost, Ok duration ->
+                    Ok(
+                        Some
+                            { Mode = mode
+                              Members = stringList entry "members" |> Result.defaultValue []
+                              Cost = range cost
+                              Currency = optionalString entry "currency" |> Result.defaultValue None
+                              DurationMs = range duration }
+                    )
+                | _ -> Error "prediction needs mode, cost and durationMs"
+            | _ -> Ok None
+
+        let outcome =
+            match field node "outcome" with
+            | Some(:? JsonObject as entry) ->
+                match requiredText entry "endedAt", requiredText entry "statement" with
+                | Ok endedAt, Ok statement ->
+                    Ok(
+                        Some
+                            { EndedAt = endedAt
+                              MembersBegun = number entry "membersBegun" |> Option.map int |> Option.defaultValue 0
+                              Cost = number entry "cost"
+                              Currency = optionalString entry "currency" |> Result.defaultValue None
+                              DurationMs = number entry "durationMs" |> Option.map int64
+                              CostWithinPrediction = flagOf entry "costWithinPrediction"
+                              DurationWithinPrediction = flagOf entry "durationWithinPrediction"
+                              Statement = statement }
+                    )
+                | _ -> Error "outcome needs endedAt and statement"
+            | _ -> Ok None
+
+        let lists =
+            [ optOuts |> Result.map box; members |> Result.map box; successors |> Result.map box; telemetry |> Result.map box ]
+            |> List.collect (function Error problems -> problems | Ok _ -> [])
+
+        match errorsOf [ boxed id; boxed groupId; boxed who; boxed startedAt; boxed repository; boxed order; boxed mode; boxed basis; boxed fallback; boxed endedAt; boxed prediction; boxed outcome ] @ lists with
+        | [] ->
+            Ok
+                { Id = value id
+                  GroupId = value groupId
+                  Actor = value who
+                  StartedAt = value startedAt
+                  Repository = value repository
+                  Order = value order
+                  Mode = value mode
+                  Basis = value basis
+                  OptOuts = Result.defaultValue [] optOuts
+                  Members = Result.defaultValue [] members
+                  Fallback = value fallback
+                  EndedAt = value endedAt
+                  Successors = Result.defaultValue [] successors
+                  Telemetry = Result.defaultValue [] telemetry
+                  Prediction = value prediction
+                  Outcome = value outcome }
+        | errors -> Error errors
+
     let readCheckpoint (node: JsonObject) : Result<GroupCheckpoint, string list> =
         let id = requiredText node "id"
         let recordedAt = requiredText node "recordedAt"
@@ -465,12 +695,13 @@ module WorkGroupJson =
                 if errors.IsEmpty then Ok(read |> List.choose (function Ok checkpoint -> Some checkpoint | Error _ -> None)) else Error errors)
 
         let home = optionalString node "homeRepository"
+        let executions = listOf node "executions" readExecution
         let dependencies = listOf node "dependencies" readDependency
         let verifications = listOf node "verifications" readObservation
         let scalarErrors = errorsOf [ boxed createdAt; boxed createdBy; boxed home ]
 
-        match declaration, history, checkpoints, dependencies, verifications, scalarErrors with
-        | Ok declaration, Ok history, Ok checkpoints, Ok dependencies, Ok verifications, [] ->
+        match declaration, history, checkpoints, dependencies, verifications, executions, scalarErrors with
+        | Ok declaration, Ok history, Ok checkpoints, Ok dependencies, Ok verifications, Ok executions, [] ->
             Ok
                 { Declaration = declaration
                   HomeRepository = value home
@@ -479,10 +710,11 @@ module WorkGroupJson =
                   CreatedAt = value createdAt
                   CreatedBy = value createdBy
                   History = history
-                  Checkpoints = checkpoints }
+                  Checkpoints = checkpoints
+                  Executions = executions }
         | _ ->
             let problems result = match result with Error problems -> problems | Ok _ -> []
-            Error(problems declaration @ problems history @ problems checkpoints @ problems dependencies @ problems verifications @ scalarErrors)
+            Error(problems declaration @ problems history @ problems checkpoints @ problems dependencies @ problems verifications @ problems executions @ scalarErrors)
 
     /// A parsed store: each group's own result, keyed by its position and
     /// (when readable) its ID, so validation can report every bad record.

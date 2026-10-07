@@ -305,11 +305,14 @@ dotnet build Praxis.slnx --configuration Release
 dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll    # F# unit and end-to-end CLI tests
 ```
 
-Requires the .NET 10 SDK, plus Python 3, which one remote-action script test
-invokes. This
+Requires the .NET 10 SDK, plus Python 3, which the remote-adapter script tests
+invoke while those scripts hold an approved exception (`DF-ROS-2026-A054`). This
 repository is F#/.NET only (`RQ-ROS-2026-A024`): it owns no JavaScript,
-TypeScript, npm or Node tooling, and `./praxis architecture check` (also part of
-`./praxis validate`) fails, naming each path, if any appears.
+TypeScript, npm or Node tooling, its automation does not run Python outside the
+exact paths `DF-ROS-2026-A054` approves, and `./praxis architecture check` (also
+part of `./praxis validate`) fails, naming each path (and line), if either
+appears. Maintainer scripts and workflows use the F# helper
+`scripts/praxis-tooling.fsx` (`dotnet fsi`).
 
 Inside this source checkout, `./praxis` runs the locally built CLI directly:
 

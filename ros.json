@@ -36,7 +36,7 @@
       "mechanical": []
     },
     "meaningfulPaths": ["**"],
-    "ignoredPaths": [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", ".ros/telemetry/**", ".ros/executions/**", ".ros/locks/**", ".ros/remote/**", ".praxis-inbox/**", "registries/**", ".echelon/**"],
+    "ignoredPaths": [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", ".ros/telemetry/**", ".ros/executions/**", ".ros/locks/**", ".ros/remote/**", ".ros/planning/**", ".praxis-inbox/**", "registries/**", ".echelon/**"],
     "continuity": {
       "requireDurableCheckpoint": true
     },
@@ -50,7 +50,45 @@
   "implementationPolicy": {
     "version": "1.0.0",
     "prohibitNodeArtifacts": true,
-    "exceptions": []
+    "prohibitPythonAutomation": true,
+    "exceptions": [
+      {
+        "path": "research/experiments/EX-ROS-2026-A021-harness/session_metrics.py",
+        "decision": "DF-ROS-2026-A054"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A021-evaluation-kit/prepare-blind-bundle.sh",
+        "decision": "DF-ROS-2026-A054"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A022-target-gate/inventory.py",
+        "decision": "DF-ROS-2026-A054"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A022-target-gate/signal/signal_structure.py",
+        "decision": "DF-ROS-2026-A054"
+      },
+      {
+        "path": "scripts/praxis-bootstrap.sh",
+        "decision": "DF-ROS-2026-A054"
+      },
+      {
+        "path": "scripts/praxis-remote-persist.sh",
+        "decision": "DF-ROS-2026-A054"
+      },
+      {
+        "path": "scripts/praxis-remote-inbox.sh",
+        "decision": "DF-ROS-2026-A054"
+      },
+      {
+        "path": ".github/actions/praxis-remote/action.yml",
+        "decision": "DF-ROS-2026-A054"
+      },
+      {
+        "path": ".github/workflows/praxis-remote.yml",
+        "decision": "DF-ROS-2026-A054"
+      }
+    ]
   },
   "provenance": {
     "version": "1.0.0",

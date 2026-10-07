@@ -69,6 +69,15 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
+      # The tag may predate scripts/praxis-tooling.fsx, so the F# helper
+      # comes from this workflow's own commit (RQ-ROS-2026-A024).
+      - uses: actions/checkout@v6
+        if: steps.need.outputs.build == 'true'
+        with:
+          path: .praxis-tooling
+          sparse-checkout: scripts/praxis-tooling.fsx
+          sparse-checkout-cone-mode: false
+
       - name: Build self-contained ros-fs binaries
         if: steps.need.outputs.build == 'true'
         env:
@@ -79,7 +88,7 @@ jobs:
           # A tag from before the rename declares its version in package.json;
           # later tags declare it in release.json. No Node is needed either way.
           if [ -f release.json ]; then source_file=release.json; else source_file=package.json; fi
-          version="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["version"])' "$source_file")"
+          version="$(dotnet fsi .praxis-tooling/scripts/praxis-tooling.fsx json-get "$source_file" version)"
           [ "v${version}" = "$TAG" ] || { echo "::error::$TAG checks out $source_file version $version"; exit 1; }
           mkdir -p dist/ros-fs
           # The CLI project is src/Praxis.Cli from the internal namespace rename

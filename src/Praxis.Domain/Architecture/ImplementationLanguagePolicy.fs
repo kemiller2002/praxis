@@ -10,6 +10,11 @@ open System.Text.RegularExpressions
 type ProhibitedArtifact =
     | NodeSource of extension: string
     | NodeToolchainManifest of fileName: string
+    /// A tracked Python source file (RQ-ROS-2026-A024, DF-ROS-2026-A054).
+    | PythonSource
+    /// A `python`/`python3` invocation, or Python set-up in a workflow, at
+    /// this 1-based line of a tracked script, workflow or action.
+    | PythonInvocation of line: int
 
 /// A narrowly documented, approved exception: one exact file path, or one
 /// directory (a path ending in `/`), justified by an accepted `DF-` decision.
@@ -19,6 +24,9 @@ type ImplementationException = { Path: string; Decision: string }
 /// project that legitimately owns JavaScript is never failed by default.
 type ImplementationPolicy =
     { ProhibitNodeArtifacts: bool
+      /// Opt-in like `ProhibitNodeArtifacts`: tracked Python, and Python
+      /// invoked by repository-owned automation, is prohibited.
+      ProhibitPythonAutomation: bool
       Exceptions: ImplementationException list }
 
 type ImplementationViolation =
@@ -46,7 +54,18 @@ module ImplementationLanguagePolicy =
 
     let disabled =
         { ProhibitNodeArtifacts = false
+          ProhibitPythonAutomation = false
           Exceptions = [] }
+
+    /// Files whose text is scanned for Python invocations: shell and
+    /// PowerShell scripts, and workflow or action YAML.
+    let automationExtensions = [ ".sh"; ".bash"; ".ps1"; ".yml"; ".yaml" ]
+
+    /// A `python`/`python3`/`python3.N` command word (after a line start,
+    /// whitespace, `;`, `|`, `&`, `(`, `$(` or a backtick, and followed by
+    /// whitespace or the end of the line), or `actions/setup-python`.
+    let private pythonCommand =
+        Regex(@"(?:^|[\s;|&(`])python(?:3(?:\.\d+)?)?(?=\s|$)|actions/setup-python@", RegexOptions.CultureInvariant)
 
     let private decisionPattern = Regex(@"^DF-[A-Z0-9]+(-[A-Z0-9]+)+$", RegexOptions.CultureInvariant)
 
@@ -86,19 +105,58 @@ module ImplementationLanguagePolicy =
         else
             String.Equals(path, target, StringComparison.Ordinal)
 
+    let private owned (policy: ImplementationPolicy) (paths: string list) =
+        paths
+        |> List.map normalize
+        |> List.distinct
+        |> List.filter (fun path -> not (path.StartsWith(".git/", StringComparison.Ordinal)))
+        |> List.filter (fun path -> not (policy.Exceptions |> List.exists (covers path)))
+
     /// Deterministic: ordinal path order, one violation per path, regardless
     /// of the order or duplication of the input listing.
     let violations (policy: ImplementationPolicy) (paths: string list) : ImplementationViolation list =
-        if not policy.ProhibitNodeArtifacts then
-            []
-        else
-            paths
-            |> List.map normalize
-            |> List.distinct
-            |> List.filter (fun path -> not (path.StartsWith(".git/", StringComparison.Ordinal)))
-            |> List.filter (fun path -> not (policy.Exceptions |> List.exists (covers path)))
-            |> List.choose (fun path -> classify path |> Option.map (fun artifact -> { Path = path; Artifact = artifact }))
-            |> List.sortWith (fun a b -> String.CompareOrdinal(a.Path, b.Path))
+        let node =
+            if not policy.ProhibitNodeArtifacts then []
+            else owned policy paths |> List.choose (fun path -> classify path |> Option.map (fun artifact -> { Path = path; Artifact = artifact }))
+
+        let python =
+            if not policy.ProhibitPythonAutomation then []
+            else
+                owned policy paths
+                |> List.filter (fun path -> extension (fileName path) = ".py")
+                |> List.map (fun path -> { Path = path; Artifact = ProhibitedArtifact.PythonSource })
+
+        node @ python |> List.sortWith (fun a b -> String.CompareOrdinal(a.Path, b.Path))
+
+    /// Whether a path's text must be scanned for Python invocations.
+    let scansContent (policy: ImplementationPolicy) (path: string) =
+        policy.ProhibitPythonAutomation
+        && automationExtensions |> List.contains (extension (fileName (normalize path)))
+        && not (policy.Exceptions |> List.exists (covers (normalize path)))
+
+    /// The 1-based lines of `text` that invoke Python. Comment lines (`#`)
+    /// are not commands and are ignored.
+    let pythonInvocations (text: string) : int list =
+        text.Replace("\r\n", "\n").Split('\n')
+        |> Array.mapi (fun index line -> index + 1, line)
+        |> Array.filter (fun (_, line) -> not (line.TrimStart().StartsWith "#") && pythonCommand.IsMatch line)
+        |> Array.map fst
+        |> List.ofArray
+
+    /// Python invocations in the scanned automation files, one violation
+    /// per line, in path then line order.
+    let contentViolations (policy: ImplementationPolicy) (files: (string * string) list) : ImplementationViolation list =
+        files
+        |> List.filter (fun (path, _) -> scansContent policy path)
+        |> List.collect (fun (path, text) ->
+            pythonInvocations text |> List.map (fun line -> { Path = normalize path; Artifact = ProhibitedArtifact.PythonInvocation line }))
+        |> List.sortWith (fun a b ->
+            match String.CompareOrdinal(a.Path, b.Path) with
+            | 0 ->
+                match a.Artifact, b.Artifact with
+                | ProhibitedArtifact.PythonInvocation left, ProhibitedArtifact.PythonInvocation right -> compare left right
+                | _ -> 0
+            | order -> order)
 
     let describe (violation: ImplementationViolation) =
         match violation.Artifact with
@@ -106,6 +164,10 @@ module ImplementationLanguagePolicy =
             $"repository-owned JavaScript/TypeScript source ('{suffix}') is prohibited; implement this behaviour in F#/.NET"
         | ProhibitedArtifact.NodeToolchainManifest name ->
             $"repository-owned Node toolchain file '{name}' is prohibited; the repository must not depend on npm or a Node runtime"
+        | ProhibitedArtifact.PythonSource ->
+            "repository-owned Python is prohibited; implement this automation in F#/.NET or record an approved exception"
+        | ProhibitedArtifact.PythonInvocation line ->
+            $"line {line} runs Python; repository-owned automation must be F#/.NET (for example a dotnet fsi script) or covered by an approved exception"
 
     /// Policy configuration errors. An exception must name a real path and an
     /// accepted decision; wildcards are refused so an exception can never
@@ -127,9 +189,9 @@ module ImplementationLanguagePolicy =
         |> List.concat
 
     /// Every finding the policy produces, in the shared validation shape.
-    let findings (policy: ImplementationPolicy) (paths: string list) : ImplementationPolicyFinding list =
+    let findings (policy: ImplementationPolicy) (paths: string list) (contents: (string * string) list) : ImplementationPolicyFinding list =
         configurationFindings policy
-        @ (violations policy paths
+        @ (violations policy paths @ contentViolations policy contents
            |> List.map (fun violation ->
                { Path = violation.Path
                  Field = "implementation_language"

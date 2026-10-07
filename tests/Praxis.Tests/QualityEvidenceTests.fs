@@ -97,7 +97,7 @@ module QualityEvidenceTests =
 
     /// The policy-only assessment: no risk metadata, no obligation evidence.
     let private assessItem p item provided dokimosObservation ordoObservation =
-        CompletionReadinessOperations.assess p CompletionFacts.none (fun _ -> true) item provided dokimosObservation ordoObservation noObligationEvidence []
+        CompletionReadinessOperations.assess p CompletionFacts.none (fun _ -> true) item provided dokimosObservation ordoObservation noObligationEvidence [] None
 
     let private assess p dokimosObservation ordoObservation =
         assessItem p ("WI-1", "task") [] dokimosObservation ordoObservation
@@ -286,6 +286,7 @@ module QualityEvidenceTests =
                       (Ok QualityEvidencePolicies.legacyDefault)
                       [ "WI-1", "task" ]
                       [ { Type = "dokimos-ratchet"; Path = "x.json" } ]
+                      (fun _ -> None)
 
               Assert.equal CompletionGateOutcome.NotApplicable outcome)
 
@@ -294,10 +295,10 @@ module QualityEvidenceTests =
                   { policy EvidenceRequirement.Required EvidenceRequirement.Off with
                       WorkTypes = Some(set [ "feature" ]) }
 
-              Assert.equal CompletionGateOutcome.NotApplicable (CompletionReadinessOperations.gate failingSources CompletionFacts.none (Ok p) [ "WI-1", "mechanical" ] []))
+              Assert.equal CompletionGateOutcome.NotApplicable (CompletionReadinessOperations.gate failingSources CompletionFacts.none (Ok p) [ "WI-1", "mechanical" ] [] (fun _ -> None)))
 
           t "an invalid policy fails closed" (fun () ->
-              Assert.equal (CompletionGateOutcome.PolicyInvalid "bad") (CompletionReadinessOperations.gate failingSources CompletionFacts.none (Error "bad") [ "WI-1", "task" ] []))
+              Assert.equal (CompletionGateOutcome.PolicyInvalid "bad") (CompletionReadinessOperations.gate failingSources CompletionFacts.none (Error "bad") [ "WI-1", "task" ] [] (fun _ -> None)))
 
           t "more than one report of a type is ambiguous" (fun () ->
               let sources =
@@ -307,7 +308,7 @@ module QualityEvidenceTests =
 
               let provided = [ { Type = "dokimos-ratchet"; Path = "a.json" }; { Type = "dokimos-ratchet"; Path = "b.json" } ]
 
-              match CompletionReadinessOperations.gate sources CompletionFacts.none (Ok(policy EvidenceRequirement.Required EvidenceRequirement.Off)) [ "WI-1", "task" ] provided with
+              match CompletionReadinessOperations.gate sources CompletionFacts.none (Ok(policy EvidenceRequirement.Required EvidenceRequirement.Off)) [ "WI-1", "task" ] provided (fun _ -> None) with
               | CompletionGateOutcome.Refused [ readiness ] -> Assert.equal (SourceObservation.Ambiguous [ "a.json"; "b.json" ]) readiness.Dokimos
               | other -> failwith $"{other}")
 

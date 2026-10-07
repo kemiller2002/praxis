@@ -331,6 +331,26 @@ type GroupProgress =
       NotRunnable: int
       Statement: string }
 
+/// PRX-GRP-130..132: whether a group qualifies for grouped execution by
+/// default, every threshold it fails, and what the planner and
+/// `plan execute-group` default to. Deterministic (PRX-GRP-137).
+type GroupedQualification =
+    { Qualifies: bool
+      /// Each failed threshold, explained (PRX-GRP-131).
+      Failures: string list
+      /// The configured default (`grouped`, or `advisory` after rollback).
+      Default: string
+      /// The planner's recommendation: `grouped` for a qualifying group
+      /// under the grouped default; `advisory` otherwise.
+      Recommended: string
+      /// The mode `plan execute-group` uses without `--mode`.
+      ExecuteGroupDefault: string
+      /// A per-group opt-out reason, when recorded (PRX-GRP-132).
+      OptOut: string option
+      /// Per-item opt-outs: (member, reason).
+      IndependentMembers: (string * string) list
+      Statement: string }
+
 type WorkGroup =
     { Id: WorkGroupId
       Kind: GroupKind
@@ -352,7 +372,11 @@ type WorkGroup =
       ContextCost: ContextCost
       Progress: GroupProgress
       ArchitectureNotes: string list
-      Notes: GroupNote list }
+      Notes: GroupNote list
+      GroupedExecution: GroupedQualification
+      /// Grouped against independent cost and time, from measured samples
+      /// only (PRX-GRP-155).
+      Pricing: GroupPricing }
 
 [<RequireQualifiedAccess>]
 type GroupEndpoint =
@@ -1206,6 +1230,58 @@ module Grouping =
                   yield note GroupNoteCode.PartialCompletion FindingSeverity.Info $"partially complete: {names} complete; the remaining members stay independently completable" ]
 
         let remaining = members' |> List.filter (fun entry -> entry.Status <> MemberStatus.Complete) |> List.length
+        let notes = declaredNotes @ candidate.Notes @ merged @ sizeNotes @ otherNotes
+        let pricing = GroupPricing.price context.Input.Executions context.Input.GroupSamples
+
+        let qualification =
+            let settings = grouping.GroupedExecution
+            let runnable = members' |> List.filter (fun entry -> entry.Status <> MemberStatus.Complete)
+            let runnableIds = runnable |> List.map (fun entry -> entry.WorkItemId) |> Set.ofList
+            let here = context.Input.Repository
+
+            let failures =
+                [ if affinity <> ContextAffinity.High then
+                      yield $"group affinity is {ContextAffinity.code affinity}; grouped execution needs high (PRX-GRP-131.1)"
+                  for pair in pairs do
+                      if runnableIds.Contains pair.Left && runnableIds.Contains pair.Right
+                         && (pair.Level = ContextAffinity.None || pair.Level = ContextAffinity.Unknown) then
+                          yield $"{pair.Left} and {pair.Right} have {ContextAffinity.code pair.Level} affinity (PRX-GRP-131.1)"
+                  if runnable.Length < settings.MinimumSize || runnable.Length > settings.MaximumSize then
+                      yield $"{runnable.Length} runnable members is outside {settings.MinimumSize}..{settings.MaximumSize} (PRX-GRP-131.2)"
+                  for entry in runnable do
+                      match context.Evidence.TryFind entry.WorkItemId with
+                      | Some evidence when evidence.Location = ExecutionLocation.Repository here -> ()
+                      | Some evidence -> yield $"{entry.WorkItemId} executes in {ExecutionLocation.describe evidence.Location}, not this checkout (PRX-GRP-131.3)"
+                      | None -> yield $"{entry.WorkItemId} is not in this checkout's inventory (PRX-GRP-131.3)"
+                  for missing in members |> List.filter (context.ById.ContainsKey >> not) do
+                      yield $"{missing} does not execute in this checkout (PRX-GRP-131.3)"
+                  if notes |> List.exists (fun entry -> entry.Code = GroupNoteCode.ContextPressureObserved || entry.Code = GroupNoteCode.SplitForContextPressure) then
+                      yield "context pressure was observed for these members (PRX-GRP-131.4, PRX-GRP-074)"
+                  for entry in runnable do
+                      if entry.PlanningState = PlanningWorkState.Captured then
+                          yield $"{entry.WorkItemId} is still captured; triage it first (PRX-GRP-131.5)" ]
+
+            let configured = match settings.Default with GroupedDefault.Grouped -> "grouped" | GroupedDefault.Advisory -> "advisory"
+            let optOut = candidate.Declared |> Option.bind (fun declared -> declared.IndependentReason)
+            let independentMembers = candidate.Declared |> Option.map (fun declared -> declared.IndependentMembers) |> Option.defaultValue []
+            let qualifies = failures.IsEmpty
+            let grouped = qualifies && settings.Default = GroupedDefault.Grouped && optOut.IsNone
+
+            { Qualifies = qualifies
+              Failures = failures
+              Default = configured
+              Recommended = if grouped then "grouped" else "advisory"
+              ExecuteGroupDefault = if grouped then "grouped" else "independent"
+              OptOut = optOut
+              IndependentMembers = independentMembers
+              Statement =
+                match optOut, qualifies, settings.Default with
+                | Some reason, _, _ -> $"grouped execution: opted out ({reason}); members execute independently (PRX-GRP-132)"
+                | None, true, GroupedDefault.Grouped -> "grouped execution: qualifies; one execution context, one reasoning owner, members in the required order, behind the completion gates (PRX-GRP-130, PRX-GRP-133..135)"
+                | None, true, GroupedDefault.Advisory -> "grouped execution: qualifies, but grouping.groupedExecution.default is advisory (rolled back, PRX-GRP-138); execute-group defaults to independent"
+                | None, false, _ ->
+                    let reasons = String.concat "; " failures
+                    $"grouped execution: does not qualify ({reasons}); advisory only, execute-group defaults to independent" }
 
         { Id = WorkGroupId id
           Kind =
@@ -1231,7 +1307,7 @@ module Grouping =
           CollisionPairs = collisions |> List.filter (fun collision -> collision.Risk <> CollisionRisk.Safe)
           ParallelSafe = parallelSafe
           Execution = execution
-          ExecutionReasons = reasons @ triage
+          ExecutionReasons = reasons @ triage @ [ qualification.Statement; pricing.Statement ]
           ContextCost =
             { IndependentAcquisitions = remaining
               GroupedAcquisitions = (if remaining = 0 then 0 else 1)
@@ -1242,7 +1318,9 @@ module Grouping =
                 $"grouped: coldStart + sharedContext + sum(memberIncremental) = 1 context acquisition; independent: {remaining} x (coldStart + itemCost) = {remaining} acquisitions; {contextNote context.Analysis.History}" }
           Progress = progress members'
           ArchitectureNotes = candidate.Declared |> Option.map (fun declared -> declared.ArchitectureNotes) |> Option.defaultValue []
-          Notes = declaredNotes @ candidate.Notes @ merged @ sizeNotes @ otherNotes }
+          Notes = notes
+          GroupedExecution = qualification
+          Pricing = pricing }
 
     // ---- group relations and dependencies --------------------------------------
 
@@ -1828,7 +1906,7 @@ module Grouping =
                       ExpectedDuration = Estimate.sumDurations durations
                       PeakConcurrency = min 1 items.Length
                       DesignOwners = min 1 items.Length }
-                  ContextSaving = coldStartSaving analysis.History (max 0 (items.Length - 1))
+                  ContextSaving = $"{coldStartSaving analysis.History (max 0 (items.Length - 1))}; {group.Pricing.Statement}"
                   ArchitectureConsideration =
                     $"independent execution gives {items.Length} separate design owner(s) over shared context ({shared}); grouped execution gives one, which must still keep per-item attribution"
                   ContextPressureRisk =

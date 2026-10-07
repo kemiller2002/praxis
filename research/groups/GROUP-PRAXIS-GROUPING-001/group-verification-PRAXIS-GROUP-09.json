@@ -1,0 +1,107 @@
+{
+  "schema": "praxis.group-verification/1",
+  "groupId": "GROUP-PRAXIS-GROUPING-001",
+  "groupExecutionId": null,
+  "member": "PRAXIS-GROUP-09",
+  "rows": [
+    {
+      "member": "PRAXIS-GROUP-09",
+      "criterion": "plan execute-group records a group execution GEX-<timestamp>-<suffix> in the group record with group ID, actor, start time, execution repository, required member order, mode and its basis, and opt-outs (PRX-GRP-117)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "execute group: cli execute-group begins members in required order through work begin, records the group execution, is idempotent per member, and writes nothing else",
+        "result": "passed: the stored execution has id GEX-..., groupId, actor example/agent-a, startedAt, repository, order [ITEM-1, ITEM-2, ITEM-3], mode grouped with a non-empty basis, and optOuts"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-09",
+      "criterion": "it begins the next runnable member in required order, or --member, through the existing work begin transition, links the member's execution to the group execution, and is idempotent per member (PRX-GRP-117)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "execute group: cli execute-group begins members in required order through work begin, records the group execution, is idempotent per member, and writes nothing else",
+        "result": "passed: ITEM-1 begins first and is active in the work context, its memberExecution is linked in the group execution, a repeated --member ITEM-1 is unchanged (changed:false), the next runnable member is ITEM-3 while ITEM-2 waits on ITEM-1"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-09",
+      "criterion": "it refuses with exit 1 an unknown group, an unresolved dependency cycle, no member runnable in this checkout, or a caller who already owns an open group execution of another group (PRX-GRP-117)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "execute group: cli execute-group refuses a group whose members depend on each other in a cycle, and records nothing",
+        "result": "passed (exit 1, code dependency-cycle, group store unchanged), with 'cli execute-group refuses an unknown group, a group with nothing runnable here, and a caller who owns another open group execution' (exit 1; nothing-runnable-here, owns-other-group-execution)"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-09",
+      "criterion": "it never launches an agent, creates a branch, selects a provider or model, or changes priorities or dependencies, and every other plan verb stays read-only (PRX-GRP-117)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "execute group: cli execute-group begins members in required order through work begin, records the group execution, is idempotent per member, and writes nothing else",
+        "result": "passed: branch and HEAD unchanged, only work begin's own files and the group store changed, every item's priority and description (its declared dependencies) unchanged; execute-group takes no provider or model option; 'planning cli: 30 no plan command mutates repository state' passed for every other plan verb, including plan groups and explain-group"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-09",
+      "criterion": "qualification thresholds under grouping.groupedExecution (high affinity with no none or unknown pair, minimumSize..maximumSize runnable members with defaults 2 and 6, all runnable here, no limiting context pressure, none captured) are shown with every failed reason by plan groups and plan explain-group (PRX-GRP-131)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "execute group: a qualifying group defaults to grouped; each failed threshold is explained; advisory by configuration alone",
+        "result": "passed: explain-group and plan groups report the same groupedExecution qualification; a maximumSize of 2 fails with 'outside 2..2'; with 'a captured member fails qualification, and qualification is deterministic' (ITEM-4 is still captured)"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-09",
+      "criterion": "a qualifying group defaults to grouped mode and a non-qualifying one to independent, where grouped mode needs --mode grouped --reason (PRX-GRP-130)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "execute group: a qualifying group defaults to grouped; each failed threshold is explained; advisory by configuration alone",
+        "result": "passed: a qualifying group's executeGroupDefault is grouped, a non-qualifying one independent; 'cli opt-outs need a reason, are recorded in history with actor and time, and are honoured' refuses --mode grouped without --reason (exit 2)"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-09",
+      "criterion": "per-group and per-item opt-outs require a non-empty reason, are recorded with actor and time in the group history, are shown by show, list and explain-group, and apply only to executions not yet begun (PRX-GRP-132)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "execute group: cli opt-outs need a reason, are recorded in history with actor and time, and are honoured",
+        "result": "passed: an opt-out without --reason exits 2; the opted-out history entry carries actor and at; work group show and explain-group list the member; a later opt-out of a begun member leaves its recorded mode grouped; 'cli a per-group opt-out makes the recommendation advisory and execute-group independent' shows it in work group list"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-09",
+      "criterion": "a context-pressure signal recorded for the group execution makes execute-group record fallback: independent with the signal and evidence, deterministically, without changing completed or active members (PRX-GRP-136, PRX-GRP-137)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "execute group: cli a context-pressure signal makes execute-group fall back, recorded, without changing the active member",
+        "result": "passed: status fell-back with fallback {mode independent, signal context.compactions}, the work context unchanged, the next execution independent; 'the fallback signal is deterministic and unknown metrics never trigger it' passed"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-09",
+      "criterion": "the default reverts to advisory by setting grouping.groupedExecution.default to advisory, with no code change (PRX-GRP-138)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "execute group: a qualifying group defaults to grouped; each failed threshold is explained; advisory by configuration alone",
+        "result": "passed: grouping.groupedExecution.default advisory makes the recommendation advisory and execute-group independent, by configuration alone"
+      },
+      "deferredTo": null
+    }
+  ]
+}

@@ -152,10 +152,20 @@ module ProvenanceValidation =
                 else
                     []
 
+            let acknowledged = provenance |> Option.bind ArtifactProvenance.originAcknowledgement
+
             let originator =
-                match provenance |> Option.bind ArtifactProvenance.originator with
-                | Some _ -> []
-                | None when isNew && not contributions.IsEmpty ->
+                match provenance |> Option.bind ArtifactProvenance.originator, acknowledged with
+                | Some _, _ -> []
+                // DF-ROS-2026-A055: an acknowledged unrecorded origin satisfies the
+                // creation rule and is reported as itself, never as a creation.
+                | None, Some acknowledgement ->
+                    [ finding
+                          FindingSeverity.Info
+                          document.RelativePath
+                          "provenance.origin"
+                          $"origin unrecorded: no Praxis execution recorded this artifact's creation and no creator is named; acknowledged by {Actor.describe acknowledgement.Actor} ({acknowledgement.Key}) at {acknowledgement.At}: {acknowledgement.Reason |> Option.defaultValue String.Empty}" ]
+                | None, None when isNew && not contributions.IsEmpty ->
                     let severity =
                         if request.Policy.RequireOriginator.Contains prefix then FindingSeverity.Error else FindingSeverity.Warning
 
@@ -164,7 +174,7 @@ module ProvenanceValidation =
                           document.RelativePath
                           "provenance.contributions"
                           $"no contribution records the artifact's creation ('created'); its originator is unknown" ]
-                | None -> []
+                | None, None -> []
 
             // `updated` is a local calendar date while contributions are
             // UTC timestamps, so a date one day ahead of the latest

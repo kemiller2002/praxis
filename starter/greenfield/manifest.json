@@ -391,6 +391,16 @@
       "template": false
     },
     {
+      "source": "schemas/praxis-group-analysis.schema.json",
+      "destination": "schemas/praxis-group-analysis.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/praxis-group-verification.schema.json",
+      "destination": "schemas/praxis-group-verification.schema.json",
+      "template": false
+    },
+    {
       "source": "schemas/execution-telemetry.schema.json",
       "destination": "schemas/execution-telemetry.schema.json",
       "template": false

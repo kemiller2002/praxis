@@ -18,7 +18,7 @@ module QualityEvidenceCommands =
     /// refusal: the readiness record on stdout and one line per blocking
     /// facet on stderr.
     let completionGate root (ids: string list) (provided: WorkEvidence list) : Result<Map<string, JsonObject>, int> =
-        match FileCompletionReadiness.evaluate root ids provided with
+        match FileCompletionReadiness.evaluate root ids provided (Praxis.Infrastructure.Planning.FileGroupGates.facet root provided) with
         | CompletionGateOutcome.NotApplicable -> Ok Map.empty
         | CompletionGateOutcome.Ready _ as outcome -> Ok(FileCompletionReadiness.extensions outcome)
         | CompletionGateOutcome.PolicyInvalid reason ->

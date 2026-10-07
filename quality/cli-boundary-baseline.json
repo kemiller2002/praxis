@@ -36,9 +36,13 @@
       "lines": 109,
       "effects": 3
     },
+    "ExecuteGroupCommands.fs": {
+      "lines": 171,
+      "effects": 0
+    },
     "ExecutionCommands.fs": {
-      "lines": 613,
-      "effects": 12
+      "lines": 275,
+      "effects": 2
     },
     "Foundations.fs": {
       "lines": 568,
@@ -104,8 +108,12 @@
       "lines": 826,
       "effects": 8
     },
+    "WorkGroupCheckpointCommands.fs": {
+      "lines": 153,
+      "effects": 0
+    },
     "WorkGroupCommands.fs": {
-      "lines": 538,
+      "lines": 419,
       "effects": 0
     },
     "WorkGroupLinkCommands.fs": {
@@ -114,6 +122,10 @@
     },
     "WorkGroupListCommands.fs": {
       "lines": 81,
+      "effects": 0
+    },
+    "WorkGroupRoutes.fs": {
+      "lines": 20,
       "effects": 0
     },
     "WorkGroupShowCommands.fs": {

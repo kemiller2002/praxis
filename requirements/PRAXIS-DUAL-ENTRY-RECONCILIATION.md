@@ -80,4 +80,10 @@ them DER-01..26). This table covers the identity items closed by
 | 22 | Met. Native executions record `instanceId`; accepted envelope history without a claim is stamped with the local instance. | `FileTelemetryExecutionRepository`, `EnvelopeReconciliation.withLocalInstance` (PRAXIS-ID-04) |
 | 23 | Met. Mismatched, unestablished and unverifiable claims are rejected; proved end to end against a generated identity. | `IdentityTests` "reconciliation rejects a claimed instance..." (PRAXIS-ID-04) |
 | 24 | Met. Upgrades and repeats keep the identity; a clone, rename or transfer stays bound; a template, fork or copy is foreign until an explicit `--reinitialize --reason` records its predecessor. | `InstanceBinding`, `InstanceInit` (PRAXIS-ID-04) |
-| 9, 10 | Open: inbox documents are inventoried but not processed. Not part of this group. | - |
+| 8-11 | Met by `PRAXIS-MISC-01`; see [Inbox](#inbox-praxis-misc-01) below. | `praxis inbox` (PRAXIS-MISC-01) |
+
+### Inbox (PRAXIS-MISC-01)
+
+- Items 8-11 and the inbox acceptance criterion ("Inbox claim/retry/reconcile tests prove no source is lost") are implemented by `PRAXIS-MISC-01`: `praxis inbox list|show|claim|derive|complete|release|reject|recover`, the `praxis.inbox-claim/1` record and the crash-safe write-ahead transfer, tested by `tests/Praxis.Tests/InputInboxTests.fs` (crash at every step of claim, complete, release and reject, then recovery). See `docs/fallback-reconciliation.md` ("Input documents"). The layout adds `.praxis/processed/` and `.praxis/rejected/documents/` with the same discoverability guarantees.
+- Processing itself is the agent's judgement: the commands record what was derived, with provenance to the input, and refuse completion until it is durably reconciled; they do not extract requirements automatically.
+

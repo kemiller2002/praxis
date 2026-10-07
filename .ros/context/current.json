@@ -1570,25 +1570,29 @@
     {
       "id": "WI-READY",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
+      "state": "abandoned",
+      "semanticState": "abandoned",
       "evidence": [],
-      "updatedAt": "2026-09-10T20:34:40.136Z",
+      "updatedAt": "2026-10-06T20:35:43.000Z",
       "telemetryExecutionIds": [
         "EXE-20260910T203440154Z-b25c0cf1"
-      ]
+      ],
+      "abandonedAt": "2026-10-06T20:35:43.000Z",
+      "abandonedReason": "Test fixtures, not repository work: commit 71be41f6 (PR #33) committed state from a manual smoke test that replayed tests/work-context-fsharp-differential.test.mjs's fixture commands in the canonical repository instead of a scratch root (PRAXIS-HYG-01)"
     },
     {
       "id": "WI-ACTIVE",
       "type": "task",
-      "state": "blocked",
-      "semanticState": "blocked",
+      "state": "abandoned",
+      "semanticState": "abandoned",
       "evidence": [],
-      "updatedAt": "2026-09-10T20:34:40.579Z",
+      "updatedAt": "2026-10-06T20:35:43.000Z",
       "telemetryExecutionIds": [
         "EXE-20260910T203440452Z-5ea56a27"
       ],
-      "blockReason": "waiting"
+      "blockReason": "waiting",
+      "abandonedAt": "2026-10-06T20:35:43.000Z",
+      "abandonedReason": "Test fixtures, not repository work: commit 71be41f6 (PR #33) committed state from a manual smoke test that replayed tests/work-context-fsharp-differential.test.mjs's fixture commands in the canonical repository instead of a scratch root (PRAXIS-HYG-01)"
     },
     {
       "id": "WI-0040",
@@ -6737,13 +6741,47 @@
     {
       "id": "PRAXIS-EXEC-02",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-06T20:37:33.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Application/Execution/Operations.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ExecutionRuntimeTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/groups/GROUP-PRAXIS-EXEC-001/verification-PRAXIS-EXEC-02.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T04:55:50.000Z",
       "telemetryExecutionIds": [
         "EXE-20261006T203734506Z-a99c3fac"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "7fd5eaced7563fa9da08b6b1",
+        "recordedAt": "2026-10-07T04:55:21.000Z",
+        "executionId": "EXE-20261006T203734506Z-a99c3fac",
+        "repository": "repository-operating-system",
+        "branch": "exec/runtime",
+        "commit": "35549c6fc671b229d0490c8feb768d244091cabb",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "exec/runtime",
+        "remoteCommit": "35549c6fc671b229d0490c8feb768d244091cabb",
+        "summary": "Implemented and verified (research/groups/GROUP-PRAXIS-EXEC-001/verification-PRAXIS-EXEC-02.md); full suite 1497/1497",
+        "nextAction": "Complete the work item and open the PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T04:55:50.000Z"
     },
     {
       "id": "PRAXIS-GROUP-07",
@@ -6925,6 +6963,683 @@
       },
       "completedAt": "2026-10-06T21:11:25.284Z",
       "conclusion": "inconclusive"
+    },
+    {
+      "id": "PRAXIS-MISC-02",
+      "type": "development",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Planning/Replay.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/PlanningEvidenceTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/groups/GROUP-PRAXIS-PLANNING-002/group-verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T09:05:51.213Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T004639605Z-dae504bf"
+      ],
+      "latestCheckpoint": {
+        "id": "2fe9f5fbc66e1cd56c9e4282",
+        "recordedAt": "2026-10-07T09:05:49.106Z",
+        "executionId": "EXE-20261007T004639605Z-dae504bf",
+        "repository": "repository-operating-system",
+        "branch": "misc/planner",
+        "commit": "ff376c368d1caa4735b105a2db34b644d1560ffc",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "misc/planner",
+        "remoteCommit": "ff376c368d1caa4735b105a2db34b644d1560ffc",
+        "summary": "PLAN-020/081/152/162/170 implemented and tested; PR #201",
+        "nextAction": "Complete PRAXIS-MISC-02..06",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T09:05:51.213Z"
+    },
+    {
+      "id": "PRAXIS-MISC-03",
+      "type": "development",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Planning/Replay.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/PlanningEvidenceTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/groups/GROUP-PRAXIS-PLANNING-002/group-verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T09:05:53.508Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T004640744Z-f318ef38"
+      ],
+      "completedAt": "2026-10-07T09:05:53.508Z"
+    },
+    {
+      "id": "PRAXIS-MISC-04",
+      "type": "development",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Planning/Replay.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/PlanningEvidenceTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/groups/GROUP-PRAXIS-PLANNING-002/group-verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T09:05:55.428Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T004642340Z-4ea14b9e"
+      ],
+      "completedAt": "2026-10-07T09:05:55.428Z"
+    },
+    {
+      "id": "PRAXIS-MISC-05",
+      "type": "development",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Planning/Replay.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/PlanningEvidenceTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/groups/GROUP-PRAXIS-PLANNING-002/group-verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T09:05:57.179Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T004644873Z-91684beb"
+      ],
+      "completedAt": "2026-10-07T09:05:57.179Z"
+    },
+    {
+      "id": "PRAXIS-MISC-06",
+      "type": "development",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Planning/Replay.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/PlanningEvidenceTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/groups/GROUP-PRAXIS-PLANNING-002/group-verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T09:05:58.938Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T004646694Z-06bd3834"
+      ],
+      "completedAt": "2026-10-07T09:05:58.938Z"
+    },
+    {
+      "id": "PRAXIS-MISC-08",
+      "type": "development",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Architecture/ImplementationLanguagePolicy.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ImplementationLanguagePolicyTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/verification/PRAXIS-MISC-08.verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T08:49:15.917Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T213719240Z-8ddc5e25"
+      ],
+      "latestCheckpoint": {
+        "id": "94e3dfc84f2ceb2866ced771",
+        "recordedAt": "2026-10-07T08:49:13.865Z",
+        "executionId": "EXE-20261006T213719240Z-8ddc5e25",
+        "repository": "repository-operating-system",
+        "branch": "misc/fsharp-only",
+        "commit": "efb2860c6ef9b5982cacb70d72a0b3595ca3a460",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "misc/fsharp-only",
+        "remoteCommit": "efb2860c6ef9b5982cacb70d72a0b3595ca3a460",
+        "summary": "Python prohibited by policy; maintainer scripts and workflows ported; DF-A054 exceptions; PRAXIS-MISC-10 captured; PR #200",
+        "nextAction": "Complete PRAXIS-MISC-08",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T08:49:15.917Z"
+    },
+    {
+      "id": "PRAXIS-MISC-01",
+      "type": "development",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Application/Work/InputInboxOperations.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/InputInboxTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/verification/PRAXIS-MISC-01.verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T08:32:40.469Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T211922889Z-b070f0b6"
+      ],
+      "latestCheckpoint": {
+        "id": "feb2b9159a11b46006c44c11",
+        "recordedAt": "2026-10-07T08:32:37.710Z",
+        "executionId": "EXE-20261006T211922889Z-b070f0b6",
+        "repository": "repository-operating-system",
+        "branch": "misc/inbox",
+        "commit": "c9028dd3ad76a04cd1568b531ec00349581249b5",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "misc/inbox",
+        "remoteCommit": "c9028dd3ad76a04cd1568b531ec00349581249b5",
+        "summary": "Inbox claim/derive/complete/release/reject/recover implemented and tested; docs updated; PR #199",
+        "nextAction": "Complete PRAXIS-MISC-01",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T08:32:40.469Z"
+    },
+    {
+      "id": "PRAXIS-HYG-01",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/praxis-validation.yml"
+        },
+        {
+          "type": "implementation",
+          "path": "docs/work-protocol.md"
+        },
+        {
+          "type": "tests",
+          "path": ".github/workflows/praxis-validation.yml"
+        },
+        {
+          "type": "verification",
+          "path": "docs/groups/GROUP-PRAXIS-HYG.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T05:06:50.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T203536205Z-a7af8db1"
+      ],
+      "latestCheckpoint": {
+        "id": "6b286ab56e71931cff615774",
+        "recordedAt": "2026-10-07T05:06:41.000Z",
+        "executionId": "EXE-20261006T203536205Z-a7af8db1",
+        "repository": "repository-operating-system",
+        "branch": "hygiene/state-docs",
+        "commit": "8b56b0e893c02cc155a239ad6df9f005b56827dd",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "hygiene/state-docs",
+        "remoteCommit": "8b56b0e893c02cc155a239ad6df9f005b56827dd",
+        "summary": "Implemented, verified per criterion (docs/groups/GROUP-PRAXIS-HYG.md section 5) and pushed on hygiene/state-docs (PR #194)",
+        "nextAction": "Complete the work item, then merge PR #194 when CI is green",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T05:06:50.000Z"
+    },
+    {
+      "id": "PRAXIS-HYG-02",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Work/QueueValidation.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Cli/BacklogQueueCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Work/FileBacklogQueueRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/BacklogReidentificationTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "docs/groups/GROUP-PRAXIS-HYG.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T05:06:52.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T205839560Z-e7a65579"
+      ],
+      "latestCheckpoint": {
+        "id": "e8c6f27241fac696b25a5132",
+        "recordedAt": "2026-10-07T05:06:44.000Z",
+        "executionId": "EXE-20261006T205839560Z-e7a65579",
+        "repository": "repository-operating-system",
+        "branch": "hygiene/state-docs",
+        "commit": "8b56b0e893c02cc155a239ad6df9f005b56827dd",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "hygiene/state-docs",
+        "remoteCommit": "8b56b0e893c02cc155a239ad6df9f005b56827dd",
+        "summary": "Implemented, verified per criterion (docs/groups/GROUP-PRAXIS-HYG.md section 5) and pushed on hygiene/state-docs (PR #194)",
+        "nextAction": "Complete the work item, then merge PR #194 when CI is green",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T05:06:52.000Z"
+    },
+    {
+      "id": "PRAXIS-HYG-04",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "docs/planning.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/StatusTableCitationTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "docs/groups/GROUP-PRAXIS-HYG.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T05:06:55.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T211552346Z-3bb743d9"
+      ],
+      "latestCheckpoint": {
+        "id": "3ff050251968dc98c0740b53",
+        "recordedAt": "2026-10-07T05:06:47.000Z",
+        "executionId": "EXE-20261006T211552346Z-3bb743d9",
+        "repository": "repository-operating-system",
+        "branch": "hygiene/state-docs",
+        "commit": "8b56b0e893c02cc155a239ad6df9f005b56827dd",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "hygiene/state-docs",
+        "remoteCommit": "8b56b0e893c02cc155a239ad6df9f005b56827dd",
+        "summary": "Implemented, verified per criterion (docs/groups/GROUP-PRAXIS-HYG.md section 5) and pushed on hygiene/state-docs (PR #194)",
+        "nextAction": "Complete the work item, then merge PR #194 when CI is green",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T05:06:55.000Z"
+    },
+    {
+      "id": "WORK-CAPTURE-ID-COLLISION",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Work/Capture.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Work/QueueValidation.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/BacklogReidentificationTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-07T05:07:06.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T050706463Z-79216408"
+      ],
+      "completedAt": "2026-10-07T05:07:06.000Z"
+    },
+    {
+      "id": "PRAXIS-EXEC-04",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Execution/Governance.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ExecutionRuntimeTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/groups/GROUP-PRAXIS-EXEC-001/verification-PRAXIS-EXEC-04.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T04:55:56.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T205811865Z-60b85946"
+      ],
+      "latestCheckpoint": {
+        "id": "45c88a99a99b45a5da33d0be",
+        "recordedAt": "2026-10-07T04:55:27.000Z",
+        "executionId": "EXE-20261006T205811865Z-60b85946",
+        "repository": "repository-operating-system",
+        "branch": "exec/runtime",
+        "commit": "35549c6fc671b229d0490c8feb768d244091cabb",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "exec/runtime",
+        "remoteCommit": "35549c6fc671b229d0490c8feb768d244091cabb",
+        "summary": "Implemented and verified (research/groups/GROUP-PRAXIS-EXEC-001/verification-PRAXIS-EXEC-04.md); full suite 1497/1497",
+        "nextAction": "Complete the work item and open the PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T04:55:56.000Z"
+    },
+    {
+      "id": "PRAXIS-EXEC-03",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Execution/FileExecutionPorts.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ExecutionRuntimeTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/groups/GROUP-PRAXIS-EXEC-001/verification-PRAXIS-EXEC-03.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T04:56:00.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T205812741Z-6e1a1335"
+      ],
+      "latestCheckpoint": {
+        "id": "2163fe70725c3f444868bef4",
+        "recordedAt": "2026-10-07T04:55:25.000Z",
+        "executionId": "EXE-20261006T205812741Z-6e1a1335",
+        "repository": "repository-operating-system",
+        "branch": "exec/runtime",
+        "commit": "35549c6fc671b229d0490c8feb768d244091cabb",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "exec/runtime",
+        "remoteCommit": "35549c6fc671b229d0490c8feb768d244091cabb",
+        "summary": "Implemented and verified (research/groups/GROUP-PRAXIS-EXEC-001/verification-PRAXIS-EXEC-03.md); full suite 1497/1497",
+        "nextAction": "Complete the work item and open the PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T04:56:00.000Z"
+    },
+    {
+      "id": "PRAXIS-EXEC-07",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "requirements/EXECUTION-ORCHESTRATION.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ExecutionRuntimeTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/groups/GROUP-PRAXIS-EXEC-001/verification-PRAXIS-EXEC-07.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T04:56:16.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T205813346Z-9ac5539d"
+      ],
+      "latestCheckpoint": {
+        "id": "f55ca020991489c561a87d4f",
+        "recordedAt": "2026-10-07T04:55:41.000Z",
+        "executionId": "EXE-20261006T205813346Z-9ac5539d",
+        "repository": "repository-operating-system",
+        "branch": "exec/runtime",
+        "commit": "35549c6fc671b229d0490c8feb768d244091cabb",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "exec/runtime",
+        "remoteCommit": "35549c6fc671b229d0490c8feb768d244091cabb",
+        "summary": "Implemented and verified (research/groups/GROUP-PRAXIS-EXEC-001/verification-PRAXIS-EXEC-07.md); full suite 1497/1497",
+        "nextAction": "Complete the work item and open the PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T04:56:16.000Z"
+    },
+    {
+      "id": "PRAXIS-EXEC-01",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Cli/ExecutionBindingCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ExecutionBindingTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/groups/GROUP-PRAXIS-EXEC-001/verification-PRAXIS-EXEC-01.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T04:56:04.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T212700684Z-83463e94"
+      ],
+      "latestCheckpoint": {
+        "id": "d5fe6bf7c9a327116a7488b1",
+        "recordedAt": "2026-10-07T04:55:01.000Z",
+        "executionId": "EXE-20261006T212700684Z-83463e94",
+        "repository": "repository-operating-system",
+        "branch": "exec/runtime",
+        "commit": "35549c6fc671b229d0490c8feb768d244091cabb",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "exec/runtime",
+        "remoteCommit": "35549c6fc671b229d0490c8feb768d244091cabb",
+        "summary": "Implemented and verified (research/groups/GROUP-PRAXIS-EXEC-001/verification-PRAXIS-EXEC-01.md); full suite 1497/1497",
+        "nextAction": "Complete the work item and open the PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T04:56:04.000Z"
+    },
+    {
+      "id": "PRAXIS-EXEC-05",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Cli/WebExecutions.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/WebExecutionTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/groups/GROUP-PRAXIS-EXEC-001/verification-PRAXIS-EXEC-05.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T04:56:08.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T212937740Z-f46a94f0"
+      ],
+      "latestCheckpoint": {
+        "id": "483d70ea36c1fbe8795208f7",
+        "recordedAt": "2026-10-07T04:55:32.000Z",
+        "executionId": "EXE-20261006T212937740Z-f46a94f0",
+        "repository": "repository-operating-system",
+        "branch": "exec/runtime",
+        "commit": "35549c6fc671b229d0490c8feb768d244091cabb",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "exec/runtime",
+        "remoteCommit": "35549c6fc671b229d0490c8feb768d244091cabb",
+        "summary": "Implemented and verified (research/groups/GROUP-PRAXIS-EXEC-001/verification-PRAXIS-EXEC-05.md); full suite 1497/1497",
+        "nextAction": "Complete the work item and open the PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T04:56:08.000Z"
+    },
+    {
+      "id": "PRAXIS-EXEC-06",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Cli/WebExecutions.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/WebExecutionTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/groups/GROUP-PRAXIS-EXEC-001/verification-PRAXIS-EXEC-06.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T04:56:12.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T212939127Z-798ef60b"
+      ],
+      "latestCheckpoint": {
+        "id": "c3d6a2c67090e417e3a824ce",
+        "recordedAt": "2026-10-07T04:55:36.000Z",
+        "executionId": "EXE-20261006T212939127Z-798ef60b",
+        "repository": "repository-operating-system",
+        "branch": "exec/runtime",
+        "commit": "35549c6fc671b229d0490c8feb768d244091cabb",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "exec/runtime",
+        "remoteCommit": "35549c6fc671b229d0490c8feb768d244091cabb",
+        "summary": "Implemented and verified (research/groups/GROUP-PRAXIS-EXEC-001/verification-PRAXIS-EXEC-06.md); full suite 1497/1497",
+        "nextAction": "Complete the work item and open the PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T04:56:12.000Z"
     },
     {
       "id": "PRAXIS-ID-01",
@@ -7792,11 +8507,203 @@
         }
       },
       "completedAt": "2026-10-07T05:19:53.422Z"
+    },
+    {
+      "id": "PRAXIS-GROUP-10",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Planning/FileGroupGates.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/GroupGateTests.fs"
+        },
+        {
+          "type": "group-analysis",
+          "path": "research/groups/GROUP-PRAXIS-GROUPING-001/group-analysis.json"
+        },
+        {
+          "type": "group-verification",
+          "path": "research/groups/GROUP-PRAXIS-GROUPING-001/group-verification-PRAXIS-GROUP-10.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T15:05:09.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T213603840Z-42582f74"
+      ],
+      "latestCheckpoint": {
+        "id": "8c85ac987698f7a5c6bc8ed1",
+        "recordedAt": "2026-10-07T15:05:03.000Z",
+        "executionId": "EXE-20261006T213603840Z-42582f74",
+        "repository": "repository-operating-system",
+        "branch": "group/10-completion-gates",
+        "commit": "71110e5ef7278b575c0613cf72a00b92b72a06d6",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "group/10-completion-gates",
+        "remoteCommit": "71110e5ef7278b575c0613cf72a00b92b72a06d6",
+        "summary": "PRAXIS-GROUP-10 implemented, merged with main (QUAL-07..10 integration), per-criterion verification recorded; full suite 1648/1648",
+        "nextAction": "complete PRAXIS-GROUP-10 with group-analysis and group-verification evidence",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T15:05:09.000Z"
+    },
+    {
+      "id": "PRAXIS-GROUP-09",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Work/GroupExecutions.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ExecuteGroupTests.fs"
+        },
+        {
+          "type": "group-analysis",
+          "path": "research/groups/GROUP-PRAXIS-GROUPING-001/group-analysis.json"
+        },
+        {
+          "type": "group-verification",
+          "path": "research/groups/GROUP-PRAXIS-GROUPING-001/group-verification-PRAXIS-GROUP-09.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T16:00:42.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T004310805Z-94d6a2b0"
+      ],
+      "latestCheckpoint": {
+        "id": "e92adebe815d7299e9ac5cbb",
+        "recordedAt": "2026-10-07T16:00:33.000Z",
+        "executionId": "EXE-20261007T004310805Z-94d6a2b0",
+        "repository": "repository-operating-system",
+        "branch": "group/09-execute-group",
+        "commit": "aba71aeac0f5f89f4fe6c6d75d2bda7f24cea230",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "group/09-execute-group",
+        "remoteCommit": "aba71aeac0f5f89f4fe6c6d75d2bda7f24cea230",
+        "summary": "PRAXIS-GROUP-09 implemented, merged with PRAXIS-GROUP-10 and main, every criterion tested and verified per criterion; full suite 1657/1657",
+        "nextAction": "complete PRAXIS-GROUP-09 with group-analysis and group-verification evidence",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T16:00:42.000Z"
+    },
+    {
+      "id": "PRAXIS-PLAN-10",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Work/GroupCost.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/GroupMeasurementTests.fs"
+        },
+        {
+          "type": "group-analysis",
+          "path": "research/groups/GROUP-PRAXIS-GROUPING-001/group-analysis.json"
+        },
+        {
+          "type": "group-verification",
+          "path": "research/groups/GROUP-PRAXIS-GROUPING-001/group-verification-PRAXIS-PLAN-10.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T16:27:28.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T051126346Z-fc19f78d"
+      ],
+      "latestCheckpoint": {
+        "id": "6d873936a9b9620e20f68766",
+        "recordedAt": "2026-10-07T16:27:26.000Z",
+        "executionId": "EXE-20261007T051126346Z-fc19f78d",
+        "repository": "repository-operating-system",
+        "branch": "plan/10-measurement",
+        "commit": "82fc1845a95a659499d6c22e5e3a436ff7bd6ca9",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "plan/10-measurement",
+        "remoteCommit": "82fc1845a95a659499d6c22e5e3a436ff7bd6ca9",
+        "summary": "PRAXIS-PLAN-10 implemented, merged with PRAXIS-GROUP-09/10 and main, every criterion tested and verified per criterion; full suite 1666/1666",
+        "nextAction": "complete PRAXIS-PLAN-10 with group-analysis and group-verification evidence",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T16:27:28.000Z"
+    },
+    {
+      "id": "PRAXIS-HYG-03",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Provenance/ArtifactProvenance.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ProvenanceAcknowledgementTests.fs"
+        },
+        {
+          "type": "decision",
+          "path": "research/decisions/DF-ROS-2026-A055--origin-unrecorded-provenance-acknowledgement.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T19:24:00.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T185521101Z-d60238bc"
+      ],
+      "latestCheckpoint": {
+        "id": "2037864383b47d328e35c599",
+        "recordedAt": "2026-10-07T19:23:58.000Z",
+        "executionId": "EXE-20261007T185521101Z-d60238bc",
+        "repository": "repository-operating-system",
+        "branch": "integration/batch-2026-10-07",
+        "commit": "87b84d9dbe21454eaf6fe98f0968768bb160b60e",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "integration/batch-2026-10-07",
+        "remoteCommit": "87b84d9dbe21454eaf6fe98f0968768bb160b60e",
+        "summary": "DF-ROS-2026-A055 origin-unrecorded acknowledgement implemented and applied to EX-A024, HY-A030, EV-A063, EV-A067; validate passes with no originator warning; full suite 1739/1739",
+        "nextAction": "complete PRAXIS-HYG-03",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T19:24:00.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T06:24:45.000Z",
+  "updatedAt": "2026-10-07T19:24:00.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
