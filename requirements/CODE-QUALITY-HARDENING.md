@@ -268,6 +268,24 @@ release-readiness contract (`release-ready` is always unavailable when
 required). PRX-QUAL-020, 021 and 022 remain open; readiness facets are the
 hook their obligations will feed.
 
+## Tracking
+
+Work items (captured 2026-10-06 from the requirements audit; groups and
+analyses in `research/groups/`):
+
+| Requirement | Work item | Group |
+|---|---|---|
+| PRX-QUAL-003 (creation evidence), PRX-QUAL-004 | PRAXIS-QUAL-01 | GROUP-PRAXIS-PACING-001 |
+| PRX-QUAL-005 | PRAXIS-QUAL-02 | GROUP-PRAXIS-PACING-001 |
+| PRX-QUAL-008 | PRAXIS-QUAL-03 | GROUP-PRAXIS-PACING-001 |
+| PRX-QUAL-011 (remaining cases) | PRAXIS-QUAL-04 | GROUP-PRAXIS-PACING-001 |
+| PRX-QUAL-009 | PRAXIS-QUAL-05 | - |
+| PRX-QUAL-010 | PRAXIS-QUAL-06 | - |
+| PRX-QUAL-020 | PRAXIS-QUAL-07 | GROUP-PRAXIS-COMPLETION-001 |
+| PRX-QUAL-021 | PRAXIS-QUAL-08 | GROUP-PRAXIS-COMPLETION-001 |
+| PRX-QUAL-022 | PRAXIS-QUAL-09 | GROUP-PRAXIS-COMPLETION-001 |
+| PRX-QUAL-023 (digest, release-readiness) | PRAXIS-QUAL-10 | GROUP-PRAXIS-COMPLETION-001 |
+
 ## Sequencing
 
 1. PRX-QUAL-007 can be fixed immediately.
