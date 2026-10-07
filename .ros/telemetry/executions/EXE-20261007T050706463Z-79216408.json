@@ -1,10 +1,10 @@
 {
   "schemaVersion": "1.0.0",
-  "executionId": "EXE-20261006T211552346Z-3bb743d9",
-  "workItemId": "PRAXIS-HYG-04",
+  "executionId": "EXE-20261007T050706463Z-79216408",
+  "workItemId": "WORK-CAPTURE-ID-COLLISION",
   "status": "finalized",
-  "startedAt": "2026-10-06T21:15:52.346Z",
-  "finalizedAt": "2026-10-07T05:06:58.651Z",
+  "startedAt": "2026-10-07T05:07:06.463Z",
+  "finalizedAt": "2026-10-07T05:07:08.521Z",
   "identity": {
     "provider": "anthropic",
     "model": null,
@@ -23,7 +23,7 @@
   "provenance": {
     "collector": "ros",
     "collectorVersion": "1.0.0",
-    "discoveredAt": "2026-10-06T21:15:52.346Z",
+    "discoveredAt": "2026-10-07T05:07:06.463Z",
     "sources": [
       {
         "type": "environment",
@@ -50,7 +50,7 @@
       "metricId": "tokens.input",
       "status": "supported-unavailable",
       "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -61,7 +61,7 @@
       "metricId": "tokens.output",
       "status": "supported-unavailable",
       "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -72,7 +72,7 @@
       "metricId": "tokens.cached_input",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -83,7 +83,7 @@
       "metricId": "tokens.cached_output",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -94,7 +94,7 @@
       "metricId": "tokens.cache_read",
       "status": "supported-unavailable",
       "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -105,7 +105,7 @@
       "metricId": "tokens.cache_write",
       "status": "supported-unavailable",
       "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -116,7 +116,7 @@
       "metricId": "tokens.reasoning",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -127,7 +127,7 @@
       "metricId": "tokens.tool",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -138,7 +138,7 @@
       "metricId": "tokens.total",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -149,7 +149,7 @@
       "metricId": "context.window_size",
       "status": "supported-unavailable",
       "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -160,7 +160,7 @@
       "metricId": "context.utilization",
       "status": "supported-unavailable",
       "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -171,7 +171,7 @@
       "metricId": "context.current_input_tokens",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -182,7 +182,7 @@
       "metricId": "context.current_output_tokens",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -193,7 +193,7 @@
       "metricId": "context.current_cache_read_tokens",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -204,7 +204,7 @@
       "metricId": "context.current_cache_write_tokens",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -215,7 +215,7 @@
       "metricId": "context.repeated_file_reads",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -226,7 +226,7 @@
       "metricId": "context.governance_reads",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -237,7 +237,7 @@
       "metricId": "context.compactions",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -248,7 +248,7 @@
       "metricId": "session.tokens.cumulative",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -259,7 +259,7 @@
       "metricId": "session.tokens.input_cumulative",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -270,7 +270,7 @@
       "metricId": "session.tokens.output_cumulative",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -281,7 +281,7 @@
       "metricId": "session.tokens.cached_input_cumulative",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -292,7 +292,7 @@
       "metricId": "session.tokens.cached_output_cumulative",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -303,7 +303,7 @@
       "metricId": "session.tokens.reasoning_cumulative",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -314,7 +314,7 @@
       "metricId": "cost.input",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -325,7 +325,7 @@
       "metricId": "cost.output",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -336,7 +336,7 @@
       "metricId": "cost.reasoning",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -347,7 +347,7 @@
       "metricId": "cost.cache",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -358,7 +358,7 @@
       "metricId": "cost.tool_api",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -369,7 +369,7 @@
       "metricId": "cost.execution_total",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -380,7 +380,7 @@
       "metricId": "cost.step_total",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -391,7 +391,7 @@
       "metricId": "cost.session_cumulative",
       "status": "supported-unavailable",
       "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -402,14 +402,14 @@
       "metricId": "time.wall_ms",
       "status": "derived",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-10-07T05:06:58.651Z",
+      "discoveredAt": "2026-10-07T05:07:08.521Z",
       "source": {
         "type": "calculated",
         "name": "ros",
         "mechanism": "timestamp-difference"
       },
-      "lastAssessedAt": "2026-10-07T05:06:58.651Z",
-      "recordedAt": "2026-10-07T05:06:58.651Z",
+      "lastAssessedAt": "2026-10-07T05:07:08.521Z",
+      "recordedAt": "2026-10-07T05:07:08.521Z",
       "history": [
         {
           "status": "derived",
@@ -419,9 +419,9 @@
             "name": "runtime-identity",
             "mechanism": "whitelisted-claude-environment"
           },
-          "discoveredAt": "2026-10-06T21:15:52.346Z",
-          "lastAssessedAt": "2026-10-06T21:15:52.346Z",
-          "recordedAt": "2026-10-06T21:15:52.346Z"
+          "discoveredAt": "2026-10-07T05:07:06.463Z",
+          "lastAssessedAt": "2026-10-07T05:07:06.463Z",
+          "recordedAt": "2026-10-07T05:07:06.463Z"
         }
       ]
     },
@@ -429,7 +429,7 @@
       "metricId": "time.active_ms",
       "status": "supported-unavailable",
       "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -440,7 +440,7 @@
       "metricId": "time.tool_ms",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -451,7 +451,7 @@
       "metricId": "time.model_ms",
       "status": "supported-unavailable",
       "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -462,7 +462,7 @@
       "metricId": "time.waiting_ms",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -473,14 +473,14 @@
       "metricId": "time.blocked_ms",
       "status": "derived",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-10-07T05:06:58.651Z",
+      "discoveredAt": "2026-10-07T05:07:08.521Z",
       "source": {
         "type": "calculated",
         "name": "ros-work-lifecycle",
         "mechanism": "block-resume-intervals"
       },
-      "lastAssessedAt": "2026-10-07T05:06:58.651Z",
-      "recordedAt": "2026-10-07T05:06:58.651Z",
+      "lastAssessedAt": "2026-10-07T05:07:08.521Z",
+      "recordedAt": "2026-10-07T05:07:08.521Z",
       "history": [
         {
           "status": "derived",
@@ -490,9 +490,9 @@
             "name": "runtime-identity",
             "mechanism": "whitelisted-claude-environment"
           },
-          "discoveredAt": "2026-10-06T21:15:52.346Z",
-          "lastAssessedAt": "2026-10-06T21:15:52.346Z",
-          "recordedAt": "2026-10-06T21:15:52.346Z"
+          "discoveredAt": "2026-10-07T05:07:06.463Z",
+          "lastAssessedAt": "2026-10-07T05:07:06.463Z",
+          "recordedAt": "2026-10-07T05:07:06.463Z"
         }
       ]
     },
@@ -500,7 +500,7 @@
       "metricId": "time.human_interruption_ms",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -511,7 +511,7 @@
       "metricId": "time.retry_ms",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -522,7 +522,7 @@
       "metricId": "time.first_code_change_ms",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -533,7 +533,7 @@
       "metricId": "time.first_token_ms",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -544,7 +544,7 @@
       "metricId": "agent.turns",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -555,7 +555,7 @@
       "metricId": "agent.reasoning_cycles",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -566,7 +566,7 @@
       "metricId": "agent.retries",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -577,7 +577,7 @@
       "metricId": "agent.self_corrections",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -588,7 +588,7 @@
       "metricId": "agent.failed_approaches",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -599,7 +599,7 @@
       "metricId": "agent.context_resets",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -610,7 +610,7 @@
       "metricId": "agent.handoffs",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -621,7 +621,7 @@
       "metricId": "agent.subagents_spawned",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -632,7 +632,7 @@
       "metricId": "agent.parallel_executions_peak",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -643,7 +643,7 @@
       "metricId": "agent.interruptions",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -654,7 +654,7 @@
       "metricId": "agent.resumes",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -665,7 +665,7 @@
       "metricId": "agent.human_escalations",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -676,7 +676,7 @@
       "metricId": "agent.clarifications",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -687,7 +687,7 @@
       "metricId": "agent.plan_revisions",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -698,7 +698,7 @@
       "metricId": "agent.scope_revisions",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -709,7 +709,7 @@
       "metricId": "agent.approvals_requested",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -720,7 +720,7 @@
       "metricId": "agent.approvals_denied",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -731,7 +731,7 @@
       "metricId": "model.requests",
       "status": "supported-unavailable",
       "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -742,7 +742,7 @@
       "metricId": "model.request_failures",
       "status": "supported-unavailable",
       "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -753,7 +753,7 @@
       "metricId": "tool.calls",
       "status": "supported-unavailable",
       "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -764,7 +764,7 @@
       "metricId": "tool.failures",
       "status": "supported-unavailable",
       "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -775,7 +775,7 @@
       "metricId": "tool.retries",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -786,7 +786,7 @@
       "metricId": "tool.duration_ms",
       "status": "supported-unavailable",
       "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -797,7 +797,7 @@
       "metricId": "tool.cost",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -808,7 +808,7 @@
       "metricId": "tool.shell_commands",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -819,7 +819,7 @@
       "metricId": "tool.file_reads",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -830,7 +830,7 @@
       "metricId": "tool.file_writes",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -841,7 +841,7 @@
       "metricId": "tool.searches",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -852,7 +852,7 @@
       "metricId": "tool.web_activity",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -863,7 +863,7 @@
       "metricId": "tool.repository_operations",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -874,7 +874,7 @@
       "metricId": "tool.api_operations",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -885,7 +885,7 @@
       "metricId": "tool.build_executions",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -896,7 +896,7 @@
       "metricId": "tool.test_executions",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -907,7 +907,7 @@
       "metricId": "tool.deployments",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -918,7 +918,7 @@
       "metricId": "tool.database_operations",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -929,7 +929,7 @@
       "metricId": "tool.external_service_calls",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -940,14 +940,14 @@
       "metricId": "git.baseline_dirty_files",
       "status": "derived",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "ros-git",
         "name": "git-status",
         "mechanism": "porcelain-v1"
       },
-      "lastAssessedAt": "2026-10-06T21:15:52.346Z",
-      "recordedAt": "2026-10-06T21:15:52.346Z",
+      "lastAssessedAt": "2026-10-07T05:07:06.463Z",
+      "recordedAt": "2026-10-07T05:07:06.463Z",
       "history": [
         {
           "status": "derived",
@@ -957,9 +957,9 @@
             "name": "runtime-identity",
             "mechanism": "whitelisted-claude-environment"
           },
-          "discoveredAt": "2026-10-06T21:15:52.346Z",
-          "lastAssessedAt": "2026-10-06T21:15:52.346Z",
-          "recordedAt": "2026-10-06T21:15:52.346Z"
+          "discoveredAt": "2026-10-07T05:07:06.463Z",
+          "lastAssessedAt": "2026-10-07T05:07:06.463Z",
+          "recordedAt": "2026-10-07T05:07:06.463Z"
         }
       ]
     },
@@ -967,14 +967,14 @@
       "metricId": "git.ending_dirty_files",
       "status": "derived",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-10-07T05:06:58.651Z",
+      "discoveredAt": "2026-10-07T05:07:08.521Z",
       "source": {
         "type": "ros-git",
         "name": "git-status",
         "mechanism": "porcelain-v1"
       },
-      "lastAssessedAt": "2026-10-07T05:06:58.651Z",
-      "recordedAt": "2026-10-07T05:06:58.651Z",
+      "lastAssessedAt": "2026-10-07T05:07:08.521Z",
+      "recordedAt": "2026-10-07T05:07:08.521Z",
       "history": [
         {
           "status": "derived",
@@ -984,9 +984,9 @@
             "name": "runtime-identity",
             "mechanism": "whitelisted-claude-environment"
           },
-          "discoveredAt": "2026-10-06T21:15:52.346Z",
-          "lastAssessedAt": "2026-10-06T21:15:52.346Z",
-          "recordedAt": "2026-10-06T21:15:52.346Z"
+          "discoveredAt": "2026-10-07T05:07:06.463Z",
+          "lastAssessedAt": "2026-10-07T05:07:06.463Z",
+          "recordedAt": "2026-10-07T05:07:06.463Z"
         }
       ]
     },
@@ -994,14 +994,14 @@
       "metricId": "git.commits_created",
       "status": "derived",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-10-07T05:06:58.651Z",
+      "discoveredAt": "2026-10-07T05:07:08.521Z",
       "source": {
         "type": "ros-git",
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "lastAssessedAt": "2026-10-07T05:06:58.651Z",
-      "recordedAt": "2026-10-07T05:06:58.651Z",
+      "lastAssessedAt": "2026-10-07T05:07:08.521Z",
+      "recordedAt": "2026-10-07T05:07:08.521Z",
       "history": [
         {
           "status": "derived",
@@ -1011,9 +1011,9 @@
             "name": "runtime-identity",
             "mechanism": "whitelisted-claude-environment"
           },
-          "discoveredAt": "2026-10-06T21:15:52.346Z",
-          "lastAssessedAt": "2026-10-06T21:15:52.346Z",
-          "recordedAt": "2026-10-06T21:15:52.346Z"
+          "discoveredAt": "2026-10-07T05:07:06.463Z",
+          "lastAssessedAt": "2026-10-07T05:07:06.463Z",
+          "recordedAt": "2026-10-07T05:07:06.463Z"
         }
       ]
     },
@@ -1021,14 +1021,14 @@
       "metricId": "git.files_added",
       "status": "derived",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-10-07T05:06:58.651Z",
+      "discoveredAt": "2026-10-07T05:07:08.521Z",
       "source": {
         "type": "ros-git",
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "lastAssessedAt": "2026-10-07T05:06:58.651Z",
-      "recordedAt": "2026-10-07T05:06:58.651Z",
+      "lastAssessedAt": "2026-10-07T05:07:08.521Z",
+      "recordedAt": "2026-10-07T05:07:08.521Z",
       "history": [
         {
           "status": "derived",
@@ -1038,9 +1038,9 @@
             "name": "runtime-identity",
             "mechanism": "whitelisted-claude-environment"
           },
-          "discoveredAt": "2026-10-06T21:15:52.346Z",
-          "lastAssessedAt": "2026-10-06T21:15:52.346Z",
-          "recordedAt": "2026-10-06T21:15:52.346Z"
+          "discoveredAt": "2026-10-07T05:07:06.463Z",
+          "lastAssessedAt": "2026-10-07T05:07:06.463Z",
+          "recordedAt": "2026-10-07T05:07:06.463Z"
         }
       ]
     },
@@ -1048,14 +1048,14 @@
       "metricId": "git.files_modified",
       "status": "derived",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-10-07T05:06:58.651Z",
+      "discoveredAt": "2026-10-07T05:07:08.521Z",
       "source": {
         "type": "ros-git",
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "lastAssessedAt": "2026-10-07T05:06:58.651Z",
-      "recordedAt": "2026-10-07T05:06:58.651Z",
+      "lastAssessedAt": "2026-10-07T05:07:08.521Z",
+      "recordedAt": "2026-10-07T05:07:08.521Z",
       "history": [
         {
           "status": "derived",
@@ -1065,9 +1065,9 @@
             "name": "runtime-identity",
             "mechanism": "whitelisted-claude-environment"
           },
-          "discoveredAt": "2026-10-06T21:15:52.346Z",
-          "lastAssessedAt": "2026-10-06T21:15:52.346Z",
-          "recordedAt": "2026-10-06T21:15:52.346Z"
+          "discoveredAt": "2026-10-07T05:07:06.463Z",
+          "lastAssessedAt": "2026-10-07T05:07:06.463Z",
+          "recordedAt": "2026-10-07T05:07:06.463Z"
         }
       ]
     },
@@ -1075,14 +1075,14 @@
       "metricId": "git.files_deleted",
       "status": "derived",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-10-07T05:06:58.651Z",
+      "discoveredAt": "2026-10-07T05:07:08.521Z",
       "source": {
         "type": "ros-git",
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "lastAssessedAt": "2026-10-07T05:06:58.651Z",
-      "recordedAt": "2026-10-07T05:06:58.651Z",
+      "lastAssessedAt": "2026-10-07T05:07:08.521Z",
+      "recordedAt": "2026-10-07T05:07:08.521Z",
       "history": [
         {
           "status": "derived",
@@ -1092,9 +1092,9 @@
             "name": "runtime-identity",
             "mechanism": "whitelisted-claude-environment"
           },
-          "discoveredAt": "2026-10-06T21:15:52.346Z",
-          "lastAssessedAt": "2026-10-06T21:15:52.346Z",
-          "recordedAt": "2026-10-06T21:15:52.346Z"
+          "discoveredAt": "2026-10-07T05:07:06.463Z",
+          "lastAssessedAt": "2026-10-07T05:07:06.463Z",
+          "recordedAt": "2026-10-07T05:07:06.463Z"
         }
       ]
     },
@@ -1102,14 +1102,14 @@
       "metricId": "git.files_renamed",
       "status": "derived",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-10-07T05:06:58.651Z",
+      "discoveredAt": "2026-10-07T05:07:08.521Z",
       "source": {
         "type": "ros-git",
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "lastAssessedAt": "2026-10-07T05:06:58.651Z",
-      "recordedAt": "2026-10-07T05:06:58.651Z",
+      "lastAssessedAt": "2026-10-07T05:07:08.521Z",
+      "recordedAt": "2026-10-07T05:07:08.521Z",
       "history": [
         {
           "status": "derived",
@@ -1119,9 +1119,9 @@
             "name": "runtime-identity",
             "mechanism": "whitelisted-claude-environment"
           },
-          "discoveredAt": "2026-10-06T21:15:52.346Z",
-          "lastAssessedAt": "2026-10-06T21:15:52.346Z",
-          "recordedAt": "2026-10-06T21:15:52.346Z"
+          "discoveredAt": "2026-10-07T05:07:06.463Z",
+          "lastAssessedAt": "2026-10-07T05:07:06.463Z",
+          "recordedAt": "2026-10-07T05:07:06.463Z"
         }
       ]
     },
@@ -1129,14 +1129,14 @@
       "metricId": "git.binary_files_changed",
       "status": "derived",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-10-07T05:06:58.651Z",
+      "discoveredAt": "2026-10-07T05:07:08.521Z",
       "source": {
         "type": "ros-git",
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "lastAssessedAt": "2026-10-07T05:06:58.651Z",
-      "recordedAt": "2026-10-07T05:06:58.651Z",
+      "lastAssessedAt": "2026-10-07T05:07:08.521Z",
+      "recordedAt": "2026-10-07T05:07:08.521Z",
       "history": [
         {
           "status": "derived",
@@ -1146,9 +1146,9 @@
             "name": "runtime-identity",
             "mechanism": "whitelisted-claude-environment"
           },
-          "discoveredAt": "2026-10-06T21:15:52.346Z",
-          "lastAssessedAt": "2026-10-06T21:15:52.346Z",
-          "recordedAt": "2026-10-06T21:15:52.346Z"
+          "discoveredAt": "2026-10-07T05:07:06.463Z",
+          "lastAssessedAt": "2026-10-07T05:07:06.463Z",
+          "recordedAt": "2026-10-07T05:07:06.463Z"
         }
       ]
     },
@@ -1156,14 +1156,14 @@
       "metricId": "git.lines_added",
       "status": "derived",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-10-07T05:06:58.651Z",
+      "discoveredAt": "2026-10-07T05:07:08.521Z",
       "source": {
         "type": "ros-git",
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "lastAssessedAt": "2026-10-07T05:06:58.651Z",
-      "recordedAt": "2026-10-07T05:06:58.651Z",
+      "lastAssessedAt": "2026-10-07T05:07:08.521Z",
+      "recordedAt": "2026-10-07T05:07:08.521Z",
       "history": [
         {
           "status": "derived",
@@ -1173,9 +1173,9 @@
             "name": "runtime-identity",
             "mechanism": "whitelisted-claude-environment"
           },
-          "discoveredAt": "2026-10-06T21:15:52.346Z",
-          "lastAssessedAt": "2026-10-06T21:15:52.346Z",
-          "recordedAt": "2026-10-06T21:15:52.346Z"
+          "discoveredAt": "2026-10-07T05:07:06.463Z",
+          "lastAssessedAt": "2026-10-07T05:07:06.463Z",
+          "recordedAt": "2026-10-07T05:07:06.463Z"
         }
       ]
     },
@@ -1183,14 +1183,14 @@
       "metricId": "git.lines_deleted",
       "status": "derived",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-10-07T05:06:58.651Z",
+      "discoveredAt": "2026-10-07T05:07:08.521Z",
       "source": {
         "type": "ros-git",
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "lastAssessedAt": "2026-10-07T05:06:58.651Z",
-      "recordedAt": "2026-10-07T05:06:58.651Z",
+      "lastAssessedAt": "2026-10-07T05:07:08.521Z",
+      "recordedAt": "2026-10-07T05:07:08.521Z",
       "history": [
         {
           "status": "derived",
@@ -1200,9 +1200,9 @@
             "name": "runtime-identity",
             "mechanism": "whitelisted-claude-environment"
           },
-          "discoveredAt": "2026-10-06T21:15:52.346Z",
-          "lastAssessedAt": "2026-10-06T21:15:52.346Z",
-          "recordedAt": "2026-10-06T21:15:52.346Z"
+          "discoveredAt": "2026-10-07T05:07:06.463Z",
+          "lastAssessedAt": "2026-10-07T05:07:06.463Z",
+          "recordedAt": "2026-10-07T05:07:06.463Z"
         }
       ]
     },
@@ -1210,14 +1210,14 @@
       "metricId": "tests.added",
       "status": "derived",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-10-07T05:06:58.651Z",
+      "discoveredAt": "2026-10-07T05:07:08.521Z",
       "source": {
         "type": "ros-git",
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "lastAssessedAt": "2026-10-07T05:06:58.651Z",
-      "recordedAt": "2026-10-07T05:06:58.651Z",
+      "lastAssessedAt": "2026-10-07T05:07:08.521Z",
+      "recordedAt": "2026-10-07T05:07:08.521Z",
       "history": [
         {
           "status": "derived",
@@ -1227,9 +1227,9 @@
             "name": "runtime-identity",
             "mechanism": "whitelisted-claude-environment"
           },
-          "discoveredAt": "2026-10-06T21:15:52.346Z",
-          "lastAssessedAt": "2026-10-06T21:15:52.346Z",
-          "recordedAt": "2026-10-06T21:15:52.346Z"
+          "discoveredAt": "2026-10-07T05:07:06.463Z",
+          "lastAssessedAt": "2026-10-07T05:07:06.463Z",
+          "recordedAt": "2026-10-07T05:07:06.463Z"
         }
       ]
     },
@@ -1237,14 +1237,14 @@
       "metricId": "tests.modified",
       "status": "derived",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-10-07T05:06:58.651Z",
+      "discoveredAt": "2026-10-07T05:07:08.521Z",
       "source": {
         "type": "ros-git",
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "lastAssessedAt": "2026-10-07T05:06:58.651Z",
-      "recordedAt": "2026-10-07T05:06:58.651Z",
+      "lastAssessedAt": "2026-10-07T05:07:08.521Z",
+      "recordedAt": "2026-10-07T05:07:08.521Z",
       "history": [
         {
           "status": "derived",
@@ -1254,9 +1254,9 @@
             "name": "runtime-identity",
             "mechanism": "whitelisted-claude-environment"
           },
-          "discoveredAt": "2026-10-06T21:15:52.346Z",
-          "lastAssessedAt": "2026-10-06T21:15:52.346Z",
-          "recordedAt": "2026-10-06T21:15:52.346Z"
+          "discoveredAt": "2026-10-07T05:07:06.463Z",
+          "lastAssessedAt": "2026-10-07T05:07:06.463Z",
+          "recordedAt": "2026-10-07T05:07:06.463Z"
         }
       ]
     },
@@ -1264,14 +1264,14 @@
       "metricId": "tests.removed",
       "status": "derived",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-10-07T05:06:58.651Z",
+      "discoveredAt": "2026-10-07T05:07:08.521Z",
       "source": {
         "type": "ros-git",
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "lastAssessedAt": "2026-10-07T05:06:58.651Z",
-      "recordedAt": "2026-10-07T05:06:58.651Z",
+      "lastAssessedAt": "2026-10-07T05:07:08.521Z",
+      "recordedAt": "2026-10-07T05:07:08.521Z",
       "history": [
         {
           "status": "derived",
@@ -1281,9 +1281,9 @@
             "name": "runtime-identity",
             "mechanism": "whitelisted-claude-environment"
           },
-          "discoveredAt": "2026-10-06T21:15:52.346Z",
-          "lastAssessedAt": "2026-10-06T21:15:52.346Z",
-          "recordedAt": "2026-10-06T21:15:52.346Z"
+          "discoveredAt": "2026-10-07T05:07:06.463Z",
+          "lastAssessedAt": "2026-10-07T05:07:06.463Z",
+          "recordedAt": "2026-10-07T05:07:06.463Z"
         }
       ]
     },
@@ -1291,7 +1291,7 @@
       "metricId": "tests.count_before",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1302,7 +1302,7 @@
       "metricId": "tests.count_after",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1313,7 +1313,7 @@
       "metricId": "tests.executions",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1324,7 +1324,7 @@
       "metricId": "tests.passed",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1335,7 +1335,7 @@
       "metricId": "tests.failed",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1346,7 +1346,7 @@
       "metricId": "tests.skipped",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1357,7 +1357,7 @@
       "metricId": "build.executions",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1368,7 +1368,7 @@
       "metricId": "build.failures",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1379,7 +1379,7 @@
       "metricId": "compiler.errors",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1390,7 +1390,7 @@
       "metricId": "lint.errors",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1401,7 +1401,7 @@
       "metricId": "lint.warnings",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1412,7 +1412,7 @@
       "metricId": "static_analysis.errors",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1423,7 +1423,7 @@
       "metricId": "architecture_check.failures",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1434,7 +1434,7 @@
       "metricId": "requirements.affected",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1445,7 +1445,7 @@
       "metricId": "requirements.satisfied",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1456,7 +1456,7 @@
       "metricId": "acceptance_criteria.affected",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1467,7 +1467,7 @@
       "metricId": "acceptance_criteria.satisfied",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1478,7 +1478,7 @@
       "metricId": "defects.discovered",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1489,7 +1489,7 @@
       "metricId": "defects.corrected",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1500,7 +1500,7 @@
       "metricId": "regressions.found",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1511,7 +1511,7 @@
       "metricId": "work.new_items",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1522,7 +1522,7 @@
       "metricId": "blockers.discovered",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1533,7 +1533,7 @@
       "metricId": "dependencies.discovered",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1544,7 +1544,7 @@
       "metricId": "architecture.findings",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1555,14 +1555,14 @@
       "metricId": "documentation.files_changed",
       "status": "derived",
       "reason": "normalized measurement recorded",
-      "discoveredAt": "2026-10-07T05:06:58.651Z",
+      "discoveredAt": "2026-10-07T05:07:08.521Z",
       "source": {
         "type": "ros-git",
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "lastAssessedAt": "2026-10-07T05:06:58.651Z",
-      "recordedAt": "2026-10-07T05:06:58.651Z",
+      "lastAssessedAt": "2026-10-07T05:07:08.521Z",
+      "recordedAt": "2026-10-07T05:07:08.521Z",
       "history": [
         {
           "status": "derived",
@@ -1572,9 +1572,9 @@
             "name": "runtime-identity",
             "mechanism": "whitelisted-claude-environment"
           },
-          "discoveredAt": "2026-10-06T21:15:52.346Z",
-          "lastAssessedAt": "2026-10-06T21:15:52.346Z",
-          "recordedAt": "2026-10-06T21:15:52.346Z"
+          "discoveredAt": "2026-10-07T05:07:06.463Z",
+          "lastAssessedAt": "2026-10-07T05:07:06.463Z",
+          "recordedAt": "2026-10-07T05:07:06.463Z"
         }
       ]
     },
@@ -1582,7 +1582,7 @@
       "metricId": "quality.false_leads",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1593,7 +1593,7 @@
       "metricId": "quality.disproven_hypotheses",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1604,7 +1604,7 @@
       "metricId": "quality.silent_omissions",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1615,7 +1615,7 @@
       "metricId": "quality.invalid_transitions_prevented",
       "status": "derived",
       "reason": "Praxis can derive this metric when its preconditions hold",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1626,7 +1626,7 @@
       "metricId": "telemetry.redactions",
       "status": "derived",
       "reason": "Praxis can derive this metric when its preconditions hold",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1637,7 +1637,7 @@
       "metricId": "telemetry.unknown_fields",
       "status": "derived",
       "reason": "Praxis can derive this metric when its preconditions hold",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1648,7 +1648,7 @@
       "metricId": "telemetry.raw_snapshots_omitted",
       "status": "derived",
       "reason": "Praxis can derive this metric when its preconditions hold",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1659,7 +1659,7 @@
       "metricId": "runtime.memory_peak_bytes",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1670,7 +1670,7 @@
       "metricId": "runtime.cpu_utilization",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-06T21:15:52.346Z",
+      "discoveredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "environment",
         "name": "runtime-identity",
@@ -1680,7 +1680,7 @@
   ],
   "metrics": [
     {
-      "measurementId": "MEAS-02f432b42e20d5885dcc5760",
+      "measurementId": "MEAS-ff3987392ef345862bef2322",
       "id": "git.baseline_dirty_files",
       "value": 0,
       "unit": "count",
@@ -1696,13 +1696,13 @@
         "name": "git-status",
         "mechanism": "porcelain-v1"
       },
-      "collectedAt": "2026-10-06T21:15:52.346Z",
+      "collectedAt": "2026-10-07T05:07:06.463Z",
       "schemaVersion": "1.0.0"
     },
     {
-      "measurementId": "MEAS-c11ee75d922cfad28c9f7635",
+      "measurementId": "MEAS-e80753d8df3e22b50622e20b",
       "id": "time.wall_ms",
-      "value": 28266305,
+      "value": 2058,
       "unit": "milliseconds",
       "currency": null,
       "quality": "derived",
@@ -1716,11 +1716,11 @@
         "name": "ros",
         "mechanism": "timestamp-difference"
       },
-      "collectedAt": "2026-10-07T05:06:58.651Z",
+      "collectedAt": "2026-10-07T05:07:08.521Z",
       "schemaVersion": "1.0.0"
     },
     {
-      "measurementId": "MEAS-1c2e38be6c307e9bad59eed8",
+      "measurementId": "MEAS-29a3cc207a2d2fa7a513a2cb",
       "id": "time.blocked_ms",
       "value": 0,
       "unit": "milliseconds",
@@ -1736,11 +1736,11 @@
         "name": "ros-work-lifecycle",
         "mechanism": "block-resume-intervals"
       },
-      "collectedAt": "2026-10-07T05:06:58.651Z",
+      "collectedAt": "2026-10-07T05:07:08.521Z",
       "schemaVersion": "1.0.0"
     },
     {
-      "measurementId": "MEAS-50e4160a1ad8ac15bdef621c",
+      "measurementId": "MEAS-6b470f29c894bd980b642b60",
       "id": "git.ending_dirty_files",
       "value": 0,
       "unit": "count",
@@ -1756,13 +1756,13 @@
         "name": "git-status",
         "mechanism": "porcelain-v1"
       },
-      "collectedAt": "2026-10-07T05:06:58.651Z",
+      "collectedAt": "2026-10-07T05:07:08.521Z",
       "schemaVersion": "1.0.0"
     },
     {
-      "measurementId": "MEAS-39e464d8f2c2266af7e42e12",
+      "measurementId": "MEAS-4d93dfd72b3c204c421abe77",
       "id": "git.commits_created",
-      "value": 30,
+      "value": 0,
       "unit": "count",
       "currency": null,
       "quality": "derived",
@@ -1776,13 +1776,13 @@
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "collectedAt": "2026-10-07T05:06:58.651Z",
+      "collectedAt": "2026-10-07T05:07:08.521Z",
       "schemaVersion": "1.0.0"
     },
     {
-      "measurementId": "MEAS-ea42fa6eeeffd347de1036c7",
+      "measurementId": "MEAS-1d27b95c6c2e1b2bc6efaae5",
       "id": "git.files_added",
-      "value": 20,
+      "value": 0,
       "unit": "count",
       "currency": null,
       "quality": "derived",
@@ -1796,13 +1796,13 @@
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "collectedAt": "2026-10-07T05:06:58.651Z",
+      "collectedAt": "2026-10-07T05:07:08.521Z",
       "schemaVersion": "1.0.0"
     },
     {
-      "measurementId": "MEAS-23d972cc26064a8d775d3723",
+      "measurementId": "MEAS-ef36c2da851ca592538c7b36",
       "id": "git.files_modified",
-      "value": 20,
+      "value": 0,
       "unit": "count",
       "currency": null,
       "quality": "derived",
@@ -1816,11 +1816,11 @@
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "collectedAt": "2026-10-07T05:06:58.651Z",
+      "collectedAt": "2026-10-07T05:07:08.521Z",
       "schemaVersion": "1.0.0"
     },
     {
-      "measurementId": "MEAS-30103b171c6bda2222bf782b",
+      "measurementId": "MEAS-d2031c67700cf74b69411c38",
       "id": "git.files_deleted",
       "value": 0,
       "unit": "count",
@@ -1836,13 +1836,13 @@
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "collectedAt": "2026-10-07T05:06:58.651Z",
+      "collectedAt": "2026-10-07T05:07:08.521Z",
       "schemaVersion": "1.0.0"
     },
     {
-      "measurementId": "MEAS-f2c22954e7911a17535c9702",
+      "measurementId": "MEAS-72abde2d5f14c989e0cea59c",
       "id": "git.files_renamed",
-      "value": 1,
+      "value": 0,
       "unit": "count",
       "currency": null,
       "quality": "derived",
@@ -1856,11 +1856,11 @@
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "collectedAt": "2026-10-07T05:06:58.651Z",
+      "collectedAt": "2026-10-07T05:07:08.521Z",
       "schemaVersion": "1.0.0"
     },
     {
-      "measurementId": "MEAS-4bcc77b2e302a4f07c5b6e7a",
+      "measurementId": "MEAS-56a31bf7d14c7d6833ef525e",
       "id": "git.binary_files_changed",
       "value": 0,
       "unit": "count",
@@ -1876,13 +1876,13 @@
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "collectedAt": "2026-10-07T05:06:58.651Z",
+      "collectedAt": "2026-10-07T05:07:08.521Z",
       "schemaVersion": "1.0.0"
     },
     {
-      "measurementId": "MEAS-d4ac65362afeab4d07508d6c",
+      "measurementId": "MEAS-873d193eac6cdf40b78e0cde",
       "id": "git.lines_added",
-      "value": 7155,
+      "value": 0,
       "unit": "lines",
       "currency": null,
       "quality": "derived",
@@ -1896,13 +1896,13 @@
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "collectedAt": "2026-10-07T05:06:58.651Z",
+      "collectedAt": "2026-10-07T05:07:08.521Z",
       "schemaVersion": "1.0.0"
     },
     {
-      "measurementId": "MEAS-e75e44ad729205fb66671a0b",
+      "measurementId": "MEAS-be2876c8e9986065ea4092c8",
       "id": "git.lines_deleted",
-      "value": 393,
+      "value": 0,
       "unit": "lines",
       "currency": null,
       "quality": "derived",
@@ -1916,13 +1916,13 @@
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "collectedAt": "2026-10-07T05:06:58.651Z",
+      "collectedAt": "2026-10-07T05:07:08.521Z",
       "schemaVersion": "1.0.0"
     },
     {
-      "measurementId": "MEAS-ae2536f00a0a766b36128322",
+      "measurementId": "MEAS-ee98f5264644088cd9ea09b3",
       "id": "tests.added",
-      "value": 1,
+      "value": 0,
       "unit": "count",
       "currency": null,
       "quality": "derived",
@@ -1936,13 +1936,13 @@
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "collectedAt": "2026-10-07T05:06:58.651Z",
+      "collectedAt": "2026-10-07T05:07:08.521Z",
       "schemaVersion": "1.0.0"
     },
     {
-      "measurementId": "MEAS-cdde8ace3996493a6683a878",
+      "measurementId": "MEAS-6e6ca1741c1dd893294f9935",
       "id": "tests.modified",
-      "value": 4,
+      "value": 0,
       "unit": "count",
       "currency": null,
       "quality": "derived",
@@ -1956,11 +1956,11 @@
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "collectedAt": "2026-10-07T05:06:58.651Z",
+      "collectedAt": "2026-10-07T05:07:08.521Z",
       "schemaVersion": "1.0.0"
     },
     {
-      "measurementId": "MEAS-4dc982033cdc7faf660181f8",
+      "measurementId": "MEAS-2ad76d6c199a2c412329fe1d",
       "id": "tests.removed",
       "value": 0,
       "unit": "count",
@@ -1976,13 +1976,13 @@
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "collectedAt": "2026-10-07T05:06:58.651Z",
+      "collectedAt": "2026-10-07T05:07:08.521Z",
       "schemaVersion": "1.0.0"
     },
     {
-      "measurementId": "MEAS-f8af70f32324da64ae5b4d09",
+      "measurementId": "MEAS-43597eb404d8793f39def832",
       "id": "documentation.files_changed",
-      "value": 12,
+      "value": 0,
       "unit": "count",
       "currency": null,
       "quality": "derived",
@@ -1996,7 +1996,7 @@
         "name": "git-diff",
         "mechanism": "git-diff-from-clean-execution-baseline"
       },
-      "collectedAt": "2026-10-07T05:06:58.651Z",
+      "collectedAt": "2026-10-07T05:07:08.521Z",
       "schemaVersion": "1.0.0"
     }
   ],
@@ -2004,7 +2004,7 @@
   "events": [
     {
       "type": "execution.started",
-      "occurredAt": "2026-10-06T21:15:52.346Z",
+      "occurredAt": "2026-10-07T05:07:06.463Z",
       "source": {
         "type": "ros-clock",
         "name": "ros",
@@ -2013,13 +2013,13 @@
     },
     {
       "type": "execution.finalized",
-      "occurredAt": "2026-10-07T05:06:58.651Z",
+      "occurredAt": "2026-10-07T05:07:08.521Z",
       "source": {
         "type": "ros-clock",
         "name": "ros",
         "mechanism": "work-lifecycle"
       },
-      "eventId": "TEVT-661e49a19c8dfcc3035780ea"
+      "eventId": "TEVT-c3b7ffc2512fe80702292b91"
     }
   ],
   "repository": {
@@ -2027,7 +2027,7 @@
       "available": true,
       "repository": "repository-operating-system",
       "branch": "hygiene/state-docs",
-      "commit": "965ecbbb068708f52a8588f7fa76d42d56545d40",
+      "commit": "8b56b0e893c02cc155a239ad6df9f005b56827dd",
       "dirty": false,
       "dirtyPaths": []
     },
@@ -2042,25 +2042,25 @@
     "changeSummary": {
       "available": true,
       "mechanism": "git-diff-from-clean-execution-baseline",
-      "startCommit": "965ecbbb068708f52a8588f7fa76d42d56545d40",
+      "startCommit": "8b56b0e893c02cc155a239ad6df9f005b56827dd",
       "endCommit": "8b56b0e893c02cc155a239ad6df9f005b56827dd",
       "branch": "hygiene/state-docs",
-      "commits": 30,
+      "commits": 0,
       "counts": {
-        "added": 20,
-        "modified": 20,
+        "added": 0,
+        "modified": 0,
         "deleted": 0,
-        "renamed": 1
+        "renamed": 0
       },
-      "linesAdded": 7155,
-      "linesDeleted": 393,
+      "linesAdded": 0,
+      "linesDeleted": 0,
       "binaryFiles": 0,
       "tests": {
-        "added": 1,
-        "modified": 4,
+        "added": 0,
+        "modified": 0,
         "removed": 0
       },
-      "documentationFilesChanged": 12
+      "documentationFilesChanged": 0
     }
   },
   "scope": {
@@ -2069,12 +2069,11 @@
   },
   "qualitySignals": [],
   "links": {
-    "workItemId": "PRAXIS-HYG-04",
+    "workItemId": "WORK-CAPTURE-ID-COLLISION",
     "parentWorkItemId": null,
     "requirements": [],
     "acceptanceCriteria": [],
     "commits": [
-      "965ecbbb068708f52a8588f7fa76d42d56545d40",
       "8b56b0e893c02cc155a239ad6df9f005b56827dd"
     ],
     "pullRequests": [],
