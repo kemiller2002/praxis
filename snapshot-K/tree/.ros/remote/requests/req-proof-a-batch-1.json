@@ -1,0 +1,184 @@
+{
+  "schema": "praxis.remote-journal",
+  "schemaVersion": 1,
+  "requestId": "req-proof-a-batch-1",
+  "fingerprint": "sha256:c9128919f166df43b97062b5f2843fbda50f37314205a45f3c45426f5619354e",
+  "protocolVersion": "1.2",
+  "operation": "batch",
+  "recordedAt": "2026-09-29T04:45:27.069Z",
+  "requestedAt": null,
+  "repository": {
+    "ref": "refs/heads/main",
+    "expectedSha": "69f1b6ce9a436a3fa1bd78f69a9534d83a2f3b5e"
+  },
+  "requester": {
+    "assurance": "asserted-by-request",
+    "actor": {"kind":"agent","id":"anthropic/claude-code","provider":"anthropic","model":"unknown","runtime":"claude-code"},
+    "sessionId": "<session redacted>",
+    "execution": null
+  },
+  "principal": "github:kemiller2002",
+  "response": {
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.2",
+  "requestId": "req-proof-a-batch-1",
+  "operation": "batch",
+  "outcome": "failed",
+  "replayed": false,
+  "repository": {
+    "ref": "refs/heads/main",
+    "expectedSha": "69f1b6ce9a436a3fa1bd78f69a9534d83a2f3b5e",
+    "observedSha": "69f1b6ce9a436a3fa1bd78f69a9534d83a2f3b5e"
+  },
+  "praxisVersion": "3.5.0",
+  "executor": {
+    "kind": "github-actions",
+    "runId": "36523001929",
+    "runAttempt": "1",
+    "workflowRef": "kemiller2002/praxis/.github/workflows/praxis-remote.yml@refs/heads/main",
+    "repository": "kemiller2002/praxis",
+    "host": "github-hosted",
+    "principal": "github:kemiller2002",
+    "praxisVersion": "3.5.0",
+    "assurance": "observed-by-executor"
+  },
+  "persistence": {
+    "paths": [
+      ".ros/remote/requests/req-proof-a-batch-1.json",
+      ".ros/remote/requests/req-proof-a-step-start-1.json",
+      ".ros/telemetry/executions/EXE-20260929T044302145Z-078a696b.json"
+    ]
+  },
+  "failure": {
+    "code": "validation-failed",
+    "decidedBy": "praxis",
+    "retry": "never",
+    "message": "constituent 'req-proof-a-telemetry-1' did not succeed (validation-failed): the mutation would leave the repository less valid than it was; it was undone",
+    "problems": [
+      {
+        "field": ".ros/telemetry/executions/EXE-20260929T044302145Z-078a696b.json",
+        "message": "unknown source type 'agent'"
+      },
+      {
+        "field": ".ros/telemetry/executions/EXE-20260929T044302145Z-078a696b.json",
+        "message": "unknown source type 'agent'"
+      }
+    ]
+  },
+  "result": {
+    "total": 3,
+    "completed": 1,
+    "stoppedAt": "req-proof-a-telemetry-1",
+    "notRun": [
+      "req-proof-a-step-complete-1"
+    ],
+    "responses": [
+      {
+        "protocol": "praxis.remote",
+        "protocolVersion": "1.2",
+        "requestId": "req-proof-a-step-start-1",
+        "operation": "step.start",
+        "outcome": "succeeded",
+        "replayed": false,
+        "repository": {
+          "ref": "refs/heads/main",
+          "expectedSha": "69f1b6ce9a436a3fa1bd78f69a9534d83a2f3b5e",
+          "observedSha": "69f1b6ce9a436a3fa1bd78f69a9534d83a2f3b5e"
+        },
+        "praxisVersion": "3.5.0",
+        "executor": {
+          "kind": "github-actions",
+          "runId": "36523001929",
+          "runAttempt": "1",
+          "workflowRef": "kemiller2002/praxis/.github/workflows/praxis-remote.yml@refs/heads/main",
+          "repository": "kemiller2002/praxis",
+          "host": "github-hosted",
+          "principal": "github:kemiller2002",
+          "praxisVersion": "3.5.0",
+          "assurance": "observed-by-executor"
+        },
+        "persistence": {
+          "paths": [
+            ".ros/remote/requests/req-proof-a-step-start-1.json",
+            ".ros/telemetry/executions/EXE-20260929T044302145Z-078a696b.json"
+          ]
+        },
+        "failure": null,
+        "result": {
+          "executionId": "EXE-20260929T044302145Z-078a696b",
+          "stepId": "remote-proof-a",
+          "event": "step.started",
+          "recorded": true
+        }
+      },
+      {
+        "protocol": "praxis.remote",
+        "protocolVersion": "1.2",
+        "requestId": "req-proof-a-telemetry-1",
+        "operation": "telemetry.record",
+        "outcome": "failed",
+        "replayed": false,
+        "repository": {
+          "ref": "refs/heads/main",
+          "expectedSha": "69f1b6ce9a436a3fa1bd78f69a9534d83a2f3b5e",
+          "observedSha": "69f1b6ce9a436a3fa1bd78f69a9534d83a2f3b5e"
+        },
+        "praxisVersion": "3.5.0",
+        "executor": {
+          "kind": "github-actions",
+          "runId": "36523001929",
+          "runAttempt": "1",
+          "workflowRef": "kemiller2002/praxis/.github/workflows/praxis-remote.yml@refs/heads/main",
+          "repository": "kemiller2002/praxis",
+          "host": "github-hosted",
+          "principal": "github:kemiller2002",
+          "praxisVersion": "3.5.0",
+          "assurance": "observed-by-executor"
+        },
+        "persistence": {
+          "paths": []
+        },
+        "failure": {
+          "code": "validation-failed",
+          "decidedBy": "praxis",
+          "retry": "never",
+          "message": "the mutation would leave the repository less valid than it was; it was undone",
+          "problems": [
+            {
+              "field": ".ros/telemetry/executions/EXE-20260929T044302145Z-078a696b.json",
+              "message": "unknown source type 'agent'"
+            },
+            {
+              "field": ".ros/telemetry/executions/EXE-20260929T044302145Z-078a696b.json",
+              "message": "unknown source type 'agent'"
+            }
+          ]
+        },
+        "result": {
+          "measurementId": "MEAS-24e925ffe7902f4910156931",
+          "id": "tool.calls",
+          "value": 17,
+          "unit": "count",
+          "currency": null,
+          "quality": "observed",
+          "confidence": null,
+          "scope": "execution",
+          "aggregation": "sum",
+          "dimensions": {
+            "step": "remote-proof-a"
+          },
+          "pricing": null,
+          "source": {
+            "type": "agent",
+            "name": "agent-a-self-count",
+            "mechanism": "explicit-metric-record"
+          },
+          "collectedAt": "2026-09-29T04:45:25.854Z",
+          "schemaVersion": "1.0.0"
+        }
+      }
+    ]
+  }
+}
+
+}

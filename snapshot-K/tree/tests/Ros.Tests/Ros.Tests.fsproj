@@ -1,0 +1,88 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Ros.Tests</AssemblyName>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Ros.Domain/Ros.Domain.fsproj" />
+    <ProjectReference Include="../../src/Ros.Contracts/Ros.Contracts.fsproj" />
+    <ProjectReference Include="../../src/Ros.Application/Ros.Application.fsproj" />
+    <ProjectReference Include="../../src/Ros.Infrastructure/Ros.Infrastructure.fsproj" />
+    <ProjectReference Include="../../src/Ros.Cli/Ros.Cli.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="TestFramework.fs" />
+    <Compile Include="ArchitectureTests.fs" />
+    <Compile Include="ArtifactTests.fs" />
+    <Compile Include="PersistenceTests.fs" />
+    <Compile Include="GitTests.fs" />
+    <Compile Include="WorkTests.fs" />
+    <Compile Include="WorkPlanTests.fs" />
+    <Compile Include="BacklogTests.fs" />
+    <Compile Include="TelemetryTests.fs" />
+    <Compile Include="TelemetryResolutionTests.fs" />
+    <Compile Include="ChangeSummaryTests.fs" />
+    <Compile Include="PathFilterTests.fs" />
+    <Compile Include="WorkAttributionTests.fs" />
+    <Compile Include="QueueValidationTests.fs" />
+    <Compile Include="QueuePresentationTests.fs" />
+    <Compile Include="BacklogTransitionEffectTests.fs" />
+    <Compile Include="WorkCaptureTests.fs" />
+    <Compile Include="WorkCaptureEffectTests.fs" />
+    <Compile Include="WorkUpdateTests.fs" />
+    <Compile Include="WorkUpdateEffectTests.fs" />
+    <Compile Include="WorkAttachmentTests.fs" />
+    <Compile Include="WorkAttachmentEffectTests.fs" />
+    <Compile Include="TelemetryIdentityTests.fs" />
+    <Compile Include="WorkContextEffectTests.fs" />
+    <Compile Include="WorkContextViewTests.fs" />
+    <Compile Include="WorkListViewTests.fs" />
+    <Compile Include="TelemetryValidationTests.fs" />
+    <Compile Include="FindingContractTests.fs" />
+    <Compile Include="TelemetryQueryTests.fs" />
+    <Compile Include="TelemetryLifecycleTests.fs" />
+    <Compile Include="TelemetrySummaryTests.fs" />
+    <Compile Include="TutelaTelemetryTests.fs" />
+    <Compile Include="TelemetryFinalizeTargetTests.fs" />
+    <Compile Include="TelemetryRecordMetricTests.fs" />
+    <Compile Include="TelemetryIngestTests.fs" />
+    <Compile Include="TelemetryIngestOpenAICodexTests.fs" />
+    <Compile Include="TelemetryIngestHookTests.fs" />
+    <Compile Include="TelemetryIngestClaudeStatuslineTests.fs" />
+    <Compile Include="TelemetryIngestOtelTests.fs" />
+    <Compile Include="TelemetryClassifyTests.fs" />
+    <Compile Include="TelemetryStartTests.fs" />
+    <Compile Include="AdapterContractTests.fs" />
+    <Compile Include="AdapterCallEffectTests.fs" />
+    <Compile Include="AdapterPublishEffectTests.fs" />
+    <Compile Include="LifecycleTests.fs" />
+    <Compile Include="FoundationsTests.fs" />
+    <Compile Include="OrdoObservationTests.fs" />
+    <Compile Include="ProvenanceTests.fs" />
+    <Compile Include="ProvenanceEffectTests.fs" />
+    <Compile Include="WorkReconciliationTests.fs" />
+    <Compile Include="WorkReconciliationEffectTests.fs" />
+    <Compile Include="RemoteProtocolTests.fs" />
+    <Compile Include="RemoteIdentityTests.fs" />
+    <Compile Include="RemoteExecutionTests.fs" />
+    <Compile Include="TelemetryStepsUsageTests.fs" />
+    <Compile Include="CheckpointDomainTests.fs" />
+    <Compile Include="GitDurabilityTests.fs" />
+    <Compile Include="CheckpointPersistenceTests.fs" />
+    <Compile Include="CheckpointCliTests.fs" />
+    <Compile Include="CheckpointGuardTests.fs" />
+    <Compile Include="ContinuationCliTests.fs" />
+    <Compile Include="TelemetrySegmentationTests.fs" />
+    <Compile Include="RecoveryProofTests.fs" />
+    <Compile Include="ExecutionGovernanceTests.fs" />
+    <Compile Include="InstallationRegistrationTests.fs" />
+    <Compile Include="CommitOwnershipTests.fs" />
+    <Compile Include="WorkAbandonTests.fs" />
+    <Compile Include="PlanningTests.fs" />
+    <Compile Include="PlanningCliTests.fs" />
+    <Compile Include="GroupingTests.fs" />
+    <Compile Include="WorkGroupTests.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+</Project>

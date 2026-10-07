@@ -1,0 +1,23 @@
+{
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.0",
+  "requestId": "req-2026-09-28-work-start-0001",
+  "operation": "work.start",
+  "repository": {
+    "ref": "refs/heads/main",
+    "expectedSha": "59b4e032818a4c765886e48c117595dc58019d43"
+  },
+  "actor": {
+    "kind": "agent",
+    "id": "example/cloud-agent",
+    "provider": "example",
+    "runtime": "cloud-agent",
+    "sessionId": "session-123"
+  },
+  "arguments": {
+    "workItemIds": ["WI-0100"],
+    "type": "task"
+  },
+  "requestedAt": "2026-09-28T08:00:00.000Z",
+  "x-client": { "name": "example-client", "version": "0.1.0" }
+}

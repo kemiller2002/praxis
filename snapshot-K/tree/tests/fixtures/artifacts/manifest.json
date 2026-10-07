@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "1.0.0",
+  "frozenAt": "2026-09-08T00:19:38Z",
+  "experiment": "EX-ROS-2026-A020",
+  "baselineTag": "ros-fsharp-migration-baseline-20260907-202926",
+  "cases": [
+    {
+      "id": "valid-all-kinds",
+      "root": "valid-all-kinds",
+      "expectedValid": true,
+      "expectedRegistryBytes": "registries",
+      "registrySha256": {
+        "decisions.json": "99f714585cd9a56bc4671ce76eda0e53aed54cf0df78447b208b584b6ee1e037",
+        "evidence.json": "098b68d0c273af622a8d7cadfa6059680545e2ee07e9a16e4cb22696a06d7bc3",
+        "experiments.json": "6cf05190c4b2ed098f5b0a8f104cf13de222afc176ee04437e18801733ecba3d",
+        "hypotheses.json": "6913af263c1fbc04006ded9a26762d9d90eee147267436b0435e9725de8ca757",
+        "journals.json": "e257ab8a6ffccd1730d97fd7f45c1a6f083021351f3bd93b809ab307b2b4287e",
+        "missions.json": "b236fc8cff70449fded5748b6002f856a829217c922e058d23a4dabddca23116",
+        "research-packages.json": "067b7a5b3fa3abafd8ac8ecac72d87ab497ee66fe8bf039bded5d1e04de501ec",
+        "theories.json": "ef0fbb62f3e079c0bf4a43d89acd2898605108b7cd119002c41887f629ae8a2d"
+      }
+    },
+    {
+      "id": "invalid-mixed",
+      "root": "invalid-mixed",
+      "expectedValid": false,
+      "expectedFindings": [
+        {"path": "missions/MS-invalid.md", "field": "id", "message": "filename must start with 'not-a-ros-id--'"},
+        {"path": "missions/MS-invalid.md", "field": "id", "message": "invalid identifier 'not-a-ros-id'"},
+        {"path": "research/decisions/DF-TEST-2026-B003--duplicate-one.md", "field": "id", "message": "duplicate 'DF-TEST-2026-B003' also in research/decisions/DF-TEST-2026-B003--duplicate-one.md, research/decisions/DF-TEST-2026-B003--duplicate-two.md"},
+        {"path": "research/decisions/DF-TEST-2026-B003--duplicate-two.md", "field": "id", "message": "duplicate 'DF-TEST-2026-B003' also in research/decisions/DF-TEST-2026-B003--duplicate-one.md, research/decisions/DF-TEST-2026-B003--duplicate-two.md"},
+        {"path": "research/evidence/EV-TEST-2026-B001--missing-title.md", "field": "title", "message": "required field is missing"},
+        {"path": "research/experiments/EX-TEST-2026-B004--unterminated-front-matter.md", "field": "front_matter", "message": "missing closing '---'"},
+        {"path": "research/hypotheses/HY-TEST-2026-B002--invalid-policy.md", "field": "confidence", "message": "unknown label 'certain'"},
+        {"path": "research/hypotheses/HY-TEST-2026-B002--invalid-policy.md", "field": "status", "message": "'completed' is not allowed for HY"},
+        {"path": "research/hypotheses/HY-TEST-2026-B002--invalid-policy.md", "field": "supporting_evidence", "message": "broken reference 'EV-TEST-2026-FFFF'"},
+        {"path": "research/theories/wrong-name.md", "field": "id", "message": "filename must start with 'TH-TEST-2026-B005--'"}
+      ]
+    }
+  ]
+}

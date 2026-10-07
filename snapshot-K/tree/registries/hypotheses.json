@@ -1,0 +1,253 @@
+[
+  {
+    "author_agent": "openai-codex",
+    "confidence": "very-low",
+    "contradicting_evidence": [
+      "EV-FE-2026-B004",
+      "EV-FE-2026-B005"
+    ],
+    "created": "2026-07-28",
+    "id": "HY-FE-2026-B006",
+    "path": "research/hypotheses/HY-FE-2026-B006--integrated-profile-incremental-value.md",
+    "related_theories": [],
+    "research_area": "framework-engineering-boundary",
+    "status": "proposed",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-FE-2026-B003"
+    ],
+    "title": "Framework Engineering integrated profile adds incremental net value"
+  },
+  {
+    "author_agent": "openai-codex",
+    "confidence": "low",
+    "contradicting_evidence": [],
+    "created": "2026-09-07",
+    "id": "HY-ROS-2026-A021",
+    "path": "research/hypotheses/HY-ROS-2026-A021--typed-semantic-authority-reduces-duplication.md",
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "supported",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A018",
+      "EV-ROS-2026-A028"
+    ],
+    "tags": [
+      "fsharp",
+      "migration",
+      "semantic-authority",
+      "duplication"
+    ],
+    "title": "Typed semantic authority reduces duplicated ROS rule sites"
+  },
+  {
+    "author_agent": "openai-codex",
+    "confidence": "low",
+    "contradicting_evidence": [],
+    "created": "2026-09-07",
+    "id": "HY-ROS-2026-A022",
+    "path": "research/hypotheses/HY-ROS-2026-A022--typed-states-reduce-invalid-state-defects.md",
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "supported",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A018",
+      "EV-ROS-2026-A028"
+    ],
+    "tags": [
+      "fsharp",
+      "types",
+      "state",
+      "defects"
+    ],
+    "title": "Typed states and outcomes reduce invalid-state defects"
+  },
+  {
+    "author_agent": "openai-codex",
+    "confidence": "low",
+    "contradicting_evidence": [],
+    "created": "2026-09-07",
+    "id": "HY-ROS-2026-A023",
+    "path": "research/hypotheses/HY-ROS-2026-A023--shadow-migration-preserves-contracts.md",
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "supported",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A018",
+      "EV-ROS-2026-A028"
+    ],
+    "tags": [
+      "fsharp",
+      "compatibility",
+      "differential-testing",
+      "rollback"
+    ],
+    "title": "Shadow migration preserves required ROS contracts"
+  },
+  {
+    "author_agent": "openai-codex",
+    "confidence": "very-low",
+    "contradicting_evidence": [],
+    "created": "2026-09-07",
+    "id": "HY-ROS-2026-A024",
+    "path": "research/hypotheses/HY-ROS-2026-A024--structural-locality-reduces-discovery-expansion.md",
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "active",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A018",
+      "EV-ROS-2026-A028"
+    ],
+    "tags": [
+      "sde",
+      "navigation",
+      "structural-locality",
+      "migration"
+    ],
+    "title": "Structural locality reduces ROS discovery expansion"
+  },
+  {
+    "author_agent": "openai-codex",
+    "confidence": "very-low",
+    "contradicting_evidence": [],
+    "created": "2026-09-07",
+    "id": "HY-ROS-2026-A025",
+    "path": "research/hypotheses/HY-ROS-2026-A025--workflow-thinning-reduces-fragility.md",
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "proposed",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A018"
+    ],
+    "tags": [
+      "github-actions",
+      "release",
+      "thin-adapter",
+      "migration"
+    ],
+    "title": "Moving ROS decisions out of workflows reduces operational fragility"
+  },
+  {
+    "author_agent": "openai-codex",
+    "confidence": "very-low",
+    "contradicting_evidence": [],
+    "created": "2026-09-07",
+    "id": "HY-ROS-2026-A026",
+    "path": "research/hypotheses/HY-ROS-2026-A026--fsharp-distribution-cost-is-acceptable.md",
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "proposed",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A018"
+    ],
+    "tags": [
+      "fsharp",
+      "dotnet",
+      "distribution",
+      "portability"
+    ],
+    "title": "F# distribution cost is acceptable for ROS consumers"
+  },
+  {
+    "confidence": "low",
+    "contradicting_evidence": [],
+    "created": "2026-09-30",
+    "id": "HY-ROS-2026-A027",
+    "path": "research/hypotheses/HY-ROS-2026-A027--advisory-planner-scheduling-value.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T102847967Z-f42c2262": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T11:17:08.787Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "WI-0064: evidence-based work groups and the frozen grouping experiment"
+        }
+      }
+    },
+    "related_documents": [
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "requirements/PLANNING-OPTIMIZATION.md",
+      "DF-ROS-2026-A046",
+      "EX-ROS-2026-A021"
+    ],
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "proposed",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A058",
+      "EV-ROS-2026-A059"
+    ],
+    "tags": [
+      "planning",
+      "scheduling",
+      "experiment"
+    ],
+    "title": "The advisory planner makes useful scheduling recommendations without mutating state"
+  },
+  {
+    "confidence": "very-low",
+    "contradicting_evidence": [],
+    "created": "2026-09-30",
+    "id": "HY-ROS-2026-A028",
+    "path": "research/hypotheses/HY-ROS-2026-A028--grouped-execution-value.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T102847967Z-f42c2262": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T11:17:09.632Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "WI-0064: evidence-based work groups and the frozen grouping experiment"
+        }
+      }
+    },
+    "related_documents": [
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "EX-ROS-2026-A021",
+      "EV-ROS-2026-A059"
+    ],
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "proposed",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [],
+    "tags": [
+      "planning",
+      "grouping",
+      "context",
+      "experiment"
+    ],
+    "title": "One shared reasoning context for strongly related work reduces repeated work or improves architectural consistency"
+  }
+]
