@@ -552,7 +552,7 @@
       "note": "audit 1 event: FETCH_HEAD of own-branch fetch (allowed; false positive); arm B terminal"
     }
   ],
-  "status": "blind architecture evaluation running",
+  "status": "blind evaluation committed; unblinding next",
   "scorers": [
     {
       "label": "scorer-K",
@@ -607,6 +607,7 @@
       "LABELS": "snapshot-K/, snapshot-P/, snapshot-W/"
     },
     "createdAt": "2026-10-07T22:25:43.601108Z",
-    "status": "running"
+    "status": "completed",
+    "resultCommit": "1414a8845b4a933820b14ee303b68e7fecf45daf"
   }
 }
