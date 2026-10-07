@@ -222,7 +222,7 @@ def quality_table(ix: Index) -> str:
 
 class Macro(NamedTuple):
     name: str
-    kind: str        # row | derived
+    kind: str        # row | derived | excluded
     key: tuple
     fmt: str
     comment: str
@@ -236,7 +236,14 @@ def derm(name: str, study: str, unit: str, metric: str, field: str, fmt: str, co
     return Macro(name, "derived", (study, unit, metric, field), fmt, comment)
 
 
+def exclm(name: str, study: str, unit: str, metric: str, session_metric: str,
+          excluded: tuple[str, ...], fmt: str, comment: str) -> Macro:
+    """Sensitivity: grouped reduction after removing named independent sessions from the aggregate."""
+    return Macro(name, "excluded", (study, unit, metric, session_metric, excluded), fmt, comment)
+
+
 G, I = "grouped", "independent"
+FAILED_A021 = ("control-04-attempt-1", "control-04-attempt-2")
 
 
 def arm_pair(prefix: str, study: str, unit: str, metric: str, fmt: str, what: str) -> tuple[Macro, ...]:
@@ -310,10 +317,29 @@ MACROS: tuple[Macro, ...] = (
     *arm_pair("RtwoDefects", "R2", A, "confirmed_acceptance_defects_r2", "int", "R2 confirmed acceptance defects"),
     *arm_pair("RtwoMergeConflicts", "R2", A, "merges_with_conflicts", "int", "R2 merges with conflicts"),
     rowm("BaselineTests", "A021", G, A, "fsharp_tests_preexisting", "int", "F# tests at the shared baseline"),
+    # Sensitivity S1: A021 without the two failed item-04 attempts
+    exclm("AcostReductionExclFailed", "A021", W, "cost_usd_platform", "cost_usd_platform", FAILED_A021, "pct1",
+          "A021 platform cost, grouped reduction in percent, excluding failed attempts"),
+    exclm("AactiveReductionExclFailed", "A021", W, "active_session_sum_s", "session_duration_s", FAILED_A021, "pct1",
+          "A021 active session time, grouped reduction in percent, excluding failed attempts"),
 )
 
 
+def excluded_reduction(ix: Index, study: str, unit: str, metric: str, session_metric: str,
+                       excluded: tuple[str, ...]) -> float:
+    def value(arm: str, u: str, met: str) -> float:
+        r = ix.rows.get((study, arm, u, met))
+        if r is None or r["value"] is None or r["completeness"] != "complete":
+            raise KeyError(f"excluded-sessions macro: no complete row {(study, arm, u, met)}")
+        return r["value"]
+    grouped = value(G, unit, metric)
+    independent = value(I, unit, metric) - sum(value(I, u, session_metric) for u in excluded)
+    return (independent - grouped) / independent
+
+
 def macro_value(ix: Index, m: Macro) -> str:
+    if m.kind == "excluded":
+        return FMT[m.fmt](excluded_reduction(ix, *m.key))
     if m.kind == "row":
         r = ix.rows.get(m.key)
         if r is None:

@@ -1,73 +1,55 @@
 # Evidence matrix
 
-Every substantive manuscript claim must map to a committed artifact.
+Every substantive manuscript claim maps to a committed artifact. The
+authoritative, machine-readable form is **`data/evidence-index.json`** (one
+entry per `% CLAIM: Cxx` marker in `manuscript/paper.tex`, with source paths,
+pinned commits, locators, extraction method, classification and caveats).
+`scripts/check_manuscript.py` fails if a marker is missing from the index or an
+index claim is unused. This file is the human-readable summary.
 
-| Claim / observation | Primary evidence | Status / caution |
-| --- | --- | --- |
-| A021 used a frozen protocol with grouped and independent arms from the same baseline | `research/experiments/EX-ROS-2026-A021--grouped-versus-independent-execution.md` | Direct |
-| Common baseline is `8b4ffa392e93b19bf39f6672a608954c934cb815` | A021 protocol; R2 findings | Direct |
-| Original grouped run used 1 session; control used 7 | `research/evidence/EV-ROS-2026-A064--grouping-experiment-results.md` | Direct |
-| Original platform cost: grouped $9.48 vs control $21.51 | EV-A064, Resources table | Direct; platform estimate |
-| Original active session time: grouped 61 min vs control 112 min | EV-A064 | Direct |
-| Original control elapsed first-start to last-finish includes orchestration gaps and permission block | EV-A064 | Must not compare this elapsed definition directly with R2 elapsed without qualification |
-| Original grouped architecture used one store/join rule/classification/error style/mutation pipeline | EV-A064 blind-evaluator findings | Evaluator judgment backed by implementation evidence |
-| Original control architecture used multiple stores/join rules/grammars/classifications/rejection/JSON patterns | EV-A064 | Evaluator judgment backed by implementation evidence |
-| Original independent execution was stronger on several individual criteria and added 37 tests vs 19 | EV-A064 | Direct; test count is not test quality |
-| Original had no compactions/context resets | EV-A064 | Direct |
-| R2 evaluator remained blind to mapping while evaluating | `research/experiments/EX-ROS-2026-A021-R2-blind/output/findings.json` | Direct |
-| R2 exact blind SHAs passed available CI | R2 findings JSON | Direct, subject to recorded build-command deviation |
-| R2 grouped mapping was Arm N and control Arm M after unblinding | `POST-UNBLINDING-METRICS.txt` | Direct post-unblinding mapping |
-| R2 grouped cost $10.7536464 vs control $26.0492768 | POST-UNBLINDING-METRICS | Direct |
-| R2 grouped elapsed 55m53s vs control 2h23m35s | POST-UNBLINDING-METRICS | Direct |
-| R2 grouped cost reduction 58.72% | POST-UNBLINDING-METRICS | Direct; recompute in analysis script |
-| R2 grouped elapsed reduction 61.08% | POST-UNBLINDING-METRICS | Direct; recompute in analysis script |
-| R2 output tokens grouped 132,902 vs control 262,893 | POST-UNBLINDING-METRICS | Direct |
-| R2 cache-read grouped 27,911,832 vs control 62,960,709 | POST-UNBLINDING-METRICS | Direct |
-| R2 had two confirmed acceptance defects in each arm | R2 findings JSON | Direct |
-| R2 grouped stronger on shared admission, repository default/enforcement, locked mutation path, one store/envelope | R2 findings + post-unblinding metrics | Direct after mapping |
-| R2 independent stronger on checkpoint ownership/attribution validation and some checkpoint detail | R2 findings + post-unblinding metrics | Direct after mapping |
-| R2 is an execution replication, not independent-domain replication | EV-A070 / POST-UNBLINDING-METRICS | Required limitation |
-| R2 control had stale-checkout deviation | POST-UNBLINDING-METRICS | Required threat |
-| Current hypothesis confidence remains low | `research/hypotheses/HY-ROS-2026-A028--grouped-execution-value.md` | Direct |
-| A022 is intended to separate affinity from generic setup-cost amortization | HY-A028; EX-A022 | Direct |
+Classification: **observed** (measured or counted, or verified in code/probes),
+**evaluated** (evaluator or rubric judgment grounded in code/tests),
+**inferred** (author interpretation). An inferred mechanism is never stated as
+an observed fact.
 
-## Quantitative table to generate for the paper
+| Claim (paper wording, abridged) | IDs | Primary evidence | Status / caution |
+| --- | --- | --- | --- |
+| Treatment = cohort session with mandated committed cross-item analysis vs. uninstructed per-item fresh sessions, serial on one branch | C01, C02 | A021 protocol (frozen `370e0a4`); `EX-ROS-2026-A021-harness/prompts/*.txt` at `bc5a8d8`; T01; AD-01 | Bundle; no shared-context-only attribution |
+| Common baseline, same items/criteria, arms unmerged | C03 | T27; protocol Isolation | Baseline SHA withheld in paper (anonymity) |
+| A021 protocol frozen before arms | C04 | T29 | R2 had no frozen protocol |
+| A021 evaluations not effectively blind | C06 | T02; AD-02; `evaluation.txt` lines 26-35; EV-A067 §3; erratum E7 | Fatal to "blinded A021"; only code-re-verified facts used |
+| R2 evaluation blind by self-report; cross-vendor | C07 | R2 `findings.json`; T09 | Mapping technically recoverable |
+| R2 = internal close (operational) replication; not preregistered; prompts not archived; designer knew interim A021 | C08, C09 | AD-07; T07; T08; R2 run record `063e6b5` | Never "independent" |
+| A021 worker-only cost and summed active time | C11, C12 | `data/metrics.json` (`sessions.json` platform usage at `bc5a8d8`); CF-03 | 111.4 min, not 112 (CF-03) |
+| R2 worker-only cost and summed active time | C13, C14 | `data/metrics.json` (R2 run record §4); CF-05, CF-06 | 52.3% / 44.4% primary |
+| R2 58.72% (incl. orchestrator), 61.08% (common-start span); A021 span incl. permission block | C16 | CF-05, CF-06; AD-03; T03, T04 | Secondary only; spans ≠ summed time |
+| S1: A021 without failed attempts 46.4% / 30.7% | C17 | `build_tables.py` excluded-sessions macros | Direction unchanged |
+| Repeated-context counts lower for grouped (lower bounds) | C18, C19 | transcript metrics files; CF-01, CF-08; T15 | Partly entailed by design |
+| No compactions | C20 | transcript metrics; EV-A064 | A021 independent count is a lower bound |
+| Architecture A021 6/8 (4 behavioral); R2 4/8 (3 behavioral) | C21, C22 | `data/architecture-findings.json`; `architecture-findings.md`; AD-05 | Rubric post-unblinding, one AI auditor, no IRR |
+| Independent better on D4 in both; D7 mixed in both; grouped P2 gap in both | C23, C24 | architecture findings D4, D7, LC-01; erratum E9 | Equal prominence required |
+| Independent lost update observed by probe in both | C25 | LC-04; probe table | Audit probe after unblinding |
+| Stale-start sensitivity (A021 item 5; R2 items 2, 3) | C26, C27, C36 | architecture-findings "Stale-start sensitivity"; T05; EV-A066 | All stale starts hit per-item sessions |
+| Evaluator counts inflated ("three stores" etc.) | C28 | erratum E8; falsification attempts | — |
+| Tests added: independent more in both | C30 | metrics.json; eval 1; R2 findings | Test count ≠ quality |
+| R2 confirmed defects 2 / 2, each in one item | C31 | R2 findings.json; POST-UNBLINDING mapping | — |
+| A021 defect evidence: no eval-1 tally; kit labels 0 / 2 | C32 | eval 1; kit findings | Not blind |
+| Both grouped checkpoints fail to reject blank decisions | C33 | LC-05, LC-06; erratum E10 | — |
+| Local correctness mixed; trade-off, not "beneficial" | C34 | T12; AD-09; erratum E11 | Inferred synthesis |
+| Replication matrix statuses | C35 | `manuscript/tables/replication-matrix.tex` (generated) | Mechanical rule |
+| Deviations, failed attempts, orchestrator, salt, evaluator model, role overlap, restarts | C37-C42 | validity-audit register; T03, T18, T19, T22, T23 | — |
+| Affinity follow-up blocked, not run | C43 | EV-A072; EX-A022 | Feasibility only |
+| Mechanism candidates, novelty, implications | C44-C47 | T21; related-work.md; architecture findings | Inferred, low confidence |
+| n = 1 per cell; correlated resample | C48 | T06 | No inference |
+| Reproducibility pipeline, corrections, artifact contents | C49-C51 | scripts; EV-A074; metric-conflicts.json; artifact manifest | Artifact still being finalised |
 
-Do not hand-copy numbers into the final manuscript. Generate a CSV/JSON table from committed source artifacts and render the paper table from that file.
+## Retired rows (superseded by the audits)
 
-Minimum columns:
-
-- execution_id
-- replication (A021/R2)
-- arm (grouped/independent)
-- implementing_sessions
-- orchestration_sessions
-- platform_cost_usd
-- active_time_seconds
-- elapsed_time_seconds
-- output_tokens
-- cache_read_tokens
-- cache_write_tokens
-- model_requests
-- file_reads
-- searches
-- builds
-- test_runs
-- governance_reads
-- agent_instruction_reads
-- compactions
-- final_test_count
-- confirmed_acceptance_defects
-- measurement_notes
-
-Unknown values stay null/unknown. Never infer zero.
-
-## Claim discipline
-
-Use three labels internally while drafting:
-
-- **Observed:** directly measured or counted.
-- **Evaluated:** independent evaluator judgment grounded in code/tests.
-- **Inferred:** author explanation/mechanism.
-
-The paper must not silently turn an inferred mechanism into an observed fact.
+- "R2 evaluator remained blind to mapping while evaluating — Direct": now a
+  self-report (T09).
+- "R2 grouped cost reduction 58.72% / elapsed 61.08%" as headline: secondary,
+  defined figures only (AD-03).
+- "Original platform cost unavailable": false (CF-02, E1).
+- "Grouped has one store/join rule/classification/error style" as blind
+  evaluator findings: re-verified structural facts only; classification and
+  grammar differences do not replicate in R2.
