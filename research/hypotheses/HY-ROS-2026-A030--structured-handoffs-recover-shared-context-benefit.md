@@ -1,0 +1,124 @@
+---
+id: HY-ROS-2026-A030
+title: Structured durable handoffs recover the shared-context benefit of continuous Claude execution
+research_area: repository-operating-system
+status: active
+confidence: very-low
+created: 2026-10-07
+author_agent: openai/chatgpt
+supporting_evidence: []
+contradicting_evidence: []
+related_theories: []
+related_documents:
+  - HY-ROS-2026-A028
+  - HY-ROS-2026-A029
+  - EV-ROS-2026-A064
+  - EV-ROS-2026-A070
+  - EX-ROS-2026-A021
+  - EX-ROS-2026-A024
+supersedes: []
+superseded_by: []
+tags: [claude, agents, context, handoff, continuity, experiment, planning]
+---
+
+# Hypothesis
+
+## Statement
+
+For serial high-affinity software work, fresh Claude agents that receive a
+structured durable handoff from the preceding agent will recover a substantial
+part of the architectural-coherence and context-reuse benefit observed when one
+Claude session retains the entire reasoning context.
+
+The claim is narrower than "handoffs are as good as memory." It predicts that
+an explicit external representation of decisions, invariants, reusable
+abstractions, changed surfaces, verification state, and unresolved risks can
+carry useful cross-item context that is otherwise lost between fresh sessions.
+
+## Mechanism
+
+A continuous Claude session can reuse two kinds of state:
+
+1. repository-visible state, such as code, tests, work records and commits;
+2. session-local state, such as cross-item decisions, rejected alternatives,
+   discovered invariants, mental indexes of relevant files, and unresolved
+   risks.
+
+Independent agents already inherit the first category through Git. They do not
+reliably inherit the second. A structured handoff makes a deliberately bounded
+subset of that second category durable and machine-readable without preserving
+a full conversation transcript.
+
+If the A021/R2 advantage is caused primarily by reusable engineering context,
+a structured handoff should move fresh-agent execution toward continuous-agent
+execution. If the advantage depends on latent session state that cannot be
+captured economically, the handoff arm should remain close to the code-only
+fresh-agent arm.
+
+## Predictions
+
+Under the same baseline, work cohort, model/runtime/configuration, ordering and
+verification rules:
+
+1. the structured-handoff arm will score higher than the code-only fresh-agent
+   arm on blinded architectural coherence;
+2. the structured-handoff arm will perform fewer repeated discovery operations
+   than the code-only arm;
+3. acceptance-criterion correctness will be non-inferior to the code-only arm;
+4. the continuous-session arm may still use fewer raw tokens, requests and
+   session startups because structured handoff does not eliminate fresh-session
+   setup cost;
+5. if the handoff captures the mechanism well, the structured-handoff arm will
+   recover at least half of the observed continuous-versus-code-only advantage
+   on both architectural coherence and repeated-discovery measures.
+
+## Evidence that would support it
+
+The primary experiment is EX-ROS-2026-A024. Support requires a valid calibration
+contrast in which continuous execution is better than code-only fresh execution
+on at least one preregistered mechanism measure, followed by a structured-handoff
+result that moves materially toward the continuous arm without sacrificing
+acceptance correctness.
+
+Because A024 replays one known cohort, even a positive result remains
+mechanistic evidence at low confidence until replicated on a different work
+family.
+
+## Evidence that would contradict it
+
+The hypothesis is weakened if, under valid runs:
+
+- the structured-handoff arm is indistinguishable from or worse than the
+  code-only fresh-agent arm on architectural coherence and repeated discovery;
+- any apparent gain is explained by relaxed acceptance quality;
+- handoff creation/consumption costs erase the recovered benefit; or
+- continuous execution remains materially better despite a complete,
+  schema-valid handoff.
+
+If continuous execution does not reproduce an advantage over code-only fresh
+execution, A024 has no mechanism effect to recover and is inconclusive for this
+hypothesis rather than supportive.
+
+## Tests performed
+
+None yet. EX-ROS-2026-A024 is preregistered as the first test.
+
+## Results
+
+No result yet.
+
+## Falsification attempts
+
+EX-ROS-2026-A024 deliberately includes a code-only fresh-agent arm so that
+ordinary Git-visible state is separated from explicit externalized reasoning
+state.
+
+## Current assessment
+
+Active, very low confidence. A021 and its R2 replication motivate the mechanism
+question but did not test structured handoff.
+
+## Next experiment
+
+Run EX-ROS-2026-A024. If supported, replicate on a different high-affinity work
+family before changing the default Praxis execution strategy.
