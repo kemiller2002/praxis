@@ -20,7 +20,7 @@ open Praxis.Infrastructure.Execution
 [<RequireQualifiedAccess>]
 module ExecutionCommands =
     let usage =
-        "execution start --work-item ID --role ROLE [--baseline REV] [--worktree] [--worktree-root DIR] [--scope SCOPE]* [--allow SCOPE=GLOB]* [--evaluator KIND=PATH]* [--human-only TRANSITION]* [--parent EXE-ID] [--json] [IDENTITY] | execution show|actions|boundary EXE-ID [--json] | execution list [--work-item ID] [--json] | execution step declare EXE-ID --step ID --expect-command CMD|--expect-artifact PATH|--expect-json JSON [--sequence N] [--depends-on ID]* [--retry-safe BASIS] | execution step run EXE-ID --step ID [--command CMD] | execution step start|observe EXE-ID --step ID [--observed-json JSON] | execution step reconcile EXE-ID --step ID --finding occurred|did-not-occur|unknown --detail TEXT | execution evaluate EXE-ID --command CMD | execution expand-scope EXE-ID --scope SCOPE [--allow SCOPE=GLOB]* --justification TEXT | execution resolve-effect EXE-ID --resource PATH --resolution reverted|expanded|transferred --detail TEXT | execution transition EXE-ID --action block|resume|complete|abandon [--reason TEXT] | execution cleanup EXE-ID"
+        "execution start --work-item ID (--contract FILE | --role ROLE [--scope SCOPE]* [--allow SCOPE=GLOB]* [--evaluator KIND=PATH]* [--human-only TRANSITION]*) [--baseline REV] [--worktree] [--worktree-root DIR] [--parent EXE-ID] [--json] [IDENTITY] | execution show|actions|boundary EXE-ID [--json] | execution list [--work-item ID] [--json] | execution step declare EXE-ID --step ID --expect-command CMD|--expect-artifact PATH|--expect-json JSON [--sequence N] [--depends-on ID]* [--retry-safe BASIS] | execution step run EXE-ID --step ID [--command CMD] | execution step start|observe EXE-ID --step ID [--observed-json JSON] | execution step reconcile EXE-ID --step ID --finding occurred|did-not-occur|unknown --detail TEXT | execution evaluate EXE-ID --command CMD | execution expand-scope EXE-ID --scope SCOPE [--allow SCOPE=GLOB]* --justification TEXT | execution resolve-effect EXE-ID --resource PATH --resolution reverted|expanded|transferred --detail TEXT | execution transition EXE-ID --action block|resume|complete|abandon [--reason TEXT] | execution cleanup EXE-ID"
 
     let private optionValue (name: string) (arguments: string list) =
         arguments |> List.pairwise |> List.tryPick (fun (flag, value) -> if flag = name && not (value.StartsWith "--") then Some value else None)
@@ -72,21 +72,16 @@ module ExecutionCommands =
         |> List.fold (fun acc r -> acc |> Result.bind (fun xs -> r |> Result.map (fun x -> x :: xs))) (Ok [])
         |> Result.map List.rev
 
-    let private boundaryFrom (arguments: string list) =
-        let scopes = optionValues "--scope" arguments
-
-        let projections =
-            optionValues "--allow" arguments
-            |> List.choose (fun spec ->
-                match spec.LastIndexOf '=' with
-                | -1 -> None
-                | i -> Some { Scope = spec.Substring(0, i); Patterns = [ spec.Substring(i + 1) ] })
-            |> List.groupBy _.Scope
-            |> List.map (fun (scope, ps) -> { Scope = scope; Patterns = ps |> List.collect _.Patterns })
-
-        match scopes |> List.tryFind (MutationBoundary.isScope >> not) with
-        | Some bad -> Error $"'{bad}' is not a semantic scope (feature:|cluster:|authority:|capability:<id>)"
-        | None -> Ok { Scopes = scopes; Projections = projections; EvaluatorReferences = [] }
+    /// The governing contract: a contract file, or the operator's flags
+    /// assembled into the same Ordo contract (PRX-BND-001, PRX-SEQ-003).
+    let private contractFrom root (arguments: string list) =
+        match optionValue "--contract" arguments with
+        | Some path ->
+            match ExecutionContracts.contractFlags |> List.filter (fun flag -> List.contains flag arguments) with
+            | [] -> ExecutionContracts.fromFile root path
+            | flags -> Error $"""--contract supplies the role, boundary, evaluator and human-only transitions; remove {String.Join(", ", flags)}"""
+        | None ->
+            ExecutionContracts.fromFlags (optionValue "--role" arguments) (optionValues "--scope" arguments) (optionValues "--allow" arguments) (optionValues "--evaluator" arguments) (optionValues "--human-only" arguments)
 
     let private workspaceDirectory (root: string) (envelope: ExecutionEnvelope) =
         match envelope.Workspace |> Option.bind _.Path with
@@ -183,10 +178,11 @@ module ExecutionCommands =
     let private start (root: string) (actor: Actor) (arguments: string list) =
         let now = DateTimeOffset.UtcNow
 
-        match optionValue "--work-item" arguments, optionValue "--role" arguments |> Option.bind ExecutionRole.tryParse with
+        match optionValue "--work-item" arguments, contractFrom root arguments with
         | None, _ -> fail "--work-item ID is required"
-        | _, None -> fail "--role specification|implementation|verification|review|integration|administration is required"
-        | Some rawWork, Some role ->
+        | _, Error e -> fail e
+        | Some rawWork, Ok contract ->
+            let role = contract.Role
             let workItem = qualifyWorkItem root rawWork
 
             let baseline =
@@ -194,16 +190,17 @@ module ExecutionCommands =
                 |> Option.map (GitWorkspace.resolve root)
                 |> Option.defaultWith (fun () -> GitWorkspace.head root)
 
+            // PRX-VER-010: the evaluator identity Ordo's contract requires, resolved and recorded before verification.
             let evaluator =
-                match optionValues "--evaluator" arguments with
+                match contract.Evaluator with
                 | [] -> Ok None
-                | specs -> evaluatorFrom root specs |> Result.bind EvaluatorIdentity.create |> Result.map Some
+                | closure -> evaluatorFrom root (closure |> List.map (fun (kind, reference) -> $"{kind}={reference}")) |> Result.bind EvaluatorIdentity.create |> Result.map Some
 
-            match baseline, evaluator, boundaryFrom arguments with
-            | Error e, _, _ -> fail $"cannot resolve the baseline revision: {e}"
-            | _, Error e, _
-            | _, _, Error e -> fail e
-            | Ok baselineSha, Ok ev, Ok boundary ->
+            match baseline, evaluator with
+            | Error e, _ -> fail $"cannot resolve the baseline revision: {e}"
+            | _, Error e -> fail e
+            | Ok baselineSha, Ok ev ->
+                let boundary = contract.Boundary
                 let id = ExecutionStore.newId now
 
                 match ExecutionEnvelope.create id workItem (executionActor actor) (RoleAuthority.defaultFor role) baselineSha boundary ev now with
@@ -237,10 +234,11 @@ module ExecutionCommands =
                     | Ok envelope ->
                         let envelope =
                             { envelope with
-                                HumanOnlyTransitions = optionValues "--human-only" arguments
+                                HumanOnlyTransitions = contract.HumanOnly
                                 Parent = optionValue "--parent" arguments }
 
                         ExecutionStore.saveEnvelope root envelope
+                        ExecutionStore.appendRecord root id "contract" [ "schema", Some "ordo.execution-contract/1"; "source", Some contract.Source; "sha256", Some contract.Sha256 ] now
                         ExecutionStore.appendRecord root id "transition" [ "transition", Some "execution.start"; "state", Some "active"; "actor", Some actor.Id ] now
 
                         if hasFlag "--json" arguments then

@@ -178,6 +178,11 @@
   "test1Execution0": {
     "schemaVersion": "1.0.0",
     "workItemId": "WI-NEW",
+    "workItem": {
+      "repositoryId": null,
+      "repository": null,
+      "localId": "WI-NEW"
+    },
     "status": "active",
     "finalizedAt": null,
     "identity": {

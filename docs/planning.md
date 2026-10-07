@@ -339,8 +339,13 @@ expected, upper, confidence}` with `{amount, currency}` for money) and an
 unknown bound is `null`, never `0`. Codes (planning states, reasons,
 findings, collision signals, evidence sources) are stable kebab-case strings.
 `plan` documents round-trip through `PlanningJson.parsePlan`, which
-`freshness` uses. Work items are identified by their existing Praxis ID; no
-new identity scheme is introduced (PRX-PLAN-182).
+`freshness` uses. Every document also carries `repository`
+(`{provider, repositoryId, repository}`, or `null` when no repository identity
+can be established): each work-item ID in the document is the local ID of a
+canonical, repository-qualified identity in that repository, using Praxis's
+one identity model ([`identity.md`](identity.md)); no planner-specific scheme is
+introduced (PRX-PLAN-182). Cross-repository group members use the same
+`owner/repo:ID` grammar (PRX-GRP-100). Parsers ignore the field.
 
 ## Architecture
 
@@ -376,7 +381,8 @@ No external dependency was added (PRX-PLAN-004).
 | 160-161 | Met; see `EV-ROS-2026-A058`. |
 | 162 | Mechanism met (`freshness` outcomes); the comparison itself needs time to pass. |
 | 170-173 | Met in replay and drift; error is not yet persisted over time. |
-| 180-182 | Met. |
+| 180-181 | Met. |
+| 182 | Met. Documents carry the repository identity their local IDs are qualified by (`PlanningJson.withRepository`; `IdentityTests` "planner documents carry the repository..."). Items are not repeated as per-item structured references. |
 
 ## Work-group requirement status
 

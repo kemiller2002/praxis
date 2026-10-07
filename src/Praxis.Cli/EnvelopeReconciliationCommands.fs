@@ -13,18 +13,6 @@ open Praxis.Infrastructure.Work
 
 [<RequireQualifiedAccess>]
 module EnvelopeReconciliationCommands =
-    let private localInstanceId root =
-        let path = Path.Combine(root, ".praxis", "instance.json")
-
-        if not (File.Exists path) then None
-        else
-            try
-                use document = JsonDocument.Parse(File.ReadAllText path)
-                match document.RootElement.TryGetProperty "instanceId" with
-                | true, value when value.ValueKind = JsonValueKind.String -> Some(value.GetString())
-                | _ -> None
-            with _ -> None
-
     let private hashEnvelopeFile path =
         Convert.ToHexString(SHA256.HashData(File.ReadAllBytes path)).ToLowerInvariant()
 
@@ -46,7 +34,7 @@ module EnvelopeReconciliationCommands =
           BaseCommitIsAncestor = baseIsAncestor
           TransactionAlreadyApplied = store.IsApplied envelope.TransactionId
           TransactionReplayMatches = true
-          LocalPraxisInstanceId = localInstanceId root }
+          LocalInstance = Praxis.Infrastructure.Identity.FileInstanceIdentityStore.local root }
 
     let private applyRequests root envelopePath envelopeHash headCommit clock envelope =
         FileEnvelopeReconciliationDispatcher.apply root envelopePath envelopeHash headCommit clock envelope

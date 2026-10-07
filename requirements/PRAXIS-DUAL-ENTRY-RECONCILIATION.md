@@ -64,3 +64,20 @@ The physical layout MAY evolve only if the same lifecycle and discoverability gu
 - Validation rejects meaningful work on a branch other than its work-item ID.
 - Successful reconciliation leaves no transient accepted envelope and leaves durable provenance plus a checkpoint.
 - Documentation includes a runtime-free agent bootstrap example.
+
+## Implementation status
+
+Requirement numbers are the numbered list above (the 2026-10-06 audit calls
+them DER-01..26). This table covers the identity items closed by
+`GROUP-PRAXIS-IDENTITY-001`; see [`docs/identity.md`](../docs/identity.md).
+
+| Item | Status | Where |
+| --- | --- | --- |
+| 1 | Met. The envelope path refuses a claimed mismatch; native work is checked by `validate` when `workProtocol.branchPolicy` is `work-item-id` (policy-gated, off by default). | `BranchPolicy`, `EnvelopeReconciliation`; `IdentityTests` "validate enforces workProtocol.branchPolicy" (PRAXIS-ID-06) |
+| 16, 17 | Met. `.praxis/instance.json` (`praxis.instance/1`) is created by `init`, `upgrade` and `praxis instance init` before any registration. | `InstanceInit`, `FileInstanceIdentityStore` (PRAXIS-ID-04) |
+| 18, 21 | Met. Registration is optional and never a dependency; the local record stays authoritative. | `praxis instance register` (PRAXIS-ID-05) |
+| 19, 20, 25, 26 | Met. `praxis instance projection` renders an allow-listed `praxis.instance-projection/1`; `praxis instance register` sends it through the installation client with a digest operation ID. | `InstanceProjection`, `FileInstanceProjection` (PRAXIS-ID-05) |
+| 22 | Met. Native executions record `instanceId`; accepted envelope history without a claim is stamped with the local instance. | `FileTelemetryExecutionRepository`, `EnvelopeReconciliation.withLocalInstance` (PRAXIS-ID-04) |
+| 23 | Met. Mismatched, unestablished and unverifiable claims are rejected; proved end to end against a generated identity. | `IdentityTests` "reconciliation rejects a claimed instance..." (PRAXIS-ID-04) |
+| 24 | Met. Upgrades and repeats keep the identity; a clone, rename or transfer stays bound; a template, fork or copy is foreign until an explicit `--reinitialize --reason` records its predecessor. | `InstanceBinding`, `InstanceInit` (PRAXIS-ID-04) |
+| 9, 10 | Open: inbox documents are inventoried but not processed. Not part of this group. | - |
