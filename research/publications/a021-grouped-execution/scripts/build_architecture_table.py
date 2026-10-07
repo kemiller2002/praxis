@@ -60,7 +60,7 @@ SHORT_NAMES: Mapping[str, str] = MappingProxyType({
     "D4": "Checkpoint ownership validation",
     "D5": "Error/JSON/exit contract",
     "D6": "Mutation/concurrency model",
-    "D7": "Reuse of baseline rules",
+    "D7": "Shared abstractions and baseline-rule reuse",
     "D8": "Duplicate definitions inside the feature"})
 
 # Construct split requested by review: cross-item consistency vs. per-verb correctness and reuse.
@@ -71,9 +71,6 @@ CORRECTNESS_DIMS = ("D4", "D7")
 # P2 -> D2/D7, P4/P6/P7 -> D5, concurrent create -> D6). Other behavioral codes rest on code reading.
 PROBED_DIMS = frozenset({"D2", "D5", "D6", "D7"})
 
-# Independent-arm differences that follow the acceptance criteria literally: only item 3 (add) requires the
-# execution-repository check; item 1 (create) does not (acceptance-criteria.txt in the artifact).
-SPEC_LITERAL = frozenset({("A021", "D2", "independent"), ("R2", "D2", "independent")})
 
 
 # --------------------------------------------------------------------------
@@ -105,8 +102,7 @@ def word(n: int) -> str:
 
 def arch_cells(cmp_: Mapping[str, Any], stale: frozenset, study: str, dim: str) -> str:
     def mark(arm: str) -> str:
-        return (("$^{\\dagger}$" if (study, dim, arm) in stale else "") +
-                ("$^{s}$" if (study, dim, arm) in SPEC_LITERAL else ""))
+        return "$^{\\dagger}$" if (study, dim, arm) in stale else ""
     g = CATEGORY_ABBR[cmp_["grouped_category"]] + mark("grouped")
     i = CATEGORY_ABBR[cmp_["independent_category"]] + mark("independent")
     kind = ("" if not cmp_["behavioral_difference"] else "$^{p}$" if dim in PROBED_DIMS else "$^{c}$")
@@ -125,9 +121,9 @@ def architecture_matrix(arch: Mapping[str, Any]) -> str:
              "Direction: G or I, the arm whose verbs agree more (consistency rows) or that meets the rule "
              "(correctness rows); eq equivalent. Behavioral difference shown by a runtime probe ($^{p}$) or "
              "by code reading only ($^{c}$); no mark: organization only. $^{\\dagger}$: comes from an item "
-             "whose session started from a stale checkout. $^{s}$: matches the acceptance criteria, which "
-             "require the repository check at add but not at create. Unified means consistent across verbs, "
-             "not correct. Rubric written and applied after unblinding by one AI auditor; no second coder.")
+             "whose session started from a stale checkout. Unified means consistent across verbs, not correct: "
+             "the grouped arms' shared admission rule ignores the planner's external-repository inference (probe "
+             "P2, add), and at create every arm accepts such an item (P3). Rubric written and applied after unblinding by one AI auditor; no second coder.")
     return (HEADER +
             "\\begin{table}[t]\n\\centering\n\\scriptsize\n\\setlength{\\tabcolsep}{3pt}\n"
             "\\caption{Post hoc architecture rubric: category per arm and direction per study}\n"
@@ -193,7 +189,7 @@ def lower_bound_rep(rix: Mapping, label: str, metric: str) -> Rep:
     (da, ca), (db, cb) = cell("A021"), cell("R2")
     status = status_from(da, db)
     return Rep("Repeated context (lower bounds)", label, ca, cb,
-               status + " (lower bounds)" if status == "recurred" else status)
+               "same direction, lower bounds only" if status == "recurred" else status)
 
 
 def arch_rep(cs: Mapping, dim: str) -> Rep:
@@ -208,8 +204,9 @@ def arch_rep(cs: Mapping, dim: str) -> Rep:
         text = {"eq": "equivalent"}.get(d, d)
         return text + (", beh." if c["behavioral_difference"] else ", org." if d in ("G", "I") else "")
     family = "Architecture: consistency" if dim in CONSISTENCY_DIMS else "Architecture: correctness/reuse"
+    status = status_from(direction("A021"), direction("R2"))
     return Rep(family, f"{dim} {SHORT_NAMES[dim]}", cell("A021"), cell("R2"),
-               status_from(direction("A021"), direction("R2")))
+               status + "$^{a}$" if status in ("recurred", "mixed in both") else status)
 
 
 def lc_rep(arch: Mapping[str, Any], label: str, ids: Sequence[str], arm: str) -> Rep:
@@ -261,8 +258,6 @@ def replication_rows(arch: Mapping[str, Any], metrics: Mapping[str, Any]) -> tup
     local = (
         count_rep(rix, "Net tests added vs.\\ baseline (count, not quality)", "fsharp_tests_net_added"),
         count_rep(rix, "Confirmed acceptance defects", "confirmed_acceptance_defects_r2"),
-        lc_rep(arch, "Grouped checkpoint does not reject blank decision", ("LC-05", "LC-06"), "grouped"),
-        lc_rep(arch, "Grouped concurrent creates fail under contention", ("LC-08",), "grouped"),
     )
     untested = tuple(Rep(f, o, "--", "--", "not tested") for f, o in NOT_TESTED)
     return resources + repeated + architecture + local + untested
@@ -280,8 +275,10 @@ def replication_matrix(arch: Mapping[str, Any], metrics: Mapping[str, Any]) -> s
              "platform figures, I/G ratio to one decimal. Repeated-context rows: both arms' script counts are "
              "lower bounds, so the direction is listed but not counted as recurred evidence. Architecture rows: "
              "the arm favored in Table~\\ref{tab:architecture}; beh./org.: behavioral or organizational "
-             "difference. The independent arm's lost update under concurrent creates is part of D6, and the "
-             "grouped arm's external-item admission (probe P2) is part of D7. Not comparable: measured in R2 "
+             "difference; $^{a}$: R2's grouped analysis had headings anticipating these dimensions and R2's "
+             "designer knew A021's results, so these recurrences carry little independent weight. Lost updates "
+             "and lock-contention failures are part of D6; blank-decision handling (stored verbatim in A021, "
+             "silently dropped in R2) is part of D4. Not comparable: measured in R2 "
              "but with no comparable A021 tally.")
     return (HEADER +
             "\\begin{table}[t]\n\\centering\n\\scriptsize\n\\setlength{\\tabcolsep}{3pt}\n"
@@ -300,7 +297,12 @@ def replication_matrix(arch: Mapping[str, Any], metrics: Mapping[str, Any]) -> s
 
 def macros(arch: Mapping[str, Any]) -> str:
     n_fals = len(arch["falsification_attempts"])
+    cs = comparisons(arch)
+    words = {"grouped_more_unified": "in favor of the cohort arm", "independent_more_unified": "in favor of the per-item arm",
+             "mixed": "mixed", "equivalent": "equivalent", "not_assessable": "not assessable"}
     entries = (
+        ("ArchDSevenA", words[cs[("A021", "D7")]["direction"]], "A021 D7 direction"),
+        ("ArchDSevenRtwo", words[cs[("R2", "D7")]["direction"]], "R2 D7 direction"),
         ("ArchDimensions", word(len(dimensions(arch))), "rubric dimensions"),
         ("ArchFindings", str(len(arch["findings"])), "coded findings (study x arm x dimension)"),
         ("ArchCitations", str(sum(len(f["evidence"]) for f in arch["findings"])), "code citations verified"),

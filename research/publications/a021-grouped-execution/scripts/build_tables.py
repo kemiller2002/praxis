@@ -113,6 +113,10 @@ A021_LINES: tuple[Line, ...] = (
     Line("Orientation before first code change, summed over sessions (min)", "time_to_first_code_s", W, W, "min", None),
     Line("Compactions", "compactions_transcript", W, W, "int", None),
     Line("Merges with conflicts", "merges_with_conflicts", A, A, "int", None),
+    Line("Lines inserted, src+tests+docs", "diff_insertions", A, A, "int", None),
+    Line("of which in tests", "diff_insertions_tests", A, A, "int", None),
+    Line("Lines deleted, src+tests+docs", "diff_deletions", A, A, "int", None),
+    Line("Files changed, src+tests+docs", "diff_files_changed", A, A, "int", None),
     Line("Commits after baseline", "commits", A, A, "int", None),
 )
 
@@ -139,6 +143,10 @@ R2_LINES: tuple[Line, ...] = (
     Line("Orientation before first code change, summed over sessions (min)", "time_to_first_code_s", W, W, "min", None),
     Line("Compactions", "compactions_transcript", W, W, "int", None),
     Line("Merges with conflicts", "merges_with_conflicts", A, A, "int", None),
+    Line("Lines inserted, src+tests+docs", "diff_insertions", A, A, "int", None),
+    Line("of which in tests", "diff_insertions_tests", A, A, "int", None),
+    Line("Lines deleted, src+tests+docs", "diff_deletions", A, A, "int", None),
+    Line("Files changed, src+tests+docs", "diff_files_changed", A, A, "int", None),
     Line("Commits after baseline", "commits", A, A, "int", None),
 )
 
@@ -226,6 +234,8 @@ COMPACT_LINES: tuple[Line, ...] = (
     Line("Output tokens, platform (k)", "output_tokens_platform", W, W, "ktok", W),
     Line("Cache-read tokens, platform (M)", "cache_read_tokens_platform", W, W, "mtok", W),
     Line("Active session time, sum (min)", "active_session_sum_s", W, W, "min", W),
+    Line("Lines inserted, src+tests+docs", "diff_insertions", A, A, "int", None),
+    Line("of which in tests", "diff_insertions_tests", A, A, "int", None),
     Line("Model requests, script", "model_requests_transcript", W, W, "int", None),
     Line("File reads, script", "file_reads_transcript", W, W, "int", None),
     Line("Searches, script", "searches_transcript", W, W, "int", None),
@@ -262,7 +272,7 @@ def compact_table(ix: Index) -> str:
 
 class Macro(NamedTuple):
     name: str
-    kind: str        # row | derived | excluded
+    kind: str        # row | derived | excluded | per
     key: tuple
     fmt: str
     comment: str
@@ -288,6 +298,12 @@ def exclpair(prefix: str, study: str, unit: str, metric: str, session_metric: st
                   f"{what}, independent/grouped"),
             exclm(f"{prefix}Reduction", study, unit, metric, session_metric, excluded, "reduction", "pct0",
                   f"{what}, grouped reduction in percent"))
+
+
+def perm(name: str, study: str, volume_metric: str, cost_metric: Optional[str], field: str, fmt: str,
+         comment: str) -> Macro:
+    """Volume ratio (cost_metric None) or worker cost per 1000 units of an arm-level volume metric."""
+    return Macro(name, "per", (study, volume_metric, cost_metric, field), fmt, comment)
 
 
 G, I = "grouped", "independent"
@@ -366,6 +382,23 @@ MACROS: tuple[Macro, ...] = (
     *arm_pair("RtwoDefects", "R2", A, "confirmed_acceptance_defects_r2", "int", "R2 confirmed acceptance defects"),
     *arm_pair("RtwoMergeConflicts", "R2", A, "merges_with_conflicts", "int", "R2 merges with conflicts"),
     rowm("BaselineTests", "A021", G, A, "fsharp_tests_preexisting", "int", "F# tests at the shared baseline"),
+    # Work volume (git diff vs baseline over src, tests, docs) and a cost-per-line normalization
+    *arm_pair("AinsLines", "A021", A, "diff_insertions", "int", "A021 lines inserted (src+tests+docs)"),
+    *arm_pair("AinsTestLines", "A021", A, "diff_insertions_tests", "int", "A021 lines inserted under tests"),
+    *arm_pair("AdelLines", "A021", A, "diff_deletions", "int", "A021 lines deleted (src+tests+docs)"),
+    *arm_pair("AfilesChanged", "A021", A, "diff_files_changed", "int", "A021 files changed (src+tests+docs)"),
+    *arm_pair("RtwoInsLines", "R2", A, "diff_insertions", "int", "R2 lines inserted (src+tests+docs)"),
+    *arm_pair("RtwoInsTestLines", "R2", A, "diff_insertions_tests", "int", "R2 lines inserted under tests"),
+    *arm_pair("RtwoDelLines", "R2", A, "diff_deletions", "int", "R2 lines deleted (src+tests+docs)"),
+    *arm_pair("RtwoFilesChanged", "R2", A, "diff_files_changed", "int", "R2 files changed (src+tests+docs)"),
+    perm("AinsLinesRatio", "A021", "diff_insertions", None, "ratio", "ratio1", "A021 lines inserted, independent/grouped"),
+    perm("RtwoInsLinesRatio", "R2", "diff_insertions", None, "ratio", "ratio1", "R2 lines inserted, independent/grouped"),
+    perm("AcostPerKLineGrouped", "A021", "diff_insertions", "cost_usd_platform", "grouped", "usd", "A021 worker cost per 1000 inserted lines USD, grouped"),
+    perm("AcostPerKLineIndep", "A021", "diff_insertions", "cost_usd_platform", "independent", "usd", "A021 worker cost per 1000 inserted lines USD, independent"),
+    perm("AcostPerLineRatio", "A021", "diff_insertions", "cost_usd_platform", "ratio", "ratio1", "A021 cost per inserted line, independent/grouped"),
+    perm("RtwoCostPerKLineGrouped", "R2", "diff_insertions", "cost_usd_platform", "grouped", "usd", "R2 worker cost per 1000 inserted lines USD, grouped"),
+    perm("RtwoCostPerKLineIndep", "R2", "diff_insertions", "cost_usd_platform", "independent", "usd", "R2 worker cost per 1000 inserted lines USD, independent"),
+    perm("RtwoCostPerLineRatio", "R2", "diff_insertions", "cost_usd_platform", "ratio", "ratio1", "R2 cost per inserted line, independent/grouped"),
     # Sensitivity S1 (primary): A021 without the stalled item-4 attempt 1 (nothing pushed)
     *exclpair("AcostExclStalled", "A021", W, "cost_usd_platform", "cost_usd_platform", STALLED_A021,
               "A021 platform cost excluding the stalled attempt"),
@@ -391,7 +424,21 @@ def excluded_reduction(ix: Index, study: str, unit: str, metric: str, session_me
     return independent / grouped if field == "ratio" else (independent - grouped) / independent
 
 
+def per_value(ix: Index, study: str, volume_metric: str, cost_metric: Optional[str], field: str) -> float:
+    def value(arm: str, unit: str, metric: str) -> float:
+        r = ix.rows.get((study, arm, unit, metric))
+        if r is None or r["value"] is None or r["completeness"] != "complete":
+            raise KeyError(f"per macro: no complete row {(study, arm, unit, metric)}")
+        return r["value"]
+    def per_k(arm: str) -> float:
+        volume = value(arm, A, volume_metric)
+        return volume if cost_metric is None else value(arm, W, cost_metric) / volume * 1000
+    return per_k(I) / per_k(G) if field == "ratio" else per_k(field)
+
+
 def macro_value(ix: Index, m: Macro) -> str:
+    if m.kind == "per":
+        return FMT[m.fmt](per_value(ix, *m.key))
     if m.kind == "excluded":
         return FMT[m.fmt](excluded_reduction(ix, *m.key))
     if m.kind == "row":
