@@ -8767,10 +8767,35 @@
     {
       "id": "EX-ROS-2026-A024",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-07T20:48:31.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/experiments/EX-ROS-2026-A024-harness/manifest.json"
+        },
+        {
+          "type": "tests",
+          "path": "research/experiments/EX-ROS-2026-A024-run/checks/arm-1/checks.json"
+        },
+        {
+          "type": "tests",
+          "path": "research/experiments/EX-ROS-2026-A024-run/checks/arm-2/checks.json"
+        },
+        {
+          "type": "tests",
+          "path": "research/experiments/EX-ROS-2026-A024-run/checks/arm-3/checks.json"
+        },
+        {
+          "type": "results",
+          "path": "research/evidence/EV-ROS-2026-A075--a024-context-continuity-results.md"
+        },
+        {
+          "type": "analysis",
+          "path": "research/experiments/EX-ROS-2026-A024-run/analysis/summary.txt"
+        }
+      ],
+      "updatedAt": "2026-10-07T23:02:53.000Z",
       "telemetryExecutionIds": [
         "EXE-20261007T162653169Z-f15a70b7"
       ],
@@ -8794,12 +8819,14 @@
           "mechanism": "git-remote-observation"
         }
       },
-      "blockReason": "Owner decision required: the arm-C item-02 slot spent its single preregistered retry on a platform launcher defect (outcome_branch pinning); see research/experiments/EX-ROS-2026-A024-run/BLOCKER.txt"
+      "blockReason": "Owner decision required: the arm-C item-02 slot spent its single preregistered retry on a platform launcher defect (outcome_branch pinning); see research/experiments/EX-ROS-2026-A024-run/BLOCKER.txt",
+      "completedAt": "2026-10-07T23:02:53.000Z",
+      "conclusion": "EX-ROS-2026-A024 executed to valid terminal results; blinded scoring and evaluation; frozen analysis: HY-ROS-2026-A030 not supported (discovery recovery -13/151; no architecture calibration effect: A 5, B 10, C 8; acceptance 36/36 in all arms). Follow-ons proposed, not run."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T20:54:37.397Z",
+  "updatedAt": "2026-10-07T23:02:53.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
