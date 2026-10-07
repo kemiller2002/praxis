@@ -6,7 +6,7 @@ open System.Text.RegularExpressions
 
 /// Requirement records cite the tests that verify them. A citation of a
 /// test file that no longer exists (for example the Node suites deleted by
-/// RQ-ROS-2026-A024, or the pre-rename `tests/Ros.Tests` path) silently
+/// RQ-ROS-2026-A024, or a test project path from before a rename) silently
 /// overstates verification, so every cited test path in a record's body
 /// must exist, unless the same line marks the citation historical
 /// (PRAXIS-MISC-09). Front matter is provenance history and is never
@@ -64,10 +64,10 @@ module RequirementCitationTests =
                                 "provenance: [tests/deleted-in-front-matter.test.mjs]"
                                 "---"
                                 "- `tests/Praxis.Tests/Present.fs`"
-                                "- `tests/Ros.Tests/Renamed.fs`"
+                                "- `tests/Praxis.Tests/Removed.fs`"
                                 "- `tests/gone.test.mjs` (historical; deleted with the Node suites)" ]
 
-                      Assert.equal [ "tests/Ros.Tests/Renamed.fs" ] (staleCitations root record |> List.map snd)
+                      Assert.equal [ "tests/Praxis.Tests/Removed.fs" ] (staleCitations root record |> List.map snd)
                   finally
                       CliHarness.removeDirectory root }
 
