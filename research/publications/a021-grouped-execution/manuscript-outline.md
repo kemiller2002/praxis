@@ -6,8 +6,24 @@ Checked with `scripts/check_manuscript.py`. Claims are indexed in
 
 ## Title
 
-**One Session or Five? Cohort versus Per-Item Coding-Agent Execution and
-Cross-Item Architectural Consistency: A Case Study with a Close Replication**
+Full paper (`manuscript/paper.tex`, 10 + 2): **Cohort versus Per-Item Coding-Agent
+Execution of Coupled Work Items: Cost and Cross-Item Consistency in a Case Study
+and an Internal Re-Execution**
+
+Short paper (`manuscript/paper-short.tex`, SANER SP&P, 6 pages including
+references): **... Early Results from a Case Study and an Internal Re-Execution**.
+Same macros, same evidence index (subset of claims), same checker (which also
+enforces both page limits on the built PDFs).
+
+Revised after `reviews/review-hostile-1.md` and `reviews/review-statistics.md`:
+"close replication" became "internal, non-preregistered re-execution"; tallies
+of dimensions and of "reproduced" rows were replaced by named dimensions and a
+direction-only recurrence matrix; ratios are one decimal and reductions whole
+percent; contamination (C52), specification-literal D2 (C53), the cohort arm's
+lock-contention failures (C54), the preregistered elements (C55, C56), role
+contamination (C57), the post hoc rubric (C58), treatment-outcome overlap (C59),
+per-session overhead (C60) and run-to-run variance (C61) were added; S1 now
+excludes only the stalled item-4 attempt.
 
 The earlier working title ("Does Shared Agent Context Reduce Architectural
 Drift? A Blinded Replication Study ...") is retired: the treatment is a bundle
@@ -33,7 +49,7 @@ before the references.
 | VI | Measures | worker-only definition; four time definitions; lower-bound transcript counts; rubric dimensions; local correctness | C11-C13, C16, C18 |
 | VII | Analysis method | descriptive comparison; rubric categories and coding rule; S1-S5 | C29 |
 | VIII | Results: A021 | Table I (resources), Table II (architecture), Table III (quality counts); S1, S2, S3, S4, S5 | C11, C12, C15-C21, C23-C26, C28, C30, C32-C34 |
-| IX | Replication: R2 | Table IV (resources), Table V (deviations, table*), Table VI (replication matrix) | C13-C16, C18, C20, C22-C25, C27, C30, C31, C33-C35 |
+| IX | Re-execution: R2 | Table IV (resources), Table V (deviations, table*), Table VI (replication matrix) | C13-C16, C18, C20, C22-C25, C27, C30, C31, C33-C35 |
 | X | Discussion | meaning; RQ5 boundary; mechanism candidates (inferred); practical implications | C02, C17, C26, C27, C34, C44, C46, C47 |
 | XI | Threats to validity | construct, internal, external, conclusion; deviations table | C02, C06, C07, C09, C17, C36-C38, C41-C43, C48 |
 | XII | Reproducibility | generated numbers; corrections; artifact contents | C49-C51 |

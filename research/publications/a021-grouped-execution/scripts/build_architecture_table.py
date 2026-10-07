@@ -1,20 +1,25 @@
 #!/usr/bin/env python3
-"""Generate the architecture matrix, the replication matrix and architecture count macros.
+"""Generate the architecture matrix, the recurrence (replication) matrix and architecture macros.
 
 Inputs (read only):
   data/architecture-findings.json  8-dimension rubric applied to both arms of both studies
   data/metrics.json                derived independent/grouped ratios and arm-level counts
 
 Outputs (manuscript/tables/):
-  architecture-matrix.tex   D1-D8 x {A021, R2}: grouped/independent category, direction, behavioral flag
-  replication-matrix.tex    outcome x {A021, R2} with a replication status
-  architecture-macros.tex   \\newcommand counts used in prose (dimension tallies, findings, citations)
+  architecture-matrix.tex   D1-D8 x {A021, R2}: grouped/independent category, direction, kind of evidence
+  replication-matrix.tex    outcome x {A021, R2} with a recurrence status (direction only)
+  architecture-macros.tex   \\newcommand counts used in prose (findings, citations, falsification attempts)
 
-Replication status rules (applied mechanically, never typed by hand):
-  reproduced      the same non-mixed direction was observed in both studies
-  mixed           at least one study shows a mixed direction on the outcome
-  not reproduced  A021 showed a direction that R2 did not show
-  not tested      the outcome was not measured in at least one study (or in neither)
+The rubric was written and applied after both studies were unblinded. No dimension tally is produced:
+the dimensions are not commensurable, so they are reported by name.
+
+Recurrence status rules (applied mechanically, never typed by hand):
+  recurred                    the same non-mixed direction was observed in both studies
+  recurred (lower bounds)     same direction, but both operands are lower bounds (not counted as evidence)
+  mixed in both               the direction is mixed in both studies
+  did not recur               A021 showed a direction that R2 did not show
+  not comparable              measured, but not with a comparable definition in both studies
+  not tested                  not measured in either study
 
 Deterministic output; stdlib only. No p-values, intervals or cross-study means.
 
@@ -56,7 +61,19 @@ SHORT_NAMES: Mapping[str, str] = MappingProxyType({
     "D5": "Error/JSON/exit contract",
     "D6": "Mutation/concurrency model",
     "D7": "Reuse of baseline rules",
-    "D8": "Incompatible duplicates in feature"})
+    "D8": "Duplicate definitions inside the feature"})
+
+# Construct split requested by review: cross-item consistency vs. per-verb correctness and reuse.
+CONSISTENCY_DIMS = ("D1", "D2", "D3", "D5", "D6", "D8")
+CORRECTNESS_DIMS = ("D4", "D7")
+
+# Behavioral differences backed by a runtime probe in the audit (architecture-findings.md, probe table:
+# P2 -> D2/D7, P4/P6/P7 -> D5, concurrent create -> D6). Other behavioral codes rest on code reading.
+PROBED_DIMS = frozenset({"D2", "D5", "D6", "D7"})
+
+# Independent-arm differences that follow the acceptance criteria literally: only item 3 (add) requires the
+# execution-repository check; item 1 (create) does not (acceptance-criteria.txt in the artifact).
+SPEC_LITERAL = frozenset({("A021", "D2", "independent"), ("R2", "D2", "independent")})
 
 
 # --------------------------------------------------------------------------
@@ -78,17 +95,6 @@ def dimensions(arch: Mapping[str, Any]) -> tuple[str, ...]:
     return tuple(d["id"] for d in arch["rubric"]["dimensions"])
 
 
-def tally(arch: Mapping[str, Any], study: str) -> Mapping[str, int]:
-    cs = tuple(c for c in arch["comparisons"] if c["study"] == study)
-    return MappingProxyType({
-        "groupedMore": sum(c["direction"] == "grouped_more_unified" for c in cs),
-        "groupedBeh": sum(c["direction"] == "grouped_more_unified" and c["behavioral_difference"] for c in cs),
-        "indepMore": sum(c["direction"] == "independent_more_unified" for c in cs),
-        "mixed": sum(c["direction"] == "mixed" for c in cs),
-        "equivalent": sum(c["direction"] == "equivalent" for c in cs),
-    })
-
-
 def word(n: int) -> str:
     return ("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten")[n] if 0 <= n <= 10 else str(n)
 
@@ -98,42 +104,44 @@ def word(n: int) -> str:
 # --------------------------------------------------------------------------
 
 def arch_cells(cmp_: Mapping[str, Any], stale: frozenset, study: str, dim: str) -> str:
-    dag = "$^{\\dagger}$"
-    g = CATEGORY_ABBR[cmp_["grouped_category"]] + (dag if (study, dim, "grouped") in stale else "")
-    i = CATEGORY_ABBR[cmp_["independent_category"]] + (dag if (study, dim, "independent") in stale else "")
-    d = DIRECTION_ABBR[cmp_["direction"]] + ("$^{b}$" if cmp_["behavioral_difference"] else "")
-    return f"{g}/{i} & {d}"
+    def mark(arm: str) -> str:
+        return (("$^{\\dagger}$" if (study, dim, arm) in stale else "") +
+                ("$^{s}$" if (study, dim, arm) in SPEC_LITERAL else ""))
+    g = CATEGORY_ABBR[cmp_["grouped_category"]] + mark("grouped")
+    i = CATEGORY_ABBR[cmp_["independent_category"]] + mark("independent")
+    kind = ("" if not cmp_["behavioral_difference"] else "$^{p}$" if dim in PROBED_DIMS else "$^{c}$")
+    return f"{g}/{i} & {DIRECTION_ABBR[cmp_['direction']]}{kind}"
 
 
 def architecture_matrix(arch: Mapping[str, Any]) -> str:
     cs, stale = comparisons(arch), stale_sensitive(arch)
-    rows = "\n".join(
-        f"{dim} {SHORT_NAMES[dim]} & " + " & ".join(arch_cells(cs[(s, dim)], stale, s, dim) for s in STUDIES) + " \\\\"
-        for dim in dimensions(arch))
-    t = {s: tally(arch, s) for s in STUDIES}
-    summary = "\n".join(
-        f"\\multicolumn{{5}}{{@{{}}l}}{{{s} tally: G more unified {t[s]['groupedMore']} "
-        f"({t[s]['groupedBeh']} behavioral), I more unified {t[s]['indepMore']}, mixed {t[s]['mixed']}, "
-        f"equivalent {t[s]['equivalent']}}} \\\\" for s in STUDIES)
+    def block(title: str, dims: Sequence[str]) -> str:
+        return (f"\\multicolumn{{5}}{{@{{}}l}}{{\\textit{{{title}}}}} \\\\\n" +
+                "\n".join(f"{dim} {SHORT_NAMES[dim]} & " +
+                          " & ".join(arch_cells(cs[(s, dim)], stale, s, dim) for s in STUDIES) + " \\\\"
+                          for dim in dims))
+    rows = block("Cross-item consistency", CONSISTENCY_DIMS) + "\n" + block("Per-verb correctness and reuse", CORRECTNESS_DIMS)
     notes = ("Cells: grouped/independent category. U unified; DC duplicated-compatible; Dv divergent; Mi missing. "
-             "Direction: G grouped more unified; I independent more unified; mixed; eq equivalent. "
-             "$^{b}$: the arms differ in observable behavior (otherwise the difference is organizational only). "
-             "$^{\\dagger}$: the finding comes from an item whose session started from a stale checkout. "
-             "Rubric applied after unblinding by one auditor; no inter-rater reliability.")
+             "Direction: G or I, the arm whose verbs agree more (consistency rows) or that meets the rule "
+             "(correctness rows); eq equivalent. Behavioral difference shown by a runtime probe ($^{p}$) or "
+             "by code reading only ($^{c}$); no mark: organization only. $^{\\dagger}$: comes from an item "
+             "whose session started from a stale checkout. $^{s}$: matches the acceptance criteria, which "
+             "require the repository check at add but not at create. Unified means consistent across verbs, "
+             "not correct. Rubric written and applied after unblinding by one AI auditor; no second coder.")
     return (HEADER +
             "\\begin{table}[t]\n\\centering\n\\scriptsize\n\\setlength{\\tabcolsep}{3pt}\n"
-            "\\caption{Architecture rubric: category per arm and direction per study}\n"
+            "\\caption{Post hoc architecture rubric: category per arm and direction per study}\n"
             "\\label{tab:architecture}\n"
-            "\\begin{tabular}{@{}p{0.40\\columnwidth}cccc@{}}\n\\hline\n"
+            "\\begin{tabular}{@{}p{0.44\\columnwidth}cccc@{}}\n\\hline\n"
             " & \\multicolumn{2}{c}{A021} & \\multicolumn{2}{c}{R2} \\\\\n"
             "Dimension & G/I & Dir. & G/I & Dir. \\\\\n\\hline\n"
-            f"{rows}\n\\hline\n{summary}\n\\hline\n\\end{{tabular}}\n\n"
+            f"{rows}\n\\hline\n\\end{{tabular}}\n\n"
             f"\\vspace{{2pt}}\\parbox{{\\columnwidth}}{{\\scriptsize {notes}}}\n"
             "\\end{table}\n")
 
 
 # --------------------------------------------------------------------------
-# Replication matrix
+# Recurrence matrix
 # --------------------------------------------------------------------------
 
 class Rep(NamedTuple):
@@ -152,30 +160,40 @@ def row_index(metrics: Mapping[str, Any]) -> Mapping[tuple[str, str, str, str], 
     return MappingProxyType({(r["study"], r["arm"], r["unit"], r["metric"]): r for r in metrics["rows"]})
 
 
-def sign_word(reduction: Optional[float], fewer: str) -> Optional[str]:
-    if reduction is None:
-        return None
-    return f"G {fewer}" if reduction > 0 else ("I " + fewer if reduction < 0 else "equal")
-
-
 def status_from(a: Optional[str], b: Optional[str]) -> str:
-    if a is None or b is None:
+    if a is None and b is None:
         return "not tested"
-    if "mixed" in (a, b):
-        return "mixed"
-    return "reproduced" if a == b else "not reproduced"
+    if a is None or b is None:
+        return "not comparable"
+    if a == "mixed" and b == "mixed":
+        return "mixed in both"
+    return "recurred" if a == b else "did not recur"
 
 
-def resource_rep(dix: Mapping, label: str, metric: str, fewer: str, family: str) -> Rep:
+def resource_rep(dix: Mapping, label: str, metric: str) -> Rep:
     def cell(study: str) -> tuple[Optional[str], str]:
         d = dix.get((study, W, metric))
         if d is None or d["ratio_independent_over_grouped"] is None:
             return None, "n/a"
-        mark = "" if d["completeness"] == "complete" else "$^{\\ast}$"
-        direction = sign_word(d["reduction_grouped_vs_independent"], fewer)
-        return direction, f"{direction}, {d['ratio_independent_over_grouped']:.2f}{mark}"
+        red = d["reduction_grouped_vs_independent"]
+        direction = "G lower" if red > 0 else "I lower" if red < 0 else "equal"
+        return direction, f"{direction}, I/G {d['ratio_independent_over_grouped']:.1f}"
     (da, ca), (db, cb) = cell("A021"), cell("R2")
-    return Rep(family, label, ca, cb, status_from(da, db))
+    return Rep("Resources (worker-only)", label, ca, cb, status_from(da, db))
+
+
+def lower_bound_rep(rix: Mapping, label: str, metric: str) -> Rep:
+    def cell(study: str) -> tuple[Optional[str], str]:
+        g = rix.get((study, "grouped", W, metric))
+        i = rix.get((study, "independent", W, metric))
+        if g is None or i is None or g["value"] is None or i["value"] is None:
+            return None, "n/a"
+        direction = "G fewer" if g["value"] < i["value"] else "I fewer" if i["value"] < g["value"] else "equal"
+        return direction, f"{direction} ($\\geq${int(g['value'])} vs.\\ $\\geq${int(i['value'])})"
+    (da, ca), (db, cb) = cell("A021"), cell("R2")
+    status = status_from(da, db)
+    return Rep("Repeated context (lower bounds)", label, ca, cb,
+               status + " (lower bounds)" if status == "recurred" else status)
 
 
 def arch_rep(cs: Mapping, dim: str) -> Rep:
@@ -187,26 +205,25 @@ def arch_rep(cs: Mapping, dim: str) -> Rep:
         if c is None:
             return "n/a"
         d = DIRECTION_ABBR[c["direction"]]
-        text = {"G": "G", "I": "I", "eq": "equivalent", "mixed": "mixed"}.get(d, d)
+        text = {"eq": "equivalent"}.get(d, d)
         return text + (", beh." if c["behavioral_difference"] else ", org." if d in ("G", "I") else "")
-    da, db = direction("A021"), direction("R2")
-    status = ("not reproduced" if da in ("G", "I") and db not in (da, None) and db != "mixed"
-              else status_from(da, db))
-    return Rep("Architecture", f"{dim} {SHORT_NAMES[dim]}", cell("A021"), cell("R2"), status)
+    family = "Architecture: consistency" if dim in CONSISTENCY_DIMS else "Architecture: correctness/reuse"
+    return Rep(family, f"{dim} {SHORT_NAMES[dim]}", cell("A021"), cell("R2"),
+               status_from(direction("A021"), direction("R2")))
 
 
 def lc_rep(arch: Mapping[str, Any], label: str, ids: Sequence[str], arm: str) -> Rep:
     impls = frozenset(i for lc in arch["local_correctness"] if lc["id"] in ids for i in lc["implementations"])
     seen = {s: f"{s}-{arm}" in impls for s in STUDIES}
     cell = {s: ("observed" if seen[s] else "not observed") for s in STUDIES}
-    status = "reproduced" if all(seen.values()) else ("not reproduced" if seen["A021"] else "not tested")
+    status = "recurred" if all(seen.values()) else ("did not recur" if seen["A021"] else "not tested")
     return Rep("Local correctness", label, cell["A021"], cell["R2"], status)
 
 
-def count_rep(rix: Mapping, label: str, metric_by_study: Mapping[str, str]) -> Rep:
+def count_rep(rix: Mapping, label: str, metric: str) -> Rep:
     def pair(study: str) -> Optional[tuple[int, int]]:
-        g = rix.get((study, "grouped", ARM, metric_by_study[study]))
-        i = rix.get((study, "independent", ARM, metric_by_study[study]))
+        g = rix.get((study, "grouped", ARM, metric))
+        i = rix.get((study, "independent", ARM, metric))
         if g is None or i is None or g["value"] is None or i["value"] is None:
             return None
         return int(g["value"]), int(i["value"])
@@ -230,26 +247,25 @@ NOT_TESTED: tuple[tuple[str, str], ...] = (
 def replication_rows(arch: Mapping[str, Any], metrics: Mapping[str, Any]) -> tuple[Rep, ...]:
     dix, rix, cs = derived_index(metrics), row_index(metrics), comparisons(arch)
     resources = (
-        resource_rep(dix, "Platform cost (workers)", "cost_usd_platform", "lower", "Resources"),
-        resource_rep(dix, "Output tokens (workers)", "output_tokens_platform", "lower", "Resources"),
-        resource_rep(dix, "Cache-read tokens (workers)", "cache_read_tokens_platform", "lower", "Resources"),
-        resource_rep(dix, "Summed active session time", "active_session_sum_s", "lower", "Resources"),
-        resource_rep(dix, "Model requests (script)", "model_requests_transcript", "fewer", "Repeated context"),
-        resource_rep(dix, "File reads (script)", "file_reads_transcript", "fewer", "Repeated context"),
-        resource_rep(dix, "Searches (script)", "searches_transcript", "fewer", "Repeated context"),
-        resource_rep(dix, "Governance/planning reads (script)", "governance_reads_transcript", "fewer", "Repeated context"),
+        resource_rep(dix, "Platform cost", "cost_usd_platform"),
+        resource_rep(dix, "Summed active session time", "active_session_sum_s"),
+        resource_rep(dix, "Output tokens", "output_tokens_platform"),
+        resource_rep(dix, "Cache-read tokens", "cache_read_tokens_platform"),
     )
-    architecture = tuple(arch_rep(cs, dim) for dim in dimensions(arch))
+    repeated = (
+        lower_bound_rep(rix, "Model requests", "model_requests_transcript"),
+        lower_bound_rep(rix, "File reads", "file_reads_transcript"),
+        lower_bound_rep(rix, "Searches", "searches_transcript"),
+    )
+    architecture = tuple(arch_rep(cs, dim) for dim in (*CONSISTENCY_DIMS, *CORRECTNESS_DIMS))
     local = (
-        count_rep(rix, "Tests added", {"A021": "tests_added", "R2": "fsharp_tests_net_added"}),
-        count_rep(rix, "Confirmed acceptance defects",
-                  {"A021": "confirmed_acceptance_defects_r2", "R2": "confirmed_acceptance_defects_r2"}),
-        lc_rep(arch, "Grouped add admits external item (P2)", ("LC-01",), "grouped"),
+        count_rep(rix, "Net tests added vs.\\ baseline (count, not quality)", "fsharp_tests_net_added"),
+        count_rep(rix, "Confirmed acceptance defects", "confirmed_acceptance_defects_r2"),
         lc_rep(arch, "Grouped checkpoint does not reject blank decision", ("LC-05", "LC-06"), "grouped"),
-        lc_rep(arch, "Independent concurrent creates lose updates", ("LC-04",), "independent"),
+        lc_rep(arch, "Grouped concurrent creates fail under contention", ("LC-08",), "grouped"),
     )
     untested = tuple(Rep(f, o, "--", "--", "not tested") for f, o in NOT_TESTED)
-    return resources + architecture + local + untested
+    return resources + repeated + architecture + local + untested
 
 
 def replication_matrix(arch: Mapping[str, Any], metrics: Mapping[str, Any]) -> str:
@@ -259,17 +275,19 @@ def replication_matrix(arch: Mapping[str, Any], metrics: Mapping[str, Any]) -> s
         f"\\multicolumn{{4}}{{@{{}}l}}{{\\textit{{{fam}}}}} \\\\\n" +
         "\n".join(f"{r.outcome} & {r.a021} & {r.r2} & {r.status} \\\\" for r in reps if r.family == fam)
         for fam in families)
-    notes = ("G grouped; I independent. Resource and repeated-context cells give the direction and the "
-             "independent/grouped ratio; resource rows use worker-only platform figures (A021 definition). Script counts are lower bounds; $^{\\ast}$ marks a ratio of "
-             "lower-bound operands. Architecture rows: the arm that is more unified (Table~\\ref{tab:architecture}); "
-             "beh./org.: behavioral or organizational difference. Status is assigned mechanically: reproduced (same direction "
-             "in both studies), mixed (a mixed direction in either study), not reproduced (A021 direction absent in "
-             "R2), not tested (not measured in one or both studies). One execution per arm per study.")
+    notes = ("G grouped; I independent. Direction only: a recurred direction in two correlated single "
+             "executions of one setup is not a replication of an effect size. Resource rows: worker-only "
+             "platform figures, I/G ratio to one decimal. Repeated-context rows: both arms' script counts are "
+             "lower bounds, so the direction is listed but not counted as recurred evidence. Architecture rows: "
+             "the arm favored in Table~\\ref{tab:architecture}; beh./org.: behavioral or organizational "
+             "difference. The independent arm's lost update under concurrent creates is part of D6, and the "
+             "grouped arm's external-item admission (probe P2) is part of D7. Not comparable: measured in R2 "
+             "but with no comparable A021 tally.")
     return (HEADER +
             "\\begin{table}[t]\n\\centering\n\\scriptsize\n\\setlength{\\tabcolsep}{3pt}\n"
-            "\\caption{Replication matrix: was the A021 direction repeated in R2?}\n"
+            "\\caption{Recurrence matrix: did the A021 direction recur in the R2 re-execution?}\n"
             "\\label{tab:replication}\n"
-            "\\begin{tabular}{@{}p{0.33\\columnwidth}p{0.22\\columnwidth}p{0.22\\columnwidth}p{0.14\\columnwidth}@{}}\n"
+            "\\begin{tabular}{@{}p{0.31\\columnwidth}p{0.23\\columnwidth}p{0.23\\columnwidth}p{0.15\\columnwidth}@{}}\n"
             "\\hline\nOutcome & A021 & R2 & Status \\\\\n\\hline\n"
             f"{body}\n\\hline\n\\end{{tabular}}\n\n"
             f"\\vspace{{2pt}}\\parbox{{\\columnwidth}}{{\\scriptsize {notes}}}\n"
@@ -280,23 +298,13 @@ def replication_matrix(arch: Mapping[str, Any], metrics: Mapping[str, Any]) -> s
 # Macros
 # --------------------------------------------------------------------------
 
-def macros(arch: Mapping[str, Any], metrics: Mapping[str, Any]) -> str:
-    t = {s: tally(arch, s) for s in STUDIES}
-    prefix = {"A021": "ArchA", "R2": "ArchRtwo"}
-    reps = replication_rows(arch, metrics)
-    status_counts = {s: sum(r.status == s for r in reps) for s in ("reproduced", "mixed", "not reproduced", "not tested")}
+def macros(arch: Mapping[str, Any]) -> str:
+    n_fals = len(arch["falsification_attempts"])
     entries = (
-        *((f"{prefix[s]}{k[0].upper()}{k[1:]}", word(v), f"{s}: dimensions with direction {k}")
-          for s in STUDIES for k, v in t[s].items()),
         ("ArchDimensions", word(len(dimensions(arch))), "rubric dimensions"),
         ("ArchFindings", str(len(arch["findings"])), "coded findings (study x arm x dimension)"),
         ("ArchCitations", str(sum(len(f["evidence"]) for f in arch["findings"])), "code citations verified"),
-        ("ArchFalsificationAttempts", word(len(arch["falsification_attempts"])) if len(arch["falsification_attempts"]) <= 10
-         else str(len(arch["falsification_attempts"])), "falsification attempts"),
-        ("RepReproduced", str(status_counts["reproduced"]), "replication-matrix rows reproduced"),
-        ("RepMixed", str(status_counts["mixed"]), "replication-matrix rows mixed"),
-        ("RepNotReproduced", str(status_counts["not reproduced"]), "replication-matrix rows not reproduced"),
-        ("RepNotTested", str(status_counts["not tested"]), "replication-matrix rows not tested"),
+        ("ArchFalsificationAttempts", word(n_fals) if n_fals <= 10 else str(n_fals), "falsification attempts"),
     )
     bad = sorted(n for n, _, _ in entries if not n.isalpha())
     if bad:
@@ -308,7 +316,7 @@ def render(arch: Mapping[str, Any], metrics: Mapping[str, Any]) -> Mapping[str, 
     return MappingProxyType({
         "architecture-matrix.tex": architecture_matrix(arch),
         "replication-matrix.tex": replication_matrix(arch, metrics),
-        "architecture-macros.tex": macros(arch, metrics),
+        "architecture-macros.tex": macros(arch),
     })
 
 

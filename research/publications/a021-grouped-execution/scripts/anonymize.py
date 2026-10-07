@@ -146,6 +146,8 @@ def person_terms(identities: Iterable[Identity], remote_owners: Iterable[str]) -
         | {a.lower() for e in emails for a in account_from_email(e)}
         | {e.split("@", 1)[0] for e in emails if not GITHUB_NOREPLY_RE.match(e)}
     ))
+    # Account stems ("name1234" -> "name") also identify; keep stems of 5+ characters.
+    owners = tuple(sorted(set(owners) | {re.sub(r"\d+$", "", o) for o in owners if len(re.sub(r"\d+$", "", o)) >= 5}))
     full_names = tuple(sorted({p.name for p in people if " " in p.name.strip()}, key=str.lower))
     name_tokens = tuple(sorted(
         {tok for n in (p.name for p in people) for tok in re.split(r"\s+", n.strip()) if len(tok) >= 3}
@@ -366,17 +368,26 @@ HEX_TOKEN_RE = re.compile(r"(?<![0-9A-Za-z])[0-9a-f]{7,40}(?![0-9A-Za-z])")
 class AliasConfig:
     tokens: tuple[tuple[str, str], ...]  # (real, alias), same length, matched as substrings
     phrases: tuple[tuple[tuple[str, ...], tuple[str, ...]], ...]  # word-wise, same lengths
+    bounded: tuple[tuple[str, str], ...] = ()  # (real, alias): Capitalised/UPPER anywhere, lower only after a non-letter
 
 
 def alias_config(raw: Mapping) -> AliasConfig:
     tokens = tuple((r.lower(), a.lower()) for r, a in raw["token_aliases"])
+    bounded = tuple((r.lower(), a.lower()) for r, a in raw.get("bounded_token_aliases", ()))
     phrases = tuple((tuple(w.lower() for w in r), tuple(w.lower() for w in a)) for r, a in raw["phrase_aliases"])
-    bad = tuple(f"{r}->{a}" for r, a in tokens if len(r) != len(a)) + tuple(
+    bad = tuple(f"{r}->{a}" for r, a in tokens + bounded if len(r) != len(a)) + tuple(
         f"{' '.join(r)}->{' '.join(a)}" for r, a in phrases
         if len(r) != len(a) or any(len(x) != len(y) for x, y in zip(r, a)))
     if bad:
         raise ValueError(f"aliases must preserve length (byte offsets, padding, hunk geometry): {bad}")
-    return AliasConfig(tokens, phrases)
+    return AliasConfig(tokens, phrases, bounded)
+
+
+def bounded_regex(real: str) -> str:
+    """Case-sensitive: `Real` and `REAL` anywhere (camelCase / CONSTANT parts),
+    `real` only when not preceded by a letter (so `recordOk` is untouched)."""
+    cap, up = real[:1].upper() + real[1:], real.upper()
+    return f"(?-i:{re.escape(cap)}|{re.escape(up)}|(?<![A-Za-z]){re.escape(real)})"
 
 
 def case_like(source: str, alias: str) -> str:
@@ -403,22 +414,24 @@ def alias_rules(cfg: AliasConfig) -> tuple[Rule, ...]:
     token = tuple(Rule(f"alias-token:{i}", re.compile(re.escape(r), re.IGNORECASE),
                        (lambda alias: lambda m: case_like(m.group(0), alias))(a))
                   for i, (r, a) in enumerate(cfg.tokens, start=1))
-    return phrase + token
+    bounded = tuple(Rule(f"alias-bounded:{i}", re.compile(bounded_regex(r)),
+                         (lambda alias: lambda m: case_like(m.group(0), alias))(a))
+                    for i, (r, a) in enumerate(cfg.bounded, start=1))
+    return phrase + token + bounded
 
 
 def alias_collisions(texts: Iterable[str], cfg: AliasConfig) -> tuple[str, ...]:
     """Alias forms already present in the faithful corpus (the rename must be invertible)."""
-    probes = tuple((a, re.compile(re.escape(a), re.IGNORECASE)) for _, a in cfg.tokens) + tuple(
+    probes = tuple((a, re.compile(re.escape(a), re.IGNORECASE)) for _, a in cfg.tokens + cfg.bounded) + tuple(
         (" ".join(a), re.compile(phrase_regex(a), re.IGNORECASE)) for _, a in cfg.phrases)
     corpus = tuple(texts)
     return tuple(name for name, p in probes if any(p.search(t) for t in corpus))
 
 
 def hex_candidates(texts: Iterable[str]) -> tuple[str, ...]:
-    """Hex tokens that may be object ids. All-digit tokens shorter than 12 are
-    treated as numbers (dates, counters), not abbreviated SHAs."""
-    found = {m.group(0) for t in texts for m in HEX_TOKEN_RE.finditer(t)}
-    return tuple(sorted(t for t in found if not t.isdigit() or len(t) >= 12))
+    """Hex tokens (7-40 chars, including all-digit ones) that may be object ids;
+    only those that resolve in the repository are pseudonymised."""
+    return tuple(sorted({m.group(0) for t in texts for m in HEX_TOKEN_RE.finditer(t)}))
 
 
 def sha_pseudonym(index: int) -> str:
@@ -452,7 +465,7 @@ def review_rules(cfg: AliasConfig, smap: ShaMap) -> tuple[Rule, ...]:
 def review_denylist(cfg: AliasConfig, real_shas: Iterable[str]) -> dict:
     return {
         "review_literals": sorted({r for r, _ in cfg.tokens}),
-        "review_regexes": sorted({phrase_regex(r) for r, _ in cfg.phrases}),
+        "review_regexes": sorted({phrase_regex(r) for r, _ in cfg.phrases} | {bounded_regex(r) for r, _ in cfg.bounded}),
         "review_shas": sorted(set(real_shas)),
     }
 

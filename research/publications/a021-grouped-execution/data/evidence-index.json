@@ -3,7 +3,7 @@
     {
       "caveats": "Prompt texts verified for A021; R2 prompts were not archived (deviation R-11), so R2 treatment wording is known only from the run record.",
       "claim_id": "C01",
-      "claim_text": "The grouped arm is one session for all five items with a mandated, committed up-front cross-item analysis; the independent arm is five fresh sessions run serially on one shared branch whose prompts name only their own item and never mention the cohort.",
+      "claim_text": "Arm G is one session for all five items with a mandated, committed up-front cross-item analysis; arm I is five fresh sessions run serially on one shared branch whose prompts name one item, do not frame the items as a cohort and request no cross-item analysis (they do name G's branch as one not to read).",
       "classification": "observed",
       "confidence": "high",
       "extraction_method": "read frozen prompt texts and protocol",
@@ -41,8 +41,7 @@
         "Abstract",
         "I",
         "V-A",
-        "XI",
-        "X"
+        "XI"
       ],
       "source_artifacts": [
         {
@@ -104,7 +103,7 @@
       "extraction_method": "GitHub push log timestamps compared with branch creation (validity audit)",
       "manuscript_sections": [
         "I",
-        "V-B"
+        "V-C"
       ],
       "source_artifacts": [
         {
@@ -151,7 +150,7 @@
       "extraction_method": "commit-history inspection and evaluator self-reports",
       "manuscript_sections": [
         "Abstract",
-        "V-D",
+        "V-E",
         "XI"
       ],
       "source_artifacts": [
@@ -191,7 +190,7 @@
       "extraction_method": "read findings.json and server-side push order",
       "manuscript_sections": [
         "Abstract",
-        "V-D",
+        "V-E",
         "XI"
       ],
       "source_artifacts": [
@@ -215,14 +214,14 @@
     {
       "caveats": "Taxonomy verified only at search-index depth; R2 is a correlated resample of the same setup.",
       "claim_id": "C08",
-      "claim_text": "R2 is an internal close (operational) replication: same organisation, baseline, cohort, criteria and implementing model; new executions; changed evaluator; not separately preregistered; prompts differ and were not archived.",
+      "claim_text": "R2 is an internal, non-preregistered re-execution (operational replication in the sense of Gomez et al., with deviations): same organisation, baseline, cohort, criteria and implementing model; new executions; changed evaluator, prompts (not archived), harness note, orchestration and metric definitions.",
       "classification": "observed",
       "confidence": "high",
       "extraction_method": "record comparison; taxonomy from Gomez et al.",
       "manuscript_sections": [
         "Abstract",
         "I",
-        "V-C"
+        "V-D"
       ],
       "source_artifacts": [
         {
@@ -255,7 +254,7 @@
       "confidence": "high",
       "extraction_method": "branch creation timestamps vs A021 arm completion; analysis headings",
       "manuscript_sections": [
-        "V-C",
+        "V-D",
         "XI"
       ],
       "source_artifacts": [
@@ -274,7 +273,7 @@
     {
       "caveats": "Raw identifier deliberately not printed in the paper.",
       "claim_id": "C10",
-      "claim_text": "All implementation sessions used one fixed Claude model through the Claude Code remote runtime; identifier recorded per session; each session had its own container.",
+      "claim_text": "All implementation sessions ran a Claude Opus-family model through the Claude Code remote runtime in their own containers; identifier recorded per session; runtime version recorded only for R2.",
       "classification": "observed",
       "confidence": "high",
       "extraction_method": "read per-session model fields",
@@ -302,7 +301,7 @@
     {
       "caveats": "Single execution; includes two failed attempts (see C17); platform/runtime-specific pricing.",
       "claim_id": "C11",
-      "claim_text": "A021 worker-only platform cost: grouped vs independent, ratio and reduction as in macros AcostGrouped/AcostIndep/AcostRatio/AcostReduction.",
+      "claim_text": "A021 worker-only platform cost G vs I (AcostGrouped/AcostIndep) and ratio about AcostRatio.",
       "classification": "observed",
       "confidence": "high",
       "extraction_method": "sum of per-session get_session cost (extract_metrics.py), verified by verify_metrics.py",
@@ -332,7 +331,7 @@
     {
       "caveats": "Original records say 112 min; recomputed 111 min 22 s (CF-03).",
       "claim_id": "C12",
-      "claim_text": "A021 summed active session time (workers) grouped vs independent and its reduction (AactiveMinGrouped/AactiveMinIndep/AactiveReduction).",
+      "claim_text": "A021 summed active session time G vs I and ratio about AactiveRatio.",
       "classification": "observed",
       "confidence": "high",
       "extraction_method": "sum of session spans from sessions.json timestamps; blocked session ends at blockedAt",
@@ -362,7 +361,7 @@
     {
       "caveats": "Excludes the per-item orchestrator; the R2 record's 58.72% includes it (secondary).",
       "claim_id": "C13",
-      "claim_text": "R2 worker-only platform cost grouped vs independent, ratio and reduction (RtwoCostGrouped/RtwoCostIndep/RtwoCostRatio/RtwoCostReduction).",
+      "claim_text": "R2 worker-only platform cost G vs I and ratio about RtwoCostRatio.",
       "classification": "observed",
       "confidence": "high",
       "extraction_method": "sum of C1-C5 platform cost excluding the orchestrator C",
@@ -397,7 +396,7 @@
     {
       "caveats": "Different from the R2 record's 'elapsed' wall-clock span.",
       "claim_id": "C14",
-      "claim_text": "R2 summed active session time of workers and reduction (RtwoActiveMinGrouped/RtwoActiveMinIndep/RtwoActiveReduction).",
+      "claim_text": "R2 summed active session time of workers and ratio about RtwoActiveRatio.",
       "classification": "observed",
       "confidence": "high",
       "extraction_method": "sum of C1-C5 session spans",
@@ -455,7 +454,7 @@
     {
       "caveats": "A021 has no orchestrator-inclusive figure (shared orchestrator, unknown usage).",
       "claim_id": "C16",
-      "claim_text": "Secondary figures: R2 cost reduction including the per-item orchestrator, R2 common-start wall-clock span reduction, A021 wall-clock span including the permission block; spans are not comparable with summed time.",
+      "claim_text": "Secondary figures: R2 cost reduction incl. the per-item orchestrator (about RtwoCostInclOrchReduction%), R2 'elapsed' wall-clock reduction (about RtwoElapsedReduction%), A021 wall-clock span incl. the permission block; none used for comparison; the block inflates only wall-clock spans, not worker-only time or cost; five time definitions.",
       "classification": "observed",
       "confidence": "high",
       "extraction_method": "recomputed from run record and sessions.json",
@@ -490,14 +489,13 @@
     {
       "caveats": "Magnitude depends on inclusion rule.",
       "claim_id": "C17",
-      "claim_text": "Sensitivity S1: excluding the two failed A021 item-4 attempts, the cost and active-time reductions are AcostReductionExclFailed and AactiveReductionExclFailed; direction unchanged.",
+      "claim_text": "Sensitivity S1: excluding the stalled item-4 attempt 1, I used about AcostExclStalledRatio x cost and AactiveExclStalledRatio x active time; also excluding the bookkeeping-only session, about AcostExclNoCodeRatio x and AactiveExclNoCodeRatio x; direction unchanged.",
       "classification": "observed",
       "confidence": "high",
       "extraction_method": "build_tables.py excluded-sessions macro",
       "manuscript_sections": [
         "VIII-A",
-        "XI",
-        "X"
+        "XI"
       ],
       "source_artifacts": [
         {
@@ -520,7 +518,7 @@
     {
       "caveats": "Captured before final steps; A021 failed attempts have none; ratios of lower bounds are not bounds.",
       "claim_id": "C18",
-      "claim_text": "Transcript counts (model requests, file reads, searches, instruction reads) are lower bounds and were lower for grouped in both studies.",
+      "claim_text": "Script counts (requests, reads, searches) are lower bounds in both arms; A021 I counts miss the session that implemented item 4; directions only, smaller for G in both studies.",
       "classification": "observed",
       "confidence": "medium",
       "extraction_method": "session_metrics.py outputs summed per arm",
@@ -597,7 +595,7 @@
     {
       "caveats": "Rubric applied post-unblinding by one AI auditor; no inter-rater reliability; D3/D8 depend on stale item 5.",
       "claim_id": "C21",
-      "claim_text": "A021: grouped more unified on ArchAGroupedMore of eight dimensions, ArchAGroupedBeh with behavioral differences (D2, D3, D5, D6); probes reproduce create/add rule split, exit-code and envelope differences.",
+      "claim_text": "A021: G applied one rule where I behaved inconsistently on admission (D2, probe), error/exit contract (D5, probe) and write locking (D6, probe); show/checkpoint classification (D3) differs by code reading only; D1 and D8 differ in organization only.",
       "classification": "evaluated",
       "confidence": "medium",
       "extraction_method": "rubric coding with code citations and runtime probes (check_architecture_findings.py verifies citations)",
@@ -632,7 +630,7 @@
     {
       "caveats": "Smaller contrast than A021; same caveats as C21.",
       "claim_id": "C22",
-      "claim_text": "R2: grouped more unified on ArchRtwoGroupedMore dimensions, ArchRtwoGroupedBeh behavioral (D2, D5, D6); D3 and D8 equivalent.",
+      "claim_text": "R2: G applied one rule where I behaved inconsistently on admission (D2), error/exit contract (D5) and write locking (D6); D1 organization only; D3 and D8 equivalent.",
       "classification": "evaluated",
       "confidence": "medium",
       "extraction_method": "rubric coding with code citations and probes",
@@ -667,7 +665,7 @@
     {
       "caveats": "A021 D4 advantage comes from stale-start item 5.",
       "claim_id": "C23",
-      "claim_text": "Independent execution was better on checkpoint ownership validation (D4) in both studies.",
+      "claim_text": "I had stronger checkpoint ownership validation (D4) in both studies, as item 5's criteria require; in A021 this comes entirely from stale-start item 5.",
       "classification": "evaluated",
       "confidence": "high",
       "extraction_method": "code citations",
@@ -723,7 +721,7 @@
     {
       "caveats": "Probe run by the audit after unblinding.",
       "claim_id": "C25",
-      "claim_text": "Both independent arms used unlocked read-modify-write for create/add/remove; in a concurrent-create probe all processes reported success but only one group was stored.",
+      "claim_text": "Both I arms used unlocked read-modify-write; in a concurrent-create probe every I process reported success while only one group was stored.",
       "classification": "observed",
       "confidence": "high",
       "extraction_method": "8-process concurrent create probe",
@@ -752,8 +750,7 @@
       "confidence": "high",
       "extraction_method": "commit ancestry of introducing commits",
       "manuscript_sections": [
-        "VIII-B",
-        "X"
+        "VIII-B"
       ],
       "source_artifacts": [
         {
@@ -776,8 +773,7 @@
       "confidence": "medium",
       "extraction_method": "commit ancestry",
       "manuscript_sections": [
-        "IX",
-        "X"
+        "IX"
       ],
       "source_artifacts": [
         {
@@ -818,7 +814,7 @@
     {
       "caveats": "",
       "claim_id": "C29",
-      "claim_text": "The rubric audit coded ArchFindings findings with ArchCitations verified code citations, built all heads, ran probes and tested ArchFalsificationAttempts earlier statements; applied after unblinding by one AI auditor without inter-rater reliability.",
+      "claim_text": "The post hoc rubric audit coded ArchFindings findings with ArchCitations verified code citations, built all heads, ran probes for admission, error contract and concurrent creates, and tested ArchFalsificationAttempts earlier statements; one AI auditor, no second or human coder, no reliability estimate.",
       "classification": "observed",
       "confidence": "high",
       "extraction_method": "count from JSON; validator run",
@@ -846,7 +842,7 @@
     {
       "caveats": "Test count is not test quality; A021 and R2 count different things (work-group tests vs net F# tests).",
       "claim_id": "C30",
-      "claim_text": "Independent arms added more tests in both studies (A021 work-group tests; R2 net tests vs baseline); final passing counts as in macros.",
+      "claim_text": "I added more net tests vs the shared baseline in both studies; a count, not quality.",
       "classification": "evaluated",
       "confidence": "high",
       "extraction_method": "evaluator counts",
@@ -971,7 +967,7 @@
     {
       "caveats": "No weighting of defects was defined in advance; no composite score.",
       "claim_id": "C34",
-      "claim_text": "Neither arm was better on local correctness overall in either study; the outcome is a trade-off, not a 'beneficial' classification.",
+      "claim_text": "The arms cannot be ranked on local correctness: confirmed defects of different kinds in both, no agreed weighting; no 'beneficial' classification.",
       "classification": "inferred",
       "confidence": "medium",
       "extraction_method": "synthesis of C23, C24, C30-C33",
@@ -1008,7 +1004,7 @@
     {
       "caveats": "Status rule is ours; two correlated executions of one setup.",
       "claim_id": "C35",
-      "claim_text": "Replication matrix: counts of outcomes reproduced, mixed, not reproduced and not tested, assigned mechanically.",
+      "claim_text": "Recurrence matrix (direction only): resource direction, admission/error-contract/write-locking differences, D1 organization, I's D4 advantage, I's higher test counts, G's blank-decision handling and lock-contention failures recurred; D3 and D8 did not; D7 mixed in both; repeated-context counts lower bounds; defect counts not comparable.",
       "classification": "evaluated",
       "confidence": "medium",
       "extraction_method": "status rule applied by script",
@@ -1031,7 +1027,7 @@
     {
       "caveats": "Whether other per-item sessions hit unnoticed stale clones is unknown.",
       "claim_id": "C36",
-      "claim_text": "All four stale-checkout events (A021 items 2 and 5; R2 items 2 and 3) affected per-item sessions; a single cohort session cannot be affected.",
+      "claim_text": "All four stale-checkout events (A021 items 2 and 5; R2 items 2 and 3) affected I sessions; their cause is unknown.",
       "classification": "observed",
       "confidence": "high",
       "extraction_method": "session records and commit parents",
@@ -1065,12 +1061,12 @@
     {
       "caveats": "",
       "claim_id": "C37",
-      "claim_text": "A021 per-item item 4 needed three sessions: one stall, one abandoned after a permission-prompt block, then success; owner approval carried into later sessions.",
+      "claim_text": "A021 I needed seven sessions: attempt 1 stalled with nothing pushed; attempt 2 implemented and pushed item 4 then blocked on a permission prompt before bookkeeping and was abandoned; a third session did bookkeeping only; owner approval carried into later sessions.",
       "classification": "observed",
       "confidence": "high",
       "extraction_method": "session ledger",
       "manuscript_sections": [
-        "V-B",
+        "V-C",
         "XI",
         "Table VI"
       ],
@@ -1100,7 +1096,7 @@
       "confidence": "high",
       "extraction_method": "run records",
       "manuscript_sections": [
-        "V-C",
+        "V-D",
         "XI"
       ],
       "source_artifacts": [
@@ -1129,7 +1125,7 @@
       "confidence": "high",
       "extraction_method": "tree-hash comparison",
       "manuscript_sections": [
-        "V-D",
+        "V-E",
         "Table VI"
       ],
       "source_artifacts": [
@@ -1153,12 +1149,12 @@
     {
       "caveats": "",
       "claim_id": "C40",
-      "claim_text": "The first A021 evaluator ran on the implementers' model and its brief foregrounded 'one model of a declared group'; the second evaluator's model was not recorded.",
+      "claim_text": "The first A021 evaluator ran on the implementers' model family and its brief asked about 'one model of a declared group'; the second evaluator's model was not recorded.",
       "classification": "observed",
       "confidence": "high",
       "extraction_method": "session ledger and prompt",
       "manuscript_sections": [
-        "V-D",
+        "V-E",
         "XI"
       ],
       "source_artifacts": [
@@ -1182,7 +1178,7 @@
     {
       "caveats": "",
       "claim_id": "C41",
-      "claim_text": "The cohort author, experiment designer, orchestrator and analyst belong to one agent lineage; the cohort extends the planner's own grouping feature.",
+      "claim_text": "AI agents of the same product (Claude Code sessions) authored the cohort and designed, orchestrated, evaluated (A021) and audited the study; the cohort extends the planner's own grouping feature.",
       "classification": "observed",
       "confidence": "high",
       "extraction_method": "protocol text",
@@ -1254,7 +1250,7 @@
     {
       "caveats": "Untested.",
       "claim_id": "C44",
-      "claim_text": "Mechanism candidates (decisions made once, retained context, independent resolution of shared invariants, stale starts) are inferred and were formulated after A021 data were seen.",
+      "claim_text": "Mechanism candidates (decisions made once, retained context, literal per-item reading of criteria, stale starts) are inferred and were formulated after A021 data were seen.",
       "classification": "inferred",
       "confidence": "low",
       "extraction_method": "author interpretation",
@@ -1277,7 +1273,7 @@
     {
       "caveats": "41 of 57 references verified at search-index depth only; coverage of 2026 preprints incomplete.",
       "claim_id": "C45",
-      "claim_text": "No examined prior study measured whether separate agent sessions converged on the same cross-cutting architectural decisions together with cost and per-item correctness on one real cohort.",
+      "claim_text": "No examined prior study measured cross-item convergence of separate agent sessions together with cost and per-item correctness on one real cohort; 41 of 57 sources considered were checked only via search-engine records, not full text.",
       "classification": "inferred",
       "confidence": "low",
       "extraction_method": "literature search summarised in related-work.md",
@@ -1323,7 +1319,7 @@
     {
       "caveats": "Recommendations not evaluated.",
       "claim_id": "C47",
-      "claim_text": "Practical implications: cohort sessions need an explicit reuse inventory and a per-criterion verification pass; per-item sessions need shared invariants surfaced.",
+      "claim_text": "Practical implications: cohort sessions need a reuse inventory and a per-criterion verification pass; per-item sessions need shared invariants as a committed decision record; specifications should state cross-verb rules.",
       "classification": "inferred",
       "confidence": "low",
       "extraction_method": "derived from observed failure classes (C23, C24, C33)",
@@ -1341,7 +1337,7 @@
     {
       "caveats": "",
       "claim_id": "C48",
-      "claim_text": "One execution per arm per study; items within an execution are dependent; R2 is a correlated resample (both grouped arms changed the same files).",
+      "claim_text": "One execution per arm per study; items within an execution are dependent; R2 is a correlated resample (both G arms changed the same files); a recurred direction is not evidence of effect size or generality.",
       "classification": "observed",
       "confidence": "high",
       "extraction_method": "design facts and diff file lists",
@@ -1397,7 +1393,7 @@
     {
       "caveats": "",
       "claim_id": "C50",
-      "claim_text": "The audit corrected errors in the original records (platform cost 'unavailable', transcript tokens quoted as platform totals, undefined R2 headline reductions, inflated evaluator counts); two A021 sessions later report higher live usage and committed values are kept.",
+      "claim_text": "The audit corrected errors in the original records; two A021 sessions ran on after experiment work and report higher live usage; committed values are used.",
       "classification": "observed",
       "confidence": "high",
       "extraction_method": "record comparison",
@@ -1420,7 +1416,7 @@
     {
       "caveats": "Artifact is being finalised by another agent; contents must be re-checked before submission.",
       "claim_id": "C51",
-      "claim_text": "The anonymous artifact contains baseline snapshot, criteria, protocol, A021 prompts, blinded patches, evaluator briefs/reports/findings, per-session metrics, mappings, datasets, scripts and checksums; not transcripts or R2 prompts.",
+      "claim_text": "The anonymous artifact contains baseline snapshot, criteria, protocol, A021 prompts, blinded patches, evaluator briefs and outputs, per-session metrics, mappings, datasets and scripts with checksums; it lacks transcripts and R2 prompts; extraction scripts need the full repository history.",
       "classification": "observed",
       "confidence": "medium",
       "extraction_method": "artifact layout",
@@ -1436,8 +1432,312 @@
         },
         {
           "commit": null,
-          "locator": "Layout (git-ignored build output)",
-          "path": "research/publications/a021-grouped-execution/build/anonymous-artifact/README.md"
+          "locator": "Bundle layout section",
+          "path": "research/publications/a021-grouped-execution/artifact/README.md"
+        }
+      ]
+    },
+    {
+      "caveats": "Whether any session read the hypothesis or protocol is unknown (no transcripts).",
+      "claim_id": "C52",
+      "claim_text": "The baseline tree contained the hypothesis, the full A021 protocol and planner outputs; every item text named the experiment cohort, a shared requirements document and dependencies; I prompts named G's branch; transcripts absent, so exposure unknown; demand-characteristics threat for both arms, rated major; R2 prompts cannot be checked.",
+      "classification": "observed",
+      "confidence": "high",
+      "extraction_method": "git ls-tree of the baseline; item descriptions; prompt text",
+      "manuscript_sections": [
+        "Abstract",
+        "I",
+        "V-A",
+        "V-B",
+        "X",
+        "XI",
+        "Table V"
+      ],
+      "source_artifacts": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "locator": "present in baseline tree (git ls-tree)",
+          "path": "research/hypotheses/HY-ROS-2026-A028--grouped-execution-value.md"
+        },
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "locator": "present in baseline tree",
+          "path": "research/experiments/EX-ROS-2026-A021--grouped-versus-independent-execution.md"
+        },
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "locator": "PRAXIS-GROUP-01..05 descriptions (generated from the baseline backlog at 8b4ffa392e93b19bf39f6672a608954c934cb815)",
+          "path": ".ros/work/queue.json"
+        },
+        {
+          "commit": "bc5a8d8e99306264c77436d313c5d0caba1d9f32",
+          "locator": "whole file (control-01..05 identical except item ID)",
+          "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/control-01.txt"
+        },
+        {
+          "commit": null,
+          "locator": "R1 (verified by the lead)",
+          "path": "research/publications/a021-grouped-execution/reviews/review-hostile-1.md"
+        }
+      ]
+    },
+    {
+      "caveats": "Rubric scores D2 as consistency, not conformance or correctness.",
+      "claim_id": "C53",
+      "claim_text": "The acceptance criteria require the execution-repository check at add (item 3) but not at create (item 1); I's create/add asymmetry follows them literally; G generalized the rule, and its shared rule ignores the planner's external inference (probe P2).",
+      "classification": "observed",
+      "confidence": "high",
+      "extraction_method": "criteria text and probes",
+      "manuscript_sections": [
+        "Abstract",
+        "IV",
+        "VIII-B",
+        "IX",
+        "X"
+      ],
+      "source_artifacts": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "locator": "PRAXIS-GROUP-01..05 descriptions (generated from the baseline backlog at 8b4ffa392e93b19bf39f6672a608954c934cb815)",
+          "path": ".ros/work/queue.json"
+        },
+        {
+          "commit": "8a2da6830057bc2d68e3fe7312b6d32158be3565",
+          "locator": "findings F-*-D2; local_correctness LC-01",
+          "path": "research/publications/a021-grouped-execution/data/architecture-findings.json"
+        },
+        {
+          "commit": "8a2da6830057bc2d68e3fe7312b6d32158be3565",
+          "locator": "D2 note",
+          "path": "research/publications/a021-grouped-execution/architecture-findings.md"
+        }
+      ]
+    },
+    {
+      "caveats": "",
+      "claim_id": "C54",
+      "claim_text": "G serialized group writes but some concurrent creates failed under lock contention in both studies; A021-G's lock did not serialize with work checkpoint; R2-G read member facts before taking its lock.",
+      "classification": "observed",
+      "confidence": "high",
+      "extraction_method": "concurrent-create probe; code citations",
+      "manuscript_sections": [
+        "VIII-B",
+        "IX"
+      ],
+      "source_artifacts": [
+        {
+          "commit": "8a2da6830057bc2d68e3fe7312b6d32158be3565",
+          "locator": "local_correctness LC-08; findings F-*-G-D6",
+          "path": "research/publications/a021-grouped-execution/data/architecture-findings.json"
+        },
+        {
+          "commit": "8a2da6830057bc2d68e3fe7312b6d32158be3565",
+          "locator": "probe table; D6 note",
+          "path": "research/publications/a021-grouped-execution/architecture-findings.md"
+        }
+      ]
+    },
+    {
+      "caveats": "",
+      "claim_id": "C55",
+      "claim_text": "Preregistered hypothesis: weakened if the grouped arm loses quality; local quality was mixed, so at best weakly supported; the original record's 'clearly beneficial' classification is not adopted.",
+      "classification": "inferred",
+      "confidence": "medium",
+      "extraction_method": "comparison of frozen falsification rule with results",
+      "manuscript_sections": [
+        "V-C"
+      ],
+      "source_artifacts": [
+        {
+          "commit": "d3b499901cfd07c3f06105060042ebfe1e5a9fe0",
+          "locator": "Falsification",
+          "path": "research/hypotheses/HY-ROS-2026-A028--grouped-execution-value.md"
+        },
+        {
+          "commit": "370e0a4d8d8558ba8853531bcb18c4a4663bf2d1",
+          "locator": "'Conclusion' (later appended) and 'Falsification criteria'",
+          "path": "research/experiments/EX-ROS-2026-A021--grouped-versus-independent-execution.md"
+        },
+        {
+          "commit": "ae4eddd2fe55b4a7f7367958e96df1d69bffd8d4",
+          "locator": "threats[id=T12]",
+          "path": "research/publications/a021-grouped-execution/data/threats.json"
+        },
+        {
+          "commit": "4dc66dbe818086d5efb330586dcd74e95c6d6bbd",
+          "locator": "E11",
+          "path": "research/evidence/EV-ROS-2026-A074--a021-r2-evidence-errata.md"
+        }
+      ]
+    },
+    {
+      "caveats": "",
+      "claim_id": "C56",
+      "claim_text": "Planner predictions of order, critical path, conflict and safe concurrency held, the duration prediction failed; several preregistered measures were not collected and three protocol controls (patch-series evaluation input, isolation audit from event logs, log retention) were not followed.",
+      "classification": "observed",
+      "confidence": "high",
+      "extraction_method": "protocol text vs results",
+      "manuscript_sections": [
+        "V-C"
+      ],
+      "source_artifacts": [
+        {
+          "commit": "bc5a8d8e99306264c77436d313c5d0caba1d9f32",
+          "locator": "Results: Predictions",
+          "path": "research/experiments/EX-ROS-2026-A021--grouped-versus-independent-execution.md"
+        },
+        {
+          "commit": "ae4eddd2fe55b4a7f7367958e96df1d69bffd8d4",
+          "locator": "deviation register A10-A12",
+          "path": "research/publications/a021-grouped-execution/validity-audit.md"
+        },
+        {
+          "commit": "ae4eddd2fe55b4a7f7367958e96df1d69bffd8d4",
+          "locator": "threats[id=T24]",
+          "path": "research/publications/a021-grouped-execution/data/threats.json"
+        }
+      ]
+    },
+    {
+      "caveats": "Effect on evaluations unknown.",
+      "claim_id": "C57",
+      "claim_text": "One A021 I implementing session (item 2) later did evaluation-kit work; the R2 evaluator could reach the main branch with A021 conclusions and a G-derived implementation.",
+      "classification": "observed",
+      "confidence": "high",
+      "extraction_method": "live session summary; branch contents",
+      "manuscript_sections": [
+        "V-E",
+        "XI",
+        "XII",
+        "Table V"
+      ],
+      "source_artifacts": [
+        {
+          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "locator": "CF-07",
+          "path": "research/publications/a021-grouped-execution/data/metric-conflicts.json"
+        },
+        {
+          "commit": "287693c82dad0208fcb51810c688469082242b39",
+          "locator": "session record",
+          "path": "research/evidence/EV-ROS-2026-A066--a021-control-02-session-record.md"
+        },
+        {
+          "commit": "ae4eddd2fe55b4a7f7367958e96df1d69bffd8d4",
+          "locator": "threats[id=T09]",
+          "path": "research/publications/a021-grouped-execution/data/threats.json"
+        }
+      ]
+    },
+    {
+      "caveats": "",
+      "claim_id": "C58",
+      "claim_text": "The analysis plan, the 8-dimension rubric and the sensitivity analyses were written after both studies were unblinded; the plan had six dimensions and D7, D8 were added later.",
+      "classification": "observed",
+      "confidence": "high",
+      "extraction_method": "git log dates vs unblinding dates",
+      "manuscript_sections": [
+        "I",
+        "VII",
+        "XI"
+      ],
+      "source_artifacts": [
+        {
+          "commit": "cc7f32ea",
+          "locator": "first commit 2026-10-07, section 2",
+          "path": "research/publications/a021-grouped-execution/analysis-plan.md"
+        },
+        {
+          "commit": "8a2da6830057bc2d68e3fe7312b6d32158be3565",
+          "locator": "rubric",
+          "path": "research/publications/a021-grouped-execution/architecture-findings.md"
+        }
+      ]
+    },
+    {
+      "caveats": "",
+      "claim_id": "C59",
+      "claim_text": "G was instructed to analyze shared invariants and reusable abstractions and was then scored on cross-item consistency; treatment-outcome overlap is a major construct threat.",
+      "classification": "inferred",
+      "confidence": "high",
+      "extraction_method": "prompt vs rubric comparison",
+      "manuscript_sections": [
+        "V-A",
+        "X",
+        "XI"
+      ],
+      "source_artifacts": [
+        {
+          "commit": "bc5a8d8e99306264c77436d313c5d0caba1d9f32",
+          "locator": "whole file",
+          "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/grouped.txt"
+        },
+        {
+          "commit": "ae4eddd2fe55b4a7f7367958e96df1d69bffd8d4",
+          "locator": "threats[id=T01]",
+          "path": "research/publications/a021-grouped-execution/data/threats.json"
+        },
+        {
+          "commit": "ae4eddd2fe55b4a7f7367958e96df1d69bffd8d4",
+          "locator": "threats[id=T08]",
+          "path": "research/publications/a021-grouped-execution/data/threats.json"
+        }
+      ]
+    },
+    {
+      "caveats": "Size of the overhead unknown (no transcripts).",
+      "claim_id": "C60",
+      "claim_text": "Part of the resource gap is per-session overhead (toolchain installation, mandated instruction reads) repeated in each fresh session; it could not be separated.",
+      "classification": "inferred",
+      "confidence": "high",
+      "extraction_method": "harness note and prompts",
+      "manuscript_sections": [
+        "Abstract",
+        "VIII-A",
+        "IX",
+        "XI"
+      ],
+      "source_artifacts": [
+        {
+          "commit": "ae4eddd2fe55b4a7f7367958e96df1d69bffd8d4",
+          "locator": "threats[id=T14]",
+          "path": "research/publications/a021-grouped-execution/data/threats.json"
+        },
+        {
+          "commit": "ae4eddd2fe55b4a7f7367958e96df1d69bffd8d4",
+          "locator": "threats[id=T15]",
+          "path": "research/publications/a021-grouped-execution/data/threats.json"
+        },
+        {
+          "commit": "bc5a8d8e99306264c77436d313c5d0caba1d9f32",
+          "locator": "harness note",
+          "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/grouped.txt"
+        }
+      ]
+    },
+    {
+      "caveats": "Variance source verified only at search-index depth.",
+      "claim_id": "C61",
+      "claim_text": "Single executions: agent token use varies widely between identical runs (cited), and within A021's I arm single-session cost varied several-fold; a two-fold difference may lie within run-to-run variation.",
+      "classification": "inferred",
+      "confidence": "medium",
+      "extraction_method": "literature caveat and per-session rows",
+      "manuscript_sections": [
+        "Abstract",
+        "VIII-A",
+        "IX",
+        "XI"
+      ],
+      "source_artifacts": [
+        {
+          "commit": null,
+          "locator": "bai2026tokens (search-index depth only)",
+          "path": "research/publications/a021-grouped-execution/references.bib"
+        },
+        {
+          "commit": "0e7383d70b18e37757f447d19e76fb87f32b6fdf",
+          "locator": "A021 independent per-session cost_usd_platform rows",
+          "path": "research/publications/a021-grouped-execution/data/metrics.json"
         }
       ]
     }

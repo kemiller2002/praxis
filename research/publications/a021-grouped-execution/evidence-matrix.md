@@ -36,11 +36,20 @@ an observed fact.
 | A021 defect evidence: no eval-1 tally; kit labels 0 / 2 | C32 | eval 1; kit findings | Not blind |
 | Both grouped checkpoints fail to reject blank decisions | C33 | LC-05, LC-06; erratum E10 | — |
 | Local correctness mixed; trade-off, not "beneficial" | C34 | T12; AD-09; erratum E11 | Inferred synthesis |
-| Replication matrix statuses | C35 | `manuscript/tables/replication-matrix.tex` (generated) | Mechanical rule |
+| Recurrence matrix (direction only) | C35 | `manuscript/tables/replication-matrix.tex` (generated) | Mechanical rule |
 | Deviations, failed attempts, orchestrator, salt, evaluator model, role overlap, restarts | C37-C42 | validity-audit register; T03, T18, T19, T22, T23 | — |
 | Affinity follow-up blocked, not run | C43 | EV-A072; EX-A022 | Feasibility only |
 | Mechanism candidates, novelty, implications | C44-C47 | T21; related-work.md; architecture findings | Inferred, low confidence |
 | n = 1 per cell; correlated resample | C48 | T06 | No inference |
+| Workspace contamination: hypothesis, protocol, cohort labels in baseline and item texts | C52 | baseline tree; acceptance-criteria.txt; prompts | Demand characteristics, both arms, major |
+| I's create/add asymmetry follows the acceptance criteria | C53 | acceptance-criteria.txt; D2 findings; P2 | Consistency ≠ conformance ≠ correctness |
+| G lock-contention failures; lock gaps | C54 | LC-08; D6 notes | Reported next to I's lost update |
+| Preregistered hypothesis rule; predictions; uncollected measures; skipped controls | C55, C56 | HY-A028; protocol; T12, T24 | Hypothesis at best weakly supported |
+| I implementer later did kit work; R2 evaluator could reach main | C57 | CF-07; EV-A066; T09 | Role contamination |
+| Rubric, analysis plan and sensitivity analyses post hoc (6 → 8 dimensions) | C58 | analysis-plan.md history; architecture-findings.md | Exploratory |
+| Treatment-outcome overlap | C59 | grouped prompt; T01, T08 | Major construct threat |
+| Per-session overhead in the resource gap | C60 | T14, T15; harness note | Not separable |
+| Run-to-run variance caveat | C61 | bai2026tokens (search-index); per-session rows | Ratios are observations |
 | Reproducibility pipeline, corrections, artifact contents | C49-C51 | scripts; EV-A074; metric-conflicts.json; artifact manifest | Artifact still being finalised |
 
 ## Retired rows (superseded by the audits)

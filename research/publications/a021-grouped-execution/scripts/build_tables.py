@@ -5,6 +5,7 @@ Outputs (manuscript/tables/):
   resources-a021.tex  A021 resource and work metrics, grouped vs independent
   resources-r2.tex    R2 resource and work metrics, both orchestration definitions
   quality-counts.tex  test and defect counts per evaluation (counts only)
+  resources-compact.tex  both studies side by side, worker-only (short paper)
   macros.tex          \\newcommand for every number used in prose
 
 Every number comes from metrics.json; nothing is typed by hand. Plain
@@ -45,6 +46,8 @@ FMT: Mapping[str, Fmt] = MappingProxyType({
     "hmin": lambda v: f"{int(v) // 3600}:{round((int(v) % 3600) / 60):02d}",
     "hms": lambda v: (lambda s: f"{s // 3600}h{(s % 3600) // 60:02d}m{s % 60:02d}s")(int(round(v))),
     "ratio": lambda v: f"{v:.2f}",
+    "ratio1": lambda v: f"{v:.1f}",
+    "pct0": lambda v: f"{v * 100:.0f}",
     "ratio4": lambda v: f"{v:.4f}",
     "pct1": lambda v: f"{v * 100:.1f}",
     "pct2": lambda v: f"{v * 100:.2f}",
@@ -90,24 +93,24 @@ W, A, WO = "agg:workers", "agg:arm", "agg:workers+orchestration"
 
 A021_LINES: tuple[Line, ...] = (
     Line("Implementation sessions", "sessions_implementation", A, A, "int", None),
-    Line("Failed attempt sessions", "sessions_failed_attempt", A, A, "int", None),
+    Line("Extra item-4 sessions (attempts 1--2)", "sessions_failed_attempt", A, A, "int", None),
     Line("Cost, platform (USD)", "cost_usd_platform", W, W, "usd", W),
     Line("Output tokens, platform (k)", "output_tokens_platform", W, W, "ktok", W),
     Line("Cache-read tokens, platform (M)", "cache_read_tokens_platform", W, W, "mtok", W),
     Line("Cache-write tokens, platform (k)", "cache_write_tokens_platform", W, W, "ktok", W),
-    Line("Uncached input tokens, platform", "input_tokens_platform", W, W, "int", W),
+    Line("Uncached input tokens, platform", "input_tokens_platform", W, W, "int", None),
     Line("Active session time, sum (min)", "active_session_sum_s", W, W, "min", W),
-    Line("Wall-clock span, first start to last end (h:mm)", "wall_clock_span_s", W, W, "hmin", W),
+    Line("Wall-clock span, first start to last end (h:mm)", "wall_clock_span_s", W, W, "hmin", None),
     Line("Blocked on a permission prompt (min)", "blocked_time_s", W, W, "min", None),
     Line("Largest end-of-session context (k tokens)", "context_tokens_at_end_platform", W, W, "ktok", None),
-    Line("Model requests, script", "model_requests_transcript", W, W, "int", W),
-    Line("File reads, script", "file_reads_transcript", W, W, "int", W),
-    Line("Searches, script", "searches_transcript", W, W, "int", W),
-    Line("Build commands, script", "builds_transcript", W, W, "int", W),
-    Line("Test-run commands, script", "test_runs_transcript", W, W, "int", W),
-    Line("AGENTS.md reads, script", "agents_md_reads_transcript", W, W, "int", W),
-    Line("Governance/planning document reads, script", "governance_reads_transcript", W, W, "int", W),
-    Line("Time to first code change, summed (min)", "time_to_first_code_s", W, W, "min", W),
+    Line("Model requests, script", "model_requests_transcript", W, W, "int", None),
+    Line("File reads, script", "file_reads_transcript", W, W, "int", None),
+    Line("Searches, script", "searches_transcript", W, W, "int", None),
+    Line("Build commands, script", "builds_transcript", W, W, "int", None),
+    Line("Test-run commands, script", "test_runs_transcript", W, W, "int", None),
+    Line("AGENTS.md reads, script", "agents_md_reads_transcript", W, W, "int", None),
+    Line("Governance/planning document reads, script", "governance_reads_transcript", W, W, "int", None),
+    Line("Orientation before first code change, summed over sessions (min)", "time_to_first_code_s", W, W, "min", None),
     Line("Compactions", "compactions_transcript", W, W, "int", None),
     Line("Merges with conflicts", "merges_with_conflicts", A, A, "int", None),
     Line("Commits after baseline", "commits", A, A, "int", None),
@@ -124,16 +127,16 @@ R2_LINES: tuple[Line, ...] = (
     Line("Cache-read tokens, platform, incl.\\ orchestrator (M)", "cache_read_tokens_platform", WO, WO, "mtok", WO),
     Line("Cache-write tokens, platform, workers (k)", "cache_write_tokens_platform", W, W, "ktok", W),
     Line("Active session time, workers, sum (min)", "active_session_sum_s", W, W, "min", W),
-    Line("Wall-clock span, workers (h:mm)", "wall_clock_span_s", W, W, "hmin", W),
-    Line("Wall-clock span from common start, incl.\\ orchestrator (h:mm)", "wall_clock_span_from_common_start_s", WO, WO, "hmin", WO),
-    Line("Model requests, script", "model_requests_transcript", W, W, "int", W),
-    Line("File reads, script", "file_reads_transcript", W, W, "int", W),
-    Line("Searches, script", "searches_transcript", W, W, "int", W),
-    Line("Build commands, script", "builds_transcript", W, W, "int", W),
-    Line("Test-run commands, script", "test_runs_transcript", W, W, "int", W),
-    Line("AGENTS.md reads, script", "agents_md_reads_transcript", W, W, "int", W),
-    Line("Governance/planning document reads, script", "governance_reads_transcript", W, W, "int", W),
-    Line("Time to first code change, summed (min)", "time_to_first_code_s", W, W, "min", W),
+    Line("Wall-clock span, workers (h:mm)", "wall_clock_span_s", W, W, "hmin", None),
+    Line("Wall-clock span from common start, incl.\\ orchestrator (h:mm)", "wall_clock_span_from_common_start_s", WO, WO, "hmin", None),
+    Line("Model requests, script", "model_requests_transcript", W, W, "int", None),
+    Line("File reads, script", "file_reads_transcript", W, W, "int", None),
+    Line("Searches, script", "searches_transcript", W, W, "int", None),
+    Line("Build commands, script", "builds_transcript", W, W, "int", None),
+    Line("Test-run commands, script", "test_runs_transcript", W, W, "int", None),
+    Line("AGENTS.md reads, script", "agents_md_reads_transcript", W, W, "int", None),
+    Line("Governance/planning document reads, script", "governance_reads_transcript", W, W, "int", None),
+    Line("Orientation before first code change, summed over sessions (min)", "time_to_first_code_s", W, W, "min", None),
     Line("Compactions", "compactions_transcript", W, W, "int", None),
     Line("Merges with conflicts", "merges_with_conflicts", A, A, "int", None),
     Line("Commits after baseline", "commits", A, A, "int", None),
@@ -142,7 +145,7 @@ R2_LINES: tuple[Line, ...] = (
 QUALITY_LINES: tuple[tuple[str, str, str, str], ...] = (
     # label, study, metric, fmt
     ("A021: final F\\# tests passed", "A021", "fsharp_tests_passed_final", "int"),
-    ("A021: work-group tests added (evaluation 1)", "A021", "tests_added", "int"),
+    ("A021: net F\\# tests added vs.\\ baseline", "A021", "fsharp_tests_net_added", "int"),
     ("A021: acceptance rows partially met (evaluation 1)", "A021", "acceptance_rows_partially_met_eval1", "int"),
     ("A021: findings labelled defect (kit evaluation)", "A021", "findings_defect_kit", "int"),
     ("A021: findings labelled inconsistency (kit evaluation)", "A021", "findings_inconsistency_kit", "int"),
@@ -168,8 +171,8 @@ def line_tex(ix: Index, study: str, ln: Line) -> str:
     g = ix.rows.get((study, "grouped", ln.session_g or ln.unit_g, ln.metric))
     i = ix.rows.get((study, "independent", ln.session_i or ln.unit_i, ln.metric))
     d = ix.derived.get((study, ln.derived_unit, ln.metric)) if ln.derived_unit else None
-    ratio = dcell(d, "ratio_independent_over_grouped", "ratio") if ln.derived_unit else "--"
-    red = dcell(d, "reduction_grouped_vs_independent", "pct1") if ln.derived_unit else "--"
+    ratio = dcell(d, "ratio_independent_over_grouped", "ratio1") if ln.derived_unit else "--"
+    red = dcell(d, "reduction_grouped_vs_independent", "pct0") if ln.derived_unit else "--"
     return f"{ln.label} & {cell(g, ln.fmt)} & {cell(i, ln.fmt)} & {ratio} & {red} \\\\"
 
 
@@ -179,27 +182,29 @@ def resource_table(ix: Index, study: str, lines: Sequence[Line], caption: str, l
             "\\begin{table}[t]\n\\centering\n\\scriptsize\n"
             f"\\caption{{{caption}}}\n\\label{{{label}}}\n"
             "\\begin{tabular}{@{}p{0.44\\columnwidth}rrrr@{}}\n\\hline\n"
-            "Measure & Grouped & Indep. & I/G & Red.\\ (\\%) \\\\\n\\hline\n"
+            "Measure & G & I & I/G & Red.\\ (\\%) \\\\\n\\hline\n"
             f"{body}\n\\hline\n\\end{{tabular}}\n\n"
             f"\\vspace{{2pt}}\\parbox{{\\columnwidth}}{{\\scriptsize {notes}}}\n"
             "\\end{table}\n")
 
 
-A021_NOTES = ("Grouped: one session. Independent: five item sessions plus two failed item-04 attempts; the shared "
-              "orchestrator and the evaluator are excluded. Platform figures are whole-session get\\_session usage. "
-              "``Script'' figures come from each session's own session\\_metrics.py run, taken before its final "
-              "steps; the independent arm has none for the two failed attempts. I/G is the independent/grouped "
-              "ratio; Red.\\ is (independent$-$grouped)/independent. $\\geq$: lower bound. $^{\\ast}$: computed from "
-              "partial or lower-bound operands, so it is not a bound on the true value. Active time ends a "
-              "blocked session at the block; the wall-clock span includes orchestration gaps and the block. "
+A021_NOTES = ("G: one session. I: five item sessions plus two extra item-4 sessions (attempt 1 "
+              "stalled with nothing pushed; attempt 2 implemented and pushed item 4, then blocked on a permission "
+              "prompt; a third session did the bookkeeping); the shared orchestrator and the evaluator are excluded. "
+              "Platform figures are whole-session usage records. ``Script'' figures come from each session's own "
+              "metrics script, run before its final steps; there are none for attempts 1 and 2, so the independent "
+              "counts miss the session that implemented item 4. I/G is the independent/grouped ratio; Red.\\ is "
+              "(independent$-$grouped)/independent, whole percent. No contrast is computed for lower bounds "
+              "($\\geq$), wall-clock spans, orientation time (one onset versus five) or uncached input. Active time "
+              "ends a blocked session at the block; the wall-clock span includes orchestration gaps and the block. "
               "End-of-session context approximates the peak (no compactions).")
 
-R2_NOTES = ("Grouped: one session. Independent: five worker sessions (``workers'') and the arm's own orchestrator "
+R2_NOTES = ("G: one session. I: five worker sessions (``workers'') and the arm's own orchestrator "
             "session, which created the workers and waited for each one; ``incl.\\ orchestrator'' adds it. Only "
             "the workers rows are defined as in A021. The common-start span runs from the grouped session's "
             "creation to the orchestrator's last update; it is the R2 record's ``elapsed''. Script figures were "
             "captured before each session's final steps; one worker's build count is not recoverable. "
-            "Markers as in Table~\\ref{tab:resources-a021}.")
+            "Markers and contrasts as in Table~\\ref{tab:resources-a021}.")
 
 
 def quality_table(ix: Index) -> str:
@@ -212,8 +217,43 @@ def quality_table(ix: Index) -> str:
             "\\caption{Test and defect counts reported by each evaluation (counts only; see text for what each "
             "evaluation classified)}\n\\label{tab:quality-counts}\n"
             "\\begin{tabular}{@{}p{0.6\\columnwidth}rr@{}}\n\\hline\n"
-            "Measure & Grouped & Indep. \\\\\n\\hline\n"
+            "Measure & G & I \\\\\n\\hline\n"
             f"{body}\n\\hline\n\\end{{tabular}}\n\\end{{table}}\n")
+
+
+COMPACT_LINES: tuple[Line, ...] = (
+    Line("Cost, platform (USD)", "cost_usd_platform", W, W, "usd", W),
+    Line("Output tokens, platform (k)", "output_tokens_platform", W, W, "ktok", W),
+    Line("Cache-read tokens, platform (M)", "cache_read_tokens_platform", W, W, "mtok", W),
+    Line("Active session time, sum (min)", "active_session_sum_s", W, W, "min", W),
+    Line("Model requests, script", "model_requests_transcript", W, W, "int", None),
+    Line("File reads, script", "file_reads_transcript", W, W, "int", None),
+    Line("Searches, script", "searches_transcript", W, W, "int", None),
+)
+
+
+def compact_table(ix: Index) -> str:
+    """Both studies side by side, worker-only definition (short paper)."""
+    def cells(study: str, ln: Line) -> str:
+        g = ix.rows.get((study, "grouped", ln.unit_g, ln.metric))
+        i = ix.rows.get((study, "independent", ln.unit_i, ln.metric))
+        d = ix.derived.get((study, ln.derived_unit, ln.metric)) if ln.derived_unit else None
+        ratio = dcell(d, "ratio_independent_over_grouped", "ratio1") if ln.derived_unit else "--"
+        return f"{cell(g, ln.fmt)} & {cell(i, ln.fmt)} & {ratio}"
+    body = "\n".join(f"{ln.label} & {cells('A021', ln)} & {cells('R2', ln)} \\\\" for ln in COMPACT_LINES)
+    return (HEADER +
+            "\\begin{table}[t]\n\\centering\n\\scriptsize\n\\setlength{\\tabcolsep}{2.5pt}\n"
+            "\\caption{Worker-only resources and lower-bound repeated-context counts, one execution per arm}\n"
+            "\\label{tab:resources-compact}\n"
+            "\\begin{tabular}{@{}p{0.33\\columnwidth}rrrrrr@{}}\n\\hline\n"
+            " & \\multicolumn{3}{c}{A021} & \\multicolumn{3}{c}{R2} \\\\\n"
+            "Measure & G & I & I/G & G & I & I/G \\\\\n\\hline\n"
+            f"{body}\n\\hline\n\\end{{tabular}}\n\n"
+            "\\vspace{2pt}\\parbox{\\columnwidth}{\\scriptsize Workers: every session that worked on an arm's items, "
+            "including the extra item-4 sessions in A021; orchestrators and evaluators excluded. $\\geq$: lower bound "
+            "(script run before each session's final steps; no ratio computed). Single executions: ratios are "
+            "observations, not effect estimates.}\n"
+            "\\end{table}\n")
 
 
 # --------------------------------------------------------------------------
@@ -237,13 +277,22 @@ def derm(name: str, study: str, unit: str, metric: str, field: str, fmt: str, co
 
 
 def exclm(name: str, study: str, unit: str, metric: str, session_metric: str,
-          excluded: tuple[str, ...], fmt: str, comment: str) -> Macro:
-    """Sensitivity: grouped reduction after removing named independent sessions from the aggregate."""
-    return Macro(name, "excluded", (study, unit, metric, session_metric, excluded), fmt, comment)
+          excluded: tuple[str, ...], field: str, fmt: str, comment: str) -> Macro:
+    """Sensitivity: ratio or reduction after removing named independent sessions from the aggregate."""
+    return Macro(name, "excluded", (study, unit, metric, session_metric, excluded, field), fmt, comment)
+
+
+def exclpair(prefix: str, study: str, unit: str, metric: str, session_metric: str,
+             excluded: tuple[str, ...], what: str) -> tuple[Macro, ...]:
+    return (exclm(f"{prefix}Ratio", study, unit, metric, session_metric, excluded, "ratio", "ratio1",
+                  f"{what}, independent/grouped"),
+            exclm(f"{prefix}Reduction", study, unit, metric, session_metric, excluded, "reduction", "pct0",
+                  f"{what}, grouped reduction in percent"))
 
 
 G, I = "grouped", "independent"
-FAILED_A021 = ("control-04-attempt-1", "control-04-attempt-2")
+STALLED_A021 = ("control-04-attempt-1",)              # stalled, nothing pushed
+NO_CODE_A021 = ("control-04-attempt-1", "control-04")   # + attempt 3, bookkeeping only
 
 
 def arm_pair(prefix: str, study: str, unit: str, metric: str, fmt: str, what: str) -> tuple[Macro, ...]:
@@ -251,7 +300,7 @@ def arm_pair(prefix: str, study: str, unit: str, metric: str, fmt: str, what: st
             rowm(f"{prefix}Indep", study, I, unit, metric, fmt, f"{what}, independent"))
 
 
-def comparison(prefix: str, study: str, unit: str, metric: str, what: str, rfmt: str = "ratio", pfmt: str = "pct1") -> tuple[Macro, ...]:
+def comparison(prefix: str, study: str, unit: str, metric: str, what: str, rfmt: str = "ratio1", pfmt: str = "pct0") -> tuple[Macro, ...]:
     return (derm(f"{prefix}Ratio", study, unit, metric, "ratio_independent_over_grouped", rfmt, f"{what}, independent/grouped"),
             derm(f"{prefix}Reduction", study, unit, metric, "reduction_grouped_vs_independent", pfmt, f"{what}, grouped reduction in percent"))
 
@@ -282,7 +331,7 @@ MACROS: tuple[Macro, ...] = (
     *arm_pair("AfirstCodeMin", "A021", W, "time_to_first_code_s", "min", "A021 summed time to first code change, minutes"),
     *arm_pair("AcontextK", "A021", W, "context_tokens_at_end_platform", "ktok", "A021 largest end-of-session context, k tokens"),
     *arm_pair("Atests", "A021", A, "fsharp_tests_passed_final", "int", "A021 final F# tests passed"),
-    *arm_pair("AtestsAdded", "A021", A, "tests_added", "int", "A021 work-group tests added (evaluation 1)"),
+    *arm_pair("AtestsAdded", "A021", A, "fsharp_tests_net_added", "int", "A021 net F# tests added vs baseline"),
     *arm_pair("AkitDefects", "A021", A, "findings_defect_kit", "int", "A021 kit-evaluation defect findings"),
     *arm_pair("AmergeConflicts", "A021", A, "merges_with_conflicts", "int", "A021 merges with conflicts"),
     # R2 resources, A021-comparable definition (workers)
@@ -299,12 +348,12 @@ MACROS: tuple[Macro, ...] = (
     # R2 as reported (incl. orchestrator; common-start span)
     rowm("RtwoCostInclOrchIndep", "R2", I, WO, "cost_usd_platform", "usd", "R2 platform cost USD, independent incl. orchestrator"),
     rowm("RtwoOrchCostIndep", "R2", I, "control-orchestrator", "cost_usd_platform", "usd", "R2 independent-arm orchestrator cost USD"),
-    *comparison("RtwoCostInclOrch", "R2", WO, "cost_usd_platform", "R2 platform cost incl. orchestrator", "ratio4", "pct2"),
-    *comparison("RtwoOutputInclOrch", "R2", WO, "output_tokens_platform", "R2 output tokens incl. orchestrator", "ratio4", "pct2"),
-    *comparison("RtwoCacheReadInclOrch", "R2", WO, "cache_read_tokens_platform", "R2 cache-read incl. orchestrator", "ratio4", "pct2"),
+    *comparison("RtwoCostInclOrch", "R2", WO, "cost_usd_platform", "R2 platform cost incl. orchestrator", ),
+    *comparison("RtwoOutputInclOrch", "R2", WO, "output_tokens_platform", "R2 output tokens incl. orchestrator", ),
+    *comparison("RtwoCacheReadInclOrch", "R2", WO, "cache_read_tokens_platform", "R2 cache-read incl. orchestrator", ),
     rowm("RtwoElapsedGrouped", "R2", G, WO, "wall_clock_span_from_common_start_s", "hms", "R2 elapsed as reported, grouped"),
     rowm("RtwoElapsedIndep", "R2", I, WO, "wall_clock_span_from_common_start_s", "hms", "R2 elapsed as reported, independent"),
-    *comparison("RtwoElapsed", "R2", WO, "wall_clock_span_from_common_start_s", "R2 elapsed as reported (wall-clock incl. orchestration)", "ratio4", "pct2"),
+    *comparison("RtwoElapsed", "R2", WO, "wall_clock_span_from_common_start_s", "R2 elapsed as reported (wall-clock incl. orchestration)", ),
     *arm_pair("RtwoSessions", "R2", A, "sessions_implementation", "int", "R2 implementation sessions"),
     *arm_pair("RtwoModelRequests", "R2", W, "model_requests_transcript", "int", "R2 model requests (script)"),
     *arm_pair("RtwoFileReads", "R2", W, "file_reads_transcript", "int", "R2 file reads (script)"),
@@ -317,16 +366,21 @@ MACROS: tuple[Macro, ...] = (
     *arm_pair("RtwoDefects", "R2", A, "confirmed_acceptance_defects_r2", "int", "R2 confirmed acceptance defects"),
     *arm_pair("RtwoMergeConflicts", "R2", A, "merges_with_conflicts", "int", "R2 merges with conflicts"),
     rowm("BaselineTests", "A021", G, A, "fsharp_tests_preexisting", "int", "F# tests at the shared baseline"),
-    # Sensitivity S1: A021 without the two failed item-04 attempts
-    exclm("AcostReductionExclFailed", "A021", W, "cost_usd_platform", "cost_usd_platform", FAILED_A021, "pct1",
-          "A021 platform cost, grouped reduction in percent, excluding failed attempts"),
-    exclm("AactiveReductionExclFailed", "A021", W, "active_session_sum_s", "session_duration_s", FAILED_A021, "pct1",
-          "A021 active session time, grouped reduction in percent, excluding failed attempts"),
+    # Sensitivity S1 (primary): A021 without the stalled item-4 attempt 1 (nothing pushed)
+    *exclpair("AcostExclStalled", "A021", W, "cost_usd_platform", "cost_usd_platform", STALLED_A021,
+              "A021 platform cost excluding the stalled attempt"),
+    *exclpair("AactiveExclStalled", "A021", W, "active_session_sum_s", "session_duration_s", STALLED_A021,
+              "A021 active session time excluding the stalled attempt"),
+    # Sensitivity S1 (extreme): also without attempt 3 (bookkeeping only, no production code)
+    *exclpair("AcostExclNoCode", "A021", W, "cost_usd_platform", "cost_usd_platform", NO_CODE_A021,
+              "A021 platform cost excluding sessions without production code"),
+    *exclpair("AactiveExclNoCode", "A021", W, "active_session_sum_s", "session_duration_s", NO_CODE_A021,
+              "A021 active session time excluding sessions without production code"),
 )
 
 
 def excluded_reduction(ix: Index, study: str, unit: str, metric: str, session_metric: str,
-                       excluded: tuple[str, ...]) -> float:
+                       excluded: tuple[str, ...], field: str) -> float:
     def value(arm: str, u: str, met: str) -> float:
         r = ix.rows.get((study, arm, u, met))
         if r is None or r["value"] is None or r["completeness"] != "complete":
@@ -334,7 +388,7 @@ def excluded_reduction(ix: Index, study: str, unit: str, metric: str, session_me
         return r["value"]
     grouped = value(G, unit, metric)
     independent = value(I, unit, metric) - sum(value(I, u, session_metric) for u in excluded)
-    return (independent - grouped) / independent
+    return independent / grouped if field == "ratio" else (independent - grouped) / independent
 
 
 def macro_value(ix: Index, m: Macro) -> str:
@@ -366,12 +420,13 @@ def render(doc: Mapping[str, Any]) -> Mapping[str, str]:
     ix = index(doc)
     return MappingProxyType({
         "resources-a021.tex": resource_table(ix, "A021", A021_LINES,
-                                             "A021 resources and repeated work, grouped versus independent execution",
+                                             "A021 resources and repeated work, cohort (G) versus per-item (I) execution",
                                              "tab:resources-a021", A021_NOTES),
         "resources-r2.tex": resource_table(ix, "R2", R2_LINES,
-                                           "R2 resources and repeated work, grouped versus independent execution",
+                                           "R2 resources and repeated work, cohort (G) versus per-item (I) execution",
                                            "tab:resources-r2", R2_NOTES),
         "quality-counts.tex": quality_table(ix),
+        "resources-compact.tex": compact_table(ix),
         "macros.tex": macros_tex(ix),
     })
 

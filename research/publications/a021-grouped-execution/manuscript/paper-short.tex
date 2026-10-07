@@ -1,0 +1,111 @@
+\documentclass[10pt,conference]{IEEEtran}
+% SANER 2027 Short Papers and Posters: IEEEtran conference, no compsoc; 6 pages INCLUDING references.
+\usepackage{cite}
+\usepackage{amsmath}
+\usepackage{array}
+\usepackage{url}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,positioning}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{pdfauthor={},pdftitle={Cohort versus Per-Item Coding-Agent Execution of Coupled Work Items: Early Results},pdfsubject={},pdfkeywords={},pdfcreator={},pdfproducer={}}
+
+% Every result number in the prose comes from these generated files.
+\input{tables/macros.tex}
+\input{tables/architecture-macros.tex}
+
+\newcommand{\G}{G}
+\newcommand{\I}{I}
+
+\begin{document}
+
+\title{Cohort versus Per-Item Coding-Agent Execution of Coupled Work Items: Early Results from a Case Study and an Internal Re-Execution}
+
+\author{\IEEEauthorblockN{Anonymous Author(s)}\IEEEauthorblockA{Anonymous Institution(s)}}
+
+\maketitle
+
+\begin{abstract}
+Coding agents usually get one work item per fresh session, even when items share design decisions. We executed five coupled work items of an F\#/.NET command-line tool in two ways: \G, one session that first writes and commits a mandated cross-item analysis and then implements all items; and \I, five fresh sessions run serially on one branch, whose prompts neither frame the items as a cohort nor request cross-item analysis. % CLAIM: C01
+The arms differ in retained context and in the instructed analysis, and every session's repository contained the study's hypothesis and cohort labels. % CLAIM: C02 C52
+In an original study and an internal, non-preregistered re-execution (one execution per arm each), \I{} used about \AcostRatio$\times$ and \RtwoCostRatio$\times$ the worker-only platform cost of \G, a gap that includes per-session overhead and that single runs cannot separate from run-to-run variation. % CLAIM: C11 C13 C60 C61
+On a post hoc rubric coded by one AI auditor, \G{} applied one rule where \I{} diverged on member admission, the error and exit-code contract and write locking in both studies, although \I's admission difference follows the acceptance criteria; \I{} validated checkpoint ownership better. Both arms had defects. We report these as hypotheses for a preregistered three-arm study. % CLAIM: C21 C22 C53 C23 C34
+\end{abstract}
+
+% ======================================================================
+\section{Introduction}
+
+Issue-resolution benchmarks and common practice give an agent one work item per fresh session~\cite{jimenez2024swebench}. When items share a domain model, persistence and command conventions, separate sessions may settle those shared invariants differently; one long session may settle them once but lose per-item detail~\cite{liu2024lost}. That partitioning coupled work across agents changes outcomes is known~\cite{khatua2026cooperbench,ren2026coordination}, as is that grouping tasks in one call cuts cost~\cite{cheng2023batch}. We report early observations on a narrower, common partition: \emph{serial, non-communicating fresh sessions on one branch} versus \emph{one cohort session with a mandated analysis}, on real repository work, measuring cross-item consistency next to cost and per-item correctness, in two executions.
+
+\textbf{Related work.} CooperBench found that one agent implementing two coupled features outperformed two communicating agents~\cite{khatua2026cooperbench}; MSEval varies collaboration topology~\cite{ren2026coordination}; CAID finds that isolated workspaces with structured merging can beat a single agent~\cite{geng2026caid}. Carried-over state can also propagate errors~\cite{shen2026evocode}. Our split sessions differ from these: they run serially, do not communicate and share only the branch. Plan-then-execute prompting~\cite{wang2023plan} resembles our cohort arm's mandated analysis, which is one reason our treatment is a bundle. Reporting guidance for LLM-based SE studies asks for human validation~\cite{wagner2025towards}, which our rubric lacks.
+
+% ======================================================================
+\section{Study Design}
+
+\textbf{Subject and cohort.} The subject is an F\#/.NET command-line tool that governs repository work items and includes a planner that rates item affinity from explicit shared signals (paths, tags, dependencies). Five items add a \texttt{work group} command family: create (1), show (2), add (3), remove (4), checkpoint (5). The planner rated them high affinity and mutually conflicting, so \I's sessions ran serially. % CLAIM: C05
+Their acceptance criteria require the execution-repository check at add but not at create. % CLAIM: C53
+The items were written by AI agents of the product that designed and ran the study. % CLAIM: C41
+
+\textbf{Treatments.} All arms branch from one baseline commit (Fig.~\ref{fig:design}). All implementation sessions ran a Claude Opus-family model in the Claude Code remote runtime. % CLAIM: C03 C10
+\G's prompt requires reading every item and the planner's group explanation and, before any code change, committing an analysis of common architecture, shared invariants and reusable abstractions. \I's five prompts each name one item and request no cross-item analysis. % CLAIM: C01
+Because \G{} was asked for shared invariants and is then scored on them, the consistency outcome partly measures compliance with an instruction only \G{} received. % CLAIM: C59
+\textbf{Contamination.} The baseline every session checked out contained the hypothesis, the protocol and planner outputs; every item text named the experiment cohort and its dependencies; \I's prompts named \G's branch as one not to read. Transcripts were not retained, so exposure is unknown: a major demand-characteristics threat for both arms. % CLAIM: C52
+
+\begin{figure}[t]
+\centering
+\input{figures/design-flow.tex}
+\caption{Design of both studies: one execution per arm per study from one baseline.}
+\label{fig:design}
+\end{figure}
+
+\textbf{Studies.} The original study (A021) followed a protocol frozen before the arms. % CLAIM: C04
+Its \I{} arm needed seven sessions: item 4's first attempt stalled with nothing pushed; the second implemented the item and then blocked on a permission prompt; a third did bookkeeping. % CLAIM: C37
+The re-execution (R2) reused baseline, cohort, criteria and model, but changed the evaluator, prompts (not archived), orchestration and metric definitions; it was not preregistered and its designer knew A021's interim results. % CLAIM: C08 C09
+\textbf{Evaluation.} The A021 evaluations used neutral labels but were not effectively blind (arm names in commit history; an evaluator reported knowing the mapping). R2's evaluator, an OpenAI GPT-family model, was blind by self-report only. % CLAIM: C06 C07
+\textbf{Measures.} Worker-only platform cost and summed session time (all sessions that worked on an arm's items, without orchestrators or evaluators); transcript counts, which are lower bounds in both arms; and an eight-dimension rubric written after unblinding, coded by one AI auditor with code citations and runtime probes, with no second coder. % CLAIM: C11 C18 C58 C29
+We report no statistics: one execution per arm, dependent items.
+
+% ======================================================================
+\section{Results}
+
+\input{tables/resources-compact.tex}
+
+\textbf{Resources.} \I{} used about \AcostRatio$\times$ (A021) and \RtwoCostRatio$\times$ (R2) the worker-only cost of \G{} and about \AactiveRatio$\times$ and \RtwoActiveRatio$\times$ the summed session time (Table~\ref{tab:resources-compact}). % CLAIM: C11 C13 C12 C14
+Without A021's stalled attempt the cost ratio is about \AcostExclStalledRatio$\times$. % CLAIM: C17
+Part of the gap is per-session overhead (each fresh session installed the toolchain and read the instructions), and agent token use varies widely across identical runs~\cite{bai2026tokens}, so these are observations, not effect estimates. % CLAIM: C60 C61
+The lower-bound counts of requests, reads and searches were smaller for \G{} in both studies; no session compacted. % CLAIM: C18 C20
+
+\input{tables/architecture-matrix.tex}
+
+\textbf{Cross-item consistency.} In both studies \G{} used one admission rule for create and add, one coded error and exit-code contract, and serialized writes; \I{} checked the repository only at add (as the criteria specify), mixed error shapes and exit codes, and lost updates under concurrent creates while every process reported success (Table~\ref{tab:architecture}). % CLAIM: C21 C22 C25 C53
+\G's consistency is not correctness: its shared admission rule accepted an item the planner treats as external, and some of its concurrent creates failed under lock contention. % CLAIM: C24 C54
+Show/checkpoint classification and duplicate definitions differed only in A021, the former from code reading and both from an \I{} item that started from a stale checkout. % CLAIM: C21 C26
+
+\textbf{Correctness and reuse.} \I{} validated checkpoint ownership as item 5's criteria require, in both studies (in A021 only through the stale-start item); \G{} did not, and did not reject blank decisions. \I{} reused more existing baseline rules. % CLAIM: C23 C24 C33
+\I{} added \AtestsAddedIndep{} and \RtwoTestsAddedIndep{} net tests against \AtestsAddedGrouped{} and \RtwoTestsAddedGrouped{} for \G, a count, not quality. R2's blind evaluator confirmed \RtwoDefectsGrouped{} acceptance defects in each arm. We cannot rank the arms on local correctness. % CLAIM: C30 C31 C34
+
+\input{tables/replication-matrix.tex}
+
+\textbf{Recurrence.} The resource direction and the admission, error-contract and write-locking differences recurred in R2; so did \I's checkpoint advantage. The classification difference did not. R2's designer knew A021's results and its analysis anticipated the scored dimensions, so recurrence in two correlated single executions shows stability of one setup, not an effect size. % CLAIM: C35 C48
+
+% ======================================================================
+\section{Threats and Outlook}
+
+The treatment is a bundle whose instructed analysis overlaps the outcome; the rubric is post hoc and singly coded by an AI auditor; every session could read the hypothesis; all four stale checkouts hit \I{} sessions, cause unknown; the original evaluations were not blind; and AI agents of one product authored the items, ran and audited the study. % CLAIM: C02 C58 C52 C36 C06 C41
+The preregistered hypothesis is weakened by its own rule if quality is lost, and local quality was mixed, so it is at best weakly supported; we do not adopt the original record's favorable classification. % CLAIM: C55
+The planner's duration prediction failed, several preregistered measures were not collected, and the isolation audit from session logs was never done. % CLAIM: C56
+Further deviations: R2's \I{} arm had its own orchestrator (excluded from the worker-only figures); every session installed the toolchain; transcript counts were captured before each session's final steps; one A021 \I{} implementer later worked on the evaluation kit, and R2's evaluator could reach the main branch holding A021's conclusions; the R2 mapping commitment could not be verified, so the mapping was recovered from source-tree identity. % CLAIM: C38 C60 C18 C57 C39
+Evidence about other repositories or low-affinity work is absent: a planned affinity study is blocked at its repository gate and has not run. % CLAIM: C43
+Practically, a cohort session should get an inventory of existing rules to reuse and a per-criterion verification pass, and per-item sessions should get the shared invariants as a committed decision record~\cite{song2026crosscontext}. % CLAIM: C47
+Next is a preregistered three-arm study (cohort session; shared analysis then per-item sessions; per-item sessions without the analysis) with several executions per arm, pre-provisioned environments, human second coding and a repository the authors did not build.
+
+% ======================================================================
+\section*{Data Availability}
+An anonymous artifact (link withheld for review) contains the baseline snapshot, criteria, protocol, A021 prompts, blinded patches, evaluation outputs, per-session metrics, datasets and the scripts that generate every table and in-text number; it lacks transcripts and R2 prompts. % CLAIM: C51
+
+\section*{Acknowledgment of AI-Generated Content}
+Claude Code (Anthropic) was used for authoring the work items, orchestration, implementation (the study's subjects), the original evaluation, data extraction, auditing, related-work search and drafting this paper and its scripts; R2's evaluation used OpenAI ChatGPT. The human authors are responsible for the content. Most references were checked only against search-engine records of their authoritative pages.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

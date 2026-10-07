@@ -1,6 +1,9 @@
 {
   "schema": "a021-anonymous-artifact.sources/1",
-  "bundle_name": "anonymous-artifact",
+  "bundle_name": {
+    "review": "anonymous-artifact",
+    "faithful": "artifact-faithful"
+  },
   "source_date_epoch": 1790726400,
   "source_date_note": "2026-09-30T00:00:00Z, the A021 execution day; every tar entry carries this mtime",
   "baseline": {
@@ -375,10 +378,16 @@
       ".py"
     ],
     "bundle_dir": "analysis",
-    "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+    "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)",
+    "exclude_names": [
+      "check_manuscript.py"
+    ],
+    "exclude_note": "check_manuscript.py is a manuscript lint whose rules list the real identifiers it guards against; it is not evidence analysis"
   },
   "authored": {
-    "readme": "research/publications/a021-grouped-execution/artifact/README.md"
+    "readme": "research/publications/a021-grouped-execution/artifact/README.md",
+    "paper": "research/publications/a021-grouped-execution/manuscript/paper.tex",
+    "paper_note": "only the \\title is read, to keep the bundle README in step with the paper"
   },
   "mapping": {
     "a021": {
@@ -392,5 +401,61 @@
       "evidence": "r2/evaluation/POST-UNBLINDING-METRICS.txt (established after the blind report by exact file-blob identity with the original arm trees; the salted commitment in r2/mapping-commitment.sha256 could not be recomputed because the salt was not retained)"
     }
   },
-  "excluded_worktree_note": "data/metrics-sources.md is marked INTERNAL by its author (it names platform session identifiers) and is never bundled; data/venues.json and data/references-verification.json concern the manuscript, not the evidence"
+  "excluded_worktree_note": "data/metrics-sources.md (marked INTERNAL by its author: names platform session identifiers) and data/evidence-index.json (internal paths and record ids) are never bundled; data/venues.json and data/references-verification.json concern the manuscript, not the evidence",
+  "review": {
+    "token_aliases": [
+      [
+        "praxis",
+        "subjex"
+      ],
+      [
+        "echelon",
+        "acmelab"
+      ]
+    ],
+    "phrase_aliases": [
+      [
+        [
+          "repository",
+          "operating",
+          "system"
+        ],
+        [
+          "repository",
+          "lifecycle",
+          "engine"
+        ]
+      ],
+      [
+        [
+          "research",
+          "operating",
+          "system"
+        ],
+        [
+          "research",
+          "lifecycle",
+          "engine"
+        ]
+      ]
+    ],
+    "alias_note": "Substring, case-preserving (positional), same-length renames applied to every text file and every path in the review bundle, including the baseline tree, all four patches, prompts, protocol, evaluator outputs, raw metrics and datasets. Same length keeps byte offsets, column padding and patch hunk geometry unchanged. The build fails if any alias form already occurs in the faithful corpus. Bounded aliases (ordo, the name of a sibling tool from the same organisation) match Capitalised and UPPER forms anywhere but the lower-case form only after a non-letter, so unrelated identifiers such as recordOk are untouched.",
+    "retained_tokens": {
+      "ros / Ros / ROS": "Kept. A generic three-letter acronym shared with unrelated well-known software (and the record-id prefix EX-ROS-*), so it does not identify the system once its expansions 'repository operating system' (the system's former public repository name) and 'research operating system' (an earlier name) are aliased. Renaming it would touch every project, namespace and assembly name (Ros.Cli, Ros.Domain, Ros.Tests.dll) for no anonymity gain over the aliases above."
+    },
+    "sha_policy": "Every lowercase hex token of 7-40 characters (all-digit ones included; in this corpus every all-digit token that resolves is a genuine abbreviated object id) that resolves in the local object store (git cat-file --batch-check) is replaced by a same-length pseudonym; abbreviations of one object share the prefix of its 40-hex pseudonym. Ambiguous prefixes are pseudonymised per token.",
+    "expected_test_counts": {
+      "baseline": 792,
+      "a021/arm-x": 811,
+      "a021/arm-y": 829,
+      "r2/arm-M": 839,
+      "r2/arm-N": 819
+    },
+    "bounded_token_aliases": [
+      [
+        "ordo",
+        "nexa"
+      ]
+    ]
+  }
 }

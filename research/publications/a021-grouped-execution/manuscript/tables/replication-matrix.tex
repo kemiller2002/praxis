@@ -3,37 +3,36 @@
 \centering
 \scriptsize
 \setlength{\tabcolsep}{3pt}
-\caption{Replication matrix: was the A021 direction repeated in R2?}
+\caption{Recurrence matrix: did the A021 direction recur in the R2 re-execution?}
 \label{tab:replication}
-\begin{tabular}{@{}p{0.33\columnwidth}p{0.22\columnwidth}p{0.22\columnwidth}p{0.14\columnwidth}@{}}
+\begin{tabular}{@{}p{0.31\columnwidth}p{0.23\columnwidth}p{0.23\columnwidth}p{0.15\columnwidth}@{}}
 \hline
 Outcome & A021 & R2 & Status \\
 \hline
-\multicolumn{4}{@{}l}{\textit{Resources}} \\
-Platform cost (workers) & G lower, 2.27 & G lower, 2.10 & reproduced \\
-Output tokens (workers) & G lower, 2.18 & G lower, 1.78 & reproduced \\
-Cache-read tokens (workers) & G lower, 1.84 & G lower, 1.95 & reproduced \\
-Summed active session time & G lower, 1.82 & G lower, 1.80 & reproduced \\
-\multicolumn{4}{@{}l}{\textit{Repeated context}} \\
-Model requests (script) & G fewer, 2.08$^{\ast}$ & G fewer, 2.72$^{\ast}$ & reproduced \\
-File reads (script) & G fewer, 2.58$^{\ast}$ & G fewer, 2.68$^{\ast}$ & reproduced \\
-Searches (script) & G fewer, 3.00$^{\ast}$ & G fewer, 2.12$^{\ast}$ & reproduced \\
-Governance/planning reads (script) & G fewer, 2.50$^{\ast}$ & G fewer, 4.25$^{\ast}$ & reproduced \\
-\multicolumn{4}{@{}l}{\textit{Architecture}} \\
-D1 Persistence/store model & G, org. & G, org. & reproduced \\
-D2 Member admission (create vs.\ add) & G, beh. & G, beh. & reproduced \\
-D3 Member classification (show vs.\ checkpoint) & G, beh. & equivalent & not reproduced \\
-D4 Checkpoint ownership validation & I, beh. & I, beh. & reproduced \\
-D5 Error/JSON/exit contract & G, beh. & G, beh. & reproduced \\
-D6 Mutation/concurrency model & G, beh. & G, beh. & reproduced \\
-D7 Reuse of baseline rules & mixed, beh. & mixed, beh. & mixed \\
-D8 Incompatible duplicates in feature & G, org. & equivalent & not reproduced \\
+\multicolumn{4}{@{}l}{\textit{Resources (worker-only)}} \\
+Platform cost & G lower, I/G 2.3 & G lower, I/G 2.1 & recurred \\
+Summed active session time & G lower, I/G 1.8 & G lower, I/G 1.8 & recurred \\
+Output tokens & G lower, I/G 2.2 & G lower, I/G 1.8 & recurred \\
+Cache-read tokens & G lower, I/G 1.8 & G lower, I/G 2.0 & recurred \\
+\multicolumn{4}{@{}l}{\textit{Repeated context (lower bounds)}} \\
+Model requests & G fewer ($\geq$114 vs.\ $\geq$237) & G fewer ($\geq$126 vs.\ $\geq$343) & recurred (lower bounds) \\
+File reads & G fewer ($\geq$52 vs.\ $\geq$134) & G fewer ($\geq$69 vs.\ $\geq$185) & recurred (lower bounds) \\
+Searches & G fewer ($\geq$53 vs.\ $\geq$159) & G fewer ($\geq$98 vs.\ $\geq$208) & recurred (lower bounds) \\
+\multicolumn{4}{@{}l}{\textit{Architecture: consistency}} \\
+D1 Persistence/store model & G, org. & G, org. & recurred \\
+D2 Member admission (create vs.\ add) & G, beh. & G, beh. & recurred \\
+D3 Member classification (show vs.\ checkpoint) & G, beh. & equivalent & did not recur \\
+D5 Error/JSON/exit contract & G, beh. & G, beh. & recurred \\
+D6 Mutation/concurrency model & G, beh. & G, beh. & recurred \\
+D8 Duplicate definitions inside the feature & G, org. & equivalent & did not recur \\
+\multicolumn{4}{@{}l}{\textit{Architecture: correctness/reuse}} \\
+D4 Checkpoint ownership validation & I, beh. & I, beh. & recurred \\
+D7 Reuse of baseline rules & mixed, beh. & mixed, beh. & mixed in both \\
 \multicolumn{4}{@{}l}{\textit{Local correctness}} \\
-Tests added & I more (19 vs.\ 37) & I more (27 vs.\ 47) & reproduced \\
-Confirmed acceptance defects & no comparable tally & tie (2 vs.\ 2) & not tested \\
-Grouped add admits external item (P2) & observed & observed & reproduced \\
-Grouped checkpoint does not reject blank decision & observed & observed & reproduced \\
-Independent concurrent creates lose updates & observed & observed & reproduced \\
+Net tests added vs.\ baseline (count, not quality) & I more (19 vs.\ 37) & I more (27 vs.\ 47) & recurred \\
+Confirmed acceptance defects & no comparable tally & tie (2 vs.\ 2) & not comparable \\
+Grouped checkpoint does not reject blank decision & observed & observed & recurred \\
+Grouped concurrent creates fail under contention & observed & observed & recurred \\
 \multicolumn{4}{@{}l}{\textit{Generalization}} \\
 Other repository or feature family & -- & -- & not tested \\
 Low-affinity cohort (planned study blocked) & -- & -- & not tested \\
@@ -44,5 +43,5 @@ Retained context vs.\ mandated analysis separated & -- & -- & not tested \\
 \hline
 \end{tabular}
 
-\vspace{2pt}\parbox{\columnwidth}{\scriptsize G grouped; I independent. Resource and repeated-context cells give the direction and the independent/grouped ratio; resource rows use worker-only platform figures (A021 definition). Script counts are lower bounds; $^{\ast}$ marks a ratio of lower-bound operands. Architecture rows: the arm that is more unified (Table~\ref{tab:architecture}); beh./org.: behavioral or organizational difference. Status is assigned mechanically: reproduced (same direction in both studies), mixed (a mixed direction in either study), not reproduced (A021 direction absent in R2), not tested (not measured in one or both studies). One execution per arm per study.}
+\vspace{2pt}\parbox{\columnwidth}{\scriptsize G grouped; I independent. Direction only: a recurred direction in two correlated single executions of one setup is not a replication of an effect size. Resource rows: worker-only platform figures, I/G ratio to one decimal. Repeated-context rows: both arms' script counts are lower bounds, so the direction is listed but not counted as recurred evidence. Architecture rows: the arm favored in Table~\ref{tab:architecture}; beh./org.: behavioral or organizational difference. The independent arm's lost update under concurrent creates is part of D6, and the grouped arm's external-item admission (probe P2) is part of D7. Not comparable: measured in R2 but with no comparable A021 tally.}
 \end{table}
