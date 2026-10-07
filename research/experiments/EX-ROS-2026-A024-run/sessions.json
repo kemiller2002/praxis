@@ -104,7 +104,22 @@
         "START_SHA": "ddda83790b91d0f7e7c27b7b8cdc88bf330ad17d"
       },
       "attempt": 1,
-      "status": "running"
+      "status": "completed",
+      "headAfter": "9a6c64fc0bcb19c9fcd7004b743f45391343a1e4",
+      "terminalAt": "2026-10-07T17:55:54.057717Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 8.2724554,
+        "input_tokens": 192,
+        "output_tokens": 102006,
+        "cache_read_tokens": 19876197,
+        "cache_write_tokens": 282041,
+        "context_used_tokens": 310164,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.292",
+        "session_context_model": "claude-opus-5-5"
+      },
+      "note": "telemetry verified (sha256 5b706d07...); headAtCapture 28d70c4; isolation audit 0 events; arm A terminal"
     },
     {
       "label": "arm-3-02",
