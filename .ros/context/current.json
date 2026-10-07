@@ -4832,38 +4832,57 @@
     {
       "id": "PRAXIS-GROUP-02",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-07T20:53:12.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/GroupView.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/cli.md"
+        },
+        {
+          "type": "handoff",
+          "path": "research/experiments/EX-ROS-2026-A024-handoffs/PRAXIS-GROUP-02.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T21:01:56.000Z",
       "telemetryExecutionIds": [
         "EXE-20261007T205313216Z-837c943f"
       ],
       "latestCheckpoint": {
-        "id": "a35591f188b19c6c93f3ff7b",
-        "recordedAt": "2026-10-07T21:00:55.000Z",
+        "id": "23ccb6d627b00f7e0482c5e4",
+        "recordedAt": "2026-10-07T21:01:50.000Z",
         "executionId": "EXE-20261007T205313216Z-837c943f",
         "repository": "repository-operating-system",
         "branch": "experiment/a024-arm-3",
-        "commit": "25c2bade7f33c09eeb41966c660e0b14ecbe8469",
+        "commit": "b01dd407beb667e9d38f59a18a53a244406e001d",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
         "remoteBranch": "experiment/a024-arm-3",
-        "remoteCommit": "25c2bade7f33c09eeb41966c660e0b14ecbe8469",
-        "summary": "work group show implemented, tested (816/816), docs updated",
-        "nextAction": "write structured handoff PRAXIS-GROUP-02.json, then complete",
+        "remoteCommit": "b01dd407beb667e9d38f59a18a53a244406e001d",
+        "summary": "work group show implemented and pushed; handoff PRAXIS-GROUP-02.json validated and pushed",
+        "nextAction": "complete PRAXIS-GROUP-02 and commit Praxis state",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-07T21:01:56.000Z",
+      "conclusion": "work group show implemented. Verification: npm run build:fsharp -- -p:FSharpCoreImplicitPackageVersion=10.1.400 succeeded (0 warnings, 0 errors); dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll 816 tests, 816 passed, 0 failed (8 new show tests); ./ros validate passed; node differential tests 7 passed."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T20:53:12.000Z",
+  "updatedAt": "2026-10-07T21:01:56.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
