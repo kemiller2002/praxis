@@ -6863,62 +6863,152 @@
     {
       "id": "PRAXIS-MISC-02",
       "type": "development",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-07T00:46:38.172Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Planning/Replay.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/PlanningEvidenceTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/groups/GROUP-PRAXIS-PLANNING-002/group-verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T09:05:51.213Z",
       "telemetryExecutionIds": [
         "EXE-20261007T004639605Z-dae504bf"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "2fe9f5fbc66e1cd56c9e4282",
+        "recordedAt": "2026-10-07T09:05:49.106Z",
+        "executionId": "EXE-20261007T004639605Z-dae504bf",
+        "repository": "repository-operating-system",
+        "branch": "misc/planner",
+        "commit": "ff376c368d1caa4735b105a2db34b644d1560ffc",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "misc/planner",
+        "remoteCommit": "ff376c368d1caa4735b105a2db34b644d1560ffc",
+        "summary": "PLAN-020/081/152/162/170 implemented and tested; PR #201",
+        "nextAction": "Complete PRAXIS-MISC-02..06",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T09:05:51.213Z"
     },
     {
       "id": "PRAXIS-MISC-03",
       "type": "development",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-07T00:46:38.172Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Planning/Replay.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/PlanningEvidenceTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/groups/GROUP-PRAXIS-PLANNING-002/group-verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T09:05:53.508Z",
       "telemetryExecutionIds": [
         "EXE-20261007T004640744Z-f318ef38"
-      ]
+      ],
+      "completedAt": "2026-10-07T09:05:53.508Z"
     },
     {
       "id": "PRAXIS-MISC-04",
       "type": "development",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-07T00:46:38.172Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Planning/Replay.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/PlanningEvidenceTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/groups/GROUP-PRAXIS-PLANNING-002/group-verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T09:05:55.428Z",
       "telemetryExecutionIds": [
         "EXE-20261007T004642340Z-4ea14b9e"
-      ]
+      ],
+      "completedAt": "2026-10-07T09:05:55.428Z"
     },
     {
       "id": "PRAXIS-MISC-05",
       "type": "development",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-07T00:46:38.172Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Planning/Replay.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/PlanningEvidenceTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/groups/GROUP-PRAXIS-PLANNING-002/group-verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T09:05:57.179Z",
       "telemetryExecutionIds": [
         "EXE-20261007T004644873Z-91684beb"
-      ]
+      ],
+      "completedAt": "2026-10-07T09:05:57.179Z"
     },
     {
       "id": "PRAXIS-MISC-06",
       "type": "development",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-07T00:46:38.172Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Planning/Replay.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/PlanningEvidenceTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/groups/GROUP-PRAXIS-PLANNING-002/group-verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T09:05:58.938Z",
       "telemetryExecutionIds": [
         "EXE-20261007T004646694Z-06bd3834"
-      ]
+      ],
+      "completedAt": "2026-10-07T09:05:58.938Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T00:46:38.172Z",
+  "updatedAt": "2026-10-07T09:05:58.938Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
