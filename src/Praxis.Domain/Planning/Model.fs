@@ -649,6 +649,24 @@ type DeclaredArchitecture =
       Members: string list
       Statement: string }
 
+/// Where a member repository's Praxis state can be read (PRX-GRP-103): a
+/// local clone and the fetched ref to read from. Praxis never fetches,
+/// writes or commits there; it reads `REF:.ros/...` with `git show`.
+type RepositorySource =
+    { Repository: string
+      Path: string
+      /// The ref to read; `None` reads the clone's `origin/HEAD`.
+      Ref: string option }
+
+/// `grouping.crossRepository` (PRX-GRP-103, PRX-GRP-109).
+type CrossRepositoryConfiguration =
+    { MaxObservationAgeMinutes: int
+      Sources: RepositorySource list }
+
+[<RequireQualifiedAccess>]
+module CrossRepositoryConfiguration =
+    let defaults = { MaxObservationAgeMinutes = 1440; Sources = [] }
+
 /// PRX-GRP-030: size and cohesion boundaries, human declarations, and where
 /// items are executed (PRX-GRP-051). Every value is reported with a group.
 type GroupingConfiguration =
@@ -658,7 +676,8 @@ type GroupingConfiguration =
       MinimumAffinity: ContextAffinity
       Groups: DeclaredGroup list
       Architecture: DeclaredArchitecture list
-      ExecutionRepositories: (string * string) list }
+      ExecutionRepositories: (string * string) list
+      CrossRepository: CrossRepositoryConfiguration }
 
 [<RequireQualifiedAccess>]
 module GroupingConfiguration =
@@ -669,7 +688,8 @@ module GroupingConfiguration =
           MinimumAffinity = ContextAffinity.Medium
           Groups = []
           Architecture = []
-          ExecutionRepositories = [] }
+          ExecutionRepositories = []
+          CrossRepository = CrossRepositoryConfiguration.defaults }
 
 type PlannerConfiguration =
     { MaxConcurrency: int

@@ -239,6 +239,7 @@ type GroupNoteCode =
     | MixedRepositories
     | CrossRepository
     | UnknownMember
+    | ExecutesElsewhere
     | DeclaredOverlap
     | SplitForSize
     | SplitForContextPressure
@@ -256,6 +257,7 @@ module GroupNoteCode =
           GroupNoteCode.MixedRepositories
           GroupNoteCode.CrossRepository
           GroupNoteCode.UnknownMember
+          GroupNoteCode.ExecutesElsewhere
           GroupNoteCode.DeclaredOverlap
           GroupNoteCode.SplitForSize
           GroupNoteCode.SplitForContextPressure
@@ -272,6 +274,7 @@ module GroupNoteCode =
         | GroupNoteCode.MixedRepositories -> "mixed-repositories"
         | GroupNoteCode.CrossRepository -> "cross-repository"
         | GroupNoteCode.UnknownMember -> "unknown-member"
+        | GroupNoteCode.ExecutesElsewhere -> "executes-elsewhere"
         | GroupNoteCode.DeclaredOverlap -> "declared-overlap"
         | GroupNoteCode.SplitForSize -> "split-for-size"
         | GroupNoteCode.SplitForContextPressure -> "split-for-context-pressure"
@@ -685,7 +688,7 @@ module Grouping =
 
     /// Mutually reachable node sets (size > 1, or a self loop) in ordinal
     /// order. Quadratic reachability, adequate for backlog-sized graphs.
-    let private stronglyConnected (nodes: string list) (successors: string -> string list) : string list list =
+    let stronglyConnected (nodes: string list) (successors: string -> string list) : string list list =
         let rec reach (seen: Set<string>) (frontier: string list) =
             match frontier with
             | [] -> seen
@@ -1143,10 +1146,22 @@ module Grouping =
             match candidate.Declared with
             | None -> []
             | Some declared ->
-                [ yield!
-                      declared.Members
-                      |> List.filter (context.ById.ContainsKey >> not)
-                      |> List.map (fun missing -> note GroupNoteCode.UnknownMember FindingSeverity.Warning $"declared member {missing} is not in the planning inventory")
+                // `owner/repo:ID` names another repository's member
+                // (PRX-GRP-100): never scheduled here, only pointed to.
+                let elsewhere (memberId: string) =
+                    match memberId.LastIndexOf ':' with
+                    | index when index > 0 && memberId.Substring(0, index).Contains '/' -> Some(memberId.Substring(0, index))
+                    | _ -> None
+
+                [ for missing in declared.Members |> List.filter (context.ById.ContainsKey >> not) do
+                      match elsewhere missing with
+                      | Some other ->
+                          yield
+                              note
+                                  GroupNoteCode.ExecutesElsewhere
+                                  FindingSeverity.Info
+                                  $"{missing} executes in {other}: begin, checkpoint and complete it there with that repository's own Praxis; it is never scheduled into this checkout (PRX-GRP-108)"
+                      | None -> yield note GroupNoteCode.UnknownMember FindingSeverity.Warning $"declared member {missing} is not in the planning inventory"
                   if crossRepository then
                       yield note GroupNoteCode.CrossRepository FindingSeverity.Info $"declared cross-repository ({repository}): each repository still gets its own branch, commits, validation, evidence and pull request (PRX-GRP-052)"
                   let pressured =

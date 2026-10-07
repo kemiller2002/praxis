@@ -71,7 +71,11 @@ evidence only; they never rewrite recorded state (PRX-PLAN-021).
 
 ### Configuration file
 
-Every field is optional; the defaults are shown.
+`--config FILE` supplies planner configuration. Without it, the `planner`
+object of `ros.json` is used when present (the same document, so a repository
+can keep its cross-repository sources and grouped-execution settings in
+version control); otherwise the defaults below apply. Every field is optional;
+the defaults are shown.
 
 ```json
 { "maxConcurrency": 3,
@@ -297,7 +301,9 @@ concurrently under the `accept-elevated` policy.
                   "executionRepository": "summa", "crossRepository": false,
                   "architectureNotes": ["no direct SQL outside Strata"] } ],
     "architecture": [ { "decision": "DF-...", "members": ["A", "B"], "statement": "..." } ],
-    "executionRepositories": { "PRAXIS-REMOTE-12": "conditor" } } }
+    "executionRepositories": { "PRAXIS-REMOTE-12": "conditor" },
+    "crossRepository": { "maxObservationAgeMinutes": 1440,
+                         "repositories": { "owner/limen": { "path": "../limen", "ref": "origin/main" } } } } }
 ```
 
 **Stored groups.** `praxis work group create` records a declaration in
@@ -392,8 +398,8 @@ No external dependency was added (PRX-PLAN-004).
 | GRP-075 | Met (test 15). |
 | GRP-080..088 | Met for one cohort in two runs: baseline and predictions frozen (`EV-ROS-2026-A059`), both arms run and blindly evaluated (`EX-ROS-2026-A021`), results and classification in `EV-ROS-2026-A064`; the replication (R2) was blindly evaluated and compared in `EV-ROS-2026-A070` (confidence low). |
 | GRP-090 | All 20 cases in `tests/Praxis.Tests/GroupingTests.fs`; case 20 in `PlanningCliTests`. |
-| GRP-100..109 | Accepted (`DF-ROS-2026-A053`), not implemented: first-class cross-repository groups with one home record, member references, derived status and cross-repository order (`PRAXIS-GROUP-07`). Existing: the ID grammar admits `GROUP-ECHELON-...`, the `crossRepository` flag and the planner's execution-location rule. |
-| GRP-110..116 | Met except `link` (GRP-102, `PRAXIS-GROUP-07`) and `execute-group` (GRP-117, `PRAXIS-GROUP-09`) (`PRAXIS-GROUP-08`): `work group list`; idempotent repeats (`changed: false`); history entries with the caller's execution and the member's state; append-only history checked by `validate` against `HEAD` and `$ROS_BASE_REF`; store `schemaVersion` 2 with version 1 still read; derived `groupStatus` and `removed-open`; no group completion transition. The GRP-113 SHOULD (`work.group.*` events) is deliberately not done: GRP-115 restricts group commands to the group store. |
+| GRP-100..109 | Met (`PRAXIS-GROUP-07`): reserved `GROUP-ECHELON-` area, `owner/repo:ID` members, `homeRepository`, `work group link` references, read-only dated observations from a configured clone's fetched ref (`grouping.crossRepository`), stale and unknown handling, derived status, `complete`/`merged`/`released:TAG` order edges with cross-repository cycle detection, per-repository progress, member observations in group checkpoints, `unlinked` warnings, and `executes-elsewhere` planner notes. Remote-protocol reads (GRP-103's second method) are not implemented; such members are `unknown` (`unreachable`) until a clone is configured. Pull-request numbers in observations are `null` (not observed). |
+| GRP-110..116 | Met (`link`: `PRAXIS-GROUP-07`) except `execute-group` (GRP-117, `PRAXIS-GROUP-09`) (`PRAXIS-GROUP-08`): `work group list`; idempotent repeats (`changed: false`); history entries with the caller's execution and the member's state; append-only history checked by `validate` against `HEAD` and `$ROS_BASE_REF`; store `schemaVersion` 2 with version 1 still read; derived `groupStatus` and `removed-open`; no group completion transition. The GRP-113 SHOULD (`work.group.*` events) is deliberately not done: GRP-115 restricts group commands to the group store. |
 | GRP-117, 130..132, 136..137 | Accepted, not implemented: `plan execute-group`, group executions, qualification thresholds, opt-outs and context-pressure fallback (`PRAXIS-GROUP-09`). The default takes effect only after GRP-133..135. |
 | GRP-133..135 | Accepted, not implemented: reuse-inventory and per-criterion verification completion gates (`PRAXIS-GROUP-10`). |
 | GRP-138 | Accepted; review and rollback triggers tracked by `PRAXIS-PLAN-11`. |

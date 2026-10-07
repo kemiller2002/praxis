@@ -4315,10 +4315,10 @@
         "grouping"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T19:48:35.208Z",
-      "updatedAt": "2026-10-06T20:09:53.000Z",
+      "updatedAt": "2026-10-06T21:49:23.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4763,6 +4763,246 @@
       "sourceReference": null
     },
     {
+      "id": "PRAXIS-QUAL-01",
+      "title": "Per-window Stale/Unsupported pacing observation states and hard-hold creation evidence (PRX-QUAL-003, PRX-QUAL-004)",
+      "description": "Covers PRX-QUAL-004 (Stale, Unsupported window states) and the PRX-QUAL-003 creation-evidence gap. Acceptance: 1. WindowStatus has Observed, Missing, Invalid, Stale and Unsupported, each with a stable code in status JSON coverage. 2. A window carried from a cached reading (not in the current response) is Stale, never Observed; a window kind the adapter does not support (unknown Claude limit kind, unknown Codex slot) is Unsupported with a diagnostic, never silently dropped. 3. Stale and Unsupported expected windows make the reading incomplete (freshness stale), with response-shape drift reported as an explicit diagnostic. 4. Hard-limit holds persist creation evidence (observedAt of the triggering reading and the provider window reference) in hold.json as an additive schema-2 field that older readers ignore; holds without it read as unrecorded, never invented. 5. Tests cover each state and the migration.",
+      "tags": [
+        "quality",
+        "pacing"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T23:55:38.288Z",
+      "updatedAt": "2026-10-06T23:55:52.881Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-QUAL-02",
+      "title": "Typed provider, model, quota-bucket and scope identities for pacing (PRX-QUAL-005)",
+      "description": "Covers PRX-QUAL-005. Acceptance: 1. ProviderId, ModelId and QuotaBucket are typed values at the Application/Domain boundary; QuotaScope matching uses typed model-family identity with no String.Contains substring matching in policy. 2. Codex Spark bucket selection and Claude scope mapping are explicit, versioned adapter rules (one table each) with fixtures. 3. Unknown models have a declared conservative behaviour: every scoped window applies. 4. Adapter id, rule-set version and capabilities are observable in pacing status (text and JSON). 5. An architecture/guard test refuses Contains-based model matching in the pacing domain and application.",
+      "tags": [
+        "quality",
+        "pacing"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T23:55:38.804Z",
+      "updatedAt": "2026-10-06T23:55:53.531Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-QUAL-03",
+      "title": "Typed pacing telemetry events with stable codes replacing free-text pace.log (PRX-QUAL-008)",
+      "description": "Covers PRX-QUAL-008. Acceptance: 1. The gate emits typed PacingEvent values with stable codes: hold-started, hold-retained, hold-released, hard-limit, provider-unavailable, override-enabled, override-disabled, state-fault. 2. Events carry provider, scope, reason kind, reset time and observedAt, never credentials, tokens or raw provider payloads. 3. Repeated polling with an unchanged hold emits no duplicate transition events (deduplicated by transition identity). 4. Events persist as praxis.pacing-event/1 JSON lines (events.jsonl) and pace.log remains as a human-readable rendering of the same events; readers (docs, status) are migrated. 5. Tests cover codes, redaction and deduplication.",
+      "tags": [
+        "quality",
+        "pacing"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T23:55:39.313Z",
+      "updatedAt": "2026-10-06T23:55:54.289Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-QUAL-04",
+      "title": "Adversarial pacing adapter tests: Keychain, HTTP errors and redirects, provider process timeout/EOF, live hook fixtures (PRX-QUAL-011)",
+      "description": "Covers the PRX-QUAL-011 cases still missing. Acceptance: 1. Claude credential decoding is testable without a real Keychain: Keychain unavailable, missing entry, expired credential and malformed credential are explicit errors and the snapshot is unavailable, never fresh. 2. The Claude usage query is testable through an injected HTTP handler: a 3xx redirect is refused without following it, 4xx/5xx are explicit errors. 3. The provider process protocol is testable with a scripted stand-in: timeout, EOF before reply, error reply and malformed JSON are explicit errors. 4. Recorded live hook payload fixtures for Claude Code and Codex (PreToolUse and Stop events) drive the gate end to end and produce the provider's documented deny shape. 5. No test uses the live network or a real credential store.",
+      "tags": [
+        "quality",
+        "pacing"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T23:55:40.087Z",
+      "updatedAt": "2026-10-06T23:55:54.703Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-QUAL-05",
+      "title": "Provider-neutral capacity port consumed by the planner (PRX-QUAL-009)",
+      "description": "Covers PRX-QUAL-009. Acceptance: 1. A provider-neutral capacity observation (available, constrained until a time, exhausted until a time, unknown with reason) is read by the planner through a port; the planner never calls pacing providers directly. 2. Capacity uncertainty (unknown) is distinct from zero capacity in the plan output. 3. Plan output explains whether capacity affected ordering (a per-item capacity note and a plan-level summary). 4. The planner never proposes switching provider or model; it reports only whether the current provider's capacity constrains the item, and compatibility is out of its authority. 5. Capacity input is optional and read-only: absent capacity leaves plans unchanged. Tests cover all states.",
+      "tags": [
+        "quality",
+        "planning"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T23:55:40.540Z",
+      "updatedAt": "2026-10-06T23:55:55.129Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-QUAL-06",
+      "title": "Declared protocol and state-schema compatibility instead of the release.json == toolchain pin fence (PRX-QUAL-010)",
+      "description": "Covers PRX-QUAL-010. Acceptance: 1. release.json declares the remote protocol range and the state-schema versions this release reads and writes. 2. Repository state declares the state-schema versions it needs; the remote executor refuses a repository whose declared state schema it does not support, before any mutation, with a typed failure. 3. The self-hosting pin may name an older attested release as long as it is compatible with the repository state; source may advance release.json to an unpublished version. 4. The release bump no longer rewrites the pin; a post-release step advances the pin only after the release assets and attestations exist. 5. The equality fence test is replaced by a compatibility fence; tests prove an incompatible executor/state combination is refused before mutation.",
+      "tags": [
+        "quality",
+        "release"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T23:55:41.005Z",
+      "updatedAt": "2026-10-06T23:55:55.789Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-QUAL-07",
+      "title": "Engineering-risk metadata on work items (PRX-QUAL-020)",
+      "description": "Covers PRX-QUAL-020. Acceptance: 1. A work item may declare praxis.work-risk/1 metadata: change class, risk level, persistent-state impact, external protocol/provider impact, security/privacy impact, failure posture (fail-open, fail-closed, indeterminate), tier ownership and required live/integration proof, set by work capture/update flags and shown by work context. 2. Invalid values are refused at capture/update. 3. Completion obligations (design-debt declaration, verification-matrix dimensions) are derived from the metadata by a pure domain function. 4. Absent metadata keeps existing behaviour. 5. Tests cover parsing, validation and obligation derivation.",
+      "tags": [
+        "quality",
+        "completion"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T23:55:41.447Z",
+      "updatedAt": "2026-10-06T23:55:56.381Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-QUAL-08",
+      "title": "Design-debt declaration as a completion-readiness facet (PRX-QUAL-021)",
+      "description": "Covers PRX-QUAL-021. Acceptance: 1. Completion accepts --evidence design-debt=PATH, a praxis.design-debt/1 document declaring either no known design debt or debt entries referencing captured work items with rationale, risk and the compromised boundary. 2. A design-debt-declared facet joins the A052 completion-readiness record. 3. For high-risk work (from PRAXIS-QUAL-07 metadata), a missing declaration or debt referencing no recorded non-terminal work item refuses completion (exit 3, no state change). 4. A declared prototype cannot complete as canonical without a debt entry. 5. Tests cover each case.",
+      "tags": [
+        "quality",
+        "completion"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T23:55:42.069Z",
+      "updatedAt": "2026-10-06T23:55:56.880Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-QUAL-09",
+      "title": "Verification-matrix obligation as a completion-readiness facet (PRX-QUAL-022)",
+      "description": "Covers PRX-QUAL-022. Acceptance: 1. Completion accepts --evidence verification-matrix=PATH, a praxis.verification-matrix/1 document with rows for happy path, negative/failure, corruption/partial state, concurrency, compatibility/version skew, recovery/rollback and representative live effect, each met, not-applicable (with reason) or not-met, with evidence. 2. A verification-matrix facet joins the A052 completion-readiness record. 3. For stateful control-plane, persistence, release/bootstrap, security or remote-execution work (from PRAXIS-QUAL-07 change class), a missing matrix or any required dimension not met refuses completion; unit-test or build evidence alone never satisfies it. 4. Tests cover each case.",
+      "tags": [
+        "quality",
+        "completion"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T23:55:42.753Z",
+      "updatedAt": "2026-10-06T23:55:57.491Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-QUAL-10",
+      "title": "Evidence-file digests and a release-readiness evidence contract (PRX-QUAL-023 leftovers)",
+      "description": "Covers the PRX-QUAL-023 leftovers. Acceptance: 1. Every consumed evidence file (dokimos-ratchet, ordo-boundary and the new design-debt, verification-matrix and release-readiness documents) is recorded with its sha256 digest in the completion-readiness record. 2. A praxis.release-readiness/1 contract is documented and consumed through --evidence release-readiness=PATH: release identity, the checks run and their results; release-ready is satisfied only by a consistent document whose checks all passed, unavailable when absent, malformed or inconsistent. 3. requirements/CODE-QUALITY-HARDENING.md drops both items from its not-yet-done list. 4. Tests cover digest recording and each release-readiness outcome.",
+      "tags": [
+        "quality",
+        "completion"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T23:55:43.349Z",
+      "updatedAt": "2026-10-06T23:55:57.981Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
       "id": "PRAXIS-HYG-01",
       "title": "Retire the leaked test-fixture work items WI-READY and WI-ACTIVE and keep tests out of canonical state",
       "description": "Covers: canonical state hygiene (audit, docs-vs-code), work protocol (RQ-ROS-2026-A003 event attribution integrity). Root cause: commit 71be41f6 (PR #33) committed .ros state from a manual smoke test that replayed tests/work-context-fsharp-differential.test.mjs's fixture commands (add/ready/start/block WI-READY, WI-ACTIVE) in the canonical repository instead of a scratch root. Acceptance: (1) WI-READY and WI-ACTIVE leave live work via praxis work abandon with a stated reason (no hand edits); planner no longer reports them as active or blocked. (2) CI fails when the F# test suite changes any tracked file or leaves untracked files in the checkout (tests must use isolated state). (3) docs/work-protocol.md says smoke tests of mutating commands run against a scratch root, never the canonical repository. Decision: no validate rule for fixture-shaped IDs: WorkItemId admits any shape and test literals legitimately name real IDs (GH-84, WI-0003...), so such a rule is unsound. Group: GROUP-PRAXIS-HYG (state hygiene).",
@@ -4821,7 +5061,7 @@
       "status": "blocked",
       "attachments": [],
       "createdAt": "2026-10-06T20:33:54.880Z",
-      "updatedAt": "2026-10-06T23:51:23.000Z",
+      "updatedAt": "2026-10-07T04:59:14.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

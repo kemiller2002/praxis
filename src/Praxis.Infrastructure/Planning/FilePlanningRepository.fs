@@ -59,28 +59,36 @@ module FilePlanningRepository =
         | :? JsonObject as value -> Some value
         | _ -> None
 
+    let private queueItems (queue: JsonObject) : PlanningQueueItem list =
+        objects queue "items"
+        |> List.choose (fun item ->
+            match text item "id", text item "status" with
+            | Some id, Some status ->
+                Some
+                    { Id = id
+                      Title = text item "title" |> Option.defaultValue id
+                      Description = text item "description"
+                      Tags = texts item "tags"
+                      Priority = text item "priority"
+                      Status = status
+                      CreatedAt = text item "createdAt"
+                      DependsOn = texts item "dependsOn" }
+            | _ -> None)
+
     let readQueue (root: string) : Result<PlanningQueueItem list, string> =
         try
-            readObject (queuePath root)
-            |> Option.map (fun queue ->
-                objects queue "items"
-                |> List.choose (fun item ->
-                    match text item "id", text item "status" with
-                    | Some id, Some status ->
-                        Some
-                            { Id = id
-                              Title = text item "title" |> Option.defaultValue id
-                              Description = text item "description"
-                              Tags = texts item "tags"
-                              Priority = text item "priority"
-                              Status = status
-                              CreatedAt = text item "createdAt"
-                              DependsOn = texts item "dependsOn" }
-                    | _ -> None))
-            |> Option.defaultValue []
-            |> Ok
+            readObject (queuePath root) |> Option.map queueItems |> Option.defaultValue [] |> Ok
         with error ->
             Error $"cannot read {queuePath root}: {error.Message}"
+
+    /// A queue read from content (an observed Git ref), by the same reader.
+    let parseQueue (content: string) : Result<PlanningQueueItem list, string> =
+        try
+            match JsonNode.Parse content with
+            | :? JsonObject as queue -> Ok(queueItems queue)
+            | _ -> Error "the queue is not a JSON object"
+        with error ->
+            Error $"the queue is not valid JSON: {error.Message}"
 
     let private checkpointSummary (id: string) (item: JsonObject) : CheckpointSummary option =
         match item["latestCheckpoint"] with
@@ -103,6 +111,27 @@ module FilePlanningRepository =
                       Verified = true }
             | _ -> None
 
+    /// The live context read from content (a file or an observed Git ref).
+    let parseLive (content: string) : Result<PlanningLiveItem list, string> =
+        try
+            WorkContextPlanContract.parseJson content
+            |> Result.map (fun view ->
+                let raw =
+                    match JsonNode.Parse content with
+                    | :? JsonObject as document -> objects document "workItems" |> List.choose (fun item -> text item "id" |> Option.map (fun id -> id, item)) |> Map.ofList
+                    | _ -> Map.empty
+
+                view.WorkItems
+                |> List.map (fun item ->
+                    { Id = item.Id
+                      State = item.SemanticState
+                      BlockReason = item.BlockReason
+                      UpdatedAt = item.UpdatedAt
+                      Checkpoint = raw.TryFind item.Id |> Option.bind (checkpointSummary item.Id)
+                      TelemetryExecutionIds = item.TelemetryExecutionIds }))
+        with error ->
+            Error error.Message
+
     let readLive (root: string) : Result<PlanningLiveItem list, string> =
         let path = contextPath root
 
@@ -110,23 +139,7 @@ module FilePlanningRepository =
             Ok []
         else
             try
-                let content = File.ReadAllText path
-
-                WorkContextPlanContract.parseJson content
-                |> Result.map (fun view ->
-                    let raw =
-                        match JsonNode.Parse content with
-                        | :? JsonObject as document -> objects document "workItems" |> List.choose (fun item -> text item "id" |> Option.map (fun id -> id, item)) |> Map.ofList
-                        | _ -> Map.empty
-
-                    view.WorkItems
-                    |> List.map (fun item ->
-                        { Id = item.Id
-                          State = item.SemanticState
-                          BlockReason = item.BlockReason
-                          UpdatedAt = item.UpdatedAt
-                          Checkpoint = raw.TryFind item.Id |> Option.bind (checkpointSummary item.Id)
-                          TelemetryExecutionIds = item.TelemetryExecutionIds }))
+                parseLive (File.ReadAllText path) |> Result.mapError (fun message -> $"cannot read {path}: {message}")
             with error ->
                 Error $"cannot read {path}: {error.Message}"
 
@@ -271,8 +284,25 @@ module FilePlanningRepository =
     /// (`work group create`) merged into `grouping.groups`, so a stored
     /// declaration is read exactly as a configured one (PRX-GRP-073). A group
     /// the supplied configuration also declares keeps the configured form.
+    /// The repository's own planner configuration: the `planner` object of
+    /// `ros.json`, when present; the defaults otherwise. An explicit
+    /// `--config` file replaces it entirely.
+    let readDefaultConfiguration (root: string) : Result<PlannerConfiguration, string> =
+        try
+            match readObject (Path.Combine(root, "ros.json")) |> Option.bind (fun rosJson -> child rosJson "planner") with
+            | Some planner -> PlanningJson.parseConfiguration (planner.ToJsonString()) |> Result.mapError (fun message -> $"ros.json planner: {message}")
+            | None -> Ok PlannerConfiguration.defaults
+        with error ->
+            Error $"cannot read ros.json: {error.Message}"
+
+    /// An explicit configuration file, else the repository's own.
+    let readBaseConfiguration (root: string) (configurationFile: string option) : Result<PlannerConfiguration, string> =
+        match configurationFile with
+        | None -> readDefaultConfiguration root
+        | Some _ -> readOptionalFile configurationFile (fun _ content -> PlanningJson.parseConfiguration content) PlannerConfiguration.defaults
+
     let readConfiguration (root: string) (configurationFile: string option) : Result<PlannerConfiguration, string> =
-        readOptionalFile configurationFile (fun _ content -> PlanningJson.parseConfiguration content) PlannerConfiguration.defaults
+        readBaseConfiguration root configurationFile
         |> Result.bind (fun configuration ->
             FileWorkGroupRepository.read root
             |> Result.map (fun stored ->

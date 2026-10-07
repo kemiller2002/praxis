@@ -439,11 +439,14 @@ ros work group remove --group GROUP-ID --member ID --occurred-at TIMESTAMP [--al
                       [--reason TEXT] [--dry-run] [--json] [IDENTITY]
 ros work group checkpoint --group GROUP-ID --occurred-at TIMESTAMP --summary TEXT
                       --next-action TEXT [--decision TEXT]* [--dry-run] [--json] [IDENTITY]
-ros work group create --group GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP
+ros work group create --group GROUP-ID --member ID|OWNER/REPO:ID [--member ...]* --occurred-at TIMESTAMP
                       [--kind KIND] [--origin ORIGIN] [--shared-context TEXT]*
                       [--architecture-note TEXT]* [--execution-repository NAME]
-                      [--cross-repository] [--config FILE] [--reason TEXT]
-                      [--dry-run] [--json] [IDENTITY]
+                      [--cross-repository] [--home-repository OWNER/REPO]
+                      [--dependency CONSUMER=PRODUCER[@complete|merged|released:TAG]]*
+                      [--config FILE] [--reason TEXT] [--dry-run] [--json] [IDENTITY]
+ros work group link   --group GROUP-ECHELON-AREA-SEQ --home OWNER/REPO --member ID
+                      --occurred-at TIMESTAMP [--dry-run] [--json] [IDENTITY]
 ```
 
 Durable execution groups (PRX-GRP-073, phase two; `PRAXIS-GROUP-01..05`),
@@ -545,6 +548,58 @@ append-only: `validate` refuses a store whose history for a group recorded at
 or whose group vanished. Group commands write only the group store, so no
 `work.group.*` event is appended to `.ros/events` (PRX-GRP-115 outranks that
 PRX-GRP-113 SHOULD; the group history is the audit trail).
+
+**Cross-repository groups** (PRX-GRP-100..109). A group whose members live in
+several repositories (a portfolio sweep: one brief, one pull request per
+repository, one consolidated status table) is created with
+`--cross-repository` and an ID in the reserved area `GROUP-ECHELON-<AREA>-<SEQ>`;
+a repository-local group may not use that area. Its **home** is the repository
+where `create` ran (`homeRepository`, from `--home-repository` or the
+checkout's `origin` remote, `owner/repo`); only the home holds the group record,
+and the home never changes. Members of other repositories are named
+`owner/repo:WORK-ID` (a bare ID is a home item; a qualified name of the home is
+stored bare). Each member is governed only in its own repository: its own
+queue entry, executions, evidence, checkpoints, pull request and completion.
+
+- **Observation, never copying.** The home reads a member repository's Praxis
+  state read-only from a local clone at a fetched ref (`git show REF:.ros/...`),
+  configured in planner configuration under
+  `grouping.crossRepository.repositories` (`{"owner/repo": {"path": "../repo",
+  "ref": "origin/main"}}`; `ref` defaults to `origin/HEAD`). Planner
+  configuration is `--config FILE`, else the `planner` object of `ros.json`.
+  Each observation records repository, ref, commit, `observedAt`, how current
+  the ref was (`sourceAsOf`: its reflog, else its commit time) and the method
+  (`git-ref`). Nothing is fetched, written, committed or pushed in another
+  repository. An observation older than `maxObservationAgeMinutes` (default
+  1440) is `stale`; a repository that is not configured, missing, a clone of a
+  different repository, without Praxis, with state this version cannot parse,
+  or denying access makes its members `unknown` with the reason (`unreachable`,
+  `praxis-not-installed`, `unsupported-schema`, `access-denied`). A stale or
+  unknown member is never complete; the rest of the view still renders.
+- **Joining.** A qualified member is checked by observation: a terminal or
+  unrecorded item is refused; an unobservable one joins with
+  `verified: false` and a warning (`verifications` in the group record).
+- **Order.** `--dependency CONSUMER=PRODUCER[@MILESTONE]` records an edge whose
+  producer must reach `complete` (default), `merged` (its latest checkpoint
+  commit is reachable from its observed ref) or `released:TAG` (the tag exists
+  there). `show` reports each edge `satisfied`, `waiting` or `unknown`, and each
+  consumer's planning state; it never changes the consumer's lifecycle state.
+  Edges must join members and may not form a cycle, across repositories.
+- **References.** `work group link`, run in a member's own repository, records
+  the only group data that repository holds: an immutable reference on its
+  item (group ID and home). Repeating it is `unchanged`; another home is
+  refused. A membership whose member repository holds no reference, or a
+  reference the observed home does not list, is `unlinked`: shown by `show`
+  and reported by `validate` as a warning.
+- **Status table.** `show` is the consolidated sweep table: per member its
+  repository, observed state, ref and commit, latest checkpoint, staleness and
+  link; progress per repository and overall (`k of n complete`); order edges.
+  In a member repository, `show` of a group homed elsewhere prints that
+  repository's references and whether the home lists them. Group checkpoints
+  in the home record `memberObservations` (labelled observations, never
+  verifications of another repository's remote). The planner reports a
+  qualified member as `executes-elsewhere` with the repository to act in and
+  never schedules it into this checkout (PRX-GRP-108).
 
 **Store and documents** (PRX-GRP-112). `.ros/work/groups.json` is written as
 `schemaVersion` 2 (additive fields); a version-1 store is read as-is and is
