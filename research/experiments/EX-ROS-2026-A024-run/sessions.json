@@ -32,7 +32,22 @@
         "START_SHA": "ddda83790b91d0f7e7c27b7b8cdc88bf330ad17d"
       },
       "attempt": 1,
-      "status": "running"
+      "status": "completed",
+      "headAfter": "3e535f3a16e0b538806e1c63cbdb9122bd5b1a6a",
+      "terminalAt": "2026-10-07T17:22:20.563543Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 3.466602,
+        "input_tokens": 112,
+        "output_tokens": 38010,
+        "cache_read_tokens": 7604690,
+        "cache_write_tokens": 148127,
+        "context_used_tokens": 191830,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.292",
+        "session_context_model": "claude-opus-5-5"
+      },
+      "note": "telemetry verified (sha256 9b1ee5fd...); headAtCapture bd8acd3; isolation audit 0 events"
     },
     {
       "label": "arm-3-01",
@@ -106,6 +121,25 @@
       "prompt": "prompts/arm-3-02.txt",
       "promptSubstitution": {
         "START_SHA": "c85eb3e6e7f96d376613a18e9bdf8256bd92b870"
+      },
+      "attempt": 1,
+      "status": "running"
+    },
+    {
+      "label": "arm-2-02",
+      "arm": "B",
+      "condition": "code-only",
+      "items": [
+        "PRAXIS-GROUP-02"
+      ],
+      "session": "session_01ERXqXbLeUNsj9e7wLTr1iM",
+      "createdAt": "2026-10-07T17:23:39.331557Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-2",
+      "startCommit": "3e535f3a16e0b538806e1c63cbdb9122bd5b1a6a",
+      "prompt": "prompts/arm-2-02.txt",
+      "promptSubstitution": {
+        "START_SHA": "3e535f3a16e0b538806e1c63cbdb9122bd5b1a6a"
       },
       "attempt": 1,
       "status": "running"
