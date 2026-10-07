@@ -4878,18 +4878,61 @@
     {
       "id": "PRAXIS-GROUP-03",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-07T20:52:59.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/GroupDeclaration.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/planning.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T21:01:06.000Z",
       "telemetryExecutionIds": [
         "EXE-20261007T205300207Z-58155ff9"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "85aa6e4997344c65bcf9637d",
+        "recordedAt": "2026-10-07T21:00:58.000Z",
+        "executionId": "EXE-20261007T205300207Z-58155ff9",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a024-arm-2",
+        "commit": "531c8de2fb4b8e1eedd3d62063d7e9a385bf8b7c",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a024-arm-2",
+        "remoteCommit": "531c8de2fb4b8e1eedd3d62063d7e9a385bf8b7c",
+        "summary": "work group add implemented, tested (833/833) and documented; commit 531c8de pushed",
+        "nextAction": "complete PRAXIS-GROUP-03 with build/test/validate evidence and push Praxis state",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T21:01:06.000Z",
+      "conclusion": "Verification: npm run build:fsharp (with the harness FSharpCore property, not committed) built with 0 warnings/0 errors; full F# suite dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll: 833 tests, 833 passed, 0 failed (14 new work-group add tests); ./ros validate: validation passed. Acceptance: refuses unknown and terminal items, items already present, undeclared groups, and an item whose execution repository differs from the group's unless the group is cross-repository (domain and CLI tests); records who added each member (additions {workItem, addedAt, addedBy}, tested through the binary); member lifecycle files byte-identical after add (tested). Item repository uses the planner's rule without --config, so grouping.executionRepositories from an explicit config file is not consulted. Not merged (experiment branch only)."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T20:52:59.000Z",
+  "updatedAt": "2026-10-07T21:01:06.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
