@@ -1,0 +1,17 @@
+[
+  {
+    "author_agent": "fixture",
+    "created": "2026-01-04",
+    "evidence_ids": [
+      "EV-TEST-2026-A001"
+    ],
+    "hypothesis_ids": [
+      "HY-TEST-2026-A002"
+    ],
+    "id": "JR-TEST-2026-A004",
+    "path": "research/journals/JR-TEST-2026-A004--journal.md",
+    "research_area": "artifact-fixtures",
+    "theory_ids": [],
+    "title": "Fixture journal"
+  }
+]

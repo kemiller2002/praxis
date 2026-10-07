@@ -1,0 +1,203 @@
+# Work Queue
+
+| ID | Work | Status | Tags | Priority |
+|---|---|---|---|---|
+| ACTOR-KIND-ANCHOR | ActorKind extension pattern accepts a trailing newline ($ anchor) | captured | provenance, security | low |
+| ATTR-COMPLETE-BASE-REF-SWEEP | Stop work complete from sweeping ROS_BASE_REF committed-range paths into its completion event | captured | attribution, reconciliation | medium |
+| ATTR-RECONCILE-SYMLINK-SUBMODULE | Content-match symbolic links and submodules for reconciled attribution | captured | attribution, reconciliation | low |
+| BOOTSTRAP-ADOPTION-FIX | BOOTSTRAP-ADOPTION-FIX | complete |  |  |
+| CI-BASE-REF-FIX | CI-BASE-REF-FIX | complete |  |  |
+| CI-LATEST-ON-VERSION-BUMP | CI-LATEST-ON-VERSION-BUMP | blocked |  |  |
+| CI-NPM-PUBLISH | CI-NPM-PUBLISH | complete |  |  |
+| DOC-BACKLOG-USAGE-GUIDE | DOC-BACKLOG-USAGE-GUIDE | complete |  |  |
+| DOC-PROJECT-ADMIN-README | DOC-PROJECT-ADMIN-README | complete |  |  |
+| DOC-WEB-README | DOC-WEB-README | complete |  |  |
+| EXEC-INSTALL-109 | Execution envelopes, step ledger, worktrees, legal actions, installation registration client | complete |  | high |
+| EXEC-INSTALL-109-NPM-BIN | Keep npm bin as ros only; praxis stays canonical via native release and ./praxis | complete |  | high |
+| FEAT-AGENT-PROVENANCE | FEAT-AGENT-PROVENANCE | complete |  |  |
+| GH-113 | GH-113 | complete |  |  |
+| GH-80 | Support auditable post-commit work-item attribution reconciliation (#80) | complete | attribution, reconciliation, provenance | high |
+| GH-84 | GH-84 | abandoned |  |  |
+| GH-90 | Make remote/cloud-agent Praxis execution a first-class capability (#90) | abandoned | remote-execution, gh-90 | high |
+| MIG-05-BACKLOG-PERSISTENCE | Add bounded recovery for backlog queue and Markdown projection | complete | fsharp, migration, persistence | high |
+| MIG-05-PERSISTENCE | MIG-05 characterize and shadow transactional persistence recovery | complete | fsharp, migration, persistence | high |
+| MIG-05-TELEMETRY-RECOVERY | Recover telemetry execution backlinks without duplicating execution evidence | complete | fsharp, migration, telemetry, persistence | high |
+| MIG-05-WORK-INTEGRATION | MIG-05 integrate recoverable work event and context persistence | complete | fsharp, migration, persistence, work | high |
+| MIG-05-WORK-PERSISTENCE | MIG-05 characterize work-state persistence and recovery | complete | fsharp, migration, persistence, work | high |
+| MIG-06-GIT-INTEGRATION | MIG-06-GIT-INTEGRATION | complete |  |  |
+| MIG-06-GIT-PROVENANCE | MIG-06 characterize and shadow typed Git provenance | complete | fsharp, migration, git | high |
+| MIG-07-BACKLOG-PLAN | MIG-07-BACKLOG-PLAN | complete |  |  |
+| MIG-07-FOUR-TIER-AUDIT | Four-tier compliance audit and real telemetry-candidate parity for the F# shadow CLI | complete |  | high |
+| MIG-07-GIT-PATH-COMPOSITION | Compose real Git observed/meaningful-path defaults into the F# work context-plan | complete |  | high |
+| MIG-07-TELEMETRY-RESOLUTION | Compose telemetry execution-ID resolution into the F# work plan/context plan | complete |  | high |
+| MIG-07-VERIFIED-CONTEXT | MIG-07-VERIFIED-CONTEXT | complete |  |  |
+| MIG-07-WORK-CONTEXT | MIG-07-WORK-CONTEXT | complete |  |  |
+| MIG-07-WORK-EVIDENCE | MIG-07-WORK-EVIDENCE | complete |  |  |
+| MIG-07-WORK-LIFECYCLE | MIG-07 shadow typed live-work transitions and evidence guards | complete | fsharp, migration, work | high |
+| MIG-07-WORK-ORCHESTRATION | MIG-07-WORK-ORCHESTRATION | complete |  |  |
+| OIDC-REPO-IDENTITY | OIDC-REPO-IDENTITY | complete |  |  |
+| PKG-BIN-EXECUTABLE | PKG-BIN-EXECUTABLE | complete |  |  |
+| PKG-ECHELON-FOUNDRY | PKG-ECHELON-FOUNDRY | complete |  |  |
+| PKG-MIT-LICENSE | PKG-MIT-LICENSE | complete |  |  |
+| PKG-PUBLISH-READINESS | PKG-PUBLISH-READINESS | complete |  |  |
+| PRAXIS-CONT-00 | Durable work checkpoints and agent continuity (umbrella) | complete | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-01-DOMAIN | Durable checkpoint domain model and invariants | complete | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-02-GIT | Git remote/upstream/durability observations | complete | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-03-PERSIST | Checkpoint events, projection, persistence, schema compatibility | complete | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-04-CLI | work checkpoint, context/status presentation, JSON contract | complete | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-05-GUARDS | Completion/block lifecycle continuity guards | complete | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-06-CONTINUE | Cross-executor work continue / takeover semantics | complete | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-07-REMOTE | Remote-agent / GitHub Actions checkpoint capability | complete | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-08-RECOVERY | Two-clone recovery and agent-loss integration proof | complete | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-09-GOVERNANCE | AGENTS/governance/docs/starter propagation | complete | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-10-HARDEN | Compatibility, edge cases, validation, final end-to-end review | complete | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-11-SEGMENTATION | Effective-current telemetry segmentation and continuity proof gaps | complete | continuity, durable-checkpoints | high |
+| PRAXIS-CONT-12 | work checkpoint attributes every meaningful path since the previous checkpoint to the checkpointing item, regardless of which work item produced it | complete | continuity, gh-90 | medium |
+| PRAXIS-DIST-NATIVE-DOTNET-TOOL | Retire npm distribution; ship native bundles and a .NET global tool | complete | distribution | high |
+| PRAXIS-GROUP-01 | praxis work group create: durable human-declared execution group | ready | work-group, cli | low |
+| PRAXIS-GROUP-02 | praxis work group show: a declared group with member states and progress | ready | work-group, cli | low |
+| PRAXIS-GROUP-03 | praxis work group add: add a member to a declared group | ready | work-group, cli | low |
+| PRAXIS-GROUP-04 | praxis work group remove: remove a member from a declared group | ready | work-group, cli | low |
+| PRAXIS-GROUP-05 | praxis work group checkpoint: a group checkpoint over members' own checkpoints | ready | work-group, cli | low |
+| PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | captured | rename, gh-90 | low |
+| PRAXIS-PLAN-01 | Deterministic shadow planner: praxis plan analyze/simulate/compare/explain (PRX-PLAN-001..182) | complete | planning, architecture, cli | high |
+| PRAXIS-PLAN-02 | Accept planner decision DF-ROS-2026-A046 on the owner's approval | complete | planning, governance | medium |
+| PRAXIS-PLAN-03 | Accept DF-ROS-2026-A047 and triage the EX-ROS-2026-A021 cohort on the owner's approval | complete | planning, governance | medium |
+| PRAXIS-PLAN-EXP-01 | Run grouping experiment EX-ROS-2026-A021: control arm, grouped arm, blind evaluation, telemetry comparison | captured | planning, experiment | medium |
+| PRAXIS-RELEASE-BUMP-WORKFLOW | Release workflow: one-click version bump that publishes | complete | release | high |
+| PRAXIS-REMOTE-01 | Remote protocol v1 contract: schemas, typed domain model, validation, fingerprint, decision order | complete | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-02 | Remote provenance roles: asserted request actor, observed executor, transport principal | complete | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-03 | praxis remote execute boundary with request journal, SHA binding and structured results | complete | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-04 | Execution steps, step-scoped usage/cost and the evidence-quality projection | complete | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-05 | Deterministic verifiable Praxis bootstrap: immutable release assets, attestation, fail-closed pins | complete | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-06 | GitHub Actions reusable workflow adapter for praxis.remote | complete | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-07 | Remote discovery (praxis.describe) and concise agent contract | complete | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-08 | Ordered batch/session remote requests | complete | remote-execution, gh-90 | low |
+| PRAXIS-REMOTE-09 | Remote reconciliation (#80), fallback records and successor continuation | complete | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-10 | Remote execution operator documentation | complete | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-11 | End-to-end no-.NET cloud-agent proof | complete | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-11-PREP | Prepare the live remote proof: ignore the request journal for attribution and script release, pin, opt-in and dispatch | complete | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-11-PREP-CI | Fix PR #93 CI: enable-script test commits without a git identity | complete | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-11-PROOF | Live proof: a cloud agent without .NET is governed through remote Praxis | complete | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-12 | Conditor installs and configures the Praxis remote surface | ready | remote-execution, gh-90 | low |
+| PRAXIS-REMOTE-12-CONTINUE-PROOF | PRAXIS-REMOTE-12-CONTINUE-PROOF | complete |  |  |
+| PRAXIS-REMOTE-13 | Adapter recognizes GitHub rate limiting on push and pull-request creation (PRX-REMOTE-038) | complete | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-14 | Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict | complete | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-15 | Agent contract: a [record] needs a block before the successor resumes | complete | remote-execution, gh-90 | high |
+| PRAXIS-REMOTE-16 | work complete silently drops the conclusion for non-research work items | complete | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-17 | Record the live praxis.remote 1.3 continuation proof as evidence | complete |  | medium |
+| PRAXIS-REMOTE-INBOX-01 | Remote request inbox: a contents-write path to praxis.remote for agents that cannot dispatch Actions | complete | remote-execution, continuity | high |
+| PRAXIS-REMOTE-PROBE-COMPLETE-CROSS | PRAXIS-REMOTE-PROBE-COMPLETE-CROSS | complete |  |  |
+| PRAXIS-REMOTE-PROBE-COMPLETE-NOEXEC | PRAXIS-REMOTE-PROBE-COMPLETE-NOEXEC | complete |  |  |
+| PRAXIS-REMOTE-PROBE-COMPLETE-WITHEXEC | PRAXIS-REMOTE-PROBE-COMPLETE-WITHEXEC | complete |  |  |
+| PRAXIS-SITE-01 | Establish public-site architecture | complete | gh-84, public-site | high |
+| PRAXIS-SITE-02 | Implement Echelon Foundry design foundation | complete | gh-84, public-site | high |
+| PRAXIS-SITE-03 | Build the hero | complete | gh-84, public-site | high |
+| PRAXIS-SITE-04 | Build the "Done is a claim" interaction | complete | gh-84, public-site | high |
+| PRAXIS-SITE-05 | Explain the execution chain | complete | gh-84, public-site | high |
+| PRAXIS-SITE-06 | Build "Git knows what. Praxis knows why." | complete | gh-84, public-site | medium |
+| PRAXIS-SITE-07 | Explain agent accountability | complete | gh-84, public-site | medium |
+| PRAXIS-SITE-08 | Show the real GH-84 agent [record] | complete | gh-84, public-site | high |
+| PRAXIS-SITE-09 | Explain unattributed-change protection | complete | gh-84, public-site | medium |
+| PRAXIS-SITE-10 | Explain resilient/double-entry execution | complete | gh-84, public-site | medium |
+| PRAXIS-SITE-11 | Explain repository-native engineering records | complete | gh-84, public-site | medium |
+| PRAXIS-SITE-12 | Explain independent installation and integrations | complete | gh-84, public-site | medium |
+| PRAXIS-SITE-13 | Create a realistic execution record component | complete | gh-84, public-site | high |
+| PRAXIS-SITE-14 | Build the product principles section | complete | gh-84, public-site | medium |
+| PRAXIS-SITE-15 | Build installation/get-started surface | complete | gh-84, public-site | high |
+| PRAXIS-SITE-16 | Build navigation and footer | complete | gh-84, public-site | medium |
+| PRAXIS-SITE-17 | Accessibility hardening | complete | gh-84, public-site | high |
+| PRAXIS-SITE-18 | Responsive/mobile engineering | complete | gh-84, public-site | high |
+| PRAXIS-SITE-19 | Performance and resilience | complete | gh-84, public-site | medium |
+| PRAXIS-SITE-20 | Security/privacy review | complete | gh-84, public-site | high |
+| PRAXIS-SITE-21 | GitHub Actions verification | complete | gh-84, public-site | high |
+| PRAXIS-SITE-22 | GitHub Pages deployment | complete | gh-84, public-site | high |
+| PRAXIS-SITE-23 | Make the site itself a Praxis case study | complete | gh-84, public-site | high |
+| PRAXIS-SITE-24 | Final communication/polish pass | complete | gh-84, public-site | medium |
+| PRAXIS-SITE-25 | Adversarial claim audit | complete | gh-84, public-site | high |
+| PRAXIS-SITE-26 | Final verification and evidence | complete | gh-84, public-site | high |
+| PRAXIS-SITE-27 | Align Pages deployment workflow with echelon-foundry deploy-pages.yml | complete | gh-84, public-site | medium |
+| PRAXIS-STATE-MERGE-01 | Parallel work items conflict in single-document Praxis state files | captured | work-protocol | high |
+| PRAXIS-TELEMETRY-CLASSIFY-VOCAB | telemetry classify accepts classifications that validate rejects | captured | telemetry | medium |
+| PRAXIS-WORK-ABANDON-01 | work abandon: cancel live (ready/active/blocked) work items truthfully | complete | work-protocol, cli | high |
+| PROJECT-ADMIN-HUB | PROJECT-ADMIN-HUB | complete |  |  |
+| RELEASE-3-5-0 | Release Praxis 3.5.0 with remote execution (GH-90) | complete |  | high |
+| RELEASE-3-6-0 | Release Praxis 3.6.0 | complete |  | medium |
+| REMOTE-ENABLE-3-5-0 | Pin Praxis 3.5.0 and enable remote execution (read,mutate,complete) (GH-90) | complete |  | high |
+| REMOTE-ENABLE-3-6-0 | Pin Praxis 3.6.0 for remote execution (praxis.remote 1.3) | complete |  | high |
+| ROADMAP-PHASE-2 | ROADMAP-PHASE-2 | complete |  |  |
+| ROADMAP-PHASE-3 | ROADMAP-PHASE-3 | complete |  |  |
+| ROADMAP-PHASE-4 | ROADMAP-PHASE-4 | complete |  |  |
+| ROS-AUTHORITY-SWITCH-DECISION | Open the ./ros authority-switch decision track (command-parity evidence + phased plan) | complete |  | high |
+| TASK-20260816-PROMPTS | TASK-20260816-PROMPTS | complete |  |  |
+| WEB-INTERFACE | WEB-INTERFACE | complete |  |  |
+| WI-0001 | This is a test entry. | abandoned | code, testing | high |
+| WI-0002 | Register other ~/dev ROS repos in the project-administration hub | captured | hub, follow-up | medium |
+| WI-0003 | Provider-neutral adaptive development telemetry | complete | telemetry, architecture, execution | high |
+| WI-0004 | Post-close telemetry data-quality hardening | complete | telemetry, data-quality | high |
+| WI-0005 | Telemetry root-record validation guard | complete | telemetry, validation | high |
+| WI-0006 | Correct telemetry gauge aggregation semantics | complete | telemetry, aggregation | high |
+| WI-0007 | Adversarial telemetry architecture revision | complete | telemetry, architecture, reliability | high |
+| WI-0008 | Run SDE init, status, verify, and update | complete |  | medium |
+| WI-0009 | Inventory ROS operational architecture and plan the F# migration | complete | architecture, fsharp, migration, sde | high |
+| WI-0010 | Install or update ROS with SDE and verify | complete | maintenance, sde | high |
+| WI-0011 | Migrate ROS toward a coherent F# application under SDE | complete | fsharp, migration, sde, research-development | high |
+| WI-0012 | F# work-attribution validation slice (work validate) | complete |  | medium |
+| WI-0013 | F# backlog-queue validation slice (work backlog-validate) | complete |  | medium |
+| WI-0014 | F# backlog-transition real effect (DF-ROS-2026-A028 Phase A, increment 1) | complete |  | medium |
+| WI-0015 | F# work-capture real effect (DF-ROS-2026-A028 Phase A, increment 2) | complete |  | medium |
+| WI-0016 | F# work-update real effect (DF-ROS-2026-A028 Phase A, increment 3) | complete |  | medium |
+| WI-0017 | F# work attach real effect: Phase A increment 4, backlog-only effects complete | complete |  | high |
+| WI-0018 | F# work start real effect: Phase A increment 5, first live-work/telemetry-creating effect | complete |  | high |
+| WI-0019 | F# work resume real effect: Phase A increment 6 | complete |  | high |
+| WI-0020 | F# work block real effect: Phase A increment 7 | complete |  | high |
+| WI-0021 | F# work complete real effect: Phase A increment 8 | complete |  | high |
+| WI-0022 | F# telemetry adapters/show real effect: Phase A/MIG-08 increment 1 | complete |  | high |
+| WI-0023 | F# telemetry lifecycle bookkeeping real effect: Phase A/MIG-08 increment 2 | complete |  | high |
+| WI-0024 | Re-run EV-ROS-2026-A043 command-surface parity inventory | complete |  | high |
+| WI-0025 | F# telemetry summary real effect: Phase A/MIG-08 increment 3 | complete |  | high |
+| WI-0026 | F# telemetry finalize real effect: Phase A/MIG-08 increment 4 | complete |  | high |
+| WI-0027 | F# telemetry record real effect: Phase A/MIG-08 increment 5 | complete |  | high |
+| WI-0028 | F# telemetry ingest real effect (generic adapter): Phase A/MIG-08 increment 6 | complete |  | high |
+| WI-0029 | F# telemetry classify real effect: Phase A/MIG-08 increment 7 | complete |  | high |
+| WI-0030 | F# telemetry start real effect: Phase A/MIG-08 increment 8 | complete |  | high |
+| WI-0031 | F# adapter call real effect: Phase A/MIG-08 increment 9 (DF-ROS-2026-A007) | complete |  | high |
+| WI-0032 | F# adapter publish real effect: Phase A/MIG-08 increment 10 (DF-ROS-2026-A007) | complete |  | high |
+| WI-0033 | F# work resume parentExecutionId correction: fixes confirmed production defect (Phase A/MIG-08) | complete |  | high |
+| WI-0034 | F# telemetry ingest openai-codex adapter: Phase A/MIG-08 increment 11 | complete |  | high |
+| WI-0035 | F# telemetry ingest hook adapters: Phase A/MIG-08 increment 12 | complete |  | high |
+| WI-0036 | F# telemetry ingest anthropic-claude-statusline adapter: Phase A/MIG-08 increment 13 | complete |  | high |
+| WI-0037 | F# telemetry ingest OTel adapter family: Phase A/MIG-08 increment 14 (final adapter, completes telemetry ingest) | complete |  | high |
+| WI-0038 | F# telemetry start execution-id and identity-override flags: Phase A/MIG-08 increment 15 (final, closes MIG-08 scope) | complete |  | high |
+| WI-0039 | Re-run F# command-surface parity inventory (EV-ROS-2026-A046): confirms MIG-08 fully closed | complete |  | high |
+| WI-0040 | F# work context read-only view: Phase A increment 9 (EV-ROS-2026-A046 follow-on) | complete |  | high |
+| WI-0041 | F# work/work list/work show read-only merged view: Phase A increment 10 (EV-ROS-2026-A046 follow-on) | complete |  | high |
+| WI-0042 | F# telemetryFindings validation port: MIG-08 increment 24 (validate unification prerequisite) | complete |  | high |
+| WI-0043 | Unify F# validate command: Phase A increment 11 (combines 5 already-real contributors) | complete |  | high |
+| WI-0044 | F# status command: Phase A increment 12 (closes EV-ROS-2026-A046's full inventory) | complete |  | high |
+| WI-0045 | Record Phase A closure evidence and point agents at F# for already-ported read-only commands | complete |  | high |
+| WI-0046 | Distribute ros-fs via npm as a self-contained single-file binary from GitHub Releases (DF-ROS-2026-A029) | complete |  | high |
+| WI-0047 | Redirect this repository's own ./ros dispatch to the F# CLI (DF-ROS-2026-A030) | complete |  | high |
+| WI-0048 | Add additive F# ros-fs launcher to the greenfield starter template (DF-ROS-2026-A031) | complete |  | high |
+| WI-0049 | Replace Node with F# by default in the greenfield starter template (DF-ROS-2026-A032) | complete |  | high |
+| WI-0050 | Execute DF-ROS-2026-A032 Phase 2 with refined scope: Node internal-library-only, golden-master tests (DF-ROS-2026-A033) | complete | fsharp-migration | high |
+| WI-0051 | Root-cause and document the session-long CI empty-output failure pattern (EV-ROS-2026-A049) | complete | ci-infra | medium |
+| WI-0052 | Bump to 2.0.1 to actually publish the first working stable release (2.0.0 never published, EV-ROS-2026-A050) | complete |  | high |
+| WI-0053 | Fix ./ros hitting an unhandled 404 for a main-branch snapshot rosVersion | complete |  | high |
+| WI-0054 | Fix ros-bootstrap init pinning a scaffolded project to a binary-less @main snapshot version | complete |  | high |
+| WI-0055 | Sync queue.json's own backlog status to complete when a promoted item finishes | complete |  | medium |
+| WI-0056 | Add the standardized Echelon Foundry lifecycle CLI (init/status/verify/upgrade/doctor) in F#, distributed through npm | complete |  | high |
+| WI-0057 | Embed the starter scaffold in the CLI binary so init/upgrade run standalone | complete |  | high |
+| WI-0058 | Release 3.0.0: version bump plus refreshed README and instructions | complete |  | high |
+| WI-0059 | Classify registries/theories.json as generated in both starter manifests | complete |  | high |
+| WI-0060 | Bump npm package version to 3.0.3 | complete | release, npm | medium |
+| WI-0061 | Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict | complete | remote-execution, gh-90 | medium |
+| WI-0062 | Triage SDE 1.3.0 structural review findings | complete | sde, structural-review | high |
+| WI-0063 | Implement ROS next-pass Ordo observation and structured [record] (#63) | complete | ordo,next-pass | high |
+| WI-0064 | Evidence-based work groups for the advisory planner (plan groups/explain-group) and the frozen grouping A/B experiment protocol | complete | planning, architecture, cli | high |
+| WI-0072 | Port provenance follow-ups onto the merged model: collaboration aggregates in provenance audit, producedBy on ordo [record], installer event actor | complete | provenance | medium |
+| WI-ACTIVE | Active item | blocked |  | medium |
+| WI-READY | Ready item | active |  | medium |
+| WORK-CAPTURE-ID-COLLISION | ros add can auto-allocate a WI-NNNN ID that already belongs to a live-context work item | captured | work-protocol, backlog | medium |
+| WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |
+| WORKQUEUE-BACKLOG-LAYER | WORKQUEUE-BACKLOG-LAYER | complete |  |  |

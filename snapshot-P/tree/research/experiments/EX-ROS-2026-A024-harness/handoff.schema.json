@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "EX-ROS-2026-A024-[record].schema.json",
+  "title": "A024 structured durable [record]",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "experimentId",
+    "arm",
+    "completedItem",
+    "baselineCommit",
+    "headCommit",
+    "decisions",
+    "invariants",
+    "reusableAbstractions",
+    "changedPaths",
+    "verification",
+    "unresolvedRisks",
+    "nextItemContext"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "experimentId": { "const": "EX-ROS-2026-A024" },
+    "arm": { "const": "structured-[record]" },
+    "completedItem": { "type": "string", "pattern": "^PRAXIS-GROUP-0[1-5]$" },
+    "baselineCommit": { "const": "8b4ffa392e93b19bf39f6672a608954c934cb815" },
+    "headCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["topic", "decision", "evidencePaths"],
+        "properties": {
+          "topic": { "type": "string", "minLength": 1 },
+          "decision": { "type": "string", "minLength": 1 },
+          "evidencePaths": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "invariants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["statement", "evidencePaths"],
+        "properties": {
+          "statement": { "type": "string", "minLength": 1 },
+          "evidencePaths": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "reusableAbstractions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "path", "purpose"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "path": { "type": "string", "minLength": 1 },
+          "purpose": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "changedPaths": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["acceptanceStatus", "testsRun"],
+      "properties": {
+        "acceptanceStatus": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["criterion", "status", "evidence"],
+            "properties": {
+              "criterion": { "type": "string", "minLength": 1 },
+              "status": { "enum": ["pass", "fail", "indeterminate"] },
+              "evidence": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "testsRun": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["command", "result"],
+            "properties": {
+              "command": { "type": "string", "minLength": 1 },
+              "result": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "unresolvedRisks": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "nextItemContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["constraints", "likelyReuse", "openQuestions"],
+      "properties": {
+        "constraints": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "likelyReuse": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "openQuestions": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

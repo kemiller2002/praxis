@@ -1,0 +1,145 @@
+[
+  {
+    "author_agent": "openai-codex",
+    "created": "2026-07-28",
+    "evidence_ids": [
+      "EV-FE-2026-B003",
+      "EV-FE-2026-B004",
+      "EV-FE-2026-B005"
+    ],
+    "hypothesis_ids": [
+      "HY-FE-2026-B006"
+    ],
+    "id": "JR-FE-2026-B002",
+    "path": "research/journals/JR-FE-2026-B002--framework-engineering-boundary-research.md",
+    "related_mission": "MS-FE-2026-B001",
+    "related_package": "RP-FE-2026-B008",
+    "research_area": "framework-engineering-boundary",
+    "status": "complete",
+    "tags": [
+      "framework-engineering",
+      "boundary-study",
+      "architecture"
+    ],
+    "theory_ids": [],
+    "title": "Framework Engineering boundary research journal"
+  },
+  {
+    "author_agent": "codex",
+    "created": "2026-07-24",
+    "evidence_ids": [
+      "EV-ROS-2026-A003"
+    ],
+    "hypothesis_ids": [],
+    "id": "JR-ROS-2026-A004",
+    "path": "research/journals/JR-ROS-2026-A004--executable-contract-implementation.md",
+    "related_mission": {},
+    "related_package": "RP-ROS-2026-A005",
+    "research_area": "ros-executable-contract",
+    "tags": [
+      "architecture",
+      "validation",
+      "[record]"
+    ],
+    "theory_ids": [],
+    "title": "Executable contract implementation"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-05",
+    "id": "JR-ROS-2026-A012",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/journals/JR-ROS-2026-A012--adaptive-telemetry-implementation.md",
+    "related_documents": [
+      "DF-ROS-2026-A010",
+      "EV-ROS-2026-A011",
+      "EV-ROS-2026-A014",
+      "docs/development-telemetry.md"
+    ],
+    "status": "complete",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "telemetry",
+      "implementation",
+      "journal"
+    ],
+    "title": "Adaptive execution telemetry archaeology and implementation journal",
+    "updated": "2026-09-05",
+    "version": "1.1.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-07",
+    "id": "JR-ROS-2026-A016",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/journals/JR-ROS-2026-A016--fsharp-migration-architecture-investigation.md",
+    "related_documents": [
+      "EV-ROS-2026-A015",
+      "RP-ROS-2026-A017"
+    ],
+    "status": "complete",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "architecture",
+      "inventory",
+      "fsharp",
+      "migration",
+      "journal"
+    ],
+    "title": "ROS operational inventory and F# migration architecture investigation",
+    "updated": "2026-09-07",
+    "version": "1.0.0"
+  },
+  {
+    "author_agent": "openai-codex",
+    "created": "2026-09-07",
+    "evidence_ids": [
+      "EV-ROS-2026-A015",
+      "EV-ROS-2026-A018",
+      "EV-ROS-2026-A030",
+      "EV-ROS-2026-A031",
+      "EV-ROS-2026-A032",
+      "EV-ROS-2026-A033",
+      "EV-ROS-2026-A034",
+      "EV-ROS-2026-A035",
+      "EV-ROS-2026-A036",
+      "EV-ROS-2026-A037",
+      "EV-ROS-2026-A038",
+      "EV-ROS-2026-A039",
+      "EV-ROS-2026-A040",
+      "EV-ROS-2026-A041",
+      "EV-ROS-2026-A042"
+    ],
+    "hypothesis_ids": [
+      "HY-ROS-2026-A021",
+      "HY-ROS-2026-A022",
+      "HY-ROS-2026-A023",
+      "HY-ROS-2026-A024",
+      "HY-ROS-2026-A025",
+      "HY-ROS-2026-A026"
+    ],
+    "id": "JR-ROS-2026-A019",
+    "path": "research/journals/JR-ROS-2026-A019--fsharp-application-migration.md",
+    "related_mission": "WI-0011",
+    "related_package": "RP-ROS-2026-A029",
+    "research_area": "repository-operating-system",
+    "status": "active",
+    "tags": [
+      "fsharp",
+      "migration",
+      "execution-journal",
+      "defects",
+      "sde"
+    ],
+    "theory_ids": [],
+    "title": "ROS F# application migration execution journal",
+    "updated": "2026-09-09",
+    "version": "1.14.0"
+  }
+]

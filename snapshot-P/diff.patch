@@ -1,0 +1,2583 @@
+diff --git a/docs/cli.md b/docs/cli.md
+index b1641d3..15cb272 100644
+--- a/docs/cli.md
++++ b/docs/cli.md
+@@ -306,6 +306,39 @@ execution for each) without changing any item; `explain-group` answers why a
+ group exists and what would change it (`DF-ROS-2026-A047`). See
+ [`planning.md`](planning.md).
+ 
++### `work group`
++
++```
++ros work group show GROUP-ID [--json] [--config FILE]
++ros work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP
++                      [--kind KIND] [--origin ORIGIN] [--execution-repository NAME] [--cross-repository]
++                      [--shared-context TEXT]* [--architecture-note TEXT]* [--reason TEXT]
++                      [--config FILE] [--dry-run] [--json] [IDENTITY]
++ros work group add    --id GROUP-ID --member ID --occurred-at TIMESTAMP [--execution-repository NAME]
++                      [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY]
++ros work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT]
++                      [--allow-empty] [--dry-run] [--json] [IDENTITY]
++ros work group checkpoint --id GROUP-ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT
++                      [--decision TEXT]* [--dry-run] [--json] [IDENTITY]
++```
++
++Durable, human-declared execution groups (phase two of the work-group
++requirements, PRX-GRP-073), stored in `.ros/work/groups.json` with provenance.
++`show` is read-only: members with their own recorded and planning states,
++partial-completion progress, blocked members and what they gate; an unknown
++group exits `1`. `add` refuses unknown or terminal items, items already present,
++and items executing in another repository unless the group is
++cross-repository, and records who added the member. `remove` refuses
++non-members and refuses removing the last member unless `--allow-empty`, and
++records who removed it. `checkpoint` records a group checkpoint (active,
++completed and remaining members, shared decisions, branch and commit, next
++action) only under the same durable verification as `work checkpoint`; it
++references members' own checkpoints, never replaces them, and attributes no
++path to any member. A group command never changes a member's lifecycle state, evidence or
++attribution, and the planner reads a stored group exactly as a
++`grouping.groups` declaration. `validate` checks stored groups. See
++[`planning.md`](planning.md) ("Declared work groups").
++
+ ### `work reconcile`
+ 
+ ```
+diff --git a/docs/planning.md b/docs/planning.md
+index 9be23b5..4c28aba 100644
+--- a/docs/planning.md
++++ b/docs/planning.md
+@@ -24,6 +24,9 @@ praxis plan simulate --groups [--max-concurrency N]    waves of groups and ungro
+ praxis plan compare  --groups [--max-concurrency N]    grouped versus independent execution, per group
+ ```
+ 
++Durable, human-declared groups are recorded with `praxis work group ...`
++(see "Declared work groups"); the planner reads them like `grouping.groups`.
++
+ Common options: `--observations FILE` (external CI/GitHub evidence, below),
+ `--config FILE` (planner configuration, below), `--as-of TIMESTAMP` (pin the
+ planning timestamp, for reproducible documents). In this checkout use `./ros
+@@ -289,6 +292,124 @@ than the observed execution (at least two).
+ **IDs.** Recommendations are named `GROUP-<REPOSITORY>-<AREA>-<NNN>` and are
+ stable for identical inputs only; durable IDs come from declarations.
+ 
++## Declared work groups (`work group`, phase two)
++
++Phase two of [`PLANNING-WORK-GROUPS.md`](../requirements/PLANNING-WORK-GROUPS.md)
++(PRX-GRP-073; `PRAXIS-GROUP-01`..`05`, proposed cohort of `EX-ROS-2026-A021`;
++not to be merged before that experiment is evaluated and the owner accepts
++phase two). A human (or an agent acting for one) records a durable execution
++group instead of keeping it in a planner configuration file.
++
++**Architecture, shared by every `work group` command.**
++
++- One store: `.ros/work/groups.json` (`schemaVersion` `1.0.0`), Praxis
++  state like the backlog, written atomically under the `work-protocol` lock.
++  A group command writes **only** this file: never a member's backlog row,
++  live record, events, telemetry or checkpoints, so membership cannot change
++  a member's lifecycle state, evidence or attribution (PRX-GRP-002, 041, 043).
++- One typed model and one decision module: `Ros.Domain.Planning.WorkGroups`
++  (pure) decides every command; `WorkGroupJson` is the stored and printed
++  contract; `FileWorkGroupRepository` reads and writes the file and builds the
++  work catalog (each item's recorded state: its live state when it has a live
++  record, otherwise its backlog status); `GroupCommands` parses and renders.
++- Provenance: the group records who created it, who added each member and
++  when, and an append-only `history` of every change (`created`,
++  `member-added`, `member-removed`, `checkpointed`) with actor, time and
++  optional reason.
++- The planner reads a stored group **exactly** as a `grouping.groups`
++  declaration (`WorkGroups.declared`): `plan groups`, `explain-group`,
++  `simulate --groups` and `compare --groups` see it with no option. A
++  configured declaration with the same ID wins; a memberless group declares
++  nothing.
++- `validate` checks the stored file: it parses; IDs are valid and unique;
++  members are tracked work items, listed once, and repository-local unless the
++  group is cross-repository; history begins with creation; and group
++  checkpoints are internally consistent and unaltered (content-addressed IDs).
++  Terminal members are expected: groups complete partially (PRX-GRP-042).
++- Every mutating command takes `--id GROUP-ID --occurred-at TIMESTAMP`,
++  `--dry-run` (decide and print, record nothing) and `--json`, and the usual
++  identity options. A refusal records nothing; argument errors exit `2`,
++  other refusals `1`.
++
++```
++praxis work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP
++                         [--kind KIND] [--origin ORIGIN] [--execution-repository NAME]
++                         [--cross-repository] [--shared-context TEXT]* [--architecture-note TEXT]*
++                         [--reason TEXT] [--config FILE] [--dry-run] [--json]
++```
++
++`create` records a declared group. IDs follow PRX-GRP-010
++(`GROUP-<AREA>-<SEQUENCE>`, for example `GROUP-PRAXIS-PLANNING-001`). It
++refuses an invalid or already-declared ID (stored, or in the `--config`
++planner configuration), no members, a member named twice, and an unknown or
++terminal (complete or abandoned) member. The execution repository defaults to
++this repository; a member executing elsewhere (its
++`grouping.executionRepositories` entry in `--config`) is refused unless the
++group is `--cross-repository` (PRX-GRP-051). `--origin` defaults to
++`human-declared`.
++
++```
++praxis work group show GROUP-ID [--json] [--config FILE]
++```
++
++`show` is read-only (it never writes). It prints the group's kind, origin,
++execution repository, shared context and architecture notes; every member
++with its own recorded state (live state, else backlog status) and its
++planning state (`unknown` when the planner cannot read the repository), its
++latest own checkpoint and who added it; partial-completion progress (`k of n
++complete`, abandoned, active, blocked, remaining: the group never implies every
++member succeeded, PRX-GRP-042); each blocked member with its block reason and
++the open items that wait directly on it; and the latest group checkpoint. An
++unknown group exits `1`.
++
++```
++praxis work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP
++                      [--execution-repository NAME] [--reason TEXT] [--config FILE] [--dry-run] [--json]
++```
++
++`add` adds one work item to a declared group and records who added it, when
++and why (the member's `addedBy`/`addedAt`/`reason` and a `member-added`
++history entry). It refuses an unknown or terminal item, an item already in
++the group, an unknown group, and an item whose execution repository
++(`--execution-repository`, else its `--config` entry, else this repository)
++differs from the group's unless the group is cross-repository. The item's own
++records are untouched.
++
++```
++praxis work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP
++                         [--reason TEXT] [--allow-empty] [--dry-run] [--json]
++```
++
++`remove` removes one member and appends a `member-removed` history entry
++naming who removed it, when and why; the `member-added` entry stays. It
++refuses a non-member and an unknown group. It reads nothing about the item,
++so its lifecycle state, evidence and attribution cannot change, and an item no
++longer tracked can still be removed. Removing the last member is refused
++unless `--allow-empty`: the group then stays declared with its history and
++declares nothing to the planner.
++
++```
++praxis work group checkpoint --id GROUP-ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT
++                             [--decision TEXT]* [--dry-run] [--json]
++```
++
++`checkpoint` records a group checkpoint (PRX-GRP-044): the group, its
++members partitioned by their own recorded state (`active`, `completed`,
++`abandoned`, and `remaining`: every member not complete or abandoned), the
++shared architectural decisions (`--decision`), the verified branch and commit,
++the summary and the next action. It requires exactly the durable-checkpoint
++verification `work checkpoint` applies (`CheckpointVerification.verifyDurableLocation`:
++local HEAD on a branch whose upstream remote head, read from the remote
++now, is the same commit, with no meaningful uncommitted work) and refuses with
++the same codes (`local-ahead`, `uncommitted-changes`, `no-upstream`, ...), as
++well as blank text and a group with no members. It **references** each
++member's own latest checkpoint and never replaces it: it writes no event,
++no `latestCheckpoint` and no paths, so no member is attributed another
++member's changes (PRX-GRP-043), and each member still checkpoints and
++completes on its own. The checkpoint ID is content-addressed; `validate`
++reports an altered checkpoint and a member reference that is not one of that
++member's recorded checkpoints. `show` prints the latest group checkpoint.
++
+ ## JSON contract
+ 
+ Every document has `"schema": "praxis.plan/1.0.0"` and a `kind`: `analysis`,
+diff --git a/src/Ros.Cli/GroupCommands.fs b/src/Ros.Cli/GroupCommands.fs
+new file mode 100644
+index 0000000..739d283
+--- /dev/null
++++ b/src/Ros.Cli/GroupCommands.fs
+@@ -0,0 +1,447 @@
++namespace Ros.Cli
++
++open System
++open System.Globalization
++open System.IO
++open System.Text.Json.Nodes
++open Ros.Application.Work
++open Ros.Contracts.Planning
++open Ros.Domain.Planning
++open Ros.Domain.Work
++open Ros.Domain.Provenance
++open Ros.Infrastructure.Artifacts
++open Ros.Infrastructure.Git
++open Ros.Infrastructure.Planning
++open Ros.Infrastructure.Work
++
++/// `praxis work group ...`: durable, human-declared execution groups
++/// (requirements/PLANNING-WORK-GROUPS.md phase two, PRX-GRP-073). This module
++/// parses, gathers the stored groups and work items, asks
++/// `Ros.Domain.Planning.WorkGroups` to decide, and writes only
++/// `.ros/work/groups.json` under the `work-protocol` lock. No group command
++/// writes a member's backlog row, live record, events or telemetry.
++[<RequireQualifiedAccess>]
++module GroupCommands =
++    let usage =
++        "work group show GROUP-ID [--json] [--config FILE] | work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--execution-repository NAME] [--cross-repository] [--shared-context TEXT]* [--architecture-note TEXT]* [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY] | work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--execution-repository NAME] [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY] | work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT] [--allow-empty] [--dry-run] [--json] [IDENTITY] | work group checkpoint --id GROUP-ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT [--decision TEXT]* [--dry-run] [--json] [IDENTITY]"
++
++    // ---- arguments ----
++
++    let private identityFlags =
++        [ "--actor-kind"; "--agent"; "--actor"; "--provider"; "--model"; "--model-version"; "--runtime"; "--runtime-version"; "--session"; "--conversation"; "--run"; "--subagent" ]
++
++    let private optionValues (name: string) (arguments: string list) =
++        arguments
++        |> List.pairwise
++        |> List.choose (fun (flag, value) -> if flag = name && not (value.StartsWith "--") then Some value else None)
++
++    let private optionValue (name: string) (arguments: string list) = optionValues name arguments |> List.tryHead
++
++    let private isTimestamp (value: string) =
++        DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind) |> fst
++
++    /// Every token that is neither a known `--flag VALUE` pair nor a known
++    /// switch.
++    let rec private unexpected (valued: Set<string>) (switches: Set<string>) (arguments: string list) =
++        match arguments with
++        | [] -> []
++        | flag :: value :: rest when valued.Contains flag && not (value.StartsWith "--") -> unexpected valued switches rest
++        | flag :: rest when valued.Contains flag -> $"{flag} requires a value" :: unexpected valued switches rest
++        | flag :: rest when switches.Contains flag -> unexpected valued switches rest
++        | token :: rest -> $"unexpected argument '{token}'" :: unexpected valued switches rest
++
++    let private commonErrors (command: string) (valued: string list) (switches: string list) (arguments: string list) =
++        [ match optionValues "--id" arguments with
++          | [ _ ] -> ()
++          | [] -> yield $"{command} requires --id GROUP-ID"
++          | _ -> yield $"{command} names exactly one group; pass --id once"
++          match optionValues "--occurred-at" arguments with
++          | [ value ] when isTimestamp value -> ()
++          | [ value ] -> yield $"--occurred-at '{value}' is not a timestamp"
++          | _ -> yield $"{command} requires exactly one --occurred-at TIMESTAMP (the real current time)"
++          yield! unexpected (Set.ofList ([ "--id"; "--occurred-at" ] @ valued @ identityFlags)) (Set.ofList ([ "--dry-run"; "--json" ] @ switches)) arguments ]
++
++    let private reportUsage (errors: string list) =
++        errors |> List.iter (eprintfn "ERROR %s")
++        eprintfn "Usage: ros %s" usage
++        2
++
++    // ---- gathering ----
++
++    let private resolve (root: string) (file: string) = if Path.IsPathRooted file then file else Path.Combine(root, file)
++
++    /// The planner configuration the caller named, if any: it supplies
++    /// declared group IDs and where items execute.
++    let private readConfiguration (root: string) (arguments: string list) : Result<PlannerConfiguration, string> =
++        match optionValue "--config" arguments |> Option.map (resolve root) with
++        | None -> Ok PlannerConfiguration.defaults
++        | Some file when not (File.Exists file) -> Error $"{file} does not exist"
++        | Some file -> PlanningJson.parseConfiguration (File.ReadAllText file)
++
++    /// Everything a group decision reads.
++    type Context =
++        { Stored: StoredWorkGroup list
++          Catalog: WorkCatalog
++          Configuration: PlannerConfiguration }
++
++    let private gather (root: string) (arguments: string list) : Result<Context, string> =
++        readConfiguration root arguments
++        |> Result.bind (fun configuration ->
++            FileWorkGroupRepository.read root
++            |> Result.bind (fun stored ->
++                FileWorkGroupRepository.catalog root configuration.Grouping.ExecutionRepositories
++                |> Result.map (fun catalog ->
++                    { Stored = stored
++                      Catalog = catalog
++                      Configuration = configuration })))
++
++    /// The stored groups with one existing group replaced in place.
++    let replace (groups: StoredWorkGroup list) (changed: StoredWorkGroup) =
++        groups |> List.map (fun group -> if group.Id = changed.Id then changed else group)
++
++    // ---- rendering ----
++
++    let private memberLines (group: StoredWorkGroup) =
++        group.Members
++        |> List.map (fun entry ->
++            let reason = entry.Reason |> Option.map (fun text -> $" ({text})") |> Option.defaultValue ""
++            $"  {entry.WorkItemId} in {entry.ExecutionRepository}, added {entry.AddedAt} by {Actor.describe entry.AddedBy}{reason}")
++
++    let private document (command: string) (groupId: string) (status: string) (fields: (string * JsonNode) list) =
++        WorkGroupJson.record
++            ([ "command", WorkGroupJson.text command
++               "schemaVersion", WorkGroupJson.integer 1
++               "groupId", WorkGroupJson.text groupId
++               "status", WorkGroupJson.text status ]
++             @ fields)
++
++    // ---- the shared mutation pipeline ----
++
++    /// What a successful decision produced: the changed group, the full set
++    /// of groups to store, and the lines describing the change.
++    type Decided =
++        { Group: StoredWorkGroup
++          Groups: StoredWorkGroup list
++          Lines: string list
++          Fields: (string * JsonNode) list }
++
++    let private withLock (root: string) (run: unit -> Result<'a, string>) : Result<'a, string> =
++        match RegistryLock.acquire root "work-protocol" RegistryLock.defaultSettings with
++        | Error failure -> Error failure.Message
++        | Ok lease ->
++            let result =
++                try
++                    run ()
++                with error ->
++                    Error $"state persistence failed: {error.Message}"
++
++            match lease.Release(), result with
++            | Error failure, Ok _ -> Error failure.Message
++            | _, value -> value
++
++    /// Gathers, decides, and (unless `--dry-run`) stores the result, all
++    /// under the `work-protocol` lock. A refusal records nothing.
++    let mutate (root: string) (command: string) (arguments: string list) (decide: Context -> Result<Decided, GroupRejection list>) =
++        let groupId = (optionValue "--id" arguments).Value
++        let asJson = List.contains "--json" arguments
++        let dryRun = List.contains "--dry-run" arguments
++
++        let outcome =
++            let run () =
++                gather root arguments
++                |> Result.bind (fun context ->
++                    match decide context with
++                    | Error rejections -> Ok(Error rejections)
++                    | Ok decided when dryRun -> Ok(Ok decided)
++                    | Ok decided -> FileWorkGroupRepository.write root decided.Groups |> Result.map (fun () -> Ok decided))
++
++            if dryRun then run () else withLock root run
++
++        match outcome with
++        | Error message ->
++            if asJson then
++                printf "%s" (WorkGroupJson.render (document command groupId "failed" [ "failure", WorkGroupJson.record [ "code", WorkGroupJson.text "persistence-failed"; "message", WorkGroupJson.text message ] ]))
++            else
++                eprintfn "ERROR [persistence-failed] %s" message
++
++            1
++        | Ok(Error rejections) ->
++            if asJson then
++                printf "%s" (WorkGroupJson.render (document command groupId "rejected" [ "rejections", WorkGroupJson.rejections rejections ]))
++            else
++                rejections |> List.iter (fun rejection -> eprintfn "ERROR [%s] %s" (GroupRejection.code rejection) (GroupRejection.message rejection))
++                eprintfn "%s rejected; nothing was recorded" command
++
++            if rejections |> List.forall GroupRejection.isArgumentError then 2 else 1
++        | Ok(Ok decided) ->
++            let status = if dryRun then "dry-run" else "recorded"
++
++            if asJson then
++                printf "%s" (WorkGroupJson.render (document command groupId status ([ "group", WorkGroupJson.group decided.Group ] @ decided.Fields)))
++            else
++                decided.Lines |> List.iter (printfn "%s")
++
++                if dryRun then
++                    printfn "dry run: nothing was recorded"
++                else
++                    printfn "Praxis state changed in %s; commit and push it so another executor can see the group." FileWorkGroupRepository.relativePath
++
++            0
++
++    // ---- work group create ----
++
++    let private parseWith (what: string) (parse: string -> 'a option) (value: string) =
++        match parse value with
++        | Some parsed -> Ok parsed
++        | None -> Error $"unknown {what} '{value}'"
++
++    let private createErrors (arguments: string list) =
++        commonErrors
++            "work group create"
++            [ "--member"; "--kind"; "--origin"; "--execution-repository"; "--shared-context"; "--architecture-note"; "--reason"; "--config" ]
++            [ "--cross-repository" ]
++            arguments
++        @ [ match optionValue "--kind" arguments |> Option.map (parseWith "group kind" GroupKind.tryParse) with
++            | Some(Error message) -> yield message
++            | _ -> ()
++            match optionValue "--origin" arguments |> Option.map (parseWith "group origin" GroupOrigin.tryParse) with
++            | Some(Error message) -> yield message
++            | _ -> () ]
++
++    let create (root: string) (arguments: string list) (actor: Actor) =
++        match createErrors arguments with
++        | _ :: _ as errors -> reportUsage errors
++        | [] ->
++            let request =
++                { Id = (optionValue "--id" arguments).Value
++                  Members = optionValues "--member" arguments
++                  Kind = optionValue "--kind" arguments |> Option.bind GroupKind.tryParse
++                  Origin = optionValue "--origin" arguments |> Option.bind GroupOrigin.tryParse |> Option.defaultValue GroupOrigin.HumanDeclared
++                  ExecutionRepository = optionValue "--execution-repository" arguments
++                  CrossRepository = List.contains "--cross-repository" arguments
++                  SharedContext = optionValues "--shared-context" arguments
++                  ArchitectureNotes = optionValues "--architecture-note" arguments
++                  OccurredAt = (optionValue "--occurred-at" arguments).Value
++                  Actor = actor
++                  Reason = optionValue "--reason" arguments }
++
++            mutate root "work group create" arguments (fun context ->
++                let declaredIds =
++                    (context.Stored |> List.map (fun group -> group.Id))
++                    @ (context.Configuration.Grouping.Groups |> List.map (fun group -> group.Id))
++
++                WorkGroups.create context.Catalog declaredIds request
++                |> Result.map (fun group ->
++                    let scope = if group.CrossRepository then " (cross-repository)" else ""
++
++                    { Group = group
++                      Groups = context.Stored @ [ group ]
++                      Lines =
++                        [ $"group {group.Id} declared ({GroupOrigin.code group.Origin}) with {group.Members.Length} member(s), executing in {group.ExecutionRepository}{scope}" ]
++                        @ memberLines group
++                        @ [ "Members' lifecycle states, evidence and attribution are unchanged." ]
++                      Fields = [] }))
++
++    // ---- work group add ----
++
++    let private membershipRequest (arguments: string list) (actor: Actor) : MembershipRequest =
++        { GroupId = (optionValue "--id" arguments).Value
++          WorkItemId = (optionValue "--member" arguments).Value
++          ExecutionRepository = optionValue "--execution-repository" arguments
++          OccurredAt = (optionValue "--occurred-at" arguments).Value
++          Actor = actor
++          Reason = optionValue "--reason" arguments }
++
++    let private memberErrors (command: string) (valued: string list) (switches: string list) (arguments: string list) =
++        commonErrors command ([ "--member"; "--reason" ] @ valued) switches arguments
++        @ [ match optionValues "--member" arguments with
++            | [ _ ] -> ()
++            | [] -> yield $"{command} requires --member ID"
++            | _ -> yield $"{command} names exactly one member; pass --member once" ]
++
++    let add (root: string) (arguments: string list) (actor: Actor) =
++        match memberErrors "work group add" [ "--execution-repository"; "--config" ] [] arguments with
++        | _ :: _ as errors -> reportUsage errors
++        | [] ->
++            let request = membershipRequest arguments actor
++
++            mutate root "work group add" arguments (fun context ->
++                WorkGroups.add context.Catalog context.Stored request
++                |> Result.map (fun group ->
++                    let added = group.Members |> List.last
++
++                    { Group = group
++                      Groups = replace context.Stored group
++                      Lines =
++                        [ $"{added.WorkItemId} added to {group.Id} (now {group.Members.Length} member(s)), executing in {added.ExecutionRepository}, by {Actor.describe added.AddedBy}"
++                          $"{added.WorkItemId}'s lifecycle state, evidence and attribution are unchanged." ]
++                      Fields = [ "workItemId", WorkGroupJson.text added.WorkItemId ] }))
++
++    // ---- work group remove ----
++
++    let remove (root: string) (arguments: string list) (actor: Actor) =
++        match memberErrors "work group remove" [] [ "--allow-empty" ] arguments with
++        | _ :: _ as errors -> reportUsage errors
++        | [] ->
++            let request = membershipRequest arguments actor
++
++            mutate root "work group remove" arguments (fun context ->
++                WorkGroups.remove context.Stored (List.contains "--allow-empty" arguments) request
++                |> Result.map (fun group ->
++                    let remaining = if group.Members.IsEmpty then "no members; it stays declared, and its history is kept" else $"{group.Members.Length} member(s)"
++
++                    { Group = group
++                      Groups = replace context.Stored group
++                      Lines =
++                        [ $"{request.WorkItemId} removed from {group.Id} by {Actor.describe actor} (now {remaining})"
++                          $"{request.WorkItemId}'s lifecycle state, evidence and attribution are unchanged." ]
++                      Fields = [ "workItemId", WorkGroupJson.text request.WorkItemId ] }))
++
++    // ---- work group checkpoint ----
++
++    let private checkpointErrors (arguments: string list) =
++        commonErrors "work group checkpoint" [ "--summary"; "--next-action"; "--decision" ] [] arguments
++        @ [ if (optionValues "--summary" arguments).Length <> 1 then
++                yield "work group checkpoint requires one --summary TEXT describing the group's progress"
++            if (optionValues "--next-action" arguments).Length <> 1 then
++                yield "work group checkpoint requires one --next-action TEXT naming the group's next step" ]
++
++    let private checkpointLines (group: StoredWorkGroup) (recorded: GroupCheckpoint) =
++        let listed (values: string list) = if values.IsEmpty then "none" else String.concat ", " values
++        let location = recorded.Location
++
++        let references =
++            recorded.MemberCheckpoints
++            |> List.map (fun reference -> $"""{reference.WorkItemId}={reference.CheckpointId |> Option.defaultValue "none"}""")
++
++        [ $"group checkpoint recorded for {group.Id} (checkpoint {recorded.Id})"
++          $"  commit:        {location.LocalCommit.Value} on {location.Branch}"
++          $"  verified at:   {location.Remote.Name}/{location.RemoteBranch} == local HEAD (read from the remote itself)"
++          $"  recorded:      {recorded.RecordedAt} by {Actor.describe recorded.Actor}"
++          $"  completed:     {recorded.Summary}"
++          $"  next action:   {recorded.NextAction}"
++          $"  members:       active {listed recorded.Active}; completed {listed recorded.Completed}; abandoned {listed recorded.Abandoned}; remaining {listed recorded.Remaining}"
++          $"  member checkpoints referenced (never replaced): {listed references}" ]
++        @ (recorded.SharedDecisions |> List.map (fun decision -> $"  shared decision: {decision}"))
++        @ [ "  attributed:    no path to any member; each member's changes stay attributed by its own checkpoints" ]
++
++    let checkpoint (root: string) (arguments: string list) (actor: Actor) =
++        match checkpointErrors arguments with
++        | _ :: _ as errors -> reportUsage errors
++        | [] ->
++            let request =
++                { GroupId = (optionValue "--id" arguments).Value
++                  Summary = (optionValue "--summary" arguments).Value
++                  NextAction = (optionValue "--next-action" arguments).Value
++                  SharedDecisions = optionValues "--decision" arguments
++                  OccurredAt = (optionValue "--occurred-at" arguments).Value
++                  Actor = actor }
++
++            mutate root "work group checkpoint" arguments (fun context ->
++                // Never cached: the remote is read now, exactly as `work checkpoint` reads it.
++                let git = ProcessGitDurability.create root
++                let policy = FileCheckpointRepository.readPolicy root
++                let observations = CheckpointObservation.candidate git policy None ExecutionObservation.NoneActive
++                let location = CheckpointVerification.verifyDurableLocation (FileWorkConfigRepository.readRepositoryId root) observations
++
++                WorkGroups.checkpoint context.Catalog context.Stored location FileWorkGroupRepository.checkpointId request
++                |> Result.map (fun (group, recorded) ->
++                    { Group = group
++                      Groups = replace context.Stored group
++                      Lines = checkpointLines group recorded
++                      Fields = [ "checkpoint", WorkGroupJson.checkpoint recorded ] }))
++
++    // ---- work group show ----
++
++    let private showLines (view: GroupView) =
++        let group = view.Group
++        let kind = group.Kind |> Option.map GroupKind.code |> Option.defaultValue "unspecified"
++        let scope = if group.CrossRepository then " (cross-repository)" else ""
++        let state (value: RecordedWorkState option) = value |> Option.map RecordedWorkState.code |> Option.defaultValue "no longer tracked"
++        let planning (value: PlanningWorkState option) = value |> Option.map PlanningWorkState.code |> Option.defaultValue "unknown"
++
++        let memberLine (entry: GroupMemberView) =
++            let checkpoint = entry.LatestCheckpointId |> Option.map (fun id -> $"; latest checkpoint {id}") |> Option.defaultValue ""
++            $"  {entry.Membership.WorkItemId}  recorded {state entry.RecordedState}; planning {planning entry.PlanningState}{checkpoint}"
++
++        let blockedLines =
++            match GroupView.blocked view with
++            | [] -> [ "  none" ]
++            | blocked ->
++                blocked
++                |> List.map (fun entry ->
++                    let reason = entry.BlockReason |> Option.map (fun text -> $" ({text})") |> Option.defaultValue ""
++                    let gates = if entry.Gates.IsEmpty then "gates nothing open" else $"""gates {String.concat ", " entry.Gates}"""
++                    $"  {entry.Membership.WorkItemId}{reason}: {gates}")
++
++        let listed (title: string) (values: string list) =
++            match values with
++            | [] -> [ $"{title}: none" ]
++            | values -> $"{title}:" :: (values |> List.map (fun value -> $"  - {value}"))
++
++        let checkpointLines =
++            match view.LatestCheckpoint with
++            | None -> [ "Latest group checkpoint: none" ]
++            | Some checkpoint ->
++                [ $"Latest group checkpoint: {checkpoint.Id} at {checkpoint.Location.LocalCommit.Value} on {checkpoint.Location.Branch} ({checkpoint.RecordedAt})"
++                  $"  completed: {checkpoint.Summary}"
++                  $"  next action: {checkpoint.NextAction}" ]
++
++        [ $"GROUP {group.Id} ({kind}, {GroupOrigin.code group.Origin})"
++          $"Execution repository: {group.ExecutionRepository}{scope}"
++          $"Declared {group.CreatedAt} by {Actor.describe group.CreatedBy}"
++          $"Progress: {GroupView.describeProgress view.Progress} (each member completes on its own evidence; the group never implies every member succeeded)"
++          "Members:" ]
++        @ (view.Members |> List.map memberLine)
++        @ [ if not view.PlanningAvailable then "  (planning states unknown: the planner could not read this repository)"
++            "Blocked members:" ]
++        @ blockedLines
++        @ listed "Shared context" group.SharedContext
++        @ listed "Architecture notes" group.ArchitectureNotes
++        @ checkpointLines
++
++    /// `work group show GROUP-ID`: read-only; it never writes.
++    let show (root: string) (arguments: string list) =
++        let configFile = optionValue "--config" arguments
++
++        match arguments with
++        | [] -> reportUsage [ "work group show requires a GROUP-ID" ]
++        | groupId :: _ when groupId.StartsWith "--" -> reportUsage [ "work group show requires a GROUP-ID first" ]
++        | groupId :: rest ->
++            match unexpected (Set.ofList [ "--config" ]) (Set.ofList [ "--json" ]) rest with
++            | _ :: _ as errors -> reportUsage errors
++            | [] ->
++            match gather root arguments with
++            | Error message ->
++                eprintfn "ERROR %s" message
++                1
++            | Ok context ->
++                match WorkGroups.tryFind context.Stored groupId with
++                | None ->
++                    eprintfn "ERROR %s" (GroupRejection.message (GroupRejection.GroupNotFound groupId))
++                    1
++                | Some group ->
++                    let analysis =
++                        let port = FilePlanningRepository.create root None (configFile |> Option.map (resolve root))
++
++                        match Ros.Application.Planning.PlanningOperations.analyze port (DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")) Lifecycle.Version with
++                        | Ok(_, value) -> Some value
++                        | Error _ -> None
++
++                    let view = GroupView.build context.Catalog analysis group
++
++                    if List.contains "--json" arguments then
++                        printf "%s" (WorkGroupJson.render (WorkGroupJson.view view))
++                    else
++                        showLines view |> List.iter (printfn "%s")
++
++                    0
++
++    let run (root: string) (arguments: string list) =
++        match arguments with
++        | "create" :: rest -> ProvenanceCommands.withResolvedActor rest (create root rest)
++        | "show" :: rest -> show root rest
++        | "add" :: rest -> ProvenanceCommands.withResolvedActor rest (add root rest)
++        | "remove" :: rest -> ProvenanceCommands.withResolvedActor rest (remove root rest)
++        | "checkpoint" :: rest -> ProvenanceCommands.withResolvedActor rest (checkpoint root rest)
++        | _ -> reportUsage [ "unknown work group command" ]
+diff --git a/src/Ros.Cli/Program.fs b/src/Ros.Cli/Program.fs
+index 5d2efa7..ed6da8e 100644
+--- a/src/Ros.Cli/Program.fs
++++ b/src/Ros.Cli/Program.fs
+@@ -29,7 +29,7 @@ open Aegis
+ let Version = Lifecycle.Version
+ 
+ let private usage =
+-    "Usage: ros-fs [--root PATH] version | " + ExecutionCommands.usage + " | " + InstallationCommands.usage + " | " + PlanCommands.usage + " | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--unrecoverable-reason TEXT] [--actor NAME] | work abandon --id ID [--id ID]* --occurred-at TIMESTAMP --reason TEXT [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | " + ReconciliationCommands.usage + " | " + CheckpointCommands.usage + " | " + CheckpointCommands.continueUsage + " | work context [ID] [--text] [--offline] | status [--json] [--verbose] [--offline] | " + RemoteCommands.usage + " | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--step STEP-ID] [--quiet] | telemetry step start|complete|fail [TARGET] --step STEP-ID [--name TEXT] [--reason TEXT] [--occurred-at TIMESTAMP] | telemetry usage [WORKITEM] [--by work-item|execution|step|provider|model|day] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | foundations verify [--json] | adapter publish --target FILE | ordo ingest --input FILE | ordo assess --input FILE | ordo observe-search --input FILE | ordo observe-effect --input FILE | ordo current | ordo [record] --revision REV --source SOURCE [--fact TEXT]* [--assumption TEXT]* [--unknown TEXT]* [--obligation TEXT]* [--next-action TEXT]* | provenance identity [--json] [IDENTITY] | provenance record (--path PATH|--id ID) --operation {created|modified|reviewed|approved|superseded|migrated} [--reason TEXT] [--evidence REF]* [--derived-from REF]* [--execution EXE-ID] [--occurred-at TIMESTAMP] [--json] | provenance show ID|PATH [--json] | provenance audit [--json]; IDENTITY (work start/resume/block/complete, add, telemetry start): [--actor-kind {agent|human|automation|unknown|x-...}] [--agent ID|--actor ID] [--provider P] [--model M] [--runtime R] ..."
++    "Usage: ros-fs [--root PATH] version | " + ExecutionCommands.usage + " | " + InstallationCommands.usage + " | " + PlanCommands.usage + " | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--unrecoverable-reason TEXT] [--actor NAME] | work abandon --id ID [--id ID]* --occurred-at TIMESTAMP --reason TEXT [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | " + ReconciliationCommands.usage + " | " + CheckpointCommands.usage + " | " + GroupCommands.usage + " | " + CheckpointCommands.continueUsage + " | work context [ID] [--text] [--offline] | status [--json] [--verbose] [--offline] | " + RemoteCommands.usage + " | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--step STEP-ID] [--quiet] | telemetry step start|complete|fail [TARGET] --step STEP-ID [--name TEXT] [--reason TEXT] [--occurred-at TIMESTAMP] | telemetry usage [WORKITEM] [--by work-item|execution|step|provider|model|day] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | foundations verify [--json] | adapter publish --target FILE | ordo ingest --input FILE | ordo assess --input FILE | ordo observe-search --input FILE | ordo observe-effect --input FILE | ordo current | ordo [record] --revision REV --source SOURCE [--fact TEXT]* [--assumption TEXT]* [--unknown TEXT]* [--obligation TEXT]* [--next-action TEXT]* | provenance identity [--json] [IDENTITY] | provenance record (--path PATH|--id ID) --operation {created|modified|reviewed|approved|superseded|migrated} [--reason TEXT] [--evidence REF]* [--derived-from REF]* [--execution EXE-ID] [--occurred-at TIMESTAMP] [--json] | provenance show ID|PATH [--json] | provenance audit [--json]; IDENTITY (work start/resume/block/complete, add, telemetry start): [--actor-kind {agent|human|automation|unknown|x-...}] [--agent ID|--actor ID] [--provider P] [--model M] [--runtime R] ..."
+ 
+ /// Removes one global `--name VALUE` option from the argument list wherever
+ /// it appears, so the command parsers below only ever see their own flags.
+@@ -2083,6 +2083,9 @@ let private computeUnifiedFindings root : Result<ArtifactFinding list, string> =
+                 let stepReferenceFindings =
+                     FileTelemetryUsageRepository.stepReferenceFindings root |> List.map (fun (path, field, message) -> convert path field message)
+ 
++                let groupFindings =
++                    Ros.Infrastructure.Planning.FileWorkGroupRepository.validationFindings root |> List.map (fun (path, field, message) -> convert path field message)
++
+                 match ProvenanceCommands.findingsOf FindingSeverity.Error root with
+                 | Error message -> Error message
+                 | Ok provenanceErrors ->
+@@ -2093,6 +2096,7 @@ let private computeUnifiedFindings root : Result<ArtifactFinding list, string> =
+                     @ telemetryFindingsConverted
+                     @ checkpointFindings
+                     @ stepReferenceFindings
++                    @ groupFindings
+                     @ (provenanceErrors |> List.map ProvenanceCommands.toArtifactFinding)
+                     |> List.sortWith (fun a b -> System.String.CompareOrdinal($"{a.Path}\000{a.Field}\000{a.Message}", $"{b.Path}\000{b.Field}\000{b.Message}"))
+                     |> Ok
+@@ -2996,6 +3000,7 @@ let private repositoryDispatch root packageRoot arguments =
+     | "work" :: "abandon" :: rest -> ProvenanceCommands.withResolvedActor rest (runWorkAbandon root rest)
+     | "work" :: ("complete" | "done") :: rest -> ProvenanceCommands.withResolvedActor rest (runWorkComplete root rest)
+     | "work" :: "reconcile" :: rest -> ProvenanceCommands.withResolvedActor rest (ReconciliationCommands.run root rest)
++    | "work" :: "group" :: rest -> GroupCommands.run root rest
+     | "work" :: "checkpoint" :: "show" :: rest -> CheckpointCommands.show root rest
+     | "work" :: "continue" :: rest -> ProvenanceCommands.withResolvedActor rest (CheckpointCommands.runContinue root rest)
+     | "work" :: "checkpoint" :: rest -> ProvenanceCommands.withResolvedActor rest (CheckpointCommands.run root rest)
+diff --git a/src/Ros.Cli/Ros.Cli.fsproj b/src/Ros.Cli/Ros.Cli.fsproj
+index 2988921..07dc96c 100644
+--- a/src/Ros.Cli/Ros.Cli.fsproj
++++ b/src/Ros.Cli/Ros.Cli.fsproj
+@@ -38,6 +38,7 @@
+     <Compile Include="ExecutionCommands.fs" />
+     <Compile Include="InstallationCommands.fs" />
+     <Compile Include="PlanCommands.fs" />
++    <Compile Include="GroupCommands.fs" />
+     <Compile Include="Program.fs" />
+   </ItemGroup>
+ </Project>
+diff --git a/src/Ros.Contracts/Planning/WorkGroupJson.fs b/src/Ros.Contracts/Planning/WorkGroupJson.fs
+new file mode 100644
+index 0000000..babf75f
+--- /dev/null
++++ b/src/Ros.Contracts/Planning/WorkGroupJson.fs
+@@ -0,0 +1,327 @@
++namespace Ros.Contracts.Planning
++
++open System
++open System.Text.Json
++open System.Text.Json.Nodes
++open Ros.Contracts.Provenance
++open Ros.Domain.Git
++open Ros.Domain.Planning
++open Ros.Domain.Provenance
++open Ros.Domain.Work
++
++/// The stored form of declared work groups (`.ros/work/groups.json`) and the
++/// JSON views the `work group` commands print. Keys are written in a fixed
++/// order so a group checkpoint's content-addressed ID is stable.
++[<RequireQualifiedAccess>]
++module WorkGroupJson =
++    let schemaVersion = "1.0.0"
++
++    let private options =
++        JsonSerializerOptions(WriteIndented = true, IndentSize = 2, Encoder = Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping)
++
++    let render (node: JsonNode) = node.ToJsonString(options) + "\n"
++
++    let text (value: string) : JsonNode = JsonValue.Create value
++    let optionalText (value: string option) : JsonNode = value |> Option.map text |> Option.toObj
++    let boolean (value: bool) : JsonNode = JsonValue.Create value
++    let integer (value: int) : JsonNode = JsonValue.Create value
++
++    let array (values: JsonNode list) : JsonNode =
++        let result = JsonArray()
++        values |> List.iter result.Add
++        result
++
++    let texts (values: string list) = values |> List.map text |> array
++
++    let record (fields: (string * JsonNode) list) : JsonNode =
++        let result = JsonObject()
++        fields |> List.iter (fun (name, value) -> result[name] <- value)
++        result
++
++    let actor (value: Actor) : JsonNode = ActorJson.node value
++
++    // ---- writing ----
++
++    let private membership (entry: GroupMembership) =
++        record
++            [ "workItemId", text entry.WorkItemId
++              "executionRepository", text entry.ExecutionRepository
++              "addedAt", text entry.AddedAt
++              "addedBy", actor entry.AddedBy
++              "reason", optionalText entry.Reason ]
++
++    let private historyEntry (entry: GroupHistoryEntry) =
++        record
++            [ "change", text (GroupChange.code entry.Change)
++              "subject", optionalText (GroupChange.subject entry.Change)
++              "occurredAt", text entry.OccurredAt
++              "actor", actor entry.Actor
++              "reason", optionalText entry.Reason ]
++
++    let location (value: GitDurableLocation) =
++        record
++            [ "repository", text value.Repository
++              "branch", text value.Branch
++              "commit", text value.LocalCommit.Value
++              "remote", record [ "name", text value.Remote.Name; "url", optionalText value.Remote.Url ]
++              "remoteBranch", text value.RemoteBranch
++              "remoteCommit", text value.RemoteCommit.Value ]
++
++    let private checkpointFields (checkpoint: GroupCheckpoint) =
++        [ "recordedAt", text checkpoint.RecordedAt
++          "actor", actor checkpoint.Actor
++          "location", location checkpoint.Location
++          "verification", record [ "status", text "verified"; "mechanism", text (DurabilityMechanism.code DurabilityMechanism.GitRemoteObservation) ]
++          "summary", text checkpoint.Summary
++          "nextAction", text checkpoint.NextAction
++          "sharedDecisions", texts checkpoint.SharedDecisions
++          "members",
++          record
++              [ "active", texts checkpoint.Active
++                "completed", texts checkpoint.Completed
++                "abandoned", texts checkpoint.Abandoned
++                "remaining", texts checkpoint.Remaining ]
++          "memberCheckpoints",
++          checkpoint.MemberCheckpoints
++          |> List.map (fun reference -> record [ "workItemId", text reference.WorkItemId; "checkpointId", optionalText reference.CheckpointId ])
++          |> array
++          // A group checkpoint attributes no path to any member (PRX-GRP-043).
++          "paths", array [] ]
++
++    /// Every field of a group checkpoint except its ID, in ID-hashing order.
++    let checkpointBody (checkpoint: GroupCheckpoint) = record (checkpointFields checkpoint)
++
++    let checkpoint (value: GroupCheckpoint) = record (("id", text value.Id) :: checkpointFields value)
++
++    let group (value: StoredWorkGroup) : JsonNode =
++        record
++            [ "id", text value.Id
++              "kind", optionalText (value.Kind |> Option.map GroupKind.code)
++              "origin", text (GroupOrigin.code value.Origin)
++              "executionRepository", text value.ExecutionRepository
++              "crossRepository", boolean value.CrossRepository
++              "sharedContext", texts value.SharedContext
++              "architectureNotes", texts value.ArchitectureNotes
++              "createdAt", text value.CreatedAt
++              "createdBy", actor value.CreatedBy
++              "members", value.Members |> List.map membership |> array
++              "history", value.History |> List.map historyEntry |> array
++              "checkpoints", value.Checkpoints |> List.map checkpoint |> array ]
++
++    let document (groups: StoredWorkGroup list) : JsonNode =
++        record
++            [ "schemaVersion", text schemaVersion
++              "groups",
++              groups
++              |> List.sortWith (fun left right -> String.CompareOrdinal(left.Id, right.Id))
++              |> List.map group
++              |> array ]
++
++    // ---- reading ----
++
++    exception private Malformed of string
++
++    let private fail message = raise (Malformed message)
++
++    let private asObject (where: string) (node: JsonNode) =
++        match node with
++        | :? JsonObject as value -> value
++        | _ -> fail $"{where} must be an object"
++
++    let private textOf (where: string) (node: JsonNode) =
++        match node with
++        | :? JsonValue as value when value.GetValueKind() = JsonValueKind.String -> value.GetValue<string>()
++        | _ -> fail $"{where} must be a string"
++
++    let private readText (node: JsonObject) (name: string) = textOf name node[name]
++
++    let private readOptionalText (node: JsonObject) (name: string) =
++        match node[name] with
++        | null -> None
++        | value -> Some(textOf name value)
++
++    let private readBool (node: JsonObject) (name: string) =
++        match node[name] with
++        | :? JsonValue as value when value.GetValueKind() = JsonValueKind.True -> true
++        | :? JsonValue as value when value.GetValueKind() = JsonValueKind.False -> false
++        | _ -> fail $"{name} must be a boolean"
++
++    let private readArray (node: JsonObject) (name: string) =
++        match node[name] with
++        | null -> []
++        | :? JsonArray as values -> values |> Seq.toList
++        | _ -> fail $"{name} must be an array"
++
++    let private readTexts (node: JsonObject) (name: string) = readArray node name |> List.map (textOf name)
++    let private readObjects (node: JsonObject) (name: string) = readArray node name |> List.map (asObject name)
++
++    let private readActor (node: JsonObject) (name: string) =
++        match ActorJson.tryParse node[name] with
++        | Ok(Some value) -> value
++        | Ok None -> fail $"{name} is required"
++        | Error message -> fail $"{name}: {message}"
++
++    let private readCommit (node: JsonObject) (name: string) =
++        let value = readText node name
++
++        match CommitId.tryParse value with
++        | Some commit -> commit
++        | None -> fail $"{name} '{value}' is not a full commit ID"
++
++    let private readLocation (node: JsonObject) : GitDurableLocation =
++        let remote = asObject "remote" node["remote"]
++
++        { Repository = readText node "repository"
++          Branch = readText node "branch"
++          LocalCommit = readCommit node "commit"
++          Remote = { Name = readText remote "name"; Url = readOptionalText remote "url" }
++          RemoteBranch = readText node "remoteBranch"
++          RemoteCommit = readCommit node "remoteCommit" }
++
++    let private readCheckpoint (node: JsonObject) : GroupCheckpoint =
++        let members = asObject "members" node["members"]
++
++        if not (readArray node "paths").IsEmpty then
++            fail "a group checkpoint must not attribute paths"
++
++        { Id = readText node "id"
++          RecordedAt = readText node "recordedAt"
++          Actor = readActor node "actor"
++          Location = readLocation (asObject "location" node["location"])
++          Summary = readText node "summary"
++          NextAction = readText node "nextAction"
++          SharedDecisions = readTexts node "sharedDecisions"
++          Active = readTexts members "active"
++          Completed = readTexts members "completed"
++          Abandoned = readTexts members "abandoned"
++          Remaining = readTexts members "remaining"
++          MemberCheckpoints =
++            readObjects node "memberCheckpoints"
++            |> List.map (fun reference ->
++                { WorkItemId = readText reference "workItemId"
++                  CheckpointId = readOptionalText reference "checkpointId" }) }
++
++    let private readGroup (node: JsonObject) : StoredWorkGroup =
++        let parsed what parse value =
++            match parse value with
++            | Some result -> result
++            | None -> fail $"unknown {what} '{value}'"
++
++        { Id = readText node "id"
++          Kind = readOptionalText node "kind" |> Option.map (parsed "group kind" GroupKind.tryParse)
++          Origin = readText node "origin" |> parsed "group origin" GroupOrigin.tryParse
++          ExecutionRepository = readText node "executionRepository"
++          CrossRepository = readBool node "crossRepository"
++          SharedContext = readTexts node "sharedContext"
++          ArchitectureNotes = readTexts node "architectureNotes"
++          CreatedAt = readText node "createdAt"
++          CreatedBy = readActor node "createdBy"
++          Members =
++            readObjects node "members"
++            |> List.map (fun entry ->
++                { WorkItemId = readText entry "workItemId"
++                  ExecutionRepository = readText entry "executionRepository"
++                  AddedAt = readText entry "addedAt"
++                  AddedBy = readActor entry "addedBy"
++                  Reason = readOptionalText entry "reason" })
++          History =
++            readObjects node "history"
++            |> List.map (fun entry ->
++                let change = readText entry "change"
++                let subject = readOptionalText entry "subject"
++
++                { Change =
++                    match GroupChange.tryParse change subject with
++                    | Some value -> value
++                    | None -> fail $"history change '{change}' is malformed"
++                  OccurredAt = readText entry "occurredAt"
++                  Actor = readActor entry "actor"
++                  Reason = readOptionalText entry "reason" })
++          Checkpoints = readObjects node "checkpoints" |> List.map readCheckpoint }
++
++    /// Every stored group, or why the document cannot be trusted.
++    let parse (json: string) : Result<StoredWorkGroup list, string> =
++        try
++            let root = JsonNode.Parse json |> asObject "groups document"
++
++            match readOptionalText root "schemaVersion" with
++            | Some version when version = schemaVersion ->
++                readObjects root "groups"
++                |> List.mapi (fun index node ->
++                    try
++                        readGroup node
++                    with Malformed message ->
++                        let id = match node["id"] with :? JsonValue as value -> value.ToString() | _ -> $"#{index}"
++                        fail $"group {id}: {message}")
++                |> Ok
++            | Some version -> Error $"unsupported groups schemaVersion '{version}'"
++            | None -> Error "groups document has no schemaVersion"
++        with
++        | Malformed message -> Error message
++        | :? JsonException as error -> Error error.Message
++
++    // ---- command views ----
++
++    let rejection (value: GroupRejection) : JsonNode =
++        let node =
++            match value with
++            | GroupRejection.Checkpoint inner -> Ros.Contracts.Work.CheckpointJson.rejectionNode inner
++            | _ ->
++                let result = JsonObject()
++                result["code"] <- text (GroupRejection.code value)
++                result["message"] <- text (GroupRejection.message value)
++                result
++
++        node
++
++    let rejections (values: GroupRejection list) = values |> List.map rejection |> array
++
++    let progress (value: StoredGroupProgress) =
++        record
++            [ "members", integer value.Members
++              "complete", integer value.Complete
++              "abandoned", integer value.Abandoned
++              "active", integer value.Active
++              "blocked", integer value.Blocked
++              "remaining", integer value.Remaining
++              "noLongerTracked", integer value.Unknown
++              "statement", text (GroupView.describeProgress value) ]
++
++    let private memberView (value: GroupMemberView) =
++        record
++            [ "workItemId", text value.Membership.WorkItemId
++              "recordedState", optionalText (value.RecordedState |> Option.map RecordedWorkState.code)
++              "planningState", optionalText (value.PlanningState |> Option.map PlanningWorkState.code)
++              "blockReason", optionalText value.BlockReason
++              "latestCheckpointId", optionalText value.LatestCheckpointId
++              "gates", texts value.Gates
++              "executionRepository", text value.Membership.ExecutionRepository
++              "addedAt", text value.Membership.AddedAt
++              "addedBy", actor value.Membership.AddedBy
++              "reason", optionalText value.Membership.Reason ]
++
++    /// `work group show --json`.
++    let view (value: GroupView) =
++        let group = value.Group
++
++        record
++            [ "command", text "work group show"
++              "schemaVersion", integer 1
++              "groupId", text group.Id
++              "kind", optionalText (group.Kind |> Option.map GroupKind.code)
++              "origin", text (GroupOrigin.code group.Origin)
++              "executionRepository", text group.ExecutionRepository
++              "crossRepository", boolean group.CrossRepository
++              "sharedContext", texts group.SharedContext
++              "architectureNotes", texts group.ArchitectureNotes
++              "createdAt", text group.CreatedAt
++              "createdBy", actor group.CreatedBy
++              "planningAvailable", boolean value.PlanningAvailable
++              "progress", progress value.Progress
++              "members", value.Members |> List.map memberView |> array
++              "blocked",
++              GroupView.blocked value
++              |> List.map (fun blocked -> record [ "workItemId", text blocked.Membership.WorkItemId; "blockReason", optionalText blocked.BlockReason; "gates", texts blocked.Gates ])
++              |> array
++              "latestCheckpoint", value.LatestCheckpoint |> Option.map checkpoint |> Option.toObj
++              "history", group.History |> List.map historyEntry |> array ]
+diff --git a/src/Ros.Contracts/Ros.Contracts.fsproj b/src/Ros.Contracts/Ros.Contracts.fsproj
+index d3c0b92..9f2bb17 100644
+--- a/src/Ros.Contracts/Ros.Contracts.fsproj
++++ b/src/Ros.Contracts/Ros.Contracts.fsproj
+@@ -30,5 +30,6 @@
+     <Compile Include="Execution/ExecutionJson.fs" />
+     <Compile Include="Installation/InstallationJson.fs" />
+     <Compile Include="Planning/PlanningJson.fs" />
++    <Compile Include="Planning/WorkGroupJson.fs" />
+   </ItemGroup>
+ </Project>
+diff --git a/src/Ros.Domain/Planning/WorkGroups.fs b/src/Ros.Domain/Planning/WorkGroups.fs
+new file mode 100644
+index 0000000..be0a008
+--- /dev/null
++++ b/src/Ros.Domain/Planning/WorkGroups.fs
+@@ -0,0 +1,620 @@
++namespace Ros.Domain.Planning
++
++open System
++open System.Text.RegularExpressions
++open Ros.Domain.Provenance
++open Ros.Domain.Work
++
++// Declared execution groups (requirements/PLANNING-WORK-GROUPS.md phase two,
++// PRX-GRP-073). A stored group is a durable human declaration that several
++// work items belong together. It is Praxis state of its own: recording,
++// changing or checkpointing a group never changes a member's lifecycle
++// state, evidence, attribution, telemetry or checkpoints (PRX-GRP-002, 041,
++// 043). The planner reads a stored group exactly as it reads a
++// `grouping.groups` declaration (`WorkGroups.declared`). Every function here
++// is pure; the file and Git effects live in Infrastructure and the CLI.
++
++/// A work item's own recorded state: its live state when it has a live
++/// record, otherwise its backlog status. Never inferred.
++[<RequireQualifiedAccess>]
++type RecordedWorkState =
++    | Live of LiveWorkState
++    | Backlog of status: string
++
++[<RequireQualifiedAccess>]
++module RecordedWorkState =
++    let code state =
++        match state with
++        | RecordedWorkState.Live LiveWorkState.Ready -> "ready"
++        | RecordedWorkState.Live LiveWorkState.Active -> "active"
++        | RecordedWorkState.Live LiveWorkState.Blocked -> "blocked"
++        | RecordedWorkState.Live LiveWorkState.Complete -> "complete"
++        | RecordedWorkState.Live LiveWorkState.Abandoned -> "abandoned"
++        | RecordedWorkState.Backlog status -> status
++
++    let isTerminal state = code state = "complete" || code state = "abandoned"
++
++/// One work item as group decisions see it.
++type CatalogItem =
++    { Id: string
++      State: RecordedWorkState
++      /// Where the item is implemented (PRX-GRP-051): an explicit
++      /// declaration, otherwise this repository.
++      ExecutionRepository: string
++      /// The item's own latest durable checkpoint, when it has one.
++      LatestCheckpointId: string option }
++
++/// Every work item this repository tracks, and the repository itself.
++type WorkCatalog =
++    { Repository: string
++      Items: Map<string, CatalogItem> }
++
++/// One member of a stored group and who added it (provenance).
++type GroupMembership =
++    { WorkItemId: string
++      ExecutionRepository: string
++      AddedAt: string
++      AddedBy: Actor
++      Reason: string option }
++
++[<RequireQualifiedAccess>]
++type GroupChange =
++    | Created
++    | MemberAdded of workItemId: string
++    | MemberRemoved of workItemId: string
++    | Checkpointed of checkpointId: string
++
++[<RequireQualifiedAccess>]
++module GroupChange =
++    let code change =
++        match change with
++        | GroupChange.Created -> "created"
++        | GroupChange.MemberAdded _ -> "member-added"
++        | GroupChange.MemberRemoved _ -> "member-removed"
++        | GroupChange.Checkpointed _ -> "checkpointed"
++
++    let subject change =
++        match change with
++        | GroupChange.Created -> None
++        | GroupChange.MemberAdded id
++        | GroupChange.MemberRemoved id
++        | GroupChange.Checkpointed id -> Some id
++
++    let tryParse (code: string) (subject: string option) =
++        match code, subject with
++        | "created", None -> Some GroupChange.Created
++        | "member-added", Some id -> Some(GroupChange.MemberAdded id)
++        | "member-removed", Some id -> Some(GroupChange.MemberRemoved id)
++        | "checkpointed", Some id -> Some(GroupChange.Checkpointed id)
++        | _ -> None
++
++/// An append-only record of who changed the group, when and why.
++type GroupHistoryEntry =
++    { Change: GroupChange
++      OccurredAt: string
++      Actor: Actor
++      Reason: string option }
++
++/// A member's own latest checkpoint as the group checkpoint saw it. It is a
++/// reference: the member's checkpoint history is never replaced.
++type MemberCheckpointReference =
++    { WorkItemId: string
++      CheckpointId: string option }
++
++/// PRX-GRP-044: a group-level recovery point over its members' own
++/// checkpoints, verified exactly like `work checkpoint`. It carries no paths:
++/// no member is attributed another member's changes (PRX-GRP-043).
++type GroupCheckpoint =
++    { Id: string
++      RecordedAt: string
++      Actor: Actor
++      Location: GitDurableLocation
++      Summary: string
++      NextAction: string
++      SharedDecisions: string list
++      Active: string list
++      Completed: string list
++      Abandoned: string list
++      /// Every member not complete or abandoned, active and blocked included.
++      Remaining: string list
++      MemberCheckpoints: MemberCheckpointReference list }
++
++/// A durable, human-declared group (PRX-GRP-010, 011, 051, 073).
++type StoredWorkGroup =
++    { Id: string
++      Kind: GroupKind option
++      Origin: GroupOrigin
++      ExecutionRepository: string
++      CrossRepository: bool
++      SharedContext: string list
++      ArchitectureNotes: string list
++      CreatedAt: string
++      CreatedBy: Actor
++      Members: GroupMembership list
++      History: GroupHistoryEntry list
++      Checkpoints: GroupCheckpoint list }
++
++/// Why a group operation was refused. Nothing is recorded on a refusal.
++[<RequireQualifiedAccess>]
++type GroupRejection =
++    | InvalidGroupId of groupId: string
++    | DuplicateGroup of groupId: string
++    | GroupNotFound of groupId: string
++    | NoMembers
++    | InvalidMemberId of workItemId: string
++    | UnknownMember of workItemId: string
++    | TerminalMember of workItemId: string * state: string
++    | RepeatedMember of workItemId: string
++    | AlreadyMember of groupId: string * workItemId: string
++    | NotMember of groupId: string * workItemId: string
++    | RepositoryMismatch of workItemId: string * itemRepository: string * groupRepository: string
++    | LastMember of groupId: string * workItemId: string
++    | EmptyGroup of groupId: string
++    | BlankText of field: string
++    | Checkpoint of CheckpointRejection
++
++[<RequireQualifiedAccess>]
++module GroupRejection =
++    let code rejection =
++        match rejection with
++        | GroupRejection.InvalidGroupId _ -> "invalid-group-id"
++        | GroupRejection.DuplicateGroup _ -> "duplicate-group"
++        | GroupRejection.GroupNotFound _ -> "group-not-found"
++        | GroupRejection.NoMembers -> "no-members"
++        | GroupRejection.InvalidMemberId _ -> "invalid-member-id"
++        | GroupRejection.UnknownMember _ -> "unknown-member"
++        | GroupRejection.TerminalMember _ -> "terminal-member"
++        | GroupRejection.RepeatedMember _ -> "repeated-member"
++        | GroupRejection.AlreadyMember _ -> "already-member"
++        | GroupRejection.NotMember _ -> "not-member"
++        | GroupRejection.RepositoryMismatch _ -> "repository-mismatch"
++        | GroupRejection.LastMember _ -> "last-member"
++        | GroupRejection.EmptyGroup _ -> "empty-group"
++        | GroupRejection.BlankText _ -> "blank-text"
++        | GroupRejection.Checkpoint inner -> CheckpointRejection.code inner
++
++    let message rejection =
++        match rejection with
++        | GroupRejection.InvalidGroupId id -> $"'{id}' is not a valid group ID; use GROUP-<AREA>-<SEQUENCE>, for example GROUP-PRAXIS-PLANNING-001"
++        | GroupRejection.DuplicateGroup id -> $"a group '{id}' is already declared"
++        | GroupRejection.GroupNotFound id -> $"no group '{id}' is declared"
++        | GroupRejection.NoMembers -> "a group needs at least one member; pass --member ID"
++        | GroupRejection.InvalidMemberId id -> $"'{id}' is not a valid work-item ID"
++        | GroupRejection.UnknownMember id -> $"work item '{id}' is not tracked by this repository (neither in the backlog nor in work context)"
++        | GroupRejection.TerminalMember(id, state) -> $"work item '{id}' is {state}; a terminal item cannot join a group"
++        | GroupRejection.RepeatedMember id -> $"work item '{id}' is named more than once"
++        | GroupRejection.AlreadyMember(group, id) -> $"work item '{id}' is already a member of {group}"
++        | GroupRejection.NotMember(group, id) -> $"work item '{id}' is not a member of {group}"
++        | GroupRejection.RepositoryMismatch(id, item, group) ->
++            $"work item '{id}' executes in {item} but the group executes in {group}; declare the group --cross-repository or keep groups repository-local (PRX-GRP-051)"
++        | GroupRejection.LastMember(group, id) -> $"'{id}' is the last member of {group}; pass --allow-empty to leave the group declared with no members"
++        | GroupRejection.EmptyGroup group -> $"{group} has no members, so there is nothing to checkpoint"
++        | GroupRejection.BlankText field -> $"{field} must not be blank"
++        | GroupRejection.Checkpoint inner -> CheckpointRejection.message inner
++
++    let isArgumentError rejection =
++        match rejection with
++        | GroupRejection.InvalidGroupId _
++        | GroupRejection.NoMembers
++        | GroupRejection.InvalidMemberId _
++        | GroupRejection.RepeatedMember _
++        | GroupRejection.BlankText _ -> true
++        | GroupRejection.Checkpoint inner -> CheckpointRejection.isArgumentError inner
++        | _ -> false
++
++/// What `work group create` asks for.
++type GroupDeclarationRequest =
++    { Id: string
++      Members: string list
++      Kind: GroupKind option
++      Origin: GroupOrigin
++      ExecutionRepository: string option
++      CrossRepository: bool
++      SharedContext: string list
++      ArchitectureNotes: string list
++      OccurredAt: string
++      Actor: Actor
++      Reason: string option }
++
++/// What `work group add` and `work group remove` ask for.
++type MembershipRequest =
++    { GroupId: string
++      WorkItemId: string
++      /// Where the item executes, when the caller declares it explicitly.
++      ExecutionRepository: string option
++      OccurredAt: string
++      Actor: Actor
++      Reason: string option }
++
++/// What `work group checkpoint` asks for.
++type GroupCheckpointRequest =
++    { GroupId: string
++      Summary: string
++      NextAction: string
++      SharedDecisions: string list
++      OccurredAt: string
++      Actor: Actor }
++
++/// A structural problem in stored groups, reported by `validate`.
++type GroupFinding =
++    { GroupId: string
++      Field: string
++      Message: string }
++
++[<RequireQualifiedAccess>]
++module WorkGroups =
++    let private idPattern = Regex(@"^GROUP-[A-Z0-9]+(?:-[A-Z0-9]+)*$", RegexOptions.CultureInvariant)
++
++    /// PRX-GRP-010: `GROUP-<repository-or-area>-<sequence>`.
++    let isValidId (id: string) = not (isNull id) && idPattern.IsMatch id
++
++    let memberIds (group: StoredWorkGroup) = group.Members |> List.map (fun entry -> entry.WorkItemId)
++
++    let tryFind (groups: StoredWorkGroup list) (id: string) = groups |> List.tryFind (fun group -> group.Id = id)
++
++    let private repeated (values: string list) =
++        values |> List.countBy id |> List.filter (fun (_, count) -> count > 1) |> List.map fst
++
++    /// Whether one item may join a group executing in `groupRepository`:
++    /// tracked, not terminal, and repository-local unless cross-repository.
++    let admit (catalog: WorkCatalog) (groupRepository: string) (crossRepository: bool) (workItemId: string) : Result<CatalogItem, GroupRejection> =
++        if not (WorkItemId.isValid workItemId) then
++            Error(GroupRejection.InvalidMemberId workItemId)
++        else
++            match catalog.Items.TryFind workItemId with
++            | None -> Error(GroupRejection.UnknownMember workItemId)
++            | Some item when RecordedWorkState.isTerminal item.State -> Error(GroupRejection.TerminalMember(workItemId, RecordedWorkState.code item.State))
++            | Some item when not crossRepository && item.ExecutionRepository <> groupRepository ->
++                Error(GroupRejection.RepositoryMismatch(workItemId, item.ExecutionRepository, groupRepository))
++            | Some item -> Ok item
++
++    let private errors (results: Result<'a, GroupRejection> list) =
++        results |> List.choose (function Error rejection -> Some rejection | Ok _ -> None)
++
++    let private membership (request: GroupDeclarationRequest) (item: CatalogItem) =
++        { WorkItemId = item.Id
++          ExecutionRepository = item.ExecutionRepository
++          AddedAt = request.OccurredAt
++          AddedBy = request.Actor
++          Reason = request.Reason }
++
++    /// `work group create`: a new declared group, or every reason it cannot
++    /// be recorded. `declaredIds` are the IDs already in use (stored groups
++    /// and any planner-configured `grouping.groups`). Members' own records
++    /// are never part of the result, so creation cannot change them.
++    let create (catalog: WorkCatalog) (declaredIds: string list) (request: GroupDeclarationRequest) : Result<StoredWorkGroup, GroupRejection list> =
++        let repository = request.ExecutionRepository |> Option.defaultValue catalog.Repository
++        let admitted = request.Members |> List.distinct |> List.map (admit catalog repository request.CrossRepository)
++
++        let rejections =
++            [ if not (isValidId request.Id) then GroupRejection.InvalidGroupId request.Id
++              elif List.contains request.Id declaredIds then GroupRejection.DuplicateGroup request.Id
++              if request.Members.IsEmpty then GroupRejection.NoMembers
++              yield! repeated request.Members |> List.map GroupRejection.RepeatedMember
++              if String.IsNullOrWhiteSpace repository then GroupRejection.BlankText "--execution-repository"
++              yield! errors admitted ]
++
++        match rejections with
++        | [] ->
++            let members = admitted |> List.choose (function Ok item -> Some(membership request item) | Error _ -> None)
++
++            Ok
++                { Id = request.Id
++                  Kind = request.Kind
++                  Origin = request.Origin
++                  ExecutionRepository = repository
++                  CrossRepository = request.CrossRepository
++                  SharedContext = request.SharedContext
++                  ArchitectureNotes = request.ArchitectureNotes
++                  CreatedAt = request.OccurredAt
++                  CreatedBy = request.Actor
++                  Members = members
++                  History =
++                    [ { Change = GroupChange.Created
++                        OccurredAt = request.OccurredAt
++                        Actor = request.Actor
++                        Reason = request.Reason } ]
++                  Checkpoints = [] }
++        | rejections -> Error rejections
++
++    let private existing (groups: StoredWorkGroup list) (groupId: string) =
++        match tryFind groups groupId with
++        | Some group -> Ok group
++        | None when isValidId groupId -> Error [ GroupRejection.GroupNotFound groupId ]
++        | None -> Error [ GroupRejection.InvalidGroupId groupId ]
++
++    /// `work group add`: the group with one more member, recorded with who
++    /// added it, when and why. The item itself is never part of the result,
++    /// so its lifecycle state cannot change.
++    let add (catalog: WorkCatalog) (groups: StoredWorkGroup list) (request: MembershipRequest) : Result<StoredWorkGroup, GroupRejection list> =
++        existing groups request.GroupId
++        |> Result.bind (fun group ->
++            let located =
++                match request.ExecutionRepository with
++                | None -> catalog
++                | Some repository ->
++                    { catalog with
++                        Items = catalog.Items |> Map.map (fun id item -> if id = request.WorkItemId then { item with ExecutionRepository = repository } else item) }
++
++            if List.contains request.WorkItemId (memberIds group) then
++                Error [ GroupRejection.AlreadyMember(group.Id, request.WorkItemId) ]
++            else
++                admit located group.ExecutionRepository group.CrossRepository request.WorkItemId
++                |> Result.mapError List.singleton
++                |> Result.map (fun item ->
++                    { group with
++                        Members =
++                            group.Members
++                            @ [ { WorkItemId = item.Id
++                                  ExecutionRepository = item.ExecutionRepository
++                                  AddedAt = request.OccurredAt
++                                  AddedBy = request.Actor
++                                  Reason = request.Reason } ]
++                        History =
++                            group.History
++                            @ [ { Change = GroupChange.MemberAdded item.Id
++                                  OccurredAt = request.OccurredAt
++                                  Actor = request.Actor
++                                  Reason = request.Reason } ] }))
++
++    /// `work group remove`: the group without one member, with a
++    /// `member-removed` history entry naming who removed it and why. Removal
++    /// reads nothing about the item, so its lifecycle state, evidence and
++    /// attribution cannot change; an item no longer tracked can still be
++    /// removed. Emptying a group must be explicit (`allowEmpty`).
++    let remove (groups: StoredWorkGroup list) (allowEmpty: bool) (request: MembershipRequest) : Result<StoredWorkGroup, GroupRejection list> =
++        existing groups request.GroupId
++        |> Result.bind (fun group ->
++            match memberIds group with
++            | ids when not (List.contains request.WorkItemId ids) -> Error [ GroupRejection.NotMember(group.Id, request.WorkItemId) ]
++            | [ _ ] when not allowEmpty -> Error [ GroupRejection.LastMember(group.Id, request.WorkItemId) ]
++            | _ ->
++                Ok
++                    { group with
++                        Members = group.Members |> List.filter (fun entry -> entry.WorkItemId <> request.WorkItemId)
++                        History =
++                            group.History
++                            @ [ { Change = GroupChange.MemberRemoved request.WorkItemId
++                                  OccurredAt = request.OccurredAt
++                                  Actor = request.Actor
++                                  Reason = request.Reason } ] })
++
++    /// `work group checkpoint` (PRX-GRP-044): a group-level recovery point,
++    /// accepted only at a verified durable location (`location`, decided by
++    /// `CheckpointVerification.verifyDurableLocation`, the rule `work
++    /// checkpoint` applies). It partitions members by their own recorded
++    /// state and references each member's own latest checkpoint; it never
++    /// replaces one and attributes no path to any member (PRX-GRP-043).
++    /// `identify` names the checkpoint from its content.
++    let checkpoint
++        (catalog: WorkCatalog)
++        (groups: StoredWorkGroup list)
++        (location: Result<GitDurableLocation, CheckpointRejection list>)
++        (identify: GroupCheckpoint -> string)
++        (request: GroupCheckpointRequest)
++        : Result<StoredWorkGroup * GroupCheckpoint, GroupRejection list> =
++        existing groups request.GroupId
++        |> Result.bind (fun group ->
++            let text =
++                [ if String.IsNullOrWhiteSpace request.Summary then GroupRejection.Checkpoint CheckpointRejection.BlankSummary
++                  if String.IsNullOrWhiteSpace request.NextAction then GroupRejection.Checkpoint CheckpointRejection.BlankNextAction
++                  if group.Members.IsEmpty then GroupRejection.EmptyGroup group.Id ]
++
++            match text, location with
++            | [], Ok verified ->
++                let ids = memberIds group
++                let stateOf id = catalog.Items.TryFind id |> Option.map (fun item -> RecordedWorkState.code item.State)
++                let having code = ids |> List.filter (fun id -> stateOf id = Some code)
++
++                let draft =
++                    { Id = ""
++                      RecordedAt = request.OccurredAt
++                      Actor = request.Actor
++                      Location = verified
++                      Summary = request.Summary.Trim()
++                      NextAction = request.NextAction.Trim()
++                      SharedDecisions = request.SharedDecisions
++                      Active = having "active"
++                      Completed = having "complete"
++                      Abandoned = having "abandoned"
++                      Remaining = ids |> List.filter (fun id -> stateOf id <> Some "complete" && stateOf id <> Some "abandoned")
++                      MemberCheckpoints =
++                        ids
++                        |> List.map (fun id ->
++                            { WorkItemId = id
++                              CheckpointId = catalog.Items.TryFind id |> Option.bind (fun item -> item.LatestCheckpointId) }) }
++
++                let recorded = { draft with Id = identify draft }
++
++                Ok(
++                    { group with
++                        Checkpoints = group.Checkpoints @ [ recorded ]
++                        History =
++                            group.History
++                            @ [ { Change = GroupChange.Checkpointed recorded.Id
++                                  OccurredAt = request.OccurredAt
++                                  Actor = request.Actor
++                                  Reason = None } ] },
++                    recorded
++                )
++            | text, Ok _ -> Error text
++            | text, Error rejections -> Error(text @ (rejections |> List.map GroupRejection.Checkpoint)))
++
++    /// The planner's view of a stored group: exactly a `grouping.groups`
++    /// declaration (PRX-GRP-073).
++    let declared (group: StoredWorkGroup) : DeclaredGroup =
++        { Id = group.Id
++          Members = memberIds group
++          Kind = group.Kind
++          Origin = group.Origin
++          SharedContext = group.SharedContext
++          ExecutionRepository = Some group.ExecutionRepository
++          CrossRepository = group.CrossRepository
++          ArchitectureNotes = group.ArchitectureNotes }
++
++    /// Adds stored groups to a planner configuration. A configured
++    /// declaration with the same ID wins (it is the file the caller named),
++    /// an empty group declares nothing, and a member recorded as executing
++    /// elsewhere keeps that location unless the configuration names one.
++    let declare (localRepository: string) (stored: StoredWorkGroup list) (configuration: PlannerConfiguration) : PlannerConfiguration =
++        let grouping = configuration.Grouping
++        let configured = grouping.Groups |> List.map (fun group -> group.Id) |> Set.ofList
++
++        let added =
++            stored
++            |> List.filter (fun group -> not (configured.Contains group.Id) && not group.Members.IsEmpty)
++            |> List.sortWith (fun left right -> String.CompareOrdinal(left.Id, right.Id))
++
++        let located = grouping.ExecutionRepositories |> List.map fst |> Set.ofList
++
++        let repositories =
++            added
++            |> List.collect (fun group -> group.Members)
++            |> List.filter (fun entry -> entry.ExecutionRepository <> localRepository && not (located.Contains entry.WorkItemId))
++            |> List.map (fun entry -> entry.WorkItemId, entry.ExecutionRepository)
++            |> List.distinctBy fst
++
++        { configuration with
++            Grouping =
++                { grouping with
++                    Groups = grouping.Groups @ (added |> List.map declared)
++                    ExecutionRepositories =
++                        grouping.ExecutionRepositories @ repositories
++                        |> List.sortWith (fun (left, _) (right, _) -> String.CompareOrdinal(left, right)) } }
++
++    /// Structural checks over every stored group (`validate`). Terminal
++    /// members are expected (partial completion, PRX-GRP-042); unknown ones
++    /// are not.
++    let validate (catalog: WorkCatalog) (groups: StoredWorkGroup list) : GroupFinding list =
++        let finding (group: StoredWorkGroup) field message =
++            { GroupId = group.Id
++              Field = field
++              Message = message }
++
++        let duplicates =
++            repeated (groups |> List.map (fun group -> group.Id))
++            |> List.map (fun id -> { GroupId = id; Field = "id"; Message = $"group '{id}' is declared more than once" })
++
++        let perGroup (group: StoredWorkGroup) =
++            let ids = memberIds group
++
++            [ if not (isValidId group.Id) then
++                  finding group "id" $"'{group.Id}' is not a valid group ID (GROUP-<AREA>-<SEQUENCE>)"
++              if String.IsNullOrWhiteSpace group.ExecutionRepository then
++                  finding group "executionRepository" "executionRepository is blank"
++              yield! repeated ids |> List.map (fun id -> finding group "members" $"member '{id}' is listed more than once")
++              yield!
++                  ids
++                  |> List.distinct
++                  |> List.filter (catalog.Items.ContainsKey >> not)
++                  |> List.map (fun id -> finding group "members" $"member '{id}' is not a work item this repository tracks")
++              if not group.CrossRepository then
++                  yield!
++                      group.Members
++                      |> List.filter (fun entry -> entry.ExecutionRepository <> group.ExecutionRepository)
++                      |> List.map (fun entry ->
++                          finding group "members" $"member '{entry.WorkItemId}' executes in {entry.ExecutionRepository} but the group is repository-local to {group.ExecutionRepository}")
++              match group.History with
++              | { Change = GroupChange.Created } :: _ -> ()
++              | _ -> finding group "history" "history must begin with the group's creation"
++              yield!
++                  group.Checkpoints
++                  |> List.collect (fun checkpoint ->
++                      [ if String.IsNullOrWhiteSpace checkpoint.Summary then
++                            finding group "checkpoints" $"checkpoint {checkpoint.Id} has a blank summary"
++                        if String.IsNullOrWhiteSpace checkpoint.NextAction then
++                            finding group "checkpoints" $"checkpoint {checkpoint.Id} has a blank next action"
++                        if checkpoint.Location.LocalCommit <> checkpoint.Location.RemoteCommit then
++                            finding group "checkpoints" $"checkpoint {checkpoint.Id} commit and remote commit differ; a group checkpoint is accepted only when they are equal" ]) ]
++
++        duplicates @ (groups |> List.collect perGroup)
++
++/// One member as `work group show` reports it: its own recorded state, the
++/// planner's view of it, and the work it holds up when blocked.
++type GroupMemberView =
++    { Membership: GroupMembership
++      /// `None` when the item is no longer tracked (`validate` reports it).
++      RecordedState: RecordedWorkState option
++      /// `None` when the planner could not be consulted.
++      PlanningState: PlanningWorkState option
++      BlockReason: string option
++      LatestCheckpointId: string option
++      /// Open items that wait directly on this member (PRX-PLAN-046).
++      Gates: string list }
++
++/// PRX-GRP-042: partial completion, counted per member, never rounded up.
++type StoredGroupProgress =
++    { Members: int
++      Complete: int
++      Abandoned: int
++      Active: int
++      Blocked: int
++      Remaining: int
++      Unknown: int }
++
++type GroupView =
++    { Group: StoredWorkGroup
++      Members: GroupMemberView list
++      Progress: StoredGroupProgress
++      PlanningAvailable: bool
++      LatestCheckpoint: GroupCheckpoint option }
++
++[<RequireQualifiedAccess>]
++module GroupView =
++    let private isBlocked (view: GroupMemberView) =
++        view.RecordedState = Some(RecordedWorkState.Live LiveWorkState.Blocked)
++        || view.PlanningState = Some PlanningWorkState.Blocked
++
++    let blocked (view: GroupView) = view.Members |> List.filter isBlocked
++
++    let private progress (members: GroupMemberView list) =
++        let count predicate = members |> List.filter predicate |> List.length
++        let recorded code (view: GroupMemberView) = view.RecordedState |> Option.map RecordedWorkState.code = Some code
++
++        let complete = count (recorded "complete")
++        let abandoned = count (recorded "abandoned")
++
++        { Members = members.Length
++          Complete = complete
++          Abandoned = abandoned
++          Active = count (fun view -> recorded "active" view && not (isBlocked view))
++          Blocked = count isBlocked
++          Remaining = members.Length - complete - abandoned
++          Unknown = count (fun view -> view.RecordedState.IsNone) }
++
++    /// The read model of one stored group. `analysis` is the planner's view
++    /// of the repository when it could be computed.
++    let build (catalog: WorkCatalog) (analysis: PlanningAnalysis option) (group: StoredWorkGroup) : GroupView =
++        let items = analysis |> Option.map (fun value -> value.Items |> List.map (fun item -> item.Id, item) |> Map.ofList) |> Option.defaultValue Map.empty
++        let unlocks = analysis |> Option.map (fun value -> value.Unlocks |> List.map (fun unlock -> unlock.WorkItem, unlock.DirectlyUnlocks) |> Map.ofList) |> Option.defaultValue Map.empty
++
++        let members =
++            group.Members
++            |> List.map (fun entry ->
++                let known = catalog.Items.TryFind entry.WorkItemId
++                let planned = items.TryFind entry.WorkItemId
++
++                { Membership = entry
++                  RecordedState = known |> Option.map (fun item -> item.State)
++                  PlanningState = planned |> Option.map (fun item -> item.PlanningState)
++                  BlockReason = planned |> Option.bind (fun item -> item.BlockReason)
++                  LatestCheckpointId = known |> Option.bind (fun item -> item.LatestCheckpointId)
++                  Gates = unlocks.TryFind entry.WorkItemId |> Option.defaultValue [] })
++
++        { Group = group
++          Members = members
++          Progress = progress members
++          PlanningAvailable = analysis.IsSome
++          LatestCheckpoint = group.Checkpoints |> List.tryLast }
++
++    /// "2 of 5 complete, ...": never implies every member succeeded.
++    let describeProgress (progress: StoredGroupProgress) =
++        let parts =
++            [ $"{progress.Complete} of {progress.Members} complete"
++              if progress.Abandoned > 0 then $"{progress.Abandoned} abandoned"
++              if progress.Active > 0 then $"{progress.Active} active"
++              if progress.Blocked > 0 then $"{progress.Blocked} blocked"
++              $"{progress.Remaining} remaining"
++              if progress.Unknown > 0 then $"{progress.Unknown} no longer tracked" ]
++
++        String.concat ", " parts
+diff --git a/src/Ros.Domain/Ros.Domain.fsproj b/src/Ros.Domain/Ros.Domain.fsproj
+index 7590ead..b3f91bb 100644
+--- a/src/Ros.Domain/Ros.Domain.fsproj
++++ b/src/Ros.Domain/Ros.Domain.fsproj
+@@ -63,5 +63,6 @@
+     <Compile Include="Planning/Replay.fs" />
+     <Compile Include="Planning/Planner.fs" />
+     <Compile Include="Planning/Grouping.fs" />
++    <Compile Include="Planning/WorkGroups.fs" />
+   </ItemGroup>
+ </Project>
+diff --git a/src/Ros.Domain/Work/Checkpoint.fs b/src/Ros.Domain/Work/Checkpoint.fs
+index 2f1f192..283796f 100644
+--- a/src/Ros.Domain/Work/Checkpoint.fs
++++ b/src/Ros.Domain/Work/Checkpoint.fs
+@@ -376,7 +376,7 @@ module CheckpointVerification =
+     /// The Git side of the invariant `local HEAD == candidate == remote
+     /// branch head`. Returns the verified location or the first reason the
+     /// candidate is not remotely recoverable.
+-    let private gitLocation (candidate: CheckpointCandidate) (observations: CheckpointObservations) =
++    let private gitLocation (repository: string) (observations: CheckpointObservations) =
+         match observations.Head with
+         | GitRead.Unavailable failure -> Error(gitFailureRejection failure)
+         | GitRead.Observed(HeadState.Unborn branch) -> Error(CheckpointRejection.NoHead branch)
+@@ -390,7 +390,7 @@ module CheckpointVerification =
+                 Error(CheckpointRejection.RemoteMissing(name, remoteBranch))
+             | Some(GitRead.Observed(UpstreamState.Tracking(remote, remoteBranch))) ->
+                 let located remoteCommit =
+-                    { Repository = candidate.Repository
++                    { Repository = repository
+                       Branch = branch
+                       LocalCommit = head
+                       Remote = remote
+@@ -434,7 +434,7 @@ module CheckpointVerification =
+     let verify (candidate: CheckpointCandidate) (observations: CheckpointObservations) : Result<Checkpoint, CheckpointRejection list> =
+         let text = textRejections candidate
+         let work = workRejections candidate observations
+-        let location = gitLocation candidate observations
++        let location = gitLocation candidate.Repository observations
+ 
+         let tree =
+             match location with
+@@ -461,6 +461,23 @@ module CheckpointVerification =
+         | [], _, _ -> Error [ CheckpointRejection.UnknownGitState "the checkpoint could not be verified" ]
+         | rejections, _, _ -> Error rejections
+ 
++    /// The Git half of `verify` on its own: the location where local HEAD,
++    /// the upstream remote branch head and the recorded commit are the same
++    /// commit with no meaningful uncommitted work, or every reason they are
++    /// not. A group checkpoint (PRX-GRP-044) is held to exactly this rule.
++    let verifyDurableLocation (repository: string) (observations: CheckpointObservations) : Result<GitDurableLocation, CheckpointRejection list> =
++        let location = gitLocation repository observations
++
++        let tree =
++            match location with
++            | Error CheckpointRejection.NotGitRepository -> []
++            | _ -> treeRejections observations
++
++        match location, tree with
++        | Ok git, [] -> Ok git
++        | Ok _, rejections -> Error rejections
++        | Error rejection, rejections -> Error(rejection :: rejections |> List.distinct)
++
+ /// The fields of a stored checkpoint, before they are re-checked.
+ type StoredCheckpoint =
+     { WorkItemId: string
+diff --git a/src/Ros.Infrastructure/Planning/FilePlanningRepository.fs b/src/Ros.Infrastructure/Planning/FilePlanningRepository.fs
+index 0590109..ec36d7f 100644
+--- a/src/Ros.Infrastructure/Planning/FilePlanningRepository.fs
++++ b/src/Ros.Infrastructure/Planning/FilePlanningRepository.fs
+@@ -178,10 +178,7 @@ module FilePlanningRepository =
+         |> List.choose execution
+         |> List.sortWith (fun left right -> String.CompareOrdinal(left.ExecutionId, right.ExecutionId))
+ 
+-    let private repositoryName (root: string) =
+-        [ readObject (queuePath root); readObject (contextPath root) ]
+-        |> List.tryPick (Option.bind (fun document -> text document "repository"))
+-        |> Option.defaultValue (Path.GetFileName(Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar)))
++    let private repositoryName (root: string) = FileWorkGroupRepository.repositoryName root
+ 
+     let readRepository (root: string) : RepositoryIdentity =
+         let branch, commit = ProcessGitRepository.readBranchAndCommit root
+@@ -269,4 +266,11 @@ module FilePlanningRepository =
+           Executions = fun () -> readExecutions root
+           RepositoryObservations = readRepositoryObservations root
+           SuppliedObservations = fun () -> readOptionalFile observationsFile PlanningJson.parseObservations []
+-          Configuration = fun () -> readOptionalFile configurationFile (fun _ content -> PlanningJson.parseConfiguration content) PlannerConfiguration.defaults }
++          // Stored `work group` declarations are read exactly like
++          // `grouping.groups` (PRX-GRP-073).
++          Configuration =
++            fun () ->
++                readOptionalFile configurationFile (fun _ content -> PlanningJson.parseConfiguration content) PlannerConfiguration.defaults
++                |> Result.bind (fun configuration ->
++                    FileWorkGroupRepository.read root
++                    |> Result.map (fun stored -> WorkGroups.declare (repositoryName root) stored configuration)) }
+diff --git a/src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs b/src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs
+new file mode 100644
+index 0000000..8b5e63f
+--- /dev/null
++++ b/src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs
+@@ -0,0 +1,175 @@
++namespace Ros.Infrastructure.Planning
++
++open System
++open System.IO
++open System.Text
++open System.Text.Json
++open System.Text.Json.Nodes
++open Ros.Contracts.Planning
++open Ros.Domain.Planning
++open Ros.Domain.Work
++open Ros.Infrastructure.Json
++open Ros.Infrastructure.Work
++
++/// Declared work groups on disk: `.ros/work/groups.json`, Praxis state of
++/// its own. Reading it never touches the backlog, work context or event log,
++/// and writing it touches nothing else, so a group operation cannot change a
++/// member's lifecycle state, evidence or attribution. Writers hold the
++/// `work-protocol` lock; each write replaces the file atomically.
++[<RequireQualifiedAccess>]
++module FileWorkGroupRepository =
++    let relativePath = ".ros/work/groups.json"
++
++    let path (root: string) = Path.Combine(root, ".ros", "work", "groups.json")
++
++    let private queuePath (root: string) = Path.Combine(root, ".ros", "work", "queue.json")
++    let private contextPath (root: string) = Path.Combine(root, ".ros", "context", "current.json")
++
++    let private readObject (file: string) : JsonObject option =
++        if File.Exists file then
++            match JsonNode.Parse(File.ReadAllText file) with
++            | :? JsonObject as value -> Some value
++            | _ -> None
++        else
++            None
++
++    let private text (node: JsonObject) (name: string) =
++        match node[name] with
++        | :? JsonValue as value when value.GetValueKind() = JsonValueKind.String -> Some(value.GetValue<string>())
++        | _ -> None
++
++    let private objects (node: JsonObject) (name: string) =
++        match node[name] with
++        | :? JsonArray as values -> values |> Seq.choose (function :? JsonObject as value -> Some value | _ -> None) |> Seq.toList
++        | _ -> []
++
++    /// The repository name the planner reports: the backlog's or work
++    /// context's `repository`, else the checkout directory's name.
++    let repositoryName (root: string) =
++        [ queuePath root; contextPath root ]
++        |> List.tryPick (fun file ->
++            try
++                readObject file |> Option.bind (fun document -> text document "repository")
++            with _ ->
++                None)
++        |> Option.defaultValue (Path.GetFileName(Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar)))
++
++    /// Every stored group; none when the file does not exist.
++    let read (root: string) : Result<StoredWorkGroup list, string> =
++        let file = path root
++
++        if not (File.Exists file) then
++            Ok []
++        else
++            try
++                WorkGroupJson.parse (File.ReadAllText file) |> Result.mapError (fun message -> $"{relativePath}: {message}")
++            with error ->
++                Error $"{relativePath}: {error.Message}"
++
++    /// Replaces the stored groups atomically (temporary file, then rename).
++    let write (root: string) (groups: StoredWorkGroup list) : Result<unit, string> =
++        let file = path root
++        let temporary = Path.Combine(Path.GetDirectoryName file, $".groups.json.{Guid.NewGuid():N}.tmp")
++
++        try
++            Directory.CreateDirectory(Path.GetDirectoryName file) |> ignore
++            File.WriteAllText(temporary, WorkGroupJson.render (WorkGroupJson.document groups), UTF8Encoding(false))
++            File.Move(temporary, file, true)
++            Ok()
++        with error ->
++            try
++                if File.Exists temporary then File.Delete temporary
++            with _ ->
++                ()
++
++            Error $"cannot write {relativePath}: {error.Message}"
++
++    /// A group checkpoint's content-addressed ID, computed like a work
++    /// event's: over every field but the ID.
++    let checkpointId (checkpoint: GroupCheckpoint) =
++        CanonicalJson.sha256HexPrefix 24 (CanonicalJson.serializeCompact (WorkGroupJson.checkpointBody checkpoint))
++
++    /// Every tracked work item with its recorded state: the live state when
++    /// it has a live record, otherwise its backlog status. `repositories`
++    /// names items implemented elsewhere (`grouping.executionRepositories`).
++    let catalog (root: string) (repositories: (string * string) list) : Result<WorkCatalog, string> =
++        let repository = repositoryName root
++        let located = Map.ofList repositories
++
++        let item id state checkpoint =
++            { Id = id
++              State = state
++              ExecutionRepository = located.TryFind id |> Option.defaultValue repository
++              LatestCheckpointId = checkpoint }
++
++        try
++            let backlog =
++                readObject (queuePath root)
++                |> Option.map (fun queue ->
++                    objects queue "items"
++                    |> List.choose (fun node ->
++                        match text node "id", text node "status" with
++                        | Some id, Some status -> Some(id, item id (RecordedWorkState.Backlog status) None)
++                        | _ -> None))
++                |> Option.defaultValue []
++
++            FileCheckpointRepository.readItems root
++            |> Result.map (fun live ->
++                let liveItems =
++                    live
++                    |> List.map (fun entry ->
++                        let checkpoint =
++                            match entry.LatestCheckpoint with
++                            | Ok(Some recorded) -> Some recorded.CheckpointId
++                            | _ -> None
++
++                        entry.WorkItemId, item entry.WorkItemId (RecordedWorkState.Live entry.State) checkpoint)
++
++                { Repository = repository
++                  // A live record supersedes the backlog row it was promoted from.
++                  Items = backlog @ liveItems |> Map.ofList })
++        with error ->
++            Error $"cannot read work items: {error.Message}"
++
++    /// `validate`'s contribution: the stored document parses, every group is
++    /// structurally sound, and every group checkpoint's ID matches its
++    /// content. Path, field and message, like every other contributor.
++    let validationFindings (root: string) : (string * string * string) list =
++        match read root with
++        | Error message -> [ relativePath, "groups", message ]
++        | Ok [] -> []
++        | Ok groups ->
++            match catalog root [] with
++            | Error message -> [ relativePath, "groups", message ]
++            | Ok known ->
++                let structural =
++                    WorkGroups.validate known groups
++                    |> List.map (fun finding -> relativePath, $"groups.{finding.GroupId}.{finding.Field}", finding.Message)
++
++                let tampered =
++                    groups
++                    |> List.collect (fun group ->
++                        group.Checkpoints
++                        |> List.filter (fun checkpoint -> checkpointId checkpoint <> checkpoint.Id)
++                        |> List.map (fun checkpoint ->
++                            relativePath, $"groups.{group.Id}.checkpoints", $"checkpoint {checkpoint.Id} does not match its content; a recorded group checkpoint is never rewritten"))
++
++                // A referenced member checkpoint must be that member's own
++                // recorded checkpoint: the group never invents or replaces one.
++                let dangling =
++                    groups
++                    |> List.collect (fun group ->
++                        group.Checkpoints
++                        |> List.collect (fun checkpoint ->
++                            checkpoint.MemberCheckpoints
++                            |> List.choose (fun reference ->
++                                match reference.CheckpointId with
++                                | Some id when not (FileCheckpointRepository.readHistory root reference.WorkItemId |> List.exists (fun event -> event.EventId = id)) ->
++                                    Some(
++                                        relativePath,
++                                        $"groups.{group.Id}.checkpoints",
++                                        $"checkpoint {checkpoint.Id} references {reference.WorkItemId} checkpoint {id}, which is not one of that item's recorded checkpoints"
++                                    )
++                                | _ -> None)))
++
++                structural @ tampered @ dangling
+diff --git a/src/Ros.Infrastructure/Ros.Infrastructure.fsproj b/src/Ros.Infrastructure/Ros.Infrastructure.fsproj
+index a8770d5..14706ba 100644
+--- a/src/Ros.Infrastructure/Ros.Infrastructure.fsproj
++++ b/src/Ros.Infrastructure/Ros.Infrastructure.fsproj
+@@ -41,6 +41,7 @@
+     <Compile Include="Remote/FileRemoteRepository.fs" />
+     <Compile Include="Execution/ExecutionStore.fs" />
+     <Compile Include="Installation/AdministrationClient.fs" />
++    <Compile Include="Planning/FileWorkGroupRepository.fs" />
+     <Compile Include="Planning/FilePlanningRepository.fs" />
+   </ItemGroup>
+ 
+diff --git a/tests/Ros.Tests/Program.fs b/tests/Ros.Tests/Program.fs
+index 2e6b1d0..445d1c0 100644
+--- a/tests/Ros.Tests/Program.fs
++++ b/tests/Ros.Tests/Program.fs
+@@ -71,4 +71,6 @@ let main _ =
+     @ PlanningTests.tests
+     @ PlanningCliTests.tests
+     @ GroupingTests.tests
++    @ WorkGroupTests.tests
++    @ WorkGroupCliTests.tests
+     |> TestRunner.run
+diff --git a/tests/Ros.Tests/Ros.Tests.fsproj b/tests/Ros.Tests/Ros.Tests.fsproj
+index e402111..887111c 100644
+--- a/tests/Ros.Tests/Ros.Tests.fsproj
++++ b/tests/Ros.Tests/Ros.Tests.fsproj
+@@ -82,6 +82,7 @@
+     <Compile Include="PlanningTests.fs" />
+     <Compile Include="PlanningCliTests.fs" />
+     <Compile Include="GroupingTests.fs" />
++    <Compile Include="WorkGroupTests.fs" />
+     <Compile Include="Program.fs" />
+   </ItemGroup>
+ </Project>
+diff --git a/tests/Ros.Tests/WorkGroupTests.fs b/tests/Ros.Tests/WorkGroupTests.fs
+new file mode 100644
+index 0000000..8da1305
+--- /dev/null
++++ b/tests/Ros.Tests/WorkGroupTests.fs
+@@ -0,0 +1,609 @@
++namespace Ros.Tests
++
++open System.IO
++open System.Text.Json.Nodes
++open Ros.Contracts.Planning
++open Ros.Domain.Git
++open Ros.Domain.Planning
++open Ros.Domain.Provenance
++open Ros.Domain.Work
++open PlanningFixtures
++
++/// Pure fixtures for declared work groups (PRAXIS-GROUP-01..05).
++module WorkGroupFixtures =
++    let actorA =
++        { Kind = ActorKind.Agent
++          Id = "example/agent-a"
++          Provider = Some "example"
++          Model = Some "unknown"
++          Runtime = Some "agent-a" }
++
++    let actorB = { actorA with Id = "example/agent-b"; Runtime = Some "agent-b" }
++
++    let at = "2026-10-01T00:00:00.000Z"
++
++    let catalogItem id state =
++        { Id = id
++          State = state
++          ExecutionRepository = "fixture"
++          LatestCheckpointId = None }
++
++    let catalog (items: CatalogItem list) =
++        { Repository = "fixture"
++          Items = items |> List.map (fun item -> item.Id, item) |> Map.ofList }
++
++    let ready id = catalogItem id (RecordedWorkState.Backlog "ready")
++    let active id = catalogItem id (RecordedWorkState.Live LiveWorkState.Active)
++    let blocked id = catalogItem id (RecordedWorkState.Live LiveWorkState.Blocked)
++    let complete id = catalogItem id (RecordedWorkState.Live LiveWorkState.Complete)
++
++    let request id members =
++        { Id = id
++          Members = members
++          Kind = Some GroupKind.SharedArea
++          Origin = GroupOrigin.HumanDeclared
++          ExecutionRepository = None
++          CrossRepository = false
++          SharedContext = [ "one typed group store" ]
++          ArchitectureNotes = [ "every command writes only groups.json" ]
++          OccurredAt = at
++          Actor = actorA
++          Reason = None }
++
++    let created (known: WorkCatalog) id members =
++        match WorkGroups.create known [] (request id members) with
++        | Ok group -> group
++        | Error rejections -> failwith $"%A{rejections}"
++
++    let membership groupId workItemId =
++        { GroupId = groupId
++          WorkItemId = workItemId
++          ExecutionRepository = None
++          OccurredAt = "2026-10-02T00:00:00.000Z"
++          Actor = actorB
++          Reason = Some "shares the store" }
++
++    let commit = (CommitId.tryParse "0123456789abcdef0123456789abcdef01234567").Value
++
++    let verified: Result<GitDurableLocation, CheckpointRejection list> =
++        Ok
++            { Repository = "fixture"
++              Branch = "feature/x"
++              LocalCommit = commit
++              Remote = { Name = "origin"; Url = None }
++              RemoteBranch = "feature/x"
++              RemoteCommit = commit }
++
++    let checkpointRequest groupId =
++        { GroupId = groupId
++          Summary = "store and create done"
++          NextAction = "implement show"
++          SharedDecisions = [ "one groups.json store" ]
++          OccurredAt = "2026-10-03T00:00:00.000Z"
++          Actor = actorB }
++
++    let identify (checkpoint: GroupCheckpoint) = $"cp-{checkpoint.Summary.Length}-{checkpoint.Active.Length}"
++
++    let codes (result: Result<'a, GroupRejection list>) =
++        match result with
++        | Ok _ -> []
++        | Error rejections -> rejections |> List.map GroupRejection.code
++
++open WorkGroupFixtures
++
++module WorkGroupTests =
++    let private t name run = { Name = $"work group: {name}"; Run = run }
++
++    let private standard = catalog [ ready "W-1"; active "W-2"; blocked "W-3"; complete "W-4"; catalogItem "W-5" (RecordedWorkState.Backlog "abandoned") ]
++
++    let tests =
++        [ t "create records the declaration, its members and who declared them" (fun () ->
++              let group = created standard "GROUP-FIXTURE-001" [ "W-1"; "W-2"; "W-3" ]
++              Assert.equal [ "W-1"; "W-2"; "W-3" ] (WorkGroups.memberIds group)
++              Assert.equal "fixture" group.ExecutionRepository
++              Assert.equal actorA group.CreatedBy
++              Assert.isTrue (group.Members |> List.forall (fun entry -> entry.AddedBy = actorA && entry.AddedAt = at)) "every member carries provenance"
++              Assert.equal [ GroupChange.Created ] (group.History |> List.map (fun entry -> entry.Change))
++              Assert.empty group.Checkpoints)
++
++          t "create refuses unknown, terminal, repeated and invalid members, and invalid or duplicate IDs" (fun () ->
++              Assert.equal [ "unknown-member" ] (codes (WorkGroups.create standard [] (request "GROUP-FIXTURE-001" [ "W-1"; "W-404" ])))
++              Assert.equal [ "terminal-member"; "terminal-member" ] (codes (WorkGroups.create standard [] (request "GROUP-FIXTURE-001" [ "W-4"; "W-5" ])))
++              Assert.equal [ "repeated-member" ] (codes (WorkGroups.create standard [] (request "GROUP-FIXTURE-001" [ "W-1"; "W-1" ])))
++              Assert.equal [ "invalid-member-id" ] (codes (WorkGroups.create standard [] (request "GROUP-FIXTURE-001" [ "lower" ])))
++              Assert.equal [ "invalid-group-id" ] (codes (WorkGroups.create standard [] (request "group-1" [ "W-1" ])))
++              Assert.equal [ "duplicate-group" ] (codes (WorkGroups.create standard [ "GROUP-FIXTURE-001" ] (request "GROUP-FIXTURE-001" [ "W-1" ])))
++              Assert.equal [ "no-members" ] (codes (WorkGroups.create standard [] (request "GROUP-FIXTURE-001" []))))
++
++          t "create keeps groups repository-local unless declared cross-repository (PRX-GRP-051)" (fun () ->
++              let elsewhere = { ready "X-1" with ExecutionRepository = "other-repo" }
++              let known = catalog [ ready "W-1"; elsewhere ]
++              Assert.equal [ "repository-mismatch" ] (codes (WorkGroups.create known [] (request "GROUP-FIXTURE-001" [ "W-1"; "X-1" ])))
++              let crossing = WorkGroups.create known [] { request "GROUP-ECHELON-SHARED-001" [ "W-1"; "X-1" ] with CrossRepository = true }
++              Assert.equal [] (codes crossing)
++
++              match crossing with
++              | Ok group -> Assert.equal [ "fixture"; "other-repo" ] (group.Members |> List.map (fun entry -> entry.ExecutionRepository))
++              | Error _ -> ())
++
++          t "the planner reads a stored group exactly as it reads grouping.groups (PRX-GRP-073)" (fun () ->
++              let queue = [ "W-1"; "W-2"; "W-3" ] |> List.map (fun id -> queued id "ready" "2026-09-01T00:00:00Z")
++              let known = catalog [ ready "W-1"; ready "W-2"; ready "W-3" ]
++              let group = created known "GROUP-FIXTURE-001" [ "W-1"; "W-2" ]
++
++              let configured =
++                  { stateSafe with Grouping = { stateSafe.Grouping with Groups = [ WorkGroups.declared group ] } }
++
++              let stored = WorkGroups.declare "fixture" [ group ] stateSafe
++              Assert.equal configured stored
++
++              let recommend configuration =
++                  let planningInput = input queue [] history [] configuration
++                  Grouping.recommend planningInput (Planner.analyze planningInput)
++
++              Assert.equal (recommend configured) (recommend stored)
++              let declared = (recommend stored).Groups |> List.find (fun entry -> WorkGroupId.value entry.Id = "GROUP-FIXTURE-001")
++              Assert.equal GroupOrigin.HumanDeclared declared.Origin
++              Assert.equal [ "every command writes only groups.json" ] declared.ArchitectureNotes)
++
++          t "a configured declaration with the same ID wins and an empty stored group declares nothing" (fun () ->
++              let group = created standard "GROUP-FIXTURE-001" [ "W-1" ]
++              let configuredGroup = { WorkGroups.declared group with Members = [ "W-2" ] }
++              let configuration = { stateSafe with Grouping = { stateSafe.Grouping with Groups = [ configuredGroup ] } }
++              Assert.equal [ configuredGroup ] (WorkGroups.declare "fixture" [ group ] configuration).Grouping.Groups
++              Assert.empty (WorkGroups.declare "fixture" [ { group with Members = [] } ] stateSafe).Grouping.Groups)
++
++          t "a stored member executing elsewhere keeps that location in the planner" (fun () ->
++              let elsewhere = { ready "X-1" with ExecutionRepository = "other-repo" }
++              let known = catalog [ ready "W-1"; elsewhere ]
++
++              let group =
++                  match WorkGroups.create known [] { request "GROUP-ECHELON-SHARED-001" [ "W-1"; "X-1" ] with CrossRepository = true } with
++                  | Ok value -> value
++                  | Error rejections -> failwith $"%A{rejections}"
++
++              Assert.equal [ "X-1", "other-repo" ] (WorkGroups.declare "fixture" [ group ] stateSafe).Grouping.ExecutionRepositories)
++
++          t "validate reports unknown members, duplicate IDs and repository mixing; terminal members are fine" (fun () ->
++              let group = created standard "GROUP-FIXTURE-001" [ "W-1"; "W-2" ]
++              Assert.empty (WorkGroups.validate (catalog [ ready "W-1"; complete "W-2" ]) [ group ])
++              let findings = WorkGroups.validate (catalog [ ready "W-1" ]) [ group; group ]
++              Assert.isTrue (findings |> List.exists (fun finding -> finding.Message.Contains "declared more than once")) "duplicate IDs"
++              Assert.isTrue (findings |> List.exists (fun finding -> finding.Message.Contains "'W-2' is not a work item")) "unknown member"
++              let mixed = { group with Members = group.Members |> List.map (fun entry -> { entry with ExecutionRepository = "other-repo" }) }
++              Assert.isTrue (WorkGroups.validate standard [ mixed ] |> List.exists (fun finding -> finding.Message.Contains "repository-local")) "mixed repositories")
++
++          t "show reports each member's own state, partial progress, and who a blocked member gates" (fun () ->
++              let queue =
++                  [ queued "W-1" "ready" "2026-09-01T00:00:00Z"
++                    { queued "W-2" "ready" "2026-09-02T00:00:00Z" with DependsOn = [ "W-1" ] }
++                    queued "W-3" "ready" "2026-09-03T00:00:00Z"
++                    queued "W-4" "ready" "2026-09-04T00:00:00Z" ]
++
++              let liveItems = [ { live "W-1" LiveWorkState.Blocked with BlockReason = Some "waiting on the API" }; live "W-3" LiveWorkState.Complete; live "W-4" LiveWorkState.Active ]
++              let analysis = analyze queue liveItems history [] stateSafe
++              let known = catalog [ blocked "W-1"; ready "W-2"; complete "W-3"; active "W-4" ]
++              let group = { created (catalog [ ready "W-1"; ready "W-3"; ready "W-4" ]) "GROUP-FIXTURE-001" [ "W-1"; "W-3"; "W-4" ] with Checkpoints = [] }
++              let view = GroupView.build known (Some analysis) group
++              Assert.equal { Members = 3; Complete = 1; Abandoned = 0; Active = 1; Blocked = 1; Remaining = 2; Unknown = 0 } view.Progress
++              Assert.equal "1 of 3 complete, 1 active, 1 blocked, 2 remaining" (GroupView.describeProgress view.Progress)
++              let blockedMember = Assert.single (GroupView.blocked view)
++              Assert.equal "W-1" blockedMember.Membership.WorkItemId
++              Assert.equal [ "W-2" ] blockedMember.Gates
++              Assert.equal (Some "waiting on the API") blockedMember.BlockReason
++              Assert.equal (Some PlanningWorkState.Complete) (view.Members |> List.find (fun entry -> entry.Membership.WorkItemId = "W-3")).PlanningState
++              let json = WorkGroupJson.render (WorkGroupJson.view view) |> JsonNode.Parse
++              Assert.equal "W-2" (json["blocked"].[0].["gates"].[0].GetValue<string>())
++              Assert.equal 1 (json["progress"].["complete"].GetValue<int>()))
++
++          t "show without the planner keeps planning states unknown and counts untracked members" (fun () ->
++              let group = created standard "GROUP-FIXTURE-001" [ "W-1"; "W-2" ]
++              let view = GroupView.build (catalog [ ready "W-1" ]) None group
++              Assert.isTrue (not view.PlanningAvailable) "the planner was not consulted"
++              Assert.isTrue (view.Members |> List.forall (fun entry -> entry.PlanningState.IsNone)) "planning states are unknown, not guessed"
++              Assert.equal 1 view.Progress.Unknown
++              Assert.equal 2 view.Progress.Remaining)
++
++          t "add appends one member with who added it, when and why" (fun () ->
++              let group = created standard "GROUP-FIXTURE-001" [ "W-1" ]
++
++              match WorkGroups.add standard [ group ] (membership "GROUP-FIXTURE-001" "W-2") with
++              | Error rejections -> failwith $"%A{rejections}"
++              | Ok changed ->
++                  Assert.equal [ "W-1"; "W-2" ] (WorkGroups.memberIds changed)
++                  let added = changed.Members |> List.last
++                  Assert.equal actorB added.AddedBy
++                  Assert.equal "2026-10-02T00:00:00.000Z" added.AddedAt
++                  Assert.equal (Some "shares the store") added.Reason
++                  Assert.equal actorA (changed.Members |> List.head).AddedBy
++                  Assert.equal [ GroupChange.Created; GroupChange.MemberAdded "W-2" ] (changed.History |> List.map (fun entry -> entry.Change))
++                  Assert.equal actorB (changed.History |> List.last).Actor)
++
++          t "add refuses unknown, terminal and present items, unknown groups, and another repository's item unless cross-repository" (fun () ->
++              let elsewhere = { ready "X-1" with ExecutionRepository = "other-repo" }
++              let known = catalog [ ready "W-1"; ready "W-2"; complete "W-4"; elsewhere ]
++              let group = created known "GROUP-FIXTURE-001" [ "W-1" ]
++              let add workItemId = WorkGroups.add known [ group ] (membership "GROUP-FIXTURE-001" workItemId)
++              Assert.equal [ "unknown-member" ] (codes (add "W-404"))
++              Assert.equal [ "terminal-member" ] (codes (add "W-4"))
++              Assert.equal [ "already-member" ] (codes (add "W-1"))
++              Assert.equal [ "repository-mismatch" ] (codes (add "X-1"))
++              Assert.equal [ "repository-mismatch" ] (codes (WorkGroups.add known [ group ] { membership "GROUP-FIXTURE-001" "W-2" with ExecutionRepository = Some "third-repo" }))
++              Assert.equal [ "group-not-found" ] (codes (WorkGroups.add known [ group ] (membership "GROUP-FIXTURE-404" "W-2")))
++              Assert.equal [ "invalid-group-id" ] (codes (WorkGroups.add known [ group ] (membership "nope" "W-2")))
++              let crossing = { group with CrossRepository = true }
++
++              match WorkGroups.add known [ crossing ] (membership "GROUP-FIXTURE-001" "X-1") with
++              | Ok changed -> Assert.equal "other-repo" (changed.Members |> List.last).ExecutionRepository
++              | Error rejections -> failwith $"%A{rejections}")
++
++          t "remove drops one member, records who removed it and why, and refuses non-members" (fun () ->
++              let group = created standard "GROUP-FIXTURE-001" [ "W-1"; "W-2" ]
++              Assert.equal [ "not-member" ] (codes (WorkGroups.remove [ group ] false (membership "GROUP-FIXTURE-001" "W-3")))
++              Assert.equal [ "group-not-found" ] (codes (WorkGroups.remove [ group ] false (membership "GROUP-FIXTURE-404" "W-1")))
++
++              match WorkGroups.remove [ group ] false (membership "GROUP-FIXTURE-001" "W-2") with
++              | Error rejections -> failwith $"%A{rejections}"
++              | Ok changed ->
++                  Assert.equal [ "W-1" ] (WorkGroups.memberIds changed)
++                  let entry = changed.History |> List.last
++                  Assert.equal (GroupChange.MemberRemoved "W-2") entry.Change
++                  Assert.equal actorB entry.Actor
++                  Assert.equal (Some "shares the store") entry.Reason
++                  Assert.equal group.Members.Head changed.Members.Head)
++
++          t "removing the last member is refused unless explicit, and an emptied group keeps its history" (fun () ->
++              let group = created standard "GROUP-FIXTURE-001" [ "W-1" ]
++              Assert.equal [ "last-member" ] (codes (WorkGroups.remove [ group ] false (membership "GROUP-FIXTURE-001" "W-1")))
++
++              match WorkGroups.remove [ group ] true (membership "GROUP-FIXTURE-001" "W-1") with
++              | Error rejections -> failwith $"%A{rejections}"
++              | Ok emptied ->
++                  Assert.empty emptied.Members
++                  Assert.equal [ GroupChange.Created; GroupChange.MemberRemoved "W-1" ] (emptied.History |> List.map (fun entry -> entry.Change))
++                  Assert.empty (WorkGroups.validate standard [ emptied ]))
++
++          t "a member that is no longer tracked can still be removed" (fun () ->
++              let group = created standard "GROUP-FIXTURE-001" [ "W-1"; "W-2" ]
++              Assert.isTrue (not (WorkGroups.validate (catalog [ ready "W-1" ]) [ group ]).IsEmpty) "the untracked member is reported"
++
++              match WorkGroups.remove [ group ] false (membership "GROUP-FIXTURE-001" "W-2") with
++              | Ok changed -> Assert.empty (WorkGroups.validate (catalog [ ready "W-1" ]) [ changed ])
++              | Error rejections -> failwith $"%A{rejections}")
++
++          t "checkpoint partitions members by their own state and references, never replaces, their checkpoints" (fun () ->
++              let known =
++                  catalog
++                      [ { active "W-1" with LatestCheckpointId = Some "member-cp-1" }
++                        complete "W-2"
++                        blocked "W-3"
++                        catalogItem "W-5" (RecordedWorkState.Live LiveWorkState.Abandoned)
++                        ready "W-6" ]
++
++              let group = created (catalog [ ready "W-1"; ready "W-2"; ready "W-3"; ready "W-5"; ready "W-6" ]) "GROUP-FIXTURE-001" [ "W-1"; "W-2"; "W-3"; "W-5"; "W-6" ]
++
++              match WorkGroups.checkpoint known [ group ] verified identify (checkpointRequest "GROUP-FIXTURE-001") with
++              | Error rejections -> failwith $"%A{rejections}"
++              | Ok(changed, recorded) ->
++                  Assert.equal [ "W-1" ] recorded.Active
++                  Assert.equal [ "W-2" ] recorded.Completed
++                  Assert.equal [ "W-5" ] recorded.Abandoned
++                  Assert.equal [ "W-1"; "W-3"; "W-6" ] recorded.Remaining
++                  Assert.equal (Some "member-cp-1") (recorded.MemberCheckpoints |> List.find (fun reference -> reference.WorkItemId = "W-1")).CheckpointId
++                  Assert.equal None (recorded.MemberCheckpoints |> List.find (fun reference -> reference.WorkItemId = "W-3")).CheckpointId
++                  Assert.equal "cp-21-1" recorded.Id
++                  Assert.equal [ "one groups.json store" ] recorded.SharedDecisions
++                  Assert.equal actorB recorded.Actor
++                  Assert.equal [ recorded ] changed.Checkpoints
++                  Assert.equal (GroupChange.Checkpointed "cp-21-1") (changed.History |> List.last).Change
++                  Assert.equal group.Members changed.Members
++                  let json = WorkGroupJson.checkpoint recorded
++                  Assert.equal 0 (json["paths"].AsArray().Count)
++                  Assert.equal (Ok [ changed ]) (WorkGroupJson.parse (WorkGroupJson.render (WorkGroupJson.document [ changed ]))))
++
++          t "checkpoint requires the same durable verification as work checkpoint, and real text" (fun () ->
++              let group = created standard "GROUP-FIXTURE-001" [ "W-1" ]
++              let refused location = WorkGroups.checkpoint standard [ group ] location identify (checkpointRequest "GROUP-FIXTURE-001")
++              let remote = { Name = "origin"; Url = None }
++              Assert.equal [ "local-ahead" ] (codes (refused (Error [ CheckpointRejection.LocalAhead(1, remote, "feature/x") ])))
++              Assert.equal [ "uncommitted-changes" ] (codes (refused (Error [ CheckpointRejection.UncommittedChanges [ "src/a.fs" ] ])))
++              Assert.equal [ "no-upstream" ] (codes (refused (Error [ CheckpointRejection.NoUpstream "feature/x" ])))
++
++              let blank = WorkGroups.checkpoint standard [ group ] verified identify { checkpointRequest "GROUP-FIXTURE-001" with Summary = " "; NextAction = "" }
++              Assert.equal [ "blank-summary"; "blank-next-action" ] (codes blank)
++              Assert.equal [ "group-not-found" ] (codes (WorkGroups.checkpoint standard [ group ] verified identify (checkpointRequest "GROUP-FIXTURE-404")))
++              Assert.equal [ "empty-group" ] (codes (WorkGroups.checkpoint standard [ { group with Members = [] } ] verified identify (checkpointRequest "GROUP-FIXTURE-001"))))
++
++          t "the durable-location rule a group checkpoint uses is work checkpoint's own" (fun () ->
++              let remote = { Name = "origin"; Url = None }
++
++              let observations head remoteHead tree =
++                  { WorkItemState = None
++                    Execution = ExecutionObservation.NoneActive
++                    Head = GitRead.Observed(HeadState.OnBranch("feature/x", head))
++                    Upstream = Some(GitRead.Observed(UpstreamState.Tracking(remote, "feature/x")))
++                    RemoteBranch = Some(RemoteBranchObservation.At remoteHead)
++                    LocalToRemote = if head = remoteHead then None else Some(CommitRelationObservation.Related(CommitRelation.Ahead 1))
++                    WorkingTree =
++                      match tree with
++                      | [] -> GitStatusObservation.Clean
++                      | paths ->
++                          GitStatusObservation.Changed(
++                              paths
++                              |> List.map (fun path ->
++                                  { Status = GitChangeStatus.Tracked(GitDelta.Unmodified, GitDelta.Modified)
++                                    Path = path
++                                    OriginalPath = None })
++                          )
++                    PathFilter = { PathFilterConfig.defaultConfig with IgnoredPatterns = [ ".ros/**" ] }
++                    BaselineDirtyPaths = [] }
++
++              let other = (CommitId.tryParse "fedcba9876543210fedcba9876543210fedcba98").Value
++
++              match CheckpointVerification.verifyDurableLocation "fixture" (observations commit commit []) with
++              | Ok location -> Assert.equal commit location.RemoteCommit
++              | Error rejections -> failwith $"%A{rejections}"
++
++              let codesOf result =
++                  match result with
++                  | Ok _ -> []
++                  | Error rejections -> rejections |> List.map CheckpointRejection.code
++
++              Assert.equal [ "local-ahead" ] (codesOf (CheckpointVerification.verifyDurableLocation "fixture" (observations commit other [])))
++              Assert.equal [] (codesOf (CheckpointVerification.verifyDurableLocation "fixture" (observations commit commit [ ".ros/work/groups.json" ])))
++              Assert.equal [ "uncommitted-changes" ] (codesOf (CheckpointVerification.verifyDurableLocation "fixture" (observations commit commit [ "src/a.fs" ]))))
++
++          t "the stored document round-trips" (fun () ->
++              let group = created standard "GROUP-FIXTURE-001" [ "W-1"; "W-2" ]
++              let json = WorkGroupJson.render (WorkGroupJson.document [ group ])
++              Assert.equal (Ok [ group ]) (WorkGroupJson.parse json)
++              Assert.isTrue (match WorkGroupJson.parse """{"schemaVersion":"9.9.9","groups":[]}""" with Error _ -> true | Ok _ -> false) "an unknown schema is refused") ]
++
++/// `work group ...` through the real binary against a fixture repository.
++module WorkGroupCliTests =
++    open PraxisCli
++
++    let private t name run = { Name = $"work group cli: {name}"; Run = run }
++
++    let private agentA = agent "example/agent-a" "example" "agent-a" "session-a"
++
++    let withRepository (test: string -> unit) =
++        let parent = GitFixture.temporaryDirectory "work-group-cli"
++
++        try
++            let _, clone = installedRepository parent "clone"
++            test clone
++        finally
++            GitFixture.cleanup parent
++
++    let capture clone (id: string) =
++        run clone (Some agentA) [ "work"; "capture"; "--id"; id; "--title"; $"Item {id}"; "--occurred-at"; now () ] |> ok |> ignore
++
++    let start clone (id: string) =
++        run clone (Some agentA) [ "work"; "start"; "--id"; id; "--type"; "feature"; "--occurred-at"; now () ] |> ok |> ignore
++
++    let createGroup clone (id: string) (members: string list) (extra: string list) =
++        run clone (Some agentA) ([ "work"; "group"; "create"; "--id"; id; "--occurred-at"; now (); "--json" ] @ (members |> List.collect (fun entry -> [ "--member"; entry ])) @ extra)
++
++    let rejectionCodes (result: Result) =
++        match result.Json["rejections"] with
++        | :? JsonArray as array -> array |> Seq.map (fun node -> text node["code"]) |> Seq.toList
++        | _ -> []
++
++    let workState clone =
++        [ ".ros/work/queue.json"; ".ros/context/current.json"; ".ros/events/events.jsonl" ]
++        |> List.map (fun relative ->
++            let path = Path.Combine(clone, relative)
++            if File.Exists path then File.ReadAllText path else "")
++
++    let groupsFile clone = Path.Combine(clone, ".ros", "work", "groups.json")
++
++    let repositoryName clone = Ros.Infrastructure.Planning.FileWorkGroupRepository.repositoryName clone
++
++    let tests =
++        [ t "create records the group, leaves members' records byte-identical, and the planner reads it" (fun () ->
++              withRepository (fun clone ->
++                  capture clone "FEAT-1"
++                  capture clone "FEAT-2"
++                  start clone "FEAT-3"
++                  let before = workState clone
++                  let result = createGroup clone "GROUP-FIXTURE-001" [ "FEAT-1"; "FEAT-2"; "FEAT-3" ] [ "--kind"; "shared-area"; "--shared-context"; "one store" ] |> ok
++                  Assert.equal "recorded" (text result.Json["status"])
++                  Assert.equal 3 (result.Json["group"].["members"].AsArray().Count)
++                  Assert.equal "example/agent-a" (text result.Json["group"].["createdBy"].["id"])
++                  Assert.equal before (workState clone)
++                  let groups = run clone None [ "plan"; "groups"; "--json" ] |> ok
++                  let declared = groups.Json["groups"].AsArray() |> Seq.find (fun node -> text node["id"] = "GROUP-FIXTURE-001")
++                  Assert.equal "human-declared" (text declared["origin"])
++                  run clone None [ "validate" ] |> ok |> ignore))
++
++          t "create --dry-run records nothing; refusals record nothing and name every reason" (fun () ->
++              withRepository (fun clone ->
++                  capture clone "FEAT-1"
++                  start clone "FEAT-2"
++                  run clone (Some agentA) [ "work"; "abandon"; "--id"; "FEAT-2"; "--reason"; "cancelled"; "--occurred-at"; now () ] |> ok |> ignore
++                  let dry = createGroup clone "GROUP-FIXTURE-001" [ "FEAT-1" ] [ "--dry-run" ] |> ok
++                  Assert.equal "dry-run" (text dry.Json["status"])
++                  Assert.isTrue (not (File.Exists(groupsFile clone))) "a dry run wrote groups.json"
++                  let refused = createGroup clone "GROUP-FIXTURE-001" [ "FEAT-1"; "FEAT-2"; "FEAT-404" ] []
++                  Assert.equal 1 refused.ExitCode
++                  Assert.equal [ "terminal-member"; "unknown-member" ] (rejectionCodes refused |> List.sort)
++                  Assert.isTrue (not (File.Exists(groupsFile clone))) "a refusal wrote groups.json"
++                  createGroup clone "GROUP-FIXTURE-001" [ "FEAT-1" ] [] |> ok |> ignore
++                  let duplicate = createGroup clone "GROUP-FIXTURE-001" [ "FEAT-1" ] []
++                  Assert.equal [ "duplicate-group" ] (rejectionCodes duplicate)
++                  let invalid = createGroup clone "group-x" [ "FEAT-1" ] []
++                  Assert.equal 2 invalid.ExitCode
++                  Assert.equal [ "invalid-group-id" ] (rejectionCodes invalid)))
++
++          t "create refuses an ID already declared in the named planner configuration" (fun () ->
++              withRepository (fun clone ->
++                  capture clone "FEAT-1"
++                  File.WriteAllText(Path.Combine(clone, "planner.json"), """{"grouping":{"groups":[{"id":"GROUP-FIXTURE-001","members":["FEAT-1"]}]}}""")
++                  let refused = createGroup clone "GROUP-FIXTURE-001" [ "FEAT-1" ] [ "--config"; "planner.json" ]
++                  Assert.equal [ "duplicate-group" ] (rejectionCodes refused)))
++
++          t "show prints members, progress and blocked members in text and JSON, exits 1 for an unknown group, and never writes" (fun () ->
++              withRepository (fun clone ->
++                  capture clone "FEAT-1"
++                  start clone "FEAT-2"
++                  start clone "FEAT-3"
++                  createGroup clone "GROUP-FIXTURE-001" [ "FEAT-1"; "FEAT-2"; "FEAT-3" ] [ "--architecture-note"; "one store" ] |> ok |> ignore
++                  run clone (Some agentA) [ "work"; "block"; "--id"; "FEAT-3"; "--reason"; "waiting on review"; "--unrecoverable-reason"; "fixture"; "--occurred-at"; now () ] |> ok |> ignore
++                  let before = workState clone @ [ File.ReadAllText(groupsFile clone) ]
++                  let shown = run clone None [ "work"; "group"; "show"; "GROUP-FIXTURE-001"; "--json" ] |> ok
++                  let document = shown.Json
++                  Assert.equal "work group show" (text document["command"])
++                  Assert.equal 3 (document["progress"].["members"].GetValue<int>())
++                  Assert.equal 1 (document["progress"].["blocked"].GetValue<int>())
++                  Assert.equal "FEAT-3" (text document["blocked"].[0].["workItemId"])
++                  Assert.equal "captured" (text document["members"].[0].["recordedState"])
++                  Assert.equal "active" (text document["members"].[1].["recordedState"])
++                  Assert.equal "one store" (text document["architectureNotes"].[0])
++                  Assert.equal (repositoryName clone) (text document["executionRepository"])
++                  let textView = run clone None [ "work"; "group"; "show"; "GROUP-FIXTURE-001" ] |> ok
++                  Assert.isTrue (textView.Output.Contains "Progress: 0 of 3 complete") textView.Output
++                  Assert.isTrue (textView.Output.Contains "FEAT-3 (waiting on review)") textView.Output
++                  let missing = run clone None [ "work"; "group"; "show"; "GROUP-MISSING-001" ]
++                  Assert.equal 1 missing.ExitCode
++                  Assert.isTrue (missing.Error.Contains "GROUP-MISSING-001") missing.Error
++                  Assert.equal before (workState clone @ [ File.ReadAllText(groupsFile clone) ])))
++
++          t "add records the member with its own provenance and leaves every member's records byte-identical" (fun () ->
++              withRepository (fun clone ->
++                  capture clone "FEAT-1"
++                  capture clone "FEAT-2"
++                  start clone "FEAT-3"
++                  createGroup clone "GROUP-FIXTURE-001" [ "FEAT-1" ] [] |> ok |> ignore
++                  let before = workState clone
++                  let agentB = agent "example/agent-b" "example" "agent-b" "session-b"
++
++                  let add who (id: string) (extra: string list) =
++                      run clone (Some who) ([ "work"; "group"; "add"; "--id"; "GROUP-FIXTURE-001"; "--member"; id; "--occurred-at"; now (); "--json" ] @ extra)
++
++                  let dry = add agentB "FEAT-2" [ "--dry-run" ] |> ok
++                  Assert.equal "dry-run" (text dry.Json["status"])
++                  Assert.equal 1 ((run clone None [ "work"; "group"; "show"; "GROUP-FIXTURE-001"; "--json" ] |> ok).Json["members"].AsArray().Count)
++                  let added = add agentB "FEAT-2" [ "--reason"; "same store" ] |> ok
++                  Assert.equal "recorded" (text added.Json["status"])
++                  let members = added.Json["group"].["members"].AsArray()
++                  Assert.equal "example/agent-b" (text members[1].["addedBy"].["id"])
++                  Assert.equal "example/agent-a" (text members[0].["addedBy"].["id"])
++                  Assert.equal "same store" (text members[1].["reason"])
++                  Assert.equal "member-added" (text (added.Json["group"].["history"].AsArray() |> Seq.last).["change"])
++                  Assert.equal [ "already-member" ] (rejectionCodes (add agentA "FEAT-2" []))
++                  Assert.equal [ "unknown-member" ] (rejectionCodes (add agentA "FEAT-404" []))
++                  Assert.equal [ "repository-mismatch" ] (rejectionCodes (add agentA "FEAT-3" [ "--execution-repository"; "other-repo" ]))
++                  Assert.equal before (workState clone)
++                  run clone None [ "validate" ] |> ok |> ignore))
++
++          t "remove never touches the member's records, refuses non-members, and empties a group only when told" (fun () ->
++              withRepository (fun clone ->
++                  capture clone "FEAT-1"
++                  start clone "FEAT-2"
++                  createGroup clone "GROUP-FIXTURE-001" [ "FEAT-1"; "FEAT-2" ] [] |> ok |> ignore
++                  let before = workState clone
++
++                  let remove (id: string) (extra: string list) =
++                      run clone (Some agentA) ([ "work"; "group"; "remove"; "--id"; "GROUP-FIXTURE-001"; "--member"; id; "--occurred-at"; now (); "--json" ] @ extra)
++
++                  Assert.equal [ "not-member" ] (rejectionCodes (remove "FEAT-404" []))
++                  let dry = remove "FEAT-2" [ "--dry-run" ] |> ok
++                  Assert.equal "dry-run" (text dry.Json["status"])
++                  let removed = remove "FEAT-2" [ "--reason"; "split out" ] |> ok
++                  Assert.equal "recorded" (text removed.Json["status"])
++                  let last = (removed.Json["group"].["history"].AsArray() |> Seq.last)
++                  Assert.equal "member-removed" (text last["change"])
++                  Assert.equal "FEAT-2" (text last["subject"])
++                  Assert.equal "example/agent-a" (text last["actor"].["id"])
++                  Assert.equal "split out" (text last["reason"])
++                  Assert.equal before (workState clone)
++                  let refused = remove "FEAT-1" []
++                  Assert.equal 1 refused.ExitCode
++                  Assert.equal [ "last-member" ] (rejectionCodes refused)
++                  let emptied = remove "FEAT-1" [ "--allow-empty" ] |> ok
++                  Assert.equal 0 (emptied.Json["group"].["members"].AsArray().Count)
++                  Assert.equal before (workState clone)
++                  run clone None [ "validate" ] |> ok |> ignore
++                  let groups = run clone None [ "plan"; "groups"; "--json" ] |> ok
++                  Assert.isTrue (groups.Json["groups"].AsArray() |> Seq.forall (fun node -> text node["id"] <> "GROUP-FIXTURE-001")) "an empty group declares nothing"))
++
++          t "checkpoint verifies durability like work checkpoint, references members' own checkpoints and claims none of their changes" (fun () ->
++              withRepository (fun clone ->
++                  start clone "FEAT-1"
++                  start clone "FEAT-2"
++                  createGroup clone "GROUP-FIXTURE-001" [ "FEAT-1"; "FEAT-2" ] [] |> ok |> ignore
++                  GitFixture.write clone "src/a.txt" "a\n"
++                  pushAll clone "FEAT-1 work" |> ignore
++                  let own = run clone (Some agentA) [ "work"; "checkpoint"; "--id"; "FEAT-1"; "--occurred-at"; now (); "--summary"; "a done"; "--next-action"; "b"; "--json" ] |> ok
++                  let ownId = text own.Json["checkpoint"].["id"]
++                  GitFixture.write clone "src/b.txt" "b\n"
++                  let head = pushAll clone "FEAT-2 work"
++
++                  let groupCheckpoint (extra: string list) =
++                      run clone (Some agentA) ([ "work"; "group"; "checkpoint"; "--id"; "GROUP-FIXTURE-001"; "--occurred-at"; now (); "--summary"; "both slices pushed"; "--next-action"; "finish FEAT-2"; "--decision"; "one store"; "--json" ] @ extra)
++
++                  let before = workState clone
++                  let recorded = groupCheckpoint [] |> ok
++                  let document = recorded.Json["checkpoint"]
++                  Assert.equal "recorded" (text recorded.Json["status"])
++                  Assert.equal head (text document["location"].["commit"])
++                  Assert.equal head (text document["location"].["remoteCommit"])
++                  Assert.equal [ "FEAT-1"; "FEAT-2" ] (document["members"].["active"].AsArray() |> Seq.map text |> Seq.toList)
++                  Assert.equal ownId (text document["memberCheckpoints"].[0].["checkpointId"])
++                  Assert.isTrue (isNull document["memberCheckpoints"].[1].["checkpointId"]) "FEAT-2 has no checkpoint of its own"
++                  Assert.equal 0 (document["paths"].AsArray().Count)
++                  Assert.equal before (workState clone)
++                  let shown = run clone None [ "work"; "group"; "show"; "GROUP-FIXTURE-001"; "--json" ] |> ok
++                  Assert.equal (text document["id"]) (text shown.Json["latestCheckpoint"].["id"])
++                  run clone None [ "validate" ] |> ok |> ignore
++                  // FEAT-2's own checkpoint still owns its change; FEAT-1's is not claimed by it.
++                  let second = run clone (Some agentA) [ "work"; "checkpoint"; "--id"; "FEAT-2"; "--occurred-at"; now (); "--summary"; "b done"; "--next-action"; "complete"; "--json" ] |> ok
++                  let paths = second.Json["paths"].AsArray() |> Seq.map text |> Seq.toList
++                  Assert.isTrue (List.contains "src/b.txt" paths) $"%A{paths}"
++                  Assert.isTrue (not (List.contains "src/a.txt" paths)) $"%A{paths}"
++                  let history = run clone None [ "work"; "checkpoint"; "show"; "FEAT-1"; "--json"; "--offline" ] |> ok
++                  Assert.equal 1 (history.Json["history"].AsArray().Count)))
++
++          t "checkpoint refuses an unpushed or dirty state and records nothing; validate catches altered checkpoints" (fun () ->
++              withRepository (fun clone ->
++                  start clone "FEAT-1"
++                  createGroup clone "GROUP-FIXTURE-001" [ "FEAT-1" ] [] |> ok |> ignore
++
++                  let groupCheckpoint (extra: string list) =
++                      run clone (Some agentA) ([ "work"; "group"; "checkpoint"; "--id"; "GROUP-FIXTURE-001"; "--occurred-at"; now (); "--summary"; "slice"; "--next-action"; "next"; "--json" ] @ extra)
++
++                  let stored = File.ReadAllText(groupsFile clone)
++                  GitFixture.write clone "src/a.txt" "a\n"
++                  GitFixture.commitAll clone "not pushed" |> ignore
++                  Assert.equal [ "local-ahead" ] (rejectionCodes (groupCheckpoint []))
++                  GitFixture.git clone [ "push"; "-q" ] |> ignore
++                  GitFixture.write clone "src/a.txt" "changed\n"
++                  Assert.equal [ "uncommitted-changes" ] (rejectionCodes (groupCheckpoint []))
++                  Assert.equal stored (File.ReadAllText(groupsFile clone))
++                  pushAll clone "pushed" |> ignore
++                  let blank = run clone (Some agentA) [ "work"; "group"; "checkpoint"; "--id"; "GROUP-FIXTURE-001"; "--occurred-at"; now (); "--summary"; " "; "--next-action"; "x"; "--json" ]
++                  Assert.equal 2 blank.ExitCode
++                  Assert.equal [ "blank-summary" ] (rejectionCodes blank)
++                  let dry = groupCheckpoint [ "--dry-run" ] |> ok
++                  Assert.equal "dry-run" (text dry.Json["status"])
++                  Assert.equal stored (File.ReadAllText(groupsFile clone))
++                  groupCheckpoint [] |> ok |> ignore
++                  run clone None [ "validate" ] |> ok |> ignore
++                  let file = groupsFile clone
++                  File.WriteAllText(file, (File.ReadAllText file).Replace("\"summary\": \"slice\"", "\"summary\": \"rewritten\""))
++                  let failed = run clone None [ "validate" ]
++                  Assert.equal 1 failed.ExitCode
++                  Assert.isTrue (failed.Error.Contains "does not match its content") failed.Error))
++
++          t "validate checks stored groups" (fun () ->
++              withRepository (fun clone ->
++                  capture clone "FEAT-1"
++                  createGroup clone "GROUP-FIXTURE-001" [ "FEAT-1" ] [] |> ok |> ignore
++                  let file = groupsFile clone
++                  File.WriteAllText(file, (File.ReadAllText file).Replace("\"workItemId\": \"FEAT-1\"", "\"workItemId\": \"FEAT-404\""))
++                  let failed = run clone None [ "validate" ]
++                  Assert.equal 1 failed.ExitCode
++                  Assert.isTrue (failed.Error.Contains "FEAT-404") failed.Error
++                  File.WriteAllText(file, "{ not json")
++                  Assert.equal 1 (run clone None [ "validate" ]).ExitCode)) ]
