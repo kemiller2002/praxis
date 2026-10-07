@@ -3,9 +3,13 @@ namespace Ros.Infrastructure.Planning
 open System
 open System.IO
 open System.Text
+open Ros.Application.Work
 open Ros.Contracts.Planning
 open Ros.Domain.Planning
+open Ros.Domain.Work
 open Ros.Infrastructure.Artifacts
+open Ros.Infrastructure.Git
+open Ros.Infrastructure.Work
 
 [<RequireQualifiedAccess>]
 type GroupCreateFailure =
@@ -115,6 +119,49 @@ module FileWorkGroupRepository =
     /// evidence and attribution are never read for writing.
     let remove (root: string) (dryRun: bool) (request: GroupRemoveRequest) : Result<StoredGroup, GroupCreateFailure> =
         apply root dryRun (fun () -> decideRemove root request) (persistUpdate root)
+
+    /// Each recorded item's latest own checkpoint, as a reference. Read
+    /// only: no member's checkpoint history or projection is written.
+    let private memberCheckpoints (root: string) : Result<string -> MemberCheckpointReference, string> =
+        FileCheckpointRepository.readItems root
+        |> Result.map (fun items ->
+            let references =
+                items
+                |> List.map (fun item ->
+                    item.WorkItemId,
+                    match item.LatestCheckpoint with
+                    | Ok(Some recorded) ->
+                        MemberCheckpointReference.Latest(recorded.CheckpointId, recorded.Recorded.Commit.Value, recorded.Recorded.RecordedAt)
+                    | Ok None -> MemberCheckpointReference.NoneRecorded
+                    | Error problems -> MemberCheckpointReference.Unreadable problems)
+                |> Map.ofList
+
+            fun id -> references |> Map.tryFind id |> Option.defaultValue MemberCheckpointReference.NoneRecorded)
+
+    /// The durable-checkpoint verification `work checkpoint` applies, read
+    /// from Git and the remote itself now (never cached).
+    let private durability (root: string) : Result<GitDurableLocation, CheckpointRejection list> =
+        let git = ProcessGitDurability.create root
+        let policy = FileCheckpointRepository.readPolicy root
+
+        CheckpointObservation.candidate git policy None ExecutionObservation.NoneActive
+        |> CheckpointVerification.locate (FileWorkConfigRepository.readRepositoryId root)
+
+    let private decideCheckpoint (root: string) (request: GroupCheckpointRequest) =
+        FilePlanningRepository.readStoredGroups root
+        |> Result.bind (fun existing -> memberStatuses root |> Result.map (fun statuses -> existing, statuses))
+        |> Result.bind (fun (existing, statuses) -> memberCheckpoints root |> Result.map (fun references -> existing, statuses, references))
+        |> Result.mapError GroupCreateFailure.Failed
+        |> Result.bind (fun (existing, statuses, references) ->
+            GroupDeclaration.checkpoint existing statuses references (durability root) request
+            |> Result.mapError GroupCreateFailure.Rejected
+            |> Result.map (fun updated -> existing, updated))
+
+    /// Verifies and, unless `dryRun`, records one group checkpoint
+    /// (PRX-GRP-044). Only the group store is written: members' own
+    /// checkpoints, context records and events are read, never written.
+    let checkpoint (root: string) (dryRun: bool) (request: GroupCheckpointRequest) : Result<StoredGroup, GroupCreateFailure> =
+        apply root dryRun (fun () -> decideCheckpoint root request) (persistUpdate root)
 
     /// `validate` findings for the store: (path, field, message).
     let findings (root: string) : (string * string * string) list =

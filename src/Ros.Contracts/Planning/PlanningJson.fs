@@ -1230,6 +1230,46 @@ module PlanningJson =
 
     let groupStoreSchemaVersion = "1.0.0"
 
+    let private memberCheckpoint (entry: MemberCheckpoint) : JsonNode =
+        match entry.Reference with
+        | MemberCheckpointReference.Latest(checkpointId, commit, recordedAt) ->
+            record
+                [ "workItem", text entry.WorkItem
+                  "status", text "recorded"
+                  "checkpointId", text checkpointId
+                  "commit", text commit
+                  "recordedAt", text recordedAt ]
+        | MemberCheckpointReference.NoneRecorded -> record [ "workItem", text entry.WorkItem; "status", text "none" ]
+        | MemberCheckpointReference.Unreadable problems ->
+            record [ "workItem", text entry.WorkItem; "status", text "unreadable"; "problems", texts problems ]
+
+    /// One group checkpoint (PRX-GRP-044). It names members' own checkpoints
+    /// and carries no paths: it claims no member's changes (PRX-GRP-043).
+    let groupCheckpoint (value: GroupCheckpoint) : JsonNode =
+        record
+            [ "checkpointId", text value.CheckpointId
+              "recordedAt", text value.RecordedAt
+              "recordedBy", text value.RecordedBy
+              "summary", text value.Summary
+              "nextAction", text value.NextAction
+              "sharedDecisions", texts value.SharedDecisions
+              "members",
+              record
+                  [ "active", texts value.Members.Active
+                    "completed", texts value.Members.Completed
+                    "remaining", texts value.Members.Remaining
+                    "abandoned", texts value.Members.Abandoned
+                    "unknown", texts value.Members.Unknown ]
+              "location",
+              record
+                  [ "repository", text value.Location.Repository
+                    "branch", text value.Location.Branch
+                    "commit", text value.Location.Commit
+                    "remote", text value.Location.Remote
+                    "remoteUrl", optionalText value.Location.RemoteUrl
+                    "remoteBranch", text value.Location.RemoteBranch ]
+              "memberCheckpoints", value.MemberCheckpoints |> List.map memberCheckpoint |> array ]
+
     /// One declaration, with the keys `grouping.groups` reads, plus who
     /// declared it and when, who added each later member, and who removed any.
     let storedGroup (value: StoredGroup) : JsonNode =
@@ -1262,7 +1302,8 @@ module PlanningJson =
                         "removedAt", text removal.RemovedAt
                         "removedBy", text removal.RemovedBy
                         "reason", optionalText removal.Reason ])
-              |> array ]
+              |> array
+              "checkpoints", value.Checkpoints |> List.map groupCheckpoint |> array ]
 
     /// `work group show`: one declaration with its members' own states and
     /// partial-completion progress. Unavailable values are null, never zero.
@@ -1313,6 +1354,41 @@ module PlanningJson =
               |> array ]
         |> render
 
+    let private readMemberCheckpoint (node: JsonObject) : MemberCheckpoint =
+        { WorkItem = readText node "workItem"
+          Reference =
+            match readText node "status" with
+            | "recorded" ->
+                MemberCheckpointReference.Latest(readText node "checkpointId", readText node "commit", readText node "recordedAt")
+            | "none" -> MemberCheckpointReference.NoneRecorded
+            | "unreadable" -> MemberCheckpointReference.Unreadable(readTexts node "problems")
+            | other -> fail $"unknown member checkpoint status '{other}'" }
+
+    let private readGroupCheckpoint (node: JsonObject) : GroupCheckpoint =
+        let members = field node "members" |> asObject "members"
+        let location = field node "location" |> asObject "location"
+
+        { CheckpointId = readText node "checkpointId"
+          RecordedAt = readText node "recordedAt"
+          RecordedBy = readText node "recordedBy"
+          Summary = readText node "summary"
+          NextAction = readText node "nextAction"
+          SharedDecisions = readTexts node "sharedDecisions"
+          Members =
+            { Active = readTexts members "active"
+              Completed = readTexts members "completed"
+              Remaining = readTexts members "remaining"
+              Abandoned = readTexts members "abandoned"
+              Unknown = readTexts members "unknown" }
+          Location =
+            { Repository = readText location "repository"
+              Branch = readText location "branch"
+              Commit = readText location "commit"
+              Remote = readText location "remote"
+              RemoteUrl = readOptionalText location "remoteUrl"
+              RemoteBranch = readText location "remoteBranch" }
+          MemberCheckpoints = objects node "memberCheckpoints" |> List.map readMemberCheckpoint }
+
     let parseGroupStore (json: string) : Result<StoredGroup list, string> =
         try
             let root = JsonNode.Parse json |> asObject "group store"
@@ -1345,7 +1421,12 @@ module PlanningJson =
                                 { WorkItem = readText removal "workItem"
                                   RemovedAt = readText removal "removedAt"
                                   RemovedBy = readText removal "removedBy"
-                                  Reason = readOptionalText removal "reason" }) })
+                                  Reason = readOptionalText removal "reason" })
+                      // Absent in declarations written before `work group checkpoint`.
+                      Checkpoints =
+                        match field node "checkpoints" with
+                        | null -> []
+                        | _ -> objects node "checkpoints" |> List.map readGroupCheckpoint })
                 |> Ok
         with
         | Malformed message -> Error $"malformed group store: {message}"

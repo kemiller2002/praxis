@@ -357,6 +357,21 @@ and a removal that would leave fewer than two members; never changes the
 item's lifecycle state, evidence or attribution. See
 [`planning.md`](planning.md#removing-a-member).
 
+### `work group checkpoint`
+
+```
+ros work group checkpoint --id GROUP-ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT [--shared-decision TEXT]* [--dry-run] [--json] [IDENTITY]
+```
+
+Records a group checkpoint (PRX-GRP-044) after the same durable-checkpoint
+verification as `work checkpoint`: HEAD on a branch, equal to its upstream
+as read from the remote, and no meaningful uncommitted change. It records
+the active, completed and remaining members, shared decisions, branch,
+commit and next action, and references each member's own latest checkpoint
+without replacing it or claiming any paths. Refuses (exit `1`) an undeclared
+group, a group with no active member, and anything `work checkpoint` would
+refuse. See [`planning.md`](planning.md#checkpointing-a-group).
+
 ### `work reconcile`
 
 ```

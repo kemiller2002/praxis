@@ -45,7 +45,7 @@ balanced --json > plan.json` to keep a plan; later `praxis plan freshness
 | Merged PRs, tags, merged checkpoint commits | read-only Git on the integration branch (`origin/HEAD`, `origin/main`, `main`, ...) | `git` |
 | CI results, GitHub state | `--observations FILE`, supplied by a caller that can see them | `ci`, `github`, `external-observation` |
 | Weights, declared dependencies/areas/conflicts | `--config FILE` | `planner-configuration` |
-| Human-declared groups | `.ros/work/groups.json` (written by `work group create`, `work group add` and `work group remove`), merged into `grouping.groups` | `planner-configuration` |
+| Human-declared groups | `.ros/work/groups.json` (written by `work group create`, `work group add`, `work group remove` and `work group checkpoint`), merged into `grouping.groups` | `planner-configuration` |
 
 The inventory is the union of queue and live context (PRX-PLAN-010); the
 effective lifecycle state uses the same authority as `work list`
@@ -303,7 +303,8 @@ Records a human-declared execution group (PRX-GRP-073 phase two) in
 `.ros/work/groups.json`. Each entry has exactly the keys of a
 `grouping.groups` configuration entry (`origin` is always `human-declared`)
 plus `declaredAt`, `declaredBy` (the resolved actor), `additions` (see
-"Adding a member") and `removals` (see "Removing a member"). The planner merges
+"Adding a member"), `removals` (see "Removing a member") and `checkpoints`
+(see "Checkpointing a group"). The planner merges
 stored groups into `grouping.groups`; when an explicit `--config` file
 declares the same ID, the configuration's definition is used.
 
@@ -407,6 +408,51 @@ and writes nothing. `--json` emits a `praxis.work-group/1.0.0` document of
 kind `work-group-remove` with `dryRun`, `ok` and either the updated `group`
 or `rejections` (`code`, `message`).
 
+### Checkpointing a group
+
+```
+ros work group checkpoint --id GROUP-ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT [--shared-decision TEXT]* [--dry-run] [--json]
+```
+
+Records a group-level checkpoint after an architectural or implementation
+milestone of a grouped execution (`PRAXIS-GROUP-05`, PRX-GRP-044). It
+requires the same durable-checkpoint verification as `work checkpoint`
+(DF-ROS-2026-A042), read from Git and the remote itself now: HEAD is on a
+branch with an upstream, the remote branch head equals local HEAD, and the
+working tree has no meaningful uncommitted change. Any refusal
+`work checkpoint` would give (`uncommitted-changes`, `local-ahead`,
+`no-upstream`, ...) is reported with the same code; blank `--summary` or
+`--next-action` are refused as there. The group must be declared and at
+least one member must be active (`no-active-member`): a group checkpoint
+records grouped execution in progress. Every independent problem is
+reported together, with exit `1`; usage errors exit `2`.
+
+The declaration gains a `checkpoints` entry (oldest first; never rewritten)
+`{checkpointId, recordedAt, recordedBy, summary, nextAction,
+sharedDecisions, members, location, memberCheckpoints}`. `checkpointId` is
+`GROUP-ID-checkpoint-N`. `members` holds `active`, `completed`, `remaining`,
+`abandoned` and `unknown` lists from each member's recorded lifecycle, so a
+group checkpoint never implies that every member succeeded (PRX-GRP-042).
+`location` is the verified `{repository, branch, commit, remote, remoteUrl,
+remoteBranch}`. `memberCheckpoints` references each member's own latest
+checkpoint: `{workItem, status: "recorded", checkpointId, commit,
+recordedAt}`, `{workItem, status: "none"}`, or `{workItem, status:
+"unreadable", problems}`.
+
+A group checkpoint references members' checkpoints and never replaces them:
+it writes only the group store, under the work-protocol lock, and never a
+member's `work.checkpointed` event, `latestCheckpoint` projection or
+context record. It carries no paths and is not a checkpoint claim, so it
+attributes no change to any member (PRX-GRP-043, `PRAXIS-CONT-12`); each
+member's changes stay attributed through its own checkpoints, and a member
+completing still needs its own durable checkpoint. A store written before
+`checkpoints` existed parses with none. `work group show` reports the
+latest group checkpoint and its shared decisions, so they are available to
+later member executions. `--dry-run` verifies and decides the same way and
+writes nothing. `--json` emits a `praxis.work-group/1.0.0` document of kind
+`work-group-checkpoint` with `dryRun`, `ok` and either the updated `group`
+or `rejections` (`code`, `message`).
+
 ## JSON contract
 
 Every document has `"schema": "praxis.plan/1.0.0"` and a `kind`: `analysis`,
@@ -465,12 +511,12 @@ No external dependency was added (PRX-PLAN-004).
 | GRP-010..011 | Met with the typed model in `Grouping`; recommended IDs stable for identical input only. |
 | GRP-020..022 | Met for tags, declared paths, branches, dependencies, requirement/decision references, declarations, ID families and titles. Historical co-change, test overlap and deployment boundaries are not observable yet. |
 | GRP-030..031 | Met (tests 2, 18). |
-| GRP-040, 044 | Guidance for executors; `EX-ROS-2026-A021` requires the group analysis. Group checkpoints and durable notes are phase two (`PRAXIS-GROUP-05`). |
+| GRP-040, 044 | GRP-040 is guidance for executors; `EX-ROS-2026-A021` requires the group analysis. GRP-044 group checkpoints, with shared decisions shown to later member executions by `work group show`, via `work group checkpoint` (`PRAXIS-GROUP-05`, experimental branch; see "Checkpointing a group"). |
 | GRP-041..043 | Met by construction (tests 9, 10); per-item attribution in a grouped execution is enforced by the existing work protocol. |
 | GRP-050..052 | Met for dependencies and cycles (dependency test) and repositories (tests 5, 5b); cross-repository orchestration is future work. |
 | GRP-060..063 | Met; context cost is counted, not priced (unmeasured). |
 | GRP-070..072 | Met. |
-| GRP-073 | Declarations from configuration, and durably from `.ros/work/groups.json` via `work group create` (`PRAXIS-GROUP-01`, experimental branch; see "Declaring a group"), viewed read-only via `work group show` (`PRAXIS-GROUP-02`, experimental branch; see "Showing a group"), extended via `work group add` (`PRAXIS-GROUP-03`, experimental branch; see "Adding a member"), and reduced via `work group remove` (`PRAXIS-GROUP-04`, experimental branch; see "Removing a member"). `checkpoint` and `plan execute-group` remain captured as `PRAXIS-GROUP-05`, deferred. |
+| GRP-073 | Declarations from configuration, and durably from `.ros/work/groups.json` via `work group create` (`PRAXIS-GROUP-01`, experimental branch; see "Declaring a group"), viewed read-only via `work group show` (`PRAXIS-GROUP-02`, experimental branch; see "Showing a group"), extended via `work group add` (`PRAXIS-GROUP-03`, experimental branch; see "Adding a member"), reduced via `work group remove` (`PRAXIS-GROUP-04`, experimental branch; see "Removing a member"), and checkpointed via `work group checkpoint` (`PRAXIS-GROUP-05`, experimental branch; see "Checkpointing a group"). `plan execute-group` remains deferred. |
 | GRP-074 | Size and context-pressure splits and architecture merges met (tests 18, 19, merge test); splitting by independent chain or external blockage is not implemented. |
 | GRP-075 | Met (test 15). |
 | GRP-080..088 | Baseline, cohort, protocol and predictions frozen (`EV-ROS-2026-A059`, `EX-ROS-2026-A021`); the arms have not run. |

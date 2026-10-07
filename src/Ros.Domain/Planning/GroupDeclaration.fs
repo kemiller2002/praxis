@@ -26,15 +26,63 @@ type MemberRemoval =
       RemovedBy: string
       Reason: string option }
 
+/// What a group checkpoint saw of one member's own checkpoint history: a
+/// reference to its latest durable checkpoint, never a copy or replacement.
+[<RequireQualifiedAccess>]
+type MemberCheckpointReference =
+    | Latest of checkpointId: string * commit: string * recordedAt: string
+    | NoneRecorded
+    | Unreadable of problems: string list
+
+type MemberCheckpoint =
+    { WorkItem: string
+      Reference: MemberCheckpointReference }
+
+/// Where each member stood when a group checkpoint was recorded. Abandoned
+/// and unknown members are kept apart from completed ones, so a group
+/// checkpoint never implies that every member succeeded (PRX-GRP-042).
+type GroupMemberProgress =
+    { Active: string list
+      Completed: string list
+      Remaining: string list
+      Abandoned: string list
+      Unknown: string list }
+
+/// The durable Git location a group checkpoint verified, as observed.
+type GroupCheckpointLocation =
+    { Repository: string
+      Branch: string
+      Commit: string
+      Remote: string
+      RemoteUrl: string option
+      RemoteBranch: string }
+
+/// A group-level checkpoint (PRX-GRP-044): a verified durable location plus
+/// the group's progress, shared decisions and next action. It references
+/// members' own checkpoints and claims no paths for any member, so member
+/// attribution stays with each member's own checkpoints (PRX-GRP-043).
+type GroupCheckpoint =
+    { CheckpointId: string
+      RecordedAt: string
+      RecordedBy: string
+      Summary: string
+      NextAction: string
+      SharedDecisions: string list
+      Members: GroupMemberProgress
+      Location: GroupCheckpointLocation
+      MemberCheckpoints: MemberCheckpoint list }
+
 /// A declaration as stored in `.ros/work/groups.json`: the same
 /// `DeclaredGroup` the planner reads from `grouping.groups`, plus who
-/// declared it and when, who added each later member, and who removed any.
+/// declared it and when, who added each later member, who removed any, and
+/// its group checkpoints (oldest first; never rewritten).
 type StoredGroup =
     { Group: DeclaredGroup
       DeclaredAt: string
       DeclaredBy: string
       Additions: MemberAddition list
-      Removals: MemberRemoval list }
+      Removals: MemberRemoval list
+      Checkpoints: GroupCheckpoint list }
 
 /// What a work item's recorded lifecycle says about group membership.
 [<RequireQualifiedAccess>]
@@ -66,6 +114,14 @@ type GroupRemoveRequest =
       RemovedBy: string
       Reason: string option }
 
+type GroupCheckpointRequest =
+    { GroupId: string
+      Summary: string
+      NextAction: string
+      SharedDecisions: string list
+      RecordedAt: string
+      RecordedBy: string }
+
 [<RequireQualifiedAccess>]
 type GroupRejection =
     | InvalidGroupId of id: string
@@ -81,6 +137,10 @@ type GroupRejection =
     | RepositoryMismatch of workItem: string * itemRepository: string * groupRepositories: string list
     | NotMember of workItem: string * group: string
     | LastMembers of workItem: string * group: string * remaining: int
+    | NoActiveMember of group: string
+    | BlankSharedDecision
+    /// The same durable-checkpoint verification `work checkpoint` applies.
+    | NotDurable of CheckpointRejection
 
 [<RequireQualifiedAccess>]
 module GroupRejection =
@@ -99,6 +159,9 @@ module GroupRejection =
         | GroupRejection.RepositoryMismatch _ -> "repository-mismatch"
         | GroupRejection.NotMember _ -> "not-member"
         | GroupRejection.LastMembers _ -> "last-members"
+        | GroupRejection.NoActiveMember _ -> "no-active-member"
+        | GroupRejection.BlankSharedDecision -> "blank-shared-decision"
+        | GroupRejection.NotDurable rejection -> CheckpointRejection.code rejection
 
     let message rejection =
         match rejection with
@@ -117,6 +180,10 @@ module GroupRejection =
         | GroupRejection.NotMember(id, group) -> $"{id} is not a member of {group}"
         | GroupRejection.LastMembers(id, group, remaining) ->
             $"removing {id} would leave {group} with {remaining} member(s); a group needs at least two, so its last members cannot be removed"
+        | GroupRejection.NoActiveMember group ->
+            $"{group} has no active member; a group checkpoint records grouped execution in progress, so start a member first"
+        | GroupRejection.BlankSharedDecision -> "--shared-decision cannot be empty"
+        | GroupRejection.NotDurable rejection -> $"{CheckpointRejection.message rejection} ({CheckpointRejection.remedy rejection})"
 
 [<RequireQualifiedAccess>]
 module GroupDeclaration =
@@ -209,7 +276,8 @@ module GroupDeclaration =
                   DeclaredAt = request.DeclaredAt
                   DeclaredBy = request.DeclaredBy
                   Additions = []
-                  Removals = [] }
+                  Removals = []
+                  Checkpoints = [] }
         else
             Error rejections
 
@@ -291,6 +359,86 @@ module GroupDeclaration =
                                   Reason = request.Reason } ] }
             else
                 Error rejections
+
+    /// Where each member stands now, from its recorded lifecycle.
+    let progress (statuses: Map<string, GroupMemberStatus>) (members: string list) : GroupMemberProgress =
+        let where predicate =
+            members |> List.distinct |> List.filter (fun id -> statuses |> Map.tryFind id |> predicate)
+
+        { Active = where (fun status -> status = Some(GroupMemberStatus.Open "active"))
+          Completed = where (fun status -> status = Some(GroupMemberStatus.Terminal "complete"))
+          Remaining =
+            where (fun status ->
+                match status with
+                | Some(GroupMemberStatus.Open state) -> state <> "active"
+                | _ -> false)
+          Abandoned =
+            where (fun status ->
+                match status with
+                | Some(GroupMemberStatus.Terminal state) -> state <> "complete"
+                | _ -> false)
+          Unknown = where Option.isNone }
+
+    let private location (git: GitDurableLocation) : GroupCheckpointLocation =
+        { Repository = git.Repository
+          Branch = git.Branch
+          Commit = git.RemoteCommit.Value
+          Remote = git.Remote.Name
+          RemoteUrl = git.Remote.Url
+          RemoteBranch = git.RemoteBranch }
+
+    /// Decides a `work group checkpoint` (PRX-GRP-044). `durable` is the
+    /// outcome of the same verification `work checkpoint` applies (local HEAD
+    /// on a branch, equal to its upstream as read from the remote, and no
+    /// meaningful uncommitted change). The checkpoint references each
+    /// member's own latest checkpoint and claims no paths: members keep their
+    /// own checkpoint history and attribution (PRX-GRP-043). Every problem
+    /// that can be known independently is reported together.
+    let checkpoint
+        (existing: StoredGroup list)
+        (statuses: Map<string, GroupMemberStatus>)
+        (references: string -> MemberCheckpointReference)
+        (durable: Result<GitDurableLocation, CheckpointRejection list>)
+        (request: GroupCheckpointRequest)
+        : Result<StoredGroup, GroupRejection list> =
+        match existing |> List.tryFind (fun stored -> stored.Group.Id = request.GroupId) with
+        | None -> Error [ GroupRejection.UnknownGroup request.GroupId ]
+        | Some stored ->
+            let members = progress statuses stored.Group.Members
+
+            let rejections =
+                [ if String.IsNullOrWhiteSpace request.Summary then
+                      yield GroupRejection.NotDurable CheckpointRejection.BlankSummary
+                  if String.IsNullOrWhiteSpace request.NextAction then
+                      yield GroupRejection.NotDurable CheckpointRejection.BlankNextAction
+                  if request.SharedDecisions |> List.exists String.IsNullOrWhiteSpace then
+                      yield GroupRejection.BlankSharedDecision
+                  if members.Active.IsEmpty then
+                      yield GroupRejection.NoActiveMember stored.Group.Id
+                  match durable with
+                  | Error failures -> yield! failures |> List.map GroupRejection.NotDurable
+                  | Ok _ -> () ]
+                |> List.distinct
+
+            match rejections, durable with
+            | [], Ok git ->
+                Ok
+                    { stored with
+                        Checkpoints =
+                            stored.Checkpoints
+                            @ [ { CheckpointId = $"{stored.Group.Id}-checkpoint-{stored.Checkpoints.Length + 1}"
+                                  RecordedAt = request.RecordedAt
+                                  RecordedBy = request.RecordedBy
+                                  Summary = request.Summary.Trim()
+                                  NextAction = request.NextAction.Trim()
+                                  SharedDecisions = request.SharedDecisions |> List.map _.Trim()
+                                  Members = members
+                                  Location = location git
+                                  MemberCheckpoints =
+                                    stored.Group.Members
+                                    |> List.distinct
+                                    |> List.map (fun item -> { WorkItem = item; Reference = references item }) } ] }
+            | _ -> Error rejections
 
     /// `validate` over the stored declarations. A member that became
     /// terminal after the group was declared is legitimate partial

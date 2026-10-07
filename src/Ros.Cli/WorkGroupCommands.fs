@@ -17,6 +17,9 @@ open Ros.Infrastructure.Planning
 /// added it; the member's own lifecycle is untouched.
 /// `praxis work group remove`: one member leaves a stored group, recording
 /// who removed it; the item's lifecycle, evidence and attribution are untouched.
+/// `praxis work group checkpoint`: a verified durable group checkpoint
+/// (PRX-GRP-044) that references members' own checkpoints and never
+/// replaces them.
 [<RequireQualifiedAccess>]
 module WorkGroupCommands =
     let showUsage = "work group show GROUP-ID [--json]"
@@ -30,7 +33,11 @@ module WorkGroupCommands =
     let removeUsage =
         "work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT] [--dry-run] [--json]"
 
-    let usage = createUsage + " | " + showUsage + " | " + addUsage + " | " + removeUsage
+    let checkpointUsage =
+        "work group checkpoint --id GROUP-ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT [--shared-decision TEXT]* [--dry-run] [--json]"
+
+    let usage =
+        createUsage + " | " + showUsage + " | " + addUsage + " | " + removeUsage + " | " + checkpointUsage
 
     let private valued =
         [ "--id"; "--member"; "--occurred-at"; "--kind"; "--execution-repository"; "--shared-context"; "--architecture-note" ]
@@ -104,6 +111,25 @@ module WorkGroupCommands =
                   RemovedAt = timestamp
                   RemovedBy = actor.Id
                   Reason = value "--reason" arguments }
+
+    let private checkpointRequest (actor: Actor) (arguments: string list) : Result<GroupCheckpointRequest, string> =
+        let given name = values name arguments
+
+        match unexpectedWith [ "--summary"; "--next-action"; "--shared-decision" ] arguments, value "--id" arguments, value "--occurred-at" arguments with
+        | (_ :: _) as stray, _, _ -> Error("unexpected argument(s): " + String.concat " " stray)
+        | _, None, _ -> Error "work group checkpoint requires --id GROUP-ID"
+        | _, _, None -> Error "work group checkpoint requires --occurred-at TIMESTAMP (the real current time)"
+        | _, _, Some timestamp when not (isTimestamp timestamp) -> Error $"--occurred-at '{timestamp}' is not a timestamp"
+        | _ when (given "--summary").Length <> 1 -> Error "work group checkpoint requires one --summary TEXT describing the completed work"
+        | _ when (given "--next-action").Length <> 1 -> Error "work group checkpoint requires one --next-action TEXT naming the next intended step"
+        | _, Some id, Some timestamp ->
+            Ok
+                { GroupId = id
+                  Summary = List.head (given "--summary")
+                  NextAction = List.head (given "--next-action")
+                  SharedDecisions = values "--shared-decision" arguments
+                  RecordedAt = timestamp
+                  RecordedBy = actor.Id }
 
     let private envelope (kind: string) (fields: (string * JsonNode) list) : string =
         let root = JsonObject()
@@ -216,6 +242,60 @@ module WorkGroupCommands =
             2
         | Ok parsed -> FileWorkGroupRepository.remove root dryRun parsed |> emit "work-group-remove" (describeRemoval dryRun parsed) json dryRun
 
+    // ---- checkpoint ---------------------------------------------------------------
+
+    let private referenceLine (entry: MemberCheckpoint) =
+        match entry.Reference with
+        | MemberCheckpointReference.Latest(checkpointId, commit, recordedAt) ->
+            $"    {entry.WorkItem}: own checkpoint {checkpointId} at {commit} ({recordedAt})"
+        | MemberCheckpointReference.NoneRecorded -> $"    {entry.WorkItem}: no checkpoint of its own yet"
+        | MemberCheckpointReference.Unreadable problems ->
+            $"    {entry.WorkItem}: its own latest checkpoint is unreadable (" + String.concat "; " problems + ")"
+
+    let private listed (values: string list) =
+        match values with
+        | [] -> "none"
+        | _ -> String.concat ", " values
+
+    let private describeCheckpoint (dryRun: bool) (stored: StoredGroup) =
+        let recorded = List.last stored.Checkpoints
+        let verb = if dryRun then "would record" else "recorded"
+        let location = recorded.Location
+
+        [ yield $"{verb} group checkpoint {recorded.CheckpointId} for {stored.Group.Id} (by {recorded.RecordedBy} at {recorded.RecordedAt})"
+          yield $"  commit:      {location.Commit} on {location.Branch}"
+          yield $"  verified at: {location.Remote}/{location.RemoteBranch} == local HEAD (read from the remote itself)"
+          yield $"  active:      {listed recorded.Members.Active}"
+          yield $"  completed:   {listed recorded.Members.Completed}"
+          yield $"  remaining:   {listed recorded.Members.Remaining}"
+          if not recorded.Members.Abandoned.IsEmpty then
+              yield $"  abandoned:   {listed recorded.Members.Abandoned}"
+          if not recorded.Members.Unknown.IsEmpty then
+              yield $"  unknown:     {listed recorded.Members.Unknown}"
+          yield! recorded.SharedDecisions |> List.map (sprintf "  shared decision: %s")
+          yield $"  completed work: {recorded.Summary}"
+          yield $"  next action:    {recorded.NextAction}"
+          yield "  members' own checkpoints (referenced, not replaced):"
+          yield! recorded.MemberCheckpoints |> List.map referenceLine
+          yield "  claims no paths: each member's changes stay attributed through its own checkpoints"
+          if not dryRun then
+              yield "Praxis state changed under .ros/; commit and push it so another executor can find this group checkpoint." ]
+        |> String.concat "\n"
+
+    /// Exit 0 recorded, 1 refused or unreadable, 2 usage.
+    let checkpoint (root: string) (actor: Actor) (arguments: string list) : int =
+        let json = List.contains "--json" arguments
+        let dryRun = List.contains "--dry-run" arguments
+
+        match checkpointRequest actor arguments with
+        | Error message ->
+            eprintfn "ERROR %s" message
+            eprintfn "Usage: %s" checkpointUsage
+            2
+        | Ok parsed ->
+            FileWorkGroupRepository.checkpoint root dryRun parsed
+            |> emit "work-group-checkpoint" (describeCheckpoint dryRun) json dryRun
+
     // ---- show ---------------------------------------------------------------------
 
     let private orUnknown (value: string option) = value |> Option.defaultValue "unknown"
@@ -253,6 +333,13 @@ module WorkGroupCommands =
               |> section "Blocked members"
           yield! section "Shared context" group.SharedContext
           yield! section "Architecture notes" group.ArchitectureNotes
+          yield!
+              match List.tryLast view.Declaration.Checkpoints with
+              | None -> [ "Latest group checkpoint: none" ]
+              | Some latest ->
+                  [ yield $"Latest group checkpoint: {latest.CheckpointId} at {latest.Location.Commit} on {latest.Location.Branch} ({latest.RecordedAt}, by {latest.RecordedBy})"
+                    yield $"  next action: {latest.NextAction}"
+                    yield! latest.SharedDecisions |> List.map (sprintf "  shared decision: %s") ]
           yield!
               view.PlannerNotes
               |> List.map (fun note -> $"{Ros.Domain.Planning.FindingSeverity.code note.Severity} {GroupNoteCode.code note.Code}: {note.Message}")

@@ -4990,11 +4990,22 @@
       },
       "completedAt": "2026-10-07T21:39:04.000Z",
       "conclusion": "work group remove implemented at 5e39a84: refuses non-members, undeclared groups and removals that would leave fewer than two members; records removedBy/removedAt/reason; writes only .ros/work/groups.json, so lifecycle, evidence and attribution are untouched. Verification: npm run build:fsharp -p:FSharpCoreImplicitPackageVersion=10.1.400 succeeded; dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll: 845 tests, 845 passed, 0 failed; ./ros validate: validation passed."
+    },
+    {
+      "id": "PRAXIS-GROUP-05",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-07T21:48:10.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T214810611Z-d4cbeb76"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T21:39:04.000Z",
+  "updatedAt": "2026-10-07T21:48:10.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

@@ -10,7 +10,7 @@ open Ros.Domain.Work
 open PlanningFixtures
 
 /// `work group create` (PRAXIS-GROUP-01), `work group show`
-/// (PRAXIS-GROUP-02), `work group add` (PRAXIS-GROUP-03) and `work group remove` (PRAXIS-GROUP-04; PRX-GRP-073 phase two): the pure declaration decision and
+/// (PRAXIS-GROUP-02), `work group add` (PRAXIS-GROUP-03), `work group remove` (PRAXIS-GROUP-04) and `work group checkpoint` (PRAXIS-GROUP-05; PRX-GRP-073 phase two): the pure declaration decision and
 /// view, the stored contract, the planner merge, and the commands through the
 /// real binary.
 module WorkGroupTests =
@@ -308,7 +308,8 @@ module WorkGroupTests =
           DeclaredAt = "2026-10-07T00:00:00.000Z"
           DeclaredBy = "tester"
           Additions = []
-          Removals = [] }
+          Removals = []
+          Checkpoints = [] }
 
     let private plannedView (stored: StoredGroup) =
         let configuration = GroupDeclaration.mergeInto [ stored ] PlannerConfiguration.defaults
@@ -370,6 +371,117 @@ module WorkGroupTests =
           t "show: an undeclared ID is not found" (fun () ->
               Assert.equal None (GroupView.tryFind [ viewStored ] "GROUP-VIEW-002")
               Assert.equal (Some viewStored) (GroupView.tryFind [ viewStored ] "GROUP-VIEW-001")) ]
+
+    // ---- checkpoint: the pure decision -------------------------------------------
+
+    let private checkpointRequest group : GroupCheckpointRequest =
+        { GroupId = group
+          Summary = "Shared parser landed"
+          NextAction = "Wire the second member"
+          SharedDecisions = [ "one parser for every group command" ]
+          RecordedAt = "2026-10-10T00:00:00.000Z"
+          RecordedBy = "grouper" }
+
+    let private commit = (Ros.Domain.Git.CommitId.tryParse "0123456789abcdef0123456789abcdef01234567").Value
+
+    let private durable : Result<GitDurableLocation, CheckpointRejection list> =
+        Ok
+            { Repository = "praxis"
+              Branch = "feature/x"
+              LocalCommit = commit
+              Remote = ({ Name = "origin"; Url = Some "https://example.invalid/praxis.git" } : Ros.Domain.Git.RemoteIdentity)
+              RemoteBranch = "feature/x"
+              RemoteCommit = commit }
+
+    /// A group whose members are active, complete, abandoned, open and unknown.
+    let private mixedGroup =
+        { baseGroup with Group = { baseGroup.Group with Members = [ "LIVE-1"; "DONE-1"; "GONE-1"; "A-1"; "NOPE-9" ] } }
+
+    let private references id =
+        match id with
+        | "LIVE-1" -> MemberCheckpointReference.Latest("evt-live", commit.Value, "2026-10-09T00:00:00.000Z")
+        | "DONE-1" -> MemberCheckpointReference.Unreadable [ "commit is not a commit id" ]
+        | _ -> MemberCheckpointReference.NoneRecorded
+
+    let private checkpointTests =
+        [ t "checkpoint: records progress, shared decisions, location and member references" (fun () ->
+              let updated = GroupDeclaration.checkpoint [ mixedGroup ] statuses references durable (checkpointRequest "GROUP-A-1") |> created
+
+              match updated.Checkpoints with
+              | [ recorded ] ->
+                  Assert.equal "GROUP-A-1-checkpoint-1" recorded.CheckpointId
+                  Assert.equal [ "LIVE-1" ] recorded.Members.Active
+                  Assert.equal [ "DONE-1" ] recorded.Members.Completed
+                  Assert.equal [ "A-1" ] recorded.Members.Remaining
+                  Assert.equal [ "GONE-1" ] recorded.Members.Abandoned
+                  Assert.equal [ "NOPE-9" ] recorded.Members.Unknown
+                  Assert.equal [ "one parser for every group command" ] recorded.SharedDecisions
+                  Assert.equal "grouper" recorded.RecordedBy
+                  Assert.equal commit.Value recorded.Location.Commit
+                  Assert.equal "feature/x" recorded.Location.Branch
+                  Assert.equal "origin" recorded.Location.Remote
+
+                  Assert.equal
+                      [ "LIVE-1", MemberCheckpointReference.Latest("evt-live", commit.Value, "2026-10-09T00:00:00.000Z")
+                        "DONE-1", MemberCheckpointReference.Unreadable [ "commit is not a commit id" ]
+                        "GONE-1", MemberCheckpointReference.NoneRecorded
+                        "A-1", MemberCheckpointReference.NoneRecorded
+                        "NOPE-9", MemberCheckpointReference.NoneRecorded ]
+                      (recorded.MemberCheckpoints |> List.map (fun entry -> entry.WorkItem, entry.Reference))
+              | other -> failwith $"unexpected checkpoints: {other}")
+
+          t "checkpoint: never changes the declaration, and appends rather than replaces" (fun () ->
+              let first = GroupDeclaration.checkpoint [ mixedGroup ] statuses references durable (checkpointRequest "GROUP-A-1") |> created
+              let second = GroupDeclaration.checkpoint [ first ] statuses references durable { checkpointRequest "GROUP-A-1" with Summary = "Second slice" } |> created
+              Assert.equal mixedGroup.Group second.Group
+              Assert.equal mixedGroup.Additions second.Additions
+              Assert.equal mixedGroup.Removals second.Removals
+              Assert.equal [ "GROUP-A-1-checkpoint-1"; "GROUP-A-1-checkpoint-2" ] (second.Checkpoints |> List.map _.CheckpointId)
+              Assert.equal (List.head first.Checkpoints) (List.head second.Checkpoints))
+
+          t "checkpoint: the same durability refusals as work checkpoint, all reported together" (fun () ->
+              let remote : Ros.Domain.Git.RemoteIdentity = { Name = "origin"; Url = None }
+              let notDurable = Error [ CheckpointRejection.LocalAhead(1, remote, "feature/x"); CheckpointRejection.UncommittedChanges [ "src/a.fs" ] ]
+
+              Assert.equal
+                  [ "blank-next-action"; "blank-shared-decision"; "blank-summary"; "local-ahead"; "uncommitted-changes" ]
+                  (GroupDeclaration.checkpoint
+                      [ mixedGroup ]
+                      statuses
+                      references
+                      notDurable
+                      { checkpointRequest "GROUP-A-1" with Summary = " "; NextAction = ""; SharedDecisions = [ "ok"; "  " ] }
+                   |> rejected)
+
+              Assert.equal
+                  (CheckpointRejection.code (CheckpointRejection.LocalAhead(1, remote, "feature/x")))
+                  (GroupRejection.code (GroupRejection.NotDurable(CheckpointRejection.LocalAhead(1, remote, "feature/x")))))
+
+          t "checkpoint: an undeclared group and a group with no active member are refused" (fun () ->
+              Assert.equal [ "unknown-group" ] (GroupDeclaration.checkpoint [ mixedGroup ] statuses references durable (checkpointRequest "GROUP-A-9") |> rejected)
+              Assert.equal [ "no-active-member" ] (GroupDeclaration.checkpoint [ baseGroup ] statuses references durable (checkpointRequest "GROUP-A-1") |> rejected))
+
+          t "checkpoint: progress keeps abandoned and unknown members apart from completed ones" (fun () ->
+              let progress = GroupDeclaration.progress statuses [ "DONE-1"; "GONE-1"; "NOPE-9"; "A-3"; "DONE-1" ]
+              Assert.equal [ "DONE-1" ] progress.Completed
+              Assert.equal [ "GONE-1" ] progress.Abandoned
+              Assert.equal [ "NOPE-9" ] progress.Unknown
+              Assert.equal [ "A-3" ] progress.Remaining
+              Assert.empty progress.Active)
+
+          t "checkpoint: group checkpoints round-trip, and a store without them still parses" (fun () ->
+              let updated = GroupDeclaration.checkpoint [ mixedGroup ] statuses references durable (checkpointRequest "GROUP-A-1") |> created
+
+              match PlanningJson.parseGroupStore (PlanningJson.renderGroupStore [ updated ]) with
+              | Ok parsed -> Assert.equal [ updated ] parsed
+              | Error message -> failwith message
+
+              let rendered = PlanningJson.renderGroupStore [ updated ]
+              Assert.isTrue (not (rendered.Contains "\"paths\"")) "a group checkpoint claims no paths"
+
+              match PlanningJson.parseGroupStore (PlanningJson.renderGroupStore [ baseGroup ]) with
+              | Ok [ parsed ] -> Assert.empty parsed.Checkpoints
+              | other -> failwith $"unexpected parse: {other}") ]
 
     // ---- the command through the real binary -----------------------------------
 
@@ -756,4 +868,140 @@ module WorkGroupTests =
               Assert.equal 2 (addMember root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--reason"; "not an add flag" ]).ExitCode
               Assert.equal stored (File.ReadAllText(storePath root))) ]
 
-    let tests = domain @ addTests @ removeTests @ viewTests @ cli @ addCli @ removeCli
+    // ---- checkpoint through the real binary, against a real remote --------------
+
+    let private grouper = PraxisCli.agent "example/grouper" "example" "grouper" "session-group"
+
+    let private withRemote (test: string -> unit) =
+        let parent = GitFixture.temporaryDirectory "group-checkpoint"
+
+        try
+            let _, clone = PraxisCli.installedRepository parent "clone"
+            test clone
+        finally
+            GitFixture.cleanup parent
+
+    let private startItem clone (id: string) =
+        PraxisCli.run clone (Some grouper) [ "work"; "start"; "--id"; id; "--type"; "feature"; "--occurred-at"; PraxisCli.now () ] |> PraxisCli.ok |> ignore
+
+    let private groupCheckpoint clone extra =
+        PraxisCli.run
+            clone
+            (Some grouper)
+            ([ "work"; "group"; "checkpoint"; "--id"; "GROUP-FEAT-001"; "--occurred-at"; PraxisCli.now (); "--summary"; "Shared parser landed"; "--next-action"; "Wire FEAT-2 onto it" ]
+             @ extra)
+
+    /// Two active members in a declared group; FEAT-1 has its own checkpoint.
+    let private groupedExecution clone =
+        startItem clone "FEAT-1"
+        startItem clone "FEAT-2"
+
+        PraxisCli.run clone (Some grouper) [ "work"; "group"; "create"; "--id"; "GROUP-FEAT-001"; "--member"; "FEAT-1"; "--member"; "FEAT-2"; "--occurred-at"; PraxisCli.now () ]
+        |> PraxisCli.ok
+        |> ignore
+
+        GitFixture.write clone "src/one.txt" "one\n"
+        PraxisCli.pushAll clone "FEAT-1 work" |> ignore
+
+        let own =
+            PraxisCli.run clone (Some grouper) [ "work"; "checkpoint"; "--id"; "FEAT-1"; "--occurred-at"; PraxisCli.now (); "--summary"; "FEAT-1 slice"; "--next-action"; "finish"; "--json" ]
+            |> PraxisCli.ok
+
+        PraxisCli.pushAll clone "FEAT-1 checkpoint state" |> ignore
+        PraxisCli.text (own.Json["checkpoint"].["id"])
+
+    let private memberState (clone: string) =
+        [ ".ros/context/current.json"; ".ros/events/events.jsonl" ] |> List.map (fun relative -> File.ReadAllText(Path.Combine(clone, relative)))
+
+    let private checkpointCli =
+        [ t "checkpoint: a pushed clean HEAD records the group checkpoint and references members' own" (fun () ->
+              withRemote (fun clone ->
+                  let feat1Checkpoint = groupedExecution clone
+                  let before = memberState clone
+                  let head = (GitFixture.git clone [ "rev-parse"; "HEAD" ]).Trim()
+
+                  let result = groupCheckpoint clone [ "--shared-decision"; "one parser for every group command"; "--json" ] |> PraxisCli.ok
+                  Assert.equal "work-group-checkpoint" (PraxisCli.text (result.Json["kind"]))
+                  let recorded = result.Json["group"].["checkpoints"].AsArray() |> Seq.exactlyOne
+                  Assert.equal "GROUP-FEAT-001-checkpoint-1" (PraxisCli.text recorded["checkpointId"])
+                  Assert.equal head (PraxisCli.text recorded["location"].["commit"])
+                  Assert.equal "feature/x" (PraxisCli.text recorded["location"].["remoteBranch"])
+                  Assert.equal "origin" (PraxisCli.text recorded["location"].["remote"])
+                  Assert.isTrue ((PraxisCli.text recorded["recordedBy"]).Contains "example/grouper") (PraxisCli.text recorded["recordedBy"])
+                  let names (node: JsonNode) = node.AsArray() |> Seq.map PraxisCli.text |> Seq.toList
+                  Assert.equal [ "FEAT-1"; "FEAT-2" ] (names recorded["members"].["active"])
+                  Assert.empty (names recorded["members"].["completed"])
+                  Assert.equal [ "one parser for every group command" ] (names recorded["sharedDecisions"])
+                  let references = recorded["memberCheckpoints"].AsArray() |> Seq.map (fun node -> node.AsObject()) |> Seq.toList
+                  Assert.equal [ "recorded"; "none" ] (references |> List.map (fun node -> PraxisCli.text node["status"]))
+                  Assert.equal feat1Checkpoint (PraxisCli.text references[0].["checkpointId"])
+
+                  // Members' own checkpoint history and context are untouched.
+                  Assert.equal before (memberState clone)
+
+                  let shown = PraxisCli.run clone None [ "work"; "group"; "show"; "GROUP-FEAT-001" ] |> PraxisCli.ok
+                  Assert.isTrue (shown.Output.Contains "Latest group checkpoint: GROUP-FEAT-001-checkpoint-1") shown.Output
+                  Assert.isTrue (shown.Output.Contains "shared decision: one parser for every group command") shown.Output
+                  let own = PraxisCli.run clone None [ "work"; "checkpoint"; "show"; "FEAT-1"; "--json" ] |> PraxisCli.ok
+                  Assert.equal 1 (own.Json["history"].AsArray().Count)
+                  PraxisCli.run clone None [ "validate" ] |> PraxisCli.ok |> ignore))
+
+          t "checkpoint: refuses what work checkpoint refuses, and records nothing" (fun () ->
+              withRemote (fun clone ->
+                  groupedExecution clone |> ignore
+                  let store = File.ReadAllText(storePath clone)
+
+                  let codes extra =
+                      let result = groupCheckpoint clone (extra @ [ "--json" ])
+                      Assert.equal 1 result.ExitCode
+                      result.Json["rejections"].AsArray() |> Seq.map (fun entry -> PraxisCli.text (entry["code"])) |> Seq.toList
+
+                  GitFixture.write clone "src/draft.txt" "draft\n"
+                  Assert.equal [ "uncommitted-changes" ] (codes [])
+                  GitFixture.commitAll clone "unpushed" |> ignore
+                  Assert.equal [ "local-ahead" ] (codes [])
+                  let text = groupCheckpoint clone []
+                  Assert.equal 1 text.ExitCode
+                  Assert.isTrue (text.Error.Contains "push") text.Error
+                  Assert.equal store (File.ReadAllText(storePath clone))
+                  GitFixture.git clone [ "push"; "-q" ] |> ignore
+                  Assert.equal [ "unknown-group" ] (codes [ "--id"; "GROUP-FEAT-404" ])
+                  Assert.equal store (File.ReadAllText(storePath clone))
+                  let dry = groupCheckpoint clone [ "--dry-run"; "--json" ] |> PraxisCli.ok
+                  Assert.isTrue (dry.Json["dryRun"].GetValue<bool>()) "dry run reported"
+                  Assert.equal store (File.ReadAllText(storePath clone))))
+
+          t "checkpoint: claims no member's changes; a later member checkpoint still attributes its own" (fun () ->
+              withRemote (fun clone ->
+                  groupedExecution clone |> ignore
+                  // Shared work that no member has checkpointed yet.
+                  GitFixture.write clone "src/shared.txt" "shared\n"
+                  PraxisCli.pushAll clone "shared parser" |> ignore
+                  groupCheckpoint clone [] |> PraxisCli.ok |> ignore
+                  PraxisCli.pushAll clone "group checkpoint state" |> ignore
+
+                  let feat2 =
+                      PraxisCli.run clone (Some grouper) [ "work"; "checkpoint"; "--id"; "FEAT-2"; "--occurred-at"; PraxisCli.now (); "--summary"; "FEAT-2 slice"; "--next-action"; "finish"; "--json" ]
+                      |> PraxisCli.ok
+
+                  let paths = feat2.Json["paths"].AsArray() |> Seq.map PraxisCli.text |> Seq.toList
+                  // FEAT-1's own checkpoint keeps src/one.txt; the group checkpoint took nothing.
+                  Assert.equal [ "src/shared.txt" ] paths))
+
+          t "checkpoint usage errors exit 2" (fun () ->
+              let root = fixture ()
+              declare root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--member"; "TASK-B" ] |> PraxisCli.ok |> ignore
+              let stored = File.ReadAllText(storePath root)
+              let run extra = PraxisCli.run root None ([ "work"; "group"; "checkpoint" ] @ extra)
+              let full = [ "--id"; "GROUP-FIXTURE-001"; "--occurred-at"; PraxisCli.now (); "--summary"; "s"; "--next-action"; "n" ]
+              Assert.equal 2 (run [ "--occurred-at"; PraxisCli.now (); "--summary"; "s"; "--next-action"; "n" ]).ExitCode
+              Assert.equal 2 (run [ "--id"; "GROUP-FIXTURE-001"; "--summary"; "s"; "--next-action"; "n" ]).ExitCode
+              Assert.equal 2 (run [ "--id"; "GROUP-FIXTURE-001"; "--occurred-at"; PraxisCli.now (); "--next-action"; "n" ]).ExitCode
+              Assert.equal 2 (run [ "--id"; "GROUP-FIXTURE-001"; "--occurred-at"; PraxisCli.now (); "--summary"; "s" ]).ExitCode
+              Assert.equal 2 (run (full @ [ "--summary"; "again" ])).ExitCode
+              Assert.equal 2 (run (full @ [ "--bogus" ])).ExitCode
+              Assert.equal 2 (run (full @ [ "--reason"; "not a checkpoint flag" ])).ExitCode
+              Assert.equal 2 (removeMember root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--summary"; "not a remove flag" ]).ExitCode
+              Assert.equal stored (File.ReadAllText(storePath root))) ]
+
+    let tests = domain @ addTests @ removeTests @ checkpointTests @ viewTests @ cli @ addCli @ removeCli @ checkpointCli
