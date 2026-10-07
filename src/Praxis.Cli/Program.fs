@@ -3082,33 +3082,16 @@ let main arguments =
         |> Option.ofObj
         |> Option.map string
 
-    let config = Aegis.configure "Praxis.Cli" version [ Sinks.console ]
-
-    match Bootstrap.validate None config with
+    match Praxis.Infrastructure.Boundary.AegisBoundary.configure version [ Sinks.console ] with
     | Result.Error problems ->
-        for problem in problems do
-            let _, message = Bootstrap.describe problem
-            eprintfn "ERROR Aegis configuration: %s" message
-
+        problems |> List.iter (eprintfn "ERROR Aegis configuration: %s")
         1
-    | Ok validated ->
-        let scope = Aegis.scope validated "Praxis.Cli.Main" Map.empty
+    | Ok aegis ->
+        let boundary = Praxis.Infrastructure.Boundary.AegisBoundary.capture
+        let operation = Praxis.Infrastructure.Boundary.AegisBoundary.operationOf (List.ofArray arguments)
 
-        let classify scope ex =
-            Aegis.faultOf
-                validated
-                scope
-                (FaultCode "PRAXIS.CLI.UNHANDLED")
-                UnknownFailure
-                FaultSeverity.Error
-                DegradedApplication
-                RequiresIntervention
-                ManualIntervention
-                "Praxis encountered an unexpected operational failure."
-                ex
-
-        match Aegis.capture validated scope classify (fun () -> execute arguments) with
+        match boundary aegis Praxis.Infrastructure.Boundary.OperationalBoundary.Unexpected operation None "could not complete the command" (fun () -> execute arguments) with
         | Ok exitCode -> exitCode
         | Result.Error fault ->
-            eprintfn "ERROR %s Reference %s" fault.UserMessage fault.Id.Value
+            eprintfn "ERROR %s" (Praxis.Infrastructure.Boundary.AegisBoundary.describe fault)
             1

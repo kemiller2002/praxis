@@ -129,6 +129,7 @@
     <Compile Include="InternalNamingTests.fs" />
     <Compile Include="TelemetryCostUnitTests.fs" />
     <Compile Include="FormaPresentationTests.fs" />
+    <Compile Include="AegisBoundaryTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

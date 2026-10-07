@@ -115,4 +115,5 @@ let main _ =
     @ TelemetryCostUnitTests.tests
     @ QualityEvidenceTests.tests
     @ FormaPresentationTests.tests
+    @ AegisBoundaryTests.tests
     |> TestRunner.run
