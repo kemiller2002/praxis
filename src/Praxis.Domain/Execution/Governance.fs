@@ -1,20 +1,20 @@
 namespace Praxis.Domain.Execution
 
 open System
-open System.Security.Cryptography
-open System.Text
+open Microsoft.FSharp.Reflection
 
 // Praxis's host projection of Ordo's execution-governance contract
 // (`ordo.execution/1`, Ordo `method/EXECUTION-GOVERNANCE-REQUIREMENTS.md`,
-// ORD-EXEC-*). Ordo owns the meaning of roles, capabilities, receipts,
-// evaluator identity, mutation boundaries and legal transitions; this module
-// implements the same semantics for the Praxis runtime and writes the same
-// wire shapes. It must never invent conflicting transition semantics
-// (ORD-EXEC-141). Conformance vectors shared with Ordo (evaluator
-// fingerprints, receipt outcomes) are asserted in
-// tests/Praxis.Tests/ExecutionGovernanceTests.fs. When Ordo.Core is published as
-// a package, this module is replaced by a reference to it (backlog item
-// ORDO-CORE-PACKAGE).
+// ORD-EXEC-*). Ordo owns the meaning of roles, capabilities, evaluator
+// identity and mutation boundaries, and Praxis consumes it from the released
+// Ordo.Core package (EchelonFoundry.Ordo.Core, pinned in
+// vendor/nuget/ordo-core.lock; ORDO-CORE-PACKAGE, PRAXIS-FND-01,
+// PRX-ARCH-001). The host types here keep Praxis's persisted wire shapes;
+// every rule that decides authority, a fingerprint or a boundary
+// classification is Ordo.Core's, reached through `OrdoSemantics` by wire
+// name. Nothing here may invent conflicting semantics (ORD-EXEC-141);
+// tests/Praxis.Tests/ExecutionGovernanceTests.fs asserts the vocabularies
+// stay one-to-one with Ordo's.
 
 /// The semantic role an execution performs. Provider identity is never a
 /// role (ORD-EXEC-075).
@@ -101,7 +101,44 @@ module Capability =
         | Capability.RemoveInstallation -> "installation.remove"
         | Capability.AdministerExecutionPolicy -> "policy.administer"
 
-/// Default role authority, identical to Ordo's `RoleAuthority.defaultFor`.
+    let all =
+        FSharpType.GetUnionCases typeof<Capability>
+        |> Array.map (fun case -> FSharpValue.MakeUnion(case, [||]) :?> Capability)
+        |> List.ofArray
+
+    let ofWire (raw: string) = all |> List.tryFind (fun c -> toWire c = raw)
+
+/// The translation between Praxis's host types and Ordo.Core's by wire name
+/// (ORDO-CORE-PACKAGE). A name Ordo does not know is a defect in the pin, not
+/// an operational condition, so it fails loudly.
+[<RequireQualifiedAccess>]
+module OrdoSemantics =
+    let private defect what (name: string) : 'a =
+        invalidOp $"the pinned Ordo.Core and Praxis disagree on {what} '{name}'"
+
+    let role (role: ExecutionRole) =
+        let name = ExecutionRole.toWire role
+
+        match Ordo.Core.ExecutionRole.ExecutionRole.fromWire name with
+        | Some r -> r
+        | None -> defect "the execution role" name
+
+    let capability (capability: Ordo.Core.ExecutionRole.ExecutionCapability) =
+        let name = Ordo.Core.ExecutionRole.ExecutionCapability.toWire capability
+
+        match Capability.ofWire name with
+        | Some c -> c
+        | None -> defect "the capability" name
+
+    let ordoCapabilities () =
+        Ordo.Core.ExecutionRole.ExecutionCapability.all |> List.map Ordo.Core.ExecutionRole.ExecutionCapability.toWire
+
+    let evaluatorKinds () =
+        FSharpType.GetUnionCases typeof<Ordo.Core.Evaluator.EvaluatorInputKind>
+        |> Array.map (fun case -> FSharpValue.MakeUnion(case, [||]) :?> Ordo.Core.Evaluator.EvaluatorInputKind |> Ordo.Core.Evaluator.EvaluatorInputKind.toWire)
+        |> List.ofArray
+
+/// A role's authority: Ordo's grants and prohibitions for that role.
 type RoleAuthority =
     { Role: ExecutionRole
       Grants: Set<Capability>
@@ -109,72 +146,14 @@ type RoleAuthority =
 
 [<RequireQualifiedAccess>]
 module RoleAuthority =
-    let private make role grants prohibits =
-        { Role = role
-          Grants = Set.ofList grants
-          Prohibits = Set.ofList prohibits }
-
-    let private evaluation = [ Capability.ModifyAcceptanceCriteria; Capability.ModifyEvaluationAuthority ]
-
+    /// Ordo.Core's default authority matrix (ORD-EXEC-081..085), never a
+    /// Praxis copy of it (PRX-EXEC-002).
     let defaultFor role =
-        match role with
-        | ExecutionRole.Specification ->
-            make
-                role
-                [ Capability.ElaborateAuthorizedScope; Capability.InspectEvidence; Capability.RecordEvidence ]
-                ([ Capability.CreateGoverningPromise
-                   Capability.ApproveSpecification
-                   Capability.ModifyImplementation
-                   Capability.ModifyImplementationTests ]
-                 @ evaluation)
-        | ExecutionRole.Implementation ->
-            make
-                role
-                [ Capability.ModifyImplementation
-                  Capability.ModifyImplementationTests
-                  Capability.InvokeEvaluator
-                  Capability.ObserveOutcome
-                  Capability.RecordEvidence ]
-                ([ Capability.CreateGoverningPromise; Capability.ApproveSpecification; Capability.RecordVerdict; Capability.AcceptReview ]
-                 @ evaluation)
-        | ExecutionRole.Verification ->
-            make
-                role
-                [ Capability.InvokeEvaluator
-                  Capability.ObserveOutcome
-                  Capability.RecordEvidence
-                  Capability.RecordVerdict
-                  Capability.InspectEvidence ]
-                ([ Capability.ModifyImplementation; Capability.ModifyImplementationTests; Capability.ExpandMutationBoundary ]
-                 @ evaluation)
-        | ExecutionRole.Review ->
-            make
-                role
-                [ Capability.InspectEvidence
-                  Capability.RecordFindings
-                  Capability.RequestRework
-                  Capability.AcceptReview
-                  Capability.RejectReview
-                  Capability.RecordEvidence ]
-                ([ Capability.ModifyImplementation; Capability.ModifyImplementationTests; Capability.ExpandMutationBoundary ]
-                 @ evaluation)
-        | ExecutionRole.Integration ->
-            make
-                role
-                [ Capability.CombineAuthorizedCandidates
-                  Capability.ResolveIntegrationConflict
-                  Capability.InvokeEvaluator
-                  Capability.ObserveOutcome
-                  Capability.RecordEvidence ]
-                ([ Capability.CreateGoverningPromise; Capability.ExpandMutationBoundary ] @ evaluation)
-        | ExecutionRole.Administration ->
-            make
-                role
-                [ Capability.RegisterInstallation
-                  Capability.RemoveInstallation
-                  Capability.RecordEvidence
-                  Capability.InspectEvidence ]
-                ([ Capability.ModifyImplementation; Capability.ModifyImplementationTests; Capability.RecordVerdict ] @ evaluation)
+        let ordo = Ordo.Core.ExecutionRole.RoleAuthority.defaultFor (OrdoSemantics.role role)
+
+        { Role = role
+          Grants = ordo.Grants |> Set.map OrdoSemantics.capability
+          Prohibits = ordo.Prohibits |> Set.map OrdoSemantics.capability }
 
     let effective (authority: RoleAuthority) = Set.difference authority.Grants authority.Prohibits
     let allows capability authority = effective authority |> Set.contains capability
@@ -185,74 +164,44 @@ type EvaluatorInput =
       Reference: string
       Digest: string }
 
-/// The effective evaluator's content-derived identity. Byte-for-byte the same
-/// algorithm as Ordo's `EvaluatorIdentity.create`: sha256 over the canonical
-/// (ordinal-sorted-key, two-space-indented) rendering of
-/// `{ schema: "ordo.evaluator-identity/1", inputs: [...] }` with inputs sorted
-/// by (reference, kind).
+/// The effective evaluator's content-derived identity, computed by Ordo.Core
+/// (`EvaluatorIdentity.create`, ORD-EXEC-092).
 type EvaluatorIdentity = { Inputs: EvaluatorInput list; Fingerprint: string }
 
 [<RequireQualifiedAccess>]
 module EvaluatorIdentity =
-    let kinds =
-        [ "gate-code"; "configuration"; "test-selection"; "schema"; "fixture"; "generated-input"; "policy"; "dependency" ]
-
-    let private escape (sb: StringBuilder) (value: string) =
-        sb.Append '"' |> ignore
-
-        for ch in value do
-            match ch with
-            | '"' -> sb.Append "\\\"" |> ignore
-            | '\\' -> sb.Append "\\\\" |> ignore
-            | '\b' -> sb.Append "\\b" |> ignore
-            | '\f' -> sb.Append "\\f" |> ignore
-            | '\n' -> sb.Append "\\n" |> ignore
-            | '\r' -> sb.Append "\\r" |> ignore
-            | '\t' -> sb.Append "\\t" |> ignore
-            | c when c < ' ' -> sb.AppendFormat("\\u{0:x4}", int c) |> ignore
-            | c -> sb.Append c |> ignore
-
-        sb.Append '"' |> ignore
-
-    let canonical (sorted: EvaluatorInput list) =
-        let sb = StringBuilder()
-        sb.Append "{\n  \"inputs\": " |> ignore
-
-        match sorted with
-        | [] -> sb.Append "[]" |> ignore
-        | items ->
-            sb.Append "[\n" |> ignore
-
-            items
-            |> List.iteri (fun i input ->
-                if i > 0 then sb.Append ",\n" |> ignore
-                sb.Append "    {\n      \"digest\": " |> ignore
-                escape sb input.Digest
-                sb.Append ",\n      \"kind\": " |> ignore
-                escape sb input.Kind
-                sb.Append ",\n      \"reference\": " |> ignore
-                escape sb input.Reference
-                sb.Append "\n    }" |> ignore)
-
-            sb.Append "\n  ]" |> ignore
-
-        sb.Append ",\n  \"schema\": \"ordo.evaluator-identity/1\"\n}" |> ignore
-        sb.ToString()
+    let kinds = OrdoSemantics.evaluatorKinds ()
 
     let create (inputs: EvaluatorInput list) : Result<EvaluatorIdentity, string> =
-        let sorted = inputs |> List.sortWith (fun a b -> match String.CompareOrdinal(a.Reference, b.Reference) with 0 -> String.CompareOrdinal(a.Kind, b.Kind) | c -> c)
+        let toOrdo (i: EvaluatorInput) =
+            Ordo.Core.Evaluator.EvaluatorInputKind.fromWire i.Kind
+            |> Option.map (fun k ->
+                let input: Ordo.Core.Evaluator.EvaluatorInput = { Kind = k; Reference = i.Reference; Digest = i.Digest }
+                input)
 
-        match inputs with
-        | [] -> Error "an evaluator closure needs at least one input"
-        | _ when not (inputs |> List.exists (fun i -> i.Kind = "gate-code")) -> Error "an evaluator closure needs gate code"
-        | _ when inputs |> List.exists (fun i -> not (List.contains i.Kind kinds)) ->
+        let converted = inputs |> List.choose toOrdo
+
+        if not inputs.IsEmpty && inputs |> List.exists (fun i -> i.Kind = "gate-code") && converted.Length <> inputs.Length then
             Error("unknown evaluator input kind; expected one of " + String.concat ", " kinds)
-        | _ when inputs |> List.exists (fun i -> String.IsNullOrWhiteSpace i.Digest) -> Error "every evaluator input needs a digest"
-        | _ when (inputs |> List.map _.Reference |> List.distinct |> List.length) <> inputs.Length ->
-            Error "evaluator input references must be unique"
-        | _ ->
-            let hash = SHA256.HashData(Encoding.UTF8.GetBytes(canonical sorted))
-            Ok { Inputs = sorted; Fingerprint = "sha256:" + Convert.ToHexString(hash).ToLowerInvariant() }
+        else
+            // Without gate code Ordo refuses whatever else is wrong, so an
+            // unknown kind cannot mask the missing gate.
+            Ordo.Core.Evaluator.EvaluatorIdentity.create converted
+            |> Result.mapError (fun error ->
+                match error with
+                | Ordo.Core.Evaluator.NoEvaluatorInputs when not inputs.IsEmpty -> "an evaluator closure needs gate code"
+                | Ordo.Core.Evaluator.NoEvaluatorInputs -> "an evaluator closure needs at least one input"
+                | Ordo.Core.Evaluator.NoGateCode -> "an evaluator closure needs gate code"
+                | Ordo.Core.Evaluator.InputWithoutDigest _ -> "every evaluator input needs a digest"
+                | Ordo.Core.Evaluator.DuplicateInputReference _ -> "evaluator input references must be unique")
+            |> Result.map (fun identity ->
+                { Inputs =
+                    identity.Inputs
+                    |> List.map (fun i ->
+                        { Kind = Ordo.Core.Evaluator.EvaluatorInputKind.toWire i.Kind
+                          Reference = i.Reference
+                          Digest = i.Digest })
+                  Fingerprint = identity.Fingerprint })
 
     /// References whose digest differs, appeared or disappeared.
     let changes (baseline: EvaluatorIdentity) (current: EvaluatorIdentity) =
@@ -492,30 +441,11 @@ module Receipt =
         | ObservationSource.SelfReported _ -> demote raw
         | _ -> raw
 
-/// Glob matching for boundary projections: `*`/`?` within a segment, `**`
-/// across segments.
+/// Glob matching for boundary projections, Ordo.Core's: `*`/`?` within a
+/// segment, `**` across segments.
 [<RequireQualifiedAccess>]
 module Glob =
-    let rec private segment (pattern: char list) (text: char list) =
-        match pattern, text with
-        | [], [] -> true
-        | '*' :: rest, _ -> segment rest text || (not text.IsEmpty && segment pattern text.Tail)
-        | '?' :: rest, _ :: tail -> segment rest tail
-        | p :: rest, c :: tail when p = c -> segment rest tail
-        | _ -> false
-
-    let rec private path (pattern: string list) (value: string list) =
-        match pattern, value with
-        | [], [] -> true
-        | [ "**" ], _ -> true
-        | "**" :: rest, _ -> path rest value || (not value.IsEmpty && path pattern value.Tail)
-        | p :: rest, s :: tail -> segment (List.ofSeq p) (List.ofSeq s) && path rest tail
-        | _ -> false
-
-    let private split (value: string) =
-        value.Replace('\\', '/').Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries) |> List.ofArray
-
-    let isMatch (pattern: string) (value: string) = path (split pattern) (split value)
+    let isMatch (pattern: string) (value: string) = Ordo.Core.MutationBoundary.Glob.isMatch pattern value
 
 /// A semantic scope (`feature:x`, `cluster:x`, `authority:x`,
 /// `capability:x`) and its physical projection (ORD-EXEC-120..122).
@@ -548,19 +478,30 @@ type ScopeExpansion =
 module MutationBoundary =
     let empty = { Scopes = []; Projections = []; EvaluatorReferences = [] }
 
-    let isScope (raw: string) =
-        match raw.Split(':', 2) with
-        | [| ("feature" | "cluster" | "authority" | "capability"); id |] -> id.Length > 0
-        | _ -> false
+    let isScope (raw: string) = Ordo.Core.MutationBoundary.SemanticScope.fromWire raw |> Option.isSome
 
+    let private scopeOf raw = Ordo.Core.MutationBoundary.SemanticScope.fromWire raw
+    let private scopeName scope = Ordo.Core.MutationBoundary.SemanticScope.toWire scope
+
+    let private projections (items: BoundaryProjection list) : Ordo.Core.MutationBoundary.PhysicalProjection list =
+        items |> List.choose (fun p -> scopeOf p.Scope |> Option.map (fun s -> { Scope = s; Patterns = p.Patterns }))
+
+    let private toOrdo (boundary: MutationBoundary) : Ordo.Core.MutationBoundary.MutationBoundary =
+        { Scopes = boundary.Scopes |> List.choose scopeOf
+          Projections = projections boundary.Projections
+          EvaluatorReferences = boundary.EvaluatorReferences }
+
+    let private ofOrdo (boundary: Ordo.Core.MutationBoundary.MutationBoundary) : MutationBoundary =
+        { Scopes = boundary.Scopes |> List.map scopeName
+          Projections = boundary.Projections |> List.map (fun p -> { Scope = scopeName p.Scope; Patterns = p.Patterns })
+          EvaluatorReferences = boundary.EvaluatorReferences }
+
+    /// Ordo.Core's classification of one mutated resource (ORD-EXEC-123..126).
     let classify (boundary: MutationBoundary) (resource: string) =
-        if boundary.EvaluatorReferences |> List.exists (fun r -> r = resource || Glob.isMatch r resource) then
-            MutationClass.EvaluatorAuthority
-        else
-            boundary.Projections
-            |> List.tryFind (fun p -> List.contains p.Scope boundary.Scopes && p.Patterns |> List.exists (fun g -> Glob.isMatch g resource))
-            |> Option.map (fun p -> MutationClass.Within p.Scope)
-            |> Option.defaultValue MutationClass.Outside
+        match Ordo.Core.MutationBoundary.MutationBoundary.classify (toOrdo boundary) resource with
+        | Ordo.Core.MutationBoundary.WithinBoundary scope -> MutationClass.Within(scopeName scope)
+        | Ordo.Core.MutationBoundary.OutsideBoundary -> MutationClass.Outside
+        | Ordo.Core.MutationBoundary.EvaluatorAuthorityMutation -> MutationClass.EvaluatorAuthority
 
     /// Out-of-bound mutations become explicit effects; explanations are kept
     /// and change nothing (ORD-EXEC-123/124).
@@ -571,22 +512,30 @@ module MutationBoundary =
             | MutationClass.Within _ -> None
             | c -> Some { Resource = resource; Classification = c; Explanation = explanation })
 
-    /// The legal scope-expansion transition (ORD-EXEC-125).
+    /// The legal scope-expansion transition, decided by Ordo.Core (ORD-EXEC-125).
     let expand (expansion: ScopeExpansion) (boundary: MutationBoundary) : Result<MutationBoundary, string> =
-        let scopes = boundary.Scopes @ expansion.Scopes |> List.distinct
-
-        let evaluatorHits =
-            boundary.EvaluatorReferences
-            |> List.filter (fun r -> expansion.Projections |> List.exists (fun p -> p.Patterns |> List.exists (fun g -> Glob.isMatch g r)))
-
-        if String.IsNullOrWhiteSpace expansion.Justification then Error "a scope expansion needs a justification"
-        elif String.IsNullOrWhiteSpace expansion.AuthorizedBy then Error "a scope expansion needs an authorizing actor"
-        elif expansion.Scopes |> List.exists (isScope >> not) then Error "scopes must be feature:|cluster:|authority:|capability:<id>"
-        elif not evaluatorHits.IsEmpty then Error("expansion would make evaluator authority writable: " + String.concat ", " evaluatorHits)
+        if expansion.Scopes |> List.exists (isScope >> not) then
+            Error "scopes must be feature:|cluster:|authority:|capability:<id>"
         else
-            match expansion.Projections |> List.tryFind (fun p -> not (List.contains p.Scope scopes)) with
+            match expansion.Projections |> List.tryFind (fun p -> not (isScope p.Scope)) with
             | Some p -> Error $"projection is not traceable to a held scope: {p.Scope}"
-            | None -> Ok { boundary with Scopes = scopes; Projections = boundary.Projections @ expansion.Projections }
+            | None ->
+                let ordoExpansion: Ordo.Core.MutationBoundary.ScopeExpansion =
+                    { ExpansionId = expansion.ExpansionId
+                      AddedScopes = expansion.Scopes |> List.choose scopeOf
+                      AddedProjections = projections expansion.Projections
+                      Justification = expansion.Justification
+                      AuthorizedBy = expansion.AuthorizedBy }
+
+                Ordo.Core.MutationBoundary.MutationBoundary.expand ordoExpansion (toOrdo boundary)
+                |> Result.map ofOrdo
+                |> Result.mapError (fun error ->
+                    match error with
+                    | Ordo.Core.MutationBoundary.ExpansionWithoutJustification -> "a scope expansion needs a justification"
+                    | Ordo.Core.MutationBoundary.ExpansionWithoutAuthorizer -> "a scope expansion needs an authorizing actor"
+                    | Ordo.Core.MutationBoundary.ExpansionIntoEvaluatorAuthority hits ->
+                        "expansion would make evaluator authority writable: " + String.concat ", " hits
+                    | Ordo.Core.MutationBoundary.ProjectionWithoutScope scope -> $"projection is not traceable to a held scope: {scopeName scope}")
 
 /// Containment strength (ORD-EXEC-033/060/061). A worktree is semantic-only.
 [<RequireQualifiedAccess>]

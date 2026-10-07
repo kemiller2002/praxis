@@ -360,10 +360,11 @@ module Foundations =
 
     let private verifyOrdo (root: string) (rule: CapabilityRule) =
         let manifestInstalled, manifestPinned = manifestVersionMatches root ".echelon/sde.json" rule.Version
-        let directoryInstalled = Directory.Exists(Path.Combine(root, ".sde"))
-        let installed = manifestInstalled || directoryInstalled
-        let pinned = if rule.Version.IsSome then manifestPinned else installed
-        installed, pinned, installed, manifestInstalled, [ "manifest: .echelon/sde.json"; "state: .sde/" ]
+        let packageInstalled, packagePinned = projectDependencyStatus root "EchelonFoundry.Ordo.Core" rule.Version
+        let lifecycle = manifestInstalled || Directory.Exists(Path.Combine(root, ".sde"))
+        let used = lifecycle || (packageInstalled && anySourceContains root [ "Ordo.Core." ])
+        let pinned = if rule.Version.IsSome then manifestPinned || packagePinned else lifecycle || packageInstalled
+        lifecycle || packageInstalled, pinned, used, manifestInstalled || packagePinned, [ "manifest: .echelon/sde.json"; "state: .sde/"; "package: EchelonFoundry.Ordo.Core" ]
 
     let private verifyPraxis (root: string) (rule: CapabilityRule) =
         let manifestInstalled, manifestPinned = manifestVersionMatches root ".echelon/ros.json" rule.Version
