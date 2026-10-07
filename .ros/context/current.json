@@ -4974,11 +4974,65 @@
       },
       "completedAt": "2026-10-07T21:32:21.000Z",
       "conclusion": "work group remove: refuses non-members and the last member, records removed provenance, writes only the group store. Verification: npm run build:fsharp (FSharpCoreImplicitPackageVersion=10.1.400) succeeded with 0 warnings; dotnet Ros.Tests.dll 833 passed, 0 failed; ./ros validate passed; node differential tests 7 passed."
+    },
+    {
+      "id": "PRAXIS-GROUP-05",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Application/Planning/WorkGroups.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/GroupDeclaration.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/cli.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T21:55:06.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T214319412Z-2e2cdc62"
+      ],
+      "latestCheckpoint": {
+        "id": "f9018bee448154f16e6464f8",
+        "recordedAt": "2026-10-07T21:54:55.000Z",
+        "executionId": "EXE-20261007T214319412Z-2e2cdc62",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a024-arm-3",
+        "commit": "8f5222e4b49623f51d1d73555775bade39e9f38e",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a024-arm-3",
+        "remoteCommit": "8f5222e4b49623f51d1d73555775bade39e9f38e",
+        "summary": "work group checkpoint implemented (8b02e42) and structured handoff PRAXIS-GROUP-05.json committed (8f5222e); build ok, 841/841 F# tests pass, ./ros validate passes",
+        "nextAction": "complete PRAXIS-GROUP-05 and commit the Praxis state",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T21:55:06.000Z",
+      "conclusion": "work group checkpoint records a durable group checkpoint (PRX-GRP-044) verified by work checkpoint's own durability rules, referencing members' own checkpoints and claiming no paths. Verification: npm run build:fsharp -- -p:FSharpCoreImplicitPackageVersion=10.1.400 succeeded (0 warnings, 0 errors); dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll 841 passed, 0 failed (8 new); ./ros validate passed."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T21:32:21.000Z",
+  "updatedAt": "2026-10-07T21:55:06.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
