@@ -1088,6 +1088,23 @@
             "modified"
           ],
           "reason": "PRAXIS-MISC-09: replace citations of deleted Node tests with the F# tests that cover the behaviour; keep the Node result as history"
+        },
+        "EXE-20261007T053405002Z-37591719": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T05:34:26.023Z",
+          "evidence": [
+            "docs/identity.md"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "Adopt PRX-REMOTE-045..050 and the order amendment; record their implementation (GROUP-PRAXIS-IDENTITY-001); correct the deleted Node test citations and the abandoned PRAXIS-NPM-BIN deferral"
         }
       }
     },
@@ -1112,8 +1129,8 @@
       "gh-90"
     ],
     "title": "Praxis governance is independent of the execution environment; remote/cloud-agent execution is a first-class capability",
-    "updated": "2026-09-29",
-    "version": "1.3.0"
+    "updated": "2026-10-07",
+    "version": "1.4.0"
   },
   {
     "created": "2026-09-29",
