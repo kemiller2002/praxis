@@ -18,6 +18,9 @@ type PlanningReadPort =
       /// Evidence the repository itself can show (Git), given the live items
       /// whose checkpoints it should check.
       RepositoryObservations: PlanningLiveItem list -> Observation list
+      /// CI status of checkpoints waiting on CI, when the caller opted in
+      /// (`--observe-ci`); otherwise no observation (PRX-PLAN-020).
+      ContinuousIntegration: PlanningLiveItem list -> Observation list
       /// Evidence a caller supplied (CI, GitHub), if any.
       SuppliedObservations: unit -> Result<Observation list, string>
       Configuration: unit -> Result<PlannerConfiguration, string> }
@@ -46,7 +49,7 @@ module PlanningOperations =
                           Queue = queue
                           Live = live
                           Executions = port.Executions()
-                          Observations = port.RepositoryObservations live @ supplied
+                          Observations = port.RepositoryObservations live @ port.ContinuousIntegration live @ supplied
                           Configuration = configuration }))))
 
     let analyze port plannedAt plannerVersion =

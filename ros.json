@@ -31,7 +31,7 @@
       "mechanical": []
     },
     "meaningfulPaths": ["**"],
-    "ignoredPaths": [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", ".ros/telemetry/**", ".ros/executions/**", ".ros/locks/**", ".ros/remote/**", ".praxis-inbox/**", "registries/**", ".echelon/**"],
+    "ignoredPaths": [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", ".ros/telemetry/**", ".ros/executions/**", ".ros/locks/**", ".ros/remote/**", ".ros/planning/**", ".praxis-inbox/**", "registries/**", ".echelon/**"],
     "continuity": {
       "requireDurableCheckpoint": true
     },

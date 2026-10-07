@@ -203,7 +203,7 @@ module Graph =
         left = right || left.StartsWith(right + "/", StringComparison.Ordinal) || right.StartsWith(left + "/", StringComparison.Ordinal)
 
     let private hasScope (configuration: PlannerConfiguration) (item: ItemAnalysis) =
-        not (areaTags configuration item).IsEmpty || not (declaredPaths configuration item.Id).IsEmpty || item.Checkpoint.IsSome
+        not (areaTags configuration item).IsEmpty || not (declaredPaths configuration item.Id).IsEmpty || item.Checkpoint.IsSome || not item.ChangedPaths.IsEmpty
 
     let collision (configuration: PlannerConfiguration) (left: ItemAnalysis) (right: ItemAnalysis) : Collision =
         let left, right = if Text.ordinal left.Id right.Id <= 0 then left, right else right, left
@@ -221,6 +221,15 @@ module Graph =
                   |> List.collect (fun path -> declaredPaths configuration right.Id |> List.filter (overlaps path) |> List.map (fun _ -> path))
                   |> Text.distinctOrdinal
                   |> List.map CollisionSignal.SharedDeclaredPath
+              yield!
+                  left.ChangedPaths
+                  |> List.filter (fun path -> right.ChangedPaths |> List.contains path)
+                  |> Text.distinctOrdinal
+                  |> List.map CollisionSignal.SharedChangedPath
+              yield!
+                  left.ContestedPaths
+                  |> List.filter (fun entry -> right.ContestedPaths |> List.contains entry)
+                  |> List.map (fun (path, merges) -> CollisionSignal.HistoricalConflict $"{path} ({merges} merge(s) changed it on both sides)")
               yield!
                   Set.intersect (areaTags configuration left |> Set.ofList) (areaTags configuration right |> Set.ofList)
                   |> Set.toList

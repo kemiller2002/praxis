@@ -120,7 +120,12 @@ checkpoint that waits on it; a blocker whose named prerequisites are now
 satisfied (all: medium confidence; some: low, listing what is still open or
 unobservable). Stale items go to the state-cleanup section and a serial
 **wave 0** of `reconcile` recommendations, and the plan reports that its
-confidence is limited.
+confidence is limited. CI is observed either from a supplied observation or,
+with `--observe-ci`, from the GitHub check runs of the checkpoint commit
+(`gh api .../commits/SHA/check-runs`): any failing run is `ci-failed`, all
+runs finished and passing is `ci-passed`, otherwise `ci-pending`; a source
+that cannot be read is `ci-unavailable` with the reason. Pending and
+unavailable leave the dependency undetermined and say why.
 
 **Durations** (PRX-PLAN-060..063, 171..173). Each finalized execution
 contributes productive time = `time.wall_ms - time.blocked_ms`, or its
@@ -171,7 +176,12 @@ is **unavailable** with the "N of M executions" statement, and a `--budget`
 is `cannot-evaluate`. Every plan still reports known contributors: executions,
 continuations, context acquisitions, peak concurrency, accepted-risk pairs.
 
-**Collisions** (PRX-PLAN-080..084). Every pair of runnable items gets a risk:
+**Collisions** (PRX-PLAN-080..084). Git adds file-level evidence: the paths
+each unmerged checkpoint changed against the integration branch (Praxis state
+files excluded; two items changing one path are a `conflict`), and the paths
+both sides of one of the last 50 integration merges changed (historical
+merge-conflict hotspots; two items touching the same hotspot's directory are
+`elevated`). Every pair of runnable items gets a risk:
 `conflict` (same checkpoint branch, overlapping declared paths, declared
 conflict), `unknown` (either item has no scope evidence: no non-generic tag,
 declared area or checkpoint branch), `elevated` (shared non-generic tag;
@@ -219,7 +229,12 @@ from executions finalized strictly before it started, then compared with its
 actual productive time (within range, absolute and relative error, by class).
 It also reports observed execution overlap against the baseline's modeled
 concurrency of one, how often backlog creation order matched actual start
-order, and cost evidence.
+order, and cost evidence. Each execution with a monetary total is also
+predicted from the costed executions finalized before it started (the same
+`minimumCostSamples` rule), with within-range and absolute error. `--record`
+appends the result to `.ros/planning/calibration.jsonl`
+(`praxis.plan-calibration/1`; a repeat for the same work-state fingerprint and
+planner version adds nothing), and every replay reports the recorded trend.
 
 **Determinism** (PRX-PLAN-002). All ordering is ordinal with explicit
 tie-breaks; no clock is read below the CLI (`--as-of` pins it); JSON field
@@ -360,22 +375,22 @@ No external dependency was added (PRX-PLAN-004).
 | --- | --- |
 | 001-004 | Met. Read-only port; test 30 hashes every file and Git state before and after every command. |
 | 010-013 | Met. |
-| 020-022 | Met for Git-observable evidence and supplied observations. The planner does not query GitHub or CI itself. |
+| 020-022 | Met. Git evidence (merged PRs, tags, merged checkpoints) and supplied observations always; CI check runs of checkpoints that wait on CI with `--observe-ci` (opt-in, `gh`), reported passed, failed, still running or unavailable (`PRAXIS-MISC-02`). |
 | 030-033 | Met; remaining fractions are an explicit configurable assumption, not yet calibrated. |
 | 040-046 | Met. Soft dependencies are modelled but only structured config can declare them. |
 | 050-053 | Met. Per-component cost modelling (053) is limited to what `cost.*` metrics carry. |
 | 060-063 | Met. |
 | 070-072 | Met as recommendations; context acquisition is counted, not priced. |
-| 080-084 | Met. File-level overlap is known only from declared `areas`. |
+| 080-084 | Met. File-level overlap comes from declared `areas` and from the paths each unmerged checkpoint changed; historical merge-conflict hotspots (paths both sides of one of the last 50 integration merges changed) raise a pair touching the same hotspot directory to `elevated` (`PRAXIS-MISC-03`). |
 | 090-094 | Met. |
 | 100-102 | Met. |
 | 110-112 | Met. |
 | 120-124, 130-131 | Met. |
 | 140-142 | Met. |
-| 150-152 | Met, except predicted-vs-actual cost (no cost evidence exists yet). |
+| 150-152 | Met. Replay also predicts each costed execution's cost from earlier costed executions and reports within-range and absolute error, or why it cannot (`PRAXIS-MISC-04`). |
 | 160-161 | Met; see `EV-ROS-2026-A058`. |
-| 162 | Mechanism met (`freshness` outcomes); the comparison itself needs time to pass. |
-| 170-173 | Met in replay and drift; error is not yet persisted over time. |
+| 162 | Met. `freshness` reports each recommended item's outcome and a follow-up: items started and completed since the plan, how many started pairs from different waves followed the recommended order, and observed against predicted duration for completed items, stated as observation (`PRAXIS-MISC-05`). |
+| 170-173 | Met. `plan replay --record` persists each replay's error in `.ros/planning/calibration.jsonl` (`praxis.plan-calibration/1`, once per work state and planner version) and `plan replay` reports the trend (`PRAXIS-MISC-06`). |
 | 180-182 | Met. |
 
 ## Work-group requirement status

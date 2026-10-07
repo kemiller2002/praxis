@@ -413,7 +413,17 @@ type ObservationKind =
     | CommitMerged of commit: string * into: string
     | ContinuousIntegrationPassed of subject: string
     | ContinuousIntegrationFailed of subject: string
+    /// CI was queried and has not finished for the subject (PRX-PLAN-020).
+    | ContinuousIntegrationPending of subject: string
+    /// CI was queried and could not be observed; never read as pass or fail.
+    | ContinuousIntegrationUnavailable of subject: string * reason: string
     | ReleaseExists of tag: string
+    /// Repository paths an item's unmerged checkpoint changed against the
+    /// integration branch (PRX-PLAN-081, "same files").
+    | ChangedPaths of workItem: string * paths: string list
+    /// A path both parents of recent integration merges changed: a
+    /// historical merge-conflict hotspot (PRX-PLAN-081).
+    | ContestedPath of path: string * merges: int
     /// Evidence that a grouped execution over these members strained its
     /// context (compactions, re-reads, forgotten requirements...), as
     /// indicator name and count (PRX-GRP-074).
@@ -422,6 +432,22 @@ type ObservationKind =
 type Observation =
     { Kind: ObservationKind
       Provenance: Provenance }
+
+/// PRX-PLAN-020: what a commit's CI check runs say, from each run's
+/// (status, conclusion). No run, or any run not finished, is pending; any
+/// failing conclusion is a failure; only all finished and passing passes.
+[<RequireQualifiedAccess>]
+module CheckRuns =
+    let private failing = set [ "failure"; "cancelled"; "timed_out"; "action_required"; "startup_failure"; "stale" ]
+    let private passing = set [ "success"; "neutral"; "skipped" ]
+
+    let observation (subject: string) (runs: (string * string) list) : ObservationKind =
+        if runs |> List.exists (fun (_, conclusion) -> failing.Contains conclusion) then
+            ObservationKind.ContinuousIntegrationFailed subject
+        elif not runs.IsEmpty && runs |> List.forall (fun (status, conclusion) -> status = "completed" && passing.Contains conclusion) then
+            ObservationKind.ContinuousIntegrationPassed subject
+        else
+            ObservationKind.ContinuousIntegrationPending subject
 
 type CheckpointSummary =
     { CheckpointId: string
@@ -968,7 +994,13 @@ type ItemAnalysis =
       RemainingDuration: Estimate<int64>
       RemainingCost: Estimate<Money>
       CostEvidence: CostEvidenceKind
-      Provenance: Provenance list }
+      Provenance: Provenance list
+      /// Paths the item's unmerged checkpoint changed (Git), excluding the
+      /// shared Praxis state files.
+      ChangedPaths: string list
+      /// Historical merge-conflict hotspots (path, merges) the item touches
+      /// through its declared or changed paths.
+      ContestedPaths: (string * int) list }
 
 [<RequireQualifiedAccess>]
 type CollisionRisk =
@@ -1011,6 +1043,10 @@ type CollisionSignal =
     | PraxisStateFiles
     | DeclaredConflict of reason: string
     | InsufficientScopeEvidence of workItem: string
+    /// Both unmerged checkpoints changed this path.
+    | SharedChangedPath of path: string
+    /// Both items touch the directory of a historical merge-conflict hotspot.
+    | HistoricalConflict of evidence: string
 
 [<RequireQualifiedAccess>]
 module CollisionSignal =
@@ -1021,7 +1057,9 @@ module CollisionSignal =
         match signal with
         | CollisionSignal.SameBranch _
         | CollisionSignal.SharedDeclaredPath _
+        | CollisionSignal.SharedChangedPath _
         | CollisionSignal.DeclaredConflict _ -> CollisionRisk.Conflict
+        | CollisionSignal.HistoricalConflict _ -> CollisionRisk.Elevated
         | CollisionSignal.InsufficientScopeEvidence _ -> CollisionRisk.Unknown
         | CollisionSignal.SharedArea _
         | CollisionSignal.PraxisStateFiles -> CollisionRisk.Elevated
@@ -1034,6 +1072,8 @@ module CollisionSignal =
         | CollisionSignal.PraxisStateFiles -> "praxis-state-files"
         | CollisionSignal.DeclaredConflict _ -> "declared-conflict"
         | CollisionSignal.InsufficientScopeEvidence _ -> "insufficient-scope-evidence"
+        | CollisionSignal.SharedChangedPath _ -> "shared-changed-path"
+        | CollisionSignal.HistoricalConflict _ -> "historical-conflict"
 
     let detail signal =
         match signal with
@@ -1043,6 +1083,8 @@ module CollisionSignal =
         | CollisionSignal.PraxisStateFiles -> String.Join(", ", praxisStateFiles)
         | CollisionSignal.DeclaredConflict reason -> reason
         | CollisionSignal.InsufficientScopeEvidence workItem -> workItem
+        | CollisionSignal.SharedChangedPath path -> path
+        | CollisionSignal.HistoricalConflict evidence -> evidence
 
     let tryParse (code: string) (detail: string) =
         match code with
@@ -1052,6 +1094,8 @@ module CollisionSignal =
         | "praxis-state-files" -> Some CollisionSignal.PraxisStateFiles
         | "declared-conflict" -> Some(CollisionSignal.DeclaredConflict detail)
         | "insufficient-scope-evidence" -> Some(CollisionSignal.InsufficientScopeEvidence detail)
+        | "shared-changed-path" -> Some(CollisionSignal.SharedChangedPath detail)
+        | "historical-conflict" -> Some(CollisionSignal.HistoricalConflict detail)
         | _ -> None
 
     let describe signal =
@@ -1062,6 +1106,8 @@ module CollisionSignal =
         | CollisionSignal.PraxisStateFiles -> "both mutate shared Praxis state files (PRAXIS-STATE-MERGE-01)"
         | CollisionSignal.DeclaredConflict reason -> $"declared conflict: {reason}"
         | CollisionSignal.InsufficientScopeEvidence workItem -> $"{workItem} has no scope evidence, so overlap is unknown"
+        | CollisionSignal.SharedChangedPath path -> $"both unmerged checkpoints change {path}"
+        | CollisionSignal.HistoricalConflict evidence -> $"both touch a historical merge-conflict hotspot: {evidence}"
 
 type Collision =
     { Left: string

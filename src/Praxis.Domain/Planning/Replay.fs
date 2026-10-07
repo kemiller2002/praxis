@@ -31,6 +31,28 @@ type OrderingAgreement =
       Agreement: decimal option
       Statement: string }
 
+/// PRX-PLAN-152: one finalized execution's observed monetary total against
+/// the pooled cost range predicted from executions finalized before it
+/// started.
+type CostReplayPrediction =
+    { ExecutionId: string
+      WorkItemId: string
+      TrainingSamples: int
+      Predicted: Estimate<Money>
+      Actual: Money
+      WithinRange: bool option
+      AbsoluteError: decimal option }
+
+type CostReplay =
+    { /// Finalized executions with an observed monetary total.
+      Observed: int
+      Predicted: int
+      WithinRange: int
+      MedianAbsoluteError: decimal option
+      Currency: string option
+      Predictions: CostReplayPrediction list
+      Statement: string }
+
 type ReplayReport =
     { Executions: int
       Predicted: int
@@ -43,6 +65,7 @@ type ReplayReport =
       Overlap: OverlapObservation
       Ordering: OrderingAgreement
       Cost: CostEvidenceSummary
+      CostAccuracy: CostReplay
       Predictions: ReplayPrediction list
       Statement: string }
 
@@ -149,6 +172,63 @@ module Replay =
                 $"Baseline creation order matched the actual start order for {concordant} of {pairs.Length} comparable pairs ({percent}%%)."
             | None -> "No pair of backlog items has both a creation time and a recorded start; ordering agreement is unknown." }
 
+    /// PRX-PLAN-152 (and 151): cost is predicted per execution only from
+    /// executions finalized strictly before it started, and only when that
+    /// earlier evidence is sufficient in one currency.
+    let costReplay (configuration: PlannerConfiguration) (executions: HistoricalExecution list) : CostReplay =
+        let finalized =
+            executions
+            |> List.filter (fun execution -> execution.Status = ExecutionStatus.Finalized)
+            |> List.choose (fun execution ->
+                match Text.tryTimestamp execution.StartedAt, execution.FinalizedAt |> Option.bind Text.tryTimestamp with
+                | Some started, Some finished -> Some(execution, started, finished)
+                | _ -> None)
+
+        let observed =
+            finalized
+            |> List.choose (fun (execution, started, _) ->
+                match History.executionCost execution with
+                | Some(amount, Some currency) -> Some(execution, started, { Amount = amount; Currency = currency })
+                | _ -> None)
+            |> List.sortWith (fun (left, _, _) (right, _, _) -> Text.ordinal left.ExecutionId right.ExecutionId)
+
+        let predictions =
+            observed
+            |> List.map (fun (execution, started, actual) ->
+                let training = finalized |> List.filter (fun (_, _, finished) -> finished < started) |> List.map (fun (earlier, _, _) -> earlier)
+                let predicted = History.costEstimate (History.costSummary configuration training) training
+
+                let comparable = predicted.Expected |> Option.filter (fun expected -> expected.Currency = actual.Currency)
+
+                { ExecutionId = execution.ExecutionId
+                  WorkItemId = execution.WorkItemId
+                  TrainingSamples = training.Length
+                  Predicted = predicted
+                  Actual = actual
+                  WithinRange =
+                    match predicted.Lower, predicted.Upper, comparable with
+                    | Some lower, Some upper, Some _ -> Some(actual.Amount >= lower.Amount && actual.Amount <= upper.Amount)
+                    | _ -> None
+                  AbsoluteError = comparable |> Option.map (fun expected -> abs (expected.Amount - actual.Amount)) })
+
+        let predicted = predictions |> List.filter (fun prediction -> prediction.AbsoluteError.IsSome)
+        let within = predicted |> List.filter (fun prediction -> prediction.WithinRange = Some true) |> List.length
+        let currencies = observed |> List.map (fun (_, _, actual) -> actual.Currency) |> List.distinct
+
+        { Observed = observed.Length
+          Predicted = predicted.Length
+          WithinRange = within
+          MedianAbsoluteError = predicted |> List.choose (fun prediction -> prediction.AbsoluteError) |> medianOf
+          Currency = (match currencies with | [ single ] -> Some single | _ -> None)
+          Predictions = predictions
+          Statement =
+            if observed.IsEmpty then
+                "Predicted-versus-observed cost is unavailable: no finalized execution records a monetary total."
+            elif predicted.IsEmpty then
+                $"Predicted-versus-observed cost is unavailable: {observed.Length} execution(s) record a monetary total, but none had at least {configuration.MinimumCostSamples} earlier costed executions in one currency to predict from."
+            else
+                $"Cost: {within} of {predicted.Length} predicted execution(s) fell within the predicted range ({observed.Length} with observed cost)." }
+
     let replay (configuration: PlannerConfiguration) (queue: PlanningQueueItem list) (executions: HistoricalExecution list) : ReplayReport =
         let samples = History.samples executions
         let predictions = samples |> List.map (predict samples)
@@ -181,6 +261,7 @@ module Replay =
           Overlap = overlap samples
           Ordering = ordering queue samples
           Cost = History.costSummary configuration executions
+          CostAccuracy = costReplay configuration executions
           Predictions = predictions
           Statement =
-            "Each execution is predicted only from executions finalized before it started (no hindsight). Its task class comes from its own telemetry record, which is normally set when the execution starts. Predicted cost is unavailable wherever cost evidence is insufficient." }
+            "Each execution is predicted only from executions finalized before it started (no hindsight). Its task class comes from its own telemetry record, which is normally set when the execution starts. Cost is predicted the same way and reported unavailable wherever earlier cost evidence is insufficient." }

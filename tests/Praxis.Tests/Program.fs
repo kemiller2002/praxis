@@ -104,6 +104,7 @@ let main _ =
     @ CliBoundaryRatchetTests.tests
     @ PlanningCliTests.tests
     @ PlanningSessionEvidenceTests.tests
+    @ PlanningEvidenceTests.tests
     @ GroupingTests.tests
     @ PremergeCommandSurfaceTests.tests
     @ PremergeRemoteTests.tests

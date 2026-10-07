@@ -100,6 +100,10 @@ module Snapshot =
             | ObservationKind.CommitMerged(commit, into) -> $"commit-merged:{commit}:{into}"
             | ObservationKind.ContinuousIntegrationPassed subject -> $"ci-passed:{subject}"
             | ObservationKind.ContinuousIntegrationFailed subject -> $"ci-failed:{subject}"
+            | ObservationKind.ContinuousIntegrationPending subject -> $"ci-pending:{subject}"
+            | ObservationKind.ContinuousIntegrationUnavailable(subject, reason) -> $"ci-unavailable:{subject}:{reason}"
+            | ObservationKind.ChangedPaths(workItem, paths) -> $"changed-paths:{workItem}:" + (paths |> Text.sortOrdinal |> String.concat ";")
+            | ObservationKind.ContestedPath(path, merges) -> $"contested-path:{path}:{merges}"
             | ObservationKind.ReleaseExists tag -> $"release:{tag}"
             | ObservationKind.ContextPressure(members, indicators) ->
                 let names = members |> Text.sortOrdinal |> String.concat ";"

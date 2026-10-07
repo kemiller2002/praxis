@@ -117,6 +117,7 @@
     <Compile Include="PacingSafetyTests.fs" />
     <Compile Include="CliBoundaryRatchetTests.fs" />
     <Compile Include="PlanningCliTests.fs" />
+    <Compile Include="PlanningEvidenceTests.fs" />
     <Compile Include="PlanningSessionEvidenceTests.fs" />
     <Compile Include="GroupingTests.fs" />
     <Compile Include="PremergeFence.fs" />
