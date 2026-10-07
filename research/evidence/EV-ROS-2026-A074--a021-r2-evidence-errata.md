@@ -26,8 +26,9 @@ derived_from: [EV-ROS-2026-A064, EV-ROS-2026-A070]
 provenance:
   contributions:
     EXE-20261007T140703062Z-100aa587:
-      operations: [created]
+      operations: [created, modified]
       at: 2026-10-07T14:34:38.000Z
+      last: 2026-10-07T18:00:24.000Z
       actor:
         kind: agent
         id: anthropic/claude-code
