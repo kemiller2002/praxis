@@ -4778,38 +4778,61 @@
     {
       "id": "PRAXIS-GROUP-01",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-07T17:07:16.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/GroupDeclaration.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/cli.md"
+        },
+        {
+          "type": "handoff",
+          "path": "research/experiments/EX-ROS-2026-A024-handoffs/PRAXIS-GROUP-01.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T17:18:16.000Z",
       "telemetryExecutionIds": [
         "EXE-20261007T170717037Z-2f51b352"
       ],
       "latestCheckpoint": {
-        "id": "aa8ce6513f6295d3912ff141",
-        "recordedAt": "2026-10-07T17:17:03.000Z",
+        "id": "a53c771fe2f71d00c433d4b0",
+        "recordedAt": "2026-10-07T17:18:15.000Z",
         "executionId": "EXE-20261007T170717037Z-2f51b352",
         "repository": "repository-operating-system",
         "branch": "experiment/a024-arm-3",
-        "commit": "7e58bd1500578c7d2615fced1e48cdde4aa4d7dc",
+        "commit": "331c8764b3e953f6ee848d28a3247fb20c161370",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
         "remoteBranch": "experiment/a024-arm-3",
-        "remoteCommit": "7e58bd1500578c7d2615fced1e48cdde4aa4d7dc",
-        "summary": "work group create implemented, tested (808/808 F# tests pass), validate passes; commit 7e58bd1 pushed",
-        "nextAction": "Write and validate the A024 handoff, then complete PRAXIS-GROUP-01",
+        "remoteCommit": "331c8764b3e953f6ee848d28a3247fb20c161370",
+        "summary": "work group create implemented (7e58bd1), handoff committed (331c876); build ok, 808/808 F# tests pass, validate passes",
+        "nextAction": "Complete PRAXIS-GROUP-01; successor continues with PRAXIS-GROUP-02 using research/experiments/EX-ROS-2026-A024-handoffs/PRAXIS-GROUP-01.json",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-07T17:18:16.000Z",
+      "conclusion": "Verification: npm run build:fsharp -- -p:FSharpCoreImplicitPackageVersion=10.1.400 succeeded (0 errors); dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll: 808 tests, 808 passed, 0 failed (16 new work-group tests); ./ros validate: validation passed; validate/status Node differential tests 7/7 passed."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T17:07:16.000Z",
+  "updatedAt": "2026-10-07T17:18:16.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
