@@ -76,8 +76,8 @@ orchestration deviation that applies equally to B and C.
 From a clean checkout of the orchestration branch
 (`claude/ex-ros-2026-a024-f5elvt` or main after merge):
 
-1. `python3 research/experiments/EX-ROS-2026-A024-harness/make_manifest.py --check`
-   must print `manifest hashes match`.
+1. `python3 research/experiments/EX-ROS-2026-A024-harness/verify_amendment_1.py`
+   must print `amendment 1 verified` (manifest frozen at `91745d9`; deviation D4).
 2. Read `research/experiments/EX-ROS-2026-A024-run/sessions.json`. Take the
    recorded heads from `git ls-remote origin refs/heads/experiment/a024-arm-2 refs/heads/experiment/a024-arm-3`.
    Each must equal the `headAfter` of that arm's last completed session.
@@ -117,5 +117,5 @@ From a clean checkout of the orchestration branch
 | C handoff | `c85eb3e` | 01 | `arm-3-01`, `arm-3-02` (stale), `arm-3-02r` (stale, declined resync) |
 
 Probe and preflight sessions are in `sessions.json` (`preflight`) and in
-`deviations.md`. The throwaway probe branch `experiment/a024-launch-probe`
+`deviations.txt`. The throwaway probe branch `experiment/a024-launch-probe`
 contains no product change.

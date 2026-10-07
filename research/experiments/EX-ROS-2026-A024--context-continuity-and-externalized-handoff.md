@@ -2,7 +2,7 @@
 id: EX-ROS-2026-A024
 title: "Claude context continuity: continuous session versus code-only resets versus structured handoffs"
 research_area: repository-operating-system
-status: proposed
+status: blocked
 created: 2026-10-07
 author_agent: openai/chatgpt
 tests_hypotheses:
@@ -11,7 +11,7 @@ tests_hypotheses:
 inputs:
   - EV-ROS-2026-A064
   - EV-ROS-2026-A070
-outputs: []
+outputs: [EV-ROS-2026-A074]
 related_theories: []
 related_documents:
   - EX-ROS-2026-A021
@@ -22,6 +22,19 @@ related_documents:
   - prompts/CLAUDE-EX-ROS-2026-A024.md
 tags: [claude, agents, context, continuity, handoff, mechanism, experiment]
 derived_from: [EX-ROS-2026-A021, EV-ROS-2026-A064, EV-ROS-2026-A070]
+provenance:
+  contributions:
+    EXE-20261007T162653169Z-f15a70b7:
+      operations: [modified]
+      at: 2026-10-07T18:47:25.856Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Executed the frozen A024 protocol until the launcher blocker; recorded status, results and observed threats without editing the preregistered text"
+      evidence: [EV-ROS-2026-A074]
 ---
 
 # Experiment
@@ -388,16 +401,54 @@ These are limitations, not reasons to alter the frozen design after execution.
 
 ## Results
 
-No arm has run under this protocol.
+Execution started on 2026-10-07 under the frozen manifest
+(`research/experiments/EX-ROS-2026-A024-harness/manifest.json`, commit
+`91745d9`) and is **blocked** (EV-ROS-2026-A074).
+
+- Sanitized start `ddda837` (parent `8b4ffa3`, reproducible), identical on all
+  three arm branches.
+- Arm A completed items 01-05 in one session. Arm B completed items 01-02.
+  Arm C completed item 01 with a schema-valid handoff.
+- A platform launcher defect (an `outcome_branch` is pinned to the first head
+  the platform saw) started every later serial session on the common start
+  commit. The frozen start check stopped those sessions before they changed
+  anything. The arm-C item-02 slot spent its single preregistered retry this
+  way, so A024 cannot reach a valid terminal state without an owner-approved
+  amendment (`research/experiments/EX-ROS-2026-A024-run/BLOCKER.txt`).
+
+No blinded scoring, evaluation or comparison has been made. Raw per-session
+telemetry is preserved in `research/experiments/EX-ROS-2026-A024-run/`.
 
 ## Analysis
 
-Pending.
+Not performed: arms B and C are not terminal. The frozen analysis
+(`analysis.py`) is unchanged.
+
+### Execution amendments (owner decision pending)
+
+None accepted. BLOCKER.txt lists the options. Any amendment is recorded here
+with its date and author, below the preregistered text, and never edits it.
 
 ## Threats to validity
 
 See the preregistered threats above. Add observed threats after execution
 without deleting or rewriting the preregistered section.
+
+Observed during execution (2026-10-07):
+
+- Platform launcher pinning of `outcome_branch` (deviations D1-D3). It is
+  harmless to validity so far: the start check stopped every affected session
+  before any change. It does block the serial arms.
+- `arm-2-02r` (B, item 02) received a fixed orchestrator resync note; C's
+  retry declined the same note. B item 02 therefore carries a small extra
+  stale-start turn in its usage that no other session has.
+- Arm B receives each prior session's Praxis checkpoint summary and next
+  action through committed `.ros/` state. That is normal repository state, but
+  it is an informal handoff, so B is not handoff-free in the strict sense.
+- Arm C's prompt alone mentions "remaining members of this work group",
+  which the handoff schema's `nextItemContext` requires.
+- The frozen arm-A prompt asked for cross-item architecture to be decided
+  once, as the orchestration script required.
 
 ## Replication notes
 

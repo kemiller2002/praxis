@@ -125,7 +125,7 @@ def inputs(start, dest):
     json.dump(items, open(os.path.join(folder, "work-items.json"), "w"), indent=2, ensure_ascii=False)
     open(os.path.join(folder, "PLANNING-WORK-GROUPS.md"), "w").write(git("show", f"{BASELINE}:requirements/PLANNING-WORK-GROUPS.md"))
     frozen = json.load(open(os.path.join(REPO, HARNESS, "manifest.json")))["hashes"]
-    for name in ("acceptance-criteria.json", "rubric.md"):
+    for name in ("acceptance-criteria.json", "rubric.txt"):
         data = open(os.path.join(REPO, HARNESS, name), "rb").read()
         if hashlib.sha256(data).hexdigest() != frozen[name]:
             sys.exit(f"{name} does not match its frozen manifest hash")

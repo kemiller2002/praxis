@@ -30,7 +30,7 @@ def git(*args):
 def frozen_files():
     prompts = sorted(f"prompts/{p}" for p in os.listdir(os.path.join(HERE, "prompts")))
     return ["handoff.schema.json", "harness-note.txt", "session_telemetry.py", "validate_handoff.py",
-            "decode_telemetry.py", "acceptance-criteria.json", "rubric.md", "analysis.py", "prepare_blind.py", "run_checks.sh",
+            "decode_telemetry.py", "acceptance-criteria.json", "rubric.txt", "analysis.py", "prepare_blind.py", "run_checks.sh",
             "build_start.sh", "verify_start.sh", "make_prompts.py"] + prompts
 
 
@@ -87,7 +87,7 @@ def manifest():
         "hashes": {path: sha(path) for path in frozen_files()},
         "handoffSchemaSha256": sha("handoff.schema.json"),
         "telemetryExtractorSha256": sha("session_telemetry.py"),
-        "rubricSha256": sha("rubric.md"),
+        "rubricSha256": sha("rubric.txt"),
         "evaluatorPromptSha256": sha("prompts/evaluator.txt"),
         "acceptanceScorerPromptSha256": sha("prompts/acceptance-scorer.txt"),
         "promptLaunchSubstitution": "{START_SHA} is the only launch-time substitution in an implementation prompt: the recorded branch head the session must start from",
@@ -97,7 +97,7 @@ def manifest():
         "blinding": {"labels": ["snapshot-K", "snapshot-P", "snapshot-W"], "procedure": f"{REL}/prepare_blind.py (seeded permutation; commitment = sha256 of canonical mapping JSON)"},
         "measures": {
             "acceptance": "passed / scorable over the 36 frozen criteria in acceptance-criteria.json, scored by one blinded fresh scorer session per snapshot; indeterminate reported separately",
-            "architecture": "blinded rubric composite 0-10 (rubric.md) from one fresh evaluator session that sees only the three anonymized snapshots",
+            "architecture": "blinded rubric composite 0-10 (rubric.txt) from one fresh evaluator session that sees only the three anonymized snapshots",
             "discoveryPrimary": "file reads + searches summed over all sessions of the arm, main and subagent transcripts (A021 extractor definitions); the protocol's named fallback proxy, chosen because the bash read/search detection is pattern-based and a repeated-operation aggregate built on it would not be reliable enough to be primary",
             "discoverySecondary": "cross-session repeated reads (paths read in more than one session of an arm, plus within-session repeats) reported descriptively",
             "resources": "platform cost and tokens from get_session external_metadata.usage read after the session is terminal (whole session, including the tail after telemetry capture), plus telemetry tokens and wall time; arm elapsed time = sum of session wall times (created_at to terminal updated_at); missing is null, never zero",

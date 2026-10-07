@@ -19,6 +19,19 @@ related_documents:
 supersedes: []
 superseded_by: []
 tags: [claude, agents, context, handoff, continuity, experiment, planning]
+provenance:
+  contributions:
+    EXE-20261007T162653169Z-f15a70b7:
+      operations: [modified]
+      at: 2026-10-07T18:47:26.586Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Recorded that the first test (EX-ROS-2026-A024) is blocked; assessment unchanged"
+      evidence: [EV-ROS-2026-A074]
 ---
 
 # Hypothesis
@@ -101,11 +114,15 @@ hypothesis rather than supportive.
 
 ## Tests performed
 
-None yet. EX-ROS-2026-A024 is preregistered as the first test.
+EX-ROS-2026-A024 started on 2026-10-07 and is blocked before any comparison
+(EV-ROS-2026-A074): a platform launcher defect consumed the arm-C item-02
+retry. Arm A is complete, arm B is through item 02, and arm C is through
+item 01.
 
 ## Results
 
-No result yet.
+No result. The partial execution yields feasibility evidence only and is
+neither supporting nor contradicting.
 
 ## Falsification attempts
 
@@ -115,8 +132,9 @@ state.
 
 ## Current assessment
 
-Active, very low confidence. A021 and its R2 replication motivate the mechanism
-question but did not test structured handoff.
+Active, very low confidence, unchanged. A021 and its R2 replication motivate
+the mechanism question but did not test structured handoff. The first test,
+EX-ROS-2026-A024, is blocked pending an owner decision (EV-ROS-2026-A074).
 
 ## Next experiment
 

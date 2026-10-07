@@ -83,6 +83,24 @@ treatments, thresholds, blinding or stop rules.
 - The preregistered retry rule ("an orchestration-only failure may be retried
   once") is spent for the arm-C item-02 slot (`arm-3-02`, then `arm-3-02r`).
   A third session would go beyond the frozen protocol, so the orchestrator
-  stops arm execution here and asks the owner to decide (BLOCKER.md). No
+  stops arm execution here and asks the owner to decide (BLOCKER.txt). No
   further arm session is launched. `arm-2-02r`, already running after its
   accepted resync, is allowed to finish and is recorded as it stands.
+
+## D4 — harness amendment 1: rename only, for repository validation (19:00Z)
+
+- `./praxis validate` requires front matter on every `.md` under
+  `research/`. Four harness and run files lacked it. One of them,
+  `rubric.md`, is frozen in the manifest.
+- Changes: `rubric.md` -> `rubric.txt` (byte-identical), `README.md` ->
+  `README.txt`, run `BLOCKER.md` -> `BLOCKER.txt`, run `deviations.md` ->
+  `deviations.txt`. The literal string `rubric.md` was replaced by
+  `rubric.txt` in `prepare_blind.py`, `prompts/evaluator.txt` and
+  `make_manifest.py`.
+- `manifest.json` is left exactly as frozen. `verify_amendment_1.py`
+  mechanically proves the change: `rubric.txt` matches the frozen rubric hash,
+  and the frozen files that changed differ from their frozen versions (read
+  from `91745d9`) only by that literal replacement. Use it in place of
+  `make_manifest.py --check`, which would now report the renamed key.
+- No treatment, threshold, margin, blinding rule, stop rule or rubric content
+  changed. The evaluator prompt and blinding script have not been used.

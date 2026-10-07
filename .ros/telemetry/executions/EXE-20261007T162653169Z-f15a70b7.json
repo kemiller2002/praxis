@@ -1493,6 +1493,23 @@
         "name": "step",
         "mechanism": "step-lifecycle"
       }
+    },
+    {
+      "type": "step.completed",
+      "occurredAt": "2026-10-07T18:47:50.000Z",
+      "stepId": "STEP-20261007T170350000Z-63bcca08",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
     }
   ],
   "repository": {
@@ -1541,12 +1558,12 @@
       "name": "A024 phase 3: execute arms",
       "description": null,
       "classification": [],
-      "status": "active",
+      "status": "completed",
       "plannedAt": "2026-10-07T17:03:50.000Z",
       "startedAt": "2026-10-07T17:03:50.000Z",
-      "completedAt": null,
-      "endedAt": null,
-      "updatedAt": "2026-10-07T17:03:50.000Z",
+      "completedAt": "2026-10-07T18:47:50.000Z",
+      "endedAt": "2026-10-07T18:47:50.000Z",
+      "updatedAt": "2026-10-07T18:47:50.000Z",
       "actor": {
         "kind": "agent",
         "id": "anthropic/claude-code",
@@ -1845,6 +1862,19 @@
           "from": null,
           "to": "active",
           "occurredAt": "2026-10-07T17:03:50.000Z",
+          "reason": null,
+          "actor": {
+            "kind": "agent",
+            "id": "anthropic/claude-code",
+            "provider": "anthropic",
+            "model": "unknown",
+            "runtime": "claude-code"
+          }
+        },
+        {
+          "from": "active",
+          "to": "completed",
+          "occurredAt": "2026-10-07T18:47:50.000Z",
           "reason": null,
           "actor": {
             "kind": "agent",

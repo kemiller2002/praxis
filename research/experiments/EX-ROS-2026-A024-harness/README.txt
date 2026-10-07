@@ -16,7 +16,7 @@ arm runs; `python3 make_manifest.py --check` detects later drift.
 | `build_start.sh`, `verify_start.sh` | Reproducible sanitized start commit (parent = frozen baseline) and identical-start verification for the arm branches. |
 | `make_prompts.py`, `prompts/` | One template; arms differ only in the context-strategy block. |
 | `acceptance-criteria.json` | 36 atomic criteria decomposed from the five items' frozen acceptance text, with item hashes. |
-| `rubric.md` | The preregistered five-dimension 0-2 architecture rubric. |
+| `rubric.txt` | The preregistered five-dimension 0-2 architecture rubric. |
 | `run_checks.sh` | Deterministic build, full F# suite and `./ros validate` at a commit. |
 | `prepare_blind.py` | Seeded neutral labels, scrubbed packages on orphan branches, mapping commitment. |
 | `analysis.py` | Frozen recovery formulas, thresholds and support rule. |
