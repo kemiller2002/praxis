@@ -1,0 +1,18 @@
+{
+  "schema": "praxis.group-verification/1",
+  "groupId": "GROUP-FND-FOUNDATIONS",
+  "rows": [
+    { "member": "PRAXIS-FND-04", "criterion": "Boundary module classifies escaped failures into per-boundary codes equal to aegis-boundaries.json", "status": "met",
+      "evidence": { "kind": "test", "reference": "aegis boundary: each operational boundary is recorded under its own code; aegis boundary: aegis-boundaries.json declares exactly the codes Praxis records; aegis boundary: a failure raised inside the Git adapter is attributed to Git", "result": "passed" } },
+    { "member": "PRAXIS-FND-04", "criterion": "Web and hub handlers capture per request and answer 500 with a safe message and reference", "status": "met",
+      "evidence": { "kind": "test", "reference": "aegis boundary: a web request that fails answers 500 with a reference and no exception text", "result": "passed" } },
+    { "member": "PRAXIS-FND-04", "criterion": "Redaction rules extend Aegis defaults; a test proves secrets, tokens and work content never reach a sink", "status": "met",
+      "evidence": { "kind": "test", "reference": "aegis boundary: credentials, repository data and work content never reach a sink; aegis boundary: configuration is released, blocking and keeps Aegis's credential rules", "result": "passed" } },
+    { "member": "PRAXIS-FND-04", "criterion": "Collector-sink tests: success and refusals record nothing; each code recorded; defects and cancellation not disguised", "status": "met",
+      "evidence": { "kind": "test", "reference": "aegis boundary: a completed command keeps its exit code and records nothing; aegis boundary: programming defects and cancellation are re-raised, not disguised", "result": "passed" } },
+    { "member": "PRAXIS-FND-04", "criterion": "Expected outcomes stay typed exit codes", "status": "met",
+      "evidence": { "kind": "test", "reference": "aegis boundary: a completed command keeps its exit code and records nothing (exit codes 0-6 unchanged, nothing recorded); full suite 1479 tests", "result": "passed" } },
+    { "member": "PRAXIS-FND-04", "criterion": "Aegis pin remains a released version", "status": "met",
+      "evidence": { "kind": "location", "reference": "src/Praxis.Infrastructure/Praxis.Infrastructure.fsproj", "result": "EchelonFoundry.Aegis.Core 1.0.0 (asserted by 'aegis boundary: configuration is released, blocking ...')" } }
+  ]
+}
