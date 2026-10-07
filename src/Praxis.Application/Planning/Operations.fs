@@ -18,12 +18,17 @@ type PlanningReadPort =
       /// Evidence the repository itself can show (Git), given the live items
       /// whose checkpoints it should check.
       RepositoryObservations: PlanningLiveItem list -> Observation list
+      /// CI status of checkpoints waiting on CI, when the caller opted in
+      /// (`--observe-ci`); otherwise no observation (PRX-PLAN-020).
+      ContinuousIntegration: PlanningLiveItem list -> Observation list
       /// Evidence a caller supplied (CI, GitHub), if any.
       SuppliedObservations: unit -> Result<Observation list, string>
       /// Provider capacity (PRX-QUAL-009), provider-neutral. Empty when no
       /// capacity was observed: unknown, never zero.
       Capacity: unit -> Result<ProviderCapacity list, string>
-      Configuration: unit -> Result<PlannerConfiguration, string> }
+      Configuration: unit -> Result<PlannerConfiguration, string>
+      /// Ended group executions, for grouped-versus-independent pricing.
+      GroupSamples: unit -> GroupedSample list }
 
 [<RequireQualifiedAccess>]
 module PlanningOperations =
@@ -51,9 +56,10 @@ module PlanningOperations =
                           Queue = queue
                           Live = live
                           Executions = port.Executions()
-                          Observations = port.RepositoryObservations live @ supplied
+                          Observations = port.RepositoryObservations live @ port.ContinuousIntegration live @ supplied
                           Capacity = capacity
-                          Configuration = configuration })))))
+                          Configuration = configuration
+                          GroupSamples = port.GroupSamples() })))))
 
     let analyze port plannedAt plannerVersion =
         gather port plannedAt plannerVersion |> Result.map (fun input -> input, Planner.analyze input)

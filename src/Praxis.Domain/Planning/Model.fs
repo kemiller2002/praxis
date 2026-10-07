@@ -413,7 +413,17 @@ type ObservationKind =
     | CommitMerged of commit: string * into: string
     | ContinuousIntegrationPassed of subject: string
     | ContinuousIntegrationFailed of subject: string
+    /// CI was queried and has not finished for the subject (PRX-PLAN-020).
+    | ContinuousIntegrationPending of subject: string
+    /// CI was queried and could not be observed; never read as pass or fail.
+    | ContinuousIntegrationUnavailable of subject: string * reason: string
     | ReleaseExists of tag: string
+    /// Repository paths an item's unmerged checkpoint changed against the
+    /// integration branch (PRX-PLAN-081, "same files").
+    | ChangedPaths of workItem: string * paths: string list
+    /// A path both parents of recent integration merges changed: a
+    /// historical merge-conflict hotspot (PRX-PLAN-081).
+    | ContestedPath of path: string * merges: int
     /// Evidence that a grouped execution over these members strained its
     /// context (compactions, re-reads, forgotten requirements...), as
     /// indicator name and count (PRX-GRP-074).
@@ -422,6 +432,22 @@ type ObservationKind =
 type Observation =
     { Kind: ObservationKind
       Provenance: Provenance }
+
+/// PRX-PLAN-020: what a commit's CI check runs say, from each run's
+/// (status, conclusion). No run, or any run not finished, is pending; any
+/// failing conclusion is a failure; only all finished and passing passes.
+[<RequireQualifiedAccess>]
+module CheckRuns =
+    let private failing = set [ "failure"; "cancelled"; "timed_out"; "action_required"; "startup_failure"; "stale" ]
+    let private passing = set [ "success"; "neutral"; "skipped" ]
+
+    let observation (subject: string) (runs: (string * string) list) : ObservationKind =
+        if runs |> List.exists (fun (_, conclusion) -> failing.Contains conclusion) then
+            ObservationKind.ContinuousIntegrationFailed subject
+        elif not runs.IsEmpty && runs |> List.forall (fun (status, conclusion) -> status = "completed" && passing.Contains conclusion) then
+            ObservationKind.ContinuousIntegrationPassed subject
+        else
+            ObservationKind.ContinuousIntegrationPending subject
 
 type CheckpointSummary =
     { CheckpointId: string
@@ -640,7 +666,13 @@ type DeclaredGroup =
       SharedContext: string list
       ExecutionRepository: string option
       CrossRepository: bool
-      ArchitectureNotes: string list }
+      ArchitectureNotes: string list
+      /// Per-group opt-out (PRX-GRP-132): the group executes independently,
+      /// for this recorded reason.
+      IndependentReason: string option
+      /// Per-item opt-outs (PRX-GRP-132): (member, reason). The member stays
+      /// a member but executes in its own fresh context.
+      IndependentMembers: (string * string) list }
 
 /// An accepted architecture decision that materially affects several items
 /// (PRX-GRP-020, PRX-GRP-074 merging).
@@ -657,6 +689,37 @@ type RepositorySource =
       Path: string
       /// The ref to read; `None` reads the clone's `origin/HEAD`.
       Ref: string option }
+
+/// What the planner recommends for a qualifying group (PRX-GRP-130, 138):
+/// `Grouped` makes grouped execution the default; `Advisory` is the
+/// rollback, a configuration change only.
+[<RequireQualifiedAccess>]
+type GroupedDefault =
+    | Grouped
+    | Advisory
+
+/// `grouping.groupedExecution` (PRX-GRP-131, PRX-GRP-136).
+type GroupedExecutionConfiguration =
+    { Default: GroupedDefault
+      MinimumSize: int
+      MaximumSize: int
+      /// Fallback when a member's `context.compactions` reaches this.
+      CompactionLimit: int
+      /// Fallback when a member's `context.repeated_file_reads` exceeds this.
+      RepeatedReadLimit: int
+      /// Fallback when a member's elapsed time exceeds this factor of its
+      /// upper duration estimate.
+      ElapsedFactor: decimal }
+
+[<RequireQualifiedAccess>]
+module GroupedExecutionConfiguration =
+    let defaults =
+        { Default = GroupedDefault.Grouped
+          MinimumSize = 2
+          MaximumSize = 6
+          CompactionLimit = 1
+          RepeatedReadLimit = 25
+          ElapsedFactor = 1.5m }
 
 /// `grouping.crossRepository` (PRX-GRP-103, PRX-GRP-109).
 type CrossRepositoryConfiguration =
@@ -677,7 +740,8 @@ type GroupingConfiguration =
       Groups: DeclaredGroup list
       Architecture: DeclaredArchitecture list
       ExecutionRepositories: (string * string) list
-      CrossRepository: CrossRepositoryConfiguration }
+      CrossRepository: CrossRepositoryConfiguration
+      GroupedExecution: GroupedExecutionConfiguration }
 
 [<RequireQualifiedAccess>]
 module GroupingConfiguration =
@@ -689,7 +753,8 @@ module GroupingConfiguration =
           Groups = []
           Architecture = []
           ExecutionRepositories = []
-          CrossRepository = CrossRepositoryConfiguration.defaults }
+          CrossRepository = CrossRepositoryConfiguration.defaults
+          GroupedExecution = GroupedExecutionConfiguration.defaults }
 
 type PlannerConfiguration =
     { MaxConcurrency: int
@@ -730,6 +795,18 @@ module PlannerConfiguration =
           Conflicts = []
           Areas = []
           Grouping = GroupingConfiguration.defaults }
+
+/// One ended group execution, as the planner prices grouped work
+/// (PRX-GRP-155): its mode, how many members it began, the executions it
+/// covers, and its shared session total when recorded.
+type GroupedSample =
+    { GroupExecutionId: string
+      Mode: string
+      Members: int
+      ExecutionIds: string list
+      CostTotal: decimal option
+      Currency: string option
+      ActiveMs: int64 option }
 
 /// Everything a plan is computed from. Identical inputs produce identical
 /// plans (PRX-PLAN-002).
@@ -798,7 +875,9 @@ type PlanningInput =
       /// Provider capacity read through the planning port; empty when none
       /// was observed (unknown, not zero).
       Capacity: ProviderCapacity list
-      Configuration: PlannerConfiguration }
+      Configuration: PlannerConfiguration
+      /// Ended group executions (PRX-GRP-155); empty when none.
+      GroupSamples: GroupedSample list }
 
 [<RequireQualifiedAccess>]
 type FindingCode =
@@ -1035,7 +1114,13 @@ type ItemAnalysis =
       RemainingDuration: Estimate<int64>
       RemainingCost: Estimate<Money>
       CostEvidence: CostEvidenceKind
-      Provenance: Provenance list }
+      Provenance: Provenance list
+      /// Paths the item's unmerged checkpoint changed (Git), excluding the
+      /// shared Praxis state files.
+      ChangedPaths: string list
+      /// Historical merge-conflict hotspots (path, merges) the item touches
+      /// through its declared or changed paths.
+      ContestedPaths: (string * int) list }
 
 [<RequireQualifiedAccess>]
 type CollisionRisk =
@@ -1078,6 +1163,10 @@ type CollisionSignal =
     | PraxisStateFiles
     | DeclaredConflict of reason: string
     | InsufficientScopeEvidence of workItem: string
+    /// Both unmerged checkpoints changed this path.
+    | SharedChangedPath of path: string
+    /// Both items touch the directory of a historical merge-conflict hotspot.
+    | HistoricalConflict of evidence: string
 
 [<RequireQualifiedAccess>]
 module CollisionSignal =
@@ -1088,7 +1177,9 @@ module CollisionSignal =
         match signal with
         | CollisionSignal.SameBranch _
         | CollisionSignal.SharedDeclaredPath _
+        | CollisionSignal.SharedChangedPath _
         | CollisionSignal.DeclaredConflict _ -> CollisionRisk.Conflict
+        | CollisionSignal.HistoricalConflict _ -> CollisionRisk.Elevated
         | CollisionSignal.InsufficientScopeEvidence _ -> CollisionRisk.Unknown
         | CollisionSignal.SharedArea _
         | CollisionSignal.PraxisStateFiles -> CollisionRisk.Elevated
@@ -1101,6 +1192,8 @@ module CollisionSignal =
         | CollisionSignal.PraxisStateFiles -> "praxis-state-files"
         | CollisionSignal.DeclaredConflict _ -> "declared-conflict"
         | CollisionSignal.InsufficientScopeEvidence _ -> "insufficient-scope-evidence"
+        | CollisionSignal.SharedChangedPath _ -> "shared-changed-path"
+        | CollisionSignal.HistoricalConflict _ -> "historical-conflict"
 
     let detail signal =
         match signal with
@@ -1110,6 +1203,8 @@ module CollisionSignal =
         | CollisionSignal.PraxisStateFiles -> String.Join(", ", praxisStateFiles)
         | CollisionSignal.DeclaredConflict reason -> reason
         | CollisionSignal.InsufficientScopeEvidence workItem -> workItem
+        | CollisionSignal.SharedChangedPath path -> path
+        | CollisionSignal.HistoricalConflict evidence -> evidence
 
     let tryParse (code: string) (detail: string) =
         match code with
@@ -1119,6 +1214,8 @@ module CollisionSignal =
         | "praxis-state-files" -> Some CollisionSignal.PraxisStateFiles
         | "declared-conflict" -> Some(CollisionSignal.DeclaredConflict detail)
         | "insufficient-scope-evidence" -> Some(CollisionSignal.InsufficientScopeEvidence detail)
+        | "shared-changed-path" -> Some(CollisionSignal.SharedChangedPath detail)
+        | "historical-conflict" -> Some(CollisionSignal.HistoricalConflict detail)
         | _ -> None
 
     let describe signal =
@@ -1129,6 +1226,8 @@ module CollisionSignal =
         | CollisionSignal.PraxisStateFiles -> "both mutate shared Praxis state files (PRAXIS-STATE-MERGE-01)"
         | CollisionSignal.DeclaredConflict reason -> $"declared conflict: {reason}"
         | CollisionSignal.InsufficientScopeEvidence workItem -> $"{workItem} has no scope evidence, so overlap is unknown"
+        | CollisionSignal.SharedChangedPath path -> $"both unmerged checkpoints change {path}"
+        | CollisionSignal.HistoricalConflict evidence -> $"both touch a historical merge-conflict hotspot: {evidence}"
 
 type Collision =
     { Left: string

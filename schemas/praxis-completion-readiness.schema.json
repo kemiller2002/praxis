@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://repository-operating-system.local/schemas/praxis-completion-readiness.schema.json",
   "title": "praxis.completion-readiness/1",
-  "description": "Completion readiness (PRX-QUAL-020..023), recorded additively as `completionReadiness` on a `work.completed` event and on the completed work-context item when workProtocol.qualityEvidence applies, when the item's risk metadata carries completion obligations, or when obligation evidence is supplied; printed (outcome: refused) by a refused `work complete`. Praxis consumes Dokimos, Ordo, design-debt, verification-matrix and release-readiness evidence; it never recomputes their verdicts. Unavailable evidence is never a pass. Every consumed evidence file is recorded with the SHA-256 digest of the bytes decoded. The documents Praxis consumes are defined under $defs (designDebtDocument, verificationMatrixDocument, releaseReadinessDocument) together with the work-item risk member (workRisk).",
+  "description": "Completion readiness (PRX-QUAL-020..023), recorded additively as `completionReadiness` on a `work.completed` event and on the completed work-context item when workProtocol.qualityEvidence applies, when the item's risk metadata carries completion obligations, or when obligation evidence is supplied; printed (outcome: refused) by a refused `work complete`. Praxis consumes Dokimos, Ordo, design-debt, verification-matrix and release-readiness evidence; it never recomputes their verdicts. Unavailable evidence is never a pass. Every consumed evidence file is recorded with the SHA-256 digest of the bytes decoded. The documents Praxis consumes are defined under $defs (designDebtDocument, verificationMatrixDocument, releaseReadinessDocument) together with the work-item risk member (workRisk). A member of a grouped-mode group execution is always judged for the `group-verified` facet (PRX-GRP-135).",
   "type": "object",
   "required": [
     "schema",
@@ -87,7 +87,8 @@
         },
         "verificationMatrixSatisfied": {
           "$ref": "#/$defs/facet"
-        }
+        },
+        "groupVerified": {"$ref": "#/$defs/facet", "description": "PRX-GRP-133..135: required only for a member of a grouped-mode group execution (judged whatever the policy); otherwise not-required. Absent in records written before it existed."}
       },
       "additionalProperties": false
     },

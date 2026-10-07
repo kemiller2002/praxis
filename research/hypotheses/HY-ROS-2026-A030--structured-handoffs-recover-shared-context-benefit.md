@@ -21,6 +21,16 @@ superseded_by: []
 tags: [claude, agents, context, handoff, continuity, experiment, planning]
 provenance:
   contributions:
+    EXE-20261007T185521101Z-d60238bc:
+      operations: [origin-unrecorded]
+      at: 2026-10-07T19:02:04.245Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Added by a direct push to main (cd97bdde..94258e4f, 2026-10-07) with no Praxis execution; its creation was never recorded (DF-ROS-2026-A055)"
     EXE-20261007T162653169Z-f15a70b7:
       operations: [modified]
       at: 2026-10-07T18:47:26.586Z
@@ -31,7 +41,7 @@ provenance:
         provider: anthropic
         model: unknown
         runtime: claude-code
-      reason: "Recorded that the first test (EX-ROS-2026-A024) is blocked; assessment unchanged"
+      reason: "Recorded the first test, EX-ROS-2026-A024: blocked, then completed; not supported (EV-ROS-2026-A075)"
       evidence: [EV-ROS-2026-A074, EV-ROS-2026-A075]
 ---
 

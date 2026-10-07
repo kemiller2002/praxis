@@ -15,6 +15,8 @@ module FindingContract =
             "Reimplement this behaviour in F#/.NET and delete the file, or record an approved DF- decision and a narrow ros.json implementationPolicy exception (DF-ROS-2026-A049)."
         elif finding.Field.StartsWith("implementationPolicy", System.StringComparison.Ordinal) then
             "Correct ros.json implementationPolicy: each exception needs an exact path (or directory ending in '/') and the accepted DF- decision approving it."
+        elif finding.Field = Praxis.Domain.Work.BacklogQueueValidation.statusAgreementField then
+            "If the backlog row is a different obligation that reused the ID, rename the row with './praxis work reidentify --id ID --new-id NEW-ID --reason TEXT --occurred-at TIMESTAMP'; otherwise bring both records to the same state with the work lifecycle commands. Never hand-edit .ros state."
         elif finding.Field = "work_items" then
             "Run './praxis work begin --id WORK-ID --occurred-at TIMESTAMP', perform the change, then complete it with configured evidence."
         elif finding.Message.Contains("provenance record") then

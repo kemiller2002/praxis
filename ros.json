@@ -31,12 +31,32 @@
       "complete": "complete"
     },
     "completionEvidence": {
-      "default": ["implementation", "tests"],
-      "research": ["research-record"],
+      "default": [
+        "implementation",
+        "tests"
+      ],
+      "research": [
+        "research-record"
+      ],
       "mechanical": []
     },
-    "meaningfulPaths": ["**"],
-    "ignoredPaths": [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", ".ros/telemetry/**", ".ros/executions/**", ".ros/locks/**", ".ros/remote/**", ".praxis-inbox/**", "registries/**", ".echelon/**"],
+    "meaningfulPaths": [
+      "**"
+    ],
+    "ignoredPaths": [
+      ".git/**",
+      ".ros/context/**",
+      ".ros/events/**",
+      ".ros/work/**",
+      ".ros/telemetry/**",
+      ".ros/executions/**",
+      ".ros/locks/**",
+      ".ros/remote/**",
+      ".ros/planning/**",
+      ".praxis-inbox/**",
+      "registries/**",
+      ".echelon/**"
+    ],
     "continuity": {
       "requireDurableCheckpoint": true
     },
@@ -50,13 +70,109 @@
   "implementationPolicy": {
     "version": "1.0.0",
     "prohibitNodeArtifacts": true,
-    "exceptions": []
+    "prohibitPythonAutomation": true,
+    "exceptions": [
+      {
+        "path": "research/experiments/EX-ROS-2026-A021-harness/session_metrics.py",
+        "decision": "DF-ROS-2026-A054"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A021-evaluation-kit/prepare-blind-bundle.sh",
+        "decision": "DF-ROS-2026-A054"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A022-target-gate/inventory.py",
+        "decision": "DF-ROS-2026-A054"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A022-target-gate/signal/signal_structure.py",
+        "decision": "DF-ROS-2026-A054"
+      },
+      {
+        "path": "scripts/praxis-bootstrap.sh",
+        "decision": "DF-ROS-2026-A054"
+      },
+      {
+        "path": "scripts/praxis-remote-persist.sh",
+        "decision": "DF-ROS-2026-A054"
+      },
+      {
+        "path": "scripts/praxis-remote-inbox.sh",
+        "decision": "DF-ROS-2026-A054"
+      },
+      {
+        "path": ".github/actions/praxis-remote/action.yml",
+        "decision": "DF-ROS-2026-A054"
+      },
+      {
+        "path": ".github/workflows/praxis-remote.yml",
+        "decision": "DF-ROS-2026-A054"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-harness/analysis.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-harness/decode_telemetry.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-harness/make_manifest.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-harness/make_prompts.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-harness/prepare_blind.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-harness/session_telemetry.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-harness/validate_handoff.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-harness/verify_amendment_1.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-harness/verify_amendment_2.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-harness/run_checks.sh",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-run/assemble_analysis.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-run/ledger.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-run/collect.sh",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-run/check_handoff.sh",
+        "decision": "DF-ROS-2026-A056"
+      }
+    ]
   },
   "provenance": {
     "version": "1.0.0",
     "enforce": true,
     "requiredFrom": "2026-09-25",
-    "requireOriginator": ["RQ"]
+    "requireOriginator": [
+      "RQ"
+    ]
   },
   "telemetry": {
     "version": "1.0.0",
@@ -71,6 +187,10 @@
     "maxCapabilityHistoryEntries": 64
   },
   "remote": {
-    "capabilities": ["read", "mutate", "complete"]
+    "capabilities": [
+      "read",
+      "mutate",
+      "complete"
+    ]
   }
 }

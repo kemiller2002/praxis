@@ -98,3 +98,12 @@ module ExecutionContracts =
                         $"{{\"schema\":\"ordo.execution-contract/1\",\"role\":{quote (roleName.Trim().ToLowerInvariant())},\"boundary\":{{\"scopes\":{array scopes},\"projections\":[{projectionJson}],\"evaluatorReferences\":[]}},\"evaluator\":[{evaluatorJson}],\"humanOnly\":{array humanOnly}}}"
 
                     ofOrdo "operator-flags" document))
+
+    /// The governing contract for an execution start: the contract file when
+    /// one is named (refusing any flag a contract supplies), else the
+    /// operator's flags assembled into the same Ordo contract.
+    let resolve (root: string) (contractFile: string option) (suppliedFlags: string list) role scopes allows evaluators humanOnly =
+        match contractFile, suppliedFlags |> List.filter (fun flag -> List.contains flag contractFlags) with
+        | Some path, [] -> fromFile root path
+        | Some _, flags -> Error $"""--contract supplies the role, boundary, evaluator and human-only transitions; remove {String.Join(", ", flags)}"""
+        | None, _ -> fromFlags role scopes allows evaluators humanOnly

@@ -148,8 +148,9 @@ module FileCompletionReadiness =
         else
             None
 
-    /// Gate for explicitly typed items (the envelope path already holds them).
-    let evaluateItems (root: string) (items: (string * string) list) (provided: WorkEvidence list) : CompletionGateOutcome =
+    /// Gate for explicitly typed items (the envelope path already holds
+    /// them). `group` gives a grouped-mode member's `group-verified` facet.
+    let evaluateItems (root: string) (items: (string * string) list) (provided: WorkEvidence list) (group: string -> FacetStatus option) : CompletionGateOutcome =
         match readRisks root with
         | Error reason -> CompletionGateOutcome.PolicyInvalid reason
         | Ok risks ->
@@ -157,18 +158,49 @@ module FileCompletionReadiness =
                 { Risk = fun id -> risks |> Map.tryFind id
                   OpenItems = openItems root (readContext root) }
 
-            CompletionReadinessOperations.gate (sources root) facts (readPolicy root) items provided
+            CompletionReadinessOperations.gate (sources root) facts (readPolicy root) items provided group
+
+    /// For a path without the native group gates (the runtime-free envelope):
+    /// every item begun in grouped mode by any group execution is refused,
+    /// because its gates cannot be checked there (fail closed, PRX-GRP-135).
+    let groupedMembersUnverifiable (root: string) : string -> FacetStatus option =
+        let path = Path.Combine(root, ".ros", "work", "groups.json")
+
+        let grouped =
+            try
+                if File.Exists path then
+                    match WorkGroupJson.readStore (File.ReadAllText path) with
+                    | Ok groups ->
+                        groups
+                        |> List.collect (fun group -> group.Executions)
+                        |> List.collect (fun execution -> execution.Members)
+                        |> List.filter (fun begun -> begun.Mode = ExecutionMode.Grouped)
+                        |> List.map (fun begun -> begun.WorkItemId)
+                        |> Set.ofList
+                        |> Ok
+                    | Error message -> Error message
+                else
+                    Ok Set.empty
+            with :? IOException as error ->
+                Error error.Message
+
+        fun id ->
+            match grouped with
+            | Ok members when members.Contains id ->
+                Some(FacetStatus.Unavailable [ $"{id} executes in grouped mode; its group gates are checked only by the native `work complete`" ])
+            | Ok _ -> None
+            | Error message -> Some(FacetStatus.Unavailable [ $"the group store cannot be read, so the group gates cannot be judged: {message}" ])
 
     /// Gate for `work complete`: item types come from the work context. Only
     /// active items can complete; any other id is left to the transition
     /// planner to reject with its usual message.
-    let evaluate (root: string) (ids: string list) (provided: WorkEvidence list) : CompletionGateOutcome =
+    let evaluate (root: string) (ids: string list) (provided: WorkEvidence list) (group: string -> FacetStatus option) : CompletionGateOutcome =
         let types =
             match readContext root with
             | Some context -> context.WorkItems |> List.filter (fun item -> item.SemanticState = LiveWorkState.Active) |> List.map (fun item -> item.Id, item.WorkType) |> Map.ofList
             | None -> Map.empty
 
-        evaluateItems root (ids |> List.choose (fun id -> types |> Map.tryFind id |> Option.map (fun workType -> id, workType))) provided
+        evaluateItems root (ids |> List.choose (fun id -> types |> Map.tryFind id |> Option.map (fun workType -> id, workType))) provided group
 
     /// The additive per-item record written onto the completion event and the
     /// completed work item. Empty when the gate did not apply.

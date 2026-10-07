@@ -50,6 +50,7 @@
     <Compile Include="Telemetry/ChangeSummary.fs" />
     <Compile Include="Telemetry/TelemetryAdapters.fs" />
     <Compile Include="Telemetry/SessionTranscript.fs" />
+    <Compile Include="Telemetry/ContextMetrics.fs" />
     <Compile Include="Telemetry/Summary.fs" />
     <Compile Include="Telemetry/Tutela.fs" />
     <Compile Include="Telemetry/TutelaTrend.fs" />
@@ -67,6 +68,7 @@
     <Compile Include="Remote/Identity.fs" />
     <Compile Include="Remote/Execution.fs" />
     <Compile Include="Work/Reconciliation.fs" />
+    <Compile Include="Work/InputInbox.fs" />
     <Compile Include="Ordo/Model.fs" />
     <Compile Include="Lifecycle/Model.fs" />
     <Compile Include="Lifecycle/ConsumerLinks.fs" />
@@ -86,9 +88,14 @@
     <Compile Include="Planning/Scheduling.fs" />
     <Compile Include="Planning/Comparison.fs" />
     <Compile Include="Planning/Replay.fs" />
+    <Compile Include="Planning/Calibration.fs" />
     <Compile Include="Planning/Planner.fs" />
+    <Compile Include="Planning/Pricing.fs" />
     <Compile Include="Planning/Grouping.fs" />
     <Compile Include="Work/WorkGroups.fs" />
+    <Compile Include="Work/GroupGates.fs" />
+    <Compile Include="Work/GroupExecutions.fs" />
+    <Compile Include="Work/GroupCost.fs" />
     <Compile Include="Foundations/LimenPin.fs" />
     <Compile Include="Foundations/FormaPin.fs" />
   </ItemGroup>

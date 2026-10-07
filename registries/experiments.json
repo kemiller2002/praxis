@@ -287,7 +287,8 @@
       "EV-ROS-2026-A070"
     ],
     "outputs": [
-      "EV-ROS-2026-A074"
+      "EV-ROS-2026-A074",
+      "EV-ROS-2026-A075"
     ],
     "path": "research/experiments/EX-ROS-2026-A024--context-continuity-and-externalized-handoff.md",
     "provenance": {
@@ -302,12 +303,28 @@
           },
           "at": "2026-10-07T18:47:25.856Z",
           "evidence": [
-            "EV-ROS-2026-A074"
+            "EV-ROS-2026-A074",
+            "EV-ROS-2026-A075"
           ],
+          "last": "2026-10-07T22:36:59.831Z",
           "operations": [
             "modified"
           ],
-          "reason": "Executed the frozen A024 protocol until the launcher blocker; recorded status, results and observed threats without editing the preregistered text"
+          "reason": "Executed the frozen A024 protocol; recorded the blocker, amendment A1, results, analysis and observed threats without editing the preregistered text"
+        },
+        "EXE-20261007T185521101Z-d60238bc": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T19:02:03.632Z",
+          "operations": [
+            "origin-unrecorded"
+          ],
+          "reason": "Added by a direct push to main (cd97bdde..94258e4f, 2026-10-07) with no Praxis execution; its creation was never recorded (DF-ROS-2026-A055)"
         }
       }
     },
@@ -321,7 +338,7 @@
     ],
     "related_theories": [],
     "research_area": "repository-operating-system",
-    "status": "active",
+    "status": "completed",
     "tags": [
       "claude",
       "agents",

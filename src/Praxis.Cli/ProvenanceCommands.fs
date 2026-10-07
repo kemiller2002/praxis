@@ -248,7 +248,7 @@ module ProvenanceCommands =
             eprintfn "ERROR provenance record requires --path PATH or --id ARTIFACT-ID"
             2
         | _, None ->
-            eprintfn "ERROR provenance record requires --operation {created|modified|reviewed|approved|superseded|migrated|x-...}"
+            eprintfn "ERROR provenance record requires --operation {created|modified|reviewed|approved|superseded|migrated|origin-unrecorded|x-...}"
             2
         | _ when not (Contribution.isTimestamp occurredAt) ->
             eprintfn "ERROR --occurred-at must be an ISO-8601 UTC timestamp (yyyy-MM-ddTHH:mm:ss[.fff]Z)"

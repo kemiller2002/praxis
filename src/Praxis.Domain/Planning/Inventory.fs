@@ -160,7 +160,15 @@ module Inventory =
                   observed observations (function ObservationKind.ContinuousIntegrationPassed value -> about value | _ -> false) with
             | Some observation, _ -> result DependencyStatus.Unsatisfied $"CI failed ({observation.Provenance.Reference})"
             | None, Some observation -> result DependencyStatus.Satisfied $"CI passed ({observation.Provenance.Reference})"
-            | None, None -> result DependencyStatus.Undetermined "no CI evidence observed"
+            | None, None ->
+                match observed observations (function ObservationKind.ContinuousIntegrationPending value -> about value | _ -> false),
+                      observations |> List.tryPick (fun observation ->
+                          match observation.Kind with
+                          | ObservationKind.ContinuousIntegrationUnavailable(value, reason) when about value -> Some(observation, reason)
+                          | _ -> None) with
+                | Some observation, _ -> result DependencyStatus.Undetermined $"CI still running ({observation.Provenance.Reference})"
+                | None, Some(observation, reason) -> result DependencyStatus.Undetermined $"CI status unavailable: {reason} ({observation.Provenance.Reference})"
+                | None, None -> result DependencyStatus.Undetermined "no CI evidence observed"
         | DependencyTarget.HumanAction _ -> result DependencyStatus.Undetermined "human action cannot be observed by the planner"
 
     // ---- classification -----------------------------------------------------
@@ -293,6 +301,30 @@ module Inventory =
           Evidence = evidence }
 
     /// Evidence that recorded state is behind reality. Never rewrites state.
+    let private directoryOf (path: string) =
+        let normalized = path.Replace('\\', '/').TrimEnd('/')
+        match normalized.LastIndexOf '/' with
+        | -1 -> ""
+        | index -> normalized.Substring(0, index)
+
+    let private touches (scope: string) (contested: string) =
+        let scope, contested = scope.Replace('\\', '/').TrimEnd('/'), contested.Replace('\\', '/').TrimEnd('/')
+
+        scope = contested
+        || contested.StartsWith(scope + "/", StringComparison.Ordinal)
+        || directoryOf scope = directoryOf contested
+
+    /// PRX-PLAN-081: the historical merge-conflict hotspots an item's scope
+    /// paths touch, at file or directory level, with their merge counts.
+    let contestedPaths (observations: Observation list) (scope: string list) =
+        observations
+        |> List.choose (fun observation ->
+            match observation.Kind with
+            | ObservationKind.ContestedPath(path, merges) when scope |> List.exists (fun candidate -> touches candidate path) -> Some(path, merges)
+            | _ -> None)
+        |> List.distinct
+        |> List.sortWith (fun (left, _) (right, _) -> String.CompareOrdinal(left, right))
+
     let staleness (id: string) (lifecycle: string) (checkpoint: CheckpointSummary option) (observations: Observation list) (dependencies: ResolvedDependency list) : PlanningFinding list =
         let merged =
             match lifecycle, checkpoint with
@@ -454,6 +486,16 @@ module Inventory =
             let firstExecution =
                 input.Executions |> List.filter (fun execution -> execution.WorkItemId = id) |> List.map (fun execution -> Some execution.StartedAt) |> earliest
 
+            let changedPaths =
+                input.Observations
+                |> List.tryPick (fun observation ->
+                    match observation.Kind with
+                    | ObservationKind.ChangedPaths(workItem, paths) when workItem = id -> Some paths
+                    | _ -> None)
+                |> Option.defaultValue []
+
+            let declared = input.Configuration.Areas |> List.tryFind (fun (item, _) -> item = id) |> Option.map snd |> Option.defaultValue []
+
             let item =
                 { Id = id
                   Title = queueItem |> Option.map (fun item -> item.Title) |> Option.defaultValue id
@@ -474,6 +516,8 @@ module Inventory =
                   RemainingDuration = if PlanningWorkState.isTerminal planningState then Estimate.unknown else remaining input.Configuration.RemainingFractions basis full
                   RemainingCost = if PlanningWorkState.isTerminal planningState then Estimate.unknown else remainingCost input.Configuration.RemainingFractions basis costWhole
                   CostEvidence = costEvidenceFor history input.Executions id
+                  ChangedPaths = changedPaths
+                  ContestedPaths = contestedPaths input.Observations (declared @ changedPaths)
                   Provenance =
                     [ if queueItem.IsSome then yield Provenance.create EvidenceSource.BacklogQueue $".ros/work/queue.json#{id}"
                       if liveItem.IsSome then yield Provenance.create EvidenceSource.LiveContext $".ros/context/current.json#{id}"

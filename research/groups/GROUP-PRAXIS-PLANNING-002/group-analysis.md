@@ -54,4 +54,4 @@ MISC-02 and MISC-03 (inputs), then MISC-04 (replay cost), then MISC-06
 
 ## 5. Verification pass
 
-Recorded per member before completion.
+Recorded per member and criterion in [`group-verification.json`](group-verification.json).

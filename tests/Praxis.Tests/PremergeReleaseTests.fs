@@ -162,7 +162,8 @@ module PremergeReleaseTests =
                   contains "git add release.json .ros" bump "the bump commits release.json and the Praxis state"
                   let enable = readRepositoryFile "scripts/praxis-remote-enable.sh"
                   let verify = enable.IndexOf("gh attestation verify")
-                  let pin = enable.IndexOf("toolchain[\"praxis\"] = version")
+                  // The pin is written by the F# tooling (PRAXIS-MISC-08, RQ-ROS-2026-A024).
+                  let pin = enable.IndexOf("tooling remote-enable \"$VERSION\"")
                   Assert.isTrue (verify > 0 && pin > verify) "the pin is written only after the attestation verifies"
                   contains "quality/release-compatibility.json" enable "the pinned release's compatibility is recorded" }
 

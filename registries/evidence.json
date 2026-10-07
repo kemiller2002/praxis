@@ -1523,6 +1523,20 @@
             "migrated"
           ],
           "reason": "PRAXIS-PLAN-07: authored by the repository owner in commit 3aef2bd without a provenance entry; this agent records the migration only and did not create or change the content"
+        },
+        "EXE-20261007T185521101Z-d60238bc": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T19:02:04.870Z",
+          "operations": [
+            "origin-unrecorded"
+          ],
+          "reason": "Authored outside a Praxis execution (commit 3aef2bd); its creation was never recorded (DF-ROS-2026-A055)"
         }
       }
     },
@@ -1780,6 +1794,20 @@
             "migrated"
           ],
           "reason": "PRAXIS-PLAN-08: renumbered from EV-ROS-2026-A060..A062 on experiment/a021-evaluation-kit, which collided with main's EV-ROS-2026-A060; content unchanged apart from the IDs"
+        },
+        "EXE-20261007T185521101Z-d60238bc": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T19:02:05.523Z",
+          "operations": [
+            "origin-unrecorded"
+          ],
+          "reason": "Written by a blinded evaluator session that had no Praxis execution (originally EV-ROS-2026-A062, commit f3bad01c); its creation was never recorded (DF-ROS-2026-A055)"
         }
       }
     },
@@ -2166,8 +2194,10 @@
             "runtime": "claude-code"
           },
           "at": "2026-10-07T18:47:24.444Z",
+          "last": "2026-10-07T22:37:02.532Z",
           "operations": [
-            "created"
+            "created",
+            "modified"
           ],
           "reason": "Recorded the EX-ROS-2026-A024 partial execution and the platform launcher blocker without changing the frozen protocol"
         }
@@ -2195,6 +2225,68 @@
       "orchestration"
     ],
     "title": "EX-ROS-2026-A024 partial execution and platform launcher blocker",
+    "updated": "2026-10-07",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "low",
+    "contradicts": [
+      "HY-ROS-2026-A030"
+    ],
+    "created": "2026-10-07",
+    "derived_from": [
+      "EX-ROS-2026-A024",
+      "EV-ROS-2026-A074"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A075",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A075--a024-context-continuity-results.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261007T162653169Z-f15a70b7": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T22:36:58.379Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Recorded the EX-ROS-2026-A024 results under the frozen analysis"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A024",
+      "HY-ROS-2026-A030",
+      "HY-ROS-2026-A028",
+      "EV-ROS-2026-A074",
+      "EV-ROS-2026-A070",
+      "EV-ROS-2026-A064",
+      "research/experiments/EX-ROS-2026-A024-run/analysis/summary.txt",
+      "research/experiments/EX-ROS-2026-A024-run/evaluation/report.txt"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "supports": [
+      "HY-ROS-2026-A028"
+    ],
+    "tags": [
+      "claude",
+      "agents",
+      "context",
+      "handoff",
+      "continuity",
+      "experiment",
+      "blind-evaluation"
+    ],
+    "title": "EX-ROS-2026-A024 results — continuous context, code-only resets and structured handoffs",
     "updated": "2026-10-07",
     "version": "1.0.0"
   }

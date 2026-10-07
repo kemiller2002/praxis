@@ -165,6 +165,8 @@ module PlanningJson =
               "remainingDuration", duration value.RemainingDuration
               "remainingCost", moneyEstimate value.RemainingCost
               "costEvidence", text (CostEvidenceKind.code value.CostEvidence)
+              "changedPaths", texts value.ChangedPaths
+              "contestedPaths", value.ContestedPaths |> List.map (fun (path, merges) -> record [ "path", text path; "merges", integer merges ]) |> array
               "provenance", value.Provenance |> List.map provenance |> array ]
 
     let private collision (value: Collision) =
@@ -454,7 +456,38 @@ module PlanningJson =
               "estimateBasis", texts value.EstimateBasis
               "findings", value.Findings |> List.map finding |> array ]
 
-    let replay (value: ReplayReport) : JsonNode =
+    let calibrationTrend (trend: CalibrationTrend) : JsonNode =
+        record
+            [ "entries", integer trend.Entries
+              "firstCoverage", optionalNumber trend.FirstCoverage
+              "latestCoverage", optionalNumber trend.LatestCoverage
+              "firstMedianAbsoluteErrorMs", optionalLong trend.FirstMedianAbsoluteErrorMs
+              "latestMedianAbsoluteErrorMs", optionalLong trend.LatestMedianAbsoluteErrorMs
+              "statement", text trend.Statement ]
+
+    let private costAccuracy (value: CostReplay) : JsonNode =
+        record
+            [ "observed", integer value.Observed
+              "predicted", integer value.Predicted
+              "withinRange", integer value.WithinRange
+              "medianAbsoluteError", optionalNumber value.MedianAbsoluteError
+              "currency", optionalText value.Currency
+              "statement", text value.Statement
+              "predictions",
+              value.Predictions
+              |> List.map (fun prediction ->
+                  record
+                      [ "executionId", text prediction.ExecutionId
+                        "workItem", text prediction.WorkItemId
+                        "trainingSamples", integer prediction.TrainingSamples
+                        "predicted", moneyEstimate prediction.Predicted
+                        "actual", money prediction.Actual
+                        "withinRange", prediction.WithinRange |> Option.map boolean |> Option.toObj
+                        "absoluteError", optionalNumber prediction.AbsoluteError ])
+              |> array ]
+
+    /// `recorded`: Some changed when `--record` ran, None otherwise.
+    let replay (value: ReplayReport) (trend: CalibrationTrend) (recorded: bool option) : JsonNode =
         record
             [ "schema", text schema
               "kind", text "replay"
@@ -489,6 +522,9 @@ module PlanningJson =
                     "agreement", optionalNumber value.Ordering.Agreement
                     "statement", text value.Ordering.Statement ]
               "cost", costSummary value.Cost
+              "costAccuracy", costAccuracy value.CostAccuracy
+              "calibration",
+              record [ "recorded", recorded |> Option.map boolean |> Option.toObj; "trend", calibrationTrend trend ]
               "predictions",
               value.Predictions
               |> List.map (fun prediction ->
@@ -525,7 +561,57 @@ module PlanningJson =
                         "lifecycleThen", text outcome.LifecycleThen
                         "lifecycleNow", text outcome.LifecycleNow
                         "outcome", text outcome.Outcome ])
-              |> array ]
+              |> array
+              "followUp",
+              record
+                  [ "recommended", integer value.FollowUp.Recommended
+                    "started", integer value.FollowUp.Started
+                    "completed", integer value.FollowUp.Completed
+                    "orderedPairs", integer value.FollowUp.OrderedPairs
+                    "pairsInRecommendedOrder", integer value.FollowUp.PairsInRecommendedOrder
+                    "durations",
+                    value.FollowUp.Durations
+                    |> List.map (fun entry ->
+                        record
+                            [ "workItem", text entry.WorkItem
+                              "predicted", duration entry.Predicted
+                              "observedMs", optionalLong entry.ObservedMs
+                              "withinRange", entry.WithinRange |> Option.map boolean |> Option.toObj ])
+                    |> array
+                    "statement", text value.FollowUp.Statement ] ]
+
+    // ---- calibration history (PRX-PLAN-170) ------------------------------------
+
+    [<Literal>]
+    let CalibrationSchema = "praxis.plan-calibration/1"
+
+    /// One history line (JSON Lines, compact).
+    let calibrationLine (entry: CalibrationEntry) : string =
+        (record
+            [ "schema", text CalibrationSchema
+              "recordedAt", text entry.RecordedAt
+              "plannerVersion", text entry.PlannerVersion
+              "workStateFingerprint", text entry.WorkStateFingerprint
+              "executions", integer entry.Executions
+              "predicted", integer entry.Predicted
+              "withinRange", integer entry.WithinRange
+              "coverage", optionalNumber entry.Coverage
+              "medianAbsoluteErrorMs", optionalLong entry.MedianAbsoluteErrorMs
+              "medianRelativeError", optionalNumber entry.MedianRelativeError
+              "byClass",
+              entry.ByClass
+              |> List.map (fun accuracy ->
+                  record
+                      [ "taskClass", text accuracy.TaskClass
+                        "predictions", integer accuracy.Predictions
+                        "withinRange", integer accuracy.WithinRange
+                        "medianAbsoluteErrorMs", optionalLong accuracy.MedianAbsoluteErrorMs ])
+              |> array
+              "costPredicted", integer entry.CostPredicted
+              "costWithinRange", integer entry.CostWithinRange
+              "costMedianAbsoluteError", optionalNumber entry.CostMedianAbsoluteError
+              "costCurrency", optionalText entry.CostCurrency ])
+            .ToJsonString()
 
     // ---- parsing (round trip of the plan document) ------------------------------
 
@@ -761,7 +847,24 @@ module PlanningJson =
           SharedContext = optionalTexts "sharedContext"
           ExecutionRepository = readOptionalText group "executionRepository"
           CrossRepository = if isNull (field group "crossRepository") then false else readBool group "crossRepository"
-          ArchitectureNotes = optionalTexts "architectureNotes" }
+          ArchitectureNotes = optionalTexts "architectureNotes"
+          IndependentReason =
+            match readOptionalText group "executionMode" with
+            | None
+            | Some "grouped" -> None
+            | Some "independent" ->
+                match readOptionalText group "executionModeReason" with
+                | Some reason when not (String.IsNullOrWhiteSpace reason) -> Some reason
+                | _ -> raise (Malformed "executionMode independent needs a non-empty executionModeReason (PRX-GRP-132)")
+            | Some other -> raise (Malformed $"executionMode '{other}' is not grouped or independent")
+          IndependentMembers =
+            if isNull (field group "independentMembers") then []
+            else
+                objects group "independentMembers"
+                |> List.map (fun entry ->
+                    let reason = readText entry "reason"
+                    if String.IsNullOrWhiteSpace reason then raise (Malformed "an independent member needs a non-empty reason (PRX-GRP-132)")
+                    readText entry "workItem", reason) }
 
     /// Parses one declared group from its `grouping.groups` object form.
     let parseDeclaredGroup (node: JsonObject) : Result<DeclaredGroup, string> =
@@ -858,7 +961,24 @@ module PlanningJson =
                                           Path = readText source "path"
                                           Ref = readOptionalText source "ref" })
                                     |> Seq.toList
-                                    |> List.sortWith (fun left right -> String.CompareOrdinal(left.Repository, right.Repository)) } }
+                                    |> List.sortWith (fun left right -> String.CompareOrdinal(left.Repository, right.Repository)) }
+                      GroupedExecution =
+                        match optionalObj node "groupedExecution" with
+                        | None -> fallback.GroupedExecution
+                        | Some grouped ->
+                            let defaults = fallback.GroupedExecution
+
+                            { Default =
+                                match readOptionalText grouped "default" with
+                                | None -> defaults.Default
+                                | Some "grouped" -> GroupedDefault.Grouped
+                                | Some "advisory" -> GroupedDefault.Advisory
+                                | Some other -> raise (Malformed $"groupedExecution.default '{other}' is not grouped or advisory")
+                              MinimumSize = readNumber<int> grouped "minimumSize" |> Option.defaultValue defaults.MinimumSize
+                              MaximumSize = readNumber<int> grouped "maximumSize" |> Option.defaultValue defaults.MaximumSize
+                              CompactionLimit = readNumber<int> grouped "compactionLimit" |> Option.defaultValue defaults.CompactionLimit
+                              RepeatedReadLimit = readNumber<int> grouped "repeatedReadLimit" |> Option.defaultValue defaults.RepeatedReadLimit
+                              ElapsedFactor = readNumber<decimal> grouped "elapsedFactor" |> Option.defaultValue defaults.ElapsedFactor } }
 
             Ok
                 { MaxConcurrency = orDefault (fun () -> readNumber<int> root "maxConcurrency") defaults.MaxConcurrency
@@ -886,6 +1006,41 @@ module PlanningJson =
         | Malformed message -> Error $"malformed planner configuration: {message}"
         | :? JsonException as error -> Error $"malformed planner configuration: {error.Message}"
 
+    let parseCalibration (origin: string) (lines: string list) : Result<CalibrationEntry list, string> =
+        try
+            lines
+            |> List.mapi (fun index line -> index + 1, line)
+            |> List.filter (fun (_, line) -> line.Trim().Length > 0)
+            |> List.map (fun (number, line) ->
+                let node = JsonNode.Parse line |> asObject $"{origin}:{number}"
+
+                if readText node "schema" <> CalibrationSchema then fail $"{origin}:{number} is not {CalibrationSchema}"
+
+                { RecordedAt = readText node "recordedAt"
+                  PlannerVersion = readText node "plannerVersion"
+                  WorkStateFingerprint = readText node "workStateFingerprint"
+                  Executions = readRequired<int> node "executions"
+                  Predicted = readRequired<int> node "predicted"
+                  WithinRange = readRequired<int> node "withinRange"
+                  Coverage = readNumber<decimal> node "coverage"
+                  MedianAbsoluteErrorMs = readNumber<int64> node "medianAbsoluteErrorMs"
+                  MedianRelativeError = readNumber<decimal> node "medianRelativeError"
+                  ByClass =
+                    objects node "byClass"
+                    |> List.map (fun item ->
+                        { TaskClass = readText item "taskClass"
+                          Predictions = readRequired<int> item "predictions"
+                          WithinRange = readRequired<int> item "withinRange"
+                          MedianAbsoluteErrorMs = readNumber<int64> item "medianAbsoluteErrorMs" })
+                  CostPredicted = readRequired<int> node "costPredicted"
+                  CostWithinRange = readRequired<int> node "costWithinRange"
+                  CostMedianAbsoluteError = readNumber<decimal> node "costMedianAbsoluteError"
+                  CostCurrency = readOptionalText node "costCurrency" })
+            |> Ok
+        with
+        | Malformed message -> Error $"malformed calibration history: {message}"
+        | :? JsonException as error -> Error $"malformed calibration history: {error.Message}"
+
     /// External evidence supplied by a caller that can see CI or GitHub
     /// (an agent or a workflow). The planner itself never contacts either.
     let parseObservations (origin: string) (json: string) : Result<Observation list, string> =
@@ -910,6 +1065,8 @@ module PlanningJson =
                     | "commit-merged" -> ObservationKind.CommitMerged(readText node "commit", readOptionalText node "into" |> Option.defaultValue "default branch")
                     | "ci-passed" -> ObservationKind.ContinuousIntegrationPassed(readText node "subject")
                     | "ci-failed" -> ObservationKind.ContinuousIntegrationFailed(readText node "subject")
+                    | "ci-pending" -> ObservationKind.ContinuousIntegrationPending(readText node "subject")
+                    | "ci-unavailable" -> ObservationKind.ContinuousIntegrationUnavailable(readText node "subject", readOptionalText node "reason" |> Option.defaultValue "not stated")
                     | "release-exists" -> ObservationKind.ReleaseExists(readText node "tag")
                     | "context-pressure" ->
                         let indicators =
@@ -1053,7 +1210,35 @@ module PlanningJson =
                     "notRunnable", integer value.Progress.NotRunnable
                     "statement", text value.Progress.Statement ]
               "architectureNotes", texts value.ArchitectureNotes
-              "notes", value.Notes |> List.map groupNote |> array ]
+              "notes", value.Notes |> List.map groupNote |> array
+              "groupedExecution",
+              record
+                  [ "qualifies", boolean value.GroupedExecution.Qualifies
+                    "failures", texts value.GroupedExecution.Failures
+                    "default", text value.GroupedExecution.Default
+                    "recommended", text value.GroupedExecution.Recommended
+                    "executeGroupDefault", text value.GroupedExecution.ExecuteGroupDefault
+                    "optOut", (value.GroupedExecution.OptOut |> Option.map text |> Option.toObj)
+                    "independentMembers",
+                    value.GroupedExecution.IndependentMembers
+                    |> List.map (fun (memberId, reason) -> record [ "workItem", text memberId; "reason", text reason ])
+                    |> array
+                    "statement", text value.GroupedExecution.Statement ]
+              "pricing",
+              (let arm (price: ArmPrice) =
+                  record
+                      [ "samples", integer price.Samples
+                        "costSamples", integer price.CostSamples
+                        "costPerMember", (price.CostPerMember |> Option.map (fun amount -> JsonValue.Create amount :> JsonNode) |> Option.toObj)
+                        "costRange",
+                        (price.CostRange
+                         |> Option.map (fun (low, high) -> array [ JsonValue.Create low :> JsonNode; JsonValue.Create high :> JsonNode ])
+                         |> Option.toObj)
+                        "currency", (price.Currency |> Option.map text |> Option.toObj)
+                        "activeMsPerMember", (price.ActiveMsPerMember |> Option.map (fun ms -> JsonValue.Create ms :> JsonNode) |> Option.toObj)
+                        "coverage", text price.Coverage ]
+
+               record [ "grouped", arm value.Pricing.Grouped; "independent", arm value.Pricing.Independent; "statement", text value.Pricing.Statement ]) ]
 
     let private endpoint (value: GroupEndpoint) =
         record [ "kind", text (GroupEndpoint.kindCode value); "value", text (GroupEndpoint.value value) ]
@@ -1272,7 +1457,59 @@ module PlanningJson =
             |> List.map (fun entry ->
                 { Code = readText entry "code" |> parsed "group note" GroupNoteCode.tryParse
                   Severity = readText entry "severity" |> parsed "severity" FindingSeverity.tryParse
-                  Message = readText entry "message" }) }
+                  Message = readText entry "message" })
+          GroupedExecution =
+            match optionalObj node "groupedExecution" with
+            // Documents written before PRX-GRP-131 carry no qualification.
+            | None ->
+                { Qualifies = false
+                  Failures = [ "not recorded: the document predates grouped-execution qualification" ]
+                  Default = "advisory"
+                  Recommended = "advisory"
+                  ExecuteGroupDefault = "independent"
+                  OptOut = None
+                  IndependentMembers = []
+                  Statement = "grouped execution: not recorded" }
+            | Some grouped ->
+                { Qualifies = readBool grouped "qualifies"
+                  Failures = readTexts grouped "failures"
+                  Default = readText grouped "default"
+                  Recommended = readText grouped "recommended"
+                  ExecuteGroupDefault = readText grouped "executeGroupDefault"
+                  OptOut = readOptionalText grouped "optOut"
+                  IndependentMembers = objects grouped "independentMembers" |> List.map (fun entry -> readText entry "workItem", readText entry "reason")
+                  Statement = readText grouped "statement" }
+          Pricing =
+            let unknownArm =
+                { Samples = 0
+                  CostSamples = 0
+                  CostPerMember = None
+                  CostRange = None
+                  Currency = None
+                  ActiveMsPerMember = None
+                  Coverage = "not recorded" }
+
+            match optionalObj node "pricing" with
+            | None -> { Grouped = unknownArm; Independent = unknownArm; Statement = "pricing: not recorded" }
+            | Some pricing ->
+                let arm name =
+                    match optionalObj pricing name with
+                    | None -> unknownArm
+                    | Some entry ->
+                        { Samples = readNumber<int> entry "samples" |> Option.defaultValue 0
+                          CostSamples = readNumber<int> entry "costSamples" |> Option.defaultValue 0
+                          CostPerMember = readNumber<decimal> entry "costPerMember"
+                          CostRange =
+                            if isNull (field entry "costRange") then None
+                            else
+                                match items entry "costRange" |> List.map (fun item -> item.GetValue<decimal>()) with
+                                | [ low; high ] -> Some(low, high)
+                                | _ -> None
+                          Currency = readOptionalText entry "currency"
+                          ActiveMsPerMember = readNumber<int64> entry "activeMsPerMember"
+                          Coverage = readText entry "coverage" }
+
+                { Grouped = arm "grouped"; Independent = arm "independent"; Statement = readText pricing "statement" } }
 
     /// Reads a document written by `groups`; refuses another schema or kind.
     let parseGroups (json: string) : Result<PlanSnapshot * GroupingReport, string> =

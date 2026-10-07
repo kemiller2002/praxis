@@ -1,8 +1,11 @@
 # Praxis execution orchestration requirements
 
-Status: **Proposed**
+Status: **Accepted; partially implemented.** The status of every requirement is
+in [Implementation status](#implementation-status) below; a test fails if a
+requirement is missing from it.
 
-Tracked by GitHub issues #94 and #96.
+Tracked by GitHub issues #94 and #96. Runtime documentation:
+[`docs/execution-runtime.md`](../docs/execution-runtime.md).
 
 These requirements capture runtime and operator-surface gaps identified while
 comparing Praxis, Ordo, and Conditor with the Bang workflow on 2026-09-28.
@@ -426,3 +429,146 @@ and obligations authoritative outside the presentation layer.
 - **PRX-CTL-012** Provider/session availability in the control plane MUST be
   presented as execution-host information and MUST NOT make a provider the
   canonical owner of work state.
+
+
+## Implementation status
+
+Statuses: *Implemented* (behaviour exists; "Tested" when a test exercises it),
+*Partial*, *Not implemented*, and *Not applicable* (the requirement constrains a
+feature Praxis does not have, such as a board). Each gap names the work item
+that covers it.
+
+<!-- status:begin -->
+| Requirement | Status | Evidence | Work item |
+|---|---|---|---|
+| PRX-EXEC-001 | Implemented | `ExecutionRole` has the five roles plus administration. Tested. | - |
+| PRX-EXEC-002 | Partial | Capability sets come from a local copy of Ordo's `RoleAuthority.defaultFor`, not from the governing authority. | PRAXIS-FND-01 |
+| PRX-EXEC-003 | Implemented | Role and effective capabilities are persisted in the envelope. Tested. | - |
+| PRX-EXEC-004 | Implemented | Verification prohibits implementation changes. Tested. | - |
+| PRX-EXEC-005 | Implemented | `execution launch` and `execution start --launch` run the repository-configured launcher for the role. Tested. | PRAXIS-EXEC-03 |
+| PRX-EXEC-006 | Implemented | `--human-only TRANSITION`; legal actions refuse it to non-human actors. Tested. | - |
+| PRX-EXEC-010 | Implemented | `ros.json` `execution.worktree.required` makes `execution start` create the worktree for listed roles. Tested. | PRAXIS-EXEC-03 |
+| PRX-EXEC-011 | Implemented | Workspace ID, branch, path, baseline and candidate are in the envelope. Tested. | - |
+| PRX-EXEC-012 | Implemented | A worktree is `semantic-only`, never a sandbox. Tested. | - |
+| PRX-EXEC-013 | Implemented | `workspace.cleanup` is legal only in a terminal state. Tested. | - |
+| PRX-EXEC-014 | Implemented | `work resume` and `execution resume` re-verify the bound workspace before re-entry. Tested. | PRAXIS-EXEC-01 |
+| PRX-EXEC-020 | Implemented | `execution step declare --expect-*`. Tested. | - |
+| PRX-EXEC-021 | Implemented | `step run` / `step observe` record the observed receipt separately. Tested. | - |
+| PRX-EXEC-022 | Implemented | Receipt result `match`/`mismatch`/`indeterminate` as JSON. Tested. | - |
+| PRX-EXEC-023 | Implemented | A mismatch blocks `step.start` and completion. Tested. | - |
+| PRX-EXEC-024 | Implemented | Every appended ledger entry carries actor, role, workspace revision and evaluator fingerprint. Tested. | PRAXIS-EXEC-02 |
+| PRX-EXEC-025 | Implemented | `events.jsonl` is append-only. Tested. | - |
+| PRX-EXEC-026 | Implemented | `work complete` refuses while a bound execution has a mismatched or unknown receipt or a failed or stale verification. Tested. | PRAXIS-EXEC-01 |
+| PRX-EXEC-030 | Implemented | `work begin` (also under remote execution and `plan execute-group`), `work continue` and fallback reconciliation bind a durable envelope sharing the telemetry execution ID. Tested. | PRAXIS-EXEC-01 |
+| PRX-EXEC-031 | Implemented | All envelope fields are present. Tested. | - |
+| PRX-EXEC-032 | Implemented | Provider, model and runtime are actor attributes, separate from the role. | - |
+| PRX-EXEC-033 | Implemented | The same role yields the same capabilities for an agent and a human. Tested. | - |
+| PRX-EXEC-034 | Implemented | Every start allocates a new ID. Tested. | - |
+| PRX-EXEC-035 | Implemented | `execution start/show --json`; launched workers receive `PRAXIS_EXECUTION_*`. Tested. | - |
+| PRX-EXEC-036 | Implemented | Authority is enforced by legal actions, not prompt text. | - |
+| PRX-EXEC-040 | Implemented | `ros.json` `execution.launchers` maps roles to launchers; launching is the legal transition `execution.launch`. Tested. | PRAXIS-EXEC-03 |
+| PRX-EXEC-041 | Implemented | Each role is launchable on its own execution with its own identity. Tested. | PRAXIS-EXEC-03 |
+| PRX-EXEC-042 | Implemented | A verification launcher receives only the verification capability set. Tested. | PRAXIS-EXEC-03 |
+| PRX-EXEC-043 | Implemented | Review records findings and may not implement. Tested. | - |
+| PRX-EXEC-044 | Implemented | Integration combines candidates and may not change acceptance or specification. Tested. | - |
+| PRX-EXEC-045 | Implemented | No legal action changes an envelope's role; another role is another execution. Tested. | - |
+| PRX-EXEC-050 | Implemented | Branch `praxis/<work>/<execution>`. Tested. | - |
+| PRX-EXEC-051 | Implemented | Workspace metadata in the envelope. Tested. | - |
+| PRX-EXEC-052 | Implemented | Independent executions of one work item. Tested. | - |
+| PRX-EXEC-053 | Implemented | Completion records the candidate and the baseline..candidate commits for explicit and work-bound executions. Tested. | PRAXIS-EXEC-01 |
+| PRX-EXEC-054 | Implemented | Commits are recorded as candidate lineage, never as attribution; attribution stays with recorded execution and provenance evidence. Tested. | PRAXIS-EXEC-01 |
+| PRX-EXEC-055 | Implemented | Branch, baseline and candidate divergence refuse resume until an explicit, recorded rebind. Tested. | PRAXIS-EXEC-01 |
+| PRX-EXEC-056 | Implemented | Cleanup keeps the record and branch. Tested. | - |
+| PRX-UI-001 | Implemented | The work detail page lists the item's executions; each execution page shows state, receipts, obligations, unknowns, evidence and legal actions. Tested. | PRAXIS-EXEC-06 |
+| PRX-UI-002 | Implemented | Web actions come from the CLI's own allowed actions. Tested. | - |
+| PRX-UI-003 | Implemented | Only allowed actions are offered. Tested. | - |
+| PRX-UI-004 | Implemented | Human-required actions are marked in text and offered only through a form that records the operator as a human actor. Tested. | PRAXIS-EXEC-06 |
+| PRX-UI-005 | Not applicable | There is no board. | - |
+| PRX-UI-006 | Not applicable | MAY; the web UI does not launch executions. | - |
+| PRX-UI-007 | Implemented | Receipt mismatch, unknown effects, unresolved scope effects, divergence and blocked state are listed separately. Tested. | PRAXIS-EXEC-06 |
+| PRX-UI-008 | Implemented | `praxis web serve` serves work, backlog and execution state. Tested. | PRAXIS-EXEC-05 |
+| PRX-UI-009 | Implemented | The web host runs the same CLI. Tested. | - |
+| PRX-UI-010 | Implemented | Loopback by default; the bind address is printed. Tested. | - |
+| PRX-UI-020 | Implemented | The execution page shows state, actor, role, evaluator, receipts, containment and legal actions. Tested. | PRAXIS-EXEC-06 |
+| PRX-UI-021 | Implemented | Unavailable actions show the engine's reasons. Tested. | PRAXIS-EXEC-06 |
+| PRX-UI-022 | Not applicable | There is no board or drag. | - |
+| PRX-UI-023 | Not applicable | There is no board. | - |
+| PRX-UI-024 | Implemented | A refused web action leaves state unchanged and shows the kernel error. Tested. | - |
+| PRX-UI-025 | Implemented | `execution start --launch` accepts the start, then launches. Tested. | PRAXIS-EXEC-03 |
+| PRX-UI-026 | Implemented | Human-required actions are labelled `human required`, separate from agent-allowed ones. Tested. | PRAXIS-EXEC-06 |
+| PRX-UI-027 | Implemented | The web runs the CLI, so provenance is identical. Tested. | - |
+| PRX-UI-028 | Not applicable | There is no board. | - |
+| PRX-UI-030 | Not implemented | The web UI uses local stylesheets, not Forma. | PRAXIS-FND-05 |
+| PRX-UI-031 | Not implemented | No Limen. | PRAXIS-FND-05 |
+| PRX-UI-032 | Partial | Native HTML; Forma not adopted. | PRAXIS-FND-05 |
+| PRX-UI-033 | Implemented | Server-rendered forms with no script; states shown as text. No dedicated accessibility test. | - |
+| PRX-UI-034 | Implemented | No client script. Tested. | - |
+| PRX-VER-001 | Implemented | `execution evaluate` runs only the declared `--evaluator-command`, gated by `execution.evaluate`. Tested. | PRAXIS-EXEC-02 |
+| PRX-VER-002 | Implemented | The verification record holds command, candidate, evaluator fingerprint, exit code, actor and evidence. Tested. | PRAXIS-EXEC-02 |
+| PRX-VER-003 | Implemented | Praxis performs no repair, by construction. | - |
+| PRX-VER-004 | Implemented | `evaluator-unavailable` is neither pass nor fail. Tested. | - |
+| PRX-VER-005 | Implemented | Evaluator change blocks completion until re-verified. Tested. | - |
+| PRX-VER-010 | Partial | The evaluator closure comes from `--evaluator` flags, not Ordo policy. | PRAXIS-FND-02 |
+| PRX-VER-011 | Implemented | sha256 closure fingerprint, byte-identical to Ordo. Tested. | - |
+| PRX-VER-012 | Implemented | All closure kinds. Tested. | - |
+| PRX-VER-013 | Implemented | The verdict carries the fingerprint. Tested. | - |
+| PRX-VER-014 | Implemented | A stale verdict is invalidated, also for a new candidate. Tested. | - |
+| PRX-VER-015 | Implemented | `evaluator-changed` is distinct from `failed`. Tested. | - |
+| PRX-SEC-001 | Implemented | A host supplies `praxis.containment-evidence/1`; policy binds roles to required restrictions. Tested. | PRAXIS-EXEC-04 |
+| PRX-SEC-002 | Implemented | Containment is recorded separately from capabilities. Tested. | - |
+| PRX-SEC-003 | Implemented | Each restriction is enforced, unavailable, unrestricted or unknown, with mechanism and evidence. Tested. | PRAXIS-EXEC-04 |
+| PRX-SEC-010 | Implemented | Every envelope carries a containment profile. Tested. | PRAXIS-EXEC-04 |
+| PRX-SEC-011 | Implemented | Filesystem, process, network, credential and environment are reported per dimension. Tested. | PRAXIS-EXEC-04 |
+| PRX-SEC-012 | Implemented | Host enforcement is never inferred; unreported stays unknown. Tested. | - |
+| PRX-SEC-013 | Implemented | `execution.containment.<role>.require` and launcher evidence; launch is refused without the required enforcement. Tested. | PRAXIS-EXEC-04 |
+| PRX-SEC-014 | Implemented | `execution containment --json` emits the stable `praxis.containment/1` profile. | PRAXIS-EXEC-04 |
+| PRX-CTL-001 | Implemented | `/api/executions` read and transition routes run the CLI. Tested. | PRAXIS-EXEC-05 |
+| PRX-CTL-002 | Implemented | Default host 127.0.0.1. Tested. | - |
+| PRX-CTL-003 | Implemented | `GET /api/control-plane` declares host, port and loopback scope. Tested. | PRAXIS-EXEC-05 |
+| PRX-CTL-004 | Implemented | No database; the host runs the CLI. | - |
+| PRX-CTL-005 | Implemented | Executions, receipts, evidence, obligations, unknowns, legal actions and transition requests are typed JSON. Tested. | PRAXIS-EXEC-05 |
+| PRX-CTL-006 | Implemented | The web host runs the same `praxis execution` legality path. Tested. | PRAXIS-EXEC-05 |
+| PRX-CTL-007 | Implemented | The hub delegates to each repository's CLI. Tested. | - |
+| PRX-CTL-008 | Implemented | The host is stateless; every request re-reads durable state. | - |
+| PRX-CTL-009 | Implemented | F# host using the same CLI. | - |
+| PRX-CTL-010 | Implemented | No JavaScript. Tested. | - |
+| PRX-CTL-011 | Implemented | Executions, actors, receipts, evidence, unknowns, obligations, containment and legal transitions are presented; cost stays in `praxis telemetry`. Tested. | PRAXIS-EXEC-05 |
+| PRX-CTL-012 | Implemented | Provider, model and runtime appear only as execution-host attributes of the actor. Tested. | PRAXIS-EXEC-05 |
+| PRX-REC-001 | Implemented | Typed expected receipts. Tested. | - |
+| PRX-REC-002 | Implemented | All receipt kinds plus composites. Tested. | - |
+| PRX-REC-003 | Implemented | Expected, observed and result are separate. Tested. | - |
+| PRX-REC-004 | Implemented | match, mismatch, indeterminate. Tested. | - |
+| PRX-REC-005 | Implemented | Indeterminate keeps unknown-effect semantics. Tested. | - |
+| PRX-REC-006 | Implemented | Composite constituents are exposed. Tested. | - |
+| PRX-REC-007 | Implemented | Entries carry actor/observer, role, revision and evaluator identity. Tested. | PRAXIS-EXEC-02 |
+| PRX-REC-008 | Implemented | Narrative is separate and never compared. Tested. | - |
+| PRX-REC-009 | Implemented | Append-only ledger. Tested. | - |
+| PRX-STEP-001 | Implemented | Ordered, dependency-aware step ledger. Tested. | - |
+| PRX-STEP-002 | Implemented | A matched step is reused. Tested. | - |
+| PRX-STEP-003 | Implemented | Unknown effects require reconciliation before retry. Tested. | - |
+| PRX-STEP-004 | Implemented | Occurred / did not occur / still unknown. Tested. | - |
+| PRX-STEP-005 | Implemented | Resume reconstructs from entries only. Tested. | - |
+| PRX-STEP-006 | Partial | Execution steps and telemetry steps are separate models. | PRAXIS-EXEC-09 |
+| PRX-STEP-007 | Implemented | Unavailable telemetry is never zero. Tested. | - |
+| PRX-STEP-008 | Partial | No cost or reliability analysis by role. | PRAXIS-EXEC-09 |
+| PRX-STEP-009 | Implemented | Resumed telemetry is preserved. Tested. | - |
+| PRX-BND-001 | Partial | The boundary comes from CLI `--scope/--allow`, not an Ordo contract. | PRAXIS-FND-02 |
+| PRX-BND-002 | Implemented | `execution boundary` shows the projection. Tested. | - |
+| PRX-BND-003 | Implemented | Scope effects come from the Git diff. Tested. | - |
+| PRX-BND-004 | Implemented | Effects block completion. Tested. | - |
+| PRX-BND-005 | Implemented | Explanations never widen scope. Tested. | - |
+| PRX-BND-006 | Implemented | `expand-scope` is a legal transition. Tested. | - |
+| PRX-BND-007 | Implemented | Evaluator authority is never writable. Tested. | - |
+| PRX-ARCH-001 | Partial | Praxis re-implements Ordo semantics locally. | PRAXIS-FND-01 |
+| PRX-ARCH-002 | Implemented | Conditor may bootstrap; not exercised by tests. | - |
+| PRX-ARCH-003 | Implemented | The UI holds no authority. Tested. | - |
+| PRX-ARCH-004 | Implemented | Provider is an attribute. Tested. | - |
+| PRX-ARCH-005 | Partial | No Conditor or Ordo integration in the loop. | PRAXIS-FND-01 |
+| PRX-SEQ-001 | Implemented | Non-UI contracts exist before any UI claim. | - |
+| PRX-SEQ-002 | Implemented | The worktree derives from the execution ID. Tested. | - |
+| PRX-SEQ-003 | Partial | Same as BND-001. | PRAXIS-FND-02 |
+| PRX-SEQ-004 | Not applicable | No graphical controls. | - |
+| PRX-SEQ-005 | Implemented | The web consumes the CLI. Tested. | - |
+| PRX-SEQ-006 | Implemented | Weaker containment is reported truthfully. Tested. | - |
+| PRX-SEQ-007 | Implemented | Followed up to host enforcement evidence. | - |
+<!-- status:end -->

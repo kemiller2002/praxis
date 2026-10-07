@@ -24,6 +24,16 @@ tags: [claude, agents, context, continuity, handoff, mechanism, experiment]
 derived_from: [EX-ROS-2026-A021, EV-ROS-2026-A064, EV-ROS-2026-A070]
 provenance:
   contributions:
+    EXE-20261007T185521101Z-d60238bc:
+      operations: [origin-unrecorded]
+      at: 2026-10-07T19:02:03.632Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Added by a direct push to main (cd97bdde..94258e4f, 2026-10-07) with no Praxis execution; its creation was never recorded (DF-ROS-2026-A055)"
     EXE-20261007T162653169Z-f15a70b7:
       operations: [modified]
       at: 2026-10-07T18:47:25.856Z
@@ -34,7 +44,7 @@ provenance:
         provider: anthropic
         model: unknown
         runtime: claude-code
-      reason: "Executed the frozen A024 protocol until the launcher blocker; recorded status, results and observed threats without editing the preregistered text"
+      reason: "Executed the frozen A024 protocol; recorded the blocker, amendment A1, results, analysis and observed threats without editing the preregistered text"
       evidence: [EV-ROS-2026-A074, EV-ROS-2026-A075]
 ---
 

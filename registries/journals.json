@@ -146,7 +146,8 @@
     "author_agent": "anthropic/claude-code",
     "created": "2026-10-07",
     "evidence_ids": [
-      "EV-ROS-2026-A074"
+      "EV-ROS-2026-A074",
+      "EV-ROS-2026-A075"
     ],
     "hypothesis_ids": [
       "HY-ROS-2026-A030",
@@ -166,10 +167,13 @@
           },
           "at": "2026-10-07T18:47:49.999Z",
           "evidence": [
-            "EV-ROS-2026-A074"
+            "EV-ROS-2026-A074",
+            "EV-ROS-2026-A075"
           ],
+          "last": "2026-10-07T22:37:01.694Z",
           "operations": [
-            "created"
+            "created",
+            "modified"
           ],
           "reason": "Execution journal for EX-ROS-2026-A024 up to the launcher blocker"
         }
@@ -178,7 +182,7 @@
     "related_mission": "EX-ROS-2026-A024",
     "related_package": "null",
     "research_area": "repository-operating-system",
-    "status": "active",
+    "status": "completed",
     "tags": [
       "claude",
       "agents",

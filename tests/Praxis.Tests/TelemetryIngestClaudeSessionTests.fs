@@ -31,6 +31,15 @@ module TelemetryIngestClaudeSessionTests =
         finally
             Directory.Delete(root, true)
 
+    let private withTemporaryRootResult (run: string -> 'result) : 'result =
+        let root = Path.Combine(Path.GetTempPath(), $"ros-telemetry-session-{Guid.NewGuid():N}")
+        Directory.CreateDirectory root |> ignore
+
+        try
+            run root
+        finally
+            Directory.Delete(root, true)
+
     /// The repository's own registry, so the adapter is tested against the
     /// metric IDs it will really meet.
     let private copyMetricRegistry root =
@@ -151,6 +160,20 @@ module TelemetryIngestClaudeSessionTests =
                       Assert.equal (Some "claude-code") (text identity "runtime")
                       Assert.equal (Some "claude-test") (text identity "model")
                       Assert.equal (Some "sess-fixture") (text identity "sessionId")))
+
+          t "first productive change follows the repository's configured meaningful paths and keeps first code change" (fun () ->
+              let productive (rosJson: string option) =
+                  withTemporaryRootResult (fun root ->
+                      copyMetricRegistry root
+                      rosJson |> Option.iter (fun json -> File.WriteAllText(Path.Combine(root, "ros.json"), json))
+                      writeExecution root "EXE-1" "WI-A"
+                      ingest root |> Result.mapError failwith |> ignore
+                      let record = readExecution root "EXE-1"
+                      metricValues record "time.first_productive_change_ms", metricValues record "time.first_code_change_ms")
+
+              // The fixture's only change edits src/Feature.fs, five minutes in.
+              Assert.equal ([ 300000.0 ], [ 300000.0 ]) (productive None)
+              Assert.equal ([], [ 300000.0 ]) (productive (Some """{"workProtocol":{"meaningfulPaths":["docs/**"]}}""")))
 
           t "the runtime's cost is an estimated session cost, never cost.execution_total" (fun () ->
               withTemporaryRoot (fun root ->

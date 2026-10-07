@@ -35,6 +35,9 @@ type CompletionFacet =
     | ReleaseReady
     | DesignDebtDeclared
     | VerificationMatrixSatisfied
+    /// A member of a grouped-mode group execution carries a committed group
+    /// analysis and a per-criterion verification (PRX-GRP-133..135).
+    | GroupVerified
 
 /// One facet's state. `Unavailable` is distinct from `NotSatisfied`: the
 /// evidence could not establish the facet either way. It is never a pass.
@@ -256,6 +259,10 @@ module QualityEvidenceTypes =
     let dokimosRatchet = "dokimos-ratchet"
     /// `work complete --evidence ordo-boundary=PATH`: an `ordo.boundary-amplification/1` assessment.
     let ordoBoundary = "ordo-boundary"
+    /// `work complete --evidence group-analysis=PATH`: a `praxis.group-analysis/1` document.
+    let groupAnalysis = "group-analysis"
+    /// `work complete --evidence group-verification=PATH`: a `praxis.group-verification/1` document.
+    let groupVerification = "group-verification"
     let implementation = "implementation"
     let tests = "tests"
     /// `--evidence design-debt=PATH`: a `praxis.design-debt/1` declaration.
@@ -275,6 +282,7 @@ module CompletionReadiness =
         | CompletionFacet.ReleaseReady -> "release-ready"
         | CompletionFacet.DesignDebtDeclared -> "design-debt-declared"
         | CompletionFacet.VerificationMatrixSatisfied -> "verification-matrix-satisfied"
+        | CompletionFacet.GroupVerified -> "group-verified"
 
     let parseFacet =
         function
@@ -292,7 +300,8 @@ module CompletionReadiness =
           CompletionFacet.ArchitectureVerified
           CompletionFacet.ReleaseReady
           CompletionFacet.DesignDebtDeclared
-          CompletionFacet.VerificationMatrixSatisfied ]
+          CompletionFacet.VerificationMatrixSatisfied
+          CompletionFacet.GroupVerified ]
 
     let requirementCode =
         function

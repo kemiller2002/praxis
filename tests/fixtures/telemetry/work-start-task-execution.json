@@ -227,6 +227,36 @@
       }
     },
     {
+      "metricId": "context.repeated_file_reads_distinct",
+      "status": "unknown",
+      "reason": "runtime capability not reported or mapped",
+      "source": {
+        "type": "environment",
+        "name": "runtime-identity",
+        "mechanism": "explicit-or-unmapped-environment"
+      }
+    },
+    {
+      "metricId": "context.peak_tokens",
+      "status": "unknown",
+      "reason": "runtime capability not reported or mapped",
+      "source": {
+        "type": "environment",
+        "name": "runtime-identity",
+        "mechanism": "explicit-or-unmapped-environment"
+      }
+    },
+    {
+      "metricId": "context.window_tokens",
+      "status": "unknown",
+      "reason": "runtime capability not reported or mapped",
+      "source": {
+        "type": "environment",
+        "name": "runtime-identity",
+        "mechanism": "explicit-or-unmapped-environment"
+      }
+    },
+    {
       "metricId": "session.tokens.cumulative",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
@@ -448,6 +478,16 @@
     },
     {
       "metricId": "time.first_code_change_ms",
+      "status": "unknown",
+      "reason": "runtime capability not reported or mapped",
+      "source": {
+        "type": "environment",
+        "name": "runtime-identity",
+        "mechanism": "explicit-or-unmapped-environment"
+      }
+    },
+    {
+      "metricId": "time.first_productive_change_ms",
       "status": "unknown",
       "reason": "runtime capability not reported or mapped",
       "source": {

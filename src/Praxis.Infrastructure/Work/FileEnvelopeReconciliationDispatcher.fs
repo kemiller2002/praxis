@@ -210,7 +210,7 @@ module FileEnvelopeReconciliationDispatcher =
                         context.WorkItems
                         |> List.filter (fun item -> item.Id = envelope.WorkItem && item.SemanticState = LiveWorkState.Active)
                         |> List.map (fun item -> item.Id, item.WorkType)
-                        |> fun items -> FileCompletionReadiness.evaluateItems realRoot items request.Evidence
+                        |> fun items -> FileCompletionReadiness.evaluateItems realRoot items request.Evidence (FileCompletionReadiness.groupedMembersUnverifiable realRoot)
                 let readinessRecords = FileCompletionReadiness.extensions readiness
                 match readiness, WorkOperations.planVerifiedContext (FileEvidenceRepository.create realRoot) planRequest with
                 | CompletionGateOutcome.PolicyInvalid reason, _ -> Error $"quality-evidence-policy-invalid:{reason}"

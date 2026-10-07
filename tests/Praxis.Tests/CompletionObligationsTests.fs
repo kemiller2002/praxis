@@ -309,11 +309,11 @@ module CompletionObligationsTests =
               let policy = { QualityEvidencePolicies.legacyDefault with RequiredFacets = set [ CompletionFacet.ReleaseReady ] }
               let facetOf (readiness: ItemReadiness) = readiness.Facets |> List.find (fun facet -> facet.Facet = CompletionFacet.ReleaseReady)
 
-              let without = CompletionReadinessOperations.assess policy CompletionFacts.none (fun _ -> true) ("WI-1", "task") [] SourceObservation.NotSupplied SourceObservation.NotSupplied noObligationEvidence []
+              let without = CompletionReadinessOperations.assess policy CompletionFacts.none (fun _ -> true) ("WI-1", "task") [] SourceObservation.NotSupplied SourceObservation.NotSupplied noObligationEvidence [] None
               Assert.isTrue (facetOf without).Blocking "absent release evidence blocks a required facet"
 
               let observations = { noObligationEvidence with ReleaseReadiness = release ReleaseVerdict.Ready [ check "suite" ReleaseCheckStatus.Passed ] }
-              let withEvidence = CompletionReadinessOperations.assess policy CompletionFacts.none (fun _ -> true) ("WI-1", "task") [] SourceObservation.NotSupplied SourceObservation.NotSupplied observations []
+              let withEvidence = CompletionReadinessOperations.assess policy CompletionFacts.none (fun _ -> true) ("WI-1", "task") [] SourceObservation.NotSupplied SourceObservation.NotSupplied observations [] None
 
               match (facetOf withEvidence).Status with
               | FacetStatus.Satisfied _ -> ()
@@ -358,7 +358,7 @@ module CompletionObligationsTests =
               let facts = { CompletionFacts.none with Risk = fun _ -> Some(risk [ ChangeClass.Feature ] RiskLevel.High) }
               let provided = [ { Type = "design-debt"; Path = "quality/debt.json" }; { Type = "implementation"; Path = "src/a.fs" } ]
 
-              match CompletionReadinessOperations.gate sources facts (Ok QualityEvidencePolicies.legacyDefault) [ "WI-1", "task" ] provided with
+              match CompletionReadinessOperations.gate sources facts (Ok QualityEvidencePolicies.legacyDefault) [ "WI-1", "task" ] provided (fun _ -> None) with
               | CompletionGateOutcome.Ready [ readiness ] ->
                   Assert.equal [ { Type = "design-debt"; Path = "quality/debt.json"; Sha256 = Some "sha256:17" } ] readiness.ConsumedEvidence
                   let node = QualityEvidenceJson.readinessNode readiness

@@ -72,6 +72,7 @@
     <Compile Include="WorkReconciliationEffectTests.fs" />
     <Compile Include="ImplementationLanguagePolicyTests.fs" />
     <Compile Include="RequirementCitationTests.fs" />
+    <Compile Include="InputInboxTests.fs" />
     <Compile Include="WebInterfaceTests.fs" />
     <Compile Include="HubTests.fs" />
     <Compile Include="WorkDecisionCliTests.fs" />
@@ -79,6 +80,8 @@
     <Compile Include="WorkGitPathsCliTests.fs" />
     <Compile Include="WorkValidateCliTests.fs" />
     <Compile Include="WorkBacklogCliTests.fs" />
+    <Compile Include="BacklogReidentificationTests.fs" />
+    <Compile Include="StatusTableCitationTests.fs" />
     <Compile Include="WorkLifecycleCliTests.fs" />
     <Compile Include="QualityEvidenceTests.fs" />
     <Compile Include="CompletionObligationsTests.fs" />
@@ -110,6 +113,9 @@
     <Compile Include="TelemetrySegmentationTests.fs" />
     <Compile Include="RecoveryProofTests.fs" />
     <Compile Include="ExecutionGovernanceTests.fs" />
+    <Compile Include="ExecutionRuntimeTests.fs" />
+    <Compile Include="ExecutionBindingTests.fs" />
+    <Compile Include="WebExecutionTests.fs" />
     <Compile Include="InstallationRegistrationTests.fs" />
     <Compile Include="CommitOwnershipTests.fs" />
     <Compile Include="WorkAbandonTests.fs" />
@@ -120,6 +126,7 @@
     <Compile Include="PacingHardeningTests.fs" />
     <Compile Include="CliBoundaryRatchetTests.fs" />
     <Compile Include="PlanningCliTests.fs" />
+    <Compile Include="PlanningEvidenceTests.fs" />
     <Compile Include="PlanningSessionEvidenceTests.fs" />
     <Compile Include="GroupingTests.fs" />
     <Compile Include="PremergeFence.fs" />
@@ -129,6 +136,9 @@
     <Compile Include="PremergeReleaseTests.fs" />
     <Compile Include="PostmergeReconciliationTests.fs" />
     <Compile Include="WorkGroupTests.fs" />
+    <Compile Include="GroupGateTests.fs" />
+    <Compile Include="ExecuteGroupTests.fs" />
+    <Compile Include="GroupMeasurementTests.fs" />
     <Compile Include="InternalNamingGuardTests.fs" />
     <Compile Include="InternalNamingTests.fs" />
     <Compile Include="TelemetryCostUnitTests.fs" />
@@ -136,6 +146,7 @@
     <Compile Include="FormaPresentationTests.fs" />
     <Compile Include="AegisBoundaryTests.fs" />
     <Compile Include="IdentityTests.fs" />
+    <Compile Include="ProvenanceAcknowledgementTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

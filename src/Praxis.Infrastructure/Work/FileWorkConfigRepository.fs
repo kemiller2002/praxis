@@ -126,12 +126,15 @@ module FileWorkConfigRepository =
     /// reads, but with telemetry's own distinct default list (it additionally
     /// ignores `registries/**`, unlike the work-protocol default).
     let readTelemetryIgnoredPaths (root: string) : string list =
-        match readWorkProtocol root with
-        | Some element ->
-            stringArray element "ignoredPaths"
-            |> Option.defaultValue
-                [ ".git/**"; ".ros/context/**"; ".ros/events/**"; ".ros/work/**"; ".ros/telemetry/**"; ".ros/locks/**"; "registries/**" ]
-        | None -> [ ".git/**"; ".ros/context/**"; ".ros/events/**"; ".ros/work/**"; ".ros/telemetry/**"; ".ros/locks/**"; "registries/**" ]
+        let defaults = [ ".git/**"; ".ros/context/**"; ".ros/events/**"; ".ros/work/**"; ".ros/telemetry/**"; ".ros/locks/**"; "registries/**" ]
+
+        let configured =
+            match readWorkProtocol root with
+            | Some element -> stringArray element "ignoredPaths" |> Option.defaultValue defaults
+            | None -> defaults
+
+        // Execution envelopes are Praxis bookkeeping, never work output.
+        configured @ [ ".ros/executions/**" ] |> List.distinct
 
     /// Mirrors production `telemetryConfig().maxCapabilityHistoryEntries`,
     /// defaulting to 64.

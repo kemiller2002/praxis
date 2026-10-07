@@ -66,7 +66,12 @@ module PathFilter =
     /// installation manifest. The Praxis instance identity
     /// (`.praxis/instance.json`) is the same kind of tool bookkeeping: `init`
     /// and `upgrade` create it (DER-16, 17), so it never needs attribution.
-    let private alwaysIgnoredPatterns = [ ".echelon/**"; ".praxis/instance.json" ]
+    ///
+    /// Execution envelopes and ledgers (`.ros/executions/**`) are the same
+    /// kind of bookkeeping: every `work begin` now writes one, so a
+    /// repository whose `ignoredPaths` predate them must not need attribution
+    /// for them either.
+    let private alwaysIgnoredPatterns = [ ".echelon/**"; ".praxis/instance.json"; ".ros/executions/**" ]
 
     let isMeaningful (config: PathFilterConfig) (path: string) =
         (config.MeaningfulPatterns |> List.exists (fun pattern -> globMatch pattern path))

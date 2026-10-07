@@ -15,6 +15,10 @@ type ContributionOperation =
     | Approved
     | Superseded
     | Migrated
+    /// An acknowledgement that no Praxis execution recorded the artifact's
+    /// creation (DF-ROS-2026-A055). It names and infers no creator: the
+    /// contribution's actor is whoever acknowledged the gap, with a reason.
+    | OriginUnrecorded
     | Extension of string
 
 [<RequireQualifiedAccess>]
@@ -30,6 +34,7 @@ module ContributionOperation =
         | ContributionOperation.Approved -> "approved"
         | ContributionOperation.Superseded -> "superseded"
         | ContributionOperation.Migrated -> "migrated"
+        | ContributionOperation.OriginUnrecorded -> "origin-unrecorded"
         | ContributionOperation.Extension value -> value
 
     let tryParse (value: string) =
@@ -40,6 +45,7 @@ module ContributionOperation =
         | "approved" -> Some ContributionOperation.Approved
         | "superseded" -> Some ContributionOperation.Superseded
         | "migrated" -> Some ContributionOperation.Migrated
+        | "origin-unrecorded" -> Some ContributionOperation.OriginUnrecorded
         | extension when extensionPattern.IsMatch extension -> Some(ContributionOperation.Extension extension)
         | _ -> None
 
@@ -91,6 +97,10 @@ module Contribution =
 
     let isCreation contribution = has ContributionOperation.Created contribution
 
+    /// An `origin-unrecorded` acknowledgement (DF-ROS-2026-A055).
+    let isOriginAcknowledgement contribution =
+        has ContributionOperation.OriginUnrecorded contribution
+
     /// `at` as a comparable instant; invalid timestamps sort last so they
     /// never masquerade as the earliest (originating) contribution.
     let instant (contribution: Contribution) =
@@ -126,7 +136,12 @@ module Contribution =
           if contribution.Actor.Kind = ActorKind.Agent && execution contribution |> Option.isNone then
               "key", "an agent contribution must be keyed by the execution (EXE-...) that produced it"
           if contribution.Evidence |> List.exists (fun item -> item.Trim().Length = 0) then
-              "evidence", "evidence references must not be empty" ]
+              "evidence", "evidence references must not be empty"
+          if isOriginAcknowledgement contribution then
+              if contribution.Operations <> [ ContributionOperation.OriginUnrecorded ] then
+                  "operations", "an origin-unrecorded acknowledgement is recorded on its own, never with another operation"
+              if contribution.Reason |> Option.forall (fun reason -> reason.Trim().Length = 0) then
+                  "reason", "an origin-unrecorded acknowledgement requires a reason" ]
 
 /// The accumulated, append-only provenance of one artifact. Contributions
 /// are ordered by time; the history is never rewritten, only extended.
@@ -154,6 +169,11 @@ module ArtifactProvenance =
     let originator (provenance: ArtifactProvenance) =
         provenance.Contributions |> List.tryFind Contribution.isCreation
 
+    /// The acknowledgement that the artifact's creation was never recorded
+    /// (DF-ROS-2026-A055), when there is one.
+    let originAcknowledgement (provenance: ArtifactProvenance) =
+        provenance.Contributions |> List.tryFind Contribution.isOriginAcknowledgement
+
     let latest (provenance: ArtifactProvenance) =
         provenance.Contributions |> List.tryLast
 
@@ -173,6 +193,13 @@ module ArtifactProvenance =
         | Some existing when not (Actor.agrees existing.Actor contribution.Actor) ->
             Error
                 $"contribution '{contribution.Key}' is already attributed to {Actor.describe existing.Actor}; refusing to re-attribute it to {Actor.describe contribution.Actor}"
+        | _ when Contribution.isOriginAcknowledgement contribution && (originator provenance).IsSome ->
+            Error
+                $"the artifact already records its creation ({(originator provenance).Value.Key}); origin-unrecorded applies only when no contribution records 'created'"
+        | _ when Contribution.isCreation contribution && (originAcknowledgement provenance).IsSome ->
+            Error "the artifact's origin is acknowledged as unrecorded; a 'created' contribution cannot be added after it"
+        | Some existing when Contribution.isOriginAcknowledgement existing <> Contribution.isOriginAcknowledgement contribution ->
+            Error "an origin-unrecorded acknowledgement is recorded on its own, never merged with another operation"
         | Some existing ->
             let operations =
                 existing.Operations
@@ -237,7 +264,14 @@ module ArtifactProvenance =
                       "more than one contribution claims 'created': "
                       + (many |> List.map _.Key |> String.concat ", ") } ]
 
-        perContribution @ creationProblems
+        let acknowledgementProblems =
+            match creations, originAcknowledgement provenance with
+            | _ :: _, Some acknowledgement ->
+                [ { Field = $"provenance.contributions.{acknowledgement.Key}.operations"
+                    Message = "the artifact records both 'created' and 'origin-unrecorded'; an acknowledgement applies only when no creation is recorded" } ]
+            | _ -> []
+
+        perContribution @ creationProblems @ acknowledgementProblems
 
     // ---- reading the front-matter representation -------------------------
 
