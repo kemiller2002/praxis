@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>ros-fs</AssemblyName>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+  <!-- The .NET global tool (DF-ROS-2026-A044): `dotnet tool install -g
+       EchelonFoundry.Praxis` provides `praxis` wherever .NET 10 is installed.
+       The scaffold is embedded in the assembly, so the tool needs no package
+       root. Machines without .NET use the native bundles instead. -->
+  <PropertyGroup>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>praxis</ToolCommandName>
+    <PackageId>EchelonFoundry.Praxis</PackageId>
+    <Authors>Echelon Foundry</Authors>
+    <Description>Praxis (Echelon Foundry Repository Operating System): initialization, verification, work protocol, telemetry, provenance and durable checkpoints for research and engineering repositories.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/kemiller2002/praxis</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/kemiller2002/praxis</RepositoryUrl>
+    <PackageTags>praxis;repository;governance;provenance;telemetry;cli</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Ros.Domain/Ros.Domain.fsproj" />
+    <ProjectReference Include="../Ros.Contracts/Ros.Contracts.fsproj" />
+    <ProjectReference Include="../Ros.Application/Ros.Application.fsproj" />
+    <ProjectReference Include="../Ros.Infrastructure/Ros.Infrastructure.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="EchelonFoundry.Aegis.Core" Version="1.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Lifecycle.fs" />
+    <Compile Include="Foundations.fs" />
+    <Compile Include="ProvenanceCommands.fs" />
+    <Compile Include="ReconciliationCommands.fs" />
+    <Compile Include="CheckpointCommands.fs" />
+    <Compile Include="RemoteCommands.fs" />
+    <Compile Include="ExecutionCommands.fs" />
+    <Compile Include="InstallationCommands.fs" />
+    <Compile Include="PlanCommands.fs" />
+    <Compile Include="WorkGroupCommands.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+</Project>

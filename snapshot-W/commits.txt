@@ -1,0 +1,5 @@
+001 PRAXIS-GROUP-01: work group create records declared execution groups
+002 PRAXIS-GROUP-02: work group show presents a declared group read-only
+003 PRAXIS-GROUP-03: work group add adds one member to a declared group
+004 PRAXIS-GROUP-04: work group remove removes one member from a declared group
+005 PRAXIS-GROUP-05: work group checkpoint records a durable group checkpoint over members' own checkpoints

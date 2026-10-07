@@ -1,0 +1,12 @@
+#!/bin/sh
+# Canonical Praxis entry point for this source checkout. Runs the same F# CLI
+# as the `./ros` compatibility alias (DF-ROS-2026-A030); `ros` is kept for
+# compatibility and `praxis` is the name documentation prefers.
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+DLL=${PRAXIS_FS_DLL_PATH_OVERRIDE:-${ROS_FS_DLL_PATH_OVERRIDE:-$ROOT/src/Ros.Cli/bin/Release/net10.0/ros-fs.dll}}
+if [ ! -f "$DLL" ]; then
+  echo "./praxis needs the F# CLI built first. Run 'npm run build:fsharp', then retry." >&2
+  echo "Missing: $DLL" >&2
+  exit 1
+fi
+exec dotnet "$DLL" "$@"
