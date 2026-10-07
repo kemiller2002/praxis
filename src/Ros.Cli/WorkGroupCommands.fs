@@ -13,8 +13,12 @@ open Ros.Infrastructure.Planning
 /// renders; it holds no group policy.
 [<RequireQualifiedAccess>]
 module WorkGroupCommands =
-    let usage =
+    let showUsage = "work group show GROUP-ID [--json]"
+
+    let createUsage =
         "work group create --id GROUP-ID --member ITEM [--member ITEM]* --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--shared-context TEXT]* [--execution-repository NAME] [--cross-repository] [--architecture-note TEXT]* [--dry-run] [--json] [IDENTITY]"
+
+    let usage = createUsage + " | " + showUsage
 
     let private identityFlags =
         [ "--actor-kind"; "--agent"; "--actor"; "--provider"; "--model"; "--model-version"; "--runtime"; "--runtime-version"; "--session"; "--conversation"; "--run"; "--subagent" ]
@@ -157,7 +161,7 @@ module WorkGroupCommands =
             for error in errors do
                 eprintfn "ERROR %s" error
 
-            eprintfn "Usage: ros %s" usage
+            eprintfn "Usage: ros %s" createUsage
             2
         | Ok(group, occurredAt) ->
             let request =
@@ -171,6 +175,84 @@ module WorkGroupCommands =
                 eprintfn "ERROR %s" message
                 1
             | Ok outcome -> render (List.contains "--json" arguments) group.Id outcome
+
+    let private showText (plan: PlanSnapshot) (view: GroupView) =
+        let group = view.Group.Declaration
+        let kind = group.Kind |> Option.map GroupKind.code |> Option.defaultValue "kind unspecified"
+        let declaredBy = view.Group.DeclaredBy |> Option.map (fun actor -> actor.Id) |> Option.defaultValue "unknown"
+        let list (values: string list) = if values.IsEmpty then "-" else String.concat ", " values
+
+        let recorded (entry: GroupMemberView) =
+            match entry.Recorded with
+            | None -> "unknown"
+            | Some(MemberState.Open code)
+            | Some(MemberState.Terminal code) -> code
+
+        let planning (entry: GroupMemberView) =
+            entry.Planning |> Option.map (fun planned -> PlanningWorkState.code planned.PlanningState) |> Option.defaultValue "not in planning inventory"
+
+        let repository =
+            match group.ExecutionRepository, view.PlannerExecutionRepository with
+            | Some declared, _ -> $"{declared} (declared)"
+            | None, Some resolved -> $"{resolved} (resolved by the planner)"
+            | None, None -> "unknown"
+
+        let crossRepository = if group.CrossRepository then "yes" else "no"
+
+        [ yield $"Group {group.Id} ({GroupOrigin.code group.Origin}, {kind}); declared {view.Group.DeclaredAt} by {declaredBy}"
+          yield $"Execution repository: {repository}; cross-repository: {crossRepository}"
+          yield $"Progress: {view.Progress.Statement}"
+          yield ""
+          yield "Members (recorded state | planning state | status):"
+          for entry in view.Members do
+              let gatedBy = entry.Planning |> Option.map (fun planned -> planned.GatedBy) |> Option.defaultValue []
+              let waits = if gatedBy.IsEmpty then "" else $"; gated by {list gatedBy}"
+              let gates = if entry.Gates.IsEmpty then "" else $"; gates {list entry.Gates}"
+              yield $"  {entry.WorkItemId}  {recorded entry} | {planning entry} | {GroupView.statusCode entry}{waits}{gates}"
+          yield ""
+          yield "Blocked members:"
+          if view.Blocked.IsEmpty then yield "  none"
+          for entry in view.Blocked do
+              yield $"  {entry.WorkItemId} gates {list entry.Gates}"
+          for line in group.SharedContext do
+              yield $"Shared context: {line}"
+          for line in group.ArchitectureNotes do
+              yield $"Architecture note: {line}"
+          for note in view.Notes do
+              yield $"Note [{GroupNoteCode.code note.Code}] {note.Message}"
+          let commit = plan.Commit |> Option.map (fun value -> value.Substring(0, min 12 value.Length)) |> Option.defaultValue "unknown"
+          yield $"Planned {plan.PlannedAt} at {commit}"
+          yield view.Statement ]
+        |> List.iter (printfn "%s")
+
+    /// `work group show GROUP-ID`: read-only. Exit 0 shown, 1 unknown group or
+    /// read error, 2 argument error.
+    let show root (version: string) (arguments: string list) =
+        let asJson = List.contains "--json" arguments
+        let positional = arguments |> List.filter ((<>) "--json")
+
+        match positional with
+        | [ id ] when not (id.StartsWith "--") ->
+            let plannedAt = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture)
+
+            match WorkGroupOperations.show (FileWorkGroupRepository.create root) (FilePlanningRepository.create root None None) plannedAt version id with
+            | Error message ->
+                eprintfn "ERROR %s" message
+                1
+            | Ok(GroupShowOutcome.NotFound id) ->
+                if asJson then
+                    printf "%s" (PlanningJson.renderGroupNotFound id)
+                else
+                    eprintfn "ERROR no declared group %s; see 'plan groups' or .ros/work/groups.json" id
+
+                1
+            | Ok(GroupShowOutcome.Shown(view, plan)) ->
+                if asJson then printf "%s" (PlanningJson.renderGroupShown plan view) else showText plan view
+                0
+        | _ ->
+            eprintfn "ERROR work group show requires exactly one group ID"
+            eprintfn "Usage: ros %s" showUsage
+            2
 
     /// Stored-group findings for the unified `validate`, as (path, field, message).
     let findings root : Result<(string * string * string) list, string> =

@@ -993,6 +993,54 @@ module PlanningJson =
               "architectureNotes", texts value.ArchitectureNotes
               "notes", value.Notes |> List.map groupNote |> array ]
 
+    let private memberStateFields (state: MemberState option) : (string * JsonNode) list =
+        match state with
+        | None -> [ "recordedState", null; "recordedTerminal", null ]
+        | Some(MemberState.Open code) -> [ "recordedState", text code; "recordedTerminal", boolean false ]
+        | Some(MemberState.Terminal code) -> [ "recordedState", text code; "recordedTerminal", boolean true ]
+
+    /// The `--json` result of `work group show`.
+    let renderGroupShown (plan: PlanSnapshot) (view: GroupView) =
+        record
+            [ "schema", text GroupStore.Schema
+              "kind", text "group-shown"
+              "group", storedGroupNode view.Group
+              "plannerExecutionRepository", optionalText view.PlannerExecutionRepository
+              "members",
+              view.Members
+              |> List.map (fun entry ->
+                  record (
+                      [ "id", text entry.WorkItemId ]
+                      @ memberStateFields entry.Recorded
+                      @ [ "planningState", entry.Planning |> Option.map (fun planned -> PlanningWorkState.code planned.PlanningState) |> optionalText
+                          "status", text (GroupView.statusCode entry)
+                          "gatedBy", entry.Planning |> Option.map (fun planned -> planned.GatedBy) |> Option.defaultValue [] |> texts
+                          "gates", texts entry.Gates ]
+                  ))
+              |> array
+              "progress",
+              record
+                  [ "total", integer view.Progress.Total
+                    "complete", integer view.Progress.Complete
+                    "abandoned", integer view.Progress.Abandoned
+                    "inProgress", integer view.Progress.InProgress
+                    "runnable", integer view.Progress.Runnable
+                    "blocked", integer view.Progress.Blocked
+                    "notRunnable", integer view.Progress.NotRunnable
+                    "unknown", integer view.Progress.Unknown
+                    "statement", text view.Progress.Statement ]
+              "blocked", view.Blocked |> List.map (fun entry -> record [ "id", text entry.WorkItemId; "gates", texts entry.Gates ]) |> array
+              "notes", view.Notes |> List.map groupNote |> array
+              "plannedAt", text plan.PlannedAt
+              "commit", optionalText plan.Commit
+              "branch", optionalText plan.Branch
+              "statement", text view.Statement ]
+        |> render
+
+    let renderGroupNotFound (id: string) =
+        record [ "schema", text GroupStore.Schema; "kind", text "group-not-found"; "id", text id; "errors", texts [ $"no declared group {id}; see 'plan groups' or .ros/work/groups.json" ] ]
+        |> render
+
     let private endpoint (value: GroupEndpoint) =
         record [ "kind", text (GroupEndpoint.kindCode value); "value", text (GroupEndpoint.value value) ]
 

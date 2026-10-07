@@ -127,6 +127,145 @@ module WorkGroupTests =
 
     let private text (node: JsonNode) = node.GetValue<string>()
 
+    // ---- work group show (PRAXIS-GROUP-02) -------------------------------------
+
+    let private showQueue =
+        [ queued "S-1" "ready" "2026-09-01T00:00:00Z"
+          { queued "S-2" "ready" "2026-09-02T00:00:00Z" with DependsOn = [ "S-1" ] }
+          { queued "S-3" "ready" "2026-09-03T00:00:00Z" with DependsOn = [ "S-2" ] }
+          queued "S-4" "ready" "2026-09-04T00:00:00Z"
+          queued "S-5" "abandoned" "2026-09-05T00:00:00Z" ]
+
+    let private showLive =
+        [ { live "S-1" LiveWorkState.Blocked with BlockReason = Some "waiting on a design decision" }
+          live "S-4" LiveWorkState.Complete ]
+
+    let private showStore =
+        { Groups =
+            [ { Declaration = declared "GROUP-PRAXIS-SHOW-001" [ "S-1"; "S-2"; "S-3"; "S-4"; "S-5"; "GONE-1" ]
+                DeclaredAt = "2026-10-07T00:00:00.000Z"
+                DeclaredBy = Some actor } ] }
+
+    let private showPorts () =
+        let writes = ref 0
+
+        let groups: WorkGroupPort =
+            { ReadStore = fun () -> Ok showStore
+              Queue = fun () -> Ok showQueue
+              Live = fun () -> Ok showLive
+              WriteStore = fun _ -> writes.Value <- writes.Value + 1; Error "show must not write" }
+
+        let planning: PlanningReadPort =
+            { Repository = fun () -> { Name = "praxis"; Commit = Some "1111111111111111111111111111111111111111"; Branch = Some "main" }
+              Queue = fun () -> Ok showQueue
+              Live = fun () -> Ok showLive
+              Executions = fun () -> history
+              RepositoryObservations = fun _ -> []
+              SuppliedObservations = fun () -> Ok []
+              Configuration = fun () -> Ok PlannerConfiguration.defaults
+              DeclaredGroups = fun () -> Ok(GroupStore.declarations showStore) }
+
+        groups, planning, writes
+
+    let private shown id =
+        let groups, planning, writes = showPorts ()
+
+        match WorkGroupOperations.show groups planning "2026-10-07T00:00:00.000Z" "test" id with
+        | Ok outcome -> outcome, writes.Value
+        | Error message -> failwith message
+
+    let private showView () =
+        match shown "GROUP-PRAXIS-SHOW-001" with
+        | GroupShowOutcome.Shown(view, _), 0 -> view
+        | outcome -> failwith $"unexpected outcome {outcome}"
+
+    let private memberView (view: GroupView) id = view.Members |> List.find (fun entry -> entry.WorkItemId = id)
+
+    let private showTests =
+        [ t "show: members carry their own recorded state beside the planner's" (fun () ->
+              let view = showView ()
+              Assert.equal [ "S-1"; "S-2"; "S-3"; "S-4"; "S-5"; "GONE-1" ] (view.Members |> List.map (fun entry -> entry.WorkItemId))
+              Assert.equal (Some(MemberState.Open "blocked")) (memberView view "S-1").Recorded
+              Assert.equal (Some(MemberState.Terminal "complete")) (memberView view "S-4").Recorded
+              Assert.equal (Some(MemberState.Terminal "abandoned")) (memberView view "S-5").Recorded
+              Assert.equal None (memberView view "GONE-1").Recorded
+              Assert.equal None (memberView view "GONE-1").Planning
+              Assert.equal (Some PlanningWorkState.Blocked) ((memberView view "S-1").Planning |> Option.map (fun planned -> planned.PlanningState))
+              Assert.equal [ "blocked"; "runnable"; "runnable"; "complete"; "abandoned"; "unknown" ] (view.Members |> List.map GroupView.statusCode))
+
+          t "show: partial-completion progress counts every declared member" (fun () ->
+              let progress = (showView ()).Progress
+              Assert.equal 6 progress.Total
+              Assert.equal 1 progress.Complete
+              Assert.equal 1 progress.Abandoned
+              Assert.equal 1 progress.Blocked
+              Assert.equal 2 progress.Runnable
+              Assert.equal 1 progress.Unknown
+              Assert.isTrue (progress.Statement.StartsWith "1 of 6 complete") progress.Statement
+              Assert.isTrue (progress.Statement.Contains "unknown: GONE-1") progress.Statement)
+
+          t "show: a blocked member lists the members it gates" (fun () ->
+              let view = showView ()
+              Assert.equal [ { WorkItemId = "S-1"; Gates = [ "S-2"; "S-3" ] } ] view.Blocked
+              Assert.equal [ "S-1" ] ((memberView view "S-3").Planning.Value.GatedBy)
+              Assert.empty (memberView view "S-3").Gates)
+
+          t "show: declaration, repository and planner notes are reported; nothing is written" (fun () ->
+              let view = showView ()
+              Assert.equal (declared "GROUP-PRAXIS-SHOW-001" [ "S-1"; "S-2"; "S-3"; "S-4"; "S-5"; "GONE-1" ]) view.Group.Declaration
+              Assert.equal (Some "praxis") view.PlannerExecutionRepository
+              Assert.isTrue (view.Notes |> List.exists (fun note -> note.Code = GroupNoteCode.UnknownMember)) "the planner's unknown-member note")
+
+          t "show: an unknown group is NotFound and nothing is written" (fun () ->
+              match shown "GROUP-PRAXIS-NONE-001" with
+              | GroupShowOutcome.NotFound "GROUP-PRAXIS-NONE-001", 0 -> ()
+              | outcome -> failwith $"unexpected outcome {outcome}")
+
+          t "cli: show renders text and --json and never writes" (fun () ->
+              let root = fixture ()
+              Assert.equal 0 (PraxisCli.run root executor (createArguments "GROUP-FIXTURE-CORE-001" [ "TASK-A"; "TASK-B" ] [ "--architecture-note"; "one store" ])).ExitCode
+              let before = fingerprint root
+              let textResult = PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-CORE-001" ]
+              Assert.equal 0 textResult.ExitCode
+              Assert.isTrue (textResult.Output.Contains "Group GROUP-FIXTURE-CORE-001" && textResult.Output.Contains "TASK-A" && textResult.Output.Contains "Architecture note: one store") textResult.Output
+              let jsonResult = PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-CORE-001"; "--json" ]
+              Assert.equal 0 jsonResult.ExitCode
+              Assert.equal "group-shown" (text (jsonResult.Json["kind"]))
+              Assert.equal "GROUP-FIXTURE-CORE-001" (text (jsonResult.Json.["group"].["id"]))
+              Assert.equal [ "TASK-A"; "TASK-B" ] (jsonResult.Json["members"].AsArray() |> Seq.map (fun entry -> text (entry["id"])) |> List.ofSeq)
+              Assert.equal 2 (jsonResult.Json.["progress"].["total"].GetValue<int>())
+              Assert.equal before (fingerprint root))
+
+          t "cli: show reports partial completion from members' own states" (fun () ->
+              let root = fixture ()
+              Assert.equal 0 (PraxisCli.run root executor (createArguments "GROUP-FIXTURE-CORE-001" [ "TASK-A"; "TASK-B" ] [])).ExitCode
+              let completed =
+                  fixtureContext.Replace(
+                      "\n]}",
+                      ",\n  {\"id\":\"TASK-B\",\"type\":\"task\",\"state\":\"complete\",\"semanticState\":\"complete\",\"evidence\":[],\"updatedAt\":\"2026-09-11T00:00:00.000Z\",\"telemetryExecutionIds\":[]}\n]}"
+                  )
+
+              write root ".ros/context/current.json" completed
+              let result = PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-CORE-001"; "--json" ]
+              Assert.equal 0 result.ExitCode
+              let taskB = result.Json["members"].AsArray() |> Seq.find (fun entry -> text (entry["id"]) = "TASK-B")
+              Assert.equal "complete" (text (taskB["recordedState"]))
+              Assert.isTrue (taskB["recordedTerminal"].GetValue<bool>()) "terminal"
+              Assert.equal 1 (result.Json.["progress"].["complete"].GetValue<int>())
+              // A member completing after declaration is not a validate finding (PRX-GRP-042).
+              Assert.isTrue (not ((PraxisCli.run root None [ "validate"; "--json" ]).Output.Contains ".ros/work/groups.json")) "no group finding")
+
+          t "cli: show of an unknown group exits 1; a missing ID exits 2" (fun () ->
+              let root = fixture ()
+              let before = fingerprint root
+              let missing = PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-NONE-001"; "--json" ]
+              Assert.equal 1 missing.ExitCode
+              Assert.equal "group-not-found" (text (missing.Json["kind"]))
+              Assert.equal 1 (PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-NONE-001" ]).ExitCode
+              Assert.equal 2 (PraxisCli.run root None [ "work"; "group"; "show" ]).ExitCode
+              Assert.equal 2 (PraxisCli.run root None [ "work"; "group"; "show"; "A"; "B" ]).ExitCode
+              Assert.equal before (fingerprint root)) ]
+
     let tests =
         [ t "create records a valid declaration and sorts the store by ID" (fun () ->
               let store = recorded (recorded GroupStore.empty (declared "GROUP-PRAXIS-B-001" [ "A-1" ])) (declared "GROUP-PRAXIS-A-001" [ "A-1"; "A-2"; "L-1" ])
@@ -287,3 +426,4 @@ module WorkGroupTests =
               let result = PraxisCli.run root None [ "validate"; "--json" ]
               Assert.equal 1 result.ExitCode
               Assert.isTrue (result.Output.Contains ".ros/work/groups.json" && result.Output.Contains "GONE-1") "the unknown member is reported") ]
+        @ showTests

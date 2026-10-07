@@ -64,5 +64,6 @@
     <Compile Include="Planning/Planner.fs" />
     <Compile Include="Planning/Grouping.fs" />
     <Compile Include="Planning/GroupDeclaration.fs" />
+    <Compile Include="Planning/GroupView.fs" />
   </ItemGroup>
 </Project>

@@ -326,6 +326,25 @@ evidence or attribution. `--dry-run` validates and writes nothing. `validate`
 checks the stored groups (duplicate IDs, unknown members, malformed entries);
 a member that became terminal later is partial completion, not a finding.
 
+### `work group show`
+
+```
+ros work group show GROUP-ID [--json]
+```
+
+Read-only view of one stored group (`PRAXIS-GROUP-02`, PRX-GRP-073): the
+declaration (kind, origin, shared context, execution repository,
+cross-repository flag, architecture notes, `declaredAt`/`declaredBy`); each
+member's own recorded state (live context over backlog; `unknown` when the item
+is in neither) beside the planner's planning state, status and `gatedBy`;
+partial-completion progress over every declared member (`complete`,
+`abandoned`, `in-progress`, `runnable`, `blocked`, `not-runnable`, `unknown`);
+blocked members and the members each gates; the execution repository the
+planner resolves; and the planner's notes for the group. It writes nothing. An
+unknown group exits `1` (`--json` kind `group-not-found`); a missing or extra
+argument exits `2`. `--json` kind is `group-shown` with schema
+`praxis.work-groups/1.0.0`.
+
 ### `work reconcile`
 
 ```

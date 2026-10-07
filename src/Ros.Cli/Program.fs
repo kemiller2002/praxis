@@ -2999,6 +2999,7 @@ let private repositoryDispatch root packageRoot arguments =
     | "work" :: ("complete" | "done") :: rest -> ProvenanceCommands.withResolvedActor rest (runWorkComplete root rest)
     | "work" :: "reconcile" :: rest -> ProvenanceCommands.withResolvedActor rest (ReconciliationCommands.run root rest)
     | "work" :: "group" :: "create" :: rest -> ProvenanceCommands.withResolvedActor rest (WorkGroupCommands.create root rest)
+    | "work" :: "group" :: "show" :: rest -> WorkGroupCommands.show root Version rest
     | "work" :: "checkpoint" :: "show" :: rest -> CheckpointCommands.show root rest
     | "work" :: "continue" :: rest -> ProvenanceCommands.withResolvedActor rest (CheckpointCommands.runContinue root rest)
     | "work" :: "checkpoint" :: rest -> ProvenanceCommands.withResolvedActor rest (CheckpointCommands.run root rest)
