@@ -430,5 +430,37 @@
       "experiment"
     ],
     "title": "Work affinity moderates the value of shared reasoning context"
+  },
+  {
+    "author_agent": "openai/chatgpt",
+    "confidence": "very-low",
+    "contradicting_evidence": [],
+    "created": "2026-10-07",
+    "id": "HY-ROS-2026-A030",
+    "path": "research/hypotheses/HY-ROS-2026-A030--structured-handoffs-recover-shared-context-benefit.md",
+    "related_documents": [
+      "HY-ROS-2026-A028",
+      "HY-ROS-2026-A029",
+      "EV-ROS-2026-A064",
+      "EV-ROS-2026-A070",
+      "EX-ROS-2026-A021",
+      "EX-ROS-2026-A024"
+    ],
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "active",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [],
+    "tags": [
+      "claude",
+      "agents",
+      "context",
+      "handoff",
+      "continuity",
+      "experiment",
+      "planning"
+    ],
+    "title": "Structured durable handoffs recover the shared-context benefit of continuous Claude execution"
   }
 ]

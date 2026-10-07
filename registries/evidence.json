@@ -2141,5 +2141,61 @@
     "title": "Cross-provider continuation attempt 2: an OpenAI/ChatGPT successor continued and completed PRAXIS-XPROVIDER-PROOF-01 through the remote inbox",
     "updated": "2026-10-06",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-10-07",
+    "derived_from": [
+      "EV-ROS-2026-A064",
+      "EV-ROS-2026-A070"
+    ],
+    "evidence_type": "secondary",
+    "id": "EV-ROS-2026-A074",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A074--a021-r2-evidence-errata.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261007T140703062Z-100aa587": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T14:34:38.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Errata for A021/R2 evidence found during the publication audit (WI-0074)"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "EV-ROS-2026-A064",
+      "EV-ROS-2026-A066",
+      "EV-ROS-2026-A070",
+      "HY-ROS-2026-A028",
+      "research/experiments/EX-ROS-2026-A021-R2-blind/output/POST-UNBLINDING-METRICS.txt",
+      "research/publications/a021-grouped-execution/data/metric-conflicts.json",
+      "research/publications/a021-grouped-execution/validity-audit.md",
+      "research/publications/a021-grouped-execution/architecture-findings.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "supports": [],
+    "tags": [
+      "planning",
+      "grouping",
+      "replication",
+      "erratum",
+      "publication"
+    ],
+    "title": "Errata for the A021 and R2 evidence records found during the publication audit",
+    "updated": "2026-10-07",
+    "version": "1.0.0"
   }
 ]
